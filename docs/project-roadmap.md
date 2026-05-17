@@ -170,9 +170,20 @@ Can ship incrementally during beta.
 
 ---
 
-## Phase 6 — Implementation: pro audio editor
+## Phase 6 — hearthis parity (catalog UX)
 
-Spec in `audio-editor.md` (add as **M21** in `AGENT.md` when implementation starts).
+See `competitive-gaps-hearthis.md` for full gap list.
+
+| Done | Milestone | Summary |
+|:---:|---|---|
+| [ ] | **M22** | Per-item metadata + editable tracklists |
+| [ ] | **M23** | Collections (albums, mix series e.g. “Trance sets”) + RSS |
+| [ ] | **M24** | Per-content visuals: banner, slideshow, YouTube/Vimeo backdrop |
+| [ ] | **M25** | Artist commentary (+ optional listener comments if AGM approves) |
+
+## Phase 7 — Implementation: pro audio editor
+
+Spec in `audio-editor.md` (**M21**).
 
 | Done | Task | Owner | Doc |
 |:---:|---|---|---|
@@ -182,7 +193,7 @@ Spec in `audio-editor.md` (add as **M21** in `AGENT.md` when implementation star
 
 ---
 
-## Phase 7 — Closed beta → open beta (200 artists)
+## Phase 8 — Closed beta → open beta (200 artists)
 
 Aligned with `strategy-and-product.md` acquisition plan.
 
@@ -208,7 +219,7 @@ Aligned with `strategy-and-product.md` acquisition plan.
 
 ---
 
-## Phase 8 — Handover to the association
+## Phase 9 — Handover to the association
 
 Goal: Tahti ry runs the platform **without depending on a single external
 contractor**. Director may remain employed, but **members can operate it**.
@@ -268,7 +279,7 @@ Tracks from `governance-and-legal.md` §7.b:
 
 ---
 
-## Phase 9 — Ongoing (post-handover)
+## Phase 10 — Ongoing (post-handover)
 
 | Done | Task | Cadence |
 |:---:|---|---|
@@ -307,6 +318,7 @@ unless maintenance team works unpaid until surplus and capex is deferred.
 | Which grants? | `funding-strategy.md` |
 | Who owns the org? | `governance-and-legal.md`, `strategy-and-product.md` |
 | How do grants to artists work? | `engagement-and-fansubs.md` |
+| Gaps vs hearthis.at? | `competitive-gaps-hearthis.md` |
 | How to broadcast? | `obs-and-broadcasting-guides.md` |
 | Infra choices? | `infra-strategy.md` |
 

@@ -62,6 +62,7 @@ Each artist gets a **24/7 channel** at `<their-handle>.tahti.fi` and a **modern 
 | `docs/infra-strategy.md` | Self-hosted infrastructure: owned hardware + UpCloud spillover, no CDN |
 | `docs/strategy-and-product.md` | Channel-first positioning + competitive critiques |
 | `docs/project-roadmap.md` | **Master todo** — grants, build, test, handover to the association |
+| `docs/competitive-gaps-hearthis.md` | Gaps vs hearthis.at — metadata, visuals, collections, editor |
 | `infra/docker-stack.yml`, `Caddyfile`, etc. | Infra configs |
 | `slides/Tahti-Community.pptx` | 12-slide artist-facing deck |
 | `slides/Tahti-Business.pptx` | 12-slide governance + sustainability deck |

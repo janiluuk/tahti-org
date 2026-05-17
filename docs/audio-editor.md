@@ -32,13 +32,19 @@ Spec for implementation: **M20** in `docs/AGENT.md`.
 
 ### Built-in processing (real-time preview + offline bounce)
 
+Full **dynamics and loudness** tooling — not a toy trimmer:
+
 - Parametric EQ (minimum 4 bands)
-- Compressor / limiter
-- Gate / expander
+- **Compressor** with threshold, ratio, attack, release, makeup gain
+- **Limiter** on master (ceiling, lookahead where supported)
+- **Gate / expander** for noise floors and DJ pauses
 - De-esser (voice/podcast)
-- Normalize and gain staging
+- **Normalize**: peak normalize, RMS target, **LUFS** integrated normalize with
+  post-bounce verification
+- Gain staging per track and master bus
 - High-pass / low-pass filters
 - Stereo width (mid/side balance) on stereo masters
+- **Trim** region in/out with sample-accurate handles; split and join regions
 
 ### DJ & broadcast workflows
 
