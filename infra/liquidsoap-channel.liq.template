@@ -1,0 +1,108 @@
+#!/usr/bin/liquidsoap
+# Replay v3 — per-channel template
+# THE CORE PRODUCT MECHANIC LIVES IN THIS FILE.
+# Each channel is a perpetual Liquidsoap process that:
+#   - listens for a live Icecast source from the artist
+#   - falls back to the channel's archive playlist when no live signal exists
+#   - records live broadcasts to disk for auto-archiving
+#   - exposes HLS for listeners
+#   - optionally multistreams to RTMP destinations
+
+settings.log.level := 3
+
+# --- Live input via Icecast harbor ---
+live_source = input.harbor(
+  "/live",
+  port={{HARBOR_INPUT_PORT}},
+  password="{{LIVE_SOURCE_PASSWORD}}",
+  buffer=4.,
+  max=20.,
+  on_connect=fun (h) -> log("Live source connected from #{h[\"X-Forwarded-For\"]}"),
+  on_disconnect=fun () -> log("Live source disconnected")
+)
+
+# --- Archive playlist (the fallback) ---
+# Hot-reloads when the artist changes their archive rotation
+archive_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u"
+archive = playlist(
+  mode="{{FALLBACK_MODE}}",      # "shuffle" or "ordered"
+  reload=300,
+  reload_mode="rounds",
+  archive_url
+)
+archive = crossfade(duration=3., archive)
+archive = normalize(target=-14., archive)
+
+# --- THE MAGIC: live-or-archive fallback ---
+# track_sensitive=false means: switch immediately when live ends, not at the next track boundary.
+# The third source (blank) is a safety net so the chain never dies if both fail.
+radio = fallback(
+  track_sensitive=false,
+  [live_source, archive, blank()]
+)
+
+# --- Live recording sidecar ---
+# Writes a WAV file ONLY while the live source is active.
+# Output filename rotates per session via reopen_when.
+output.file(
+  %wav(stereo=true, samplesize=24, channels=2),
+  reopen_when={ source.is_ready(live_source) },
+  reopen_on_metadata=false,
+  fallible=true,
+  "/recordings/{{CHANNEL_ID}}/live_$(year)$(month)$(day)_$(hour)$(min)$(sec).wav",
+  live_source
+)
+
+# --- HLS output for listeners (the public-facing stream) ---
+output.file.hls(
+  playlist="stream.m3u8",
+  segments=4,
+  segment_duration=4.,
+  segments_overhead=10,
+  "/hls/{{CHANNEL_ID}}",
+  [
+    ("opus_64k",  %ffmpeg(format="mpegts", %audio(codec="opus", b="64k"))),
+    ("opus_128k", %ffmpeg(format="mpegts", %audio(codec="opus", b="128k"))),
+    ("opus_256k", %ffmpeg(format="mpegts", %audio(codec="opus", b="256k")))
+  ],
+  radio
+)
+
+# --- Now-playing metadata endpoint ---
+# Internal-only: orchestrator scrapes for "what's playing right now"
+output.harbor(
+  %mp3(bitrate=64),
+  port={{HARBOR_NOWPLAYING_PORT}},
+  mount="/now",
+  radio
+)
+
+{{#RTMP_TARGETS}}
+# --- RTMP push to {{provider}} ---
+# If alwaysMirror is false, only the live_source goes out (archive doesn't multistream by default
+# to avoid pushing royalty-bearing tracks to a copyright-strict platform like YouTube).
+{{#ALWAYS_MIRROR}}
+output.url(
+  url="{{rtmp_url}}/{{stream_key}}",
+  fallible=true,
+  %ffmpeg(
+    format="flv",
+    %audio(codec="aac", b="128k", ar=44100, ac=2),
+    %video.raw(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)
+  ),
+  mux(audio=radio, video=video.add_image(file="{{COVER_PATH}}", duration=infinity, blank()))
+)
+{{/ALWAYS_MIRROR}}
+{{^ALWAYS_MIRROR}}
+output.url(
+  url="{{rtmp_url}}/{{stream_key}}",
+  fallible=true,
+  %ffmpeg(
+    format="flv",
+    %audio(codec="aac", b="128k", ar=44100, ac=2),
+    %video.raw(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)
+  ),
+  mux(audio=live_source, video=video.add_image(file="{{COVER_PATH}}", duration=infinity, blank()))
+)
+{{/ALWAYS_MIRROR}}
+{{/RTMP_TARGETS}}

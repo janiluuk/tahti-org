@@ -1,0 +1,67 @@
+{
+    email ops@example.com
+}
+
+# Main site + artist dashboard
+example.com, www.example.com {
+    encode zstd gzip
+    reverse_proxy web:3000
+}
+
+# Per-channel landing pages — wildcard subdomain routing
+*.replay.fm {
+    @valid expression {labels.0} != "www"
+    encode zstd gzip
+    reverse_proxy @valid web:3000 {
+        header_up X-Replay-Channel-Slug {labels.0}
+    }
+    tls {
+        on_demand
+    }
+}
+
+# Artist API
+api.example.com {
+    encode zstd gzip
+    @cors method OPTIONS
+    header @cors Access-Control-Allow-Origin "https://example.com"
+    header @cors Access-Control-Allow-Credentials "true"
+    reverse_proxy api:3000
+}
+
+# Centrifugo WebSocket for live chat
+chat.example.com {
+    @ws header Connection *Upgrade*
+    @ws header Upgrade websocket
+    reverse_proxy chat:8000
+}
+
+# Public HLS streams from shared volume — Bunny CDN pulls from this
+stream.example.com {
+    encode gzip
+    header Access-Control-Allow-Origin "*"
+    header Cache-Control "public, max-age=2, s-maxage=10"
+    root * /srv/hls
+    file_server
+}
+
+# CDN origin for archive items, covers, etc.
+cdn-origin.example.com {
+    reverse_proxy minio:9000
+    header Cache-Control "public, max-age=86400"
+}
+
+# Live ingress endpoints — separate hostnames per protocol
+ingest-icecast.example.com {
+    reverse_proxy icecast:8000
+}
+
+# RTMP ingress goes via a TCP stream proxy at the network level, NOT through Caddy.
+# (nginx-rtmp listens directly on port 1935 on the edge node, Swarm published port.)
+
+# MinIO admin console — IP-restricted
+minio.example.com {
+    @allowed remote_ip <your-ip>/32
+    reverse_proxy @allowed minio:9001
+    respond 403
+}

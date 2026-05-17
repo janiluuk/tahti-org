@@ -1,0 +1,389 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────
+# Replay v3 — production Swarm stack (channel-first)
+#
+# Setup once on the manager:
+#   docker swarm init --advertise-addr <manager-ip>
+#   docker node update --label-add role=db node-db-01
+#   docker node update --label-add role=storage node-storage-01
+#   docker node update --label-add role=worker node-worker-01
+#   docker node update --label-add role=worker node-worker-02
+#   docker node update --label-add role=edge node-edge-01
+#   docker node update --label-add role=ingest node-ingest-01
+#
+# Create secrets:
+#   echo -n "..." | docker secret create pg_password -
+#   echo -n "..." | docker secret create minio_root_password -
+#   openssl rand -base64 48 | docker secret create session_secret -
+#   openssl rand -base64 32 | docker secret create rtmp_key_encryption_key -
+#   openssl rand -base64 32 | docker secret create centrifugo_secret -
+#   openssl rand -hex 32   | docker secret create chat_fingerprint_salt -
+#   echo -n "..." | docker secret create revelator_api_key -
+#   echo -n "..." | docker secret create mixcloud_client_secret -
+#   echo -n "..." | docker secret create smtp_password -
+# ─────────────────────────────────────────────────────────────────────
+
+networks:
+  edge:
+    driver: overlay
+    attachable: true
+  internal:
+    driver: overlay
+    attachable: true
+  ingest:
+    driver: overlay
+    attachable: true
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  caddy_data:
+  caddy_config:
+  hls_shared:
+  recordings_shared:
+  prometheus_data:
+  grafana_data:
+
+secrets:
+  pg_password:                    { external: true }
+  minio_root_password:            { external: true }
+  session_secret:                 { external: true }
+  rtmp_key_encryption_key:        { external: true }
+  centrifugo_secret:              { external: true }
+  chat_fingerprint_salt:          { external: true }
+  revelator_api_key:              { external: true }
+  mixcloud_client_secret:         { external: true }
+  smtp_password:                  { external: true }
+
+configs:
+  caddyfile:    { file: ./Caddyfile }
+  centrifugo:   { file: ./centrifugo.json }
+  nginx_rtmp:   { file: ./nginx-rtmp.conf }
+  icecast:      { file: ./icecast.xml }
+
+services:
+
+  # ───────────────────────────────────────────────────────────────────
+  # Postgres
+  # ───────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    networks: [internal]
+    environment:
+      POSTGRES_USER: replay
+      POSTGRES_DB: replay
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+    secrets: [pg_password]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U replay"]
+      interval: 10s
+      retries: 5
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == db]
+      restart_policy: { condition: any, delay: 5s, max_attempts: 5 }
+      resources:
+        limits: { cpus: "2", memory: 4G }
+
+  # ───────────────────────────────────────────────────────────────────
+  # Redis — used by API, chat backplane, BullMQ, presence
+  # ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "2gb", "--maxmemory-policy", "allkeys-lru"]
+    networks: [internal]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == db]
+      resources:
+        limits: { cpus: "1", memory: 2.5G }
+
+  # ───────────────────────────────────────────────────────────────────
+  # MinIO
+  # ───────────────────────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    networks: [internal, edge]
+    environment:
+      MINIO_ROOT_USER: replay
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_root_password
+    secrets: [minio_root_password]
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      retries: 5
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == storage]
+      resources:
+        limits: { cpus: "2", memory: 2G }
+
+  # ───────────────────────────────────────────────────────────────────
+  # Centrifugo — chat WebSocket server
+  # ───────────────────────────────────────────────────────────────────
+  chat:
+    image: centrifugo/centrifugo:v5
+    command: centrifugo --config /etc/centrifugo/config.json
+    networks: [internal, edge]
+    environment:
+      CENTRIFUGO_TOKEN_HMAC_SECRET_KEY_FILE: /run/secrets/centrifugo_secret
+    secrets: [centrifugo_secret]
+    configs:
+      - source: centrifugo
+        target: /etc/centrifugo/config.json
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 15s
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.labels.role == worker]
+      update_config: { parallelism: 1, order: start-first }
+      resources:
+        limits: { cpus: "1", memory: 1G }
+
+  # ───────────────────────────────────────────────────────────────────
+  # API — Fastify
+  # ───────────────────────────────────────────────────────────────────
+  api:
+    image: registry.example.com/replay/api:${TAG:-latest}
+    networks: [internal, edge]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://replay@postgres:5432/replay
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      CENTRIFUGO_HOST: chat
+      PUBLIC_CDN_BASE: https://cdn.example.com
+      PUBLIC_HLS_BASE: https://stream.example.com
+      SESSION_SECRET_FILE: /run/secrets/session_secret
+      RTMP_KEY_FILE: /run/secrets/rtmp_key_encryption_key
+      CENTRIFUGO_SECRET_FILE: /run/secrets/centrifugo_secret
+      CHAT_FINGERPRINT_SALT_FILE: /run/secrets/chat_fingerprint_salt
+      REVELATOR_API_KEY_FILE: /run/secrets/revelator_api_key
+      MIXCLOUD_CLIENT_SECRET_FILE: /run/secrets/mixcloud_client_secret
+    secrets:
+      - pg_password
+      - session_secret
+      - rtmp_key_encryption_key
+      - centrifugo_secret
+      - chat_fingerprint_salt
+      - revelator_api_key
+      - mixcloud_client_secret
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 15s
+      retries: 5
+    deploy:
+      replicas: 3
+      placement:
+        constraints: [node.labels.role == worker]
+      update_config: { parallelism: 1, delay: 10s, order: start-first, failure_action: rollback }
+      restart_policy: { condition: any, delay: 5s }
+      resources:
+        limits: { cpus: "1", memory: 1G }
+
+  # ───────────────────────────────────────────────────────────────────
+  # Workers — heavy media work and light fanout
+  # ───────────────────────────────────────────────────────────────────
+  worker-media:
+    image: registry.example.com/replay/worker:${TAG:-latest}
+    command: ["node", "dist/index.js", "--queues=transcode-archive,record-live,fingerprint"]
+    networks: [internal]
+    environment:
+      DATABASE_URL: postgres://replay@postgres:5432/replay
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio
+    secrets: [pg_password]
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.labels.role == worker]
+      resources:
+        limits: { cpus: "4", memory: 4G }
+
+  worker-dist:
+    image: registry.example.com/replay/worker:${TAG:-latest}
+    command: ["node", "dist/index.js", "--queues=mixcloud-upload,revelator-deliver,revelator-royalty-sync"]
+    networks: [internal]
+    environment:
+      DATABASE_URL: postgres://replay@postgres:5432/replay
+      REDIS_URL: redis://redis:6379
+      REVELATOR_API_KEY_FILE: /run/secrets/revelator_api_key
+      MIXCLOUD_CLIENT_SECRET_FILE: /run/secrets/mixcloud_client_secret
+    secrets: [pg_password, revelator_api_key, mixcloud_client_secret]
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == worker]
+      resources:
+        limits: { cpus: "1", memory: 1G }
+
+  worker-light:
+    image: registry.example.com/replay/worker:${TAG:-latest}
+    command: ["node", "dist/index.js", "--queues=stats-rollup,chat-cleanup,chat-ban-rotate"]
+    networks: [internal]
+    environment:
+      DATABASE_URL: postgres://replay@postgres:5432/replay
+      REDIS_URL: redis://redis:6379
+    secrets: [pg_password]
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == worker]
+      resources:
+        limits: { cpus: "1", memory: 512M }
+
+  # ───────────────────────────────────────────────────────────────────
+  # Orchestrator — spawns per-channel Liquidsoap containers
+  # ───────────────────────────────────────────────────────────────────
+  orchestrator:
+    image: registry.example.com/replay/orchestrator:${TAG:-latest}
+    networks: [internal]
+    environment:
+      DATABASE_URL: postgres://replay@postgres:5432/replay
+      REDIS_URL: redis://redis:6379
+      DOCKER_HOST: unix:///var/run/docker.sock
+      CHANNEL_IMAGE: registry.example.com/replay/liquidsoap:latest
+      CHANNEL_NETWORK: replay_internal
+      HLS_VOLUME: hls_shared
+      RECORDINGS_VOLUME: recordings_shared
+    secrets: [pg_password]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+
+  # ───────────────────────────────────────────────────────────────────
+  # Icecast — live source ingress for Mixxx/Traktor/butt/SAM Cast
+  # ───────────────────────────────────────────────────────────────────
+  icecast:
+    image: moul/icecast:latest
+    networks: [ingest, internal]
+    ports:
+      - target: 8000
+        published: 8000
+        mode: host
+    configs:
+      - source: icecast
+        target: /etc/icecast.xml
+    volumes:
+      - recordings_shared:/recordings
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == ingest]
+      resources:
+        limits: { cpus: "2", memory: 1G }
+
+  # ───────────────────────────────────────────────────────────────────
+  # Nginx-RTMP — live source ingress for OBS/Streamlabs and similar
+  # ───────────────────────────────────────────────────────────────────
+  rtmp-ingest:
+    image: tiangolo/nginx-rtmp:latest
+    networks: [ingest, internal]
+    ports:
+      - target: 1935
+        published: 1935
+        mode: host
+    configs:
+      - source: nginx_rtmp
+        target: /etc/nginx/nginx.conf
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == ingest]
+      resources:
+        limits: { cpus: "2", memory: 1G }
+
+  # ───────────────────────────────────────────────────────────────────
+  # Web — Next.js
+  # ───────────────────────────────────────────────────────────────────
+  web:
+    image: registry.example.com/replay/web:${TAG:-latest}
+    networks: [internal, edge]
+    environment:
+      NEXT_PUBLIC_API_BASE: https://api.example.com
+      NEXT_PUBLIC_CHAT_BASE: https://chat.example.com
+      NEXT_PUBLIC_HLS_BASE: https://stream.example.com
+      INTERNAL_API_BASE: http://api:3000
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 15s
+    deploy:
+      replicas: 2
+      placement:
+        constraints: [node.labels.role == worker]
+      update_config: { parallelism: 1, order: start-first }
+      resources:
+        limits: { cpus: "1", memory: 1G }
+
+  # ───────────────────────────────────────────────────────────────────
+  # Caddy — TLS termination + reverse proxy
+  # ───────────────────────────────────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    networks: [edge]
+    ports:
+      - target: 80
+        published: 80
+        mode: host
+      - target: 443
+        published: 443
+        mode: host
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - hls_shared:/srv/hls:ro
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == edge]
+
+  # ───────────────────────────────────────────────────────────────────
+  # Observability
+  # ───────────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    networks: [internal]
+    volumes:
+      - prometheus_data:/prometheus
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == db]
+
+  grafana:
+    image: grafana/grafana:latest
+    networks: [internal, edge]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/session_secret
+    secrets: [session_secret]
+    volumes:
+      - grafana_data:/var/lib/grafana
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == db]
