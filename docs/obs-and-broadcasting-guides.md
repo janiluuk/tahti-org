@@ -42,7 +42,7 @@ exact field values, and gotchas.
 
 ---
 
-### Broadcasting to your Tahti channel from OBS Studio
+### Broadcasting to your  Tahti channel from OBS Studio
 
 You'll be live in about 5 minutes.
 
@@ -56,7 +56,7 @@ dialog opens.
 In the settings dialog, click **Stream** in the left sidebar.
 
 - **Service:** select *Custom...*
-- **Server:** `rtmp://rtmp.tahti.fm/live` *(copy)*
+- **Server:** `rtmp://rtmp.tahti.fi/live` *(copy)*
 - **Stream Key:** `<channel-id>__<rotating-secret>` *(copy — keep this private)*
 
 Click *Apply*.
@@ -119,7 +119,7 @@ In the *Sources* panel:
 
 Click **Start Streaming** in the bottom-right of OBS.
 
-After about 5 seconds, your channel at `<your-slug>.tahti.fm` will be live.
+After about 5 seconds, your channel at `<your-slug>.tahti.fi` will be live.
 Your dashboard will show *LIVE* status. Listeners can tune in.
 
 **Step 8 — when you're done**
@@ -164,7 +164,7 @@ machine, import them.
 Mixxx ships with Icecast/Shoutcast streaming built in. Mixxx is also free and
 open-source, like us — strong aesthetic fit.
 
-### Broadcasting to your Tahti channel from Mixxx
+### Broadcasting to your  Tahti channel from Mixxx
 
 **Step 1 — open Mixxx preferences**
 
@@ -176,7 +176,7 @@ In the left sidebar, click **Live Broadcasting**.
 
 - **Server connection 1:**
   - **Type:** Icecast 2
-  - **Host:** `icecast.tahti.fm`
+  - **Host:** `icecast.tahti.fi`
   - **Mount:** `/live/<channel-slug>` *(copy)*
   - **Port:** `8000`
   - **Login:** `source`
@@ -202,7 +202,7 @@ In the same dialog:
 Click *Apply*, then *OK*.
 
 In the main Mixxx window, click the **Broadcast** button (top toolbar) to
-start streaming. Mixxx connects to Tahti and your channel goes live.
+start streaming. Mixxx connects to  Tahti and your channel goes live.
 
 **Step 6 — when you're done**
 
@@ -215,7 +215,7 @@ about 10 seconds.
 
 Traktor has built-in broadcasting via Icecast.
 
-### Broadcasting to your Tahti channel from Traktor Pro
+### Broadcasting to your  Tahti channel from Traktor Pro
 
 **Step 1 — open Traktor preferences**
 
@@ -228,7 +228,7 @@ In the preferences sidebar, click **Broadcasting**.
 **Step 3 — configure server**
 
 - **Server Type:** Icecast 2
-- **Address:** `icecast.tahti.fm`
+- **Address:** `icecast.tahti.fi`
 - **Port:** `8000`
 - **Mount Path:** `/live/<channel-slug>` *(copy)*
 - **Password:** `<your-source-password>` *(copy)*
@@ -255,7 +255,7 @@ butt (Broadcast Using This Tool) is a minimal Icecast streamer — perfect for
 artists who don't want a DAW or DJ software running, e.g. for talk shows or
 ambient streams.
 
-### Broadcasting to your Tahti channel from butt
+### Broadcasting to your  Tahti channel from butt
 
 **Step 1 — install butt**
 
@@ -268,7 +268,7 @@ In butt, click **Settings**.
 
 - **Server settings:**
   - **Type:** Icecast
-  - **Address:** `icecast.tahti.fm`
+  - **Address:** `icecast.tahti.fi`
   - **Port:** `8000`
   - **Password:** `<your-source-password>` *(copy)*
   - **Icecast mountpoint:** `/live/<channel-slug>` *(copy)*
@@ -303,7 +303,7 @@ talk-show-style channels or quick mobile broadcasts.
 
 **Step 1 — sign in to your dashboard**
 
-Go to your Tahti dashboard and click **Go Live (Browser)** in the channel panel.
+Go to your  Tahti dashboard and click **Go Live (Browser)** in the channel panel.
 
 **Step 2 — grant microphone permission**
 

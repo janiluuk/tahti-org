@@ -1,6 +1,7 @@
 # Tahti ry — artist profile and promo toolkit
 
-This document specifies the artist profile page, release management model, and promo tools. The agent uses this
+This document specifies the v5 additions: the modern artist profile page, the
+release management model, and the five promo tools. The agent uses this
 alongside `docs/AGENT.md` when building M12–M14.
 
 ## Design principle
@@ -16,13 +17,10 @@ profile. Three things to keep in mind:
 3. **Discovery on the platform happens through the channel** (the listener
    experience) and **through external links** (search, social, embedded
    widgets). Not through any internal feed.
-4. **Editing happens in Tahti.** Every artist gets the built-in pro audio
-   editor (`docs/audio-editor.md`). Profile releases and archive items are
-   prepared in-browser — no separate DAW subscription required.
 
 ## The artist profile page
 
-URL: `tahti.fm/u/<handle>`
+URL: `tahti.fi/u/<handle>`
 
 ### Sections
 
@@ -58,7 +56,14 @@ URL: `tahti.fm/u/<handle>`
    - Order is artist-controlled
    - Each renders as a button with platform icon
 
-6. **Tip jar** *(optional)*
+6. **Press kit** *(Studio tier, optional)*
+   - Downloadable bio: 200-word, 400-word, 1000-word versions (PDF + plain text)
+   - High-res photos (artist uploads, displayed as gallery)
+   - Hi-res cover art for releases (auto-pulled)
+   - Tech rider (optional, PDF upload)
+   - Contact info: booking, press, management — separate fields, can be hidden
+
+7. **Tip jar** *(optional)*
    - Link-out to PayPal.me, Buy Me a Coffee, Patreon, Bandcamp
    - We don't process payments here — pure link-out
    - Shown as a "Support" button near the hero
@@ -82,7 +87,8 @@ URL: `tahti.fm/u/<handle>`
 - Twitter Card: `summary_large_image`
 - JSON-LD: `MusicGroup` schema with embedded `MusicAlbum` entries
 - Sitemap: every published release gets its own sitemap entry
-- Canonical URL is `tahti.fm/u/<handle>`
+- Canonical URL is `tahti.fi/u/<handle>`; custom domain (Studio) sets canonical
+  to the custom domain version
 
 ### Performance
 
@@ -128,14 +134,14 @@ Transcoding (worker job `transcode-release-track`):
 1. **Stream derivative:** Opus 256 kbps Ogg, mono if source is mono, otherwise stereo
 2. **HLS ladder:** Opus 64/128/256 kbps in MPEG-TS segments, 4-second segments
 3. **FLAC derivative:** FLAC 16-bit/44.1 kHz (downsampled from 24/96 with
-   proper dither if needed). For fan-subscriber downloads only.
+   proper dither if needed). For Studio-tier downloads.
 4. **Source preservation:** the uploaded file is stored as-is in `sourceKey`,
-   never re-encoded. Artists export originals from the dashboard at any time.
+   never re-encoded. Studio-tier users can download their original.
 
 Storage:
 - `sourceKey` (original WAV/FLAC/MP3) — primary archival object
 - `streamKey` (Opus 256) — for player
-- `flacKey` (FLAC 16/44 derivative) — for fan-subscriber downloads
+- `flacKey` (FLAC 16/44 derivative) — for Studio downloads
 - `hlsManifest` — for adaptive streaming
 
 ### What "highest possible quality" means in practice
@@ -145,8 +151,9 @@ You can **upload** in 24/96 WAV or FLAC. We **preserve** the original. We
 than FLAC streaming, indistinguishable from lossless in blind tests for
 ~99% of listeners).
 
-Fan-subscribers can **download** the FLAC derivative for supported artists.
-Free listeners get MP3/Opus downloads where the artist allows.
+Studio-tier users can **download** the FLAC derivative for any track they own,
+and download the original source file as uploaded. This is the same model
+Bandcamp uses for their highest tier.
 
 If a listener strongly prefers FLAC streaming, the platform doesn't currently
 support it. The bylaws (§ TBD) commit to revisiting this if storage and
@@ -159,9 +166,9 @@ the imperceptible quality benefit.
 ### Embed widget
 
 URL pattern:
-- `tahti.fm/embed/r/<release-id>` — single release player
-- `tahti.fm/embed/c/<channel-slug>` — channel "now playing" player
-- `tahti.fm/embed/u/<handle>` — artist profile mini-widget
+- `tahti.fi/embed/r/<release-id>` — single release player
+- `tahti.fi/embed/c/<channel-slug>` — channel "now playing" player
+- `tahti.fi/embed/u/<handle>` — artist profile mini-widget
 
 Implementation:
 - Separate Next.js app under `services/embed`, no shared chrome
@@ -172,12 +179,12 @@ Implementation:
 - HLS.js loaded only when play is clicked (lazy)
 
 oEmbed discovery:
-- `GET /oembed?url=https://tahti.fm/r/abc&format=json` returns oEmbed JSON
+- `GET /oembed?url=https://tahti.fi/r/abc&format=json` returns oEmbed JSON
 - WordPress, Substack, Notion, Ghost auto-embed when artist pastes a release URL
 
 ### Smart links
 
-URL pattern: `tahti.fm/r/<smart-link-slug>`
+URL pattern: `tahti.fi/r/<smart-link-slug>`
 
 Page renders:
 - Cover art

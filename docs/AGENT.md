@@ -6,7 +6,7 @@ Build a self-hostable, AGPL-3.0-licensed platform where each artist operates a
 **24/7 channel** that broadcasts live and falls back to archive when offline.
 The hosted instance is operated by **Tahti ry**, a Finnish registered nonprofit
 association. Annual operating surplus is distributed as **transparent
-engagement-unit-weighted grants** to artist members, visible on a permanent
+listener-hour-weighted grants** to artist members, visible on a permanent
 public ledger.
 
 ## Reference user
@@ -48,33 +48,29 @@ financial model that returns surplus to them, not to shareholders.
     biographical timeline, releases, channel, externals. Treat it as a label
     site, not a SoundCloud profile. No follower graph, no track-level
     comments, no algorithmic feed.
-12. **Lossless uploads accepted, smart streaming.** WAV and FLAC supported as
-    upload formats (alongside MP3/AAC). Streaming defaults to Opus 256 for
-    cost reasons. FLAC download available for fan-subscribers on supported
-    artists; paying artists can export their uploaded originals from the dashboard.
-13. **Grants flow from engagement units, not listener-hours.** Downloads
+12. **Lossless audio for paid users. MP3 for free.** WAV and FLAC supported as
+    upload formats (alongside MP3/AAC). Paid members stream FLAC 16/44 to their
+    listeners; free users stream MP3 192 kbps. Originals preserved as-is.
+13. **Free tier is a complete product, not a feature-limited trial.** Free
+    members get the channel, profile, releases, downloads, chat, fan-subs.
+    The only restrictions: MP3 audio (vs lossless) and 1 hour of live
+    broadcasting per week. Everything else works. We do not break things to
+    force conversion. Members upgrade because they want more, not because
+    they are frustrated.
+14. **Grants flow from engagement units, not listener-hours.** Downloads
     (weighted by listener commitment) and fan-subscription euros determine
     grant share. Passive listening doesn't count. Listener-hours are a vanity
     metric only. See `docs/engagement-and-fansubs.md`.
-14. **Fan-to-artist subscriptions take 0% org cut.** A 2% operational fee
+15. **Fan-to-artist subscriptions take 0% org cut.** A 2% operational fee
     covers Stripe + GDPR + ops, fully consumed by costs. Bylaws-locked.
-15. **Tahti Radio is live-relay only.** Org-operated meta-stream picks up
+16. **Tahti Radio is live-relay only.** Org-operated meta-stream picks up
     whichever channels are currently live. No editorial curation. Multistreamed
     to Mixcloud only (the only legally clean target).
-16. **Anonymous downloads stay anonymous.** No account required for free
+17. **Anonymous downloads stay anonymous.** No account required for free
     downloads. Anti-fraud is rate limits + fingerprint dedup + same-track caps.
-17. **European-first CDN.** Bunny CDN primary (Slovenia, EU-jurisdiction).
-    See `docs/cdn-strategy.md`.
-18. **€40/yr must cover service COGS at scale.** Prefer owned hardware and
-    self-hosted components over per-seat SaaS. Target ~€13 platform cost per
-    paying artist at 4,000 members. See `docs/financial-model.md` unit economics.
-19. **Pro audio editor is a basic artist feature.** Every artist account gets a
-    full in-browser DAW-class editor (multitrack, modern processing, export to
-    archive/releases/channel). Not upsold. See `docs/audio-editor.md`.
-20. **Members own the platform.** Paying artists are members of Tahti ry with
-    votes at AGM. The director trains member-operators to share maintenance;
-    the nonprofit handles membership and ops until the community can. See
-    `docs/strategy-and-product.md` and `docs/governance-and-legal.md`.
+18. **No CDN, Finnish hosting.** Primary infrastructure on owned hardware
+    in Helsinki; UpCloud Helsinki for spillover and DR. No Bunny, Fastly,
+    Cloudflare, or US cloud. See `docs/infra-strategy.md`.
 
 ## Tech stack (non-negotiable)
 
@@ -104,7 +100,7 @@ financial model that returns surplus to them, not to shareholders.
 ## Repo layout
 
 ```
-Tahti/
+tahti/
 ├── apps/
 │   ├── api/                     # Fastify
 │   ├── web/                     # Next.js (channels, profiles, dashboard, transparency, members)
@@ -144,7 +140,7 @@ Use pnpm workspaces. Top-level `LICENSE` is AGPL-3.0. Every source file starts w
 
 - Monorepo with pnpm workspaces + Turborepo
 - AGPL-3.0 `LICENSE` at root; header in every source file
-- Prisma schema with core entities (see DATA_MODEL)
+- Prisma schema with v4 entities (see DATA_MODEL)
 - Dev compose: postgres, redis, minio, centrifugo, mailhog, icecast2, nginx-rtmp
 - API `/health`, Next.js placeholder, worker boot
 - ESLint, Prettier, Vitest
@@ -175,7 +171,7 @@ appear in the member register at the next nightly export.
   technical anti-abuse circuit-breaker, only triggered at ≥95% to alert ops.
   Never expose this number publicly. See `docs/storage-policy.md`.
 - ffprobe validation (rejects non-audio, > 8h duration as sanity check)
-- FFmpeg transcode: Opus 256 (everyone) + HLS ladder + FLAC (fan-sub downloads)
+- FFmpeg transcode: Opus 256 (everyone) + HLS ladder + MP3 192 (free) + FLAC stream (paid)
 - audiowaveform for cover thumbnails (the channel player doesn't show waveforms — it's continuous)
 - chromaprint fingerprint for dedup
 
@@ -203,7 +199,7 @@ plays in fallback rotation. UI shows "you've used 200 MB" without limit warnings
   chat scroll
 
 **Done when:** I start broadcasting from any source (OBS, Mixxx, browser) →
-my channel.Tahti.fm plays the live audio within 5 seconds. I stop broadcasting
+my channel.tahti.fi plays the live audio within 5 seconds. I stop broadcasting
 → archive starts playing within 10 seconds, no silence.
 
 ### M4 — Auto-archive of live broadcasts
@@ -224,7 +220,8 @@ channel reflect the broadcast in the next 5-min stats rollup.
 
 ### M5 — Live chat (Centrifugo) — featured capability
 
-Chat is a featured product capability, not an afterthought.
+This milestone is **bigger than v3's chat milestone** because chat is a featured
+product capability, not an afterthought.
 
 - One chat room per channel, always available (even when offline — listeners can
   leave messages for when the artist returns)
@@ -242,6 +239,8 @@ Chat is a featured product capability, not an afterthought.
   player. Centrifugo channel for reactions, rate-limited, no persistence.
 - Moderation: artist-only kick/ban; mute by fingerprint
 - Listener-count from Centrifugo presence
+- "Now listening" sidebar (Studio tier only): show count + handles of chat-active listeners
+
 **Featured UX:**
 - Chat panel docked on the channel page by default (not collapsed)
 - Mobile: chat opens as bottom sheet, swipe up to expand
@@ -258,18 +257,18 @@ troll by fingerprint. Live reactions fly across the player at the right rate.
 - Liquidsoap template adds outputs when targets exist; reload on add/remove
 - Audio + cover-art video sidecar (libx264 + image, 720p, 30fps, ~2500 kbps)
 - Encrypted stream-key storage (sealed box, key in Docker secret)
-- Mode: live-only (multistream while broadcasting)
+- Modes: live-only (default) or always-mirror (Studio only)
 
 **Done when:** I add my YouTube Live target, go live, my YouTube channel shows
 my audio + cover within 30 seconds.
 
 ### M7 — Distribution: Mixcloud + Revelator
 
-Key points:
+Same as v3 spec. Key points:
 
 - Mixcloud OAuth + Upload API for mixes (free integration)
 - Revelator white-label API for DSP delivery (€3-5/release pass-through, our cost)
-- Paying artists: pay €8/release (Revelator pass-through)
+- Studio tier: 12 releases/yr included; Artist tier: pay €8/release
 - DistroKid affiliate link as fallback for full-catalog artists
 - ISRC validation, artwork 3000×3000 enforcement, 14-day release lead time
 - Royalty pull (monthly cron) → dashboard display → Stripe Connect Express payout
@@ -277,9 +276,9 @@ Key points:
 **Done when:** Mix → Mixcloud one-click. Original track → Revelator wizard →
 appears on Spotify in 7-10 days. Royalty reports flow back monthly.
 
-### M8 — Transparency ledger
+### M8 — Transparency ledger (NEW for v4)
 
-This is what makes Tahti a nonprofit, not just an open-source project.
+This is what makes  Tahti a nonprofit, not just an open-source project.
 
 - Schema `ledger.ledger_entries` append-only, partitioned by month:
   - `id`, `category`, `amount_cents`, `currency`, `description`, `external_ref`,
@@ -308,7 +307,7 @@ This is what makes Tahti a nonprofit, not just an open-source project.
     - `GET /api/v1/transparency/categories`
     - All returning JSON, CORS-open for third-party use
 
-### M9 — Annual grant calculation + disbursement
+### M9 — Annual grant calculation + disbursement (NEW for v4)
 
 - Cron runs March 1 for prior calendar year (matches Finnish fiscal year)
 - Step 1: read `ledger.monthly_rollup` for the year, compute surplus
@@ -329,11 +328,9 @@ This is what makes Tahti a nonprofit, not just an open-source project.
 **Done when:** Test data flowed through Y1 simulation produces correct grant
 allocations within 1 cent of hand-calculation.
 
-### M10 — Member governance UI
+### M10 — Member governance UI (NEW for v4)
 
 - Member directory (members-only): member number, name, channel link, join date
-- **Operators roster** (members-only): trained member-operators by role (infra,
-  support, treasurer); board-approved list with training completion date
 - AGM (annual general meeting) scheduling page
 - Voting:
   - Board posts motions (free-text description + yes/no/abstain options)
@@ -348,7 +345,7 @@ allocations within 1 cent of hand-calculation.
 **Done when:** A motion can be posted, voted on, and results published. Bylaws
 diff can be displayed in the member portal.
 
-### M11 — Hardening + audit prep
+### M11 — Hardening + audit prep (formerly M8 in v3)
 
 - Rate limiting (Redis token bucket) on all public endpoints incl. chat
 - hCaptcha on signup + first chat message
@@ -360,7 +357,7 @@ diff can be displayed in the member portal.
 - **Audit-ready financial export:** Excel/CSV monthly rollup downloadable by
   treasurer for Finnish auditor (mandatory at €100k+ revenue)
 
-### M12 — Modern artist profile + releases
+### M12 — Modern artist profile + releases (NEW for v5)
 
 The artist profile is the artist's **home page on the internet** — what shows
 up when someone googles them, what they put on every flyer and Instagram bio.
@@ -369,7 +366,7 @@ track-level comments). It's closer to a label site or a Linktree-meets-Bandcamp.
 
 **Profile structure:**
 
-- `Tahti.fm/u/<handle>` — the artist's permanent URL
+- `tahti.fi/u/<handle>` — the artist's permanent URL
 - Hero section: name, location, "currently broadcasting" indicator with link to
   channel, primary CTA (custom — could be "tune in," "buy the album," "subscribe")
 - Bio: rich-text (Markdown), supports paragraphs, headings, images, embedded
@@ -382,6 +379,8 @@ track-level comments). It's closer to a label site or a Linktree-meets-Bandcamp.
   state), link to channel page
 - Externals: configurable list of social/external links (Instagram, Bandcamp,
   personal site, etc.)
+- Press kit (optional, Studio tier): downloadable bio (200 / 400 / 1000 word
+  variants), high-res photos, hi-res cover art, tech rider, contact info
 - Tip jar / support links (PayPal.me, Buy Me a Coffee, Patreon — link-out, no
   payment processing on our side beyond the existing Stripe channel)
 
@@ -427,7 +426,7 @@ model ReleaseTrack {
   sourceSampleRate Int   // 44100 | 48000 | 96000
   sourceBitDepth Int     // 16 | 24 | 32
   streamKey     String   // Opus 256 derivative
-  flacKey       String?  // FLAC 16/44 derivative for fan-subscriber downloads
+  flacKey       String?  // FLAC 16/44 derivative for Studio downloads
   hlsManifest   String?
   explicit      Boolean  @default(false)
   previewStart  Int?
@@ -451,10 +450,10 @@ enum ReleaseState { DRAFT PUBLISHED ARCHIVED }
 - Transcode to:
   - Opus 256 kbps Ogg (streaming default for all listeners)
   - HLS Opus ladder (64/128/256) for adaptive bitrate
-  - FLAC 16/44.1 (fan-subscriber downloads — if source was 24-bit or higher,
-    downsample with proper dither)
-- Original `sourceKey` retained as-is — never recompressed. Paying artists can
-  export the original they uploaded.
+  - FLAC 16/44.1 (download for Studio tier on tracks they own — if source was
+    24-bit or higher, downsample with proper dither)
+- Original `sourceKey` retained as-is — never recompressed. Studio tier users
+  can download the original they uploaded.
 
 **Profile page acceptance criteria:**
 
@@ -467,10 +466,10 @@ enum ReleaseState { DRAFT PUBLISHED ARCHIVED }
 
 **Done when:** I can fill out a bio with formatting and images, upload a 24-bit
 WAV album with cover art, publish the release, and the profile page renders at
-`Tahti.fm/u/<handle>` with the release in the timeline, smart link generated,
+`tahti.fi/u/<handle>` with the release in the timeline, smart link generated,
 and Open Graph card showing correctly when shared on social media.
 
-### M13 — Newsletter & fan email list
+### M13 — Newsletter & fan email list (NEW for v5)
 
 Every channel/artist gets a built-in newsletter system. Listeners can opt in to
 receive emails from artists they follow. Artist sends, we deliver, GDPR-clean.
@@ -498,9 +497,11 @@ receive emails from artists they follow. Artist sends, we deliver, GDPR-clean.
 
 **Anti-abuse:**
 
-- Rate limit: max 1 newsletter / artist / week (free tier), 4 / week (paying)
+- Rate limit: max 1 newsletter / artist / week (free tier), 4 / week (Artist),
+  unlimited (Studio)
 - Content scan for spam keywords (basic)
-- Manual review required for first 3 newsletters from new artists
+- Manual review required for first 3 newsletters from new artists (Studio tier
+  exempt after first verification)
 
 **Cost projection at scale (Y3, 4,000 paying artists, avg 2,000 subscribers each):**
 
@@ -513,15 +514,15 @@ receive emails from artists they follow. Artist sends, we deliver, GDPR-clean.
 subscribers' inboxes within 1 hour with proper unsubscribe footer. Analytics
 populate within 24h.
 
-### M14 — Promo toolkit: embed widget, smart links, social auto-post, analytics
+### M14 — Promo toolkit: embed widget, smart links, social auto-post, analytics (NEW for v5)
 
 Four lightweight tools, surfaced from the same dashboard area, each with
 real-world utility.
 
 **Embed widget (oEmbed + iframe):**
 
-- Every release has an embed URL: `Tahti.fm/embed/r/<release-id>`
-- Every channel has an embed URL: `Tahti.fm/embed/c/<slug>`
+- Every release has an embed URL: `tahti.fi/embed/r/<release-id>`
+- Every channel has an embed URL: `tahti.fi/embed/c/<slug>`
 - Renders a lightweight player (cover art, play button, current track) in a
   customizable color theme
 - oEmbed discovery endpoint at `/oembed?url=...` so paste-into-Substack /
@@ -532,7 +533,7 @@ real-world utility.
 
 **Smart links (one URL → all DSPs):**
 
-- Every release auto-generates a smart link: `Tahti.fm/r/<slug>`
+- Every release auto-generates a smart link: `tahti.fi/r/<slug>`
 - Landing page: cover art, release title, artist, list of streaming services
   (Spotify, Apple, Tidal, Amazon, Deezer, Bandcamp, SoundCloud, Mixcloud, YouTube
   Music — only the ones the artist has set targets for)
@@ -576,7 +577,7 @@ real-world utility.
 smart link, embed widget, and auto-post all work; analytics start populating
 within 5 minutes of first plays.
 
-### M15 — Artist tagging
+### M15 — Artist tagging (NEW for v6)
 
 A lightweight `@-mention` system that lets artists reference each other across
 the platform. Tags resolve to profile links. Opt-in notifications. No social
@@ -590,7 +591,7 @@ graph implied — tagging is just human-readable cross-references, like links.
 - Newsletter compose
 
 **Tag resolution:**
-- `@handle` → `Tahti.fm/u/<handle>` with the artist's display name
+- `@handle` → `tahti.fi/u/<handle>` with the artist's display name
 - Unknown handles render as plain text (no broken links)
 - Tags in user-generated content (chat) are validated at send time; deleted
   artists' tags render as `@deleted-user`
@@ -611,13 +612,13 @@ graph implied — tagging is just human-readable cross-references, like links.
 links to that artist's page. They receive a notification if opted in. Muting
 works.
 
-### M16 — Tahti Radio meta-stream
+### M16 — Tahti Radio meta-stream (NEW for v6)
 
 A 24/7 org-operated stream that **relays whichever channels are currently live**.
-Multistreamed to Mixcloud Live. Live-only — no curation, no archive Tahti.
+Multistreamed to Mixcloud Live. Live-only — no curation, no archive replay.
 
 **Architecture:**
-- New service `services/Tahti-radio/` — perpetual Liquidsoap container
+- New service `services/tahti-radio/` — perpetual Liquidsoap container
 - Orchestrator runs a "TahtiRadioPicker" routine every 60 seconds
 - Picker queries currently-live channels (filtered: `metaStreamOptOut=false`,
   not in cooldown, member in good standing)
@@ -625,10 +626,10 @@ Multistreamed to Mixcloud Live. Live-only — no curation, no archive Tahti.
   less-broadcast channels)
 - Picker hands off: re-encodes the chosen channel's HLS into the meta-stream's
   own HLS output
-- Tahti Radio HLS published at `radio.Tahti.fm` via Bunny CDN
+- Tahti Radio HLS published at `radio.tahti.fi` via Bunny CDN
 - Tahti Radio simultaneously pushes RTMP to Mixcloud Live at the org's
-  `mixcloud.com/Tahti-radio` account
-- When zero channels are live: falls back to `services/Tahti-radio/placeholder.flac`
+  `mixcloud.com/tahti-radio` account
+- When zero channels are live: falls back to `services/tahti-radio/placeholder.flac`
   (public-domain instrumental + voice tag)
 
 **Channel opt-out:**
@@ -636,8 +637,8 @@ Multistreamed to Mixcloud Live. Live-only — no curation, no archive Tahti.
 - When OFF, channel is excluded from picker pool
 
 **Listener-hour attribution:**
-- Listeners on `radio.Tahti.fm` are counted toward the originating channel's
-  listener-hour counter (vanity metric only; doesn't affect grants)
+- Listeners on `radio.tahti.fi` are counted toward the originating channel's
+  listener-hour counter (vanity metric only; doesn't affect grants under v6)
 
 **No multistream to YouTube/Twitch.** Both will copyright-strike a stream
 containing third-party music regardless of artist consent. **Mixcloud only.**
@@ -650,16 +651,16 @@ YouTube/Twitch accounts and damage Tahti's relationships with the platforms.
 live stream with rotating "Now broadcasting" metadata. When both stop, the
 placeholder loop kicks in within 30 seconds.
 
-### M17 — Venue calendar API
+### M17 — Venue calendar API (NEW for v6)
 
 A lightweight system for venues to register and publish iCalendar feeds of
 broadcasts happening at their location. No booking marketplace, no ticketing.
 
 **Scope:**
 - New account type `VENUE` (separate from `ARTIST`)
-- Public venue directory at `Tahti.fm/venues`
-- Venue profile pages at `Tahti.fm/v/<slug>`
-- iCalendar feeds at `Tahti.fm/v/<slug>/calendar.ics`
+- Public venue directory at `tahti.fi/venues`
+- Venue profile pages at `tahti.fi/v/<slug>`
+- iCalendar feeds at `tahti.fi/v/<slug>/calendar.ics`
 - JSON API at `/v1/venues/<slug>/broadcasts`
 
 **Data model in `services/api`:**
@@ -716,7 +717,7 @@ publish it. Artists can see upcoming venue-broadcasts in their dashboard.
 The iCalendar feed at `/v/<slug>/calendar.ics` parses correctly in Apple
 Calendar / Google Calendar / Thunderbird.
 
-### M18 — Downloads as first-class action
+### M18 — Downloads as first-class action (NEW for v6, replaces partial v5 spec)
 
 Downloads of archive items and release tracks become a primary product
 action, with anti-fraud and grant-unit accounting baked in.
@@ -755,7 +756,7 @@ counter shows +25 units for those (5 × 5×). Fraud monitor detects a script
 hitting one track 1000× from one fingerprint, flags for review, those
 downloads don't count.
 
-### M19 — Fan-to-artist subscriptions
+### M19 — Fan-to-artist subscriptions (NEW for v6)
 
 A direct payment relationship between listeners and artists, with 0% org
 take (operationally break-even, 2% covers Stripe + GDPR + support).
@@ -773,11 +774,11 @@ take (operationally break-even, 2% covers Stripe + GDPR + support).
 1. Dashboard → "Fan Subscriptions" → "Enable"
 2. Stripe Connect Express onboarding (KYC: ID, bank, tax forms)
 3. Once approved (1-3 days), artist defines tiers
-4. Tiers go live on `Tahti.fm/u/<handle>/subscribe`
+4. Tiers go live on `tahti.fi/u/<handle>/subscribe`
 
 **Listener subscribe flow:**
 1. On artist's channel page or profile: "Support [artist name]" button
-2. Routes to `Tahti.fm/u/<handle>/subscribe`
+2. Routes to `tahti.fi/u/<handle>/subscribe`
 3. Choose tier → Stripe Checkout
 4. On successful payment, account created automatically (email + Stripe
    customer ID); confirmation email sent with password setup link
@@ -800,36 +801,41 @@ Stripe onboarding. A listener subscribes via Checkout. Money flows to my
 Stripe account minus 2% (~€0.45 to org) and Stripe fees (~€0.45). I see
 "Supporter: handle_42" in my fan chat. They can download my FLACs.
 
-### M20 — Pro audio editor (baseline for all artists)
+### M20 — Tier gating: free tier limits + paid lossless (NEW for v7)
 
-Built-in browser DAW so artists never need a separate editing subscription to
-prepare material for archive, releases, or the channel. **Same feature set for
-free-tier and paying artists.**
+Two gates implemented gracefully so free users never feel "broken":
 
-Full product spec: `docs/audio-editor.md`.
+**Free tier weekly broadcasting cap:**
+- 1 hour (3,600 seconds) of live broadcasting per calendar week (UTC week, Mon 00:00)
+- `weeklyLiveSecondsUsed` field on User; incremented every minute during live broadcast
+- Cron `weekly-broadcast-reset` runs every Monday 00:00 UTC: resets all free users' counter to 0
+- When approaching the cap (45-min warning, 55-min warning), gentle banner: "you've broadcast 45 minutes this week — 15 minutes left until Monday"
+- At cap: broadcast continues for 60 seconds (grace), then orchestrator gracefully stops the broadcast with the message "your weekly hour is up — channel returns to archive. Reset Monday 00:00 UTC."
+- Listeners get a smooth transition to archive, not a hard cut. No error toasts.
+- Paid users: `weeklyLiveSecondsUsed` is still tracked (for stats) but the gate doesn't apply.
 
-**Scope summary:**
+**Audio quality differentiation:**
+- Liquidsoap channel template renders two outputs per live broadcast:
+  - **`stream-mp3-192/`** — MP3 192 kbps, HLS segmented
+  - **`stream-flac/`** — FLAC 16/44 over HLS-FLAC manifest
+- API routes player to the right manifest based on the artist's tier:
+  - Free artist's channel → all listeners get MP3 192 manifest
+  - Paid artist's channel → all listeners get FLAC manifest
+- Listener doesn't choose. The artist's tier sets the quality.
+- Archive playback: same logic. Free artists' archives transcode to MP3 derivatives; paid artists' archives keep FLAC.
 
-- Multitrack timeline, non-destructive projects, waveform + metering
-- Cut/trim/fade/crossfade, markers, loops, undo/autosave, keyboard shortcuts
-- Built-in EQ, dynamics, de-ess, normalize, LUFS targeting
-- Import from live archives, uploads, or releases; export to archive, release
-  track, channel playlist, or local file
-- Offline bounce worker (FFmpeg) generates streaming derivatives after export
+**Upgrade path (graceful, no friction):**
+- "Upgrade to lossless" CTA appears at the *end* of a live broadcast (post-show, not during), shown to the artist (not listeners) in the dashboard:
+  > "Your listeners heard MP3 192 today. Upgrade to Tahti to broadcast in lossless FLAC and remove the weekly hour cap. €40/year, fully tax-deductible if you're a registered professional in Finland."
+- Upgrade processed via Stripe Checkout in <60 seconds; next broadcast is lossless.
 
-**Routes (sketch):**
+**Anti-patterns to avoid here:**
+- Showing free users a degraded UI ("upgrade for chat moderation!" — no, free users get full chat moderation).
+- Adding a watermark, advertising, or any audio degradation beyond bitrate.
+- Making the weekly cap user-visible as a "you've hit your limit" friction popup; it's a gentle banner approaching, a smooth transition at the cap.
+- Treating MP3 192 as "low quality" in marketing copy — it's good enough for streaming. We just deliver better when paid.
 
-```
-GET/POST /v1/me/editor/projects
-GET/PATCH/DELETE /v1/me/editor/projects/:id
-POST     /v1/me/editor/projects/:id/autosave
-POST     /v1/me/editor/projects/:id/bounce     → queue worker, return job id
-GET      /v1/me/editor/projects/:id/bounce/:jobId
-```
-
-**Done when:** I open an auto-archived live set in the editor, edit and master
-it, bounce to a new archive item, and that item appears in my channel fallback
-rotation without using an external DAW.
+**Done when:** I'm a free user, broadcast 1 hour live in a week, see the gentle warnings, smoothly transition to archive at the cap, and my Monday reset works. As a paid user, my listeners hear FLAC, my upgrade button at end of broadcasts is non-aggressive, and there's no friction popup blocking my workflow.
 
 ## Data model (Prisma schema sketch — agent expands)
 
@@ -855,6 +861,9 @@ model User {
   softTargetBytes  BigInt     @default(524288000)   // 500 MB
   hiddenCeilingBytes BigInt   @default(53687091200) // 50 GB
   storageUsedBytes BigInt     @default(0)
+  // v7: free tier broadcasting limit
+  weeklyLiveSecondsUsed Int    @default(0)         // resets weekly via cron
+  weeklyLiveResetAt     DateTime?                   // last reset timestamp
   createdAt       DateTime   @default(now())
 
   channel    Channel?
@@ -921,13 +930,13 @@ model ArchiveItem {
   @@schema("media")
 }
 
-model RtmpTarget {  @@schema("channel") }
-model ChannelAnnouncement {  @@schema("channel") }
-model ChatBan {  @@schema("chat") }
+model RtmpTarget { /* same as v3 */ @@schema("channel") }
+model ChannelAnnouncement { /* same as v3 */ @@schema("channel") }
+model ChatBan { /* same as v3 */ @@schema("chat") }
 
-model Release {  @@schema("dist") }
-model ReleaseTrack {  @@schema("dist") }
-model MixUpload {  @@schema("dist") }
+model Release { /* same as v3 */ @@schema("dist") }
+model ReleaseTrack { /* same as v3 */ @@schema("dist") }
+model MixUpload { /* same as v3 */ @@schema("dist") }
 
 model ListenerHour {
   id          BigInt   @id @default(autoincrement())
@@ -1014,7 +1023,7 @@ model Vote {
   @@schema("governance")
 }
 
-enum ArtistTier { FREE ARTIST STUDIO }
+enum ArtistTier { FREE PAID }
 enum ChannelState { OFFLINE LIVE STARTING FAILED }
 enum ArchiveSource { UPLOAD LIVE_RECORDING }
 enum TrackState { UPLOADING SCANNING TRANSCODING READY FAILED TAKEDOWN }
@@ -1086,7 +1095,7 @@ GET    /v1/me/broadcast/credentials   → all current source credentials
 GET    /v1/me/broadcast/guides/:tool  → returns OBS/Mixxx/Traktor/butt/BUTT guide
                                          personalized with this artist's credentials
 
-# Public profile
+# Public profile (v5)
 GET    /v1/u/:handle                  → profile JSON (bio, releases, channel state)
 GET    /v1/u/:handle/releases         → release timeline
 GET    /v1/r/:id                      → release detail incl. tracklist + smart link
@@ -1104,9 +1113,9 @@ DELETE /v1/me/releases/:id
 POST   /v1/me/releases/:id/tracks     → upload track
 PATCH  /v1/me/releases/:id/tracks/reorder
 GET    /v1/me/releases/:id/download/source/:trackId   → original-format download
-GET    /v1/me/releases/:id/download/flac/:trackId     → FLAC derivative (fan-sub auth)
+GET    /v1/me/releases/:id/download/flac/:trackId     → FLAC derivative (Studio tier)
 
-# Newsletter
+# Newsletter (v5)
 GET    /v1/me/newsletter/subscribers  → counts + recent growth
 POST   /v1/me/newsletter/compose      → save draft
 POST   /v1/me/newsletter/send/:draftId → queue for delivery
@@ -1115,7 +1124,7 @@ POST   /v1/newsletter/subscribe       → public endpoint, listener subscribes
 GET    /v1/newsletter/confirm/:token  → double opt-in confirmation
 GET    /v1/newsletter/unsubscribe/:token → one-click unsubscribe (also via List-Unsubscribe header)
 
-# Promo tools
+# Promo tools (v5)
 GET    /v1/r/:id/smartlink            → renders smart link landing page
 POST   /v1/me/releases/:id/smartlink  → update smart-link targets
 GET    /v1/me/releases/:id/analytics  → plays, smart-link clicks, embed plays
@@ -1126,7 +1135,7 @@ PATCH  /v1/me/social/triggers         → enable/disable auto-post triggers
 # Stats
 GET    /v1/me/stats/channel
 GET    /v1/me/stats/listeners
-GET    /v1/me/stats/listener-hours    → vanity metric (not used for grants)
+GET    /v1/me/stats/listener-hours    → for grant transparency
 GET    /v1/me/stats/releases          → aggregate release plays + embed plays
 GET    /v1/me/stats/export.csv        → full analytics export
 
@@ -1165,7 +1174,7 @@ guides that fill in the artist's current credentials. See
 implementation:
 
 - `GET /v1/me/broadcast/guides/obs` returns a personalized Markdown guide for OBS:
-  - The artist's current RTMP server URL (`rtmp://rtmp.Tahti.fm/live`)
+  - The artist's current RTMP server URL (`rtmp://rtmp.tahti.fi/live`)
   - Their current stream key (revealed once, rotatable)
   - Recommended OBS settings (1920×1080 placeholder, 30 fps, AAC 128k, x264 veryfast, 2500 kbps)
   - Audio-only setup (recommended): set video to "color source" with their cover art, set audio to their interface
@@ -1177,7 +1186,7 @@ implementation:
 
 ## Liquidsoap channel template
 
-See `infra/liquidsoap-channel.liq.template`. Live source priority,
+Same as v3 — `infra/liquidsoap-channel.liq.template`. Live source priority,
 archive fallback, live recording sidecar, HLS output, optional RTMP multistream.
 
 ## Acceptance criteria (for every milestone)
@@ -1211,7 +1220,7 @@ archive fallback, live recording sidecar, HLS output, optional RTMP multistream.
 - Re-encoding original uploads. The `sourceKey` is the artist's master.
   Transcodes go into separate derivative keys. Never overwrite.
 - Streaming FLAC by default. Opus 256 streams to listeners; FLAC is for
-  fan-subscriber *downloads* only. This decision is about cost,
+  Studio-tier *downloads* on tracks the user owns. This decision is about cost,
   not principle — revisit at M14 review if listener feedback warrants it.
 - Treating profile pages as SoundCloud profiles. They're label/biographical
   pages. No track-level comments, no follower graph, no like buttons.
@@ -1219,20 +1228,20 @@ archive fallback, live recording sidecar, HLS output, optional RTMP multistream.
   manual review for first 3 sends from new artists, mandatory unsubscribe.
 - Auto-posting to social on every minor event. Newsletter sends, going-live,
   and new-release-published are it. Don't post every track upload.
-- Treating listener-hours as still meaningful for grants. They are
+- **v6:** Treating listener-hours as still meaningful for grants. They are
   not. Vanity metric only. The grant formula is engagement units.
-- Forgetting the 5× multiplier on paid-subscriber downloads.
-- Counting fan-sub euros as org revenue. They're not. They're a
+- **v6:** Forgetting the 5× multiplier on paid-subscriber downloads.
+- **v6:** Counting fan-sub euros as org revenue. They're not. They're a
   passthrough to the artist, minus 2% operational fee.
-- Allowing artists to subscribe to themselves or sock-puppet accounts.
+- **v6:** Allowing artists to subscribe to themselves or sock-puppet accounts.
   Dedup by email and payment method.
-- Adding YouTube or Twitch as Tahti Radio multistream targets. You
+- **v6:** Adding YouTube or Twitch as Tahti Radio multistream targets. You
   will get copyright-struck within weeks. Mixcloud only.
-- Editorializing the Tahti Radio rotation. The picker algorithm is
+- **v6:** Editorializing the Tahti Radio rotation. The picker algorithm is
   fair-rotation by default. The director should not have programming control.
-- Building a venue *booking* marketplace. Calendar feeds only — no
+- **v6:** Building a venue *booking* marketplace. Calendar feeds only — no
   job postings, no application flows, no mediation. We are not Resident Advisor.
-- Requiring accounts for free downloads. Anti-fraud relies on rate
+- **v6:** Requiring accounts for free downloads. Anti-fraud relies on rate
   limits + fingerprint dedup. Accounts are required only for fan-subscribers.
 
 ## What's explicitly NOT in this product
@@ -1245,7 +1254,7 @@ archive fallback, live recording sidecar, HLS output, optional RTMP multistream.
 - Cross-platform search
 - Centralized moderation team
 - Merch shop (link out to Bandcamp)
-- Native mobile apps in the initial release (PWA only)
+- Native mobile apps in v1 (PWA only)
 - Multi-region deployment
 - Sponsorship displayed in-product (transparency report only, no logos in player)
 - Advertising of any kind

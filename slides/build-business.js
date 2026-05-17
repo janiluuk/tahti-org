@@ -242,7 +242,7 @@ async function main() {
     s.addText("Featured capabilities", {
       x: 0.7, y: 0.4, w: 12, h: 0.55, fontFace: F.header, fontSize: 30, bold: true, color: COL.textLight, margin: 0,
     });
-    s.addText("Seven pillars \u2014 chat, broadcast, editor, profile, promo, fan-subs, Tahti Radio.", {
+    s.addText("Six pillars \u2014 chat, broadcasting, profile, promo, fan-subs, Tahti Radio.", {
       x: 0.7, y: 0.95, w: 12, h: 0.4, fontFace: F.body, fontSize: 12, italic: true, color: COL.textMuted, margin: 0,
     });
 
@@ -260,22 +260,22 @@ async function main() {
       },
       {
         x: 4.7,  y: 1.5, color: COL.cyan, icon: FaBroadcastTower,
-        head: "Broadcast + editor", sub: "Live tools and in-browser DAW",
+        head: "OBS + broadcasting", sub: "Guides for every tool",
         rows: [
-          ["Pro audio editor", "Multitrack, EQ, LUFS"],
-          ["OBS, Mixxx, Traktor", "RTMP / Icecast"],
+          ["OBS Studio",       "RTMP, copy-paste"],
+          ["Mixxx, Traktor",   "Icecast2"],
           ["Browser Go Live",  "WebRTC, no install"],
-          ["Export",           "Archive, releases"],
+          ["Test connection",  "10s probe, feedback"],
         ],
       },
       {
         x: 8.8,  y: 1.5, color: COL.amber, icon: FaUserShield,
         head: "Profile + releases", sub: "The artist\u2019s home on the internet",
         rows: [
-          ["Editor",           "Multitrack, EQ, LUFS"],
-          ["URL",              "tahti.fm/u/<handle>"],
+          ["URL",              "tahti.fi/u/<handle>"],
+          ["Bio",              "Markdown, rich"],
           ["Releases",         "Albums, EPs, singles"],
-          ["Export",           "Archive, channel, DSP"],
+          ["Upload formats",   "WAV, FLAC, MP3, AAC"],
         ],
       },
       {
@@ -358,27 +358,41 @@ async function main() {
     const tiers = [
       {
         icon: FaHeadphones, color: COL.textMuted, tag: "FREE", price: "\u20AC0",
-        sub: "Free-tier artist", emphasize: false,
-        features: ["1 channel", "5 archive items", "Pro audio editor (full)", "Live broadcasting", "Basic chat", "60-day inactive expiry"],
+        sub: "For trying out", emphasize: false,
+        features: ["1 channel", "5 archive items", "Live broadcasting", "Basic chat", "60-day inactive expiry"],
       },
       {
-        icon: FaMicrophone, color: COL.cyan, tag: "PAYING", price: "\u20AC40",
-        sub: "/year \u2014 paying artist", emphasize: true,
+        icon: FaMicrophone, color: COL.cyan, tag: "ARTIST", price: "\u20AC40",
+        sub: "/year \u2014 the workhorse tier", emphasize: false,
         features: [
           "Unlimited archive (no enforced limit)",
           "Auto-archive every live set",
-          "Fan-subs + downloads",
-          "1 multistream (Mixcloud Live)",
-          "Newsletter + social auto-post",
+          "1 multistream destination",
+          "Mixcloud auto-upload",
+          "Pinned announcements + moderation",
           "Pay-per-release DSP \u20AC8",
-          "Member of Tahti ry (grants eligible)",
+          "Member of the association",
+        ],
+      },
+      {
+        icon: FaTrophy, color: COL.violet, tag: "STUDIO", price: "\u20AC120",
+        sub: "/year \u2014 for working pros", emphasize: true,
+        features: [
+          "Everything in Artist",
+          "12 DSP releases/yr included",
+          "Unlimited multistream",
+          "Custom domain",
+          "Detailed listener insights",
+          "Live recording in FLAC",
+          "API access",
+          "Member of the association",
         ],
       },
     ];
 
     for (let i = 0; i < tiers.length; i++) {
       const t = tiers[i];
-      const x = 2.4 + i * 4.6;
+      const x = 1.7 + i * 3.5;
       const cardW = 3.3;
       const cardH = t.emphasize ? 5.0 : 4.8;
       const cardY = t.emphasize ? 1.9 : 2.0;
@@ -515,10 +529,11 @@ async function main() {
 
     const labels = ["Year 1\n200 paid", "Year 2\n1,200 paid", "Year 3\n4,000 paid"];
     const data = [
-      { name: "Paying-artist subs (\u20AC40)", labels, values: [8000, 48000, 160000] },
-      { name: "Distribution (gross)",          labels, values: [960, 5760, 19200] },
+      { name: "Subscriptions (\u20AC40)",        labels, values: [8000, 48000, 160000] },
+      { name: "Distribution (gross)",          labels, values: [1440, 8640, 28800] },
       { name: "Foundation grants",             labels, values: [25000, 45000, 80000] },
-      { name: "Donations + referral",          labels, values: [986, 6204, 22072] },
+      { name: "Donations + referral",          labels, values: [950, 5700, 19000] },
+      { name: "Fan-sub op fee",                labels, values: [36, 504, 3072] },
     ];
 
     s.addChart(pres.charts.BAR, data, {
@@ -533,7 +548,7 @@ async function main() {
       showTitle: false,
     });
 
-    const totals = [34946, 104964, 281272];
+    const totals = [35426, 107844, 290872];
     for (let i = 0; i < 3; i++) {
       const x = 1.6 + i * 4.0;
       s.addShape(pres.shapes.RECTANGLE, {
@@ -564,7 +579,7 @@ async function main() {
     s.addChart(pres.charts.BAR, [{
       name: "Y3 allocation",
       labels: ["Infrastructure + ops", "Director salary", "Audit + admin", "Distribution pass-through", "Stripe + payment fees", "Artist grants", "Operating reserve"],
-      values: [69280, 45000, 6000, 43200, 4640, 102737, 11415],
+      values: [86280, 45000, 6000, 10800, 4640, 129737, 14415],
     }], {
       x: 0.7, y: 2.0, w: 8.0, h: 4.8,
       barDir: "bar",
@@ -593,7 +608,7 @@ async function main() {
       x: 9.0, y: 2.9, w: 3.7, h: 0.45, align: "center",
       fontFace: F.header, fontSize: 14, bold: true, color: COL.textLight, margin: 0,
     });
-    s.addText("\u20AC102,737", {
+    s.addText("\u20AC129,737", {
       x: 9.0, y: 3.35, w: 3.7, h: 0.9, align: "center",
       fontFace: F.header, fontSize: 36, bold: true, color: COL.mint, margin: 0,
     });
@@ -604,9 +619,9 @@ async function main() {
     s.addText([
       { text: "Weighted by engagement units:\n", options: { color: COL.textLight, bold: true, breakLine: true } },
       { text: "Top 10% ", options: { color: COL.textMuted } },
-      { text: "\u2192 ~\u20AC210 each\n", options: { color: COL.mint, bold: true, breakLine: true } },
+      { text: "\u2192 ~\u20AC260 each\n", options: { color: COL.mint, bold: true, breakLine: true } },
       { text: "Mid 30% ", options: { color: COL.textMuted } },
-      { text: "\u2192 ~\u20AC17 each\n", options: { color: COL.cyan, bold: true, breakLine: true } },
+      { text: "\u2192 ~\u20AC19 each\n", options: { color: COL.cyan, bold: true, breakLine: true } },
       { text: "Active rest ", options: { color: COL.textMuted } },
       { text: "\u2192 ~\u20AC4 each", options: { color: COL.violet, bold: true } },
     ], { x: 9.2, y: 4.75, w: 3.3, h: 1.95, fontFace: F.body, fontSize: 12, margin: 0, valign: "top" });
@@ -641,24 +656,24 @@ async function main() {
       ],
       [
         { text: "Total revenue",             options: { color: COL.textLight, fontSize: 12 } },
-        { text: "\u20AC34,946",              options: { color: COL.cyan, fontSize: 12, align: "right" } },
-        { text: "\u20AC104,964",             options: { color: COL.cyan, fontSize: 12, align: "right" } },
-        { text: "\u20AC281,272",             options: { color: COL.cyan, fontSize: 12, align: "right" } },
-        { text: "\u20AC421,182",             options: { color: COL.cyan, fontSize: 13, bold: true, align: "right" } },
+        { text: "\u20AC35,426",              options: { color: COL.cyan, fontSize: 12, align: "right" } },
+        { text: "\u20AC107,844",             options: { color: COL.cyan, fontSize: 12, align: "right" } },
+        { text: "\u20AC290,872",             options: { color: COL.cyan, fontSize: 12, align: "right" } },
+        { text: "\u20AC434,142",             options: { color: COL.cyan, fontSize: 13, bold: true, align: "right" } },
       ],
       [
         { text: "Total costs (incl. salary)", options: { color: COL.textLight, fontSize: 12 } },
-        { text: "\u20AC54,382",              options: { color: COL.rose, fontSize: 12, align: "right" } },
-        { text: "\u20AC91,412",              options: { color: COL.rose, fontSize: 12, align: "right" } },
-        { text: "\u20AC167,120",             options: { color: COL.rose, fontSize: 12, align: "right" } },
-        { text: "\u20AC312,914",             options: { color: COL.rose, fontSize: 13, bold: true, align: "right" } },
+        { text: "\u20AC54,572",              options: { color: COL.rose, fontSize: 12, align: "right" } },
+        { text: "\u20AC85,692",              options: { color: COL.rose, fontSize: 12, align: "right" } },
+        { text: "\u20AC146,720",             options: { color: COL.rose, fontSize: 12, align: "right" } },
+        { text: "\u20AC286,984",             options: { color: COL.rose, fontSize: 13, bold: true, align: "right" } },
       ],
       [
         { text: "Surplus",                   options: { color: COL.textLight, fontSize: 12, bold: true } },
-        { text: "-\u20AC19,436",             options: { color: COL.rose, fontSize: 12, bold: true, align: "right" } },
-        { text: "+\u20AC13,552",             options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "+\u20AC114,152",            options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "+\u20AC108,268",            options: { color: COL.mint, fontSize: 13, bold: true, align: "right" } },
+        { text: "-\u20AC19,146",             options: { color: COL.rose, fontSize: 12, bold: true, align: "right" } },
+        { text: "+\u20AC22,152",             options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "+\u20AC144,152",            options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "+\u20AC147,158",            options: { color: COL.mint, fontSize: 13, bold: true, align: "right" } },
       ],
       [
         { text: "Director salary",           options: { color: COL.textLight, fontSize: 12 } },
@@ -670,9 +685,9 @@ async function main() {
       [
         { text: "Artist grants distributed", options: { color: COL.textLight, fontSize: 12, bold: true } },
         { text: "\u20AC0",                   options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC12,197",              options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC102,737",             options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC114,934",             options: { color: COL.mint, fontSize: 13, bold: true, align: "right" } },
+        { text: "\u20AC19,937",              options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC129,737",             options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC149,674",             options: { color: COL.mint, fontSize: 13, bold: true, align: "right" } },
       ],
       [
         { text: "Fan-sub direct to artists", options: { color: COL.textLight, fontSize: 12, bold: true } },
@@ -684,9 +699,9 @@ async function main() {
       [
         { text: "Total artist money",        options: { color: COL.textLight, fontSize: 12, bold: true } },
         { text: "\u20AC1,622",               options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC34,902",              options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC241,131",             options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC277,655",             options: { color: COL.amber, fontSize: 14, bold: true, align: "right" } },
+        { text: "\u20AC42,642",              options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC268,131",             options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC312,395",             options: { color: COL.amber, fontSize: 14, bold: true, align: "right" } },
       ],
     ], {
       x: 0.7, y: 2.0, w: 12.0, h: 4.4,
@@ -706,7 +721,7 @@ async function main() {
     });
     s.addText([
       { text: "THE HEADLINE:  ", options: { color: COL.mint, bold: true, charSpacing: 3 } },
-      { text: "\u20AC278k in artists\u2019 hands over 3 years \u2014 grants + direct fan-subs \u2014 while paying the director a fair Finnish wage.", options: { color: COL.textLight, italic: true } },
+      { text: "\u20AC312k in artists\u2019 hands over 3 years \u2014 grants + direct fan-subs \u2014 while paying the director a fair Finnish wage.", options: { color: COL.textLight, italic: true } },
     ], { x: 0.95, y: 6.45, w: 11.5, h: 0.7, fontFace: F.body, fontSize: 13, valign: "middle", margin: 0 });
   }
 
@@ -919,7 +934,7 @@ async function main() {
     });
   }
 
-  await pres.writeFile({ fileName: "slides/Tahti-Business.pptx" });
+  await pres.writeFile({ fileName: "/home/claude/tahti-package-v7/slides/Tahti-Business.pptx" });
   console.log("OK");
 }
 

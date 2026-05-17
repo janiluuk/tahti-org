@@ -1,7 +1,7 @@
 version: "3.9"
 
 # ─────────────────────────────────────────────────────────────────────
-# Tahti — production Swarm stack (channel-first)
+# Tahti v6 — production Swarm stack (channel-first)
 #
 # Setup once on the manager:
 #   docker swarm init --advertise-addr <manager-ip>
@@ -72,14 +72,14 @@ services:
     image: postgres:16-alpine
     networks: [internal]
     environment:
-      POSTGRES_USER: tahti
-      POSTGRES_DB: tahti
+      POSTGRES_USER: replay
+      POSTGRES_DB: replay
       POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
     secrets: [pg_password]
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tahti"]
+      test: ["CMD-SHELL", "pg_isready -U replay"]
       interval: 10s
       retries: 5
     deploy:
@@ -118,7 +118,7 @@ services:
     command: server /data --console-address ":9001"
     networks: [internal, edge]
     environment:
-      MINIO_ROOT_USER: tahti
+      MINIO_ROOT_USER: replay
       MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_root_password
     secrets: [minio_root_password]
     volumes:
@@ -162,11 +162,11 @@ services:
   # API — Fastify
   # ───────────────────────────────────────────────────────────────────
   api:
-    image: registry.example.com/tahti/api:${TAG:-latest}
+    image: registry.example.com/replay/api:${TAG:-latest}
     networks: [internal, edge]
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      DATABASE_URL: postgres://replay@postgres:5432/replay
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
@@ -204,11 +204,11 @@ services:
   # Workers — heavy media work and light fanout
   # ───────────────────────────────────────────────────────────────────
   worker-media:
-    image: registry.example.com/tahti/worker:${TAG:-latest}
+    image: registry.example.com/replay/worker:${TAG:-latest}
     command: ["node", "dist/index.js", "--queues=transcode-archive,record-live,fingerprint"]
     networks: [internal]
     environment:
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      DATABASE_URL: postgres://replay@postgres:5432/replay
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
     secrets: [pg_password]
@@ -220,11 +220,11 @@ services:
         limits: { cpus: "4", memory: 4G }
 
   worker-dist:
-    image: registry.example.com/tahti/worker:${TAG:-latest}
+    image: registry.example.com/replay/worker:${TAG:-latest}
     command: ["node", "dist/index.js", "--queues=mixcloud-upload,revelator-deliver,revelator-royalty-sync"]
     networks: [internal]
     environment:
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      DATABASE_URL: postgres://replay@postgres:5432/replay
       REDIS_URL: redis://redis:6379
       REVELATOR_API_KEY_FILE: /run/secrets/revelator_api_key
       MIXCLOUD_CLIENT_SECRET_FILE: /run/secrets/mixcloud_client_secret
@@ -237,11 +237,11 @@ services:
         limits: { cpus: "1", memory: 1G }
 
   worker-light:
-    image: registry.example.com/tahti/worker:${TAG:-latest}
+    image: registry.example.com/replay/worker:${TAG:-latest}
     command: ["node", "dist/index.js", "--queues=stats-rollup,chat-cleanup,chat-ban-rotate"]
     networks: [internal]
     environment:
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      DATABASE_URL: postgres://replay@postgres:5432/replay
       REDIS_URL: redis://redis:6379
     secrets: [pg_password]
     deploy:
@@ -255,14 +255,14 @@ services:
   # Orchestrator — spawns per-channel Liquidsoap containers
   # ───────────────────────────────────────────────────────────────────
   orchestrator:
-    image: registry.example.com/tahti/orchestrator:${TAG:-latest}
+    image: registry.example.com/replay/orchestrator:${TAG:-latest}
     networks: [internal]
     environment:
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      DATABASE_URL: postgres://replay@postgres:5432/replay
       REDIS_URL: redis://redis:6379
       DOCKER_HOST: unix:///var/run/docker.sock
-      CHANNEL_IMAGE: registry.example.com/tahti/liquidsoap:latest
-      CHANNEL_NETWORK: tahti_internal
+      CHANNEL_IMAGE: registry.example.com/replay/liquidsoap:latest
+      CHANNEL_NETWORK: replay_internal
       HLS_VOLUME: hls_shared
       RECORDINGS_VOLUME: recordings_shared
     secrets: [pg_password]
@@ -319,7 +319,7 @@ services:
   # Web — Next.js
   # ───────────────────────────────────────────────────────────────────
   web:
-    image: registry.example.com/tahti/web:${TAG:-latest}
+    image: registry.example.com/replay/web:${TAG:-latest}
     networks: [internal, edge]
     environment:
       NEXT_PUBLIC_API_BASE: https://api.example.com

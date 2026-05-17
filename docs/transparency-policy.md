@@ -22,8 +22,8 @@ that we accept deliberately.
   - Audited financial statements
   - Per-channel grant disbursement (anonymized as "Channel #N" unless artist
     opts into public attribution)
-  - Methodology explanation (how engagement units are counted, how the grant
-    formula works; listener-hours reported separately as a vanity metric only)
+  - Methodology explanation (how listener-hours are counted, how the formula
+    works)
   - Board roster and trustee statements of conflict
   - Sustaining donor list (with consent)
 - All historical data preserved indefinitely; no quiet rewrites

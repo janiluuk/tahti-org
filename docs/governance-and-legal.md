@@ -1,11 +1,5 @@
 # Tahti ry — governance and legal framework
 
-Tahti is **owned by its members** — the paying artists who use the platform.
-Tahti ry is the Finnish nonprofit (*yhdistys*) that holds membership, collects
-fees, maintains the service, and distributes surplus. The board and director
-work for the members; trained member-operators gradually share maintenance
-after documented training. See `docs/strategy-and-product.md`.
-
 ## Legal form
 
 **Tahti ry** — registered nonprofit association (*rekisteröity yhdistys*) under
@@ -41,8 +35,7 @@ The bylaws (*säännöt*) are the governing document. Key clauses for Tahti ry:
 >    chat, and distribution capabilities;
 > b) operating the Platform under fair and transparent terms;
 > c) annually distributing operating surplus, after a 10% operating reserve, as
->    grants to artist members, weighted by engagement units (downloads and
->    fan-support — not passive listening);
+>    grants to artist members, weighted by listener engagement on their channels;
 > d) supporting the development of free, open-source audio broadcasting
 >    technology.
 
@@ -74,19 +67,6 @@ The bylaws (*säännöt*) are the governing document. Key clauses for Tahti ry:
 - The Board may employ a director and other staff
 - The director runs day-to-day operations and reports to the Board monthly
 - Director compensation set by Board, capped per §10
-- The director's role includes **training members** to share operational work;
-  the association shall not depend indefinitely on a single external operator
-
-### Member operators (§7.b)
-
-- Members may volunteer as **operators** after completing the association's
-  training program (infra, support, and/or treasurer tracks)
-- The Board maintains an operators roster, approved at each AGM
-- Operators act under written runbooks; material infrastructure changes require
-  Board approval
-- Operators receive no salary unless separately employed under §7; reimbursement
-  of documented expenses only
-- Goal: by Year 3, at least five trained operators share maintenance with the director
 
 ### Transparency (§9)
 
@@ -122,7 +102,7 @@ The bylaws (*säännöt*) are the governing document. Key clauses for Tahti ry:
 - Unclaimed grants (member fails to confirm within 30 days) roll into the
   following year's grant pool
 
-### Fan-to-artist subscriptions (§11.b)
+### Fan-to-artist subscriptions (§11.b — NEW v6)
 
 - Tahti ry takes **0% of fan-to-artist subscription revenue**
 - A minimal operational fee not exceeding 2% of the gross is taken to cover
@@ -163,10 +143,10 @@ joins.
 AGPL-3.0 means:
 
 1. **Anyone can use, modify, distribute the code.** Anyone can run their own
-   Tahti clone. Encourage this — it's the point.
+    Tahti clone. Encourage this — it's the point.
 
 2. **Network-deployed modifications must be open-sourced.** If a third party
-   runs a modified version and exposes it as a service (`tahti.example.com`),
+   runs a modified version and exposes it as a service (`replay.example.com`),
    they must publish their modified source. This prevents AWS-style appropriation.
 
 3. **Every page links to source.** Per AGPL §13, the public-facing service must

@@ -1,6 +1,7 @@
 # Tahti ry — engagement units and fan-subscriptions
 
-This doc specifies how annual grants are calculated and how fan-to-artist subscriptions work.
+This doc specifies the v6 grant calculation model and the fan-to-artist
+subscription product. It supersedes the listener-hours basis used in v4/v5.
 
 ## Why we changed the grant basis
 
@@ -9,7 +10,7 @@ in a coffee shop generated the same grant-share as an artist with 50 devoted
 fans actively engaging with their work. That's not the fairness story Tahti
 wants to tell.
 
-The model rewards **intentional engagement** — listeners actively
+The v6 model rewards **intentional engagement** — listeners actively
 downloading content, listeners paying the artist directly. Money and effort
 flow in the same direction.
 
@@ -114,7 +115,7 @@ Without account requirement, we rely on layered defenses:
    regardless of how many times they actually download it. A fanatic-but-real
    listener still works; a script trying to inflate a single track to 10,000
    units is blocked.
-5. **Net-new IP threshold:** the IP must have been seen on Tahti (any page)
+5. **Net-new IP threshold:** the IP must have been seen on Tahti (ny page)
    at least 24 hours before its download counts. Brand-new IPs can download,
    they just don't count toward grants for that first day.
 6. **Tor and known bot networks:** allowed to download (we don't refuse
@@ -227,7 +228,7 @@ When a subscriber cancels:
 
 ### Subscribe page design
 
-On `tahti.fm/u/<handle>/subscribe`:
+On `tahti.fi/u/<handle>/subscribe`:
 - Artist hero (same as profile)
 - Intro text: why subscribe (artist-written)
 - Tier cards: name, price, benefits
@@ -344,8 +345,8 @@ Two new categories under `ledger.LedgerCategory`:
   to the artist, minus 2% operational fee.
 - Allowing artists to subscribe to themselves (or sock-puppet accounts to
   themselves). Same email/payment-method dedup.
-- One-time tips are out of scope for the initial release — adds Stripe
-  complexity without clear demand yet.
+- Building "tip" or "one-time payment" features in v6. Defer to v7 — adds
+  scope, doesn't change the math.
 - Showing per-artist fan-sub revenue publicly without consent. The artist's
   fan-sub income is their business; it appears on the transparency dashboard
   only as aggregate "Channel #N received €X in fan-subs this year" with the

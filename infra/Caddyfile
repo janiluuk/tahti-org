@@ -9,7 +9,7 @@ example.com, www.example.com {
 }
 
 # Per-channel landing pages — wildcard subdomain routing
-*.tahti.fm {
+*.tahti.fi {
     @valid expression {labels.0} != "www"
     encode zstd gzip
     reverse_proxy @valid web:3000 {

@@ -2,64 +2,15 @@
 
 ## Positioning, in one sentence
 
-A **member-owned** broadcasting platform for independent artists: the people
-who use it govern it, and the nonprofit handles membership and maintenance
-until they can run it themselves.
+A nonprofit broadcasting platform for independent artists, owned by its members,
+giving operating surplus back as transparent listener-hour grants.
 
 ## Positioning, in three sentences
 
 Each artist gets a 24/7 channel — live when they're broadcasting, their archive
-when they're not. The platform is open source under AGPL, operated by **Tahti
-ry**, a Finnish nonprofit. Paying artists are **members** with a vote; surplus
-returns as grants weighted by real engagement (downloads and fan-support), on a
-public ledger anyone can audit.
-
-## Who owns Tahti
-
-| Role | Who | What they do |
-|---|---|---|
-| **Owners** | Paying artists (members of Tahti ry) | Vote at the annual general meeting, propose bylaws changes, elect the board, approve accounts and grant formulas |
-| **Legal operator** | Tahti ry (*yhdistys*) | Registers members, collects €40/yr membership fees, signs contracts, employs staff, files taxes and audits |
-| **Day-to-day operations** | Director + trained members | Runs servers, deploys software, handles support — with a deliberate path from "one hired operator" to "member-maintained" |
-| **Listeners** | Not members | Tune in free; optional fan-subscriptions pay artists directly |
-
-**Tahti ry is not a startup with shareholders.** It is the nonprofit shell that
-lets a community of artists own a shared tool without each person incorporating
-alone. The association exists to:
-
-1. **Hold membership** — one paying artist = one member = one vote
-2. **Maintain the service** — hardware, software, backups, security, billing
-3. **Train operators** — document runbooks; teach members who volunteer to help
-4. **Publish transparent accounts** — monthly ledger, annual audit, public API
-5. **Distribute surplus** — grants to members after costs and reserve
-
-### Training and handoff
-
-Early years: a **director** (paid employee of the association) runs
-infrastructure and teaches interested members.
-
-**Goal:** trained **member-operators** take on documented maintenance under
-board supervision — monitoring, deploys, first-line support, treasurer
-workflows. The nonprofit should not depend forever on a single external tech
-hire. Capability transfers to the people on the platform.
-
-**Training covers (minimum):**
-
-- Reading the public transparency dashboard and monthly rollup
-- Docker Swarm deploy and rollback (`docs/AGENT.md` runbooks)
-- Channel orchestrator health checks and Liquidsoap restarts
-- Member support triage (billing, broadcast credentials, archive uploads)
-- AGM preparation (motions, member register export for PRH)
-
-Members who complete training are listed in an internal **operators roster**
-(roles: infra, support, treasurer — not all required). The board approves
-roster changes at each AGM.
-
-### If leadership fails
-
-All code is **AGPL-3.0**. Members can export data, fork the codebase, and
-continue on another host. Ownership is meaningful because **exit is real** —
-the community is never locked to one vendor or one director.
+when they're not. The platform is open source under AGPL, run by Tahti ry, a
+Finnish nonprofit. Every year the surplus is awarded as grants to artist
+members, weighted by listener engagement, with a public ledger anyone can audit.
 
 ## Who we serve
 
@@ -80,99 +31,232 @@ We are not for:
 
 ## What the product is
 
-Two artist tiers on owned infrastructure in Helsinki:
+A two-tier subscription service running on owned infrastructure in Helsinki:
 
-| Free-tier artist | Paying artist (€40/yr membership) |
-|---|---|
-| 1 channel, 5 archive items | Unlimited archive |
-| **Pro audio editor (full)** | Same editor — export to archive, releases, channel |
-| Live + basic chat | Auto-archive, moderation, analytics |
-| Embed + smart link | 1 multistream (Mixcloud Live) |
-| Inactive deletion after 60d | Fan-subs, downloads, newsletter |
-|  | Pay-per-release DSP (€8 each) |
-|  | **Member of Tahti ry** — vote, grants eligible |
-
-**Unit economics:** €40/yr is set so that, at roughly **3,000+ paying artists**,
-membership fees cover **running the service** on owned infrastructure. Early
-years need grant bridge funding; at 4,000 members the model carries platform,
-governance, and operations with surplus for grants. See `docs/financial-model.md`.
+| Free | Artist €40/yr | Studio €120/yr |
+|---|---|---|
+| 1 channel | Unlimited archive | Everything in Artist |
+| 5 archive items | 1 multistream | Unlimited multistream |
+| Live + chat | Mixcloud upload | Custom domain |
+| Inactive deletion 60d | Pay-per-release DSP €8 | 12 DSP releases included |
+|  | Listener stats | Listener insights + FLAC |
+|  | Member of association | Member of association |
 
 ## Differentiation
 
-Three things make Tahti distinct:
+Three things make Tahti distinct from existing options:
 
-1. **Channel-first.** The channel is the primary object — live and archive
-   stitched on one URL, with a **pro audio editor** included for every artist.
-2. **Member-owned nonprofit.** Not a commercial platform extracting margin.
-   Surplus returns to artists; governance belongs to members.
-3. **Open source under AGPL.** Anyone running the code as a service must
-   publish changes. Forks and self-hosting are encouraged.
+1. **Channel-first.** Mixcloud is upload-and-share. SoundCloud is the same.
+   Twitch wants video. Twitch's audio-only category is a graveyard. We are
+   the only product where the channel is the primary object and live + archive
+   are seamlessly stitched.
+
+2. **Nonprofit + transparent.** Resonate has tried this model for streaming
+   playback (the listener side). We're applying it to the artist-broadcaster
+   side, which has fewer competitors and better unit economics. Patreon takes
+   8-12%, Bandcamp takes 10-15%, Mixcloud Pro is ad-supported with subscription
+   tiers — we return the surplus to artists themselves.
+
+3. **Open source under AGPL.** Most "open source" products are MIT or Apache.
+   AGPL means anyone who runs our code as a network service must publish their
+   changes. This protects against extractive forking and signals real commitment
+   to the open ecosystem.
+
+## The competitive set, examined honestly
+
+Each of the dominant platforms in the independent-music space has structural
+problems that Tahti is built to address. Not aspirationally — concretely.
+
+### SoundCloud and Mixcloud cap audio quality at the listener tier, not the uploader
+
+Every commercial platform we compete with has a fundamental dishonesty in its
+pricing model: **the artist pays, but the listener still gets a bad experience.**
+
+- **SoundCloud** streams at 128 kbps Opus to free listeners regardless of
+  whether the uploader is on Pro. Pro Unlimited at $16/month doesn't fix
+  what the listener hears — they need their own SoundCloud Go+ subscription
+  ($10/month on their end) for 256 kbps.
+- **Mixcloud** streams at 64 kbps AAC to free listeners. A DJ paying Mixcloud
+  Pro €15/month cannot deliver better audio to a free listener; the listener
+  needs Mixcloud Select on their own account for 320 kbps.
+- The user-visible result: a Pro DJ uploads a flawless mixed-down master,
+  and their listeners hear it through what sounds like a YouTube rip.
+
+Tahti's approach: **all paid users stream lossless to all listeners.** A
+€40/year Tahti member's listeners hear FLAC 16/44 from a real broadcast
+pipeline, not a degraded transcode. Free users on Tahti hear MP3 192 — better
+than what most listeners get on a paid Mixcloud Pro stream.
+
+### Spotify has been overrun by AI-generated content with no required disclosure
+
+Documented in *Music Business Worldwide*, *Harper's*, and multiple investigative
+pieces 2023-2024: Spotify has accepted AI-generated content into curated
+playlists, used "ghost artist" placeholder names for tracks of unclear
+provenance, and pushed back against labelling requirements. The platform's
+position is that AI content competes on the same terms as human artists.
+
+For the independent artist on Spotify, this means their work is competing
+with infinite-supply autogenerated tracks for the same playlist placements
+and the same algorithmic surfacing.
+
+Tahti's approach: **we don't have an algorithm.** Discovery happens through
+the channel (live broadcast), the smart link (artist-shared), the embed
+widget (on the artist's own site), and Tahti Radio (relay of currently-live
+broadcasts). There's no playlist economy for AI content to invade. Originals
+that artists submit through Tahti to Spotify will still face the AI problem
+there — but the artist's *home* on Tahti is unaffected.
+
+### Bandcamp pays fairly but is mostly storage
+
+Bandcamp pays 82-85% to artists after fees — the best rate in commercial
+distribution. Songtradr's 2023 acquisition gutted the editorial team and
+introduced uncertainty, but the core economics for artists are still
+favorable.
+
+What Bandcamp is good at: selling albums, selling merch, fan subscriptions,
+exposure through Bandcamp Daily editorial.
+
+What Bandcamp is *not*: a broadcasting platform. There's no 24/7 channel.
+There's no live broadcasting integration. There's no real-time chat with
+listeners during a set. There's no archive-fallback rotation. It is fundamentally
+**a high-quality online record store, not a radio station.**
+
+Tahti's approach: be a broadcasting platform. Link out to Bandcamp for merch
+and album-store needs; we don't compete with them on that turf. If an artist
+wants a record store, Bandcamp is still the right answer. If they want a
+broadcasting home with a 24/7 presence, that's us.
+
+### Patreon takes 8-12% plus payment processing fees
+
+For artists who want direct fan support, Patreon and its competitors take
+8-12% as platform fee, plus 2.9% + €0.30 per transaction in payment processing,
+plus a recurring "Patreon-as-platform tax" that has crept up over time.
+Compare to Tahti: **0% platform fee, 2% operational fee, Stripe fees as
+pass-through.** An artist receiving €5/month from a fan via Patreon nets
+~€4.20 after fees. Via Tahti: ~€4.45. That difference compounds: €30/year
+more to the artist per €5/month subscriber.
 
 ## Why this works as a nonprofit
 
-The competitive set is narrow (Mixcloud, SoundCloud, Bandcamp, Patreon-for-music).
-None offer a 24/7 channel with live + archive fallback **and** member ownership.
-We're filling a structural gap, not out-featuring a giant.
+Most aspirational-nonprofit platforms fail because they need to compete on
+features with well-funded commercial alternatives. Tahti's competitive set is
+narrower:
+
+- Mixcloud (commercial, ad-funded)
+- SoundCloud (struggling commercial)
+- Bandcamp (commercial, recently sold)
+- Patreon-for-music (no good alternative)
+
+None of these offer a 24/7 channel with live + archive fallback. We're not
+out-featuring a giant, we're filling a structural gap.
 
 ## Acquisition strategy
 
-### Year 1 — hand-recruit 200 paying artists
+Realistic, given no marketing budget:
 
-- Director's network: Helsinki/Tallinn scene, collectives, university programs
-- Invite-only beta; artists who will broadcast immediately
-- Niche press (Resident Advisor tools, Wire, Native Instruments Blog)
-- Conferences: Mutek, CTM, Sónar, Flow Helsinki — network, don't sponsor
+### Year 1 — hand-recruit 200 artists
 
-### Year 2 — grow to 1,200
+- **The director's network first.** Helsinki/Tallinn DJ scene, Estonian/Finnish
+  electronic music collectives, university music programs.
+- **Beta program.** Invite-only initial release. Bias toward known artists with
+  small-but-engaged audiences who will use the product immediately.
+- **Press in niche outlets.** Resident Advisor's "tools" section, Mixmag's
+  technology coverage, Native Instruments Blog, Wire magazine. Pitch the
+  nonprofit/open-source angle.
+- **Conferences.** Mutek (Montreal/Barcelona/Tokyo), CTM Berlin, Sónar
+  Barcelona, Insomnia Tromsø, Flow Helsinki. Don't sponsor — attend, network,
+  build personal relationships.
 
-- Word of mouth; open free tier widely
-- Open-source community presence (FOSDEM, audio conferences)
-- Artist case studies
-- Light social promotion to electronic-music micro-influencers
+### Year 2 — grow to 1,200 via word of mouth + scene presence
 
-### Year 3 — 4,000 artists
+- Continue beta-tier invitations
+- Open up free tier widely
+- Active engagement with the open-source community (FOSDEM, EuroPython if
+  educational angle, audio-conferences)
+- First artist case studies / interview series
+- Begin paid Twitter/Mastodon promotion targeting electronic music micro-influencers
 
-- EU artist-development partnerships
-- Cultural-org residencies broadcasting on Tahti
-- Member-driven growth at AGM and beyond
+### Year 3 — broader reach, 4,000 artists
+
+- Partner with EU-funded artist development programs
+- Sponsored channels with cultural orgs (residencies broadcast through Tahti)
+- Established press presence
+- Continued AGM growth, member-driven word of mouth
 
 ## Geographic strategy
 
-**Year 1:** Helsinki-centric (legal home, foundations, director).  
-**Year 2:** EU/Nordic (Tallinn, Stockholm, Copenhagen, Berlin).  
-**Year 3+:** English-language global availability; marketing stays EU-focused.
+**Helsinki-centric for Y1.** It's where the director is, where the bylaws are
+filed, where the foundations are. Don't try to be everywhere at once.
 
-## Retention
+**EU/Nordic expansion Y2.** Tallinn, Stockholm, Copenhagen, Berlin are the
+priority. Shared scene context, similar legal frameworks (EU), similar funding
+ecosystems.
 
-**Engagement units** reward artists whose fans download and subscribe — not
-passive listening. Secondary retention: channel as home base on flyers and bios,
-archive as property, chat audience over time.
+**English-language US/UK Y3+.** Always available globally (the platform doesn't
+care), but no marketing investment until Y3. The transatlantic story is "Nordic
+nonprofit alternative to commercial US platforms" — that's our angle.
+
+## The retention thesis
+
+**Listener-hours.** A successful channel doesn't just exist — it gets played.
+Channels that don't see listener engagement don't earn grant share. The grant
+model itself is a retention mechanism for the engaged tail.
+
+Secondary retention factors:
+- Channel as "home base" — once an artist hangs their channel on Instagram bio,
+  flyer, business card, it costs them friction to leave
+- Distribution stays once set up
+- Archive is property; deleting it is loss
+- Chat audience accumulates over time
 
 ## What success looks like (Year 3)
 
-- 4,000 paying members, ~70% renewal
-- ~50 anchor channels with engaged audiences
-- ~€103k in annual grants distributed
-- Audited financials and functioning board
-- **At least 5 trained member-operators** sharing maintenance with the director
-- Mention in at least one major industry publication
+- 4,000 paying artists, ~70% renewal
+- ~50 "anchor" channels with engaged audiences (>1k unique monthly listeners)
+- €190k in artist grants distributed annually
+- Audited financials, transparent ledger, satisfied auditor
+- Three foundation grants ongoing or completed
+- Mention in at least one major industry publication (Resident Advisor, Wire,
+  Pitchfork)
+- Sustainable director salary and well-functioning board
 
 ## What failure looks like (early signals)
 
-- **Q3 Year 1: <50 paying members** — pricing or product gap; consider temporary €25 membership
-- **End Year 1: no founding grant** — defer features, reduce director hours, extend beta
-- **End Year 2: renewal <50%** — diagnose product vs governance vs grant model
-- **End Year 3: no member-operators trained** — operations still single-point-of-failure
-- **Top 1% eats 80% of grants** — membership debates formula (square-root, floor, etc.)
+- **Q3 Y1: <50 paying artists.** Pricing or feature gap. Likely fix: temporarily
+  drop Artist tier to €25 for 12 months, see if it accelerates conversion.
+- **End Y1: founding grant didn't land.** Restructure: defer distribution
+  feature, cut director salary to €20k, pure beta mode through Y2.
+- **End Y2: renewal rate <50%.** Product not retaining. Diagnose: is it the
+  broadcasting tool itself, the chat, the grant theatre, the open-source story?
+- **End Y3: top 1% of channels eat 80% of grants.** Bylaws debate. Likely
+  resolution: square-root weighting or floor amount; democratic process.
 
 ## Why no venture capital
 
-Nonprofits cannot issue equity. Mission returns surplus to artists, not investors.
-Capital comes from **membership fees**, **grants**, and **donations** — not VC.
+This shape has no VC fit:
 
-## What we're building toward
+- Nonprofit can't issue equity
+- Total revenue Y3 is €358k — too small for traditional VC, too constrained
+  on growth velocity
+- Mission requires returning surplus to artists, not maximizing topline
+- Any capital should be grant capital (no return expectation) or member capital
+  (paying artists), not equity
 
-A durable **commons**: artists own the institution that hosts their channels,
-learn to maintain it, and share the surplus fairly. Tahti ry is the legal and
-operational wrapper that makes that possible — not a company selling access to
-their own work back to them.
+If a values-aligned investor *wants* to support, the path is donation or grant,
+not equity. The bylaws prevent share issuance.
+
+## The honest reflection
+
+The commercial v3 model would have generated ~€215k cumulative profit to a
+founder over 3 years. The nonprofit v4 model generates ~€115k director
+compensation to that same founder, plus ~€229k in grants distributed to artists.
+
+If "success" means personal wealth, v3 wins.
+
+If "success" means a sustainable institution serving 4,000 artists with
+€229k of community-distributed grants and a thriving open-source codebase,
+v4 is the answer.
+
+You've chosen v4. The financial model honestly reflects that choice. The
+deck communicates it to the audiences who need to fund it (foundations) and
+populate it (board, members).

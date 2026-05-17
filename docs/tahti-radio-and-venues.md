@@ -8,23 +8,23 @@ program.
 
 ### What it is
 
-- A single Liquidsoap container running on the Tahti infrastructure
+- A single Liquidsoap container running on the  Tahti infrastructure
 - At any given moment, it relays the audio from one currently-live member channel
 - When the current relay-target stops broadcasting, the meta-stream picks the
   next available live channel (round-robin or random; configurable)
 - When zero channels are live, it falls back to a placeholder loop (an
   instrumental track + occasional "we'll be back" voice tag)
 - It multistreams out to **Mixcloud Live** only (legally clean target)
-- Listeners can tune in at `radio.tahti.fm` or via the player on `tahti.fm`
+- Listeners can tune in at `radio.tahti.fi` or via the player on `tahti.fi`
 - Listener-hours on Tahti Radio route to the originating channel's vanity
-  counter (not used for grant calculation — listener-hours are
+  counter (not to grant calculation under v6 anyway, since listener-hours are
   cosmetic now — but for honest accounting, the data still attributes correctly)
 
 ### What it isn't
 
 - Not a curated radio station. No editorial schedule. The director doesn't
   pick what plays when.
-- Not a tahti-of-archives stream. Archives don't go through Tahti Radio.
+- Not a replay-of-archives stream. Archives don't go through Tahti Radio.
   Only currently-live broadcasts.
 - Not multistreamed to YouTube or Twitch. Those platforms strike unlicensed
   music regardless of artist consent. Mixcloud has blanket licenses.
@@ -117,7 +117,7 @@ Modeled in financials at:
 
 ### Listener experience
 
-`radio.tahti.fm` is a minimal page:
+`radio.tahti.fi` is a minimal page:
 - Always-playing HLS player
 - "Now broadcasting: [artist name]" with link to their channel
 - "Up next" doesn't exist (we don't know)
@@ -134,10 +134,10 @@ discover scene activity by physical location.
 
 ### What it is
 
-- Venue creates a free venue profile at `tahti.fm/v/<venue-slug>`
+- Venue creates a free venue profile at `tahti.fi/v/<venue-slug>`
 - Venue defines: name, location, address, capacity, photos, externals
 - Venue publishes broadcasts: "DJ Long Doe broadcasting from us, Friday 22:00"
-- Each venue has an iCalendar feed: `tahti.fm/v/<venue-slug>/calendar.ics`
+- Each venue has an iCalendar feed: `tahti.fi/v/<venue-slug>/calendar.ics`
 - Artists can subscribe to venue feeds; venue subscriptions show up on their
   dashboard as "upcoming gigs"
 - Listeners can subscribe to venue feeds in their calendar app
@@ -221,15 +221,15 @@ GET /v/<venue-slug>/calendar.ics
 BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//Tahti ry//Venue Calendar//EN
-NAME:[Venue Name] — Tahti broadcasts
+NAME:[Venue Name] —  Tahti broadcasts
 BEGIN:VEVENT
-UID:venue-broadcast-<id>@tahti.fm
+UID:venue-broadcast-<id>@tahti.fi
 DTSTART:20260620T220000Z
 DTEND:20260621T010000Z
 SUMMARY:DJ Long Doe — live from [Venue Name]
-DESCRIPTION:Listen live at https://long-doe.tahti.fm
+DESCRIPTION:Listen live at https://long-doe.tahti.fi
 LOCATION:[venue address]
-URL:https://tahti.fm/v/<venue-slug>
+URL:https://tahti.fi/v/<venue-slug>
 END:VEVENT
 END:VCALENDAR
 ```
@@ -238,8 +238,8 @@ JSON API also available: `GET /v1/venues/<slug>/broadcasts?from=&to=`
 
 ### Discovery
 
-- `tahti.fm/venues` lists all verified venues (paginated, geo-filterable)
-- `tahti.fm/v/<slug>` shows venue profile + upcoming broadcasts + past broadcasts
+- `tahti.fi/venues` lists all verified venues (paginated, geo-filterable)
+- `tahti.fi/v/<slug>` shows venue profile + upcoming broadcasts + past broadcasts
 - Artist profile shows "Past gigs" pulled from venue records they were tagged in
 
 ### Verification
