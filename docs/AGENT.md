@@ -1,10 +1,10 @@
-# Project: Replay ry — nonprofit broadcasting platform
+# Project: Tahti ry — nonprofit broadcasting platform
 
 ## Mission (technical interpretation)
 
 Build a self-hostable, AGPL-3.0-licensed platform where each artist operates a
 **24/7 channel** that broadcasts live and falls back to archive when offline.
-The hosted instance is operated by **Replay ry**, a Finnish registered nonprofit
+The hosted instance is operated by **Tahti ry**, a Finnish registered nonprofit
 association. Annual operating surplus is distributed as **transparent
 listener-hour-weighted grants** to artist members, visible on a permanent
 public ledger.
@@ -58,7 +58,7 @@ financial model that returns surplus to them, not to shareholders.
     metric only. See `docs/engagement-and-fansubs.md`.
 14. **Fan-to-artist subscriptions take 0% org cut.** A 2% operational fee
     covers Stripe + GDPR + ops, fully consumed by costs. Bylaws-locked.
-15. **Replay Radio is live-relay only.** Org-operated meta-stream picks up
+15. **Tahti Radio is live-relay only.** Org-operated meta-stream picks up
     whichever channels are currently live. No editorial curation. Multistreamed
     to Mixcloud only (the only legally clean target).
 16. **Anonymous downloads stay anonymous.** No account required for free
@@ -94,7 +94,7 @@ financial model that returns surplus to them, not to shareholders.
 ## Repo layout
 
 ```
-replay/
+Tahti/
 ├── apps/
 │   ├── api/                     # Fastify
 │   ├── web/                     # Next.js (channels, profiles, dashboard, transparency, members)
@@ -193,7 +193,7 @@ plays in fallback rotation. UI shows "you've used 200 MB" without limit warnings
   chat scroll
 
 **Done when:** I start broadcasting from any source (OBS, Mixxx, browser) →
-my channel.replay.fm plays the live audio within 5 seconds. I stop broadcasting
+my channel.Tahti.fm plays the live audio within 5 seconds. I stop broadcasting
 → archive starts playing within 10 seconds, no silence.
 
 ### M4 — Auto-archive of live broadcasts
@@ -272,7 +272,7 @@ appears on Spotify in 7-10 days. Royalty reports flow back monthly.
 
 ### M8 — Transparency ledger (NEW for v4)
 
-This is what makes Replay a nonprofit, not just an open-source project.
+This is what makes Tahti a nonprofit, not just an open-source project.
 
 - Schema `ledger.ledger_entries` append-only, partitioned by month:
   - `id`, `category`, `amount_cents`, `currency`, `description`, `external_ref`,
@@ -360,7 +360,7 @@ track-level comments). It's closer to a label site or a Linktree-meets-Bandcamp.
 
 **Profile structure:**
 
-- `replay.fm/u/<handle>` — the artist's permanent URL
+- `Tahti.fm/u/<handle>` — the artist's permanent URL
 - Hero section: name, location, "currently broadcasting" indicator with link to
   channel, primary CTA (custom — could be "tune in," "buy the album," "subscribe")
 - Bio: rich-text (Markdown), supports paragraphs, headings, images, embedded
@@ -460,7 +460,7 @@ enum ReleaseState { DRAFT PUBLISHED ARCHIVED }
 
 **Done when:** I can fill out a bio with formatting and images, upload a 24-bit
 WAV album with cover art, publish the release, and the profile page renders at
-`replay.fm/u/<handle>` with the release in the timeline, smart link generated,
+`Tahti.fm/u/<handle>` with the release in the timeline, smart link generated,
 and Open Graph card showing correctly when shared on social media.
 
 ### M13 — Newsletter & fan email list (NEW for v5)
@@ -515,8 +515,8 @@ real-world utility.
 
 **Embed widget (oEmbed + iframe):**
 
-- Every release has an embed URL: `replay.fm/embed/r/<release-id>`
-- Every channel has an embed URL: `replay.fm/embed/c/<slug>`
+- Every release has an embed URL: `Tahti.fm/embed/r/<release-id>`
+- Every channel has an embed URL: `Tahti.fm/embed/c/<slug>`
 - Renders a lightweight player (cover art, play button, current track) in a
   customizable color theme
 - oEmbed discovery endpoint at `/oembed?url=...` so paste-into-Substack /
@@ -527,7 +527,7 @@ real-world utility.
 
 **Smart links (one URL → all DSPs):**
 
-- Every release auto-generates a smart link: `replay.fm/r/<slug>`
+- Every release auto-generates a smart link: `Tahti.fm/r/<slug>`
 - Landing page: cover art, release title, artist, list of streaming services
   (Spotify, Apple, Tidal, Amazon, Deezer, Bandcamp, SoundCloud, Mixcloud, YouTube
   Music — only the ones the artist has set targets for)
@@ -585,7 +585,7 @@ graph implied — tagging is just human-readable cross-references, like links.
 - Newsletter compose
 
 **Tag resolution:**
-- `@handle` → `replay.fm/u/<handle>` with the artist's display name
+- `@handle` → `Tahti.fm/u/<handle>` with the artist's display name
 - Unknown handles render as plain text (no broken links)
 - Tags in user-generated content (chat) are validated at send time; deleted
   artists' tags render as `@deleted-user`
@@ -606,41 +606,41 @@ graph implied — tagging is just human-readable cross-references, like links.
 links to that artist's page. They receive a notification if opted in. Muting
 works.
 
-### M16 — Replay Radio meta-stream (NEW for v6)
+### M16 — Tahti Radio meta-stream (NEW for v6)
 
 A 24/7 org-operated stream that **relays whichever channels are currently live**.
-Multistreamed to Mixcloud Live. Live-only — no curation, no archive replay.
+Multistreamed to Mixcloud Live. Live-only — no curation, no archive Tahti.
 
 **Architecture:**
-- New service `services/replay-radio/` — perpetual Liquidsoap container
-- Orchestrator runs a "ReplayRadioPicker" routine every 60 seconds
+- New service `services/Tahti-radio/` — perpetual Liquidsoap container
+- Orchestrator runs a "TahtiRadioPicker" routine every 60 seconds
 - Picker queries currently-live channels (filtered: `metaStreamOptOut=false`,
   not in cooldown, member in good standing)
 - Picker sorts: longest-since-last-feature first (fair rotation, prefer
   less-broadcast channels)
 - Picker hands off: re-encodes the chosen channel's HLS into the meta-stream's
   own HLS output
-- Replay Radio HLS published at `radio.replay.fm` via Bunny CDN
-- Replay Radio simultaneously pushes RTMP to Mixcloud Live at the org's
-  `mixcloud.com/replay-radio` account
-- When zero channels are live: falls back to `services/replay-radio/placeholder.flac`
+- Tahti Radio HLS published at `radio.Tahti.fm` via Bunny CDN
+- Tahti Radio simultaneously pushes RTMP to Mixcloud Live at the org's
+  `mixcloud.com/Tahti-radio` account
+- When zero channels are live: falls back to `services/Tahti-radio/placeholder.flac`
   (public-domain instrumental + voice tag)
 
 **Channel opt-out:**
-- Channel settings adds: "Include my live broadcasts on Replay Radio" (default ON)
+- Channel settings adds: "Include my live broadcasts on Tahti Radio" (default ON)
 - When OFF, channel is excluded from picker pool
 
 **Listener-hour attribution:**
-- Listeners on `radio.replay.fm` are counted toward the originating channel's
+- Listeners on `radio.Tahti.fm` are counted toward the originating channel's
   listener-hour counter (vanity metric only; doesn't affect grants under v6)
 
 **No multistream to YouTube/Twitch.** Both will copyright-strike a stream
 containing third-party music regardless of artist consent. **Mixcloud only.**
 This decision is documented in the anti-patterns list — do not add YouTube/Twitch
 multistream targets to the meta-stream "to test it." You will lose the org's
-YouTube/Twitch accounts and damage Replay's relationships with the platforms.
+YouTube/Twitch accounts and damage Tahti's relationships with the platforms.
 
-**Done when:** Two artists go live simultaneously. Replay Radio plays one for
+**Done when:** Two artists go live simultaneously. Tahti Radio plays one for
 ~10 min, switches to the other, switches back. Mixcloud account shows the
 live stream with rotating "Now broadcasting" metadata. When both stop, the
 placeholder loop kicks in within 30 seconds.
@@ -652,9 +652,9 @@ broadcasts happening at their location. No booking marketplace, no ticketing.
 
 **Scope:**
 - New account type `VENUE` (separate from `ARTIST`)
-- Public venue directory at `replay.fm/venues`
-- Venue profile pages at `replay.fm/v/<slug>`
-- iCalendar feeds at `replay.fm/v/<slug>/calendar.ics`
+- Public venue directory at `Tahti.fm/venues`
+- Venue profile pages at `Tahti.fm/v/<slug>`
+- iCalendar feeds at `Tahti.fm/v/<slug>/calendar.ics`
 - JSON API at `/v1/venues/<slug>/broadcasts`
 
 **Data model in `services/api`:**
@@ -768,11 +768,11 @@ take (operationally break-even, 2% covers Stripe + GDPR + support).
 1. Dashboard → "Fan Subscriptions" → "Enable"
 2. Stripe Connect Express onboarding (KYC: ID, bank, tax forms)
 3. Once approved (1-3 days), artist defines tiers
-4. Tiers go live on `replay.fm/u/<handle>/subscribe`
+4. Tiers go live on `Tahti.fm/u/<handle>/subscribe`
 
 **Listener subscribe flow:**
 1. On artist's channel page or profile: "Support [artist name]" button
-2. Routes to `replay.fm/u/<handle>/subscribe`
+2. Routes to `Tahti.fm/u/<handle>/subscribe`
 3. Choose tier → Stripe Checkout
 4. On successful payment, account created automatically (email + Stripe
    customer ID); confirmation email sent with password setup link
@@ -1129,7 +1129,7 @@ guides that fill in the artist's current credentials. See
 implementation:
 
 - `GET /v1/me/broadcast/guides/obs` returns a personalized Markdown guide for OBS:
-  - The artist's current RTMP server URL (`rtmp://rtmp.replay.fm/live`)
+  - The artist's current RTMP server URL (`rtmp://rtmp.Tahti.fm/live`)
   - Their current stream key (revealed once, rotatable)
   - Recommended OBS settings (1920×1080 placeholder, 30 fps, AAC 128k, x264 veryfast, 2500 kbps)
   - Audio-only setup (recommended): set video to "color source" with their cover art, set audio to their interface
@@ -1190,9 +1190,9 @@ archive fallback, live recording sidecar, HLS output, optional RTMP multistream.
   passthrough to the artist, minus 2% operational fee.
 - **v6:** Allowing artists to subscribe to themselves or sock-puppet accounts.
   Dedup by email and payment method.
-- **v6:** Adding YouTube or Twitch as Replay Radio multistream targets. You
+- **v6:** Adding YouTube or Twitch as Tahti Radio multistream targets. You
   will get copyright-struck within weeks. Mixcloud only.
-- **v6:** Editorializing the Replay Radio rotation. The picker algorithm is
+- **v6:** Editorializing the Tahti Radio rotation. The picker algorithm is
   fair-rotation by default. The director should not have programming control.
 - **v6:** Building a venue *booking* marketplace. Calendar feeds only — no
   job postings, no application flows, no mediation. We are not Resident Advisor.
