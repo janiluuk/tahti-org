@@ -1,4 +1,4 @@
-# Replay ry — funding strategy
+# Tahti ry — funding strategy
 
 Foundation grants and donations are not optional decoration on the model — they
 are required revenue. This document is the plan to secure them.
@@ -7,9 +7,9 @@ are required revenue. This document is the plan to secure them.
 
 | | Subs + dist | Grants | Donations | Total revenue |
 |---|---|---|---|---|
-| Y1 | €13,110 (34%) | €25,000 (64%) | €800 (2%) | €38,910 |
-| Y2 | €83,160 (65%) | €45,000 (35%) | €4,800 (4%) | €128,460 |
-| Y3 | €262,200 (73%) | €80,000 (22%) | €16,000 (4%) | €358,200 |
+| Y1 | €9,110 (26%) | €25,000 (72%) | €800 (2%) | €34,946 |
+| Y2 | €54,660 (52%) | €45,000 (43%) | €4,800 (5%) | €104,964 |
+| Y3 | €182,200 (65%) | €80,000 (28%) | €16,000 (6%) | €281,272 |
 
 Grant dependency drops over time as subscription revenue grows — by Y3 we're a
 mostly subscription-supported organization with grants as supplement, not lifeline.
@@ -84,7 +84,7 @@ and a real platform serving real artists. Grant application surface broadens.
 ### Creative Europe — the big bet
 
 Creative Europe's Culture strand awards €30k–150k for cross-border European
-cultural projects. Replay ry partnering with a Berlin or Tallinn collective
+cultural projects. Tahti ry partnering with a Berlin or Tallinn collective
 fits.
 
 - **Application:** complex, ~80 hours of work, partnership required
@@ -137,7 +137,7 @@ matter for:
 
 ## Sponsorship policy
 
-Sponsorship complicates the nonprofit story if not handled carefully. Replay ry
+Sponsorship complicates the nonprofit story if not handled carefully. Tahti ry
 policy:
 
 **Accept:**

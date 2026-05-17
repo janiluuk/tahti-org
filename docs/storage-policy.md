@@ -1,8 +1,8 @@
-# Replay ry — storage policy
+# Tahti ry — storage policy
 
 ## The principle
 
-Replay does not enforce per-user storage limits.
+Tahti does not enforce per-user storage limits.
 
 We track usage. We display it. We nudge gently when it grows large. We do not
 cut anyone off.
@@ -103,7 +103,7 @@ revisited** at AGM.
 
 The bylaws (§8 proposed) state:
 
-> Replay ry does not impose enforced storage limits on member channels. The
+> Tahti ry does not impose enforced storage limits on member channels. The
 > Board may revisit this policy if aggregate storage cost exceeds 25% of
 > subscription revenue, by proposing an amendment subject to member vote at
 > the next General Meeting.

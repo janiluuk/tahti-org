@@ -1,6 +1,6 @@
-# Replay ry — transparency policy
+# Tahti ry — transparency policy
 
-The transparency commitment is what distinguishes Replay ry from any other
+The transparency commitment is what distinguishes Tahti ry from any other
 broadcasting platform. It is also a real engineering and operational burden
 that we accept deliberately.
 
@@ -22,8 +22,8 @@ that we accept deliberately.
   - Audited financial statements
   - Per-channel grant disbursement (anonymized as "Channel #N" unless artist
     opts into public attribution)
-  - Methodology explanation (how listener-hours are counted, how the formula
-    works)
+  - Methodology explanation (how engagement units are counted, how the grant
+    formula works; listener-hours reported separately as a vanity metric only)
   - Board roster and trustee statements of conflict
   - Sustaining donor list (with consent)
 - All historical data preserved indefinitely; no quiet rewrites

@@ -1,30 +1,30 @@
-# Replay ry — Replay Radio meta-stream and venue calendar API
+# Tahti ry — Tahti Radio meta-stream and venue calendar API
 
-## Replay Radio — the meta-stream
+## Tahti Radio — the meta-stream
 
-Replay Radio is the org-operated 24/7 stream that **relays whichever member
+Tahti Radio is the org-operated 24/7 stream that **relays whichever member
 channels are currently live**. It's a discovery surface, not a curated
 program.
 
 ### What it is
 
-- A single Liquidsoap container running on the Replay infrastructure
+- A single Liquidsoap container running on the Tahti infrastructure
 - At any given moment, it relays the audio from one currently-live member channel
 - When the current relay-target stops broadcasting, the meta-stream picks the
   next available live channel (round-robin or random; configurable)
 - When zero channels are live, it falls back to a placeholder loop (an
   instrumental track + occasional "we'll be back" voice tag)
 - It multistreams out to **Mixcloud Live** only (legally clean target)
-- Listeners can tune in at `radio.replay.fm` or via the player on `replay.fm`
-- Listener-hours on Replay Radio route to the originating channel's vanity
-  counter (not to grant calculation under v6 anyway, since listener-hours are
+- Listeners can tune in at `radio.tahti.fm` or via the player on `tahti.fm`
+- Listener-hours on Tahti Radio route to the originating channel's vanity
+  counter (not used for grant calculation — listener-hours are
   cosmetic now — but for honest accounting, the data still attributes correctly)
 
 ### What it isn't
 
 - Not a curated radio station. No editorial schedule. The director doesn't
   pick what plays when.
-- Not a replay-of-archives stream. Archives don't go through Replay Radio.
+- Not a tahti-of-archives stream. Archives don't go through Tahti Radio.
   Only currently-live broadcasts.
 - Not multistreamed to YouTube or Twitch. Those platforms strike unlicensed
   music regardless of artist consent. Mixcloud has blanket licenses.
@@ -62,12 +62,12 @@ the whole meta-stream until it stops.
 
 ### Opt-out
 
-Any artist can disable being on Replay Radio in their channel settings:
+Any artist can disable being on Tahti Radio in their channel settings:
 
-> **Include my live broadcasts on Replay Radio**
-> When enabled, your live broadcasts may be relayed on Replay Radio (the
+> **Include my live broadcasts on Tahti Radio**
+> When enabled, your live broadcasts may be relayed on Tahti Radio (the
 > org-operated meta-stream) and multistreamed to Mixcloud. Listeners
-> discovering you through Replay Radio can click through to your channel.
+> discovering you through Tahti Radio can click through to your channel.
 > [toggle: ON / OFF — default ON]
 
 There is no opt-in for archive relay because we don't relay archives.
@@ -75,7 +75,7 @@ There is no opt-in for archive relay because we don't relay archives.
 ### Multistream-out to Mixcloud
 
 The meta-stream is multistreamed to Mixcloud Live continuously when it has
-audio. The Mixcloud account is `mixcloud.com/replay-radio`. Stream metadata
+audio. The Mixcloud account is `mixcloud.com/tahti-radio`. Stream metadata
 ("now playing: Artist Name") updates as the meta-stream switches between
 sources.
 
@@ -104,27 +104,27 @@ Modeled in financials at:
 
 ### Tech notes
 
-- Lives in `services/replay-radio/` — a separate Liquidsoap container
+- Lives in `services/tahti-radio/` — a separate Liquidsoap container
 - Uses `input.http` to pull HLS from the currently-elected source channel
 - Re-encodes to Opus 256 for output to its own HLS publish
 - Uses `output.url` to push RTMP to Mixcloud Live
 - Has a placeholder loop file checked into the repo at
-  `services/replay-radio/placeholder.flac` — public-domain instrumental + voice
+  `services/tahti-radio/placeholder.flac` — public-domain instrumental + voice
   tag. Played when zero channels are live.
-- Orchestrator service has a new "ReplayRadioPicker" routine that runs every
+- Orchestrator service has a new "TahtiRadioPicker" routine that runs every
   60 seconds, evaluates the candidate list, and rewrites the meta-stream's
   Liquidsoap source URL if a switch is warranted.
 
 ### Listener experience
 
-`radio.replay.fm` is a minimal page:
+`radio.tahti.fm` is a minimal page:
 - Always-playing HLS player
 - "Now broadcasting: [artist name]" with link to their channel
 - "Up next" doesn't exist (we don't know)
 - Chat reflects whichever channel is being relayed (joining radio chat
   redirects to the source channel's chat)
 
-Or listeners can subscribe to Replay Radio on Mixcloud and tune in there.
+Or listeners can subscribe to Tahti Radio on Mixcloud and tune in there.
 
 ## Venue calendar API
 
@@ -134,10 +134,10 @@ discover scene activity by physical location.
 
 ### What it is
 
-- Venue creates a free venue profile at `replay.fm/v/<venue-slug>`
+- Venue creates a free venue profile at `tahti.fm/v/<venue-slug>`
 - Venue defines: name, location, address, capacity, photos, externals
 - Venue publishes broadcasts: "DJ Long Doe broadcasting from us, Friday 22:00"
-- Each venue has an iCalendar feed: `replay.fm/v/<venue-slug>/calendar.ics`
+- Each venue has an iCalendar feed: `tahti.fm/v/<venue-slug>/calendar.ics`
 - Artists can subscribe to venue feeds; venue subscriptions show up on their
   dashboard as "upcoming gigs"
 - Listeners can subscribe to venue feeds in their calendar app
@@ -220,16 +220,16 @@ GET /v/<venue-slug>/calendar.ics
 
 BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Replay ry//Venue Calendar//EN
-NAME:[Venue Name] — Replay broadcasts
+PRODID:-//Tahti ry//Venue Calendar//EN
+NAME:[Venue Name] — Tahti broadcasts
 BEGIN:VEVENT
-UID:venue-broadcast-<id>@replay.fm
+UID:venue-broadcast-<id>@tahti.fm
 DTSTART:20260620T220000Z
 DTEND:20260621T010000Z
 SUMMARY:DJ Long Doe — live from [Venue Name]
-DESCRIPTION:Listen live at https://long-doe.replay.fm
+DESCRIPTION:Listen live at https://long-doe.tahti.fm
 LOCATION:[venue address]
-URL:https://replay.fm/v/<venue-slug>
+URL:https://tahti.fm/v/<venue-slug>
 END:VEVENT
 END:VCALENDAR
 ```
@@ -238,8 +238,8 @@ JSON API also available: `GET /v1/venues/<slug>/broadcasts?from=&to=`
 
 ### Discovery
 
-- `replay.fm/venues` lists all verified venues (paginated, geo-filterable)
-- `replay.fm/v/<slug>` shows venue profile + upcoming broadcasts + past broadcasts
+- `tahti.fm/venues` lists all verified venues (paginated, geo-filterable)
+- `tahti.fm/v/<slug>` shows venue profile + upcoming broadcasts + past broadcasts
 - Artist profile shows "Past gigs" pulled from venue records they were tagged in
 
 ### Verification

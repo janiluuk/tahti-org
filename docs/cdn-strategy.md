@@ -1,6 +1,6 @@
-# Replay ry — CDN strategy (European-first)
+# Tahti ry — CDN strategy (European-first)
 
-Replay is a Helsinki-based Finnish nonprofit serving primarily EU listeners.
+Tahti is a Helsinki-based Finnish nonprofit serving primarily EU listeners.
 Our CDN strategy is European-first for two reasons:
 
 1. **Latency** — most listeners are in the EU; routing through US PoPs adds 80-150 ms
@@ -129,9 +129,9 @@ Every CDN we use needs:
 - Robots.txt: allows indexing of public profile/release pages, disallows
   private API endpoints
 
-## What changes for the Replay Radio meta-stream
+## What changes for the Tahti Radio meta-stream
 
-Replay Radio's HLS is served via Bunny too. Mixcloud Live is its own
+Tahti Radio's HLS is served via Bunny too. Mixcloud Live is its own
 infrastructure — we just push RTMP to them and they handle distribution.
 
 ## What changes for fan-sub-only downloads

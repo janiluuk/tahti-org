@@ -1,4 +1,4 @@
-// Replay ry — community deck (for artists, scene, prospective members)
+// Tahti ry — community deck (for artists, scene, prospective members)
 
 const pptxgen = require("pptxgenjs");
 const React = require("react");
@@ -51,8 +51,8 @@ const sh = (opacity = 0.4) => ({
 async function main() {
   const pres = new pptxgen();
   pres.layout = "LAYOUT_WIDE";
-  pres.author = "Replay ry";
-  pres.title = "Replay \u2014 your radio station";
+  pres.author = "Tahti ry";
+  pres.title = "Tahti \u2014 your radio station";
 
   // ─── Slide 1: title (artist-facing) ─────────────────────────────
   {
@@ -65,7 +65,7 @@ async function main() {
     s.addShape(pres.shapes.RECTANGLE, {
       x: 0.7, y: 0.55, w: 0.06, h: 0.5, fill: { color: COL.amber }, line: { color: COL.amber },
     });
-    s.addText("REPLAY", {
+    s.addText("TAHTI", {
       x: 0.85, y: 0.5, w: 4, h: 0.55,
       fontFace: F.header, fontSize: 18, bold: true, color: COL.textLight, charSpacing: 4, margin: 0,
     });
@@ -174,7 +174,7 @@ async function main() {
     s.addText([
       { text: "https://", options: { color: COL.textDim, fontSize: 22 } },
       { text: "your-name", options: { color: COL.amber, fontSize: 22, bold: true } },
-      { text: ".replay.fm", options: { color: COL.cyan, fontSize: 22, bold: true } },
+      { text: ".tahti.fm", options: { color: COL.cyan, fontSize: 22, bold: true } },
     ], {
       x: 0.7, y: 2.5, w: 11.9, h: 1.0, align: "center", valign: "middle",
       fontFace: F.header, margin: 0,
@@ -378,7 +378,7 @@ async function main() {
     s.addText("Your home page on the internet.", {
       x: 0.7, y: 0.5, w: 12, h: 0.7, fontFace: F.header, fontSize: 36, bold: true, color: COL.textLight, margin: 0,
     });
-    s.addText("Bio, releases, channel \u2014 one URL that shows up when someone googles you.", {
+    s.addText("Bio, releases, channel, and a pro audio editor \u2014 one URL that shows up when someone googles you.", {
       x: 0.7, y: 1.15, w: 12, h: 0.5, fontFace: F.body, fontSize: 15, italic: true, color: COL.textMuted, margin: 0,
     });
 
@@ -388,7 +388,7 @@ async function main() {
       fill: { color: COL.bg2 }, line: { color: COL.amber, width: 1.5 }, shadow: sh(0.35),
     });
     s.addText([
-      { text: "https://replay.fm/u/", options: { color: COL.textDim, fontSize: 20 } },
+      { text: "https://tahti.fm/u/", options: { color: COL.textDim, fontSize: 20 } },
       { text: "your-handle", options: { color: COL.amber, fontSize: 20, bold: true } },
     ], {
       x: 0.7, y: 1.95, w: 11.9, h: 0.85, align: "center", valign: "middle",
@@ -401,14 +401,14 @@ async function main() {
         head: "Bio + photos",
         body: "Markdown-rich text with paragraphs, headings, images, and embedded video. Pull-quotes, links, the works. Looks like a label site, not a SoundCloud profile." },
       { x: 3.75, icon: FaMusic,  color: COL.violet,
-        head: "Release timeline",
-        body: "Albums, EPs, singles in chronological order. Upload in WAV or FLAC \u2014 we preserve the original. Studio tier downloads in FLAC, streams in transparent Opus 256." },
+        head: "Editor + releases",
+        body: "Built-in pro audio editor: multitrack, EQ, dynamics, LUFS, fades. Bounce straight to archive or a release. Upload WAV/FLAC \u2014 we preserve the original." },
       { x: 6.80, icon: FaPlay,   color: COL.mint,
         head: "Channel embed",
         body: "Your 24/7 channel player embedded inline. Live state, current track, tune-in CTA. Listeners reach your broadcast from the same page as your discography." },
       { x: 9.85, icon: FaLink,   color: COL.amber,
         head: "Externals + press kit",
-        body: "Instagram, Bandcamp, personal site \u2014 all in one place. Studio tier adds a downloadable press kit: bio in 200/400/1000-word variants, hi-res photos." },
+        body: "Instagram, Bandcamp, personal site \u2014 all in one place. One profile URL for flyers, bios, and releases." },
     ];
     for (const c of cols) {
       s.addShape(pres.shapes.RECTANGLE, {
@@ -529,7 +529,7 @@ async function main() {
         x: 0.7, color: COL.mint, icon: FaSpotify, head: "Original tracks",
         target: "Spotify  \u00B7  Apple Music  \u00B7  Tidal  \u00B7  Amazon  \u00B7  Deezer",
         body: "Submit through our wizard. ISRC allocated for you. Live on every DSP in 7\u201310 days. Royalty reports pull back monthly to your dashboard.",
-        cta: "Studio tier: 12 releases/yr included.\nArtist tier: \u20AC8/release pay-per-use.",
+        cta: "Paying artists: \u20AC40/yr membership.\nDSP releases: \u20AC8 each pay-per-use.",
       },
       {
         x: 6.85, color: COL.violet, icon: FaMixcloud, head: "DJ mixes",
@@ -589,7 +589,7 @@ async function main() {
       { icon: FaInfinity, color: COL.cyan,  head: "Keep everything",
         body: "Recorded a 200-hour back catalog of mixes? Keep them all. We don\u2019t delete to save costs." },
       { icon: FaUnlock,   color: COL.mint,  head: "Open formats",
-        body: "Opus 256 for streaming, FLAC archival on Studio. No proprietary lock-in. Export anytime." },
+        body: "Opus 256 for streaming. Originals preserved; export anytime. FLAC for fan-subscribers." },
       { icon: FaCloudUploadAlt, color: COL.amber, head: "Auto-archive live sets",
         body: "Every live broadcast saved automatically. Edit titles later or let them stay unnamed." },
       { icon: FaLink, color: COL.violet, head: "Fallback rotation",
@@ -652,7 +652,7 @@ async function main() {
         body: [
           { text: "Fans subscribe directly to you for \u20AC1\u2013\u20AC100/month. ", options: { color: COL.textLight, bold: true } },
           { text: "Money flows fan \u2192 Stripe \u2192 you, with a 2% operational fee covering processing, GDPR, and support. ", options: { color: COL.textMuted } },
-          { text: "Replay ry takes zero. ", options: { color: COL.amber, bold: true } },
+          { text: "Tahti ry takes zero. ", options: { color: COL.amber, bold: true } },
           { text: "Subscribers get a badge, FLAC downloads, fan-only chat. You choose tiers and benefits.", options: { color: COL.textMuted } },
         ],
         fig: "\u20AC163k", figLabel: "to artists, 3yr total",
@@ -737,7 +737,7 @@ async function main() {
     });
 
     s.addText(
-      "Every paying artist is automatically a member of Replay ry, the Finnish nonprofit that runs the platform. You get a member number. You get a vote. You get a seat at the annual general meeting.",
+      "Every paying artist is automatically a member of Tahti ry, the Finnish nonprofit that runs the platform. You get a member number. You get a vote. You get a seat at the annual general meeting.",
       {
         x: 0.7, y: 2.25, w: 11.5, h: 1.0,
         fontFace: F.body, fontSize: 15, color: COL.textMuted, margin: 0,
@@ -781,7 +781,7 @@ async function main() {
     }
   }
 
-  // ─── Slide: Replay Radio + venue calendar (NEW v6) ─────────────
+  // ─── Slide: Tahti Radio + venue calendar ─────────────
   {
     const s = pres.addSlide();
     s.background = { color: COL.bg };
@@ -789,7 +789,7 @@ async function main() {
     s.addText("More ways to be found.", {
       x: 0.7, y: 0.5, w: 12, h: 0.7, fontFace: F.header, fontSize: 36, bold: true, color: COL.textLight, margin: 0,
     });
-    s.addText("Replay Radio amplifies your live broadcasts. Venue calendars surface where you\u2019re playing.", {
+    s.addText("Tahti Radio amplifies your live broadcasts. Venue calendars surface where you\u2019re playing.", {
       x: 0.7, y: 1.15, w: 12, h: 0.5, fontFace: F.body, fontSize: 14, italic: true, color: COL.textMuted, margin: 0,
     });
 
@@ -797,9 +797,9 @@ async function main() {
     const features = [
       {
         x: 0.7, color: COL.cyan, icon: FaBroadcastTower,
-        head: "Replay Radio", sub: "The org-operated 24/7 meta-stream",
+        head: "Tahti Radio", sub: "The org-operated 24/7 meta-stream",
         body: [
-          { text: "When you go live, Replay Radio may relay your broadcast \u2014 along with whichever other channels are currently on air. ", options: { color: COL.textLight, bold: true } },
+          { text: "When you go live, Tahti Radio may relay your broadcast \u2014 along with whichever other channels are currently on air. ", options: { color: COL.textLight, bold: true } },
           { text: "Fair rotation, no curation, no editorial control. ", options: { color: COL.textMuted } },
           { text: "Multistreamed to Mixcloud Live ", options: { color: COL.cyan, bold: true } },
           { text: "so listeners can find you from outside the platform. Opt-out toggle in your settings if you prefer.", options: { color: COL.textMuted } },
@@ -815,13 +815,13 @@ async function main() {
         x: 6.85, color: COL.amber, icon: FaBuilding,
         head: "Venue calendars", sub: "Where you\u2019re playing, when, for whom",
         body: [
-          { text: "Venues can register on Replay and publish calendars of broadcasts at their location. ", options: { color: COL.textLight, bold: true } },
+          { text: "Venues can register on Tahti and publish calendars of broadcasts at their location. ", options: { color: COL.textLight, bold: true } },
           { text: "Your future gigs at a venue appear on the venue\u2019s page; their iCalendar feed shows up in your fans\u2019 calendar apps. ", options: { color: COL.textMuted } },
           { text: "Not a booking marketplace ", options: { color: COL.amber, bold: true } },
           { text: "\u2014 venues find artists, artists find venues, we just publish the schedule.", options: { color: COL.textMuted } },
         ],
         rows: [
-          ["URL",        "replay.fm/v/<venue-slug>"],
+          ["URL",        "tahti.fm/v/<venue-slug>"],
           ["Calendar",   "iCalendar feed + JSON API"],
           ["Booking",    "Direct \u2014 we don\u2019t mediate"],
           ["Verification", "Manual, ~3 business days"],
@@ -882,42 +882,28 @@ async function main() {
     const tiers = [
       {
         icon: FaHeadphones, color: COL.textMuted, tag: "FREE", price: "\u20AC0",
-        sub: "Try it out, no commitment", emphasize: false,
-        features: ["1 channel", "5 archive items", "Live broadcasting", "Basic chat", "Downloads enabled", "60d inactive = auto-archive"],
+        sub: "Free-tier artist", emphasize: false,
+        features: ["1 channel", "5 archive items", "Pro audio editor (full)", "Live broadcasting", "Basic chat", "60d inactive = auto-archive"],
       },
       {
-        icon: FaMicrophone, color: COL.cyan, tag: "ARTIST", price: "\u20AC40",
-        sub: "/year \u2014 most artists fit here", emphasize: false,
+        icon: FaMicrophone, color: COL.cyan, tag: "PAYING", price: "\u20AC40",
+        sub: "/year \u2014 paying artist", emphasize: true,
         features: [
           "Unlimited archive (no enforced limit)",
+          "Pro audio editor (full)",
           "Every live set auto-archived",
-          "1 multistream destination",
-          "Mixcloud auto-upload",
+          "Fan-subs + downloads \u2014 0% org cut",
+          "1 multistream (Mixcloud Live)",
           "Pay \u20AC8/release for Spotify etc.",
-          "Fan-subs enabled \u2014 0% org cut",
-          "Member of the association",
+          "Member of Tahti ry",
           "Eligible for annual grants",
-        ],
-      },
-      {
-        icon: FaTrophy, color: COL.violet, tag: "STUDIO", price: "\u20AC120",
-        sub: "/year \u2014 working pros & labels", emphasize: true,
-        features: [
-          "Everything in Artist",
-          "12 DSP releases/yr included",
-          "Unlimited multistream destinations",
-          "Custom domain",
-          "Detailed listener insights",
-          "FLAC live recording + downloads",
-          "Press kit page",
-          "API access",
         ],
       },
     ];
 
     for (let i = 0; i < tiers.length; i++) {
       const t = tiers[i];
-      const x = 1.7 + i * 3.5;
+      const x = 2.4 + i * 4.6;
       const cardW = 3.3;
       const cardH = t.emphasize ? 5.0 : 4.8;
       const cardY = t.emphasize ? 1.9 : 2.0;
@@ -980,7 +966,7 @@ async function main() {
     });
 
     s.addText(
-      "Every line of code is published under AGPL-3.0. If the org is ever sold, captured, or fails, the code is still yours. Anyone can fork Replay and run their own instance \u2014 we encourage it.",
+      "Every line of code is published under AGPL-3.0. If the org is ever sold, captured, or fails, the code is still yours. Anyone can fork Tahti and run their own instance \u2014 we encourage it.",
       {
         x: 0.7, y: 2.5, w: 11.5, h: 0.9,
         fontFace: F.body, fontSize: 14, color: COL.textMuted, margin: 0,
@@ -991,11 +977,11 @@ async function main() {
       { icon: FaCodeBranch,  color: COL.cyan,   head: "Every page links to source",
         body: "The code running the platform is always one click away. AGPL section 13 requires it. We honor it." },
       { icon: FaUnlock,      color: COL.mint,   head: "Fork if we fail",
-        body: "If Replay ry ever shuts down, the community can take over the code and the data. No platform graveyards." },
+        body: "If Tahti ry ever shuts down, the community can take over the code and the data. No platform graveyards." },
       { icon: FaBalanceScale, color: COL.violet, head: "Contributions welcome",
         body: "Send a pull request. We review. No contributor license agreement \u2014 your contributions stay AGPL." },
       { icon: FaShieldAlt,   color: COL.amber,  head: "Anti-extraction by design",
-        body: "AGPL is copyleft. Anyone running modified Replay code as a network service must publish their changes. No silent extraction." },
+        body: "AGPL is copyleft. Anyone running modified Tahti code as a network service must publish their changes. No silent extraction." },
     ];
 
     // Some IconExp aren't imported; fall back to FaShieldAlt placeholder check
@@ -1092,13 +1078,13 @@ async function main() {
       });
     }
 
-    s.addText("REPLAY  ry  \u00B7  HELSINKI  \u00B7  AGPL-3.0  \u00B7  hello@replay.fm", {
+    s.addText("TAHTI  ry  \u00B7  HELSINKI  \u00B7  AGPL-3.0  \u00B7  hello@tahti.fm", {
       x: 0.7, y: 6.95, w: 12.0, h: 0.4, align: "center",
       fontFace: F.header, fontSize: 10, color: COL.amber, charSpacing: 6, margin: 0,
     });
   }
 
-  await pres.writeFile({ fileName: "/home/claude/replay-package-v6/slides/Replay-Community.pptx" });
+  await pres.writeFile({ fileName: "slides/Tahti-Community.pptx" });
   console.log("OK");
 }
 

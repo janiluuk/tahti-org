@@ -9,11 +9,11 @@ example.com, www.example.com {
 }
 
 # Per-channel landing pages — wildcard subdomain routing
-*.replay.fm {
+*.tahti.fm {
     @valid expression {labels.0} != "www"
     encode zstd gzip
     reverse_proxy @valid web:3000 {
-        header_up X-Replay-Channel-Slug {labels.0}
+        header_up X-Tahti-Channel-Slug {labels.0}
     }
     tls {
         on_demand

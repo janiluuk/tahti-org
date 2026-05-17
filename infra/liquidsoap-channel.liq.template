@@ -1,5 +1,5 @@
 #!/usr/bin/liquidsoap
-# Replay v3 — per-channel template
+# Tahti — per-channel Liquidsoap template
 # THE CORE PRODUCT MECHANIC LIVES IN THIS FILE.
 # Each channel is a perpetual Liquidsoap process that:
 #   - listens for a live Icecast source from the artist
