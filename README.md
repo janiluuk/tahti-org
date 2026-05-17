@@ -1,4 +1,4 @@
-# Replay ry — implementation package (v6)
+# tahti.fm — implementation package 
 
 A nonprofit, open-source, channel-first broadcasting platform for independent artists.
 
@@ -10,17 +10,7 @@ A nonprofit, open-source, channel-first broadcasting platform for independent ar
 
 ## Product, in one paragraph
 
-Each artist gets a **24/7 channel** at `<slug>.replay.fm` and a **modern profile page** at `replay.fm/u/<handle>`. They broadcast live from OBS, Mixxx, Traktor, browser, or anything else. Listeners tune in anonymously, chat ephemerally, can **download tracks and mixes**, and can **subscribe directly to support their favorite artists** — money flows straight to the artist, the org takes nothing beyond a 2% operational fee. **Replay Radio** is the org-operated meta-stream that relays whichever channels are currently live, multistreamed to Mixcloud. Originals reach Spotify/Apple/Tidal via Revelator; mixes reach Mixcloud. Artists tag each other in bios and announcements. **Venues publish calendar feeds** of broadcasts on their premises. Every year the org's surplus is distributed as grants weighted by **engagement units** — paid downloads count more than free, fan-subscription euros count proportionally, passive listening doesn't count at all.
-
-## What changed in v6
-
-- **Grant model rewritten.** Listener-hours are now a vanity metric. Grants flow by **engagement units**: free downloads × 1, paid-subscriber downloads × 5, fan-subscription euros × 1.
-- **Fan-to-artist subscriptions.** Listeners can pay artists directly through Replay. **0% org take** (bylaws-locked), 2% operational fee covers Stripe + GDPR + ops, the rest flows to the artist.
-- **Downloads as first-class action.** Anonymous downloads with rate limits and fingerprint dedup; paid-subscriber downloads unlimited and count for more in grants.
-- **Replay Radio meta-stream.** Live-only relay of currently-broadcasting channels. Multistreamed to Mixcloud (the only legally clean target). Listener-hours route to the originating channel.
-- **Artist tagging.** `@-mention` system across profiles, bios, announcements, release credits.
-- **Venue calendar API.** Venues register, publish iCalendar feeds of broadcasts at their location. Lightweight, no booking marketplace.
-- **European CDN strategy.** Bunny CDN (Slovenia) primary; BlazingCDN (Latvia) secondary; Fastly EU-only as Y3+ fallback. GDPR DPAs noted.
+Each artist gets a **24/7 channel** at `<slug>.tahti.fm` and a **modern profile page** at `tahti.fm/u/<handle>`. They broadcast live from OBS, Mixxx, Traktor, browser, or anything else. Listeners tune in anonymously, chat ephemerally, can **download tracks and mixes**, and can **subscribe directly to support their favorite artists** — money flows straight to the artist, the org takes nothing beyond a 2% operational fee. **Replay Radio** is the org-operated meta-stream that relays whichever channels are currently live, multistreamed to Mixcloud. Originals reach Spotify/Apple/Tidal via Revelator; mixes reach Mixcloud. Artists tag each other in bios and announcements. **Venues publish calendar feeds** of broadcasts on their premises. Every year the org's surplus is distributed as grants weighted by **engagement units** — paid downloads count more than free, fan-subscription euros count proportionally, passive listening doesn't count at all.
 
 ## Files
 
