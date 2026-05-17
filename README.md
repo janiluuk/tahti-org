@@ -83,6 +83,9 @@ Cumulative 3-year:
 - **Total artist money: ~€312,000**
 - Director compensation: €115,000
 
+Per-artist net income by scenario (inactive, typical, top decile): see
+**Artist income by scenario** in `docs/financial-model.md`.
+
 ## What's on record
 
 1. **Y1 needs a founding grant of €20-25k.** ~€19k deficit on the model; one Tempo or Koneen grant covers it. Without it, the org can't start.

@@ -111,6 +111,97 @@ Six income streams:
 | Fan-sub direct to artists | €1,622 | €22,705 | €138,394 | €162,721 |
 | **Total artist money** | **€1,622** | **€42,642** | **€268,131** | **€312,395** |
 
+## Artist income by scenario
+
+Net income for a **paying member** = **annual grant + fan-sub net − €40 membership**.
+
+- Grants require **≥5 engagement units**/year and paying membership (see
+  `docs/engagement-and-fansubs.md`).
+- Fan-sub money goes **directly** to the artist (Stripe Connect), not through the
+  grant pool. In the model, only **5% / 7% / 8%** of paying artists have any
+  fan-subscribers (Y1–Y3), so fan income is concentrated.
+
+Engagement units:
+
+```
+units = free_downloads×1 + paid_downloads×5 + fan_sub_euros_received×1
+```
+
+Illustrative platform totals for grant-share math: Y1 ~25k units, Y2 ~200k, Y3 ~1M.
+
+### Year 3 (grant pool €129,737 · 4,000 paying members)
+
+| Archetype | ~Share of members | Units (illustr.) | Grant | Fan-sub net | Membership | **Net income** |
+|---|---|---|---|---|---|---|
+| Inactive (&lt;5 units) | ~30% | &lt;5 | €0 | €0 | −€40 | **−€40** |
+| Low engagement | ~30% | ~50 | ~€6 | €0 | −€40 | **−€34** |
+| Typical active | ~30% | ~500 | ~€65 | €0 | −€40 | **+€25** |
+| Modest fan-base (5 fans) | ~8% | ~200 | ~€26 | ~€267* | −€40 | **+€253** |
+| Strong presence | ~8% | ~2,000 | ~€259 | ~€267* | −€40 | **+€486** |
+| Top decile (engaged) | ~10% | ~3,800 | ~€493 | ~€2,136* | −€40 | **+€2,589** |
+
+\*Fan-sub net examples after Stripe + 2% org fee: 5 fans × €4.45/mo × 12 ≈ €267/yr;
+40 fans at ~€5/mo tier ≈ €2,136/yr.
+
+**Even split fallacy** (if grant pool and fan-subs were divided equally — they are not):
+
+| Source | Per paying member (Y3) |
+|---|---|
+| Grant | ~€32 |
+| Fan-sub net | ~€35 |
+| Membership | −€40 |
+| Hypothetical average | ~€27 |
+
+### Year 2 (grant pool €19,937)
+
+| Archetype | Grant | Fan-sub net | Membership | **Net income** |
+|---|---|---|---|
+| Inactive | €0 | €0 | −€40 | **−€40** |
+| Typical active (~500 units / ~200k total) | ~€50 | €0 | −€40 | **+€10** |
+| Artist with 5 fans | ~€40 | ~€267 | −€40 | **+€267** |
+
+### Year 1 (no grant pool)
+
+| Archetype | Grant | Fan-sub net | Membership | **Net income** |
+|---|---|---|---|
+| Paying member (no fans) | €0 | €0 | −€40 | **−€40** |
+| One of ~10 artists with fans | €0 | ~€162 avg | −€40 | **+€122** |
+
+### Three-year cumulative (paying members, platform-wide)
+
+| | Total |
+|---|---|
+| Grants (pooled) | €149,674 |
+| Fan-sub net (direct) | €162,721 |
+| **Gross received by artists** | **€312,395** |
+| Membership fees paid (4,800 member-years × €40) | −€192,000 |
+| **Net after membership** | **+€120,395** |
+
+Membership funds the service members own; grants and fan-subs return value to
+**engaged** members above the fee.
+
+### Bear cases — artist net income (Year 3)
+
+| Scenario | Grant pool | Typical active net | Top decile net |
+|---|---|---|---|
+| **Base plan** | €129,737 | ~+€25 | ~+€2,589 |
+| Half paying artists (2,000) | ~€49,000 | ~+€10 | ~+€800 |
+| No foundation grant | ~€58,000 | ~+€12 | ~+€950 |
+| Half fan-sub adoption | €129,737 | ~+€25 | ~+€1,300* |
+
+\*Top-decile fan-sub halved; grant pool unchanged in this simplified row.
+
+### Alignment with project plan
+
+| Plan target | Model | Status |
+|---|---|---|
+| Y1 / Y2 / Y3 paying members: 200 / 1,200 / 4,000 | Assumptions § | ✓ |
+| €40/yr single paid tier | Revenue § | ✓ |
+| Engagement-unit grants | `engagement-and-fansubs.md` | ✓ |
+| Y1 bridge ~€20k deficit | Surplus Y1 −€19,146 | ✓ |
+| Cost table = sum of lines | Verified | ✓ |
+| Revelator pass-through = releases × €4.50 COGS | Costs § | ✓ |
+
 ## Comparison with v6
 
 | | v6 cumulative | v7 cumulative | Delta |
