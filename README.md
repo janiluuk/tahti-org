@@ -72,24 +72,24 @@ Each artist gets a **24/7 channel** at `<their-handle>.tahti.fi` and a **modern 
 |---|---|---|---|
 | Paying artists | 200 | 1,200 | 4,000 |
 | Total org revenue | €35,426 | €107,844 | €290,872 |
-| Total costs (incl. director salary €30–45k) | €54,572 | €85,692 | €146,720 |
-| **Surplus** | **-€19,146** | **+€22,152** | **+€144,152** |
-| **Grant pool (90% of surplus)** | **€0** | **€19,937** | **€129,737** |
+| Total costs (no fixed salaries) | €24,572 | €45,692 | €101,720 |
+| **Surplus** | **+€10,854** | **+€62,152** | **+€189,152** |
+| **Grant pool (90% of surplus)** | **€9,769** | **€55,937** | **€170,237** |
 | **Fan-sub gross to artists** | €1,800 | €25,200 | €153,600 |
 | **Fan-sub net to artists** | €1,622 | €22,705 | €138,394 |
 
 Cumulative 3-year:
-- Grants distributed: ~€150,000
+- Grants distributed: ~€236,000
 - Fan-sub revenue direct to artists: ~€163,000
-- **Total artist money: ~€312,000**
-- Director compensation: €115,000
+- **Total artist money: ~€399,000**
+- Maintenance team: equal per-person share of surplus when positive (no fixed salary line)
 
 Per-artist net income by scenario (inactive, typical, top decile): see
 **Artist income by scenario** in `docs/financial-model.md`.
 
 ## What's on record
 
-1. **Y1 needs a founding grant of €20-25k.** ~€19k deficit on the model; one Tempo or Koneen grant covers it. Without it, the org can't start.
+1. **Y1 is operationally in surplus** on this model (~€11k before maintenance allocation). Founding grants (€20–25k target) fund capex and growth, not payroll survival.
 
 2. **No CDN means no recurring CDN line — but lossless streaming at Y3 scale requires either a 10 Gbps business fiber pipe (~€18k/yr in Helsinki) or routing significant traffic through UpCloud Helsinki (also paid by the GB).** The model assumes fiber upgrade by Y3. If concurrent listeners exceed 1,500 sustained before Y3, this gets pulled forward. Sensitivity analysis in `docs/financial-model.md`.
 
@@ -101,7 +101,7 @@ Per-artist net income by scenario (inactive, typical, top decile): see
 
 6. **Listener-hours are still a vanity metric only.** Grant share comes from engagement units (downloads + fan-sub euros). See `docs/engagement-and-fansubs.md`.
 
-7. **Director salary unchanged.** €30k/€40k/€45k. Cumulative €115k over 3 years.
+7. **No director salary line.** Director is on the maintenance team; surplus is split equally among active operators when income is positive (board cap 30% of revenue).
 
 8. **Competitive positioning is sharper.** See `docs/strategy-and-product.md` for the four critiques (Mixcloud/SoundCloud quality cap, Spotify AI saturation, Bandcamp as storage-only).
 

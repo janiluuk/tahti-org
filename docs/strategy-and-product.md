@@ -213,19 +213,19 @@ Secondary retention factors:
 
 - 4,000 paying artists, ~70% renewal
 - ~50 "anchor" channels with engaged audiences (>1k unique monthly listeners)
-- €190k in artist grants distributed annually
+- ~€170k in artist grants distributed annually (Y3 plan)
 - Audited financials, transparent ledger, satisfied auditor
 - Three foundation grants ongoing or completed
 - Mention in at least one major industry publication (Resident Advisor, Wire,
   Pitchfork)
-- Sustainable director salary and well-functioning board
+- Sustainable maintenance team (equal surplus share) and well-functioning board
 
 ## What failure looks like (early signals)
 
 - **Q3 Y1: <50 paying artists.** Pricing or feature gap. Likely fix: temporarily
   drop Artist tier to €25 for 12 months, see if it accelerates conversion.
 - **End Y1: founding grant didn't land.** Restructure: defer distribution
-  feature, cut director salary to €20k, pure beta mode through Y2.
+  feature, defer capex, maintenance team unpaid until surplus, pure beta through Y2.
 - **End Y2: renewal rate <50%.** Product not retaining. Diagnose: is it the
   broadcasting tool itself, the chat, the grant theatre, the open-source story?
 - **End Y3: top 1% of channels eat 80% of grants.** Bylaws debate. Likely
@@ -248,8 +248,9 @@ not equity. The bylaws prevent share issuance.
 ## The honest reflection
 
 The commercial v3 model would have generated ~€215k cumulative profit to a
-founder over 3 years. The nonprofit v4 model generates ~€115k director
-compensation to that same founder, plus ~€229k in grants distributed to artists.
+founder over 3 years. The nonprofit model returns surplus to artists as grants
+(~€236k over 3 years in the current plan) and pays the maintenance team
+(including the director) **equally from positive income** — not a fixed salary line.
 
 If "success" means personal wealth, v3 wins.
 

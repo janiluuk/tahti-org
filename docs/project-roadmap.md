@@ -6,8 +6,9 @@ platform → tested beta → operation by Tahti ry** (with trained member-operat
 **Status today:** specs, infra templates, and financial model exist; **application
 code is not started** (`docs/AGENT.md` milestones M0–M20).
 
-**Target Year 1 plan:** 200 paying members · ~€20k founding grant · first AGM ·
-handover-ready ops by month 12–18.
+**Target Year 1 plan:** 200 paying members · founding grant for capex/growth ·
+first AGM · handover-ready ops by month 12–18. Ops balance without a fixed
+salary line; maintenance team paid equally from surplus when positive.
 
 Use this as a GitHub Project / issue checklist (`- [ ]` = open).
 
@@ -39,7 +40,7 @@ or collect memberships.
 | [ ] | Register association at PRH (~€100) | Board | founding meeting | `governance-and-legal.md` |
 | [ ] | Open association bank account | Treasurer | PRH registration | — |
 | [ ] | Elect interim board (chair, treasurer, tech trustee) | Board | registration | `governance-and-legal.md` |
-| [ ] | Appoint director (employment contract, §10 salary cap understood) | Board | bank account | `financial-model.md` |
+| [ ] | Appoint director + define maintenance team roster (equal surplus share, §10 cap) | Board | bank account | `governance-and-legal.md` |
 | [ ] | Register VAT if revenue expected >€15k in Y1 | Treasurer | bank account | `governance-and-legal.md` |
 | [ ] | GDPR processing register + privacy policy published | Director | — | `governance-and-legal.md` |
 | [ ] | Sign DPAs: Stripe, Revelator, Mixcloud, UpCloud, email provider | Director | accounts | `cdn-strategy.md`, `infra-strategy.md` |
@@ -62,7 +63,7 @@ Goal: secure **≥€20k** to bridge Year 1 deficit (`financial-model.md`).
 | [ ] | **Suomen Kulttuurirahasto** — regional/central application | Director | 15–25 h | `funding-strategy.md` |
 | [ ] | Track co-funding narrative (membership ramp + committed director time) | Treasurer | 4 h | `funding-strategy.md` |
 | [ ] | Grant income recorded in transparency ledger when awarded | Treasurer | — | `transparency-policy.md` |
-| [ ] | Plan B if only €15k lands: defer capex, trim legal, director hours | Board | 2 h | `funding-strategy.md` |
+| [ ] | Plan B if only €15k lands: defer capex, trim legal, maintenance unpaid until surplus | Board | 2 h | `funding-strategy.md` |
 
 **Milestones:**
 
@@ -244,7 +245,7 @@ Tracks from `governance-and-legal.md` §7.b:
 | [ ] | GitHub org **tahti-ry** owns repo; director has admin, not sole owner | Board |
 | [ ] | Domains, TLS certs, Stripe account owned by association | Board |
 | [ ] | Hardware asset register (association property) | Treasurer |
-| [ ] | Employment contract / job description for director role | Board |
+| [ ] | Director role description + maintenance team compensation policy (equal split) | Board |
 | [ ] | Director liability insurance (~€500/yr) | Board |
 | [ ] | Annual audit firm engaged before €100k revenue (Y2) | Treasurer |
 
@@ -293,7 +294,7 @@ Month 13–18  Remaining features + operator training + handover package
 ```
 
 Adjust if grants land late: **do not launch public beta without G2 funding**
-unless director works pro bono and capex is deferred.
+unless maintenance team works unpaid until surplus and capex is deferred.
 
 ---
 

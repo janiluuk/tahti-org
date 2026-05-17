@@ -578,8 +578,8 @@ async function main() {
     // Implemented as a 2-stage bar chart
     s.addChart(pres.charts.BAR, [{
       name: "Y3 allocation",
-      labels: ["Infrastructure + ops", "Director salary", "Audit + admin", "Distribution pass-through", "Stripe + payment fees", "Artist grants", "Operating reserve"],
-      values: [86280, 45000, 6000, 10800, 4640, 129737, 14415],
+      labels: ["Infrastructure", "Operations", "Distribution pass-through", "Stripe + payment fees", "Artist grants", "Operating reserve"],
+      values: [45080, 41200, 10800, 4640, 170237, 18915],
     }], {
       x: 0.7, y: 2.0, w: 8.0, h: 4.8,
       barDir: "bar",
@@ -608,7 +608,7 @@ async function main() {
       x: 9.0, y: 2.9, w: 3.7, h: 0.45, align: "center",
       fontFace: F.header, fontSize: 14, bold: true, color: COL.textLight, margin: 0,
     });
-    s.addText("\u20AC129,737", {
+    s.addText("\u20AC170,237", {
       x: 9.0, y: 3.35, w: 3.7, h: 0.9, align: "center",
       fontFace: F.header, fontSize: 36, bold: true, color: COL.mint, margin: 0,
     });
@@ -619,11 +619,11 @@ async function main() {
     s.addText([
       { text: "Weighted by engagement units:\n", options: { color: COL.textLight, bold: true, breakLine: true } },
       { text: "Top 10% ", options: { color: COL.textMuted } },
-      { text: "\u2192 ~\u20AC260 each\n", options: { color: COL.mint, bold: true, breakLine: true } },
+      { text: "\u2192 ~\u20AC340 each\n", options: { color: COL.mint, bold: true, breakLine: true } },
       { text: "Mid 30% ", options: { color: COL.textMuted } },
-      { text: "\u2192 ~\u20AC19 each\n", options: { color: COL.cyan, bold: true, breakLine: true } },
+      { text: "\u2192 ~\u20AC25 each\n", options: { color: COL.cyan, bold: true, breakLine: true } },
       { text: "Active rest ", options: { color: COL.textMuted } },
-      { text: "\u2192 ~\u20AC4 each", options: { color: COL.violet, bold: true } },
+      { text: "\u2192 ~\u20AC6 each", options: { color: COL.violet, bold: true } },
     ], { x: 9.2, y: 4.75, w: 3.3, h: 1.95, fontFace: F.body, fontSize: 12, margin: 0, valign: "top" });
   }
 
@@ -635,7 +635,7 @@ async function main() {
     s.addText("Three-year picture", {
       x: 0.7, y: 0.5, w: 12, h: 0.7, fontFace: F.header, fontSize: 36, bold: true, color: COL.textLight, margin: 0,
     });
-    s.addText("Year 1 needs a founding grant to bridge the deficit. Year 2 and 3 build surplus.", {
+    s.addText("Year 1 is in surplus on ops costs; grants fund growth. Maintenance team shares surplus equally.", {
       x: 0.7, y: 1.15, w: 12, h: 0.5, fontFace: F.body, fontSize: 14, italic: true, color: COL.textMuted, margin: 0,
     });
 
@@ -662,32 +662,25 @@ async function main() {
         { text: "\u20AC434,142",             options: { color: COL.cyan, fontSize: 13, bold: true, align: "right" } },
       ],
       [
-        { text: "Total costs (incl. salary)", options: { color: COL.textLight, fontSize: 12 } },
-        { text: "\u20AC54,572",              options: { color: COL.rose, fontSize: 12, align: "right" } },
-        { text: "\u20AC85,692",              options: { color: COL.rose, fontSize: 12, align: "right" } },
-        { text: "\u20AC146,720",             options: { color: COL.rose, fontSize: 12, align: "right" } },
-        { text: "\u20AC286,984",             options: { color: COL.rose, fontSize: 13, bold: true, align: "right" } },
+        { text: "Total costs (no fixed salaries)", options: { color: COL.textLight, fontSize: 12 } },
+        { text: "\u20AC24,572",              options: { color: COL.rose, fontSize: 12, align: "right" } },
+        { text: "\u20AC45,692",              options: { color: COL.rose, fontSize: 12, align: "right" } },
+        { text: "\u20AC101,720",             options: { color: COL.rose, fontSize: 12, align: "right" } },
+        { text: "\u20AC171,984",             options: { color: COL.rose, fontSize: 13, bold: true, align: "right" } },
       ],
       [
         { text: "Surplus",                   options: { color: COL.textLight, fontSize: 12, bold: true } },
-        { text: "-\u20AC19,146",             options: { color: COL.rose, fontSize: 12, bold: true, align: "right" } },
-        { text: "+\u20AC22,152",             options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "+\u20AC144,152",            options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "+\u20AC147,158",            options: { color: COL.mint, fontSize: 13, bold: true, align: "right" } },
-      ],
-      [
-        { text: "Director salary",           options: { color: COL.textLight, fontSize: 12 } },
-        { text: "\u20AC30,000",              options: { color: COL.amber, fontSize: 12, align: "right" } },
-        { text: "\u20AC40,000",              options: { color: COL.amber, fontSize: 12, align: "right" } },
-        { text: "\u20AC45,000",              options: { color: COL.amber, fontSize: 12, align: "right" } },
-        { text: "\u20AC115,000",             options: { color: COL.amber, fontSize: 13, bold: true, align: "right" } },
+        { text: "+\u20AC10,854",             options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "+\u20AC62,152",             options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "+\u20AC189,152",            options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "+\u20AC262,158",            options: { color: COL.mint, fontSize: 13, bold: true, align: "right" } },
       ],
       [
         { text: "Artist grants distributed", options: { color: COL.textLight, fontSize: 12, bold: true } },
-        { text: "\u20AC0",                   options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC19,937",              options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC129,737",             options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC149,674",             options: { color: COL.mint, fontSize: 13, bold: true, align: "right" } },
+        { text: "\u20AC9,769",               options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC55,937",              options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC170,237",             options: { color: COL.mint, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC235,943",             options: { color: COL.mint, fontSize: 13, bold: true, align: "right" } },
       ],
       [
         { text: "Fan-sub direct to artists", options: { color: COL.textLight, fontSize: 12, bold: true } },
@@ -698,10 +691,10 @@ async function main() {
       ],
       [
         { text: "Total artist money",        options: { color: COL.textLight, fontSize: 12, bold: true } },
-        { text: "\u20AC1,622",               options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC42,642",              options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC268,131",             options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
-        { text: "\u20AC312,395",             options: { color: COL.amber, fontSize: 14, bold: true, align: "right" } },
+        { text: "\u20AC11,391",              options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC78,642",              options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC308,631",             options: { color: COL.amber, fontSize: 12, bold: true, align: "right" } },
+        { text: "\u20AC398,664",             options: { color: COL.amber, fontSize: 14, bold: true, align: "right" } },
       ],
     ], {
       x: 0.7, y: 2.0, w: 12.0, h: 4.4,
@@ -721,7 +714,7 @@ async function main() {
     });
     s.addText([
       { text: "THE HEADLINE:  ", options: { color: COL.mint, bold: true, charSpacing: 3 } },
-      { text: "\u20AC312k in artists\u2019 hands over 3 years \u2014 grants + direct fan-subs \u2014 while paying the director a fair Finnish wage.", options: { color: COL.textLight, italic: true } },
+      { text: "\u20AC399k in artists\u2019 hands over 3 years \u2014 grants + fan-subs. Maintenance team (incl. director) shares surplus equally when income is positive.", options: { color: COL.textLight, italic: true } },
     ], { x: 0.95, y: 6.45, w: 11.5, h: 0.7, fontFace: F.body, fontSize: 13, valign: "middle", margin: 0 });
   }
 
@@ -743,7 +736,7 @@ async function main() {
         rows: [
           ["Members", "Paying artists, one vote each"],
           ["Board", "3-5 trustees, 2-yr terms"],
-          ["Director", "Paid employee, salary cap 30% of revenue"],
+          ["Maintenance team", "Director + operators; equal surplus share, 30% cap"],
           ["AGM", "Annual, electronic OK, motions voted"],
           ["Audit", "Required at \u20AC100k+ revenue (Y2 on)"],
         ],

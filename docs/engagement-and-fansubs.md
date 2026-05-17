@@ -51,14 +51,14 @@ Artist Long Doe in fiscal year 2027:
 - 40 fan-subscribers paying avg €5/month → 40 × €60 = €2,400 → 2,400 units
 - **Total units: 3,800**
 
-If the platform total is 1,000,000 units and the Year 3 grant pool is €129,737
+If the platform total is 1,000,000 units and the Year 3 grant pool is €170,237
 (see `docs/financial-model.md`):
 - Long Doe's share = 3,800 / 1,000,000 = 0.38%
-- Long Doe's grant = **€493**
+- Long Doe's grant = **€647**
 
 This is *in addition to* the €2,400/year that flowed directly to Long Doe via
 fan-subs (gross). After Stripe + 2% org fee, Long received ~€2,136 directly,
-plus the €493 grant, minus €40 membership — **net ~€2,589 for the year**.
+plus the €647 grant, minus €40 membership — **net ~€2,743 for the year**.
 
 ## Grant eligibility threshold
 

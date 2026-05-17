@@ -16,9 +16,10 @@ mostly subscription-supported organization with grants as supplement, not lifeli
 
 ## Y1 — survival year, secure the founding grant
 
-**The €25,000 target.** This bridges the Y1 operating deficit. Without it, the
-organization can technically operate but the director salary must drop to
-€15–20k, making it unsustainable for any director with rent and bills.
+**The €25,000 target.** This accelerates Y1 capex and member growth — hardware,
+legal, and outreach — not payroll survival. Operating costs balance without a
+fixed director salary; the maintenance team (including the director) shares
+surplus **equally** when the year is in the black (see `financial-model.md`).
 
 ### Primary target: Business Finland Tempo
 
