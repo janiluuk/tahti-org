@@ -23,14 +23,14 @@ Each artist gets a **24/7 channel** at `<their-handle>.tahti.fi` and a **modern 
 | Live chat + announcements | ✓ | ✓ |
 | Downloads (free + paid listeners) | ✓ | ✓ |
 | Fan-subscriptions enabled | ✓ | ✓ |
-| Multistream | — | ✓ (unlimited destinations) |
-| Mixcloud auto-upload | — | ✓ |
+| Multistream to popular video streaming services | — | ✓ (unlimited destinations) |
+| Auto-upload tracks to other services | — | ✓ |
 | DSP distribution | — | ✓ (pay €8/release) |
 | Newsletter | — | ✓ (4 sends/week) |
 | Social auto-post | — | ✓ |
 | Custom domain | — | ✓ |
 | API access | — | ✓ |
-| **Audio quality (broadcasts)** | **MP3 192 kbps** | **Lossless (FLAC stream + FLAC download)** |
+| **Audio quality (broadcasts)** | **MP3 320 kbps** | **Lossless (FLAC stream + FLAC download)** |
 | **Live broadcasting time** | **1 hour / week** | **Unlimited** |
 | **Member of the association** | — | ✓ — eligible for annual grants |
 
