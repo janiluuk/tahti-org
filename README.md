@@ -1,109 +1,113 @@
-# Tahti ry — implementation package (v7)
+# Tahti ry — implementation package
 
 A Finnish nonprofit, open-source, channel-first broadcasting platform for independent artists.
 
+## Read first
+
+**[`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)** — the three rules that govern every other document in this repository:
+
+1. This is for artists, not for corporate. Administration paid fairly. No profit motive.
+2. Highest quality, useful, community-driven platform — by design.
+3. The artist shines brightest. We don't rip off anyone in the chain.
+
+These rules are constitutional. They are not changeable by management decision. Everything else in `docs/` implements them.
+
+## What this is
+
 - **Legal form:** Finnish *yhdistys* (registered nonprofit association)
 - **License:** AGPL-3.0
-- **Surplus:** distributed annually as engagement-unit-weighted artist grants
-- **Direct artist revenue:** fan-to-artist subscriptions with 0% org take (operational fee only, ≤2%)
-- **Hosting:** owned hardware in Helsinki, UpCloud (Helsinki) for spillover, no CDN
-- **Mission:** give independent musicians and DJs a broadcasting home that doesn't extract from them
+- **Audio quality:** lossless FLAC for paid members (all their listeners); MP3 192 kbps for free
+- **Grant distribution:** annual, weighted by engagement units (downloads + fan-sub euros, not listener-hours)
+- **Direct artist revenue:** fan-to-artist subscriptions with 0% org take (2% operational fee covers Stripe + GDPR + ops)
+- **Hosting:** owned hardware in Helsinki + UpCloud Helsinki spillover; no CDN
+- **Pricing:** single paid tier €40/year; free tier with MP3 + 1 hr/week live broadcasting
 
-## Product, in one paragraph
+## Package structure
 
-Each artist gets a **24/7 channel** at `<their-handle>.tahti.fi` and a **modern profile page** at `tahti.fi/u/<handle>`. They broadcast live from OBS, Mixxx, Traktor, browser, or anything else. Listeners tune in anonymously, chat ephemerally, download tracks and mixes, and can subscribe directly to support their favorite artists — we take 0% of fan support (only a 2% fee covers Stripe and ops). Tahti Radio is the org-operated meta-stream that relays whichever channels are currently live, multistreamed to Mixcloud. Originals reach Spotify/Apple/Tidal via Revelator; mixes reach Mixcloud. Artists tag each other in bios and announcements. Venues publish iCalendar feeds of broadcasts on their premises. Every year the org's surplus is distributed as grants weighted by engagement units — paid downloads count 5×, free downloads count 1×, fan-sub euros count 1× each.
-
-## Pricing (v7 — single paid tier)
-
-| | Free | Tahti — €40/year |
-|---|---|---|
-| Channel | ✓ | ✓ |
-| Archive uploads | ✓ | ✓ (unlimited) |
-| Profile + releases | ✓ | ✓ |
-| Live chat + announcements | ✓ | ✓ |
-| Downloads (free + paid listeners) | ✓ | ✓ |
-| Fan-subscriptions enabled | ✓ | ✓ |
-| Multistream to popular video streaming services | — | ✓ (unlimited destinations) |
-| Auto-upload tracks to other services | — | ✓ |
-| DSP distribution | — | ✓ (pay €8/release) |
-| Newsletter | — | ✓ (4 sends/week) |
-| Social auto-post | — | ✓ |
-| Custom domain | — | ✓ |
-| API access | — | ✓ |
-| **Audio quality (broadcasts)** | **MP3 320 kbps** | **Lossless (FLAC stream + FLAC download)** |
-| **Live broadcasting time** | **1 hour / week** | **Unlimited** |
-| **Member of the association** | — | ✓ — eligible for annual grants |
-
-**The philosophy:** free users are not forced to upgrade by friction. They get a complete, working product with MP3 audio and 1 hour of live broadcasting per week. People upgrade because they want more — not because they're frustrated.
-
-## What changed in v7
-
-- **Renamed Replay → Tahti.** Finnish name, registered for verification at PRH.
-- **Single paid tier at €40/year.** Studio tier (€120) dropped. Cleaner membership story.
-- **Free tier sharpened:** 1 hour of live broadcasting per week (otherwise full product), MP3 audio quality.
-- **Lossless for paid users:** FLAC streaming + FLAC download for all paid members.
-- **No CDN in financial model.** Hosting is owned hardware in Helsinki, on business fiber, with **UpCloud Helsinki** as spillover for static content.
-- **Sharper competitive positioning** in `docs/strategy-and-product.md` — direct critiques of SoundCloud/Mixcloud quality, Spotify AI saturation, Bandcamp as storage-only.
-
-## Files
+### Foundation documents (read these to understand the project)
 
 | File | Purpose |
 |---|---|
-| `docs/AGENT.md` | Coding-agent brief — repo, milestones (M0–M19), data model, OBS guides, transparency dashboard |
-| `docs/profile-and-promo-toolkit.md` | Profile spec, release model, embed/smartlink/social/newsletter/analytics |
-| `docs/engagement-and-fansubs.md` | Engagement units, downloads, fan-subscriptions |
-| `docs/tahti-radio-and-venues.md` | Meta-stream + venue calendar API |
-| `docs/financial-model.md` | 3-year financial model |
-| `docs/governance-and-legal.md` | Yhdistys structure, AGPL, bylaws sketch |
-| `docs/funding-strategy.md` | Foundation grants, donations, sponsorship policy |
-| `docs/transparency-policy.md` | Public ledger commitment |
-| `docs/storage-policy.md` | Soft-target storage, no enforced limit |
-| `docs/obs-and-broadcasting-guides.md` | Per-tool onboarding |
-| `docs/infra-strategy.md` | Self-hosted infrastructure: owned hardware + UpCloud spillover, no CDN |
-| `docs/strategy-and-product.md` | Channel-first positioning + competitive critiques |
-| `docs/project-roadmap.md` | **Master todo** — grants, build, test, handover to the association |
-| `docs/competitive-gaps-hearthis.md` | Gaps vs hearthis.at — metadata, visuals, collections, editor |
-| `infra/docker-stack.yml`, `Caddyfile`, etc. | Infra configs |
-| `slides/Tahti-Community.pptx` | 12-slide artist-facing deck |
-| `slides/Tahti-Business.pptx` | 12-slide governance + sustainability deck |
+| [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) | **Start here.** The three rules. Constitutional. |
+| [`docs/business-evaluation.md`](docs/business-evaluation.md) | Honest "is this worth doing" memo for founder, board, grant officers |
+| [`docs/strategy-and-product.md`](docs/strategy-and-product.md) | Positioning, competitive critique (SoundCloud/Mixcloud/Spotify/Bandcamp), retention thesis |
+| [`docs/roadmap-and-plan.md`](docs/roadmap-and-plan.md) | Phase 0 (pre-incorporation), Phase 1 (Months 1-9), Phase 2 (10-24), Phase 3 (25-36) |
+| [`docs/financial-model.md`](docs/financial-model.md) | Headline 3-year model — revenue, cost, surplus, grant pool |
+| [`docs/budget-detailed.md`](docs/budget-detailed.md) | Line-item monthly budget + break-even sensitivity analysis |
 
-## Headline numbers (v7)
+### Implementation documents (for the agent + director)
 
-| | Y1 | Y2 | Y3 |
-|---|---|---|---|
-| Paying artists | 200 | 1,200 | 4,000 |
-| Total org revenue | €35,426 | €107,844 | €290,872 |
-| Total costs (no fixed salaries) | €24,572 | €45,692 | €101,720 |
-| **Surplus** | **+€10,854** | **+€62,152** | **+€189,152** |
-| **Grant pool (90% of surplus)** | **€9,769** | **€55,937** | **€170,237** |
-| **Fan-sub gross to artists** | €1,800 | €25,200 | €153,600 |
-| **Fan-sub net to artists** | €1,622 | €22,705 | €138,394 |
+| File | Purpose |
+|---|---|
+| [`docs/AGENT.md`](docs/AGENT.md) | Coding-agent brief — repo, milestones M0-M20, data model, anti-patterns |
+| [`docs/governance-and-legal.md`](docs/governance-and-legal.md) | Yhdistys structure, bylaws (§1-12), AGPL implications, AGM mechanics |
+| [`docs/profile-and-promo-toolkit.md`](docs/profile-and-promo-toolkit.md) | Profile, release model, embed/smartlink/social/newsletter/analytics specs |
+| [`docs/engagement-and-fansubs.md`](docs/engagement-and-fansubs.md) | Engagement-unit grant formula + fan-to-artist subscription product spec |
+| [`docs/tahti-radio-and-venues.md`](docs/tahti-radio-and-venues.md) | Meta-stream architecture + venue calendar API |
+| [`docs/infra-strategy.md`](docs/infra-strategy.md) | Self-hosted Helsinki + UpCloud spillover, no CDN, GDPR posture |
+| [`docs/funding-strategy.md`](docs/funding-strategy.md) | Foundation grant pipeline (Tempo, Koneen, SKR, Creative Europe), donations, sponsorship |
+| [`docs/transparency-policy.md`](docs/transparency-policy.md) | Public ledger, annual report commitment, financial visibility |
+| [`docs/storage-policy.md`](docs/storage-policy.md) | Soft-target 500MB, no enforcement, hidden 50GB abuse safeguard |
+| [`docs/obs-and-broadcasting-guides.md`](docs/obs-and-broadcasting-guides.md) | Per-tool onboarding for OBS, Mixxx, Traktor, butt, browser ingest |
 
-Cumulative 3-year:
-- Grants distributed: ~€236,000
-- Fan-sub revenue direct to artists: ~€163,000
-- **Total artist money: ~€399,000**
-- Maintenance team: equal per-person share of surplus when positive (no fixed salary line)
+### Infrastructure templates
 
-Per-artist net income by scenario (inactive, typical, top decile): see
-**Artist income by scenario** in `docs/financial-model.md`.
+| File | Purpose |
+|---|---|
+| `infra/docker-stack.yml` | Production Swarm stack |
+| `infra/docker-compose.dev.yml` | Local development |
+| `infra/Caddyfile` | Edge TLS + reverse proxy |
+| `infra/liquidsoap-channel.liq.template` | Per-channel broadcaster template |
 
-## What's on record
+### Presentations
 
-1. **Y1 is operationally in surplus** on this model (~€11k before maintenance allocation). Founding grants (€20–25k target) fund capex and growth, not payroll survival.
+| File | Purpose |
+|---|---|
+| `slides/Tahti-Community.pptx` | Artist-facing deck — for founding-cohort recruitment + scene press |
+| `slides/Tahti-Business.pptx` | Governance + sustainability deck — for board candidates, grant officers, auditors |
 
-2. **No CDN means no recurring CDN line — but lossless streaming at Y3 scale requires either a 10 Gbps business fiber pipe (~€18k/yr in Helsinki) or routing significant traffic through UpCloud Helsinki (also paid by the GB).** The model assumes fiber upgrade by Y3. If concurrent listeners exceed 1,500 sustained before Y3, this gets pulled forward. Sensitivity analysis in `docs/financial-model.md`.
+## Headline numbers (base case)
 
-3. **The single-tier model is cleaner but less profitable.** Studio tier would have added ~€120k/yr revenue at Y3 (~€100k more surplus, ~€90k more grants). The trade-off was simplicity of membership story.
+| | Y1 | Y2 | Y3 | 3-yr cum. |
+|---|---|---|---|---|
+| Paid members | 200 | 1,200 | 4,000 | — |
+| Total org revenue | €35,426 | €107,700 | €290,872 | €433,998 |
+| Total costs (incl. director salary) | €54,572 | €86,092 | €148,220 | €288,884 |
+| **Org surplus** | **-€19,146** | **+€21,608** | **+€141,500** | **+€143,962** |
+| **Artist grant pool (90% of surplus)** | **€0** | **€19,447** | **€129,737** | **€149,184** |
+| **Fan-sub direct to artists** | €1,622 | €22,705 | €138,394 | €162,721 |
+| **Total artist money** | €1,622 | €42,152 | €268,131 | **€311,905** |
+| Director compensation | €30,000 | €40,000 | €45,000 | €115,000 |
 
-4. **Free users get a complete product.** Not a feature-limited trial. The only restrictions are MP3 audio (vs lossless) and 1 hour of live broadcasting per week. Everything else — chat, profile, releases, downloads, fan-subs, archive playback, multistream is gated to paid — is the same as paid users. We do not break things to force conversion.
+Break-even threshold: ~600 paid members in Y1 absent grant funding, ~775 in Y2, ~1,100 in Y3 (Y3 jump is the 10 Gbps fiber upgrade).
 
-5. **AGPL means anyone can fork.** Moat is the hosted instance plus the artist network on it, not the code.
+## Three things that must go right
 
-6. **Listener-hours are still a vanity metric only.** Grant share comes from engagement units (downloads + fan-sub euros). See `docs/engagement-and-fansubs.md`.
+1. A founding grant of €20-25k lands in Year 1 (Tempo, Koneen, or SKR).
+2. The org reaches at least 100 paid members by end of Year 1 (200 modeled).
+3. The director does not burn out or quit.
 
-7. **No director salary line.** Director is on the maintenance team; surplus is split equally among active operators when income is positive (board cap 30% of revenue).
+If all three: Tahti is operationally self-funding by Y2 and distributes meaningful grants by Y3.
+If any one fails: the org pauses, retrenches, or terminates. See `business-evaluation.md` for honest scenarios.
 
-8. **Competitive positioning is sharper.** See `docs/strategy-and-product.md` for the four critiques (Mixcloud/SoundCloud quality cap, Spotify AI saturation, Bandcamp as storage-only).
+## What's on record from the design process
+
+This package is the seventh major iteration of a multi-session design process. The accumulated honest observations:
+
+1. **Year 1 deficit is real and unavoidable** without grant funding. €19k modeled. Apply to Tempo + Koneen + SKR in parallel before incorporating.
+
+2. **The grant-distribution model concentrates pay-out.** Top-decile artists by engagement units receive ~€260/year at Y3 scale; mid-tier ~€19; active rest ~€4. This is intentional ("reward engagement, not passive consumption") and contestable ("the system rewards the artists who least need it"). The bylaws permit AGM amendment.
+
+3. **Fan-subs at 0% org take is unusual.** Patreon takes 8-12%, Bandcamp takes 10-15%. The 2% Tahti operational fee is bounded by costs (Stripe + GDPR + customer support); surplus rolls into the next year's grant pool. This is in the constitution and the bylaws.
+
+4. **AGPL is a moat *and* a vulnerability.** Anyone can fork. The defense is the hosted instance + the network on it, not the code. Be at peace with this.
+
+5. **Director salary is real and modest.** €30-45k cumulative €115k. This is the founder's three-year compensation; there is no equity upside downstream.
+
+6. **No CDN is a trade.** UpCloud Helsinki handles spillover. Y3 requires a 10 Gbps business fiber pipe (~€18k/yr). If fiber pricing changes materially, revisit the CDN decision at AGM — but doing so is a constitutional question, not a unilateral director call.
+
+7. **Listener-hours are vanity metrics only.** Grant share comes from engagement units. The constitution forbids designing around listener metrics.
+
+8. **The audio quality story is verifiable, not aspirational.** SoundCloud caps free listeners at 128 kbps Opus. Mixcloud caps free listeners at 64 kbps AAC. Tahti's paid members stream FLAC to all listeners. This claim is testable.
 
 — Generated 2026-05-17

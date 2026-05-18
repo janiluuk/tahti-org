@@ -1,12 +1,22 @@
 # Project: Tahti ry — nonprofit broadcasting platform
 
+## READ THIS FIRST
+
+Before reading anything else in this brief, read `docs/CONSTITUTION.md`. It is short. It contains the three rules that govern every implementation decision in this repository. The rules are:
+
+1. **This is for artists, not for corporate.** No profit motive. Administration paid fairly. Professional roles, not founder-forever. Surplus redistributed to artists annually.
+2. **Highest quality, useful, community-driven platform — by design.** Lossless audio not capped at listener tier. AGPL. Transparent ledger. Community-driven roadmap.
+3. **The artist shines brightest. We don't rip off anyone in the chain.** No algorithmic feeds. No data sales. No 0%-with-hidden-fees pricing. 0% org cut on fan-subs. Anonymous listening by default.
+
+If an implementation choice in this AGENT.md ever conflicts with the constitution, the constitution wins. If you (the agent) find yourself building a feature whose existence would violate one of the three rules — stop and flag it. The constitution overrides this document.
+
 ## Mission (technical interpretation)
 
 Build a self-hostable, AGPL-3.0-licensed platform where each artist operates a
 **24/7 channel** that broadcasts live and falls back to archive when offline.
 The hosted instance is operated by **Tahti ry**, a Finnish registered nonprofit
 association. Annual operating surplus is distributed as **transparent
-listener-hour-weighted grants** to artist members, visible on a permanent
+engagement-unit-weighted grants** to artist members, visible on a permanent
 public ledger.
 
 ## Reference user
@@ -23,7 +33,8 @@ financial model that returns surplus to them, not to shareholders.
    live. When they're offline, the channel plays from their archive. Listeners
    should never hit silence on an active channel.
 2. **Listeners are traffic, not users.** No accounts to listen. Chat handles are
-   per-browser-session, no signup.
+   per-browser-session, no signup. (Exception: fan-subscribers have accounts
+   because billing requires it. That is the only exception.)
 3. **Live chat is featured, not buried.** A first-class capability with ephemeral
    messages and persistent artist-pinned announcements. Make it visible from the
    channel page hero.
@@ -285,8 +296,7 @@ This is what makes  Tahti a nonprofit, not just an open-source project.
     `created_at`, `period_start`, `period_end`
   - Categories: REVENUE_SUBSCRIPTION, REVENUE_DISTRIBUTION,
     REVENUE_GRANT_INBOUND, REVENUE_DONATION, COST_INFRASTRUCTURE,
-    COST_DISTRIBUTION_PASSTHROUGH, COST_OPERATIONS, COST_MAINTENANCE_COMP,
-    COST_AUDIT,
+    COST_DISTRIBUTION_PASSTHROUGH, COST_OPERATIONS, COST_SALARY, COST_AUDIT,
     COST_PROFESSIONAL_SERVICES, GRANT_DISBURSEMENT, RESERVE_TRANSFER
 - Workers populate the ledger:
   - Stripe webhooks → REVENUE_SUBSCRIPTION
@@ -1030,8 +1040,7 @@ enum ArchiveSource { UPLOAD LIVE_RECORDING }
 enum TrackState { UPLOADING SCANNING TRANSCODING READY FAILED TAKEDOWN }
 enum LedgerCategory {
   REVENUE_SUBSCRIPTION REVENUE_DISTRIBUTION REVENUE_GRANT_INBOUND REVENUE_DONATION
-  COST_INFRASTRUCTURE COST_DISTRIBUTION_PASSTHROUGH COST_OPERATIONS
-  COST_MAINTENANCE_COMP
+  COST_INFRASTRUCTURE COST_DISTRIBUTION_PASSTHROUGH COST_OPERATIONS COST_SALARY
   COST_AUDIT COST_PROFESSIONAL_SERVICES
   GRANT_DISBURSEMENT RESERVE_TRANSFER
 }

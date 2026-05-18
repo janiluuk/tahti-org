@@ -9,7 +9,7 @@ that we accept deliberately.
 ### Monthly (within 30 days of month-end)
 
 - Revenue by category (subscriptions, distribution, grants, donations)
-- Costs by category (infrastructure, ops, maintenance compensation, audit, distribution
+- Costs by category (infrastructure, ops, salary, audit, distribution
   pass-through, professional services)
 - Running surplus
 - Storage usage in aggregate (total TB, average per user, median per user)

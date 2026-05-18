@@ -59,17 +59,14 @@ The bylaws (*säännöt*) are the governing document. Key clauses for Tahti ry:
 
 - 3–5 trustees elected at the AGM for 2-year terms (staggered)
 - Board elects chair from among trustees
-- Board sets maintenance team compensation annually, subject to §10 cap
+- Board sets director compensation annually, subject to §10 cap
 - Board approves the annual report and grant distribution before publication
 
-### Director and maintenance team (§7)
+### Director and staff (§7)
 
-- The Board may appoint a **director** and recognize **maintenance team**
-  members (trained member-operators for infra, support, and treasurer functions)
+- The Board may employ a director and other staff
 - The director runs day-to-day operations and reports to the Board monthly
-- There is **no standing director salary** in the operating budget
-- The director is a **maintenance team member** with the same compensation
-  rules as other team members (§10)
+- Director compensation set by Board, capped per §10
 
 ### Transparency (§9)
 
@@ -81,26 +78,16 @@ The bylaws (*säännöt*) are the governing document. Key clauses for Tahti ry:
 
 ### Compensation cap (§10)
 
-- **Maintenance team** = director + board-approved operators who perform
-  ongoing platform operations (deploy, support, ledger, grant runs)
-- When operating **surplus is positive** after audited costs, the Board may
-  allocate a **maintenance compensation pool** from that surplus
-- The pool is divided **equally** among every active maintenance team member
-  for that fiscal year (the director receives the same per-person amount as
-  any other operator — no premium tier)
-- Total maintenance team compensation per fiscal year shall not exceed 30%
-  of total revenue for that year
+- Total director compensation per fiscal year shall not exceed 30% of total
+  revenue for that year
 - No board member shall receive compensation other than reimbursement of
-  documented expenses (board service is voluntary)
+  documented expenses
 - Bylaws amendments require ⅔ majority of members present at AGM
 
 ### Surplus distribution (§11)
 
 - After audit, the operating surplus = total revenue − total costs for the fiscal year
-  (costs exclude maintenance compensation — that is paid from surplus per §10)
-- If surplus is positive, the Board may first allocate the maintenance
-  compensation pool (§10), split equally among active team members
-- On the **remainder**, 10% is retained as operating reserve, until reserve = 6 months
+- 10% of surplus is retained as operating reserve, until reserve = 6 months
   of average monthly costs; thereafter additional retention requires AGM vote
 - 90% of surplus distributed as grants to artist members within the following
   fiscal year, weighted by **engagement units** accumulated during the
