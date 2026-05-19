@@ -63,8 +63,8 @@ These rules are constitutional. They are not changeable by management decision. 
 
 | File | Purpose |
 |---|---|
-| `slides/Tahti-Community.pptx` | Artist-facing deck — for founding-cohort recruitment + scene press |
-| `slides/Tahti-Business.pptx` | Governance + sustainability deck — for board candidates, grant officers, auditors |
+| [`slides/Tahti-Community.pptx`](slides/Tahti-Community.pptx) | Artist-facing deck — for founding-cohort recruitment + scene press |
+| [`slides/Tahti-Business.pptx`](slides/Tahti-Business.pptx) | Governance + sustainability deck — for board candidates, grant officers, auditors |
 
 ## Headline numbers (base case)
 
@@ -96,18 +96,18 @@ This package is the seventh major iteration of a multi-session design process. T
 
 1. **Year 1 deficit is real and unavoidable** without grant funding. €19k modeled. Apply to Tempo + Koneen + SKR in parallel before incorporating.
 
-2. **The grant-distribution model concentrates pay-out.** Top-decile artists by engagement units receive ~€260/year at Y3 scale; mid-tier ~€19; active rest ~€4. This is intentional ("reward engagement, not passive consumption") and contestable ("the system rewards the artists who least need it"). The bylaws permit AGM amendment.
+2. **The grant-distribution model concentrates pay-out.** Top-decile artists by engagement units receive ~€260/year at Y3 scale; mid-tier ~€19; active rest ~€4. This is intentional ("reward [...]
 
-3. **Fan-subs at 0% org take is unusual.** Patreon takes 8-12%, Bandcamp takes 10-15%. The 2% Tahti operational fee is bounded by costs (Stripe + GDPR + customer support); surplus rolls into the next year's grant pool. This is in the constitution and the bylaws.
+3. **Fan-subs at 0% org take is unusual.** Patreon takes 8-12%, Bandcamp takes 10-15%. The 2% Tahti operational fee is bounded by costs (Stripe + GDPR + customer support); surplus rolls into the [...]
 
 4. **AGPL is a moat *and* a vulnerability.** Anyone can fork. The defense is the hosted instance + the network on it, not the code. Be at peace with this.
 
 5. **Director salary is real and modest.** €30-45k cumulative €115k. This is the founder's three-year compensation; there is no equity upside downstream.
 
-6. **No CDN is a trade.** UpCloud Helsinki handles spillover. Y3 requires a 10 Gbps business fiber pipe (~€18k/yr). If fiber pricing changes materially, revisit the CDN decision at AGM — but doing so is a constitutional question, not a unilateral director call.
+6. **No CDN is a trade.** UpCloud Helsinki handles spillover. Y3 requires a 10 Gbps business fiber pipe (~€18k/yr). If fiber pricing changes materially, revisit the CDN decision at AGM — but [...]
 
 7. **Listener-hours are vanity metrics only.** Grant share comes from engagement units. The constitution forbids designing around listener metrics.
 
-8. **The audio quality story is verifiable, not aspirational.** SoundCloud caps free listeners at 128 kbps Opus. Mixcloud caps free listeners at 64 kbps AAC. Tahti's paid members stream FLAC to all listeners. This claim is testable.
+8. **The audio quality story is verifiable, not aspirational.** SoundCloud caps free listeners at 128 kbps Opus. Mixcloud caps free listeners at 64 kbps AAC. Tahti's paid members stream FLAC to a[...]
 
 — Generated 2026-05-17
