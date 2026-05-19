@@ -1,14 +1,29 @@
 version: "3.9"
 
-# Local dev — stateful infra only. Run apps with `pnpm dev` on the host.
+# Local dev — stateful infra + website.
+# Run API / web / workers with `pnpm dev` on the host.
+#
+#   docker compose -f infra/docker-compose.dev.yml up -d
+#   open http://localhost:8080   ← marketing website
+#   open http://localhost:8025   ← MailHog (email UI)
 
 services:
+
+  # ── Marketing website ──────────────────────────────────────────────────────
+  website:
+    build:
+      context: ../website
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+
+  # ── Stateful services ──────────────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: replay
-      POSTGRES_PASSWORD: replay_dev
-      POSTGRES_DB: replay
+      POSTGRES_USER: tahti
+      POSTGRES_PASSWORD: tahti_dev
+      POSTGRES_DB: tahti
     ports: ["5432:5432"]
     volumes:
       - dev_postgres:/var/lib/postgresql/data
@@ -24,8 +39,8 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: replay
-      MINIO_ROOT_PASSWORD: replay_dev_secret
+      MINIO_ROOT_USER: tahti
+      MINIO_ROOT_PASSWORD: tahti_dev_secret
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -34,7 +49,15 @@ services:
 
   chat:
     image: centrifugo/centrifugo:v5
-    command: centrifugo --port=8000 --admin --admin_password=dev --admin_secret=dev --api_key=dev --token_hmac_secret_key=dev_secret_change_me
+    command: >
+      centrifugo
+      --port=8000
+      --admin
+      --admin_password=dev
+      --admin_secret=dev
+      --api_key=dev
+      --token_hmac_secret_key=dev_secret_do_not_use_in_prod
+      --allowed_origins=http://localhost:3000
     ports:
       - "8000:8000"
 
@@ -54,8 +77,8 @@ services:
   mailhog:
     image: mailhog/mailhog:latest
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
 
 volumes:
   dev_postgres:

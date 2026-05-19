@@ -1,0 +1,40 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    env: production
+    org: tahti-ry
+
+scrape_configs:
+  - job_name: api
+    static_configs:
+      - targets: ['api:3000']
+    metrics_path: /metrics
+
+  - job_name: centrifugo
+    static_configs:
+      - targets: ['chat:8000']
+    metrics_path: /metrics
+
+  - job_name: postgres
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: redis
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  - job_name: minio
+    static_configs:
+      - targets: ['minio:9000']
+    metrics_path: /minio/v2/metrics/cluster
+
+  - job_name: nginx-rtmp
+    static_configs:
+      - targets: ['rtmp-ingest:8080']
+    metrics_path: /stat
+
+  - job_name: caddy
+    static_configs:
+      - targets: ['caddy:2019']
+    metrics_path: /metrics

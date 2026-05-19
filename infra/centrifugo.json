@@ -1,0 +1,24 @@
+{
+  "log_level": "info",
+  "allowed_origins": [
+    "https://tahti.fi",
+    "https://www.tahti.fi",
+    "https://app.tahti.fi"
+  ],
+  "websocket_compression": true,
+  "client_anonymous": false,
+  "history_size": 100,
+  "history_ttl": "1h",
+  "presence": true,
+  "join_leave": true,
+  "namespaces": [
+    {
+      "name": "channel",
+      "presence": true,
+      "join_leave": true,
+      "history_size": 200,
+      "history_ttl": "1h",
+      "subscribe_proxy_enabled": false
+    }
+  ]
+}

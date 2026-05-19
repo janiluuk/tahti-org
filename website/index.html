@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tahti — Your Radio Station</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f1e;--card:#111827;--card2:#1a2340;
+  --amber:#f0a500;--cyan:#00bcd4;--green:#00e676;
+  --purple:#7c4dff;--coral:#ff6b6b;--lavender:#9c88ff;
+  --text:#e8eaf6;--muted:#8892a4;
+  --font-head:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden}
+#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(10,15,30,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.05)}
+.nav-logo{font-family:var(--font-head);font-weight:700;font-size:18px;letter-spacing:4px;color:var(--text);display:flex;align-items:center;gap:10px}
+.nav-logo-bar{width:3px;height:20px;background:var(--amber)}
+.nav-dots{display:flex;gap:8px}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.3s;border:none}
+.nav-dot.active,.nav-dot:hover{background:var(--amber);transform:scale(1.3)}
+.nav-cta{background:var(--amber);color:#0a0f1e;padding:9px 22px;border-radius:6px;font-family:var(--font-head);font-weight:600;font-size:13px;letter-spacing:1px;text-decoration:none;transition:opacity 0.2s}
+.nav-cta:hover{opacity:0.85}
+
+/* SECTIONS */
+section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:100px 40px 80px}
+.section-inner{max-width:1100px;width:100%}
+
+/* HERO */
+#hero{text-align:left}
+.hero-tag{font-size:11px;letter-spacing:4px;color:var(--muted);margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.hero-tag::before{content:'';display:inline-block;width:30px;height:1px;background:var(--amber)}
+.hero-h1{font-family:var(--font-head);font-size:clamp(48px,7vw,90px);font-weight:700;line-height:1.05;margin-bottom:20px}
+.hero-h1 span{color:var(--amber)}
+.hero-italic{font-family:var(--font-body);font-style:italic;font-size:clamp(28px,4vw,52px);color:var(--amber);font-weight:300;margin-bottom:40px}
+.hero-desc{max-width:620px;line-height:1.7;color:var(--muted);font-size:17px;margin-bottom:50px}
+.hero-footer{font-size:11px;letter-spacing:3px;color:var(--muted);display:flex;gap:20px}
+.hero-footer span{display:flex;align-items:center;gap:6px}
+.hero-footer span::before{content:'·';color:var(--amber)}
+.hero-icon{position:absolute;top:50%;right:8%;transform:translateY(-50%);opacity:0.12;font-size:180px;line-height:1}
+
+/* SECTION HEADERS */
+.s-h2{font-family:var(--font-head);font-size:clamp(32px,5vw,58px);font-weight:700;line-height:1.1;margin-bottom:10px}
+.s-sub{font-style:italic;font-size:clamp(18px,2.5vw,28px);color:var(--amber);font-weight:300;margin-bottom:40px}
+.s-sub.cyan{color:var(--cyan)}
+.s-sub.green{color:var(--green)}
+.s-sub.purple{color:var(--lavender)}
+.s-sub.coral{color:var(--coral)}
+.s-lead{color:var(--muted);font-size:16px;line-height:1.7;max-width:700px;margin-bottom:40px}
+
+/* CARDS */
+.cards-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px}
+.cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+.cards-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.card{background:var(--card);border-radius:8px;padding:24px;border-left:3px solid var(--amber);transition:transform 0.3s,border-color 0.3s}
+.card:hover{transform:translateY(-3px)}
+.card.cyan{border-left-color:var(--cyan)}
+.card.green{border-left-color:var(--green)}
+.card.purple{border-left-color:var(--purple)}
+.card.coral{border-left-color:var(--coral)}
+.card.lavender{border-left-color:var(--lavender)}
+.card h3{font-family:var(--font-head);font-size:16px;font-weight:600;margin-bottom:6px}
+.card h3.amber{color:var(--amber)}
+.card h3.cyan{color:var(--cyan)}
+.card h3.green{color:var(--green)}
+.card h3.coral{color:var(--coral)}
+.card h3.lavender{color:var(--lavender)}
+.card p{font-size:14px;color:var(--muted);line-height:1.6}
+.card-icon{font-size:28px;margin-bottom:12px}
+.card-tag{font-size:11px;letter-spacing:2px;color:var(--muted);font-style:italic;margin-bottom:8px}
+
+/* CALLOUT BOX */
+.callout{background:var(--card2);border:1px solid rgba(240,165,0,0.3);border-radius:8px;padding:20px 28px;margin-top:16px}
+.callout p{font-size:14px;line-height:1.7;color:var(--muted)}
+.callout strong{color:var(--text)}
+.callout-label{font-size:10px;letter-spacing:3px;color:var(--amber);margin-bottom:8px}
+
+/* URL DISPLAY */
+.url-box{background:var(--card2);border:1px solid rgba(0,188,212,0.4);border-radius:8px;padding:22px;text-align:center;font-family:monospace;font-size:22px;margin-bottom:24px;color:var(--muted)}
+.url-box span{color:var(--amber);font-weight:700}
+
+/* PLATFORM CARD (problem section) */
+.platform-card{background:var(--card);border-radius:8px;padding:20px 24px;border-left:3px solid var(--coral)}
+.platform-card h3{font-size:17px;font-weight:600;margin-bottom:6px}
+.platform-card p{font-size:14px;color:var(--coral);font-style:italic}
+.platform-card.c2{border-left-color:var(--amber)}
+.platform-card.c2 p{color:var(--amber)}
+.platform-card.c3{border-left-color:var(--green)}
+.platform-card.c3 p{color:var(--green)}
+.platform-card.c4{border-left-color:var(--cyan)}
+.platform-card.c4 p{color:var(--cyan)}
+.platform-card.c5{border-left-color:var(--lavender)}
+.platform-card.c5 p{color:var(--lavender)}
+.platform-card.c6{border-left-color:var(--coral)}
+
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:780px}
+.price-card{background:var(--card);border-radius:12px;padding:36px;border:1px solid rgba(255,255,255,0.07)}
+.price-card.featured{border-color:var(--cyan);position:relative}
+.price-badge{position:absolute;top:-12px;right:24px;background:var(--cyan);color:#0a0f1e;font-size:11px;letter-spacing:2px;font-weight:700;padding:4px 14px;border-radius:20px}
+.price-tier{font-size:11px;letter-spacing:3px;color:var(--muted);margin-bottom:8px}
+.price-num{font-family:var(--font-head);font-size:56px;font-weight:700;line-height:1;margin-bottom:4px}
+.price-num .cur{font-size:24px;vertical-align:top;margin-top:10px;display:inline-block}
+.price-period{font-size:13px;color:var(--muted);font-style:italic;margin-bottom:24px}
+.price-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.price-list li{font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:flex-start;line-height:1.4}
+.price-list li::before{content:'▪';color:var(--cyan);flex-shrink:0;margin-top:1px}
+.price-list.free li::before{color:var(--muted)}
+
+/* REVENUE STATS */
+.rev-stat{background:var(--card2);border-radius:8px;padding:20px 24px;text-align:center}
+.rev-num{font-family:var(--font-head);font-size:42px;font-weight:700;color:var(--amber)}
+.rev-label{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* SIGNAL ANIMATION */
+.signal-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+/* SCROLL ANIMATION */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity 0.7s ease,transform 0.7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:0.1s}
+.reveal-delay-2{transition-delay:0.2s}
+.reveal-delay-3{transition-delay:0.3s}
+.reveal-delay-4{transition-delay:0.4s}
+
+/* STEP CARDS */
+.step-card{background:var(--card);border-radius:8px;padding:24px;border-left:3px solid var(--amber);position:relative}
+.step-card.purple{border-left-color:var(--purple)}
+.step-card.green{border-left-color:var(--green)}
+.step-card.cyan{border-left-color:var(--cyan)}
+.step-num{font-family:var(--font-head);font-size:36px;font-weight:700;color:rgba(240,165,0,0.25);margin-bottom:8px}
+.step-num.purple{color:rgba(124,77,255,0.25)}
+.step-num.green{color:rgba(0,230,118,0.25)}
+.step-num.cyan{color:rgba(0,188,212,0.25)}
+.step-card h3{font-family:var(--font-head);font-size:16px;font-weight:600;margin-bottom:8px}
+.step-card p{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* TOOL CARD */
+.tool-card{background:var(--card);border-radius:8px;padding:20px;display:flex;align-items:center;gap:16px;border-left:3px solid}
+.tool-icon{font-size:32px;flex-shrink:0}
+.tool-card h3{font-size:15px;font-weight:600;margin-bottom:2px}
+.tool-card p{font-size:12px;color:var(--muted)}
+
+/* ===== APP MOCKUPS ===== */
+#mockups{background:linear-gradient(180deg,transparent,rgba(0,188,212,0.03),transparent)}
+.mockup-tabs{display:flex;gap:4px;margin-bottom:32px;background:var(--card);border-radius:8px;padding:4px;width:fit-content}
+.mtab{padding:10px 24px;border-radius:6px;font-size:13px;font-family:var(--font-head);font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all 0.2s}
+.mtab.active{background:var(--card2);color:var(--text)}
+
+.mockup-frame{display:none;animation:fadeIn 0.4s ease}
+.mockup-frame.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Browser chrome */
+.browser{background:#1e2a3a;border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.6);max-width:900px}
+.browser-bar{background:#16202e;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.browser-dots{display:flex;gap:6px}
+.browser-dots span{width:12px;height:12px;border-radius:50%}
+.browser-dots span:nth-child(1){background:#ff5f57}
+.browser-dots span:nth-child(2){background:#febc2e}
+.browser-dots span:nth-child(3){background:#28c840}
+.browser-url{flex:1;background:#0d1626;border-radius:6px;padding:6px 14px;font-family:monospace;font-size:12px;color:var(--muted)}
+.browser-url b{color:var(--cyan)}
+.browser-content{background:#0d1626}
+
+/* Channel page mockup */
+.ch-header{background:#111827;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06)}
+.ch-logo{font-family:var(--font-head);font-size:14px;letter-spacing:3px;color:var(--text)}
+.ch-live{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--green)}
+.ch-body{display:grid;grid-template-columns:1fr 320px;min-height:420px}
+.ch-main{padding:28px;border-right:1px solid rgba(255,255,255,0.06)}
+.ch-player-card{background:#1a2340;border-radius:10px;padding:24px;display:flex;gap:20px;align-items:center;margin-bottom:20px}
+.ch-cover{width:80px;height:80px;border-radius:8px;background:linear-gradient(135deg,#7c4dff,#00bcd4);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px}
+.ch-track-info h3{font-family:var(--font-head);font-size:16px;margin-bottom:4px}
+.ch-track-info p{font-size:12px;color:var(--muted);margin-bottom:10px}
+.ch-waveform{height:40px;display:flex;align-items:center;gap:2px;margin-bottom:10px}
+.wf-bar{background:var(--cyan);border-radius:2px;width:3px;opacity:0.7;animation:wfpulse 1s ease-in-out infinite}
+@keyframes wfpulse{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.4)}}
+.ch-controls{display:flex;align-items:center;gap:12px;margin-top:4px}
+.ch-btn{background:var(--cyan);color:#0a0f1e;border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.ch-time{font-size:12px;color:var(--muted);font-family:monospace}
+.ch-quality{font-size:10px;letter-spacing:1px;background:rgba(0,188,212,0.15);color:var(--cyan);padding:3px 8px;border-radius:4px;margin-left:auto}
+.ch-sidebar{padding:20px}
+.ch-sidebar h4{font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:12px}
+.chat-msg{margin-bottom:10px;font-size:13px;line-height:1.4}
+.chat-msg .handle{font-weight:600;margin-right:6px}
+.chat-msg .handle.cyan{color:var(--cyan)}
+.chat-msg .handle.amber{color:var(--amber)}
+.chat-msg .handle.green{color:var(--green)}
+.chat-msg .handle.artist{color:var(--lavender)}
+.chat-input{display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06)}
+.chat-input input{flex:1;background:#1a2340;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--text);outline:none}
+.chat-send{background:var(--cyan);color:#0a0f1e;border:none;border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer}
+.pinned-msg{background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:12px}
+.pinned-msg .pin-label{font-size:10px;letter-spacing:2px;color:var(--amber);margin-bottom:4px}
+
+/* Dashboard mockup */
+.db-layout{display:grid;grid-template-columns:200px 1fr;min-height:480px}
+.db-sidebar{background:#0d1626;padding:20px 0;border-right:1px solid rgba(255,255,255,0.06)}
+.db-nav-item{padding:10px 20px;font-size:13px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.2s}
+.db-nav-item.active{background:rgba(0,188,212,0.08);color:var(--cyan);border-right:2px solid var(--cyan)}
+.db-nav-item:hover:not(.active){color:var(--text)}
+.db-main{padding:28px;background:#0d1626}
+.db-status-bar{background:#1a2340;border-radius:8px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;border-left:3px solid var(--green)}
+.db-live{display:flex;align-items:center;gap:8px;font-weight:600}
+.db-live-count{font-size:12px;color:var(--muted)}
+.db-stream-key{background:#111827;border-radius:8px;padding:16px 20px;margin-bottom:20px}
+.db-stream-key label{font-size:11px;letter-spacing:2px;color:var(--muted);display:block;margin-bottom:8px}
+.db-key-row{display:flex;align-items:center;gap:10px}
+.db-key-val{flex:1;background:#0d1626;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 14px;font-family:monospace;font-size:13px;color:var(--muted)}
+.db-copy{background:var(--card2);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:8px 14px;font-size:12px;color:var(--text);cursor:pointer}
+.db-test{background:rgba(0,188,212,0.15);color:var(--cyan);border:1px solid rgba(0,188,212,0.3);border-radius:6px;padding:8px 14px;font-size:12px;cursor:pointer}
+.db-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.db-stat{background:#1a2340;border-radius:8px;padding:16px;text-align:center}
+.db-stat-num{font-family:var(--font-head);font-size:26px;font-weight:700;color:var(--amber)}
+.db-stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+.db-actions{display:flex;gap:10px}
+.db-btn-primary{background:var(--amber);color:#0a0f1e;border:none;border-radius:8px;padding:12px 24px;font-family:var(--font-head);font-weight:600;font-size:14px;cursor:pointer}
+.db-btn-secondary{background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:12px 24px;font-size:14px;color:var(--text);cursor:pointer}
+
+/* Mobile mockup */
+.mobile-wrap{display:flex;justify-content:center;gap:48px;align-items:flex-start}
+.phone{width:320px;background:#0d1626;border-radius:36px;overflow:hidden;box-shadow:0 0 0 8px #1a2340, 0 30px 80px rgba(0,0,0,0.6)}
+.phone-notch{background:#0a0f1e;height:30px;border-radius:0 0 20px 20px;width:120px;margin:0 auto}
+.phone-content{padding:0 0 20px}
+.ph-header{padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06)}
+.ph-logo{font-family:var(--font-head);font-size:13px;letter-spacing:3px}
+.ph-menu{font-size:18px;color:var(--muted)}
+.ph-live-band{background:rgba(0,230,118,0.1);border-bottom:1px solid rgba(0,230,118,0.2);padding:6px 20px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);letter-spacing:1px}
+.ph-cover{width:100%;aspect-ratio:1;background:linear-gradient(135deg,#7c4dff 0%,#00bcd4 50%,#00e676 100%);display:flex;align-items:center;justify-content:center;font-size:60px;position:relative}
+.ph-cover-overlay{position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(0,0,0,0.7))}
+.ph-artist{font-family:var(--font-head);font-size:18px;font-weight:700}
+.ph-track{font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px}
+.ph-player{padding:16px 20px}
+.ph-waveform{height:36px;display:flex;align-items:center;gap:1.5px;margin-bottom:10px}
+.ph-wf-bar{background:var(--amber);border-radius:1px;width:2px;opacity:0.8;animation:wfpulse 0.8s ease-in-out infinite}
+.ph-controls{display:flex;justify-content:center;align-items:center;gap:20px;margin-bottom:10px}
+.ph-btn-play{background:var(--amber);color:#0a0f1e;border:none;border-radius:50%;width:48px;height:48px;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ph-btn-skip{background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.ph-quality{display:flex;justify-content:space-between;align-items:center}
+.ph-quality-badge{font-size:10px;letter-spacing:1px;background:rgba(240,165,0,0.15);color:var(--amber);padding:3px 8px;border-radius:4px}
+.ph-time{font-size:11px;color:var(--muted);font-family:monospace}
+.ph-fansub{margin:0 20px;background:linear-gradient(135deg,rgba(124,77,255,0.2),rgba(0,188,212,0.2));border:1px solid rgba(124,77,255,0.4);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.ph-fansub p{font-size:12px;font-weight:600}
+.ph-fansub span{font-size:11px;color:var(--muted)}
+.ph-fansub-btn{background:var(--purple);color:white;border:none;border-radius:6px;padding:8px 14px;font-size:12px;cursor:pointer;font-weight:600}
+.ph-chat{border-top:1px solid rgba(255,255,255,0.06);padding:14px 20px}
+.ph-chat h4{font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:10px}
+.ph-msg{font-size:12px;margin-bottom:8px;line-height:1.4}
+.ph-chat-input{display:flex;gap:8px;margin-top:10px}
+.ph-chat-input input{flex:1;background:#1a2340;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:8px 14px;font-size:12px;color:var(--text);outline:none}
+.ph-chat-input button{background:var(--cyan);border:none;border-radius:50%;width:34px;height:34px;color:#0a0f1e;font-size:14px;cursor:pointer}
+
+/* Open source section */
+.oss-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+
+/* CTA */
+#cta{text-align:center}
+#cta .s-h2{font-size:clamp(40px,6vw,72px)}
+#cta .s-sub{color:var(--amber)}
+.cta-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:800px;margin:0 auto 48px}
+.cta-btn{display:inline-block;background:var(--amber);color:#0a0f1e;padding:16px 44px;border-radius:8px;font-family:var(--font-head);font-weight:700;font-size:16px;text-decoration:none;letter-spacing:1px;transition:transform 0.2s,opacity 0.2s;margin-right:12px}
+.cta-btn:hover{transform:translateY(-2px);opacity:0.9}
+.cta-btn-ghost{display:inline-block;border:1px solid rgba(255,255,255,0.2);color:var(--text);padding:16px 44px;border-radius:8px;font-family:var(--font-head);font-size:16px;text-decoration:none;transition:all 0.2s}
+.cta-btn-ghost:hover{border-color:var(--text)}
+.cta-footer{font-size:12px;letter-spacing:3px;color:var(--muted);margin-top:48px;display:flex;gap:20px;justify-content:center}
+
+/* ===== PROFILE PAGE MOCKUP ===== */
+.prof-cover{height:100px;background:linear-gradient(135deg,#1a0a40 0%,#0a2040 40%,#0a3020 100%);position:relative}
+.prof-cover-overlay{position:absolute;inset:0;background:linear-gradient(transparent 40%,rgba(13,22,38,0.9))}
+.prof-avatar{position:absolute;bottom:-26px;left:22px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:24px;border:3px solid #0d1626;z-index:2}
+.prof-info-row{padding:38px 22px 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.prof-name{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:4px}
+.prof-meta-line{font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.prof-live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.3);border-radius:20px;padding:3px 9px;font-size:9px;font-weight:700;color:var(--green);letter-spacing:1px}
+.prof-cta-row{display:flex;gap:7px;flex-shrink:0}
+.prof-cta-btn{background:var(--cyan);color:#0a0f1e;border:none;border-radius:5px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.prof-sub-btn{background:rgba(124,77,255,0.15);border:1px solid rgba(124,77,255,0.35);color:var(--lavender);border-radius:5px;padding:7px 12px;font-size:11px;cursor:pointer;white-space:nowrap}
+.prof-bio{padding:0 22px 14px;font-size:12px;color:var(--muted);line-height:1.7;border-bottom:1px solid rgba(255,255,255,0.06)}
+.prof-sec-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px}
+.prof-release-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.prof-release-art{width:40px;height:40px;border-radius:5px;flex-shrink:0}
+.prof-release-info{flex:1;min-width:0}
+.prof-release-info h4{font-size:12px;font-weight:600;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prof-release-info p{font-size:10px;color:var(--muted)}
+.prof-rel-btns{display:flex;gap:4px;flex-shrink:0}
+.prof-rel-btns button{background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:4px 8px;font-size:10px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.prof-embed-row{margin:10px 22px;background:var(--card2);border-radius:7px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.prof-embed-cover{width:40px;height:40px;border-radius:5px;background:linear-gradient(135deg,#7c4dff,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.prof-embed-info{flex:1;min-width:0}
+.prof-embed-live-line{font-size:9px;color:var(--green);letter-spacing:1px;display:flex;align-items:center;gap:4px;margin-bottom:2px}
+.prof-embed-info h5{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+.prof-embed-info p{font-size:10px;color:var(--muted)}
+.prof-embed-prog{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:5px;position:relative}
+.prof-embed-prog-fill{position:absolute;left:0;top:0;bottom:0;width:38%;background:var(--cyan);border-radius:2px}
+.prof-ext-row{padding:10px 22px 14px;display:flex;gap:6px;flex-wrap:wrap}
+.prof-ext-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 11px;font-size:10px;color:var(--text);white-space:nowrap}
+
+/* ===== SMART LINK MOCKUP ===== */
+.sl-wrap{padding:24px 20px;max-width:360px;margin:0 auto;text-align:center}
+.sl-cover-art{width:160px;height:160px;margin:0 auto 18px;border-radius:10px;box-shadow:0 16px 48px rgba(0,0,0,0.5)}
+.sl-title-h2{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:3px}
+.sl-title-meta{font-size:11px;color:var(--muted);margin-bottom:14px}
+.sl-artist-quote{background:var(--card2);border-left:3px solid var(--amber);border-radius:4px;padding:9px 12px;font-size:11px;font-style:italic;text-align:left;margin-bottom:14px;color:var(--text);line-height:1.5}
+.sl-btns{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.sl-btn{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;text-align:left}
+.sl-btn-icon{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.sl-btn-name{flex:1;font-size:12px;font-weight:500}
+.sl-btn-action{font-size:10px;color:var(--muted)}
+.sl-btn-arrow{color:var(--muted);font-size:11px}
+.sl-powered-by{font-size:10px;color:var(--muted)}
+.sl-countdown-box{background:rgba(240,165,0,0.07);border:1px solid rgba(240,165,0,0.25);border-radius:8px;padding:14px;margin-bottom:14px}
+.sl-countdown-lbl{font-size:9px;letter-spacing:2px;color:var(--amber);margin-bottom:8px}
+.sl-countdown-nums{display:flex;gap:14px;justify-content:center}
+.sl-cd-unit{text-align:center}
+.sl-cd-num{font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--amber);line-height:1}
+.sl-cd-lbl{font-size:9px;color:var(--muted);margin-top:2px}
+.sl-notify-box{background:var(--card);border-radius:7px;padding:12px;margin-bottom:14px}
+.sl-notify-label{font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:7px}
+.sl-notify-row{display:flex;gap:6px}
+.sl-notify-input{flex:1;background:var(--card2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:7px 9px;font-size:11px;color:var(--text);outline:none}
+.sl-notify-btn{background:var(--amber);color:#0a0f1e;border:none;border-radius:5px;padding:7px 11px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sl-notify-small{font-size:9px;color:var(--muted);margin-top:5px}
+
+/* ===== ANALYTICS MOCKUP ===== */
+.an-chart-wrap{background:var(--card2);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.an-chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.an-chart-lbl{font-size:10px;letter-spacing:2px;color:var(--muted)}
+.an-period-group{display:flex;gap:3px}
+.an-period{background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:3px 7px;font-size:10px;color:var(--muted);cursor:pointer}
+.an-period.active{background:rgba(0,188,212,0.12);border-color:rgba(0,188,212,0.4);color:var(--cyan)}
+.an-bars-wrap{display:flex;align-items:flex-end;gap:2px;height:64px}
+.an-bar-i{flex:1;border-radius:1px 1px 0 0;min-width:0;background:rgba(0,188,212,0.45)}
+.an-bar-i.today{background:var(--amber)}
+.an-date-row{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:4px}
+.an-units-wrap{background:var(--card2);border-radius:8px;padding:14px 16px}
+.an-unit-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.an-unit-lbl{font-size:11px;color:var(--text)}
+.an-unit-val{font-family:var(--font-head);font-size:13px;font-weight:700}
+.an-unit-bar{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:9px}
+.an-unit-fill{height:100%;border-radius:2px}
+.an-grant-box{background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.18);border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.an-grant-lbl{font-size:11px;color:var(--muted)}
+.an-grant-sub{font-size:9px;color:var(--muted);margin-top:1px}
+.an-grant-amt{font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--green)}
+.an-tbl-wrap{background:var(--card2);border-radius:8px;padding:12px 14px}
+.an-tbl-lbl{font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:9px}
+.an-tbl-row{display:flex;align-items:center;gap:7px;font-size:11px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.an-tbl-row:last-child{border-bottom:none}
+.an-tbl-rank{font-size:10px;color:var(--muted);width:13px;flex-shrink:0}
+.an-tbl-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.an-tbl-val{font-family:var(--font-head);font-size:11px;font-weight:600;color:var(--amber);flex-shrink:0}
+.an-ctry-bar-bg{width:44px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;flex-shrink:0}
+.an-ctry-bar-fill{height:100%;border-radius:2px;background:var(--purple)}
+.an-ctry-pct{font-size:10px;color:var(--muted);width:26px;text-align:right;flex-shrink:0}
+
+/* Responsive */
+@media(max-width:768px){
+  nav{padding:14px 20px}
+  .nav-dots{display:none}
+  section{padding:80px 20px 60px}
+  .cards-2,.cards-3,.cards-4,.oss-cards,.cta-grid{grid-template-columns:1fr}
+  .pricing-grid{grid-template-columns:1fr}
+  .ch-body{grid-template-columns:1fr}
+  .ch-sidebar{display:none}
+  .db-layout{grid-template-columns:1fr}
+  .db-sidebar{display:none}
+  .db-stats{grid-template-columns:repeat(2,1fr)}
+  .mobile-wrap{flex-direction:column;align-items:center}
+  .phone{width:280px}
+  .hero-icon{display:none}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<nav>
+  <div class="nav-logo"><div class="nav-logo-bar"></div>TAHTI</div>
+  <div class="nav-dots" id="navDots"></div>
+  <a href="#cta" class="nav-cta">APPLY FOR BETA</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="section-inner">
+    <div class="hero-tag">FOR ARTISTS · HELSINKI · BETA INVITATIONS OPEN</div>
+    <h1 class="hero-h1 reveal">Your radio<br>station.</h1>
+    <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
+    <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
+    <div class="hero-footer reveal reveal-delay-3">
+      <span>FOR ARTISTS</span><span>HELSINKI</span><span>BETA INVITATIONS OPEN</span>
+    </div>
+  </div>
+  <div class="hero-icon">((A))</div>
+</section>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">You're scattered across</h2>
+    <div class="s-sub coral reveal reveal-delay-1">six platforms that don't talk to each other.</div>
+    <div class="cards-3 reveal reveal-delay-2">
+      <div class="platform-card"><h3>SoundCloud</h3><p>Takedowns. Algorithm.</p></div>
+      <div class="platform-card c2"><h3>Mixcloud</h3><p>Only mixes. No live.</p></div>
+      <div class="platform-card c3"><h3>Spotify</h3><p>DJ mixes rejected.</p></div>
+    </div>
+    <div class="cards-3 reveal reveal-delay-3">
+      <div class="platform-card c4"><h3>Bandcamp</h3><p>Recently sold. Uncertain.</p></div>
+      <div class="platform-card c5"><h3>Twitch</h3><p>Audio-only is a graveyard.</p></div>
+      <div class="platform-card c6"><h3>Instagram</h3><p>Owns your reach.</p></div>
+    </div>
+    <div class="callout reveal reveal-delay-4">
+      <div class="callout-label">AND NONE OF THEM ARE YOURS.</div>
+      <p><strong>You're renting attention from companies that change the rules whenever it suits them.</strong> Algorithm shifts. Pricing tiers. Acquisitions. Shutdowns.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM DEEPER -->
+<section id="problem2">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">It's worse than just scattered.</h2>
+    <p class="s-lead reveal reveal-delay-1">Each platform has a structural problem you can't fix by trying harder.</p>
+    <div class="cards-3 reveal reveal-delay-2">
+      <div class="card cyan">
+        <h3 class="cyan">SoundCloud &amp; Mixcloud</h3>
+        <div class="card-tag">Audio quality is capped at the listener tier, not you</div>
+        <p>You pay Pro. Your listeners still hear 128 kbps Opus or 64 kbps AAC. Your master sounds like a YouTube rip to the people you made it for. Even when you pay, your audience suffers — unless they also pay.</p>
+      </div>
+      <div class="card coral">
+        <h3 class="coral">Spotify</h3>
+        <div class="card-tag">Overrun by AI, no required disclosure</div>
+        <p>Documented in Music Business Worldwide: AI-generated tracks in curated playlists, "ghost artist" placeholder names. Your original work competes with infinite-supply autogenerated audio for the same algorithmic surfacing.</p>
+      </div>
+      <div class="card green">
+        <h3 class="green">Bandcamp</h3>
+        <div class="card-tag">Pays fairly — but it's a store, not a station</div>
+        <p>82–85% to artists is the best rate in commercial music. But Bandcamp is fundamentally a record store: no 24/7 channel, no live broadcasting, no real-time chat. Good at selling albums. Not what artists need for broadcasting.</p>
+      </div>
+    </div>
+    <div class="callout reveal reveal-delay-3">
+      <div class="callout-label">WHAT TAHTI DOES DIFFERENTLY</div>
+      <p>Lossless audio for paid — your listeners hear what you made. No algorithm, no AI feed. Broadcasting + chat + downloads, not just storage.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ONE URL -->
+<section id="one-url">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">One URL.</h2>
+    <div class="s-sub cyan reveal reveal-delay-1">Always playing.</div>
+    <div class="url-box reveal reveal-delay-2">https://<span>your-name</span>.tahti.fi</div>
+    <div class="cards-2 reveal reveal-delay-3">
+      <div class="card green">
+        <div class="card-icon">🎙</div>
+        <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">WHEN YOU'RE LIVE</div>
+        <p>Your broadcast streams to listeners in real time. Chat is active. Multistream to YouTube/Twitch fans out automatically. Recording starts on its own.</p>
+      </div>
+      <div class="card lavender">
+        <div class="card-icon">📻</div>
+        <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">WHEN YOU'RE OFFLINE</div>
+        <p>Your archive keeps playing on rotation. Listeners can still tune in, chat, leave messages. Auto-recorded sets join the rotation automatically.</p>
+      </div>
+    </div>
+    <div class="callout reveal reveal-delay-4">
+      <div class="callout-label" style="color:var(--cyan)">NEVER A SILENT GAP.</div>
+      <p>When you stop, the archive starts within 10 seconds. Listeners stay tuned in.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BROADCAST TOOLS -->
+<section id="broadcast">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Broadcast from anything</h2>
+    <p class="s-lead reveal reveal-delay-1">Your existing tools work. Copy-paste credentials, follow our guide, you're live in 5 minutes.</p>
+    <div class="cards-3 reveal reveal-delay-2">
+      <div class="tool-card" style="border-color:var(--cyan)">
+        <div class="tool-icon">🎛</div>
+        <div><h3>OBS Studio</h3><p style="color:var(--muted);font-size:12px">RTMP · video+audio</p></div>
+      </div>
+      <div class="tool-card" style="border-color:var(--purple)">
+        <div class="tool-icon">🎚</div>
+        <div><h3>Mixxx</h3><p style="color:var(--muted);font-size:12px">Icecast · open-source DJ</p></div>
+      </div>
+      <div class="tool-card" style="border-color:var(--green)">
+        <div class="tool-icon">🎹</div>
+        <div><h3>Traktor Pro</h3><p style="color:var(--muted);font-size:12px">Icecast · NI workflow</p></div>
+      </div>
+    </div>
+    <div class="cards-3 reveal reveal-delay-3">
+      <div class="tool-card" style="border-color:var(--amber)">
+        <div class="tool-icon">🎤</div>
+        <div><h3>butt</h3><p style="color:var(--muted);font-size:12px">Icecast · minimal streamer</p></div>
+      </div>
+      <div class="tool-card" style="border-color:var(--coral)">
+        <div class="tool-icon">▶</div>
+        <div><h3>Browser</h3><p style="color:var(--muted);font-size:12px">WebRTC · zero install</p></div>
+      </div>
+      <div class="tool-card" style="border-color:var(--muted)">
+        <div class="tool-icon">⚙</div>
+        <div><h3>FFmpeg</h3><p style="color:var(--muted);font-size:12px">CLI · for power users</p></div>
+      </div>
+    </div>
+    <div class="callout reveal reveal-delay-4">
+      <div class="callout-label" style="color:var(--cyan)">PERSONALIZED SETUP GUIDE FOR EVERY TOOL</div>
+      <p>Open your dashboard. Click "How to broadcast." Pick your tool. <strong>Your credentials are pre-filled and ready to copy-paste.</strong> Click <strong style="color:var(--cyan)">"Test connection"</strong> to verify your setup with a 10-second probe before you go live for real.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE CHAT -->
+<section id="community">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Your listeners are right there.</h2>
+    <p class="s-lead reveal reveal-delay-1">A real-time chat next to the player. Pinned announcements. Live reactions. No signup wall.</p>
+    <div class="cards-2 reveal reveal-delay-2">
+      <div style="background:var(--card);border-radius:8px;padding:20px">
+        <div class="pinned-msg">
+          <div class="pin-label">📌 PINNED · YOUR ARTIST</div>
+          <em>Tonight 22:00 UTC — ambient set, three new originals</em>
+        </div>
+        <div class="chat-msg"><span class="handle cyan">moonglow_42</span> this track is killing me 🔥</div>
+        <div class="chat-msg"><span class="handle amber">midnight_dj</span> what synth is this?</div>
+        <div class="chat-msg"><span class="handle green">tallinn_owl</span> tuned in from Tallinn 🇪🇪</div>
+        <div class="chat-msg"><span class="handle muted" style="color:var(--muted)">ghost</span> first time here — this is amazing</div>
+        <div class="chat-msg"><span class="handle artist">you (artist)</span> @midnight_dj — Prophet 5, sent through tape delay</div>
+        <div class="chat-msg"><span class="handle cyan">harmonic.air</span> the transition at 14:00 🙌</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card cyan"><div class="card-icon">💬</div><h3>Ephemeral by default</h3><p>Messages live for 24 hours. The vibe of a live show — not a permanent forum.</p></div>
+        <div class="card amber" style="border-left-color:var(--amber)"><div class="card-icon">🔒</div><h3>Anonymous listening</h3><p>No signup to listen. Listeners type a handle on first chat. You set the rules in your channel.</p></div>
+        <div class="card green"><div class="card-icon">📌</div><h3>Pinned announcements</h3><p>Up to three pinned notes persist above chat. Show times, links, calls to action.</p></div>
+        <div class="card coral"><div class="card-icon">🔥</div><h3>Live reactions</h3><p>Emoji bursts fly across the player. The roar of a live crowd, in audio-only.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROFILE / HOMEPAGE -->
+<section id="profile">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Your home page on the internet.</h2>
+    <div class="s-sub cyan reveal reveal-delay-1">Bio, releases, channel — one URL that shows up when someone googles you.</div>
+    <div class="url-box reveal reveal-delay-2" style="border-color:rgba(240,165,0,0.4)">https://tahti.fi/u/<span>your-handle</span></div>
+    <div class="cards-4 reveal reveal-delay-3">
+      <div class="card cyan"><div class="card-icon">💙</div><h3>Bio + photos</h3><p>Markdown-rich text. Paragraphs, headings, images, embedded video. Looks like a label site, not a SoundCloud profile.</p></div>
+      <div class="card purple"><div class="card-icon">🎵</div><h3>Release timeline</h3><p>Albums, EPs, singles in chronological order. Upload in WAV or FLAC — we preserve the original. Studio tier downloads in FLAC.</p></div>
+      <div class="card green"><div class="card-icon">▶</div><h3>Channel embed</h3><p>Your 24/7 channel player embedded inline. Live state, current track, tune-in CTA. Listeners reach your broadcast from your profile.</p></div>
+      <div class="card amber"><div class="card-icon">🔗</div><h3>Externals + press kit</h3><p>Instagram, Bandcamp, personal site — all in one place. Studio tier: downloadable press kit, hi-res photos.</p></div>
+    </div>
+    <div class="callout reveal reveal-delay-4">
+      <div class="callout-label">WHAT'S NOT ON YOUR PROFILE</div>
+      <p>No follower count, no track-level comments, no algorithmic feed. This is a label page, not a social profile.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PROMO TOOLS -->
+<section id="tools">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Tools to spread the word.</h2>
+    <div class="s-sub amber reveal reveal-delay-1">Embed, smart links, newsletter, social auto-post, analytics — the things every artist asks for.</div>
+    <div class="cards-3 reveal reveal-delay-2">
+      <div class="card cyan"><div class="card-icon">🧩</div><h3>Embed widget</h3><p>Drop your channel or any release into your website, Substack, Notion. Lightweight, theme-aware, no tracking. oEmbed-compatible — paste a URL and it just works.</p></div>
+      <div class="card purple"><div class="card-icon">🔗</div><h3>Smart links</h3><p>One URL routes to every platform: Spotify, Apple, Tidal, Bandcamp, SoundCloud. Customizable landing page. Per-platform click stats so you see where your audience actually is.</p></div>
+      <div class="card green"><div class="card-icon">📧</div><h3>Newsletter</h3><p>A built-in mailing list per channel. Listeners subscribe with one click. Compose, schedule, send. GDPR-clean unsubscribe. No middleman, no "Sent via Mailchimp" footer.</p></div>
+    </div>
+    <div class="cards-3 reveal reveal-delay-3">
+      <div class="card amber"><div class="card-icon">📢</div><h3>Social auto-post</h3><p>Connect Twitter, Mastodon, Threads, Bluesky. Triggers post for you when a release publishes or your channel goes live. Templates with placeholders — set it once, forget it.</p></div>
+      <div class="card coral"><div class="card-icon">⭐</div><h3>Track-level analytics</h3><p>Plays, completion rate, top countries, top embedding domains, smart-link clicks per platform. Honest aggregates, no personal data, exportable as CSV.</p></div>
+      <div class="card" style="border-left-color:var(--muted)"><div class="card-icon">🛡</div><h3>Privacy by default</h3><p>No cookies for analytics. IP hashes rotate daily. "Unique listener" is a daily-bucketed concept. Slightly less precision than other platforms — that's the trade.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- DISTRIBUTION -->
+<section id="distribution">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Your music, everywhere it should be.</h2>
+    <div class="s-sub green reveal reveal-delay-1">Originals to Spotify, Apple, Tidal. Mixes to Mixcloud. From the same dashboard.</div>
+    <div class="cards-2 reveal reveal-delay-2">
+      <div class="card green">
+        <div class="card-icon">🎵</div>
+        <h3 class="green">Original tracks</h3>
+        <div class="card-tag" style="color:var(--green)">Spotify · Apple Music · Tidal · Amazon · Deezer</div>
+        <p>Submit through our wizard. ISRC allocated for you. Live on every DSP in 7–10 days. Royalty reports pull back monthly to your dashboard.</p>
+        <div style="margin-top:16px;background:var(--card2);border-radius:6px;padding:12px;font-size:12px;color:var(--muted)">Studio tier: 12 releases/yr included.<br>Artist tier: €8/release pay-per-use.</div>
+      </div>
+      <div class="card purple">
+        <div class="card-icon">☁</div>
+        <h3 class="lavender">DJ mixes</h3>
+        <div class="card-tag" style="color:var(--lavender)">Mixcloud</div>
+        <p>Spotify rejects DJ mixes for copyright. Mixcloud has the blanket licenses that make mixes legal — it's the right home. One-click push from your archive, tracklist auto-populated.</p>
+        <div style="margin-top:16px;background:var(--card2);border-radius:6px;padding:12px;font-size:12px;color:var(--muted)">Free integration.<br>Any tier.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHIVE -->
+<section id="archive">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Your archive is yours.</h2>
+    <div class="s-sub amber reveal reveal-delay-1">No enforced storage limits. No "you've used 80% of your quota" anxiety.</div>
+    <div class="cards-2 reveal reveal-delay-2">
+      <div class="card cyan"><div class="card-icon">∞</div><h3>Keep everything</h3><p>Recorded a 200-hour back catalog of mixes? Keep them all. We don't delete to save costs.</p></div>
+      <div class="card green"><div class="card-icon">🔓</div><h3>Open formats</h3><p>Opus 256 for streaming, FLAC archival on Studio. No proprietary lock-in. Export anytime.</p></div>
+    </div>
+    <div class="cards-2 reveal reveal-delay-3">
+      <div class="card amber"><div class="card-icon">☁</div><h3>Auto-archive live sets</h3><p>Every live broadcast saved automatically. Edit titles later or let them stay unnamed.</p></div>
+      <div class="card purple"><div class="card-icon">🔁</div><h3>Fallback rotation</h3><p>Choose which archive items play when you're offline. Shuffle or ordered. Update anytime.</p></div>
+    </div>
+    <div class="callout reveal reveal-delay-4">
+      <div class="callout-label" style="color:var(--amber)">OUR PROMISE</div>
+      <p>We track storage and display it openly on the public dashboard. We never cut you off. <strong>Written into the bylaws — see for yourself.</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- REVENUE -->
+<section id="revenue">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Two ways money reaches you.</h2>
+    <div class="s-sub amber reveal reveal-delay-1">Direct from fans who support you. Plus a yearly grant from the org's surplus, weighted by engagement.</div>
+    <div class="cards-2 reveal reveal-delay-2">
+      <div class="card amber">
+        <div class="card-icon">💛</div>
+        <h3 class="amber">Direct fan-subscriptions</h3>
+        <div class="card-tag" style="color:var(--amber)">0% org take</div>
+        <p style="margin-bottom:16px"><strong>Fans subscribe directly to you for €1–€100/month.</strong> Money flows fan → Stripe → you, with a 2% operational fee covering processing, GDPR, and support. <strong style="color:var(--amber)">Tahti ry takes zero.</strong> Subscribers get a badge, FLAC downloads, fan-only chat.</p>
+        <div class="rev-stat"><div class="rev-num">€163k</div><div class="rev-label">to artists, 3yr total</div></div>
+      </div>
+      <div class="card green">
+        <div class="card-icon">🌱</div>
+        <h3 class="green">Annual grant from surplus</h3>
+        <div class="card-tag" style="color:var(--green)">Weighted by engagement units</div>
+        <p style="margin-bottom:16px">After audit each year, 90% of org surplus flows to artists as grants. Your share depends on <strong>engagement units</strong>: free downloads count 1×, paid-subscriber downloads count 5×, each €1 of fan-sub revenue counts 1×. <strong>Passive listening doesn't count.</strong></p>
+        <div class="rev-stat"><div class="rev-num" style="color:var(--green)">€150k</div><div class="rev-label">to artists, 3yr total</div></div>
+      </div>
+    </div>
+    <div class="callout reveal reveal-delay-3">
+      <div class="callout-label" style="color:var(--amber)">TOTAL OVER 3 YEARS</div>
+      <p><strong>~€312,000 in artists' hands</strong> — <em>46% more than a model where the org takes a cut. Yours because of how we routed the money, not because we generated more of it.</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- MEMBERSHIP -->
+<section id="membership">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">You're a member.</h2>
+    <div class="s-sub purple reveal reveal-delay-1">Not a user. Not a customer.</div>
+    <p class="s-lead reveal reveal-delay-2">Every paying artist is automatically a member of Tahti ry, the Finnish nonprofit that runs the platform. You get a member number. You get a vote. You get a seat at the annual general meeting.</p>
+    <div class="cards-2 reveal reveal-delay-3">
+      <div class="step-card cyan"><div class="step-num cyan">⚖</div><h3>One member, one vote</h3><p>Every member votes equally at the AGM. Founder's vote = newest member's vote.</p></div>
+      <div class="step-card purple"><div class="step-num purple">📜</div><h3>Propose changes</h3><p>Members can propose motions. Pricing, grant formula, storage policy, board composition — anything is up for debate.</p></div>
+    </div>
+    <div class="cards-2 reveal reveal-delay-4">
+      <div class="step-card green"><div class="step-num green">💻</div><h3>Read the source</h3><p>Every line of code is open source under AGPL-3.0. Inspect, audit, fork — the org can't hide anything in the code.</p></div>
+      <div class="step-card" style="border-left-color:var(--amber)"><div class="step-num">🗳</div><h3>Elect the board</h3><p>Trustees serve 2-year terms, elected by members. From Year 2 onward, at least one trustee seat is reserved for elected artist representatives.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- DISCOVERY -->
+<section id="discovery">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">More ways to be found.</h2>
+    <div class="s-sub cyan reveal reveal-delay-1">Tahti Radio amplifies your live broadcasts. Venue calendars surface where you're playing.</div>
+    <div class="cards-2 reveal reveal-delay-2">
+      <div class="card cyan">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="font-size:24px">📡</div><div><h3 style="font-family:var(--font-head);font-size:18px">Tahti Radio</h3><div style="font-size:12px;color:var(--cyan);font-style:italic">The org-operated 24/7 meta-stream</div></div></div>
+        <p style="margin-bottom:16px">When you go live, Tahti Radio may relay your broadcast — along with whichever other channels are currently on air. <strong>Fair rotation, no curation, no editorial control.</strong> Multistreamed to Mixcloud Live so listeners can find you from outside the platform. Opt-out toggle in your settings.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+          <div style="color:var(--muted)">Source</div><div>Currently-live channels only</div>
+          <div style="color:var(--muted)">Curation</div><div>None — algorithmic fair rotation</div>
+          <div style="color:var(--muted)">Multistream</div><div>Mixcloud Live (legally clean)</div>
+          <div style="color:var(--muted)">Opt-out</div><div>One toggle, takes effect immediately</div>
+        </div>
+      </div>
+      <div class="card amber">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="font-size:24px">🏛</div><div><h3 style="font-family:var(--font-head);font-size:18px">Venue calendars</h3><div style="font-size:12px;color:var(--amber);font-style:italic">Where you're playing, when, for whom</div></div></div>
+        <p style="margin-bottom:16px">Venues can register on Tahti and publish calendars of broadcasts at their location. Your future gigs at a venue appear on the venue's page. <strong>Not a booking marketplace</strong> — venues find artists, artists find venues, we just publish the schedule.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+          <div style="color:var(--muted)">URL</div><div>tahti.fi/v/&lt;venue-slug&gt;</div>
+          <div style="color:var(--muted)">Calendar</div><div>iCalendar feed + JSON API</div>
+          <div style="color:var(--muted)">Booking</div><div>Direct — we don't mediate</div>
+          <div style="color:var(--muted)">Verification</div><div>Manual, ~3 business days</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">What it costs</h2>
+    <p class="s-lead reveal reveal-delay-1">One paid tier. Free users get a complete product — not a frustrating trial.</p>
+    <div class="pricing-grid reveal reveal-delay-2">
+      <div class="price-card">
+        <div style="font-size:28px;margin-bottom:8px">🎧</div>
+        <div class="price-tier">FREE</div>
+        <div class="price-num"><span class="cur">€</span>0</div>
+        <div class="price-period">Start here. No upgrade pressure.</div>
+        <ul class="price-list free">
+          <li>Your channel + profile + releases</li>
+          <li>MP3 192 kbps audio quality</li>
+          <li>1 hour of live broadcasting per week</li>
+          <li>Live chat with announcements</li>
+          <li>Downloads enabled (free + paid)</li>
+          <li>Fan-subscriptions enabled</li>
+          <li>Smart links, embed widget</li>
+          <li>Soft 500 MB storage — not enforced</li>
+        </ul>
+      </div>
+      <div class="price-card featured">
+        <div class="price-badge">RECOMMENDED</div>
+        <div style="font-size:28px;margin-bottom:8px;color:var(--cyan)">👑</div>
+        <div class="price-tier" style="color:var(--cyan)">TAHTI</div>
+        <div class="price-num" style="color:var(--cyan)"><span class="cur" style="color:var(--cyan)">€</span>40</div>
+        <div class="price-period">/year — lossless, unlimited live</div>
+        <ul class="price-list">
+          <li>Everything in Free, plus:</li>
+          <li>Lossless FLAC streaming for all listeners</li>
+          <li>FLAC downloads available</li>
+          <li>Unlimited live broadcasting time</li>
+          <li>Unlimited multistream destinations</li>
+          <li>Mixcloud auto-upload + DSP distribution</li>
+          <li>Newsletter, social auto-post</li>
+          <li>Custom domain, API access</li>
+          <li>Member of the association — eligible for grants</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OPEN SOURCE -->
+<section id="open-source">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Open source means</h2>
+    <div class="s-sub green reveal reveal-delay-1">we can't turn it against you.</div>
+    <p class="s-lead reveal reveal-delay-2">Every line of code is published under AGPL-3.0. If the org is ever sold, captured, or fails, the code is still yours. Anyone can fork Tahti and run their own instance — we encourage it.</p>
+    <div class="oss-cards reveal reveal-delay-3">
+      <div class="card cyan"><div class="card-icon">💻</div><h3>Every page links to source</h3><p>The code running the platform is always one click away. AGPL section 13 requires it. We honor it.</p></div>
+      <div class="card green"><div class="card-icon">🔓</div><h3>Fork if we fail</h3><p>If Tahti ry ever shuts down, the community can take over the code and the data. No platform graveyards.</p></div>
+      <div class="card purple"><div class="card-icon">⚖</div><h3>Contributions welcome</h3><p>Send a pull request. We review. No contributor license agreement — your contributions stay AGPL.</p></div>
+      <div class="card amber"><div class="card-icon">🛡</div><h3>Anti-extraction by design</h3><p>AGPL is copyleft. Anyone running modified Tahti code as a network service must publish their changes. No silent extraction.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- APP MOCKUPS -->
+<section id="mockups">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">How it looks.</h2>
+    <div class="s-sub cyan reveal reveal-delay-1">Mockups of the core app views.</div>
+
+    <div class="mockup-tabs reveal reveal-delay-2">
+      <button class="mtab active" onclick="switchMockup('channel',this)">Channel Page</button>
+      <button class="mtab" onclick="switchMockup('dashboard',this)">Artist Dashboard</button>
+      <button class="mtab" onclick="switchMockup('mobile',this)">Mobile Listener</button>
+    </div>
+
+    <!-- CHANNEL PAGE MOCKUP -->
+    <div class="mockup-frame active" id="mock-channel">
+      <div class="browser reveal reveal-delay-3">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://<b>dj-moonrise</b>.tahti.fi</div>
+        </div>
+        <div class="browser-content">
+          <div class="ch-header">
+            <div class="ch-logo">TAHTI</div>
+            <div style="font-size:13px;color:var(--muted);font-family:var(--font-head)">dj-moonrise</div>
+            <div class="ch-live"><div class="signal-dot"></div> LIVE</div>
+          </div>
+          <div class="ch-body">
+            <div class="ch-main">
+              <div class="ch-player-card">
+                <div class="ch-cover">🌙</div>
+                <div style="flex:1">
+                  <div class="ch-track-info">
+                    <h3>Moonrise Sessions — Live</h3>
+                    <p>Ambient Electronic · <span style="color:var(--cyan)">FLAC</span> · Helsinki</p>
+                  </div>
+                  <div class="ch-waveform" id="waveform">
+                    <!-- bars injected by JS -->
+                  </div>
+                  <div class="ch-controls">
+                    <button class="ch-btn">▶</button>
+                    <span class="ch-time">24:37</span>
+                    <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px"><div style="width:38%;height:100%;background:var(--cyan);border-radius:2px"></div></div>
+                    <div class="ch-quality">FLAC</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+                <div style="background:var(--card2);border-radius:6px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--amber)">47</div><div style="font-size:10px;color:var(--muted)">LISTENING NOW</div></div>
+                <div style="background:var(--card2);border-radius:6px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--cyan)">1,247</div><div style="font-size:10px;color:var(--muted)">PLAYS THIS MONTH</div></div>
+                <div style="background:var(--card2);border-radius:6px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--green)">89</div><div style="font-size:10px;color:var(--muted)">DOWNLOADS</div></div>
+              </div>
+
+              <div style="display:flex;gap:10px;margin-bottom:20px">
+                <button style="background:var(--purple);color:white;border:none;border-radius:6px;padding:10px 20px;font-size:13px;cursor:pointer;font-weight:600">💜 Subscribe €5/mo</button>
+                <button style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text);border-radius:6px;padding:10px 20px;font-size:13px;cursor:pointer">⬇ Download</button>
+                <button style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text);border-radius:6px;padding:10px 20px;font-size:13px;cursor:pointer">🔗 Share</button>
+              </div>
+
+              <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">RECENT SETS</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div style="background:var(--card2);border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px">
+                  <div>▶ Late Night Drift Vol. 3</div><div style="color:var(--muted);font-size:11px">1h 42m · FLAC</div>
+                </div>
+                <div style="background:var(--card2);border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px">
+                  <div>▶ Helsinki Winter Session</div><div style="color:var(--muted);font-size:11px">2h 08m · FLAC</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ch-sidebar">
+              <div class="pinned-msg">
+                <div class="pin-label">📌 PINNED</div>
+                <em style="font-size:12px">Tonight 22:00 UTC — ambient set, three new originals</em>
+              </div>
+              <div class="ch-sidebar"><h4>LIVE CHAT</h4>
+                <div class="chat-msg"><span class="handle cyan">moonglow_42</span> this track is killing me 🔥</div>
+                <div class="chat-msg"><span class="handle amber">midnight_dj</span> what synth is this?</div>
+                <div class="chat-msg"><span class="handle green">tallinn_owl</span> tuned in from Tallinn 🇪🇪</div>
+                <div class="chat-msg"><span class="handle" style="color:var(--muted)">ghost</span> first time here — this is amazing</div>
+                <div class="chat-msg"><span class="handle artist">you (artist)</span> @midnight_dj — Prophet 5</div>
+                <div class="chat-msg"><span class="handle cyan">harmonic.air</span> transition at 14:00 🙌</div>
+                <div class="chat-input">
+                  <input placeholder="Say something..." type="text">
+                  <button class="chat-send">↑</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD MOCKUP -->
+    <div class="mockup-frame" id="mock-dashboard">
+      <div class="browser">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://tahti.fi/<b>dashboard</b></div>
+        </div>
+        <div class="browser-content">
+          <div class="ch-header">
+            <div class="ch-logo">TAHTI</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+          </div>
+          <div class="db-layout">
+            <div class="db-sidebar">
+              <div class="db-nav-item active">▶ Channel</div>
+              <div class="db-nav-item">📈 Stats</div>
+              <div class="db-nav-item">📁 Archive</div>
+              <div class="db-nav-item">💰 Revenue</div>
+              <div class="db-nav-item">📧 Newsletter</div>
+              <div class="db-nav-item">🔗 Smart Links</div>
+              <div class="db-nav-item">📡 Distribution</div>
+              <div class="db-nav-item">⚙ Settings</div>
+            </div>
+            <div class="db-main">
+              <div class="db-status-bar">
+                <div>
+                  <div class="db-live"><div class="signal-dot"></div> LIVE NOW</div>
+                  <div class="db-live-count">47 listeners · 24:37 elapsed</div>
+                </div>
+                <button class="db-btn-primary">⏹ End Broadcast</button>
+              </div>
+
+              <div class="db-stream-key">
+                <label>ICECAST STREAM KEY</label>
+                <div class="db-key-row">
+                  <div class="db-key-val">••••••••••••••••••••••</div>
+                  <button class="db-copy">Copy</button>
+                  <button class="db-test">Test Connection</button>
+                </div>
+                <div style="font-size:11px;color:var(--muted);margin-top:8px">Server: icecast.tahti.fi:8000 · Mount: /dj-moonrise · FLAC/Icecast</div>
+              </div>
+
+              <div class="db-stats">
+                <div class="db-stat"><div class="db-stat-num">1,247</div><div class="db-stat-label">Plays this month</div></div>
+                <div class="db-stat"><div class="db-stat-num" style="color:var(--green)">89</div><div class="db-stat-label">Downloads</div></div>
+                <div class="db-stat"><div class="db-stat-num" style="color:var(--purple)">3</div><div class="db-stat-label">Fan subscribers</div></div>
+                <div class="db-stat"><div class="db-stat-num" style="color:var(--cyan)">€15</div><div class="db-stat-label">Revenue this month</div></div>
+              </div>
+
+              <div style="background:#1a2340;border-radius:8px;padding:16px 20px;margin-bottom:16px">
+                <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">RECENT ARCHIVE</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+                    <div>📻 Late Night Drift Vol. 3 <span style="color:var(--muted);font-size:11px;margin-left:8px">In rotation</span></div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--muted);font-size:11px">1h 42m</span><button style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer">Edit</button></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0">
+                    <div>📻 Helsinki Winter Session</div>
+                    <div style="display:flex;gap:8px"><span style="color:var(--muted);font-size:11px">2h 08m</span><button style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer">Edit</button></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="db-actions">
+                <button class="db-btn-secondary">📤 Upload Release</button>
+                <button class="db-btn-secondary">📧 Send Newsletter</button>
+                <button class="db-btn-secondary">📡 Push to Mixcloud</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE MOCKUP -->
+    <div class="mockup-frame" id="mock-mobile">
+      <div class="mobile-wrap">
+        <div>
+          <div style="text-align:center;font-size:12px;color:var(--muted);letter-spacing:2px;margin-bottom:16px">LISTENER VIEW</div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-content">
+              <div class="ph-header">
+                <div class="ph-logo">TAHTI</div>
+                <div class="ph-menu">≡</div>
+              </div>
+              <div class="ph-live-band"><div class="signal-dot" style="width:7px;height:7px"></div> LIVE · DJ MOONRISE</div>
+              <div class="ph-cover">
+                🌙
+                <div class="ph-cover-overlay">
+                  <div class="ph-artist">dj-moonrise</div>
+                  <div class="ph-track">Moonrise Sessions · Ambient Set #12</div>
+                </div>
+              </div>
+              <div class="ph-player">
+                <div class="ph-waveform" id="ph-waveform"></div>
+                <div class="ph-controls">
+                  <button class="ph-btn-skip">⏮</button>
+                  <button class="ph-btn-play">▶</button>
+                  <button class="ph-btn-skip">⏭</button>
+                </div>
+                <div class="ph-quality">
+                  <div class="ph-quality-badge">FLAC</div>
+                  <div class="ph-time">24:37 / LIVE</div>
+                </div>
+              </div>
+              <div class="ph-fansub">
+                <div><p>Support dj-moonrise</p><span>Subscribers get FLAC + fan chat</span></div>
+                <button class="ph-fansub-btn">€5/mo</button>
+              </div>
+              <div class="ph-chat">
+                <h4>LIVE CHAT</h4>
+                <div class="ph-msg"><span class="handle cyan">moonglow_42</span> this track 🔥</div>
+                <div class="ph-msg"><span class="handle amber">midnight_dj</span> what synth?</div>
+                <div class="ph-msg"><span class="handle green">tallinn_owl</span> 🇪🇪 tuned in!</div>
+                <div class="ph-chat-input">
+                  <input placeholder="Say something..." type="text">
+                  <button>↑</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="text-align:center;font-size:12px;color:var(--muted);letter-spacing:2px;margin-bottom:16px">PROFILE PAGE</div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-content">
+              <div class="ph-header">
+                <div class="ph-logo">TAHTI</div>
+                <div class="ph-menu">≡</div>
+              </div>
+              <div style="padding:20px">
+                <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px">🌙</div>
+                <div style="font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:4px">dj-moonrise</div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Ambient Electronic · Helsinki · since 2019</div>
+                <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:16px">Synthesizer explorer. Late night sets for late night people. All sets recorded in lossless.</div>
+                <div style="background:var(--card2);border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+                  <div><div style="font-size:10px;color:var(--muted);letter-spacing:1px">CHANNEL</div><div style="font-size:13px;margin-top:2px"><div class="signal-dot" style="width:6px;height:6px;display:inline-block;margin-right:6px"></div>LIVE NOW</div></div>
+                  <button style="background:var(--cyan);color:#0a0f1e;border:none;border-radius:6px;padding:8px 14px;font-size:12px;cursor:pointer;font-weight:600">Tune in</button>
+                </div>
+                <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">RELEASES</div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <div style="background:var(--card2);border-radius:6px;padding:10px;display:flex;align-items:center;gap:10px">
+                    <div style="width:36px;height:36px;background:linear-gradient(135deg,#7c4dff,#00e676);border-radius:4px;flex-shrink:0"></div>
+                    <div><div style="font-size:13px;font-weight:500">Drift EP</div><div style="font-size:11px;color:var(--muted)">2024 · 4 tracks · FLAC</div></div>
+                  </div>
+                  <div style="background:var(--card2);border-radius:6px;padding:10px;display:flex;align-items:center;gap:10px">
+                    <div style="width:36px;height:36px;background:linear-gradient(135deg,#f0a500,#ff6b6b);border-radius:4px;flex-shrink:0"></div>
+                    <div><div style="font-size:13px;font-weight:500">Winter Session Archive</div><div style="font-size:11px;color:var(--muted)">2024 · Live Mix · 2h 08m</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOCKUP: ARTIST PROFILE PAGE -->
+<section id="mockup-profile">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">The artist profile.</h2>
+    <div class="s-sub reveal reveal-delay-1" style="color:var(--lavender)">Your permanent home on the internet.</div>
+    <p class="s-lead reveal reveal-delay-2">A label-quality bio page — not a social feed. Bio, releases, channel embed. What shows up when someone googles you, clicks from a flyer, or lands from a press mention. No follower counts. No likes. No algorithm.</p>
+
+    <div class="browser reveal reveal-delay-3">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">https://tahti.fi/u/<b>dj-moonrise</b></div>
+      </div>
+      <div class="browser-content">
+        <div class="ch-header">
+          <div class="ch-logo">TAHTI</div>
+          <div style="font-size:12px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+        </div>
+
+        <!-- Hero cover -->
+        <div class="prof-cover">
+          <div class="prof-cover-overlay"></div>
+          <div class="prof-avatar">🌙</div>
+        </div>
+
+        <!-- Name + CTAs -->
+        <div class="prof-info-row">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+              <div class="prof-name">dj-moonrise</div>
+              <div class="prof-live-badge"><div class="signal-dot" style="width:6px;height:6px"></div> ON AIR NOW</div>
+            </div>
+            <div class="prof-meta-line">
+              <span>Helsinki</span><span>·</span><span>Ambient Electronic</span><span>·</span><span>Member since 2023</span>
+            </div>
+          </div>
+          <div class="prof-cta-row">
+            <button class="prof-cta-btn">▶ Tune in live</button>
+            <button class="prof-sub-btn">💜 Support €5/mo</button>
+          </div>
+        </div>
+
+        <!-- Bio -->
+        <div class="prof-bio">
+          Synthesizer explorer. Late night sets for late night people. All sessions recorded lossless — what you hear is what was played. Based in Helsinki, broadcasting since 2019.
+          <div style="margin-top:8px;display:flex;gap:6px">
+            <span style="font-size:10px;background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:4px;color:var(--muted)">ambient</span>
+            <span style="font-size:10px;background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:4px;color:var(--muted)">electronic</span>
+            <span style="font-size:10px;background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:4px;color:var(--muted)">synthesizer</span>
+          </div>
+        </div>
+
+        <!-- Releases -->
+        <div style="padding:16px 22px 0">
+          <div class="prof-sec-label">RELEASES</div>
+          <div class="prof-release-item">
+            <div class="prof-release-art" style="background:linear-gradient(135deg,#7c4dff,#00e676)"></div>
+            <div class="prof-release-info"><h4>Drift EP</h4><p>2024 · EP · 4 tracks</p></div>
+            <div class="prof-rel-btns">
+              <button style="color:var(--cyan);border-color:rgba(0,188,212,0.3)">🔗 Links</button>
+              <button>▶ Play</button>
+            </div>
+          </div>
+          <div class="prof-release-item">
+            <div class="prof-release-art" style="background:linear-gradient(135deg,#f0a500,#ff6b6b)"></div>
+            <div class="prof-release-info"><h4>Analog Summer</h4><p>2023 · EP · 3 tracks</p></div>
+            <div class="prof-rel-btns">
+              <button style="color:var(--cyan);border-color:rgba(0,188,212,0.3)">🔗 Links</button>
+              <button>▶ Play</button>
+            </div>
+          </div>
+          <div class="prof-release-item" style="border-bottom:none">
+            <div class="prof-release-art" style="background:linear-gradient(135deg,#00bcd4,#7c4dff)"></div>
+            <div class="prof-release-info"><h4>Winter Session 2024</h4><p>2024 · Live Mix · 2h 08m · FLAC</p></div>
+            <div class="prof-rel-btns">
+              <button>⬇ Download</button>
+              <button>▶ Play</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Channel embed -->
+        <div class="prof-embed-row">
+          <div class="prof-embed-cover">🌙</div>
+          <div class="prof-embed-info">
+            <div class="prof-embed-live-line"><div class="signal-dot" style="width:5px;height:5px"></div> LIVE NOW · 47 listening</div>
+            <h5>Moonrise Sessions — Ambient Set #12</h5>
+            <p>dj-moonrise · FLAC</p>
+            <div class="prof-embed-prog"><div class="prof-embed-prog-fill"></div></div>
+          </div>
+          <button style="background:var(--cyan);color:#0a0f1e;border:none;border-radius:5px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">Open →</button>
+        </div>
+
+        <!-- External links -->
+        <div class="prof-ext-row">
+          <span class="prof-ext-btn">🎵 Bandcamp</span>
+          <span class="prof-ext-btn">📸 Instagram</span>
+          <span class="prof-ext-btn">☁ SoundCloud</span>
+          <span class="prof-ext-btn">🐘 Mastodon</span>
+          <span class="prof-ext-btn">🌐 djmoonrise.fi</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-3" style="margin-top:20px">
+      <div class="card purple reveal reveal-delay-1">
+        <div class="card-tag">NO SOCIAL GRAPH</div>
+        <h3>No follower counts. No likes.</h3>
+        <p>Subscribe to newsletter. Tune in to channel. That's the relationship — clean, intentional, noise-free.</p>
+      </div>
+      <div class="card cyan reveal reveal-delay-2">
+        <div class="card-tag">SEO-FIRST</div>
+        <h3 class="cyan">What Google sees when they search you</h3>
+        <p>JSON-LD MusicGroup schema, Open Graph for every release, clean canonical URLs — or your own domain on Studio tier.</p>
+      </div>
+      <div class="card green reveal reveal-delay-3">
+        <div class="card-tag">STUDIO TIER</div>
+        <h3 class="green">Press kit built-in</h3>
+        <p>200/400/1000-word bios, hi-res photos, tech rider PDF. One link to a journalist means everything they need.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOCKUP: SMART LINK -->
+<section id="mockup-smartlink">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">The release smart link.</h2>
+    <div class="s-sub reveal reveal-delay-1">One link. Every platform. Pre-release mode.</div>
+    <p class="s-lead reveal reveal-delay-2">Generated automatically when you publish. Paste it in your Instagram bio, Substack, press email. The page logs which platform each listener clicks — no cookies, no personal data.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start" class="reveal reveal-delay-2">
+
+      <!-- Published state -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:12px">PUBLISHED</div>
+        <div class="browser" style="max-width:420px;margin:0 auto">
+          <div class="browser-bar">
+            <div class="browser-dots"><span></span><span></span><span></span></div>
+            <div class="browser-url">tahti.fi/<b>r/drift-ep</b></div>
+          </div>
+          <div class="browser-content">
+            <div class="sl-wrap">
+              <div class="sl-cover-art" style="background:linear-gradient(135deg,#7c4dff 0%,#00e676 100%)"></div>
+              <div class="sl-title-h2">Drift EP</div>
+              <div class="sl-title-meta">dj-moonrise · EP · 4 tracks · 2024</div>
+              <div class="sl-artist-quote">"Recorded live to tape, mixed in one take. Sides A and B are meant to be played together."</div>
+              <div class="sl-btns">
+                <div class="sl-btn">
+                  <div class="sl-btn-icon" style="background:#1db954">🎵</div>
+                  <span class="sl-btn-name">Spotify</span>
+                  <span class="sl-btn-action">Stream</span>
+                  <span class="sl-btn-arrow">→</span>
+                </div>
+                <div class="sl-btn">
+                  <div class="sl-btn-icon" style="background:#fc3c44">🍎</div>
+                  <span class="sl-btn-name">Apple Music</span>
+                  <span class="sl-btn-action">Stream</span>
+                  <span class="sl-btn-arrow">→</span>
+                </div>
+                <div class="sl-btn">
+                  <div class="sl-btn-icon" style="background:#1da0c3">🎸</div>
+                  <span class="sl-btn-name">Bandcamp</span>
+                  <span class="sl-btn-action">Buy / Free DL</span>
+                  <span class="sl-btn-arrow">→</span>
+                </div>
+                <div class="sl-btn" style="border-color:rgba(0,188,212,0.3)">
+                  <div class="sl-btn-icon" style="background:rgba(0,188,212,0.15)">⭐</div>
+                  <span class="sl-btn-name" style="color:var(--cyan)">tahti.fi</span>
+                  <span class="sl-btn-action" style="color:var(--cyan)">FLAC · best quality</span>
+                  <span class="sl-btn-arrow" style="color:var(--cyan)">→</span>
+                </div>
+              </div>
+              <div class="sl-powered-by">Powered by <span style="color:var(--amber)">tahti.fi</span> · @dj-moonrise</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pre-release state -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--amber);text-align:center;margin-bottom:12px">PRE-RELEASE MODE</div>
+        <div class="browser" style="max-width:420px;margin:0 auto">
+          <div class="browser-bar">
+            <div class="browser-dots"><span></span><span></span><span></span></div>
+            <div class="browser-url">tahti.fi/<b>r/winter-25</b></div>
+          </div>
+          <div class="browser-content">
+            <div class="sl-wrap">
+              <div class="sl-cover-art" style="background:linear-gradient(135deg,#0a2040 0%,#00bcd4 100%)"></div>
+              <div class="sl-title-h2">Winter Session 2025</div>
+              <div class="sl-title-meta">dj-moonrise · Live Mix · Releasing Dec 1, 2025</div>
+              <div class="sl-countdown-box">
+                <div class="sl-countdown-lbl">DROPS IN</div>
+                <div class="sl-countdown-nums">
+                  <div class="sl-cd-unit"><div class="sl-cd-num">03</div><div class="sl-cd-lbl">DAYS</div></div>
+                  <div class="sl-cd-unit"><div class="sl-cd-num">14</div><div class="sl-cd-lbl">HRS</div></div>
+                  <div class="sl-cd-unit"><div class="sl-cd-num">22</div><div class="sl-cd-lbl">MIN</div></div>
+                </div>
+              </div>
+              <div class="sl-notify-box">
+                <div class="sl-notify-label">GET NOTIFIED WHEN THIS DROPS</div>
+                <div class="sl-notify-row">
+                  <input class="sl-notify-input" type="email" placeholder="your@email.com">
+                  <button class="sl-notify-btn">Notify me</button>
+                </div>
+                <div class="sl-notify-small">Goes to the artist's newsletter list. Unsubscribe anytime.</div>
+              </div>
+              <div style="opacity:0.35;font-size:12px;color:var(--muted);text-align:center;padding:8px 0;border:1px dashed rgba(255,255,255,0.12);border-radius:6px">Platforms available on release day</div>
+              <div class="sl-powered-by" style="margin-top:16px">Powered by <span style="color:var(--amber)">tahti.fi</span> · @dj-moonrise</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="cards-3" style="margin-top:20px">
+      <div class="card reveal reveal-delay-1">
+        <div class="card-tag">AUTO-GENERATED</div>
+        <h3 class="amber">Publish a release → smart link appears</h3>
+        <p>No separate setup. The link is created as part of the release workflow. Platform targets are set from your dashboard.</p>
+      </div>
+      <div class="card cyan reveal reveal-delay-2">
+        <div class="card-tag">ANALYTICS</div>
+        <h3 class="cyan">Clicks per platform per day. Top countries.</h3>
+        <p>No cookies. No personal data. IP-hashed with daily-rotating salt for counting. You see aggregate conversions, not individual listeners.</p>
+      </div>
+      <div class="card coral reveal reveal-delay-3">
+        <div class="card-tag">EMAIL CAPTURE</div>
+        <h3>Pre-release mode builds your list</h3>
+        <p>Every "notify me" opt-in lands in your newsletter list with explicit consent. The email is never sold, shared, or seen by Tahti.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOCKUP: ANALYTICS DASHBOARD -->
+<section id="mockup-analytics">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">The analytics dashboard.</h2>
+    <div class="s-sub green reveal reveal-delay-1">Your numbers. Your grant estimate. No black box.</div>
+    <p class="s-lead reveal reveal-delay-2">See plays, downloads, fan subscribers, and your running engagement-unit tally — the number that determines your annual grant share. Every step of the formula is visible. No surprise at year end.</p>
+
+    <div class="browser reveal reveal-delay-3">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">https://tahti.fi/<b>dashboard/stats</b></div>
+      </div>
+      <div class="browser-content">
+        <div class="ch-header">
+          <div class="ch-logo">TAHTI</div>
+          <div style="font-size:12px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+        </div>
+        <div class="db-layout">
+          <div class="db-sidebar">
+            <div class="db-nav-item">▶ Channel</div>
+            <div class="db-nav-item active">📈 Stats</div>
+            <div class="db-nav-item">📁 Archive</div>
+            <div class="db-nav-item">💰 Revenue</div>
+            <div class="db-nav-item">📧 Newsletter</div>
+            <div class="db-nav-item">🔗 Smart Links</div>
+            <div class="db-nav-item">📡 Distribution</div>
+            <div class="db-nav-item">⚙ Settings</div>
+          </div>
+          <div class="db-main" style="padding:18px">
+
+            <!-- Overview stats -->
+            <div class="db-stats" style="margin-bottom:14px">
+              <div class="db-stat"><div class="db-stat-num">1,247</div><div class="db-stat-label">Plays this month</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--green)">89</div><div class="db-stat-label">Downloads</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--purple)">3</div><div class="db-stat-label">Fan subscribers</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--cyan)">€15</div><div class="db-stat-label">Fan-sub / mo</div></div>
+            </div>
+
+            <!-- Plays chart -->
+            <div class="an-chart-wrap">
+              <div class="an-chart-head">
+                <div class="an-chart-lbl">PLAYS — LAST 30 DAYS</div>
+                <div class="an-period-group">
+                  <button class="an-period">7d</button>
+                  <button class="an-period active">30d</button>
+                  <button class="an-period">All</button>
+                </div>
+              </div>
+              <div class="an-bars-wrap" id="an-bars"></div>
+              <div class="an-date-row"><span>May 1</span><span>May 10</span><span>May 20</span><span>Today</span></div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+              <!-- Engagement units formula -->
+              <div class="an-units-wrap">
+                <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">ENGAGEMENT UNITS — 2025</div>
+                <div class="an-unit-row">
+                  <span class="an-unit-lbl">89 free downloads × 1</span>
+                  <span class="an-unit-val" style="color:var(--cyan)">89</span>
+                </div>
+                <div class="an-unit-bar"><div class="an-unit-fill" style="width:32%;background:var(--cyan)"></div></div>
+                <div class="an-unit-row">
+                  <span class="an-unit-lbl">15 paid downloads × 5</span>
+                  <span class="an-unit-val" style="color:var(--amber)">75</span>
+                </div>
+                <div class="an-unit-bar"><div class="an-unit-fill" style="width:27%;background:var(--amber)"></div></div>
+                <div class="an-unit-row">
+                  <span class="an-unit-lbl">€180/yr fan-subs × 1</span>
+                  <span class="an-unit-val" style="color:var(--purple)">180</span>
+                </div>
+                <div class="an-unit-bar"><div class="an-unit-fill" style="width:65%;background:var(--purple)"></div></div>
+                <div class="an-grant-box">
+                  <div>
+                    <div class="an-grant-lbl">Est. grant — year end</div>
+                    <div class="an-grant-sub">344 units · at Y2 pool size</div>
+                  </div>
+                  <div class="an-grant-amt">~€31</div>
+                </div>
+              </div>
+
+              <!-- Top tracks + countries -->
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div class="an-tbl-wrap">
+                  <div class="an-tbl-lbl">TOP TRACKS</div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">1</span><span class="an-tbl-name">Drift Vol. 3</span><span class="an-tbl-val">482</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">2</span><span class="an-tbl-name">Helsinki Winter</span><span class="an-tbl-val">311</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">3</span><span class="an-tbl-name">Late Night Drift</span><span class="an-tbl-val">178</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">4</span><span class="an-tbl-name">Analog Summer</span><span class="an-tbl-val">89</span></div>
+                </div>
+                <div class="an-tbl-wrap">
+                  <div class="an-tbl-lbl">TOP COUNTRIES</div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">🇫🇮</span><span class="an-tbl-name">Finland</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:42%"></div></div><span class="an-ctry-pct">42%</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">🇩🇪</span><span class="an-tbl-name">Germany</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:18%"></div></div><span class="an-ctry-pct">18%</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">🇸🇪</span><span class="an-tbl-name">Sweden</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:12%"></div></div><span class="an-ctry-pct">12%</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">🇪🇪</span><span class="an-tbl-name">Estonia</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:8%"></div></div><span class="an-ctry-pct">8%</span></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-3" style="margin-top:20px">
+      <div class="card reveal reveal-delay-1">
+        <div class="card-tag">PRIVACY-FIRST</div>
+        <h3 class="amber">No cookies. No PII. No fingerprinting.</h3>
+        <p>IP-hashed with a daily-rotating salt. "Unique listener" is a 24-hour bucket concept — we can count, but we cannot track across days.</p>
+      </div>
+      <div class="card cyan reveal reveal-delay-2">
+        <div class="card-tag">GRANT FORMULA VISIBLE</div>
+        <h3 class="cyan">You see exactly how your grant share is built</h3>
+        <p>Every unit counted, every formula step explicit. The AGM can vote to change the weighting. No black box, ever.</p>
+      </div>
+      <div class="card green reveal reveal-delay-3">
+        <div class="card-tag">EXPORT</div>
+        <h3 class="green">Full CSV always available</h3>
+        <p>GET /v1/me/stats/export.csv — all aggregates, no PII. Your data is yours and always portable, regardless of membership status.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Be a founding artist.</h2>
+    <div class="s-sub reveal reveal-delay-1">Help build the broadcasting tool you actually want.</div>
+    <div class="cta-grid reveal reveal-delay-2">
+      <div class="step-card"><div class="step-num">01</div><h3>Apply for the private beta</h3><p>We're inviting 30–50 working artists from EU electronic scenes for the first round. You get a free channel for 12 months and direct input on what we ship.</p></div>
+      <div class="step-card purple"><div class="step-num purple">02</div><h3>Spread the word</h3><p>If you know other artists who deserve a better deal, send them this deck. We'd rather grow by word of mouth than by ads.</p></div>
+      <div class="step-card green"><div class="step-num green">03</div><h3>Contribute to the code</h3><p>The repo is open. The bylaws are open. If you're technical, propose a PR. If you're an artist, tell us what we're missing.</p></div>
+      <div class="step-card cyan"><div class="step-num cyan">04</div><h3>Join the AGM</h3><p>From the first AGM onward, every paying member has a voice. Pricing, grant formula, board composition — all up for discussion. Show up. Vote. Shape it.</p></div>
+    </div>
+    <div class="reveal reveal-delay-3" style="margin-top:8px">
+      <a href="#" class="cta-btn">APPLY FOR BETA</a>
+      <a href="#" class="cta-btn-ghost">READ THE DOCS</a>
+    </div>
+    <div class="cta-footer reveal reveal-delay-4">
+      <span>TAHTI ry</span><span>HELSINKI</span><span>AGPL-3.0</span><span>hello@tahti.fi</span>
+    </div>
+  </div>
+</section>
+
+<script>
+// ===== THREE.JS BACKGROUND =====
+(function() {
+  const canvas = document.getElementById('bg');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera.position.z = 400;
+
+  // Background particle field
+  const N = 1800;
+  const pos = new Float32Array(N * 3);
+  const col = new Float32Array(N * 3);
+  const vels = new Float32Array(N * 2);
+  const phases = new Float32Array(N);
+  const palette = [
+    [0.94, 0.65, 0.0],  // amber
+    [0.0, 0.74, 0.83],  // cyan
+    [0.49, 0.3, 1.0],   // purple
+    [0.0, 0.9, 0.46],   // green
+    [1.0, 0.42, 0.42],  // coral
+  ];
+  for (let i = 0; i < N; i++) {
+    pos[i*3]   = (Math.random() - 0.5) * 900;
+    pos[i*3+1] = (Math.random() - 0.5) * 500;
+    pos[i*3+2] = (Math.random() - 0.5) * 300 - 80;
+    vels[i*2]   = (Math.random() - 0.5) * 0.08;
+    vels[i*2+1] = (Math.random() - 0.5) * 0.04;
+    phases[i]   = Math.random() * Math.PI * 2;
+    const c = palette[Math.floor(Math.random() * palette.length)];
+    const bright = 0.15 + Math.random() * 0.35;
+    col[i*3]   = c[0] * bright;
+    col[i*3+1] = c[1] * bright;
+    col[i*3+2] = c[2] * bright;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({ size: 2, vertexColors: true, transparent: true, opacity: 0.85, sizeAttenuation: true });
+  scene.add(new THREE.Points(geo, mat));
+
+  // Foreground audio waveform — multi-layer
+  const WAVES = 3;
+  const WN = 400;
+  const waveObjs = [];
+  const waveColors = [
+    [0.0, 0.74, 0.83, 0.8],   // cyan
+    [0.94, 0.65, 0.0, 0.5],   // amber
+    [0.49, 0.3, 1.0, 0.4],    // purple
+  ];
+  const waveFreqs = [0.018, 0.012, 0.025];
+  const waveSpeeds = [2.0, 1.3, 2.8];
+  const waveAmps = [28, 18, 14];
+  const waveZ = [-40, -60, -80];
+
+  for (let w = 0; w < WAVES; w++) {
+    const wPos = new Float32Array(WN * 3);
+    const wCol = new Float32Array(WN * 3);
+    const wc = waveColors[w];
+    for (let i = 0; i < WN; i++) {
+      const t = i / (WN - 1);
+      wPos[i*3]   = (t - 0.5) * 900;
+      wPos[i*3+1] = 0;
+      wPos[i*3+2] = waveZ[w];
+      wCol[i*3]   = wc[0] * wc[3];
+      wCol[i*3+1] = wc[1] * wc[3];
+      wCol[i*3+2] = wc[2] * wc[3];
+    }
+    const wg = new THREE.BufferGeometry();
+    wg.setAttribute('position', new THREE.BufferAttribute(wPos, 3));
+    wg.setAttribute('color',    new THREE.BufferAttribute(wCol, 3));
+    const wm = new THREE.PointsMaterial({ size: 2.5, vertexColors: true, transparent: true, opacity: 1, sizeAttenuation: true });
+    const wp = new THREE.Points(wg, wm);
+    scene.add(wp);
+    waveObjs.push({ geo: wg, freq: waveFreqs[w], speed: waveSpeeds[w], amp: waveAmps[w] });
+  }
+
+  let scrollY = 0;
+  window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  let frameId;
+  function animate() {
+    frameId = requestAnimationFrame(animate);
+    const t = Date.now() * 0.001;
+
+    // Drift background particles
+    for (let i = 0; i < N; i++) {
+      pos[i*3]   += vels[i*2];
+      pos[i*3+1] += vels[i*2+1] + Math.sin(t * 0.3 + phases[i]) * 0.03;
+      if (pos[i*3] >  450) pos[i*3] = -450;
+      if (pos[i*3] < -450) pos[i*3] =  450;
+      if (pos[i*3+1] >  250) pos[i*3+1] = -250;
+      if (pos[i*3+1] < -250) pos[i*3+1] =  250;
+    }
+    geo.attributes.position.needsUpdate = true;
+
+    // Animate waves
+    waveObjs.forEach(({ geo: wg, freq, speed, amp }) => {
+      const wPos = wg.attributes.position.array;
+      for (let i = 0; i < WN; i++) {
+        const x = wPos[i*3];
+        wPos[i*3+1] =
+          Math.sin(x * freq + t * speed) * amp * 0.6 +
+          Math.sin(x * freq * 2.3 + t * speed * 1.4) * amp * 0.25 +
+          Math.sin(x * freq * 0.4 + t * speed * 0.7) * amp * 0.4;
+      }
+      wg.attributes.position.needsUpdate = true;
+    });
+
+    camera.position.y = -scrollY * 0.03;
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+// ===== WAVEFORM BARS (channel mockup) =====
+(function() {
+  const container = document.getElementById('waveform');
+  if (!container) return;
+  const heights = [8,14,22,30,18,26,34,20,12,28,36,24,16,30,22,18,32,14,26,20,16,28,38,22,18,14,26,32,20,16];
+  heights.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'wf-bar';
+    bar.style.height = h + 'px';
+    bar.style.animationDelay = (i * 0.05) + 's';
+    bar.style.animationDuration = (0.6 + Math.random() * 0.8) + 's';
+    container.appendChild(bar);
+  });
+})();
+
+// ===== PHONE WAVEFORM BARS =====
+(function() {
+  const container = document.getElementById('ph-waveform');
+  if (!container) return;
+  const heights = [10,16,24,18,28,20,14,30,22,16,26,32,18,24,14,20,28,16,22,18,24,12,28,20,16];
+  heights.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'ph-wf-bar';
+    bar.style.height = h + 'px';
+    bar.style.animationDelay = (i * 0.06) + 's';
+    bar.style.animationDuration = (0.5 + Math.random() * 0.9) + 's';
+    container.appendChild(bar);
+  });
+})();
+
+// ===== SCROLL REVEAL =====
+(function() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+})();
+
+// ===== NAV DOTS =====
+(function() {
+  const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','revenue','membership','discovery','pricing','open-source','mockups','mockup-profile','mockup-smartlink','mockup-analytics','cta'];
+  const dotContainer = document.getElementById('navDots');
+  sections.forEach(id => {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot';
+    dot.title = id;
+    dot.addEventListener('click', () => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    });
+    dotContainer.appendChild(dot);
+  });
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const idx = sections.indexOf(e.target.id);
+        document.querySelectorAll('.nav-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+      }
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(id => { const el = document.getElementById(id); if(el) io.observe(el); });
+})();
+
+// ===== ANALYTICS BAR CHART =====
+(function() {
+  const data = [18,22,15,30,25,28,20,35,18,24,28,32,22,18,35,42,28,38,32,45,30,35,40,48,38,42,50,44,52,60];
+  const container = document.getElementById('an-bars');
+  if (!container) return;
+  const max = Math.max(...data);
+  data.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'an-bar-i' + (i === data.length - 1 ? ' today' : '');
+    bar.style.height = Math.max(4, Math.round(h / max * 64)) + 'px';
+    container.appendChild(bar);
+  });
+})();
+
+// ===== MOCKUP TABS =====
+function switchMockup(id, btn) {
+  document.querySelectorAll('.mockup-frame').forEach(f => f.classList.remove('active'));
+  document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
+  document.getElementById('mock-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Environment / secrets
+infra/stack.env
+.env
+.env.*
+!.env.*.example
+*.pem
+*.key
+
+# Node
+node_modules/
+dist/
+.next/
+.pnpm-store/
+
+# Build artefacts
+*.tgz
+*.tar.gz
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

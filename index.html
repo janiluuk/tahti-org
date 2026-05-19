@@ -19,6 +19,14 @@
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden}
 #bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#bg-video{position:fixed;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform:translate(-50%,-50%);z-index:0;pointer-events:none;object-fit:cover;opacity:0.35}
+#bg-video-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;background:rgba(10,15,30,0.75);transition:background 0.5s}
+#bg-video-overlay.sound-on{background:rgba(10,15,30,0.55)}
+#unmute-btn{position:fixed;bottom:32px;right:32px;z-index:200;display:flex;align-items:center;gap:12px;background:rgba(17,24,39,0.9);backdrop-filter:blur(12px);border:1px solid rgba(240,165,0,0.4);border-radius:12px;padding:14px 24px;cursor:pointer;transition:all 0.3s;color:var(--text);font-family:var(--font-head);font-size:14px;font-weight:600;letter-spacing:1px}
+#unmute-btn:hover{background:rgba(240,165,0,0.15);border-color:var(--amber);transform:scale(1.05)}
+#unmute-btn .icon{font-size:22px;display:flex;align-items:center}
+#unmute-btn .pulse{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.5s ease-in-out infinite;margin-right:4px}
+#unmute-btn.muted .pulse{background:var(--coral)}
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(10,15,30,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.05)}
@@ -46,6 +54,26 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 .hero-footer span{display:flex;align-items:center;gap:6px}
 .hero-footer span::before{content:'·';color:var(--amber)}
 .hero-icon{position:absolute;top:50%;right:8%;transform:translateY(-50%);opacity:0.12;font-size:180px;line-height:1}
+
+/* HERO VIDEO PLAYER */
+.hero-video-player{position:absolute;top:50%;right:6%;transform:translateY(-50%);width:340px;cursor:pointer;z-index:20}
+.hero-video-thumb{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);border:1px solid rgba(240,165,0,0.3);transition:transform 0.3s,border-color 0.3s,box-shadow 0.3s}
+.hero-video-thumb:hover{transform:scale(1.03);border-color:var(--amber);box-shadow:0 25px 80px rgba(240,165,0,0.15)}
+.hero-video-thumb video{width:100%;display:block;aspect-ratio:16/9;object-fit:cover;opacity:0.7}
+.hero-play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(240,165,0,0.9);display:flex;align-items:center;justify-content:center;color:#0a0f1e;transition:transform 0.2s,background 0.2s}
+.hero-video-thumb:hover .hero-play-btn{transform:translate(-50%,-50%) scale(1.1);background:var(--amber)}
+.hero-play-btn svg{margin-left:3px}
+.hero-play-label{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.6);font-family:var(--font-head)}
+
+/* VIDEO MODAL */
+#video-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(5,8,15,0.95);backdrop-filter:blur(20px);opacity:0;transition:opacity 0.4s}
+#video-modal.open{display:flex;opacity:1}
+#video-modal .modal-inner{position:relative;width:min(90vw,1100px);aspect-ratio:16/9;border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.8);border:1px solid rgba(240,165,0,0.3)}
+#video-modal video{width:100%;height:100%;object-fit:cover}
+#video-modal .modal-close{position:absolute;top:16px;right:16px;z-index:10;width:44px;height:44px;border-radius:50%;background:rgba(10,15,30,0.8);border:1px solid rgba(255,255,255,0.2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+#video-modal .modal-close:hover{background:rgba(240,165,0,0.2);border-color:var(--amber)}
+#video-modal .modal-title{position:absolute;bottom:20px;left:24px;font-family:var(--font-head);font-size:14px;letter-spacing:3px;color:rgba(255,255,255,0.7)}
+#video-modal .modal-title span{color:var(--amber)}
 
 /* SECTION HEADERS */
 .s-h2{font-family:var(--font-head);font-size:clamp(32px,5vw,58px);font-weight:700;line-height:1.1;margin-bottom:10px}
@@ -274,6 +302,95 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 .cta-btn-ghost:hover{border-color:var(--text)}
 .cta-footer{font-size:12px;letter-spacing:3px;color:var(--muted);margin-top:48px;display:flex;gap:20px;justify-content:center}
 
+/* ===== PROFILE PAGE MOCKUP ===== */
+.prof-cover{height:100px;background:linear-gradient(135deg,#1a0a40 0%,#0a2040 40%,#0a3020 100%);position:relative}
+.prof-cover-overlay{position:absolute;inset:0;background:linear-gradient(transparent 40%,rgba(13,22,38,0.9))}
+.prof-avatar{position:absolute;bottom:-26px;left:22px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:24px;border:3px solid #0d1626;z-index:2}
+.prof-info-row{padding:38px 22px 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.prof-name{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:4px}
+.prof-meta-line{font-size:11px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.prof-live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.3);border-radius:20px;padding:3px 9px;font-size:9px;font-weight:700;color:var(--green);letter-spacing:1px}
+.prof-cta-row{display:flex;gap:7px;flex-shrink:0}
+.prof-cta-btn{background:var(--cyan);color:#0a0f1e;border:none;border-radius:5px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.prof-sub-btn{background:rgba(124,77,255,0.15);border:1px solid rgba(124,77,255,0.35);color:var(--lavender);border-radius:5px;padding:7px 12px;font-size:11px;cursor:pointer;white-space:nowrap}
+.prof-bio{padding:0 22px 14px;font-size:12px;color:var(--muted);line-height:1.7;border-bottom:1px solid rgba(255,255,255,0.06)}
+.prof-sec-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:8px}
+.prof-release-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.prof-release-art{width:40px;height:40px;border-radius:5px;flex-shrink:0}
+.prof-release-info{flex:1;min-width:0}
+.prof-release-info h4{font-size:12px;font-weight:600;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prof-release-info p{font-size:10px;color:var(--muted)}
+.prof-rel-btns{display:flex;gap:4px;flex-shrink:0}
+.prof-rel-btns button{background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:4px;padding:4px 8px;font-size:10px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.prof-embed-row{margin:10px 22px;background:var(--card2);border-radius:7px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.prof-embed-cover{width:40px;height:40px;border-radius:5px;background:linear-gradient(135deg,#7c4dff,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.prof-embed-info{flex:1;min-width:0}
+.prof-embed-live-line{font-size:9px;color:var(--green);letter-spacing:1px;display:flex;align-items:center;gap:4px;margin-bottom:2px}
+.prof-embed-info h5{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+.prof-embed-info p{font-size:10px;color:var(--muted)}
+.prof-embed-prog{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:5px;position:relative}
+.prof-embed-prog-fill{position:absolute;left:0;top:0;bottom:0;width:38%;background:var(--cyan);border-radius:2px}
+.prof-ext-row{padding:10px 22px 14px;display:flex;gap:6px;flex-wrap:wrap}
+.prof-ext-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 11px;font-size:10px;color:var(--text);white-space:nowrap}
+
+/* ===== SMART LINK MOCKUP ===== */
+.sl-wrap{padding:24px 20px;max-width:360px;margin:0 auto;text-align:center}
+.sl-cover-art{width:160px;height:160px;margin:0 auto 18px;border-radius:10px;box-shadow:0 16px 48px rgba(0,0,0,0.5)}
+.sl-title-h2{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:3px}
+.sl-title-meta{font-size:11px;color:var(--muted);margin-bottom:14px}
+.sl-artist-quote{background:var(--card2);border-left:3px solid var(--amber);border-radius:4px;padding:9px 12px;font-size:11px;font-style:italic;text-align:left;margin-bottom:14px;color:var(--text);line-height:1.5}
+.sl-btns{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.sl-btn{display:flex;align-items:center;gap:11px;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;text-align:left}
+.sl-btn-icon{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.sl-btn-name{flex:1;font-size:12px;font-weight:500}
+.sl-btn-action{font-size:10px;color:var(--muted)}
+.sl-btn-arrow{color:var(--muted);font-size:11px}
+.sl-powered-by{font-size:10px;color:var(--muted)}
+.sl-countdown-box{background:rgba(240,165,0,0.07);border:1px solid rgba(240,165,0,0.25);border-radius:8px;padding:14px;margin-bottom:14px}
+.sl-countdown-lbl{font-size:9px;letter-spacing:2px;color:var(--amber);margin-bottom:8px}
+.sl-countdown-nums{display:flex;gap:14px;justify-content:center}
+.sl-cd-unit{text-align:center}
+.sl-cd-num{font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--amber);line-height:1}
+.sl-cd-lbl{font-size:9px;color:var(--muted);margin-top:2px}
+.sl-notify-box{background:var(--card);border-radius:7px;padding:12px;margin-bottom:14px}
+.sl-notify-label{font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:7px}
+.sl-notify-row{display:flex;gap:6px}
+.sl-notify-input{flex:1;background:var(--card2);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:7px 9px;font-size:11px;color:var(--text);outline:none}
+.sl-notify-btn{background:var(--amber);color:#0a0f1e;border:none;border-radius:5px;padding:7px 11px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sl-notify-small{font-size:9px;color:var(--muted);margin-top:5px}
+
+/* ===== ANALYTICS MOCKUP ===== */
+.an-chart-wrap{background:var(--card2);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.an-chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.an-chart-lbl{font-size:10px;letter-spacing:2px;color:var(--muted)}
+.an-period-group{display:flex;gap:3px}
+.an-period{background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:3px 7px;font-size:10px;color:var(--muted);cursor:pointer}
+.an-period.active{background:rgba(0,188,212,0.12);border-color:rgba(0,188,212,0.4);color:var(--cyan)}
+.an-bars-wrap{display:flex;align-items:flex-end;gap:2px;height:64px}
+.an-bar-i{flex:1;border-radius:1px 1px 0 0;min-width:0;background:rgba(0,188,212,0.45)}
+.an-bar-i.today{background:var(--amber)}
+.an-date-row{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:4px}
+.an-units-wrap{background:var(--card2);border-radius:8px;padding:14px 16px}
+.an-unit-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.an-unit-lbl{font-size:11px;color:var(--text)}
+.an-unit-val{font-family:var(--font-head);font-size:13px;font-weight:700}
+.an-unit-bar{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-bottom:9px}
+.an-unit-fill{height:100%;border-radius:2px}
+.an-grant-box{background:rgba(0,230,118,0.07);border:1px solid rgba(0,230,118,0.18);border-radius:6px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.an-grant-lbl{font-size:11px;color:var(--muted)}
+.an-grant-sub{font-size:9px;color:var(--muted);margin-top:1px}
+.an-grant-amt{font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--green)}
+.an-tbl-wrap{background:var(--card2);border-radius:8px;padding:12px 14px}
+.an-tbl-lbl{font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:9px}
+.an-tbl-row{display:flex;align-items:center;gap:7px;font-size:11px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.an-tbl-row:last-child{border-bottom:none}
+.an-tbl-rank{font-size:10px;color:var(--muted);width:13px;flex-shrink:0}
+.an-tbl-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.an-tbl-val{font-family:var(--font-head);font-size:11px;font-weight:600;color:var(--amber);flex-shrink:0}
+.an-ctry-bar-bg{width:44px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;flex-shrink:0}
+.an-ctry-bar-fill{height:100%;border-radius:2px;background:var(--purple)}
+.an-ctry-pct{font-size:10px;color:var(--muted);width:26px;text-align:right;flex-shrink:0}
+
 /* Responsive */
 @media(max-width:768px){
   nav{padding:14px 20px}
@@ -289,12 +406,22 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   .mobile-wrap{flex-direction:column;align-items:center}
   .phone{width:280px}
   .hero-icon{display:none}
+  .hero-video-player{position:relative;top:auto;right:auto;transform:none;width:100%;max-width:480px;margin:32px auto 0}
 }
 </style>
 </head>
 <body>
 
 <canvas id="bg"></canvas>
+<video id="bg-video" autoplay muted loop playsinline poster="">
+  <source src="output_vhs.mp4" type="video/mp4">
+</video>
+<div id="bg-video-overlay"></div>
+<button id="unmute-btn" class="muted">
+  <span class="pulse"></span>
+  <span class="icon">🔇</span>
+  <span class="label">UNMUTE</span>
+</button>
 
 <nav>
   <div class="nav-logo"><div class="nav-logo-bar"></div>TAHTI</div>
@@ -313,7 +440,15 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <span>FOR ARTISTS</span><span>HELSINKI</span><span>BETA INVITATIONS OPEN</span>
     </div>
   </div>
-  <div class="hero-icon">((A))</div>
+  <div class="hero-video-player" id="heroPlayer">
+    <div class="hero-video-thumb">
+      <video src="output_vhs.mp4" muted loop playsinline preload="metadata"></video>
+      <div class="hero-play-btn">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+      </div>
+      <div class="hero-play-label">WATCH THE VISION</div>
+    </div>
+  </div>
 </section>
 
 <!-- PROBLEM -->
@@ -929,6 +1064,367 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   </div>
 </section>
 
+<!-- MOCKUP: ARTIST PROFILE PAGE -->
+<section id="mockup-profile">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">The artist profile.</h2>
+    <div class="s-sub reveal reveal-delay-1" style="color:var(--lavender)">Your permanent home on the internet.</div>
+    <p class="s-lead reveal reveal-delay-2">A label-quality bio page — not a social feed. Bio, releases, channel embed. What shows up when someone googles you, clicks from a flyer, or lands from a press mention. No follower counts. No likes. No algorithm.</p>
+
+    <div class="browser reveal reveal-delay-3">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">https://tahti.fi/u/<b>dj-moonrise</b></div>
+      </div>
+      <div class="browser-content">
+        <div class="ch-header">
+          <div class="ch-logo">TAHTI</div>
+          <div style="font-size:12px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+        </div>
+
+        <!-- Hero cover -->
+        <div class="prof-cover">
+          <div class="prof-cover-overlay"></div>
+          <div class="prof-avatar">🌙</div>
+        </div>
+
+        <!-- Name + CTAs -->
+        <div class="prof-info-row">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+              <div class="prof-name">dj-moonrise</div>
+              <div class="prof-live-badge"><div class="signal-dot" style="width:6px;height:6px"></div> ON AIR NOW</div>
+            </div>
+            <div class="prof-meta-line">
+              <span>Helsinki</span><span>·</span><span>Ambient Electronic</span><span>·</span><span>Member since 2023</span>
+            </div>
+          </div>
+          <div class="prof-cta-row">
+            <button class="prof-cta-btn">▶ Tune in live</button>
+            <button class="prof-sub-btn">💜 Support €5/mo</button>
+          </div>
+        </div>
+
+        <!-- Bio -->
+        <div class="prof-bio">
+          Synthesizer explorer. Late night sets for late night people. All sessions recorded lossless — what you hear is what was played. Based in Helsinki, broadcasting since 2019.
+          <div style="margin-top:8px;display:flex;gap:6px">
+            <span style="font-size:10px;background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:4px;color:var(--muted)">ambient</span>
+            <span style="font-size:10px;background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:4px;color:var(--muted)">electronic</span>
+            <span style="font-size:10px;background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:4px;color:var(--muted)">synthesizer</span>
+          </div>
+        </div>
+
+        <!-- Releases -->
+        <div style="padding:16px 22px 0">
+          <div class="prof-sec-label">RELEASES</div>
+          <div class="prof-release-item">
+            <div class="prof-release-art" style="background:linear-gradient(135deg,#7c4dff,#00e676)"></div>
+            <div class="prof-release-info"><h4>Drift EP</h4><p>2024 · EP · 4 tracks</p></div>
+            <div class="prof-rel-btns">
+              <button style="color:var(--cyan);border-color:rgba(0,188,212,0.3)">🔗 Links</button>
+              <button>▶ Play</button>
+            </div>
+          </div>
+          <div class="prof-release-item">
+            <div class="prof-release-art" style="background:linear-gradient(135deg,#f0a500,#ff6b6b)"></div>
+            <div class="prof-release-info"><h4>Analog Summer</h4><p>2023 · EP · 3 tracks</p></div>
+            <div class="prof-rel-btns">
+              <button style="color:var(--cyan);border-color:rgba(0,188,212,0.3)">🔗 Links</button>
+              <button>▶ Play</button>
+            </div>
+          </div>
+          <div class="prof-release-item" style="border-bottom:none">
+            <div class="prof-release-art" style="background:linear-gradient(135deg,#00bcd4,#7c4dff)"></div>
+            <div class="prof-release-info"><h4>Winter Session 2024</h4><p>2024 · Live Mix · 2h 08m · FLAC</p></div>
+            <div class="prof-rel-btns">
+              <button>⬇ Download</button>
+              <button>▶ Play</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Channel embed -->
+        <div class="prof-embed-row">
+          <div class="prof-embed-cover">🌙</div>
+          <div class="prof-embed-info">
+            <div class="prof-embed-live-line"><div class="signal-dot" style="width:5px;height:5px"></div> LIVE NOW · 47 listening</div>
+            <h5>Moonrise Sessions — Ambient Set #12</h5>
+            <p>dj-moonrise · FLAC</p>
+            <div class="prof-embed-prog"><div class="prof-embed-prog-fill"></div></div>
+          </div>
+          <button style="background:var(--cyan);color:#0a0f1e;border:none;border-radius:5px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">Open →</button>
+        </div>
+
+        <!-- External links -->
+        <div class="prof-ext-row">
+          <span class="prof-ext-btn">🎵 Bandcamp</span>
+          <span class="prof-ext-btn">📸 Instagram</span>
+          <span class="prof-ext-btn">☁ SoundCloud</span>
+          <span class="prof-ext-btn">🐘 Mastodon</span>
+          <span class="prof-ext-btn">🌐 djmoonrise.fi</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-3" style="margin-top:20px">
+      <div class="card purple reveal reveal-delay-1">
+        <div class="card-tag">NO SOCIAL GRAPH</div>
+        <h3>No follower counts. No likes.</h3>
+        <p>Subscribe to newsletter. Tune in to channel. That's the relationship — clean, intentional, noise-free.</p>
+      </div>
+      <div class="card cyan reveal reveal-delay-2">
+        <div class="card-tag">SEO-FIRST</div>
+        <h3 class="cyan">What Google sees when they search you</h3>
+        <p>JSON-LD MusicGroup schema, Open Graph for every release, clean canonical URLs — or your own domain on Studio tier.</p>
+      </div>
+      <div class="card green reveal reveal-delay-3">
+        <div class="card-tag">STUDIO TIER</div>
+        <h3 class="green">Press kit built-in</h3>
+        <p>200/400/1000-word bios, hi-res photos, tech rider PDF. One link to a journalist means everything they need.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOCKUP: SMART LINK -->
+<section id="mockup-smartlink">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">The release smart link.</h2>
+    <div class="s-sub reveal reveal-delay-1">One link. Every platform. Pre-release mode.</div>
+    <p class="s-lead reveal reveal-delay-2">Generated automatically when you publish. Paste it in your Instagram bio, Substack, press email. The page logs which platform each listener clicks — no cookies, no personal data.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start" class="reveal reveal-delay-2">
+
+      <!-- Published state -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:12px">PUBLISHED</div>
+        <div class="browser" style="max-width:420px;margin:0 auto">
+          <div class="browser-bar">
+            <div class="browser-dots"><span></span><span></span><span></span></div>
+            <div class="browser-url">tahti.fi/<b>r/drift-ep</b></div>
+          </div>
+          <div class="browser-content">
+            <div class="sl-wrap">
+              <div class="sl-cover-art" style="background:linear-gradient(135deg,#7c4dff 0%,#00e676 100%)"></div>
+              <div class="sl-title-h2">Drift EP</div>
+              <div class="sl-title-meta">dj-moonrise · EP · 4 tracks · 2024</div>
+              <div class="sl-artist-quote">"Recorded live to tape, mixed in one take. Sides A and B are meant to be played together."</div>
+              <div class="sl-btns">
+                <div class="sl-btn">
+                  <div class="sl-btn-icon" style="background:#1db954">🎵</div>
+                  <span class="sl-btn-name">Spotify</span>
+                  <span class="sl-btn-action">Stream</span>
+                  <span class="sl-btn-arrow">→</span>
+                </div>
+                <div class="sl-btn">
+                  <div class="sl-btn-icon" style="background:#fc3c44">🍎</div>
+                  <span class="sl-btn-name">Apple Music</span>
+                  <span class="sl-btn-action">Stream</span>
+                  <span class="sl-btn-arrow">→</span>
+                </div>
+                <div class="sl-btn">
+                  <div class="sl-btn-icon" style="background:#1da0c3">🎸</div>
+                  <span class="sl-btn-name">Bandcamp</span>
+                  <span class="sl-btn-action">Buy / Free DL</span>
+                  <span class="sl-btn-arrow">→</span>
+                </div>
+                <div class="sl-btn" style="border-color:rgba(0,188,212,0.3)">
+                  <div class="sl-btn-icon" style="background:rgba(0,188,212,0.15)">⭐</div>
+                  <span class="sl-btn-name" style="color:var(--cyan)">tahti.fi</span>
+                  <span class="sl-btn-action" style="color:var(--cyan)">FLAC · best quality</span>
+                  <span class="sl-btn-arrow" style="color:var(--cyan)">→</span>
+                </div>
+              </div>
+              <div class="sl-powered-by">Powered by <span style="color:var(--amber)">tahti.fi</span> · @dj-moonrise</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pre-release state -->
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--amber);text-align:center;margin-bottom:12px">PRE-RELEASE MODE</div>
+        <div class="browser" style="max-width:420px;margin:0 auto">
+          <div class="browser-bar">
+            <div class="browser-dots"><span></span><span></span><span></span></div>
+            <div class="browser-url">tahti.fi/<b>r/winter-25</b></div>
+          </div>
+          <div class="browser-content">
+            <div class="sl-wrap">
+              <div class="sl-cover-art" style="background:linear-gradient(135deg,#0a2040 0%,#00bcd4 100%)"></div>
+              <div class="sl-title-h2">Winter Session 2025</div>
+              <div class="sl-title-meta">dj-moonrise · Live Mix · Releasing Dec 1, 2025</div>
+              <div class="sl-countdown-box">
+                <div class="sl-countdown-lbl">DROPS IN</div>
+                <div class="sl-countdown-nums">
+                  <div class="sl-cd-unit"><div class="sl-cd-num">03</div><div class="sl-cd-lbl">DAYS</div></div>
+                  <div class="sl-cd-unit"><div class="sl-cd-num">14</div><div class="sl-cd-lbl">HRS</div></div>
+                  <div class="sl-cd-unit"><div class="sl-cd-num">22</div><div class="sl-cd-lbl">MIN</div></div>
+                </div>
+              </div>
+              <div class="sl-notify-box">
+                <div class="sl-notify-label">GET NOTIFIED WHEN THIS DROPS</div>
+                <div class="sl-notify-row">
+                  <input class="sl-notify-input" type="email" placeholder="your@email.com">
+                  <button class="sl-notify-btn">Notify me</button>
+                </div>
+                <div class="sl-notify-small">Goes to the artist's newsletter list. Unsubscribe anytime.</div>
+              </div>
+              <div style="opacity:0.35;font-size:12px;color:var(--muted);text-align:center;padding:8px 0;border:1px dashed rgba(255,255,255,0.12);border-radius:6px">Platforms available on release day</div>
+              <div class="sl-powered-by" style="margin-top:16px">Powered by <span style="color:var(--amber)">tahti.fi</span> · @dj-moonrise</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="cards-3" style="margin-top:20px">
+      <div class="card reveal reveal-delay-1">
+        <div class="card-tag">AUTO-GENERATED</div>
+        <h3 class="amber">Publish a release → smart link appears</h3>
+        <p>No separate setup. The link is created as part of the release workflow. Platform targets are set from your dashboard.</p>
+      </div>
+      <div class="card cyan reveal reveal-delay-2">
+        <div class="card-tag">ANALYTICS</div>
+        <h3 class="cyan">Clicks per platform per day. Top countries.</h3>
+        <p>No cookies. No personal data. IP-hashed with daily-rotating salt for counting. You see aggregate conversions, not individual listeners.</p>
+      </div>
+      <div class="card coral reveal reveal-delay-3">
+        <div class="card-tag">EMAIL CAPTURE</div>
+        <h3>Pre-release mode builds your list</h3>
+        <p>Every "notify me" opt-in lands in your newsletter list with explicit consent. The email is never sold, shared, or seen by Tahti.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MOCKUP: ANALYTICS DASHBOARD -->
+<section id="mockup-analytics">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">The analytics dashboard.</h2>
+    <div class="s-sub green reveal reveal-delay-1">Your numbers. Your grant estimate. No black box.</div>
+    <p class="s-lead reveal reveal-delay-2">See plays, downloads, fan subscribers, and your running engagement-unit tally — the number that determines your annual grant share. Every step of the formula is visible. No surprise at year end.</p>
+
+    <div class="browser reveal reveal-delay-3">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">https://tahti.fi/<b>dashboard/stats</b></div>
+      </div>
+      <div class="browser-content">
+        <div class="ch-header">
+          <div class="ch-logo">TAHTI</div>
+          <div style="font-size:12px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+        </div>
+        <div class="db-layout">
+          <div class="db-sidebar">
+            <div class="db-nav-item">▶ Channel</div>
+            <div class="db-nav-item active">📈 Stats</div>
+            <div class="db-nav-item">📁 Archive</div>
+            <div class="db-nav-item">💰 Revenue</div>
+            <div class="db-nav-item">📧 Newsletter</div>
+            <div class="db-nav-item">🔗 Smart Links</div>
+            <div class="db-nav-item">📡 Distribution</div>
+            <div class="db-nav-item">⚙ Settings</div>
+          </div>
+          <div class="db-main" style="padding:18px">
+
+            <!-- Overview stats -->
+            <div class="db-stats" style="margin-bottom:14px">
+              <div class="db-stat"><div class="db-stat-num">1,247</div><div class="db-stat-label">Plays this month</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--green)">89</div><div class="db-stat-label">Downloads</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--purple)">3</div><div class="db-stat-label">Fan subscribers</div></div>
+              <div class="db-stat"><div class="db-stat-num" style="color:var(--cyan)">€15</div><div class="db-stat-label">Fan-sub / mo</div></div>
+            </div>
+
+            <!-- Plays chart -->
+            <div class="an-chart-wrap">
+              <div class="an-chart-head">
+                <div class="an-chart-lbl">PLAYS — LAST 30 DAYS</div>
+                <div class="an-period-group">
+                  <button class="an-period">7d</button>
+                  <button class="an-period active">30d</button>
+                  <button class="an-period">All</button>
+                </div>
+              </div>
+              <div class="an-bars-wrap" id="an-bars"></div>
+              <div class="an-date-row"><span>May 1</span><span>May 10</span><span>May 20</span><span>Today</span></div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+              <!-- Engagement units formula -->
+              <div class="an-units-wrap">
+                <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">ENGAGEMENT UNITS — 2025</div>
+                <div class="an-unit-row">
+                  <span class="an-unit-lbl">89 free downloads × 1</span>
+                  <span class="an-unit-val" style="color:var(--cyan)">89</span>
+                </div>
+                <div class="an-unit-bar"><div class="an-unit-fill" style="width:32%;background:var(--cyan)"></div></div>
+                <div class="an-unit-row">
+                  <span class="an-unit-lbl">15 paid downloads × 5</span>
+                  <span class="an-unit-val" style="color:var(--amber)">75</span>
+                </div>
+                <div class="an-unit-bar"><div class="an-unit-fill" style="width:27%;background:var(--amber)"></div></div>
+                <div class="an-unit-row">
+                  <span class="an-unit-lbl">€180/yr fan-subs × 1</span>
+                  <span class="an-unit-val" style="color:var(--purple)">180</span>
+                </div>
+                <div class="an-unit-bar"><div class="an-unit-fill" style="width:65%;background:var(--purple)"></div></div>
+                <div class="an-grant-box">
+                  <div>
+                    <div class="an-grant-lbl">Est. grant — year end</div>
+                    <div class="an-grant-sub">344 units · at Y2 pool size</div>
+                  </div>
+                  <div class="an-grant-amt">~€31</div>
+                </div>
+              </div>
+
+              <!-- Top tracks + countries -->
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div class="an-tbl-wrap">
+                  <div class="an-tbl-lbl">TOP TRACKS</div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">1</span><span class="an-tbl-name">Drift Vol. 3</span><span class="an-tbl-val">482</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">2</span><span class="an-tbl-name">Helsinki Winter</span><span class="an-tbl-val">311</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">3</span><span class="an-tbl-name">Late Night Drift</span><span class="an-tbl-val">178</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">4</span><span class="an-tbl-name">Analog Summer</span><span class="an-tbl-val">89</span></div>
+                </div>
+                <div class="an-tbl-wrap">
+                  <div class="an-tbl-lbl">TOP COUNTRIES</div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">🇫🇮</span><span class="an-tbl-name">Finland</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:42%"></div></div><span class="an-ctry-pct">42%</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">🇩🇪</span><span class="an-tbl-name">Germany</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:18%"></div></div><span class="an-ctry-pct">18%</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">🇸🇪</span><span class="an-tbl-name">Sweden</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:12%"></div></div><span class="an-ctry-pct">12%</span></div>
+                  <div class="an-tbl-row"><span class="an-tbl-rank">🇪🇪</span><span class="an-tbl-name">Estonia</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:8%"></div></div><span class="an-ctry-pct">8%</span></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-3" style="margin-top:20px">
+      <div class="card reveal reveal-delay-1">
+        <div class="card-tag">PRIVACY-FIRST</div>
+        <h3 class="amber">No cookies. No PII. No fingerprinting.</h3>
+        <p>IP-hashed with a daily-rotating salt. "Unique listener" is a 24-hour bucket concept — we can count, but we cannot track across days.</p>
+      </div>
+      <div class="card cyan reveal reveal-delay-2">
+        <div class="card-tag">GRANT FORMULA VISIBLE</div>
+        <h3 class="cyan">You see exactly how your grant share is built</h3>
+        <p>Every unit counted, every formula step explicit. The AGM can vote to change the weighting. No black box, ever.</p>
+      </div>
+      <div class="card green reveal reveal-delay-3">
+        <div class="card-tag">EXPORT</div>
+        <h3 class="green">Full CSV always available</h3>
+        <p>GET /v1/me/stats/export.csv — all aggregates, no PII. Your data is yours and always portable, regardless of membership status.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- CTA -->
 <section id="cta">
   <div class="section-inner">
@@ -950,7 +1446,72 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   </div>
 </section>
 
+<div id="video-modal">
+  <div class="modal-inner">
+    <video id="modal-video" loop playsinline></video>
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-title">TAHTI — <span>Your radio station. Always on. Always yours.</span></div>
+  </div>
+</div>
+
 <script>
+// ===== UNMUTE BUTTON =====
+(function() {
+  const btn = document.getElementById('unmute-btn');
+  const bgVideo = document.getElementById('bg-video');
+  const overlay = document.getElementById('bg-video-overlay');
+  if (!btn || !bgVideo) return;
+
+  function setVideoSound(on) {
+    bgVideo.muted = !on;
+    bgVideo.volume = 0.7;
+    if (on) {
+      btn.classList.remove('muted');
+      btn.querySelector('.icon').textContent = '🔊';
+      btn.querySelector('.label').textContent = 'MUTE';
+      overlay.classList.add('sound-on');
+    } else {
+      btn.classList.add('muted');
+      btn.querySelector('.icon').textContent = '🔇';
+      btn.querySelector('.label').textContent = 'UNMUTE';
+      overlay.classList.remove('sound-on');
+    }
+  }
+
+  btn.addEventListener('click', () => setVideoSound(bgVideo.muted));
+
+  // Hero player → modal
+  const heroPlayer = document.getElementById('heroPlayer');
+  const modal = document.getElementById('video-modal');
+  const modalVideo = document.getElementById('modal-video');
+  const modalClose = document.getElementById('modal-close');
+
+  if (heroPlayer && modal && modalVideo) {
+    heroPlayer.addEventListener('click', () => {
+      setVideoSound(true);
+      modalVideo.src = 'output_vhs.mp4';
+      modalVideo.muted = false;
+      modalVideo.volume = 0.7;
+      modalVideo.play();
+      modal.classList.add('open');
+      btn.style.display = 'none';
+      document.body.style.overflow = 'hidden';
+    });
+
+    function closeModal() {
+      modal.classList.remove('open');
+      modalVideo.pause();
+      modalVideo.src = '';
+      btn.style.display = '';
+      document.body.style.overflow = '';
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+  }
+})();
+
 // ===== THREE.JS BACKGROUND =====
 (function() {
   const canvas = document.getElementById('bg');
@@ -961,6 +1522,115 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
   camera.position.z = 400;
+
+  // Gradient mesh — large soft spheres that create color fields
+  const gradientGroup = new THREE.Group();
+  scene.add(gradientGroup);
+
+  const gradientColors = [
+    { color: new THREE.Color(0.94, 0.65, 0.0), pos: [-200, 100, -200], scale: 300 },
+    { color: new THREE.Color(0.0, 0.74, 0.83), pos: [200, -80, -250], scale: 350 },
+    { color: new THREE.Color(0.49, 0.3, 1.0), pos: [0, 150, -300], scale: 280 },
+    { color: new THREE.Color(0.0, 0.9, 0.46), pos: [-150, -120, -180], scale: 260 },
+    { color: new THREE.Color(1.0, 0.42, 0.42), pos: [180, 120, -220], scale: 240 },
+  ];
+
+  const gradientMeshes = gradientColors.map((cfg, i) => {
+    const geo = new THREE.SphereGeometry(1, 32, 32);
+    const mat = new THREE.MeshBasicMaterial({
+      color: cfg.color,
+      transparent: true,
+      opacity: 0.08,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(...cfg.pos);
+    mesh.scale.setScalar(cfg.scale);
+    gradientGroup.add(mesh);
+    return {
+      mesh,
+      basePos: [...cfg.pos],
+      baseScale: cfg.scale,
+      speed: 0.3 + Math.random() * 0.4,
+      radius: 40 + Math.random() * 60,
+      phase: Math.random() * Math.PI * 2,
+    };
+  });
+
+  // Floating rings — torus shapes orbiting slowly
+  const ringGroup = new THREE.Group();
+  scene.add(ringGroup);
+  const ringObjs = [];
+  const ringPalette = [
+    [0.94, 0.65, 0.0],
+    [0.0, 0.74, 0.83],
+    [0.49, 0.3, 1.0],
+    [0.0, 0.9, 0.46],
+  ];
+  for (let i = 0; i < 8; i++) {
+    const geo = new THREE.TorusGeometry(30 + Math.random() * 50, 1.5, 8, 64);
+    const c = ringPalette[i % ringPalette.length];
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.12 + Math.random() * 0.1, wireframe: true });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set((Math.random() - 0.5) * 700, (Math.random() - 0.5) * 400, -100 - Math.random() * 200);
+    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+    ringGroup.add(mesh);
+    ringObjs.push({ mesh, rotSpeed: [(Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.1], drift: (Math.random() - 0.5) * 0.15, phase: Math.random() * Math.PI * 2 });
+  }
+
+  // Shooting stars — fast streaks that fire periodically
+  const STAR_COUNT = 40;
+  const starPos = new Float32Array(STAR_COUNT * 3);
+  const starCol = new Float32Array(STAR_COUNT * 3);
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+  const starMat = new THREE.PointsMaterial({ size: 3, vertexColors: true, transparent: true, opacity: 0.9, sizeAttenuation: true });
+  const stars = new THREE.Points(starGeo, starMat);
+  scene.add(stars);
+  const starData = [];
+  for (let i = 0; i < STAR_COUNT; i++) {
+    starData.push({ active: false, life: 0, maxLife: 0, vx: 0, vy: 0, vz: 0 });
+    starPos[i*3] = 0; starPos[i*3+1] = -9999; starPos[i*3+2] = 0;
+  }
+  let lastStarTime = 0;
+
+  // Pulsing grid lines
+  const gridGroup = new THREE.Group();
+  scene.add(gridGroup);
+  const gridLines = [];
+  const gridSpacing = 80;
+  const gridExtent = 600;
+  for (let x = -gridExtent; x <= gridExtent; x += gridSpacing) {
+    const pts = [new THREE.Vector3(x, -gridExtent, -300), new THREE.Vector3(x, gridExtent, -300)];
+    const g = new THREE.BufferGeometry().setFromPoints(pts);
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.03 });
+    const line = new THREE.Line(g, m);
+    gridGroup.add(line);
+    gridLines.push({ line, baseX: x, axis: 'x' });
+  }
+  for (let y = -gridExtent; y <= gridExtent; y += gridSpacing) {
+    const pts = [new THREE.Vector3(-gridExtent, y, -300), new THREE.Vector3(gridExtent, y, -300)];
+    const g = new THREE.BufferGeometry().setFromPoints(pts);
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.49, 0.3, 1.0), transparent: true, opacity: 0.03 });
+    const line = new THREE.Line(g, m);
+    gridGroup.add(line);
+    gridLines.push({ line, baseY: y, axis: 'y' });
+  }
+
+  // Floating diamond shapes
+  const diamondGroup = new THREE.Group();
+  scene.add(diamondGroup);
+  const diamondObjs = [];
+  for (let i = 0; i < 15; i++) {
+    const geo = new THREE.OctahedronGeometry(4 + Math.random() * 8, 0);
+    const c = palette[Math.floor(Math.random() * palette.length)];
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.1 + Math.random() * 0.15, wireframe: true });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set((Math.random() - 0.5) * 800, (Math.random() - 0.5) * 500, -50 - Math.random() * 150);
+    diamondGroup.add(mesh);
+    diamondObjs.push({ mesh, rotSpeed: 0.5 + Math.random() * 1.5, drift: (Math.random() - 0.5) * 0.2, phase: Math.random() * Math.PI * 2, bobAmp: 15 + Math.random() * 25 });
+  }
 
   // Background particle field
   const N = 1800;
@@ -1043,6 +1713,83 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     frameId = requestAnimationFrame(animate);
     const t = Date.now() * 0.001;
 
+    // Animate gradient orbs
+    gradientMeshes.forEach((g, i) => {
+      const { mesh, basePos, speed, radius, phase } = g;
+      mesh.position.x = basePos[0] + Math.sin(t * speed + phase) * radius;
+      mesh.position.y = basePos[1] + Math.cos(t * speed * 0.7 + phase) * radius * 0.6;
+      mesh.position.z = basePos[2] + Math.sin(t * speed * 0.5 + phase * 1.3) * radius * 0.4;
+      const s = g.baseScale + Math.sin(t * speed * 0.8 + phase) * 30;
+      mesh.scale.setScalar(s);
+      mesh.material.opacity = 0.06 + Math.sin(t * speed * 0.6 + phase * 0.5) * 0.03;
+    });
+
+    // Animate floating rings
+    ringObjs.forEach(r => {
+      const { mesh, rotSpeed, drift, phase } = r;
+      mesh.rotation.x += rotSpeed[0] * 0.01;
+      mesh.rotation.y += rotSpeed[1] * 0.01;
+      mesh.rotation.z += rotSpeed[2] * 0.01;
+      mesh.position.y += Math.sin(t * 0.5 + phase) * drift * 0.1;
+      mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.05;
+    });
+
+    // Shooting stars
+    if (t - lastStarTime > 2.5 + Math.random() * 3) {
+      lastStarTime = t;
+      for (let i = 0; i < STAR_COUNT; i++) {
+        if (!starData[i].active) {
+          starData[i].active = true;
+          starData[i].life = 0;
+          starData[i].maxLife = 0.8 + Math.random() * 1.2;
+          starPos[i*3]   = (Math.random() - 0.5) * 800;
+          starPos[i*3+1] = 250 + Math.random() * 100;
+          starPos[i*3+2] = -50 - Math.random() * 150;
+          starData[i].vx = (Math.random() - 0.5) * 8;
+          starData[i].vy = -(6 + Math.random() * 8);
+          starData[i].vz = 0;
+          const c = palette[Math.floor(Math.random() * palette.length)];
+          starCol[i*3] = c[0]; starCol[i*3+1] = c[1]; starCol[i*3+2] = c[2];
+          break;
+        }
+      }
+    }
+    for (let i = 0; i < STAR_COUNT; i++) {
+      if (starData[i].active) {
+        starData[i].life += 0.016;
+        starPos[i*3]   += starData[i].vx;
+        starPos[i*3+1] += starData[i].vy;
+        starPos[i*3+2] += starData[i].vz;
+        const lifeRatio = starData[i].life / starData[i].maxLife;
+        starCol[i*3]   *= 0.98;
+        starCol[i*3+1] *= 0.98;
+        starCol[i*3+2] *= 0.98;
+        if (lifeRatio >= 1) {
+          starData[i].active = false;
+          starPos[i*3+1] = -9999;
+        }
+      }
+    }
+    starGeo.attributes.position.needsUpdate = true;
+    starGeo.attributes.color.needsUpdate = true;
+
+    // Pulsing grid
+    gridLines.forEach((g, i) => {
+      const pulse = 0.02 + Math.sin(t * 0.8 + i * 0.15) * 0.02;
+      g.line.material.opacity = Math.max(0.005, pulse);
+    });
+
+    // Floating diamonds
+    diamondObjs.forEach(d => {
+      const { mesh, rotSpeed, drift, phase, bobAmp } = d;
+      mesh.rotation.x += rotSpeed * 0.005;
+      mesh.rotation.y += rotSpeed * 0.008;
+      mesh.position.y += Math.sin(t * 0.4 + phase) * drift * 0.05;
+      mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.03;
+      const s = 1 + Math.sin(t * rotSpeed + phase) * 0.3;
+      mesh.scale.setScalar(s);
+    });
+
     // Drift background particles
     for (let i = 0; i < N; i++) {
       pos[i*3]   += vels[i*2];
@@ -1068,9 +1815,17 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     });
 
     camera.position.y = -scrollY * 0.03;
+    camera.position.x = Math.sin(t * 0.15) * 15;
+    camera.rotation.z = Math.sin(t * 0.1) * 0.005;
     renderer.render(scene, camera);
   }
   animate();
+})();
+
+// ===== HERO THUMBNAIL VIDEO =====
+(function() {
+  const thumb = document.querySelector('.hero-video-thumb video');
+  if (thumb) { thumb.muted = true; thumb.play(); }
 })();
 
 // ===== WAVEFORM BARS (channel mockup) =====
@@ -1117,7 +1872,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 
 // ===== NAV DOTS =====
 (function() {
-  const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','revenue','membership','discovery','pricing','open-source','mockups','cta'];
+  const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','revenue','membership','discovery','pricing','open-source','mockups','mockup-profile','mockup-smartlink','mockup-analytics','cta'];
   const dotContainer = document.getElementById('navDots');
   sections.forEach(id => {
     const dot = document.createElement('button');
@@ -1138,6 +1893,66 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     });
   }, { threshold: 0.4 });
   sections.forEach(id => { const el = document.getElementById(id); if(el) io.observe(el); });
+})();
+
+// ===== AUTO-SCROLL ON INACTIVITY =====
+(function() {
+  const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','revenue','membership','discovery','pricing','open-source','mockups','mockup-profile','mockup-smartlink','mockup-analytics','cta'];
+  let currentIdx = 0;
+  let lastActivity = Date.now();
+  const INTERVAL = 20000;
+  let autoScrollTimer;
+
+  function getCurrentSectionIndex() {
+    const scrollPos = window.scrollY + window.innerHeight / 2;
+    let closest = 0;
+    let closestDist = Infinity;
+    sections.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const top = el.offsetTop;
+      const dist = Math.abs(scrollPos - top);
+      if (dist < closestDist) { closestDist = dist; closest = i; }
+    });
+    return closest;
+  }
+
+  function scrollToNext() {
+    currentIdx = getCurrentSectionIndex();
+    const nextIdx = (currentIdx + 1) % sections.length;
+    const nextEl = document.getElementById(sections[nextIdx]);
+    if (nextEl) {
+      nextEl.scrollIntoView({ behavior: 'smooth' });
+      currentIdx = nextIdx;
+    }
+  }
+
+  function resetTimer() {
+    lastActivity = Date.now();
+    clearTimeout(autoScrollTimer);
+    autoScrollTimer = setTimeout(scrollToNext, INTERVAL);
+  }
+
+  const events = ['scroll', 'mousedown', 'touchstart', 'keydown', 'wheel', 'click'];
+  events.forEach(evt => {
+    window.addEventListener(evt, resetTimer, { passive: true });
+  });
+
+  autoScrollTimer = setTimeout(scrollToNext, INTERVAL);
+})();
+
+// ===== ANALYTICS BAR CHART =====
+(function() {
+  const data = [18,22,15,30,25,28,20,35,18,24,28,32,22,18,35,42,28,38,32,45,30,35,40,48,38,42,50,44,52,60];
+  const container = document.getElementById('an-bars');
+  if (!container) return;
+  const max = Math.max(...data);
+  data.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'an-bar-i' + (i === data.length - 1 ? ' today' : '');
+    bar.style.height = Math.max(4, Math.round(h / max * 64)) + 'px';
+    container.appendChild(bar);
+  });
 })();
 
 // ===== MOCKUP TABS =====

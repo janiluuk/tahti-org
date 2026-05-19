@@ -1,16 +1,24 @@
 {
-    email ops@example.com
+    email ops@tahti.fi
+    admin 0.0.0.0:2019
 }
 
-# Main site + artist dashboard
-example.com, www.example.com {
+# ── Marketing site ────────────────────────────────────────────────────────────
+tahti.fi, www.tahti.fi {
+    encode zstd gzip
+    reverse_proxy website:80
+}
+
+# ── Artist app ────────────────────────────────────────────────────────────────
+app.tahti.fi {
     encode zstd gzip
     reverse_proxy web:3000
 }
 
-# Per-channel landing pages — wildcard subdomain routing
+# ── Per-channel landing pages — wildcard subdomain routing ───────────────────
 *.tahti.fi {
-    @valid expression {labels.0} != "www"
+    @app host app.tahti.fi
+    @valid expression {labels.0} != "www" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream" && {labels.0} != "cdn" && {labels.0} != "ingest-icecast" && {labels.0} != "minio" && {labels.0} != "grafana"
     encode zstd gzip
     reverse_proxy @valid web:3000 {
         header_up X-Tahti-Channel-Slug {labels.0}
@@ -20,24 +28,27 @@ example.com, www.example.com {
     }
 }
 
-# Artist API
-api.example.com {
+# ── Artist API ────────────────────────────────────────────────────────────────
+api.tahti.fi {
     encode zstd gzip
     @cors method OPTIONS
-    header @cors Access-Control-Allow-Origin "https://example.com"
+    header @cors Access-Control-Allow-Origin "https://tahti.fi https://app.tahti.fi"
     header @cors Access-Control-Allow-Credentials "true"
+    header @cors Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    header @cors Access-Control-Allow-Headers "Content-Type, Authorization"
     reverse_proxy api:3000
 }
 
-# Centrifugo WebSocket for live chat
-chat.example.com {
+# ── Centrifugo WebSocket for live chat ────────────────────────────────────────
+chat.tahti.fi {
     @ws header Connection *Upgrade*
     @ws header Upgrade websocket
+    reverse_proxy @ws chat:8000
     reverse_proxy chat:8000
 }
 
-# Public HLS streams from shared volume — Bunny CDN pulls from this
-stream.example.com {
+# ── Public HLS streams — served direct; UpCloud Helsinki mirrors for spillover ─
+stream.tahti.fi {
     encode gzip
     header Access-Control-Allow-Origin "*"
     header Cache-Control "public, max-age=2, s-maxage=10"
@@ -45,23 +56,27 @@ stream.example.com {
     file_server
 }
 
-# CDN origin for archive items, covers, etc.
-cdn-origin.example.com {
+# ── CDN origin for archive items, covers, waveforms ──────────────────────────
+cdn.tahti.fi {
     reverse_proxy minio:9000
     header Cache-Control "public, max-age=86400"
 }
 
-# Live ingress endpoints — separate hostnames per protocol
-ingest-icecast.example.com {
+# ── Icecast ingest ────────────────────────────────────────────────────────────
+ingest-icecast.tahti.fi {
     reverse_proxy icecast:8000
 }
 
-# RTMP ingress goes via a TCP stream proxy at the network level, NOT through Caddy.
-# (nginx-rtmp listens directly on port 1935 on the edge node, Swarm published port.)
-
-# MinIO admin console — IP-restricted
-minio.example.com {
-    @allowed remote_ip <your-ip>/32
+# ── MinIO admin console — restrict to ops IPs ────────────────────────────────
+minio.tahti.fi {
+    @allowed remote_ip 127.0.0.1/32 10.0.0.0/8
     reverse_proxy @allowed minio:9001
+    respond 403
+}
+
+# ── Grafana dashboards — restrict to ops IPs ─────────────────────────────────
+grafana.tahti.fi {
+    @allowed remote_ip 127.0.0.1/32 10.0.0.0/8
+    reverse_proxy @allowed grafana:3000
     respond 403
 }
