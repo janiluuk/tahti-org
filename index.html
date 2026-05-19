@@ -56,14 +56,16 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 .hero-icon{position:absolute;top:50%;right:8%;transform:translateY(-50%);opacity:0.12;font-size:180px;line-height:1}
 
 /* HERO VIDEO PLAYER */
-.hero-video-player{position:absolute;top:50%;right:6%;transform:translateY(-50%);width:340px;cursor:pointer;z-index:20}
-.hero-video-thumb{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);border:1px solid rgba(240,165,0,0.3);transition:transform 0.3s,border-color 0.3s,box-shadow 0.3s}
-.hero-video-thumb:hover{transform:scale(1.03);border-color:var(--amber);box-shadow:0 25px 80px rgba(240,165,0,0.15)}
-.hero-video-thumb video{width:100%;display:block;aspect-ratio:16/9;object-fit:cover;opacity:0.7}
-.hero-play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(240,165,0,0.9);display:flex;align-items:center;justify-content:center;color:#0a0f1e;transition:transform 0.2s,background 0.2s}
+.hero-layout{display:flex;align-items:center;gap:48px;justify-content:space-between}
+.hero-layout .section-inner{flex:1;max-width:600px}
+.hero-video-player{flex:0 0 520px;cursor:pointer;z-index:20}
+.hero-video-thumb{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);border:2px solid rgba(240,165,0,0.3);transition:transform 0.3s,border-color 0.3s,box-shadow 0.3s}
+.hero-video-thumb:hover{transform:scale(1.02);border-color:var(--amber);box-shadow:0 25px 80px rgba(240,165,0,0.2)}
+.hero-video-thumb video{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
+.hero-play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;background:rgba(240,165,0,0.92);display:flex;align-items:center;justify-content:center;color:#0a0f1e;transition:transform 0.2s,background 0.2s;box-shadow:0 8px 30px rgba(240,165,0,0.3)}
 .hero-video-thumb:hover .hero-play-btn{transform:translate(-50%,-50%) scale(1.1);background:var(--amber)}
-.hero-play-btn svg{margin-left:3px}
-.hero-play-label{position:absolute;bottom:12px;left:0;right:0;text-align:center;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.6);font-family:var(--font-head)}
+.hero-play-btn svg{margin-left:4px}
+.hero-play-label{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.7);font-family:var(--font-head);font-weight:600}
 
 /* VIDEO MODAL */
 #video-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(5,8,15,0.95);backdrop-filter:blur(20px);opacity:0;transition:opacity 0.4s}
@@ -406,7 +408,9 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   .mobile-wrap{flex-direction:column;align-items:center}
   .phone{width:280px}
   .hero-icon{display:none}
-  .hero-video-player{position:relative;top:auto;right:auto;transform:none;width:100%;max-width:480px;margin:32px auto 0}
+  .hero-layout{flex-direction:column;gap:32px}
+  .hero-layout .section-inner{max-width:100%}
+  .hero-video-player{flex:none;width:100%;max-width:480px}
 }
 </style>
 </head>
@@ -431,22 +435,24 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 
 <!-- HERO -->
 <section id="hero">
-  <div class="section-inner">
-    <div class="hero-tag">FOR ARTISTS · HELSINKI · BETA INVITATIONS OPEN</div>
-    <h1 class="hero-h1 reveal">Your radio<br>station.</h1>
-    <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
-    <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
-    <div class="hero-footer reveal reveal-delay-3">
-      <span>FOR ARTISTS</span><span>HELSINKI</span><span>BETA INVITATIONS OPEN</span>
-    </div>
-  </div>
-  <div class="hero-video-player" id="heroPlayer">
-    <div class="hero-video-thumb">
-      <video src="output_vhs.mp4" muted loop playsinline preload="metadata"></video>
-      <div class="hero-play-btn">
-        <svg viewBox="0 0 24 24" width="48" height="48" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+  <div class="hero-layout">
+    <div class="section-inner">
+      <div class="hero-tag">FOR ARTISTS · HELSINKI · BETA INVITATIONS OPEN</div>
+      <h1 class="hero-h1 reveal">Your radio<br>station.</h1>
+      <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
+      <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
+      <div class="hero-footer reveal reveal-delay-3">
+        <span>FOR ARTISTS</span><span>HELSINKI</span><span>BETA INVITATIONS OPEN</span>
       </div>
-      <div class="hero-play-label">WATCH THE VISION</div>
+    </div>
+    <div class="hero-video-player" id="heroPlayer">
+      <div class="hero-video-thumb">
+        <video src="output_vhs.mp4" muted loop playsinline preload="auto"></video>
+        <div class="hero-play-btn">
+          <svg viewBox="0 0 24 24" width="56" height="56" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        </div>
+        <div class="hero-play-label">WATCH THE VISION</div>
+      </div>
     </div>
   </div>
 </section>

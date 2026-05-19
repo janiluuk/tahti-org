@@ -19,6 +19,14 @@
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden}
 #bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#bg-video{position:fixed;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform:translate(-50%,-50%);z-index:0;pointer-events:none;object-fit:cover;opacity:0.35}
+#bg-video-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;background:rgba(10,15,30,0.75);transition:background 0.5s}
+#bg-video-overlay.sound-on{background:rgba(10,15,30,0.55)}
+#unmute-btn{position:fixed;bottom:32px;right:32px;z-index:200;display:flex;align-items:center;gap:12px;background:rgba(17,24,39,0.9);backdrop-filter:blur(12px);border:1px solid rgba(240,165,0,0.4);border-radius:12px;padding:14px 24px;cursor:pointer;transition:all 0.3s;color:var(--text);font-family:var(--font-head);font-size:14px;font-weight:600;letter-spacing:1px}
+#unmute-btn:hover{background:rgba(240,165,0,0.15);border-color:var(--amber);transform:scale(1.05)}
+#unmute-btn .icon{font-size:22px;display:flex;align-items:center}
+#unmute-btn .pulse{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.5s ease-in-out infinite;margin-right:4px}
+#unmute-btn.muted .pulse{background:var(--coral)}
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(10,15,30,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.05)}
@@ -46,6 +54,28 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 .hero-footer span{display:flex;align-items:center;gap:6px}
 .hero-footer span::before{content:'·';color:var(--amber)}
 .hero-icon{position:absolute;top:50%;right:8%;transform:translateY(-50%);opacity:0.12;font-size:180px;line-height:1}
+
+/* HERO VIDEO PLAYER */
+.hero-layout{display:flex;align-items:center;gap:48px;justify-content:space-between}
+.hero-layout .section-inner{flex:1;max-width:600px}
+.hero-video-player{flex:0 0 520px;cursor:pointer;z-index:20}
+.hero-video-thumb{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);border:2px solid rgba(240,165,0,0.3);transition:transform 0.3s,border-color 0.3s,box-shadow 0.3s}
+.hero-video-thumb:hover{transform:scale(1.02);border-color:var(--amber);box-shadow:0 25px 80px rgba(240,165,0,0.2)}
+.hero-video-thumb video{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
+.hero-play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:80px;height:80px;border-radius:50%;background:rgba(240,165,0,0.92);display:flex;align-items:center;justify-content:center;color:#0a0f1e;transition:transform 0.2s,background 0.2s;box-shadow:0 8px 30px rgba(240,165,0,0.3)}
+.hero-video-thumb:hover .hero-play-btn{transform:translate(-50%,-50%) scale(1.1);background:var(--amber)}
+.hero-play-btn svg{margin-left:4px}
+.hero-play-label{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.7);font-family:var(--font-head);font-weight:600}
+
+/* VIDEO MODAL */
+#video-modal{position:fixed;inset:0;z-index:9999;display:none;align-items:center;justify-content:center;background:rgba(5,8,15,0.95);backdrop-filter:blur(20px);opacity:0;transition:opacity 0.4s}
+#video-modal.open{display:flex;opacity:1}
+#video-modal .modal-inner{position:relative;width:min(90vw,1100px);aspect-ratio:16/9;border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.8);border:1px solid rgba(240,165,0,0.3)}
+#video-modal video{width:100%;height:100%;object-fit:cover}
+#video-modal .modal-close{position:absolute;top:16px;right:16px;z-index:10;width:44px;height:44px;border-radius:50%;background:rgba(10,15,30,0.8);border:1px solid rgba(255,255,255,0.2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+#video-modal .modal-close:hover{background:rgba(240,165,0,0.2);border-color:var(--amber)}
+#video-modal .modal-title{position:absolute;bottom:20px;left:24px;font-family:var(--font-head);font-size:14px;letter-spacing:3px;color:rgba(255,255,255,0.7)}
+#video-modal .modal-title span{color:var(--amber)}
 
 /* SECTION HEADERS */
 .s-h2{font-family:var(--font-head);font-size:clamp(32px,5vw,58px);font-weight:700;line-height:1.1;margin-bottom:10px}
@@ -378,12 +408,24 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   .mobile-wrap{flex-direction:column;align-items:center}
   .phone{width:280px}
   .hero-icon{display:none}
+  .hero-layout{flex-direction:column;gap:32px}
+  .hero-layout .section-inner{max-width:100%}
+  .hero-video-player{flex:none;width:100%;max-width:480px}
 }
 </style>
 </head>
 <body>
 
 <canvas id="bg"></canvas>
+<video id="bg-video" autoplay muted loop playsinline poster="">
+  <source src="output_vhs.mp4" type="video/mp4">
+</video>
+<div id="bg-video-overlay"></div>
+<button id="unmute-btn" class="muted">
+  <span class="pulse"></span>
+  <span class="icon">🔇</span>
+  <span class="label">UNMUTE</span>
+</button>
 
 <nav>
   <div class="nav-logo"><div class="nav-logo-bar"></div>TAHTI</div>
@@ -393,16 +435,26 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 
 <!-- HERO -->
 <section id="hero">
-  <div class="section-inner">
-    <div class="hero-tag">FOR ARTISTS · HELSINKI · BETA INVITATIONS OPEN</div>
-    <h1 class="hero-h1 reveal">Your radio<br>station.</h1>
-    <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
-    <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
-    <div class="hero-footer reveal reveal-delay-3">
-      <span>FOR ARTISTS</span><span>HELSINKI</span><span>BETA INVITATIONS OPEN</span>
+  <div class="hero-layout">
+    <div class="section-inner">
+      <div class="hero-tag">FOR ARTISTS · HELSINKI · BETA INVITATIONS OPEN</div>
+      <h1 class="hero-h1 reveal">Your radio<br>station.</h1>
+      <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
+      <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
+      <div class="hero-footer reveal reveal-delay-3">
+        <span>FOR ARTISTS</span><span>HELSINKI</span><span>BETA INVITATIONS OPEN</span>
+      </div>
+    </div>
+    <div class="hero-video-player" id="heroPlayer">
+      <div class="hero-video-thumb">
+        <video src="output_vhs.mp4" muted loop playsinline preload="auto"></video>
+        <div class="hero-play-btn">
+          <svg viewBox="0 0 24 24" width="56" height="56" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        </div>
+        <div class="hero-play-label">WATCH THE VISION</div>
+      </div>
     </div>
   </div>
-  <div class="hero-icon">((A))</div>
 </section>
 
 <!-- PROBLEM -->
@@ -1400,7 +1452,72 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   </div>
 </section>
 
+<div id="video-modal">
+  <div class="modal-inner">
+    <video id="modal-video" loop playsinline></video>
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-title">TAHTI — <span>Your radio station. Always on. Always yours.</span></div>
+  </div>
+</div>
+
 <script>
+// ===== UNMUTE BUTTON =====
+(function() {
+  const btn = document.getElementById('unmute-btn');
+  const bgVideo = document.getElementById('bg-video');
+  const overlay = document.getElementById('bg-video-overlay');
+  if (!btn || !bgVideo) return;
+
+  function setVideoSound(on) {
+    bgVideo.muted = !on;
+    bgVideo.volume = 0.7;
+    if (on) {
+      btn.classList.remove('muted');
+      btn.querySelector('.icon').textContent = '🔊';
+      btn.querySelector('.label').textContent = 'MUTE';
+      overlay.classList.add('sound-on');
+    } else {
+      btn.classList.add('muted');
+      btn.querySelector('.icon').textContent = '🔇';
+      btn.querySelector('.label').textContent = 'UNMUTE';
+      overlay.classList.remove('sound-on');
+    }
+  }
+
+  btn.addEventListener('click', () => setVideoSound(bgVideo.muted));
+
+  // Hero player → modal
+  const heroPlayer = document.getElementById('heroPlayer');
+  const modal = document.getElementById('video-modal');
+  const modalVideo = document.getElementById('modal-video');
+  const modalClose = document.getElementById('modal-close');
+
+  if (heroPlayer && modal && modalVideo) {
+    heroPlayer.addEventListener('click', () => {
+      setVideoSound(true);
+      modalVideo.src = 'output_vhs.mp4';
+      modalVideo.muted = false;
+      modalVideo.volume = 0.7;
+      modalVideo.play();
+      modal.classList.add('open');
+      btn.style.display = 'none';
+      document.body.style.overflow = 'hidden';
+    });
+
+    function closeModal() {
+      modal.classList.remove('open');
+      modalVideo.pause();
+      modalVideo.src = '';
+      btn.style.display = '';
+      document.body.style.overflow = '';
+    }
+
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+  }
+})();
+
 // ===== THREE.JS BACKGROUND =====
 (function() {
   const canvas = document.getElementById('bg');
@@ -1411,6 +1528,115 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
   camera.position.z = 400;
+
+  // Gradient mesh — large soft spheres that create color fields
+  const gradientGroup = new THREE.Group();
+  scene.add(gradientGroup);
+
+  const gradientColors = [
+    { color: new THREE.Color(0.94, 0.65, 0.0), pos: [-200, 100, -200], scale: 300 },
+    { color: new THREE.Color(0.0, 0.74, 0.83), pos: [200, -80, -250], scale: 350 },
+    { color: new THREE.Color(0.49, 0.3, 1.0), pos: [0, 150, -300], scale: 280 },
+    { color: new THREE.Color(0.0, 0.9, 0.46), pos: [-150, -120, -180], scale: 260 },
+    { color: new THREE.Color(1.0, 0.42, 0.42), pos: [180, 120, -220], scale: 240 },
+  ];
+
+  const gradientMeshes = gradientColors.map((cfg, i) => {
+    const geo = new THREE.SphereGeometry(1, 32, 32);
+    const mat = new THREE.MeshBasicMaterial({
+      color: cfg.color,
+      transparent: true,
+      opacity: 0.08,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(...cfg.pos);
+    mesh.scale.setScalar(cfg.scale);
+    gradientGroup.add(mesh);
+    return {
+      mesh,
+      basePos: [...cfg.pos],
+      baseScale: cfg.scale,
+      speed: 0.3 + Math.random() * 0.4,
+      radius: 40 + Math.random() * 60,
+      phase: Math.random() * Math.PI * 2,
+    };
+  });
+
+  // Floating rings — torus shapes orbiting slowly
+  const ringGroup = new THREE.Group();
+  scene.add(ringGroup);
+  const ringObjs = [];
+  const ringPalette = [
+    [0.94, 0.65, 0.0],
+    [0.0, 0.74, 0.83],
+    [0.49, 0.3, 1.0],
+    [0.0, 0.9, 0.46],
+  ];
+  for (let i = 0; i < 8; i++) {
+    const geo = new THREE.TorusGeometry(30 + Math.random() * 50, 1.5, 8, 64);
+    const c = ringPalette[i % ringPalette.length];
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.12 + Math.random() * 0.1, wireframe: true });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set((Math.random() - 0.5) * 700, (Math.random() - 0.5) * 400, -100 - Math.random() * 200);
+    mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+    ringGroup.add(mesh);
+    ringObjs.push({ mesh, rotSpeed: [(Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.1], drift: (Math.random() - 0.5) * 0.15, phase: Math.random() * Math.PI * 2 });
+  }
+
+  // Shooting stars — fast streaks that fire periodically
+  const STAR_COUNT = 40;
+  const starPos = new Float32Array(STAR_COUNT * 3);
+  const starCol = new Float32Array(STAR_COUNT * 3);
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+  const starMat = new THREE.PointsMaterial({ size: 3, vertexColors: true, transparent: true, opacity: 0.9, sizeAttenuation: true });
+  const stars = new THREE.Points(starGeo, starMat);
+  scene.add(stars);
+  const starData = [];
+  for (let i = 0; i < STAR_COUNT; i++) {
+    starData.push({ active: false, life: 0, maxLife: 0, vx: 0, vy: 0, vz: 0 });
+    starPos[i*3] = 0; starPos[i*3+1] = -9999; starPos[i*3+2] = 0;
+  }
+  let lastStarTime = 0;
+
+  // Pulsing grid lines
+  const gridGroup = new THREE.Group();
+  scene.add(gridGroup);
+  const gridLines = [];
+  const gridSpacing = 80;
+  const gridExtent = 600;
+  for (let x = -gridExtent; x <= gridExtent; x += gridSpacing) {
+    const pts = [new THREE.Vector3(x, -gridExtent, -300), new THREE.Vector3(x, gridExtent, -300)];
+    const g = new THREE.BufferGeometry().setFromPoints(pts);
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.03 });
+    const line = new THREE.Line(g, m);
+    gridGroup.add(line);
+    gridLines.push({ line, baseX: x, axis: 'x' });
+  }
+  for (let y = -gridExtent; y <= gridExtent; y += gridSpacing) {
+    const pts = [new THREE.Vector3(-gridExtent, y, -300), new THREE.Vector3(gridExtent, y, -300)];
+    const g = new THREE.BufferGeometry().setFromPoints(pts);
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.49, 0.3, 1.0), transparent: true, opacity: 0.03 });
+    const line = new THREE.Line(g, m);
+    gridGroup.add(line);
+    gridLines.push({ line, baseY: y, axis: 'y' });
+  }
+
+  // Floating diamond shapes
+  const diamondGroup = new THREE.Group();
+  scene.add(diamondGroup);
+  const diamondObjs = [];
+  for (let i = 0; i < 15; i++) {
+    const geo = new THREE.OctahedronGeometry(4 + Math.random() * 8, 0);
+    const c = palette[Math.floor(Math.random() * palette.length)];
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.1 + Math.random() * 0.15, wireframe: true });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set((Math.random() - 0.5) * 800, (Math.random() - 0.5) * 500, -50 - Math.random() * 150);
+    diamondGroup.add(mesh);
+    diamondObjs.push({ mesh, rotSpeed: 0.5 + Math.random() * 1.5, drift: (Math.random() - 0.5) * 0.2, phase: Math.random() * Math.PI * 2, bobAmp: 15 + Math.random() * 25 });
+  }
 
   // Background particle field
   const N = 1800;
@@ -1493,6 +1719,83 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     frameId = requestAnimationFrame(animate);
     const t = Date.now() * 0.001;
 
+    // Animate gradient orbs
+    gradientMeshes.forEach((g, i) => {
+      const { mesh, basePos, speed, radius, phase } = g;
+      mesh.position.x = basePos[0] + Math.sin(t * speed + phase) * radius;
+      mesh.position.y = basePos[1] + Math.cos(t * speed * 0.7 + phase) * radius * 0.6;
+      mesh.position.z = basePos[2] + Math.sin(t * speed * 0.5 + phase * 1.3) * radius * 0.4;
+      const s = g.baseScale + Math.sin(t * speed * 0.8 + phase) * 30;
+      mesh.scale.setScalar(s);
+      mesh.material.opacity = 0.06 + Math.sin(t * speed * 0.6 + phase * 0.5) * 0.03;
+    });
+
+    // Animate floating rings
+    ringObjs.forEach(r => {
+      const { mesh, rotSpeed, drift, phase } = r;
+      mesh.rotation.x += rotSpeed[0] * 0.01;
+      mesh.rotation.y += rotSpeed[1] * 0.01;
+      mesh.rotation.z += rotSpeed[2] * 0.01;
+      mesh.position.y += Math.sin(t * 0.5 + phase) * drift * 0.1;
+      mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.05;
+    });
+
+    // Shooting stars
+    if (t - lastStarTime > 2.5 + Math.random() * 3) {
+      lastStarTime = t;
+      for (let i = 0; i < STAR_COUNT; i++) {
+        if (!starData[i].active) {
+          starData[i].active = true;
+          starData[i].life = 0;
+          starData[i].maxLife = 0.8 + Math.random() * 1.2;
+          starPos[i*3]   = (Math.random() - 0.5) * 800;
+          starPos[i*3+1] = 250 + Math.random() * 100;
+          starPos[i*3+2] = -50 - Math.random() * 150;
+          starData[i].vx = (Math.random() - 0.5) * 8;
+          starData[i].vy = -(6 + Math.random() * 8);
+          starData[i].vz = 0;
+          const c = palette[Math.floor(Math.random() * palette.length)];
+          starCol[i*3] = c[0]; starCol[i*3+1] = c[1]; starCol[i*3+2] = c[2];
+          break;
+        }
+      }
+    }
+    for (let i = 0; i < STAR_COUNT; i++) {
+      if (starData[i].active) {
+        starData[i].life += 0.016;
+        starPos[i*3]   += starData[i].vx;
+        starPos[i*3+1] += starData[i].vy;
+        starPos[i*3+2] += starData[i].vz;
+        const lifeRatio = starData[i].life / starData[i].maxLife;
+        starCol[i*3]   *= 0.98;
+        starCol[i*3+1] *= 0.98;
+        starCol[i*3+2] *= 0.98;
+        if (lifeRatio >= 1) {
+          starData[i].active = false;
+          starPos[i*3+1] = -9999;
+        }
+      }
+    }
+    starGeo.attributes.position.needsUpdate = true;
+    starGeo.attributes.color.needsUpdate = true;
+
+    // Pulsing grid
+    gridLines.forEach((g, i) => {
+      const pulse = 0.02 + Math.sin(t * 0.8 + i * 0.15) * 0.02;
+      g.line.material.opacity = Math.max(0.005, pulse);
+    });
+
+    // Floating diamonds
+    diamondObjs.forEach(d => {
+      const { mesh, rotSpeed, drift, phase, bobAmp } = d;
+      mesh.rotation.x += rotSpeed * 0.005;
+      mesh.rotation.y += rotSpeed * 0.008;
+      mesh.position.y += Math.sin(t * 0.4 + phase) * drift * 0.05;
+      mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.03;
+      const s = 1 + Math.sin(t * rotSpeed + phase) * 0.3;
+      mesh.scale.setScalar(s);
+    });
+
     // Drift background particles
     for (let i = 0; i < N; i++) {
       pos[i*3]   += vels[i*2];
@@ -1518,9 +1821,17 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     });
 
     camera.position.y = -scrollY * 0.03;
+    camera.position.x = Math.sin(t * 0.15) * 15;
+    camera.rotation.z = Math.sin(t * 0.1) * 0.005;
     renderer.render(scene, camera);
   }
   animate();
+})();
+
+// ===== HERO THUMBNAIL VIDEO =====
+(function() {
+  const thumb = document.querySelector('.hero-video-thumb video');
+  if (thumb) { thumb.muted = true; thumb.play(); }
 })();
 
 // ===== WAVEFORM BARS (channel mockup) =====
@@ -1588,6 +1899,52 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     });
   }, { threshold: 0.4 });
   sections.forEach(id => { const el = document.getElementById(id); if(el) io.observe(el); });
+})();
+
+// ===== AUTO-SCROLL ON INACTIVITY =====
+(function() {
+  const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','revenue','membership','discovery','pricing','open-source','mockups','mockup-profile','mockup-smartlink','mockup-analytics','cta'];
+  let currentIdx = 0;
+  let lastActivity = Date.now();
+  const INTERVAL = 20000;
+  let autoScrollTimer;
+
+  function getCurrentSectionIndex() {
+    const scrollPos = window.scrollY + window.innerHeight / 2;
+    let closest = 0;
+    let closestDist = Infinity;
+    sections.forEach((id, i) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const top = el.offsetTop;
+      const dist = Math.abs(scrollPos - top);
+      if (dist < closestDist) { closestDist = dist; closest = i; }
+    });
+    return closest;
+  }
+
+  function scrollToNext() {
+    currentIdx = getCurrentSectionIndex();
+    const nextIdx = (currentIdx + 1) % sections.length;
+    const nextEl = document.getElementById(sections[nextIdx]);
+    if (nextEl) {
+      nextEl.scrollIntoView({ behavior: 'smooth' });
+      currentIdx = nextIdx;
+    }
+  }
+
+  function resetTimer() {
+    lastActivity = Date.now();
+    clearTimeout(autoScrollTimer);
+    autoScrollTimer = setTimeout(scrollToNext, INTERVAL);
+  }
+
+  const events = ['scroll', 'mousedown', 'touchstart', 'keydown', 'wheel', 'click'];
+  events.forEach(evt => {
+    window.addEventListener(evt, resetTimer, { passive: true });
+  });
+
+  autoScrollTimer = setTimeout(scrollToNext, INTERVAL);
 })();
 
 // ===== ANALYTICS BAR CHART =====
