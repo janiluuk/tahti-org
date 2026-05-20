@@ -1,0 +1,136 @@
+# Deploy Tahti website to production via jumphost → root@192.168.2.100.
+#
+# Required repository secret:
+#   DEPLOY_SSH_PRIVATE_KEY — ed25519 private key (authorized on jumphost + production)
+#
+# Optional repository variables (see "Export deploy targets" step for defaults):
+#   DEPLOY_JUMP_HOST, DEPLOY_JUMP_USER, DEPLOY_JUMP_PORT
+#   DEPLOY_HOST, DEPLOY_PATH, DEPLOY_USER, DEPLOY_APP_PORT
+#
+# Triggers:
+#   - workflow_dispatch (manual, with optional --no-cache flag)
+#   - CI workflow completed successfully on push to main (auto)
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      no_cache:
+        description: Docker build --no-cache
+        type: boolean
+        default: false
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Rsync and docker compose up
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    env:
+      DEPLOY_JUMP_USER: ${{ vars.DEPLOY_JUMP_USER }}
+      DEPLOY_JUMP_HOST: ${{ vars.DEPLOY_JUMP_HOST }}
+      DEPLOY_JUMP_PORT: ${{ vars.DEPLOY_JUMP_PORT }}
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      DEPLOY_APP_PORT: ${{ vars.DEPLOY_APP_PORT }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Export deploy targets
+        run: |
+          jump_user="${DEPLOY_JUMP_USER:-pi}"
+          jump_host="${DEPLOY_JUMP_HOST:-sparkki.dudeisland.eu}"
+          jump_port="${DEPLOY_JUMP_PORT:-4322}"
+          {
+            echo "DEPLOY_JUMP_USER=${jump_user}"
+            echo "DEPLOY_JUMP_HOST=${jump_host}"
+            echo "DEPLOY_JUMP_PORT=${jump_port}"
+            echo "DEPLOY_HOST=${DEPLOY_HOST:-192.168.2.100}"
+            echo "DEPLOY_PATH=${DEPLOY_PATH:-/srv/tahti}"
+            echo "DEPLOY_USER=${DEPLOY_USER:-root}"
+            echo "DEPLOY_APP_PORT=${DEPLOY_APP_PORT:-8090}"
+            echo "SSH_PROXY_JUMP=${jump_user}@${jump_host}:${jump_port}"
+          } >> "$GITHUB_ENV"
+
+      - name: Require deploy key
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "${DEPLOY_KEY}" ]; then
+            echo "::error::Set repository secret DEPLOY_SSH_PRIVATE_KEY (see workflow header)."
+            exit 1
+          fi
+
+      - name: Configure SSH agent
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/deploy_key
+          echo "SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" >> "$GITHUB_ENV"
+          echo "SSH_AGENT_PID=${SSH_AGENT_PID}" >> "$GITHUB_ENV"
+          cat >> ~/.ssh/config <<CFG
+          Host deploy-jump
+            HostName ${DEPLOY_JUMP_HOST}
+            Port ${DEPLOY_JUMP_PORT}
+            User ${DEPLOY_JUMP_USER}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking accept-new
+
+          Host deploy-prod
+            HostName ${DEPLOY_HOST}
+            User ${DEPLOY_USER}
+            ProxyJump deploy-jump
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking accept-new
+          CFG
+          chmod 600 ~/.ssh/config
+
+      - name: Trust SSH host keys
+        run: |
+          set -euo pipefail
+          touch ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keyscan -p "${DEPLOY_JUMP_PORT}" -H "${DEPLOY_JUMP_HOST}" >> ~/.ssh/known_hosts
+          ssh deploy-jump "ssh-keyscan -H '${DEPLOY_HOST}'" >> ~/.ssh/known_hosts
+
+      - name: Verify jumphost and production SSH
+        run: |
+          ssh deploy-jump 'echo "jumphost ok"'
+          ssh deploy-prod "test -d '${DEPLOY_PATH}' && echo 'production ok'"
+
+      - name: Deploy stack
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.no_cache }}" = "true" ]; then
+            ./scripts/lab-stack-up.sh --no-cache
+          else
+            ./scripts/lab-stack-up.sh
+          fi
+
+      - name: Health check
+        run: |
+          ssh deploy-prod "curl -sfS http://127.0.0.1:${DEPLOY_APP_PORT}/health"

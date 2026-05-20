@@ -49,16 +49,27 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 .hero-h1{font-family:var(--font-head);font-size:clamp(48px,7vw,90px);font-weight:700;line-height:1.05;margin-bottom:20px}
 .hero-h1 span{color:var(--amber)}
 .hero-italic{font-family:var(--font-body);font-style:italic;font-size:clamp(28px,4vw,52px);color:var(--amber);font-weight:300;margin-bottom:40px}
-.hero-desc{max-width:620px;line-height:1.7;color:var(--muted);font-size:17px;margin-bottom:50px}
+.hero-desc{max-width:100%;line-height:1.7;color:var(--muted);font-size:17px;margin-bottom:50px}
 .hero-footer{font-size:11px;letter-spacing:3px;color:var(--muted);display:flex;gap:20px}
 .hero-footer span{display:flex;align-items:center;gap:6px}
 .hero-footer span::before{content:'·';color:var(--amber)}
 .hero-icon{position:absolute;top:50%;right:8%;transform:translateY(-50%);opacity:0.12;font-size:180px;line-height:1}
+.hero-cta-row{display:flex;gap:14px;margin-bottom:40px;flex-wrap:wrap;align-items:center}
+.btn-primary{background:var(--amber);color:#0a0f1e;padding:14px 30px;border-radius:8px;font-family:var(--font-head);font-weight:700;font-size:13px;letter-spacing:1.5px;text-decoration:none;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{opacity:0.88;transform:translateY(-2px);box-shadow:0 8px 24px rgba(240,165,0,0.35)}
+.btn-secondary{background:transparent;color:var(--text);padding:13px 28px;border-radius:8px;font-family:var(--font-head);font-weight:600;font-size:13px;letter-spacing:1px;text-decoration:none;border:1px solid rgba(255,255,255,0.18);transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+.btn-secondary:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
+.hero-mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.hero-mini-stat{background:rgba(17,24,39,0.85);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;transition:border-color 0.3s}
+.hero-mini-stat:hover{border-color:rgba(240,165,0,0.3)}
+.hms-val{font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--amber);line-height:1;margin-bottom:4px}
+.hms-val.c{color:var(--cyan)}.hms-val.g{color:var(--green)}.hms-val.p{color:var(--lavender)}
+.hms-label{font-size:11px;color:var(--muted);letter-spacing:0.5px;line-height:1.4}
 
 /* HERO VIDEO PLAYER */
 .hero-layout{display:flex;align-items:center;gap:48px;justify-content:space-between}
-.hero-layout .section-inner{flex:1;max-width:600px}
-.hero-video-player{flex:0 0 520px;cursor:pointer;z-index:20}
+.hero-layout .section-inner{flex:1 1 0;min-width:0}
+.hero-video-player{flex:0 0 460px;cursor:pointer;z-index:20}
 .hero-video-thumb{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);border:2px solid rgba(240,165,0,0.3);transition:transform 0.3s,border-color 0.3s,box-shadow 0.3s}
 .hero-video-thumb:hover{transform:scale(1.02);border-color:var(--amber);box-shadow:0 25px 80px rgba(240,165,0,0.2)}
 .hero-video-thumb video{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
@@ -411,6 +422,8 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   .hero-layout{flex-direction:column;gap:32px}
   .hero-layout .section-inner{max-width:100%}
   .hero-video-player{flex:none;width:100%;max-width:480px}
+  .hero-cta-row{flex-wrap:wrap}
+  .hero-mini-stats{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -441,17 +454,27 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <h1 class="hero-h1 reveal">Your radio<br>station.</h1>
       <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
       <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
-      <div class="hero-footer reveal reveal-delay-3">
+      <div class="hero-cta-row reveal reveal-delay-3">
+        <a href="#cta" class="btn-primary">Apply for beta →</a>
+        <a href="#broadcast" class="btn-secondary">See how it works</a>
+      </div>
+      <div class="hero-footer reveal reveal-delay-4">
         <span>FOR ARTISTS</span><span>HELSINKI</span><span>BETA INVITATIONS OPEN</span>
       </div>
     </div>
     <div class="hero-video-player" id="heroPlayer">
       <div class="hero-video-thumb">
-        <video src="output_vhs.mp4" muted loop playsinline preload="auto"></video>
+        <video src="output_vhs.mp4" muted loop playsinline preload="auto" autoplay></video>
         <div class="hero-play-btn">
           <svg viewBox="0 0 24 24" width="56" height="56" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
         </div>
         <div class="hero-play-label">WATCH THE VISION</div>
+      </div>
+      <div class="hero-mini-stats">
+        <div class="hero-mini-stat"><div class="hms-val">0%</div><div class="hms-label">Revenue cut — ever</div></div>
+        <div class="hero-mini-stat"><div class="hms-val c">1 URL</div><div class="hms-label">Live + archive, always on</div></div>
+        <div class="hero-mini-stat"><div class="hms-val g">FLAC</div><div class="hms-label">Lossless for paid artists</div></div>
+        <div class="hero-mini-stat"><div class="hms-val p">Beta</div><div class="hms-label">30–50 artists, apply now</div></div>
       </div>
     </div>
   </div>
@@ -1469,8 +1492,8 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   if (!btn || !bgVideo) return;
 
   function setVideoSound(on) {
-    bgVideo.muted = !on;
-    bgVideo.volume = 0.7;
+    window.audioReactive.init(bgVideo); // no-op after first call
+    window.audioReactive.setVolume(on ? 0.75 : 0);
     if (on) {
       btn.classList.remove('muted');
       btn.querySelector('.icon').textContent = '🔊';
@@ -1484,7 +1507,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     }
   }
 
-  btn.addEventListener('click', () => setVideoSound(bgVideo.muted));
+  btn.addEventListener('click', () => setVideoSound(btn.classList.contains('muted')));
 
   // Hero player → modal
   const heroPlayer = document.getElementById('heroPlayer');
@@ -1494,14 +1517,32 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 
   if (heroPlayer && modal && modalVideo) {
     heroPlayer.addEventListener('click', () => {
-      setVideoSound(true);
       modalVideo.src = 'output_vhs.mp4';
       modalVideo.muted = false;
-      modalVideo.volume = 0.7;
-      modalVideo.play();
+      modalVideo.volume = 0.8;
       modal.classList.add('open');
-      btn.style.display = 'none';
       document.body.style.overflow = 'hidden';
+      btn.style.display = 'none';
+
+      // rAF ensures display:flex is applied before fullscreen is requested
+      requestAnimationFrame(() => {
+        const fsReq = modalVideo.requestFullscreen
+          || modalVideo.webkitRequestFullscreen
+          || modalVideo.mozRequestFullScreen;
+        if (fsReq) fsReq.call(modalVideo).catch(() => {});
+        modalVideo.play().catch(() => {});
+
+        // Close modal when native fullscreen exits (ESC or browser chrome button)
+        function onFsChange() {
+          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            document.removeEventListener('fullscreenchange', onFsChange);
+            document.removeEventListener('webkitfullscreenchange', onFsChange);
+            if (modal.classList.contains('open')) closeModal();
+          }
+        }
+        document.addEventListener('fullscreenchange', onFsChange);
+        document.addEventListener('webkitfullscreenchange', onFsChange);
+      });
     });
 
     function closeModal() {
@@ -1510,12 +1551,71 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       modalVideo.src = '';
       btn.style.display = '';
       document.body.style.overflow = '';
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else if (document.webkitFullscreenElement) {
+        document.webkitExitFullscreen();
+      }
     }
 
     modalClose.addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
   }
+})();
+
+// ===== AUDIO REACTIVE =====
+window.audioReactive = (function() {
+  const BINS = 256;
+  const smooth = new Float32Array(BINS);
+  let analyser = null, gainNode = null, audioCtx = null, ready = false;
+
+  function init(videoEl) {
+    if (ready) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.82;
+      gainNode = audioCtx.createGain();
+      gainNode.gain.value = 0;
+      const src = audioCtx.createMediaElementSource(videoEl);
+      src.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      ready = true;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch(e) {}
+  }
+
+  function setVolume(v) {
+    if (!ready) return;
+    gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(Math.max(0, v), audioCtx.currentTime + 0.12);
+  }
+
+  const raw = new Uint8Array(BINS);
+  function update() {
+    if (!ready || audioCtx.state !== 'running') return;
+    analyser.getByteFrequencyData(raw);
+    for (let i = 0; i < BINS; i++) {
+      const v = raw[i] / 255;
+      smooth[i] = smooth[i] * 0.75 + v * 0.25;
+    }
+  }
+
+  function avg(lo, hi) {
+    let s = 0; for (let i = lo; i <= hi; i++) s += smooth[i]; return s / (hi - lo + 1);
+  }
+
+  return {
+    init, setVolume, update,
+    getBass:   () => avg(1, 5),    // sub + bass
+    getMid:    () => avg(6, 35),   // low-mid + mid
+    getHigh:   () => avg(36, 100), // upper-mid + presence
+    getEnergy: () => avg(1, 80),   // broadband energy
+    getBin:    (i) => smooth[Math.min(i, BINS - 1)],
+  };
 })();
 
 // ===== THREE.JS BACKGROUND =====
@@ -1546,7 +1646,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     const mat = new THREE.MeshBasicMaterial({
       color: cfg.color,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.2,
       depthWrite: false,
     });
     const mesh = new THREE.Mesh(geo, mat);
@@ -1576,7 +1676,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   for (let i = 0; i < 8; i++) {
     const geo = new THREE.TorusGeometry(30 + Math.random() * 50, 1.5, 8, 64);
     const c = ringPalette[i % ringPalette.length];
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.12 + Math.random() * 0.1, wireframe: true });
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.25 + Math.random() * 0.15, wireframe: true });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set((Math.random() - 0.5) * 700, (Math.random() - 0.5) * 400, -100 - Math.random() * 200);
     mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
@@ -1610,7 +1710,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   for (let x = -gridExtent; x <= gridExtent; x += gridSpacing) {
     const pts = [new THREE.Vector3(x, -gridExtent, -300), new THREE.Vector3(x, gridExtent, -300)];
     const g = new THREE.BufferGeometry().setFromPoints(pts);
-    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.03 });
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.07 });
     const line = new THREE.Line(g, m);
     gridGroup.add(line);
     gridLines.push({ line, baseX: x, axis: 'x' });
@@ -1618,11 +1718,20 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   for (let y = -gridExtent; y <= gridExtent; y += gridSpacing) {
     const pts = [new THREE.Vector3(-gridExtent, y, -300), new THREE.Vector3(gridExtent, y, -300)];
     const g = new THREE.BufferGeometry().setFromPoints(pts);
-    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.49, 0.3, 1.0), transparent: true, opacity: 0.03 });
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.49, 0.3, 1.0), transparent: true, opacity: 0.07 });
     const line = new THREE.Line(g, m);
     gridGroup.add(line);
     gridLines.push({ line, baseY: y, axis: 'y' });
   }
+
+  // Shared color palette (must be defined before any geometry that references it)
+  const palette = [
+    [0.94, 0.65, 0.0],  // amber
+    [0.0, 0.74, 0.83],  // cyan
+    [0.49, 0.3, 1.0],   // purple
+    [0.0, 0.9, 0.46],   // green
+    [1.0, 0.42, 0.42],  // coral
+  ];
 
   // Floating diamond shapes
   const diamondGroup = new THREE.Group();
@@ -1631,7 +1740,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   for (let i = 0; i < 15; i++) {
     const geo = new THREE.OctahedronGeometry(4 + Math.random() * 8, 0);
     const c = palette[Math.floor(Math.random() * palette.length)];
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.1 + Math.random() * 0.15, wireframe: true });
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.22 + Math.random() * 0.2, wireframe: true });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set((Math.random() - 0.5) * 800, (Math.random() - 0.5) * 500, -50 - Math.random() * 150);
     diamondGroup.add(mesh);
@@ -1644,13 +1753,6 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   const col = new Float32Array(N * 3);
   const vels = new Float32Array(N * 2);
   const phases = new Float32Array(N);
-  const palette = [
-    [0.94, 0.65, 0.0],  // amber
-    [0.0, 0.74, 0.83],  // cyan
-    [0.49, 0.3, 1.0],   // purple
-    [0.0, 0.9, 0.46],   // green
-    [1.0, 0.42, 0.42],  // coral
-  ];
   for (let i = 0; i < N; i++) {
     pos[i*3]   = (Math.random() - 0.5) * 900;
     pos[i*3+1] = (Math.random() - 0.5) * 500;
@@ -1700,11 +1802,62 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     const wg = new THREE.BufferGeometry();
     wg.setAttribute('position', new THREE.BufferAttribute(wPos, 3));
     wg.setAttribute('color',    new THREE.BufferAttribute(wCol, 3));
-    const wm = new THREE.PointsMaterial({ size: 2.5, vertexColors: true, transparent: true, opacity: 1, sizeAttenuation: true });
+    const wm = new THREE.PointsMaterial({ size: 4, vertexColors: true, transparent: true, opacity: 1, sizeAttenuation: true });
     const wp = new THREE.Points(wg, wm);
     scene.add(wp);
     waveObjs.push({ geo: wg, freq: waveFreqs[w], speed: waveSpeeds[w], amp: waveAmps[w] });
   }
+
+  // ── Radial spectrum analyzer ──────────────────────────────────────────────
+  const SPEC_N = 128;
+  const SPEC_R = 110;
+  const specGroup = new THREE.Group();
+  specGroup.position.set(0, 0, -20);
+  scene.add(specGroup);
+
+  // Thin base ring that glows with energy
+  const baseRingGeo = new THREE.RingGeometry(SPEC_R - 1.5, SPEC_R + 1.5, 128);
+  const baseRingMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+  const baseRing = new THREE.Mesh(baseRingGeo, baseRingMat);
+  specGroup.add(baseRing);
+
+  // 128 radial bars
+  const specBars = [];
+  for (let i = 0; i < SPEC_N; i++) {
+    const angle = (i / SPEC_N) * Math.PI * 2;
+    const cosA = Math.cos(angle), sinA = Math.sin(angle);
+    const pts = new Float32Array(6);
+    pts[0] = cosA * SPEC_R; pts[1] = sinA * SPEC_R; pts[2] = 0;
+    pts[3] = cosA * (SPEC_R + 20); pts[4] = sinA * (SPEC_R + 20); pts[5] = 0;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+    const frac = i / SPEC_N;
+    let r, gc, bc;
+    if (frac < 0.25)      { r=0.94; gc=0.65; bc=0.0; }   // amber
+    else if (frac < 0.5)  { r=0.0;  gc=0.74; bc=0.83; }  // cyan
+    else if (frac < 0.75) { r=0.49; gc=0.3;  bc=1.0; }   // purple
+    else                  { r=0.0;  gc=0.9;  bc=0.46; }  // green
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(r, gc, bc), transparent: true, opacity: 0.7 });
+    const line = new THREE.Line(g, m);
+    specGroup.add(line);
+    specBars.push({ geo: g, cosA, sinA, mat: m });
+  }
+
+  // ── Bass-pulse wireframe sphere ────────────────────────────────────────────
+  const pulseSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(55, 24, 24),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(0.94, 0.65, 0.0), transparent: true, opacity: 0.0, wireframe: true })
+  );
+  pulseSphere.position.z = -30;
+  scene.add(pulseSphere);
+
+  // Second, larger pulse sphere (cyan, offset timing)
+  const pulseSphere2 = new THREE.Mesh(
+    new THREE.SphereGeometry(80, 20, 20),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.0, wireframe: true })
+  );
+  pulseSphere2.position.z = -40;
+  scene.add(pulseSphere2);
 
   let scrollY = 0;
   window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
@@ -1719,25 +1872,37 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     frameId = requestAnimationFrame(animate);
     const t = Date.now() * 0.001;
 
-    // Animate gradient orbs
+    // Sample audio each frame
+    window.audioReactive.update();
+    const aBass   = window.audioReactive.getBass();
+    const aMid    = window.audioReactive.getMid();
+    const aHigh   = window.audioReactive.getHigh();
+    const aEnergy = window.audioReactive.getEnergy();
+
+    // Animate gradient orbs — bass swells the first two, mids the others
     gradientMeshes.forEach((g, i) => {
       const { mesh, basePos, speed, radius, phase } = g;
       mesh.position.x = basePos[0] + Math.sin(t * speed + phase) * radius;
       mesh.position.y = basePos[1] + Math.cos(t * speed * 0.7 + phase) * radius * 0.6;
       mesh.position.z = basePos[2] + Math.sin(t * speed * 0.5 + phase * 1.3) * radius * 0.4;
-      const s = g.baseScale + Math.sin(t * speed * 0.8 + phase) * 30;
+      const aBand = i < 2 ? aBass : i < 4 ? aMid : aHigh;
+      const s = g.baseScale + Math.sin(t * speed * 0.8 + phase) * 30 + aBand * 70;
       mesh.scale.setScalar(s);
-      mesh.material.opacity = 0.06 + Math.sin(t * speed * 0.6 + phase * 0.5) * 0.03;
+      mesh.material.opacity = 0.14 + Math.sin(t * speed * 0.6 + phase * 0.5) * 0.06 + aEnergy * 0.12;
     });
 
-    // Animate floating rings
+    // Animate floating rings — mids spin them, bass pulses their scale
     ringObjs.forEach(r => {
       const { mesh, rotSpeed, drift, phase } = r;
-      mesh.rotation.x += rotSpeed[0] * 0.01;
-      mesh.rotation.y += rotSpeed[1] * 0.01;
-      mesh.rotation.z += rotSpeed[2] * 0.01;
+      const spinBoost = 1 + aMid * 2.5;
+      mesh.rotation.x += rotSpeed[0] * 0.01 * spinBoost;
+      mesh.rotation.y += rotSpeed[1] * 0.01 * spinBoost;
+      mesh.rotation.z += rotSpeed[2] * 0.01 * spinBoost;
       mesh.position.y += Math.sin(t * 0.5 + phase) * drift * 0.1;
       mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.05;
+      const rs = 1 + aBass * 0.4;
+      mesh.scale.set(rs, rs, rs);
+      mesh.material.opacity = Math.min(0.55, (mesh.material.opacity || 0.28) * 0.9 + (0.28 + aBass * 0.22) * 0.1);
     });
 
     // Shooting stars
@@ -1779,21 +1944,24 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     starGeo.attributes.position.needsUpdate = true;
     starGeo.attributes.color.needsUpdate = true;
 
-    // Pulsing grid
+    // Pulsing grid — energy brightens the whole grid, bass creates a travelling pulse
     gridLines.forEach((g, i) => {
-      const pulse = 0.02 + Math.sin(t * 0.8 + i * 0.15) * 0.02;
+      const travel = Math.sin(t * 1.2 + i * 0.2) * aBass * 0.06;
+      const pulse = 0.05 + Math.sin(t * 0.8 + i * 0.15) * 0.04 + aEnergy * 0.14 + travel;
       g.line.material.opacity = Math.max(0.005, pulse);
     });
 
-    // Floating diamonds
+    // Floating diamonds — highs spin them faster, bass flashes their scale
     diamondObjs.forEach(d => {
       const { mesh, rotSpeed, drift, phase, bobAmp } = d;
-      mesh.rotation.x += rotSpeed * 0.005;
-      mesh.rotation.y += rotSpeed * 0.008;
+      const spinBoost = 1 + aHigh * 3;
+      mesh.rotation.x += rotSpeed * 0.005 * spinBoost;
+      mesh.rotation.y += rotSpeed * 0.008 * spinBoost;
       mesh.position.y += Math.sin(t * 0.4 + phase) * drift * 0.05;
       mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.03;
-      const s = 1 + Math.sin(t * rotSpeed + phase) * 0.3;
+      const s = 1 + Math.sin(t * rotSpeed + phase) * 0.3 + aBass * 0.6;
       mesh.scale.setScalar(s);
+      mesh.material.opacity = Math.min(0.55, mesh.material.opacity * 0.92 + (0.22 + aEnergy * 0.18) * 0.08);
     });
 
     // Drift background particles
@@ -1807,18 +1975,49 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     }
     geo.attributes.position.needsUpdate = true;
 
-    // Animate waves
-    waveObjs.forEach(({ geo: wg, freq, speed, amp }) => {
+    // Animate waves — each layer reacts to its own frequency band + per-bin displacement
+    waveObjs.forEach(({ geo: wg, freq, speed, amp }, wi) => {
+      const wBand = wi === 0 ? aBass : wi === 1 ? aMid : aHigh;
+      const effectiveAmp = amp * (1 + wBand * 2.2);
       const wPos = wg.attributes.position.array;
       for (let i = 0; i < WN; i++) {
         const x = wPos[i*3];
+        // Map particle index to a frequency bin (spread across audible spectrum)
+        const binVal = window.audioReactive.getBin(Math.floor((i / WN) * 80));
         wPos[i*3+1] =
-          Math.sin(x * freq + t * speed) * amp * 0.6 +
-          Math.sin(x * freq * 2.3 + t * speed * 1.4) * amp * 0.25 +
-          Math.sin(x * freq * 0.4 + t * speed * 0.7) * amp * 0.4;
+          Math.sin(x * freq + t * speed) * effectiveAmp * 0.6 +
+          Math.sin(x * freq * 2.3 + t * speed * 1.4) * effectiveAmp * 0.25 +
+          Math.sin(x * freq * 0.4 + t * speed * 0.7) * effectiveAmp * 0.4 +
+          binVal * 55 * wBand;
       }
       wg.attributes.position.needsUpdate = true;
     });
+
+    // Radial spectrum analyzer
+    specGroup.rotation.z += 0.004 + aBass * 0.012;
+    baseRing.material.opacity = 0.15 + aEnergy * 0.4;
+    baseRing.scale.setScalar(1 + aBass * 0.08);
+    specBars.forEach(({ geo, cosA, sinA, mat }, i) => {
+      const bin = window.audioReactive.getBin(Math.floor((i / SPEC_N) * 100));
+      const barLen = 8 + bin * 90 * (1 + aBass * 0.6);
+      const pa = geo.attributes.position.array;
+      pa[3] = cosA * (SPEC_R + barLen);
+      pa[4] = sinA * (SPEC_R + barLen);
+      geo.attributes.position.needsUpdate = true;
+      mat.opacity = 0.3 + bin * 0.7;
+    });
+
+    // Bass-pulse spheres
+    const ps = 1 + aBass * 2.8;
+    pulseSphere.scale.setScalar(ps);
+    pulseSphere.material.opacity = Math.max(0, aBass * 0.3 - 0.02);
+    pulseSphere.rotation.x += 0.006;
+    pulseSphere.rotation.y += 0.004;
+    const ps2 = 1 + aMid * 1.8;
+    pulseSphere2.scale.setScalar(ps2);
+    pulseSphere2.material.opacity = Math.max(0, aMid * 0.2 - 0.01);
+    pulseSphere2.rotation.x -= 0.004;
+    pulseSphere2.rotation.y += 0.007;
 
     camera.position.y = -scrollY * 0.03;
     camera.position.x = Math.sin(t * 0.15) * 15;
