@@ -4,6 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tahti — Your Radio Station</title>
+<meta name="description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Applying for private beta now.">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tahti.fi/">
+<meta property="og:title" content="Tahti — Your Radio Station">
+<meta property="og:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Applying for private beta now.">
+<meta property="og:image" content="https://tahti.fi/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:site_name" content="Tahti">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tahti — Your Radio Station">
+<meta name="twitter:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio.">
+<meta name="twitter:image" content="https://tahti.fi/og-image.png">
+
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <style>
@@ -27,6 +46,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflo
 #unmute-btn .icon{font-size:22px;display:flex;align-items:center}
 #unmute-btn .pulse{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.5s ease-in-out infinite;margin-right:4px}
 #unmute-btn.muted .pulse{background:var(--coral)}
+#eq-canvas{position:fixed;bottom:0;left:0;width:100%;height:110px;z-index:5;pointer-events:none;opacity:0.55;mix-blend-mode:screen}
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(10,15,30,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.05)}
@@ -404,6 +424,78 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 .an-ctry-bar-fill{height:100%;border-radius:2px;background:var(--purple)}
 .an-ctry-pct{font-size:10px;color:var(--muted);width:26px;text-align:right;flex-shrink:0}
 
+/* ===== LIVE / 247 / STASH MOCKUP ===== */
+.live-header{background:#111827;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06)}
+.live-artist-name{font-family:var(--font-head);font-size:16px;font-weight:700;letter-spacing:1px}
+.live-meta{display:flex;align-items:center;gap:14px}
+.listener-count{font-size:12px;color:var(--muted)}
+.live-player-card{background:#0d1626;border-radius:8px;padding:20px;margin-bottom:14px}
+.live-artist-row{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.live-avatar{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid rgba(0,188,212,0.4)}
+.live-name-block .name{font-family:var(--font-head);font-size:17px;font-weight:700}
+.live-name-block .handle{font-size:11px;color:var(--muted);margin-top:2px}
+.broadcasting-badge{font-size:10px;letter-spacing:2px;color:var(--green);display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.now-playing-title{font-family:var(--font-head);font-size:15px;font-weight:600;margin-bottom:2px}
+.now-playing-sub{font-size:11px;color:var(--muted);margin-bottom:12px}
+.upcoming-label{font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px}
+.upcoming-item{background:var(--card2);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.upcoming-item.next{border-left:2px solid var(--amber)}
+.upcoming-item .up-icon{font-size:16px;flex-shrink:0}
+.upcoming-item .up-title{font-size:12px;font-weight:600}
+.upcoming-item .up-time{font-size:10px;color:var(--muted);margin-top:1px}
+/* 247 channel */
+.offline-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);border-radius:20px;padding:3px 9px;font-size:9px;font-weight:700;color:var(--amber);letter-spacing:1px}
+.countdown-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.cdr-unit{background:var(--card2);border-radius:6px;padding:10px;text-align:center}
+.cdr-num{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--amber);line-height:1}
+.cdr-lbl{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:1px}
+.archive-row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:7px;padding:10px 14px;margin-bottom:6px}
+.archive-cover{width:36px;height:36px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.archive-info .title{font-size:12px;font-weight:600}
+.archive-info .meta{font-size:10px;color:var(--muted)}
+.archive-dur{font-family:var(--font-head);font-size:11px;color:var(--muted);margin-left:auto;flex-shrink:0}
+/* stash */
+.stash-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.stash-title-block .title{font-family:var(--font-head);font-size:15px;font-weight:700}
+.stash-title-block .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.stash-actions{display:flex;gap:7px}
+.stash-file{background:var(--card);border-radius:7px;padding:11px 14px;display:flex;align-items:center;gap:11px;margin-bottom:6px;border-left:2px solid rgba(255,255,255,0.06);transition:border-color 0.2s}
+.stash-file.playing{border-left-color:var(--cyan)}
+.stash-lock{font-size:14px;flex-shrink:0}
+.stash-file-info{flex:1;min-width:0}
+.stash-file-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.stash-file-meta{font-size:10px;color:var(--muted)}
+.stash-file-actions{display:flex;gap:4px;flex-shrink:0}
+.stash-btn{background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;font-size:10px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.stash-btn.share{border-color:rgba(0,188,212,0.35);color:var(--cyan)}
+.stash-shared-box{background:rgba(124,77,255,0.06);border:1px solid rgba(124,77,255,0.2);border-radius:8px;padding:12px 14px;margin-top:14px}
+.stash-shared-lbl{font-size:10px;letter-spacing:2px;color:var(--lavender);margin-bottom:8px}
+.stash-collab-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.stash-collab-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.stash-collab-info{flex:1}
+.stash-collab-name{font-weight:600}
+.stash-collab-meta{font-size:10px;color:var(--muted)}
+.stash-revoke{background:transparent;border:1px solid rgba(255,100,100,0.3);border-radius:4px;padding:4px 9px;font-size:10px;color:var(--coral);cursor:pointer}
+
+/* ===== APPLY FORM ===== */
+.apply-form-wrap{background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:36px 40px;margin-top:40px;max-width:640px}
+.apply-form-title{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:6px}
+.apply-form-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+.apply-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.apply-field{margin-bottom:16px}
+.apply-field label{display:block;font-size:11px;letter-spacing:1.5px;color:var(--muted);margin-bottom:7px;font-weight:600;text-transform:uppercase}
+.apply-field input,.apply-field textarea{width:100%;background:var(--card2);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:11px 14px;font-size:14px;color:var(--text);font-family:var(--font-body);outline:none;transition:border-color 0.2s;resize:vertical}
+.apply-field input:focus,.apply-field textarea:focus{border-color:rgba(240,165,0,0.5)}
+.apply-field input::placeholder,.apply-field textarea::placeholder{color:rgba(255,255,255,0.18)}
+.apply-submit-row{display:flex;align-items:center;gap:20px;margin-top:8px;flex-wrap:wrap}
+.apply-submit-note{font-size:11px;color:var(--muted);line-height:1.5}
+#apply-success{display:none;text-align:center;padding:32px 0}
+#apply-success .ok-icon{font-size:48px;margin-bottom:12px}
+#apply-success .ok-title{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--green);margin-bottom:10px}
+#apply-success .ok-body{font-size:15px;color:var(--muted);line-height:1.7}
+#apply-error{display:none;margin-top:14px;font-size:13px;color:var(--coral);padding:10px 14px;background:rgba(255,107,107,0.07);border:1px solid rgba(255,107,107,0.2);border-radius:7px}
+#apply-error a{color:var(--amber);text-decoration:underline}
+
 /* Responsive */
 @media(max-width:768px){
   nav{padding:14px 20px}
@@ -424,12 +516,15 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   .hero-video-player{flex:none;width:100%;max-width:480px}
   .hero-cta-row{flex-wrap:wrap}
   .hero-mini-stats{grid-template-columns:1fr 1fr}
+  .apply-form-wrap{padding:24px 20px}
+  .apply-row-2{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
 <canvas id="bg"></canvas>
+<canvas id="eq-canvas"></canvas>
 <video id="bg-video" autoplay muted loop playsinline poster="">
   <source src="output_vhs.mp4" type="video/mp4">
 </video>
@@ -848,7 +943,10 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     <div class="mockup-tabs reveal reveal-delay-2">
       <button class="mtab active" onclick="switchMockup('channel',this)">Channel Page</button>
       <button class="mtab" onclick="switchMockup('dashboard',this)">Artist Dashboard</button>
-      <button class="mtab" onclick="switchMockup('mobile',this)">Mobile Listener</button>
+      <button class="mtab" onclick="switchMockup('mobile',this)">Mobile</button>
+      <button class="mtab" onclick="switchMockup('live',this)">Live + Chat</button>
+      <button class="mtab" onclick="switchMockup('247',this)">24/7 Channel</button>
+      <button class="mtab" onclick="switchMockup('stash',this)">Private Stash</button>
     </div>
 
     <!-- CHANNEL PAGE MOCKUP -->
@@ -1090,6 +1188,213 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
         </div>
       </div>
     </div>
+
+    <!-- LIVE STREAM + CHAT MOCKUP -->
+    <div class="mockup-frame" id="mock-live">
+      <div class="browser reveal reveal-delay-3">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">tahti.fi/<b>neon-ghost</b></div>
+        </div>
+        <div class="browser-content">
+          <div class="live-header">
+            <div class="live-artist-name">NEON GHOST</div>
+            <div class="live-meta">
+              <div class="listener-count">247 listeners</div>
+              <div class="ch-live"><div class="signal-dot"></div> LIVE</div>
+            </div>
+          </div>
+          <div class="ch-body">
+            <div class="ch-main">
+              <div class="live-player-card">
+                <div class="live-artist-row">
+                  <div class="live-avatar" style="background:linear-gradient(135deg,#1a0060,#004060)">👾</div>
+                  <div class="live-name-block">
+                    <div class="name">Neon Ghost</div>
+                    <div class="handle">tahti.fi/neon-ghost · Helsinki, FI</div>
+                  </div>
+                </div>
+                <div class="broadcasting-badge"><div class="signal-dot"></div>BROADCASTING NOW — 47 MIN IN</div>
+                <div class="now-playing-title">Crystalline Shore</div>
+                <div class="now-playing-sub">Ambient Set · Lossless 24-bit/96 kHz</div>
+                <div id="live-waveform" class="ch-waveform" style="height:36px;margin-bottom:12px"></div>
+                <div class="ch-controls">
+                  <button class="ch-btn">▶</button>
+                  <div class="ch-time">47:23</div>
+                  <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;position:relative;margin:0 8px"><div style="position:absolute;left:0;top:0;bottom:0;width:62%;background:var(--cyan);border-radius:2px"></div></div>
+                  <div class="ch-time">1:14:00</div>
+                  <div class="ch-quality">LOSSLESS</div>
+                </div>
+              </div>
+              <div class="upcoming-label">UP NEXT</div>
+              <div class="upcoming-item next"><div class="up-icon">🌙</div><div><div class="up-title">Twilight Protocol</div><div class="up-time">Tonight 23:00 UTC · 90 min set</div></div></div>
+              <div class="upcoming-item"><div class="up-icon">🎵</div><div><div class="up-title">Archive: Neon Shore EP</div><div class="up-time">Plays automatically after live ends</div></div></div>
+            </div>
+            <div class="ch-sidebar">
+              <div class="pinned-msg"><div class="pin-label">📌 PINNED</div><em>Neon Shore EP out Friday — pre-save link in bio</em></div>
+              <h4>LIVE CHAT <span style="color:var(--green);margin-left:6px;font-size:10px">● 247</span></h4>
+              <div class="chat-msg"><span class="handle cyan">@aurora_fi</span>this bassline 🔥🔥</div>
+              <div class="chat-msg"><span class="handle green">@kai_studio</span>been waiting for this set</div>
+              <div class="chat-msg"><span class="handle artist">neon-ghost</span>thank you! glad you're here ❤️</div>
+              <div class="chat-msg"><span class="handle amber">@mia.waves</span>sound quality is incredible on lossless</div>
+              <div class="chat-msg"><span class="handle cyan">@aurora_fi</span>is this the vhs mix or new material?</div>
+              <div class="chat-msg"><span class="handle artist">neon-ghost</span>mix of both — surprise at 50 min 👾</div>
+              <div class="chat-input">
+                <input type="text" placeholder="Say something…">
+                <button class="chat-send">→</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 24/7 CHANNEL MOCKUP (between live sets — archive mode) -->
+    <div class="mockup-frame" id="mock-247">
+      <div class="browser reveal reveal-delay-3">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">tahti.fi/<b>neon-ghost</b></div>
+        </div>
+        <div class="browser-content">
+          <div class="live-header">
+            <div>
+              <div class="live-artist-name">NEON GHOST</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">tahti.fi/neon-ghost · always on</div>
+            </div>
+            <div class="live-meta">
+              <div class="listener-count">12 listening</div>
+              <div class="offline-badge">📻 ARCHIVE</div>
+            </div>
+          </div>
+          <div class="ch-body">
+            <div class="ch-main">
+              <div class="live-player-card">
+                <div style="font-size:10px;letter-spacing:2px;color:var(--amber);margin-bottom:10px">NEXT LIVE BROADCAST</div>
+                <div class="countdown-row">
+                  <div class="cdr-unit"><div class="cdr-num">06</div><div class="cdr-lbl">HRS</div></div>
+                  <div class="cdr-unit"><div class="cdr-num">24</div><div class="cdr-lbl">MIN</div></div>
+                  <div class="cdr-unit"><div class="cdr-num">38</div><div class="cdr-lbl">SEC</div></div>
+                  <div class="cdr-unit"><div class="cdr-num">—</div><div class="cdr-lbl" style="white-space:nowrap">FRI 22:00</div></div>
+                </div>
+                <div style="font-family:var(--font-head);font-size:13px;font-weight:600;margin-bottom:4px;color:var(--amber)">Twilight Protocol — Live Set</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:16px">90 min · ambient/electronic · 🔔 Set a reminder</div>
+                <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:14px"></div>
+                <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">NOW PLAYING FROM ARCHIVE</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                  <div style="width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#1a0060,#004060);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌌</div>
+                  <div>
+                    <div style="font-family:var(--font-head);font-size:13px;font-weight:600">Neon Shore EP — Full Broadcast</div>
+                    <div style="font-size:11px;color:var(--muted)">Recorded live · Mar 2025 · 1h 14m</div>
+                  </div>
+                </div>
+                <div class="ch-controls">
+                  <button class="ch-btn">▶</button>
+                  <div class="ch-time">23:41</div>
+                  <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;position:relative;margin:0 8px"><div style="position:absolute;left:0;top:0;bottom:0;width:32%;background:var(--amber);border-radius:2px"></div></div>
+                  <div class="ch-time">1:14:00</div>
+                  <div class="ch-quality">MP3 HQ</div>
+                </div>
+              </div>
+              <div class="upcoming-label" style="margin-top:4px">ARCHIVE — ALL BROADCASTS</div>
+              <div class="archive-row"><div class="archive-cover" style="background:linear-gradient(135deg,#1a0060,#004060)">🌌</div><div class="archive-info"><div class="title">Neon Shore EP</div><div class="meta">Mar 2025 · 1h 14m</div></div><div class="archive-dur">1:14:00</div></div>
+              <div class="archive-row"><div class="archive-cover" style="background:linear-gradient(135deg,#003040,#001040)">❄️</div><div class="archive-info"><div class="title">Winter Session Archive</div><div class="meta">Dec 2024 · 2h 08m</div></div><div class="archive-dur">2:08:00</div></div>
+              <div class="archive-row"><div class="archive-cover" style="background:linear-gradient(135deg,#400010,#200030)">🎛</div><div class="archive-info"><div class="title">Late Night Drift Vol.3</div><div class="meta">Nov 2024 · 1h 40m</div></div><div class="archive-dur">1:40:00</div></div>
+            </div>
+            <div class="ch-sidebar">
+              <div class="pinned-msg"><div class="pin-label">📌 PINNED</div><em>Next live set Friday 22:00 UTC — Twilight Protocol</em></div>
+              <h4>CHAT</h4>
+              <div class="chat-msg"><span class="handle cyan">@aurora_fi</span>love that the archive just keeps playing 🙌</div>
+              <div class="chat-msg"><span class="handle green">@kai_studio</span>reminder set for Friday</div>
+              <div class="chat-msg"><span class="handle amber">@mia.waves</span>this neon shore ep is so good</div>
+              <div class="chat-input">
+                <input type="text" placeholder="Say something…">
+                <button class="chat-send">→</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIVATE STASH MOCKUP -->
+    <div class="mockup-frame" id="mock-stash">
+      <div class="browser reveal reveal-delay-3">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">tahti.fi/<b>app</b>/stash</div>
+        </div>
+        <div class="browser-content" style="background:#0d1626;padding:20px;min-height:420px">
+          <div class="stash-toolbar">
+            <div class="stash-title-block">
+              <div class="title">My Stash</div>
+              <div class="sub">Private storage · 4.2 GB used of 20 GB · Paid plan</div>
+            </div>
+            <div class="stash-actions">
+              <button class="stash-btn share">+ Upload</button>
+              <button class="stash-btn share">Share folder</button>
+            </div>
+          </div>
+          <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">WIP TRACKS</div>
+          <div class="stash-file playing">
+            <div class="stash-lock">🔒</div>
+            <div class="stash-file-info">
+              <div class="stash-file-name">crystalline-shore-v3.flac</div>
+              <div class="stash-file-meta">FLAC 24-bit/48kHz · 12.3 MB · Modified 2h ago · 2 comments</div>
+            </div>
+            <div class="stash-file-actions">
+              <button class="stash-btn">▶</button>
+              <button class="stash-btn share">Share link</button>
+              <button class="stash-btn">↓</button>
+            </div>
+          </div>
+          <div class="stash-file">
+            <div class="stash-lock">🔒</div>
+            <div class="stash-file-info">
+              <div class="stash-file-name">neon-protocol-rough-v1.wav</div>
+              <div class="stash-file-meta">WAV 24-bit · 8.7 MB · Modified yesterday · 0 comments</div>
+            </div>
+            <div class="stash-file-actions">
+              <button class="stash-btn">▶</button>
+              <button class="stash-btn share">Share link</button>
+              <button class="stash-btn">↓</button>
+            </div>
+          </div>
+          <div class="stash-file">
+            <div class="stash-lock">🔒</div>
+            <div class="stash-file-info">
+              <div class="stash-file-name">twilight-protocol-stems.zip</div>
+              <div class="stash-file-meta">ZIP · 340 MB · Stems export · 5 comments</div>
+            </div>
+            <div class="stash-file-actions">
+              <button class="stash-btn">▶</button>
+              <button class="stash-btn share">Share link</button>
+              <button class="stash-btn">↓</button>
+            </div>
+          </div>
+          <div class="stash-shared-box">
+            <div class="stash-shared-lbl">SHARED ACCESS</div>
+            <div class="stash-collab-row" style="margin-bottom:8px">
+              <div class="stash-collab-avatar">KV</div>
+              <div class="stash-collab-info">
+                <div class="stash-collab-name">@kai_studio</div>
+                <div class="stash-collab-meta">Read-only · 2 files · Link expires in 5 days</div>
+              </div>
+              <button class="stash-revoke">Revoke</button>
+            </div>
+            <div class="stash-collab-row">
+              <div class="stash-collab-avatar" style="background:linear-gradient(135deg,#00bcd4,#00e676)">MA</div>
+              <div class="stash-collab-info">
+                <div class="stash-collab-name">@mastering_ak</div>
+                <div class="stash-collab-meta">Download · 1 file · Permanent link</div>
+              </div>
+              <button class="stash-revoke">Revoke</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -1465,10 +1770,47 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="step-card green"><div class="step-num green">03</div><h3>Contribute to the code</h3><p>The repo is open. The bylaws are open. If you're technical, propose a PR. If you're an artist, tell us what we're missing.</p></div>
       <div class="step-card cyan"><div class="step-num cyan">04</div><h3>Join the AGM</h3><p>From the first AGM onward, every paying member has a voice. Pricing, grant formula, board composition — all up for discussion. Show up. Vote. Shape it.</p></div>
     </div>
-    <div class="reveal reveal-delay-3" style="margin-top:8px">
-      <a href="#" class="cta-btn">APPLY FOR BETA</a>
-      <a href="#" class="cta-btn-ghost">READ THE DOCS</a>
+    <div class="apply-form-wrap reveal reveal-delay-3" id="apply-wrap">
+      <div class="apply-form-title">Apply for the private beta</div>
+      <div class="apply-form-sub">We're inviting 30–50 working artists from EU electronic scenes. All applications are reviewed personally.</div>
+      <form id="apply-form" novalidate>
+        <div class="apply-row-2">
+          <div class="apply-field">
+            <label for="af-name">Your name</label>
+            <input id="af-name" type="text" name="name" placeholder="DJ Moonrise" required>
+          </div>
+          <div class="apply-field">
+            <label for="af-email">Email address</label>
+            <input id="af-email" type="email" name="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+        <div class="apply-field">
+          <label for="af-type">What kind of artist are you?</label>
+          <input id="af-type" type="text" name="artist_type" placeholder="DJ / producer / live electronics / experimental…" required>
+        </div>
+        <div class="apply-field">
+          <label for="af-links">Links to your music (optional)</label>
+          <input id="af-links" type="text" name="links" placeholder="SoundCloud, Mixcloud, Bandcamp, personal site…">
+        </div>
+        <div class="apply-field">
+          <label for="af-msg">Anything else?</label>
+          <textarea id="af-msg" name="message" rows="3" placeholder="Tell us about your setup, what you broadcast, what frustrates you about existing platforms…"></textarea>
+        </div>
+        <div class="apply-submit-row">
+          <button type="submit" class="cta-btn" id="apply-submit" style="margin:0">APPLY FOR BETA</button>
+          <div class="apply-submit-note">No spam. We reply personally to every<br>application.</div>
+        </div>
+      </form>
+      <div id="apply-success">
+        <div class="ok-icon">✓</div>
+        <div class="ok-title">Application received</div>
+        <div class="ok-body">We'll be in touch at the email you provided.<br>The first round of invitations goes out in early 2025.</div>
+      </div>
+      <div id="apply-error">
+        Something went wrong — please email us directly at <a href="mailto:hello@tahti.fi">hello@tahti.fi</a>
+      </div>
     </div>
+
     <div class="cta-footer reveal reveal-delay-4">
       <span>TAHTI ry</span><span>HELSINKI</span><span>AGPL-3.0</span><span>hello@tahti.fi</span>
     </div>
@@ -1491,10 +1833,12 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   const overlay = document.getElementById('bg-video-overlay');
   if (!btn || !bgVideo) return;
 
-  function setVideoSound(on) {
-    window.audioReactive.init(bgVideo); // no-op after first call
-    window.audioReactive.setVolume(on ? 0.75 : 0);
+  async function setVideoSound(on) {
+    await window.audioReactive.init(bgVideo);
+    window.audioReactive.setVolume(on ? 0.8 : 0);
     if (on) {
+      bgVideo.muted = false;
+      bgVideo.play().catch(() => {});
       btn.classList.remove('muted');
       btn.querySelector('.icon').textContent = '🔊';
       btn.querySelector('.label').textContent = 'MUTE';
@@ -1570,7 +1914,7 @@ window.audioReactive = (function() {
   const smooth = new Float32Array(BINS);
   let analyser = null, gainNode = null, audioCtx = null, ready = false;
 
-  function init(videoEl) {
+  async function init(videoEl) {
     if (ready) return;
     try {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1584,14 +1928,14 @@ window.audioReactive = (function() {
       analyser.connect(gainNode);
       gainNode.connect(audioCtx.destination);
       ready = true;
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-    } catch(e) {}
+      if (audioCtx.state !== 'running') await audioCtx.resume();
+    } catch(e) { console.warn('[audioReactive]', e); }
   }
 
   function setVolume(v) {
     if (!ready) return;
     gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(Math.max(0, v), audioCtx.currentTime + 0.12);
+    gainNode.gain.linearRampToValueAtTime(Math.max(0, v), audioCtx.currentTime + 0.15);
   }
 
   const raw = new Uint8Array(BINS);
@@ -2063,6 +2407,75 @@ window.audioReactive = (function() {
   });
 })();
 
+// ===== LIVE MOCKUP WAVEFORM =====
+(function() {
+  const container = document.getElementById('live-waveform');
+  if (!container) return;
+  const heights = [8,14,22,30,18,26,34,20,12,28,36,24,16,30,22,18,32,14,26,20,16,28,38,22,18,14,26,32,20,16];
+  heights.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'wf-bar';
+    bar.style.height = h + 'px';
+    bar.style.animationDelay = (i * 0.05) + 's';
+    bar.style.animationDuration = (0.6 + Math.random() * 0.8) + 's';
+    container.appendChild(bar);
+  });
+})();
+
+// ===== BOTTOM EQUALIZER CANVAS =====
+(function() {
+  const canvas = document.getElementById('eq-canvas');
+  if (!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext('2d');
+  const EQ_BARS = 56;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = 110;
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  const peaks = new Float32Array(EQ_BARS);
+  const peakFall = new Float32Array(EQ_BARS).fill(0.004);
+
+  // Color stops per frequency region
+  function barColor(frac, alpha) {
+    if (frac < 0.33) return `rgba(240,165,0,${alpha})`;   // bass: amber
+    if (frac < 0.66) return `rgba(0,188,212,${alpha})`;   // mid: cyan
+    return `rgba(124,77,255,${alpha})`;                   // high: purple
+  }
+
+  function draw() {
+    requestAnimationFrame(draw);
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const slot = w / EQ_BARS;
+    const bw = Math.max(2, slot - 3);
+    const gap = (slot - bw) / 2;
+    for (let i = 0; i < EQ_BARS; i++) {
+      const bin = window.audioReactive.getBin(Math.floor((i / EQ_BARS) * 90));
+      const bh = Math.max(3, bin * (h - 6) * 1.15);
+      const x = i * slot + gap;
+      const y = h - bh;
+      const frac = i / EQ_BARS;
+      const grad = ctx.createLinearGradient(0, h, 0, y);
+      grad.addColorStop(0, barColor(frac, 0.95));
+      grad.addColorStop(1, barColor(frac, 0.15));
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, bw, bh);
+      // Peak hold marker
+      if (peaks[i] < bh) { peaks[i] = bh; peakFall[i] = 0.003; }
+      else { peaks[i] -= peakFall[i]; peakFall[i] *= 1.04; }
+      if (peaks[i] > 5) {
+        ctx.fillStyle = barColor(frac, 0.8);
+        ctx.fillRect(x, h - peaks[i], bw, 2);
+      }
+    }
+  }
+  draw();
+})();
+
 // ===== SCROLL REVEAL =====
 (function() {
   const observer = new IntersectionObserver((entries) => {
@@ -2167,6 +2580,50 @@ function switchMockup(id, btn) {
   document.getElementById('mock-' + id).classList.add('active');
   btn.classList.add('active');
 }
+
+// ===== APPLY FORM =====
+// Formspree setup (one-time, ~2 min):
+//   1. Go to https://formspree.io — sign in with janiluuk@gmail.com
+//   2. Create a new form, set notification email to janiluuk@gmail.com
+//   3. Copy the endpoint URL and replace the value below
+(function() {
+  const ENDPOINT = 'https://formspree.io/f/janiluuk@gmail.com';
+
+  const form = document.getElementById('apply-form');
+  const btn  = document.getElementById('apply-submit');
+  const ok   = document.getElementById('apply-success');
+  const err  = document.getElementById('apply-error');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+
+    const orig = btn.textContent;
+    btn.textContent = 'SENDING…';
+    btn.disabled = true;
+    err.style.display = 'none';
+
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' }
+      });
+      if (res.ok) {
+        form.style.display = 'none';
+        ok.style.display = 'block';
+      } else {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Server error ' + res.status);
+      }
+    } catch (e) {
+      err.style.display = 'block';
+      btn.textContent = orig;
+      btn.disabled = false;
+    }
+  });
+})();
 </script>
 </body>
 </html>
