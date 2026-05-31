@@ -1,29 +1,22 @@
-# CI — monorepo lint, typecheck, test (all app packages)
+# CI — website Docker build (always) + monorepo lint/test (when pnpm-lock.yaml exists)
 #
-# Runs on every PR and every push to main.
-# Does NOT build Docker images (that happens in deploy workflows).
-#
-# Jobs:
-#   lint-typecheck  — ESLint + TypeScript across all packages
-#   test            — Vitest unit + integration (real Postgres via service containers)
-#   agpl-check      — Every source file must carry the AGPL-3.0 header
+# Monorepo jobs activate automatically once the Phase 2 app scaffold lands
+# (root package.json + pnpm-lock.yaml). Until then, only the website image build runs.
 
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore:
-      - "docs/**"
-      - "slides/**"
-      - "img/**"
-      - "website/**"
-      - "*.md"
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -31,8 +24,20 @@ env:
   PNPM_VERSION: "9"
 
 jobs:
+  website-docker:
+    name: Validate website Docker build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build website image
+        run: docker build -t tahti/website:ci ./website
+
   lint-typecheck:
     name: Lint & typecheck
+    if: hashFiles('pnpm-lock.yaml') != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
@@ -47,6 +52,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -62,6 +68,7 @@ jobs:
 
   test:
     name: Unit + integration tests
+    if: hashFiles('pnpm-lock.yaml') != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
@@ -106,6 +113,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -126,6 +134,7 @@ jobs:
 
   agpl-check:
     name: AGPL header check
+    if: hashFiles('pnpm-lock.yaml') != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 5
 
@@ -134,7 +143,6 @@ jobs:
 
       - name: Check AGPL-3.0 header in all source files
         run: |
-          # Every .ts and .tsx file in apps/ and packages/ must have the AGPL header
           MISSING=0
           while IFS= read -r -d '' file; do
             if ! head -3 "$file" | grep -q "AGPL"; then
@@ -146,27 +154,21 @@ jobs:
           if [[ $MISSING -gt 0 ]]; then
             echo ""
             echo "::error::$MISSING file(s) missing AGPL-3.0 header"
-            echo "Add this to the top of each file:"
-            echo "// SPDX-License-Identifier: AGPL-3.0-or-later"
-            echo "// Copyright (C) $(date +%Y) Tahti ry <https://tahti.fi>"
             exit 1
           fi
           echo "✓ All source files have AGPL headers"
 
-  # This job succeeds only when all required jobs pass.
-  # Branch protection can require this single job instead of each individual job.
   all-checks:
     name: All checks
     if: always()
-    needs: [lint-typecheck, test, agpl-check]
+    needs: [website-docker, lint-typecheck, test, agpl-check]
     runs-on: ubuntu-24.04
     steps:
       - name: Check all jobs passed
         run: |
-          if [[ "${{ needs.lint-typecheck.result }}" != "success" || \
-                "${{ needs.test.result }}" != "success" || \
-                "${{ needs.agpl-check.result }}" != "success" ]]; then
-            echo "One or more required checks failed"
-            exit 1
-          fi
+          ok() { [[ "$1" == "success" || "$1" == "skipped" ]]; }
+          ok "${{ needs.website-docker.result }}" || { echo "website-docker failed"; exit 1; }
+          ok "${{ needs.lint-typecheck.result }}" || { echo "lint-typecheck failed"; exit 1; }
+          ok "${{ needs.test.result }}" || { echo "test failed"; exit 1; }
+          ok "${{ needs.agpl-check.result }}" || { echo "agpl-check failed"; exit 1; }
           echo "All checks passed ✓"
