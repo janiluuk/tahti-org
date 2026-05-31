@@ -372,6 +372,54 @@ unless maintenance team works unpaid until surplus and capex is deferred.
 
 ---
 
+---
+
+## Streaming infrastructure backlog
+
+Issues identified from streaming architecture review and user journey analysis. See `docs/technical/streaming-architecture.md` for full context.
+
+### CRITICAL — blocks horizontal scaling
+
+| ID | Issue | Raised by | Phase to fix |
+|:---|---|---|---|
+| [ ] | **STREAM-001** HLS segments written to shared Docker volume instead of MinIO — prevents adding a second Caddy or worker node | Architecture review | M3 (must fix before any beta) |
+| [ ] | **STREAM-004** Recording is a Liquidsoap sidecar — recording lost if Liquidsoap crashes mid-broadcast | Architecture review | M3 |
+| [ ] | **STREAM-005** No per-channel health watchdog — silent/frozen channels go undetected until user reports | Journey: Listener J1 | M3 |
+
+### HIGH — breaks artist or listener experience
+
+| ID | Issue | Raised by | Phase to fix |
+|:---|---|---|---|
+| [ ] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | Architecture review | M3 |
+| [ ] | **STREAM-003** Ingest DNS failover has 30s dead window — OBS connections to failed ingest node must manually reconnect | Architecture review | M3 / Phase 4 |
+| [ ] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | Journey: Artist J2 | M4 |
+| [ ] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | Journey: Artist J2 | M3 |
+| [ ] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | Journey: Listener J2 | M3 |
+| [ ] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Journey: Listener J1 | M3 |
+| [ ] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | Journey: Listener J2 | M5 |
+
+### MEDIUM — affects operations and cost attribution
+
+| ID | Issue | Raised by | Phase to fix |
+|:---|---|---|---|
+| [ ] | **STREAM-006** No per-channel bandwidth accounting — can't attribute egress costs per artist, can't inform resource limits or grant calculations | Architecture review | M8 |
+| [ ] | **STREAM-007** Single Icecast node — Mixxx/Traktor users have no failover | Architecture review | Phase 5 / pre-launch |
+| [ ] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Architecture review | M4 |
+| [ ] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Architecture review | M3 |
+| [ ] | **OPS-001** No structured log correlation across edge encoder → Liquidsoap → recording containers for a single broadcast session | Journey: Ops J3 | M11 |
+| [ ] | **OPS-002** DB migration is a manual step after deploy — must be automated in CI before service update | Journey: Ops J2 | M0 |
+
+### LOW — improvements for polish
+
+| ID | Issue | Raised by | Phase to fix |
+|:---|---|---|---|
+| [ ] | **STREAM-010** Graceful drain on Liquidsoap stop may emit an incomplete final HLS segment — listeners hear a cut instead of a fade | Architecture review | M3 |
+| [ ] | **ARTIST-004** Upload progress bar shows browser→MinIO upload only, not transcode progress — artist thinks "nothing is happening" during transcode | Journey: Artist J4 | M2 |
+| [ ] | **LISTENER-003** Anonymous listener sets a handle in localStorage but it resets if cookies cleared — confusing return identity | Journey: Listener J1 | M5 |
+| [ ] | **DIRECTOR-001** Grant calculation preview has no anomaly detection — director must manually spot-check 200 rows for bot activity | Journey: Director J1 | M9 |
+
+---
+
 ## Quick reference — doc map
 
 | Question | Read |
