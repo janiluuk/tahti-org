@@ -77,6 +77,11 @@ services:
   website:
     image: registry.tahti.fi/tahti/website:${TAG:-latest}
     networks: [edge]
+    volumes:
+      - type: bind
+        source: /srv/tahti/media/output_vhs.mp4
+        target: /usr/share/nginx/html/output_vhs.mp4
+        read_only: true
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/health"]
       interval: 30s

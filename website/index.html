@@ -4,6 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tahti — Your Radio Station</title>
+<meta name="description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Applying for private beta now.">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tahti.fi/">
+<meta property="og:title" content="Tahti — Your Radio Station">
+<meta property="og:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Applying for private beta now.">
+<meta property="og:image" content="https://tahti.fi/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:site_name" content="Tahti">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Tahti — Your Radio Station">
+<meta name="twitter:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio.">
+<meta name="twitter:image" content="https://tahti.fi/og-image.png">
+
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <style>
@@ -27,6 +46,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflo
 #unmute-btn .icon{font-size:22px;display:flex;align-items:center}
 #unmute-btn .pulse{width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1.5s ease-in-out infinite;margin-right:4px}
 #unmute-btn.muted .pulse{background:var(--coral)}
+#eq-canvas{position:fixed;bottom:0;left:0;width:100%;height:110px;z-index:5;pointer-events:none;opacity:0.55;mix-blend-mode:screen}
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(10,15,30,0.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.05)}
@@ -49,16 +69,27 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 .hero-h1{font-family:var(--font-head);font-size:clamp(48px,7vw,90px);font-weight:700;line-height:1.05;margin-bottom:20px}
 .hero-h1 span{color:var(--amber)}
 .hero-italic{font-family:var(--font-body);font-style:italic;font-size:clamp(28px,4vw,52px);color:var(--amber);font-weight:300;margin-bottom:40px}
-.hero-desc{max-width:620px;line-height:1.7;color:var(--muted);font-size:17px;margin-bottom:50px}
+.hero-desc{max-width:100%;line-height:1.7;color:var(--muted);font-size:17px;margin-bottom:50px}
 .hero-footer{font-size:11px;letter-spacing:3px;color:var(--muted);display:flex;gap:20px}
 .hero-footer span{display:flex;align-items:center;gap:6px}
 .hero-footer span::before{content:'·';color:var(--amber)}
 .hero-icon{position:absolute;top:50%;right:8%;transform:translateY(-50%);opacity:0.12;font-size:180px;line-height:1}
+.hero-cta-row{display:flex;gap:14px;margin-bottom:40px;flex-wrap:wrap;align-items:center}
+.btn-primary{background:var(--amber);color:#0a0f1e;padding:14px 30px;border-radius:8px;font-family:var(--font-head);font-weight:700;font-size:13px;letter-spacing:1.5px;text-decoration:none;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{opacity:0.88;transform:translateY(-2px);box-shadow:0 8px 24px rgba(240,165,0,0.35)}
+.btn-secondary{background:transparent;color:var(--text);padding:13px 28px;border-radius:8px;font-family:var(--font-head);font-weight:600;font-size:13px;letter-spacing:1px;text-decoration:none;border:1px solid rgba(255,255,255,0.18);transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+.btn-secondary:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
+.hero-mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.hero-mini-stat{background:rgba(17,24,39,0.85);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;transition:border-color 0.3s}
+.hero-mini-stat:hover{border-color:rgba(240,165,0,0.3)}
+.hms-val{font-family:var(--font-head);font-size:24px;font-weight:700;color:var(--amber);line-height:1;margin-bottom:4px}
+.hms-val.c{color:var(--cyan)}.hms-val.g{color:var(--green)}.hms-val.p{color:var(--lavender)}
+.hms-label{font-size:11px;color:var(--muted);letter-spacing:0.5px;line-height:1.4}
 
 /* HERO VIDEO PLAYER */
 .hero-layout{display:flex;align-items:center;gap:48px;justify-content:space-between}
-.hero-layout .section-inner{flex:1;max-width:600px}
-.hero-video-player{flex:0 0 520px;cursor:pointer;z-index:20}
+.hero-layout .section-inner{flex:1 1 0;min-width:0}
+.hero-video-player{flex:0 0 460px;cursor:pointer;z-index:20}
 .hero-video-thumb{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6);border:2px solid rgba(240,165,0,0.3);transition:transform 0.3s,border-color 0.3s,box-shadow 0.3s}
 .hero-video-thumb:hover{transform:scale(1.02);border-color:var(--amber);box-shadow:0 25px 80px rgba(240,165,0,0.2)}
 .hero-video-thumb video{width:100%;display:block;aspect-ratio:16/9;object-fit:cover}
@@ -393,6 +424,78 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 .an-ctry-bar-fill{height:100%;border-radius:2px;background:var(--purple)}
 .an-ctry-pct{font-size:10px;color:var(--muted);width:26px;text-align:right;flex-shrink:0}
 
+/* ===== LIVE / 247 / STASH MOCKUP ===== */
+.live-header{background:#111827;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06)}
+.live-artist-name{font-family:var(--font-head);font-size:16px;font-weight:700;letter-spacing:1px}
+.live-meta{display:flex;align-items:center;gap:14px}
+.listener-count{font-size:12px;color:var(--muted)}
+.live-player-card{background:#0d1626;border-radius:8px;padding:20px;margin-bottom:14px}
+.live-artist-row{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.live-avatar{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid rgba(0,188,212,0.4)}
+.live-name-block .name{font-family:var(--font-head);font-size:17px;font-weight:700}
+.live-name-block .handle{font-size:11px;color:var(--muted);margin-top:2px}
+.broadcasting-badge{font-size:10px;letter-spacing:2px;color:var(--green);display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.now-playing-title{font-family:var(--font-head);font-size:15px;font-weight:600;margin-bottom:2px}
+.now-playing-sub{font-size:11px;color:var(--muted);margin-bottom:12px}
+.upcoming-label{font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px}
+.upcoming-item{background:var(--card2);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.upcoming-item.next{border-left:2px solid var(--amber)}
+.upcoming-item .up-icon{font-size:16px;flex-shrink:0}
+.upcoming-item .up-title{font-size:12px;font-weight:600}
+.upcoming-item .up-time{font-size:10px;color:var(--muted);margin-top:1px}
+/* 247 channel */
+.offline-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);border-radius:20px;padding:3px 9px;font-size:9px;font-weight:700;color:var(--amber);letter-spacing:1px}
+.countdown-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.cdr-unit{background:var(--card2);border-radius:6px;padding:10px;text-align:center}
+.cdr-num{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--amber);line-height:1}
+.cdr-lbl{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:1px}
+.archive-row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:7px;padding:10px 14px;margin-bottom:6px}
+.archive-cover{width:36px;height:36px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.archive-info .title{font-size:12px;font-weight:600}
+.archive-info .meta{font-size:10px;color:var(--muted)}
+.archive-dur{font-family:var(--font-head);font-size:11px;color:var(--muted);margin-left:auto;flex-shrink:0}
+/* stash */
+.stash-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.stash-title-block .title{font-family:var(--font-head);font-size:15px;font-weight:700}
+.stash-title-block .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.stash-actions{display:flex;gap:7px}
+.stash-file{background:var(--card);border-radius:7px;padding:11px 14px;display:flex;align-items:center;gap:11px;margin-bottom:6px;border-left:2px solid rgba(255,255,255,0.06);transition:border-color 0.2s}
+.stash-file.playing{border-left-color:var(--cyan)}
+.stash-lock{font-size:14px;flex-shrink:0}
+.stash-file-info{flex:1;min-width:0}
+.stash-file-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.stash-file-meta{font-size:10px;color:var(--muted)}
+.stash-file-actions{display:flex;gap:4px;flex-shrink:0}
+.stash-btn{background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:4px 8px;font-size:10px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.stash-btn.share{border-color:rgba(0,188,212,0.35);color:var(--cyan)}
+.stash-shared-box{background:rgba(124,77,255,0.06);border:1px solid rgba(124,77,255,0.2);border-radius:8px;padding:12px 14px;margin-top:14px}
+.stash-shared-lbl{font-size:10px;letter-spacing:2px;color:var(--lavender);margin-bottom:8px}
+.stash-collab-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.stash-collab-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.stash-collab-info{flex:1}
+.stash-collab-name{font-weight:600}
+.stash-collab-meta{font-size:10px;color:var(--muted)}
+.stash-revoke{background:transparent;border:1px solid rgba(255,100,100,0.3);border-radius:4px;padding:4px 9px;font-size:10px;color:var(--coral);cursor:pointer}
+
+/* ===== APPLY FORM ===== */
+.apply-form-wrap{background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:36px 40px;margin-top:40px;max-width:640px}
+.apply-form-title{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:6px}
+.apply-form-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+.apply-row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.apply-field{margin-bottom:16px}
+.apply-field label{display:block;font-size:11px;letter-spacing:1.5px;color:var(--muted);margin-bottom:7px;font-weight:600;text-transform:uppercase}
+.apply-field input,.apply-field textarea{width:100%;background:var(--card2);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:11px 14px;font-size:14px;color:var(--text);font-family:var(--font-body);outline:none;transition:border-color 0.2s;resize:vertical}
+.apply-field input:focus,.apply-field textarea:focus{border-color:rgba(240,165,0,0.5)}
+.apply-field input::placeholder,.apply-field textarea::placeholder{color:rgba(255,255,255,0.18)}
+.apply-submit-row{display:flex;align-items:center;gap:20px;margin-top:8px;flex-wrap:wrap}
+.apply-submit-note{font-size:11px;color:var(--muted);line-height:1.5}
+#apply-success{display:none;text-align:center;padding:32px 0}
+#apply-success .ok-icon{font-size:48px;margin-bottom:12px}
+#apply-success .ok-title{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--green);margin-bottom:10px}
+#apply-success .ok-body{font-size:15px;color:var(--muted);line-height:1.7}
+#apply-error{display:none;margin-top:14px;font-size:13px;color:var(--coral);padding:10px 14px;background:rgba(255,107,107,0.07);border:1px solid rgba(255,107,107,0.2);border-radius:7px}
+#apply-error a{color:var(--amber);text-decoration:underline}
+
 /* Responsive */
 @media(max-width:768px){
   nav{padding:14px 20px}
@@ -411,12 +514,17 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   .hero-layout{flex-direction:column;gap:32px}
   .hero-layout .section-inner{max-width:100%}
   .hero-video-player{flex:none;width:100%;max-width:480px}
+  .hero-cta-row{flex-wrap:wrap}
+  .hero-mini-stats{grid-template-columns:1fr 1fr}
+  .apply-form-wrap{padding:24px 20px}
+  .apply-row-2{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
 <canvas id="bg"></canvas>
+<canvas id="eq-canvas"></canvas>
 <video id="bg-video" autoplay muted loop playsinline poster="">
   <source src="output_vhs.mp4" type="video/mp4">
 </video>
@@ -441,17 +549,27 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <h1 class="hero-h1 reveal">Your radio<br>station.</h1>
       <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
       <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
-      <div class="hero-footer reveal reveal-delay-3">
+      <div class="hero-cta-row reveal reveal-delay-3">
+        <a href="#cta" class="btn-primary">Apply for beta →</a>
+        <a href="#broadcast" class="btn-secondary">See how it works</a>
+      </div>
+      <div class="hero-footer reveal reveal-delay-4">
         <span>FOR ARTISTS</span><span>HELSINKI</span><span>BETA INVITATIONS OPEN</span>
       </div>
     </div>
     <div class="hero-video-player" id="heroPlayer">
       <div class="hero-video-thumb">
-        <video src="output_vhs.mp4" muted loop playsinline preload="auto"></video>
+        <video src="output_vhs.mp4" muted loop playsinline preload="auto" autoplay></video>
         <div class="hero-play-btn">
           <svg viewBox="0 0 24 24" width="56" height="56" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
         </div>
         <div class="hero-play-label">WATCH THE VISION</div>
+      </div>
+      <div class="hero-mini-stats">
+        <div class="hero-mini-stat"><div class="hms-val">0%</div><div class="hms-label">Revenue cut — ever</div></div>
+        <div class="hero-mini-stat"><div class="hms-val c">1 URL</div><div class="hms-label">Live + archive, always on</div></div>
+        <div class="hero-mini-stat"><div class="hms-val g">FLAC</div><div class="hms-label">Lossless for paid artists</div></div>
+        <div class="hero-mini-stat"><div class="hms-val p">Beta</div><div class="hms-label">30–50 artists, apply now</div></div>
       </div>
     </div>
   </div>
@@ -825,7 +943,10 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     <div class="mockup-tabs reveal reveal-delay-2">
       <button class="mtab active" onclick="switchMockup('channel',this)">Channel Page</button>
       <button class="mtab" onclick="switchMockup('dashboard',this)">Artist Dashboard</button>
-      <button class="mtab" onclick="switchMockup('mobile',this)">Mobile Listener</button>
+      <button class="mtab" onclick="switchMockup('mobile',this)">Mobile</button>
+      <button class="mtab" onclick="switchMockup('live',this)">Live + Chat</button>
+      <button class="mtab" onclick="switchMockup('247',this)">24/7 Channel</button>
+      <button class="mtab" onclick="switchMockup('stash',this)">Private Stash</button>
     </div>
 
     <!-- CHANNEL PAGE MOCKUP -->
@@ -1067,6 +1188,213 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
         </div>
       </div>
     </div>
+
+    <!-- LIVE STREAM + CHAT MOCKUP -->
+    <div class="mockup-frame" id="mock-live">
+      <div class="browser reveal reveal-delay-3">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">tahti.fi/<b>neon-ghost</b></div>
+        </div>
+        <div class="browser-content">
+          <div class="live-header">
+            <div class="live-artist-name">NEON GHOST</div>
+            <div class="live-meta">
+              <div class="listener-count">247 listeners</div>
+              <div class="ch-live"><div class="signal-dot"></div> LIVE</div>
+            </div>
+          </div>
+          <div class="ch-body">
+            <div class="ch-main">
+              <div class="live-player-card">
+                <div class="live-artist-row">
+                  <div class="live-avatar" style="background:linear-gradient(135deg,#1a0060,#004060)">👾</div>
+                  <div class="live-name-block">
+                    <div class="name">Neon Ghost</div>
+                    <div class="handle">tahti.fi/neon-ghost · Helsinki, FI</div>
+                  </div>
+                </div>
+                <div class="broadcasting-badge"><div class="signal-dot"></div>BROADCASTING NOW — 47 MIN IN</div>
+                <div class="now-playing-title">Crystalline Shore</div>
+                <div class="now-playing-sub">Ambient Set · Lossless 24-bit/96 kHz</div>
+                <div id="live-waveform" class="ch-waveform" style="height:36px;margin-bottom:12px"></div>
+                <div class="ch-controls">
+                  <button class="ch-btn">▶</button>
+                  <div class="ch-time">47:23</div>
+                  <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;position:relative;margin:0 8px"><div style="position:absolute;left:0;top:0;bottom:0;width:62%;background:var(--cyan);border-radius:2px"></div></div>
+                  <div class="ch-time">1:14:00</div>
+                  <div class="ch-quality">LOSSLESS</div>
+                </div>
+              </div>
+              <div class="upcoming-label">UP NEXT</div>
+              <div class="upcoming-item next"><div class="up-icon">🌙</div><div><div class="up-title">Twilight Protocol</div><div class="up-time">Tonight 23:00 UTC · 90 min set</div></div></div>
+              <div class="upcoming-item"><div class="up-icon">🎵</div><div><div class="up-title">Archive: Neon Shore EP</div><div class="up-time">Plays automatically after live ends</div></div></div>
+            </div>
+            <div class="ch-sidebar">
+              <div class="pinned-msg"><div class="pin-label">📌 PINNED</div><em>Neon Shore EP out Friday — pre-save link in bio</em></div>
+              <h4>LIVE CHAT <span style="color:var(--green);margin-left:6px;font-size:10px">● 247</span></h4>
+              <div class="chat-msg"><span class="handle cyan">@aurora_fi</span>this bassline 🔥🔥</div>
+              <div class="chat-msg"><span class="handle green">@kai_studio</span>been waiting for this set</div>
+              <div class="chat-msg"><span class="handle artist">neon-ghost</span>thank you! glad you're here ❤️</div>
+              <div class="chat-msg"><span class="handle amber">@mia.waves</span>sound quality is incredible on lossless</div>
+              <div class="chat-msg"><span class="handle cyan">@aurora_fi</span>is this the vhs mix or new material?</div>
+              <div class="chat-msg"><span class="handle artist">neon-ghost</span>mix of both — surprise at 50 min 👾</div>
+              <div class="chat-input">
+                <input type="text" placeholder="Say something…">
+                <button class="chat-send">→</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 24/7 CHANNEL MOCKUP (between live sets — archive mode) -->
+    <div class="mockup-frame" id="mock-247">
+      <div class="browser reveal reveal-delay-3">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">tahti.fi/<b>neon-ghost</b></div>
+        </div>
+        <div class="browser-content">
+          <div class="live-header">
+            <div>
+              <div class="live-artist-name">NEON GHOST</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">tahti.fi/neon-ghost · always on</div>
+            </div>
+            <div class="live-meta">
+              <div class="listener-count">12 listening</div>
+              <div class="offline-badge">📻 ARCHIVE</div>
+            </div>
+          </div>
+          <div class="ch-body">
+            <div class="ch-main">
+              <div class="live-player-card">
+                <div style="font-size:10px;letter-spacing:2px;color:var(--amber);margin-bottom:10px">NEXT LIVE BROADCAST</div>
+                <div class="countdown-row">
+                  <div class="cdr-unit"><div class="cdr-num">06</div><div class="cdr-lbl">HRS</div></div>
+                  <div class="cdr-unit"><div class="cdr-num">24</div><div class="cdr-lbl">MIN</div></div>
+                  <div class="cdr-unit"><div class="cdr-num">38</div><div class="cdr-lbl">SEC</div></div>
+                  <div class="cdr-unit"><div class="cdr-num">—</div><div class="cdr-lbl" style="white-space:nowrap">FRI 22:00</div></div>
+                </div>
+                <div style="font-family:var(--font-head);font-size:13px;font-weight:600;margin-bottom:4px;color:var(--amber)">Twilight Protocol — Live Set</div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:16px">90 min · ambient/electronic · 🔔 Set a reminder</div>
+                <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:14px"></div>
+                <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">NOW PLAYING FROM ARCHIVE</div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                  <div style="width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#1a0060,#004060);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌌</div>
+                  <div>
+                    <div style="font-family:var(--font-head);font-size:13px;font-weight:600">Neon Shore EP — Full Broadcast</div>
+                    <div style="font-size:11px;color:var(--muted)">Recorded live · Mar 2025 · 1h 14m</div>
+                  </div>
+                </div>
+                <div class="ch-controls">
+                  <button class="ch-btn">▶</button>
+                  <div class="ch-time">23:41</div>
+                  <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;position:relative;margin:0 8px"><div style="position:absolute;left:0;top:0;bottom:0;width:32%;background:var(--amber);border-radius:2px"></div></div>
+                  <div class="ch-time">1:14:00</div>
+                  <div class="ch-quality">MP3 HQ</div>
+                </div>
+              </div>
+              <div class="upcoming-label" style="margin-top:4px">ARCHIVE — ALL BROADCASTS</div>
+              <div class="archive-row"><div class="archive-cover" style="background:linear-gradient(135deg,#1a0060,#004060)">🌌</div><div class="archive-info"><div class="title">Neon Shore EP</div><div class="meta">Mar 2025 · 1h 14m</div></div><div class="archive-dur">1:14:00</div></div>
+              <div class="archive-row"><div class="archive-cover" style="background:linear-gradient(135deg,#003040,#001040)">❄️</div><div class="archive-info"><div class="title">Winter Session Archive</div><div class="meta">Dec 2024 · 2h 08m</div></div><div class="archive-dur">2:08:00</div></div>
+              <div class="archive-row"><div class="archive-cover" style="background:linear-gradient(135deg,#400010,#200030)">🎛</div><div class="archive-info"><div class="title">Late Night Drift Vol.3</div><div class="meta">Nov 2024 · 1h 40m</div></div><div class="archive-dur">1:40:00</div></div>
+            </div>
+            <div class="ch-sidebar">
+              <div class="pinned-msg"><div class="pin-label">📌 PINNED</div><em>Next live set Friday 22:00 UTC — Twilight Protocol</em></div>
+              <h4>CHAT</h4>
+              <div class="chat-msg"><span class="handle cyan">@aurora_fi</span>love that the archive just keeps playing 🙌</div>
+              <div class="chat-msg"><span class="handle green">@kai_studio</span>reminder set for Friday</div>
+              <div class="chat-msg"><span class="handle amber">@mia.waves</span>this neon shore ep is so good</div>
+              <div class="chat-input">
+                <input type="text" placeholder="Say something…">
+                <button class="chat-send">→</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIVATE STASH MOCKUP -->
+    <div class="mockup-frame" id="mock-stash">
+      <div class="browser reveal reveal-delay-3">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">tahti.fi/<b>app</b>/stash</div>
+        </div>
+        <div class="browser-content" style="background:#0d1626;padding:20px;min-height:420px">
+          <div class="stash-toolbar">
+            <div class="stash-title-block">
+              <div class="title">My Stash</div>
+              <div class="sub">Private storage · 4.2 GB used of 20 GB · Paid plan</div>
+            </div>
+            <div class="stash-actions">
+              <button class="stash-btn share">+ Upload</button>
+              <button class="stash-btn share">Share folder</button>
+            </div>
+          </div>
+          <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">WIP TRACKS</div>
+          <div class="stash-file playing">
+            <div class="stash-lock">🔒</div>
+            <div class="stash-file-info">
+              <div class="stash-file-name">crystalline-shore-v3.flac</div>
+              <div class="stash-file-meta">FLAC 24-bit/48kHz · 12.3 MB · Modified 2h ago · 2 comments</div>
+            </div>
+            <div class="stash-file-actions">
+              <button class="stash-btn">▶</button>
+              <button class="stash-btn share">Share link</button>
+              <button class="stash-btn">↓</button>
+            </div>
+          </div>
+          <div class="stash-file">
+            <div class="stash-lock">🔒</div>
+            <div class="stash-file-info">
+              <div class="stash-file-name">neon-protocol-rough-v1.wav</div>
+              <div class="stash-file-meta">WAV 24-bit · 8.7 MB · Modified yesterday · 0 comments</div>
+            </div>
+            <div class="stash-file-actions">
+              <button class="stash-btn">▶</button>
+              <button class="stash-btn share">Share link</button>
+              <button class="stash-btn">↓</button>
+            </div>
+          </div>
+          <div class="stash-file">
+            <div class="stash-lock">🔒</div>
+            <div class="stash-file-info">
+              <div class="stash-file-name">twilight-protocol-stems.zip</div>
+              <div class="stash-file-meta">ZIP · 340 MB · Stems export · 5 comments</div>
+            </div>
+            <div class="stash-file-actions">
+              <button class="stash-btn">▶</button>
+              <button class="stash-btn share">Share link</button>
+              <button class="stash-btn">↓</button>
+            </div>
+          </div>
+          <div class="stash-shared-box">
+            <div class="stash-shared-lbl">SHARED ACCESS</div>
+            <div class="stash-collab-row" style="margin-bottom:8px">
+              <div class="stash-collab-avatar">KV</div>
+              <div class="stash-collab-info">
+                <div class="stash-collab-name">@kai_studio</div>
+                <div class="stash-collab-meta">Read-only · 2 files · Link expires in 5 days</div>
+              </div>
+              <button class="stash-revoke">Revoke</button>
+            </div>
+            <div class="stash-collab-row">
+              <div class="stash-collab-avatar" style="background:linear-gradient(135deg,#00bcd4,#00e676)">MA</div>
+              <div class="stash-collab-info">
+                <div class="stash-collab-name">@mastering_ak</div>
+                <div class="stash-collab-meta">Download · 1 file · Permanent link</div>
+              </div>
+              <button class="stash-revoke">Revoke</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -1442,10 +1770,47 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="step-card green"><div class="step-num green">03</div><h3>Contribute to the code</h3><p>The repo is open. The bylaws are open. If you're technical, propose a PR. If you're an artist, tell us what we're missing.</p></div>
       <div class="step-card cyan"><div class="step-num cyan">04</div><h3>Join the AGM</h3><p>From the first AGM onward, every paying member has a voice. Pricing, grant formula, board composition — all up for discussion. Show up. Vote. Shape it.</p></div>
     </div>
-    <div class="reveal reveal-delay-3" style="margin-top:8px">
-      <a href="#" class="cta-btn">APPLY FOR BETA</a>
-      <a href="#" class="cta-btn-ghost">READ THE DOCS</a>
+    <div class="apply-form-wrap reveal reveal-delay-3" id="apply-wrap">
+      <div class="apply-form-title">Apply for the private beta</div>
+      <div class="apply-form-sub">We're inviting 30–50 working artists from EU electronic scenes. All applications are reviewed personally.</div>
+      <form id="apply-form" novalidate>
+        <div class="apply-row-2">
+          <div class="apply-field">
+            <label for="af-name">Your name</label>
+            <input id="af-name" type="text" name="name" placeholder="DJ Moonrise" required>
+          </div>
+          <div class="apply-field">
+            <label for="af-email">Email address</label>
+            <input id="af-email" type="email" name="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+        <div class="apply-field">
+          <label for="af-type">What kind of artist are you?</label>
+          <input id="af-type" type="text" name="artist_type" placeholder="DJ / producer / live electronics / experimental…" required>
+        </div>
+        <div class="apply-field">
+          <label for="af-links">Links to your music (optional)</label>
+          <input id="af-links" type="text" name="links" placeholder="SoundCloud, Mixcloud, Bandcamp, personal site…">
+        </div>
+        <div class="apply-field">
+          <label for="af-msg">Anything else?</label>
+          <textarea id="af-msg" name="message" rows="3" placeholder="Tell us about your setup, what you broadcast, what frustrates you about existing platforms…"></textarea>
+        </div>
+        <div class="apply-submit-row">
+          <button type="submit" class="cta-btn" id="apply-submit" style="margin:0">APPLY FOR BETA</button>
+          <div class="apply-submit-note">No spam. We reply personally to every<br>application.</div>
+        </div>
+      </form>
+      <div id="apply-success">
+        <div class="ok-icon">✓</div>
+        <div class="ok-title">Application received</div>
+        <div class="ok-body">We'll be in touch at the email you provided.<br>The first round of invitations goes out in early 2025.</div>
+      </div>
+      <div id="apply-error">
+        Something went wrong — please email us directly at <a href="mailto:hello@tahti.fi">hello@tahti.fi</a>
+      </div>
     </div>
+
     <div class="cta-footer reveal reveal-delay-4">
       <span>TAHTI ry</span><span>HELSINKI</span><span>AGPL-3.0</span><span>hello@tahti.fi</span>
     </div>
@@ -1468,10 +1833,12 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   const overlay = document.getElementById('bg-video-overlay');
   if (!btn || !bgVideo) return;
 
-  function setVideoSound(on) {
-    bgVideo.muted = !on;
-    bgVideo.volume = 0.7;
+  async function setVideoSound(on) {
+    await window.audioReactive.init(bgVideo);
+    window.audioReactive.setVolume(on ? 0.8 : 0);
     if (on) {
+      bgVideo.muted = false;
+      bgVideo.play().catch(() => {});
       btn.classList.remove('muted');
       btn.querySelector('.icon').textContent = '🔊';
       btn.querySelector('.label').textContent = 'MUTE';
@@ -1484,7 +1851,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     }
   }
 
-  btn.addEventListener('click', () => setVideoSound(bgVideo.muted));
+  btn.addEventListener('click', () => setVideoSound(btn.classList.contains('muted')));
 
   // Hero player → modal
   const heroPlayer = document.getElementById('heroPlayer');
@@ -1494,14 +1861,32 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 
   if (heroPlayer && modal && modalVideo) {
     heroPlayer.addEventListener('click', () => {
-      setVideoSound(true);
       modalVideo.src = 'output_vhs.mp4';
       modalVideo.muted = false;
-      modalVideo.volume = 0.7;
-      modalVideo.play();
+      modalVideo.volume = 0.8;
       modal.classList.add('open');
-      btn.style.display = 'none';
       document.body.style.overflow = 'hidden';
+      btn.style.display = 'none';
+
+      // rAF ensures display:flex is applied before fullscreen is requested
+      requestAnimationFrame(() => {
+        const fsReq = modalVideo.requestFullscreen
+          || modalVideo.webkitRequestFullscreen
+          || modalVideo.mozRequestFullScreen;
+        if (fsReq) fsReq.call(modalVideo).catch(() => {});
+        modalVideo.play().catch(() => {});
+
+        // Close modal when native fullscreen exits (ESC or browser chrome button)
+        function onFsChange() {
+          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            document.removeEventListener('fullscreenchange', onFsChange);
+            document.removeEventListener('webkitfullscreenchange', onFsChange);
+            if (modal.classList.contains('open')) closeModal();
+          }
+        }
+        document.addEventListener('fullscreenchange', onFsChange);
+        document.addEventListener('webkitfullscreenchange', onFsChange);
+      });
     });
 
     function closeModal() {
@@ -1510,12 +1895,71 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       modalVideo.src = '';
       btn.style.display = '';
       document.body.style.overflow = '';
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else if (document.webkitFullscreenElement) {
+        document.webkitExitFullscreen();
+      }
     }
 
     modalClose.addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
   }
+})();
+
+// ===== AUDIO REACTIVE =====
+window.audioReactive = (function() {
+  const BINS = 256;
+  const smooth = new Float32Array(BINS);
+  let analyser = null, gainNode = null, audioCtx = null, ready = false;
+
+  async function init(videoEl) {
+    if (ready) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.82;
+      gainNode = audioCtx.createGain();
+      gainNode.gain.value = 0;
+      const src = audioCtx.createMediaElementSource(videoEl);
+      src.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      ready = true;
+      if (audioCtx.state !== 'running') await audioCtx.resume();
+    } catch(e) { console.warn('[audioReactive]', e); }
+  }
+
+  function setVolume(v) {
+    if (!ready) return;
+    gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(Math.max(0, v), audioCtx.currentTime + 0.15);
+  }
+
+  const raw = new Uint8Array(BINS);
+  function update() {
+    if (!ready || audioCtx.state !== 'running') return;
+    analyser.getByteFrequencyData(raw);
+    for (let i = 0; i < BINS; i++) {
+      const v = raw[i] / 255;
+      smooth[i] = smooth[i] * 0.75 + v * 0.25;
+    }
+  }
+
+  function avg(lo, hi) {
+    let s = 0; for (let i = lo; i <= hi; i++) s += smooth[i]; return s / (hi - lo + 1);
+  }
+
+  return {
+    init, setVolume, update,
+    getBass:   () => avg(1, 5),    // sub + bass
+    getMid:    () => avg(6, 35),   // low-mid + mid
+    getHigh:   () => avg(36, 100), // upper-mid + presence
+    getEnergy: () => avg(1, 80),   // broadband energy
+    getBin:    (i) => smooth[Math.min(i, BINS - 1)],
+  };
 })();
 
 // ===== THREE.JS BACKGROUND =====
@@ -1546,7 +1990,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     const mat = new THREE.MeshBasicMaterial({
       color: cfg.color,
       transparent: true,
-      opacity: 0.08,
+      opacity: 0.2,
       depthWrite: false,
     });
     const mesh = new THREE.Mesh(geo, mat);
@@ -1576,7 +2020,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   for (let i = 0; i < 8; i++) {
     const geo = new THREE.TorusGeometry(30 + Math.random() * 50, 1.5, 8, 64);
     const c = ringPalette[i % ringPalette.length];
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.12 + Math.random() * 0.1, wireframe: true });
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.25 + Math.random() * 0.15, wireframe: true });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set((Math.random() - 0.5) * 700, (Math.random() - 0.5) * 400, -100 - Math.random() * 200);
     mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
@@ -1610,7 +2054,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   for (let x = -gridExtent; x <= gridExtent; x += gridSpacing) {
     const pts = [new THREE.Vector3(x, -gridExtent, -300), new THREE.Vector3(x, gridExtent, -300)];
     const g = new THREE.BufferGeometry().setFromPoints(pts);
-    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.03 });
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.07 });
     const line = new THREE.Line(g, m);
     gridGroup.add(line);
     gridLines.push({ line, baseX: x, axis: 'x' });
@@ -1618,11 +2062,20 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   for (let y = -gridExtent; y <= gridExtent; y += gridSpacing) {
     const pts = [new THREE.Vector3(-gridExtent, y, -300), new THREE.Vector3(gridExtent, y, -300)];
     const g = new THREE.BufferGeometry().setFromPoints(pts);
-    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.49, 0.3, 1.0), transparent: true, opacity: 0.03 });
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(0.49, 0.3, 1.0), transparent: true, opacity: 0.07 });
     const line = new THREE.Line(g, m);
     gridGroup.add(line);
     gridLines.push({ line, baseY: y, axis: 'y' });
   }
+
+  // Shared color palette (must be defined before any geometry that references it)
+  const palette = [
+    [0.94, 0.65, 0.0],  // amber
+    [0.0, 0.74, 0.83],  // cyan
+    [0.49, 0.3, 1.0],   // purple
+    [0.0, 0.9, 0.46],   // green
+    [1.0, 0.42, 0.42],  // coral
+  ];
 
   // Floating diamond shapes
   const diamondGroup = new THREE.Group();
@@ -1631,7 +2084,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   for (let i = 0; i < 15; i++) {
     const geo = new THREE.OctahedronGeometry(4 + Math.random() * 8, 0);
     const c = palette[Math.floor(Math.random() * palette.length)];
-    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.1 + Math.random() * 0.15, wireframe: true });
+    const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.22 + Math.random() * 0.2, wireframe: true });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set((Math.random() - 0.5) * 800, (Math.random() - 0.5) * 500, -50 - Math.random() * 150);
     diamondGroup.add(mesh);
@@ -1644,13 +2097,6 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   const col = new Float32Array(N * 3);
   const vels = new Float32Array(N * 2);
   const phases = new Float32Array(N);
-  const palette = [
-    [0.94, 0.65, 0.0],  // amber
-    [0.0, 0.74, 0.83],  // cyan
-    [0.49, 0.3, 1.0],   // purple
-    [0.0, 0.9, 0.46],   // green
-    [1.0, 0.42, 0.42],  // coral
-  ];
   for (let i = 0; i < N; i++) {
     pos[i*3]   = (Math.random() - 0.5) * 900;
     pos[i*3+1] = (Math.random() - 0.5) * 500;
@@ -1700,11 +2146,62 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     const wg = new THREE.BufferGeometry();
     wg.setAttribute('position', new THREE.BufferAttribute(wPos, 3));
     wg.setAttribute('color',    new THREE.BufferAttribute(wCol, 3));
-    const wm = new THREE.PointsMaterial({ size: 2.5, vertexColors: true, transparent: true, opacity: 1, sizeAttenuation: true });
+    const wm = new THREE.PointsMaterial({ size: 4, vertexColors: true, transparent: true, opacity: 1, sizeAttenuation: true });
     const wp = new THREE.Points(wg, wm);
     scene.add(wp);
     waveObjs.push({ geo: wg, freq: waveFreqs[w], speed: waveSpeeds[w], amp: waveAmps[w] });
   }
+
+  // ── Radial spectrum analyzer ──────────────────────────────────────────────
+  const SPEC_N = 128;
+  const SPEC_R = 110;
+  const specGroup = new THREE.Group();
+  specGroup.position.set(0, 0, -20);
+  scene.add(specGroup);
+
+  // Thin base ring that glows with energy
+  const baseRingGeo = new THREE.RingGeometry(SPEC_R - 1.5, SPEC_R + 1.5, 128);
+  const baseRingMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+  const baseRing = new THREE.Mesh(baseRingGeo, baseRingMat);
+  specGroup.add(baseRing);
+
+  // 128 radial bars
+  const specBars = [];
+  for (let i = 0; i < SPEC_N; i++) {
+    const angle = (i / SPEC_N) * Math.PI * 2;
+    const cosA = Math.cos(angle), sinA = Math.sin(angle);
+    const pts = new Float32Array(6);
+    pts[0] = cosA * SPEC_R; pts[1] = sinA * SPEC_R; pts[2] = 0;
+    pts[3] = cosA * (SPEC_R + 20); pts[4] = sinA * (SPEC_R + 20); pts[5] = 0;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+    const frac = i / SPEC_N;
+    let r, gc, bc;
+    if (frac < 0.25)      { r=0.94; gc=0.65; bc=0.0; }   // amber
+    else if (frac < 0.5)  { r=0.0;  gc=0.74; bc=0.83; }  // cyan
+    else if (frac < 0.75) { r=0.49; gc=0.3;  bc=1.0; }   // purple
+    else                  { r=0.0;  gc=0.9;  bc=0.46; }  // green
+    const m = new THREE.LineBasicMaterial({ color: new THREE.Color(r, gc, bc), transparent: true, opacity: 0.7 });
+    const line = new THREE.Line(g, m);
+    specGroup.add(line);
+    specBars.push({ geo: g, cosA, sinA, mat: m });
+  }
+
+  // ── Bass-pulse wireframe sphere ────────────────────────────────────────────
+  const pulseSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(55, 24, 24),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(0.94, 0.65, 0.0), transparent: true, opacity: 0.0, wireframe: true })
+  );
+  pulseSphere.position.z = -30;
+  scene.add(pulseSphere);
+
+  // Second, larger pulse sphere (cyan, offset timing)
+  const pulseSphere2 = new THREE.Mesh(
+    new THREE.SphereGeometry(80, 20, 20),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.0, wireframe: true })
+  );
+  pulseSphere2.position.z = -40;
+  scene.add(pulseSphere2);
 
   let scrollY = 0;
   window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
@@ -1719,25 +2216,37 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     frameId = requestAnimationFrame(animate);
     const t = Date.now() * 0.001;
 
-    // Animate gradient orbs
+    // Sample audio each frame
+    window.audioReactive.update();
+    const aBass   = window.audioReactive.getBass();
+    const aMid    = window.audioReactive.getMid();
+    const aHigh   = window.audioReactive.getHigh();
+    const aEnergy = window.audioReactive.getEnergy();
+
+    // Animate gradient orbs — bass swells the first two, mids the others
     gradientMeshes.forEach((g, i) => {
       const { mesh, basePos, speed, radius, phase } = g;
       mesh.position.x = basePos[0] + Math.sin(t * speed + phase) * radius;
       mesh.position.y = basePos[1] + Math.cos(t * speed * 0.7 + phase) * radius * 0.6;
       mesh.position.z = basePos[2] + Math.sin(t * speed * 0.5 + phase * 1.3) * radius * 0.4;
-      const s = g.baseScale + Math.sin(t * speed * 0.8 + phase) * 30;
+      const aBand = i < 2 ? aBass : i < 4 ? aMid : aHigh;
+      const s = g.baseScale + Math.sin(t * speed * 0.8 + phase) * 30 + aBand * 70;
       mesh.scale.setScalar(s);
-      mesh.material.opacity = 0.06 + Math.sin(t * speed * 0.6 + phase * 0.5) * 0.03;
+      mesh.material.opacity = 0.14 + Math.sin(t * speed * 0.6 + phase * 0.5) * 0.06 + aEnergy * 0.12;
     });
 
-    // Animate floating rings
+    // Animate floating rings — mids spin them, bass pulses their scale
     ringObjs.forEach(r => {
       const { mesh, rotSpeed, drift, phase } = r;
-      mesh.rotation.x += rotSpeed[0] * 0.01;
-      mesh.rotation.y += rotSpeed[1] * 0.01;
-      mesh.rotation.z += rotSpeed[2] * 0.01;
+      const spinBoost = 1 + aMid * 2.5;
+      mesh.rotation.x += rotSpeed[0] * 0.01 * spinBoost;
+      mesh.rotation.y += rotSpeed[1] * 0.01 * spinBoost;
+      mesh.rotation.z += rotSpeed[2] * 0.01 * spinBoost;
       mesh.position.y += Math.sin(t * 0.5 + phase) * drift * 0.1;
       mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.05;
+      const rs = 1 + aBass * 0.4;
+      mesh.scale.set(rs, rs, rs);
+      mesh.material.opacity = Math.min(0.55, (mesh.material.opacity || 0.28) * 0.9 + (0.28 + aBass * 0.22) * 0.1);
     });
 
     // Shooting stars
@@ -1779,21 +2288,24 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     starGeo.attributes.position.needsUpdate = true;
     starGeo.attributes.color.needsUpdate = true;
 
-    // Pulsing grid
+    // Pulsing grid — energy brightens the whole grid, bass creates a travelling pulse
     gridLines.forEach((g, i) => {
-      const pulse = 0.02 + Math.sin(t * 0.8 + i * 0.15) * 0.02;
+      const travel = Math.sin(t * 1.2 + i * 0.2) * aBass * 0.06;
+      const pulse = 0.05 + Math.sin(t * 0.8 + i * 0.15) * 0.04 + aEnergy * 0.14 + travel;
       g.line.material.opacity = Math.max(0.005, pulse);
     });
 
-    // Floating diamonds
+    // Floating diamonds — highs spin them faster, bass flashes their scale
     diamondObjs.forEach(d => {
       const { mesh, rotSpeed, drift, phase, bobAmp } = d;
-      mesh.rotation.x += rotSpeed * 0.005;
-      mesh.rotation.y += rotSpeed * 0.008;
+      const spinBoost = 1 + aHigh * 3;
+      mesh.rotation.x += rotSpeed * 0.005 * spinBoost;
+      mesh.rotation.y += rotSpeed * 0.008 * spinBoost;
       mesh.position.y += Math.sin(t * 0.4 + phase) * drift * 0.05;
       mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.03;
-      const s = 1 + Math.sin(t * rotSpeed + phase) * 0.3;
+      const s = 1 + Math.sin(t * rotSpeed + phase) * 0.3 + aBass * 0.6;
       mesh.scale.setScalar(s);
+      mesh.material.opacity = Math.min(0.55, mesh.material.opacity * 0.92 + (0.22 + aEnergy * 0.18) * 0.08);
     });
 
     // Drift background particles
@@ -1807,18 +2319,49 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     }
     geo.attributes.position.needsUpdate = true;
 
-    // Animate waves
-    waveObjs.forEach(({ geo: wg, freq, speed, amp }) => {
+    // Animate waves — each layer reacts to its own frequency band + per-bin displacement
+    waveObjs.forEach(({ geo: wg, freq, speed, amp }, wi) => {
+      const wBand = wi === 0 ? aBass : wi === 1 ? aMid : aHigh;
+      const effectiveAmp = amp * (1 + wBand * 2.2);
       const wPos = wg.attributes.position.array;
       for (let i = 0; i < WN; i++) {
         const x = wPos[i*3];
+        // Map particle index to a frequency bin (spread across audible spectrum)
+        const binVal = window.audioReactive.getBin(Math.floor((i / WN) * 80));
         wPos[i*3+1] =
-          Math.sin(x * freq + t * speed) * amp * 0.6 +
-          Math.sin(x * freq * 2.3 + t * speed * 1.4) * amp * 0.25 +
-          Math.sin(x * freq * 0.4 + t * speed * 0.7) * amp * 0.4;
+          Math.sin(x * freq + t * speed) * effectiveAmp * 0.6 +
+          Math.sin(x * freq * 2.3 + t * speed * 1.4) * effectiveAmp * 0.25 +
+          Math.sin(x * freq * 0.4 + t * speed * 0.7) * effectiveAmp * 0.4 +
+          binVal * 55 * wBand;
       }
       wg.attributes.position.needsUpdate = true;
     });
+
+    // Radial spectrum analyzer
+    specGroup.rotation.z += 0.004 + aBass * 0.012;
+    baseRing.material.opacity = 0.15 + aEnergy * 0.4;
+    baseRing.scale.setScalar(1 + aBass * 0.08);
+    specBars.forEach(({ geo, cosA, sinA, mat }, i) => {
+      const bin = window.audioReactive.getBin(Math.floor((i / SPEC_N) * 100));
+      const barLen = 8 + bin * 90 * (1 + aBass * 0.6);
+      const pa = geo.attributes.position.array;
+      pa[3] = cosA * (SPEC_R + barLen);
+      pa[4] = sinA * (SPEC_R + barLen);
+      geo.attributes.position.needsUpdate = true;
+      mat.opacity = 0.3 + bin * 0.7;
+    });
+
+    // Bass-pulse spheres
+    const ps = 1 + aBass * 2.8;
+    pulseSphere.scale.setScalar(ps);
+    pulseSphere.material.opacity = Math.max(0, aBass * 0.3 - 0.02);
+    pulseSphere.rotation.x += 0.006;
+    pulseSphere.rotation.y += 0.004;
+    const ps2 = 1 + aMid * 1.8;
+    pulseSphere2.scale.setScalar(ps2);
+    pulseSphere2.material.opacity = Math.max(0, aMid * 0.2 - 0.01);
+    pulseSphere2.rotation.x -= 0.004;
+    pulseSphere2.rotation.y += 0.007;
 
     camera.position.y = -scrollY * 0.03;
     camera.position.x = Math.sin(t * 0.15) * 15;
@@ -1862,6 +2405,75 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     bar.style.animationDuration = (0.5 + Math.random() * 0.9) + 's';
     container.appendChild(bar);
   });
+})();
+
+// ===== LIVE MOCKUP WAVEFORM =====
+(function() {
+  const container = document.getElementById('live-waveform');
+  if (!container) return;
+  const heights = [8,14,22,30,18,26,34,20,12,28,36,24,16,30,22,18,32,14,26,20,16,28,38,22,18,14,26,32,20,16];
+  heights.forEach((h, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'wf-bar';
+    bar.style.height = h + 'px';
+    bar.style.animationDelay = (i * 0.05) + 's';
+    bar.style.animationDuration = (0.6 + Math.random() * 0.8) + 's';
+    container.appendChild(bar);
+  });
+})();
+
+// ===== BOTTOM EQUALIZER CANVAS =====
+(function() {
+  const canvas = document.getElementById('eq-canvas');
+  if (!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext('2d');
+  const EQ_BARS = 56;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = 110;
+  }
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  const peaks = new Float32Array(EQ_BARS);
+  const peakFall = new Float32Array(EQ_BARS).fill(0.004);
+
+  // Color stops per frequency region
+  function barColor(frac, alpha) {
+    if (frac < 0.33) return `rgba(240,165,0,${alpha})`;   // bass: amber
+    if (frac < 0.66) return `rgba(0,188,212,${alpha})`;   // mid: cyan
+    return `rgba(124,77,255,${alpha})`;                   // high: purple
+  }
+
+  function draw() {
+    requestAnimationFrame(draw);
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    const slot = w / EQ_BARS;
+    const bw = Math.max(2, slot - 3);
+    const gap = (slot - bw) / 2;
+    for (let i = 0; i < EQ_BARS; i++) {
+      const bin = window.audioReactive.getBin(Math.floor((i / EQ_BARS) * 90));
+      const bh = Math.max(3, bin * (h - 6) * 1.15);
+      const x = i * slot + gap;
+      const y = h - bh;
+      const frac = i / EQ_BARS;
+      const grad = ctx.createLinearGradient(0, h, 0, y);
+      grad.addColorStop(0, barColor(frac, 0.95));
+      grad.addColorStop(1, barColor(frac, 0.15));
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, bw, bh);
+      // Peak hold marker
+      if (peaks[i] < bh) { peaks[i] = bh; peakFall[i] = 0.003; }
+      else { peaks[i] -= peakFall[i]; peakFall[i] *= 1.04; }
+      if (peaks[i] > 5) {
+        ctx.fillStyle = barColor(frac, 0.8);
+        ctx.fillRect(x, h - peaks[i], bw, 2);
+      }
+    }
+  }
+  draw();
 })();
 
 // ===== SCROLL REVEAL =====
@@ -1968,6 +2580,50 @@ function switchMockup(id, btn) {
   document.getElementById('mock-' + id).classList.add('active');
   btn.classList.add('active');
 }
+
+// ===== APPLY FORM =====
+// Formspree setup (one-time, ~2 min):
+//   1. Go to https://formspree.io — sign in with janiluuk@gmail.com
+//   2. Create a new form, set notification email to janiluuk@gmail.com
+//   3. Copy the endpoint URL and replace the value below
+(function() {
+  const ENDPOINT = 'https://formspree.io/f/janiluuk@gmail.com';
+
+  const form = document.getElementById('apply-form');
+  const btn  = document.getElementById('apply-submit');
+  const ok   = document.getElementById('apply-success');
+  const err  = document.getElementById('apply-error');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+
+    const orig = btn.textContent;
+    btn.textContent = 'SENDING…';
+    btn.disabled = true;
+    err.style.display = 'none';
+
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' }
+      });
+      if (res.ok) {
+        form.style.display = 'none';
+        ok.style.display = 'block';
+      } else {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Server error ' + res.status);
+      }
+    } catch (e) {
+      err.style.display = 'block';
+      btn.textContent = orig;
+      btn.disabled = false;
+    }
+  });
+})();
 </script>
 </body>
 </html>

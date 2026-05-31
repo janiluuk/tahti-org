@@ -16,6 +16,9 @@ dist/
 *.tgz
 *.tar.gz
 
+# Large media — not tracked; preserved on server between deploys (see scripts/lab-stack-up.sh)
+*.mp4
+
 # OS
 .DS_Store
 Thumbs.db
