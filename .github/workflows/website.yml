@@ -1,0 +1,105 @@
+# CI/CD — marketing website (tahti.fi)
+#
+# Triggered on any push to main that touches website/ or infra/Caddyfile.
+# Builds the nginx image, pushes to the self-hosted registry, and triggers
+# a rolling update on the production Swarm via SSH.
+#
+# Required repository secrets:
+#   REGISTRY_PASSWORD   — password for registry.tahti.fi
+#   DEPLOY_SSH_KEY      — private key for the deploy user on the production node
+#   DEPLOY_HOST         — production node IP or hostname
+
+name: website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "infra/Caddyfile"
+      - "infra/docker-stack-phase1.yml"
+      - ".github/workflows/website.yml"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for manual deploy"
+        required: false
+
+env:
+  REGISTRY: registry.tahti.fi
+  IMAGE: tahti/website
+
+jobs:
+  build-and-deploy:
+    name: Build, push, deploy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: tag
+        run: echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to registry
+        run: |
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | \
+            docker login ${{ env.REGISTRY }} -u tahti --password-stdin
+
+      - name: Build image
+        run: |
+          docker build \
+            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.tag.outputs.tag }} \
+            -t ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest \
+            website/
+
+      - name: Push image
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
+
+      - name: Smoke test image
+        run: |
+          docker run --rm -d --name smoke-test -p 18080:80 \
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.tag.outputs.tag }}
+          sleep 3
+          curl -sf http://localhost:18080/health | grep -q "ok"
+          docker rm -f smoke-test
+          echo "✓ Image smoke test passed"
+
+      - name: Deploy to production
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: deploy
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            cd /srv/tahti
+            echo "Deploying website ${{ steps.tag.outputs.tag }}..."
+            TAG=${{ steps.tag.outputs.tag }} docker service update \
+              --image ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.tag.outputs.tag }} \
+              --with-registry-auth \
+              tahti_website
+            echo "✓ Website deployed"
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: deploy
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            sleep 10
+            curl -sf https://tahti.fi/health | grep -q "ok" || (echo "Health check failed"; exit 1)
+            echo "✓ Production health check passed"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Website deployment failed for ${{ github.sha }}"
+          echo "Check the deploy logs and run: make logs SVC=website"

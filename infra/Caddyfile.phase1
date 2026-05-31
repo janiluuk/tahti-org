@@ -1,0 +1,26 @@
+# Phase 1 Caddyfile — website only.
+# No API, no app subdomains. Just tahti.fi live over HTTPS.
+
+{
+    email ops@tahti.fi
+    admin 0.0.0.0:2019
+}
+
+# Redirect www → apex
+www.tahti.fi {
+    redir https://tahti.fi{uri} permanent
+}
+
+# Marketing site
+tahti.fi {
+    encode zstd gzip
+    reverse_proxy website:80
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+}
