@@ -1,0 +1,172 @@
+# CI — monorepo lint, typecheck, test (all app packages)
+#
+# Runs on every PR and every push to main.
+# Does NOT build Docker images (that happens in deploy workflows).
+#
+# Jobs:
+#   lint-typecheck  — ESLint + TypeScript across all packages
+#   test            — Vitest unit + integration (real Postgres via service containers)
+#   agpl-check      — Every source file must carry the AGPL-3.0 header
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "slides/**"
+      - "img/**"
+      - "website/**"
+      - "*.md"
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9"
+
+jobs:
+  lint-typecheck:
+    name: Lint & typecheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (ESLint)
+        run: pnpm lint
+
+      - name: Typecheck (tsc --noEmit)
+        run: pnpm typecheck
+
+      - name: Check formatting (Prettier)
+        run: pnpm format:check
+
+  test:
+    name: Unit + integration tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run database migrations
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      - name: Run tests
+        run: pnpm test --reporter=verbose
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.sha }}
+          path: "**/coverage/"
+          retention-days: 7
+
+  agpl-check:
+    name: AGPL header check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check AGPL-3.0 header in all source files
+        run: |
+          # Every .ts and .tsx file in apps/ and packages/ must have the AGPL header
+          MISSING=0
+          while IFS= read -r -d '' file; do
+            if ! head -3 "$file" | grep -q "AGPL"; then
+              echo "Missing AGPL header: $file"
+              MISSING=$((MISSING + 1))
+            fi
+          done < <(find apps packages -name "*.ts" -o -name "*.tsx" -print0 2>/dev/null)
+
+          if [[ $MISSING -gt 0 ]]; then
+            echo ""
+            echo "::error::$MISSING file(s) missing AGPL-3.0 header"
+            echo "Add this to the top of each file:"
+            echo "// SPDX-License-Identifier: AGPL-3.0-or-later"
+            echo "// Copyright (C) $(date +%Y) Tahti ry <https://tahti.fi>"
+            exit 1
+          fi
+          echo "✓ All source files have AGPL headers"
+
+  # This job succeeds only when all required jobs pass.
+  # Branch protection can require this single job instead of each individual job.
+  all-checks:
+    name: All checks
+    if: always()
+    needs: [lint-typecheck, test, agpl-check]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.lint-typecheck.result }}" != "success" || \
+                "${{ needs.test.result }}" != "success" || \
+                "${{ needs.agpl-check.result }}" != "success" ]]; then
+            echo "One or more required checks failed"
+            exit 1
+          fi
+          echo "All checks passed ✓"
