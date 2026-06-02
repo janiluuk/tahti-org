@@ -26,6 +26,10 @@ import chatTokenRoute from './routes/chat/token.js'
 import chatMessageRoute from './routes/chat/message.js'
 import chatAnnouncementsRoute from './routes/chat/announcements.js'
 import meChat from './routes/me/chat.js'
+import rtmpTargetRoutes from './routes/me/rtmp-targets.js'
+import transparencyRoutes from './routes/transparency/index.js'
+import adminLedgerRoutes from './routes/admin/ledger.js'
+import rateLimitPlugin from './plugins/rate-limit.js'
 import { config } from './config.js'
 
 export interface BuildOptions {
@@ -42,6 +46,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(sensible)
   await fastify.register(dbPlugin)
   await fastify.register(authPlugin)
+  await fastify.register(rateLimitPlugin)
 
   // Add Source-Code header for AGPL §13 compliance
   fastify.addHook('onSend', async (_request, reply) => {
@@ -73,6 +78,13 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(chatMessageRoute)
   await fastify.register(chatAnnouncementsRoute)
   await fastify.register(meChat)
+
+  // M6: RTMP multistream targets
+  await fastify.register(rtmpTargetRoutes)
+
+  // M8: transparency ledger
+  await fastify.register(transparencyRoutes)
+  await fastify.register(adminLedgerRoutes)
 
   return fastify
 }

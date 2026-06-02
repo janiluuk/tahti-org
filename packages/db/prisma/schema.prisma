@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat"]
+  schemas  = ["core", "channel", "chat", "ledger", "governance"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -53,6 +53,47 @@ enum BroadcastSource {
   WEBRTC
 
   @@schema("channel")
+}
+
+enum RtmpTargetProvider {
+  YOUTUBE
+  TWITCH
+  FACEBOOK
+  MIXCLOUD_LIVE
+  CUSTOM
+
+  @@schema("channel")
+}
+
+enum LedgerCategory {
+  REVENUE_SUBSCRIPTION
+  REVENUE_DISTRIBUTION
+  REVENUE_GRANT_INBOUND
+  REVENUE_DONATION
+  COST_INFRASTRUCTURE
+  COST_DISTRIBUTION_PASSTHROUGH
+  COST_OPERATIONS
+  COST_SALARY
+  COST_AUDIT
+  COST_PROFESSIONAL_SERVICES
+  GRANT_DISBURSEMENT
+  RESERVE_TRANSFER
+
+  @@schema("ledger")
+}
+
+enum AuditAction {
+  CHAT_BAN
+  CHAT_UNBAN
+  CHAT_MESSAGE_DELETE
+  STREAM_KEY_ROTATE
+  RTMP_TARGET_ADD
+  RTMP_TARGET_DELETE
+  LEDGER_ENTRY_CREATE
+  MEMBER_SUSPEND
+  MEMBER_REINSTATE
+
+  @@schema("governance")
 }
 
 // ── Core schema ───────────────────────────────────────────────────────────────
@@ -153,6 +194,7 @@ model Channel {
   broadcasts     Broadcast[]
   announcements  ChannelAnnouncement[]
   chatBans       ChatBan[]
+  rtmpTargets    RtmpTarget[]
 
   @@schema("channel")
 }
@@ -182,17 +224,23 @@ model ChannelAnnouncement {
   @@schema("channel")
 }
 
-// ── Chat schema ───────────────────────────────────────────────────────────────
+// Encrypted stream key stored as base64(nonce+ciphertext); key comes from
+// RTMP_KEY_ENC_KEY env var (32-byte hex). plaintext key never stored unencrypted.
+model RtmpTarget {
+  id           String             @id @default(cuid())
+  channelId    String
+  channel      Channel            @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  provider     RtmpTargetProvider
+  label        String
+  rtmpUrl      String
+  streamKeyEnc String
+  alwaysMirror Boolean            @default(false)
+  enabled      Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
-model ChatBan {
-  id              String   @id @default(cuid())
-  channelId       String
-  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  fingerprintHash String
-  bannedAt        DateTime @default(now())
-
-  @@unique([channelId, fingerprintHash])
-  @@schema("chat")
+  @@index([channelId])
+  @@schema("channel")
 }
 
 model ArchiveItem {
@@ -211,4 +259,62 @@ model ArchiveItem {
 
   @@index([channelId, createdAt(sort: Desc)])
   @@schema("channel")
+}
+
+// ── Chat schema ───────────────────────────────────────────────────────────────
+
+model ChatBan {
+  id              String   @id @default(cuid())
+  channelId       String
+  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  fingerprintHash String
+  bannedAt        DateTime @default(now())
+
+  @@unique([channelId, fingerprintHash])
+  @@schema("chat")
+}
+
+// ── Ledger schema (append-only) ───────────────────────────────────────────────
+
+model LedgerEntry {
+  id           BigInt          @id @default(autoincrement())
+  category     LedgerCategory
+  amountCents  BigInt
+  currency     String          @default("EUR")
+  description  String
+  externalRef  String?
+  periodStart  DateTime
+  periodEnd    DateTime
+  createdAt    DateTime        @default(now())
+  createdBy    String
+
+  @@index([category, periodStart])
+  @@index([createdAt])
+  @@schema("ledger")
+}
+
+model MonthlyRollup {
+  yearMonth   String   @id
+  byCategory  Json
+  surplus     BigInt
+  finalizedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@schema("ledger")
+}
+
+// ── Governance schema ─────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         BigInt      @id @default(autoincrement())
+  action     AuditAction
+  actorId    String
+  targetId   String?
+  meta       Json?
+  createdAt  DateTime    @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@schema("governance")
 }

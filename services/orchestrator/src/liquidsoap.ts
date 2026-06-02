@@ -4,6 +4,7 @@
 import { exec } from 'node:child_process'
 import { readFile, writeFile } from 'node:fs/promises'
 import { promisify } from 'node:util'
+import { createDecipheriv } from 'node:crypto'
 import { prisma } from '@tahti/db'
 
 const execAsync = promisify(exec)
@@ -16,6 +17,18 @@ const HLS_VOLUME = process.env.HLS_VOLUME ?? 'tahti_hls_shared'
 const RECORDINGS_VOLUME = process.env.RECORDINGS_VOLUME ?? 'tahti_recordings_shared'
 const API_URL = process.env.API_URL ?? 'http://api:3001'
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
+
+function decryptKey(enc: string): string {
+  const hex = process.env.RTMP_KEY_ENC_KEY ?? 'dev0000000000000000000000000000000000000000000000000000000000000'
+  const key = Buffer.from(hex.slice(0, 64), 'hex')
+  const buf = Buffer.from(enc, 'base64')
+  const nonce = buf.subarray(0, 12)
+  const tag = buf.subarray(buf.length - 16)
+  const ct = buf.subarray(12, buf.length - 16)
+  const decipher = createDecipheriv('aes-256-gcm', key, nonce)
+  decipher.setAuthTag(tag)
+  return Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8')
+}
 
 // Track running containers: channelId → containerName
 const activeChannels = new Map<string, string>()
@@ -41,21 +54,46 @@ export async function spawnChannel(
       slug: true,
       liveSourcePass: true,
       fallbackMode: true,
+      rtmpTargets: {
+        where: { enabled: true },
+        select: { provider: true, rtmpUrl: true, streamKeyEnc: true, alwaysMirror: true },
+      },
     },
   })
 
   if (!channel) throw new Error(`Channel ${channelId} not found`)
 
+  // Decrypt RTMP stream keys
+  const targets = channel.rtmpTargets.map((t) => ({
+    provider: t.provider,
+    rtmpUrl: t.rtmpUrl,
+    streamKey: decryptKey(t.streamKeyEnc),
+    alwaysMirror: t.alwaysMirror,
+  }))
+
   // Render Liquidsoap config from template
   const templateRaw = await readFile(TEMPLATE_PATH, 'utf8')
-  const config = templateRaw
+  let config = templateRaw
     .replace(/\{\{CHANNEL_ID\}\}/g, channelId)
     .replace(/\{\{LIVE_SOURCE_PASSWORD\}\}/g, channel.liveSourcePass)
     .replace(/\{\{HARBOR_INPUT_PORT\}\}/g, '8001')
     .replace(/\{\{HARBOR_NOWPLAYING_PORT\}\}/g, '8002')
     .replace(/\{\{FALLBACK_MODE\}\}/g, channel.fallbackMode)
     .replace(/\{\{API_URL\}\}/g, API_URL)
-    .replace(/\{\{RTMP_TARGETS\}\}[\s\S]*?\{\{\/RTMP_TARGETS\}\}/g, '')
+
+  if (targets.length === 0) {
+    // Strip the entire RTMP_TARGETS block
+    config = config.replace(/\{\{#RTMP_TARGETS\}\}[\s\S]*?\{\{\/RTMP_TARGETS\}\}/g, '')
+  } else {
+    // Replace the template block with rendered outputs
+    const rtmpBlock = targets
+      .map((t) => {
+        const alwaysMirrorFlag = t.alwaysMirror ? '1' : ''
+        return `output.url(\n  url="${t.rtmpUrl}/${t.streamKey}",\n  fallible=true,\n  %ffmpeg(format="flv", %audio(codec="aac", b="128k")),\n  ${alwaysMirrorFlag ? 'radio' : 'live_source'}\n)`
+      })
+      .join('\n\n')
+    config = config.replace(/\{\{#RTMP_TARGETS\}\}[\s\S]*?\{\{\/RTMP_TARGETS\}\}/g, rtmpBlock)
+  }
 
   const configPath = `/tmp/liquidsoap-${channelId}.liq`
   await writeFile(configPath, config)

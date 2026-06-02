@@ -37,4 +37,6 @@ export const config = {
   hlsBaseUrl: process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live',
   rtmpIngestHost: process.env.RTMP_INGEST_HOST ?? 'localhost',
   icecastHost: process.env.ICECAST_HOST ?? 'localhost:8100',
+  rtmpKeyEncKey: process.env.RTMP_KEY_ENC_KEY ?? 'dev0000000000000000000000000000000000000000000000000000000000000',
+  hcaptchaSecret: process.env.HCAPTCHA_SECRET ?? 'dev',
 }

@@ -6,6 +6,7 @@ import { RegisterSchema } from '@tahti/shared'
 import { hashPassword } from '../../lib/password.js'
 import { generateVerificationToken, verificationExpiresAt } from '../../lib/token.js'
 import { sendVerificationEmail } from '../../lib/email.js'
+import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 import { nanoid } from 'nanoid'
 
 const registerRoute: FastifyPluginAsync = async (fastify) => {
@@ -19,6 +20,10 @@ const registerRoute: FastifyPluginAsync = async (fastify) => {
     }
 
     const { email, password, username, displayName } = parsed.data
+    const hcaptchaToken = (request.body as { hcaptchaToken?: string }).hcaptchaToken
+    if (!(await verifyHcaptcha(hcaptchaToken))) {
+      return reply.status(400).send({ error: 'hCaptcha verification failed' })
+    }
 
     // Check uniqueness
     const existing = await fastify.prisma.user.findFirst({

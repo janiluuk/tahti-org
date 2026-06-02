@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import UploadForm from './upload-form.js'
 import StreamSettingsPanel from './stream-settings.js'
+import RtmpTargetsPanel from './rtmp-targets.js'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }
@@ -21,6 +22,15 @@ interface MeResponse {
   emailVerifiedAt: string | null
   membership: { status: string; activatedAt: string | null } | null
   channel: { slug: string; state: string } | null
+}
+
+interface RtmpTarget {
+  id: string
+  provider: string
+  label: string
+  rtmpUrl: string
+  alwaysMirror: boolean
+  enabled: boolean
 }
 
 interface ArchiveItem {
@@ -69,6 +79,17 @@ export default async function DashboardPage() {
     } catch {
       // ignore
     }
+  }
+
+  let rtmpTargets: RtmpTarget[] = []
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/rtmp-targets`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) rtmpTargets = (await res.json()) as RtmpTarget[]
+    } catch { /* ignore */ }
   }
 
   let archiveItems: ArchiveItem[] = []
@@ -134,6 +155,10 @@ export default async function DashboardPage() {
 
       {user.channel && streamSettings && (
         <StreamSettingsPanel initial={streamSettings} />
+      )}
+
+      {user.channel && (
+        <RtmpTargetsPanel initial={rtmpTargets} />
       )}
 
       {user.channel && (
