@@ -1,7 +1,11 @@
-# CI — website Docker build (always) + monorepo lint/test (when pnpm-lock.yaml exists)
+# CI — website Docker build (always) + monorepo lint/test/agpl-check (when pnpm-lock.yaml exists)
 #
-# Monorepo jobs activate automatically once the Phase 2 app scaffold lands
-# (root package.json + pnpm-lock.yaml). Until then, only the website image build runs.
+# Monorepo jobs (lint-typecheck, test, agpl-check) activate automatically once
+# pnpm-lock.yaml is committed (Phase 4 M0 scaffold). Until then only the website
+# image build runs.
+#
+# e2e-phase4 is a separate workflow (e2e-phase4.yml) — it runs against a live
+# deployment and must be triggered manually or via deploy hooks.
 
 name: CI
 
@@ -39,7 +43,7 @@ jobs:
     name: Lint & typecheck
     if: hashFiles('pnpm-lock.yaml') != ''
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -57,6 +61,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
       - name: Lint (ESLint)
         run: pnpm lint
 
@@ -70,7 +77,7 @@ jobs:
     name: Unit + integration tests
     if: hashFiles('pnpm-lock.yaml') != ''
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     services:
       postgres:
@@ -118,7 +125,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run database migrations
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema (test database)
         run: pnpm --filter @tahti/db db:migrate:test
 
       - name: Run tests
@@ -149,14 +159,19 @@ jobs:
               echo "Missing AGPL header: $file"
               MISSING=$((MISSING + 1))
             fi
-          done < <(find apps packages -name "*.ts" -o -name "*.tsx" -print0 2>/dev/null)
+          done < <(find apps packages \( -name "*.ts" -o -name "*.tsx" \) \
+            -not -path "*/node_modules/*" \
+            -not -path "*/dist/*" \
+            -not -path "*/.next/*" \
+            -not -name "*.d.ts" \
+            -print0 2>/dev/null)
 
           if [[ $MISSING -gt 0 ]]; then
             echo ""
             echo "::error::$MISSING file(s) missing AGPL-3.0 header"
             exit 1
           fi
-          echo "✓ All source files have AGPL headers"
+          echo "✓ All source files have AGPL-3.0 headers"
 
   all-checks:
     name: All checks
