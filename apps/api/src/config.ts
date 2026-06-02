@@ -28,4 +28,13 @@ export const config = {
     publicEndpoint: process.env.MINIO_PUBLIC_ENDPOINT ?? 'http://localhost:9000',
   },
   internalSecret: process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod',
+  centrifugo: {
+    apiUrl: process.env.CENTRIFUGO_API_URL ?? 'http://localhost:8000/api',
+    apiKey: process.env.CENTRIFUGO_API_KEY ?? 'dev',
+    jwtSecret: process.env.CENTRIFUGO_JWT_SECRET ?? 'dev_secret_do_not_use_in_prod',
+  },
+  orchestratorUrl: process.env.ORCHESTRATOR_URL ?? 'http://localhost:3003',
+  hlsBaseUrl: process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live',
+  rtmpIngestHost: process.env.RTMP_INGEST_HOST ?? 'localhost',
+  icecastHost: process.env.ICECAST_HOST ?? 'localhost:8100',
 }

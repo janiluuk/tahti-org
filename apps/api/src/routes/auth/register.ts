@@ -37,8 +37,10 @@ const registerRoute: FastifyPluginAsync = async (fastify) => {
     const channelSlug = username
     // Generate live source credentials (rotatable later from dashboard)
     const liveSourceMount = `/live/${channelSlug}`
-    const liveSourcePassHash = await hashPassword(nanoid(24))
-    const rtmpStreamKeyHash = await hashPassword(nanoid(32))
+    const liveSourcePass = nanoid(24)
+    const rtmpStreamKey = `${channelSlug}__${nanoid(32)}`
+    const liveSourcePassHash = await hashPassword(liveSourcePass)
+    const rtmpStreamKeyHash = await hashPassword(rtmpStreamKey)
 
     const user = await fastify.prisma.$transaction(async (tx) => {
       const u = await tx.user.create({
@@ -52,7 +54,9 @@ const registerRoute: FastifyPluginAsync = async (fastify) => {
             create: {
               slug: channelSlug,
               liveSourceMount,
+              liveSourcePass,
               liveSourcePassHash,
+              rtmpStreamKey,
               rtmpStreamKeyHash,
             },
           },

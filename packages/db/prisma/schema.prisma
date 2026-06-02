@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel"]
+  schemas  = ["core", "channel", "chat"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -43,6 +43,14 @@ enum ArchiveItemStatus {
   PROCESSING
   READY
   ERROR
+
+  @@schema("channel")
+}
+
+enum BroadcastSource {
+  RTMP
+  ICECAST
+  WEBRTC
 
   @@schema("channel")
 }
@@ -129,17 +137,62 @@ model Channel {
   state              ChannelState @default(OFFLINE)
   containerId        String?
   liveSourceMount    String
+  liveSourcePass     String
   liveSourcePassHash String
+  rtmpStreamKey      String
   rtmpStreamKeyHash  String
+  webrtcTokenHash    String?
+  fallbackMode       String       @default("shuffle")
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
   goneLiveAt         DateTime?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
-  archiveItems ArchiveItem[]
+  archiveItems   ArchiveItem[]
+  broadcasts     Broadcast[]
+  announcements  ChannelAnnouncement[]
+  chatBans       ChatBan[]
 
   @@schema("channel")
+}
+
+model Broadcast {
+  id            String          @id @default(cuid())
+  channelId     String
+  channel       Channel         @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  source        BroadcastSource
+  startedAt     DateTime        @default(now())
+  endedAt       DateTime?
+  recordingKey  String?
+  archiveItemId String?         @unique
+
+  @@index([channelId, startedAt(sort: Desc)])
+  @@schema("channel")
+}
+
+model ChannelAnnouncement {
+  id        String   @id @default(cuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([channelId, createdAt(sort: Desc)])
+  @@schema("channel")
+}
+
+// ── Chat schema ───────────────────────────────────────────────────────────────
+
+model ChatBan {
+  id              String   @id @default(cuid())
+  channelId       String
+  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  fingerprintHash String
+  bannedAt        DateTime @default(now())
+
+  @@unique([channelId, fingerprintHash])
+  @@schema("chat")
 }
 
 model ArchiveItem {

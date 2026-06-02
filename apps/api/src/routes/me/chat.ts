@@ -1,0 +1,120 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+
+import type { FastifyPluginAsync } from 'fastify'
+import { requireAuth } from '../../plugins/auth.js'
+
+const meChat: FastifyPluginAsync = async (fastify) => {
+  // POST /api/me/chat/announcements { body: string }
+  fastify.post('/api/me/chat/announcements', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const { body: text } = (request.body as { body?: string }) ?? {}
+
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return reply.status(400).send({ error: 'body is required' })
+    }
+
+    const channel = await fastify.prisma.channel.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    })
+
+    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+    // Max 3 announcements: delete the oldest if already at limit
+    const existing = await fastify.prisma.channelAnnouncement.findMany({
+      where: { channelId: channel.id },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    if (existing.length >= 3) {
+      await fastify.prisma.channelAnnouncement.delete({
+        where: { id: existing[0]!.id },
+      })
+    }
+
+    const announcement = await fastify.prisma.channelAnnouncement.create({
+      data: { channelId: channel.id, body: text.trim().slice(0, 500) },
+    })
+
+    return reply.status(201).send(announcement)
+  })
+
+  // DELETE /api/me/chat/announcements/:id
+  fastify.delete(
+    '/api/me/chat/announcements/:id',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
+
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      const announcement = await fastify.prisma.channelAnnouncement.findFirst({
+        where: { id, channelId: channel.id },
+      })
+
+      if (!announcement) return reply.status(404).send({ error: 'Not found' })
+
+      await fastify.prisma.channelAnnouncement.delete({ where: { id } })
+      return reply.status(204).send()
+    },
+  )
+
+  // POST /api/me/chat/ban { fingerprintHash: string }
+  fastify.post('/api/me/chat/ban', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const { fingerprintHash } = (request.body as { fingerprintHash?: string }) ?? {}
+
+    if (!fingerprintHash || typeof fingerprintHash !== 'string') {
+      return reply.status(400).send({ error: 'fingerprintHash is required' })
+    }
+
+    const channel = await fastify.prisma.channel.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    })
+
+    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+    await fastify.prisma.chatBan.upsert({
+      where: {
+        channelId_fingerprintHash: { channelId: channel.id, fingerprintHash },
+      },
+      create: { channelId: channel.id, fingerprintHash },
+      update: { bannedAt: new Date() },
+    })
+
+    return reply.status(201).send({ ok: true })
+  })
+
+  // DELETE /api/me/chat/ban/:fingerprintHash
+  fastify.delete(
+    '/api/me/chat/ban/:fingerprintHash',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { fingerprintHash } = request.params as { fingerprintHash: string }
+
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      await fastify.prisma.chatBan.deleteMany({
+        where: { channelId: channel.id, fingerprintHash },
+      })
+
+      return reply.status(204).send()
+    },
+  )
+}
+
+export default meChat

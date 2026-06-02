@@ -4,6 +4,13 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import UploadForm from './upload-form.js'
+import StreamSettingsPanel from './stream-settings.js'
+
+interface StreamSettings {
+  rtmp: { server: string; streamKey: string }
+  icecast: { server: string; mount: string; password: string }
+  hlsUrl: string
+}
 
 interface MeResponse {
   id: string
@@ -47,6 +54,21 @@ export default async function DashboardPage() {
     user = (await response.json()) as MeResponse
   } catch {
     redirect('/login')
+  }
+
+  let streamSettings: StreamSettings | null = null
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/stream-settings`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        streamSettings = (await res.json()) as StreamSettings
+      }
+    } catch {
+      // ignore
+    }
   }
 
   let archiveItems: ArchiveItem[] = []
@@ -108,6 +130,10 @@ export default async function DashboardPage() {
             </span>
           </p>
         </section>
+      )}
+
+      {user.channel && streamSettings && (
+        <StreamSettingsPanel initial={streamSettings} />
       )}
 
       {user.channel && (

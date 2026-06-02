@@ -42,7 +42,9 @@ describe('POST /api/uploads/prepare', () => {
           create: {
             slug: 'prepare-upload-testuser',
             liveSourceMount: '/live/prepare-upload-testuser',
-            liveSourcePassHash: 'dummy',
+            liveSourcePass: 'dummypass',
+              liveSourcePassHash: 'dummy',
+              rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },

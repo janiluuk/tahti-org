@@ -32,7 +32,9 @@ describe('POST /api/auth/login', () => {
           create: {
             slug: 'login-test-user',
             liveSourceMount: '/live/login-test-user',
-            liveSourcePassHash: 'dummy',
+            liveSourcePass: 'dummypass',
+              liveSourcePassHash: 'dummy',
+              rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },
@@ -106,7 +108,9 @@ describe('POST /api/auth/login', () => {
           create: {
             slug: 'login-test-unverified',
             liveSourceMount: '/live/login-test-unverified',
-            liveSourcePassHash: 'dummy',
+            liveSourcePass: 'dummypass',
+              liveSourcePassHash: 'dummy',
+              rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },
@@ -210,7 +214,9 @@ describe('GET /api/auth/verify', () => {
           create: {
             slug: 'login-test-verify',
             liveSourceMount: '/live/login-test-verify',
-            liveSourcePassHash: 'dummy',
+            liveSourcePass: 'dummypass',
+              liveSourcePassHash: 'dummy',
+              rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },
@@ -255,7 +261,9 @@ describe('GET /api/auth/verify', () => {
           create: {
             slug: 'login-test-expired',
             liveSourceMount: '/live/login-test-expired',
-            liveSourcePassHash: 'dummy',
+            liveSourcePass: 'dummypass',
+              liveSourcePassHash: 'dummy',
+              rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },
