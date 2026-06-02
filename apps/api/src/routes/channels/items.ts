@@ -35,7 +35,11 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
     const itemsWithUrls = await Promise.all(
       items.map(async (item) => {
         const audioUrl = item.mp3Key ? await presignedGetUrl(item.mp3Key, 3600) : null
-        return { ...item, audioUrl }
+        return {
+          ...item,
+          fileSizeBytes: Number(item.fileSizeBytes),
+          audioUrl,
+        }
       }),
     )
 
