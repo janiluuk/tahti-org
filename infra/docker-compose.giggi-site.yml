@@ -1,0 +1,202 @@
+# Tahti — giggi-site staging/production compose
+#
+# Host: 192.168.2.100  Path: /srv/giggi-site
+#
+# Prerequisites on the host:
+#   mkdir -p /srv/giggi-site/data/{postgres,redis,minio,prometheus,grafana,minio-backups}
+#   cp infra/.env.giggi-site.example /srv/giggi-site/.env  && vim /srv/giggi-site/.env
+#
+# Start:
+#   cd /srv/giggi-site
+#   docker compose -f docker-compose.yml up -d
+#
+# All containers share the isolated 'giggi-net' bridge — nothing reaches the
+# outside except through the explicitly published ports below.
+#
+# Data directories are bind-mounted to /srv/giggi-site/data/* so that backing
+# them up is a plain rsync/borg job against the host filesystem.
+
+services:
+
+  # ── Stateful layer ─────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tahti}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-tahti}
+    volumes:
+      - /srv/giggi-site/data/postgres:/var/lib/postgresql/data
+    networks:
+      - giggi-net
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-tahti}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - /srv/giggi-site/data/redis:/data
+    networks:
+      - giggi-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-tahti}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - /srv/giggi-site/data/minio:/data
+    networks:
+      - giggi-net
+    ports:
+      - "127.0.0.1:9000:9000"   # S3 API — reverse-proxy only
+      - "127.0.0.1:9001:9001"   # MinIO console — local access only
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Monitoring ─────────────────────────────────────────────────────────────
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - /srv/giggi-site/data/prometheus:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - giggi-net
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_SERVER_ROOT_URL: "${APP_URL:-http://localhost}/grafana"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    volumes:
+      - /srv/giggi-site/data/grafana:/var/lib/grafana
+    networks:
+      - giggi-net
+    ports:
+      - "127.0.0.1:3100:3000"   # Grafana — local access only
+
+  # ── Chat (Centrifugo) ──────────────────────────────────────────────────────
+
+  centrifugo:
+    image: centrifugo/centrifugo:v5
+    restart: unless-stopped
+    command: centrifugo --port=8000 --api_key=${CENTRIFUGO_API_KEY}
+    environment:
+      CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_SECRET}
+      CENTRIFUGO_ALLOWED_ORIGINS: "${APP_URL:-http://localhost}"
+    networks:
+      - giggi-net
+    ports:
+      - "127.0.0.1:8000:8000"   # Centrifugo — reverse-proxy only
+
+  # ── Email ─────────────────────────────────────────────────────────────────
+
+  mailhog:
+    # Dev/staging only — replace with real SMTP in prod
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
+    networks:
+      - giggi-net
+    ports:
+      - "127.0.0.1:8025:8025"   # MailHog web UI — local access only
+
+  # ── Application layer ──────────────────────────────────────────────────────
+
+  api:
+    image: ${REGISTRY:-registry.tahti.fi}/tahti/api:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: >-
+        postgres://${POSTGRES_USER:-tahti}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-tahti}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      SESSION_SECRET: ${SESSION_SECRET}
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+      SMTP_FROM: "Tahti <noreply@tahti.fi>"
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      API_URL: ${API_URL:-http://localhost:3001}
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-tahti}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: tahti
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
+      INTERNAL_SECRET: ${INTERNAL_SECRET}
+    networks:
+      - giggi-net
+    ports:
+      - "127.0.0.1:3001:3001"   # API — reverse-proxy only
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:3001/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  web:
+    image: ${REGISTRY:-registry.tahti.fi}/tahti/web:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      API_URL: http://api:3001
+    networks:
+      - giggi-net
+    ports:
+      - "127.0.0.1:3000:3000"   # Next.js — reverse-proxy only
+
+  worker:
+    image: ${REGISTRY:-registry.tahti.fi}/tahti/worker:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: >-
+        postgres://${POSTGRES_USER:-tahti}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-tahti}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-tahti}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: tahti
+    networks:
+      - giggi-net
+
+networks:
+  giggi-net:
+    driver: bridge
+    name: giggi-net

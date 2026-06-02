@@ -20,4 +20,12 @@ export const config = {
   apiUrl: process.env.API_URL ?? 'http://localhost:3001',
   sourceRepoUrl: 'https://github.com/tahtiapp/tahti',
   isProd: process.env.NODE_ENV === 'production',
+  minio: {
+    endpoint: process.env.MINIO_ENDPOINT ?? 'http://localhost:9000',
+    accessKey: process.env.MINIO_ACCESS_KEY ?? 'tahti',
+    secretKey: process.env.MINIO_SECRET_KEY ?? 'tahti_dev_secret',
+    bucket: process.env.MINIO_BUCKET ?? 'tahti',
+    publicEndpoint: process.env.MINIO_PUBLIC_ENDPOINT ?? 'http://localhost:9000',
+  },
+  internalSecret: process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod',
 }

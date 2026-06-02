@@ -6,7 +6,8 @@
 #   docker build -f apps/worker/Dockerfile -t tahti/worker .
 
 FROM node:20-alpine
-RUN corepack enable && corepack prepare pnpm@9 --activate && \
+RUN apk add --no-cache ffmpeg && \
+    corepack enable && corepack prepare pnpm@9 --activate && \
     npm install -g tsx@4
 
 WORKDIR /app
