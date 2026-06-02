@@ -3,7 +3,6 @@
 
 import { exec } from 'node:child_process'
 import { readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { prisma } from '@tahti/db'
 

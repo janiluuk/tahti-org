@@ -159,7 +159,7 @@ jobs:
               echo "Missing AGPL header: $file"
               MISSING=$((MISSING + 1))
             fi
-          done < <(find apps packages \( -name "*.ts" -o -name "*.tsx" \) \
+          done < <(find apps packages services \( -name "*.ts" -o -name "*.tsx" \) \
             -not -path "*/node_modules/*" \
             -not -path "*/dist/*" \
             -not -path "*/.next/*" \
