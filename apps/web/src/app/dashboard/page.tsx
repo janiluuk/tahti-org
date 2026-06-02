@@ -3,6 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import UploadForm from './upload-form.js'
 
 interface MeResponse {
   id: string
@@ -13,6 +14,15 @@ interface MeResponse {
   emailVerifiedAt: string | null
   membership: { status: string; activatedAt: string | null } | null
   channel: { slug: string; state: string } | null
+}
+
+interface ArchiveItem {
+  id: string
+  title: string
+  description: string | null
+  durationSec: number | null
+  audioUrl: string | null
+  createdAt: string
 }
 
 export default async function DashboardPage() {
@@ -37,6 +47,20 @@ export default async function DashboardPage() {
     user = (await response.json()) as MeResponse
   } catch {
     redirect('/login')
+  }
+
+  let archiveItems: ArchiveItem[] = []
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/channels/${user.channel.slug}/items`, {
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        archiveItems = (await res.json()) as ArchiveItem[]
+      }
+    } catch {
+      // ignore — items section just shows empty
+    }
   }
 
   return (
@@ -72,7 +96,10 @@ export default async function DashboardPage() {
         >
           <h2 style={{ margin: '0 0 1rem' }}>Your channel</h2>
           <p style={{ margin: '0.25rem 0' }}>
-            <strong>URL:</strong> <code>{user.channel.slug}.tahti.fi</code>
+            <strong>URL:</strong>{' '}
+            <a href={`/c/${user.channel.slug}`}>
+              <code>{user.channel.slug}.tahti.fi</code>
+            </a>
           </p>
           <p style={{ margin: '0.25rem 0' }}>
             <strong>Status:</strong>{' '}
@@ -83,9 +110,51 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <p style={{ marginTop: '2rem', color: '#999', fontSize: '0.9rem' }}>
-        Broadcasting and archive features are coming in the next update.
-      </p>
+      {user.channel && (
+        <section
+          style={{
+            marginTop: '2rem',
+            padding: '1.5rem',
+            border: '1px solid #eee',
+            borderRadius: 8,
+          }}
+        >
+          <h2 style={{ margin: '0 0 1rem' }}>Archive</h2>
+
+          <UploadForm />
+
+          {archiveItems.length === 0 ? (
+            <p style={{ color: '#999', marginTop: '1.5rem' }}>No archive items yet.</p>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, marginTop: '1.5rem' }}>
+              {archiveItems.map((item) => (
+                <li
+                  key={item.id}
+                  style={{
+                    padding: '0.75rem 0',
+                    borderBottom: '1px solid #f0f0f0',
+                  }}
+                >
+                  <div style={{ fontWeight: 500 }}>{item.title}</div>
+                  {item.durationSec != null && (
+                    <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                      {Math.floor(item.durationSec / 60)}:
+                      {String(item.durationSec % 60).padStart(2, '0')}
+                    </div>
+                  )}
+                  {item.audioUrl && (
+                    <audio
+                      controls
+                      src={item.audioUrl}
+                      style={{ marginTop: '0.5rem', width: '100%' }}
+                    />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </div>
   )
 }

@@ -13,6 +13,11 @@ import verifyRoute from './routes/auth/verify.js'
 import loginRoute from './routes/auth/login.js'
 import logoutRoute from './routes/auth/logout.js'
 import meRoute from './routes/auth/me.js'
+import prepareUploadRoute from './routes/uploads/prepare.js'
+import completeUploadRoute from './routes/uploads/complete.js'
+import channelGetRoute from './routes/channels/get.js'
+import channelItemsRoute from './routes/channels/items.js'
+import itemReadyRoute from './routes/internal/item-ready.js'
 import { config } from './config.js'
 
 export interface BuildOptions {
@@ -43,6 +48,11 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(loginRoute)
   await fastify.register(logoutRoute)
   await fastify.register(meRoute)
+  await fastify.register(prepareUploadRoute)
+  await fastify.register(completeUploadRoute)
+  await fastify.register(channelGetRoute)
+  await fastify.register(channelItemsRoute)
+  await fastify.register(itemReadyRoute)
 
   return fastify
 }

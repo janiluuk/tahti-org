@@ -1,10 +1,6 @@
 {
   "log_level": "info",
-  "allowed_origins": [
-    "https://tahti.fi",
-    "https://www.tahti.fi",
-    "https://app.tahti.fi"
-  ],
+  "allowed_origins": ["https://tahti.fi", "https://www.tahti.fi", "https://app.tahti.fi"],
   "websocket_compression": true,
   "client_anonymous": false,
   "history_size": 100,

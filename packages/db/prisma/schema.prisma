@@ -38,6 +38,15 @@ enum ChannelState {
   @@schema("channel")
 }
 
+enum ArchiveItemStatus {
+  PENDING
+  PROCESSING
+  READY
+  ERROR
+
+  @@schema("channel")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model User {
@@ -128,5 +137,25 @@ model Channel {
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
+  archiveItems ArchiveItem[]
+
+  @@schema("channel")
+}
+
+model ArchiveItem {
+  id            String            @id @default(cuid())
+  channelId     String
+  channel       Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  rawKey        String
+  mp3Key        String?
+  durationSec   Int?
+  fileSizeBytes BigInt
+  status        ArchiveItemStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([channelId, createdAt(sort: Desc)])
   @@schema("channel")
 }
