@@ -38,27 +38,23 @@ dev-down:
 	$(COMPOSE) down
 
 # ── Build ─────────────────────────────────────────────────────────────────────
-build: build-website build-api build-web build-worker build-orchestrator
+build: build-website build-api build-web build-worker
 
 build-website:
 	docker build -t $(REGISTRY)/tahti/website:$(TAG) website/
 	docker tag $(REGISTRY)/tahti/website:$(TAG) $(REGISTRY)/tahti/website:latest
 
 build-api:
-	docker build -t $(REGISTRY)/tahti/api:$(TAG) api/
+	docker build -f apps/api/Dockerfile -t $(REGISTRY)/tahti/api:$(TAG) .
 	docker tag $(REGISTRY)/tahti/api:$(TAG) $(REGISTRY)/tahti/api:latest
 
 build-web:
-	docker build -t $(REGISTRY)/tahti/web:$(TAG) web/
+	docker build -f apps/web/Dockerfile -t $(REGISTRY)/tahti/web:$(TAG) .
 	docker tag $(REGISTRY)/tahti/web:$(TAG) $(REGISTRY)/tahti/web:latest
 
 build-worker:
-	docker build -t $(REGISTRY)/tahti/worker:$(TAG) worker/
+	docker build -f apps/worker/Dockerfile -t $(REGISTRY)/tahti/worker:$(TAG) .
 	docker tag $(REGISTRY)/tahti/worker:$(TAG) $(REGISTRY)/tahti/worker:latest
-
-build-orchestrator:
-	docker build -t $(REGISTRY)/tahti/orchestrator:$(TAG) orchestrator/
-	docker tag $(REGISTRY)/tahti/orchestrator:$(TAG) $(REGISTRY)/tahti/orchestrator:latest
 
 push:
 	docker push $(REGISTRY)/tahti/website:$(TAG)
@@ -69,8 +65,6 @@ push:
 	docker push $(REGISTRY)/tahti/web:latest
 	docker push $(REGISTRY)/tahti/worker:$(TAG)
 	docker push $(REGISTRY)/tahti/worker:latest
-	docker push $(REGISTRY)/tahti/orchestrator:$(TAG)
-	docker push $(REGISTRY)/tahti/orchestrator:latest
 
 # ── Production ────────────────────────────────────────────────────────────────
 deploy:
@@ -82,7 +76,7 @@ deploy:
 		$(STACK_NAME)
 
 rollback:
-	@for svc in website api web worker-media worker-dist worker-light chat orchestrator; do \
+	@for svc in website api web worker-media worker-light chat; do \
 		docker service rollback $(STACK_NAME)_$$svc || true; \
 	done
 

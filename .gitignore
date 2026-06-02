@@ -12,6 +12,12 @@ dist/
 .next/
 .pnpm-store/
 
+# Turbo cache
+.turbo/
+
+# TypeScript
+*.tsbuildinfo
+
 # Build artefacts
 *.tgz
 *.tar.gz

@@ -1,0 +1,132 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["core", "channel"]
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
+
+enum ArtistTier {
+  FREE
+  ARTIST
+  STUDIO
+
+  @@schema("core")
+}
+
+enum MembershipStatus {
+  PENDING_EMAIL
+  ACTIVE
+  SUSPENDED
+  RESIGNED
+
+  @@schema("core")
+}
+
+enum ChannelState {
+  OFFLINE
+  LIVE
+
+  @@schema("channel")
+}
+
+// ── Core schema ───────────────────────────────────────────────────────────────
+
+model User {
+  id                    String     @id @default(cuid())
+  email                 String     @unique
+  emailVerifiedAt       DateTime?
+  passwordHash          String
+  username              String     @unique
+  displayName           String
+  bio                   String?
+  avatarUrl             String?
+  socialLinks           Json?
+  tipJarUrl             String?
+  tier                  ArtistTier @default(FREE)
+  isMember              Boolean    @default(false)
+  memberNumber          Int?       @unique
+  memberSince           DateTime?
+  publicAttribution     Boolean    @default(true)
+  stripeCustomerId      String?
+  softTargetBytes       BigInt     @default(524288000)
+  hiddenCeilingBytes    BigInt     @default(53687091200)
+  storageUsedBytes      BigInt     @default(0)
+  weeklyLiveSecondsUsed Int        @default(0)
+  weeklyLiveResetAt     DateTime?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  sessions           Session[]
+  emailVerifications EmailVerification[]
+  membership         Membership?
+  channel            Channel?
+
+  @@schema("core")
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@schema("core")
+}
+
+model EmailVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([token])
+  @@schema("core")
+}
+
+model Membership {
+  id          String           @id @default(cuid())
+  userId      String           @unique
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      MembershipStatus @default(PENDING_EMAIL)
+  activatedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@schema("core")
+}
+
+// ── Channel schema ────────────────────────────────────────────────────────────
+
+model Channel {
+  id                 String       @id @default(cuid())
+  userId             String       @unique
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug               String       @unique
+  customDomain       String?
+  state              ChannelState @default(OFFLINE)
+  containerId        String?
+  liveSourceMount    String
+  liveSourcePassHash String
+  rtmpStreamKeyHash  String
+  totalLiveHours     Float        @default(0)
+  totalListenerHours BigInt       @default(0)
+  goneLiveAt         DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@schema("channel")
+}

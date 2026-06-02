@@ -1,0 +1,40 @@
+# E2E exit criteria — Phase 4 (M0-M1)
+# Runs the phase-4.sh exit-criteria script against a live or staging environment.
+# Triggered manually or via a deploy hook (e.g. after `make deploy`).
+#
+# Required secrets:
+#   E2E_API_URL    — Fastify API base URL  (e.g. https://api.tahti.fi)
+#   E2E_APP_URL    — Next.js web base URL  (e.g. https://app.tahti.fi)
+#   E2E_MAILHOG_URL — MailHog base URL     (optional; skip token tests if absent)
+
+name: E2E — Phase 4
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: "API base URL (overrides secret)"
+        required: false
+      app_url:
+        description: "Web app base URL (overrides secret)"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  phase4-exit-criteria:
+    name: Phase 4 exit criteria
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    env:
+      API_URL: ${{ github.event.inputs.api_url || secrets.E2E_API_URL || 'http://localhost:3001' }}
+      APP_URL: ${{ github.event.inputs.app_url || secrets.E2E_APP_URL || 'http://localhost:3000' }}
+      MAILHOG_URL: ${{ secrets.E2E_MAILHOG_URL || '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Phase 4 exit criteria
+        run: bash tests/e2e/phase-4.sh
