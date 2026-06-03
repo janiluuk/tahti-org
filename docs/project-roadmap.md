@@ -69,22 +69,25 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
 | **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence |
 | **M6** Multistream RTMP | ✅ Done | Per-channel targets, encrypted stream keys, `alwaysMirror` gated to STUDIO |
-| **M7** Distribution (Mixcloud) | 🟡 Partial | `packages/mixcloud` client (stub mode when MIXCLOUD_CLIENT_ID unset), `MixUpload` model, `mixcloud-upload` worker job, `POST /api/me/archive/:itemId/mixcloud` + status GET. Deferred: Revelator DSP (`packages/revelator`), Mixcloud OAuth UI, release submission wizard |
+| **M7** Distribution (Mixcloud) | 🟡 Partial | `packages/mixcloud` client (stub mode when MIXCLOUD_CLIENT_ID unset), `MixUpload` model, `mixcloud-upload` worker job, `POST /api/me/archive/:itemId/mixcloud` + status GET. Deferred: Revelator DSP (`packages/revelator`), Mixcloud OAuth UI, release submission wizard. **See also M30** (MusicBrainz + release-ops tooling) |
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
-| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + chat token), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth). Deferred: Upptime, backup drills, structured request logging |
-| **M12** Profile + releases | 🟡 Partial | Release CRUD, track upload + transcode queue, public profile, OG, smart links, DSP editor. Deferred: profile playback via `archiveItemId`, release artwork to MinIO |
+| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + chat token join), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth), shared `lib/csv.ts`. Deferred: Upptime, **backup/DR infra + restore drills** (see [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)), structured request logging |
+| **M12** Profile + releases | 🟡 Partial | Release CRUD, `TrackStatus` + audio fields on `ReleaseTrack`, track upload + transcode queue, public profile, OG, smart links, DSP editor. Deferred: profile playback via `archiveItemId`, release artwork to MinIO |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, **web `/embed/r/[id]` + `/embed/c/[slug]`** (iframe-safe headers). Deferred: social auto-post, smart-link analytics |
+| **M24** Per-content visuals | 🟡 Partial | Channel **gallery modes**: static strip + **Twisted Wave GLSL** (WebGL shaders, user image URLs). Per-item `bannerUrl`, `backgroundUrl`, `slideshowUrls` on archive metadata. Deferred: YouTube/Vimeo backdrop, per-item visualMode on playback page |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
 | **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
 | **M17** Venue calendar | 🟡 Partial | `venue` schema (Venue/VenueBroadcast), `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`, venue + broadcast create endpoints. Deferred: admin verification UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
-| **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes, fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
-| **M22** Archive metadata | 🟡 Partial | Hearthis-style upload metadata (genre, type, BPM/key, license, access gates, visuals) with sensible defaults; upload form + dashboard editor; TBPM tag detection. Deferred: editable tracklists, repost/follow download gates |
+| **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
+| **M22** Archive metadata | 🟡 Partial | Hearthis-style upload metadata (genre, type, BPM/key, license, access gates, visuals) with sensible defaults; upload form + dashboard editor; TBPM tag detection. Deferred: **editable tracklist UI**, **@artist tagging in tracklists** (M15 + `artistUsername` on rows), repost/follow download gates |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS with CDN enclosure URLs, release items, profile + `/u/:user/c/:slug` + dashboard collections panel. Deferred: drag reorder, featured collections on smart links |
 | **M28** Track version history | ❌ Not started | Today: single `mixVersion` label on archive items. Deferred: upload new audio as a version of the same track — version list, lineage, stable public URL |
+| **M30** Release ops toolkit | ❌ Not started | Variety of **release tooling** so artists handle the official/catalog side in one place — not only DSP delivery (M7) or smart links (M12). Planned: **MusicBrainz** release/artist submission (MBIDs on profile), ISRC/UPC + credits reused across exports, release checklist wizard, post-release claim links (Spotify for Artists, etc.). Deferred: Discogs submit API, direct Teosto filing |
+| **M29** Backup & DR | ❌ Not started | Strategy in `infra-strategy.md` §Backups and DR; implementation checklist in [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta). **Targets:** Postgres RPO 1h / RTO 4h (pgBackRest → UpCloud); MinIO RPO 24h / RTO 8h (`mc mirror`); config GitOps. **Not started:** cron scripts, offsite buckets, restore-test automation, `ops/RUNBOOK.md` restore chapter, operator drills |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: 45/55-min API→UI polish edge cases |
 
 ### Improvements identified during the audit (added to the roadmap)
@@ -99,6 +102,8 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Add board **role** (`User.isBoard` + `requireBoard`) so role checks stop using `isMember` as a proxy | Board-only actions are now gated properly; `admin/ledger` now uses `requireBoard` (manual ledger entries are board/treasurer-only) | M10 (done) |
 | [ ] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
 | [ ] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | AGENT.md acceptance criteria require Zod validation on every endpoint; several routes hand-roll validation | ongoing hardening |
+| [ ] | **M30 release-ops toolkit** — MusicBrainz submission, ISRC/UPC/credits, release checklist so official catalog work is not scattered across external sites | Producers need more than smart links; open-catalog + identifiers are table stakes for serious releases | M30 / Phase 6b |
+| [ ] | **Tracklist @artist tags** — editable tracklist rows with `@handle` autocomplete; link to `/u/:handle`; M15 `TRACKLIST` mention surface | DJs credit guests and collaborators; hearthis-style tracklists without a social graph | M22 |
 | [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
 | [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; suite now runs on every PR with Postgres + Redis services | CI |
 | [x] | Consolidate CI: lint job, vital-flows e2e, user-journey e2e, AGPL check, website Docker | Single `ci.yml` gate; Playwright screenshots stay local-only (`scripts/e2e-screenshots.sh`) | CI |
@@ -109,6 +114,10 @@ as their own checklist so they don't get lost between milestones.
 | [ ] | Stripe webhook: metric/alert when handler throws (today returns `{ received: true }` anyway) | Silent membership/fan-sub activation failures | M19 hardening |
 | [ ] | Automate `db push` / migrate in deploy pipeline (OPS-002) | Manual schema step blocks reliable rollouts | M0 / Phase 2 |
 | [ ] | Document local test prerequisites in README (`docker compose up postgres redis -d`, `pnpm ci:check`) | Onboarding friction; tests fail opaque without DB | M11 |
+| [ ] | **Postgres backup pipeline** — pgBackRest (or `pg_dump` interim) → MinIO `backups/pg/` → UpCloud offsite; daily cron + age alert | Artist uploads, ledger, memberships are irreplaceable; RPO 1h per `infra-strategy.md` | M29 / Phase 2b |
+| [ ] | **MinIO mirror** — `mc mirror` tahti → UpCloud bucket daily; verify object count | Archive audio + HLS segments; RPO 24h | M29 / Phase 2b |
+| [ ] | **Restore-test automation** — weekly script restores latest PG dump to throwaway DB, row-count check, log to `/var/log/tahti-restore-test.log` | Backups that are never restored are fiction; required before public beta | M29 / Phase 2b |
+| [ ] | **`ops/RUNBOOK.md` restore procedures** — Postgres point-in-time, MinIO bucket swap, DR read-only origin on UpCloud | Operators must recover without the director on call | M11 handover |
 | [x] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | Both inputs now live: download weight (M18) + fan-sub gross euros (M19) feed `computeEngagementUnits` | M18 + M19 → M9 (done) |
 
 ---
@@ -166,7 +175,7 @@ Goal: secure **≥€20k** to bridge Year 1 deficit (`financial-model.md`).
 | [ ] | Procure Y1 hardware (servers, NVMe, UPS) per capex budget | Director | G2 or bootstrapped | `financial-model.md` |
 | [ ] | Helsinki business fiber contract (symmetric gigabit) | Director | hardware | `infra-strategy.md` |
 | [ ] | UpCloud Helsinki account for spillover/static | Dev | — | `infra-strategy.md` |
-| [ ] | Backup colocation / DR target chosen | Dev | — | `infra-strategy.md` |
+| [ ] | Backup colocation / DR target chosen (UpCloud Helsinki or aligned Finnish partner) | Dev | — | `infra-strategy.md` |
 | [ ] | Domain **tahti.live** + DNS → Caddy on owned edge | Dev | association exists | `infra/Caddyfile` |
 | [ ] | Docker Swarm (or Compose staging) from `infra/docker-stack.yml` | Dev | hardware | `infra/docker-stack.yml` |
 | [ ] | Secrets management (Docker secrets / sops) documented | Dev | stack up | — |
@@ -176,6 +185,49 @@ Goal: secure **≥€20k** to bridge Year 1 deficit (`financial-model.md`).
 
 **Exit criteria:** staging URL serves health checks; production hardware racked;
 runbook for reboot / failover exists.
+
+---
+
+## Phase 2b — Backup & disaster recovery (before public beta)
+
+Strategy summary from [`infra-strategy.md`](./infra-strategy.md) and
+[`technical/phase-3.md`](./technical/phase-3.md). **Primary site:** owned Helsinki
+hardware (Postgres, Redis, MinIO, Swarm). **Offsite copy:** UpCloud Helsinki
+object storage (EU jurisdiction, DPA before launch).
+
+| Layer | Method | RPO | RTO | Offsite |
+|---|---|---|---|---|
+| **Postgres** | pgBackRest WAL archive + daily base backup (interim: `pg_dump \| gzip`) | 1 hour | 4 hours | UpCloud bucket `tahti-backups/pg/` |
+| **MinIO** (archive audio, HLS, derivatives) | `mc mirror` daily | 24 hours | 8 hours | UpCloud bucket `tahti-backups/minio/` |
+| **Config & secrets** | GitOps in private Finnish-hosted repo; Docker Swarm secrets documented | — | 1 hour | Same repo + encrypted offline copy |
+| **Redis** | Ephemeral (queues, sessions) — rebuild from Postgres on restore | — | 1 hour | Not backed up |
+| **Ledger** | Same Postgres backup; restore test must verify `ledger_entry` row counts | 1 hour | 4 hours | Same as Postgres |
+
+**Disaster scenario (primary hardware lost):** UpCloud bucket serves **read-only**
+origin for static/audio; Postgres replica or restored dump on UpCloud accepts
+signups and writes; **live broadcasting paused** until primary recovered or
+failover stack promoted. Document exact DNS/Caddy cutover in `ops/RUNBOOK.md`.
+
+### Implementation checklist
+
+| Done | Task | Owner | Depends | Doc |
+|:---:|---|---|---|---|
+| [ ] | UpCloud object storage buckets provisioned (`pg/`, `minio/`, lifecycle rules) | Dev | UpCloud account | `infra-strategy.md` |
+| [ ] | MinIO `backups` bucket on primary; `mc` alias configured on manager node | Dev | MinIO up | `technical/phase-3.md` |
+| [ ] | `backup-postgres.sh` — dump/WAL → `mc pipe tahti/backups/pg/YYYYMMDD.sql.gz` | Dev | Postgres up | `technical/phase-3.md` |
+| [ ] | `backup-minio.sh` — mirror user buckets to offsite (exclude temp transcode keys if needed) | Dev | MinIO up | `technical/phase-3.md` |
+| [ ] | `restore-test.sh` — weekly restore to throwaway Postgres, `COUNT(*)` sanity check, log result | Dev | backup scripts | `technical/journey-ops.md` |
+| [ ] | Cron: PG daily 03:00, MinIO daily 04:00, restore test Sunday 05:00 (`/etc/cron.d/tahti-backup`) | Dev | scripts | `technical/phase-3.md` |
+| [ ] | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call | Dev | monitoring | `technical/journey-ops.md` |
+| [ ] | pgBackRest (replace interim `pg_dump` when hardware stable) + WAL shipping | Dev | Postgres prod | `future-improvements.md` |
+| [ ] | Pre-destructive-op snapshot: `docker run … pg_dump` before migrations / volume resize | Dev | — | `technical/phase-7.md` |
+| [ ] | `ops/RUNBOOK.md` — restore Postgres, restore MinIO prefix, DR read-only cutover | Dev | restore test passed once | Phase 9 |
+| [ ] | Operator drill: restore from yesterday's backup without director (timed exercise) | Operators | RUNBOOK | Phase 9 §8b |
+| [ ] | DPA signed with UpCloud before storing artist/listener data offsite | Director | association | `infra-strategy.md` §GDPR |
+
+**Exit criteria:** latest PG backup restorable within RTO in a documented drill;
+MinIO mirror object count within 1% of primary; alert fires on stale backup in
+staging test; treasurer confirms ledger row count matches post-restore.
 
 ---
 
@@ -219,6 +271,7 @@ Required before first **real** membership money and first grant cycle.
 |:---:|---|---|---|
 | [x] | **M8** | Public transparency ledger + monthly rollup API + grants/:year report | Dev |
 | [ ] | **M7** | Mixcloud upload + Revelator wizard (€8/release) | Dev |
+| [ ] | **M30** | **Release ops toolkit** — MusicBrainz submission, ISRC/UPC/credits, release checklist (official metadata out of the way) | Dev |
 | [x] | **M9** | Annual engagement-unit grant cron + report (`packages/ledger`, payout transfer pending Stripe Connect / M19) | Dev |
 | [~] | **M19** | Fan-subscriptions: Connect, Checkout, crons, perks; live payout retry + newsletter fan UI remain | Dev |
 | [x] | **M10** (core) | Member directory, motions, advisory voting (Topic 11), governance portal | Dev |
@@ -242,6 +295,7 @@ Can ship incrementally during beta.
 | Done | Milestone | Summary | Priority |
 |:---:|---|---|---|
 | [~] | **M12** | Profile + releases + smart links (playback + artwork remain) | High |
+| [~] | **M30** | Release ops toolkit (MusicBrainz, catalog metadata, release checklist) | Medium |
 | [~] | **M20** | Tier gating polish, upgrade UX | High |
 | [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
 | [~] | **M14** | Embed pages done; social auto-post + analytics remain | Medium |
@@ -250,7 +304,7 @@ Can ship incrementally during beta.
 | [x] | **M16** | Tahti Radio meta-stream | Medium |
 | [x] | **M15** | Artist @-mentions | Low |
 | [~] | **M17** | Venue API + iCal; admin verification UI remain | Low |
-| [~] | **M11** | Rate limits, hCaptcha, audit export, OpenAPI; Upptime + backup drills remain | High before Y2 audit |
+| [~] | **M11** | Rate limits, hCaptcha, audit export, OpenAPI; Upptime + backup/DR drills remain | High before Y2 audit |
 
 **Exit criteria:** profile URL shareable; downloads + fan-subs used by ≥10 beta artists.
 
@@ -262,21 +316,44 @@ See `competitive-gaps-hearthis.md` for full gap list.
 
 | Done | Milestone | Summary |
 |:---:|---|---|
-| [~] | **M22** | Per-item metadata + editable tracklists (upload metadata live; **track version history → M28**) |
+| [~] | **M22** | Per-item metadata + editable tracklists with **@artist tagging** (upload metadata live; tracklist editor + M15 notifications deferred; **track version history → M28**) |
 | [~] | **M23** | Collections (albums, mix series e.g. “Trance sets”) + RSS |
 | [ ] | **M28** | **Track version history** — add a new audio file as a version of an existing archive/release track; keep version labels (Original, Remix, Re-edit), lineage, and stable public URLs; dashboard “Replace file / New version” flow (hearthis “Replace File” parity) |
-| [~] | **M24** | Per-content visuals: banner, slideshow, YouTube/Vimeo backdrop |
+| [~] | **M24** | Per-content visuals: channel Twisted Wave GLSL gallery + static strip; per-item banner/slideshow URLs. Deferred: YouTube/Vimeo backdrop |
 | [ ] | **M25** | Artist commentary (+ optional listener comments if AGM approves) |
 | [ ] | **M26** | Customisable radio/channel page: video background, per-album visualisations, theme picker — designer app for live show visuals |
 | [ ] | **M27** | 24/7 archive stream with automated scheduling and annotations: picks up previous live sets in fair rotation; moderator users control the programme list; audio visualisations per set; as automated as possible (ACRCloud tracklist sync feeds annotations) |
 
-## Phase 7 — Implementation: pro audio editor
+## Phase 6b — Release ops & catalog metadata (**M30**)
 
-Spec in `audio-editor.md` (**M21**).
+Artists need more than a smart link and a Revelator upload: the **official** side of a release — open-catalog entries, identifiers, credits, and society paperwork — is fragmented across a dozen sites. **M30** bundles guided tooling so Tahti handles the boring part and the artist ships once.
+
+**Principle:** one release record in Tahti → reusable metadata for every downstream system. No duplicate data entry.
+
+| Done | Capability | Notes |
+|:---:|---|---|
+| [ ] | **MusicBrainz submission** | Guided flow: artist, release group, tracklist, relationships; store returned **MBIDs** on `Release` / `ReleaseTrack`; show MusicBrainz link on profile and smart link |
+| [ ] | **ISRC + UPC/EAN** | Capture on release; Revelator auto-allocation where applicable ([Topic 12](./planning-decisions.md)); display on `/r/:slug` |
+| [ ] | **Credits & roles** | Writers, performers, producers, remixers — fields map to MusicBrainz relationships and Revelator/DDEX export |
+| [ ] | **Copyright lines** | P-line / C-line / label imprint on release metadata |
+| [ ] | **Release checklist wizard** | Ordered steps: metadata complete → identifiers → MusicBrainz (optional) → DSP via M7 → smart link live → newsletter (M13) |
+| [ ] | **Post-release claim links** | Checklist with deep links: Spotify for Artists, Apple Music for Artists, YouTube OAC — not automated filing |
+| [ ] | **Export pack** | Download JSON/CSV of release metadata for Picard, label copy, or accountant |
+| [ ] | **Collecting-society pointers** | Teosto / PRS / GEMA etc. — jurisdiction-aware checklist (links + what to register), not in-platform filing |
+
+**Deferred (later M30+):** Discogs submission API, direct PRO registration, AllMusic pitch workflow.
+
+**Depends:** M12 release schema (partial ✅), M7 Revelator wizard (partial). **Doc:** `AGENT.md` §M30.
+
+---
+
+Spec in `audio-editor.md` (**M21**) — see **§M21 implementation options** for phased plan (v0 trim → v1 multitrack → v2 LUFS/limiter).
 
 | Done | Task | Owner | Doc |
 |:---:|---|---|---|
-| [ ] | Browser editor (waveform, trim, normalize, export) | Dev | `audio-editor.md` |
+| [ ] | **v0** Single-file trim/fade + save to archive | Dev | `audio-editor.md` §Phased delivery |
+| [ ] | **v1** Multitrack timeline (`@waveform-playlist/browser`) | Dev | `audio-editor.md` |
+| [ ] | **v2** Master LUFS + limiter on bounce | Dev | `audio-editor.md` |
 | [ ] | Bounce worker → archive / release pipeline | Dev | `AGENT.md` |
 | [ ] | Editor load test (large WAV, 1h DJ mix) | Dev | — |
 
@@ -317,7 +394,8 @@ contractor**. Director may remain employed, but **members can operate it**.
 
 | Done | Deliverable | Owner |
 |:---:|---|---|
-| [ ] | `ops/RUNBOOK.md` — deploy, rollback, backup restore | Dev |
+| [ ] | `ops/RUNBOOK.md` — deploy, rollback, **Postgres + MinIO restore**, DR cutover | Dev |
+| [ ] | `ops/BACKUP.md` — RPO/RTO table, cron schedule, offsite bucket names, escalation | Dev |
 | [ ] | `ops/INCIDENTS.md` — outage comms, escalation | Dev |
 | [ ] | `ops/ONBOARDING-OPERATOR.md` — training syllabus | Director |
 | [ ] | `ops/TREASURER.md` — ledger import, grant payout, PRH export | Treasurer |
@@ -332,7 +410,7 @@ Tracks from `governance-and-legal.md` §7.b:
 
 | Done | Trainee completes | Trainer |
 |:---:|---|---|
-| [ ] | **Infra track** — deploy, restart Liquidsoap, read monitoring | Dev |
+| [ ] | **Infra track** — deploy, restart Liquidsoap, read monitoring, **trigger restore-test.sh** | Dev |
 | [ ] | **Support track** — credentials, chat abuse, membership billing | Director |
 | [ ] | **Treasurer track** — transparency dashboard, Stripe, grant export | Treasurer |
 | [ ] | Operators roster approved at AGM | Board |
@@ -376,6 +454,8 @@ Tracks from `governance-and-legal.md` §7.b:
 | [ ] | Review €40 membership vs costs (storage, fiber) | annual AGM |
 | [ ] | Engagement-unit formula review (membership debate) | annual AGM |
 | [ ] | Security updates on Swarm nodes | monthly |
+| [ ] | Backup restore drill (automated weekly + manual spot-check) | weekly / monthly |
+| [ ] | Verify offsite backup age and object counts | weekly |
 | [ ] | AGPL `/source` tarball matches deployed commit | each release |
 | [ ] | PRH annual filing + tax return | annual |
 | [ ] | Member count vs plan (200 → 1,200 → 4,000) | quarterly |
@@ -386,10 +466,10 @@ Tracks from `governance-and-legal.md` §7.b:
 
 ```text
 Month  1–2   Phase 0 legal + Phase 1 grant applications + M0–M1
-Month  3–4   Phase 2 infra + M2–M3 + internal dogfood
+Month  3–4   Phase 2 infra + **Phase 2b backup/DR** + M2–M3 + internal dogfood
 Month  5–6   M4–M5 + M20 partial + 10-artist closed beta
-Month  7–9   M7–M9, M19, M8 + 50-artist beta
-Month 10–12  M12, M18, M14 + push to 200 paying + first AGM
+Month  7–9   M7–M9, M19, M8 + **M30 release-ops planning** + 50-artist beta
+Month 10–12  M12, M18, M14, **M30 MusicBrainz + checklist (incremental)** + push to 200 paying + first AGM
 Month 13–18  Remaining features + operator training + handover package
 ```
 
@@ -497,17 +577,20 @@ Issues identified from streaming architecture review and user journey analysis. 
 | Who owns the org? | `governance-and-legal.md`, `strategy-and-product.md` |
 | How do grants to artists work? | `engagement-and-fansubs.md` |
 | Gaps vs hearthis.at? | `competitive-gaps-hearthis.md` |
+| Release ops (MusicBrainz, ISRC, checklist)? | `AGENT.md` §M30, [Phase 6b](#phase-6b--release-ops--catalog-metadata-m30) |
 | How to broadcast? | `guides/for-streamers.md` + `obs-and-broadcasting-guides.md` |
 | Plain-language guides (artist / viewer / streamer) | `guides/README.md` |
 | Infra choices? | `infra-strategy.md` |
 | How to scale nodes? | `scaling-node-distribution.md`, `infra/docker-compose.stack.yml` |
 | E2E screenshots / flows? | `user-flows.md`, `e2e-screenshots/README.md` |
 | Platform hardening backlog? | [Platform engineering backlog](#platform-engineering-backlog), `future-improvements.md` |
+| Backup & restore flow? | `technical/phase-3.md`, [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta) |
+| Ops journeys (restore drill)? | `technical/journey-ops.md` |
 
 ---
 
 ## Issue labels (for GitHub Projects)
 
-- `legal` · `grant` · `infra` · `milestone/M*` · `test` · `beta` · `handover` · `ops`
+- `legal` · `grant` · `infra` · `backup` · `milestone/M*` · `test` · `beta` · `handover` · `ops`
 
 Create one issue per milestone sub-task or per checkbox row as you begin execution.

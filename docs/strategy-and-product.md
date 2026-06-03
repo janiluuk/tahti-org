@@ -41,6 +41,7 @@ A two-tier subscription service running on owned infrastructure in Helsinki:
 | Inactive deletion 60d | Pay-per-release DSP €8 | 12 DSP releases included |
 |  | Listener stats | Listener insights + FLAC |
 |  | Member of association | Member of association |
+|  | Smart links + manual DSP URLs | **Release ops toolkit (M30):** MusicBrainz submission, ISRC/UPC, credits, release checklist |
 
 ## Differentiation
 

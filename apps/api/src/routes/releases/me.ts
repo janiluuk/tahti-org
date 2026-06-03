@@ -5,6 +5,12 @@ import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import { requireAuth } from '../../plugins/auth.js'
 import { parseSmartLinkTargets } from '../../lib/smartlink.js'
+import {
+  buildReleaseExportPack,
+  catalogPatchFromBody,
+  releaseCatalogSelect,
+} from '../../lib/release-catalog.js'
+import { computeReleaseChecklist } from '@tahti/shared'
 
 const VALID_TYPES = ['SINGLE', 'EP', 'ALBUM', 'COMPILATION', 'REMIX'] as const
 
@@ -28,13 +34,30 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         type: true,
         state: true,
         releaseDate: true,
+        description: true,
+        artworkUrl: true,
         smartLinkSlug: true,
         smartLinkTargets: true,
-        tracks: { orderBy: { position: 'asc' }, select: { id: true, position: true, title: true } },
+        upc: true,
+        musicbrainzReleaseId: true,
+        musicbrainzArtistId: true,
+        pLine: true,
+        cLine: true,
+        labelImprint: true,
+        revelatorStatus: true,
+        tracks: {
+          orderBy: { position: 'asc' },
+          select: { id: true, position: true, title: true, isrc: true },
+        },
         _count: { select: { tracks: true } },
       },
     })
-    return reply.send(releases)
+    return reply.send(
+      releases.map((r) => ({
+        ...r,
+        checklist: computeReleaseChecklist(r),
+      })),
+    )
   })
 
   fastify.post('/api/me/releases', { preHandler: requireAuth }, async (request, reply) => {
@@ -143,6 +166,77 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
     })
     return reply.send(release)
   })
+
+  fastify.get(
+    '/api/me/releases/:id/catalog',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id, userId: user.id },
+        select: releaseCatalogSelect,
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const checklist = computeReleaseChecklist(release)
+      return reply.send({ ...release, checklist })
+    },
+  )
+
+  fastify.patch(
+    '/api/me/releases/:id/catalog',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
+
+      const existing = await fastify.prisma.release.findFirst({
+        where: { id, userId: user.id },
+        select: { id: true },
+      })
+      if (!existing) return reply.status(404).send({ error: 'Release not found' })
+
+      const patch = catalogPatchFromBody(request.body)
+      if (!patch.ok) return reply.status(400).send({ error: patch.error })
+
+      const release = await fastify.prisma.release.update({
+        where: { id },
+        data: patch.data,
+        select: releaseCatalogSelect,
+      })
+      return reply.send({
+        ...release,
+        checklist: computeReleaseChecklist(release),
+      })
+    },
+  )
+
+  fastify.get(
+    '/api/me/releases/:id/export.json',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id, userId: user.id },
+        select: {
+          ...releaseCatalogSelect,
+          user: { select: { username: true, displayName: true } },
+        },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      return reply
+        .header(
+          'Content-Disposition',
+          `attachment; filename="release-${release.smartLinkSlug}.json"`,
+        )
+        .send(buildReleaseExportPack(release))
+    },
+  )
 }
 
 export default meReleaseRoutes

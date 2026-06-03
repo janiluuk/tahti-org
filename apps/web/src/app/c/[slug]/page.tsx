@@ -6,11 +6,26 @@ import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
 import HlsPlayer from './hls-player'
 import ReactionsOverlay from './reactions'
+import { ChannelGalleryView } from './channel-gallery'
+import { ChannelTextLayerView } from '@/components/text-layer'
+import { TracklistView } from '@/components/tracklist/tracklist-view'
+import type {
+  ChannelGalleryMode,
+  ChannelTextLayerAlignment,
+  ChannelTextLayerMode,
+  TracklistEntry,
+} from '@tahti/shared'
+import { Badge, Heading, PageShell, Row, Text } from '@/components/ui'
 
 interface ChannelResponse {
   slug: string
   state: string
   hlsUrl: string | null
+  galleryMode: ChannelGalleryMode
+  slideshowImages: string[]
+  textLayerMode: ChannelTextLayerMode
+  textLayerText: string
+  textLayerAlign: ChannelTextLayerAlignment
   user: {
     username: string
     displayName: string
@@ -26,6 +41,7 @@ interface ArchiveItem {
   durationSec: number | null
   audioUrl: string | null
   createdAt: string
+  tracklist?: TracklistEntry[] | null
 }
 
 interface Announcement {
@@ -63,14 +79,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const hlsUrl = channel.hlsUrl
 
   return (
-    <div style={{ maxWidth: 1100, margin: '2rem auto', padding: '0 1rem' }}>
-      {/* Two-column layout: player + archive on left, chat on right */}
+    <PageShell size="lg" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
         <div>
           <header style={{ marginBottom: '1.5rem' }}>
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}
-            >
+            <Row className="ui-row--gap-3" style={{ marginBottom: '0.5rem' }}>
               {channel.user.avatarUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -82,30 +95,25 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 />
               )}
               <div>
-                <h1 style={{ margin: '0 0 0.15rem' }}>{channel.user.displayName}</h1>
-                <p style={{ color: '#888', margin: 0, fontSize: '0.9rem' }}>
+                <Heading level={1} style={{ marginBottom: '0.15rem' }}>
+                  {channel.user.displayName}
+                </Heading>
+                <Text size="sm" tone="muted">
                   @{channel.user.username}
-                </p>
+                </Text>
               </div>
-              {channel.state === 'LIVE' && (
-                <span
-                  style={{
-                    display: 'inline-block',
-                    background: '#dc2626',
-                    color: '#fff',
-                    padding: '0.25rem 0.7rem',
-                    borderRadius: 4,
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.05em',
-                  }}
-                >
-                  LIVE
-                </span>
-              )}
-            </div>
-            {channel.user.bio && <p style={{ color: '#555', margin: 0 }}>{channel.user.bio}</p>}
+              {channel.state === 'LIVE' && <Badge variant="live">Live</Badge>}
+            </Row>
+            {channel.user.bio && <Text tone="secondary">{channel.user.bio}</Text>}
           </header>
+
+          <ChannelTextLayerView
+            mode={channel.textLayerMode}
+            text={channel.textLayerText}
+            align={channel.textLayerAlign}
+          />
+
+          <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
 
           {/* HLS player + reactions overlay (only when live) */}
           {hlsUrl && (
@@ -146,6 +154,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         {String(item.durationSec % 60).padStart(2, '0')}
                       </div>
                     )}
+                    {item.tracklist && item.tracklist.length > 0 && (
+                      <TracklistView entries={item.tracklist} />
+                    )}
                     {item.audioUrl && (
                       <audio controls src={item.audioUrl} style={{ width: '100%' }} />
                     )}
@@ -162,6 +173,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           <FanChatPanel slug={slug} />
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }

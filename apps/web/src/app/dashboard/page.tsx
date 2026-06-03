@@ -11,10 +11,18 @@ import FanSubscriptionsPanel from './fan-subscriptions'
 import NewsletterPanel from './newsletter-panel'
 import ReleasesPanel from './releases-panel'
 import CollectionsPanel from './collections-panel'
+import ChannelGalleryPanel from './channel-gallery-panel'
+import ChannelTextLayerPanel from './channel-text-layer-panel'
 import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
+import { Button, Heading, Link, PageShell, Panel, Row, Text } from '@/components/ui'
+import type {
+  ChannelGalleryMode,
+  ChannelTextLayerAlignment,
+  ChannelTextLayerMode,
+} from '@tahti/shared'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }
@@ -223,6 +231,46 @@ export default async function DashboardPage() {
     }
   }
 
+  let channelGallery: { galleryMode: ChannelGalleryMode; slideshowImages: string[] } | null = null
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/channel/gallery`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        channelGallery = (await res.json()) as typeof channelGallery
+      }
+    } catch {
+      // ignore
+    }
+  }
+  if (user.channel && !channelGallery) {
+    channelGallery = { galleryMode: 'NONE', slideshowImages: [] }
+  }
+
+  let channelTextLayer: {
+    textLayerMode: ChannelTextLayerMode
+    textLayerText: string
+    textLayerAlign: ChannelTextLayerAlignment
+  } | null = null
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/channel/text-layer`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        channelTextLayer = (await res.json()) as typeof channelTextLayer
+      }
+    } catch {
+      // ignore
+    }
+  }
+  if (user.channel && !channelTextLayer) {
+    channelTextLayer = { textLayerMode: 'NONE', textLayerText: '', textLayerAlign: 'CENTER' }
+  }
+
   let archiveItems: ArchiveItem[] = []
   let archiveItemsForEdit: Array<
     Record<string, unknown> & { id: string; title: string; status: string }
@@ -315,31 +363,19 @@ export default async function DashboardPage() {
   )
 
   return (
-    <div style={{ maxWidth: 960, margin: '2rem auto', padding: '0 1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ margin: 0 }}>Dashboard</h1>
+    <PageShell size="md" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+      <Row between className="ui-row--gap-3">
+        <Heading level={1}>Dashboard</Heading>
         <form action="/api/auth/logout" method="POST">
-          <button
-            type="submit"
-            style={{
-              background: 'none',
-              border: '1px solid #ccc',
-              borderRadius: 4,
-              padding: '0.4rem 0.8rem',
-              cursor: 'pointer',
-            }}
-          >
+          <Button type="submit" variant="ghost">
             Log out
-          </button>
+          </Button>
         </form>
-      </div>
+      </Row>
 
-      <p style={{ color: '#555', marginTop: '0.5rem' }}>
-        Welcome back, {user.displayName} ·{' '}
-        <a href="/governance" style={{ color: '#2563eb' }}>
-          Member governance
-        </a>
-      </p>
+      <Text tone="secondary" style={{ marginTop: '0.5rem' }}>
+        Welcome back, {user.displayName} · <Link href="/governance">Member governance</Link>
+      </Text>
 
       {membershipInfo && (
         <MembershipPanel
@@ -352,30 +388,19 @@ export default async function DashboardPage() {
       )}
 
       {user.channel && (
-        <section
-          style={{
-            marginTop: '2rem',
-            padding: '1.5rem',
-            border: '1px solid #eee',
-            borderRadius: 8,
-          }}
-        >
-          <h2 style={{ margin: '0 0 1rem' }}>Your channel</h2>
+        <Panel title="Your channel">
           <BroadcastUsageBanner usage={broadcastUsage} />
           <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
-          <p style={{ margin: '0.25rem 0' }}>
+          <Text size="sm" style={{ margin: '0.25rem 0' }}>
             <strong>URL:</strong>{' '}
-            <a href={`/c/${user.channel.slug}`}>
+            <Link href={`/c/${user.channel.slug}`}>
               <code>{user.channel.slug}.tahti.live</code>
-            </a>
-          </p>
-          <p style={{ margin: '0.25rem 0' }}>
-            <strong>Status:</strong>{' '}
-            <span style={{ color: user.channel.state === 'LIVE' ? '#16a34a' : '#888' }}>
-              {user.channel.state === 'LIVE' ? 'Live' : 'Offline'}
-            </span>
-          </p>
-        </section>
+            </Link>
+          </Text>
+          <Text size="sm" tone={user.channel.state === 'LIVE' ? 'success' : 'muted'}>
+            <strong>Status:</strong> {user.channel.state === 'LIVE' ? 'Live' : 'Offline'}
+          </Text>
+        </Panel>
       )}
 
       {user.storage && (
@@ -386,6 +411,10 @@ export default async function DashboardPage() {
       )}
 
       {user.channel && streamSettings && <StreamSettingsPanel initial={streamSettings} />}
+
+      {user.channel && channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
+
+      {user.channel && channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
 
       {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
 
@@ -455,7 +484,7 @@ export default async function DashboardPage() {
           )}
         </section>
       )}
-    </div>
+    </PageShell>
   )
 }
 

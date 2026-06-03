@@ -12,6 +12,7 @@ import dbPlugin from './plugins/db.js'
 import authPlugin from './plugins/auth.js'
 import healthRoute from './routes/health.js'
 import statusRoutes from './routes/status.js'
+import metricsRoute from './routes/metrics.js'
 import sourceRoute from './routes/source.js'
 import registerRoute from './routes/auth/register.js'
 import verifyRoute from './routes/auth/verify.js'
@@ -64,6 +65,7 @@ import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
 import meArchiveRoutes from './routes/me/archive.js'
+import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { config } from './config.js'
@@ -160,6 +162,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // Routes
   await fastify.register(healthRoute)
   await fastify.register(statusRoutes)
+  await fastify.register(metricsRoute)
   await fastify.register(sourceRoute)
   await fastify.register(registerRoute)
   await fastify.register(verifyRoute)
@@ -254,6 +257,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M22/M24/M25: archive item metadata edit + channel slideshow
   await fastify.register(meArchiveRoutes)
+  await fastify.register(meUsersRoutes)
 
   // M23: collections + RSS feeds
   await fastify.register(collectionRoutes)

@@ -5,6 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { Alert, Button, Panel, Text } from '@/components/ui'
 import { startMembershipCheckout, startMembershipPortal } from './actions'
 
 export default function MembershipPanel({
@@ -53,69 +54,41 @@ export default function MembershipPanel({
 
   if (isMember) {
     return (
-      <section
-        style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
-      >
-        <h2 style={{ margin: 0 }}>Tahti ry membership</h2>
-        <p style={{ color: '#16a34a', marginTop: '0.5rem' }}>
+      <Panel title="Tahti ry membership">
+        <Text tone="success">
           Active member #{memberNumber ?? '—'} — thank you for supporting the cooperative.
-        </p>
-        <button
+        </Text>
+        <Button
           type="button"
+          variant="ghost"
           onClick={openPortal}
           disabled={isPending}
-          style={{
-            marginTop: '0.75rem',
-            background: 'none',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            padding: '0.4rem 0.8rem',
-            cursor: 'pointer',
-          }}
+          style={{ marginTop: '0.75rem' }}
         >
           {isPending ? 'Opening…' : 'Manage billing'}
-        </button>
-      </section>
+        </Button>
+      </Panel>
     )
   }
 
   return (
-    <section
-      style={{
-        marginTop: '2rem',
-        padding: '1.5rem',
-        border: '1px solid #fbbf24',
-        borderRadius: 8,
-        background: '#fffbeb',
-      }}
+    <Panel
+      variant="warning"
+      title="Complete your membership"
+      description={`Tahti ry is a member-governed nonprofit. Annual membership is €${(priceCents / 100).toFixed(0)}/year (tax-deductible for eligible professionals in Finland). Unlocks lossless streaming and unlimited live broadcasting.`}
     >
-      <h2 style={{ margin: 0 }}>Complete your membership</h2>
-      <p style={{ marginTop: '0.5rem', color: '#555' }}>
-        Tahti ry is a member-governed nonprofit. Annual membership is €
-        {(priceCents / 100).toFixed(0)}
-        /year (tax-deductible for eligible professionals in Finland). Unlocks lossless streaming and
-        unlimited live broadcasting.
-      </p>
       {status === 'PENDING_EMAIL' && (
-        <p style={{ color: '#dc2626' }}>Verify your email before paying.</p>
+        <Alert variant="error">Verify your email before paying.</Alert>
       )}
-      {error && <p style={{ color: '#dc2626' }}>{error}</p>}
-      {message && <p style={{ color: '#16a34a' }}>{message}</p>}
-      <button
+      {error && <Alert variant="error">{error}</Alert>}
+      {message && <Alert variant="success">{message}</Alert>}
+      <Button
+        variant="primary"
         onClick={pay}
         disabled={isPending || !emailVerified || status === 'PENDING_EMAIL'}
-        style={{
-          marginTop: '0.75rem',
-          background: '#2563eb',
-          color: 'white',
-          border: 'none',
-          borderRadius: 4,
-          padding: '0.5rem 1rem',
-          cursor: 'pointer',
-        }}
       >
         {isPending ? 'Processing…' : `Pay €${(priceCents / 100).toFixed(0)} / year`}
-      </button>
-    </section>
+      </Button>
+    </Panel>
   )
 }

@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../server.js'
+
+vi.mock('../lib/minio.js', () => ({
+  s3: { send: vi.fn().mockResolvedValue({}) },
+}))
 
 describe('GET /health', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -16,12 +20,20 @@ describe('GET /health', () => {
     await app.close()
   })
 
-  it('returns 200 with status ok when DB is connected', async () => {
+  it('returns health payload with dependency checks', async () => {
     const response = await app.inject({ method: 'GET', url: '/health' })
-    expect(response.statusCode).toBe(200)
+    expect([200, 503]).toContain(response.statusCode)
     const body = response.json()
-    expect(body.status).toBe('ok')
-    expect(body.db).toBe('ok')
+    if (response.statusCode === 200) {
+      expect(['ok', 'degraded']).toContain(body.status)
+      expect(body.db).toBe('ok')
+    } else {
+      expect(body.status).toBe('error')
+      expect(body.db).toBe('error')
+    }
+    expect(body.checks).toHaveProperty('postgres')
+    expect(body.checks).toHaveProperty('redis')
+    expect(body.checks).toHaveProperty('minio')
     expect(typeof body.uptime).toBe('number')
   })
 

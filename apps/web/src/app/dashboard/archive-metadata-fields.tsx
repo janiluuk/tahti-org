@@ -3,6 +3,7 @@
 
 'use client'
 
+import type { TracklistEntry } from '@tahti/shared'
 import {
   ARCHIVE_GENRES,
   ARCHIVE_CONTENT_TYPES,
@@ -11,6 +12,7 @@ import {
   ARCHIVE_METADATA_DEFAULTS,
   CONTENT_TYPE_LABELS,
 } from '../../lib/archive-metadata-options'
+import { TracklistEditor } from './tracklist-editor'
 
 export type ArchiveMetadataFormState = {
   description: string
@@ -34,6 +36,7 @@ export type ArchiveMetadataFormState = {
   commentary: string
   taggedNote: string
   isPublic: boolean
+  tracklist: TracklistEntry[] | null
 }
 
 export function defaultMetadataFormState(): ArchiveMetadataFormState {
@@ -63,6 +66,7 @@ export function defaultMetadataFormState(): ArchiveMetadataFormState {
     commentary: '',
     taggedNote: '',
     isPublic: ARCHIVE_METADATA_DEFAULTS.isPublic,
+    tracklist: null,
   }
 }
 
@@ -99,6 +103,7 @@ export function metadataFormToPayload(state: ArchiveMetadataFormState): Record<s
     commentary: state.commentary.trim() || undefined,
     taggedNote: state.taggedNote.trim() || undefined,
     isPublic: state.isPublic,
+    tracklist: state.tracklist,
   }
 }
 
@@ -132,6 +137,7 @@ export function metadataFromApi(item: Record<string, unknown>): ArchiveMetadataF
     commentary: (item.commentary as string) ?? '',
     taggedNote: (item.taggedNote as string) ?? '',
     isPublic: (item.isPublic as boolean) ?? true,
+    tracklist: Array.isArray(item.tracklist) ? (item.tracklist as TracklistEntry[]) : null,
   }
 }
 
@@ -393,6 +399,12 @@ export function ArchiveMetadataFields({
           style={{ ...fieldStyle, resize: 'vertical' }}
         />
       </label>
+
+      <TracklistEditor
+        value={state.tracklist}
+        onChange={(tracklist) => set({ tracklist })}
+        disabled={disabled}
+      />
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.9rem' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>

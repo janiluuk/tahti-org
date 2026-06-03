@@ -14,6 +14,11 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
       select: {
         slug: true,
         state: true,
+        galleryMode: true,
+        slideshowImages: true,
+        textLayerMode: true,
+        textLayerText: true,
+        textLayerAlign: true,
         user: {
           select: {
             username: true,

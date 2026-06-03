@@ -41,4 +41,10 @@ Username: `screenshot-demo` · Smart link slug: `northern-lights-ep`
 
 See `manifest.json` for route → file mapping.
 
+Copies used on the marketing site (`website/screenshots/`) power the annotated “How it looks” section on [tahti.live](https://tahti.live). Re-copy after re-capturing:
+
+```bash
+cp docs/e2e-screenshots/{06,07,08,09,10,11,12}-*.png website/screenshots/
+```
+
 Production node layout and scaling bottlenecks: [../scaling-node-distribution.md](../scaling-node-distribution.md).

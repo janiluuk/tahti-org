@@ -1,0 +1,224 @@
+{
+  "title": "Tahti vital services",
+  "uid": "tahti-vital-services",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "tags": ["tahti", "health", "vimage6"],
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "type": "query",
+        "label": "Environment",
+        "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+        "query": "label_values(tahti_dependency_up, environment)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "API healthy (all critical deps)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": { "text": "HEALTHY", "color": "green" },
+                "0": { "text": "UNHEALTHY", "color": "red" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "expr": "tahti_api_healthy{environment=~\"$environment\"}",
+          "legendFormat": "{{host}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "HTTP probes (blackbox)",
+      "description": "External reachability of Tahti endpoints from vimage6.",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 0, "w": 18, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": { "text": "UP", "color": "green" },
+                "0": { "text": "DOWN", "color": "red" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "probe_success{job=\"tahti_blackbox\",environment=~\"$environment\"}",
+          "legendFormat": "{{probe}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Dependency checks (from API /metrics)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 5 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": { "text": "UP", "color": "green" },
+                "0": { "text": "DOWN", "color": "red" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "expr": "tahti_dependency_up{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{dependency}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Dependency check latency (ms)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 9, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2 } }
+      },
+      "targets": [
+        {
+          "expr": "tahti_dependency_check_latency_ms{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{dependency}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Blackbox probe duration (s)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 9, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2 } }
+      },
+      "targets": [
+        {
+          "expr": "probe_duration_seconds{job=\"tahti_blackbox\",environment=~\"$environment\"}",
+          "legendFormat": "{{probe}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "API uptime (hours)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 17, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "unit": "s" } },
+      "targets": [
+        {
+          "expr": "tahti_api_uptime_seconds{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Probe failures (1 = down)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 17, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "custom": { "drawStyle": "bars", "fillOpacity": 80 }
+        }
+      },
+      "targets": [
+        {
+          "expr": "1 - probe_success{job=\"tahti_blackbox\",environment=~\"$environment\"}",
+          "legendFormat": "{{probe}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Endpoints monitored",
+      "type": "text",
+      "gridPos": { "x": 0, "y": 23, "w": 24, "h": 4 },
+      "options": {
+        "mode": "markdown",
+        "content": "| Probe | URL |\n|-------|-----|\n| API health | `http://192.168.2.100:3011/health` |\n| API status | `http://192.168.2.100:3011/api/v1/status` |\n| Web app | `http://192.168.2.100:3010/` |\n| Marketing site | `http://192.168.2.100:8090/health` |\n| Centrifugo chat | `http://192.168.2.100:8000/health` |\n| MinIO | `http://192.168.2.100:9000/minio/health/live` |\n| Orchestrator | `http://192.168.2.100:3003/health` |\n| Icecast | `http://192.168.2.100:8100/` |\n\nDependency gauges come from **`GET /metrics`** on the Tahti API (postgres, redis, minio, centrifugo, orchestrator, icecast)."
+      }
+    }
+  ]
+}

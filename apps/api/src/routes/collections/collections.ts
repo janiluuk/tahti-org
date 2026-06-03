@@ -202,6 +202,56 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // PUT /api/me/collections/:slug/reorder — M23 drag reorder
+  fastify.put(
+    '/api/me/collections/:slug/reorder',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { slug } = request.params as { slug: string }
+      const body = request.body as { itemIds?: string[] }
+
+      const itemIds = body.itemIds
+      if (!Array.isArray(itemIds) || itemIds.length === 0) {
+        return reply.status(400).send({ error: 'itemIds array is required' })
+      }
+
+      const col = await fastify.prisma.collection.findFirst({
+        where: { slug, userId: user.id },
+        include: { items: { select: { id: true } } },
+      })
+      if (!col) return reply.status(404).send({ error: 'Collection not found' })
+
+      const existing = new Set(col.items.map((i) => i.id))
+      if (itemIds.length !== existing.size || itemIds.some((id) => !existing.has(id))) {
+        return reply.status(400).send({ error: 'itemIds must match collection items exactly' })
+      }
+
+      // Two-phase update avoids @@unique([collectionId, position]) collisions while swapping.
+      await fastify.prisma.$transaction(async (tx) => {
+        for (let i = 0; i < itemIds.length; i++) {
+          await tx.collectionItem.update({
+            where: { id: itemIds[i] },
+            data: { position: -(i + 1) },
+          })
+        }
+        for (let i = 0; i < itemIds.length; i++) {
+          await tx.collectionItem.update({
+            where: { id: itemIds[i] },
+            data: { position: i + 1 },
+          })
+        }
+      })
+
+      const items = await fastify.prisma.collectionItem.findMany({
+        where: { collectionId: col.id },
+        orderBy: { position: 'asc' },
+        include: collectionItemInclude,
+      })
+      return reply.send({ items })
+    },
+  )
+
   // DELETE /api/me/collections/:slug/items/:itemId
   fastify.delete(
     '/api/me/collections/:slug/items/:itemId',

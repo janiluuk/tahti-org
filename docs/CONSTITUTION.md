@@ -38,7 +38,7 @@ Tahti's mission is to be the *best* broadcasting platform for independent artist
 
 **Product usefulness:**
 
-- The platform must do real work the artist needs: 24/7 channel with seamless live-to-archive transitions, real broadcasting tools (OBS / Mixxx / Traktor / browser ingest), real distribution (Spotify / Apple / Tidal via Revelator, Mixcloud direct), real promotional tooling (embed widget, smart links, social auto-post, newsletter), real analytics (engagement units, completion rates, embed sources).
+- The platform must do real work the artist needs: 24/7 channel with seamless live-to-archive transitions, real broadcasting tools (OBS / Mixxx / Traktor / browser ingest), real distribution (Spotify / Apple / Tidal via Revelator, Mixcloud direct), **release-ops tooling** (MusicBrainz submission, ISRC/UPC/credits, release checklist — M30), real promotional tooling (embed widget, smart links, social auto-post, newsletter), real analytics (engagement units, completion rates, embed sources).
 - No feature ships unless an artist would actually use it. We do not build vanity features to mark roadmap completion.
 - The product roadmap is published. Members vote on priority at AGM. The director's discretion is bounded by what members have approved.
 - No vendor lock-in for artists. Export of all data (releases, archive, analytics, fan-sub records) must work and is tested quarterly. Forks of Tahti are explicitly welcome under AGPL.
