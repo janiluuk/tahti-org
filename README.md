@@ -35,6 +35,15 @@ These rules are constitutional. They are not changeable by management decision. 
 | [`docs/financial-model.md`](docs/financial-model.md) | Headline 3-year model — revenue, cost, surplus, grant pool |
 | [`docs/budget-detailed.md`](docs/budget-detailed.md) | Line-item monthly budget + break-even sensitivity analysis |
 
+### User guides (plain language)
+
+| File | Purpose |
+|---|---|
+| [`docs/guides/README.md`](docs/guides/README.md) | Index — who should read which guide |
+| [`docs/guides/for-viewers.md`](docs/guides/for-viewers.md) | Listeners & fans: listen, chat, subscribe, smart links |
+| [`docs/guides/for-artists.md`](docs/guides/for-artists.md) | Members: dashboard, profile, releases, fan tiers |
+| [`docs/guides/for-streamers.md`](docs/guides/for-streamers.md) | Going live: OBS, RTMP, limits, multistream |
+
 ### Implementation documents (for the agent + director)
 
 | File | Purpose |

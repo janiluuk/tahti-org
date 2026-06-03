@@ -376,7 +376,8 @@ unless maintenance team works unpaid until surplus and capex is deferred.
 | Who owns the org? | `governance-and-legal.md`, `strategy-and-product.md` |
 | How do grants to artists work? | `engagement-and-fansubs.md` |
 | Gaps vs hearthis.at? | `competitive-gaps-hearthis.md` |
-| How to broadcast? | `obs-and-broadcasting-guides.md` |
+| How to broadcast? | `guides/for-streamers.md` + `obs-and-broadcasting-guides.md` |
+| Plain-language guides (artist / viewer / streamer) | `guides/README.md` |
 | Infra choices? | `infra-strategy.md` |
 
 ---
