@@ -4,8 +4,12 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   DraftIdParamSchema,
+  NewsletterDraftListSchema,
   NewsletterDraftSchema,
+  NewsletterDraftViewSchema,
   NewsletterSendSchema,
+  NewsletterSubscriberStatsSchema,
+  openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -24,7 +28,13 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/newsletter/subscribers — subscriber count + recent growth
   fastify.get(
     '/api/me/newsletter/subscribers',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['newsletter'],
+        response: openApiResponse(NewsletterSubscriberStatsSchema, 'NewsletterSubscriberStats'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
 
@@ -47,45 +57,65 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // POST /api/me/newsletter/drafts — save a draft
-  fastify.post('/api/me/newsletter/drafts', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const parsed = NewsletterDraftSchema.safeParse(request.body)
-    if (!parsed.success) return zodError(reply, parsed.error)
-    const body = parsed.data
-
-    const draft = await fastify.prisma.newsletterDraft.create({
-      data: {
-        userId: user.id,
-        subject: body.subject,
-        bodyMd: body.bodyMd,
-        state: 'DRAFT',
-        subscribersOnly: body.subscribersOnly ?? false,
+  fastify.post(
+    '/api/me/newsletter/drafts',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['newsletter'],
+        response: openApiResponse(NewsletterDraftViewSchema, 'NewsletterDraft'),
       },
-    })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = NewsletterDraftSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const body = parsed.data
 
-    return reply.status(201).send(draft)
-  })
+      const draft = await fastify.prisma.newsletterDraft.create({
+        data: {
+          userId: user.id,
+          subject: body.subject,
+          bodyMd: body.bodyMd,
+          state: 'DRAFT',
+          subscribersOnly: body.subscribersOnly ?? false,
+        },
+      })
+
+      return reply.status(201).send(draft)
+    },
+  )
 
   // GET /api/me/newsletter/drafts — list drafts + past sends
-  fastify.get('/api/me/newsletter/drafts', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-
-    const drafts = await fastify.prisma.newsletterDraft.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        subject: true,
-        state: true,
-        sentAt: true,
-        createdAt: true,
-        subscribersOnly: true,
-        _count: { select: { sends: true } },
+  fastify.get(
+    '/api/me/newsletter/drafts',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['newsletter'],
+        response: openApiResponse(NewsletterDraftListSchema, 'NewsletterDraftList'),
       },
-    })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
 
-    return reply.send(drafts)
-  })
+      const drafts = await fastify.prisma.newsletterDraft.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          subject: true,
+          state: true,
+          sentAt: true,
+          createdAt: true,
+          subscribersOnly: true,
+          _count: { select: { sends: true } },
+        },
+      })
+
+      return reply.send(drafts)
+    },
+  )
 
   // POST /api/me/newsletter/send/:draftId — queue for delivery
   fastify.post(

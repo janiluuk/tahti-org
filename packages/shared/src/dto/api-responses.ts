@@ -343,6 +343,91 @@ export const CollectionPublicViewSchema = z
   })
   .passthrough()
 
+export const PrepareUploadResponseSchema = z.object({
+  uploadId: z.string(),
+  uploadUrl: z.string().url(),
+  expiresAt: z.string(),
+  title: z.string(),
+})
+
+export const CompleteUploadResponseSchema = z.object({
+  itemId: z.string(),
+  status: z.string(),
+})
+
+export const AuthMeResponseSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  username: z.string(),
+  displayName: z.string(),
+  tier: z.string(),
+  emailVerifiedAt: z.coerce.date().nullable(),
+  isMember: z.boolean(),
+  isBoard: z.boolean(),
+  membership: z
+    .object({
+      status: z.string(),
+      activatedAt: z.coerce.date().nullable(),
+    })
+    .nullable(),
+  channel: z
+    .object({
+      slug: z.string(),
+      state: z.string(),
+    })
+    .nullable(),
+  storage: z.object({
+    usedBytes: z.string(),
+    softTargetBytes: z.string(),
+  }),
+})
+
+export const ProfileFieldsSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  displayName: z.string(),
+  bio: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  tipJarUrl: z.string().nullable(),
+  socialLinks: z.unknown(),
+  publicAttribution: z.boolean(),
+})
+
+export const MetaStreamOptResponseSchema = z.object({
+  metaStreamOptOut: z.boolean(),
+})
+
+export const NewsletterSubscriberStatsSchema = z.object({
+  total: z.number().int(),
+  confirmed: z.number().int(),
+  newLast30Days: z.number().int(),
+})
+
+export const NewsletterSubscribeStatusSchema = z.object({
+  status: z.string(),
+})
+
+export const RepostAckResponseSchema = z.object({
+  acknowledged: z.boolean(),
+})
+
+export const NewsletterDraftSummarySchema = z.object({
+  id: z.string(),
+  subject: z.string(),
+  state: z.string(),
+  sentAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+  subscribersOnly: z.boolean(),
+  _count: z.object({ sends: z.number().int() }),
+})
+
+export const NewsletterDraftListSchema = z.array(NewsletterDraftSummarySchema)
+
+export const NewsletterDraftViewSchema = NewsletterDraftSummarySchema.extend({
+  bodyMd: z.string(),
+  updatedAt: z.coerce.date().optional(),
+}).passthrough()
+
 export const BroadcastUsageResponseSchema = z.object({
   tier: z.string(),
   unlimited: z.boolean(),
