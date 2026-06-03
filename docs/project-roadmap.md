@@ -83,10 +83,10 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M17** Venue calendar | 🟡 Partial | `venue` schema (Venue/VenueBroadcast), `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`, venue + broadcast create endpoints. Deferred: admin verification UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
 | **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
-| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; **auto file tags** (BPM, key, genre, description); **lossless uploads → FLAC only**. Deferred: repost/follow download gates |
-| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, profile + smart-link **featured collections**, item reorder API + dashboard controls. Deferred: drag-and-drop UI polish |
+| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto file tags; lossless → FLAC; **repost/follow download gates** (follow, repost-ack, channel download UI) |
+| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | `ArchiveItemVersion` model, upload/activate API, worker transcode job, dashboard version panel (stable public item id). Deferred: release-track versions |
-| **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export; UPC/ISRC on `/r/:slug`. Deferred: guided MusicBrainz submit |
+| **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, MusicBrainz guide; UPC/ISRC on `/r/:slug` |
 | **M29** Backup & DR | 🟡 Partial | `scripts/backup-*.sh`, `restore-test.sh`; **`ops/RUNBOOK.md`**. Deferred: pgBackRest, offsite buckets, operator drills |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: 45/55-min API→UI polish edge cases |
 
@@ -102,7 +102,7 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Add board **role** (`User.isBoard` + `requireBoard`) so role checks stop using `isMember` as a proxy | Board-only actions are now gated properly; `admin/ledger` now uses `requireBoard` (manual ledger entries are board/treasurer-only) | M10 (done) |
 | [ ] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
 | [ ] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | AGENT.md acceptance criteria require Zod validation on every endpoint; several routes hand-roll validation | ongoing hardening |
-| [ ] | **M30 release-ops toolkit** — MusicBrainz submission, ISRC/UPC/credits, release checklist so official catalog work is not scattered across external sites | Producers need more than smart links; open-catalog + identifiers are table stakes for serious releases | M30 / Phase 6b |
+| [ ] | **M30 release-ops toolkit** — guided MusicBrainz submit, Revelator pre-fill from same release record | Producers need more than smart links; open-catalog + identifiers are table stakes for serious releases | M30 / Phase 6b |
 | [x] | **Tracklist @artist tags** — editable tracklist rows with `@handle` autocomplete; link to `/u/:handle`; M15 `TRACKLIST` mention surface | DJs credit guests and collaborators; hearthis-style tracklists without a social graph | M22 |
 | [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
 | [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; suite now runs on every PR with Postgres + Redis services | CI |
@@ -320,7 +320,7 @@ See `competitive-gaps-hearthis.md` for full gap list.
 | [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug` smart links |
 | [~] | **M28** | **Track version history** — upload new audio as a version; activate version; stable public archive item id |
 | [~] | **M24** | Per-content visuals: channel Twisted Wave GLSL gallery + static strip; per-item banner/slideshow URLs. Deferred: YouTube/Vimeo backdrop |
-| [~] | **M25** | Artist commentary on archive items (dashboard + public channel page) |
+| [~] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
 | [ ] | **M26** | Customisable radio/channel page: video background, per-album visualisations, theme picker — designer app for live show visuals |
 | [ ] | **M27** | 24/7 archive stream with automated scheduling and annotations: picks up previous live sets in fair rotation; moderator users control the programme list; audio visualisations per set; as automated as possible (ACRCloud tracklist sync feeds annotations) |
 
@@ -332,7 +332,7 @@ Artists need more than a smart link and a Revelator upload: the **official** sid
 
 | Done | Capability | Notes |
 |:---:|---|---|
-| [~] | **MusicBrainz submission** | MBID fields + submit link + MusicBrainz URL on smart link |
+| [~] | **MusicBrainz submission** | MBID fields + submit link + guide steps + MusicBrainz URL on smart link |
 | [~] | **ISRC + UPC/EAN** | Release ops capture; display on `/r/:slug` |
 | [~] | **Credits & roles** | Dashboard credits editor; JSON export |
 | [~] | **Copyright lines** | P/C-line + label imprint |
