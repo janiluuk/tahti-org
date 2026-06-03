@@ -119,7 +119,7 @@ This phase corresponds to milestones M0–M5 in `docs/AGENT.md`.
 | 1 | Provision 3 staging VMs (manager + 2 workers, 2 vCPU each) | UpCloud — can be smaller than prod |
 | 2 | Init 3-node Swarm, assign node labels | Follow `docker-stack.yml` header |
 | 3 | Create staging secrets (use random values, not real keys) | Separate `docker secret create` run on staging manager |
-| 4 | Update GitHub Actions: deploy to staging on every push to `main`, deploy to production on tag `v*`; CI auto-tags `YYmmdd-buildnr` on each green `main` build | Two deploy jobs, same Makefile target |
+| 4 | Update GitHub Actions: deploy to staging on every push to `main`, deploy to production on tag `v*`; CI auto-tags `YYYY-MM-DD-buildnr` on each green `main` build | Two deploy jobs, same Makefile target |
 | 5 | Add DNS: `staging.tahti.live` → staging edge node | Verify Caddy + TLS works |
 | 6 | Run smoke test suite against staging after every deploy | Basic curl checks for `/health` endpoints |
 

@@ -1,5 +1,5 @@
 # CI — lint, typecheck, tests, API vital-flows e2e, website Docker, AGPL headers.
-# On push to main (after all checks): creates GitHub release tag YYmmdd-buildnr (UTC).
+# On push to main (after all checks): creates GitHub release tag YYYY-MM-DD-buildnr (UTC).
 # Screenshots are local-only: ./scripts/e2e-screenshots.sh (not run here).
 
 name: CI
@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "24"
 
 jobs:
   website-docker:
@@ -456,7 +456,7 @@ jobs:
           echo "All checks passed ✓"
 
   release:
-    name: Release (YYmmdd-buildnr)
+    name: Release (YYYY-MM-DD-buildnr)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [all-checks]
     runs-on: ubuntu-24.04

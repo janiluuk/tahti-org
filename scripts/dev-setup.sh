@@ -24,13 +24,13 @@ echo ""
 blue "Checking prerequisites..."
 
 command -v docker   &>/dev/null || red "docker not found — install Docker Desktop or Docker Engine"
-command -v node     &>/dev/null || red "node not found — install Node.js 20 LTS"
+command -v node     &>/dev/null || red "node not found — install Node.js 24 LTS"
 command -v pnpm     &>/dev/null || red "pnpm not found — run: npm install -g pnpm"
 command -v make     &>/dev/null || red "make not found"
 
 NODE_VER=$(node -e "process.stdout.write(process.versions.node)")
 NODE_MAJOR=$(echo "$NODE_VER" | cut -d. -f1)
-[[ $NODE_MAJOR -ge 20 ]] || red "Node.js 20+ required (found $NODE_VER)"
+[[ $NODE_MAJOR -ge 24 ]] || red "Node.js 24+ required (found $NODE_VER)"
 
 green "Prerequisites OK (node $NODE_VER)"
 

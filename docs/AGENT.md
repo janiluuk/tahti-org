@@ -114,7 +114,7 @@ The streaming pipeline is the core product. Every component must be designed for
 
 ## Tech stack (non-negotiable)
 
-- **Runtime:** Node.js 20 LTS, TypeScript strict
+- **Runtime:** Node.js 24 LTS, TypeScript strict
 - **API:** Fastify 4 + @fastify/swagger
 - **Realtime (chat + presence):** Centrifugo 5
 - **DB:** Postgres 16 + Prisma 5

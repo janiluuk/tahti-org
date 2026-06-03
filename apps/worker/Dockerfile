@@ -5,8 +5,8 @@
 # Build from repo root:
 #   docker build -f apps/worker/Dockerfile -t tahti/worker .
 
-FROM node:20-alpine
-RUN apk add --no-cache ffmpeg aubio openssl && \
+FROM node:24-alpine
+RUN apk add --no-cache ffmpeg openssl && \
     corepack enable && corepack prepare pnpm@9 --activate && \
     npm install -g tsx@4
 

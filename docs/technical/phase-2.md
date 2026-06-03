@@ -93,7 +93,7 @@ sequenceDiagram
 docker --version    # >= 24.0
 docker compose version  # >= 2.20
 make --version
-node --version      # >= 20 LTS
+node --version      # >= 24 LTS
 pnpm --version      # >= 9
 ```
 

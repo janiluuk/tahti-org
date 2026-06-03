@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Print the next release tag: YYmmdd-buildnr (UTC date, daily incrementing buildnr).
-# Example: 260603-1, 260603-2
+# Print the next release tag: YYYY-MM-DD-buildnr (UTC calendar date, daily incrementing buildnr).
+# Example: 2026-06-03-1, 2026-06-03-2
 set -euo pipefail
 
-PREFIX="$(date -u +%y%m%d)"
+PREFIX="$(date -u +%Y-%m-%d)"
 
 git fetch --tags origin 2>/dev/null || true
 
