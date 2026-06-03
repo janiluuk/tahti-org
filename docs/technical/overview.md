@@ -199,6 +199,11 @@ All host-side ports sit above 15 000 to avoid collisions with other local servic
 | website (marketing) | `WEBSITE_PORT` | 18080 | http://localhost:18080 |
 | rtmp-ingest | `RTMP_PORT` | 1935 | rtmp://localhost:1935 |
 
+### Local dev stack — build notes
+
+- **Centrifugo config:** channel-level settings (`presence`, `history_size`, `history_ttl`, namespaces) must live in a config file in v5, not CLI flags. Dev config is at `infra/stack/centrifugo.dev.json`; production config at `infra/centrifugo.json`.
+- **Workspace packages in Dockerfiles:** `apps/api/Dockerfile` and `apps/worker/Dockerfile` must explicitly `COPY` every `packages/*` the app imports. Currently required: `db`, `ledger`, `mixcloud`, `revelator` (worker only), `shared`. Missing entries cause `ERR_MODULE_NOT_FOUND` at startup.
+
 ## Domain routing
 
 ```mermaid

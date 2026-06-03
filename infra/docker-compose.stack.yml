@@ -105,24 +105,15 @@ services:
 
   chat:
     image: centrifugo/centrifugo:v5
-    command: >
-      centrifugo
-      --port=8000
-      --admin
-      --admin_password=dev
-      --admin_secret=dev
-      --api_key=dev
-      --token_hmac_secret_key=dev_secret_do_not_use_in_prod
-      --allowed_origins=http://localhost:17777,http://localhost:3000
-      --presence=true
-      --history_size=100
-      --history_ttl=86400s
+    command: centrifugo --config /centrifugo/config.json --port=8000 --health
+    volumes:
+      - ./stack/centrifugo.dev.json:/centrifugo/config.json:ro
     ports:
       - "${CHAT_PORT:-18000}:8000"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 5
 
   mailhog:
