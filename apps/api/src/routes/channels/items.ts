@@ -47,6 +47,8 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
         license: true,
         commentary: true,
         tracklist: true,
+        repostToDownload: true,
+        followToDownload: true,
       },
     })
 

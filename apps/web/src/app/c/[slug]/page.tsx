@@ -9,6 +9,7 @@ import ReactionsOverlay from './reactions'
 import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
+import { ArchiveDownloadButton } from './archive-download'
 import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
@@ -43,6 +44,8 @@ interface ArchiveItem {
   audioUrl: string | null
   createdAt: string
   tracklist?: TracklistEntry[] | null
+  repostToDownload?: boolean
+  followToDownload?: boolean
 }
 
 interface Announcement {
@@ -176,6 +179,13 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     {item.audioUrl && (
                       <audio controls src={item.audioUrl} style={{ width: '100%' }} />
                     )}
+                    <ArchiveDownloadButton
+                      channelSlug={slug}
+                      artistUsername={channel.user.username}
+                      itemId={item.id}
+                      repostToDownload={Boolean(item.repostToDownload)}
+                      followToDownload={Boolean(item.followToDownload)}
+                    />
                   </li>
                 ))}
               </ul>

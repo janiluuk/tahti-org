@@ -338,6 +338,8 @@ model User {
   mentionsMuted         MentionMute[]            @relation("MuterMutes")
   mentionsMutedBy       MentionMute[]            @relation("MuteTarget")
   collections           Collection[]
+  artistFollowers       ArtistFollow[]       @relation("ArtistFollowers")
+  artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
 
   @@schema("core")
 }
@@ -672,6 +674,32 @@ model Download {
   @@index([channelId, countedAt])
   @@index([byFingerprint, archiveItemId])
   @@index([archiveItemId, createdAt])
+  @@schema("engagement")
+}
+
+// M22: lightweight artist follow (not a social graph — unlocks follow-gated downloads).
+model ArtistFollow {
+  followerUserId String
+  artistUserId   String
+  follower       User     @relation("ArtistFollowing", fields: [followerUserId], references: [id], onDelete: Cascade)
+  artist         User     @relation("ArtistFollowers", fields: [artistUserId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@id([followerUserId, artistUserId])
+  @@index([artistUserId])
+  @@schema("engagement")
+}
+
+// M22: listener acknowledged sharing (repost-gated downloads).
+model ArchiveRepostAck {
+  id            String   @id @default(cuid())
+  archiveItemId String
+  byUserId      String?
+  byFingerprint String
+  createdAt     DateTime @default(now())
+
+  @@unique([archiveItemId, byFingerprint])
+  @@index([archiveItemId])
   @@schema("engagement")
 }
 

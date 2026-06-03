@@ -84,6 +84,14 @@ export default function CollectionsPanel({
     })
   }
 
+  function applyReorder(collectionSlug: string, itemIds: string[]) {
+    startTransition(async () => {
+      const res = await reorderCollectionItems(collectionSlug, itemIds)
+      if (res.error) setError(res.error)
+      else router.refresh()
+    })
+  }
+
   function moveItem(
     collectionSlug: string,
     items: NonNullable<CollectionRow['items']>,
@@ -95,11 +103,20 @@ export default function CollectionsPanel({
     const ids = [...items].sort((a, b) => a.position - b.position).map((i) => i.id)
     const swapped = [...ids]
     ;[swapped[index], swapped[next]] = [swapped[next], swapped[index]]
-    startTransition(async () => {
-      const res = await reorderCollectionItems(collectionSlug, swapped)
-      if (res.error) setError(res.error)
-      else router.refresh()
-    })
+    applyReorder(collectionSlug, swapped)
+  }
+
+  function reorderByDrag(
+    collectionSlug: string,
+    items: NonNullable<CollectionRow['items']>,
+    fromIndex: number,
+    toIndex: number,
+  ) {
+    if (fromIndex === toIndex) return
+    const ids = [...items].sort((a, b) => a.position - b.position).map((i) => i.id)
+    const [moved] = ids.splice(fromIndex, 1)
+    ids.splice(toIndex, 0, moved)
+    applyReorder(collectionSlug, ids)
   }
 
   function toggleFeatured(slug: string, isFeatured: boolean) {
@@ -188,11 +205,26 @@ export default function CollectionsPanel({
                     .map((it, idx, sorted) => (
                       <li
                         key={it.id}
+                        draggable={!isPending}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', String(idx))
+                          e.dataTransfer.effectAllowed = 'move'
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault()
+                          e.dataTransfer.dropEffect = 'move'
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          const from = Number(e.dataTransfer.getData('text/plain'))
+                          if (!Number.isNaN(from)) reorderByDrag(c.slug, sorted, from, idx)
+                        }}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           gap: '0.35rem',
                           marginBottom: 4,
+                          cursor: isPending ? 'default' : 'grab',
                         }}
                       >
                         <span style={{ flex: 1 }}>

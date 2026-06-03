@@ -83,8 +83,8 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M17** Venue calendar | 🟡 Partial | `venue` schema (Venue/VenueBroadcast), `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`, venue + broadcast create endpoints. Deferred: admin verification UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
 | **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
-| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; **auto file tags** (BPM, key, genre, description); **lossless uploads → FLAC only**. Deferred: repost/follow download gates |
-| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, profile + smart-link **featured collections**, item reorder API + dashboard controls. Deferred: drag-and-drop UI polish |
+| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto file tags; lossless → FLAC; **repost/follow download gates** (follow, repost-ack, channel download UI) |
+| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | `ArchiveItemVersion` model, upload/activate API, worker transcode job, dashboard version panel (stable public item id). Deferred: release-track versions |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export; UPC/ISRC on `/r/:slug`. Deferred: guided MusicBrainz submit |
 | **M29** Backup & DR | 🟡 Partial | `scripts/backup-*.sh`, `restore-test.sh`; **`ops/RUNBOOK.md`**. Deferred: pgBackRest, offsite buckets, operator drills |
@@ -295,7 +295,7 @@ Can ship incrementally during beta.
 | Done | Milestone | Summary | Priority |
 |:---:|---|---|---|
 | [~] | **M12** | Profile + releases + smart links (playback + artwork remain) | High |
-| [~] | **M30** | Release ops toolkit (MusicBrainz, catalog metadata, release checklist) | Medium |
+| [~] | **M30** | Release ops toolkit (MusicBrainz guide + MBIDs, credits, checklist, export) | Medium |
 | [~] | **M20** | Tier gating polish, upgrade UX | High |
 | [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
 | [~] | **M14** | Embed pages done; social auto-post + analytics remain | Medium |

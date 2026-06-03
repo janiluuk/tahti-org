@@ -6,6 +6,7 @@
 import { useState, useTransition } from 'react'
 import {
   COLLECTING_SOCIETY_POINTERS,
+  MUSICBRAINZ_GUIDE_STEPS,
   MUSICBRAINZ_SUBMIT_URL,
   POST_RELEASE_CLAIM_LINKS,
   RELEASE_CREDIT_ROLES,
@@ -291,6 +292,19 @@ export default function ReleaseOpsPanel({
             >
               Add on MusicBrainz →
             </a>
+          </div>
+
+          <div style={{ marginTop: '1rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+              MusicBrainz submission guide
+            </div>
+            <ol style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#444' }}>
+              {MUSICBRAINZ_GUIDE_STEPS.map((step) => (
+                <li key={step} style={{ marginBottom: '0.35rem' }}>
+                  {step}
+                </li>
+              ))}
+            </ol>
           </div>
 
           <div style={{ marginTop: '1rem' }}>
