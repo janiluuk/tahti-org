@@ -46,9 +46,7 @@ export function DownloadGateSummaryPanel({
         <strong>{summary.totals.repostAcks}</strong> repost acks ·{' '}
         <strong>{summary.totals.blockedAttempts}</strong> blocked attempts
       </Text>
-      {summary.daily && summary.daily.length > 0 && (
-        <GateDailyChart daily={summary.daily} />
-      )}
+      {summary.daily && summary.daily.length > 0 && <GateDailyChart daily={summary.daily} />}
       <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ textAlign: 'left', borderBottom: '1px solid #eee' }}>
