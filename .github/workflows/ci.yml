@@ -420,7 +420,7 @@ jobs:
           await app.close()
           console.log('OpenAPI spec written — ' + JSON.stringify(spec).length + ' bytes')
           EOF
-          pnpm exec tsx /tmp/export-spec.ts
+          pnpm --filter @tahti/api exec tsx /tmp/export-spec.ts
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
