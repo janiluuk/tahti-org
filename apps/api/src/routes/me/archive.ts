@@ -171,23 +171,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/me/channel/slideshow',
     { preHandler: requireAuth },
     async (request, reply) => {
-      const user = request.sessionUser!
-      const body = request.body as { slideshowImages?: unknown; galleryMode?: unknown }
-
-      if (body.slideshowImages !== undefined && !Array.isArray(body.slideshowImages)) {
-        return reply.status(400).send({ error: 'slideshowImages must be an array' })
-      }
-
-      const result = await patchChannelGallery(user.id, {
-        ...(body.slideshowImages !== undefined
-          ? {
-              slideshowImages: (body.slideshowImages as unknown[])
-                .filter((u) => typeof u === 'string')
-                .slice(0, 10) as string[],
-            }
-          : {}),
-        ...(typeof body.galleryMode === 'string' ? { galleryMode: body.galleryMode } : {}),
-      })
+      const result = await patchChannelGallery(request.sessionUser!.id, request.body)
       if (!result.ok) return reply.status(result.status).send({ error: result.error })
       return reply.send({ slideshowImages: result.slideshowImages })
     },

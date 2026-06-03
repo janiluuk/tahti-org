@@ -6,7 +6,8 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./broadcast-cap": "./src/broadcast-cap.ts"
+    "./broadcast-cap": "./src/broadcast-cap.ts",
+    "./openapi-zod": "./src/openapi-zod.ts"
   },
   "scripts": {
     "lint": "eslint src --ext .ts --max-warnings 0",
@@ -15,7 +16,8 @@
   },
   "dependencies": {
     "@tahti/db": "workspace:*",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.5"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

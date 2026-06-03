@@ -10,6 +10,7 @@ export interface GateSummaryItem {
   followToDownload: boolean
   repostAckCount: number
   blockedDownloadAttempts: number
+  countedDownloadCount?: number
 }
 
 export interface GateDailyPoint {
@@ -24,7 +25,7 @@ export function DownloadGateSummaryPanel({
 }: {
   summary: {
     artistFollowerCount: number
-    totals: { repostAcks: number; blockedAttempts: number }
+    totals: { repostAcks: number; blockedAttempts: number; countedDownloads?: number }
     items: GateSummaryItem[]
     daily?: GateDailyPoint[]
   } | null
@@ -45,6 +46,12 @@ export function DownloadGateSummaryPanel({
         <strong>{summary.artistFollowerCount}</strong> channel followers ·{' '}
         <strong>{summary.totals.repostAcks}</strong> repost acks ·{' '}
         <strong>{summary.totals.blockedAttempts}</strong> blocked attempts
+        {summary.totals.countedDownloads != null && (
+          <>
+            {' '}
+            · <strong>{summary.totals.countedDownloads}</strong> counted downloads (14d)
+          </>
+        )}
       </Text>
       {summary.daily && summary.daily.length > 0 && <GateDailyChart daily={summary.daily} />}
       <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
@@ -54,6 +61,7 @@ export function DownloadGateSummaryPanel({
             <th>Gates</th>
             <th>Reposts</th>
             <th>Blocked</th>
+            <th>Counted</th>
           </tr>
         </thead>
         <tbody>
@@ -67,6 +75,7 @@ export function DownloadGateSummaryPanel({
               </td>
               <td>{row.repostAckCount}</td>
               <td>{row.blockedDownloadAttempts}</td>
+              <td>{row.countedDownloadCount ?? 0}</td>
             </tr>
           ))}
         </tbody>

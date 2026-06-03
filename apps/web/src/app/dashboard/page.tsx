@@ -167,7 +167,7 @@ export default async function DashboardPage() {
   let broadcastUsage: BroadcastUsageInfo | null = null
   let downloadGateSummary: {
     artistFollowerCount: number
-    totals: { repostAcks: number; blockedAttempts: number }
+    totals: { repostAcks: number; blockedAttempts: number; countedDownloads?: number }
     daily?: Array<{
       date: string
       repostAcks: number
@@ -181,6 +181,7 @@ export default async function DashboardPage() {
       followToDownload: boolean
       repostAckCount: number
       blockedDownloadAttempts: number
+      countedDownloadCount?: number
     }>
   } | null = null
   let channelEgress: {

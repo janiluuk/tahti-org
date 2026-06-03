@@ -83,6 +83,12 @@ import rateLimitPlugin from './plugins/rate-limit.js'
 import requestLogPlugin from './plugins/request-log.js'
 import { apiLoggerConfig } from './lib/logger.js'
 import { config } from './config.js'
+import {
+  ChannelEgressResponseSchema,
+  ChannelScheduleViewSchema,
+  DownloadGateStatsResponseSchema,
+  zodOpenApiComponents,
+} from '@tahti/shared'
 
 export interface BuildOptions {
   logger?: boolean | object
@@ -115,6 +121,11 @@ export async function buildApp(opts: BuildOptions = {}) {
             description: 'Session cookie issued by POST /api/auth/login',
           },
         },
+        schemas: zodOpenApiComponents({
+          ChannelEgress: ChannelEgressResponseSchema,
+          DownloadGateStats: DownloadGateStatsResponseSchema,
+          ChannelSchedule: ChannelScheduleViewSchema,
+        }),
       },
       tags: [
         { name: 'auth', description: 'Authentication and session management' },
