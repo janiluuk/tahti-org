@@ -7,6 +7,7 @@ import sensible from '@fastify/sensible'
 import dbPlugin from './plugins/db.js'
 import authPlugin from './plugins/auth.js'
 import healthRoute from './routes/health.js'
+import statusRoutes from './routes/status.js'
 import sourceRoute from './routes/source.js'
 import registerRoute from './routes/auth/register.js'
 import verifyRoute from './routes/auth/verify.js'
@@ -38,6 +39,13 @@ import adminGrantsRoutes from './routes/admin/grants.js'
 import fanTierRoutes from './routes/fansubs/tiers.js'
 import fanSubscriptionRoutes from './routes/fansubs/subscriptions.js'
 import stripeWebhookRoutes from './routes/webhooks/stripe.js'
+import membershipRoutes from './routes/me/membership.js'
+import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
+import adminMembersRoutes from './routes/admin/members.js'
+import adminAuditRoutes from './routes/admin/audit.js'
+import meReleaseRoutes from './routes/releases/me.js'
+import publicProfileRoutes from './routes/profile/public.js'
+import smartlinkRoutes from './routes/releases/smartlink.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { config } from './config.js'
 
@@ -48,6 +56,7 @@ export interface BuildOptions {
 export async function buildApp(opts: BuildOptions = {}) {
   const fastify = Fastify({
     logger: opts.logger ?? config.nodeEnv !== 'test',
+    trustProxy: true,
   })
 
   // Plugins
@@ -64,6 +73,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // Routes
   await fastify.register(healthRoute)
+  await fastify.register(statusRoutes)
   await fastify.register(sourceRoute)
   await fastify.register(registerRoute)
   await fastify.register(verifyRoute)
@@ -111,6 +121,21 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(fanTierRoutes)
   await fastify.register(fanSubscriptionRoutes)
   await fastify.register(stripeWebhookRoutes)
+
+  // M1: annual membership payment
+  await fastify.register(membershipRoutes)
+  await fastify.register(adminMembersRoutes)
+
+  // M20: tier gating
+  await fastify.register(broadcastUsageRoutes)
+
+  // M11: audit exports
+  await fastify.register(adminAuditRoutes)
+
+  // M12: artist profile + releases
+  await fastify.register(meReleaseRoutes)
+  await fastify.register(publicProfileRoutes)
+  await fastify.register(smartlinkRoutes)
 
   return fastify
 }

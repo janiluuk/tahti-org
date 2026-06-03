@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs"]
+  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs", "release"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -24,6 +24,7 @@ enum ArtistTier {
 
 enum MembershipStatus {
   PENDING_EMAIL
+  PENDING_PAYMENT
   ACTIVE
   SUSPENDED
   RESIGNED
@@ -147,6 +148,24 @@ enum FanSubPayoutState {
   @@schema("fansubs")
 }
 
+enum ReleaseType {
+  SINGLE
+  EP
+  ALBUM
+  COMPILATION
+  REMIX
+
+  @@schema("release")
+}
+
+enum ReleaseState {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+
+  @@schema("release")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model User {
@@ -185,6 +204,7 @@ model User {
   fanTiers            FanTier[]
   fanSubsAsArtist     FanSubscription[]   @relation("ArtistFanSubs")
   fanSubsAsSubscriber FanSubscription[]   @relation("SubscriberFanSubs")
+  releases            Release[]
 
   @@schema("core")
 }
@@ -309,6 +329,7 @@ model ArchiveItem {
   description   String?
   rawKey        String
   mp3Key        String?
+  flacKey       String?
   durationSec   Int?
   fileSizeBytes BigInt
   status        ArchiveItemStatus @default(PENDING)
@@ -530,4 +551,43 @@ model FanSubPayout {
   @@index([fanSubscriptionId, forPeriodStart])
   @@index([artistUserId, forPeriodStart])
   @@schema("fansubs")
+}
+
+// ── Artist profile releases (M12) ───────────────────────────────────────────
+// Full upload/transcode pipeline deferred; v1 supports metadata + archive links.
+
+model Release {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  type          ReleaseType
+  artworkUrl    String?
+  releaseDate   DateTime
+  description   String?
+  smartLinkSlug String       @unique
+  state         ReleaseState @default(DRAFT)
+  publishedAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  tracks ReleaseTrack[]
+
+  @@index([userId, releaseDate])
+  @@index([userId, state])
+  @@schema("release")
+}
+
+model ReleaseTrack {
+  id            String   @id @default(cuid())
+  releaseId     String
+  release       Release  @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  position      Int
+  title         String
+  durationSec   Int?
+  archiveItemId String?
+  createdAt     DateTime @default(now())
+
+  @@unique([releaseId, position])
+  @@schema("release")
 }

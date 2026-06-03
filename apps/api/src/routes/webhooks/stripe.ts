@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { constructWebhookEvent } from '../../lib/stripe.js'
 import { activateSubscription, recordFanSubPayment } from '../../lib/fansub.js'
+import { activateMembership } from '../../lib/membership.js'
 
 // Stripe webhook for fan-subscription lifecycle. Encapsulated in its own plugin
 // so the raw-body parser (needed for signature verification) does not affect the
@@ -33,6 +34,16 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
     const meta = (obj.metadata as Record<string, string> | undefined) ?? {}
 
     switch (event.type) {
+      case 'checkout.session.completed': {
+        if (meta.type !== 'membership' || !meta.userId) break
+        const amount = obj.amount_total != null ? Number(obj.amount_total) : undefined
+        await activateMembership(fastify.prisma, meta.userId, {
+          stripeSessionId: String(obj.id),
+          amountCents: amount,
+        })
+        break
+      }
+
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
         if (!meta.artistUserId || !meta.subscriberUserId) break

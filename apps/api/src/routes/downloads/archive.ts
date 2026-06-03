@@ -16,9 +16,7 @@ import { config } from '../../config.js'
 // A download that doesn't count toward grants still succeeds for the listener;
 // it is logged with countedAt = NULL and a `reason`.
 //
-// Note: the 24h net-new-IP threshold and Tor/bot allowlist (engagement-and-
-// fansubs.md §anti-fraud 5–6) are deferred; the grant-relevant controls
-// (rate limit, dedup, per-track cap, weighting) are implemented here.
+// Tor/bot allowlist (engagement-and-fansubs.md §6) is deferred.
 
 const HOUR_MS = 60 * 60 * 1000
 const DAY_MS = 24 * HOUR_MS
@@ -43,16 +41,18 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, user: { select: { tier: true } } },
     })
     if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
     const item = await fastify.prisma.archiveItem.findFirst({
       where: { id: itemId, channelId: channel.id, status: 'READY' },
-      select: { id: true, mp3Key: true, fileSizeBytes: true },
+      select: { id: true, mp3Key: true, flacKey: true, fileSizeBytes: true },
     })
     if (!item) return reply.status(404).send({ error: 'Archive item not found' })
-    if (!item.mp3Key) {
+    const wantFlac = query.format === 'flac' && item.flacKey && channel.user.tier !== 'FREE'
+    const objectKey = wantFlac ? item.flacKey! : item.mp3Key
+    if (!objectKey) {
       return reply.status(409).send({ error: 'No downloadable file for this item' })
     }
 
@@ -119,11 +119,23 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
+    if (countedAt) {
+      const ipFirstSeen = await fastify.prisma.download.findFirst({
+        where: { byIpHash },
+        orderBy: { createdAt: 'asc' },
+        select: { createdAt: true },
+      })
+      if (!ipFirstSeen || now - ipFirstSeen.createdAt.getTime() < DAY_MS) {
+        countedAt = null
+        reason = 'new_ip'
+      }
+    }
+
     await fastify.prisma.download.create({
       data: {
         channelId: channel.id,
         archiveItemId: item.id,
-        format: query.format === 'opus256' ? 'opus256' : 'mp3_320',
+        format: wantFlac ? 'flac' : query.format === 'opus256' ? 'opus256' : 'mp3_320',
         byUserId,
         byFingerprint,
         byIpHash,
@@ -134,7 +146,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       },
     })
 
-    const url = await presignedGetUrl(item.mp3Key, 300)
+    const url = await presignedGetUrl(objectKey, 300)
     return reply.send({ url, counted: countedAt !== null })
   })
 }

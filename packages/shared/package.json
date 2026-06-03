@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@tahti/db": "workspace:*",
     "zod": "^3.23.8"
   },
   "devDependencies": {

@@ -14,6 +14,54 @@ import { config } from '../config.js'
 
 export const stripeEnabled = config.stripe.enabled
 
+export interface CheckoutSessionResult {
+  id: string
+  url: string
+}
+
+/** Create a one-time Stripe Checkout session (REST API, no SDK dependency). */
+export async function createCheckoutSession(params: {
+  customerEmail: string
+  successUrl: string
+  cancelUrl: string
+  unitAmountCents: number
+  productName: string
+  metadata: Record<string, string>
+}): Promise<CheckoutSessionResult> {
+  const key = config.stripe.secretKey
+  if (!key) throw new Error('Stripe is not configured')
+
+  const body = new URLSearchParams({
+    mode: 'payment',
+    customer_email: params.customerEmail,
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    'line_items[0][price_data][currency]': 'eur',
+    'line_items[0][price_data][unit_amount]': String(params.unitAmountCents),
+    'line_items[0][price_data][product_data][name]': params.productName,
+    'line_items[0][quantity]': '1',
+  })
+  for (const [k, v] of Object.entries(params.metadata)) {
+    body.set(`metadata[${k}]`, v)
+  }
+
+  const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${key}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body,
+  })
+
+  const data = (await res.json()) as { id?: string; url?: string; error?: { message?: string } }
+  if (!res.ok) {
+    throw new Error(data.error?.message ?? `Stripe Checkout failed (${res.status})`)
+  }
+  if (!data.id || !data.url) throw new Error('Stripe Checkout returned an incomplete session')
+  return { id: data.id, url: data.url }
+}
+
 export interface StripeEvent {
   id?: string
   type: string

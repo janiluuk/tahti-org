@@ -9,6 +9,7 @@ import ReactionsOverlay from './reactions.js'
 interface ChannelResponse {
   slug: string
   state: string
+  hlsUrl: string | null
   user: {
     username: string
     displayName: string
@@ -58,10 +59,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     ? ((await announcementsRes.json()) as Announcement[])
     : []
 
-  const hlsUrl =
-    channel.state === 'LIVE'
-      ? `${process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live'}/${slug}/stream.m3u8`
-      : null
+  const hlsUrl = channel.hlsUrl
 
   return (
     <div style={{ maxWidth: 1100, margin: '2rem auto', padding: '0 1rem' }}>

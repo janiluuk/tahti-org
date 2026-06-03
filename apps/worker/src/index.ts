@@ -7,6 +7,7 @@ import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
 import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
+import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -24,6 +25,12 @@ const worker = new Worker(
       await processArchiveBroadcastJob(job)
     } else if (job.name === 'monthly-ledger-rollup') {
       await processMonthlyLedgerRollup(job)
+    } else if (job.name === 'broadcast-cap-tick') {
+      const summary = await processBroadcastCapTick(prisma)
+      console.log('[worker] broadcast-cap-tick:', JSON.stringify(summary))
+    } else if (job.name === 'weekly-broadcast-reset') {
+      const summary = await processWeeklyBroadcastReset(prisma)
+      console.log('[worker] weekly-broadcast-reset:', JSON.stringify(summary))
     } else if (job.name === 'annual-grant-calc') {
       // Default to the prior calendar year (matches Finnish fiscal year).
       const { year } = job.data as { year?: number }
@@ -61,6 +68,20 @@ async function registerCrons() {
     'annual-grant-calc',
     {},
     { repeat: { pattern: '0 3 1 3 *' }, jobId: 'annual-grant-calc-cron' },
+  )
+
+  // M20: increment free-tier live seconds every minute; disconnect at cap
+  await queue.add(
+    'broadcast-cap-tick',
+    {},
+    { repeat: { pattern: '* * * * *' }, jobId: 'broadcast-cap-tick-cron' },
+  )
+
+  // M20: reset free-tier weekly counters Monday 00:00 UTC
+  await queue.add(
+    'weekly-broadcast-reset',
+    {},
+    { repeat: { pattern: '0 0 * * 1' }, jobId: 'weekly-broadcast-reset-cron' },
   )
 
   await queue.close()

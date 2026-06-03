@@ -27,6 +27,7 @@ describe('M10 — member governance', () => {
       where: { proposer: { email: { startsWith: TEST_EMAIL_PREFIX } } },
     })
     await prisma.user.deleteMany({ where: { email: { startsWith: TEST_EMAIL_PREFIX } } })
+    await prisma.user.deleteMany({ where: { memberNumber: { gte: 97100, lte: 97199 } } })
 
     const passwordHash = await hashPassword('testpassword')
 
@@ -39,7 +40,7 @@ describe('M10 — member governance', () => {
         emailVerifiedAt: new Date(),
         isMember: true,
         isBoard: true,
-        memberNumber: 1,
+        memberNumber: 97101,
         memberSince: new Date(),
         membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
       },
@@ -52,7 +53,7 @@ describe('M10 — member governance', () => {
         displayName: 'Ordinary Member',
         emailVerifiedAt: new Date(),
         isMember: true,
-        memberNumber: 2,
+        memberNumber: 97102,
         memberSince: new Date(),
         membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
       },
@@ -65,7 +66,7 @@ describe('M10 — member governance', () => {
         displayName: 'Other Member',
         emailVerifiedAt: new Date(),
         isMember: true,
-        memberNumber: 3,
+        memberNumber: 97103,
         memberSince: new Date(),
         membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
       },
@@ -121,8 +122,8 @@ describe('M10 — member governance', () => {
     // present. Assert only that this suite's fixtures appear in member-number
     // order (the directory is ordered by memberNumber asc).
     const numbers: number[] = res.json().map((m: { memberNumber: number }) => m.memberNumber)
-    const ours = numbers.filter((n) => [1, 2, 3].includes(n))
-    expect(ours).toEqual([1, 2, 3])
+    const ours = numbers.filter((n) => [97101, 97102, 97103].includes(n))
+    expect(ours).toEqual([97101, 97102, 97103])
   })
 
   it('forbids non-board members from posting a motion', async () => {

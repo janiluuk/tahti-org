@@ -2,12 +2,26 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { createHash } from 'node:crypto'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
+import { config } from '../../config.js'
+
+const HOUR_MS = 60 * 60 * 1000
+const DAY_MS = 24 * HOUR_MS
+
+function ipHashForTest(ip: string): string {
+  const day = new Date().toISOString().slice(0, 10)
+  const salt = createHash('sha256').update(`${config.internalSecret}:${day}`).digest('hex')
+  return createHash('sha256').update(`${ip}:${salt}`).digest('hex')
+}
 
 const TEST_EMAIL_PREFIX = 'download-test-'
 const SLUG = 'download-test-channel'
+// Isolated IP so rate-limit tests are not affected by other suites on 127.0.0.1.
+const TEST_IP = '203.0.113.55'
+const dlHeaders = { 'x-forwarded-for': TEST_IP }
 
 describe('M18 — archive downloads + engagement units', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -74,31 +88,79 @@ describe('M18 — archive downloads + engagement units', () => {
     expect(res.statusCode).toBe(404)
   })
 
-  it('counts the first download (weight 1, counted)', async () => {
+  it('does not count the first download from a brand-new IP (24h threshold)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/c/${SLUG}/archive/${itemId}/download?fp=fingerprint-new-ip`,
+      headers: dlHeaders,
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().counted).toBe(false)
+
+    const row = await prisma.download.findFirst({ where: { channelId } })
+    expect(row?.reason).toBe('new_ip')
+  })
+
+  it('counts download when IP was first seen 24h+ ago', async () => {
+    const byIpHash = ipHashForTest(TEST_IP)
+    const seenAt = new Date(Date.now() - 25 * HOUR_MS)
+    await prisma.download.create({
+      data: {
+        channelId,
+        archiveItemId: itemId,
+        format: 'mp3_320',
+        byFingerprint: 'ip-seed-fp',
+        byIpHash,
+        countedAt: seenAt,
+        weight: 1,
+        bytes: 0,
+        createdAt: seenAt,
+      },
+    })
+
     const res = await app.inject({
       method: 'GET',
       url: `/api/v1/c/${SLUG}/archive/${itemId}/download?fp=fingerprint-A`,
+      headers: dlHeaders,
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().counted).toBe(true)
-    expect(typeof res.json().url).toBe('string')
 
-    const rows = await prisma.download.findMany({ where: { channelId } })
-    expect(rows).toHaveLength(1)
-    expect(rows[0].countedAt).not.toBeNull()
-    expect(rows[0].weight).toBe(1)
+    const counted = await prisma.download.count({
+      where: { channelId, countedAt: { not: null } },
+    })
+    expect(counted).toBe(2)
   })
 
   it('dedups a repeat download from the same fingerprint within 30 days', async () => {
+    const byIpHash = ipHashForTest(TEST_IP)
+    const seenAt = new Date(Date.now() - 25 * HOUR_MS)
+    await prisma.download.create({
+      data: {
+        channelId,
+        archiveItemId: itemId,
+        format: 'mp3_320',
+        byFingerprint: 'dedup-ip-seed',
+        byIpHash,
+        countedAt: null,
+        reason: 'new_ip',
+        weight: 1,
+        bytes: 0,
+        createdAt: seenAt,
+      },
+    })
+
     const first = await app.inject({
       method: 'GET',
       url: `/api/v1/c/${SLUG}/archive/${itemId}/download?fp=fingerprint-B`,
+      headers: dlHeaders,
     })
     expect(first.json().counted).toBe(true)
 
     const second = await app.inject({
       method: 'GET',
       url: `/api/v1/c/${SLUG}/archive/${itemId}/download?fp=fingerprint-B`,
+      headers: dlHeaders,
     })
     // Download still succeeds for the listener…
     expect(second.statusCode).toBe(200)
@@ -112,18 +174,21 @@ describe('M18 — archive downloads + engagement units', () => {
   })
 
   it('rate-limits after 5 downloads in an hour (429)', async () => {
+    await prisma.download.deleteMany({ where: { channelId } })
     // 5 distinct fingerprints from the same IP — dedup won't apply, but the
     // per-IP rate limit should trip on the 6th request.
     for (let i = 0; i < 5; i++) {
       const res = await app.inject({
         method: 'GET',
         url: `/api/v1/c/${SLUG}/archive/${itemId}/download?fp=rate-${i}`,
+        headers: dlHeaders,
       })
       expect(res.statusCode).toBe(200)
     }
     const blocked = await app.inject({
       method: 'GET',
       url: `/api/v1/c/${SLUG}/archive/${itemId}/download?fp=rate-final`,
+      headers: dlHeaders,
     })
     expect(blocked.statusCode).toBe(429)
     expect(blocked.headers['retry-after']).toBeDefined()

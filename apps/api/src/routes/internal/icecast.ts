@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
+import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared'
 
 // Icecast URL auth callbacks.
 // Icecast sends: mount, user, pass (plus optional ip, agent) as form-encoded body.
@@ -19,7 +20,13 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },
-      select: { id: true, liveSourcePassHash: true, state: true },
+      select: {
+        id: true,
+        liveSourcePassHash: true,
+        state: true,
+        userId: true,
+        user: { select: { tier: true } },
+      },
     })
 
     if (!channel) return reply.status(403).send('denied')
@@ -28,6 +35,12 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
     if (!valid) {
       fastify.log.warn({ slug }, 'icecast on_connect: invalid source password')
       return reply.status(403).send('denied')
+    }
+
+    const cap = await checkBroadcastCap(fastify.prisma, channel.userId, channel.user.tier)
+    if (!canAcceptSourceConnect(cap, channel.state)) {
+      fastify.log.info({ slug }, 'icecast on_connect: weekly live cap reached')
+      return reply.status(403).send('weekly_cap')
     }
 
     const broadcast = await fastify.prisma.broadcast.create({

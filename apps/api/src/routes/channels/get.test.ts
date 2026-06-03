@@ -63,5 +63,33 @@ describe('GET /api/channels/:slug', () => {
     expect(body.slug).toBe('channel-get-testuser')
     expect(body.user.displayName).toBe('Channel Get Test')
     expect(body.user.username).toBe('channel-get-testuser')
+    expect(body.hlsUrl).toBeNull()
+  })
+
+  it('includes tier-based HLS URL when LIVE', async () => {
+    await prisma.user.update({
+      where: { username: 'channel-get-testuser' },
+      data: { tier: 'ARTIST' },
+    })
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { state: 'LIVE' },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/channels/channel-get-testuser',
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().hlsUrl).toContain('stream-flac')
+
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { state: 'OFFLINE' },
+    })
+    await prisma.user.update({
+      where: { username: 'channel-get-testuser' },
+      data: { tier: 'FREE' },
+    })
   })
 })

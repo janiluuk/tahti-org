@@ -41,7 +41,7 @@ const verifyRoute: FastifyPluginAsync = async (fastify) => {
       }),
       fastify.prisma.membership.update({
         where: { userId: verification.userId },
-        data: { status: 'ACTIVE', activatedAt: new Date() },
+        data: { status: 'PENDING_PAYMENT' },
       }),
       fastify.prisma.emailVerification.update({
         where: { id: verification.id },
@@ -49,7 +49,10 @@ const verifyRoute: FastifyPluginAsync = async (fastify) => {
       }),
     ])
 
-    return reply.send({ message: 'Email verified — you can now log in' })
+    return reply.send({
+      message:
+        'Email verified — log in and complete your €40 annual membership payment to join Tahti ry',
+    })
   })
 }
 

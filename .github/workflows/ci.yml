@@ -6,8 +6,8 @@
 # startup ("workflow file issue", 0 jobs, 0s). The monorepo is committed, so the
 # guard is removed and the jobs always run.
 #
-# e2e-phase4 is a separate workflow (e2e-phase4.yml) — it runs against a live
-# deployment and must be triggered manually or via deploy hooks.
+# E2E: e2e-api.yml runs vital-flows.sh against a CI-started API; e2e-phase4.yml
+# targets a deployed environment (manual / deploy hook).
 
 name: CI
 

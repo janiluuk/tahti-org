@@ -108,6 +108,29 @@ export async function createFanTier(params: {
   return { error: null }
 }
 
+export async function startMembershipCheckout(): Promise<{
+  error: string | null
+  checkoutUrl?: string
+  activated?: boolean
+  memberNumber?: number
+}> {
+  const response = await fetch(`${apiUrl}/api/me/membership/checkout`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    return { error: (data as { error?: string }).error ?? 'Checkout failed' }
+  }
+  return {
+    error: null,
+    checkoutUrl: (data as { checkoutUrl?: string }).checkoutUrl,
+    activated: (data as { activated?: boolean }).activated,
+    memberNumber: (data as { memberNumber?: number }).memberNumber,
+  }
+}
+
 export async function setFanTierActive(
   id: string,
   active: boolean,
