@@ -510,7 +510,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
 | [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Studio shell + public brand on login/join/transparency/channel/profile/governance/subscribe/embed/smart link |
-| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | + chat react/announcements/ban, release track create/upload |
+| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | + chat token, react/announcements/ban, release track create/upload |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [x] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` — members, audit, fan-subscriber exports |
@@ -547,7 +547,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 
 | ID | Issue | Raised by | Phase to fix |
 |:---|---|---|---|
-| [ ] | **STREAM-006** No per-channel bandwidth accounting — can't attribute egress costs per artist, can't inform resource limits or grant calculations | Architecture review | M8 |
+| [~] | **STREAM-006** No per-channel bandwidth accounting — can't attribute egress costs per artist, can't inform resource limits or grant calculations | `GET /api/me/channel-egress` + dashboard 30d chart (download bytes; HLS egress deferred) | M8 |
 | [ ] | **STREAM-007** Single Icecast node — Mixxx/Traktor users have no failover | Architecture review | Phase 5 / pre-launch |
 | [ ] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Architecture review | M4 |
 | [ ] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Architecture review | M3 |
@@ -560,7 +560,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 |:---|---|---|---|
 | [ ] | **STREAM-010** Graceful drain on Liquidsoap stop may emit an incomplete final HLS segment — listeners hear a cut instead of a fade | Architecture review | M3 |
 | [ ] | **ARTIST-004** Upload progress bar shows browser→MinIO upload only, not transcode progress — artist thinks "nothing is happening" during transcode | Journey: Artist J4 | M2 |
-| [ ] | **LISTENER-003** Anonymous listener sets a handle in localStorage but it resets if cookies cleared — confusing return identity | Journey: Listener J1 | M5 |
+| [~] | **LISTENER-003** Anonymous listener sets a handle in localStorage but it resets if cookies cleared — confusing return identity | `tahti_chat_handle` cookie + localStorage fallback on join | M5 |
 | [ ] | **DIRECTOR-001** Grant calculation preview has no anomaly detection — director must manually spot-check 200 rows for bot activity | Journey: Director J1 | M9 |
 
 ---

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { ChatReactSchema, ChatAnnouncementSchema, ChatBanSchema } from './chat.js'
+import { ChatReactSchema, ChatAnnouncementSchema, ChatBanSchema, ChatTokenSchema } from './chat.js'
 
 describe('ChatReactSchema', () => {
   it('accepts allowed emoji', () => {
@@ -21,6 +21,12 @@ describe('ChatAnnouncementSchema', () => {
 
   it('rejects body over 500 chars', () => {
     expect(ChatAnnouncementSchema.safeParse({ body: 'x'.repeat(501) }).success).toBe(false)
+  })
+})
+
+describe('ChatTokenSchema', () => {
+  it('rejects empty handle', () => {
+    expect(ChatTokenSchema.safeParse({ handle: '  ' }).success).toBe(false)
   })
 })
 

@@ -27,3 +27,10 @@ export const ChatBanSchema = z.object({
 })
 
 export type ChatBanInput = z.infer<typeof ChatBanSchema>
+
+export const ChatTokenSchema = z.object({
+  handle: z.string().trim().min(1, 'handle is required').max(32),
+  hcaptchaToken: z.string().optional(),
+})
+
+export type ChatTokenInput = z.infer<typeof ChatTokenSchema>

@@ -19,7 +19,7 @@ interface ChatMessage {
   supporter?: boolean
 }
 
-const HANDLE_KEY = 'tahti_chat_handle'
+import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
 
 export default function ChatPanel({
   slug,
@@ -41,10 +41,13 @@ export default function ChatPanel({
   const msgIdRef = useRef(1)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Load saved handle from localStorage
+  // Load saved handle from localStorage or API cookie (LISTENER-003)
   useEffect(() => {
-    const saved = localStorage.getItem(HANDLE_KEY)
-    if (saved) setHandle(saved)
+    const saved = loadStoredChatHandle()
+    if (saved) {
+      setHandle(saved)
+      setPendingHandle(saved)
+    }
   }, [])
 
   // Poll listener count every 30s
@@ -149,7 +152,7 @@ export default function ChatPanel({
       }
       if (!res.ok) throw new Error('Failed to get token')
       const data = (await res.json()) as { token: string; handle: string; supporter?: boolean }
-      localStorage.setItem(HANDLE_KEY, data.handle)
+      persistChatHandle(data.handle)
       setHandle(data.handle)
       setToken(data.token)
       setSupporter(!!data.supporter)
