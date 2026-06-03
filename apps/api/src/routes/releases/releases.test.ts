@@ -153,7 +153,9 @@ describe('M12 — releases and public profile', () => {
       url: '/api/me/releases',
       headers: { cookie },
     })
-    const id = list.json()[0].id
+    const row = list.json().find((r: { _count: { tracks: number } }) => r._count.tracks > 0)
+    expect(row).toBeTruthy()
+    const id = row!.id as string
 
     const patch = await app.inject({
       method: 'PATCH',
@@ -181,5 +183,32 @@ describe('M12 — releases and public profile', () => {
     })
     expect(exp.statusCode).toBe(200)
     expect(exp.json().release.upc).toBe('1234567890123')
+
+    const csv = await app.inject({
+      method: 'GET',
+      url: `/api/me/releases/${id}/export.csv`,
+      headers: { cookie },
+    })
+    expect(csv.statusCode).toBe(200)
+    expect(csv.headers['content-type']).toContain('text/csv')
+    expect(csv.body).toContain('1234567890123')
+
+    const trackId = row!.tracks[0].id as string
+    const trackPatch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${id}/catalog`,
+      headers: { cookie },
+      payload: {
+        tracks: [
+          {
+            id: trackId,
+            isrc: 'FI-XXX-26001',
+            musicbrainzRecordingId: '11111111-2222-3333-4444-555555555555',
+          },
+        ],
+      },
+    })
+    expect(trackPatch.statusCode).toBe(200)
+    expect(trackPatch.json().tracks[0].isrc).toBe('FI-XXX-26001')
   })
 })

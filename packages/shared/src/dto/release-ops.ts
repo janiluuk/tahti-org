@@ -24,6 +24,12 @@ export const ReleaseCreditSchema = z.object({
 
 export type ReleaseCredit = z.infer<typeof ReleaseCreditSchema>
 
+export const ReleaseTrackCatalogPatchSchema = z.object({
+  id: z.string().min(1),
+  isrc: z.string().max(12).nullable().optional(),
+  musicbrainzRecordingId: z.string().max(64).nullable().optional(),
+})
+
 export const ReleaseCatalogPatchSchema = z
   .object({
     upc: z.string().max(20).nullable().optional(),
@@ -33,6 +39,7 @@ export const ReleaseCatalogPatchSchema = z
     cLine: z.string().max(200).nullable().optional(),
     labelImprint: z.string().max(120).nullable().optional(),
     credits: z.array(ReleaseCreditSchema).max(40).optional(),
+    tracks: z.array(ReleaseTrackCatalogPatchSchema).max(50).optional(),
   })
   .partial()
 
@@ -44,6 +51,7 @@ export const RELEASE_CHECKLIST_STEPS = [
   'musicbrainz',
   'dsp',
   'published',
+  'newsletter',
 ] as const
 
 export type ReleaseChecklistStep = (typeof RELEASE_CHECKLIST_STEPS)[number]
@@ -65,10 +73,18 @@ export interface ReleaseForChecklist {
   musicbrainzReleaseId: string | null
   revelatorStatus: string | null
   smartLinkTargets: unknown
-  tracks: Array<{ isrc: string | null }>
+  tracks: Array<{ isrc: string | null; musicbrainzRecordingId?: string | null }>
 }
 
-export function computeReleaseChecklist(release: ReleaseForChecklist): ReleaseChecklistItem[] {
+export type ReleaseChecklistContext = {
+  /** True when the artist has sent at least one newsletter (M13). */
+  artistNewsletterSent?: boolean
+}
+
+export function computeReleaseChecklist(
+  release: ReleaseForChecklist,
+  context: ReleaseChecklistContext = {},
+): ReleaseChecklistItem[] {
   const hasTargets =
     release.smartLinkTargets &&
     typeof release.smartLinkTargets === 'object' &&
@@ -106,7 +122,7 @@ export function computeReleaseChecklist(release: ReleaseForChecklist): ReleaseCh
       id: 'musicbrainz',
       label: 'MusicBrainz',
       done: musicbrainzDone,
-      hint: 'Optional — store MBID after open-catalog submission',
+      hint: 'Store release MBID; add recording MBIDs per track when known',
     },
     {
       id: 'dsp',
@@ -120,7 +136,67 @@ export function computeReleaseChecklist(release: ReleaseForChecklist): ReleaseCh
       done: publishedDone,
       hint: 'Release state is PUBLISHED',
     },
+    {
+      id: 'newsletter',
+      label: 'Newsletter to fans',
+      done: Boolean(context.artistNewsletterSent),
+      hint: 'Optional — send a release announcement from the Newsletter panel',
+    },
   ]
+}
+
+/** CSV rows for label copy / Picard (track-level identifiers). */
+export function buildReleaseExportCsv(pack: {
+  release: {
+    title: string
+    type: string
+    releaseDate: string
+    upc: string | null
+    musicbrainzReleaseId: string | null
+    musicbrainzArtistId: string | null
+    pLine: string | null
+    cLine: string | null
+    labelImprint: string | null
+  }
+  artist: { username: string; displayName: string }
+  tracks: Array<{
+    position: number
+    title: string
+    isrc: string | null
+    musicbrainzRecordingId: string | null
+    durationSec: number | null
+  }>
+}): string {
+  const lines = [
+    'position,title,isrc,musicbrainz_recording_id,duration_sec,upc,release_mbid,artist_mbid,p_line,c_line,label,artist,release_title,release_type,release_date',
+  ]
+  for (const t of pack.tracks) {
+    lines.push(
+      [
+        t.position,
+        csvEscape(t.title),
+        csvEscape(t.isrc ?? ''),
+        csvEscape(t.musicbrainzRecordingId ?? ''),
+        t.durationSec ?? '',
+        csvEscape(pack.release.upc ?? ''),
+        csvEscape(pack.release.musicbrainzReleaseId ?? ''),
+        csvEscape(pack.release.musicbrainzArtistId ?? ''),
+        csvEscape(pack.release.pLine ?? ''),
+        csvEscape(pack.release.cLine ?? ''),
+        csvEscape(pack.release.labelImprint ?? ''),
+        csvEscape(pack.artist.displayName),
+        csvEscape(pack.release.title),
+        pack.release.type,
+        pack.release.releaseDate.slice(0, 10),
+      ].join(','),
+    )
+  }
+  return lines.join('\n') + '\n'
+}
+
+function csvEscape(value: string): string {
+  if (/[",\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+  return value
 }
 
 export const MUSICBRAINZ_SUBMIT_URL = 'https://musicbrainz.org/release/add'

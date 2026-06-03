@@ -41,7 +41,13 @@ interface ReleaseSummary {
   credits?: unknown
   revelatorStatus?: string | null
   revelatorId?: string | null
-  tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
+  tracks?: Array<{
+    id: string
+    title: string
+    isrc: string | null
+    musicbrainzRecordingId?: string | null
+    status?: string
+  }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
 }
@@ -200,6 +206,12 @@ export default function ReleasesPanel({
                   labelImprint: r.labelImprint ?? '',
                 }}
                 initialCredits={parseCredits(r.credits)}
+                initialTracks={(r.tracks ?? []).map((t) => ({
+                  id: t.id,
+                  title: t.title,
+                  isrc: t.isrc ?? '',
+                  musicbrainzRecordingId: t.musicbrainzRecordingId ?? '',
+                }))}
                 checklist={
                   r.checklist ?? [
                     { id: 'metadata', label: 'Release metadata', done: false },

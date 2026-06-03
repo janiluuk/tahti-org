@@ -14,9 +14,11 @@ import {
   type ReleaseCredit,
 } from '@tahti/shared'
 import {
+  fetchReleaseExportCsv,
   fetchReleaseExportJson,
   submitReleaseToRevelator,
   updateReleaseCatalog,
+  type ReleaseTrackCatalogRow,
 } from './release-actions'
 
 type CatalogState = {
@@ -47,6 +49,7 @@ export default function ReleaseOpsPanel({
   smartLinkSlug,
   initial,
   initialCredits,
+  initialTracks,
   checklist: initialChecklist,
   revelatorStatus: initialRevelatorStatus,
   revelatorId: initialRevelatorId,
@@ -56,6 +59,7 @@ export default function ReleaseOpsPanel({
   smartLinkSlug: string
   initial: CatalogState
   initialCredits: ReleaseCredit[]
+  initialTracks: ReleaseTrackCatalogRow[]
   checklist: ReleaseChecklistItem[]
   revelatorStatus?: string | null
   revelatorId?: string | null
@@ -65,6 +69,7 @@ export default function ReleaseOpsPanel({
   const [credits, setCredits] = useState<ReleaseCredit[]>(
     initialCredits.length > 0 ? initialCredits : [],
   )
+  const [tracks, setTracks] = useState<ReleaseTrackCatalogRow[]>(initialTracks)
   const [checklist, setChecklist] = useState(initialChecklist)
   const [revelatorStatus, setRevelatorStatus] = useState(initialRevelatorStatus ?? null)
   const revelatorId = initialRevelatorId ?? null
@@ -92,6 +97,11 @@ export default function ReleaseOpsPanel({
         cLine: form.cLine.trim() || null,
         labelImprint: form.labelImprint.trim() || null,
         credits: trimmedCredits,
+        tracks: tracks.map((t) => ({
+          id: t.id,
+          isrc: t.isrc.trim() || null,
+          musicbrainzRecordingId: t.musicbrainzRecordingId.trim() || null,
+        })),
       })
       if (res.error) {
         setError(res.error)
@@ -296,6 +306,29 @@ export default function ReleaseOpsPanel({
             >
               Export JSON
             </button>
+            <button
+              type="button"
+              style={{ fontSize: '0.9rem' }}
+              disabled={isPending}
+              onClick={() => {
+                startTransition(async () => {
+                  const res = await fetchReleaseExportCsv(releaseId)
+                  if (res.error || !res.csv) {
+                    setError(res.error ?? 'Export failed')
+                    return
+                  }
+                  const blob = new Blob([res.csv], { type: 'text/csv' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `release-${smartLinkSlug}.csv`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                })
+              }}
+            >
+              Export CSV
+            </button>
             <a
               href={MUSICBRAINZ_SUBMIT_URL}
               target="_blank"
@@ -305,6 +338,50 @@ export default function ReleaseOpsPanel({
               Add on MusicBrainz →
             </a>
           </div>
+
+          {tracks.length > 0 && (
+            <div style={{ marginTop: '1rem', maxWidth: 560 }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                Track identifiers (ISRC / recording MBID)
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {tracks.map((track, index) => (
+                  <li
+                    key={track.id}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 120px 1fr',
+                      gap: '0.35rem',
+                      marginBottom: '0.5rem',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.85rem' }}>{track.title}</span>
+                    <input
+                      value={track.isrc}
+                      placeholder="ISRC"
+                      disabled={isPending}
+                      onChange={(e) => {
+                        const next = [...tracks]
+                        next[index] = { ...track, isrc: e.target.value }
+                        setTracks(next)
+                      }}
+                    />
+                    <input
+                      value={track.musicbrainzRecordingId}
+                      placeholder="Recording MBID"
+                      disabled={isPending}
+                      onChange={(e) => {
+                        const next = [...tracks]
+                        next[index] = { ...track, musicbrainzRecordingId: e.target.value }
+                        setTracks(next)
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div
             style={{ marginTop: '1rem', padding: '0.75rem', background: '#fff', borderRadius: 6 }}

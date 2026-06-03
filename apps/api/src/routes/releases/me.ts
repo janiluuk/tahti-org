@@ -10,7 +10,7 @@ import {
   catalogPatchFromBody,
   releaseCatalogSelect,
 } from '../../lib/release-catalog.js'
-import { computeReleaseChecklist } from '@tahti/shared'
+import { buildReleaseExportCsv, computeReleaseChecklist } from '@tahti/shared'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 
 const VALID_TYPES = ['SINGLE', 'EP', 'ALBUM', 'COMPILATION', 'REMIX'] as const
@@ -26,6 +26,10 @@ function slugify(title: string): string {
 const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/me/releases', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
+    const sentNewsletter = await fastify.prisma.newsletterDraft.count({
+      where: { userId: user.id, state: 'SENT' },
+    })
+
     const releases = await fastify.prisma.release.findMany({
       where: { userId: user.id },
       orderBy: { releaseDate: 'desc' },
@@ -52,17 +56,25 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         revelatorId: true,
         tracks: {
           orderBy: { position: 'asc' },
-          select: { id: true, position: true, title: true, isrc: true, status: true },
+          select: {
+            id: true,
+            position: true,
+            title: true,
+            isrc: true,
+            musicbrainzRecordingId: true,
+            status: true,
+          },
         },
         _count: { select: { tracks: true } },
       },
     })
+    const checklistCtx = { artistNewsletterSent: sentNewsletter > 0 }
     return reply.send(
       await Promise.all(
         releases.map(async (r) => ({
           ...r,
           artworkUrl: await resolveReleaseArtworkUrl(r),
-          checklist: computeReleaseChecklist(r),
+          checklist: computeReleaseChecklist(r, checklistCtx),
         })),
       ),
     )
@@ -188,7 +200,12 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!release) return reply.status(404).send({ error: 'Release not found' })
 
-      const checklist = computeReleaseChecklist(release)
+      const sentNewsletter = await fastify.prisma.newsletterDraft.count({
+        where: { userId: user.id, state: 'SENT' },
+      })
+      const checklist = computeReleaseChecklist(release, {
+        artistNewsletterSent: sentNewsletter > 0,
+      })
       return reply.send({ ...release, checklist })
     },
   )
@@ -209,14 +226,42 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       const patch = catalogPatchFromBody(request.body)
       if (!patch.ok) return reply.status(400).send({ error: patch.error })
 
-      const release = await fastify.prisma.release.update({
-        where: { id },
-        data: patch.data,
+      if (patch.trackPatches?.length) {
+        for (const row of patch.trackPatches) {
+          const trackData: Record<string, unknown> = {}
+          if (row.isrc !== undefined) trackData.isrc = row.isrc?.trim() || null
+          if (row.musicbrainzRecordingId !== undefined) {
+            trackData.musicbrainzRecordingId = row.musicbrainzRecordingId?.trim() || null
+          }
+          if (Object.keys(trackData).length === 0) continue
+          await fastify.prisma.releaseTrack.updateMany({
+            where: { id: row.id, releaseId: id },
+            data: trackData,
+          })
+        }
+      }
+
+      if (Object.keys(patch.data).length > 0) {
+        await fastify.prisma.release.update({
+          where: { id },
+          data: patch.data,
+        })
+      }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id, userId: user.id },
         select: releaseCatalogSelect,
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const sentNewsletter = await fastify.prisma.newsletterDraft.count({
+        where: { userId: user.id, state: 'SENT' },
       })
       return reply.send({
         ...release,
-        checklist: computeReleaseChecklist(release),
+        checklist: computeReleaseChecklist(release, {
+          artistNewsletterSent: sentNewsletter > 0,
+        }),
       })
     },
   )
@@ -243,6 +288,49 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
           `attachment; filename="release-${release.smartLinkSlug}.json"`,
         )
         .send(buildReleaseExportPack(release))
+    },
+  )
+
+  fastify.get(
+    '/api/me/releases/:id/export.csv',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id, userId: user.id },
+        select: {
+          ...releaseCatalogSelect,
+          user: { select: { username: true, displayName: true } },
+        },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const pack = buildReleaseExportPack(release)
+      const csv = buildReleaseExportCsv({
+        artist: pack.artist,
+        release: {
+          title: pack.release.title,
+          type: pack.release.type,
+          releaseDate: pack.release.releaseDate,
+          upc: pack.release.upc,
+          musicbrainzReleaseId: pack.release.musicbrainzReleaseId,
+          musicbrainzArtistId: pack.release.musicbrainzArtistId,
+          pLine: pack.release.pLine,
+          cLine: pack.release.cLine,
+          labelImprint: pack.release.labelImprint,
+        },
+        tracks: pack.tracks,
+      })
+
+      return reply
+        .header('Content-Type', 'text/csv; charset=utf-8')
+        .header(
+          'Content-Disposition',
+          `attachment; filename="release-${release.smartLinkSlug}.csv"`,
+        )
+        .send(csv)
     },
   )
 }
