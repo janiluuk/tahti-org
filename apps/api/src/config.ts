@@ -41,4 +41,11 @@ export const config = {
     process.env.RTMP_KEY_ENC_KEY ??
     'dev0000000000000000000000000000000000000000000000000000000000000',
   hcaptchaSecret: process.env.HCAPTCHA_SECRET ?? 'dev',
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY ?? '',
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? '',
+    // When false (no key configured, e.g. dev/test), the fan-sub flow activates
+    // subscriptions directly instead of redirecting to Stripe Checkout.
+    enabled: !!process.env.STRIPE_SECRET_KEY,
+  },
 }

@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { config } from '../../config.js'
 
 // M18 — downloads as a first-class action with engagement-unit accounting.
@@ -87,10 +88,11 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         .send({ error: 'Download rate limit exceeded. Try again later.' })
     }
 
-    // Determine grant weight. Fan-subscribers (M19) get a 5× weight; until
-    // fan-subs exist, every download is an anonymous/free download (weight 1).
+    // Determine grant weight. An active fan-subscriber to this artist (M19)
+    // gets a 5× paid-download weight; everyone else is a free download.
     const byUserId = request.sessionUser?.id ?? null
-    const weight = 1
+    const weight =
+      byUserId && (await isActiveFanSubscriber(fastify.prisma, channel.userId, byUserId)) ? 5 : 1
 
     // Decide whether this download counts toward grants.
     let countedAt: Date | null = new Date()

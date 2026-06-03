@@ -15,9 +15,10 @@ export interface AnnualGrantSummary {
   unallocatedCents: number
 }
 
-// Sum eligible engagement units per artist for the fiscal year. Units come from
-// counted downloads (weighted) keyed by channel → user. Fan-sub euros (M19)
-// will add to this once fan-subs exist; today that contribution is 0.
+// Sum eligible engagement units per artist for the fiscal year, per the v6
+// formula (docs/engagement-and-fansubs.md):
+//   units = counted-download weight (free ×1, paid fan-sub ×5)
+//         + fan_sub_euros_received (1 unit per euro of gross fan-sub revenue)
 export async function computeEngagementUnits(
   prisma: PrismaClient,
   year: number,
@@ -25,24 +26,37 @@ export async function computeEngagementUnits(
   const start = new Date(Date.UTC(year, 0, 1))
   const end = new Date(Date.UTC(year + 1, 0, 1))
 
+  const byUser = new Map<string, number>()
+
+  // Downloads → weighted units, keyed by channel → artist.
   const grouped = await prisma.download.groupBy({
     by: ['channelId'],
     where: { countedAt: { gte: start, lt: end } },
     _sum: { weight: true },
   })
-  if (grouped.length === 0) return []
+  if (grouped.length > 0) {
+    const channels = await prisma.channel.findMany({
+      where: { id: { in: grouped.map((g) => g.channelId) } },
+      select: { id: true, userId: true },
+    })
+    const channelToUser = new Map(channels.map((c) => [c.id, c.userId]))
+    for (const g of grouped) {
+      const userId = channelToUser.get(g.channelId)
+      if (!userId) continue
+      byUser.set(userId, (byUser.get(userId) ?? 0) + (g._sum.weight ?? 0))
+    }
+  }
 
-  const channels = await prisma.channel.findMany({
-    where: { id: { in: grouped.map((g) => g.channelId) } },
-    select: { id: true, userId: true },
+  // Fan-sub euros received → 1 unit per euro of gross (€/12 per month).
+  const fanSubGross = await prisma.fanSubPayout.groupBy({
+    by: ['artistUserId'],
+    where: { forPeriodStart: { gte: start, lt: end } },
+    _sum: { grossCents: true },
   })
-  const channelToUser = new Map(channels.map((c) => [c.id, c.userId]))
-
-  const byUser = new Map<string, number>()
-  for (const g of grouped) {
-    const userId = channelToUser.get(g.channelId)
-    if (!userId) continue
-    byUser.set(userId, (byUser.get(userId) ?? 0) + (g._sum.weight ?? 0))
+  for (const g of fanSubGross) {
+    const euros = Math.floor((g._sum.grossCents ?? 0) / 100)
+    if (euros <= 0) continue
+    byUser.set(g.artistUserId, (byUser.get(g.artistUserId) ?? 0) + euros)
   }
 
   return [...byUser.entries()].map(([userId, units]) => ({ userId, units }))

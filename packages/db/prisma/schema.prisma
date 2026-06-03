@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement"]
+  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -129,6 +129,24 @@ enum VoteChoice {
   @@schema("governance")
 }
 
+enum FanSubState {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  EXPIRED
+
+  @@schema("fansubs")
+}
+
+enum FanSubPayoutState {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+
+  @@schema("fansubs")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model User {
@@ -157,13 +175,16 @@ model User {
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
-  sessions           Session[]
-  emailVerifications EmailVerification[]
-  membership         Membership?
-  channel            Channel?
-  motionsProposed    Motion[]
-  votes              Vote[]
-  grants             GrantDisbursement[]
+  sessions            Session[]
+  emailVerifications  EmailVerification[]
+  membership          Membership?
+  channel             Channel?
+  motionsProposed     Motion[]
+  votes               Vote[]
+  grants              GrantDisbursement[]
+  fanTiers            FanTier[]
+  fanSubsAsArtist     FanSubscription[]   @relation("ArtistFanSubs")
+  fanSubsAsSubscriber FanSubscription[]   @relation("SubscriberFanSubs")
 
   @@schema("core")
 }
@@ -442,4 +463,71 @@ model Download {
   @@index([byFingerprint, archiveItemId])
   @@index([archiveItemId, createdAt])
   @@schema("engagement")
+}
+
+// ── Fan-to-artist subscriptions (M19) ─────────────────────────────────────────
+// Listeners subscribe directly to an artist. Money flows to the artist via
+// Stripe Connect minus Stripe fees and a 2% operational fee (passthrough, not
+// org revenue — bylaws §11.b). Fan-sub euros and 5× paid-download weighting feed
+// the M9 grant formula. See docs/engagement-and-fansubs.md.
+
+model FanTier {
+  id           String   @id @default(cuid())
+  artistUserId String
+  artist       User     @relation(fields: [artistUserId], references: [id], onDelete: Cascade)
+  name         String
+  amountCents  Int
+  description  String?
+  perks        String[]
+  active       Boolean  @default(true)
+  position     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([artistUserId, active])
+  @@schema("fansubs")
+}
+
+model FanSubscription {
+  id                   String      @id @default(cuid())
+  artistUserId         String
+  subscriberUserId     String
+  artist               User        @relation("ArtistFanSubs", fields: [artistUserId], references: [id], onDelete: Cascade)
+  subscriber           User        @relation("SubscriberFanSubs", fields: [subscriberUserId], references: [id], onDelete: Cascade)
+  tierName             String
+  amountCents          Int
+  stripeSubscriptionId String      @unique
+  state                FanSubState @default(ACTIVE)
+  startedAt            DateTime    @default(now())
+  currentPeriodEnd     DateTime
+  canceledAt           DateTime?
+  createdAt            DateTime    @default(now())
+
+  payouts FanSubPayout[]
+
+  @@unique([artistUserId, subscriberUserId])
+  @@index([artistUserId, state])
+  @@index([subscriberUserId, state])
+  @@schema("fansubs")
+}
+
+model FanSubPayout {
+  id                String            @id @default(cuid())
+  fanSubscriptionId String
+  fanSubscription   FanSubscription   @relation(fields: [fanSubscriptionId], references: [id], onDelete: Cascade)
+  artistUserId      String
+  forPeriodStart    DateTime
+  forPeriodEnd      DateTime
+  grossCents        Int
+  stripeFeeCents    Int
+  orgFeeCents       Int
+  netToArtistCents  Int
+  stripeTransferId  String?
+  state             FanSubPayoutState @default(PENDING)
+  paidAt            DateTime?
+  createdAt         DateTime          @default(now())
+
+  @@index([fanSubscriptionId, forPeriodStart])
+  @@index([artistUserId, forPeriodStart])
+  @@schema("fansubs")
 }

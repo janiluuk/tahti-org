@@ -7,8 +7,8 @@ platform → tested beta → operation by Tahti ry** (with trained member-operat
 model exist **and the application code is well underway**. The MVP broadcasting
 stack (M0–M6), live chat (M5), the transparency ledger (M8), the annual grant
 engine (M9), member governance (M10), download engagement units (M18 core), and
-hardening basics (M11 partial) are implemented with a green test suite
-(81 tests). See the [Build audit](#build-audit--current-state-2026-06-03) below
+fan-to-artist subscriptions (M19 core) are implemented with a green test suite
+(95 tests). See the [Build audit](#build-audit--current-state-2026-06-03) below
 for the milestone-by-milestone breakdown of what is done, partial, and not
 started.
 
@@ -38,7 +38,7 @@ closed beta → **M7–M9, M19** (money + grants) → remaining features → han
 Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 `docs/AGENT.md` milestones. Verified by reading the source and running
 `pnpm typecheck` (passes), `pnpm lint` + `pnpm format:check` (clean), and
-`pnpm test` (81 tests pass with Postgres up).
+`pnpm test` (95 tests pass with Postgres up).
 
 | Milestone | State | Evidence / notes |
 |---|---|---|
@@ -56,8 +56,8 @@ Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha lib, audit log present. Missing: backups runbook wiring, status page, audit CSV export |
 | **M12** Profile + releases | ❌ Not started | No `Release`/`ReleaseTrack` models |
 | **M13–M17** Newsletter, promo, tagging, radio, venues | ❌ Not started | — |
-| **M18** Downloads first-class | 🟡 Partial | `engagement.Download` model + archive download endpoint with per-IP/fingerprint rate limit, 30-day dedup, per-track cap, grant-unit weighting. Deferred: 24h net-new-IP threshold, Tor/bot allowlist, fraud-scan cron, release-track + FLAC/source formats |
-| **M19** Fan-subs | ❌ Not started | No Stripe Connect onboarding |
+| **M18** Downloads first-class | 🟡 Partial | `engagement.Download` model + archive download endpoint with per-IP/fingerprint rate limit, 30-day dedup, per-track cap, grant-unit weighting (now 5× for active fan-subscribers). Deferred: 24h net-new-IP threshold, Tor/bot allowlist, fraud-scan cron, release-track + FLAC/source formats |
+| **M19** Fan-subs | 🟡 Partial | `fansubs` schema (FanTier/FanSubscription/FanSubPayout); tier CRUD, subscribe/cancel, Stripe webhook (signature-verified) lifecycle; deterministic fee split (Stripe + 2% org fee) → 3 ledger entries; 5× download weight + fan-sub-euro units feed M9; public subscribe page + dashboard panel. Deferred: live Stripe Checkout/Connect Express onboarding (the network boundary), payout-transfer + churn crons, fan-only chat/newsletter |
 | **M20** Tier gating | 🟡 Partial | 3-tier enum `FREE/ARTIST/STUDIO` exists (diverges from spec's `FREE/PAID`); weekly-cap fields on `User`. Free-tier broadcast cap + MP3/FLAC manifest split not enforced |
 
 ### Improvements identified during the audit (added to the roadmap)
@@ -75,7 +75,7 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
 | [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; the suite now runs green (81 tests) on every PR against a Postgres service | CI |
 | [ ] | Document ephemeral test DB story for local dev (`pnpm test` needs Postgres) | CI now provisions Postgres + `db push`; local dev still needs the docker-compose DB documented | M11 |
-| [~] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | Download → unit pipeline is live (M18); fan-sub euro input lands with M19 | M18 (done) / M19 → M9 |
+| [x] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | Both inputs now live: download weight (M18) + fan-sub gross euros (M19) feed `computeEngagementUnits` | M18 + M19 → M9 (done) |
 
 ---
 
@@ -186,7 +186,7 @@ Required before first **real** membership money and first grant cycle.
 | [x] | **M8** | Public transparency ledger + monthly rollup API + grants/:year report | Dev |
 | [ ] | **M7** | Mixcloud upload + Revelator wizard (€8/release) | Dev |
 | [x] | **M9** | Annual engagement-unit grant cron + report (`packages/ledger`, payout transfer pending Stripe Connect / M19) | Dev |
-| [ ] | **M19** | Fan-subscriptions (Stripe Connect, 0% org take, 2% ops fee) | Dev |
+| [~] | **M19** | Fan-subscriptions: tiers, subscribe/cancel, webhook lifecycle, fee split + ledger, M9/M18 integration, subscribe page (live Stripe Connect/Checkout still to wire) | Dev |
 | [x] | **M10** (core) | Member directory, motions, advisory voting (Topic 11), governance portal | Dev |
 
 **Test matrix:**
@@ -194,7 +194,7 @@ Required before first **real** membership money and first grant cycle.
 | Done | Test |
 |:---:|---|
 | [ ] | Stripe membership + webhook → ledger entry |
-| [ ] | Fan-sub: listener pays → artist Connect payout → 2% ops fee line |
+| [x] | Fan-sub: listener subscribes → payout split (Stripe + 2% ops fee) → 3 ledger entries (`fansubs.test.ts`) |
 | [x] | Download → engagement unit increments (see `engagement-and-fansubs.md`) |
 | [x] | Grant dry-run on synthetic data matches hand calc within 1 cent (`packages/ledger`, `admin/grants.test.ts`) |
 | [ ] | `/transparency` matches ledger exports |

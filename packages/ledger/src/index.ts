@@ -3,3 +3,4 @@
 
 export * from './allocate.js'
 export * from './run.js'
+export * from './fansub.js'
