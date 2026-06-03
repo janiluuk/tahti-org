@@ -1,6 +1,6 @@
 # Phase 1 stack — website + Caddy TLS only.
 # No stateful services. No API. No app.
-# Used for the initial deployment to get tahti.fi live before Phase 3 stateful services.
+# Used for the initial deployment to get tahti.live live before Phase 3 stateful services.
 #
 # Deploy:
 #   TAG=<sha> docker stack deploy -c infra/docker-stack-phase1.yml tahti
@@ -27,7 +27,7 @@ configs:
 services:
 
   website:
-    image: registry.tahti.fi/tahti/website:${TAG:-latest}
+    image: registry.tahti.live/tahti/website:${TAG:-latest}
     networks: [edge]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/health"]

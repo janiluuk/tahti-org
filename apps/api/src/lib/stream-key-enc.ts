@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 // Symmetric encryption for RTMP target stream keys at rest.
 // Algorithm: AES-256-GCM with a random 12-byte nonce per value.
@@ -10,7 +10,9 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
 const ALG = 'aes-256-gcm'
 
 function getKey(): Buffer {
-  const hex = process.env.RTMP_KEY_ENC_KEY ?? 'dev0000000000000000000000000000000000000000000000000000000000000'
+  const hex =
+    process.env.RTMP_KEY_ENC_KEY ??
+    'dev0000000000000000000000000000000000000000000000000000000000000'
   const buf = Buffer.from(hex.slice(0, 64), 'hex')
   if (buf.length !== 32) throw new Error('RTMP_KEY_ENC_KEY must be 32 bytes (64 hex chars)')
   return buf

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
@@ -10,7 +10,10 @@ import { auditLog } from '../../lib/audit.js'
 // Production gating: user must be isMember=true; full role check deferred to M10.
 
 const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
-  async function requireTreasurer(request: Parameters<typeof requireAuth>[0], reply: Parameters<typeof requireAuth>[1]) {
+  async function requireTreasurer(
+    request: Parameters<typeof requireAuth>[0],
+    reply: Parameters<typeof requireAuth>[1],
+  ) {
     await requireAuth(request, reply)
     if (reply.sent) return
     if (!request.sessionUser?.isMember) {
@@ -94,9 +97,10 @@ const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
       ? new Date(`${year}-${month ?? '01'}-01`)
       : new Date(new Date().getFullYear(), 0, 1)
 
-    const periodEnd = year && month
-      ? new Date(parseInt(year), parseInt(month), 0) // last day of month
-      : new Date(new Date().getFullYear(), 11, 31)
+    const periodEnd =
+      year && month
+        ? new Date(parseInt(year), parseInt(month), 0) // last day of month
+        : new Date(new Date().getFullYear(), 11, 31)
 
     const entries = await fastify.prisma.ledgerEntry.findMany({
       where: {

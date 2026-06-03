@@ -114,12 +114,12 @@ export const options = {
 
 export default function () {
   // Fetch HLS playlist
-  const res = http.get('https://staging.stream.tahti.fi/hls/test-channel/index.m3u8');
+  const res = http.get('https://staging.stream.tahti.live/hls/test-channel/index.m3u8');
   check(res, { 'playlist 200': (r) => r.status === 200 });
 
   // Simulate segment fetch every 3s
   sleep(3);
-  const seg = http.get('https://staging.stream.tahti.fi/hls/test-channel/seg-001.ts');
+  const seg = http.get('https://staging.stream.tahti.live/hls/test-channel/seg-001.ts');
   check(seg, { 'segment 200': (r) => r.status === 200 });
   sleep(1);
 }
@@ -179,7 +179,7 @@ Documented responses for the five most likely incidents at launch:
 ### Incident: Live stream not starting
 
 ```
-1. curl -I https://api.tahti.fi/internal/rtmp/on_publish → should be reachable
+1. curl -I https://api.tahti.live/internal/rtmp/on_publish → should be reachable
 2. docker service logs tahti_rtmp-ingest --tail=50 → check for auth errors
 3. docker service logs tahti_orchestrator --tail=50 → check Liquidsoap spawn
 4. docker ps | grep liquidsoap → is container running?
@@ -200,7 +200,7 @@ Documented responses for the five most likely incidents at launch:
 ```
 1. docker service logs tahti_chat --tail=100
 2. Check Redis backplane: redis-cli -h redis PING
-3. Check Centrifugo admin panel: https://chat.tahti.fi/admin
+3. Check Centrifugo admin panel: https://chat.tahti.live/admin
 4. If fan-out lag > 1s: check Redis memory usage
 5. Scale chat replicas: docker service scale tahti_chat=3
 ```
@@ -208,7 +208,7 @@ Documented responses for the five most likely incidents at launch:
 ### Incident: API returning 5xx
 
 ```
-1. Check error rate in Grafana: grafana.tahti.fi/d/api-latency
+1. Check error rate in Grafana: grafana.tahti.live/d/api-latency
 2. docker service logs tahti_api --tail=100 | grep ERROR
 3. Check DB connections: SELECT count(*) FROM pg_stat_activity
 4. If connection pool exhausted: add PgBouncer (Phase 7 add-on)
@@ -225,12 +225,12 @@ Documented responses for the five most likely incidents at launch:
         X-Frame-Options DENY
         Referrer-Policy strict-origin-when-cross-origin
         Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://cdn.tahti.fi; connect-src 'self' wss://chat.tahti.fi https://api.tahti.fi"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://cdn.tahti.live; connect-src 'self' wss://chat.tahti.live https://api.tahti.live"
         -Server
     }
 }
 
-tahti.fi, www.tahti.fi {
+tahti.live, www.tahti.live {
     import secure_headers
     encode zstd gzip
     reverse_proxy website:80
@@ -246,8 +246,8 @@ tahti.fi, www.tahti.fi {
 | `pnpm audit` shows no high/critical | Dev | ☐ |
 | Ops runbook reviewed by director | Director | ☐ |
 | Backup restore tested within 7 days | Ops | ☐ |
-| GDPR privacy policy live at tahti.fi/privacy | Director | ☐ |
-| Terms of service live at tahti.fi/terms | Director + Lawyer | ☐ |
+| GDPR privacy policy live at tahti.live/privacy | Director | ☐ |
+| Terms of service live at tahti.live/terms | Director + Lawyer | ☐ |
 | Postmark DKIM/SPF verified | Ops | ☐ |
 | Stripe account KYC complete | Director | ☐ |
 | 50+ artists confirmed via beta | Director | ☐ |

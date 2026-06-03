@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Phase 1 exit criteria — tahti.fi live over HTTPS
+# Phase 1 exit criteria — tahti.live live over HTTPS
 #
 # Usage:
-#   ./tests/e2e/phase-1.sh                        # tests production (tahti.fi)
+#   ./tests/e2e/phase-1.sh                        # tests production (tahti.live)
 #   ./tests/e2e/phase-1.sh http://localhost:8080   # tests local dev server
 #
 # Exit codes: 0 = all pass, 1 = one or more failures
 
 set -euo pipefail
 
-BASE="${1:-https://tahti.fi}"
+BASE="${1:-https://tahti.live}"
 PASS=0
 FAIL=0
 

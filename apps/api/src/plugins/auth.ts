@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import fp from 'fastify-plugin'
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
@@ -32,5 +32,24 @@ export default fp(authPlugin, { name: 'auth', dependencies: ['db'] })
 export async function requireAuth(request: FastifyRequest, reply: FastifyReply) {
   if (!request.sessionUser) {
     return reply.status(401).send({ error: 'Unauthorized' })
+  }
+}
+
+// Members-only routes (the yhdistys register). Requires an authenticated user
+// who has an active membership.
+export async function requireMember(request: FastifyRequest, reply: FastifyReply) {
+  await requireAuth(request, reply)
+  if (reply.sent) return
+  if (!request.sessionUser?.isMember) {
+    return reply.status(403).send({ error: 'Members only' })
+  }
+}
+
+// Board-only routes (posting/opening/closing motions, treasurer ledger entries).
+export async function requireBoard(request: FastifyRequest, reply: FastifyReply) {
+  await requireAuth(request, reply)
+  if (reply.sent) return
+  if (!request.sessionUser?.isBoard) {
+    return reply.status(403).send({ error: 'Board members only' })
   }
 }

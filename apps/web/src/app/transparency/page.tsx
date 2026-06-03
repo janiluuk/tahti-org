@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 interface MonthlyRollup {
   yearMonth: string
@@ -50,27 +50,51 @@ export default async function TransparencyPage() {
 
   const ytd: YtdSummary = ytdRes.ok
     ? ((await ytdRes.json()) as YtdSummary)
-    : { year: String(new Date().getFullYear()), byCategory: {}, runningsurplus: '0', monthsFinalized: 0 }
+    : {
+        year: String(new Date().getFullYear()),
+        byCategory: {},
+        runningsurplus: '0',
+        monthsFinalized: 0,
+      }
 
   const rollups: MonthlyRollup[] = rollupRes.ok ? ((await rollupRes.json()) as MonthlyRollup[]) : []
 
   const revenueKeys = Object.keys(ytd.byCategory).filter((k) => k.startsWith('REVENUE_'))
   const costKeys = Object.keys(ytd.byCategory).filter((k) => k.startsWith('COST_'))
-  const disbKeys = Object.keys(ytd.byCategory).filter((k) => !k.startsWith('REVENUE_') && !k.startsWith('COST_'))
+  const disbKeys = Object.keys(ytd.byCategory).filter(
+    (k) => !k.startsWith('REVENUE_') && !k.startsWith('COST_'),
+  )
 
   const totalRevenue = revenueKeys.reduce((s, k) => s + parseInt(ytd.byCategory[k] ?? '0', 10), 0)
   const totalCosts = costKeys.reduce((s, k) => s + parseInt(ytd.byCategory[k] ?? '0', 10), 0)
 
   return (
-    <div style={{ maxWidth: 860, margin: '3rem auto', padding: '0 1rem', fontFamily: 'system-ui, sans-serif' }}>
+    <div
+      style={{
+        maxWidth: 860,
+        margin: '3rem auto',
+        padding: '0 1rem',
+        fontFamily: 'system-ui, sans-serif',
+      }}
+    >
       <h1 style={{ marginBottom: '0.25rem' }}>Transparency</h1>
       <p style={{ color: '#666', marginBottom: '2.5rem' }}>
-        Tahti ry is a Finnish registered nonprofit. All income, costs, and artist grants are published here.
-        {' '}<a href="/transparency/methodology" style={{ color: '#555' }}>Methodology ↗</a>
+        Tahti ry is a Finnish registered nonprofit. All income, costs, and artist grants are
+        published here.{' '}
+        <a href="/transparency/methodology" style={{ color: '#555' }}>
+          Methodology ↗
+        </a>
       </p>
 
       {/* YTD summary cards */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2.5rem' }}>
+      <section
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '1rem',
+          marginBottom: '2.5rem',
+        }}
+      >
         <SummaryCard label={`${ytd.year} Revenue`} value={formatEur(totalRevenue)} positive />
         <SummaryCard label={`${ytd.year} Costs`} value={formatEur(totalCosts)} />
         <SummaryCard
@@ -104,9 +128,15 @@ export default async function TransparencyPage() {
               <thead>
                 <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
                   <th style={{ padding: '0.5rem 0.75rem', color: '#666' }}>Month</th>
-                  <th style={{ padding: '0.5rem 0.75rem', color: '#666', textAlign: 'right' }}>Revenue</th>
-                  <th style={{ padding: '0.5rem 0.75rem', color: '#666', textAlign: 'right' }}>Costs</th>
-                  <th style={{ padding: '0.5rem 0.75rem', color: '#666', textAlign: 'right' }}>Surplus</th>
+                  <th style={{ padding: '0.5rem 0.75rem', color: '#666', textAlign: 'right' }}>
+                    Revenue
+                  </th>
+                  <th style={{ padding: '0.5rem 0.75rem', color: '#666', textAlign: 'right' }}>
+                    Costs
+                  </th>
+                  <th style={{ padding: '0.5rem 0.75rem', color: '#666', textAlign: 'right' }}>
+                    Surplus
+                  </th>
                   <th style={{ padding: '0.5rem 0.75rem', color: '#666' }}>Status</th>
                 </tr>
               </thead>
@@ -122,10 +152,14 @@ export default async function TransparencyPage() {
                   return (
                     <tr key={r.yearMonth} style={{ borderBottom: '1px solid #f0f0f0' }}>
                       <td style={{ padding: '0.5rem 0.75rem', fontWeight: 500 }}>{r.yearMonth}</td>
-                      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: '#16a34a' }}>
+                      <td
+                        style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: '#16a34a' }}
+                      >
                         {formatEur(rev)}
                       </td>
-                      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: '#dc2626' }}>
+                      <td
+                        style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: '#dc2626' }}
+                      >
                         {formatEur(costs)}
                       </td>
                       <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right' }}>
@@ -149,11 +183,22 @@ export default async function TransparencyPage() {
         </p>
       )}
 
-      <footer style={{ marginTop: '3rem', borderTop: '1px solid #eee', paddingTop: '1.5rem', color: '#aaa', fontSize: '0.8rem' }}>
+      <footer
+        style={{
+          marginTop: '3rem',
+          borderTop: '1px solid #eee',
+          paddingTop: '1.5rem',
+          color: '#aaa',
+          fontSize: '0.8rem',
+        }}
+      >
         <p>
-          Tahti ry — Y-tunnus 3368171-8 — Helsinki, Finland<br />
+          Tahti ry — Y-tunnus 3368171-8 — Helsinki, Finland
+          <br />
           All figures in EUR. Data updated monthly after board approval.{' '}
-          <a href="https://github.com/tahtiapp/tahti" style={{ color: '#999' }}>Source code (AGPL-3.0)</a>
+          <a href="https://github.com/tahtiapp/tahti" style={{ color: '#999' }}>
+            Source code (AGPL-3.0)
+          </a>
         </p>
       </footer>
     </div>
@@ -177,7 +222,9 @@ function SummaryCard({
       <div style={{ fontSize: '1.4rem', fontWeight: 700, color: positive ? '#16a34a' : '#111' }}>
         {value}
       </div>
-      {subtitle && <div style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.15rem' }}>{subtitle}</div>}
+      {subtitle && (
+        <div style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.15rem' }}>{subtitle}</div>
+      )}
     </div>
   )
 }
@@ -194,13 +241,32 @@ function CategoryTable({
   if (keys.length === 0) return null
   return (
     <div style={{ marginBottom: '1rem' }}>
-      <div style={{ fontSize: '0.8rem', color: '#888', fontWeight: 600, marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <div
+        style={{
+          fontSize: '0.8rem',
+          color: '#888',
+          fontWeight: 600,
+          marginBottom: '0.25rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+        }}
+      >
         {title}
       </div>
       {keys.map((k) => (
-        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.3rem 0', borderBottom: '1px solid #f5f5f5' }}>
+        <div
+          key={k}
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: '0.3rem 0',
+            borderBottom: '1px solid #f5f5f5',
+          }}
+        >
           <span style={{ color: '#444', fontSize: '0.875rem' }}>{categoryLabel(k)}</span>
-          <span style={{ fontVariantNumeric: 'tabular-nums', fontSize: '0.875rem' }}>{formatEur(data[k] ?? '0')}</span>
+          <span style={{ fontVariantNumeric: 'tabular-nums', fontSize: '0.875rem' }}>
+            {formatEur(data[k] ?? '0')}
+          </span>
         </div>
       ))}
     </div>

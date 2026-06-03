@@ -115,14 +115,14 @@ graph TB
 
 | Service | Image | Network | Role |
 |---------|-------|---------|------|
-| `website` | `registry.tahti.fi/tahti/website` | edge | Marketing site at tahti.fi |
-| `web` | `registry.tahti.fi/tahti/web` | internal + edge | Artist app at app.tahti.fi + channel subdomains |
-| `api` | `registry.tahti.fi/tahti/api` | internal + edge | Fastify REST + webhook target |
+| `website` | `registry.tahti.live/tahti/website` | edge | Marketing site at tahti.live |
+| `web` | `registry.tahti.live/tahti/web` | internal + edge | Artist app at app.tahti.live + channel subdomains |
+| `api` | `registry.tahti.live/tahti/api` | internal + edge | Fastify REST + webhook target |
 | `chat` | `centrifugo/centrifugo:v5` | internal + edge | WebSocket hub for live chat |
-| `worker-media` | `registry.tahti.fi/tahti/worker` | internal | Transcode, archive, fingerprint |
-| `worker-dist` | `registry.tahti.fi/tahti/worker` | internal | Revelator DSP + Mixcloud upload |
-| `worker-light` | `registry.tahti.fi/tahti/worker` | internal | Stats rollup, chat cleanup |
-| `orchestrator` | `registry.tahti.fi/tahti/orchestrator` | internal | Spawns Liquidsoap per channel |
+| `worker-media` | `registry.tahti.live/tahti/worker` | internal | Transcode, archive, fingerprint |
+| `worker-dist` | `registry.tahti.live/tahti/worker` | internal | Revelator DSP + Mixcloud upload |
+| `worker-light` | `registry.tahti.live/tahti/worker` | internal | Stats rollup, chat cleanup |
+| `orchestrator` | `registry.tahti.live/tahti/orchestrator` | internal | Spawns Liquidsoap per channel |
 | `icecast` | `moul/icecast` | ingest + internal | Icecast source ingress |
 | `rtmp-ingest` | `tiangolo/nginx-rtmp` | ingest + internal | OBS/RTMP ingress |
 | `postgres` | `postgres:16-alpine` | internal | Primary database |
@@ -144,25 +144,25 @@ graph TB
 
 ```mermaid
 graph LR
-    DNS["DNS\ntahti.fi"]
+    DNS["DNS\ntahti.live"]
 
-    DNS -- "tahti.fi\nwww.tahti.fi" --> website
-    DNS -- "app.tahti.fi" --> web
-    DNS -- "*.tahti.fi (channel slugs)" --> web
-    DNS -- "api.tahti.fi" --> api
-    DNS -- "chat.tahti.fi" --> chat
-    DNS -- "stream.tahti.fi" --> hls[HLS file server\nCaddy]
-    DNS -- "cdn.tahti.fi" --> minio
-    DNS -- "ingest-icecast.tahti.fi" --> icecast
-    DNS -- "minio.tahti.fi" --> minio_console[MinIO console\nops-IP only]
-    DNS -- "grafana.tahti.fi" --> grafana[Grafana\nops-IP only]
+    DNS -- "tahti.live\nwww.tahti.live" --> website
+    DNS -- "app.tahti.live" --> web
+    DNS -- "*.tahti.live (channel slugs)" --> web
+    DNS -- "api.tahti.live" --> api
+    DNS -- "chat.tahti.live" --> chat
+    DNS -- "stream.tahti.live" --> hls[HLS file server\nCaddy]
+    DNS -- "cdn.tahti.live" --> minio
+    DNS -- "ingest-icecast.tahti.live" --> icecast
+    DNS -- "minio.tahti.live" --> minio_console[MinIO console\nops-IP only]
+    DNS -- "grafana.tahti.live" --> grafana[Grafana\nops-IP only]
 ```
 
 ## Phase documents
 
 | Phase | Doc | Goal |
 |-------|-----|------|
-| 1 | [phase-1.md](phase-1.md) | tahti.fi live over HTTPS |
+| 1 | [phase-1.md](phase-1.md) | tahti.live live over HTTPS |
 | 2 | [phase-2.md](phase-2.md) | `make dev` works; CI + registry |
 | 3 | [phase-3.md](phase-3.md) | Postgres / Redis / MinIO in prod with backups |
 | 4 | [phase-4.md](phase-4.md) | Artist app alpha — accounts, broadcast, archive |

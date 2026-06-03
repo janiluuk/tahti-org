@@ -15,7 +15,7 @@ program.
 - When zero channels are live, it falls back to a placeholder loop (an
   instrumental track + occasional "we'll be back" voice tag)
 - It multistreams out to **Mixcloud Live** only (legally clean target)
-- Listeners can tune in at `radio.tahti.fi` or via the player on `tahti.fi`
+- Listeners can tune in at `radio.tahti.live` or via the player on `tahti.live`
 - Listener-hours on Tahti Radio route to the originating channel's vanity
   counter (not to grant calculation under v6 anyway, since listener-hours are
   cosmetic now — but for honest accounting, the data still attributes correctly)
@@ -117,7 +117,7 @@ Modeled in financials at:
 
 ### Listener experience
 
-`radio.tahti.fi` is a minimal page:
+`radio.tahti.live` is a minimal page:
 - Always-playing HLS player
 - "Now broadcasting: [artist name]" with link to their channel
 - "Up next" doesn't exist (we don't know)
@@ -134,10 +134,10 @@ discover scene activity by physical location.
 
 ### What it is
 
-- Venue creates a free venue profile at `tahti.fi/v/<venue-slug>`
+- Venue creates a free venue profile at `tahti.live/v/<venue-slug>`
 - Venue defines: name, location, address, capacity, photos, externals
 - Venue publishes broadcasts: "DJ Long Doe broadcasting from us, Friday 22:00"
-- Each venue has an iCalendar feed: `tahti.fi/v/<venue-slug>/calendar.ics`
+- Each venue has an iCalendar feed: `tahti.live/v/<venue-slug>/calendar.ics`
 - Artists can subscribe to venue feeds; venue subscriptions show up on their
   dashboard as "upcoming gigs"
 - Listeners can subscribe to venue feeds in their calendar app
@@ -223,13 +223,13 @@ VERSION:2.0
 PRODID:-//Tahti ry//Venue Calendar//EN
 NAME:[Venue Name] —  Tahti broadcasts
 BEGIN:VEVENT
-UID:venue-broadcast-<id>@tahti.fi
+UID:venue-broadcast-<id>@tahti.live
 DTSTART:20260620T220000Z
 DTEND:20260621T010000Z
 SUMMARY:DJ Long Doe — live from [Venue Name]
-DESCRIPTION:Listen live at https://long-doe.tahti.fi
+DESCRIPTION:Listen live at https://long-doe.tahti.live
 LOCATION:[venue address]
-URL:https://tahti.fi/v/<venue-slug>
+URL:https://tahti.live/v/<venue-slug>
 END:VEVENT
 END:VCALENDAR
 ```
@@ -238,8 +238,8 @@ JSON API also available: `GET /v1/venues/<slug>/broadcasts?from=&to=`
 
 ### Discovery
 
-- `tahti.fi/venues` lists all verified venues (paginated, geo-filterable)
-- `tahti.fi/v/<slug>` shows venue profile + upcoming broadcasts + past broadcasts
+- `tahti.live/venues` lists all verified venues (paginated, geo-filterable)
+- `tahti.live/v/<slug>` shows venue profile + upcoming broadcasts + past broadcasts
 - Artist profile shows "Past gigs" pulled from venue records they were tagged in
 
 ### Verification

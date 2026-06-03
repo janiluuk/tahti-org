@@ -178,7 +178,7 @@ mc ilm add --expiry-days 730 tahti/audio  # hard delete after 2 years
 docker run --rm \
   --network tahti_internal \
   -e DATABASE_URL=postgres://tahti@postgres:5432/tahti \
-  registry.tahti.fi/tahti/api:latest \
+  registry.tahti.live/tahti/api:latest \
   node dist/migrate.js
 ```
 

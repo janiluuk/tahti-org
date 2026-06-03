@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
 import { config } from '../../config.js'
@@ -24,9 +24,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
 
     if (items.length === 0) {
       // Return a silent fallback so Liquidsoap doesn't crash
-      return reply
-        .header('Content-Type', 'audio/x-mpegurl')
-        .send('#EXTM3U\n# no items yet\n')
+      return reply.header('Content-Type', 'audio/x-mpegurl').send('#EXTM3U\n# no items yet\n')
     }
 
     const lines: string[] = ['#EXTM3U']

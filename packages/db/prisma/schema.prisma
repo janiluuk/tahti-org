@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 generator client {
   provider        = "prisma-client-js"
@@ -92,6 +92,26 @@ enum AuditAction {
   LEDGER_ENTRY_CREATE
   MEMBER_SUSPEND
   MEMBER_REINSTATE
+  MOTION_CREATE
+  MOTION_OPEN
+  MOTION_CLOSE
+  VOTE_CAST
+
+  @@schema("governance")
+}
+
+enum MotionState {
+  DRAFT
+  OPEN
+  CLOSED
+
+  @@schema("governance")
+}
+
+enum VoteChoice {
+  YES
+  NO
+  ABSTAIN
 
   @@schema("governance")
 }
@@ -111,6 +131,7 @@ model User {
   tipJarUrl             String?
   tier                  ArtistTier @default(FREE)
   isMember              Boolean    @default(false)
+  isBoard               Boolean    @default(false)
   memberNumber          Int?       @unique
   memberSince           DateTime?
   publicAttribution     Boolean    @default(true)
@@ -127,6 +148,8 @@ model User {
   emailVerifications EmailVerification[]
   membership         Membership?
   channel            Channel?
+  motionsProposed    Motion[]
+  votes              Vote[]
 
   @@schema("core")
 }
@@ -316,5 +339,42 @@ model AuditLog {
 
   @@index([actorId, createdAt])
   @@index([action, createdAt])
+  @@schema("governance")
+}
+
+// ── Member governance (M10) ───────────────────────────────────────────────────
+// Voting is ADVISORY for Y1 (see docs/planning-decisions.md Topic 11). Binding
+// AGM decisions require a live meeting until the bylaws authorize asynchronous
+// electronic voting; `advisory` flips to false once that clause is filed.
+
+model Motion {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  proposedBy  String
+  proposer    User        @relation(fields: [proposedBy], references: [id])
+  advisory    Boolean     @default(true)
+  openAt      DateTime
+  closeAt     DateTime
+  state       MotionState @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  votes Vote[]
+
+  @@index([state, closeAt])
+  @@schema("governance")
+}
+
+model Vote {
+  motionId String
+  motion   Motion     @relation(fields: [motionId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  choice   VoteChoice
+  castAt   DateTime   @default(now())
+
+  @@id([motionId, userId])
+  @@index([motionId])
   @@schema("governance")
 }

@@ -11,7 +11,7 @@ set -euo pipefail
 
 LOG_PREFIX="[$(date -u +%Y-%m-%dT%H:%M:%SZ)] [restore-test]"
 TEMP_CONTAINER="tahti-restore-test-$$"
-ALERT_EMAIL="${ALERT_EMAIL:-ops@tahti.fi}"
+ALERT_EMAIL="${ALERT_EMAIL:-ops@tahti.live}"
 MINIO_ALIAS="${MINIO_ALIAS:-tahti}"
 BACKUP_BUCKET="${BACKUP_BUCKET:-tahti}"
 EXPECTED_MIN_ROWS="${EXPECTED_MIN_ROWS:-1}"   # minimum users table rows expected

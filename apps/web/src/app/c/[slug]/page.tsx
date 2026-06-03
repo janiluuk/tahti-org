@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { notFound } from 'next/navigation'
 import ChatPanel from './chat-panel.js'
+import HlsPlayer from './hls-player.js'
+import ReactionsOverlay from './reactions.js'
 
 interface ChannelResponse {
   slug: string
@@ -56,9 +58,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     ? ((await announcementsRes.json()) as Announcement[])
     : []
 
-  const hlsUrl = channel.state === 'LIVE'
-    ? `${process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live'}/${slug}/stream.m3u8`
-    : null
+  const hlsUrl =
+    channel.state === 'LIVE'
+      ? `${process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live'}/${slug}/stream.m3u8`
+      : null
 
   return (
     <div style={{ maxWidth: 1100, margin: '2rem auto', padding: '0 1rem' }}>
@@ -66,7 +69,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
         <div>
           <header style={{ marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}
+            >
               {channel.user.avatarUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -103,9 +108,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             {channel.user.bio && <p style={{ color: '#555', margin: 0 }}>{channel.user.bio}</p>}
           </header>
 
-          {/* HLS player (only when live) */}
+          {/* HLS player + reactions overlay (only when live) */}
           {hlsUrl && (
-            <HlsPlayer url={hlsUrl} />
+            <div
+              style={{
+                position: 'relative',
+                background: '#111',
+                borderRadius: 8,
+                overflow: 'hidden',
+                minHeight: 80,
+              }}
+            >
+              <div style={{ padding: '0.75rem' }}>
+                <HlsPlayer url={hlsUrl} />
+              </div>
+              <ReactionsOverlay slug={slug} />
+            </div>
           )}
 
           <section style={{ marginTop: '2rem' }}>
@@ -116,10 +134,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             ) : (
               <ul style={{ listStyle: 'none', padding: 0 }}>
                 {items.map((item) => (
-                  <li
-                    key={item.id}
-                    style={{ padding: '1rem 0', borderBottom: '1px solid #eee' }}
-                  >
+                  <li key={item.id} style={{ padding: '1rem 0', borderBottom: '1px solid #eee' }}>
                     <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.title}</div>
                     {item.description && (
                       <p style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}>
@@ -146,44 +161,5 @@ export default async function ChannelPage({ params }: { params: { slug: string }
         <ChatPanel slug={slug} announcements={announcements} />
       </div>
     </div>
-  )
-}
-
-// Inline RSC wrapper that renders a placeholder; HLS playback is client-side
-function HlsPlayer({ url }: { url: string }) {
-  return (
-    <div
-      style={{
-        background: '#111',
-        borderRadius: 8,
-        padding: '1rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: 80,
-      }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <noscript>
-        <p style={{ color: '#ccc' }}>Enable JavaScript to play the live stream.</p>
-      </noscript>
-      {/* HlsPlayerClient is loaded client-side and hydrates this */}
-      <HlsPlayerClient url={url} />
-    </div>
-  )
-}
-
-// This is a server component; we use a dynamic import trick via the chat-panel pattern.
-// For now render a simple <audio> with HLS.js loaded via CDN script in layout.
-function HlsPlayerClient({ url }: { url: string }) {
-  return (
-    // The audio element with data-hls-src is picked up by a small inline script
-    // that initialises Hls.js. See layout.tsx for the CDN script tag.
-    <audio
-      id="hls-player"
-      controls
-      data-hls-src={url}
-      style={{ width: '100%' }}
-    />
   )
 }

@@ -1,44 +1,48 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
 
 const meChat: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/chat/announcements { body: string }
-  fastify.post('/api/me/chat/announcements', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const { body: text } = (request.body as { body?: string }) ?? {}
+  fastify.post(
+    '/api/me/chat/announcements',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { body: text } = (request.body as { body?: string }) ?? {}
 
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      return reply.status(400).send({ error: 'body is required' })
-    }
+      if (!text || typeof text !== 'string' || text.trim().length === 0) {
+        return reply.status(400).send({ error: 'body is required' })
+      }
 
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    })
-
-    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-
-    // Max 3 announcements: delete the oldest if already at limit
-    const existing = await fastify.prisma.channelAnnouncement.findMany({
-      where: { channelId: channel.id },
-      orderBy: { createdAt: 'asc' },
-    })
-
-    if (existing.length >= 3) {
-      await fastify.prisma.channelAnnouncement.delete({
-        where: { id: existing[0]!.id },
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
       })
-    }
 
-    const announcement = await fastify.prisma.channelAnnouncement.create({
-      data: { channelId: channel.id, body: text.trim().slice(0, 500) },
-    })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-    return reply.status(201).send(announcement)
-  })
+      // Max 3 announcements: delete the oldest if already at limit
+      const existing = await fastify.prisma.channelAnnouncement.findMany({
+        where: { channelId: channel.id },
+        orderBy: { createdAt: 'asc' },
+      })
+
+      if (existing.length >= 3) {
+        await fastify.prisma.channelAnnouncement.delete({
+          where: { id: existing[0]!.id },
+        })
+      }
+
+      const announcement = await fastify.prisma.channelAnnouncement.create({
+        data: { channelId: channel.id, body: text.trim().slice(0, 500) },
+      })
+
+      return reply.status(201).send(announcement)
+    },
+  )
 
   // DELETE /api/me/chat/announcements/:id
   fastify.delete(

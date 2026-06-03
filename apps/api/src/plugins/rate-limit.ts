@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 // Redis token-bucket rate limiting for Fastify.
 // Applied globally — individual routes can override limits via config.
@@ -52,7 +52,11 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
     if (process.env.NODE_ENV === 'test') return
 
     // Skip internal routes
-    if (request.url.startsWith('/internal/') || request.url === '/health' || request.url === '/source') {
+    if (
+      request.url.startsWith('/internal/') ||
+      request.url === '/health' ||
+      request.url === '/source'
+    ) {
       return
     }
 
@@ -61,7 +65,9 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
     const limit = isAuthRoute ? AUTH_LIMIT : DEFAULT_LIMIT
 
     const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() => ({
-      ok: true, remaining: 999, resetSec: 60,
+      ok: true,
+      remaining: 999,
+      resetSec: 60,
     }))
 
     reply.header('X-RateLimit-Remaining', remaining)

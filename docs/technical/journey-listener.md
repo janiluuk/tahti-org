@@ -11,7 +11,7 @@ journey
     title Listener experience on Tahti
     section Discovery
       Artist shares channel link on social media    : 5 : Listener
-      Opens channelslug.tahti.fi                    : 4 : Listener
+      Opens channelslug.tahti.live                    : 4 : Listener
       Page loads instantly (static channel page)    : 5 : Listener
     section First listen
       Clicks play on live stream                    : 5 : Listener
@@ -42,11 +42,11 @@ journey
 sequenceDiagram
     participant L as Listener (Maija)
     participant Link as Shared link (Instagram)
-    participant CH as channelslug.tahti.fi
+    participant CH as channelslug.tahti.live
     participant API as API (SSR)
-    participant HLS as stream.tahti.fi (HLS)
+    participant HLS as stream.tahti.live (HLS)
 
-    L->>Link: Sees artist's Instagram story: "live now — tahti.fi/joonas"
+    L->>Link: Sees artist's Instagram story: "live now — tahti.live/joonas"
     L->>CH: Opens link on phone (mobile browser)
     CH->>API: SSR: GET /api/channels/joonas (channel data)
     API-->>CH: Channel metadata, current broadcast, last 10 archive items
@@ -84,7 +84,7 @@ sequenceDiagram
     participant ARCH as Archive (MinIO)
 
     Note over L: Tuesday evening — artist is not broadcasting
-    L->>CH: Opens channelslug.tahti.fi
+    L->>CH: Opens channelslug.tahti.live
     CH->>API: GET /api/channels/slug
     API-->>CH: { status: offline, fallback: archive }
 
@@ -192,11 +192,11 @@ flowchart TD
 sequenceDiagram
     participant L as Listener
     participant CH as Channel page
-    participant Email as ops@tahti.fi
+    participant Email as ops@tahti.live
 
     Note over L: Chat message deleted by artist — listener disputes
     L->>CH: Sees "message removed" placeholder
-    L->>Email: Sends email to ops@tahti.fi
+    L->>Email: Sends email to ops@tahti.live
     Email-->>Director: Support ticket
     Director->>PG: SELECT * FROM chat_moderation_log WHERE fingerprint=...
     Note over Director: Reviews deletion reason

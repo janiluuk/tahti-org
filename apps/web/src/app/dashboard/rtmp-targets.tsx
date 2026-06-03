@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 'use client'
 
@@ -73,13 +73,29 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
   }
 
   return (
-    <div style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+    <div
+      style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem',
+        }}
+      >
         <h2 style={{ margin: 0 }}>Multistream</h2>
         {targets.length < 5 && !adding && (
           <button
             onClick={() => setAdding(true)}
-            style={{ padding: '0.35rem 0.8rem', border: '1px solid #ccc', borderRadius: 4, cursor: 'pointer', background: 'none', fontSize: '0.85rem' }}
+            style={{
+              padding: '0.35rem 0.8rem',
+              border: '1px solid #ccc',
+              borderRadius: 4,
+              cursor: 'pointer',
+              background: 'none',
+              fontSize: '0.85rem',
+            }}
           >
             + Add target
           </button>
@@ -95,7 +111,13 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
       {targets.map((t) => (
         <div
           key={t.id}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0', borderBottom: '1px solid #f0f0f0' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            padding: '0.6rem 0',
+            borderBottom: '1px solid #f0f0f0',
+          }}
         >
           <span style={{ flex: 1, fontWeight: 500, fontSize: '0.875rem' }}>
             {t.label}
@@ -103,7 +125,16 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
               {PROVIDERS.find((p) => p.value === t.provider)?.label ?? t.provider}
             </span>
           </span>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', color: '#555', cursor: 'pointer' }}>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontSize: '0.8rem',
+              color: '#555',
+              cursor: 'pointer',
+            }}
+          >
             <input
               type="checkbox"
               checked={t.enabled}
@@ -113,7 +144,15 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
           </label>
           <button
             onClick={() => void deleteTarget(t.id)}
-            style={{ padding: '0.2rem 0.5rem', border: '1px solid #fca5a5', borderRadius: 4, cursor: 'pointer', background: 'none', color: '#dc2626', fontSize: '0.75rem' }}
+            style={{
+              padding: '0.2rem 0.5rem',
+              border: '1px solid #fca5a5',
+              borderRadius: 4,
+              cursor: 'pointer',
+              background: 'none',
+              color: '#dc2626',
+              fontSize: '0.75rem',
+            }}
           >
             Remove
           </button>
@@ -121,27 +160,60 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
       ))}
 
       {adding && (
-        <div style={{ marginTop: '1rem', padding: '1rem', background: '#fafafa', borderRadius: 6, border: '1px solid #eee' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <div
+          style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            background: '#fafafa',
+            borderRadius: 6,
+            border: '1px solid #eee',
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.75rem',
+              marginBottom: '0.75rem',
+            }}
+          >
             <div>
               <label style={{ fontSize: '0.8rem', color: '#555' }}>Platform</label>
               <select
                 value={form.provider}
                 onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
-                style={{ display: 'block', width: '100%', padding: '0.4rem', border: '1px solid #ccc', borderRadius: 4, marginTop: '0.25rem' }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '0.4rem',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  marginTop: '0.25rem',
+                }}
               >
                 {PROVIDERS.map((p) => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: '0.8rem', color: '#555' }}>{'Label (e.g. "My YouTube")'}</label>
+              <label style={{ fontSize: '0.8rem', color: '#555' }}>
+                {'Label (e.g. "My YouTube")'}
+              </label>
               <input
                 value={form.label}
                 onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
                 maxLength={64}
-                style={{ display: 'block', width: '100%', padding: '0.4rem', border: '1px solid #ccc', borderRadius: 4, marginTop: '0.25rem' }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '0.4rem',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  marginTop: '0.25rem',
+                }}
               />
             </div>
           </div>
@@ -153,7 +225,15 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
               value={form.streamKey}
               onChange={(e) => setForm((f) => ({ ...f, streamKey: e.target.value }))}
               placeholder="Paste your stream key here"
-              style={{ display: 'block', width: '100%', padding: '0.4rem', border: '1px solid #ccc', borderRadius: 4, marginTop: '0.25rem', fontFamily: 'monospace' }}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '0.4rem',
+                border: '1px solid #ccc',
+                borderRadius: 4,
+                marginTop: '0.25rem',
+                fontFamily: 'monospace',
+              }}
             />
           </div>
 
@@ -164,24 +244,52 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
                 value={form.rtmpUrl}
                 onChange={(e) => setForm((f) => ({ ...f, rtmpUrl: e.target.value }))}
                 placeholder="rtmp://live.example.com/live"
-                style={{ display: 'block', width: '100%', padding: '0.4rem', border: '1px solid #ccc', borderRadius: 4, marginTop: '0.25rem', fontFamily: 'monospace' }}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '0.4rem',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  marginTop: '0.25rem',
+                  fontFamily: 'monospace',
+                }}
               />
             </div>
           )}
 
-          {error && <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: '0 0 0.5rem' }}>{error}</p>}
+          {error && (
+            <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: '0 0 0.5rem' }}>{error}</p>
+          )}
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               onClick={() => void addTarget()}
               disabled={saving || !form.label || !form.streamKey}
-              style={{ padding: '0.4rem 0.9rem', background: '#111', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: '0.85rem' }}
+              style={{
+                padding: '0.4rem 0.9rem',
+                background: '#111',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 4,
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+              }}
             >
               {saving ? 'Saving…' : 'Add target'}
             </button>
             <button
-              onClick={() => { setAdding(false); setError(null) }}
-              style={{ padding: '0.4rem 0.9rem', background: 'none', border: '1px solid #ccc', borderRadius: 4, cursor: 'pointer', fontSize: '0.85rem' }}
+              onClick={() => {
+                setAdding(false)
+                setError(null)
+              }}
+              style={{
+                padding: '0.4rem 0.9rem',
+                background: 'none',
+                border: '1px solid #ccc',
+                borderRadius: 4,
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+              }}
             >
               Cancel
             </button>

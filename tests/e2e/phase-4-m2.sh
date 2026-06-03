@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Copyright (C) 2024 Tahti ry <https://tahti.fi>
+# Copyright (C) 2024 Tahti ry <https://tahti.live>
 #
 # Phase 4 M2 exit-criteria smoke test.
 # Usage: API_URL=http://localhost:3001 tests/e2e/phase-4-m2.sh
