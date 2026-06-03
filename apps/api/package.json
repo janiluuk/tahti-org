@@ -32,6 +32,7 @@
     "redis": "^6.0.0"
   },
   "devDependencies": {
+    "@tahti/mixcloud": "workspace:*",
     "@types/node": "^20.14.0",
     "@types/nodemailer": "^6.4.15",
     "@vitest/coverage-v8": "^1.6.0",

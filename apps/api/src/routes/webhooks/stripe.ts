@@ -91,6 +91,16 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
           break
         }
 
+        case 'account.updated': {
+          const accountId = String(obj.id ?? '')
+          if (!accountId) break
+          await fastify.prisma.user.updateMany({
+            where: { stripeConnectAccountId: accountId },
+            data: { stripeConnectChargesEnabled: obj.charges_enabled === true },
+          })
+          break
+        }
+
         default:
           break
       }

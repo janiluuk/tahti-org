@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
+import { stripeEnabled } from '../../lib/stripe.js'
 
 const MIN_CENTS = 100 // €1
 const MAX_CENTS = 10000 // €100
@@ -45,7 +46,14 @@ const fanTierRoutes: FastifyPluginAsync = async (fastify) => {
     const { username } = request.params as { username: string }
     const artist = await fastify.prisma.user.findUnique({
       where: { username },
-      select: { id: true, displayName: true, username: true, bio: true, avatarUrl: true },
+      select: {
+        id: true,
+        displayName: true,
+        username: true,
+        bio: true,
+        avatarUrl: true,
+        stripeConnectChargesEnabled: true,
+      },
     })
     if (!artist) return reply.status(404).send({ error: 'Artist not found' })
 
@@ -55,7 +63,19 @@ const fanTierRoutes: FastifyPluginAsync = async (fastify) => {
       select: { id: true, name: true, amountCents: true, description: true, perks: true },
     })
 
-    return reply.send({ artist, tiers })
+    const paymentsReady = !stripeEnabled || artist.stripeConnectChargesEnabled
+
+    return reply.send({
+      artist: {
+        id: artist.id,
+        displayName: artist.displayName,
+        username: artist.username,
+        bio: artist.bio,
+        avatarUrl: artist.avatarUrl,
+      },
+      tiers,
+      paymentsReady,
+    })
   })
 
   // GET /api/me/fan-tiers — the signed-in artist's own tiers (incl. disabled)

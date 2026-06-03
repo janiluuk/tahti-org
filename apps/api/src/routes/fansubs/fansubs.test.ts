@@ -119,6 +119,7 @@ describe('M19 — fan-to-artist subscriptions', () => {
     expect(pub.statusCode).toBe(200)
     expect(pub.json().tiers).toHaveLength(1)
     expect(pub.json().tiers[0].amountCents).toBe(500)
+    expect(pub.json().paymentsReady).toBe(true)
   })
 
   it('rejects an out-of-range tier price', async () => {

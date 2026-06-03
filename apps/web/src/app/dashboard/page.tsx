@@ -195,6 +195,29 @@ export default async function DashboardPage() {
     }
   }
 
+  let fanConnect: {
+    stripeConfigured: boolean
+    paymentsReady: boolean
+    chargesEnabled: boolean
+    detailsSubmitted: boolean
+  } = {
+    stripeConfigured: false,
+    paymentsReady: true,
+    chargesEnabled: true,
+    detailsSubmitted: true,
+  }
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/fan-subs/connect`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) fanConnect = (await res.json()) as typeof fanConnect
+    } catch {
+      // ignore
+    }
+  }
+
   let archiveItems: ArchiveItem[] = []
   if (user.channel) {
     try {
@@ -286,7 +309,9 @@ export default async function DashboardPage() {
 
       {user.channel && <AnnouncementsPanel initial={announcements} />}
 
-      {user.channel && <FanSubscriptionsPanel initial={fanTiers} username={user.username} />}
+      {user.channel && (
+        <FanSubscriptionsPanel initial={fanTiers} username={user.username} connect={fanConnect} />
+      )}
 
       {user.channel && <ReleasesPanel initial={releases} username={user.username} />}
 

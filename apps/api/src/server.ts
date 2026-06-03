@@ -42,6 +42,7 @@ import meGrantsRoutes from './routes/me/grants.js'
 import adminGrantsRoutes from './routes/admin/grants.js'
 import fanTierRoutes from './routes/fansubs/tiers.js'
 import fanSubscriptionRoutes from './routes/fansubs/subscriptions.js'
+import fanConnectRoutes from './routes/fansubs/connect.js'
 import stripeWebhookRoutes from './routes/webhooks/stripe.js'
 import membershipRoutes from './routes/me/membership.js'
 import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
@@ -201,6 +202,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M19: fan-to-artist subscriptions
   await fastify.register(fanTierRoutes)
   await fastify.register(fanSubscriptionRoutes)
+  await fastify.register(fanConnectRoutes)
   await fastify.register(stripeWebhookRoutes)
 
   // M1: annual membership payment

@@ -147,3 +147,19 @@ export async function setFanTierActive(
   }
   return { error: null }
 }
+
+export async function startFanSubConnectOnboarding(): Promise<{
+  error: string | null
+  onboardingUrl?: string
+}> {
+  const response = await fetch(`${apiUrl}/api/me/fan-subs/connect/onboard`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    return { error: (data as { error?: string }).error ?? 'Could not start onboarding' }
+  }
+  return { error: null, onboardingUrl: (data as { onboardingUrl?: string }).onboardingUrl }
+}

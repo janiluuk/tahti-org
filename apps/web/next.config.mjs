@@ -10,7 +10,15 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/embed/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
+          { key: 'Content-Security-Policy', value: 'frame-ancestors *' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+        ],
+      },
+      {
+        source: '/((?!embed).*)',
         headers: [
           { key: 'X-Source-Code', value: 'https://github.com/tahtiapp/tahti' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
