@@ -83,7 +83,7 @@ describe('M6 — RTMP multistream targets', () => {
       method: 'POST',
       url: '/api/me/rtmp-targets',
       headers: { cookie },
-      payload: { provider: 'TIKTOK', label: 'X', streamKey: 'k' },
+      payload: { provider: 'NOT_A_PLATFORM', label: 'X', streamKey: 'k' },
     })
     expect(badProvider.statusCode).toBe(400)
 

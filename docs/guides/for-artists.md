@@ -36,7 +36,7 @@ Open `/dashboard` after login.
 | **Tahti ry membership** | Pay €40/year or **Manage billing** (Stripe portal when enabled). |
 | **Your channel** | Live/offline status, link to public channel, broadcast time warnings. |
 | **Stream settings** | RTMP server, stream key, Icecast mount — for OBS/Mixxx ([streamers guide](for-streamers.md)). |
-| **RTMP targets** | Mirror live to YouTube/Twitch/etc. (Studio tier: “always mirror”). |
+| **Multistream** | Mirror live to YouTube, Twitch, Kick, Facebook, TikTok, Mixcloud, Instagram (RTMP), or custom — paste each platform’s **stream key** ([guide](multistream-simulcast.md)). |
 | **Announcements** | Pinned notes at top of chat on your channel. |
 | **Fan subscriptions** | Stripe Connect + fan tiers + perk codes. |
 | **Releases** | Draft/publish releases + **DSP URLs** for smart links. |

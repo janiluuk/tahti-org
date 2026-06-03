@@ -7,6 +7,7 @@ These are **“for dummies”** walkthroughs: short steps, no jargon where we ca
 | **[For viewers](for-viewers.md)** | Anyone listening, chatting, or supporting an artist | Tune in, chat, subscribe, downloads |
 | **[For artists](for-artists.md)** | Members building a profile, releases, and fan support | Dashboard, profile, fan tiers, releases |
 | **[For streamers](for-streamers.md)** | Members going **live** with OBS, Mixxx, or similar | RTMP, stream key, going LIVE, limits |
+| **[Multistream / simulcast](multistream-simulcast.md)** | Mirror Tahti live to Twitch, YouTube, Kick, etc. | Paste each platform’s **stream key** in dashboard |
 
 **Quick URLs (replace with real host in production):**
 

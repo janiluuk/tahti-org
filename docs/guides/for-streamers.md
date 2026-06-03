@@ -85,14 +85,20 @@ The dashboard shows **warnings** (e.g. 45 / 55 minutes) and may **stop** the str
 
 ---
 
-## Multistream (YouTube, Twitch, …)
+## Multistream (YouTube, Twitch, Kick, Facebook, …)
 
-1. Dashboard → **RTMP targets**.
-2. Add a target (YouTube, Twitch, custom URL).
-3. Enter label + RTMP URL + stream key (encrypted on server).
-4. Enable the target before going live.
+Tahti can **simulcast** your live show to other platforms while you only stream to Tahti from OBS.
 
-**Studio tier:** “Always mirror” can push to targets automatically. Other tiers: enable per show as documented on dashboard.
+1. Dashboard → **Multistream (simulcast)** → **Add destination**.
+2. Choose **YouTube**, **Twitch**, **Kick**, **Facebook**, **TikTok**, **Mixcloud**, **Instagram** (RTMP), or **Custom**.
+3. Paste the **stream key** from that platform’s creator dashboard (see **[multistream guide](multistream-simulcast.md)** or `/help/multistream` in the app).
+4. Keep **Active** checked, then go live on Tahti as usual.
+
+**Important:** You paste each site’s **stream key**, not a Tahti API key and not YouTube/Twitch OAuth app credentials.
+
+**Studio tier:** “Always mirror” can push to all targets automatically. Other tiers: toggle **Active** per destination before each show.
+
+Supported ingest URLs are configured for you (e.g. `rtmp://live.twitch.tv/app` + your Twitch key). **Custom** is for any other RTMP service — you fill in both URL and key.
 
 ---
 

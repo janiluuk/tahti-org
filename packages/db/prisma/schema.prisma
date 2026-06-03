@@ -60,7 +60,10 @@ enum RtmpTargetProvider {
   YOUTUBE
   TWITCH
   FACEBOOK
+  KICK
+  TIKTOK
   MIXCLOUD_LIVE
+  INSTAGRAM
   CUSTOM
 
   @@schema("channel")
