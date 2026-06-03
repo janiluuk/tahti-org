@@ -492,7 +492,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [~] | **PLAT-002** | Require branch protection on all `ci.yml` jobs (lint, test, both e2e, AGPL) | `.github/BRANCH_PROTECTION.md` — enable **All checks** in repo settings | P1 |
 | [ ] | **PLAT-003** | PgBouncer before scaling API replicas (`docs/scaling-node-distribution.md`) | P1 |
 | [x] | **PLAT-004** | Internal ingest routes: shared `@fastify/formbody` + integration tests for RTMP + Icecast | `ingest.test.ts` |
-| [~] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | `DOCS_*_FILE` + prod warning on default pass | P2 |
+| [~] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | `DOCS_*_FILE`, `readSecret` tests, prod warning on default `DOCS_PASS` | P2 |
 | [x] | **PLAT-006** | Rate-limit policy doc: fail-open vs fail-closed when Redis unavailable | P2 |
 
 ### Optimisations (performance & cost)
@@ -503,7 +503,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [x] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | `apps/api/src/lib/redis.ts` | P2 |
 | [ ] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | P2 |
 | [ ] | **PLAT-013** | Website Docker: mount large media (`bg-audio.mp3`, hero video) from host like `output_vhs.mp4` | P3 |
-| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | + status, per-item gate detail; route `schema.tags` on status + per-item gate |
+| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | + gate status, transparency YTD/grants, download URL; tags on downloads + transparency |
 
 ### Refactors (maintainability)
 

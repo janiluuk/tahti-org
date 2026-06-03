@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest'
 import {
   DownloadGateItemDetailResponseSchema,
   DownloadGateStatsResponseSchema,
+  DownloadGateStatusSchema,
   DownloadUrlResponseSchema,
 } from './api-responses.js'
 import { zodOpenApiComponents } from '../openapi-zod.js'
@@ -16,6 +17,17 @@ describe('api response schemas', () => {
       items: [],
       totals: { repostAcks: 1, blockedAttempts: 0, countedDownloads: 3 },
       daily: [{ date: '2026-06-01', repostAcks: 1, blockedAttempts: 0, countedDownloads: 3 }],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('parses download gate status', () => {
+    const parsed = DownloadGateStatusSchema.safeParse({
+      repostRequired: true,
+      followRequired: false,
+      repostSatisfied: false,
+      followSatisfied: true,
+      canDownload: false,
     })
     expect(parsed.success).toBe(true)
   })

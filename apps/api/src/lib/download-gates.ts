@@ -2,15 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@tahti/db'
+import type { DownloadGateStatus } from '@tahti/shared'
 import { isActiveFanSubscriber } from './fansub.js'
 
-export type DownloadGateStatus = {
-  repostRequired: boolean
-  followRequired: boolean
-  repostSatisfied: boolean
-  followSatisfied: boolean
-  canDownload: boolean
-}
+export type { DownloadGateStatus }
 
 export async function resolveDownloadGateStatus(
   prisma: PrismaClient,
