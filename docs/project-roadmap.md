@@ -73,7 +73,8 @@ as their own checklist so they don't get lost between milestones.
 | [ ] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
 | [ ] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | AGENT.md acceptance criteria require Zod validation on every endpoint; several routes hand-roll validation | ongoing hardening |
 | [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
-| [ ] | Document ephemeral test DB story for CI + local (`pnpm test` needs Postgres) | Integration tests silently fail without a DB; document/seed it | M11 |
+| [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; the suite now runs green (81 tests) on every PR against a Postgres service | CI |
+| [ ] | Document ephemeral test DB story for local dev (`pnpm test` needs Postgres) | CI now provisions Postgres + `db push`; local dev still needs the docker-compose DB documented | M11 |
 | [~] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | Download → unit pipeline is live (M18); fan-sub euro input lands with M19 | M18 (done) / M19 → M9 |
 
 ---
