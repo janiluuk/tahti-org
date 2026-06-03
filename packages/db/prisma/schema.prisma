@@ -168,6 +168,7 @@ enum AuditAction {
   MOTION_CLOSE
   VOTE_CAST
   GRANT_RUN
+  STRIPE_WEBHOOK_ERROR
 
   @@schema("governance")
 }
@@ -738,6 +739,14 @@ model Release {
   // M7 — Revelator DSP distribution
   revelatorId      String?
   revelatorStatus  String?      // pending | submitted | delivered | failed
+  // M30 — release ops / catalog metadata
+  upc                    String?
+  musicbrainzReleaseId   String?
+  musicbrainzArtistId    String?
+  pLine                  String?
+  cLine                  String?
+  labelImprint           String?
+  credits                Json?    // [{ role, name, artistUsername? }]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
@@ -756,6 +765,7 @@ model ReleaseTrack {
   position         Int
   title            String
   isrc             String?
+  musicbrainzRecordingId String?
   durationSec      Int?
   archiveItemId    String?
   // M12 — audio file pipeline

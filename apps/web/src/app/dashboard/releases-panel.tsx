@@ -6,7 +6,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import type { ReleaseChecklistItem } from '@tahti/shared'
 import { createRelease, publishRelease, updateReleaseSmartLinks } from './release-actions'
+import ReleaseOpsPanel from './release-ops-panel'
 
 const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
   { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
@@ -23,8 +25,19 @@ interface ReleaseSummary {
   type: string
   state: string
   releaseDate: string
+  description?: string | null
+  artworkUrl?: string | null
   smartLinkSlug: string
   smartLinkTargets: Record<string, string> | null
+  upc?: string | null
+  musicbrainzReleaseId?: string | null
+  musicbrainzArtistId?: string | null
+  pLine?: string | null
+  cLine?: string | null
+  labelImprint?: string | null
+  revelatorStatus?: string | null
+  tracks?: Array<{ isrc: string | null }>
+  checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
 }
 
@@ -156,6 +169,32 @@ export default function ReleasesPanel({
                   )}
                 </span>
               </div>
+              <ReleaseOpsPanel
+                releaseId={r.id}
+                releaseTitle={r.title}
+                smartLinkSlug={r.smartLinkSlug}
+                initial={{
+                  upc: r.upc ?? '',
+                  musicbrainzReleaseId: r.musicbrainzReleaseId ?? '',
+                  musicbrainzArtistId: r.musicbrainzArtistId ?? '',
+                  pLine: r.pLine ?? '',
+                  cLine: r.cLine ?? '',
+                  labelImprint: r.labelImprint ?? '',
+                }}
+                checklist={
+                  r.checklist ?? [
+                    { id: 'metadata', label: 'Release metadata', done: false },
+                    { id: 'identifiers', label: 'UPC / ISRC', done: false },
+                    { id: 'musicbrainz', label: 'MusicBrainz', done: false },
+                    { id: 'dsp', label: 'DSP / smart links', done: false },
+                    {
+                      id: 'published',
+                      label: 'Published on profile',
+                      done: r.state === 'PUBLISHED',
+                    },
+                  ]
+                }
+              />
             </li>
           ))}
         </ul>

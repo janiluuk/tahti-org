@@ -29,3 +29,15 @@ export async function updateArchiveMetadata(
   }
   return { error: null }
 }
+
+export async function searchTahtiUsers(
+  q: string,
+): Promise<Array<{ username: string; displayName: string }>> {
+  if (q.trim().length < 2) return []
+  const res = await fetch(`${apiUrl}/api/me/users/search?q=${encodeURIComponent(q.trim())}`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return []
+  return res.json()
+}

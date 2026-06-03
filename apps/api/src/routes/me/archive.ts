@@ -9,6 +9,8 @@ import {
   metadataPatchFromBody,
   serializeArchiveItem,
 } from '../../lib/archive-metadata.js'
+import { normalizeTracklist, recordTracklistMentions } from '../../lib/tracklist.js'
+import type { TracklistEntry } from '@tahti/shared'
 
 const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/me/archive', { preHandler: requireAuth }, async (request, reply) => {
@@ -59,11 +61,33 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       patch.data.title = t.slice(0, 200)
     }
 
+    if (patch.data.tracklist !== undefined && patch.data.tracklist !== null) {
+      try {
+        patch.data.tracklist = await normalizeTracklist(
+          fastify.prisma,
+          patch.data.tracklist as TracklistEntry[],
+        )
+      } catch (err) {
+        return reply
+          .status(400)
+          .send({ error: err instanceof Error ? err.message : 'Invalid tracklist' })
+      }
+    }
+
     const updated = await fastify.prisma.archiveItem.update({
       where: { id },
       data: patch.data,
       select: archiveItemMetadataSelect,
     })
+
+    if (patch.data.tracklist !== undefined && Array.isArray(updated.tracklist)) {
+      recordTracklistMentions(
+        fastify.prisma,
+        user.id,
+        updated.tracklist as TracklistEntry[],
+        id,
+      ).catch((e) => fastify.log.warn(e, 'tracklist mention record failed'))
+    }
 
     return reply.send(serializeArchiveItem(updated))
   })

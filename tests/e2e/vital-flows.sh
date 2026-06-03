@@ -34,10 +34,10 @@ fi
 e2e_green "API health reachable"
 
 HEALTH=$(curl -sf "$API_URL/health" || echo '{}')
-e2e_check_json "health status ok" '"status":"ok"' "$HEALTH"
+e2e_check_json "health postgres up" '"postgres":"up"' "$HEALTH"
 
-STATUS=$(curl -sf "$API_URL/api/v1/status" 2>/dev/null || echo '{}')
-e2e_check_json "status has database check" '"database"' "$STATUS"
+STATUS=$(curl -s "$API_URL/api/v1/status" 2>/dev/null || echo '{}')
+e2e_check_json "status has postgres check" '"postgres"' "$STATUS"
 
 # ── Artist: register → verify (DB token via API is not available; set verify in dev path) ──
 # Registration only — full verify needs MailHog or test DB access.

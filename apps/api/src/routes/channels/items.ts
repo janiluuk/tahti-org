@@ -43,6 +43,7 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
         useDetectedBpmKey: true,
         bannerUrl: true,
         license: true,
+        tracklist: true,
       },
     })
 

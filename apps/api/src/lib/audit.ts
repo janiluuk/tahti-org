@@ -19,6 +19,7 @@ interface AuditParams {
     | 'MOTION_CLOSE'
     | 'VOTE_CAST'
     | 'GRANT_RUN'
+    | 'STRIPE_WEBHOOK_ERROR'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

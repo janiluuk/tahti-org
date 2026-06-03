@@ -8,6 +8,7 @@ import StreamSettingsPanel from './stream-settings'
 import RtmpTargetsPanel from './rtmp-targets'
 import AnnouncementsPanel from './announcements-panel'
 import FanSubscriptionsPanel from './fan-subscriptions'
+import NewsletterPanel from './newsletter-panel'
 import ReleasesPanel from './releases-panel'
 import CollectionsPanel from './collections-panel'
 import ChannelGalleryPanel from './channel-gallery-panel'
@@ -326,6 +327,41 @@ export default async function DashboardPage() {
     .filter((r) => r.state === 'PUBLISHED')
     .map((r) => ({ id: r.id, title: r.title }))
 
+  type NewsletterStats = { total: number; confirmed: number; newLast30Days: number }
+  type NewsletterDraft = {
+    id: string
+    subject: string
+    state: string
+    sentAt: string | null
+    createdAt: string
+    subscribersOnly: boolean
+    _count: { sends: number }
+  }
+  let newsletterStats: NewsletterStats = { total: 0, confirmed: 0, newLast30Days: 0 }
+  let newsletterDrafts: NewsletterDraft[] = []
+  if (user.channel) {
+    try {
+      const [statsRes, draftsRes] = await Promise.all([
+        fetch(`${apiUrl}/api/me/newsletter/subscribers`, {
+          headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+          cache: 'no-store',
+        }),
+        fetch(`${apiUrl}/api/me/newsletter/drafts`, {
+          headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+          cache: 'no-store',
+        }),
+      ])
+      if (statsRes.ok) newsletterStats = (await statsRes.json()) as NewsletterStats
+      if (draftsRes.ok) newsletterDrafts = (await draftsRes.json()) as NewsletterDraft[]
+    } catch {
+      // ignore
+    }
+  }
+
+  const hasFanNewsletterPerk = fanTiers.some(
+    (t) => t.active && t.perks.some((p) => p === 'FAN_NEWSLETTER'),
+  )
+
   return (
     <PageShell size="md" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
       <Row between className="ui-row--gap-3">
@@ -386,6 +422,15 @@ export default async function DashboardPage() {
 
       {user.channel && (
         <FanSubscriptionsPanel initial={fanTiers} username={user.username} connect={fanConnect} />
+      )}
+
+      {user.channel && (
+        <NewsletterPanel
+          initialStats={newsletterStats}
+          initialDrafts={newsletterDrafts}
+          hasFanNewsletterPerk={hasFanNewsletterPerk}
+          tier={user.tier}
+        />
       )}
 
       {user.channel && <ReleasesPanel initial={releases} username={user.username} />}

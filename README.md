@@ -81,12 +81,25 @@ These rules are constitutional. They are not changeable by management decision. 
 
 ## Running tests
 
-API and package tests need **Postgres** with the Prisma schema applied:
+API and package tests need **Postgres** and **Redis** with the Prisma schema applied:
 
 ```bash
-docker compose -f infra/docker-compose.dev.yml up -d postgres
-cd packages/db && pnpm db:migrate:test
+docker compose -f infra/docker-compose.dev.yml up -d postgres redis
+cd packages/db && pnpm db:push   # or pnpm db:migrate:test in CI
 cd ../.. && pnpm test
+```
+
+Run the same lint, format, and typecheck gates as CI locally:
+
+```bash
+pnpm ci:check
+```
+
+Full app stack in Docker (API, web, worker, postgres, redis, minio — ports **3010** / **3011**):
+
+```bash
+make stack-up          # or ./scripts/stack-up.sh --seed for demo fixtures
+make stack-deploy      # rsync + stack-up on lab host (SSH required)
 ```
 
 Optional bash e2e against a running API:

@@ -49,6 +49,23 @@ export async function addCollectionItem(
   return { error: null }
 }
 
+export async function reorderCollectionItems(
+  slug: string,
+  itemIds: string[],
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}/reorder`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ itemIds }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to reorder' }
+  }
+  return { error: null }
+}
+
 export async function deleteCollection(slug: string): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}`, {
     method: 'DELETE',

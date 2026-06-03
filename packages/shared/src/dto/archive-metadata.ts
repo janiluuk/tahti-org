@@ -63,6 +63,8 @@ export const TracklistEntrySchema = z.object({
     .optional(),
 })
 
+export type TracklistEntry = z.infer<typeof TracklistEntrySchema>
+
 export const ArchiveMetadataFieldsSchema = z.object({
   description: z.string().max(2000).optional(),
   tracklist: z.array(TracklistEntrySchema).max(200).nullable().optional(),

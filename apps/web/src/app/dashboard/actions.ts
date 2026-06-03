@@ -180,3 +180,65 @@ export async function startFanSubConnectOnboarding(): Promise<{
   }
   return { error: null, onboardingUrl: (data as { onboardingUrl?: string }).onboardingUrl }
 }
+
+export async function createNewsletterDraft(params: {
+  subject: string
+  bodyMd: string
+  subscribersOnly?: boolean
+}): Promise<{
+  error: string | null
+  draft?: {
+    id: string
+    subject: string
+    state: string
+    sentAt: string | null
+    createdAt: string
+    subscribersOnly: boolean
+    _count: { sends: number }
+  }
+}> {
+  const response = await fetch(`${apiUrl}/api/me/newsletter/drafts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(params),
+    cache: 'no-store',
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    return { error: (data as { error?: string }).error ?? 'Failed to save draft' }
+  }
+  const draft = data as {
+    id: string
+    subject: string
+    state: string
+    sentAt: string | null
+    createdAt: string
+    subscribersOnly: boolean
+  }
+  return {
+    error: null,
+    draft: { ...draft, _count: { sends: 0 } },
+  }
+}
+
+export async function sendNewsletterDraft(params: {
+  draftId: string
+  audience: 'all' | 'fans'
+}): Promise<{ error: string | null; queued?: number; audience?: string }> {
+  const body = params.audience === 'fans' ? { audience: 'fans' } : {}
+  const response = await fetch(`${apiUrl}/api/me/newsletter/send/${params.draftId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    return { error: (data as { error?: string }).error ?? 'Failed to send newsletter' }
+  }
+  return {
+    error: null,
+    queued: (data as { queued?: number }).queued,
+    audience: (data as { audience?: string }).audience,
+  }
+}
