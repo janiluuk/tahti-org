@@ -113,7 +113,7 @@ SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/t
 
 ## CI releases
 
-Every merge to **`main`** runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). When all checks pass, CI creates a GitHub release tagged **`YYmmdd-buildnr`** (UTC date + daily increment), e.g. `260603-1`, `260603-2`.
+Every merge to **`main`** runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). When all checks pass, CI creates a GitHub release tagged **`YYYY-MM-DD-buildnr`** (UTC calendar date + daily increment), e.g. `2026-06-03-1`, `2026-06-03-2`.
 
 Preview the next tag locally:
 
