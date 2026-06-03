@@ -211,6 +211,15 @@ enum VenueBroadcastState {
   @@schema("venue")
 }
 
+enum MentionSurface {
+  BIO
+  ANNOUNCEMENT
+  RELEASE
+  NEWSLETTER
+
+  @@schema("core")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model User {
@@ -236,6 +245,7 @@ model User {
   storageUsedBytes      BigInt     @default(0)
   weeklyLiveSecondsUsed Int        @default(0)
   weeklyLiveResetAt     DateTime?
+  mentionsEnabled       Boolean    @default(true)
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
@@ -253,6 +263,10 @@ model User {
   mixUploads            MixUpload[]
   newsletterSubscribers NewsletterSubscriber[]   @relation("ArtistSubscribers")
   newsletterDrafts      NewsletterDraft[]
+  mentionsSent          Mention[]                @relation("MentionerMentions")
+  mentionsReceived      Mention[]                @relation("MentionTarget")
+  mentionsMuted         MentionMute[]            @relation("MuterMutes")
+  mentionsMutedBy       MentionMute[]            @relation("MuteTarget")
 
   @@schema("core")
 }
@@ -313,6 +327,7 @@ model Channel {
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
   goneLiveAt         DateTime?
+  metaStreamOptOut   Boolean      @default(false)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -766,4 +781,33 @@ model VenueBroadcast {
   @@index([venueId, startAt])
   @@index([artistUserId, startAt])
   @@schema("venue")
+}
+
+// ── Artist @-mentions (M15) ──────────────────────────────────────────────────
+
+model Mention {
+  id              String         @id @default(cuid())
+  mentionerUserId String
+  mentioner       User           @relation("MentionerMentions", fields: [mentionerUserId], references: [id], onDelete: Cascade)
+  targetUserId    String
+  target          User           @relation("MentionTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  surface         MentionSurface
+  sourceId        String         // bio userId | announcement id | release id | draft id
+  notifiedAt      DateTime?
+  createdAt       DateTime       @default(now())
+
+  @@unique([mentionerUserId, targetUserId, surface, sourceId])
+  @@index([targetUserId, notifiedAt])
+  @@schema("core")
+}
+
+model MentionMute {
+  muterId      String
+  muter        User    @relation("MuterMutes", fields: [muterId], references: [id], onDelete: Cascade)
+  targetUserId String
+  target       User    @relation("MuteTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@id([muterId, targetUserId])
+  @@schema("core")
 }

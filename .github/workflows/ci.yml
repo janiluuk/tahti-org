@@ -269,6 +269,76 @@ jobs:
           fi
           echo "✓ All source files have AGPL-3.0 headers"
 
+  generate-openapi:
+    name: Generate OpenAPI spec
+    # Only run on pushes to main (not on PRs) — produces the versioned spec artifact
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, typecheck]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_dev
+          POSTGRES_DB: tahti_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://tahti:tahti_dev@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      PORT: 3001
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Push DB schema
+        run: pnpm --filter @tahti/db exec prisma db push --skip-generate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Export OpenAPI spec (JSON)
+        run: |
+          cat > /tmp/export-spec.ts << 'EOF'
+          import { buildApp } from './apps/api/src/server.ts'
+          import { writeFileSync } from 'node:fs'
+
+          const app = await buildApp({ logger: false })
+          await app.ready()
+          const spec = app.swagger()
+          writeFileSync('openapi.json', JSON.stringify(spec, null, 2))
+          await app.close()
+          console.log('OpenAPI spec written — ' + JSON.stringify(spec).length + ' bytes')
+          EOF
+          pnpm exec tsx /tmp/export-spec.ts
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Upload OpenAPI spec artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-${{ github.sha }}
+          path: openapi.json
+          retention-days: 90
+
   all-checks:
     name: All checks
     if: always()

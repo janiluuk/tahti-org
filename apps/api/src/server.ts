@@ -5,6 +5,9 @@ import Fastify from 'fastify'
 import cookie from '@fastify/cookie'
 import formbody from '@fastify/formbody'
 import sensible from '@fastify/sensible'
+import swagger from '@fastify/swagger'
+import swaggerUi from '@fastify/swagger-ui'
+import basicAuth from '@fastify/basic-auth'
 import dbPlugin from './plugins/db.js'
 import authPlugin from './plugins/auth.js'
 import healthRoute from './routes/health.js'
@@ -46,6 +49,7 @@ import adminMembersRoutes from './routes/admin/members.js'
 import adminAuditRoutes from './routes/admin/audit.js'
 import meReleaseRoutes from './routes/releases/me.js'
 import releaseTrackRoutes from './routes/releases/tracks.js'
+import releaseDownloadRoutes from './routes/downloads/release.js'
 import embedRoutes from './routes/releases/embed.js'
 import publicProfileRoutes from './routes/profile/public.js'
 import smartlinkRoutes from './routes/releases/smartlink.js'
@@ -53,6 +57,9 @@ import mixcloudRoutes from './routes/me/mixcloud.js'
 import newsletterPublicRoutes from './routes/newsletter/public.js'
 import newsletterMeRoutes from './routes/newsletter/me.js'
 import venueRoutes from './routes/venues/venues.js'
+import radioRoutes from './routes/radio/index.js'
+import mentionRoutes from './routes/me/mentions.js'
+import meProfileRoutes from './routes/me/profile.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { config } from './config.js'
 
@@ -64,6 +71,72 @@ export async function buildApp(opts: BuildOptions = {}) {
   const fastify = Fastify({
     logger: opts.logger ?? config.nodeEnv !== 'test',
     trustProxy: true,
+  })
+
+  // OpenAPI / Swagger (versioned; built on every startup, served at /docs)
+  await fastify.register(swagger, {
+    openapi: {
+      openapi: '3.1.0',
+      info: {
+        title: 'Tahti API',
+        version: '1',
+        description:
+          'Tahti ry broadcasting platform API. AGPL-3.0 licensed. Source: https://github.com/tahtiapp/tahti',
+        contact: { name: 'Tahti ry', url: 'https://tahti.live' },
+        license: { name: 'AGPL-3.0', url: 'https://www.gnu.org/licenses/agpl-3.0.html' },
+      },
+      components: {
+        securitySchemes: {
+          sessionCookie: {
+            type: 'apiKey',
+            in: 'cookie',
+            name: config.sessionCookieName,
+            description: 'Session cookie issued by POST /api/auth/login',
+          },
+        },
+      },
+      tags: [
+        { name: 'auth', description: 'Authentication and session management' },
+        { name: 'channel', description: 'Channel + archive management' },
+        { name: 'chat', description: 'Live chat (Centrifugo)' },
+        { name: 'releases', description: 'Release catalogue and smart links' },
+        { name: 'downloads', description: 'Public downloads with anti-fraud' },
+        { name: 'newsletter', description: 'Fan newsletter system' },
+        { name: 'fansubs', description: 'Fan-to-artist subscriptions' },
+        { name: 'governance', description: 'Member governance and motions' },
+        { name: 'transparency', description: 'Public transparency ledger' },
+        { name: 'venues', description: 'Venue directory and iCalendar feeds' },
+        { name: 'radio', description: 'Tahti Radio meta-stream' },
+        { name: 'admin', description: 'Board / admin endpoints' },
+      ],
+    },
+  })
+
+  // Swagger UI with HTTP Basic Auth guard (ops-only)
+  const docsUser = process.env.DOCS_USER ?? 'tahti'
+  const docsPass = process.env.DOCS_PASS ?? 'changeme'
+  await fastify.register(basicAuth, {
+    validate(username, password, _req, _reply, done) {
+      if (username === docsUser && password === docsPass) return done()
+      return done(new Error('Unauthorized'))
+    },
+    authenticate: { realm: 'Tahti API docs' },
+  })
+
+  // Guard /docs/* before registering swagger-ui so its routes inherit the hook
+  fastify.addHook('onRequest', async (request, reply) => {
+    if (!request.url.startsWith('/docs')) return
+    await new Promise<void>((resolve, reject) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (fastify.basicAuth as any)(request, reply, (err?: Error) => (err ? reject(err) : resolve())),
+    )
+  })
+
+  await fastify.register(swaggerUi, {
+    routePrefix: '/docs',
+    uiConfig: { docExpansion: 'list', deepLinking: true },
+    transformSpecificationClone: true,
+    logLevel: 'warn',
   })
 
   // Plugins
@@ -146,6 +219,9 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(publicProfileRoutes)
   await fastify.register(smartlinkRoutes)
 
+  // M12 / M15: profile update (bio, social links) + mention detection
+  await fastify.register(meProfileRoutes)
+
   // M14: embed widget + oEmbed
   await fastify.register(embedRoutes)
 
@@ -156,8 +232,17 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(newsletterPublicRoutes)
   await fastify.register(newsletterMeRoutes)
 
+  // M15: artist @-mention preferences + mute management
+  await fastify.register(mentionRoutes)
+
+  // M16: Tahti Radio now-playing
+  await fastify.register(radioRoutes)
+
   // M17: venue directory + iCalendar feeds
   await fastify.register(venueRoutes)
+
+  // M18: public release-track downloads with anti-fraud
+  await fastify.register(releaseDownloadRoutes)
 
   return fastify
 }
