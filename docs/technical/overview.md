@@ -216,6 +216,8 @@ graph LR
 
 **Node placement & bottlenecks:** [scaling-node-distribution.md](../scaling-node-distribution.md) — Swarm labels, replica map, and what to scale when API, chat, transcode, DB, or egress saturates.
 
+**Audit & deferred work:** [project-roadmap.md](../project-roadmap.md#build-audit--current-state-2026-06-03) (milestone matrix), [future-improvements.md](../future-improvements.md) (hardening/optimisation/refactor backlog).
+
 ## User journey documents
 
 | Perspective | Doc | Phases covered |

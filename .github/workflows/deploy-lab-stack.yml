@@ -1,0 +1,188 @@
+# Deploy the full Tahti Docker stack (Compose) to the lab/production host.
+#
+# Builds and starts postgres, redis, minio, api, web, worker, orchestrator on the
+# remote machine via rsync + ./scripts/stack-up.sh (see scripts/remote-stack-deploy.sh).
+#
+# Required repository secret:
+#   DEPLOY_SSH_PRIVATE_KEY — ed25519 key (jumphost + production)
+#
+# Repository variables (optional — defaults in remote-stack-deploy.sh / deploy-production):
+#   DEPLOY_JUMP_HOST, DEPLOY_JUMP_USER, DEPLOY_JUMP_PORT
+#   DEPLOY_HOST, DEPLOY_PATH, DEPLOY_USER
+#   STACK_WEB_PORT (default 3010), STACK_API_PORT (default 3011)
+#
+# Triggers:
+#   - workflow_dispatch (manual; optional --seed, --no-cache)
+#   - CI completed successfully on push to main when stack-related paths changed
+
+name: Deploy lab stack
+
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: Seed screenshot demo fixtures after deploy
+        type: boolean
+        default: false
+      no_cache:
+        description: Docker build without cache on remote
+        type: boolean
+        default: false
+      skip_path_filter:
+        description: Deploy even if no stack paths changed (manual only)
+        type: boolean
+        default: true
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-lab-stack
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    name: Stack paths changed
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-24.04
+    outputs:
+      deploy: ${{ steps.filter.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Detect stack-related changes
+        id: filter
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "${{ inputs.skip_path_filter }}" == "true" ]]; then
+              echo "deploy=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            before="${{ github.event.workflow_run.head_sha }}^"
+            after="${{ github.event.workflow_run.head_sha }}"
+          else
+            before="HEAD~1"
+            after="HEAD"
+          fi
+          changed="$(git diff --name-only "$before" "$after" 2>/dev/null || true)"
+          if echo "$changed" | grep -qE '^(apps/|packages/|services/|infra/docker-compose\.stack\.yml|infra/stack/|scripts/stack-up\.sh|scripts/remote-stack-deploy\.sh|pnpm-lock\.yaml|pnpm-workspace\.yaml)'; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            echo "Stack-related files changed — will deploy"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "No stack-related changes — skipping auto deploy"
+          fi
+
+  deploy:
+    name: Rsync and stack-up on remote
+    needs: changes
+    if: needs.changes.outputs.deploy == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      DEPLOY_JUMP_USER: ${{ vars.DEPLOY_JUMP_USER }}
+      DEPLOY_JUMP_HOST: ${{ vars.DEPLOY_JUMP_HOST }}
+      DEPLOY_JUMP_PORT: ${{ vars.DEPLOY_JUMP_PORT }}
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      WEB_PORT: ${{ vars.STACK_WEB_PORT || '3010' }}
+      API_PORT: ${{ vars.STACK_API_PORT || '3011' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Export deploy targets
+        run: |
+          jump_user="${DEPLOY_JUMP_USER:-pi}"
+          jump_host="${DEPLOY_JUMP_HOST:-sparkki.dudeisland.eu}"
+          jump_port="${DEPLOY_JUMP_PORT:-4322}"
+          {
+            echo "DEPLOY_JUMP_USER=${jump_user}"
+            echo "DEPLOY_JUMP_HOST=${jump_host}"
+            echo "DEPLOY_JUMP_PORT=${jump_port}"
+            echo "DEPLOY_HOST=${DEPLOY_HOST:-192.168.2.100}"
+            echo "DEPLOY_PATH=${DEPLOY_PATH:-/srv/tahti}"
+            echo "DEPLOY_USER=${DEPLOY_USER:-root}"
+            echo "SSH_PROXY_JUMP=${jump_user}@${jump_host}:${jump_port}"
+            echo "WEB_PORT=${WEB_PORT}"
+            echo "API_PORT=${API_PORT}"
+          } >> "$GITHUB_ENV"
+
+      - name: Require deploy key
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          if [[ -z "${DEPLOY_KEY}" ]]; then
+            echo "::error::Set repository secret DEPLOY_SSH_PRIVATE_KEY"
+            exit 1
+          fi
+
+      - name: Configure SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/deploy_key
+          echo "SSH_AUTH_SOCK=${SSH_AUTH_SOCK}" >> "$GITHUB_ENV"
+          echo "SSH_AGENT_PID=${SSH_AGENT_PID}" >> "$GITHUB_ENV"
+          cat >> ~/.ssh/config <<CFG
+          Host deploy-jump
+            HostName ${DEPLOY_JUMP_HOST}
+            Port ${DEPLOY_JUMP_PORT}
+            User ${DEPLOY_JUMP_USER}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking accept-new
+
+          Host deploy-prod
+            HostName ${DEPLOY_HOST}
+            User ${DEPLOY_USER}
+            ProxyJump deploy-jump
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking accept-new
+          CFG
+          chmod 600 ~/.ssh/config
+          ssh-keyscan -p "${DEPLOY_JUMP_PORT}" -H "${DEPLOY_JUMP_HOST}" >> ~/.ssh/known_hosts
+          ssh deploy-jump "ssh-keyscan -H '${DEPLOY_HOST}'" >> ~/.ssh/known_hosts
+
+      - name: Verify SSH
+        run: |
+          ssh deploy-jump 'echo jumphost ok'
+          ssh deploy-prod "test -d '${DEPLOY_PATH}' || mkdir -p '${DEPLOY_PATH}'"
+
+      - name: Deploy full stack
+        run: |
+          set -euo pipefail
+          args=()
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.seed }}" = "true" ]; then
+            args+=(--seed)
+          fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.no_cache }}" = "true" ]; then
+            args+=(--no-cache)
+          fi
+          ./scripts/remote-stack-deploy.sh "${args[@]}"
+
+      - name: Remote health summary
+        run: |
+          ssh deploy-prod "curl -sf http://127.0.0.1:${API_PORT}/health"
+          ssh deploy-prod "curl -sf http://127.0.0.1:${WEB_PORT}/ | head -c 200 | grep -qi tahti"
