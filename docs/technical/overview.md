@@ -170,6 +170,8 @@ graph LR
 | 6 | [phase-6.md](phase-6.md) | Distribution, transparency ledger, grants |
 | 7 | [phase-7.md](phase-7.md) | Hardening, load test, public launch |
 
+**Node placement & bottlenecks:** [scaling-node-distribution.md](../scaling-node-distribution.md) — Swarm labels, replica map, and what to scale when API, chat, transcode, DB, or egress saturates.
+
 ## User journey documents
 
 | Perspective | Doc | Phases covered |

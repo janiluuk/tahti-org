@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { castVote, transitionMotion } from './actions.js'
+import { castVote, transitionMotion } from './actions'
 
 export interface MotionSummary {
   id: string

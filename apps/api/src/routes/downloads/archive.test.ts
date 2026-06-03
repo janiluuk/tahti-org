@@ -9,7 +9,6 @@ import { hashPassword } from '../../lib/password.js'
 import { config } from '../../config.js'
 
 const HOUR_MS = 60 * 60 * 1000
-const DAY_MS = 24 * HOUR_MS
 
 function ipHashForTest(ip: string): string {
   const day = new Date().toISOString().slice(0, 10)

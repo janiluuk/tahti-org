@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
 import { prisma } from '@tahti/db'
-import { isUnlimitedLiveTier } from '@tahti/shared'
+import { isUnlimitedLiveTier } from '@tahti/shared/broadcast-cap'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 
 function ffmpegToMp3(inputPath: string, outputPath: string): Promise<void> {

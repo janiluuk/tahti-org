@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { createRelease, publishRelease } from './release-actions.js'
+import { createRelease, publishRelease } from './release-actions'
 
 interface ReleaseSummary {
   id: string

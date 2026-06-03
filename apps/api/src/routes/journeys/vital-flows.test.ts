@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import { FREE_WEEKLY_LIVE_CAP_SEC, utcWeekStart } from '@tahti/shared'
+import { FREE_WEEKLY_LIVE_CAP_SEC, utcWeekStart } from '@tahti/shared/broadcast-cap'
 import {
   cleanupUsersByEmailPrefix,
   createEmailVerificationToken,

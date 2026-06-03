@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# CI-quality checks — lint, format, typecheck. No Docker stack, no screenshots.
+#
+# Usage:
+#   ./scripts/ci-check.sh
+#   pnpm ci:check
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+echo "── CI check: lint ────────────────────────────────────────"
+pnpm lint
+
+echo ""
+echo "── CI check: format (Prettier) ─────────────────────────────"
+pnpm format:check
+
+echo ""
+echo "── CI check: typecheck ─────────────────────────────────────"
+pnpm typecheck
+
+echo ""
+echo "✓ ci-check passed (lint, format, typecheck)"

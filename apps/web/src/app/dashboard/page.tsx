@@ -3,15 +3,15 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import UploadForm from './upload-form.js'
-import StreamSettingsPanel from './stream-settings.js'
-import RtmpTargetsPanel from './rtmp-targets.js'
-import AnnouncementsPanel from './announcements-panel.js'
-import FanSubscriptionsPanel from './fan-subscriptions.js'
-import ReleasesPanel from './releases-panel.js'
-import MembershipPanel from './membership-panel.js'
-import BroadcastUsageBanner from './broadcast-usage.js'
-import UpgradeCta from './upgrade-cta.js'
+import UploadForm from './upload-form'
+import StreamSettingsPanel from './stream-settings'
+import RtmpTargetsPanel from './rtmp-targets'
+import AnnouncementsPanel from './announcements-panel'
+import FanSubscriptionsPanel from './fan-subscriptions'
+import ReleasesPanel from './releases-panel'
+import MembershipPanel from './membership-panel'
+import BroadcastUsageBanner from './broadcast-usage'
+import UpgradeCta from './upgrade-cta'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }

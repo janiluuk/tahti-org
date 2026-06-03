@@ -1,13 +1,5 @@
-# CI — website Docker build + monorepo lint/typecheck, tests, and AGPL header check.
-#
-# NOTE: these jobs previously carried `if: hashFiles('pnpm-lock.yaml') != ''`.
-# hashFiles() is only valid inside a job's steps (it reads $GITHUB_WORKSPACE
-# after checkout); at the job level it makes GitHub reject the whole workflow at
-# startup ("workflow file issue", 0 jobs, 0s). The monorepo is committed, so the
-# guard is removed and the jobs always run.
-#
-# E2E: e2e-api.yml runs vital-flows.sh against a CI-started API; e2e-phase4.yml
-# targets a deployed environment (manual / deploy hook).
+# CI — lint, typecheck, tests, API vital-flows e2e, website Docker, AGPL headers.
+# Screenshots are local-only: ./scripts/e2e-screenshots.sh (not run here).
 
 name: CI
 
@@ -15,10 +7,6 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-  # Run on every pull request regardless of base branch. The project uses a
-  # stacked-PR ("merge train") workflow where PRs target intermediate feature
-  # branches, not just main — restricting to `branches: [main]` meant those
-  # stacked PRs never triggered CI.
   pull_request:
 
 permissions:
@@ -43,16 +31,14 @@ jobs:
       - name: Build website image
         run: docker build -t tahti/website:ci ./website
 
-  lint-typecheck:
-    name: Lint & typecheck
+  lint:
+    name: Lint & format
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
 
-      # Version is read from the root package.json "packageManager" field;
-      # passing `version:` here too makes action-setup@v4 error on the conflict.
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
@@ -67,17 +53,41 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @tahti/db db:generate
 
-      - name: Lint (ESLint)
+      - name: ESLint (turbo lint)
         run: pnpm lint
+
+      - name: Prettier (format:check)
+        run: pnpm format:check
+
+  typecheck:
+    name: Typecheck
+    needs: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
 
       - name: Typecheck (tsc --noEmit)
         run: pnpm typecheck
 
-      - name: Check formatting (Prettier)
-        run: pnpm format:check
-
   test:
     name: Unit + integration tests
+    needs: lint
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -114,8 +124,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Version is read from the root package.json "packageManager" field;
-      # passing `version:` here too makes action-setup@v4 error on the conflict.
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
@@ -143,6 +151,93 @@ jobs:
           name: coverage-${{ github.sha }}
           path: "**/coverage/"
           retention-days: 7
+
+  vital-flows-e2e:
+    name: API vital flows (curl e2e)
+    needs: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      HCAPTCHA_SECRET: dev
+      PORT: "3001"
+      STRIPE_SECRET_KEY: ""
+      STRIPE_WEBHOOK_SECRET: ""
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      - name: Start API server
+        working-directory: apps/api
+        run: |
+          pnpm exec tsx src/index.ts &
+          echo $! > /tmp/tahti-api.pid
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3001/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::API did not become healthy"
+          exit 1
+
+      - name: Run vital flows e2e
+        run: bash tests/e2e/vital-flows.sh
+
+      - name: Stop API server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-api.pid ]]; then
+            kill "$(cat /tmp/tahti-api.pid)" 2>/dev/null || true
+          fi
 
   agpl-check:
     name: AGPL header check
@@ -177,14 +272,22 @@ jobs:
   all-checks:
     name: All checks
     if: always()
-    needs: [website-docker, lint-typecheck, test, agpl-check]
+    needs:
+      - website-docker
+      - lint
+      - typecheck
+      - test
+      - vital-flows-e2e
+      - agpl-check
     runs-on: ubuntu-24.04
     steps:
       - name: Check all jobs passed
         run: |
           ok() { [[ "$1" == "success" || "$1" == "skipped" ]]; }
           ok "${{ needs.website-docker.result }}" || { echo "website-docker failed"; exit 1; }
-          ok "${{ needs.lint-typecheck.result }}" || { echo "lint-typecheck failed"; exit 1; }
+          ok "${{ needs.lint.result }}" || { echo "lint failed"; exit 1; }
+          ok "${{ needs.typecheck.result }}" || { echo "typecheck failed"; exit 1; }
           ok "${{ needs.test.result }}" || { echo "test failed"; exit 1; }
+          ok "${{ needs.vital-flows-e2e.result }}" || { echo "vital-flows-e2e failed"; exit 1; }
           ok "${{ needs.agpl-check.result }}" || { echo "agpl-check failed"; exit 1; }
           echo "All checks passed ✓"

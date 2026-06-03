@@ -3,7 +3,11 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
-import { checkBroadcastCap, FREE_WEEKLY_LIVE_CAP_SEC, isUnlimitedLiveTier } from '@tahti/shared'
+import {
+  checkBroadcastCap,
+  FREE_WEEKLY_LIVE_CAP_SEC,
+  isUnlimitedLiveTier,
+} from '@tahti/shared/broadcast-cap'
 
 const broadcastUsageRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/me/broadcast-usage', { preHandler: requireAuth }, async (request, reply) => {

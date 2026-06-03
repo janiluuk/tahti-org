@@ -25,6 +25,9 @@ dist/
 # Large media — not tracked; preserved on server between deploys (see scripts/lab-stack-up.sh)
 *.mp4
 
+# E2E screenshot tooling (generated locally)
+docs/e2e-screenshots/.seed-output.json
+
 # OS
 .DS_Store
 Thumbs.db

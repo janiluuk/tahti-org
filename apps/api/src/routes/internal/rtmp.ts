@@ -4,7 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
 import { config } from '../../config.js'
-import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared'
+import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
 
 // nginx-rtmp sends form-encoded bodies to on_publish / on_done / on_update
 const rtmpRoutes: FastifyPluginAsync = async (fastify) => {

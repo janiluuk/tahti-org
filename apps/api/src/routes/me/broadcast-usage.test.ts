@@ -6,7 +6,11 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
 import { createSession } from '../../lib/session.js'
-import { FREE_WEEKLY_LIVE_CAP_SEC, FREE_WEEKLY_HARD_CAP_SEC, utcWeekStart } from '@tahti/shared'
+import {
+  FREE_WEEKLY_LIVE_CAP_SEC,
+  FREE_WEEKLY_HARD_CAP_SEC,
+  utcWeekStart,
+} from '@tahti/shared/broadcast-cap'
 
 const PREFIX = 'bcap-test-'
 
@@ -97,6 +101,16 @@ describe('M20 — broadcast usage', () => {
       headers: { cookie: freeCookie },
     })
     expect(usage.json().blocked).toBe(true)
+  })
+
+  it('denies unknown mount via Icecast form-encoded body', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/internal/icecast/on_connect',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: 'mount=/live/no-such-channel&pass=x',
+    })
+    expect(res.statusCode).toBe(403)
   })
 
   it('allows icecast connect when under cap', async () => {

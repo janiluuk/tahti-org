@@ -6,7 +6,7 @@
 #   docker build -f apps/api/Dockerfile -t tahti/api .
 
 FROM node:20-alpine
-RUN apk add --no-cache python3 make g++ && \
+RUN apk add --no-cache python3 make g++ openssl openssl-dev && \
     corepack enable && corepack prepare pnpm@9 --activate && \
     npm install -g tsx@4
 
@@ -15,6 +15,7 @@ WORKDIR /app
 # Workspace manifests first for layer caching (pnpm needs all of them)
 COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/db/package.json     ./packages/db/
+COPY packages/ledger/package.json ./packages/ledger/
 COPY packages/shared/package.json ./packages/shared/
 COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
@@ -26,8 +27,10 @@ RUN pnpm install --frozen-lockfile
 # Source (after install for better layer caching)
 COPY packages/db/src     ./packages/db/src
 COPY packages/db/prisma  ./packages/db/prisma
+COPY packages/ledger/src ./packages/ledger/src
 COPY packages/shared/src ./packages/shared/src
 COPY apps/api/src        ./apps/api/src
+COPY apps/api/scripts    ./apps/api/scripts
 
 # Generate Prisma client into node_modules/.prisma
 RUN pnpm --filter @tahti/db db:generate

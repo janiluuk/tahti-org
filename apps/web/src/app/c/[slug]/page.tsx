@@ -2,9 +2,9 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { notFound } from 'next/navigation'
-import ChatPanel from './chat-panel.js'
-import HlsPlayer from './hls-player.js'
-import ReactionsOverlay from './reactions.js'
+import ChatPanel from './chat-panel'
+import HlsPlayer from './hls-player'
+import ReactionsOverlay from './reactions'
 
 interface ChannelResponse {
   slug: string

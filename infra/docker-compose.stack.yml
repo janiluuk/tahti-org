@@ -1,0 +1,239 @@
+# Full local Tahti stack — infra + API + web + worker + orchestrator.
+# Not Swarm; use: ./scripts/stack-up.sh
+#
+# App UI:     http://localhost:3010  (override WEB_PORT)
+# API:        http://localhost:3011  (override API_PORT)
+# MailHog:    http://localhost:8025
+# MinIO:      http://localhost:9001  (tahti / tahti_dev_secret)
+
+name: tahti-stack
+
+x-app-env: &app-env
+  NODE_ENV: production
+  DATABASE_URL: postgresql://tahti:tahti_dev@postgres:5432/tahti
+  REDIS_URL: redis://redis:6379
+  SESSION_SECRET: dev-session-secret-do-not-use-in-prod
+  INTERNAL_SECRET: dev-internal-secret-change-in-prod
+  HCAPTCHA_SECRET: dev
+  SMTP_HOST: mailhog
+  SMTP_PORT: "1025"
+  SMTP_FROM: Tahti <noreply@tahti.live>
+  MINIO_ENDPOINT: http://minio:9000
+  MINIO_PUBLIC_ENDPOINT: http://localhost:9000
+  MINIO_ACCESS_KEY: tahti
+  MINIO_SECRET_KEY: tahti_dev_secret
+  MINIO_BUCKET: tahti
+  CENTRIFUGO_API_URL: http://chat:8000/api
+  CENTRIFUGO_API_KEY: dev
+  CENTRIFUGO_JWT_SECRET: dev_secret_do_not_use_in_prod
+  ORCHESTRATOR_URL: http://orchestrator:3003
+  ICECAST_HOST: icecast:8000
+  RTMP_INGEST_HOST: rtmp-ingest
+  HLS_BASE_URL: http://localhost:9000/hls-live
+  APP_URL: http://localhost:${WEB_PORT:-3010}
+  API_URL: http://localhost:${API_PORT:-3011}
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: tahti
+      POSTGRES_PASSWORD: tahti_dev
+      POSTGRES_DB: tahti
+    # No host port — isolated stack DB; seed via `docker compose exec` on the api service.
+    volumes:
+      - stack_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tahti -d tahti"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--loglevel", "warning"]
+    volumes:
+      - stack_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: tahti
+      MINIO_ROOT_PASSWORD: tahti_dev_secret
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - stack_minio:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 tahti tahti_dev_secret &&
+        mc mb --ignore-existing local/tahti &&
+        mc mb --ignore-existing local/audio &&
+        mc mb --ignore-existing local/covers &&
+        mc mb --ignore-existing local/hls-live &&
+        mc mb --ignore-existing local/recordings &&
+        mc anonymous set download local/covers &&
+        mc anonymous set download local/hls-live &&
+        echo 'MinIO buckets ready'
+      "
+    restart: "no"
+
+  chat:
+    image: centrifugo/centrifugo:v5
+    command: >
+      centrifugo
+      --port=8000
+      --admin
+      --admin_password=dev
+      --admin_secret=dev
+      --api_key=dev
+      --token_hmac_secret_key=dev_secret_do_not_use_in_prod
+      --allowed_origins=http://localhost:3010,http://localhost:3000
+      --presence=true
+      --history_size=100
+      --history_ttl=86400s
+    ports:
+      - "${CHAT_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+
+  icecast:
+    image: moul/icecast:latest
+    volumes:
+      - ./stack/icecast.xml:/etc/icecast.xml:ro
+    ports:
+      - "${ICECAST_PORT:-8100}:8000"
+
+  rtmp-ingest:
+    image: tiangolo/nginx-rtmp:latest
+    volumes:
+      - ./stack/nginx-rtmp.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "${RTMP_PORT:-1935}:1935"
+
+  db-push:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      <<: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["sh", "-c", "pnpm --filter @tahti/db exec prisma db push --accept-data-loss"]
+    restart: "no"
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+      <<: *app-env
+      PORT: "3001"
+    ports:
+      - "${API_PORT:-3011}:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      mailhog:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    environment:
+      <<: *app-env
+      API_URL: http://api:3001
+      PORT: "3000"
+    ports:
+      - "${WEB_PORT:-3010}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 45s
+
+  worker:
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      <<: *app-env
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  orchestrator:
+    build:
+      context: ..
+      dockerfile: services/orchestrator/Dockerfile
+    environment:
+      <<: *app-env
+      PORT: "3003"
+    ports:
+      - "${ORCHESTRATOR_PORT:-3003}:3003"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      api:
+        condition: service_healthy
+
+  website:
+    build:
+      context: ../website
+      dockerfile: Dockerfile
+    ports:
+      - "${WEBSITE_PORT:-8080}:80"
+    profiles: ["marketing"]
+
+volumes:
+  stack_postgres:
+  stack_redis:
+  stack_minio:

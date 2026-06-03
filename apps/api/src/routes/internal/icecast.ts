@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
-import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared'
+import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
 
 // Icecast URL auth callbacks.
 // Icecast sends: mount, user, pass (plus optional ip, agent) as form-encoded body.

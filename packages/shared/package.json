@@ -5,7 +5,8 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./broadcast-cap": "./src/broadcast-cap.ts"
   },
   "scripts": {
     "lint": "eslint src --ext .ts --max-warnings 0",

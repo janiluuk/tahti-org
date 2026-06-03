@@ -68,33 +68,33 @@ e2e_check_json "transparency grants report" '"year":2031' "$GRANTS"
 echo ""
 echo "── Fan subscriptions ─────────────────────────────────────"
 
-TIERS_404=$(curl -sf -o /dev/null -w '%{http_code}' "$API_URL/api/v1/u/no-such-artist-${UNIQUE}/tiers" 2>/dev/null || echo '000')
+TIERS_404=$(e2e_http_code "$API_URL/api/v1/u/no-such-artist-${UNIQUE}/tiers" || echo '000')
 e2e_check_http "unknown artist tiers 404" '404' "$TIERS_404"
 
-PROFILE_404=$(curl -sf -o /dev/null -w '%{http_code}' "$API_URL/api/v1/u/no-such-artist-${UNIQUE}/profile" 2>/dev/null || echo '000')
+PROFILE_404=$(e2e_http_code "$API_URL/api/v1/u/no-such-artist-${UNIQUE}/profile" || echo '000')
 e2e_check_http "unknown artist profile 404" '404' "$PROFILE_404"
 
-SMART_404=$(curl -sf -o /dev/null -w '%{http_code}' "$API_URL/api/v1/r/no-such-release-${UNIQUE}" 2>/dev/null || echo '000')
+SMART_404=$(e2e_http_code "$API_URL/api/v1/r/no-such-release-${UNIQUE}" || echo '000')
 e2e_check_http "unknown smart link 404" '404' "$SMART_404"
 
 # ── Auth guards ──────────────────────────────────────────────────────────────
 echo ""
 echo "── Auth guards ───────────────────────────────────────────"
 
-ME=$(curl -sf -o /dev/null -w '%{http_code}' "$API_URL/api/auth/me" 2>/dev/null || echo '000')
+ME=$(e2e_http_code "$API_URL/api/auth/me" || echo '000')
 e2e_check_http "GET /api/auth/me without session 401" '401' "$ME"
 
-GOV=$(curl -sf -o /dev/null -w '%{http_code}' "$API_URL/api/v1/governance/members" 2>/dev/null || echo '000')
+GOV=$(e2e_http_code "$API_URL/api/v1/governance/members" || echo '000')
 e2e_check_http "governance members without session 401" '401' "$GOV"
 
-MSHIP=$(curl -sf -o /dev/null -w '%{http_code}' -X POST "$API_URL/api/me/membership/checkout" 2>/dev/null || echo '000')
+MSHIP=$(e2e_http_code -X POST "$API_URL/api/me/membership/checkout" || echo '000')
 e2e_check_http "membership checkout without session 401" '401' "$MSHIP"
 
 # ── Stripe webhook accepts synthetic event (no signature in dev) ───────────────
 echo ""
 echo "── Stripe webhook ────────────────────────────────────────"
 
-WH=$(curl -sf -X POST "$API_URL/api/webhooks/stripe" \
+WH=$(curl -sS -X POST "$API_URL/api/webhooks/stripe" \
   -H 'Content-Type: application/json' \
   -d '{"type":"checkout.session.completed","data":{"object":{"id":"e2e_cs_'"$UNIQUE"'","amount_total":4000,"metadata":{"type":"membership","userId":"nonexistent"}}}}}' \
   2>/dev/null || echo '{}')
@@ -104,9 +104,9 @@ e2e_check_json "webhook returns received" '"received":true' "$WH"
 echo ""
 echo "── Broadcast cap (internal) ──────────────────────────────"
 
-ICE=$(curl -sf -o /dev/null -w '%{http_code}' -X POST "$API_URL/internal/icecast/on_connect" \
+ICE=$(e2e_http_code -X POST "$API_URL/internal/icecast/on_connect" \
   -H 'Content-Type: application/x-www-form-urlencoded' \
-  -d 'mount=/live/no-such&pass=x' 2>/dev/null || echo '000')
+  -d 'mount=/live/no-such&pass=x' || echo '000')
 e2e_check_http "icecast unknown mount 403" '403' "$ICE"
 
 e2e_summary "Vital flows e2e" || exit 1

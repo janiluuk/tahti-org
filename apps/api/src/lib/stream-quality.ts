@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { ArtistTier } from '@tahti/db'
-import { isUnlimitedLiveTier } from '@tahti/shared'
+import { isUnlimitedLiveTier } from '@tahti/shared/broadcast-cap'
 
 // M20: listener stream quality follows the artist's tier (not the listener's).
 

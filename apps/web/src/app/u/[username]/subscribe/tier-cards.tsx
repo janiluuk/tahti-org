@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { subscribe } from './actions.js'
+import { subscribe } from './actions'
 
 interface Tier {
   id: string

@@ -96,7 +96,7 @@ Last reviewed: 2026-06-03
 ### CI / DX
 | P | Item | Benefit |
 |---|---|---|
-| P1 | Merge **e2e-api** into required checks once stable | Vital flows validated on every PR |
+| P1 | ~~Merge e2e-api into CI~~ | Done: `vital-flows-e2e` job in `ci.yml` |
 | P2 | Turbo remote cache in CI | Faster `typecheck` / `lint` on large diffs |
 | P2 | `pnpm test --coverage` threshold gate (e.g. 60% on `apps/api`) | Prevents untested money paths |
 | P3 | Preview deployments per PR | Stakeholder review without local setup |
@@ -141,6 +141,6 @@ These stay in `docs/project-roadmap.md` Phases 0–2 but are listed here for vis
 ## Completed recently (for context)
 
 - M8/M9/M10, M18 core, M19 core, M1 membership checkout, M20 cap + HLS tier split
-- Vitest journey tests + `tests/e2e/vital-flows.sh` + CI `e2e-api.yml`
+- Vitest journey tests + `tests/e2e/vital-flows.sh` + CI `ci.yml` (lint + vital-flows-e2e)
 - M11 partial: audit CSV, ledger CSV, `/api/v1/status`
 - M12 partial: release schema, profile API, `/u/[username]` page, dashboard drafts

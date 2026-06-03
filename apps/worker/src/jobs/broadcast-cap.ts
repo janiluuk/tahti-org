@@ -6,7 +6,7 @@ import {
   tickWeeklyLiveSeconds,
   enforceWeeklyCapDisconnects,
   resetFreeWeeklyLiveCounters,
-} from '@tahti/shared'
+} from '@tahti/shared/broadcast-cap'
 import { stopOrchestratorChannel } from '../lib/orchestrator.js'
 
 export async function processBroadcastCapTick(prisma: PrismaClient) {

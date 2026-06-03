@@ -3,6 +3,7 @@
 
 import Fastify from 'fastify'
 import cookie from '@fastify/cookie'
+import formbody from '@fastify/formbody'
 import sensible from '@fastify/sensible'
 import dbPlugin from './plugins/db.js'
 import authPlugin from './plugins/auth.js'
@@ -61,6 +62,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // Plugins
   await fastify.register(cookie)
+  await fastify.register(formbody)
   await fastify.register(sensible)
   await fastify.register(dbPlugin)
   await fastify.register(authPlugin)

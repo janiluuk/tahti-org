@@ -159,6 +159,26 @@ describe('M1 — membership payment', () => {
 
     await prisma.user.delete({ where: { id: pending.id } })
   })
+
+  it('webhook returns received when membership user is missing', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/webhooks/stripe',
+      headers: { 'content-type': 'application/json' },
+      payload: JSON.stringify({
+        type: 'checkout.session.completed',
+        data: {
+          object: {
+            id: 'cs_missing_user',
+            amount_total: 4000,
+            metadata: { type: 'membership', userId: 'nonexistent' },
+          },
+        },
+      }),
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ received: true })
+  })
 })
 
 describe('M1 — verify sets PENDING_PAYMENT', () => {

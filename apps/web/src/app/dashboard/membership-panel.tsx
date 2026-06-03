@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { startMembershipCheckout } from './actions.js'
+import { startMembershipCheckout } from './actions'
 
 export default function MembershipPanel({
   status,
