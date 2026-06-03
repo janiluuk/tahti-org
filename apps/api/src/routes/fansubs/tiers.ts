@@ -5,8 +5,10 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   FanTierBodySchema,
   FanTierPatchSchema,
+  FanTiersPublicResponseSchema,
   IdParamSchema,
   UsernameParamSchema,
+  openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -16,7 +18,13 @@ const fanTierRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/u/:username/tiers — public, active tiers for the subscribe page
   fastify.get(
     '/api/v1/u/:username/tiers',
-    { schema: { tags: ['fansubs'], description: 'M19: public fan subscription tiers' } },
+    {
+      schema: {
+        tags: ['fansubs'],
+        description: 'M19: public fan subscription tiers',
+        response: openApiResponse(FanTiersPublicResponseSchema, 'FanTiersPublic'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(UsernameParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })

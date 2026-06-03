@@ -9,8 +9,10 @@ import {
   CreateCollectionSchema,
   PatchCollectionSchema,
   ReorderCollectionSchema,
+  CollectionPublicViewSchema,
   SlugParamSchema,
   archivePlaybackKey,
+  openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -293,30 +295,40 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
   // ── Public endpoints ────────────────────────────────────────────────────
 
-  fastify.get('/api/v1/collections/:slug', async (request, reply) => {
-    const routeParams = parseRouteParams(SlugParamSchema, request.params)
-    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-    const { slug } = routeParams
+  fastify.get(
+    '/api/v1/collections/:slug',
+    {
+      schema: {
+        tags: ['releases'],
+        description: 'M23: public collection page payload',
+        response: openApiResponse(CollectionPublicViewSchema, 'CollectionPublic'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
 
-    const col = await fastify.prisma.collection.findFirst({
-      where: { slug, isPublic: true },
-      include: {
-        user: { select: { username: true, displayName: true } },
-        items: {
-          orderBy: { position: 'asc' },
-          include: collectionItemInclude,
+      const col = await fastify.prisma.collection.findFirst({
+        where: { slug, isPublic: true },
+        include: {
+          user: { select: { username: true, displayName: true } },
+          items: {
+            orderBy: { position: 'asc' },
+            include: collectionItemInclude,
+          },
         },
-      },
-    })
-    if (!col) return reply.status(404).send({ error: 'Collection not found' })
-    return reply.send({
-      ...col,
-      links: {
-        page: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
-        rss: `${config.apiUrl}/api/v1/collections/${col.slug}/rss.xml`,
-      },
-    })
-  })
+      })
+      if (!col) return reply.status(404).send({ error: 'Collection not found' })
+      return reply.send({
+        ...col,
+        links: {
+          page: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
+          rss: `${config.apiUrl}/api/v1/collections/${col.slug}/rss.xml`,
+        },
+      })
+    },
+  )
 
   // GET /api/v1/collections/:slug/rss.xml — collection RSS feed
   fastify.get('/api/v1/collections/:slug/rss.xml', async (request, reply) => {

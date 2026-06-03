@@ -2,8 +2,17 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { IdParamSchema, parseRouteParams } from '@tahti/shared'
-import { CreateMotionSchema, PatchMotionSchema, VoteMotionSchema } from '@tahti/shared'
+import {
+  CreateMotionSchema,
+  GovernanceMemberListSchema,
+  IdParamSchema,
+  MotionDetailSchema,
+  MotionListSchema,
+  PatchMotionSchema,
+  VoteMotionSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireMember, requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 
@@ -21,7 +30,13 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/members — members-only directory (PRH register view)
   fastify.get(
     '/api/v1/governance/members',
-    { preHandler: requireMember },
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(GovernanceMemberListSchema, 'GovernanceMembers'),
+      },
+    },
     async (_request, reply) => {
       const members = await fastify.prisma.user.findMany({
         where: { isMember: true },
@@ -52,7 +67,13 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/motions — list motions (members-only)
   fastify.get(
     '/api/v1/governance/motions',
-    { preHandler: requireMember },
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionListSchema, 'MotionList'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const motions = await fastify.prisma.motion.findMany({
@@ -120,7 +141,13 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/motions/:id — detail; tallies revealed only on CLOSE
   fastify.get(
     '/api/v1/governance/motions/:id',
-    { preHandler: requireMember },
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionDetailSchema, 'MotionDetail'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)

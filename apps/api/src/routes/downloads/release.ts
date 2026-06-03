@@ -6,9 +6,11 @@ import { createHash } from 'node:crypto'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import {
+  DownloadUrlResponseSchema,
   ReleaseDownloadQuerySchema,
   ReleaseTrackDownloadParamsSchema,
   evaluateDownloadCountPolicy,
+  openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
@@ -40,6 +42,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['downloads'],
         description: 'M18: presigned release-track download with anti-fraud accounting',
+        response: openApiResponse(DownloadUrlResponseSchema, 'DownloadUrl'),
       },
     },
     async (request, reply) => {

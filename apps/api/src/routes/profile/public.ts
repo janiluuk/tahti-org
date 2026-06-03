@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { UsernameParamSchema, archivePlaybackKey, parseRouteParams } from '@tahti/shared'
+import {
+  PublicProfileViewSchema,
+  UsernameParamSchema,
+  archivePlaybackKey,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 
@@ -10,7 +16,13 @@ import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/v1/u/:username/profile',
-    { schema: { tags: ['releases'], description: 'M12: public artist profile' } },
+    {
+      schema: {
+        tags: ['releases'],
+        description: 'M12: public artist profile',
+        response: openApiResponse(PublicProfileViewSchema, 'PublicProfile'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(UsernameParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
