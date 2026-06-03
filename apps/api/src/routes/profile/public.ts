@@ -42,6 +42,19 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
           orderBy: { position: 'asc' },
           select: { id: true, name: true, amountCents: true },
         },
+        collections: {
+          where: { isPublic: true },
+          orderBy: { createdAt: 'desc' },
+          take: 12,
+          select: {
+            slug: true,
+            name: true,
+            type: true,
+            description: true,
+            coverUrl: true,
+            _count: { select: { items: true } },
+          },
+        },
       },
     })
 
@@ -60,6 +73,15 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
       channel: user.channel,
       releases: user.releases,
       fanTiers: user.fanTiers,
+      collections: user.collections.map(({ _count, ...c }) => ({
+        slug: c.slug,
+        name: c.name,
+        type: c.type,
+        description: c.description,
+        coverUrl: c.coverUrl,
+        itemCount: _count.items,
+        url: `/u/${user.username}/c/${c.slug}`,
+      })),
       links: {
         channel: user.channel ? `/c/${user.channel.slug}` : null,
         subscribe: `/u/${user.username}/subscribe`,

@@ -75,6 +75,7 @@ describe('M12 — releases and public profile', () => {
     expect(profile.json().releases).toHaveLength(1)
     expect(profile.json().releases[0].title).toBe('Midnight EP')
     expect(profile.json().links.channel).toBe(`/c/${username}`)
+    expect(Array.isArray(profile.json().collections)).toBe(true)
 
     const release = await prisma.release.findFirst({
       where: { user: { username }, state: 'PUBLISHED' },

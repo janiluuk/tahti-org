@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { CompleteUploadSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
+import { metadataForNewUpload } from '../../lib/archive-metadata.js'
 
 const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post('/api/uploads/complete', { preHandler: requireAuth }, async (request, reply) => {
@@ -16,7 +17,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
       })
     }
 
-    const { uploadId, title } = parsed.data
+    const { uploadId, title, metadata } = parsed.data
     const user = request.sessionUser!
 
     const channel = await fastify.prisma.channel.findUnique({
@@ -39,6 +40,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
         rawKey: uploadId,
         fileSizeBytes: 0,
         status: 'PENDING',
+        ...metadataForNewUpload(metadata),
       },
       select: { id: true, status: true },
     })

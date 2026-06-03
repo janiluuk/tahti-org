@@ -2,6 +2,7 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { ArchiveUploadMetadataSchema } from './archive-metadata.js'
 
 export const PrepareUploadSchema = z.object({
   filename: z.string().min(1).max(255),
@@ -20,6 +21,7 @@ export const CompleteUploadSchema = z.object({
   uploadId: z.string().min(1),
   etag: z.string().min(1),
   title: z.string().min(1).max(200).trim(),
+  metadata: ArchiveUploadMetadataSchema.optional(),
 })
 
 export type CompleteUploadInput = z.infer<typeof CompleteUploadSchema>

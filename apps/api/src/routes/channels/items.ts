@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { serializeArchiveItem } from '../../lib/archive-metadata.js'
 
 const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/channels/:slug/items', async (request, reply) => {
@@ -18,7 +19,7 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
     }
 
     const items = await fastify.prisma.archiveItem.findMany({
-      where: { channelId: channel.id, status: 'READY' },
+      where: { channelId: channel.id, status: 'READY', isPublic: true },
       orderBy: { createdAt: 'desc' },
       take: 50,
       select: {
@@ -29,6 +30,19 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
         fileSizeBytes: true,
         mp3Key: true,
         createdAt: true,
+        releasedAt: true,
+        genre: true,
+        genreCustom: true,
+        subGenres: true,
+        contentType: true,
+        mixVersion: true,
+        bpm: true,
+        musicalKey: true,
+        bpmDetected: true,
+        keyDetected: true,
+        useDetectedBpmKey: true,
+        bannerUrl: true,
+        license: true,
       },
     })
 
@@ -36,7 +50,7 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
       items.map(async (item) => {
         const audioUrl = item.mp3Key ? await presignedGetUrl(item.mp3Key, 3600) : null
         return {
-          ...item,
+          ...serializeArchiveItem(item),
           fileSizeBytes: Number(item.fileSizeBytes),
           audioUrl,
         }

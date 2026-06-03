@@ -9,6 +9,8 @@ import RtmpTargetsPanel from './rtmp-targets'
 import AnnouncementsPanel from './announcements-panel'
 import FanSubscriptionsPanel from './fan-subscriptions'
 import ReleasesPanel from './releases-panel'
+import CollectionsPanel from './collections-panel'
+import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
@@ -221,6 +223,9 @@ export default async function DashboardPage() {
   }
 
   let archiveItems: ArchiveItem[] = []
+  let archiveItemsForEdit: Array<
+    Record<string, unknown> & { id: string; title: string; status: string }
+  > = []
   if (user.channel) {
     try {
       const res = await fetch(`${apiUrl}/api/channels/${user.channel.slug}/items`, {
@@ -232,7 +237,46 @@ export default async function DashboardPage() {
     } catch {
       // ignore — items section just shows empty
     }
+    try {
+      const res = await fetch(`${apiUrl}/api/me/archive`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        archiveItemsForEdit = (await res.json()) as typeof archiveItemsForEdit
+      }
+    } catch {
+      // ignore
+    }
   }
+
+  let collections: Array<{
+    id: string
+    slug: string
+    name: string
+    type: string
+    isPublic: boolean
+    _count?: { items: number }
+    items?: Array<{
+      id: string
+      position: number
+      archiveItem: { id: string; title: string } | null
+      release: { id: string; title: string } | null
+    }>
+  }> = []
+  try {
+    const res = await fetch(`${apiUrl}/api/me/collections?expand=items`, {
+      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+      cache: 'no-store',
+    })
+    if (res.ok) collections = (await res.json()) as typeof collections
+  } catch {
+    // ignore
+  }
+
+  const publishedReleases = releases
+    .filter((r) => r.state === 'PUBLISHED')
+    .map((r) => ({ id: r.id, title: r.title }))
 
   return (
     <div style={{ maxWidth: 960, margin: '2rem auto', padding: '0 1rem' }}>
@@ -318,6 +362,15 @@ export default async function DashboardPage() {
       {user.channel && <ReleasesPanel initial={releases} username={user.username} />}
 
       {user.channel && (
+        <CollectionsPanel
+          initial={collections}
+          username={user.username}
+          archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
+          publishedReleases={publishedReleases}
+        />
+      )}
+
+      {user.channel && (
         <section
           style={{
             marginTop: '2rem',
@@ -327,37 +380,32 @@ export default async function DashboardPage() {
           }}
         >
           <h2 style={{ margin: '0 0 1rem' }}>Archive</h2>
+          <p style={{ color: '#666', fontSize: '0.875rem', margin: '0 0 0.5rem' }}>
+            Upload with genre, type, BPM, license, and access options — like hearthis.at edit
+            upload.
+          </p>
 
           <UploadForm />
 
-          {archiveItems.length === 0 ? (
+          {archiveItemsForEdit.length === 0 ? (
             <p style={{ color: '#999', marginTop: '1.5rem' }}>No archive items yet.</p>
           ) : (
             <ul style={{ listStyle: 'none', padding: 0, marginTop: '1.5rem' }}>
-              {archiveItems.map((item) => (
-                <li
-                  key={item.id}
-                  style={{
-                    padding: '0.75rem 0',
-                    borderBottom: '1px solid #f0f0f0',
-                  }}
-                >
-                  <div style={{ fontWeight: 500 }}>{item.title}</div>
-                  {item.durationSec != null && (
-                    <div style={{ fontSize: '0.85rem', color: '#666' }}>
-                      {Math.floor(item.durationSec / 60)}:
-                      {String(item.durationSec % 60).padStart(2, '0')}
-                    </div>
-                  )}
-                  {item.audioUrl && (
-                    <audio
-                      controls
-                      src={item.audioUrl}
-                      style={{ marginTop: '0.5rem', width: '100%' }}
-                    />
-                  )}
-                </li>
-              ))}
+              {archiveItemsForEdit.map((item) => {
+                const play = archiveItems.find((a) => a.id === item.id)
+                return (
+                  <div key={item.id}>
+                    <ArchiveEditor item={item} />
+                    {play?.audioUrl && (
+                      <audio
+                        controls
+                        src={play.audioUrl}
+                        style={{ margin: '0 0 0.75rem', width: '100%' }}
+                      />
+                    )}
+                  </div>
+                )
+              })}
             </ul>
           )}
         </section>

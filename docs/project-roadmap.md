@@ -39,7 +39,7 @@ closed beta → **M7–M9, M19** (money + grants) → remaining features → han
 
 Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 `docs/AGENT.md` milestones. Verified by running `pnpm typecheck` (passes),
-`pnpm lint` + `pnpm format:check` (clean), and `pnpm test` (200 tests pass with Postgres up).
+`pnpm lint` + `pnpm format:check` (clean), and `pnpm test` (~230 tests pass with Postgres up).
 
 | Milestone | State | Evidence / notes |
 |---|---|---|
@@ -62,7 +62,10 @@ Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 | **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
 | **M17** Venue calendar | 🟡 Partial | `venue` schema (Venue/VenueBroadcast), `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`, venue + broadcast create endpoints. Deferred: admin verification UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
-| **M19** Fan-subs | 🟡 Partial | Tiers, subscribe/cancel, webhook lifecycle, ledger split, subscribe page + dashboard. **Added:** Connect + Checkout, churn grace, payout/expire crons, **perk codes** (`FAN_CHAT`, `FAN_NEWSLETTER`), fan-only Centrifugo channel + newsletter `audience: fans`, supporter badge in public chat. Deferred: newsletter send UI for fan-only audience |
+| **M19** Fan-subs | 🟡 Partial | Tiers, subscribe/cancel, webhook lifecycle, ledger split, subscribe page + dashboard. **Added:** Connect + Checkout, churn grace, payout/expire crons, **perk codes** (`FAN_CHAT`, `FAN_NEWSLETTER`), fan-only Centrifugo channel + newsletter `audience: fans` / `subscribersOnly` drafts, supporter badge in public chat. Deferred: newsletter send UI for fan-only audience |
+| **M22** Archive metadata | 🟡 Partial | Hearthis-style upload metadata (genre, type, BPM/key, license, access gates, visuals) with sensible defaults; upload form + dashboard editor; TBPM tag detection. Deferred: editable tracklists, repost/follow download gates |
+| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS with CDN enclosure URLs, release items, profile + `/u/:user/c/:slug` + dashboard collections panel. Deferred: drag reorder, featured collections on smart links |
+| **M28** Track version history | ❌ Not started | Today: single `mixVersion` label on archive items. Deferred: upload new audio as a version of the same track — version list, lineage, stable public URL |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: 45/55-min API→UI polish edge cases |
 
 ### Improvements identified during the audit (added to the roadmap)
@@ -233,10 +236,13 @@ See `competitive-gaps-hearthis.md` for full gap list.
 
 | Done | Milestone | Summary |
 |:---:|---|---|
-| [ ] | **M22** | Per-item metadata + editable tracklists |
-| [ ] | **M23** | Collections (albums, mix series e.g. “Trance sets”) + RSS |
-| [ ] | **M24** | Per-content visuals: banner, slideshow, YouTube/Vimeo backdrop |
+| [~] | **M22** | Per-item metadata + editable tracklists (upload metadata live; **track version history → M28**) |
+| [~] | **M23** | Collections (albums, mix series e.g. “Trance sets”) + RSS |
+| [ ] | **M28** | **Track version history** — add a new audio file as a version of an existing archive/release track; keep version labels (Original, Remix, Re-edit), lineage, and stable public URLs; dashboard “Replace file / New version” flow (hearthis “Replace File” parity) |
+| [~] | **M24** | Per-content visuals: banner, slideshow, YouTube/Vimeo backdrop |
 | [ ] | **M25** | Artist commentary (+ optional listener comments if AGM approves) |
+| [ ] | **M26** | Customisable radio/channel page: video background, per-album visualisations, theme picker — designer app for live show visuals |
+| [ ] | **M27** | 24/7 archive stream with automated scheduling and annotations: picks up previous live sets in fair rotation; moderator users control the programme list; audio visualisations per set; as automated as possible (ACRCloud tracklist sync feeds annotations) |
 
 ## Phase 7 — Implementation: pro audio editor
 
