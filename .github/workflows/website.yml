@@ -30,8 +30,27 @@ env:
   IMAGE: tahti/website
 
 jobs:
+  preflight:
+    name: Check registry credentials
+    runs-on: ubuntu-24.04
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          if [[ -n "${REGISTRY_PASSWORD}" ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::REGISTRY_PASSWORD not set — skipping website deploy"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-deploy:
     name: Build, push, deploy
+    needs: preflight
+    if: needs.preflight.outputs.ready == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
@@ -44,8 +63,10 @@ jobs:
         run: echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Log in to registry
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         run: |
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | \
+          echo "$REGISTRY_PASSWORD" | \
             docker login ${{ env.REGISTRY }} -u tahti --password-stdin
 
       - name: Build image
