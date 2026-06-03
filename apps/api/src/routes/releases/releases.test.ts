@@ -142,4 +142,38 @@ describe('M12 — releases and public profile', () => {
     })
     expect(pub.statusCode).toBe(400)
   })
+
+  it('updates release catalog metadata and returns checklist', async () => {
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/releases',
+      headers: { cookie },
+    })
+    const id = list.json()[0].id
+
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${id}/catalog`,
+      headers: { cookie },
+      payload: {
+        upc: '1234567890123',
+        musicbrainzReleaseId: 'a1b2c3d4-5678-90ab-cdef-1234567890ab',
+        pLine: '℗ 2026 Tahti Demo',
+      },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json().upc).toBe('1234567890123')
+    expect(Array.isArray(patch.json().checklist)).toBe(true)
+    expect(patch.json().checklist.find((s: { id: string }) => s.id === 'identifiers')?.done).toBe(
+      true,
+    )
+
+    const exp = await app.inject({
+      method: 'GET',
+      url: `/api/me/releases/${id}/export.json`,
+      headers: { cookie },
+    })
+    expect(exp.statusCode).toBe(200)
+    expect(exp.json().release.upc).toBe('1234567890123')
+  })
 })

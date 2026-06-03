@@ -63,3 +63,32 @@ export async function publishRelease(id: string): Promise<{ error: string | null
   }
   return { error: null }
 }
+
+export async function fetchReleaseExportJson(id: string): Promise<{ error: string | null; json?: string }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${id}/export.json`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Export failed' }
+  }
+  return { error: null, json: await res.text() }
+}
+
+export async function updateReleaseCatalog(
+  id: string,
+  payload: Record<string, string | null>,
+): Promise<{ error: string | null; checklist?: unknown }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${id}/catalog`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    return { error: (data as { error?: string }).error ?? 'Failed to save catalog' }
+  }
+  return { error: null, checklist: (data as { checklist?: unknown }).checklist }
+}

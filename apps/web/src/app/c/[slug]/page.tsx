@@ -8,7 +8,13 @@ import HlsPlayer from './hls-player'
 import ReactionsOverlay from './reactions'
 import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
-import type { ChannelGalleryMode, ChannelTextLayerAlignment, ChannelTextLayerMode } from '@tahti/shared'
+import { TracklistView } from '@/components/tracklist/tracklist-view'
+import type {
+  ChannelGalleryMode,
+  ChannelTextLayerAlignment,
+  ChannelTextLayerMode,
+  TracklistEntry,
+} from '@tahti/shared'
 import { Badge, Heading, PageShell, Row, Text } from '@/components/ui'
 
 interface ChannelResponse {
@@ -35,6 +41,7 @@ interface ArchiveItem {
   durationSec: number | null
   audioUrl: string | null
   createdAt: string
+  tracklist?: TracklistEntry[] | null
 }
 
 interface Announcement {
@@ -146,6 +153,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         {Math.floor(item.durationSec / 60)}:
                         {String(item.durationSec % 60).padStart(2, '0')}
                       </div>
+                    )}
+                    {item.tracklist && item.tracklist.length > 0 && (
+                      <TracklistView entries={item.tracklist} />
                     )}
                     {item.audioUrl && (
                       <audio controls src={item.audioUrl} style={{ width: '100%' }} />

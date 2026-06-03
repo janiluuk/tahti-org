@@ -5,7 +5,12 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { addCollectionItem, createCollection, deleteCollection } from './collection-actions'
+import {
+  addCollectionItem,
+  createCollection,
+  deleteCollection,
+  reorderCollectionItems,
+} from './collection-actions'
 
 interface CollectionRow {
   id: string
@@ -77,6 +82,19 @@ export default function CollectionsPanel({
     })
   }
 
+  function moveItem(collectionSlug: string, items: NonNullable<CollectionRow['items']>, index: number, dir: -1 | 1) {
+    const next = index + dir
+    if (next < 0 || next >= items.length) return
+    const ids = [...items].sort((a, b) => a.position - b.position).map((i) => i.id)
+    const swapped = [...ids]
+    ;[swapped[index], swapped[next]] = [swapped[next], swapped[index]]
+    startTransition(async () => {
+      const res = await reorderCollectionItems(collectionSlug, swapped)
+      if (res.error) setError(res.error)
+      else router.refresh()
+    })
+  }
+
   function remove(slug: string) {
     if (!confirm(`Delete collection "${slug}"?`)) return
     startTransition(async () => {
@@ -132,12 +150,35 @@ export default function CollectionsPanel({
                 </span>
               </div>
               {c.items && c.items.length > 0 && (
-                <ol style={{ margin: '0.5rem 0 0', paddingLeft: '1.25rem', color: '#555' }}>
-                  {c.items.map((it) => (
-                    <li key={it.id}>
-                      {it.archiveItem?.title ?? it.release?.title ?? 'Item'} (#{it.position})
-                    </li>
-                  ))}
+                <ol style={{ margin: '0.5rem 0 0', paddingLeft: 0, listStyle: 'none', color: '#555' }}>
+                  {[...c.items]
+                    .sort((a, b) => a.position - b.position)
+                    .map((it, idx, sorted) => (
+                      <li
+                        key={it.id}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: 4 }}
+                      >
+                        <span style={{ flex: 1 }}>
+                          {it.archiveItem?.title ?? it.release?.title ?? 'Item'}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={isPending || idx === 0}
+                          onClick={() => moveItem(c.slug, sorted, idx, -1)}
+                          aria-label="Move up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isPending || idx === sorted.length - 1}
+                          onClick={() => moveItem(c.slug, sorted, idx, 1)}
+                          aria-label="Move down"
+                        >
+                          ↓
+                        </button>
+                      </li>
+                    ))}
                 </ol>
               )}
               {addSlug === c.slug && (

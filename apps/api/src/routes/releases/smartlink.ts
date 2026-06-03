@@ -19,6 +19,14 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         artworkUrl: true,
         smartLinkTargets: true,
         description: true,
+        upc: true,
+        musicbrainzReleaseId: true,
+        pLine: true,
+        cLine: true,
+        tracks: {
+          orderBy: { position: 'asc' },
+          select: { title: true, isrc: true, position: true },
+        },
         user: { select: { username: true, displayName: true, avatarUrl: true } },
       },
     })
@@ -32,6 +40,10 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         ? (release.smartLinkTargets as Record<string, string>)
         : {}
 
+    const musicbrainzUrl = release.musicbrainzReleaseId
+      ? `https://musicbrainz.org/release/${release.musicbrainzReleaseId}`
+      : null
+
     return reply.send({
       release: {
         id: release.id,
@@ -41,6 +53,11 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         artworkUrl: release.artworkUrl,
         description: release.description,
         smartLinkSlug,
+        upc: release.upc,
+        pLine: release.pLine,
+        cLine: release.cLine,
+        tracks: release.tracks,
+        musicbrainzUrl,
       },
       artist: release.user,
       profileUrl,

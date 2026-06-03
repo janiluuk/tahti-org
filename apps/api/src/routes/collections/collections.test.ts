@@ -193,6 +193,37 @@ describe('M23 — collections and RSS', () => {
     })
   })
 
+  it('reorders collection items via PUT /reorder', async () => {
+    const item2 = await createReadyArchiveItem(prisma, channelId, 'Dawn Mix')
+    const create2 = await app.inject({
+      method: 'POST',
+      url: `/api/me/collections/${collectionSlug}/items`,
+      headers: { cookie },
+      payload: { archiveItemId: item2.id },
+    })
+    expect(create2.statusCode).toBe(201)
+
+    const withItems = await app.inject({
+      method: 'GET',
+      url: '/api/me/collections?expand=items',
+      headers: { cookie },
+    })
+    const col = withItems.json().find((c: { slug: string }) => c.slug === collectionSlug)
+    const sorted = [...col.items].sort(
+      (a: { position: number }, b: { position: number }) => a.position - b.position,
+    )
+    const reversed = [...sorted].reverse().map((i: { id: string }) => i.id)
+
+    const reorder = await app.inject({
+      method: 'PUT',
+      url: `/api/me/collections/${collectionSlug}/reorder`,
+      headers: { cookie },
+      payload: { itemIds: reversed },
+    })
+    expect(reorder.statusCode).toBe(200)
+    expect(reorder.json().items[0].id).toBe(reversed[0])
+  })
+
   it('removes collection items and deletes the collection', async () => {
     const list = await app.inject({
       method: 'GET',
