@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Fastify from 'fastify'
+import { broadcastSessionLogFields } from '@tahti/shared'
 import { spawnChannel, stopChannel, getActiveChannels } from './liquidsoap.js'
 
 const PORT = parseInt(process.env.PORT ?? '3003', 10)
@@ -32,6 +33,10 @@ fastify.post('/spawn', async (request, reply) => {
   }
 
   await spawnChannel(channelId, slug, broadcastId)
+  request.log.info(
+    broadcastSessionLogFields({ broadcastId, channelId, slug }),
+    'liquidsoap spawned',
+  )
   return reply.send({ ok: true })
 })
 
@@ -57,6 +62,10 @@ fastify.post('/restart', async (request, reply) => {
 
   await stopChannel(channelId)
   await spawnChannel(channelId, slug, broadcastId)
+  request.log.info(
+    broadcastSessionLogFields({ broadcastId, channelId, slug }),
+    'liquidsoap restarted',
+  )
   return reply.send({ ok: true, restarted: true })
 })
 

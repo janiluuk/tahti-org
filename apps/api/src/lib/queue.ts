@@ -22,3 +22,16 @@ export async function enqueueVersionTranscode(versionId: string): Promise<void> 
 export async function enqueueReleaseTrackVersionTranscode(versionId: string): Promise<void> {
   await mediaQueue.add('transcode-release-track-version', { versionId })
 }
+
+/** ARTIST-001: scan Liquidsoap WAV on shared volume, upload to MinIO, then archive. */
+export async function enqueueFinalizeBroadcastRecording(broadcastId: string): Promise<void> {
+  await mediaQueue.add(
+    'finalize-broadcast-recording',
+    { broadcastId },
+    {
+      jobId: `finalize-broadcast-${broadcastId}`,
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 15_000 },
+    },
+  )
+}
