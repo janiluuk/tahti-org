@@ -65,6 +65,7 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
         state: true,
         sentAt: true,
         createdAt: true,
+        subscribersOnly: true,
         _count: { select: { sends: true } },
       },
     })

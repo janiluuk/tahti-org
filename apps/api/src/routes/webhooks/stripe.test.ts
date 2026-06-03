@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
 import { cleanupUsersByEmailPrefix, createTestArtist } from '../../test/helpers.js'
+import * as membership from '../../lib/membership.js'
 
 const PREFIX = 'stripe-wh-'
 
@@ -138,5 +139,49 @@ describe('Stripe webhooks', () => {
     const updated = await prisma.fanSubscription.findUnique({ where: { id: sub.id } })
     expect(updated?.state).toBe('CANCELED')
     expect(updated?.canceledAt).not.toBeNull()
+  })
+
+  it('writes audit dead-letter when a handler throws', async () => {
+    const member = await createTestArtist(prisma, {
+      email: `${PREFIX}deadletter@example.com`,
+      username: 'stripe-wh-deadletter',
+      membershipStatus: 'PENDING_PAYMENT',
+    })
+
+    const spy = vi
+      .spyOn(membership, 'activateMembership')
+      .mockRejectedValueOnce(new Error('simulated handler failure'))
+
+    const payload = JSON.stringify({
+      id: 'evt_deadletter_test',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_deadletter_test',
+          amount_total: 4000,
+          metadata: { type: 'membership', userId: member.id },
+        },
+      },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/webhooks/stripe',
+      headers: { 'content-type': 'application/json' },
+      payload,
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ received: true })
+
+    const deadLetter = await prisma.auditLog.findFirst({
+      where: { action: 'STRIPE_WEBHOOK_ERROR', targetId: 'evt_deadletter_test' },
+    })
+    expect(deadLetter).toBeTruthy()
+    expect(deadLetter?.meta).toMatchObject({
+      eventType: 'checkout.session.completed',
+      message: 'simulated handler failure',
+    })
+
+    spy.mockRestore()
   })
 })

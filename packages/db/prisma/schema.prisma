@@ -137,6 +137,7 @@ enum AuditAction {
   MOTION_CLOSE
   VOTE_CAST
   GRANT_RUN
+  STRIPE_WEBHOOK_ERROR
 
   @@schema("governance")
 }
