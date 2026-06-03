@@ -3,7 +3,14 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
-import { DownloadGatesQuerySchema, RepostAckBodySchema } from '@tahti/shared'
+import {
+  ChannelArchiveParamsSchema,
+  DownloadGateStatusSchema,
+  DownloadGatesQuerySchema,
+  RepostAckBodySchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { config } from '../../config.js'
 import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
 
@@ -24,10 +31,15 @@ const archiveRepostRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['downloads'],
         description: 'M22: public download gate requirements for a track',
+        response: openApiResponse(DownloadGateStatusSchema, 'DownloadGateStatus'),
       },
     },
     async (request, reply) => {
-      const { slug, itemId } = request.params as { slug: string; itemId: string }
+      const routeParams = parseRouteParams(ChannelArchiveParamsSchema, request.params)
+      if (!routeParams) {
+        return reply.status(400).send({ error: 'Invalid path parameters' })
+      }
+      const { slug, itemId } = routeParams
       const parsedQuery = DownloadGatesQuerySchema.safeParse(request.query)
       if (!parsedQuery.success) {
         return reply.status(400).send({
@@ -77,7 +89,11 @@ const archiveRepostRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const { slug, itemId } = request.params as { slug: string; itemId: string }
+      const routeParams = parseRouteParams(ChannelArchiveParamsSchema, request.params)
+      if (!routeParams) {
+        return reply.status(400).send({ error: 'Invalid path parameters' })
+      }
+      const { slug, itemId } = routeParams
       const parsedBody = RepostAckBodySchema.safeParse(request.body ?? {})
       if (!parsedBody.success) {
         return reply.status(400).send({

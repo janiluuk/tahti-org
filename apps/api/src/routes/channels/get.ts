@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { SlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { config } from '../../config.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
 
@@ -15,7 +16,9 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },

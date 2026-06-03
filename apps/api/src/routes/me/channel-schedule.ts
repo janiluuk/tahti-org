@@ -2,7 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { ChannelSchedulePatchSchema } from '@tahti/shared'
+import {
+  ChannelSchedulePatchSchema,
+  ChannelScheduleViewSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 function zodError(
@@ -21,6 +25,7 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description: 'LISTENER-002: next planned broadcast',
+        response: openApiResponse(ChannelScheduleViewSchema, 'ChannelSchedule'),
       },
     },
     async (request, reply) => {

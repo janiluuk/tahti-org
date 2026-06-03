@@ -22,6 +22,7 @@ import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelEgressPanel } from './channel-egress-panel'
+import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
 import UpgradeCta from './upgrade-cta'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
@@ -190,6 +191,12 @@ export default async function DashboardPage() {
     totalDownloads: number
     daily: Array<{ date: string; bytes: number; downloads: number }>
   } | null = null
+  let channelLiveStats: {
+    windowDays: number
+    totalLiveSeconds: number
+    totalBroadcasts: number
+    daily: Array<{ date: string; liveSeconds: number; broadcastCount: number }>
+  } | null = null
   if (user.channel) {
     try {
       const res = await fetch(`${apiUrl}/api/me/broadcast-usage`, {
@@ -215,6 +222,15 @@ export default async function DashboardPage() {
         cache: 'no-store',
       })
       if (res.ok) channelEgress = (await res.json()) as typeof channelEgress
+    } catch {
+      // ignore
+    }
+    try {
+      const res = await fetch(`${apiUrl}/api/me/channel-live-stats`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) channelLiveStats = (await res.json()) as typeof channelLiveStats
     } catch {
       // ignore
     }
@@ -495,6 +511,7 @@ export default async function DashboardPage() {
           <BroadcastUsageBanner usage={broadcastUsage} />
           <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
           <DownloadGateSummaryPanel summary={downloadGateSummary} />
+          <ChannelLiveStatsPanel stats={channelLiveStats} />
           <ChannelEgressPanel stats={channelEgress} />
           <Text size="sm" style={{ margin: '0.25rem 0' }}>
             <strong>URL:</strong>{' '}

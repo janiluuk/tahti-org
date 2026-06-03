@@ -11,7 +11,7 @@ const statusRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['admin'],
-        description: 'M11: dependency health for Upptime and ops monitors',
+        description: 'M11: dependency health for Upptime and ops monitors (200 or 503)',
       },
     },
     async (_request, reply) => {

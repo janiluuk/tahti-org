@@ -5,6 +5,8 @@ import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
 import {
   ArchiveDownloadQuerySchema,
+  ChannelArchiveParamsSchema,
+  parseRouteParams,
   archivePlaybackKey,
   evaluateDownloadCountPolicy,
 } from '@tahti/shared'
@@ -50,7 +52,11 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const { slug, itemId } = request.params as { slug: string; itemId: string }
+      const routeParams = parseRouteParams(ChannelArchiveParamsSchema, request.params)
+      if (!routeParams) {
+        return reply.status(400).send({ error: 'Invalid path parameters' })
+      }
+      const { slug, itemId } = routeParams
       const parsedQuery = ArchiveDownloadQuerySchema.safeParse(request.query)
       if (!parsedQuery.success) {
         return reply.status(400).send({

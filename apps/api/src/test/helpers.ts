@@ -20,6 +20,12 @@ export interface TestArtistOptions {
   weeklyLiveResetAt?: Date
 }
 
+/** PLAT-012: dynamic member number — avoids hard-coded bands in parallel tests later. */
+export async function allocateMemberNumber(prisma: PrismaClient): Promise<number> {
+  const max = await prisma.user.aggregate({ _max: { memberNumber: true } })
+  return (max._max.memberNumber ?? 10_000) + 1
+}
+
 export async function createTestArtist(prisma: PrismaClient, opts: TestArtistOptions) {
   const passwordHash = await hashPassword('testpassword')
   const liveSourcePass = `pass-${opts.username}`

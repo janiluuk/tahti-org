@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { CreateVenueBroadcastSchema, CreateVenueSchema } from '@tahti/shared'
+import {
+  CreateVenueBroadcastSchema,
+  CreateVenueSchema,
+  SlugParamSchema,
+  VenueCalendarQuerySchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 function zodError(
@@ -15,94 +21,123 @@ function zodError(
 // M17 — Venue directory and broadcast calendar
 const venueRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/venues — public directory (verified only)
-  fastify.get('/api/v1/venues', async (_request, reply) => {
-    const venues = await fastify.prisma.venue.findMany({
-      where: { verifiedAt: { not: null } },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        city: true,
-        countryCode: true,
-        capacity: true,
-        description: true,
-      },
-      orderBy: { name: 'asc' },
-    })
-    return reply.send(venues)
-  })
+  fastify.get(
+    '/api/v1/venues',
+    { schema: { tags: ['venues'], description: 'M17: verified venue directory' } },
+    async (_request, reply) => {
+      const venues = await fastify.prisma.venue.findMany({
+        where: { verifiedAt: { not: null } },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          city: true,
+          countryCode: true,
+          capacity: true,
+          description: true,
+        },
+        orderBy: { name: 'asc' },
+      })
+      return reply.send(venues)
+    },
+  )
 
   // GET /api/v1/venues/:slug — public venue profile
-  fastify.get('/api/v1/venues/:slug', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+  fastify.get(
+    '/api/v1/venues/:slug',
+    { schema: { tags: ['venues'], description: 'M17: public venue profile' } },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
 
-    const venue = await fastify.prisma.venue.findUnique({
-      where: { slug },
-      include: {
-        broadcasts: {
-          where: { startAt: { gte: new Date() }, state: 'SCHEDULED' },
-          orderBy: { startAt: 'asc' },
-          take: 20,
+      const venue = await fastify.prisma.venue.findUnique({
+        where: { slug },
+        include: {
+          broadcasts: {
+            where: { startAt: { gte: new Date() }, state: 'SCHEDULED' },
+            orderBy: { startAt: 'asc' },
+            take: 20,
+          },
         },
-      },
-    })
+      })
 
-    if (!venue) return reply.status(404).send({ error: 'Venue not found' })
-    if (!venue.verifiedAt) return reply.status(404).send({ error: 'Venue not found' })
+      if (!venue) return reply.status(404).send({ error: 'Venue not found' })
+      if (!venue.verifiedAt) return reply.status(404).send({ error: 'Venue not found' })
 
-    return reply.send(venue)
-  })
+      return reply.send(venue)
+    },
+  )
 
   // GET /api/v1/venues/:slug/broadcasts — JSON calendar feed
-  fastify.get('/api/v1/venues/:slug/broadcasts', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
-    const { from, to } = request.query as { from?: string; to?: string }
+  fastify.get(
+    '/api/v1/venues/:slug/broadcasts',
+    { schema: { tags: ['venues'], description: 'M17: venue broadcast calendar (JSON)' } },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
+      const parsedQuery = VenueCalendarQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply.status(400).send({
+          error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
 
-    const venue = await fastify.prisma.venue.findUnique({
-      where: { slug, verifiedAt: { not: null } },
-      select: { id: true, name: true },
-    })
-    if (!venue) return reply.status(404).send({ error: 'Venue not found' })
+      const venue = await fastify.prisma.venue.findUnique({
+        where: { slug, verifiedAt: { not: null } },
+        select: { id: true, name: true },
+      })
+      if (!venue) return reply.status(404).send({ error: 'Venue not found' })
 
-    const fromDate = from ? new Date(from) : new Date()
-    const toDate = to ? new Date(to) : new Date(Date.now() + 90 * 24 * 3600 * 1000)
+      const fromDate = parsedQuery.data.from ? new Date(parsedQuery.data.from) : new Date()
+      const toDate = parsedQuery.data.to
+        ? new Date(parsedQuery.data.to)
+        : new Date(Date.now() + 90 * 24 * 3600 * 1000)
 
-    const broadcasts = await fastify.prisma.venueBroadcast.findMany({
-      where: {
-        venueId: venue.id,
-        startAt: { gte: fromDate, lte: toDate },
-      },
-      orderBy: { startAt: 'asc' },
-    })
+      const broadcasts = await fastify.prisma.venueBroadcast.findMany({
+        where: {
+          venueId: venue.id,
+          startAt: { gte: fromDate, lte: toDate },
+        },
+        orderBy: { startAt: 'asc' },
+      })
 
-    return reply.send({ venue: { id: venue.id, name: venue.name, slug }, broadcasts })
-  })
+      return reply.send({ venue: { id: venue.id, name: venue.name, slug }, broadcasts })
+    },
+  )
 
   // GET /api/v1/venues/:slug/calendar.ics — iCalendar feed
-  fastify.get('/api/v1/venues/:slug/calendar.ics', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+  fastify.get(
+    '/api/v1/venues/:slug/calendar.ics',
+    { schema: { tags: ['venues'], description: 'M17: venue iCalendar feed' } },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
 
-    const venue = await fastify.prisma.venue.findUnique({
-      where: { slug, verifiedAt: { not: null } },
-    })
-    if (!venue) return reply.status(404).send({ error: 'Venue not found' })
+      const venue = await fastify.prisma.venue.findUnique({
+        where: { slug, verifiedAt: { not: null } },
+      })
+      if (!venue) return reply.status(404).send({ error: 'Venue not found' })
 
-    const broadcasts = await fastify.prisma.venueBroadcast.findMany({
-      where: {
-        venueId: venue.id,
-        startAt: { gte: new Date() },
-        state: { in: ['SCHEDULED', 'LIVE'] },
-      },
-      orderBy: { startAt: 'asc' },
-      take: 100,
-    })
+      const broadcasts = await fastify.prisma.venueBroadcast.findMany({
+        where: {
+          venueId: venue.id,
+          startAt: { gte: new Date() },
+          state: { in: ['SCHEDULED', 'LIVE'] },
+        },
+        orderBy: { startAt: 'asc' },
+        take: 100,
+      })
 
-    const ics = buildIcs(venue, broadcasts)
-    return reply
-      .header('Content-Type', 'text/calendar; charset=utf-8')
-      .header('Content-Disposition', `attachment; filename="${slug}.ics"`)
-      .send(ics)
-  })
+      const ics = buildIcs(venue, broadcasts)
+      return reply
+        .header('Content-Type', 'text/calendar; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="${slug}.ics"`)
+        .send(ics)
+    },
+  )
 
   // POST /api/v1/venues — create venue (auth required, unverified until board approves)
   fastify.post('/api/v1/venues', { preHandler: requireAuth }, async (request, reply) => {

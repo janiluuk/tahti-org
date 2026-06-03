@@ -77,6 +77,7 @@ import meChannelScheduleRoutes from './routes/me/channel-schedule.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
 import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
 import meChannelEgressRoutes from './routes/me/channel-egress.js'
+import meChannelLiveStatsRoutes from './routes/me/channel-live-stats.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
@@ -87,6 +88,7 @@ import {
   ApiStatusResponseSchema,
   BroadcastUsageResponseSchema,
   ChannelEgressResponseSchema,
+  ChannelLiveStatsResponseSchema,
   ChannelScheduleViewSchema,
   DownloadGateItemDetailResponseSchema,
   DownloadGateStatsResponseSchema,
@@ -132,6 +134,7 @@ export async function buildApp(opts: BuildOptions = {}) {
         },
         schemas: zodOpenApiComponents({
           ChannelEgress: ChannelEgressResponseSchema,
+          ChannelLiveStats: ChannelLiveStatsResponseSchema,
           DownloadGateStats: DownloadGateStatsResponseSchema,
           DownloadGateItemDetail: DownloadGateItemDetailResponseSchema,
           DownloadUrl: DownloadUrlResponseSchema,
@@ -312,6 +315,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meArchiveVersionRoutes)
   await fastify.register(meDownloadGateStatsRoutes)
   await fastify.register(meChannelEgressRoutes)
+  await fastify.register(meChannelLiveStatsRoutes)
   await fastify.register(meUsersRoutes)
 
   // M23: collections + RSS feeds

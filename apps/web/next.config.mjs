@@ -5,7 +5,6 @@
 const nextConfig = {
   poweredByHeader: false,
   transpilePackages: ['@tahti/shared', '@tahti/ui'],
-  eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: false },
   async headers() {
     return [

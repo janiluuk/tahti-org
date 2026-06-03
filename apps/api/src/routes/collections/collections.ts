@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   AddCollectionItemSchema,
+  CollectionListQuerySchema,
   CreateCollectionSchema,
   PatchCollectionSchema,
   ReorderCollectionSchema,
@@ -50,18 +51,31 @@ const collectionItemInclude = {
 const collectionRoutes: FastifyPluginAsync = async (fastify) => {
   // ── Artist-facing management ─────────────────────────────────────────────
 
-  fastify.get('/api/me/collections', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const expand = (request.query as { expand?: string }).expand === 'items'
-    const cols = await fastify.prisma.collection.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      include: expand
-        ? { items: { orderBy: { position: 'asc' }, include: collectionItemInclude } }
-        : { _count: { select: { items: true } } },
-    })
-    return reply.send(cols)
-  })
+  fastify.get(
+    '/api/me/collections',
+    {
+      preHandler: requireAuth,
+      schema: { tags: ['releases'], description: 'M23: list artist collections' },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsedQuery = CollectionListQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply.status(400).send({
+          error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
+      const expand = parsedQuery.data.expand === 'items'
+      const cols = await fastify.prisma.collection.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
+        include: expand
+          ? { items: { orderBy: { position: 'asc' }, include: collectionItemInclude } }
+          : { _count: { select: { items: true } } },
+      })
+      return reply.send(cols)
+    },
+  )
 
   fastify.post('/api/me/collections', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
