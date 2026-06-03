@@ -79,7 +79,9 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
       if (wantSource && !track.sourceKey) {
-        return reply.status(409).send({ error: 'Original source file not available for this track' })
+        return reply
+          .status(409)
+          .send({ error: 'Original source file not available for this track' })
       }
 
       const objectKey = wantSource
