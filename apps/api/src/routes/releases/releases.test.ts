@@ -205,5 +205,7 @@ describe('M12 — releases and public profile', () => {
     })
     expect(exp.statusCode).toBe(200)
     expect(exp.json().release.upc).toBe('1234567890123')
+    expect(exp.json().musicbrainzPrefill).toContain('1234567890123')
+    expect(exp.json().musicbrainzPrefill).toContain('MusicBrainz')
   })
 })

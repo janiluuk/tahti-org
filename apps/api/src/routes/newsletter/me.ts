@@ -2,9 +2,17 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { NewsletterDraftSchema, NewsletterSendSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { mediaQueue } from '../../lib/queue.js'
 import { artistOffersFanNewsletter, fanOnlyNewsletterSubscriberIds } from '../../lib/fan-perks.js'
+
+function zodError(
+  reply: { status: (n: number) => { send: (b: unknown) => unknown } },
+  err: { issues: Array<{ message?: string }> },
+) {
+  return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
+}
 
 // M13 — artist newsletter management (auth required)
 const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
@@ -36,17 +44,18 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/newsletter/drafts — save a draft
   fastify.post('/api/me/newsletter/drafts', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const body = request.body as { subject?: string; bodyMd?: string }
+    const parsed = NewsletterDraftSchema.safeParse(request.body)
+    if (!parsed.success) return zodError(reply, parsed.error)
+    const body = parsed.data
 
-    const subject = body.subject?.trim()
-    const bodyMd = body.bodyMd?.trim()
-
-    if (!subject) return reply.status(400).send({ error: 'subject is required' })
-    if (!bodyMd) return reply.status(400).send({ error: 'bodyMd is required' })
-
-    const subscribersOnly = (request.body as { subscribersOnly?: boolean }).subscribersOnly ?? false
     const draft = await fastify.prisma.newsletterDraft.create({
-      data: { userId: user.id, subject, bodyMd, state: 'DRAFT', subscribersOnly },
+      data: {
+        userId: user.id,
+        subject: body.subject,
+        bodyMd: body.bodyMd,
+        state: 'DRAFT',
+        subscribersOnly: body.subscribersOnly ?? false,
+      },
     })
 
     return reply.status(201).send(draft)
@@ -80,7 +89,9 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { draftId } = request.params as { draftId: string }
-      const body = (request.body as { audience?: string }) ?? {}
+      const parsed = NewsletterSendSchema.safeParse(request.body ?? {})
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const body = parsed.data
 
       const draft = await fastify.prisma.newsletterDraft.findFirst({
         where: { id: draftId, userId: user.id },
@@ -105,7 +116,7 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       let subscriberIds: string[]
-      const fanAudience = body.audience === 'fans' || draft.subscribersOnly
+      const fanAudience = body.audience === 'fans' || draft.subscribersOnly === true
 
       if (fanAudience) {
         if (!(await artistOffersFanNewsletter(fastify.prisma, user.id))) {

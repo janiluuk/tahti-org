@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { ReleaseCatalogPatchSchema } from '@tahti/shared'
+import { ReleaseCatalogPatchSchema, buildMusicBrainzPrefill } from '@tahti/shared'
 
 export const releaseCatalogSelect = {
   id: true,
@@ -81,8 +81,12 @@ export function buildReleaseExportPack(release: {
   }>
   user: { username: string; displayName: string }
 }) {
+  const musicbrainzPrefill = buildMusicBrainzPrefill(release)
+
   return {
     exportedAt: new Date().toISOString(),
+    musicbrainzPrefill,
+    musicbrainzSubmitUrl: 'https://musicbrainz.org/release/add',
     artist: { username: release.user.username, displayName: release.user.displayName },
     release: {
       title: release.title,

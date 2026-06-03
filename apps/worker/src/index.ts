@@ -22,6 +22,8 @@ import {
   processMembershipRenewalJob,
 } from './jobs/membership-lifecycle.js'
 import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
+import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
+import { processHlsMinioSyncJob } from './jobs/hls-minio-sync.js'
 import { WORKER_CRON_JOBS } from './cron-manifest.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
@@ -50,6 +52,14 @@ const worker = new Worker(
       await processArchiveBroadcastJob(job)
     } else if (job.name === 'monthly-ledger-rollup') {
       await processMonthlyLedgerRollup(job)
+    } else if (job.name === 'channel-watchdog') {
+      const summary = await processChannelWatchdogJob(prisma, job)
+      console.log('[worker] channel-watchdog:', JSON.stringify(summary))
+    } else if (job.name === 'hls-minio-sync') {
+      const summary = await processHlsMinioSyncJob(prisma, job)
+      if (summary.uploaded > 0) {
+        console.log('[worker] hls-minio-sync:', JSON.stringify(summary))
+      }
     } else if (job.name === 'broadcast-cap-tick') {
       const summary = await processBroadcastCapTick(prisma)
       console.log('[worker] broadcast-cap-tick:', JSON.stringify(summary))

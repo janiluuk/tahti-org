@@ -1,28 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { createClient } from 'redis'
 import { TOR_EXIT_REDIS_KEY, loadBundledTorExitCidrs } from '@tahti/shared'
 import { config } from '../config.js'
+import { getRedisClient } from './redis.js'
 
 let redisCache: { cidrs: string[]; at: number } | null = null
 const REDIS_TTL_MS = 60 * 60 * 1000
-
-let redis: ReturnType<typeof createClient> | null = null
-
-async function getRedis() {
-  if (!redis) {
-    redis = createClient({ url: config.redisUrl })
-    await redis.connect()
-  }
-  return redis
-}
 
 async function loadRedisTorExitCidrs(): Promise<string[]> {
   const now = Date.now()
   if (redisCache && now - redisCache.at < REDIS_TTL_MS) return redisCache.cidrs
   try {
-    const rd = await getRedis()
+    const rd = await getRedisClient()
+    if (!rd) return []
     const raw = await rd.get(TOR_EXIT_REDIS_KEY)
     if (!raw) {
       redisCache = { cidrs: [], at: now }

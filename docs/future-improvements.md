@@ -19,7 +19,7 @@ Last reviewed: 2026-06-03 (audit pass)
 
 **Top gaps to close before beta:**
 
-1. Streaming scale blockers (STREAM-001 HLS → MinIO, STREAM-004/005)
+1. Streaming scale blockers (STREAM-001 sync cron partial, STREAM-004; STREAM-005 watchdog done)
 2. Fan-sub live payout retry + M19 newsletter fan-only send UI
 3. Wire `@tahti/ui` into dashboard/public pages
 4. Backup runbooks + Upptime (M11)
@@ -169,7 +169,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | P1 | Playwright smoke in CI against `docker compose stack` (optional nightly, not every PR) | Catch RSC regressions without local-only flow |
 | P1 | README: local test DB + `pnpm ci:check` one-liner | Onboarding |
 | ~~P2~~ | ~~Broad API test coverage~~ — ~230 tests (2026-06-03) | — |
-| P2 | Contract tests for public `/api/v1/*` JSON shapes | Safe third-party consumers |
+| ~~P2~~ | ~~Contract tests for public `/api/v1/*` JSON shapes~~ — `apps/api/src/routes/contracts/public-v1.test.ts` |
 | P2 | Ephemeral DB per Vitest worker (Testcontainers) | Parallel CI |
 
 ### CI / DX
@@ -197,7 +197,7 @@ Last reviewed: 2026-06-03 (audit pass)
 ### Runtime / ops
 | P | Item | Benefit |
 |---|---|---|
-| P1 | Redis connection pool singleton | PLAT-011 |
+| ~~P1~~ | ~~Redis connection pool singleton~~ — `apps/api/src/lib/redis.ts` (PLAT-011 partial) |
 | P2 | Graceful Redis-down mode for rate limit (policy decision) | Dev without Redis |
 
 ---

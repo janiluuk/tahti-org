@@ -564,6 +564,7 @@ export default async function DashboardPage() {
                         controls
                         src={play.audioUrl}
                         style={{ margin: '0 0 0.75rem', width: '100%' }}
+                        data-testid="dashboard-archive-player"
                       />
                     )}
                   </div>

@@ -257,7 +257,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         <TracklistView entries={item.tracklist} />
                       )}
                       {item.audioUrl && (
-                        <audio controls src={item.audioUrl} style={{ width: '100%' }} />
+                        <audio
+                          controls
+                          src={item.audioUrl}
+                          style={{ width: '100%' }}
+                          data-testid="channel-archive-player"
+                        />
                       )}
                       <ArchiveDownloadButton
                         channelSlug={slug}

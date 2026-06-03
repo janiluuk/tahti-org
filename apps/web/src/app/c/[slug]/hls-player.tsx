@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface HlsInstance {
   loadSource(url: string): void
@@ -26,10 +26,18 @@ declare global {
 // Falls back to native HLS for Safari which supports it natively.
 export default function HlsPlayer({ url }: { url: string }) {
   const audioRef = useRef<HTMLAudioElement>(null)
+  const [buffering, setBuffering] = useState(false)
 
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
+
+    const onWaiting = () => setBuffering(true)
+    const onPlaying = () => setBuffering(false)
+    const onCanPlay = () => setBuffering(false)
+    audio.addEventListener('waiting', onWaiting)
+    audio.addEventListener('playing', onPlaying)
+    audio.addEventListener('canplay', onCanPlay)
 
     // Safari: native HLS support
     if (audio.canPlayType('application/vnd.apple.mpegurl')) {
@@ -72,9 +80,31 @@ export default function HlsPlayer({ url }: { url: string }) {
     }
 
     return () => {
+      audio.removeEventListener('waiting', onWaiting)
+      audio.removeEventListener('playing', onPlaying)
+      audio.removeEventListener('canplay', onCanPlay)
       hls?.destroy()
     }
   }, [url])
 
-  return <audio ref={audioRef} controls style={{ width: '100%' }} aria-label="Live stream player" />
+  return (
+    <div>
+      {buffering && (
+        <p
+          role="status"
+          aria-live="polite"
+          style={{ fontSize: '0.85rem', color: '#888', margin: '0 0 0.35rem' }}
+        >
+          Buffering live stream…
+        </p>
+      )}
+      <audio
+        ref={audioRef}
+        controls
+        style={{ width: '100%' }}
+        aria-label="Live stream player"
+        data-testid="channel-live-player"
+      />
+    </div>
+  )
 }

@@ -20,6 +20,8 @@
     "test:e2e:journeys:artist": "bash tests/e2e/journeys/artist.sh",
     "test:e2e:journeys:member": "bash tests/e2e/journeys/member.sh",
     "test:e2e:journeys:web": "node tests/e2e/user-journeys.mjs",
+    "test:e2e:dashboard-player": "bash tests/e2e/journeys/dashboard-player.sh",
+    "test:e2e:dashboard-player:web": "node tests/e2e/dashboard-player.mjs",
     "screenshots": "bash scripts/e2e-screenshots.sh",
     "test:e2e:phase4": "bash tests/e2e/phase-4.sh",
     "format": "prettier --write \"**/*.{ts,tsx,js,json}\" --ignore-path .gitignore",

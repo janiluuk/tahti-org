@@ -23,6 +23,8 @@ source "$SCRIPT_DIR/journeys/listener.sh"
 source "$SCRIPT_DIR/journeys/artist.sh"
 # shellcheck source=journeys/member.sh
 source "$SCRIPT_DIR/journeys/member.sh"
+# shellcheck source=journeys/dashboard-player.sh
+source "$SCRIPT_DIR/journeys/dashboard-player.sh"
 
 echo "── Tahti user journey e2e ────────────────────────────────"
 echo "   API: $API_URL"
@@ -48,5 +50,6 @@ run_artist_journey
 run_streamer_journey
 run_member_journey
 run_fan_supporter_journey
+run_dashboard_player_journey
 
 e2e_summary "User journey e2e" || exit 1

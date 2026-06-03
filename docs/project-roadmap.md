@@ -102,7 +102,7 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Add board **role** (`User.isBoard` + `requireBoard`) so role checks stop using `isMember` as a proxy | Board-only actions are now gated properly; `admin/ledger` now uses `requireBoard` (manual ledger entries are board/treasurer-only) | M10 (done) |
 | [x] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
 | [x] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | Governance, RTMP, fan tiers, **admin ledger** on Zod; multi-section CSV export unchanged | ongoing hardening |
-| [ ] | **M30 release-ops toolkit** — guided MusicBrainz submit, Revelator pre-fill from same release record | Producers need more than smart links; open-catalog + identifiers are table stakes for serious releases | M30 / Phase 6b |
+| [x] | **M30 release-ops toolkit** — MusicBrainz clipboard prefill in export pack + Revelator pre-fill from same release record | Export JSON includes `musicbrainzPrefill`; Revelator worker reads catalog fields | M30 / Phase 6b |
 | [x] | **Tracklist @artist tags** — editable tracklist rows with `@handle` autocomplete; link to `/u/:handle`; M15 `TRACKLIST` mention surface | DJs credit guests and collaborators; hearthis-style tracklists without a social graph | M22 |
 | [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
 | [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; suite now runs on every PR with Postgres + Redis services | CI |
@@ -115,7 +115,7 @@ as their own checklist so they don't get lost between milestones.
 | [~] | Automate `db push` / migrate in deploy pipeline (OPS-002) | `db-push` service in `stack-up.sh`; production website-only deploy still manual | M0 / Phase 2 |
 | [x] | Document local test prerequisites in README (`docker compose up postgres redis -d`, `pnpm ci:check`) | Onboarding friction; tests fail opaque without DB | M11 |
 | [~] | **Postgres backup pipeline** — pgBackRest (or `pg_dump` interim) → MinIO `backups/pg/` → UpCloud offsite; daily cron + age alert | Artist uploads, ledger, memberships are irreplaceable; RPO 1h per `infra-strategy.md` | M29 / Phase 2b |
-| [ ] | **MinIO mirror** — `mc mirror` tahti → UpCloud bucket daily; verify object count | Archive audio + HLS segments; RPO 24h | M29 / Phase 2b |
+| [~] | **MinIO mirror** — `mc mirror` tahti → UpCloud bucket daily; verify object count | `scripts/backup.sh minio` compares primary vs DR counts (1% tolerance) | M29 / Phase 2b |
 | [x] | **Restore-test automation** — weekly script restores latest PG dump to throwaway DB, row-count check, log to `/var/log/tahti-restore-test.log` | Backups that are never restored are fiction; required before public beta | M29 / Phase 2b |
 | [~] | **`ops/RUNBOOK.md` restore procedures** — Postgres point-in-time, MinIO bucket swap, DR read-only origin on UpCloud | Operators must recover without the director on call | M11 handover |
 | [x] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | Both inputs now live: download weight (M18) + fan-sub gross euros (M19) feed `computeEngagementUnits` | M18 + M19 → M9 (done) |
@@ -492,7 +492,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [ ] | **PLAT-002** | Require branch protection on all `ci.yml` jobs (lint, test, both e2e, AGPL) | P1 |
 | [ ] | **PLAT-003** | PgBouncer before scaling API replicas (`docs/scaling-node-distribution.md`) | P1 |
 | [x] | **PLAT-004** | Internal ingest routes: shared `@fastify/formbody` + integration tests for RTMP + Icecast | `ingest.test.ts` |
-| [ ] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | P2 |
+| [~] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | `DOCS_*_FILE` + prod warning on default pass | P2 |
 | [x] | **PLAT-006** | Rate-limit policy doc: fail-open vs fail-closed when Redis unavailable | P2 |
 
 ### Optimisations (performance & cost)
@@ -500,7 +500,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
 | [ ] | **PLAT-010** | Turbo remote cache in CI | P2 |
-| [ ] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | P2 |
+| [~] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | `apps/api/src/lib/redis.ts` | P2 |
 | [ ] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | P2 |
 | [ ] | **PLAT-013** | Website Docker: mount large media (`bg-audio.mp3`, hero video) from host like `output_vhs.mp4` | P3 |
 | [ ] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | P2 |
@@ -510,7 +510,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
 | [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Public brand + dashboard `data-tahti-ui="studio"` |
-| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | Ledger + governance + fansubs + RTMP + **release create/patch** |
+| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | Ledger + governance + fansubs + RTMP + releases + **collections CRUD** |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [x] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` — members, audit, fan-subscriber exports |
@@ -527,9 +527,9 @@ Issues identified from streaming architecture review and user journey analysis. 
 
 | ID | Issue | Raised by | Phase to fix |
 |:---|---|---|---|
-| [ ] | **STREAM-001** HLS segments written to shared Docker volume instead of MinIO — prevents adding a second Caddy or worker node | Architecture review | M3 (must fix before any beta) |
+| [~] | **STREAM-001** HLS segments written to shared Docker volume instead of MinIO — prevents adding a second Caddy or worker node | `hls-minio-sync` worker cron mirrors volume → `hls-live` bucket; stack `tahti_stack_hls` volume | M3 |
 | [ ] | **STREAM-004** Recording is a Liquidsoap sidecar — recording lost if Liquidsoap crashes mid-broadcast | Architecture review | M3 |
-| [ ] | **STREAM-005** No per-channel health watchdog — silent/frozen channels go undetected until user reports | Journey: Listener J1 | M3 |
+| [~] | **STREAM-005** No per-channel health watchdog — silent/frozen channels go undetected until user reports | `channel-watchdog` worker cron + orchestrator `/restart` when segments stale | M3 |
 
 ### HIGH — breaks artist or listener experience
 
@@ -540,7 +540,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | [ ] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | Journey: Artist J2 | M4 |
 | [ ] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | Journey: Artist J2 | M3 |
 | [ ] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | Journey: Listener J2 | M3 |
-| [ ] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Journey: Listener J1 | M3 |
+| [~] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Live player shows “Buffering live stream…” (LISTENER-001) | M3 |
 | [ ] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | Journey: Listener J2 | M5 |
 
 ### MEDIUM — affects operations and cost attribution

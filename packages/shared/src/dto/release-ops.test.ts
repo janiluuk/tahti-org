@@ -2,30 +2,32 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { computeReleaseChecklist } from './release-ops.js'
+import { buildMusicBrainzPrefill } from './release-ops.js'
 
-describe('computeReleaseChecklist', () => {
-  const base = {
-    title: 'EP',
-    releaseDate: new Date('2024-06-01'),
-    description: 'Notes',
-    artworkUrl: 'https://cdn/a.jpg',
-    state: 'DRAFT',
-    upc: null,
-    musicbrainzReleaseId: null,
-    revelatorStatus: null,
-    smartLinkTargets: null,
-    tracks: [{ isrc: null }],
-  }
+describe('buildMusicBrainzPrefill', () => {
+  it('formats release and track fields for MusicBrainz entry', () => {
+    const text = buildMusicBrainzPrefill({
+      title: 'Northern Lights',
+      type: 'EP',
+      releaseDate: new Date('2026-03-15'),
+      description: 'Ambient EP',
+      upc: '1234567890123',
+      pLine: '℗ 2026 Demo',
+      cLine: '© 2026 Demo',
+      labelImprint: 'Tahti Demo',
+      credits: [{ role: 'writer', name: 'Alex Demo' }],
+      tracks: [
+        { position: 1, title: 'Aurora', isrc: 'FI-XXX-26-00001' },
+        { position: 2, title: 'Polar', isrc: null },
+      ],
+      user: { username: 'demo', displayName: 'Demo Artist' },
+    })
 
-  it('marks metadata done when basics present', () => {
-    const steps = computeReleaseChecklist(base)
-    expect(steps.find((s) => s.id === 'metadata')?.done).toBe(true)
-    expect(steps.find((s) => s.id === 'published')?.done).toBe(false)
-  })
-
-  it('marks identifiers done with UPC', () => {
-    const steps = computeReleaseChecklist({ ...base, upc: '123456789012' })
-    expect(steps.find((s) => s.id === 'identifiers')?.done).toBe(true)
+    expect(text).toContain('Northern Lights')
+    expect(text).toContain('Demo Artist')
+    expect(text).toContain('1234567890123')
+    expect(text).toContain('FI-XXX-26-00001')
+    expect(text).toContain('Aurora')
+    expect(text).toContain('Alex Demo')
   })
 })

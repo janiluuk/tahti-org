@@ -2,12 +2,23 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { archivePlaybackKey } from '@tahti/shared'
+import {
+  AddCollectionItemSchema,
+  CreateCollectionSchema,
+  PatchCollectionSchema,
+  ReorderCollectionSchema,
+  archivePlaybackKey,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
 
-const VALID_TYPES = ['MIX_SERIES', 'ALBUM', 'CUSTOM'] as const
+function zodError(
+  reply: { status: (n: number) => { send: (b: unknown) => unknown } },
+  err: { issues: Array<{ message?: string }> },
+) {
+  return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
+}
 
 const collectionItemInclude = {
   archiveItem: {
@@ -54,32 +65,21 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/api/me/collections', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const body = request.body as {
-      name?: string
-      slug?: string
-      description?: string
-      type?: string
-      isPublic?: boolean
-      coverUrl?: string
-    }
-
-    const name = body.name?.trim()
-    if (!name) return reply.status(400).send({ error: 'name is required' })
+    const parsed = CreateCollectionSchema.safeParse(request.body)
+    if (!parsed.success) return zodError(reply, parsed.error)
+    const body = parsed.data
 
     const slug =
       body.slug
         ?.trim()
         .toLowerCase()
         .replace(/[^a-z0-9-]/g, '-') ??
-      `${user.username}-${name
+      `${user.username}-${body.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .slice(0, 30)}`
 
-    const type = (body.type?.toUpperCase() ?? 'CUSTOM') as (typeof VALID_TYPES)[number]
-    if (!VALID_TYPES.includes(type)) {
-      return reply.status(400).send({ error: 'Invalid type' })
-    }
+    const type = body.type ?? 'CUSTOM'
 
     const existing = await fastify.prisma.collection.findUnique({ where: { slug } })
     if (existing) return reply.status(409).send({ error: 'Slug already taken' })
@@ -88,7 +88,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       data: {
         userId: user.id,
         slug,
-        name,
+        name: body.name,
         description: body.description?.trim() || null,
         type,
         isPublic: body.isPublic ?? true,
@@ -104,13 +104,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { slug } = request.params as { slug: string }
-      const body = request.body as {
-        name?: string
-        description?: string
-        isPublic?: boolean
-        isFeatured?: boolean
-        coverUrl?: string
-      }
+      const parsed = PatchCollectionSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const body = parsed.data
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, userId: user.id },
@@ -119,11 +115,11 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data: Record<string, any> = {}
-      if (body.name !== undefined) data.name = body.name.trim().slice(0, 100)
-      if (body.description !== undefined) data.description = body.description.slice(0, 1000) || null
+      if (body.name !== undefined) data.name = body.name
+      if (body.description !== undefined) data.description = body.description
       if (body.isPublic !== undefined) data.isPublic = body.isPublic
       if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
-      if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl.trim() || null
+      if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl?.trim() || null
 
       const updated = await fastify.prisma.collection.update({ where: { id: col.id }, data })
       return reply.send(updated)
@@ -153,20 +149,15 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { slug } = request.params as { slug: string }
-      const body = request.body as { archiveItemId?: string; releaseId?: string; position?: number }
+      const parsed = AddCollectionItemSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const body = parsed.data
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, userId: user.id },
         include: { _count: { select: { items: true } } },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
-
-      if (!body.archiveItemId && !body.releaseId) {
-        return reply.status(400).send({ error: 'archiveItemId or releaseId is required' })
-      }
-      if (body.archiveItemId && body.releaseId) {
-        return reply.status(400).send({ error: 'Provide archiveItemId or releaseId, not both' })
-      }
 
       if (body.archiveItemId) {
         const archive = await fastify.prisma.archiveItem.findFirst({
@@ -213,12 +204,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { slug } = request.params as { slug: string }
-      const body = request.body as { itemIds?: string[] }
-
-      const itemIds = body.itemIds
-      if (!Array.isArray(itemIds) || itemIds.length === 0) {
-        return reply.status(400).send({ error: 'itemIds array is required' })
-      }
+      const parsed = ReorderCollectionSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const itemIds = parsed.data.itemIds
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, userId: user.id },

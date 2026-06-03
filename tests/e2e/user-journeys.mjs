@@ -20,6 +20,8 @@ const FIXTURE = {
   memberEmail: process.env.E2E_DEMO_MEMBER_EMAIL ?? 'screenshot-fan@e2e.tahti.live',
   artist: process.env.E2E_DEMO_ARTIST_USER ?? 'screenshot-demo',
   smartLinkSlug: process.env.E2E_DEMO_SMART_SLUG ?? 'northern-lights-ep',
+  archiveTitle: 'Live at Klubi',
+  releaseTitle: 'Northern Lights',
 }
 
 let passed = 0
@@ -89,6 +91,17 @@ async function main() {
   const pubPage = await pub.newPage()
 
   await pageLoads(pubPage, `/c/${FIXTURE.artist}`, 'channel page', { text: 'Chat' })
+  const channelArchive = pubPage.locator('[data-testid="channel-archive-player"]')
+  if ((await channelArchive.count()) > 0) {
+    const src = await channelArchive.first().getAttribute('src')
+    if (src && src.length > 8) ok('channel archive player src')
+    else fail('channel archive player missing src')
+  } else {
+    console.log('⚠ channel archive player skipped (no audioUrl / MinIO)')
+  }
+  if ((await pubPage.locator('[data-testid="channel-live-player"]').count()) === 0) {
+    ok('no live player when channel offline')
+  }
   await pageLoads(pubPage, `/u/${FIXTURE.artist}`, 'public profile')
   await pageLoads(pubPage, `/u/${FIXTURE.artist}/subscribe`, 'subscribe page', {
     text: 'Subscribe',
@@ -114,6 +127,24 @@ async function main() {
       ok('dashboard shows studio sections')
     } else {
       fail('dashboard missing studio sections')
+    }
+    if (body.includes('Your channel')) ok('dashboard channel panel')
+    else fail('dashboard missing channel panel')
+    if (body.includes(FIXTURE.releaseTitle)) ok('dashboard lists demo release')
+    if (body.includes('Archive')) ok('dashboard archive section')
+    const dashPlayer = dash.locator('[data-testid="dashboard-archive-player"]')
+    if ((await dashPlayer.count()) > 0) {
+      const src = await dashPlayer.first().getAttribute('src')
+      if (src && src.length > 8) ok('dashboard archive player src')
+      else fail('dashboard archive player missing src')
+    } else {
+      console.log('⚠ dashboard archive player skipped (no audioUrl / MinIO)')
+    }
+    const channelLink = dash.locator(`a[href="/c/${FIXTURE.artist}"]`).first()
+    if ((await channelLink.count()) > 0) {
+      await channelLink.click()
+      await dash.waitForURL(`**/c/${FIXTURE.artist}`, { timeout: 15_000 })
+      ok('dashboard opens channel from Your channel link')
     }
     await artistCtx.close()
   } catch (e) {

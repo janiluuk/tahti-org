@@ -132,11 +132,10 @@ export async function buildApp(opts: BuildOptions = {}) {
   })
 
   // Swagger UI with HTTP Basic Auth guard (ops-only)
-  const docsUser = process.env.DOCS_USER ?? 'tahti'
-  const docsPass = process.env.DOCS_PASS ?? 'changeme'
   await fastify.register(basicAuth, {
     validate(username, password, _req, _reply, done) {
-      if (username === docsUser && password === docsPass) return done()
+      if (username === config.swagger.docsUser && password === config.swagger.docsPass)
+        return done()
       return done(new Error('Unauthorized'))
     },
     authenticate: { realm: 'Tahti API docs' },

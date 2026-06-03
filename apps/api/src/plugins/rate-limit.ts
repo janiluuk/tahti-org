@@ -7,8 +7,8 @@
 
 import fp from 'fastify-plugin'
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
-import { createClient } from 'redis'
 import { config } from '../config.js'
+import { getRedisClient } from '../lib/redis.js'
 
 interface RateLimitConfig {
   max: number
@@ -26,22 +26,19 @@ function authLimit(): RateLimitConfig {
   return { max: config.rateLimit.authMaxPerMin, windowSec: 60 }
 }
 
-let redis: ReturnType<typeof createClient> | null = null
-
-async function getRedis() {
-  if (!redis) {
-    redis = createClient({ url: config.redisUrl })
-    await redis.connect()
-  }
-  return redis
-}
-
 async function checkLimit(
   ip: string,
   route: string,
   limit: RateLimitConfig,
 ): Promise<{ ok: boolean; remaining: number; resetSec: number }> {
-  const rd = await getRedis()
+  const rd = await getRedisClient()
+  if (!rd) {
+    return {
+      ok: config.rateLimit.redisFailOpen,
+      remaining: config.rateLimit.redisFailOpen ? 999 : 0,
+      resetSec: limit.windowSec,
+    }
+  }
   const key = `rl:${limit.keyPrefix ?? 'api'}:${ip}:${Math.floor(Date.now() / (limit.windowSec * 1000))}`
 
   const count = await rd.incr(key)

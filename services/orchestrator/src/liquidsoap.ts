@@ -11,7 +11,7 @@ const execAsync = promisify(exec)
 
 const LIQUIDSOAP_IMAGE = process.env.LIQUIDSOAP_IMAGE ?? 'savonet/liquidsoap:v2.2.5'
 const TEMPLATE_PATH = process.env.LIQUIDSOAP_TEMPLATE ?? '/srv/liquidsoap-channel.liq.template'
-const HLS_VOLUME = process.env.HLS_VOLUME ?? 'tahti_hls_shared'
+const HLS_VOLUME = process.env.HLS_VOLUME ?? 'tahti_stack_hls'
 const RECORDINGS_VOLUME = process.env.RECORDINGS_VOLUME ?? 'tahti_recordings_shared'
 const API_URL = process.env.API_URL ?? 'http://api:3001'
 const ICECAST_BASE_URL = (process.env.ICECAST_BASE_URL ?? 'http://icecast:8000').replace(/\/$/, '')

@@ -33,6 +33,18 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'M20: free-tier live cap tick every minute',
   },
   {
+    name: 'channel-watchdog',
+    pattern: '* * * * *',
+    jobId: 'channel-watchdog-cron',
+    description: 'STREAM-005: restart Liquidsoap when HLS segments are stale',
+  },
+  {
+    name: 'hls-minio-sync',
+    pattern: '* * * * *',
+    jobId: 'hls-minio-sync-cron',
+    description: 'STREAM-001: mirror live HLS segments from volume to MinIO hls-live bucket',
+  },
+  {
     name: 'weekly-broadcast-reset',
     pattern: '0 0 * * 1',
     jobId: 'weekly-broadcast-reset-cron',
