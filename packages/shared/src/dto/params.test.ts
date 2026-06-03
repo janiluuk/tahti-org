@@ -3,6 +3,7 @@
 
 import { describe, it, expect } from 'vitest'
 import {
+  ArchiveVersionParamsSchema,
   ChannelArchiveParamsSchema,
   ReleaseIdTrackIdParamsSchema,
   ReleaseTrackDownloadParamsSchema,
@@ -51,5 +52,11 @@ describe('route param schemas', () => {
     expect(parseRouteParams(SmartLinkSlugParamSchema, { smartLinkSlug: 'ep-2026' })).toEqual({
       smartLinkSlug: 'ep-2026',
     })
+  })
+
+  it('parses archive version params', () => {
+    expect(
+      parseRouteParams(ArchiveVersionParamsSchema, { id: 'item1', versionId: 'ver1' }),
+    ).toEqual({ id: 'item1', versionId: 'ver1' })
   })
 })

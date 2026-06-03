@@ -177,6 +177,25 @@ export const GrantPreviewResponseSchema = z.object({
   artists: z.array(GrantPreviewArtistSchema),
 })
 
+export const ArtistFollowResponseSchema = z.object({
+  following: z.boolean(),
+})
+
+export const TransparencyMonthlyRollupSchema = z.object({
+  yearMonth: z.string(),
+  byCategory: z.record(z.unknown()),
+  surplus: z.string(),
+  finalizedAt: z.string().datetime().nullable(),
+})
+
+export const TransparencyMonthlyRollupListSchema = z.array(TransparencyMonthlyRollupSchema)
+
+export const TransparencyCategoriesResponseSchema = z.object({
+  revenue: z.array(z.object({ code: z.string(), label: z.string() })),
+  costs: z.array(z.object({ code: z.string(), label: z.string() })),
+  disbursements: z.array(z.object({ code: z.string(), label: z.string() })),
+})
+
 export const BroadcastUsageResponseSchema = z.object({
   tier: z.string(),
   unlimited: z.boolean(),

@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { ChannelGalleryPatchSchema, ChannelTextLayerPatchSchema } from '@tahti/shared'
+import {
+  ChannelGalleryPatchSchema,
+  ChannelTextLayerPatchSchema,
+  IdParamSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import {
   archiveItemMetadataSelect,
@@ -32,7 +37,9 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/api/me/archive/:id', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const { id } = request.params as { id: string }
+    const routeParams = parseRouteParams(IdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { id } = routeParams
 
     const item = await fastify.prisma.archiveItem.findFirst({
       where: { id, channel: { userId: user.id } },
@@ -44,7 +51,9 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.patch('/api/me/archive/:id', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const { id } = request.params as { id: string }
+    const routeParams = parseRouteParams(IdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { id } = routeParams
 
     const item = await fastify.prisma.archiveItem.findFirst({
       where: { id, channel: { userId: user.id } },

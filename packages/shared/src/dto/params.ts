@@ -43,6 +43,35 @@ export const ReleaseTrackVersionParamsSchema = ReleaseIdTrackIdParamsSchema.exte
   versionId: IdParamSchema.shape.id,
 })
 
+export const ArchiveVersionParamsSchema = z.object({
+  id: IdParamSchema.shape.id,
+  versionId: IdParamSchema.shape.id,
+})
+
+export const ArchiveItemIdParamSchema = z.object({
+  itemId: IdParamSchema.shape.id,
+})
+
+export const HandleParamSchema = z.object({
+  handle: UsernameParamSchema.shape.username,
+})
+
+export const FingerprintHashParamSchema = z.object({
+  fingerprintHash: z.string().min(16).max(64),
+})
+
+export const TokenParamSchema = z.object({
+  token: z.string().min(16).max(128),
+})
+
+export const DraftIdParamSchema = z.object({
+  draftId: IdParamSchema.shape.id,
+})
+
+export const ChannelIdParamSchema = z.object({
+  channelId: IdParamSchema.shape.id,
+})
+
 export function parseRouteParams<T extends z.ZodTypeAny>(
   schema: T,
   params: unknown,

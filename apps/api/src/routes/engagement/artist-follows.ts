@@ -2,13 +2,24 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { UsernameParamSchema, parseRouteParams } from '@tahti/shared'
+import {
+  ArtistFollowResponseSchema,
+  UsernameParamSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/v1/artists/:username/follow',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['engagement'],
+        response: openApiResponse(ArtistFollowResponseSchema, 'ArtistFollow'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(UsernameParamSchema, request.params)
@@ -38,7 +49,13 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete(
     '/api/v1/artists/:username/follow',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['engagement'],
+        response: openApiResponse(ArtistFollowResponseSchema, 'ArtistFollow'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(UsernameParamSchema, request.params)
@@ -61,7 +78,13 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get(
     '/api/v1/artists/:username/follow',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['engagement'],
+        response: openApiResponse(ArtistFollowResponseSchema, 'ArtistFollow'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(UsernameParamSchema, request.params)

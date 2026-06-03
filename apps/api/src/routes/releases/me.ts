@@ -9,7 +9,13 @@ import {
   catalogPatchFromBody,
   releaseCatalogSelect,
 } from '../../lib/release-catalog.js'
-import { computeReleaseChecklist, CreateReleaseSchema, PatchReleaseSchema } from '@tahti/shared'
+import {
+  IdParamSchema,
+  computeReleaseChecklist,
+  CreateReleaseSchema,
+  PatchReleaseSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 
 function slugify(title: string): string {
@@ -119,7 +125,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.patch('/api/me/releases/:id', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const { id } = request.params as { id: string }
+    const routeParams = parseRouteParams(IdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { id } = routeParams
     const parsed = PatchReleaseSchema.safeParse(request.body)
     if (!parsed.success) return zodError(reply, parsed.error)
     const body = parsed.data
@@ -165,7 +173,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const release = await fastify.prisma.release.findFirst({
         where: { id, userId: user.id },
@@ -183,7 +193,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const existing = await fastify.prisma.release.findFirst({
         where: { id, userId: user.id },
@@ -211,7 +223,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const release = await fastify.prisma.release.findFirst({
         where: { id, userId: user.id },

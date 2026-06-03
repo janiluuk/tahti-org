@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { ChatAnnouncementSchema, ChatBanSchema } from '@tahti/shared'
+import {
+  ChatAnnouncementSchema,
+  ChatBanSchema,
+  FingerprintHashParamSchema,
+  IdParamSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { recordMentions } from '../../lib/mentions.js'
 
@@ -62,7 +68,9 @@ const meChat: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
@@ -113,7 +121,9 @@ const meChat: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { fingerprintHash } = request.params as { fingerprintHash: string }
+      const routeParams = parseRouteParams(FingerprintHashParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { fingerprintHash } = routeParams
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },

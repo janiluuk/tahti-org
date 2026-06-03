@@ -4,7 +4,11 @@
 import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
 import { buildMixcloudAuthorizeUrl, exchangeMixcloudCode } from '@tahti/mixcloud'
-import { MixcloudOAuthCallbackQuerySchema } from '@tahti/shared'
+import {
+  ArchiveItemIdParamSchema,
+  MixcloudOAuthCallbackQuerySchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { mediaQueue } from '../../lib/queue.js'
@@ -102,7 +106,9 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { itemId } = request.params as { itemId: string }
+      const routeParams = parseRouteParams(ArchiveItemIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { itemId } = routeParams
 
       const me = await fastify.prisma.user.findUnique({
         where: { id: user.id },
@@ -148,7 +154,9 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { itemId } = request.params as { itemId: string }
+      const routeParams = parseRouteParams(ArchiveItemIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { itemId } = routeParams
 
       const item = await fastify.prisma.archiveItem.findFirst({
         where: { id: itemId, channel: { userId: user.id } },

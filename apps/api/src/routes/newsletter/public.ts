@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
-import { NewsletterSubscribeSchema } from '@tahti/shared'
+import { NewsletterSubscribeSchema, TokenParamSchema, parseRouteParams } from '@tahti/shared'
 import { sendMail } from '../../lib/email.js'
 import { config } from '../../config.js'
 
@@ -66,7 +66,9 @@ const newsletterPublicRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/newsletter/confirm/:token — double opt-in confirmation
   fastify.get('/api/newsletter/confirm/:token', async (request, reply) => {
-    const { token } = request.params as { token: string }
+    const routeParams = parseRouteParams(TokenParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { token } = routeParams
 
     const sub = await fastify.prisma.newsletterSubscriber.findUnique({
       where: { confirmToken: token },
@@ -84,7 +86,9 @@ const newsletterPublicRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/newsletter/unsubscribe/:token — one-click unsubscribe
   fastify.get('/api/newsletter/unsubscribe/:token', async (request, reply) => {
-    const { token } = request.params as { token: string }
+    const routeParams = parseRouteParams(TokenParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { token } = routeParams
 
     const sub = await fastify.prisma.newsletterSubscriber.findUnique({
       where: { unsubToken: token },
