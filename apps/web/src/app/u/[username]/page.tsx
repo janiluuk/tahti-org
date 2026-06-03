@@ -58,13 +58,21 @@ interface ProfileResponse {
     tracks: Array<{ position: number; title: string; durationSec: number | null }>
   }>
   links: { channel: string | null; subscribe: string }
+  collections?: Array<{
+    slug: string
+    name: string
+    type: string
+    description: string | null
+    itemCount: number
+    url: string
+  }>
 }
 
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
   const data = await fetchProfile(params.username)
   if (!data) notFound()
 
-  const { artist, channel, releases, links } = data
+  const { artist, channel, releases, links, collections = [] } = data
 
   return (
     <div style={{ maxWidth: 720, margin: '3rem auto', padding: '0 1rem', fontFamily: 'system-ui' }}>
@@ -93,6 +101,30 @@ export default async function ArtistProfilePage({ params }: { params: { username
           )}
         </div>
       </header>
+
+      {collections.length > 0 && (
+        <section style={{ marginBottom: '2.5rem' }}>
+          <h2 style={{ fontSize: '1.25rem' }}>Collections</h2>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {collections.map((c) => (
+              <li key={c.slug} style={{ padding: '0.75rem 0', borderBottom: '1px solid #eee' }}>
+                <Link href={c.url} style={{ fontWeight: 600, color: '#2563eb' }}>
+                  {c.name}
+                </Link>
+                <span style={{ color: '#888', fontSize: '0.85rem' }}>
+                  {' '}
+                  · {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
+                </span>
+                {c.description && (
+                  <p style={{ color: '#555', margin: '0.35rem 0 0', fontSize: '0.9rem' }}>
+                    {c.description}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section>
         <h2 style={{ fontSize: '1.25rem' }}>Releases</h2>

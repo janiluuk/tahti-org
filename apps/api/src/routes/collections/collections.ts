@@ -4,8 +4,34 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
+import { publicMediaUrl } from '../../lib/public-media-url.js'
 
 const VALID_TYPES = ['MIX_SERIES', 'ALBUM', 'CUSTOM'] as const
+
+const collectionItemInclude = {
+  archiveItem: {
+    select: {
+      id: true,
+      title: true,
+      durationSec: true,
+      mp3Key: true,
+      bannerUrl: true,
+      description: true,
+      createdAt: true,
+    },
+  },
+  release: {
+    select: {
+      id: true,
+      title: true,
+      type: true,
+      smartLinkSlug: true,
+      releaseDate: true,
+      artworkUrl: true,
+      description: true,
+    },
+  },
+} as const
 
 // M23 — Collections: named groupings of archive items / releases
 const collectionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -13,10 +39,13 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/api/me/collections', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
+    const expand = (request.query as { expand?: string }).expand === 'items'
     const cols = await fastify.prisma.collection.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
-      include: { _count: { select: { items: true } } },
+      include: expand
+        ? { items: { orderBy: { position: 'asc' }, include: collectionItemInclude } }
+        : { _count: { select: { items: true } } },
     })
     return reply.send(cols)
   })
@@ -125,6 +154,27 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!body.archiveItemId && !body.releaseId) {
         return reply.status(400).send({ error: 'archiveItemId or releaseId is required' })
       }
+      if (body.archiveItemId && body.releaseId) {
+        return reply.status(400).send({ error: 'Provide archiveItemId or releaseId, not both' })
+      }
+
+      if (body.archiveItemId) {
+        const archive = await fastify.prisma.archiveItem.findFirst({
+          where: {
+            id: body.archiveItemId,
+            status: 'READY',
+            channel: { userId: user.id },
+          },
+        })
+        if (!archive) return reply.status(400).send({ error: 'Archive item not found' })
+      }
+
+      if (body.releaseId) {
+        const release = await fastify.prisma.release.findFirst({
+          where: { id: body.releaseId, userId: user.id, state: 'PUBLISHED' },
+        })
+        if (!release) return reply.status(400).send({ error: 'Published release not found' })
+      }
 
       const position = body.position ?? col._count.items + 1
 
@@ -177,16 +227,18 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         user: { select: { username: true, displayName: true } },
         items: {
           orderBy: { position: 'asc' },
-          include: {
-            archiveItem: {
-              select: { id: true, title: true, durationSec: true, mp3Key: true, bannerUrl: true },
-            },
-          },
+          include: collectionItemInclude,
         },
       },
     })
     if (!col) return reply.status(404).send({ error: 'Collection not found' })
-    return reply.send(col)
+    return reply.send({
+      ...col,
+      links: {
+        page: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
+        rss: `${config.apiUrl}/api/v1/collections/${col.slug}/rss.xml`,
+      },
+    })
   })
 
   // GET /api/v1/collections/:slug/rss.xml — collection RSS feed
@@ -199,18 +251,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         user: { select: { username: true, displayName: true } },
         items: {
           orderBy: { position: 'asc' },
-          include: {
-            archiveItem: {
-              select: {
-                id: true,
-                title: true,
-                description: true,
-                durationSec: true,
-                mp3Key: true,
-                createdAt: true,
-              },
-            },
-          },
+          include: collectionItemInclude,
         },
       },
     })
@@ -219,17 +260,8 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     const xml = buildRss({
       title: col.name,
       description: col.description ?? `${col.name} by ${col.user.displayName}`,
-      link: `${config.appUrl}/u/${col.user.username}`,
-      items: col.items
-        .filter((i) => i.archiveItem)
-        .map((i) => ({
-          title: i.archiveItem!.title,
-          description: i.archiveItem!.description ?? '',
-          pubDate: i.archiveItem!.createdAt,
-          duration: i.archiveItem!.durationSec ?? 0,
-          enclosureKey: i.archiveItem!.mp3Key ?? null,
-          guid: `${config.appUrl}/archive/${i.archiveItem!.id}`,
-        })),
+      link: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
+      items: collectionRssItems(col.items, col.user.username),
     })
 
     return reply.header('Content-Type', 'application/rss+xml; charset=utf-8').send(xml)
@@ -270,8 +302,8 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         description: i.description ?? '',
         pubDate: i.createdAt,
         duration: i.durationSec ?? 0,
-        enclosureKey: i.mp3Key ?? null,
-        guid: `${config.appUrl}/archive/${i.id}`,
+        enclosureUrl: publicMediaUrl(i.mp3Key),
+        guid: `${config.appUrl}/c/${channel.slug}#${i.id}`,
       })),
     })
 
@@ -284,8 +316,51 @@ interface RssItem {
   description: string
   pubDate: Date
   duration: number
-  enclosureKey: string | null
+  enclosureUrl: string | null
   guid: string
+}
+
+type CollectionItemRow = {
+  archiveItem: {
+    id: string
+    title: string
+    description: string | null
+    durationSec: number | null
+    mp3Key: string | null
+    createdAt: Date
+  } | null
+  release: {
+    title: string
+    description: string | null
+    smartLinkSlug: string
+    releaseDate: Date
+  } | null
+}
+
+function collectionRssItems(items: CollectionItemRow[], username: string): RssItem[] {
+  const out: RssItem[] = []
+  for (const i of items) {
+    if (i.archiveItem) {
+      out.push({
+        title: i.archiveItem.title,
+        description: i.archiveItem.description ?? '',
+        pubDate: i.archiveItem.createdAt,
+        duration: i.archiveItem.durationSec ?? 0,
+        enclosureUrl: publicMediaUrl(i.archiveItem.mp3Key),
+        guid: `${config.appUrl}/u/${username}/c/item/${i.archiveItem.id}`,
+      })
+    } else if (i.release) {
+      out.push({
+        title: i.release.title,
+        description: i.release.description ?? '',
+        pubDate: i.release.releaseDate,
+        duration: 0,
+        enclosureUrl: null,
+        guid: `${config.appUrl}/r/${i.release.smartLinkSlug}`,
+      })
+    }
+  }
+  return out
 }
 
 function buildRss(opts: {
@@ -296,8 +371,8 @@ function buildRss(opts: {
 }): string {
   const items = opts.items
     .map((i) => {
-      const enclosure = i.enclosureKey
-        ? `<enclosure url="${escXml(i.enclosureKey)}" type="audio/mpeg" length="0"/>`
+      const enclosure = i.enclosureUrl
+        ? `<enclosure url="${escXml(i.enclosureUrl)}" type="audio/mpeg" length="0"/>`
         : ''
       const mins = Math.floor(i.duration / 60)
       const secs = i.duration % 60

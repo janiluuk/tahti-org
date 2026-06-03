@@ -662,7 +662,8 @@ model Release {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
-  tracks ReleaseTrack[]
+  tracks           ReleaseTrack[]
+  collectionItems  CollectionItem[]
 
   @@index([userId, releaseDate])
   @@index([userId, state])
@@ -864,6 +865,7 @@ model CollectionItem {
   archiveItemId String?
   archiveItem   ArchiveItem? @relation(fields: [archiveItemId], references: [id], onDelete: SetNull)
   releaseId     String?
+  release       Release?    @relation(fields: [releaseId], references: [id], onDelete: SetNull)
   position      Int
   createdAt     DateTime    @default(now())
 

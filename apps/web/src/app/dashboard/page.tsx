@@ -9,6 +9,7 @@ import RtmpTargetsPanel from './rtmp-targets'
 import AnnouncementsPanel from './announcements-panel'
 import FanSubscriptionsPanel from './fan-subscriptions'
 import ReleasesPanel from './releases-panel'
+import CollectionsPanel from './collections-panel'
 import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
@@ -234,6 +235,34 @@ export default async function DashboardPage() {
     }
   }
 
+  let collections: Array<{
+    id: string
+    slug: string
+    name: string
+    type: string
+    isPublic: boolean
+    _count?: { items: number }
+    items?: Array<{
+      id: string
+      position: number
+      archiveItem: { id: string; title: string } | null
+      release: { id: string; title: string } | null
+    }>
+  }> = []
+  try {
+    const res = await fetch(`${apiUrl}/api/me/collections?expand=items`, {
+      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+      cache: 'no-store',
+    })
+    if (res.ok) collections = (await res.json()) as typeof collections
+  } catch {
+    // ignore
+  }
+
+  const publishedReleases = releases
+    .filter((r) => r.state === 'PUBLISHED')
+    .map((r) => ({ id: r.id, title: r.title }))
+
   return (
     <div style={{ maxWidth: 960, margin: '2rem auto', padding: '0 1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -316,6 +345,15 @@ export default async function DashboardPage() {
       )}
 
       {user.channel && <ReleasesPanel initial={releases} username={user.username} />}
+
+      {user.channel && (
+        <CollectionsPanel
+          initial={collections}
+          username={user.username}
+          archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
+          publishedReleases={publishedReleases}
+        />
+      )}
 
       {user.channel && (
         <section

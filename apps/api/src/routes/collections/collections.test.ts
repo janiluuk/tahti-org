@@ -88,6 +88,50 @@ describe('M23 — collections and RSS', () => {
     expect(rss.body).toContain('<rss')
     expect(rss.body).toContain('Sunset Mix')
     expect(rss.body).toContain('<itunes:duration>')
+    expect(rss.body).toContain('http://localhost:9000/tahti/mp3/')
+  })
+
+  it('adds a published release to a collection', async () => {
+    const createRel = await app.inject({
+      method: 'POST',
+      url: '/api/me/releases',
+      headers: { cookie },
+      payload: {
+        title: 'Collection EP',
+        type: 'EP',
+        releaseDate: '2026-04-01',
+        tracks: [{ title: 'One', durationSec: 200 }],
+      },
+    })
+    expect(createRel.statusCode).toBe(201)
+    const releaseId = createRel.json().id
+    await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${releaseId}`,
+      headers: { cookie },
+      payload: { state: 'PUBLISHED', smartLinkSlug: 'collection-ep-test' },
+    })
+
+    const relSlug = `${username}-with-release`
+    await app.inject({
+      method: 'POST',
+      url: '/api/me/collections',
+      headers: { cookie },
+      payload: { name: 'With Release', slug: relSlug },
+    })
+    const add = await app.inject({
+      method: 'POST',
+      url: `/api/me/collections/${relSlug}/items`,
+      headers: { cookie },
+      payload: { releaseId },
+    })
+    expect(add.statusCode).toBe(201)
+
+    const pub = await app.inject({
+      method: 'GET',
+      url: `/api/v1/collections/${relSlug}`,
+    })
+    expect(pub.json().items[0].release.title).toBe('Collection EP')
   })
 
   it('hides private collections from public API', async () => {
