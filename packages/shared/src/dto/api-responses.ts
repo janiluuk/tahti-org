@@ -57,6 +57,12 @@ export const DownloadGateStatsResponseSchema = z.object({
   daily: z.array(GateDailyPointSchema),
 })
 
+export const ChannelFunnelResponseSchema = z.object({
+  downloadGates: DownloadGateStatsResponseSchema,
+  live: ChannelLiveStatsResponseSchema,
+  egress: ChannelEgressResponseSchema,
+})
+
 export const ChannelScheduleViewSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable(),
   nextBroadcastNote: z.string().nullable(),
@@ -65,6 +71,7 @@ export const ChannelScheduleViewSchema = z.object({
 export const DownloadUrlResponseSchema = z.object({
   url: z.string().url(),
   counted: z.boolean(),
+  format: z.string().optional(),
 })
 
 export const DownloadGateStatusSchema = z.object({
@@ -170,6 +177,171 @@ export const GrantPreviewResponseSchema = z.object({
   unallocatedCents: z.number().int(),
   artists: z.array(GrantPreviewArtistSchema),
 })
+
+export const ArtistFollowResponseSchema = z.object({
+  following: z.boolean(),
+})
+
+export const TransparencyMonthlyRollupSchema = z.object({
+  yearMonth: z.string(),
+  byCategory: z.record(z.unknown()),
+  surplus: z.string(),
+  finalizedAt: z.string().datetime().nullable(),
+})
+
+export const TransparencyMonthlyRollupListSchema = z.array(TransparencyMonthlyRollupSchema)
+
+export const TransparencyCategoriesResponseSchema = z.object({
+  revenue: z.array(z.object({ code: z.string(), label: z.string() })),
+  costs: z.array(z.object({ code: z.string(), label: z.string() })),
+  disbursements: z.array(z.object({ code: z.string(), label: z.string() })),
+})
+
+export const ArchiveItemViewSchema = z
+  .object({
+    id: z.string(),
+    title: z.string(),
+    status: z.string(),
+    effectiveBpm: z.number().nullable().optional(),
+    effectiveKey: z.string().nullable().optional(),
+  })
+  .passthrough()
+
+export const ArchiveItemListSchema = z.array(ArchiveItemViewSchema)
+
+/** Public channel archive list (includes presigned audioUrl and full metadata). */
+export const ChannelArchiveItemsResponseSchema = z.array(z.record(z.string(), z.unknown()))
+
+export const PublicProfileArtistSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  bio: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  socialLinks: z.unknown(),
+  tipJarUrl: z.string().nullable(),
+  tier: z.string(),
+})
+
+export const PublicProfileViewSchema = z.object({
+  artist: PublicProfileArtistSchema,
+  channel: z
+    .object({
+      slug: z.string(),
+      state: z.string(),
+    })
+    .nullable(),
+  releases: z.array(z.record(z.string(), z.unknown())),
+  fanTiers: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      amountCents: z.number().int(),
+    }),
+  ),
+  collections: z.array(
+    z.object({
+      slug: z.string(),
+      name: z.string(),
+      type: z.string(),
+      description: z.string().nullable(),
+      coverUrl: z.string().nullable(),
+      isFeatured: z.boolean(),
+      itemCount: z.number().int(),
+      url: z.string(),
+    }),
+  ),
+  links: z.object({
+    channel: z.string().nullable(),
+    subscribe: z.string(),
+  }),
+})
+
+export const SmartLinkViewSchema = z.object({
+  release: z.record(z.string(), z.unknown()),
+  artist: z.object({
+    username: z.string(),
+    displayName: z.string(),
+    avatarUrl: z.string().nullable(),
+  }),
+  featuredCollections: z.array(z.record(z.string(), z.unknown())),
+  profileUrl: z.string(),
+  releaseUrl: z.string(),
+  targets: z.record(z.string()),
+  embedUrl: z.string(),
+})
+
+export const FanTierPublicSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  amountCents: z.number().int(),
+  description: z.string().nullable(),
+  perks: z.array(z.string()),
+})
+
+export const FanTiersPublicResponseSchema = z.object({
+  artist: z.object({
+    id: z.string(),
+    displayName: z.string(),
+    username: z.string(),
+    bio: z.string().nullable(),
+    avatarUrl: z.string().nullable(),
+  }),
+  tiers: z.array(FanTierPublicSchema),
+  paymentsReady: z.boolean(),
+})
+
+export const GovernanceMemberViewSchema = z.object({
+  memberNumber: z.number().int().nullable(),
+  displayName: z.string(),
+  username: z.string(),
+  memberSince: z.coerce.date().nullable(),
+  isBoard: z.boolean(),
+  channelSlug: z.string().nullable(),
+})
+
+export const GovernanceMemberListSchema = z.array(GovernanceMemberViewSchema)
+
+export const MotionVoteTallySchema = z.object({
+  YES: z.number().int(),
+  NO: z.number().int(),
+  ABSTAIN: z.number().int(),
+})
+
+export const MotionSummarySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  state: z.string(),
+  advisory: z.boolean(),
+  openAt: z.coerce.date(),
+  closeAt: z.coerce.date(),
+  proposer: z.string(),
+  totalVotes: z.number().int(),
+  youVoted: z.boolean(),
+  yourChoice: z.string().nullable(),
+})
+
+export const MotionListSchema = z.array(MotionSummarySchema)
+
+export const MotionDetailSchema = MotionSummarySchema.extend({
+  description: z.string(),
+  tally: MotionVoteTallySchema.optional(),
+})
+
+export const CollectionPublicViewSchema = z
+  .object({
+    slug: z.string(),
+    name: z.string(),
+    isPublic: z.boolean(),
+    user: z.object({
+      username: z.string(),
+      displayName: z.string(),
+    }),
+    links: z.object({
+      page: z.string(),
+      rss: z.string(),
+    }),
+  })
+  .passthrough()
 
 export const BroadcastUsageResponseSchema = z.object({
   tier: z.string(),

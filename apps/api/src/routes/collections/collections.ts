@@ -4,11 +4,16 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   AddCollectionItemSchema,
+  ChannelArchiveParamsSchema,
   CollectionListQuerySchema,
   CreateCollectionSchema,
   PatchCollectionSchema,
   ReorderCollectionSchema,
+  CollectionPublicViewSchema,
+  SlugParamSchema,
   archivePlaybackKey,
+  openApiResponse,
+  parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
@@ -117,7 +122,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
       const parsed = PatchCollectionSchema.safeParse(request.body)
       if (!parsed.success) return zodError(reply, parsed.error)
       const body = parsed.data
@@ -145,7 +152,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, userId: user.id },
@@ -162,7 +171,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
       const parsed = AddCollectionItemSchema.safeParse(request.body)
       if (!parsed.success) return zodError(reply, parsed.error)
       const body = parsed.data
@@ -217,7 +228,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
       const parsed = ReorderCollectionSchema.safeParse(request.body)
       if (!parsed.success) return zodError(reply, parsed.error)
       const itemIds = parsed.data.itemIds
@@ -264,7 +277,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { slug, itemId } = request.params as { slug: string; itemId: string }
+      const routeParams = parseRouteParams(ChannelArchiveParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug, itemId } = routeParams
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, userId: user.id },
@@ -280,32 +295,46 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
   // ── Public endpoints ────────────────────────────────────────────────────
 
-  fastify.get('/api/v1/collections/:slug', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+  fastify.get(
+    '/api/v1/collections/:slug',
+    {
+      schema: {
+        tags: ['releases'],
+        description: 'M23: public collection page payload',
+        response: openApiResponse(CollectionPublicViewSchema, 'CollectionPublic'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
 
-    const col = await fastify.prisma.collection.findFirst({
-      where: { slug, isPublic: true },
-      include: {
-        user: { select: { username: true, displayName: true } },
-        items: {
-          orderBy: { position: 'asc' },
-          include: collectionItemInclude,
+      const col = await fastify.prisma.collection.findFirst({
+        where: { slug, isPublic: true },
+        include: {
+          user: { select: { username: true, displayName: true } },
+          items: {
+            orderBy: { position: 'asc' },
+            include: collectionItemInclude,
+          },
         },
-      },
-    })
-    if (!col) return reply.status(404).send({ error: 'Collection not found' })
-    return reply.send({
-      ...col,
-      links: {
-        page: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
-        rss: `${config.apiUrl}/api/v1/collections/${col.slug}/rss.xml`,
-      },
-    })
-  })
+      })
+      if (!col) return reply.status(404).send({ error: 'Collection not found' })
+      return reply.send({
+        ...col,
+        links: {
+          page: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
+          rss: `${config.apiUrl}/api/v1/collections/${col.slug}/rss.xml`,
+        },
+      })
+    },
+  )
 
   // GET /api/v1/collections/:slug/rss.xml — collection RSS feed
   fastify.get('/api/v1/collections/:slug/rss.xml', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
 
     const col = await fastify.prisma.collection.findFirst({
       where: { slug, isPublic: true },
@@ -331,7 +360,9 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/v1/c/:slug/rss.xml — channel archive RSS feed
   fastify.get('/api/v1/c/:slug/rss.xml', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { ChatPublishProxySchema } from '@tahti/shared'
+import { ChatPublishProxySchema, SlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
 
 // Centrifugo proxy publish webhook.
@@ -10,7 +10,9 @@ import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
 // We check if the sender is banned and validate message length.
 const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post('/api/chat/:slug/message', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
     const parsed = ChatPublishProxySchema.safeParse(request.body)
     if (!parsed.success) {
       return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })

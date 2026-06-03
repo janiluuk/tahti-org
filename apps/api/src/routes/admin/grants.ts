@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { yearFromPathParams } from '@tahti/shared'
+import { GrantPreviewResponseSchema, openApiResponse, yearFromPathParams } from '@tahti/shared'
 import { buildGrantPreview, runAnnualGrantCalc } from '@tahti/ledger'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
@@ -17,6 +17,7 @@ const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['admin'],
         description: 'DIRECTOR-001: dry-run grant split with per-artist anomaly flags',
+        response: openApiResponse(GrantPreviewResponseSchema, 'GrantPreview'),
       },
     },
     async (request, reply) => {

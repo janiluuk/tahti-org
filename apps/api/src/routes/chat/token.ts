@@ -3,7 +3,7 @@
 
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
-import { ChatTokenSchema } from '@tahti/shared'
+import { ChatTokenSchema, SlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
@@ -28,7 +28,9 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
   // POST /api/chat/:slug/token { handle: string }
   // Issues a Centrifugo connection JWT. handle stored in localStorage by the client.
   fastify.post('/api/chat/:slug/token', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
     const parsed = ChatTokenSchema.safeParse(request.body)
     if (!parsed.success) {
       return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })

@@ -3,7 +3,12 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
-import { ReleaseArtworkCompleteSchema, ReleaseArtworkPrepareSchema } from '@tahti/shared'
+import {
+  IdParamSchema,
+  ReleaseArtworkCompleteSchema,
+  ReleaseArtworkPrepareSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
@@ -27,7 +32,9 @@ const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
       const release = await ownedRelease(user.id, id)
       if (!release) return reply.status(404).send({ error: 'Release not found' })
 
@@ -50,7 +57,9 @@ const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
       const release = await ownedRelease(user.id, id)
       if (!release) return reply.status(404).send({ error: 'Release not found' })
 

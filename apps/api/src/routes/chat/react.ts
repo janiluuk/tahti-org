@@ -3,7 +3,7 @@
 
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
-import { ChatReactSchema } from '@tahti/shared'
+import { ChatReactSchema, SlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { config } from '../../config.js'
 
 // In-memory rate limit: max 3 reactions per fingerprint per 5s window
@@ -33,7 +33,9 @@ pruneTimer.unref()
 const chatReactRoute: FastifyPluginAsync = async (fastify) => {
   // POST /api/chat/:slug/react { emoji: string }
   fastify.post('/api/chat/:slug/react', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
     const parsed = ChatReactSchema.safeParse(request.body)
     if (!parsed.success) {
       return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid emoji' })
@@ -76,7 +78,9 @@ const chatReactRoute: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/chat/:slug/reactions-token — anonymous Centrifugo token for reactions channel
   fastify.get('/api/chat/:slug/reactions-token', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { MentionsEnabledSchema } from '@tahti/shared'
+import { HandleParamSchema, MentionsEnabledSchema, parseRouteParams } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 // M15 — artist mention preferences and mute management
@@ -34,7 +34,9 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { handle } = request.params as { handle: string }
+      const routeParams = parseRouteParams(HandleParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { handle } = routeParams
 
       const target = await fastify.prisma.user.findUnique({
         where: { username: handle },
@@ -58,7 +60,9 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { handle } = request.params as { handle: string }
+      const routeParams = parseRouteParams(HandleParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { handle } = routeParams
 
       const target = await fastify.prisma.user.findUnique({
         where: { username: handle },

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { SlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 
 // M17: board verifies venue listings before they appear in the public directory.
@@ -27,7 +28,9 @@ const adminVenueRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/admin/venues/:slug/verify',
     { preHandler: requireBoard },
     async (request, reply) => {
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
       const venue = await fastify.prisma.venue.findUnique({ where: { slug } })
       if (!venue) return reply.status(404).send({ error: 'Venue not found' })
 
@@ -43,7 +46,9 @@ const adminVenueRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/admin/venues/:slug/unverify',
     { preHandler: requireBoard },
     async (request, reply) => {
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
       const venue = await fastify.prisma.venue.findUnique({ where: { slug } })
       if (!venue) return reply.status(404).send({ error: 'Venue not found' })
 

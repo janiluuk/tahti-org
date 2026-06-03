@@ -2,7 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { TransparencyYearQuerySchema, yearFromPathParams } from '@tahti/shared'
+import {
+  TransparencyCategoriesResponseSchema,
+  TransparencyGrantReportSchema,
+  TransparencyMonthlyRollupListSchema,
+  TransparencyYearQuerySchema,
+  TransparencyYtdResponseSchema,
+  openApiResponse,
+  yearFromPathParams,
+} from '@tahti/shared'
 
 // Public, CORS-open transparency endpoints.
 // These expose the nonprofit's financial data per AGPL principle 6.
@@ -19,6 +27,10 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['transparency'],
         description: 'Monthly ledger rollups by category for a calendar year',
+        response: openApiResponse(
+          TransparencyMonthlyRollupListSchema,
+          'TransparencyMonthlyRollupList',
+        ),
       },
     },
     async (request, reply) => {
@@ -52,6 +64,7 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['transparency'],
         description: 'Ledger category codes and human-readable labels',
+        response: openApiResponse(TransparencyCategoriesResponseSchema, 'TransparencyCategories'),
       },
     },
     async (_request, reply) => {
@@ -84,6 +97,7 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['transparency'],
         description: 'M9: published artist grant disbursements for a year',
+        response: openApiResponse(TransparencyGrantReportSchema, 'TransparencyGrantReport'),
       },
     },
     async (request, reply) => {
@@ -120,6 +134,7 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['transparency'],
         description: 'Year-to-date running surplus and category totals',
+        response: openApiResponse(TransparencyYtdResponseSchema, 'TransparencyYtd'),
       },
     },
     async (_request, reply) => {

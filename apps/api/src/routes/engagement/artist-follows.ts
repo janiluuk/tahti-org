@@ -2,15 +2,29 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import {
+  ArtistFollowResponseSchema,
+  UsernameParamSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/api/v1/artists/:username/follow',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['engagement'],
+        response: openApiResponse(ArtistFollowResponseSchema, 'ArtistFollow'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { username } = request.params as { username: string }
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { username } = routeParams
 
       const artist = await fastify.prisma.user.findUnique({
         where: { username },
@@ -35,10 +49,18 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.delete(
     '/api/v1/artists/:username/follow',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['engagement'],
+        response: openApiResponse(ArtistFollowResponseSchema, 'ArtistFollow'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { username } = request.params as { username: string }
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { username } = routeParams
 
       const artist = await fastify.prisma.user.findUnique({
         where: { username },
@@ -56,10 +78,18 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get(
     '/api/v1/artists/:username/follow',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['engagement'],
+        response: openApiResponse(ArtistFollowResponseSchema, 'ArtistFollow'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { username } = request.params as { username: string }
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { username } = routeParams
 
       const artist = await fastify.prisma.user.findUnique({
         where: { username },

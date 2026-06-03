@@ -2,12 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { SlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { config } from '../../config.js'
 
 const chatPresenceRoute: FastifyPluginAsync = async (fastify) => {
   // GET /api/channels/:slug/presence — listener count from Centrifugo
   fastify.get('/api/channels/:slug/presence', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },

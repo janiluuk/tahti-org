@@ -175,7 +175,9 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
       const parsed = CreateVenueBroadcastSchema.safeParse(request.body)
       if (!parsed.success) return zodError(reply, parsed.error)
       const body = parsed.data

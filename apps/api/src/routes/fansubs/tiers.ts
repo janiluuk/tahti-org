@@ -2,47 +2,67 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { FanTierBodySchema, FanTierPatchSchema } from '@tahti/shared'
+import {
+  FanTierBodySchema,
+  FanTierPatchSchema,
+  FanTiersPublicResponseSchema,
+  IdParamSchema,
+  UsernameParamSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { stripeEnabled } from '../../lib/stripe.js'
 
 const fanTierRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/u/:username/tiers — public, active tiers for the subscribe page
-  fastify.get('/api/v1/u/:username/tiers', async (request, reply) => {
-    const { username } = request.params as { username: string }
-    const artist = await fastify.prisma.user.findUnique({
-      where: { username },
-      select: {
-        id: true,
-        displayName: true,
-        username: true,
-        bio: true,
-        avatarUrl: true,
-        stripeConnectChargesEnabled: true,
+  fastify.get(
+    '/api/v1/u/:username/tiers',
+    {
+      schema: {
+        tags: ['fansubs'],
+        description: 'M19: public fan subscription tiers',
+        response: openApiResponse(FanTiersPublicResponseSchema, 'FanTiersPublic'),
       },
-    })
-    if (!artist) return reply.status(404).send({ error: 'Artist not found' })
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { username } = routeParams
+      const artist = await fastify.prisma.user.findUnique({
+        where: { username },
+        select: {
+          id: true,
+          displayName: true,
+          username: true,
+          bio: true,
+          avatarUrl: true,
+          stripeConnectChargesEnabled: true,
+        },
+      })
+      if (!artist) return reply.status(404).send({ error: 'Artist not found' })
 
-    const tiers = await fastify.prisma.fanTier.findMany({
-      where: { artistUserId: artist.id, active: true },
-      orderBy: { position: 'asc' },
-      select: { id: true, name: true, amountCents: true, description: true, perks: true },
-    })
+      const tiers = await fastify.prisma.fanTier.findMany({
+        where: { artistUserId: artist.id, active: true },
+        orderBy: { position: 'asc' },
+        select: { id: true, name: true, amountCents: true, description: true, perks: true },
+      })
 
-    const paymentsReady = !stripeEnabled || artist.stripeConnectChargesEnabled
+      const paymentsReady = !stripeEnabled || artist.stripeConnectChargesEnabled
 
-    return reply.send({
-      artist: {
-        id: artist.id,
-        displayName: artist.displayName,
-        username: artist.username,
-        bio: artist.bio,
-        avatarUrl: artist.avatarUrl,
-      },
-      tiers,
-      paymentsReady,
-    })
-  })
+      return reply.send({
+        artist: {
+          id: artist.id,
+          displayName: artist.displayName,
+          username: artist.username,
+          bio: artist.bio,
+          avatarUrl: artist.avatarUrl,
+        },
+        tiers,
+        paymentsReady,
+      })
+    },
+  )
 
   // GET /api/me/fan-tiers — the signed-in artist's own tiers (incl. disabled)
   fastify.get('/api/me/fan-tiers', { preHandler: requireAuth }, async (request, reply) => {
@@ -81,7 +101,9 @@ const fanTierRoutes: FastifyPluginAsync = async (fastify) => {
   // PATCH /api/me/fan-tiers/:id — update or enable/disable a tier
   fastify.patch('/api/me/fan-tiers/:id', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const { id } = request.params as { id: string }
+    const routeParams = parseRouteParams(IdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { id } = routeParams
     const parsed = FanTierPatchSchema.safeParse(request.body)
     if (!parsed.success) {
       return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })

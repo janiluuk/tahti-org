@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { NewsletterDraftSchema, NewsletterSendSchema } from '@tahti/shared'
+import {
+  DraftIdParamSchema,
+  NewsletterDraftSchema,
+  NewsletterSendSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { mediaQueue } from '../../lib/queue.js'
 import { artistOffersFanNewsletter, fanOnlyNewsletterSubscriberIds } from '../../lib/fan-perks.js'
@@ -88,7 +93,9 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { draftId } = request.params as { draftId: string }
+      const routeParams = parseRouteParams(DraftIdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { draftId } = routeParams
       const parsed = NewsletterSendSchema.safeParse(request.body ?? {})
       if (!parsed.success) return zodError(reply, parsed.error)
       const body = parsed.data

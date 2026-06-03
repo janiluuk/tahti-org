@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { IdParamSchema, parseRouteParams } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { releaseCatalogSelect } from '../../lib/release-catalog.js'
 import { mediaQueue } from '../../lib/queue.js'
@@ -15,7 +16,9 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const release = await fastify.prisma.release.findFirst({
         where: { id, userId: user.id },
@@ -40,7 +43,9 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const release = await fastify.prisma.release.findFirst({
         where: { id, userId: user.id },

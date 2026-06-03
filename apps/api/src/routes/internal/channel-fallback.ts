@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { ChannelIdParamSchema, parseRouteParams } from '@tahti/shared'
 import { config } from '../../config.js'
 import { buildFallbackPlaybackRows, renderFallbackM3u } from '../../lib/fallback-playlist.js'
 
@@ -9,7 +10,9 @@ import { buildFallbackPlaybackRows, renderFallbackM3u } from '../../lib/fallback
 // Returns an extended M3U with HTTP URLs to archive playback files (MP3 or FLAC).
 const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get('/internal/channels/:channelId/fallback.m3u', async (request, reply) => {
-    const { channelId } = request.params as { channelId: string }
+    const routeParams = parseRouteParams(ChannelIdParamSchema, request.params)
+    if (!routeParams) return reply.status(401).send('invalid path')
+    const { channelId } = routeParams
 
     // Validate internal caller via shared secret header
     const auth = (request.headers['authorization'] as string | undefined) ?? ''

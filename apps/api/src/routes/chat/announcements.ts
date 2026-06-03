@@ -2,11 +2,14 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { SlugParamSchema, parseRouteParams } from '@tahti/shared'
 
 // Public: GET announcements for a channel
 const chatAnnouncementsRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/chat/:slug/announcements', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },

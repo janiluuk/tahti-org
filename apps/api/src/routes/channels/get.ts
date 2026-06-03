@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { SlugParamSchema, parseRouteParams } from '@tahti/shared'
+import {
+  PublicChannelViewSchema,
+  SlugParamSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { config } from '../../config.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
 
@@ -13,6 +18,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description: 'Public channel page payload (LISTENER-002 schedule + HLS when live)',
+        response: openApiResponse(PublicChannelViewSchema, 'PublicChannel'),
       },
     },
     async (request, reply) => {

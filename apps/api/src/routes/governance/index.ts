@@ -2,7 +2,17 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { CreateMotionSchema, PatchMotionSchema, VoteMotionSchema } from '@tahti/shared'
+import {
+  CreateMotionSchema,
+  GovernanceMemberListSchema,
+  IdParamSchema,
+  MotionDetailSchema,
+  MotionListSchema,
+  PatchMotionSchema,
+  VoteMotionSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireMember, requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 
@@ -20,7 +30,13 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/members — members-only directory (PRH register view)
   fastify.get(
     '/api/v1/governance/members',
-    { preHandler: requireMember },
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(GovernanceMemberListSchema, 'GovernanceMembers'),
+      },
+    },
     async (_request, reply) => {
       const members = await fastify.prisma.user.findMany({
         where: { isMember: true },
@@ -51,7 +67,13 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/motions — list motions (members-only)
   fastify.get(
     '/api/v1/governance/motions',
-    { preHandler: requireMember },
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionListSchema, 'MotionList'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const motions = await fastify.prisma.motion.findMany({
@@ -119,10 +141,18 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/motions/:id — detail; tallies revealed only on CLOSE
   fastify.get(
     '/api/v1/governance/motions/:id',
-    { preHandler: requireMember },
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionDetailSchema, 'MotionDetail'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const motion = await fastify.prisma.motion.findUnique({
         where: { id },
@@ -166,7 +196,9 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireBoard },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
       const parsed = PatchMotionSchema.safeParse(request.body)
       if (!parsed.success) {
         return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
@@ -217,7 +249,9 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireMember },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
       const parsed = VoteMotionSchema.safeParse(request.body)
       if (!parsed.success) {
         return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })

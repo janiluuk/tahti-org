@@ -150,11 +150,26 @@ flowchart LR
 | Chat lag / 500+ WS | `chat` | Worker nodes; `chat` replicas 3+ | Redis must be backplane (already on `db`) |
 | BullMQ `transcode-archive` depth > 50 | `worker-media` | Dedicated worker node, 4 CPU | `--queues=transcode-archive,record-live,fingerprint` only |
 | Mixcloud/Revelator backlog | `worker-dist` | Scale replicas 2+ on worker | IO-bound to external APIs |
-| PG connections > 80% max | `postgres` | **PgBouncer** on `db`; API → pooler | Do not scale API without pooler |
+| PG connections > 80% max | `postgres` | **PgBouncer** on `db`; API → pooler | Do not scale API without pooler (see below) |
 | MinIO disk > 70% | `minio` | `role=storage` bigger NVMe or 2nd storage node | Distributed erasure later |
 | Caddy egress > 500 Mbps | `caddy` + HLS | CDN origin = MinIO; edge thin | See `docs/cdn-strategy.md` |
 | RTMP disconnects under load | `rtmp-ingest` | Second ingest node (label `ingest`) | Host mode ports → one service per node |
 | Many simultaneous live channels | Liquidsoap pods | More worker RAM/CPU; orchestrator on manager | Orchestrator uses Docker socket |
+
+---
+
+## PgBouncer before API replicas (PLAT-003)
+
+Each `api` replica opens its own Prisma pool (`connection_limit` per process). Scaling `api` to 3+ replicas without a pooler multiplies Postgres backends and can hit `max_connections` on a single `postgres` task.
+
+**Target layout (Phase 3):**
+
+1. Add a `pgbouncer` service on the `db` node (transaction pooling, `default_pool_size` tuned to ~25–40).
+2. Point `DATABASE_URL` at `postgres://user:pass@pgbouncer:6432/tahti` for `api`, `worker-*`, and `chat` — not direct `postgres:5432`.
+3. Keep migrations and `prisma migrate` on a direct admin URL (session mode or one-off job), not through transaction pooling.
+4. Only then increase `tahti_api` replicas in `docker-stack.yml`.
+
+**Readiness check:** `SELECT count(*) FROM pg_stat_activity;` vs `max_connections` under load test with N API replicas. If connections ≈ N × pool size, PgBouncer is required before adding replicas.
 
 ---
 

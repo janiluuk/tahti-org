@@ -61,6 +61,8 @@ secrets:
   revelator_api_key:         { external: true }
   mixcloud_client_secret:    { external: true }
   smtp_password:             { external: true }
+  docs_user:                 { external: true }
+  docs_pass:                 { external: true }
 
 configs:
   caddyfile:    { file: ./Caddyfile }
@@ -217,6 +219,8 @@ services:
       REVELATOR_API_KEY_FILE: /run/secrets/revelator_api_key
       MIXCLOUD_CLIENT_SECRET_FILE: /run/secrets/mixcloud_client_secret
       SMTP_PASSWORD_FILE: /run/secrets/smtp_password
+      DOCS_USER_FILE: /run/secrets/docs_user
+      DOCS_PASS_FILE: /run/secrets/docs_pass
     secrets:
       - pg_password
       - session_secret
@@ -226,6 +230,8 @@ services:
       - revelator_api_key
       - mixcloud_client_secret
       - smtp_password
+      - docs_user
+      - docs_pass
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
       interval: 15s

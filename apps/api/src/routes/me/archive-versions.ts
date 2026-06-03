@@ -3,7 +3,13 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
-import { ArchiveVersionCompleteSchema, ArchiveVersionPrepareSchema } from '@tahti/shared'
+import {
+  ArchiveVersionCompleteSchema,
+  ArchiveVersionParamsSchema,
+  ArchiveVersionPrepareSchema,
+  IdParamSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
 import { enqueueVersionTranscode } from '../../lib/queue.js'
@@ -25,7 +31,9 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const item = await ownedItem(user.id, id)
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
@@ -60,7 +68,9 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
       const item = await ownedItem(user.id, id)
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
@@ -83,7 +93,9 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
       const item = await ownedItem(user.id, id)
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
@@ -127,7 +139,9 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id, versionId } = request.params as { id: string; versionId: string }
+      const routeParams = parseRouteParams(ArchiveVersionParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id, versionId } = routeParams
 
       const item = await ownedItem(user.id, id)
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })

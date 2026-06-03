@@ -2,9 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { MeReleaseTrackDownloadQuerySchema } from '@tahti/shared'
+import {
+  IdParamSchema,
+  MeReleaseTrackDownloadQuerySchema,
+  ReleaseTrackInputSchema,
+  ReleaseTrackParamsSchema,
+  ReleaseTrackUploadSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { nanoid } from 'nanoid'
-import { ReleaseTrackInputSchema, ReleaseTrackUploadSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
 import { mediaQueue } from '../../lib/queue.js'
@@ -19,7 +25,9 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id: releaseId } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const releaseId = routeParams.id
       const parsed = ReleaseTrackInputSchema.safeParse(request.body)
       if (!parsed.success) {
         return reply
@@ -59,7 +67,9 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id: releaseId, trackId } = request.params as { id: string; trackId: string }
+      const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id: releaseId, trackId } = routeParams
       const parsed = ReleaseTrackUploadSchema.safeParse(request.body ?? {})
       if (!parsed.success) {
         return reply
@@ -106,7 +116,9 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id: releaseId, trackId } = request.params as { id: string; trackId: string }
+      const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id: releaseId, trackId } = routeParams
 
       const release = await fastify.prisma.release.findFirst({
         where: { id: releaseId, userId: user.id },
@@ -136,7 +148,9 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id: releaseId, trackId } = request.params as { id: string; trackId: string }
+      const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id: releaseId, trackId } = routeParams
       const parsedQuery = MeReleaseTrackDownloadQuerySchema.safeParse(request.query)
       if (!parsedQuery.success) {
         return reply.status(400).send({

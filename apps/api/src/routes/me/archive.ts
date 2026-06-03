@@ -2,7 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { ChannelGalleryPatchSchema, ChannelTextLayerPatchSchema } from '@tahti/shared'
+import {
+  ChannelGalleryPatchSchema,
+  ChannelTextLayerPatchSchema,
+  ArchiveItemListSchema,
+  ArchiveItemViewSchema,
+  IdParamSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import {
   archiveItemMetadataSelect,
@@ -13,88 +21,124 @@ import { normalizeTracklist, recordTracklistMentions } from '../../lib/tracklist
 import type { TracklistEntry } from '@tahti/shared'
 
 const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/api/me/archive', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    })
-    if (!channel) return reply.send([])
+  fastify.get(
+    '/api/me/archive',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M22: list channel archive items with metadata',
+        response: openApiResponse(ArchiveItemListSchema, 'ArchiveItemList'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.send([])
 
-    const items = await fastify.prisma.archiveItem.findMany({
-      where: { channelId: channel.id },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-      select: archiveItemMetadataSelect,
-    })
-    return reply.send(items.map((i) => serializeArchiveItem(i)))
-  })
+      const items = await fastify.prisma.archiveItem.findMany({
+        where: { channelId: channel.id },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+        select: archiveItemMetadataSelect,
+      })
+      return reply.send(items.map((i) => serializeArchiveItem(i)))
+    },
+  )
 
-  fastify.get('/api/me/archive/:id', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const { id } = request.params as { id: string }
+  fastify.get(
+    '/api/me/archive/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ArchiveItemViewSchema, 'ArchiveItem'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
-    const item = await fastify.prisma.archiveItem.findFirst({
-      where: { id, channel: { userId: user.id } },
-      select: archiveItemMetadataSelect,
-    })
-    if (!item) return reply.status(404).send({ error: 'Archive item not found' })
-    return reply.send(serializeArchiveItem(item))
-  })
+      const item = await fastify.prisma.archiveItem.findFirst({
+        where: { id, channel: { userId: user.id } },
+        select: archiveItemMetadataSelect,
+      })
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      return reply.send(serializeArchiveItem(item))
+    },
+  )
 
-  fastify.patch('/api/me/archive/:id', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const { id } = request.params as { id: string }
+  fastify.patch(
+    '/api/me/archive/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M22: patch archive item metadata (ArchiveMetadataPatchSchema body)',
+        response: openApiResponse(ArchiveItemViewSchema, 'ArchiveItem'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
-    const item = await fastify.prisma.archiveItem.findFirst({
-      where: { id, channel: { userId: user.id } },
-      select: { id: true },
-    })
-    if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      const item = await fastify.prisma.archiveItem.findFirst({
+        where: { id, channel: { userId: user.id } },
+        select: { id: true },
+      })
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
-    const patch = metadataPatchFromBody(request.body)
-    if (!patch.ok) return reply.status(400).send({ error: patch.error })
+      const patch = metadataPatchFromBody(request.body)
+      if (!patch.ok) return reply.status(400).send({ error: patch.error })
 
-    if (patch.title !== undefined) {
-      const t = patch.title.trim()
-      if (!t) return reply.status(400).send({ error: 'title cannot be empty' })
-      patch.data.title = t.slice(0, 200)
-    }
-
-    if (patch.data.tracklist !== undefined && patch.data.tracklist !== null) {
-      try {
-        patch.data.tracklist = await normalizeTracklist(
-          fastify.prisma,
-          patch.data.tracklist as TracklistEntry[],
-        )
-      } catch (err) {
-        return reply
-          .status(400)
-          .send({ error: err instanceof Error ? err.message : 'Invalid tracklist' })
+      if (patch.title !== undefined) {
+        const t = patch.title.trim()
+        if (!t) return reply.status(400).send({ error: 'title cannot be empty' })
+        patch.data.title = t.slice(0, 200)
       }
-    }
 
-    const updated = await fastify.prisma.archiveItem.update({
-      where: { id },
-      data: patch.data,
-      select: archiveItemMetadataSelect,
-    })
-
-    if (patch.data.tracklist !== undefined && Array.isArray(updated.tracklist)) {
-      try {
-        await recordTracklistMentions(
-          fastify.prisma,
-          user.id,
-          updated.tracklist as TracklistEntry[],
-          id,
-        )
-      } catch (e) {
-        fastify.log.warn(e, 'tracklist mention record failed')
+      if (patch.data.tracklist !== undefined && patch.data.tracklist !== null) {
+        try {
+          patch.data.tracklist = await normalizeTracklist(
+            fastify.prisma,
+            patch.data.tracklist as TracklistEntry[],
+          )
+        } catch (err) {
+          return reply
+            .status(400)
+            .send({ error: err instanceof Error ? err.message : 'Invalid tracklist' })
+        }
       }
-    }
 
-    return reply.send(serializeArchiveItem(updated))
-  })
+      const updated = await fastify.prisma.archiveItem.update({
+        where: { id },
+        data: patch.data,
+        select: archiveItemMetadataSelect,
+      })
+
+      if (patch.data.tracklist !== undefined && Array.isArray(updated.tracklist)) {
+        try {
+          await recordTracklistMentions(
+            fastify.prisma,
+            user.id,
+            updated.tracklist as TracklistEntry[],
+            id,
+          )
+        } catch (e) {
+          fastify.log.warn(e, 'tracklist mention record failed')
+        }
+      }
+
+      return reply.send(serializeArchiveItem(updated))
+    },
+  )
 
   fastify.get('/api/me/channel/gallery', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!

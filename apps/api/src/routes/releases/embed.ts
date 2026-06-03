@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { OEmbedQuerySchema } from '@tahti/shared'
+import {
+  IdParamSchema,
+  OEmbedQuerySchema,
+  ReleaseTrackParamsSchema,
+  SlugParamSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { config } from '../../config.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
@@ -84,7 +90,9 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/v1/embed/r/:id — release embed metadata (lightweight, no auth)
   fastify.get('/api/v1/embed/r/:id', async (request, reply) => {
-    const { id } = request.params as { id: string }
+    const routeParams = parseRouteParams(IdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { id } = routeParams
 
     const release = await fastify.prisma.release.findFirst({
       where: { id, state: 'PUBLISHED' },
@@ -128,7 +136,9 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/v1/embed/c/:slug — channel embed metadata
   fastify.get('/api/v1/embed/c/:slug', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },
@@ -153,7 +163,9 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/v1/embed/r/:id/tracks/:trackId/play — short-lived stream URL for embed player
   fastify.get('/api/v1/embed/r/:id/tracks/:trackId/play', async (request, reply) => {
-    const { id, trackId } = request.params as { id: string; trackId: string }
+    const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { id, trackId } = routeParams
 
     const release = await fastify.prisma.release.findFirst({
       where: { id, state: 'PUBLISHED' },
