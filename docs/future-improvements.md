@@ -76,7 +76,7 @@ Last reviewed: 2026-06-03 (audit pass)
 ### M11 — Hardening (remaining)
 | P | Item |
 |---|---|
-| P1 | pgBackRest + MinIO offsite backup **runbooks** wired and tested (`ops/RUNBOOK.md`) |
+| ~~P1~~ | ~~pgBackRest + MinIO offsite backup **runbooks** wired and tested (`ops/RUNBOOK.md`)~~ — unified `scripts/backup.sh` + `install-crons.sh` |
 | P1 | Self-hosted **Upptime** pointing at `/api/v1/status` |
 | ~~P1~~ | ~~Stripe webhook failure metrics~~ — Prometheus counters on `/metrics` (done) |
 | ~~P2~~ | ~~hCaptcha on first chat message~~ — token join marks Redis; publish proxy requires verification (done) |

@@ -17,7 +17,8 @@ import type {
   ChannelTextLayerMode,
   TracklistEntry,
 } from '@tahti/shared'
-import { Badge, Heading, PageShell, Row, Text } from '@/components/ui'
+import { Heading, PageShell, Row, Text } from '@/components/ui'
+import { LiveBadge } from '@/components/ui/from-tahti-ui'
 
 interface ChannelResponse {
   slug: string
@@ -128,7 +129,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   @{channel.user.username}
                 </Text>
               </div>
-              {channel.state === 'LIVE' && <Badge variant="live">Live</Badge>}
+              {channel.state === 'LIVE' && <LiveBadge />}
             </Row>
             {channel.user.bio && <Text tone="secondary">{channel.user.bio}</Text>}
           </header>

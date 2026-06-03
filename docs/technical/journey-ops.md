@@ -153,7 +153,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Cron as Weekly cron (Sunday 05:00)
-    participant Script as restore-test.sh
+    participant Script as backup.sh restore-test
     participant S3 as UpCloud bucket
     participant TMP as Temp postgres container
     participant Log as /var/log/tahti-restore-test.log

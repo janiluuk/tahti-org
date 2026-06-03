@@ -22,6 +22,7 @@ import {
   processMembershipRenewalJob,
 } from './jobs/membership-lifecycle.js'
 import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
+import { WORKER_CRON_JOBS } from './cron-manifest.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -96,78 +97,16 @@ worker.on('failed', (job, err) => {
 async function registerCrons() {
   const queue = new Queue('media', { connection })
 
-  // Monthly ledger rollup: runs at 02:00 on the 2nd of every month
-  await queue.add(
-    'monthly-ledger-rollup',
-    {},
-    { repeat: { pattern: '0 2 2 * *' }, jobId: 'monthly-ledger-rollup-cron' },
-  )
-
-  // Annual grant calculation: 03:00 on March 1 for the prior fiscal year
-  await queue.add(
-    'annual-grant-calc',
-    {},
-    { repeat: { pattern: '0 3 1 3 *' }, jobId: 'annual-grant-calc-cron' },
-  )
-
-  // M20: increment free-tier live seconds every minute; disconnect at cap
-  await queue.add(
-    'broadcast-cap-tick',
-    {},
-    { repeat: { pattern: '* * * * *' }, jobId: 'broadcast-cap-tick-cron' },
-  )
-
-  // M20: reset free-tier weekly counters Monday 00:00 UTC
-  await queue.add(
-    'weekly-broadcast-reset',
-    {},
-    { repeat: { pattern: '0 0 * * 1' }, jobId: 'weekly-broadcast-reset-cron' },
-  )
-
-  // M19: settle fan-sub payouts (Connect destination charges) daily at 04:00 UTC
-  await queue.add(
-    'fan-sub-payout',
-    {},
-    { repeat: { pattern: '0 4 * * *' }, jobId: 'fan-sub-payout-cron' },
-  )
-
-  // M19: expire lapsed fan subscriptions daily at 05:00 UTC
-  await queue.add(
-    'fan-sub-expire',
-    {},
-    { repeat: { pattern: '0 5 * * *' }, jobId: 'fan-sub-expire-cron' },
-  )
-
-  // M18: refresh Tor exit list in Redis (05:30 UTC, before fraud scan)
-  await queue.add(
-    'tor-exit-list-sync',
-    {},
-    { repeat: { pattern: '30 5 * * *' }, jobId: 'tor-exit-list-sync-cron' },
-  )
-
-  // M18: flag suspicious download spikes for board review (06:00 UTC)
-  await queue.add(
-    'download-fraud-scan',
-    {},
-    { repeat: { pattern: '0 6 * * *' }, jobId: 'download-fraud-scan-cron' },
-  )
-
-  // M1: renewal reminder emails ~30 days before annual membership expires (07:00 UTC)
-  await queue.add(
-    'membership-renewal-reminder',
-    {},
-    { repeat: { pattern: '0 7 * * *' }, jobId: 'membership-renewal-reminder-cron' },
-  )
-
-  // M1: lapse memberships past 365 days without renewal (08:00 UTC)
-  await queue.add(
-    'membership-lapse',
-    {},
-    { repeat: { pattern: '0 8 * * *' }, jobId: 'membership-lapse-cron' },
-  )
+  for (const job of WORKER_CRON_JOBS) {
+    await queue.add(
+      job.name,
+      {},
+      { repeat: { pattern: job.pattern }, jobId: job.jobId },
+    )
+  }
 
   await queue.close()
-  console.log('[worker] cron jobs registered')
+  console.log(`[worker] ${WORKER_CRON_JOBS.length} cron jobs registered`)
 }
 
 registerCrons().catch((err: unknown) => {

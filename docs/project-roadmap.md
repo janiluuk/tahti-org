@@ -87,7 +87,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`. Deferred: Discogs API |
-| **M29** Backup & DR | 🟡 Partial | `scripts/backup-*.sh`, `restore-test.sh`; **`ops/RUNBOOK.md`**. Deferred: pgBackRest, offsite buckets, operator drills |
+| **M29** Backup & DR | 🟡 Partial | Unified **`scripts/backup.sh`** (postgres, minio, restore-test, status); **`ops/RUNBOOK.md`**, `install-crons.sh`. Deferred: pgBackRest, offsite buckets, operator drills |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API (`45m`/`55m`/`grace`/`blocked`) + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: further copy polish |
 
 ### Improvements identified during the audit (added to the roadmap)
@@ -214,11 +214,9 @@ failover stack promoted. Document exact DNS/Caddy cutover in `ops/RUNBOOK.md`.
 |:---:|---|---|---|---|
 | [ ] | UpCloud object storage buckets provisioned (`pg/`, `minio/`, lifecycle rules) | Dev | UpCloud account | `infra-strategy.md` |
 | [ ] | MinIO `backups` bucket on primary; `mc` alias configured on manager node | Dev | MinIO up | `technical/phase-3.md` |
-| [x] | `backup-postgres.sh` — dump/WAL → `mc pipe tahti/backups/pg/YYYYMMDD.sql.gz` | Dev | Postgres up | `technical/phase-3.md` |
-| [x] | `backup-minio.sh` — mirror user buckets to offsite (exclude temp transcode keys if needed) | Dev | MinIO up | `technical/phase-3.md` |
-| [x] | `restore-test.sh` — weekly restore to throwaway Postgres, `COUNT(*)` sanity check, log result | Dev | backup scripts | `technical/journey-ops.md` |
-| [ ] | Cron: PG daily 03:00, MinIO daily 04:00, restore test Sunday 05:00 (`/etc/cron.d/tahti-backup`) | Dev | scripts | `technical/phase-3.md` |
-| [ ] | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call | Dev | monitoring | `technical/journey-ops.md` |
+| [x] | `scripts/backup.sh` — unified postgres + minio + restore-test + status (wrappers deprecated) | Dev | Postgres + MinIO up | `ops/RUNBOOK.md` |
+| [x] | Cron: PG daily 03:00, MinIO daily 04:00, restore test Sunday 05:00 (`/etc/cron.d/tahti-backup`) | Dev | `scripts/backup.sh` + `install-crons.sh` | `technical/phase-3.md` |
+| [x] | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call | Dev | `backup.sh status` in cron | `technical/journey-ops.md` |
 | [ ] | pgBackRest (replace interim `pg_dump` when hardware stable) + WAL shipping | Dev | Postgres prod | `future-improvements.md` |
 | [ ] | Pre-destructive-op snapshot: `docker run … pg_dump` before migrations / volume resize | Dev | — | `technical/phase-7.md` |
 | [~] | `ops/RUNBOOK.md` — restore Postgres, restore MinIO prefix, DR read-only cutover | Dev | restore test passed once | Phase 9 |
@@ -514,7 +512,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [ ] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | P1 |
 | [ ] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | P1 |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
-| [ ] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
+| [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [ ] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | P3 |
 | [ ] | **PLAT-025** | Remove `eslint.ignoreDuringBuilds` in web Dockerfile once lint clean in CI | P3 |
 | [x] | **PLAT-026** | Reconcile tier enum in AGENT.md (`FREE/PAID` vs `FREE/ARTIST/STUDIO`) | P2 |
