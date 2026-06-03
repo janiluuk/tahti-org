@@ -316,6 +316,41 @@ Same as v3 spec. Key points:
 **Done when:** Mix → Mixcloud one-click. Original track → Revelator wizard →
 appears on Spotify in 7-10 days. Royalty reports flow back monthly.
 
+### M30 — Release ops & catalog metadata toolkit (NEW)
+
+Tahti should offer a **variety of release tooling** — not only DSP delivery (M7)
+and promotional smart links (M12), but the **official/catalog** work artists
+otherwise do on MusicBrainz, label spreadsheets, and society portals.
+
+**Single source of truth:** the `Release` + `ReleaseTrack` records in Tahti.
+Every export and submission reads from the same fields.
+
+**In scope:**
+
+- **MusicBrainz entry submission** — guided artist/release/track submission;
+  store `musicbrainzReleaseId`, recording MBIDs, and relationship types;
+  link from profile and `/r/:slug`
+- **Identifiers** — ISRC per track (Revelator allocation per
+  `planning-decisions.md` Topic 12), UPC/EAN on release
+- **Credits & roles** — writers, performers, producers, remixers (maps to
+  MusicBrainz relationships + Revelator metadata)
+- **Copyright lines** — P-line, C-line, label imprint
+- **Release checklist wizard** — ordered steps from draft → identifiers →
+  optional MusicBrainz → M7 DSP submit → publish → M13 newsletter
+- **Export pack** — JSON/CSV for Picard, label copy, distributor handoff
+- **Post-release claim checklist** — deep links to Spotify for Artists, Apple
+  Music for Artists, YouTube OAC (artist completes on each platform)
+- **Collecting-society pointers** — Teosto (FI) and other PROs: what to
+  register and when (links only — no in-platform filing in v1)
+
+**Out of scope for M30 v1:** Discogs API submit, direct Teosto/GEMA filing,
+AllMusic editorial pitch automation.
+
+**Done when:** An artist fills release metadata once in Tahti, submits to
+MusicBrainz from the dashboard (or exports for Picard with zero field mismatch),
+and sees MBID + ISRC on the public smart link. Revelator wizard (M7) pre-fills
+from the same release record.
+
 ### M8 — Transparency ledger (NEW for v4)
 
 This is what makes  Tahti a nonprofit, not just an open-source project.
@@ -627,6 +662,8 @@ graph implied — tagging is just human-readable cross-references, like links.
 - Profile bio (Markdown rendering treats `@handle` as a link)
 - Channel announcements
 - Release credits ("Featuring @other-artist", "Remix by @another")
+- **Tracklists** on archive items and releases — per-row `@handle` for the played
+  track's artist when they are a Tahti member (see **M22**)
 - Chat messages (artist-side; listeners can mention but it's not a notification)
 - Newsletter compose
 
@@ -638,7 +675,7 @@ graph implied — tagging is just human-readable cross-references, like links.
 
 **Notifications:**
 - Opt-in per artist in settings (default ON for paying members, OFF for free)
-- "You were mentioned by @X in their bio / announcement / release / chat"
+- "You were mentioned by @X in their bio / announcement / release / **tracklist** / chat"
 - Email digest, max one per day per mentioned-artist
 - Notification logs to ledger as auditable event
 
@@ -876,6 +913,52 @@ Two gates implemented gracefully so free users never feel "broken":
 - Treating MP3 192 as "low quality" in marketing copy — it's good enough for streaming. We just deliver better when paid.
 
 **Done when:** I'm a free user, broadcast 1 hour live in a week, see the gentle warnings, smoothly transition to archive at the cap, and my Monday reset works. As a paid user, my listeners hear FLAC, my upgrade button at end of broadcasts is non-aggressive, and there's no friction popup blocking my workflow.
+
+### M22 — Content metadata + editable tracklists (hearthis parity)
+
+Per-upload metadata on **archive items** (and mirrored on **releases** where
+applicable): description, genre, content type, BPM/key, license, release date,
+visuals, and an **editable tracklist**. See `competitive-gaps-hearthis.md` §1.
+
+**Tracklist model:**
+
+Each entry is an ordered row on `ArchiveItem.tracklist` (JSON):
+
+```json
+{ "startSec": 1234, "title": "Track Name", "artist": "Plain text", "artistUsername": "handle" }
+```
+
+| Field | Purpose |
+|---|---|
+| `startSec` | Timestamp in the mix/recording |
+| `title` | Track title as played |
+| `artist` | Free-text credit (ACRCloud import, guest DJs, non-Tahti artists) |
+| `artistUsername` | Optional Tahti `@handle` when the played artist is a member |
+
+**Tagging other artists in tracklists (required):**
+
+- Dashboard **tracklist editor**: per row, artist field supports **`@handle`
+  autocomplete** against Tahti usernames (same resolution rules as M15).
+- On save: resolve handle → store `artistUsername`; keep `artist` as display
+  fallback (prefill from display name when tagged).
+- **Public display:** tagged artists link to `tahti.live/u/<handle>` on the
+  archive page, profile release view, collection pages, and RSS tracklist blocks.
+- **Notifications:** new `MentionSurface.TRACKLIST` — tagged artist receives
+  M15 opt-in notification: "You were tagged in @X's tracklist for *[mix title]*".
+- **ACRCloud import:** may populate `title` + plain `artist` only; uploader can
+  link rows to Tahti members afterward without re-entering timestamps.
+- **External artists:** leave `artistUsername` empty; plain `artist` text only.
+
+**Anti-abuse:** M15 daily mention limit and mute list apply to tracklist tags.
+Bulk ACRCloud rows do not auto-tag — only explicit `@handle` in the editor.
+
+**Also in M22:** content metadata fields (see `ArchiveMetadataFields` in
+`packages/shared`), dashboard editor, TBPM tag detection, optional ACRCloud
+import/export. Deferred: repost/follow download gates.
+
+**Done when:** I edit a DJ mix tracklist, tag `@guest` on three rows with
+autocomplete, publish, and `@guest` sees profile links on the public archive page
+and gets a mention notification if opted in. Non-member artists stay plain text.
 
 ## Data model (Prisma schema sketch — agent expands)
 

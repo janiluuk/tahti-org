@@ -40,16 +40,16 @@ even when they choose Tahti for broadcasting.
 | Capability | Spec / build | Gap |
 |---|---|---|
 | Release title, type, date, description | M12 profile releases | Partial — **releases** only, not every archive/live item |
-| Tracklist with timestamps | ACRCloud optional on archive (M4) | Not exposed as editable **user metadata**; no manual tracklist UI |
+| Tracklist with timestamps | ACRCloud optional on archive (M4) | Not exposed as editable **user metadata**; no manual tracklist UI; **no @artist tags** yet |
 | Track type (original, mix, live recording, podcast, etc.) | — | **Missing** enum + UI |
 | Release date on archive items | — | **Missing** on auto-archived sets |
 | Genre / mood tags | Explicitly out of scope on profile | **Missing** for browse and self-organization |
-| ISRC / catalog numbers on tracks | Release model only | **Missing** on archive items |
+| ISRC / catalog numbers on tracks | Release model only | **Partial** — release tracks; **M30:** MusicBrainz MBIDs + export pack |
 
 ### Should build
 
 - [ ] **Content metadata schema** on `archive_items` and live sessions: `title`, `description`, `contentType`, `releasedAt`, `genreTags[]`, `bpm`, `key` (optional)
-- [ ] **Tracklist editor**: ordered `{startMs, title, artist}` rows; import from ACRCloud; export to profile + RSS
+- [ ] **Tracklist editor**: ordered `{startSec, title, artist, artistUsername?}` rows; **`@handle` autocomplete** to tag Tahti artists (profile links + M15 notifications); import from ACRCloud; export to profile + RSS
 - [ ] **Bulk edit** from dashboard (same date/type on a selection)
 
 ---
@@ -209,7 +209,7 @@ Ship the full spec, not a minimal trimmer:
 
 | # | Shortcoming | Fix |
 |---|---|---|
-| 1 | Can’t edit tracklist / type / date on mixes | Content metadata + tracklist UI |
+| 1 | Can’t edit tracklist / type / date on mixes | Content metadata + tracklist UI + **@artist tags** |
 | 2 | Can’t set banner / slideshow / YouTube on a set page | Per-content `visualMode` |
 | 3 | No commentary on individual tracks/sets | Artist notes + optional listener comments |
 | 4 | Can’t group mixes into “Trance sets”, albums, etc. | Collections + RSS |
@@ -221,7 +221,7 @@ Ship the full spec, not a minimal trimmer:
 
 | Milestone | Scope |
 |---|---|
-| **M22** | Content metadata + tracklist editor (archive + live) |
+| **M22** | Content metadata + tracklist editor (archive + live); **@artist tagging** per tracklist row |
 | **M23** | Collections (`mix_series`, albums, podcast feeds) |
 | **M24** | Per-content visuals (cover, banner, slideshow, YouTube/Vimeo) |
 | **M25** | Artist commentary (+ optional moderated listener comments) |
@@ -236,6 +236,6 @@ Add these to `docs/AGENT.md` when implementation starts. Update `profile-and-pro
 | File | Change |
 |---|---|
 | `docs/profile-and-promo-toolkit.md` | Collections, per-item visuals, commentary policy |
-| `docs/audio-editor.md` | Already sufficient; link from M21 |
+| `docs/audio-editor.md` | M21 spec + **implementation options** (waveform-playlist + audio + phased v0–v2) |
 | `docs/AGENT.md` | Prisma models, API routes, player UI |
 | `docs/engagement-and-fansubs.md` | Whether downloads from collections count (yes, same rules) |

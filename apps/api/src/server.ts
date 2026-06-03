@@ -12,6 +12,7 @@ import dbPlugin from './plugins/db.js'
 import authPlugin from './plugins/auth.js'
 import healthRoute from './routes/health.js'
 import statusRoutes from './routes/status.js'
+import metricsRoute from './routes/metrics.js'
 import sourceRoute from './routes/source.js'
 import registerRoute from './routes/auth/register.js'
 import verifyRoute from './routes/auth/verify.js'
@@ -160,6 +161,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // Routes
   await fastify.register(healthRoute)
   await fastify.register(statusRoutes)
+  await fastify.register(metricsRoute)
   await fastify.register(sourceRoute)
   await fastify.register(registerRoute)
   await fastify.register(verifyRoute)

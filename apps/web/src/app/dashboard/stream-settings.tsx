@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button, CopyRow, Heading, Panel, Stack } from '@/components/ui'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }
@@ -38,109 +39,44 @@ export default function StreamSettingsPanel({ initial }: { initial: StreamSettin
   }
 
   return (
-    <div
-      style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
-    >
-      <h2 style={{ margin: '0 0 1.25rem' }}>Go Live</h2>
+    <Panel title="Go Live">
+      <Stack gap={6}>
+        <div>
+          <Heading level={3}>OBS / Streamlabs (RTMP)</Heading>
+          <CopyRow label="Server" value={settings.rtmp.server} />
+          <CopyRow label="Stream Key" value={settings.rtmp.streamKey} />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => rotateKey('rtmp')}
+            disabled={rotating === 'rtmp'}
+            style={{ marginTop: '0.5rem' }}
+          >
+            {rotating === 'rtmp' ? 'Rotating…' : 'Rotate RTMP key'}
+          </Button>
+        </div>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>OBS / Streamlabs (RTMP)</h3>
-        <Row label="Server" value={settings.rtmp.server} />
-        <Row label="Stream Key" value={settings.rtmp.streamKey} />
-        <RotateButton
-          label="Rotate RTMP key"
-          loading={rotating === 'rtmp'}
-          onClick={() => rotateKey('rtmp')}
-        />
-      </div>
+        <div>
+          <Heading level={3}>Mixxx / Traktor / butt (Icecast)</Heading>
+          <CopyRow label="Server" value={settings.icecast.server} />
+          <CopyRow label="Mount" value={settings.icecast.mount} />
+          <CopyRow label="Password" value={settings.icecast.password} />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => rotateKey('icecast')}
+            disabled={rotating === 'icecast'}
+            style={{ marginTop: '0.5rem' }}
+          >
+            {rotating === 'icecast' ? 'Rotating…' : 'Rotate Icecast password'}
+          </Button>
+        </div>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>Mixxx / Traktor / butt (Icecast)</h3>
-        <Row label="Server" value={settings.icecast.server} />
-        <Row label="Mount" value={settings.icecast.mount} />
-        <Row label="Password" value={settings.icecast.password} />
-        <RotateButton
-          label="Rotate Icecast password"
-          loading={rotating === 'icecast'}
-          onClick={() => rotateKey('icecast')}
-        />
-      </div>
-
-      <div>
-        <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>HLS stream URL</h3>
-        <Row label="URL" value={settings.hlsUrl} />
-      </div>
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  const [copied, setCopied] = useState(false)
-
-  function copy() {
-    void navigator.clipboard.writeText(value).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
-  }
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-      <span style={{ minWidth: 100, color: '#666', fontSize: '0.85rem' }}>{label}</span>
-      <code
-        style={{
-          flex: 1,
-          background: '#f5f5f5',
-          padding: '0.25rem 0.5rem',
-          borderRadius: 4,
-          fontSize: '0.8rem',
-          overflowX: 'auto',
-        }}
-      >
-        {value}
-      </code>
-      <button
-        onClick={copy}
-        style={{
-          padding: '0.2rem 0.6rem',
-          fontSize: '0.75rem',
-          cursor: 'pointer',
-          border: '1px solid #ccc',
-          borderRadius: 4,
-          background: 'none',
-        }}
-      >
-        {copied ? 'Copied!' : 'Copy'}
-      </button>
-    </div>
-  )
-}
-
-function RotateButton({
-  label,
-  loading,
-  onClick,
-}: {
-  label: string
-  loading: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={loading}
-      style={{
-        marginTop: '0.5rem',
-        padding: '0.3rem 0.8rem',
-        fontSize: '0.8rem',
-        cursor: loading ? 'not-allowed' : 'pointer',
-        border: '1px solid #ccc',
-        borderRadius: 4,
-        background: 'none',
-        opacity: loading ? 0.6 : 1,
-      }}
-    >
-      {loading ? 'Rotating…' : label}
-    </button>
+        <div>
+          <Heading level={3}>HLS stream URL</Heading>
+          <CopyRow label="URL" value={settings.hlsUrl} />
+        </div>
+      </Stack>
+    </Panel>
   )
 }

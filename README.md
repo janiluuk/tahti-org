@@ -50,6 +50,7 @@ These rules are constitutional. They are not changeable by management decision. 
 | File | Purpose |
 |---|---|
 | [`docs/AGENT.md`](docs/AGENT.md) | Coding-agent brief — repo, milestones M0-M20, data model, anti-patterns |
+| [`docs/style-guide.md`](docs/style-guide.md) | UI component library (`@/components/ui`), tokens, typography, patterns |
 | [`docs/project-roadmap.md`](docs/project-roadmap.md) | Build audit, phase checklist, milestone status |
 | [`docs/future-improvements.md`](docs/future-improvements.md) | Deferred milestones + engineering efficiency backlog |
 | [`docs/governance-and-legal.md`](docs/governance-and-legal.md) | Yhdistys structure, bylaws (§1-12), AGPL implications, AGM mechanics |
@@ -96,6 +97,18 @@ SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/t
   API_URL=http://localhost:3001 APP_URL=http://localhost:3010 pnpm test:e2e:journeys
 # With web up: pnpm test:e2e:journeys:web
 ```
+
+## CI releases
+
+Every merge to **`main`** runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). When all checks pass, CI creates a GitHub release tagged **`YYmmdd-buildnr`** (UTC date + daily increment), e.g. `260603-1`, `260603-2`.
+
+Preview the next tag locally:
+
+```bash
+scripts/next-release-tag.sh
+```
+
+Manual semver production deploys still use `v*.*.*` tags via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
 
 ## Headline numbers (base case)
 

@@ -1,4 +1,5 @@
 # CI — lint, typecheck, tests, API vital-flows e2e, website Docker, AGPL headers.
+# On push to main (after all checks): creates GitHub release tag YYmmdd-buildnr (UTC).
 # Screenshots are local-only: ./scripts/e2e-screenshots.sh (not run here).
 
 name: CI
@@ -454,3 +455,46 @@ jobs:
           ok "${{ needs.user-journeys-e2e.result }}" || { echo "user-journeys-e2e failed"; exit 1; }
           ok "${{ needs.agpl-check.result }}" || { echo "agpl-check failed"; exit 1; }
           echo "All checks passed ✓"
+
+  release:
+    name: Release (YYmmdd-buildnr)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [all-checks]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: release-main
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next release tag
+        id: tag
+        run: |
+          chmod +x scripts/next-release-tag.sh
+          TAG="$(scripts/next-release-tag.sh)"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Release tag: ${TAG}"
+
+      - name: Download OpenAPI spec
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: openapi-${{ github.sha }}
+          path: release-assets
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          files: |
+            release-assets/openapi.json
+          fail_on_unmatched_files: false
