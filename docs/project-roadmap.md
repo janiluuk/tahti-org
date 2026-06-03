@@ -541,7 +541,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | [ ] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | Journey: Artist J2 | M3 |
 | [ ] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | Journey: Listener J2 | M3 |
 | [~] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Live player shows “Buffering live stream…” (LISTENER-001) | M3 |
-| [ ] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | Journey: Listener J2 | M5 |
+| [~] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | `nextBroadcastAt` / `nextBroadcastNote` on channel + dashboard + public page | M5 |
 
 ### MEDIUM — affects operations and cost attribution
 

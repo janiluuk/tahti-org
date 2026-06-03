@@ -4,7 +4,7 @@
 import type { ReactNode } from 'react'
 import '@/components/brand-public.css'
 
-export default function GovernanceLayout({ children }: { children: ReactNode }) {
+export default function SubscribeLayout({ children }: { children: ReactNode }) {
   return (
     <div data-tahti-ui="brand" className="brand-public brand-public--center">
       {children}

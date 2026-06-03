@@ -2,7 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { CreateVenueBroadcastSchema, CreateVenueSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+
+function zodError(
+  reply: { status: (n: number) => { send: (b: unknown) => unknown } },
+  err: { issues: Array<{ message?: string }> },
+) {
+  return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
+}
 
 // M17 — Venue directory and broadcast calendar
 const venueRoutes: FastifyPluginAsync = async (fastify) => {
@@ -99,40 +107,19 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/v1/venues — create venue (auth required, unverified until board approves)
   fastify.post('/api/v1/venues', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const body = request.body as {
-      slug?: string
-      name?: string
-      address?: string
-      city?: string
-      countryCode?: string
-      description?: string
-      capacity?: number
-      latitude?: number
-      longitude?: number
-      externalLinks?: unknown
-    }
+    const parsed = CreateVenueSchema.safeParse(request.body)
+    if (!parsed.success) return zodError(reply, parsed.error)
+    const body = parsed.data
 
-    const slug = body.slug
-      ?.trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, '-')
-    if (!slug) return reply.status(400).send({ error: 'slug is required' })
-    const name = body.name?.trim()
-    if (!name) return reply.status(400).send({ error: 'name is required' })
-    const address = body.address?.trim()
-    if (!address) return reply.status(400).send({ error: 'address is required' })
-    const city = body.city?.trim()
-    if (!city) return reply.status(400).send({ error: 'city is required' })
-
-    const existing = await fastify.prisma.venue.findUnique({ where: { slug } })
+    const existing = await fastify.prisma.venue.findUnique({ where: { slug: body.slug } })
     if (existing) return reply.status(409).send({ error: 'Slug already taken' })
 
     const venue = await fastify.prisma.venue.create({
       data: {
-        slug,
-        name,
-        address,
-        city,
+        slug: body.slug,
+        name: body.name,
+        address: body.address,
+        city: body.city,
         countryCode: body.countryCode ?? 'FI',
         description: body.description?.trim() || null,
         capacity: body.capacity ?? null,
@@ -154,21 +141,14 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { slug } = request.params as { slug: string }
-      const body = request.body as {
-        startAt?: string
-        endAt?: string
-        description?: string
-        channelId?: string
-      }
+      const parsed = CreateVenueBroadcastSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const body = parsed.data
 
       const venue = await fastify.prisma.venue.findUnique({ where: { slug } })
       if (!venue) return reply.status(404).send({ error: 'Venue not found' })
 
-      if (!body.startAt) return reply.status(400).send({ error: 'startAt is required' })
       const startAt = new Date(body.startAt)
-      if (Number.isNaN(startAt.getTime())) {
-        return reply.status(400).send({ error: 'Invalid startAt' })
-      }
 
       const broadcast = await fastify.prisma.venueBroadcast.create({
         data: {

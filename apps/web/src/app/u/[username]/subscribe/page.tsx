@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { notFound } from 'next/navigation'
+import { SafePlainText } from '@/components/safe-plain-text'
 import TierCards from './tier-cards'
 
 interface TiersResponse {
@@ -47,9 +48,11 @@ export default async function SubscribePage({ params }: { params: { username: st
       </a>
       <h1 style={{ margin: '0.5rem 0 0.25rem' }}>Support {data.artist.displayName}</h1>
       {data.artist.bio && (
-        <p className="brand-muted" style={{ marginBottom: '2rem', lineHeight: 1.6 }}>
-          {data.artist.bio}
-        </p>
+        <SafePlainText
+          text={data.artist.bio}
+          className="brand-muted"
+          style={{ marginBottom: '2rem', lineHeight: 1.6 }}
+        />
       )}
 
       {data.tiers.length === 0 ? (

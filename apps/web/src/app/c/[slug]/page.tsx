@@ -19,11 +19,14 @@ import type {
 } from '@tahti/shared'
 import { Heading, PageShell, Row, Text } from '@/components/ui'
 import { LiveBadge } from '@/components/ui/from-tahti-ui'
+import { SafePlainText } from '@/components/safe-plain-text'
 
 interface ChannelResponse {
   slug: string
   state: string
   hlsUrl: string | null
+  nextBroadcastAt: string | null
+  nextBroadcastNote: string | null
   galleryMode: ChannelGalleryMode
   slideshowImages: string[]
   textLayerMode: ChannelTextLayerMode
@@ -131,8 +134,41 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               </div>
               {channel.state === 'LIVE' && <LiveBadge />}
             </Row>
-            {channel.user.bio && <Text tone="secondary">{channel.user.bio}</Text>}
+            {channel.user.bio && (
+              <SafePlainText
+                text={channel.user.bio}
+                style={{ marginTop: '0.35rem', color: '#555' }}
+              />
+            )}
           </header>
+
+          {channel.state !== 'LIVE' && (channel.nextBroadcastAt || channel.nextBroadcastNote) && (
+            <div
+              role="status"
+              style={{
+                marginBottom: '1rem',
+                padding: '0.75rem 1rem',
+                background: '#f0f4ff',
+                borderRadius: 8,
+                border: '1px solid #c7d2fe',
+              }}
+            >
+              <strong>Next broadcast</strong>
+              {channel.nextBroadcastAt && (
+                <div style={{ marginTop: '0.25rem' }}>
+                  {new Date(channel.nextBroadcastAt).toLocaleString(undefined, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </div>
+              )}
+              {channel.nextBroadcastNote && (
+                <div style={{ marginTop: '0.25rem', color: '#444' }}>
+                  {channel.nextBroadcastNote}
+                </div>
+              )}
+            </div>
+          )}
 
           <ChannelTextLayerView
             mode={channel.textLayerMode}

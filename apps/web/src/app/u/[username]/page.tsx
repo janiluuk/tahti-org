@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { LiveBadge } from '@/components/ui/from-tahti-ui'
+import { SafePlainText } from '@/components/safe-plain-text'
 
 async function fetchProfile(username: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -95,7 +96,9 @@ export default async function ArtistProfilePage({ params }: { params: { username
             <LiveBadge />
           </p>
         )}
-        {artist.bio && <p style={{ marginTop: '1rem', lineHeight: 1.6 }}>{artist.bio}</p>}
+        {artist.bio && (
+          <SafePlainText text={artist.bio} style={{ marginTop: '1rem', lineHeight: 1.6 }} />
+        )}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
           {links.channel && <Link href={links.channel}>Channel →</Link>}
           <Link href={links.subscribe}>Support →</Link>

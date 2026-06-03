@@ -191,7 +191,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | P | Item | Benefit |
 |---|---|---|
 | ~~P1~~ | ~~Shared design tokens / component library~~ — `packages/ui` created; **adoption pending** | PLAT-020 |
-| P2 | Server-side profile markdown rendering (sanitised) | Rich bios without XSS |
+| ~~P2~~ | ~~Server-side profile markdown rendering (sanitised)~~ — plain-text escape on profile/channel/subscribe (`SafePlainText`) |
 | P2 | Image optimisation for `avatarUrl` / `artworkUrl` | Profile LCP < 1.5s |
 
 ### Runtime / ops
