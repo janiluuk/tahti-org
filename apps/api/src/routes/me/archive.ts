@@ -3,24 +3,45 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
+import {
+  archiveItemMetadataSelect,
+  metadataPatchFromBody,
+  serializeArchiveItem,
+} from '../../lib/archive-metadata.js'
 
-// M22 — editable archive item metadata: title, description, tracklist, bannerUrl, commentary
-// M24 — bannerUrl field
-// M25 — commentary field
 const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
-  // PATCH /api/me/archive/:id — update item metadata
+  fastify.get('/api/me/archive', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const channel = await fastify.prisma.channel.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    })
+    if (!channel) return reply.send([])
+
+    const items = await fastify.prisma.archiveItem.findMany({
+      where: { channelId: channel.id },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      select: archiveItemMetadataSelect,
+    })
+    return reply.send(items.map((i) => serializeArchiveItem(i)))
+  })
+
+  fastify.get('/api/me/archive/:id', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const { id } = request.params as { id: string }
+
+    const item = await fastify.prisma.archiveItem.findFirst({
+      where: { id, channel: { userId: user.id } },
+      select: archiveItemMetadataSelect,
+    })
+    if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+    return reply.send(serializeArchiveItem(item))
+  })
+
   fastify.patch('/api/me/archive/:id', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
     const { id } = request.params as { id: string }
-    const body = request.body as {
-      title?: string
-      description?: string
-      tracklist?: unknown
-      bannerUrl?: string
-      commentary?: string
-      isPublic?: boolean
-      isFallback?: boolean
-    }
 
     const item = await fastify.prisma.archiveItem.findFirst({
       where: { id, channel: { userId: user.id } },
@@ -28,51 +49,24 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     })
     if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: Record<string, any> = {}
-    if (body.title !== undefined) {
-      const t = body.title.trim()
-      if (!t) return reply.status(400).send({ error: 'title cannot be empty' })
-      data.title = t.slice(0, 200)
-    }
-    if (body.description !== undefined) data.description = body.description.slice(0, 2000) || null
-    if (body.tracklist !== undefined) {
-      if (body.tracklist !== null && !Array.isArray(body.tracklist)) {
-        return reply.status(400).send({ error: 'tracklist must be an array or null' })
-      }
-      data.tracklist = body.tracklist
-    }
-    if (body.bannerUrl !== undefined) data.bannerUrl = body.bannerUrl.trim() || null
-    if (body.commentary !== undefined) data.commentary = body.commentary.slice(0, 5000) || null
-    if (body.isPublic !== undefined) data.isPublic = body.isPublic
-    if (body.isFallback !== undefined) data.isFallback = body.isFallback
+    const patch = metadataPatchFromBody(request.body)
+    if (!patch.ok) return reply.status(400).send({ error: patch.error })
 
-    if (Object.keys(data).length === 0) {
-      return reply.status(400).send({ error: 'No fields to update' })
+    if (patch.title !== undefined) {
+      const t = patch.title.trim()
+      if (!t) return reply.status(400).send({ error: 'title cannot be empty' })
+      patch.data.title = t.slice(0, 200)
     }
 
     const updated = await fastify.prisma.archiveItem.update({
       where: { id },
-      data,
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        tracklist: true,
-        bannerUrl: true,
-        commentary: true,
-        isPublic: true,
-        isFallback: true,
-        status: true,
-        durationSec: true,
-        createdAt: true,
-      },
+      data: patch.data,
+      select: archiveItemMetadataSelect,
     })
 
-    return reply.send(updated)
+    return reply.send(serializeArchiveItem(updated))
   })
 
-  // PATCH /api/me/channel/slideshow — update channel slideshow images
   fastify.patch(
     '/api/me/channel/slideshow',
     { preHandler: requireAuth },

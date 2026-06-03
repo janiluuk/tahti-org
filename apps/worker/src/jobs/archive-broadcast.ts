@@ -99,6 +99,13 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         durationSec,
         fileSizeBytes: 0,
         status: 'READY',
+        contentType: 'LIVE',
+        genre: 'Electronic',
+        license: 'ALL_RIGHTS_RESERVED',
+        releasedAt: startedAt,
+        isPublic: true,
+        useDetectedBpmKey: true,
+        description: `Auto-archived live broadcast from ${startedAt.toISOString()}`,
       },
     })
 

@@ -41,6 +41,7 @@ export async function completeUpload(params: {
   uploadId: string
   etag: string
   title: string
+  metadata?: Record<string, unknown>
 }): Promise<{ itemId: string; status: string }> {
   const response = await fetch(`${apiUrl}/api/uploads/complete`, {
     method: 'POST',

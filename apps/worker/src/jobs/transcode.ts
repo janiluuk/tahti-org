@@ -30,6 +30,23 @@ function ffprobeGetDuration(filePath: string): Promise<number> {
   })
 }
 
+/** Read BPM from embedded tags (TBPM / bpm) when present. */
+function ffprobeEmbeddedBpm(filePath: string): Promise<number | null> {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) return reject(err)
+      const tags = metadata.format.tags ?? {}
+      const raw = tags.TBPM ?? tags.bpm ?? tags.BPM
+      if (raw == null) {
+        resolve(null)
+        return
+      }
+      const n = parseInt(String(raw), 10)
+      resolve(n >= 40 && n <= 300 ? n : null)
+    })
+  })
+}
+
 export async function processTranscodeJob(job: Job): Promise<void> {
   const { itemId } = job.data as { itemId: string }
 
@@ -55,13 +72,19 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     await ffmpegNormalize(rawPath, mp3Path)
 
     const durationSec = await ffprobeGetDuration(mp3Path)
+    const bpmDetected = await ffprobeEmbeddedBpm(mp3Path).catch(() => null)
     const mp3Key = `mp3/${item.channel.slug}/${itemId}.mp3`
 
     await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
 
     await prisma.archiveItem.update({
       where: { id: itemId },
-      data: { status: 'READY', mp3Key, durationSec },
+      data: {
+        status: 'READY',
+        mp3Key,
+        durationSec,
+        ...(bpmDetected != null ? { bpmDetected } : {}),
+      },
     })
   } catch (err) {
     await prisma.archiveItem.update({

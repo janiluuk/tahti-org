@@ -111,5 +111,39 @@ describe('POST /api/uploads/complete', () => {
     expect(item).not.toBeNull()
     expect(item!.title).toBe('Test Track')
     expect(item!.status).toBe('PENDING')
+    expect(item!.contentType).toBe('STUDIO')
+    expect(item!.license).toBe('ALL_RIGHTS_RESERVED')
+    expect(item!.genre).toBe('Electronic')
+    expect(item!.isPublic).toBe(true)
+  })
+
+  it('applies upload metadata with sensible defaults', async () => {
+    const uploadId = `raw/${channelSlug}/metafile.mp3`
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/uploads/complete',
+      cookies: { tahti_session: sessionCookie },
+      payload: {
+        uploadId,
+        etag: 'etag456',
+        title: 'Helsinki Live',
+        metadata: {
+          genre: 'Techno',
+          recordingLocation: 'Helsinki, Finland',
+          contentType: 'LIVE',
+          bpm: 128,
+          musicalKey: 'Am',
+          license: 'CC_BY_NC',
+        },
+      },
+    })
+    expect(res.statusCode).toBe(201)
+    const item = await prisma.archiveItem.findUnique({ where: { id: res.json().itemId } })
+    expect(item!.genre).toBe('Techno')
+    expect(item!.contentType).toBe('LIVE')
+    expect(item!.recordingLocation).toBe('Helsinki, Finland')
+    expect(item!.bpm).toBe(128)
+    expect(item!.musicalKey).toBe('Am')
+    expect(item!.license).toBe('CC_BY_NC')
   })
 })

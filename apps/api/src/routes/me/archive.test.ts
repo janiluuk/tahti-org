@@ -51,15 +51,41 @@ describe('M22/M24/M25 — archive metadata and slideshow', () => {
         tracklist: [{ startSec: 0, title: 'Intro' }],
         bannerUrl: 'https://cdn.example/banner.jpg',
         commentary: 'Thanks for listening',
+        genre: 'Techno',
+        recordingLocation: 'Helsinki, Finland',
+        subGenres: ['peak-time', 'melodic'],
+        contentType: 'DJ_MIX',
+        mixVersion: 'Original Mix',
+        bpm: 128,
+        musicalKey: 'Am',
+        license: 'CC_BY_NC',
+        isAiGenerated: false,
         isPublic: false,
         isFallback: true,
       },
     })
     expect(patch.statusCode).toBe(200)
     expect(patch.json().title).toBe('Renamed set')
+    expect(patch.json().genre).toBe('Techno')
+    expect(patch.json().contentType).toBe('DJ_MIX')
+    expect(patch.json().license).toBe('CC_BY_NC')
     expect(patch.json().isPublic).toBe(false)
     expect(patch.json().isFallback).toBe(true)
     expect(patch.json().tracklist).toEqual([{ startSec: 0, title: 'Intro' }])
+  })
+
+  it('lists archive items with metadata on GET /api/me/archive', async () => {
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/archive',
+      headers: { cookie },
+    })
+    expect(list.statusCode).toBe(200)
+    const row = list.json().find((i: { id: string }) => i.id === archiveItemId)
+    expect(row).toBeTruthy()
+    expect(row.license).toBe('CC_BY_NC')
+    expect(row.contentType).toBe('DJ_MIX')
+    expect(row.genre).toBe('Techno')
   })
 
   it('rejects empty title updates', async () => {

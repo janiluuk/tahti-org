@@ -48,6 +48,30 @@ enum ArchiveItemStatus {
   @@schema("channel")
 }
 
+enum ArchiveContentType {
+  LIVE
+  STUDIO
+  DJ_MIX
+  PODCAST
+  ORIGINAL
+  REMIX
+  RADIO_SHOW
+
+  @@schema("channel")
+}
+
+enum ArchiveLicense {
+  ALL_RIGHTS_RESERVED
+  CC_BY
+  CC_BY_NC
+  CC_BY_NC_SA
+  CC_BY_NC_ND
+  CC_BY_SA
+  CC0
+
+  @@schema("channel")
+}
+
 enum BroadcastSource {
   RTMP
   ICECAST
@@ -405,9 +429,28 @@ model ArchiveItem {
   channel       Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
   title         String
   description   String?
-  tracklist     Json?             // M22: [{startSec: number, title: string}]
-  bannerUrl     String?           // M24: custom banner image URL
+  tracklist     Json?             // M22: [{startSec, title, artist?}]
+  bannerUrl     String?           // M24: cover image URL
+  backgroundUrl String?           // per-track background image
+  slideshowUrls String[]          // ordered images for track page slideshow
   commentary    String?           // M25: artist commentary (Markdown)
+  taggedNote    String?           // draft @-mention text for collaborators
+  genre         String?
+  genreCustom   String?           // when not in preset genre list
+  recordingLocation String?
+  subGenres     String[]          @default([])
+  contentType   ArchiveContentType @default(STUDIO)
+  mixVersion    String?           // e.g. "Original Mix", "Rok Tek Remix"
+  bpm           Int?
+  musicalKey    String?
+  bpmDetected   Int?
+  keyDetected   String?
+  useDetectedBpmKey Boolean       @default(true)
+  isAiGenerated Boolean           @default(false)
+  releasedAt    DateTime          @default(now())
+  license       ArchiveLicense    @default(ALL_RIGHTS_RESERVED)
+  repostToDownload Boolean        @default(false)
+  followToDownload Boolean        @default(false)
   rawKey        String
   mp3Key        String?
   flacKey       String?

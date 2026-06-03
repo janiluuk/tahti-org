@@ -4,14 +4,23 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { prepareUpload, completeUpload } from './actions'
+import {
+  ArchiveMetadataFields,
+  defaultMetadataFormState,
+  metadataFormToPayload,
+} from './archive-metadata-fields'
 
 type UploadState = 'idle' | 'preparing' | 'uploading' | 'completing' | 'done' | 'error'
 
 export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) {
+  const router = useRouter()
   const [state, setState] = useState<UploadState>('idle')
   const [progress, setProgress] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
+  const [showMeta, setShowMeta] = useState(true)
+  const [meta, setMeta] = useState(defaultMetadataFormState)
   const fileRef = useRef<HTMLInputElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
 
@@ -59,13 +68,19 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
       })
 
       setState('completing')
-
-      await completeUpload({ uploadId, etag, title })
+      await completeUpload({
+        uploadId,
+        etag,
+        title,
+        metadata: metadataFormToPayload(meta),
+      })
 
       setState('done')
       if (fileRef.current) fileRef.current.value = ''
       if (titleRef.current) titleRef.current.value = ''
+      setMeta(defaultMetadataFormState())
       onUploaded?.()
+      router.refresh()
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Upload failed')
       setState('error')
@@ -83,7 +98,7 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
           type="text"
           required
           maxLength={200}
-          placeholder="Track title"
+          placeholder="Track or set title"
           disabled={isLoading}
           style={{
             width: '100%',
@@ -103,9 +118,29 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
       </div>
 
       <button
+        type="button"
+        onClick={() => setShowMeta(!showMeta)}
+        style={{
+          marginBottom: '0.5rem',
+          background: 'none',
+          border: 'none',
+          color: '#2563eb',
+          cursor: 'pointer',
+          padding: 0,
+        }}
+      >
+        {showMeta ? '▼ Hide metadata' : '▶ Show metadata (genre, BPM, license…)'}
+      </button>
+
+      {showMeta && (
+        <ArchiveMetadataFields state={meta} onChange={setMeta} disabled={isLoading} />
+      )}
+
+      <button
         type="submit"
         disabled={isLoading}
         style={{
+          marginTop: '1rem',
           padding: '0.5rem 1.2rem',
           background: '#2563eb',
           color: '#fff',
@@ -123,7 +158,7 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
 
       {state === 'done' && (
         <p style={{ color: '#16a34a', marginTop: '0.5rem' }}>
-          Uploaded! Transcoding in the background.
+          Uploaded! Transcoding in the background — edit metadata anytime below.
         </p>
       )}
 
