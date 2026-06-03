@@ -13,8 +13,11 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  # Run on every pull request regardless of base branch. The project uses a
+  # stacked-PR ("merge train") workflow where PRs target intermediate feature
+  # branches, not just main — restricting to `branches: [main]` meant those
+  # stacked PRs never triggered CI.
   pull_request:
-    branches: [main]
 
 permissions:
   contents: read

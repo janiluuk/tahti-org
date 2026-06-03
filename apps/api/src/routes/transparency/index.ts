@@ -111,7 +111,7 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({
       year,
       byCategory: Object.fromEntries(Object.entries(totals).map(([k, v]) => [k, v.toString()])),
-      runningsurplus: totalSurplus.toString(),
+      runningSurplus: totalSurplus.toString(),
       monthsFinalized: rollups.length,
     })
   })

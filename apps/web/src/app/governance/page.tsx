@@ -30,7 +30,10 @@ export default async function GovernancePage() {
 
   let me: MeResponse
   try {
-    const res = await fetch(`${apiUrl}/api/auth/me`, { headers: { Cookie: cookie }, cache: 'no-store' })
+    const res = await fetch(`${apiUrl}/api/auth/me`, {
+      headers: { Cookie: cookie },
+      cache: 'no-store',
+    })
     if (!res.ok) redirect('/login')
     me = (await res.json()) as MeResponse
   } catch {
@@ -50,15 +53,30 @@ export default async function GovernancePage() {
   }
 
   const [motionsRes, membersRes] = await Promise.all([
-    fetch(`${apiUrl}/api/v1/governance/motions`, { headers: { Cookie: cookie }, cache: 'no-store' }),
-    fetch(`${apiUrl}/api/v1/governance/members`, { headers: { Cookie: cookie }, cache: 'no-store' }),
+    fetch(`${apiUrl}/api/v1/governance/motions`, {
+      headers: { Cookie: cookie },
+      cache: 'no-store',
+    }),
+    fetch(`${apiUrl}/api/v1/governance/members`, {
+      headers: { Cookie: cookie },
+      cache: 'no-store',
+    }),
   ])
 
-  const motions: MotionSummary[] = motionsRes.ok ? ((await motionsRes.json()) as MotionSummary[]) : []
+  const motions: MotionSummary[] = motionsRes.ok
+    ? ((await motionsRes.json()) as MotionSummary[])
+    : []
   const members: Member[] = membersRes.ok ? ((await membersRes.json()) as Member[]) : []
 
   return (
-    <div style={{ maxWidth: 820, margin: '3rem auto', padding: '0 1rem', fontFamily: 'system-ui, sans-serif' }}>
+    <div
+      style={{
+        maxWidth: 820,
+        margin: '3rem auto',
+        padding: '0 1rem',
+        fontFamily: 'system-ui, sans-serif',
+      }}
+    >
       <h1 style={{ marginBottom: '0.25rem' }}>Member governance</h1>
       <p style={{ color: '#666', marginBottom: '2rem' }}>
         Motions and voting for Tahti ry members. Voting is currently <strong>advisory</strong> —
@@ -93,7 +111,9 @@ export default async function GovernancePage() {
             <tbody>
               {members.map((m) => (
                 <tr key={m.username} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                  <td style={{ padding: '0.5rem 0.75rem', color: '#999' }}>{m.memberNumber ?? '—'}</td>
+                  <td style={{ padding: '0.5rem 0.75rem', color: '#999' }}>
+                    {m.memberNumber ?? '—'}
+                  </td>
                   <td style={{ padding: '0.5rem 0.75rem' }}>
                     {m.displayName}
                     {m.isBoard && (

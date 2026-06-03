@@ -36,108 +36,105 @@ function sha256(input: string): string {
 }
 
 const downloadRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get(
-    '/api/v1/c/:slug/archive/:itemId/download',
-    async (request, reply) => {
-      const { slug, itemId } = request.params as { slug: string; itemId: string }
-      const query = request.query as { fp?: string; format?: string }
+  fastify.get('/api/v1/c/:slug/archive/:itemId/download', async (request, reply) => {
+    const { slug, itemId } = request.params as { slug: string; itemId: string }
+    const query = request.query as { fp?: string; format?: string }
 
-      const channel = await fastify.prisma.channel.findUnique({
-        where: { slug },
-        select: { id: true, userId: true },
-      })
-      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+    const channel = await fastify.prisma.channel.findUnique({
+      where: { slug },
+      select: { id: true, userId: true },
+    })
+    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const item = await fastify.prisma.archiveItem.findFirst({
-        where: { id: itemId, channelId: channel.id, status: 'READY' },
-        select: { id: true, mp3Key: true, fileSizeBytes: true },
-      })
-      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
-      if (!item.mp3Key) {
-        return reply.status(409).send({ error: 'No downloadable file for this item' })
-      }
+    const item = await fastify.prisma.archiveItem.findFirst({
+      where: { id: itemId, channelId: channel.id, status: 'READY' },
+      select: { id: true, mp3Key: true, fileSizeBytes: true },
+    })
+    if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+    if (!item.mp3Key) {
+      return reply.status(409).send({ error: 'No downloadable file for this item' })
+    }
 
-      const salt = dailySalt()
-      const fingerprintInput = query.fp?.trim() || `${request.headers['user-agent'] ?? 'unknown'}`
-      const byFingerprint = sha256(`${fingerprintInput}:${salt}`)
-      const byIpHash = sha256(`${request.ip}:${salt}`)
+    const salt = dailySalt()
+    const fingerprintInput = query.fp?.trim() || `${request.headers['user-agent'] ?? 'unknown'}`
+    const byFingerprint = sha256(`${fingerprintInput}:${salt}`)
+    const byIpHash = sha256(`${request.ip}:${salt}`)
 
-      // Rate limit by fingerprint OR IP (whichever trips first).
-      const now = Date.now()
-      const hourAgo = new Date(now - HOUR_MS)
-      const dayAgo = new Date(now - DAY_MS)
+    // Rate limit by fingerprint OR IP (whichever trips first).
+    const now = Date.now()
+    const hourAgo = new Date(now - HOUR_MS)
+    const dayAgo = new Date(now - DAY_MS)
 
-      const [lastHour, lastDay] = await Promise.all([
-        fastify.prisma.download.count({
-          where: {
-            createdAt: { gte: hourAgo },
-            OR: [{ byFingerprint }, { byIpHash }],
-          },
-        }),
-        fastify.prisma.download.count({
-          where: {
-            createdAt: { gte: dayAgo },
-            OR: [{ byFingerprint }, { byIpHash }],
-          },
-        }),
-      ])
-
-      if (lastHour >= RATE_PER_HOUR || lastDay >= RATE_PER_DAY) {
-        return reply
-          .header('Retry-After', '3600')
-          .status(429)
-          .send({ error: 'Download rate limit exceeded. Try again later.' })
-      }
-
-      // Determine grant weight. Fan-subscribers (M19) get a 5× weight; until
-      // fan-subs exist, every download is an anonymous/free download (weight 1).
-      const byUserId = request.sessionUser?.id ?? null
-      const weight = 1
-
-      // Decide whether this download counts toward grants.
-      let countedAt: Date | null = new Date()
-      let reason: string | null = null
-
-      const dedupHit = await fastify.prisma.download.findFirst({
+    const [lastHour, lastDay] = await Promise.all([
+      fastify.prisma.download.count({
         where: {
-          archiveItemId: item.id,
-          byFingerprint,
-          countedAt: { gte: new Date(now - DEDUP_WINDOW_MS) },
+          createdAt: { gte: hourAgo },
+          OR: [{ byFingerprint }, { byIpHash }],
         },
-        select: { id: true },
+      }),
+      fastify.prisma.download.count({
+        where: {
+          createdAt: { gte: dayAgo },
+          OR: [{ byFingerprint }, { byIpHash }],
+        },
+      }),
+    ])
+
+    if (lastHour >= RATE_PER_HOUR || lastDay >= RATE_PER_DAY) {
+      return reply
+        .header('Retry-After', '3600')
+        .status(429)
+        .send({ error: 'Download rate limit exceeded. Try again later.' })
+    }
+
+    // Determine grant weight. Fan-subscribers (M19) get a 5× weight; until
+    // fan-subs exist, every download is an anonymous/free download (weight 1).
+    const byUserId = request.sessionUser?.id ?? null
+    const weight = 1
+
+    // Decide whether this download counts toward grants.
+    let countedAt: Date | null = new Date()
+    let reason: string | null = null
+
+    const dedupHit = await fastify.prisma.download.findFirst({
+      where: {
+        archiveItemId: item.id,
+        byFingerprint,
+        countedAt: { gte: new Date(now - DEDUP_WINDOW_MS) },
+      },
+      select: { id: true },
+    })
+    if (dedupHit) {
+      countedAt = null
+      reason = 'dedup'
+    } else {
+      const countedForTrack = await fastify.prisma.download.count({
+        where: { archiveItemId: item.id, byFingerprint, countedAt: { not: null } },
       })
-      if (dedupHit) {
+      if (countedForTrack >= PER_TRACK_CAP) {
         countedAt = null
-        reason = 'dedup'
-      } else {
-        const countedForTrack = await fastify.prisma.download.count({
-          where: { archiveItemId: item.id, byFingerprint, countedAt: { not: null } },
-        })
-        if (countedForTrack >= PER_TRACK_CAP) {
-          countedAt = null
-          reason = 'per_track_cap'
-        }
+        reason = 'per_track_cap'
       }
+    }
 
-      await fastify.prisma.download.create({
-        data: {
-          channelId: channel.id,
-          archiveItemId: item.id,
-          format: query.format === 'opus256' ? 'opus256' : 'mp3_320',
-          byUserId,
-          byFingerprint,
-          byIpHash,
-          bytes: Number(item.fileSizeBytes),
-          countedAt,
-          reason,
-          weight,
-        },
-      })
+    await fastify.prisma.download.create({
+      data: {
+        channelId: channel.id,
+        archiveItemId: item.id,
+        format: query.format === 'opus256' ? 'opus256' : 'mp3_320',
+        byUserId,
+        byFingerprint,
+        byIpHash,
+        bytes: Number(item.fileSizeBytes),
+        countedAt,
+        reason,
+        weight,
+      },
+    })
 
-      const url = await presignedGetUrl(item.mp3Key, 300)
-      return reply.send({ url, counted: countedAt !== null })
-    },
-  )
+    const url = await presignedGetUrl(item.mp3Key, 300)
+    return reply.send({ url, counted: countedAt !== null })
+  })
 }
 
 export default downloadRoutes

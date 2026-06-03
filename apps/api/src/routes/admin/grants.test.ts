@@ -107,10 +107,20 @@ describe('M9 — annual grant calculation', () => {
 
     // Surplus: €1,000 across the year (two monthly rollups summing to 100000c).
     await prisma.monthlyRollup.create({
-      data: { yearMonth: `${YEAR}-01`, byCategory: {}, surplus: BigInt(60_000), finalizedAt: new Date() },
+      data: {
+        yearMonth: `${YEAR}-01`,
+        byCategory: {},
+        surplus: BigInt(60_000),
+        finalizedAt: new Date(),
+      },
     })
     await prisma.monthlyRollup.create({
-      data: { yearMonth: `${YEAR}-02`, byCategory: {}, surplus: BigInt(40_000), finalizedAt: new Date() },
+      data: {
+        yearMonth: `${YEAR}-02`,
+        byCategory: {},
+        surplus: BigInt(40_000),
+        finalizedAt: new Date(),
+      },
     })
 
     // Engagement: A gets 60 counted downloads, B gets 40. Total 100 units.

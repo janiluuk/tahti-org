@@ -86,8 +86,7 @@ export function allocateGrants(opts: AllocateOptions): AllocationResult {
 
   // Stable ordering: larger remainder first, then more units, then userId.
   const order = [...raw].sort(
-    (a, b) =>
-      b.remainder - a.remainder || b.units - a.units || a.userId.localeCompare(b.userId),
+    (a, b) => b.remainder - a.remainder || b.units - a.units || a.userId.localeCompare(b.userId),
   )
   const bonus = new Map<string, number>()
   for (let i = 0; i < order.length && leftover > 0; i++) {

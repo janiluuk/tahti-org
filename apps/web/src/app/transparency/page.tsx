@@ -11,7 +11,7 @@ interface MonthlyRollup {
 interface YtdSummary {
   year: string
   byCategory: Record<string, string>
-  runningsurplus: string
+  runningSurplus: string
   monthsFinalized: number
 }
 
@@ -53,7 +53,7 @@ export default async function TransparencyPage() {
     : {
         year: String(new Date().getFullYear()),
         byCategory: {},
-        runningsurplus: '0',
+        runningSurplus: '0',
         monthsFinalized: 0,
       }
 
@@ -99,8 +99,8 @@ export default async function TransparencyPage() {
         <SummaryCard label={`${ytd.year} Costs`} value={formatEur(totalCosts)} />
         <SummaryCard
           label="Running surplus"
-          value={formatEur(ytd.runningsurplus)}
-          positive={parseInt(ytd.runningsurplus, 10) >= 0}
+          value={formatEur(ytd.runningSurplus)}
+          positive={parseInt(ytd.runningSurplus, 10) >= 0}
           subtitle={`${ytd.monthsFinalized} month${ytd.monthsFinalized !== 1 ? 's' : ''} finalized`}
         />
       </section>

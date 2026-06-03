@@ -5,10 +5,12 @@ platform → tested beta → operation by Tahti ry** (with trained member-operat
 
 **Status today (updated 2026-06-03):** specs, infra templates, and financial
 model exist **and the application code is well underway**. The MVP broadcasting
-stack (M0–M6), the transparency ledger (M8), and hardening basics (M11 partial)
-are implemented with a green test suite. See the
-[Build audit](#build-audit--current-state-2026-06-03) below for the
-milestone-by-milestone breakdown of what is done, partial, and not started.
+stack (M0–M6), live chat (M5), the transparency ledger (M8), the annual grant
+engine (M9), member governance (M10), download engagement units (M18 core), and
+hardening basics (M11 partial) are implemented with a green test suite
+(81 tests). See the [Build audit](#build-audit--current-state-2026-06-03) below
+for the milestone-by-milestone breakdown of what is done, partial, and not
+started.
 
 **Target Year 1 plan:** 200 paying members · founding grant for capex/growth ·
 first AGM · handover-ready ops by month 12–18. Ops balance without a fixed
@@ -35,7 +37,8 @@ closed beta → **M7–M9, M19** (money + grants) → remaining features → han
 
 Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 `docs/AGENT.md` milestones. Verified by reading the source and running
-`pnpm typecheck` (passes) and `pnpm test` (57 tests pass with Postgres up).
+`pnpm typecheck` (passes), `pnpm lint` + `pnpm format:check` (clean), and
+`pnpm test` (81 tests pass with Postgres up).
 
 | Milestone | State | Evidence / notes |
 |---|---|---|
@@ -44,7 +47,7 @@ Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 | **M2** Channel + archive upload | ✅ Done | Presigned S3-multipart upload (resolves Topic 5 → option A), transcode worker, channel page |
 | **M3** Live ingress + orchestrator | ✅ Done | Icecast + RTMP webhooks, orchestrator + Liquidsoap template, HLS player. Path-based routing `/c/<slug>` (resolves Topic 9 → option B/C). WebRTC browser-live deferred (Topic 6) |
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
-| **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence (uncommitted working tree) |
+| **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence |
 | **M6** Multistream RTMP | ✅ Done | Per-channel targets, encrypted stream keys, `alwaysMirror` gated to STUDIO |
 | **M7** Distribution (Mixcloud/Revelator) | ❌ Not started | No `packages/revelator` or `packages/mixcloud` |
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
@@ -66,10 +69,10 @@ as their own checklist so they don't get lost between milestones.
 |:---:|---|---|---|
 | [ ] | Wire Stripe Checkout for €40 membership + webhook → `REVENUE_SUBSCRIPTION` ledger entry | M1 currently activates membership with no payment; this is core to the nonprofit money flow | M1 finish / Phase 4 |
 | [x] | Add `GrantDisbursement` model + annual grant cron + `/transparency/grants/:year` | The grant engine is "what makes Tahti a nonprofit" and is entirely absent | M9 (done) |
-| [x] | Add board **role** (`User.isBoard` + `requireBoard`) so role checks stop using `isMember` as a proxy | Board-only actions are now gated properly; `admin/ledger` can adopt `requireBoard` next | M10 (done) |
+| [x] | Add board **role** (`User.isBoard` + `requireBoard`) so role checks stop using `isMember` as a proxy | Board-only actions are now gated properly; `admin/ledger` now uses `requireBoard` (manual ledger entries are board/treasurer-only) | M10 (done) |
 | [ ] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
 | [ ] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | AGENT.md acceptance criteria require Zod validation on every endpoint; several routes hand-roll validation | ongoing hardening |
-| [ ] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fix before third parties depend on it | M8 polish |
+| [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
 | [ ] | Document ephemeral test DB story for CI + local (`pnpm test` needs Postgres) | Integration tests silently fail without a DB; document/seed it | M11 |
 | [~] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | Download → unit pipeline is live (M18); fan-sub euro input lands with M19 | M18 (done) / M19 → M9 |
 

@@ -58,7 +58,14 @@ export default function NewMotionForm() {
   }
 
   return (
-    <div style={{ marginBottom: '2rem', padding: '1.25rem', border: '1px solid #e5e7eb', borderRadius: 8 }}>
+    <div
+      style={{
+        marginBottom: '2rem',
+        padding: '1.25rem',
+        border: '1px solid #e5e7eb',
+        borderRadius: 8,
+      }}
+    >
       <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.95rem' }}>New motion (saved as draft)</h3>
       <input
         value={title}

@@ -2,27 +2,17 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { requireAuth } from '../../plugins/auth.js'
+import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 
 // Treasurer-only: manually create ledger entries (infrastructure bills,
-// salaries, donations, grants received, etc.)
-// Production gating: user must be isMember=true; full role check deferred to M10.
+// salaries, donations, grants received, etc.). Gated to board members
+// (requireBoard) now that M10 introduced the board role — manual ledger
+// mutations must not be open to every member.
 
 const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
-  async function requireTreasurer(
-    request: Parameters<typeof requireAuth>[0],
-    reply: Parameters<typeof requireAuth>[1],
-  ) {
-    await requireAuth(request, reply)
-    if (reply.sent) return
-    if (!request.sessionUser?.isMember) {
-      return reply.status(403).send({ error: 'Members only' })
-    }
-  }
-
   // POST /api/admin/ledger — create a manual ledger entry
-  fastify.post('/api/admin/ledger', { preHandler: requireTreasurer }, async (request, reply) => {
+  fastify.post('/api/admin/ledger', { preHandler: requireBoard }, async (request, reply) => {
     const user = request.sessionUser!
     const body = request.body as {
       category?: string
@@ -90,7 +80,7 @@ const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   // GET /api/admin/ledger?year=YYYY&month=MM — list entries for period
-  fastify.get('/api/admin/ledger', { preHandler: requireTreasurer }, async (request, reply) => {
+  fastify.get('/api/admin/ledger', { preHandler: requireBoard }, async (request, reply) => {
     const { year, month } = request.query as { year?: string; month?: string }
 
     const periodStart = year

@@ -7,8 +7,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     env: {
-      DATABASE_URL:
-        process.env.DATABASE_URL ?? 'postgresql://tahti:tahti_dev@localhost:5432/tahti',
+      DATABASE_URL: process.env.DATABASE_URL ?? 'postgresql://tahti:tahti_dev@localhost:5432/tahti',
     },
     coverage: {
       provider: 'v8',

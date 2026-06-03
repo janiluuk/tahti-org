@@ -77,7 +77,8 @@ export default function MotionCard({
         </span>
       </div>
       <p style={{ margin: '0.25rem 0 0.75rem', fontSize: '0.8rem', color: '#888' }}>
-        Proposed by {motion.proposer} · closes {new Date(motion.closeAt).toLocaleDateString('fi-FI')}
+        Proposed by {motion.proposer} · closes{' '}
+        {new Date(motion.closeAt).toLocaleDateString('fi-FI')}
         {motion.advisory && ' · advisory'}
       </p>
 
@@ -119,9 +120,7 @@ export default function MotionCard({
       )}
 
       {motion.state === 'DRAFT' && (
-        <p style={{ fontSize: '0.8rem', color: '#aaa', margin: 0 }}>
-          Not yet open for voting.
-        </p>
+        <p style={{ fontSize: '0.8rem', color: '#aaa', margin: 0 }}>Not yet open for voting.</p>
       )}
 
       {isBoard && motion.state !== 'CLOSED' && (
@@ -147,7 +146,9 @@ export default function MotionCard({
         </div>
       )}
 
-      {error && <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: '0.5rem 0 0' }}>{error}</p>}
+      {error && (
+        <p style={{ color: '#dc2626', fontSize: '0.8rem', margin: '0.5rem 0 0' }}>{error}</p>
+      )}
     </article>
   )
 }
