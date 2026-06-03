@@ -76,6 +76,7 @@ import meProgrammeRoutes from './routes/me/programme.js'
 import meChannelScheduleRoutes from './routes/me/channel-schedule.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
 import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
+import meChannelEgressRoutes from './routes/me/channel-egress.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
@@ -281,6 +282,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meChannelScheduleRoutes)
   await fastify.register(meArchiveVersionRoutes)
   await fastify.register(meDownloadGateStatsRoutes)
+  await fastify.register(meChannelEgressRoutes)
   await fastify.register(meUsersRoutes)
 
   // M23: collections + RSS feeds

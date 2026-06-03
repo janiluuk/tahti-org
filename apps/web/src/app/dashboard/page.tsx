@@ -21,6 +21,7 @@ import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
+import { ChannelEgressPanel } from './channel-egress-panel'
 import UpgradeCta from './upgrade-cta'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
@@ -182,6 +183,12 @@ export default async function DashboardPage() {
       blockedDownloadAttempts: number
     }>
   } | null = null
+  let channelEgress: {
+    windowDays: number
+    totalBytes: number
+    totalDownloads: number
+    daily: Array<{ date: string; bytes: number; downloads: number }>
+  } | null = null
   if (user.channel) {
     try {
       const res = await fetch(`${apiUrl}/api/me/broadcast-usage`, {
@@ -198,6 +205,15 @@ export default async function DashboardPage() {
         cache: 'no-store',
       })
       if (res.ok) downloadGateSummary = (await res.json()) as typeof downloadGateSummary
+    } catch {
+      // ignore
+    }
+    try {
+      const res = await fetch(`${apiUrl}/api/me/channel-egress`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) channelEgress = (await res.json()) as typeof channelEgress
     } catch {
       // ignore
     }
@@ -478,6 +494,7 @@ export default async function DashboardPage() {
           <BroadcastUsageBanner usage={broadcastUsage} />
           <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
           <DownloadGateSummaryPanel summary={downloadGateSummary} />
+          <ChannelEgressPanel stats={channelEgress} />
           <Text size="sm" style={{ margin: '0.25rem 0' }}>
             <strong>URL:</strong>{' '}
             <Link href={`/c/${user.channel.slug}`}>

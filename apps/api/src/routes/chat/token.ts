@@ -3,6 +3,7 @@
 
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
+import { ChatTokenSchema } from '@tahti/shared'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
@@ -28,11 +29,11 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
   // Issues a Centrifugo connection JWT. handle stored in localStorage by the client.
   fastify.post('/api/chat/:slug/token', async (request, reply) => {
     const { slug } = request.params as { slug: string }
-    const { handle, hcaptchaToken } =
-      (request.body as {
-        handle?: string
-        hcaptchaToken?: string
-      }) ?? {}
+    const parsed = ChatTokenSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+    }
+    const { handle, hcaptchaToken } = parsed.data
 
     const ip = request.ip ?? '0.0.0.0'
     if (!checkRateLimit(ip)) {
@@ -51,11 +52,7 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
     if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-    if (!handle || typeof handle !== 'string' || handle.trim().length === 0) {
-      return reply.status(400).send({ error: 'handle is required' })
-    }
-
-    const cleanHandle = handle.trim().slice(0, 32)
+    const cleanHandle = handle
 
     // Fingerprint: sha256(ip + user-agent + channel) — monthly salt kept in env
     const salt = process.env.FINGERPRINT_SALT ?? 'dev-salt'
@@ -84,6 +81,14 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
     )
 
     await markChatCaptchaVerified(channel.id, fingerprint)
+
+    // LISTENER-003: cookie survives localStorage clears (non-HttpOnly so client can read it too).
+    reply.setCookie('tahti_chat_handle', cleanHandle, {
+      path: '/',
+      maxAge: 365 * 24 * 60 * 60,
+      sameSite: 'lax',
+      httpOnly: false,
+    })
 
     return reply.send({ token, handle: cleanHandle, fingerprint, supporter })
   })
