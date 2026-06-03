@@ -243,6 +243,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "${WEBSITE_PORT:-8080}:80"
+    volumes:
+      - ../website/output_vhs.mp4:/usr/share/nginx/html/output_vhs.mp4:ro,optional
+      - ../website/bg-audio.mp3:/usr/share/nginx/html/bg-audio.mp3:ro
     profiles: ["marketing"]
 
 volumes:

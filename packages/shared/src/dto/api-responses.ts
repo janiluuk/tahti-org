@@ -49,6 +49,42 @@ export const ChannelScheduleViewSchema = z.object({
   nextBroadcastNote: z.string().nullable(),
 })
 
+export const DownloadUrlResponseSchema = z.object({
+  url: z.string().url(),
+  counted: z.boolean(),
+})
+
+export const DownloadGateStatusSchema = z.object({
+  repostRequired: z.boolean(),
+  followRequired: z.boolean(),
+  repostSatisfied: z.boolean(),
+  followSatisfied: z.boolean(),
+  canDownload: z.boolean(),
+})
+
+export type DownloadGateStatus = z.infer<typeof DownloadGateStatusSchema>
+
+export const TransparencyYtdResponseSchema = z.object({
+  year: z.string(),
+  byCategory: z.record(z.string()),
+  runningSurplus: z.string(),
+  monthsFinalized: z.number().int().nonnegative(),
+})
+
+export const TransparencyGrantReportSchema = z.object({
+  year: z.number().int(),
+  totalCents: z.string(),
+  grantCount: z.number().int().nonnegative(),
+  grants: z.array(
+    z.object({
+      publishedAs: z.string(),
+      units: z.number(),
+      amountCents: z.string(),
+      state: z.string(),
+    }),
+  ),
+})
+
 export const DownloadGateItemDetailResponseSchema = z.object({
   repostToDownload: z.boolean(),
   followToDownload: z.boolean(),

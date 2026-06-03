@@ -31,6 +31,12 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/releases/:smartLinkSlug/tracks/:trackId/download
   fastify.get(
     '/api/v1/releases/:smartLinkSlug/tracks/:trackId/download',
+    {
+      schema: {
+        tags: ['downloads'],
+        description: 'M18: presigned release-track download with anti-fraud accounting',
+      },
+    },
     async (request, reply) => {
       const { smartLinkSlug, trackId } = request.params as {
         smartLinkSlug: string

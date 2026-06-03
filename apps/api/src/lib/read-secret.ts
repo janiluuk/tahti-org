@@ -5,13 +5,16 @@ import { readFileSync } from 'node:fs'
 
 /** PLAT-005: read credential from env or Docker secret file (`*_FILE`). */
 export function readSecret(envKey: string, fileKey: string, fallback: string): string {
+  const fromEnv = process.env[envKey]
+  if (fromEnv !== undefined && fromEnv !== '') return fromEnv
+
   const path = process.env[fileKey]
   if (path) {
     try {
       return readFileSync(path, 'utf8').trim()
     } catch {
-      // fall through to env/default
+      // fall through to default
     }
   }
-  return process.env[envKey] ?? fallback
+  return fallback
 }

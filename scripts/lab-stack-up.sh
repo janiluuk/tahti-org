@@ -13,10 +13,11 @@
 #   SSH_PROXY_JUMP           — e.g. pi@sparkki.dudeisland.eu:4322 (GitHub Actions / remote deploy)
 #   DEPLOY_APP_PORT          — default 8090
 #
-# NOTE: website/output_vhs.mp4 is not tracked in git. It is preserved across
+# NOTE: website/output_vhs.mp4 and bg-audio.mp3 are bind-mounted at runtime (not in the image).
+#       output_vhs.mp4 is not tracked in git. It is preserved across
 #       deployments because rsync does not run --delete. For a fresh server,
 #       copy it once manually:
-#         scp website/output_vhs.mp4 root@192.168.2.100:/srv/tahti/website/
+#         scp website/output_vhs.mp4 website/bg-audio.mp3 root@192.168.2.100:/srv/tahti/media/
 #
 set -euo pipefail
 
