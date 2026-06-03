@@ -5,10 +5,13 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   FanTierBodySchema,
   FanTierPatchSchema,
+  FanTierListSchema,
+  FanTierViewSchema,
   FanTiersPublicResponseSchema,
   IdParamSchema,
   UsernameParamSchema,
   openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -65,82 +68,114 @@ const fanTierRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // GET /api/me/fan-tiers — the signed-in artist's own tiers (incl. disabled)
-  fastify.get('/api/me/fan-tiers', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const tiers = await fastify.prisma.fanTier.findMany({
-      where: { artistUserId: user.id },
-      orderBy: { position: 'asc' },
-    })
-    return reply.send(tiers)
-  })
+  fastify.get(
+    '/api/me/fan-tiers',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        response: openApiResponse(FanTierListSchema, 'FanTierList'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const tiers = await fastify.prisma.fanTier.findMany({
+        where: { artistUserId: user.id },
+        orderBy: { position: 'asc' },
+      })
+      return reply.send(tiers)
+    },
+  )
 
   // POST /api/me/fan-tiers — create a tier
-  fastify.post('/api/me/fan-tiers', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const parsed = FanTierBodySchema.safeParse(request.body)
-    if (!parsed.success) {
-      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
-    }
-
-    const count = await fastify.prisma.fanTier.count({ where: { artistUserId: user.id } })
-    if (count >= 8) return reply.status(400).send({ error: 'Maximum of 8 tiers' })
-
-    const tier = await fastify.prisma.fanTier.create({
-      data: {
-        artistUserId: user.id,
-        name: parsed.data.name,
-        amountCents: parsed.data.amountCents,
-        description: parsed.data.description,
-        perks: parsed.data.perks,
-        position: count,
+  fastify.post(
+    '/api/me/fan-tiers',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        response: openApiResponses([{ status: 201, schema: FanTierViewSchema, name: 'FanTier' }]),
       },
-    })
-    return reply.status(201).send(tier)
-  })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = FanTierBodySchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+
+      const count = await fastify.prisma.fanTier.count({ where: { artistUserId: user.id } })
+      if (count >= 8) return reply.status(400).send({ error: 'Maximum of 8 tiers' })
+
+      const tier = await fastify.prisma.fanTier.create({
+        data: {
+          artistUserId: user.id,
+          name: parsed.data.name,
+          amountCents: parsed.data.amountCents,
+          description: parsed.data.description,
+          perks: parsed.data.perks,
+          position: count,
+        },
+      })
+      return reply.status(201).send(tier)
+    },
+  )
 
   // PATCH /api/me/fan-tiers/:id — update or enable/disable a tier
-  fastify.patch('/api/me/fan-tiers/:id', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const routeParams = parseRouteParams(IdParamSchema, request.params)
-    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-    const { id } = routeParams
-    const parsed = FanTierPatchSchema.safeParse(request.body)
-    if (!parsed.success) {
-      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
-    }
-    const body = parsed.data
-
-    const existing = await fastify.prisma.fanTier.findFirst({
-      where: { id, artistUserId: user.id },
-    })
-    if (!existing) return reply.status(404).send({ error: 'Tier not found' })
-
-    const data: Record<string, unknown> = {}
-    const tierFieldsTouched =
-      body.name !== undefined ||
-      body.amountCents !== undefined ||
-      body.perks !== undefined ||
-      body.description !== undefined
-
-    if (tierFieldsTouched) {
-      const merged = FanTierBodySchema.safeParse({
-        name: body.name ?? existing.name,
-        amountCents: body.amountCents ?? existing.amountCents,
-        description:
-          body.description !== undefined ? body.description : (existing.description ?? undefined),
-        perks: body.perks ?? existing.perks,
-      })
-      if (!merged.success) {
-        return reply.status(400).send({ error: merged.error.issues[0]?.message ?? 'Invalid body' })
+  fastify.patch(
+    '/api/me/fan-tiers/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        response: openApiResponse(FanTierViewSchema, 'FanTier'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const parsed = FanTierPatchSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
       }
-      Object.assign(data, merged.data)
-    }
-    if (body.active !== undefined) data.active = body.active
-    if (body.position !== undefined) data.position = body.position
+      const body = parsed.data
 
-    const tier = await fastify.prisma.fanTier.update({ where: { id }, data })
-    return reply.send(tier)
-  })
+      const existing = await fastify.prisma.fanTier.findFirst({
+        where: { id, artistUserId: user.id },
+      })
+      if (!existing) return reply.status(404).send({ error: 'Tier not found' })
+
+      const data: Record<string, unknown> = {}
+      const tierFieldsTouched =
+        body.name !== undefined ||
+        body.amountCents !== undefined ||
+        body.perks !== undefined ||
+        body.description !== undefined
+
+      if (tierFieldsTouched) {
+        const merged = FanTierBodySchema.safeParse({
+          name: body.name ?? existing.name,
+          amountCents: body.amountCents ?? existing.amountCents,
+          description:
+            body.description !== undefined ? body.description : (existing.description ?? undefined),
+          perks: body.perks ?? existing.perks,
+        })
+        if (!merged.success) {
+          return reply
+            .status(400)
+            .send({ error: merged.error.issues[0]?.message ?? 'Invalid body' })
+        }
+        Object.assign(data, merged.data)
+      }
+      if (body.active !== undefined) data.active = body.active
+      if (body.position !== undefined) data.position = body.position
+
+      const tier = await fastify.prisma.fanTier.update({ where: { id }, data })
+      return reply.send(tier)
+    },
+  )
 }
 
 export default fanTierRoutes

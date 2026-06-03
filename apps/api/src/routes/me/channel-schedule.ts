@@ -42,40 +42,50 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.patch('/api/me/channel/schedule', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const parsed = ChannelSchedulePatchSchema.safeParse(request.body)
-    if (!parsed.success) return zodError(reply, parsed.error)
+  fastify.patch(
+    '/api/me/channel/schedule',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ChannelScheduleViewSchema, 'ChannelSchedule'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = ChannelSchedulePatchSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
 
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    })
-    if (!channel) return reply.status(404).send({ error: 'No channel' })
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'No channel' })
 
-    const data: { nextBroadcastAt?: Date | null; nextBroadcastNote?: string | null } = {}
-    if (parsed.data.nextBroadcastAt !== undefined) {
-      data.nextBroadcastAt = parsed.data.nextBroadcastAt
-        ? new Date(parsed.data.nextBroadcastAt)
-        : null
-    }
-    if (parsed.data.nextBroadcastNote !== undefined) {
-      data.nextBroadcastNote = parsed.data.nextBroadcastNote?.trim() || null
-    }
-    if (Object.keys(data).length === 0) {
-      return reply.status(400).send({ error: 'No schedule fields to update' })
-    }
+      const data: { nextBroadcastAt?: Date | null; nextBroadcastNote?: string | null } = {}
+      if (parsed.data.nextBroadcastAt !== undefined) {
+        data.nextBroadcastAt = parsed.data.nextBroadcastAt
+          ? new Date(parsed.data.nextBroadcastAt)
+          : null
+      }
+      if (parsed.data.nextBroadcastNote !== undefined) {
+        data.nextBroadcastNote = parsed.data.nextBroadcastNote?.trim() || null
+      }
+      if (Object.keys(data).length === 0) {
+        return reply.status(400).send({ error: 'No schedule fields to update' })
+      }
 
-    const updated = await fastify.prisma.channel.update({
-      where: { id: channel.id },
-      data,
-      select: { nextBroadcastAt: true, nextBroadcastNote: true },
-    })
-    return reply.send({
-      nextBroadcastAt: updated.nextBroadcastAt?.toISOString() ?? null,
-      nextBroadcastNote: updated.nextBroadcastNote,
-    })
-  })
+      const updated = await fastify.prisma.channel.update({
+        where: { id: channel.id },
+        data,
+        select: { nextBroadcastAt: true, nextBroadcastNote: true },
+      })
+      return reply.send({
+        nextBroadcastAt: updated.nextBroadcastAt?.toISOString() ?? null,
+        nextBroadcastNote: updated.nextBroadcastNote,
+      })
+    },
+  )
 }
 
 export default channelScheduleRoutes

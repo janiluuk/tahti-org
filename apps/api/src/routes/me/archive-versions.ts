@@ -6,8 +6,13 @@ import { nanoid } from 'nanoid'
 import {
   ArchiveVersionCompleteSchema,
   ArchiveVersionParamsSchema,
+  ArchiveVersionCreatedSchema,
+  ArchiveVersionListSchema,
+  ArchiveVersionPrepareResponseSchema,
   ArchiveVersionPrepareSchema,
   IdParamSchema,
+  openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -28,7 +33,13 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get(
     '/api/me/archive/:id/versions',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ArchiveVersionListSchema, 'ArchiveVersionList'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)
@@ -60,7 +71,13 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/archive/:id/versions/prepare',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ArchiveVersionPrepareResponseSchema, 'ArchiveVersionPrepare'),
+      },
+    },
     async (request, reply) => {
       const parsed = ArchiveVersionPrepareSchema.safeParse(request.body)
       if (!parsed.success) {
@@ -85,7 +102,15 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/archive/:id/versions/complete',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponses([
+          { status: 201, schema: ArchiveVersionCreatedSchema, name: 'ArchiveVersionCreated' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const parsed = ArchiveVersionCompleteSchema.safeParse(request.body)
       if (!parsed.success) {
@@ -136,7 +161,13 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/archive/:id/versions/:versionId/activate',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ArchiveVersionListSchema, 'ArchiveVersionList'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(ArchiveVersionParamsSchema, request.params)

@@ -6,7 +6,10 @@ import { nanoid } from 'nanoid'
 import {
   IdParamSchema,
   ReleaseArtworkCompleteSchema,
+  ReleaseArtworkCompleteResponseSchema,
+  ReleaseArtworkPrepareResponseSchema,
   ReleaseArtworkPrepareSchema,
+  openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -24,7 +27,13 @@ const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/releases/:id/artwork/prepare',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(ReleaseArtworkPrepareResponseSchema, 'ReleaseArtworkPrepare'),
+      },
+    },
     async (request, reply) => {
       const parsed = ReleaseArtworkPrepareSchema.safeParse(request.body)
       if (!parsed.success) {
@@ -49,7 +58,13 @@ const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/releases/:id/artwork/complete',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(ReleaseArtworkCompleteResponseSchema, 'ReleaseArtworkComplete'),
+      },
+    },
     async (request, reply) => {
       const parsed = ReleaseArtworkCompleteSchema.safeParse(request.body)
       if (!parsed.success) {

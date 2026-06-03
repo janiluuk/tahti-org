@@ -2,7 +2,14 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { IdParamSchema, parseRouteParams } from '@tahti/shared'
+import {
+  IdParamSchema,
+  RevelatorStatusResponseSchema,
+  RevelatorSubmitResponseSchema,
+  openApiResponse,
+  openApiResponses,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { releaseCatalogSelect } from '../../lib/release-catalog.js'
 import { mediaQueue } from '../../lib/queue.js'
@@ -13,7 +20,13 @@ const SUBMITTABLE_STATUSES = new Set(['failed', null])
 const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/releases/:id/revelator',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(RevelatorStatusResponseSchema, 'RevelatorStatus'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)
@@ -40,7 +53,15 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/releases/:id/revelator/submit',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponses([
+          { status: 202, schema: RevelatorSubmitResponseSchema, name: 'RevelatorSubmit' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)

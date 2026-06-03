@@ -809,3 +809,164 @@ export const EmbedTrackPlaySchema = z.object({
   title: z.string(),
   expiresInSec: z.number().int(),
 })
+
+export const PresignUploadResponseSchema = z.object({
+  uploadUrl: z.string().url(),
+  expiresAt: z.string(),
+})
+
+export const FanTierViewSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    amountCents: z.number().int(),
+    active: z.boolean(),
+    position: z.number().int(),
+    perks: z.array(z.string()),
+  })
+  .passthrough()
+
+export const FanTierListSchema = z.array(FanTierViewSchema)
+
+export const ReleaseTrackViewSchema = z.object({ id: z.string(), title: z.string() }).passthrough()
+
+export const ReleaseTrackUploadPrepareSchema = PresignUploadResponseSchema.extend({
+  sourceKey: z.string(),
+})
+
+export const ReleaseTrackFinalizeSchema = z.object({
+  trackId: z.string(),
+  status: z.string(),
+})
+
+export const MeTrackDownloadSchema = z.object({
+  url: z.string().url(),
+  format: z.string(),
+  expiresInSec: z.number().int(),
+})
+
+export const ChatPublishResultSchema = z.object({
+  result: z.object({}).passthrough(),
+})
+
+export const ChatAccessResponseSchema = z.object({
+  fanChatEnabled: z.boolean(),
+  isSupporter: z.boolean(),
+  canJoinFanChat: z.boolean(),
+})
+
+export const ChatFanTokenResponseSchema = z.object({
+  token: z.string(),
+  handle: z.string(),
+  channel: z.string(),
+  supporter: z.literal(true),
+})
+
+export const MentionsEnabledResponseSchema = z.object({
+  mentionsEnabled: z.boolean(),
+})
+
+export const MuteHandleResponseSchema = z.object({
+  muted: z.string().optional(),
+  unmuted: z.string().optional(),
+})
+
+export const ArchiveVersionViewSchema = z.object({
+  id: z.string(),
+  versionNumber: z.number().int(),
+  versionLabel: z.string(),
+  status: z.string(),
+  isActive: z.boolean(),
+  durationSec: z.number().nullable(),
+  createdAt: z.string(),
+})
+
+export const ArchiveVersionListSchema = z.array(ArchiveVersionViewSchema)
+
+export const ArchiveVersionPrepareResponseSchema = PresignUploadResponseSchema.extend({
+  uploadId: z.string(),
+})
+
+export const ArchiveVersionCreatedSchema = z.object({
+  versionId: z.string(),
+  versionNumber: z.number().int(),
+  versionLabel: z.string(),
+  status: z.string(),
+})
+
+export const ReleaseArtworkPrepareResponseSchema = PresignUploadResponseSchema.extend({
+  uploadKey: z.string(),
+})
+
+export const ReleaseArtworkCompleteResponseSchema = z.object({
+  artworkUrl: z.string().nullable(),
+  artworkKey: z.string().nullable(),
+})
+
+export const CollectionViewSchema = z.object({ id: z.string(), slug: z.string() }).passthrough()
+
+export const CollectionListSchema = z.array(CollectionViewSchema)
+
+export const CollectionItemViewSchema = z
+  .object({ id: z.string(), position: z.number().int() })
+  .passthrough()
+
+export const CollectionReorderResponseSchema = z.object({
+  items: z.array(z.unknown()),
+})
+
+export const UserSearchHitSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+})
+
+export const UserSearchListSchema = z.array(UserSearchHitSchema)
+
+export const RevelatorStatusResponseSchema = z.object({
+  revelatorId: z.string().nullable(),
+  revelatorStatus: z.string().nullable(),
+  title: z.string(),
+})
+
+export const RevelatorSubmitResponseSchema = z.object({
+  releaseId: z.string(),
+  revelatorStatus: z.string(),
+})
+
+export const NewsletterSendQueuedSchema = z.object({
+  draftId: z.string(),
+  queued: z.number().int(),
+  audience: z.enum(['fans', 'all']),
+})
+
+export const GrantRunResponseSchema = z.object({
+  forYear: z.number().int(),
+  alreadyRun: z.boolean(),
+  surplusCents: z.number().int(),
+  reserveCents: z.number().int(),
+  poolCents: z.number().int(),
+  totalUnits: z.number(),
+  grantCount: z.number().int(),
+  unallocatedCents: z.number().int(),
+})
+
+export const ChannelGalleryViewSchema = z.object({
+  galleryMode: z.string(),
+  slideshowImages: z.array(z.string()),
+  videoBackgroundUrl: z.string().nullable(),
+})
+
+export const ChannelSlideshowViewSchema = z.object({
+  slideshowImages: z.array(z.string()),
+})
+
+export const ChannelTextLayerViewSchema = z.object({
+  textLayerMode: z.string(),
+  textLayerText: z.string(),
+  textLayerAlign: z.string(),
+})
+
+export const ReleaseTrackVersionViewSchema = ArchiveVersionViewSchema
+export const ReleaseTrackVersionListSchema = ArchiveVersionListSchema
+export const ReleaseTrackVersionPrepareResponseSchema = ArchiveVersionPrepareResponseSchema
+export const ReleaseTrackVersionCreatedSchema = ArchiveVersionCreatedSchema

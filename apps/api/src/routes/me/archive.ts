@@ -7,6 +7,9 @@ import {
   ChannelTextLayerPatchSchema,
   ArchiveItemListSchema,
   ArchiveItemViewSchema,
+  ChannelGalleryViewSchema,
+  ChannelSlideshowViewSchema,
+  ChannelTextLayerViewSchema,
   IdParamSchema,
   openApiResponse,
   parseRouteParams,
@@ -140,15 +143,25 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.get('/api/me/channel/gallery', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { galleryMode: true, slideshowImages: true, videoBackgroundUrl: true },
-    })
-    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-    return reply.send(channel)
-  })
+  fastify.get(
+    '/api/me/channel/gallery',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ChannelGalleryViewSchema, 'ChannelGallery'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { galleryMode: true, slideshowImages: true, videoBackgroundUrl: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      return reply.send(channel)
+    },
+  )
 
   async function patchChannelGallery(
     userId: string,
@@ -201,19 +214,35 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     return { ok: true, ...updated }
   }
 
-  fastify.patch('/api/me/channel/gallery', { preHandler: requireAuth }, async (request, reply) => {
-    const result = await patchChannelGallery(request.sessionUser!.id, request.body)
-    if (!result.ok) return reply.status(result.status).send({ error: result.error })
-    return reply.send({
-      galleryMode: result.galleryMode,
-      slideshowImages: result.slideshowImages,
-      videoBackgroundUrl: result.videoBackgroundUrl,
-    })
-  })
+  fastify.patch(
+    '/api/me/channel/gallery',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ChannelGalleryViewSchema, 'ChannelGallery'),
+      },
+    },
+    async (request, reply) => {
+      const result = await patchChannelGallery(request.sessionUser!.id, request.body)
+      if (!result.ok) return reply.status(result.status).send({ error: result.error })
+      return reply.send({
+        galleryMode: result.galleryMode,
+        slideshowImages: result.slideshowImages,
+        videoBackgroundUrl: result.videoBackgroundUrl,
+      })
+    },
+  )
 
   fastify.patch(
     '/api/me/channel/slideshow',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ChannelSlideshowViewSchema, 'ChannelSlideshow'),
+      },
+    },
     async (request, reply) => {
       const result = await patchChannelGallery(request.sessionUser!.id, request.body)
       if (!result.ok) return reply.status(result.status).send({ error: result.error })
@@ -221,15 +250,25 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.get('/api/me/channel/text-layer', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { textLayerMode: true, textLayerText: true, textLayerAlign: true },
-    })
-    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-    return reply.send(channel)
-  })
+  fastify.get(
+    '/api/me/channel/text-layer',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ChannelTextLayerViewSchema, 'ChannelTextLayer'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { textLayerMode: true, textLayerText: true, textLayerAlign: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      return reply.send(channel)
+    },
+  )
 
   async function patchChannelTextLayer(
     userId: string,
@@ -292,7 +331,13 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.patch(
     '/api/me/channel/text-layer',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ChannelTextLayerViewSchema, 'ChannelTextLayer'),
+      },
+    },
     async (request, reply) => {
       const result = await patchChannelTextLayer(request.sessionUser!.id, request.body)
       if (!result.ok) return reply.status(result.status).send({ error: result.error })

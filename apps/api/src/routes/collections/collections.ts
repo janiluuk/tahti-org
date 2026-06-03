@@ -9,10 +9,15 @@ import {
   CreateCollectionSchema,
   PatchCollectionSchema,
   ReorderCollectionSchema,
+  CollectionItemViewSchema,
+  CollectionListSchema,
   CollectionPublicViewSchema,
+  CollectionReorderResponseSchema,
+  CollectionViewSchema,
   SlugParamSchema,
   archivePlaybackKey,
   openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -60,7 +65,11 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/me/collections',
     {
       preHandler: requireAuth,
-      schema: { tags: ['releases'], description: 'M23: list artist collections' },
+      schema: {
+        tags: ['releases'],
+        description: 'M23: list artist collections',
+        response: openApiResponse(CollectionListSchema, 'CollectionList'),
+      },
     },
     async (request, reply) => {
       const user = request.sessionUser!
@@ -82,44 +91,62 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  fastify.post('/api/me/collections', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const parsed = CreateCollectionSchema.safeParse(request.body)
-    if (!parsed.success) return zodError(reply, parsed.error)
-    const body = parsed.data
-
-    const slug =
-      body.slug
-        ?.trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, '-') ??
-      `${user.username}-${body.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .slice(0, 30)}`
-
-    const type = body.type ?? 'CUSTOM'
-
-    const existing = await fastify.prisma.collection.findUnique({ where: { slug } })
-    if (existing) return reply.status(409).send({ error: 'Slug already taken' })
-
-    const col = await fastify.prisma.collection.create({
-      data: {
-        userId: user.id,
-        slug,
-        name: body.name,
-        description: body.description?.trim() || null,
-        type,
-        isPublic: body.isPublic ?? true,
-        coverUrl: body.coverUrl?.trim() || null,
+  fastify.post(
+    '/api/me/collections',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponses([
+          { status: 201, schema: CollectionViewSchema, name: 'Collection' },
+        ]),
       },
-    })
-    return reply.status(201).send(col)
-  })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = CreateCollectionSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const body = parsed.data
+
+      const slug =
+        body.slug
+          ?.trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9-]/g, '-') ??
+        `${user.username}-${body.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .slice(0, 30)}`
+
+      const type = body.type ?? 'CUSTOM'
+
+      const existing = await fastify.prisma.collection.findUnique({ where: { slug } })
+      if (existing) return reply.status(409).send({ error: 'Slug already taken' })
+
+      const col = await fastify.prisma.collection.create({
+        data: {
+          userId: user.id,
+          slug,
+          name: body.name,
+          description: body.description?.trim() || null,
+          type,
+          isPublic: body.isPublic ?? true,
+          coverUrl: body.coverUrl?.trim() || null,
+        },
+      })
+      return reply.status(201).send(col)
+    },
+  )
 
   fastify.patch(
     '/api/me/collections/:slug',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(CollectionViewSchema, 'Collection'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
@@ -168,7 +195,15 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/collections/:slug/items — add archive item or release
   fastify.post(
     '/api/me/collections/:slug/items',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponses([
+          { status: 201, schema: CollectionItemViewSchema, name: 'CollectionItem' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
@@ -225,7 +260,13 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
   // PUT /api/me/collections/:slug/reorder — M23 drag reorder
   fastify.put(
     '/api/me/collections/:slug/reorder',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(CollectionReorderResponseSchema, 'CollectionReorder'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(SlugParamSchema, request.params)

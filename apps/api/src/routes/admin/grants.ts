@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { GrantPreviewResponseSchema, openApiResponse, yearFromPathParams } from '@tahti/shared'
+import {
+  GrantPreviewResponseSchema,
+  GrantRunResponseSchema,
+  openApiResponse,
+  openApiResponses,
+  yearFromPathParams,
+} from '@tahti/shared'
 import { buildGrantPreview, runAnnualGrantCalc } from '@tahti/ledger'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
@@ -37,6 +43,9 @@ const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['admin'],
         description: 'M9: run annual grant calculation for a calendar year',
+        response: openApiResponses([
+          { status: 201, schema: GrantRunResponseSchema, name: 'GrantRun' },
+        ]),
       },
     },
     async (request, reply) => {

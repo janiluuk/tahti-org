@@ -7,6 +7,7 @@ import {
   NewsletterDraftListSchema,
   NewsletterDraftSchema,
   NewsletterDraftViewSchema,
+  NewsletterSendQueuedSchema,
   NewsletterSendSchema,
   NewsletterSubscriberStatsSchema,
   openApiResponse,
@@ -120,7 +121,13 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/newsletter/send/:draftId — queue for delivery
   fastify.post(
     '/api/me/newsletter/send/:draftId',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['newsletter'],
+        response: openApiResponse(NewsletterSendQueuedSchema, 'NewsletterSendQueued'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(DraftIdParamSchema, request.params)
