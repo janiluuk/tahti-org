@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import MotionCard, { type MotionSummary } from './motion-card'
 import NewMotionForm from './new-motion-form'
+import GrantPreviewPanel from './grant-preview-panel'
 
 interface MeResponse {
   displayName: string
@@ -87,9 +88,12 @@ export default async function GovernancePage() {
       {me.isBoard && <NewMotionForm />}
 
       {me.isBoard && (
-        <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-          <Link href="/governance/venues">Venue verification (board) →</Link>
-        </p>
+        <>
+          <GrantPreviewPanel />
+          <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+            <Link href="/governance/venues">Venue verification (board) →</Link>
+          </p>
+        </>
       )}
 
       <section style={{ marginBottom: '3rem' }}>

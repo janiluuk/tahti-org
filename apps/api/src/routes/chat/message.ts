@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { ChatPublishProxySchema } from '@tahti/shared'
 import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
 
 // Centrifugo proxy publish webhook.
@@ -10,20 +11,14 @@ import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
 const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post('/api/chat/:slug/message', async (request, reply) => {
     const { slug } = request.params as { slug: string }
-    const body = request.body as {
-      client?: string
-      user?: string
-      channel?: string
-      data?: { text?: string }
+    const parsed = ChatPublishProxySchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
     }
+    const body = parsed.data
 
     const sub = body.user ?? ''
     const fingerprint = sub.split('#')[1] ?? ''
-    const text = body.data?.text ?? ''
-
-    if (text.length > 500) {
-      return reply.status(400).send({ error: 'message too long' })
-    }
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { ItemReadyWebhookSchema } from '@tahti/shared'
 import { config } from '../../config.js'
 
 const itemReadyRoute: FastifyPluginAsync = async (fastify) => {
@@ -11,10 +12,11 @@ const itemReadyRoute: FastifyPluginAsync = async (fastify) => {
       return reply.status(401).send({ error: 'Unauthorized' })
     }
 
-    const { itemId } = request.body as { itemId?: string }
-    if (!itemId || typeof itemId !== 'string') {
-      return reply.status(400).send({ error: 'itemId is required' })
+    const parsed = ItemReadyWebhookSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
     }
+    const { itemId } = parsed.data
 
     const item = await fastify.prisma.archiveItem.findUnique({
       where: { id: itemId },

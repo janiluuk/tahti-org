@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { MentionsEnabledSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 // M15 — artist mention preferences and mute management
@@ -12,10 +13,13 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { mentionsEnabled } = request.body as { mentionsEnabled?: boolean }
-      if (typeof mentionsEnabled !== 'boolean') {
-        return reply.status(400).send({ error: 'mentionsEnabled (boolean) is required' })
+      const parsed = MentionsEnabledSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
       }
+      const { mentionsEnabled } = parsed.data
       await fastify.prisma.user.update({
         where: { id: user.id },
         data: { mentionsEnabled },

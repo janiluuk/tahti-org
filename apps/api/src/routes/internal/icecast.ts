@@ -5,15 +5,17 @@ import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
 import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
+import { IcecastConnectSchema, IcecastDisconnectSchema } from '@tahti/shared'
 
 // Icecast URL auth callbacks.
 // Icecast sends: mount, user, pass (plus optional ip, agent) as form-encoded body.
 // Return HTTP 200 to allow, non-200 to deny.
 const icecastRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/internal/icecast/on_connect', async (request, reply) => {
-    const body = request.body as Record<string, string>
-    const mount: string = body.mount ?? ''
-    const pass: string = body.pass ?? ''
+    const parsed = IcecastConnectSchema.safeParse(request.body)
+    if (!parsed.success) return reply.status(403).send('denied')
+    const mount = parsed.data.mount
+    const pass = parsed.data.pass ?? ''
 
     // mount is /live/<slug>
     const slug = mount.replace(/^\/live\//, '')
@@ -62,9 +64,9 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   fastify.post('/internal/icecast/on_disconnect', async (request, reply) => {
-    const body = request.body as Record<string, string>
-    const mount: string = body.mount ?? ''
-    const slug = mount.replace(/^\/live\//, '')
+    const parsed = IcecastDisconnectSchema.safeParse(request.body)
+    if (!parsed.success) return reply.status(200).send('ok')
+    const slug = parsed.data.mount.replace(/^\/live\//, '')
     if (!slug) return reply.status(200).send('ok')
 
     const channel = await fastify.prisma.channel.findUnique({
