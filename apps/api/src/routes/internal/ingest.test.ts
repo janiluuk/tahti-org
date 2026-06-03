@@ -4,11 +4,23 @@
 /**
  * PLAT-004: internal ingest callbacks (Icecast + RTMP) with form-encoded bodies.
  */
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
 import { utcWeekStart } from '@tahti/shared/broadcast-cap'
+
+const { enqueueFinalizeBroadcastRecording } = vi.hoisted(() => ({
+  enqueueFinalizeBroadcastRecording: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('../../lib/queue.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../lib/queue.js')>()
+  return {
+    ...actual,
+    enqueueFinalizeBroadcastRecording,
+  }
+})
 
 const PREFIX = 'ingest-test-'
 const SLUG = 'ingest-artist'
@@ -20,6 +32,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
   let channelId: string
 
   beforeAll(async () => {
+    enqueueFinalizeBroadcastRecording.mockClear()
     app = await buildApp({ logger: false })
     await app.ready()
     await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
@@ -120,6 +133,13 @@ describe('internal ingest (RTMP + Icecast)', () => {
       where: { channelId, endedAt: null },
     })
     expect(open).toBeNull()
+
+    const ended = await prisma.broadcast.findFirst({
+      where: { channelId },
+      orderBy: { startedAt: 'desc' },
+    })
+    expect(ended?.endedAt).toBeTruthy()
+    expect(enqueueFinalizeBroadcastRecording).toHaveBeenCalledWith(ended!.id)
   })
 
   it('allows Icecast on_connect with urlencoded mount and pass', async () => {

@@ -49,6 +49,28 @@ export const ChannelScheduleViewSchema = z.object({
   nextBroadcastNote: z.string().nullable(),
 })
 
+export const PublicChannelUserSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  bio: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+})
+
+export const PublicChannelViewSchema = z.object({
+  slug: z.string(),
+  state: z.string(),
+  hlsUrl: z.string().nullable(),
+  nextBroadcastAt: z.string().datetime().nullable(),
+  nextBroadcastNote: z.string().nullable(),
+  galleryMode: z.string(),
+  slideshowImages: z.array(z.string()),
+  textLayerMode: z.string(),
+  textLayerText: z.string(),
+  textLayerAlign: z.string(),
+  videoBackgroundUrl: z.string().nullable(),
+  user: PublicChannelUserSchema,
+})
+
 export const GrantAnomalySchema = z.object({
   code: z.enum(['DOMINANT_IP', 'HIGH_UNIT_SHARE', 'ANONYMOUS_GRANT']),
   message: z.string(),

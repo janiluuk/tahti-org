@@ -89,6 +89,7 @@ import {
   ChannelScheduleViewSchema,
   DownloadGateStatsResponseSchema,
   GrantPreviewResponseSchema,
+  PublicChannelViewSchema,
   zodOpenApiComponents,
 } from '@tahti/shared'
 
@@ -129,6 +130,7 @@ export async function buildApp(opts: BuildOptions = {}) {
           ChannelSchedule: ChannelScheduleViewSchema,
           GrantPreview: GrantPreviewResponseSchema,
           BroadcastUsage: BroadcastUsageResponseSchema,
+          PublicChannel: PublicChannelViewSchema,
         }),
       },
       tags: [
