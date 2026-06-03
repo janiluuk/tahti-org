@@ -19,6 +19,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
         textLayerMode: true,
         textLayerText: true,
         textLayerAlign: true,
+        videoBackgroundUrl: true,
         user: {
           select: {
             username: true,

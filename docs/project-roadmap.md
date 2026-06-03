@@ -77,7 +77,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor, profile playback; **cover art upload to MinIO** (`artworkKey` + presigned URLs). Deferred: bulk import |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard. Deferred: social auto-post |
-| **M24** Per-content visuals | 🟡 Partial | Channel gallery modes + **per-item banner/background/slideshow** on `/c/:slug`; **YouTube/Vimeo** background via `parseVideoEmbedUrl` + muted iframe backdrop |
+| **M24** Per-content visuals | 🟡 Partial | Channel gallery + **channel video backdrop** + per-item banner/background/slideshow on `/c/:slug`; **YouTube/Vimeo** via `parseVideoEmbedUrl` |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
 | **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
 | **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI |
@@ -319,10 +319,10 @@ See `competitive-gaps-hearthis.md` for full gap list.
 | [~] | **M22** | Per-item metadata + editable tracklists with **@artist tagging** (dashboard tracklist editor wired) |
 | [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug` smart links |
 | [~] | **M28** | **Track version history** — archive + release-track versions; activate; stable public ids |
-| [~] | **M24** | Per-content visuals: channel Twisted Wave GLSL gallery + static strip; per-item banner/slideshow; YouTube/Vimeo backdrop on archive items |
+| [~] | **M24** | Channel gallery/text layers + **channel video backdrop**; per-item banner/slideshow; YouTube/Vimeo on archive items |
 | [~] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
-| [ ] | **M26** | Customisable radio/channel page: video background, per-album visualisations, theme picker — designer app for live show visuals |
-| [ ] | **M27** | 24/7 archive stream with automated scheduling and annotations: picks up previous live sets in fair rotation; moderator users control the programme list; audio visualisations per set; as automated as possible (ACRCloud tracklist sync feeds annotations) |
+| [~] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; per-collection visual themes deferred |
+| [~] | **M27** | **Programme API** + dashboard rotation editor; `fallback.m3u` respects `isFallback`, ordered/fair shuffle; live auto-archive joins rotation. Deferred: moderator roles, ACRCloud annotation cron, per-set visualisations |
 
 ## Phase 6b — Release ops & catalog metadata (**M30**)
 

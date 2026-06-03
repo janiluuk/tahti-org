@@ -40,6 +40,8 @@ export const CHANNEL_GALLERY_MODE_HINTS: Partial<Record<ChannelGalleryMode, stri
 export const ChannelGalleryPatchSchema = z.object({
   galleryMode: z.enum(CHANNEL_GALLERY_MODES).optional(),
   slideshowImages: z.array(z.string().url().max(2048)).max(10).optional(),
+  /** M26: HTTPS image or YouTube/Vimeo watch URL for full-width channel backdrop */
+  videoBackgroundUrl: z.string().max(2048).nullable().optional(),
 })
 
 export type ChannelGalleryPatch = z.infer<typeof ChannelGalleryPatchSchema>

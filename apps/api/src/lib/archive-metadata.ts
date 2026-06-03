@@ -36,6 +36,8 @@ export const archiveItemMetadataSelect = {
   followToDownload: true,
   isPublic: true,
   isFallback: true,
+  fallbackOrder: true,
+  lastFallbackPlayedAt: true,
   status: true,
   durationSec: true,
   createdAt: true,

@@ -71,6 +71,7 @@ import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
 import meArchiveRoutes from './routes/me/archive.js'
+import meProgrammeRoutes from './routes/me/programme.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
 import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
 import meUsersRoutes from './routes/me/users.js'
@@ -271,6 +272,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M22/M24/M25: archive item metadata edit + channel slideshow
   await fastify.register(meArchiveRoutes)
+  await fastify.register(meProgrammeRoutes)
   await fastify.register(meArchiveVersionRoutes)
   await fastify.register(meDownloadGateStatsRoutes)
   await fastify.register(meUsersRoutes)

@@ -14,6 +14,8 @@ import ReleasesPanel from './releases-panel'
 import CollectionsPanel from './collections-panel'
 import ChannelGalleryPanel from './channel-gallery-panel'
 import ChannelTextLayerPanel from './channel-text-layer-panel'
+import ProgrammePanel from './programme-panel'
+import type { ProgrammeItemRow } from './programme-actions'
 import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
@@ -234,7 +236,11 @@ export default async function DashboardPage() {
     }
   }
 
-  let channelGallery: { galleryMode: ChannelGalleryMode; slideshowImages: string[] } | null = null
+  let channelGallery: {
+    galleryMode: ChannelGalleryMode
+    slideshowImages: string[]
+    videoBackgroundUrl?: string | null
+  } | null = null
   if (user.channel) {
     try {
       const res = await fetch(`${apiUrl}/api/me/channel/gallery`, {
@@ -272,6 +278,25 @@ export default async function DashboardPage() {
   }
   if (user.channel && !channelTextLayer) {
     channelTextLayer = { textLayerMode: 'NONE', textLayerText: '', textLayerAlign: 'CENTER' }
+  }
+
+  let channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] } | null =
+    null
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/channel/programme`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        channelProgramme = (await res.json()) as typeof channelProgramme
+      }
+    } catch {
+      // ignore
+    }
+  }
+  if (user.channel && !channelProgramme) {
+    channelProgramme = { fallbackMode: 'shuffle', items: [] }
   }
 
   let archiveItems: ArchiveItem[] = []
@@ -420,6 +445,8 @@ export default async function DashboardPage() {
       {user.channel && channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
 
       {user.channel && channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
+
+      {user.channel && channelProgramme && <ProgrammePanel initial={channelProgramme} />}
 
       {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
 

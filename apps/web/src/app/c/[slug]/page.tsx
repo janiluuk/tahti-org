@@ -28,6 +28,7 @@ interface ChannelResponse {
   textLayerMode: ChannelTextLayerMode
   textLayerText: string
   textLayerAlign: ChannelTextLayerAlignment
+  videoBackgroundUrl?: string | null
   user: {
     username: string
     displayName: string
@@ -85,11 +86,28 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     : []
 
   const hlsUrl = channel.hlsUrl
+  const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
 
   return (
     <PageShell size="lg" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
         <div>
+          {channelBackdrop.videoEmbedUrl && (
+            <ArchiveVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
+          )}
+          {channelBackdrop.imageUrl && !channelBackdrop.videoEmbedUrl && (
+            <div
+              style={{
+                width: '100%',
+                maxHeight: 220,
+                marginBottom: '1rem',
+                borderRadius: 8,
+                overflow: 'hidden',
+                background: `center/cover no-repeat url(${channelBackdrop.imageUrl})`,
+                minHeight: 120,
+              }}
+            />
+          )}
           <header style={{ marginBottom: '1.5rem' }}>
             <Row className="ui-row--gap-3" style={{ marginBottom: '0.5rem' }}>
               {channel.user.avatarUrl && (

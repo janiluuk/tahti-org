@@ -410,6 +410,7 @@ model Channel {
   textLayerMode      ChannelTextLayerMode @default(NONE)
   textLayerText      String               @default("")
   textLayerAlign     ChannelTextLayerAlign @default(CENTER)
+  videoBackgroundUrl String?              // M26: YouTube/Vimeo or image URL for channel backdrop
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -501,9 +502,11 @@ model ArchiveItem {
   fileSizeBytes BigInt
   status        ArchiveItemStatus @default(PENDING)
   isPublic      Boolean           @default(true)
-  isFallback    Boolean           @default(false)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  isFallback           Boolean           @default(false)
+  fallbackOrder        Int?              // M27: position in ordered offline rotation
+  lastFallbackPlayedAt DateTime?         // M27: fair shuffle — least recent first
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
   mixUpload      MixUpload?
   collectionItems CollectionItem[]
