@@ -96,7 +96,7 @@ echo "── Stripe webhook ─────────────────�
 
 WH=$(curl -sS -X POST "$API_URL/api/webhooks/stripe" \
   -H 'Content-Type: application/json' \
-  -d '{"type":"checkout.session.completed","data":{"object":{"id":"e2e_cs_'"$UNIQUE"'","amount_total":4000,"metadata":{"type":"membership","userId":"nonexistent"}}}}}' \
+  -d '{"type":"checkout.session.completed","data":{"object":{"id":"e2e_cs_'"$UNIQUE"'","amount_total":4000,"metadata":{"type":"membership","userId":"nonexistent"}}}}' \
   2>/dev/null || echo '{}')
 e2e_check_json "webhook returns received" '"received":true' "$WH"
 
