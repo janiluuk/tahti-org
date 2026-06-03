@@ -81,12 +81,16 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     })
 
     if (patch.data.tracklist !== undefined && Array.isArray(updated.tracklist)) {
-      recordTracklistMentions(
-        fastify.prisma,
-        user.id,
-        updated.tracklist as TracklistEntry[],
-        id,
-      ).catch((e) => fastify.log.warn(e, 'tracklist mention record failed'))
+      try {
+        await recordTracklistMentions(
+          fastify.prisma,
+          user.id,
+          updated.tracklist as TracklistEntry[],
+          id,
+        )
+      } catch (e) {
+        fastify.log.warn(e, 'tracklist mention record failed')
+      }
     }
 
     return reply.send(serializeArchiveItem(updated))

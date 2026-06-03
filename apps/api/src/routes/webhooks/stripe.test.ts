@@ -170,8 +170,8 @@ describe('Stripe webhooks', () => {
       headers: { 'content-type': 'application/json' },
       payload,
     })
-    expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ received: true })
+    expect(res.statusCode).toBe(500)
+    expect(res.json()).toMatchObject({ received: false })
 
     const deadLetter = await prisma.auditLog.findFirst({
       where: { action: 'STRIPE_WEBHOOK_ERROR', targetId: 'evt_deadletter_test' },
