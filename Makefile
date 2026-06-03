@@ -4,7 +4,7 @@ STACK_NAME ?= tahti
 COMPOSE    := docker compose -f infra/docker-compose.dev.yml
 STACK      := docker compose -f infra/docker-compose.stack.yml
 
-.PHONY: help dev dev-down ci-check stack-up stack-seed stack-down e2e-screenshots build build-website build-orchestrator push deploy deploy-staging rollback secrets-check logs
+.PHONY: help dev dev-down ci-check stack-up stack-seed stack-down stack-deploy e2e-screenshots build build-website build-orchestrator push deploy deploy-staging rollback secrets-check logs
 
 help:
 	@echo "Usage: make <target>"
@@ -17,6 +17,7 @@ help:
 	@echo "  stack-up         Full app stack in Docker (no screenshot seed)"
 	@echo "  stack-seed       stack-up + screenshot demo fixtures"
 	@echo "  stack-down       Stop the full Docker stack"
+	@echo "  stack-deploy     Rsync + stack-up on lab host (SSH_PROXY_JUMP / DEPLOY_HOST)"
 	@echo "  e2e-screenshots  Local only: stack + seed + Playwright captures"
 	@echo ""
 	@echo "Build"
@@ -59,6 +60,9 @@ stack-seed:
 
 stack-down:
 	./scripts/stack-up.sh --down
+
+stack-deploy:
+	./scripts/remote-stack-deploy.sh
 
 e2e-screenshots:
 	./scripts/e2e-screenshots.sh

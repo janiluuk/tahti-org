@@ -74,6 +74,52 @@ sequenceDiagram
 
 **Phase 4 relevant.**
 
+### Streaming infrastructure schematic
+
+```mermaid
+graph LR
+    subgraph "Artist machine"
+        OBS[OBS Studio\nRTMP 2500 kbps AAC]
+    end
+    subgraph "Ingest tier (2 nodes)"
+        RTMP_A[nginx-RTMP A\n:1935]
+        RTMP_B[nginx-RTMP B\n:1935 standby]
+    end
+    subgraph "Edge encoder (per channel)"
+        EE[ffmpeg\nnormalize → PCM 48kHz\ntee: lossless + MP3 192k\nchromaprint fingerprint]
+    end
+    subgraph "Media server + Recording"
+        LS[Liquidsoap\nHLS packaging\narchive fallback\nsegments → MinIO]
+        REC[ffmpeg-recorder\nraw FLAC → MinIO recordings/]
+    end
+    subgraph "Segment store"
+        MN_LIVE[MinIO hls-live/\nTTL 60s per segment]
+        MN_ARCH[MinIO audio/\narchive + releases]
+    end
+    subgraph "Delivery"
+        CADDY[Caddy A\nserves /hls/* from MinIO]
+        CADDY_B[Caddy B\nhot standby]
+    end
+    subgraph "Metrics"
+        PROM[Prometheus\nsegment_write_rate\ninput_bitrate\nbandwidth_bytes_out]
+    end
+
+    OBS -->|RTMP| RTMP_A
+    OBS -.->|failover| RTMP_B
+    RTMP_A --> EE
+    EE --> LS
+    EE --> REC
+    LS -->|HLS segments| MN_LIVE
+    REC -->|raw recording| MN_ARCH
+    MN_LIVE --> CADDY
+    MN_LIVE --> CADDY_B
+    LS & EE & CADDY --> PROM
+```
+
+> **Issues raised:** STREAM-001 (segments must go to MinIO not volume), STREAM-002 (edge encoder must exist), STREAM-003 (DNS failover gap), STREAM-004 (recording must be separate container). All tracked in roadmap streaming backlog.
+
+### Sequence
+
 ```mermaid
 sequenceDiagram
     participant A as Artist (Joonas)
@@ -93,8 +139,11 @@ sequenceDiagram
     OBS->>RTMP: RTMP connect with stream key
     RTMP->>API: POST /internal/rtmp/on_publish
     API-->>RTMP: 200 authorized
-    API->>LS: Spawn channel container
-    LS-->>CH: HLS segments begin flowing
+    API->>API: Spawn edge-encoder container for channel
+    API->>LS: Spawn Liquidsoap (pulls from edge encoder output)
+    API->>REC: Spawn ffmpeg-recorder (writes raw to MinIO recordings/)
+    LS-->>MN: HLS segments flowing to MinIO hls-live/
+    MN-->>CH: Caddy serves /hls/slug/* from MinIO
 
     Note over CH: slug.tahti.live now shows LIVE badge
     L->>CH: Opens slug.tahti.live (someone shared the link)
@@ -107,11 +156,17 @@ sequenceDiagram
 
     A->>OBS: Stops streaming after 2 hours
     OBS->>RTMP: Disconnect
-    RTMP->>API: POST /internal/rtmp/on_done
-    API->>API: Enqueue transcode-archive job
-    Note over API: 5 min later: recording transcoded, appears in channel
+    RTMP->>EE: Edge encoder receives EOF
+    EE->>REC: Signal broadcast end
+    REC->>MN: Finalize recording file
+    REC->>API: POST /internal/recording/complete {channelId, key, durationSec}
+    API->>WM: Enqueue transcode-archive job
+    Note over WM: 5 min later: FLAC + Opus + MP3 derivatives ready
     A->>CH: Refreshes channel — sees broadcast in archive
 ```
+
+> **Issue ARTIST-001:** If OBS disconnects unexpectedly (network drop) before the graceful end signal, the recorder must detect the closed input stream and finalize the partial recording rather than discarding it. Tracked in roadmap.
+> **Issue ARTIST-002:** Stream key rotation while live is not yet supported — tracked in roadmap.
 
 ---
 

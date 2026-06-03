@@ -38,6 +38,42 @@ journey
 
 **Phase 4 relevant.**
 
+### Streaming delivery schematic
+
+```mermaid
+graph LR
+    subgraph "Listener device"
+        PHONE[Mobile browser\nHLS.js]
+    end
+    subgraph "Delivery"
+        CADDY[Caddy\nserves /hls/*]
+    end
+    subgraph "Segment store"
+        MN[MinIO hls-live/\n3-second segments\nObject TTL: 60s]
+    end
+    subgraph "Media server"
+        LS[Liquidsoap\nwrites new segment every 3s\nindex.m3u8 updated]
+    end
+    subgraph "Watchdog"
+        WD[worker-light\nchecks segment_age every 30s\nauto-restarts stale channels]
+    end
+
+    PHONE -->|GET /hls/slug/index.m3u8| CADDY
+    CADDY -->|s3 get| MN
+    MN -->|playlist| CADDY
+    CADDY -->|playlist| PHONE
+    PHONE -->|GET seg-NNN.ts every 3s| CADDY
+    CADDY -->|s3 get| MN
+    MN -->|segment| CADDY
+    CADDY -->|segment| PHONE
+    LS -->|PUT seg-NNN.ts| MN
+    WD -->|check newest segment age| MN
+    WD -.->|restart if age > 20s| LS
+```
+
+> **Issue LISTENER-001:** On slow mobile (4G, 100ms RTT), the 3s segment interval plus 2-segment buffer = ~6s startup delay. HLS.js shows a spinner with no text — the channel page must show an explicit "Buffering..." state with a time estimate. Tracked in roadmap.
+> **Issue STREAM-005:** Without the watchdog, a crashed Liquidsoap container produces no new segments but the playlist still exists in MinIO with old entries. Listeners get `404` on segment fetches and HLS.js stalls silently. The watchdog detects this via segment age check.
+
 ```mermaid
 sequenceDiagram
     participant L as Listener (Maija)
@@ -74,6 +110,8 @@ sequenceDiagram
 ## Journey 2 — Offline fallback (archive playback)
 
 **Phase 4 relevant. The channel always plays — live or archive.**
+
+> **Issue ARTIST-003 / LISTENER-002:** When an artist goes offline, the archive fallback begins within 10 seconds. But if the archive is cold in MinIO (not recently accessed), Liquidsoap must fetch segments from MinIO before it can serve them. This can produce a brief silence. Mitigation: Liquidsoap should pre-buffer the first 3 archive segments on startup, before going into fallback mode. Additionally, there is currently no "Next broadcast: Thursday 22:00" signal — the channel page shows "offline" with no further information, which is a dead end for returning listeners.
 
 ```mermaid
 sequenceDiagram

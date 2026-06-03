@@ -5,6 +5,7 @@
 #   ./scripts/stack-up.sh          # build, migrate, start, wait for health
 #   ./scripts/stack-up.sh --seed   # also load screenshot demo fixtures
 #   ./scripts/stack-up.sh --down   # tear down the stack
+#   ./scripts/stack-up.sh --no-cache  # rebuild images without cache
 #
 # After up:
 #   App:     http://localhost:${WEB_PORT:-3000}
@@ -22,11 +23,13 @@ export WEB_PORT="${WEB_PORT:-3010}"
 export API_PORT="${API_PORT:-3011}"
 SEED=false
 DOWN=false
+NO_CACHE=false
 
 for arg in "$@"; do
   case "$arg" in
     --seed) SEED=true ;;
     --down) DOWN=true ;;
+    --no-cache) NO_CACHE=true ;;
     -h|--help)
       sed -n '2,12p' "$0"
       exit 0
@@ -45,7 +48,9 @@ if [[ "$DOWN" == true ]]; then
 fi
 
 echo "── Building images (first run may take several minutes) ──"
-"${COMPOSE[@]}" build api web worker orchestrator db-push
+BUILD_ARGS=()
+[[ "$NO_CACHE" == true ]] && BUILD_ARGS+=(--no-cache)
+"${COMPOSE[@]}" build "${BUILD_ARGS[@]}" api web worker orchestrator db-push
 
 echo "── Starting stack ──"
 "${COMPOSE[@]}" up -d postgres redis minio mailhog chat icecast rtmp-ingest

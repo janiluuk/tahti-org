@@ -27,6 +27,35 @@ Mixcloud, Twitch, YouTube Live, Bandcamp, and a mailing list. They want one URL
 that always plays, with broadcasting tools that respect their workflow and a
 financial model that returns surplus to them, not to shareholders.
 
+## Streaming infrastructure principles (READ BEFORE TOUCHING ANY STREAMING CODE)
+
+The streaming pipeline is the core product. Every component must be designed for independent scaling and measurement from day one. Retrofitting distribution after launch is far more costly than building it right once.
+
+**Required architecture — see `docs/technical/streaming-architecture.md` for full spec:**
+
+1. **HLS segments go to MinIO, never to a shared Docker volume.** A `hls_shared` volume cannot be read by a second Caddy node or a second worker node. The moment you pin the segment store to a volume, you prevent horizontal scaling. MinIO is S3-compatible, accessible from any container on any node.
+
+2. **Edge encoders sit between ingest and Liquidsoap.** One FFmpeg container per live channel normalizes the incoming stream (codec, bitrate, sample rate) before Liquidsoap sees it. This means: (a) Liquidsoap restarts don't drop the artist's connection; (b) two quality feeds (lossless + MP3) are produced once from one source; (c) chromaprint fingerprinting runs at ingest, not post-broadcast.
+
+3. **Recording is a separate container, not a Liquidsoap sidecar.** The ffmpeg-recorder writes raw audio directly to MinIO. It must survive a Liquidsoap crash. Never attach recording logic to the media server — if the packager dies, the recording dies with it.
+
+4. **Every streaming container exposes Prometheus metrics.** Minimum required per channel: `segment_write_rate`, `input_bitrate_kbps`, `listeners_connected`, `cpu_seconds`, `memory_bytes`. Without these, you cannot detect silent channels, attribute infrastructure costs, or make scaling decisions.
+
+5. **Per-channel health watchdog with auto-recovery.** Worker-light runs a 30-second check against MinIO: if the newest HLS segment for a live channel is >20 seconds old, restart the Liquidsoap container. Log every restart. Alert ops if >2 restarts in 10 minutes.
+
+6. **Ingest redundancy from Phase 4.** Two nginx-RTMP instances and two Icecast instances. DNS round-robin on `ingest.tahti.fi` (TTL 30s). New connections distribute across both; existing connections survive on their assigned node until disconnect.
+
+7. **Every container that touches streaming must be independently deployable and scalable.** No container should depend on another container's local filesystem. No container should require a specific node label unless it holds persistent data (Postgres, MinIO — pinned to their nodes). Edge encoders, Liquidsoap containers, and recorders can run on any labeled `worker` node.
+
+8. **Measure bandwidth per channel.** Caddy must log bytes-out per request prefixed with channel slug. Aggregate to Prometheus. This data feeds artist cost attribution (for future per-channel cost reporting) and informs the Y3 fiber upgrade decision.
+
+**Anti-patterns that will block scaling — never do these:**
+- Writing HLS segments to a Docker bind-mount or named volume
+- Spawning Liquidsoap with a recording output — recording is a separate concern
+- Serving HLS from the Liquidsoap container directly (Liquidsoap is not a web server)
+- Skipping Prometheus metrics on streaming containers "for now"
+- Using a single ingest node with no standby
+
 ## North-star principles
 
 1. **Channel-first, always-on.** When the artist is live, the channel broadcasts
@@ -102,7 +131,7 @@ financial model that returns surplus to them, not to shareholders.
 - **Distribution backend:** Revelator API (DSP delivery)
 - **Mixcloud:** Mixcloud Upload API for mixes
 - **Edge:** Caddy 2 with on-demand TLS
-- **CDN:** Bunny CDN in front of MinIO + edge HLS
+- **Static serving:** Caddy on owned hardware serves HLS segments and MinIO-backed assets directly; UpCloud Helsinki mirrors for spillover and DR. No commercial CDN. See `docs/infra-strategy.md`.
 - **Orchestration:** Docker Swarm (production), Compose (dev)
 - **Auth (artist accounts only):** Lucia + argon2, optional Google/Apple OAuth
 - **Payments:** Stripe Checkout (subs) + Stripe Connect Express (grant payouts) +
@@ -637,7 +666,7 @@ Multistreamed to Mixcloud Live. Live-only — no curation, no archive replay.
   less-broadcast channels)
 - Picker hands off: re-encodes the chosen channel's HLS into the meta-stream's
   own HLS output
-- Tahti Radio HLS published at `radio.tahti.live` via Bunny CDN
+- Tahti Radio HLS published at `radio.tahti.live` via Caddy on owned hardware (same as channel HLS)
 - Tahti Radio simultaneously pushes RTMP to Mixcloud Live at the org's
   `mixcloud.com/tahti-radio` account
 - When zero channels are live: falls back to `services/tahti-radio/placeholder.flac`

@@ -3,7 +3,27 @@
 Living document for work **deferred** from the current roadmap pass, plus engineering
 efficiency items. Update this when closing milestones or discovering new gaps.
 
-Last reviewed: 2026-06-03
+Last reviewed: 2026-06-03 (audit pass)
+
+---
+
+## Audit snapshot (2026-06-03)
+
+**Shipped since last major roadmap update:**
+
+- Phase 5–6 product: profiles, smart links, downloads, fan-subs (Connect, crons, perks), collections/RSS, archive metadata, embed pages, mentions, Tahti Radio, venues, newsletter API
+- Quality: ~230 Vitest tests (56 files), OpenAPI `/docs`, journey + vital-flows + user-journey bash e2e in CI
+- Platform: `ci.yml` lint gate, `scripts/ci-check.sh`, Docker full stack (`stack-up.sh`), `docs/scaling-node-distribution.md`, local Playwright screenshots (`e2e-screenshots.sh`)
+- Design: `docs/design-system.md`, `packages/ui/` (tokens + React components — **not yet used by web**)
+- Marketing: OG tags, apply form, bg-audio, favicons on `website/`
+
+**Top gaps to close before beta:**
+
+1. Streaming scale blockers (STREAM-001 HLS → MinIO, STREAM-004/005)
+2. Fan-sub live payout retry + M19 newsletter fan-only send UI
+3. Wire `@tahti/ui` into dashboard/public pages
+4. Backup runbooks + Upptime (M11)
+5. Legal/infra Phase 0–2 (Tahti ry, hardware, staging)
 
 ---
 
@@ -23,24 +43,23 @@ Last reviewed: 2026-06-03
 ### M1 — Membership
 | P | Item |
 |---|---|
-| P1 | Stripe Customer Portal for renewals and receipt history |
+| ~~P1~~ | ~~Stripe Customer Portal~~ — `POST /api/me/membership/portal` (done) |
 | P1 | Renewal reminder emails before lapse |
 | P2 | Membership lapse → downgrade tier to `FREE` automatically |
 
 ### M19 — Fan subscriptions
 | P | Item |
 |---|---|
-| P0 | ~~**Stripe Connect Express** onboarding + live Checkout~~ — wired (REST API); payout cron still open |
-| P1 | ~~`charges_enabled` gate on subscribe page~~ — done (Topic 10 option A) |
-| P1 | Payout transfer cron + failed-payout retry |
-| ~~P2~~ | ~~Fan-only chat / newsletter perks enforcement~~ — tier codes `FAN_CHAT` / `FAN_NEWSLETTER` (2026-06-03) |
-| P2 | Churn handling (`customer.subscription.deleted` → grace period UX) |
+| P1 | Payout transfer cron: live Stripe transfer + failed-payout retry queue |
+| ~~P2~~ | ~~Fan-only chat / newsletter perks~~ — `FAN_CHAT` / `FAN_NEWSLETTER` codes (done) |
+| ~~P2~~ | ~~Churn grace on `customer.subscription.deleted`~~ — worker + tests (done) |
+| P2 | Dashboard UI: send newsletter draft to `audience: fans` only |
 
 ### M20 — Tier gating
 | P | Item |
 |---|---|
 | P2 | 45 / 55-minute warning copy polish |
-| ~~P1~~ | ~~60-second grace + orchestrator stop~~ — done (2026-06-03) |
+| ~~P1~~ | ~~60-second grace + orchestrator stop~~ — done |
 | ~~P1~~ | ~~Archive FLAC for paid broadcast archives~~ — done |
 | ~~P2~~ | ~~Post-broadcast upgrade CTA~~ — done |
 | P2 | Reconcile docs: `FREE/ARTIST/STUDIO` in code vs `FREE/PAID` in AGENT.md |
@@ -49,36 +68,93 @@ Last reviewed: 2026-06-03
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~24h net-new-IP threshold~~ — done |
+| ~~P2~~ | ~~Release-track downloads~~ — done (basic) |
 | P2 | Tor exit / datacenter IP allowlist |
 | P2 | Nightly fraud-scan cron (velocity anomalies) |
-| P2 | Release-track + FLAC/source download formats |
+| P2 | FLAC/source formats for all release-track tiers (parity with archive) |
 
 ### M11 — Hardening (remaining)
 | P | Item |
 |---|---|
 | P1 | pgBackRest + MinIO offsite backup **runbooks** wired and tested (`ops/RUNBOOK.md`) |
 | P1 | Self-hosted **Upptime** pointing at `/api/v1/status` |
-| P2 | hCaptcha on first chat message (signup only today) |
+| P1 | Stripe webhook failure metrics (handler errors currently swallowed with `{ received: true }`) |
+| P2 | hCaptcha on first chat message (token join only today) |
 | P2 | ACRCloud cost watchdog |
 | P2 | Rate-limit tuning per route from config |
+| P2 | Structured logging (pino) + request IDs |
 
 ### M12 — Profile + releases (remaining)
 | P | Item |
 |---|---|
-| P1 | Release audio upload pipeline (WAV/FLAC → Opus/HLS/FLAC derivatives per AGENT.md) |
+| ~~P1~~ | ~~Release track upload + transcode queue~~ — presigned upload + worker job (done) |
 | P1 | Link `ReleaseTrack.archiveItemId` to playable audio on profile |
 | ~~P1~~ | ~~Open Graph on `/u/[username]`~~ — done |
-| ~~P2~~ | ~~Smart link targets JSON + DSP buttons~~ — dashboard editor + `/r/:slug` (2026-06-03) |
+| ~~P2~~ | ~~Smart link + DSP editor~~ — done |
 | P2 | Artwork upload to MinIO for releases |
 | P2 | Press kit (Studio tier) |
 
-### Not started (Phase 5+)
+### M22 — Archive metadata (remaining)
+| P | Item |
+|---|---|
+| ~~P1~~ | ~~Hearthis-style metadata defaults on upload~~ — done |
+| P2 | Editable tracklists on archive items |
+| P2 | Repost/follow download gates |
+
+### M23 — Collections (remaining)
+| P | Item |
+|---|---|
+| ~~P1~~ | ~~Collections CRUD + RSS + profile page~~ — done |
+| P2 | Drag reorder in dashboard |
+| P2 | Featured collections on smart-link landing |
+
+### Still largely open
 | Milestone | Notes |
 |---|---|
-| **M7** | Mixcloud + Revelator distribution — large external integration |
-| **M13–M17** | Newsletter, promo, tagging, radio, venues |
+| **M7** | Mixcloud OAuth UI + Revelator DSP wizard |
 | **M21** | Browser audio editor |
-| **M22–M25** | hearthis parity (metadata, collections, visuals, commentary) |
+| **M24–M28** | Visuals, commentary, custom radio page, 24/7 scheduler, track version history |
+
+---
+
+## Hardening backlog (cross-cutting)
+
+| P | Item | Tracks as |
+|---|---|---|
+| P1 | Branch protection: all `ci.yml` jobs required on merge | PLAT-002 |
+| P1 | Automate DB migrate in deploy (no manual `db push` after release) | OPS-002, PLAT — |
+| P1 | PgBouncer before API horizontal scale | `scaling-node-distribution.md` |
+| P2 | Swagger `/docs` auth from secrets, rotate default password | PLAT-005 |
+| P2 | Redis-down policy for rate limit + sessions documented and tested | PLAT-006 |
+| P2 | `@fastify/formbody` coverage for RTMP callbacks (Icecast done) | PLAT-004 |
+
+---
+
+## Optimisations
+
+| P | Item | Benefit |
+|---|---|---|
+| P2 | Turbo remote cache in CI | Faster lint/typecheck on large PRs |
+| P2 | Redis connection singleton | Fewer connections under load |
+| P2 | Vitest Testcontainers + parallel workers | Remove serial tests + memberNumber hacks |
+| P2 | OpenAPI schemas from Zod (single source of truth) | `/docs` stays accurate |
+| P3 | Website Docker: host-mount large media assets | Smaller images, faster builds |
+| P3 | Read replica for transparency aggregate queries | Scale public ledger reads |
+
+---
+
+## Refactors
+
+| P | Item | Benefit |
+|---|---|---|
+| P1 | Wire `@tahti/ui` into `apps/web` | One design system; delete duplicated CSS |
+| P1 | Zod on all route bodies | Consistent validation + types |
+| P2 | Single e2e seed module (`apps/api/scripts/seed-e2e-screenshots.ts` only) | Less Docker/host confusion |
+| P2 | Worker cron manifest (one registry file) | Easier ops audit of scheduled jobs |
+| P2 | Shared Vitest `TestContext` fixture | Less boilerplate across 56 test files |
+| P2 | `exportCsv()` helper for admin routes | DRY |
+| P2 | `@tahti/ui` ESLint in Turbo | Same bar as other packages |
+| P3 | Drop `eslint.ignoreDuringBuilds` in web Docker build | Lint enforced at build time |
 
 ---
 
@@ -87,62 +163,60 @@ Last reviewed: 2026-06-03
 ### Testing
 | P | Item | Benefit |
 |---|---|---|
-| P1 | **Playwright** smoke tests for dashboard + `/u/[username]` + `/c/[slug]` | Catches RSC/regression bugs bash e2e misses |
-| P1 | Document local test DB in README (`docker compose up postgres -d`) | Faster onboarding; pairs with CI Postgres |
-| ~~P2~~ | ~~Vitest coverage for embed, newsletter, venues, Connect, webhooks~~ | Done: 191 API/workspace tests (2026-06-03) |
-| P2 | Shared `TestContext` fixture (single `beforeAll` app + cleanup registry) | Less boilerplate across 40+ test files |
-| P2 | Ephemeral DB per Vitest worker (Testcontainers) | Eliminates `memberNumber` collision hacks |
-| P2 | Contract tests for public `/api/v1/*` JSON shapes | Safe mobile/third-party consumers |
+| ~~P1~~ | ~~Playwright page captures~~ — local `scripts/e2e-screenshots.sh` + `docs/e2e-screenshots/` (not CI) | Visual regression for docs/stakeholders |
+| P1 | Playwright smoke in CI against `docker compose stack` (optional nightly, not every PR) | Catch RSC regressions without local-only flow |
+| P1 | README: local test DB + `pnpm ci:check` one-liner | Onboarding |
+| ~~P2~~ | ~~Broad API test coverage~~ — ~230 tests (2026-06-03) | — |
+| P2 | Contract tests for public `/api/v1/*` JSON shapes | Safe third-party consumers |
+| P2 | Ephemeral DB per Vitest worker (Testcontainers) | Parallel CI |
 
 ### CI / DX
 | P | Item | Benefit |
 |---|---|---|
-| P1 | ~~Merge e2e-api into CI~~ | Done: `vital-flows-e2e` job in `ci.yml` |
-| P2 | Turbo remote cache in CI | Faster `typecheck` / `lint` on large diffs |
-| P2 | `pnpm test --coverage` threshold gate (e.g. 60% on `apps/api`) | Prevents untested money paths |
-| P3 | Preview deployments per PR | Stakeholder review without local setup |
+| ~~P1~~ | ~~Merge vital-flows into CI~~ — done | — |
+| P1 | `user-journeys-e2e` required in branch protection | Guides-backed paths always verified |
+| P2 | `pnpm test --coverage` threshold (e.g. 60% on `apps/api`) | Untested money paths visible |
+| P2 | Docker stack smoke job in CI (build + health, weekly) | Catches Dockerfile drift |
+| P3 | Preview deployments per PR | Stakeholder review |
 
 ### Code quality
 | P | Item | Benefit |
 |---|---|---|
-| P1 | **Zod** on all route bodies (governance, ledger, fansubs, releases done ad-hoc) | Consistent validation + types |
-| P2 | Extract CSV export routes to shared `exportCsv(reply, rows)` helper | DRY for admin exports |
-| P2 | Centralise `memberNumber` allocation with retry (serialisable transaction) | Remove test-only number ranges |
-| P2 | OpenAPI spec generated from routes | Docs + client SDKs |
-
-### Runtime / ops
-| P | Item | Benefit |
-|---|---|---|
-| P1 | Redis connection pool singleton (status + rate-limit share one client) | Fewer connections, faster cold checks |
-| P2 | Graceful Redis-down mode for rate limit (fail open vs closed — policy decision) | Dev without Redis |
-| P2 | Structured logging (pino) with request IDs | Incident debugging |
-| P3 | Read replicas for transparency aggregates | Scale public read load |
+| P2 | Centralise `memberNumber` allocation (serialisable txn + retry) | Remove test-only 97xxx/98xxx bands |
+| P2 | Generate public OpenAPI from route Zod schemas | Docs + SDKs |
 
 ### Frontend
 | P | Item | Benefit |
 |---|---|---|
-| P1 | Shared design tokens / component library | Consistent dashboard + public pages |
+| ~~P1~~ | ~~Shared design tokens / component library~~ — `packages/ui` created; **adoption pending** | PLAT-020 |
 | P2 | Server-side profile markdown rendering (sanitised) | Rich bios without XSS |
-| P2 | Image optimisation for `avatarUrl` / `artworkUrl` | Profile LCP < 1.5s target |
+| P2 | Image optimisation for `avatarUrl` / `artworkUrl` | Profile LCP < 1.5s |
+
+### Runtime / ops
+| P | Item | Benefit |
+|---|---|---|
+| P1 | Redis connection pool singleton | PLAT-011 |
+| P2 | Graceful Redis-down mode for rate limit (policy decision) | Dev without Redis |
 
 ---
 
 ## Infrastructure (non-code)
 
-These stay in `docs/project-roadmap.md` Phases 0–2 but are listed here for visibility:
+These stay in `docs/project-roadmap.md` Phases 0–2:
 
 - Tahti ry PRH registration and bank account
 - Grant applications (Tempo, Koneen, SKR)
 - Production hardware + Helsinki fiber
-- Staging environment mirroring prod
+- Staging environment mirroring prod Swarm topology
 - DPAs with Stripe, Mixcloud, Revelator, UpCloud
 
 ---
 
 ## Completed recently (for context)
 
-- M8/M9/M10, M18 core, M19 core, M1 membership checkout, M20 cap + HLS tier split
-- Vitest journey tests + `tests/e2e/vital-flows.sh` + CI `ci.yml` (lint + vital-flows-e2e)
-- M11 partial: audit CSV, ledger CSV, `/api/v1/status`
-- M12 partial: release schema, profile API, `/u/[username]` page, dashboard drafts
-- M14 embed web pages; M19 Connect + Checkout; +48 Vitest files (embed, newsletter, venues, Connect, webhooks, RTMP, etc.)
+- M8/M9/M10, M18 core, M19 core (Connect, crons, perks), M1 membership + portal
+- M12–M14 partial, M15–M17, M22–M23 partial, M20 cap + HLS + upgrade CTA
+- OpenAPI/Swagger, fan-sub payout tests, collections/archive tests, user-journey e2e
+- CI: lint job, vital-flows + user-journeys e2e, AGPL, website Docker
+- Docker stack scripts, scaling doc, e2e screenshots (local), `packages/ui` scaffold
+- Website: OG, apply form, audio unmute, design-system + phases 8–11 docs

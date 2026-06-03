@@ -1,0 +1,89 @@
+/**
+ * Tahti design tokens — import this once at the app root.
+ * All component styles reference these custom properties.
+ * Never hardcode color hex values in component CSS — always use a token.
+ *
+ * See docs/design-system.md for the full spec.
+ */
+
+:root {
+  /* ─── Backgrounds ───────────────────────────────────────────────────── */
+  --bg:    #0a0f1e;   /* page background */
+  --card:  #111827;   /* card surface */
+  --card2: #1a2340;   /* elevated card, callout, stat bg */
+
+  /* ─── Accent colors (each carries semantic meaning) ────────────────── */
+  --amber:    #f0a500;  /* primary CTA · logo · key values */
+  --cyan:     #00bcd4;  /* streaming · tech · player controls */
+  --green:    #00e676;  /* live state · positive status */
+  --purple:   #7c4dff;  /* fan-subs · community · governance */
+  --coral:    #ff6b6b;  /* errors · competitor critique · warnings */
+  --lavender: #9c88ff;  /* membership · artist handle · grants */
+
+  /* ─── Text ──────────────────────────────────────────────────────────── */
+  --text:  #e8eaf6;   /* primary */
+  --muted: #8892a4;   /* secondary · labels · captions */
+
+  /* ─── Typography ────────────────────────────────────────────────────── */
+  --font-head: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+
+  /* ─── Borders ───────────────────────────────────────────────────────── */
+  --border:       rgba(255, 255, 255, 0.07);
+  --border-hover: rgba(255, 255, 255, 0.15);
+
+  /* ─── Radius ────────────────────────────────────────────────────────── */
+  --radius-sm:   4px;
+  --radius:      8px;
+  --radius-lg:   12px;
+  --radius-pill: 20px;
+  --radius-full: 50%;
+
+  /* ─── Shadows ───────────────────────────────────────────────────────── */
+  --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-amber:   0 8px 24px rgba(240, 165, 0, 0.35);
+  --shadow-modal:   0 40px 120px rgba(0, 0, 0, 0.8);
+
+  /* ─── Motion ────────────────────────────────────────────────────────── */
+  --ease:           0.2s ease;
+  --ease-reveal:    0.7s ease;
+  --ease-card:      0.3s ease;
+}
+
+/* ─── Global base ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Scroll reveal ────────────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity var(--ease-reveal), transform var(--ease-reveal);
+}
+.reveal.visible       { opacity: 1; transform: translateY(0); }
+.reveal-delay-1       { transition-delay: 0.1s; }
+.reveal-delay-2       { transition-delay: 0.2s; }
+.reveal-delay-3       { transition-delay: 0.3s; }
+.reveal-delay-4       { transition-delay: 0.4s; }
+
+/* ─── Animations ───────────────────────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+@keyframes wfpulse {
+  0%, 100% { transform: scaleY(1); }
+  50%       { transform: scaleY(0.4); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

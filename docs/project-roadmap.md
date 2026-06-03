@@ -5,14 +5,16 @@ platform → tested beta → operation by Tahti ry** (with trained member-operat
 
 **Status today (updated 2026-06-03):** specs, infra templates, and financial
 model exist **and the application code is well underway**. The MVP broadcasting
-stack (M0–M6), live chat (M5), the transparency ledger (M8), the annual grant
-engine (M9), member governance (M10), download engagement units (M18 core), and
-fan-to-artist subscriptions (M19 core), hardening exports (M11 partial), and
-artist profiles + release metadata (M12 partial) are implemented with a green
-test suite. See the [Build audit](#build-audit--current-state-2026-06-03) below
-and [future-improvements.md](./future-improvements.md) for deferred work.
-for the milestone-by-milestone breakdown of what is done, partial, and not
-started.
+stack (M0–M6), live chat (M5), transparency ledger (M8), annual grant engine (M9),
+member governance (M10), download engagement units (M18 core), fan-to-artist
+subscriptions (M19 core), hardening exports (M11 partial), artist profiles +
+releases (M12 partial), newsletter/embed/mentions/radio/venues (M13–M17 partial),
+archive metadata + collections (M22–M23 partial), and tier gating (M20 partial)
+are implemented with **~230 Vitest tests** (56 files) and **three CI e2e layers**
+(vital-flows curl, user-journey curl, local Playwright screenshots). See the
+[Build audit](#build-audit--current-state-2026-06-03) and
+[Platform engineering backlog](#platform-engineering-backlog) below, plus
+[future-improvements.md](./future-improvements.md) for deferred work.
 
 **Target Year 1 plan:** 200 paying members · founding grant for capex/growth ·
 first AGM · handover-ready ops by month 12–18. Ops balance without a fixed
@@ -37,9 +39,26 @@ closed beta → **M7–M9, M19** (money + grants) → remaining features → han
 
 ## Build audit — current state (2026-06-03, updated)
 
-Audit of the actual code in `apps/`, `services/`, and `packages/` against the
-`docs/AGENT.md` milestones. Verified by running `pnpm typecheck` (passes),
-`pnpm lint` + `pnpm format:check` (clean), and `pnpm test` (~230 tests pass with Postgres up).
+Audit of the actual code in `apps/`, `services/`, `packages/`, and `website/`
+against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
+`pnpm test` (~230 tests, Postgres required, `maxWorkers: 1`), and CI jobs in
+`.github/workflows/ci.yml`.
+
+### Work completed (high level)
+
+| Area | Delivered |
+|---|---|
+| **Core platform** | M0–M6 MVP (accounts, upload, live ingest, archive, chat, multistream) |
+| **Money & governance** | M8 ledger, M9 grants, M10 motions, M1/M19 Stripe paths (REST + webhooks) |
+| **Artist product** | M12 profiles/releases/smart links, M18 downloads, M20 cap/HLS tiers, M22 metadata, M23 collections/RSS |
+| **Community** | M13 newsletter API, M14 embed, M15 mentions, M16 radio, M17 venues |
+| **Quality** | 56 Vitest files, journey + vital-flows + user-journey bash e2e, OpenAPI at `/docs` |
+| **CI / DX** | Lint gate, format check, typecheck, AGPL header check, website Docker build |
+| **Local ops** | `infra/docker-compose.stack.yml`, `scripts/stack-up.sh`, `scripts/ci-check.sh`, `docs/scaling-node-distribution.md` |
+| **Docs / design** | `docs/design-system.md`, `packages/ui/` tokens + components (not yet wired into web), plain-language guides |
+| **Marketing site** | OG tags, inline apply form, bg-audio + favicons, Three.js hero (`website/`) |
+
+### Milestone matrix
 
 | Milestone | State | Evidence / notes |
 |---|---|---|
@@ -54,15 +73,15 @@ Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
-| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha lib, audit log. **Added:** `GET /api/v1/status`, `GET /api/admin/audit/export.csv`, `GET /api/admin/ledger/export.csv?year=`, shared `lib/csv.ts`, **hCaptcha on chat token join**. Deferred: Upptime, backup runbook drills |
-| **M12** Profile + releases | 🟡 Partial | Release schema + CRUD + public profile, web `/u/[username]` with **Open Graph**, **`/r/:slug` smart-link landing**, **dashboard DSP URL editor** (`PATCH /api/me/releases/:id`). **Added:** `TrackStatus` enum + audio fields on `ReleaseTrack`, upload/transcode pipeline, per-tier download URLs. Deferred: `ReleaseTrack.archiveItemId` on profile playback |
+| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + chat token), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth). Deferred: Upptime, backup drills, structured request logging |
+| **M12** Profile + releases | 🟡 Partial | Release CRUD, track upload + transcode queue, public profile, OG, smart links, DSP editor. Deferred: profile playback via `archiveItemId`, release artwork to MinIO |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, **web `/embed/r/[id]` + `/embed/c/[slug]`** (iframe-safe headers). Deferred: social auto-post, smart-link analytics |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
 | **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
 | **M17** Venue calendar | 🟡 Partial | `venue` schema (Venue/VenueBroadcast), `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`, venue + broadcast create endpoints. Deferred: admin verification UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
-| **M19** Fan-subs | 🟡 Partial | Tiers, subscribe/cancel, webhook lifecycle, ledger split, subscribe page + dashboard. **Added:** Connect + Checkout, churn grace, payout/expire crons, **perk codes** (`FAN_CHAT`, `FAN_NEWSLETTER`), fan-only Centrifugo channel + newsletter `audience: fans` / `subscribersOnly` drafts, supporter badge in public chat. Deferred: newsletter send UI for fan-only audience |
+| **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes, fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
 | **M22** Archive metadata | 🟡 Partial | Hearthis-style upload metadata (genre, type, BPM/key, license, access gates, visuals) with sensible defaults; upload form + dashboard editor; TBPM tag detection. Deferred: editable tracklists, repost/follow download gates |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS with CDN enclosure URLs, release items, profile + `/u/:user/c/:slug` + dashboard collections panel. Deferred: drag reorder, featured collections on smart links |
 | **M28** Track version history | ❌ Not started | Today: single `mixVersion` label on archive items. Deferred: upload new audio as a version of the same track — version list, lineage, stable public URL |
@@ -81,8 +100,15 @@ as their own checklist so they don't get lost between milestones.
 | [ ] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
 | [ ] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | AGENT.md acceptance criteria require Zod validation on every endpoint; several routes hand-roll validation | ongoing hardening |
 | [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
-| [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; the suite now runs green (81 tests) on every PR against a Postgres service | CI |
-| [ ] | Document ephemeral test DB story for local dev (`pnpm test` needs Postgres) | CI now provisions Postgres + `db push`; local dev still needs the docker-compose DB documented — see also `docs/future-improvements.md` | M11 |
+| [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; suite now runs on every PR with Postgres + Redis services | CI |
+| [x] | Consolidate CI: lint job, vital-flows e2e, user-journey e2e, AGPL check, website Docker | Single `ci.yml` gate; Playwright screenshots stay local-only (`scripts/e2e-screenshots.sh`) | CI |
+| [x] | Full local Docker stack (`stack-up.sh`, ports 3010/3011) + scaling node doc | Dev/stakeholder demos without host port clashes; ops handover reference | M11 / Phase 2 |
+| [ ] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | Design-system drift; duplicate styling maintenance | M12 / DX |
+| [ ] | `@tahti/ui`: add `lint` script to Turbo pipeline | CI AGPL pass but no ESLint on UI package | CI |
+| [ ] | Consolidate e2e seed scripts (`scripts/seed-e2e-screenshots.ts` vs `apps/api/scripts/`) | Two entrypoints, easy to run wrong one in Docker | CI / DX |
+| [ ] | Stripe webhook: metric/alert when handler throws (today returns `{ received: true }` anyway) | Silent membership/fan-sub activation failures | M19 hardening |
+| [ ] | Automate `db push` / migrate in deploy pipeline (OPS-002) | Manual schema step blocks reliable rollouts | M0 / Phase 2 |
+| [ ] | Document local test prerequisites in README (`docker compose up postgres redis -d`, `pnpm ci:check`) | Onboarding friction; tests fail opaque without DB | M11 |
 | [x] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | Both inputs now live: download weight (M18) + fan-sub gross euros (M19) feed `computeEngagementUnits` | M18 + M19 → M9 (done) |
 
 ---
@@ -194,7 +220,7 @@ Required before first **real** membership money and first grant cycle.
 | [x] | **M8** | Public transparency ledger + monthly rollup API + grants/:year report | Dev |
 | [ ] | **M7** | Mixcloud upload + Revelator wizard (€8/release) | Dev |
 | [x] | **M9** | Annual engagement-unit grant cron + report (`packages/ledger`, payout transfer pending Stripe Connect / M19) | Dev |
-| [~] | **M19** | Fan-subscriptions: tiers, subscribe/cancel, webhook lifecycle, fee split + ledger, M9/M18 integration, subscribe page (live Stripe Connect/Checkout still to wire) | Dev |
+| [~] | **M19** | Fan-subscriptions: Connect, Checkout, crons, perks; live payout retry + newsletter fan UI remain | Dev |
 | [x] | **M10** (core) | Member directory, motions, advisory voting (Topic 11), governance portal | Dev |
 
 **Test matrix:**
@@ -215,16 +241,16 @@ Can ship incrementally during beta.
 
 | Done | Milestone | Summary | Priority |
 |:---:|---|---|---|
-| [ ] | **M12** | Profile + releases + smart links | High |
-| [ ] | **M20** (complete) | Tier gating polish, upgrade UX | High |
-| [ ] | **M18** | Anonymous + fan downloads, anti-fraud | High |
-| [ ] | **M14** | Embed, smart links, social auto-post, analytics | Medium |
-| [ ] | **M13** | Newsletter | Medium |
-| [ ] | **M6** | Multistream (Mixcloud Live only) | Medium |
-| [ ] | **M16** | Tahti Radio meta-stream | Medium |
-| [ ] | **M15** | Artist @-mentions | Low |
-| [ ] | **M17** | Venue calendar API | Low |
-| [ ] | **M11** | Rate limits, hCaptcha, audit export for accountant | High before Y2 audit |
+| [~] | **M12** | Profile + releases + smart links (playback + artwork remain) | High |
+| [~] | **M20** | Tier gating polish, upgrade UX | High |
+| [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
+| [~] | **M14** | Embed pages done; social auto-post + analytics remain | Medium |
+| [~] | **M13** | Newsletter API + worker; SES + bounce webhook remain | Medium |
+| [x] | **M6** | Multistream RTMP targets | Medium |
+| [x] | **M16** | Tahti Radio meta-stream | Medium |
+| [x] | **M15** | Artist @-mentions | Low |
+| [~] | **M17** | Venue API + iCal; admin verification UI remain | Low |
+| [~] | **M11** | Rate limits, hCaptcha, audit export, OpenAPI; Upptime + backup drills remain | High before Y2 audit |
 
 **Exit criteria:** profile URL shareable; downloads + fan-subs used by ≥10 beta artists.
 
@@ -372,6 +398,95 @@ unless maintenance team works unpaid until surplus and capex is deferred.
 
 ---
 
+---
+
+## Platform engineering backlog
+
+Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
+(not tied to a single AGENT.md milestone). See also
+[future-improvements.md](./future-improvements.md).
+
+### Hardening (security & reliability)
+
+| Done | ID | Item | Priority |
+|:---:|---|---|---|
+| [ ] | **PLAT-001** | Stripe webhook dead-letter log + alert when `activateMembership` / fan-sub handlers fail | P1 |
+| [ ] | **PLAT-002** | Require branch protection on all `ci.yml` jobs (lint, test, both e2e, AGPL) | P1 |
+| [ ] | **PLAT-003** | PgBouncer before scaling API replicas (`docs/scaling-node-distribution.md`) | P1 |
+| [ ] | **PLAT-004** | Internal ingest routes: shared `@fastify/formbody` + integration tests for RTMP + Icecast | P2 |
+| [ ] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | P2 |
+| [ ] | **PLAT-006** | Rate-limit policy doc: fail-open vs fail-closed when Redis unavailable | P2 |
+
+### Optimisations (performance & cost)
+
+| Done | ID | Item | Priority |
+|:---:|---|---|---|
+| [ ] | **PLAT-010** | Turbo remote cache in CI | P2 |
+| [ ] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | P2 |
+| [ ] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | P2 |
+| [ ] | **PLAT-013** | Website Docker: mount large media (`bg-audio.mp3`, hero video) from host like `output_vhs.mp4` | P3 |
+| [ ] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | P2 |
+
+### Refactors (maintainability)
+
+| Done | ID | Item | Priority |
+|:---:|---|---|---|
+| [ ] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | P1 |
+| [ ] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | P1 |
+| [ ] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
+| [ ] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
+| [ ] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | P3 |
+| [ ] | **PLAT-025** | Remove `eslint.ignoreDuringBuilds` in web Dockerfile once lint clean in CI | P3 |
+| [ ] | **PLAT-026** | Reconcile tier enum in AGENT.md (`FREE/PAID` vs `FREE/ARTIST/STUDIO`) | P2 |
+
+---
+
+## Streaming infrastructure backlog
+
+Issues identified from streaming architecture review and user journey analysis. See `docs/technical/streaming-architecture.md` for full context.
+
+### CRITICAL — blocks horizontal scaling
+
+| ID | Issue | Raised by | Phase to fix |
+|:---|---|---|---|
+| [ ] | **STREAM-001** HLS segments written to shared Docker volume instead of MinIO — prevents adding a second Caddy or worker node | Architecture review | M3 (must fix before any beta) |
+| [ ] | **STREAM-004** Recording is a Liquidsoap sidecar — recording lost if Liquidsoap crashes mid-broadcast | Architecture review | M3 |
+| [ ] | **STREAM-005** No per-channel health watchdog — silent/frozen channels go undetected until user reports | Journey: Listener J1 | M3 |
+
+### HIGH — breaks artist or listener experience
+
+| ID | Issue | Raised by | Phase to fix |
+|:---|---|---|---|
+| [ ] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | Architecture review | M3 |
+| [ ] | **STREAM-003** Ingest DNS failover has 30s dead window — OBS connections to failed ingest node must manually reconnect | Architecture review | M3 / Phase 4 |
+| [ ] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | Journey: Artist J2 | M4 |
+| [ ] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | Journey: Artist J2 | M3 |
+| [ ] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | Journey: Listener J2 | M3 |
+| [ ] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Journey: Listener J1 | M3 |
+| [ ] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | Journey: Listener J2 | M5 |
+
+### MEDIUM — affects operations and cost attribution
+
+| ID | Issue | Raised by | Phase to fix |
+|:---|---|---|---|
+| [ ] | **STREAM-006** No per-channel bandwidth accounting — can't attribute egress costs per artist, can't inform resource limits or grant calculations | Architecture review | M8 |
+| [ ] | **STREAM-007** Single Icecast node — Mixxx/Traktor users have no failover | Architecture review | Phase 5 / pre-launch |
+| [ ] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Architecture review | M4 |
+| [ ] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Architecture review | M3 |
+| [ ] | **OPS-001** No structured log correlation across edge encoder → Liquidsoap → recording containers for a single broadcast session | Journey: Ops J3 | M11 |
+| [ ] | **OPS-002** DB migration is a manual step after deploy — must be automated in CI before service update | Journey: Ops J2 | M0 |
+
+### LOW — improvements for polish
+
+| ID | Issue | Raised by | Phase to fix |
+|:---|---|---|---|
+| [ ] | **STREAM-010** Graceful drain on Liquidsoap stop may emit an incomplete final HLS segment — listeners hear a cut instead of a fade | Architecture review | M3 |
+| [ ] | **ARTIST-004** Upload progress bar shows browser→MinIO upload only, not transcode progress — artist thinks "nothing is happening" during transcode | Journey: Artist J4 | M2 |
+| [ ] | **LISTENER-003** Anonymous listener sets a handle in localStorage but it resets if cookies cleared — confusing return identity | Journey: Listener J1 | M5 |
+| [ ] | **DIRECTOR-001** Grant calculation preview has no anomaly detection — director must manually spot-check 200 rows for bot activity | Journey: Director J1 | M9 |
+
+---
+
 ## Quick reference — doc map
 
 | Question | Read |
@@ -385,6 +500,9 @@ unless maintenance team works unpaid until surplus and capex is deferred.
 | How to broadcast? | `guides/for-streamers.md` + `obs-and-broadcasting-guides.md` |
 | Plain-language guides (artist / viewer / streamer) | `guides/README.md` |
 | Infra choices? | `infra-strategy.md` |
+| How to scale nodes? | `scaling-node-distribution.md`, `infra/docker-compose.stack.yml` |
+| E2E screenshots / flows? | `user-flows.md`, `e2e-screenshots/README.md` |
+| Platform hardening backlog? | [Platform engineering backlog](#platform-engineering-backlog), `future-improvements.md` |
 
 ---
 
