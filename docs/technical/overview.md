@@ -173,11 +173,31 @@ graph TB
 
 ## Key port map
 
+### Production (Swarm / colocation)
+
 | External port | Protocol | Service |
 |---------------|----------|---------|
 | 80 / 443 | HTTPS | Caddy (all web traffic) |
 | 1935 | RTMP | nginx-RTMP (OBS ingest) |
 | 8000 | HTTP+Icecast | Icecast (Mixxx ingest) |
+
+### Local dev stack (`docker-compose.stack.yml`)
+
+All host-side ports sit above 15 000 to avoid collisions with other local services. Override any via env var before running `./scripts/stack-up.sh`.
+
+| Service | Env var | Host port | URL |
+|---------|---------|-----------|-----|
+| web (Next.js) | `WEB_PORT` | 17777 | http://localhost:17777 |
+| api (Fastify) | `API_PORT` | 15011 | http://localhost:15011 |
+| orchestrator | `ORCHESTRATOR_PORT` | 15003 | http://localhost:15003 |
+| chat (Centrifugo) | `CHAT_PORT` | 18000 | http://localhost:18000 |
+| mailhog SMTP | `MAILHOG_SMTP_PORT` | 15025 | — |
+| mailhog UI | `MAILHOG_UI_PORT` | 18025 | http://localhost:18025 |
+| minio API | `MINIO_PORT` | 19000 | http://localhost:19000 |
+| minio console | `MINIO_CONSOLE_PORT` | 19001 | http://localhost:19001 |
+| icecast | `ICECAST_PORT` | 18100 | http://localhost:18100 |
+| website (marketing) | `WEBSITE_PORT` | 18080 | http://localhost:18080 |
+| rtmp-ingest | `RTMP_PORT` | 1935 | rtmp://localhost:1935 |
 
 ## Domain routing
 

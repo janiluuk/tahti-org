@@ -8,9 +8,9 @@
 #   ./scripts/stack-up.sh --no-cache  # rebuild images without cache
 #
 # After up:
-#   App:     http://localhost:${WEB_PORT:-3000}
-#   API:     http://localhost:${API_PORT:-3001}
-#   MailHog: http://localhost:${MAILHOG_UI_PORT:-8025}
+#   App:     http://localhost:${WEB_PORT:-17777}
+#   API:     http://localhost:${API_PORT:-15011}
+#   MailHog: http://localhost:${MAILHOG_UI_PORT:-18025}
 
 set -euo pipefail
 
@@ -18,9 +18,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 COMPOSE_FILE="$ROOT/infra/docker-compose.stack.yml"
 COMPOSE=(docker compose -f "$COMPOSE_FILE")
 
-# Defaults avoid clashing with host dev (Giggi on :3000, local Postgres on :5432).
-export WEB_PORT="${WEB_PORT:-3010}"
-export API_PORT="${API_PORT:-3011}"
+# All stack ports live above 15 000 to avoid clashing with any host dev service.
+export WEB_PORT="${WEB_PORT:-17777}"
+export API_PORT="${API_PORT:-15011}"
 SEED=false
 DOWN=false
 NO_CACHE=false
@@ -73,8 +73,8 @@ wait_for() {
   return 1
 }
 
-wait_for "http://localhost:${API_PORT:-3001}/health" "API"
-wait_for "http://localhost:${WEB_PORT:-3000}/" "Web"
+wait_for "http://localhost:${API_PORT:-15011}/health" "API"
+wait_for "http://localhost:${WEB_PORT:-17777}/" "Web"
 
 if [[ "$SEED" == true ]]; then
   echo "── Seeding screenshot fixtures ──"
@@ -88,10 +88,10 @@ fi
 
 echo ""
 echo "── Tahti stack is up ─────────────────────────────────────"
-echo "   Web app:  http://localhost:${WEB_PORT:-3000}"
-echo "   API:      http://localhost:${API_PORT:-3001}/health"
-echo "   MailHog:  http://localhost:${MAILHOG_UI_PORT:-8025}"
-echo "   MinIO UI: http://localhost:${MINIO_CONSOLE_PORT:-9001}"
+echo "   Web app:  http://localhost:${WEB_PORT:-17777}"
+echo "   API:      http://localhost:${API_PORT:-15011}/health"
+echo "   MailHog:  http://localhost:${MAILHOG_UI_PORT:-18025}"
+echo "   MinIO UI: http://localhost:${MINIO_CONSOLE_PORT:-19001}"
 echo ""
 echo "   Screenshots (local): ./scripts/e2e-screenshots.sh"
 echo "   Stop:        ./scripts/stack-up.sh --down"
