@@ -2,6 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import {
+  BillingPortalUrlResponseSchema,
+  MembershipCheckoutResponseSchema,
+  MembershipStatusResponseSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import {
@@ -14,26 +20,43 @@ import { activateMembership } from '../../lib/membership.js'
 
 const membershipRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/membership — current membership status
-  fastify.get('/api/me/membership', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const membership = await fastify.prisma.membership.findUnique({
-      where: { userId: user.id },
-    })
-    return reply.send({
-      status: membership?.status ?? 'PENDING_EMAIL',
-      isMember: user.isMember,
-      memberNumber: user.memberNumber,
-      memberSince: user.memberSince,
-      tier: user.tier,
-      priceCents: config.membership.priceCents,
-      emailVerified: !!user.emailVerifiedAt,
-    })
-  })
+  fastify.get(
+    '/api/me/membership',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['auth'],
+        description: 'M1: membership status for dashboard',
+        response: openApiResponse(MembershipStatusResponseSchema, 'MembershipStatus'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const membership = await fastify.prisma.membership.findUnique({
+        where: { userId: user.id },
+      })
+      return reply.send({
+        status: membership?.status ?? 'PENDING_EMAIL',
+        isMember: user.isMember,
+        memberNumber: user.memberNumber,
+        memberSince: user.memberSince,
+        tier: user.tier,
+        priceCents: config.membership.priceCents,
+        emailVerified: !!user.emailVerifiedAt,
+      })
+    },
+  )
 
   // POST /api/me/membership/checkout — pay €40 annual membership
   fastify.post(
     '/api/me/membership/checkout',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['auth'],
+        response: openApiResponse(MembershipCheckoutResponseSchema, 'MembershipCheckout'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
 
@@ -81,44 +104,54 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // POST /api/me/membership/portal — Stripe Customer Portal (receipts, payment method)
-  fastify.post('/api/me/membership/portal', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
+  fastify.post(
+    '/api/me/membership/portal',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['auth'],
+        response: openApiResponse(BillingPortalUrlResponseSchema, 'BillingPortalUrl'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
 
-    if (!user.isMember) {
-      return reply.status(400).send({ error: 'Active membership required' })
-    }
+      if (!user.isMember) {
+        return reply.status(400).send({ error: 'Active membership required' })
+      }
 
-    if (!stripeEnabled) {
-      return reply.status(400).send({
-        error: 'Billing portal is only available when Stripe is configured',
-      })
-    }
-
-    let customerId = user.stripeCustomerId
-    if (!customerId) {
-      try {
-        customerId = await createStripeCustomer({ email: user.email, userId: user.id })
-        await fastify.prisma.user.update({
-          where: { id: user.id },
-          data: { stripeCustomerId: customerId },
+      if (!stripeEnabled) {
+        return reply.status(400).send({
+          error: 'Billing portal is only available when Stripe is configured',
         })
+      }
+
+      let customerId = user.stripeCustomerId
+      if (!customerId) {
+        try {
+          customerId = await createStripeCustomer({ email: user.email, userId: user.id })
+          await fastify.prisma.user.update({
+            where: { id: user.id },
+            data: { stripeCustomerId: customerId },
+          })
+        } catch (err) {
+          request.log.error({ err }, 'stripe customer creation failed')
+          return reply.status(502).send({ error: 'Could not open billing portal' })
+        }
+      }
+
+      try {
+        const session = await createBillingPortalSession({
+          customerId,
+          returnUrl: `${config.appUrl}/dashboard?membership=portal`,
+        })
+        return reply.send({ portalUrl: session.url })
       } catch (err) {
-        request.log.error({ err }, 'stripe customer creation failed')
+        request.log.error({ err }, 'billing portal failed')
         return reply.status(502).send({ error: 'Could not open billing portal' })
       }
-    }
-
-    try {
-      const session = await createBillingPortalSession({
-        customerId,
-        returnUrl: `${config.appUrl}/dashboard?membership=portal`,
-      })
-      return reply.send({ portalUrl: session.url })
-    } catch (err) {
-      request.log.error({ err }, 'billing portal failed')
-      return reply.status(502).send({ error: 'Could not open billing portal' })
-    }
-  })
+    },
+  )
 }
 
 export default membershipRoutes

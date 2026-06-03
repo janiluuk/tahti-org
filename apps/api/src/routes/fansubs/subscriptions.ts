@@ -3,9 +3,15 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  FanSubActivatedResponseSchema,
+  FanSubCancelResponseSchema,
   FanSubCheckoutSchema,
+  FanSubCheckoutUrlResponseSchema,
+  FanSubSubscriptionListSchema,
   IdParamSchema,
   UsernameParamSchema,
+  openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -27,7 +33,17 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/v1/u/:username/subscribe — subscribe to an artist tier
   fastify.post(
     '/api/v1/u/:username/subscribe',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        description: 'M19: start fan subscription (Stripe Checkout or dev activate)',
+        response: openApiResponses([
+          { status: 200, schema: FanSubCheckoutUrlResponseSchema, name: 'FanSubCheckoutUrl' },
+          { status: 201, schema: FanSubActivatedResponseSchema, name: 'FanSubActivated' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const subscriber = request.sessionUser!
       const routeParams = parseRouteParams(UsernameParamSchema, request.params)
@@ -147,28 +163,44 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // GET /api/me/subscriptions — subscriptions where I am the subscriber
-  fastify.get('/api/me/subscriptions', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const subs = await fastify.prisma.fanSubscription.findMany({
-      where: { subscriberUserId: user.id },
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        tierName: true,
-        amountCents: true,
-        state: true,
-        currentPeriodEnd: true,
-        canceledAt: true,
-        artist: { select: { username: true, displayName: true } },
+  fastify.get(
+    '/api/me/subscriptions',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        response: openApiResponse(FanSubSubscriptionListSchema, 'FanSubSubscriptionList'),
       },
-    })
-    return reply.send(subs)
-  })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const subs = await fastify.prisma.fanSubscription.findMany({
+        where: { subscriberUserId: user.id },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          tierName: true,
+          amountCents: true,
+          state: true,
+          currentPeriodEnd: true,
+          canceledAt: true,
+          artist: { select: { username: true, displayName: true } },
+        },
+      })
+      return reply.send(subs)
+    },
+  )
 
   // POST /api/me/subscriptions/:id/cancel — cancel; access lasts until period end
   fastify.post(
     '/api/me/subscriptions/:id/cancel',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        response: openApiResponse(FanSubCancelResponseSchema, 'FanSubCancel'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)

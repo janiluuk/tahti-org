@@ -8,6 +8,7 @@ import {
   DownloadGateStatusSchema,
   DownloadGatesQuerySchema,
   RepostAckBodySchema,
+  RepostAckResponseSchema,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -86,6 +87,7 @@ const archiveRepostRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['downloads'],
         description: 'M22: acknowledge repost to satisfy download gate',
+        response: openApiResponse(RepostAckResponseSchema, 'RepostAck'),
       },
     },
     async (request, reply) => {

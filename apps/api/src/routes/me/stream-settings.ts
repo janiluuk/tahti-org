@@ -3,6 +3,12 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
+import {
+  IcecastPassRotateResponseSchema,
+  StreamKeyRotateResponseSchema,
+  StreamSettingsResponseSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { hashPassword } from '../../lib/password.js'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
@@ -10,41 +16,58 @@ import { liveHlsUrl } from '../../lib/stream-quality.js'
 
 const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/stream-settings — returns ingest URLs + masked credentials
-  fastify.get('/api/me/stream-settings', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: {
-        slug: true,
-        state: true,
-        liveSourceMount: true,
-        liveSourcePass: true,
-        rtmpStreamKey: true,
+  fastify.get(
+    '/api/me/stream-settings',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M3: RTMP + Icecast ingest credentials and HLS playback URL',
+        response: openApiResponse(StreamSettingsResponseSchema, 'StreamSettings'),
       },
-    })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
 
-    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: {
+          slug: true,
+          state: true,
+          liveSourceMount: true,
+          liveSourcePass: true,
+          rtmpStreamKey: true,
+        },
+      })
 
-    return reply.send({
-      rtmp: {
-        server: `rtmp://${config.rtmpIngestHost}:1935/live`,
-        streamKey: channel.rtmpStreamKey,
-      },
-      icecast: {
-        server: config.icecastPublicUrl.replace(/\/$/, ''),
-        mount: channel.liveSourceMount,
-        password: channel.liveSourcePass,
-        hint: 'Audio-only DJ apps (Mixxx, Traktor, butt) — not OBS. Same live show as RTMP.',
-      },
-      hlsUrl: liveHlsUrl(config.hlsBaseUrl, channel.slug, user.tier),
-    })
-  })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      return reply.send({
+        rtmp: {
+          server: `rtmp://${config.rtmpIngestHost}:1935/live`,
+          streamKey: channel.rtmpStreamKey,
+        },
+        icecast: {
+          server: config.icecastPublicUrl.replace(/\/$/, ''),
+          mount: channel.liveSourceMount,
+          password: channel.liveSourcePass,
+          hint: 'Audio-only DJ apps (Mixxx, Traktor, butt) — not OBS. Same live show as RTMP.',
+        },
+        hlsUrl: liveHlsUrl(config.hlsBaseUrl, channel.slug, user.tier),
+      })
+    },
+  )
 
   // POST /api/me/stream-settings/rtmp/rotate — generate a new RTMP stream key
   fastify.post(
     '/api/me/stream-settings/rtmp/rotate',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(StreamKeyRotateResponseSchema, 'StreamKeyRotate'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
 
@@ -75,7 +98,13 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/stream-settings/icecast/rotate — generate a new Icecast source password
   fastify.post(
     '/api/me/stream-settings/icecast/rotate',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(IcecastPassRotateResponseSchema, 'IcecastPassRotate'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
 

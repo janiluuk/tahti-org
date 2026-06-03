@@ -6,7 +6,11 @@ import {
   CreateVenueBroadcastSchema,
   CreateVenueSchema,
   SlugParamSchema,
+  VenueBroadcastCalendarSchema,
   VenueCalendarQuerySchema,
+  VenueDirectoryListSchema,
+  VenuePublicProfileSchema,
+  openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -23,7 +27,13 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/venues — public directory (verified only)
   fastify.get(
     '/api/v1/venues',
-    { schema: { tags: ['venues'], description: 'M17: verified venue directory' } },
+    {
+      schema: {
+        tags: ['venues'],
+        description: 'M17: verified venue directory',
+        response: openApiResponse(VenueDirectoryListSchema, 'VenueDirectoryList'),
+      },
+    },
     async (_request, reply) => {
       const venues = await fastify.prisma.venue.findMany({
         where: { verifiedAt: { not: null } },
@@ -45,7 +55,13 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/venues/:slug — public venue profile
   fastify.get(
     '/api/v1/venues/:slug',
-    { schema: { tags: ['venues'], description: 'M17: public venue profile' } },
+    {
+      schema: {
+        tags: ['venues'],
+        description: 'M17: public venue profile',
+        response: openApiResponse(VenuePublicProfileSchema, 'VenuePublicProfile'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -72,7 +88,13 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/venues/:slug/broadcasts — JSON calendar feed
   fastify.get(
     '/api/v1/venues/:slug/broadcasts',
-    { schema: { tags: ['venues'], description: 'M17: venue broadcast calendar (JSON)' } },
+    {
+      schema: {
+        tags: ['venues'],
+        description: 'M17: venue broadcast calendar (JSON)',
+        response: openApiResponse(VenueBroadcastCalendarSchema, 'VenueBroadcastCalendar'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })

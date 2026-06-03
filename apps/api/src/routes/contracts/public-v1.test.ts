@@ -8,6 +8,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
+  allocateMemberNumber,
   cleanupUsersByEmailPrefix,
   createPublishedReleaseWithTrack,
   createTestArtist,
@@ -30,7 +31,7 @@ describe('Public API v1 contracts', () => {
       username: `${PREFIX}artist`,
       tier: 'ARTIST',
       isMember: true,
-      memberNumber: 98600,
+      memberNumber: await allocateMemberNumber(prisma),
     })
     username = artist.username
     const release = await createPublishedReleaseWithTrack(prisma, artist.id, {
@@ -90,6 +91,14 @@ describe('Public API v1 contracts', () => {
       status: expect.stringMatching(/operational|degraded|outage/),
       checks: expect.any(Object),
       uptimeSec: expect.any(Number),
+    })
+  })
+
+  it('GET /api/v1/radio', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/radio' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({
+      live: expect.any(Boolean),
     })
   })
 

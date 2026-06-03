@@ -2,42 +2,63 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { ChannelProgrammePatchSchema } from '@tahti/shared'
+import {
+  ChannelProgrammePatchSchema,
+  ChannelProgrammeViewSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 const meProgrammeRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/api/me/channel/programme', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { id: true, fallbackMode: true },
-    })
-    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-
-    const items = await fastify.prisma.archiveItem.findMany({
-      where: { channelId: channel.id, status: 'READY' },
-      orderBy: [{ fallbackOrder: 'asc' }, { createdAt: 'asc' }],
-      select: {
-        id: true,
-        title: true,
-        status: true,
-        durationSec: true,
-        isFallback: true,
-        fallbackOrder: true,
-        lastFallbackPlayedAt: true,
-        createdAt: true,
+  fastify.get(
+    '/api/me/channel/programme',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M22: fallback programme (offline playback order)',
+        response: openApiResponse(ChannelProgrammeViewSchema, 'ChannelProgramme'),
       },
-    })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true, fallbackMode: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-    return reply.send({
-      fallbackMode: channel.fallbackMode,
-      items,
-    })
-  })
+      const items = await fastify.prisma.archiveItem.findMany({
+        where: { channelId: channel.id, status: 'READY' },
+        orderBy: [{ fallbackOrder: 'asc' }, { createdAt: 'asc' }],
+        select: {
+          id: true,
+          title: true,
+          status: true,
+          durationSec: true,
+          isFallback: true,
+          fallbackOrder: true,
+          lastFallbackPlayedAt: true,
+          createdAt: true,
+        },
+      })
+
+      return reply.send({
+        fallbackMode: channel.fallbackMode,
+        items,
+      })
+    },
+  )
 
   fastify.patch(
     '/api/me/channel/programme',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ChannelProgrammeViewSchema, 'ChannelProgramme'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const parsed = ChannelProgrammePatchSchema.safeParse(request.body)
