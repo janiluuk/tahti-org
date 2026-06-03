@@ -44,4 +44,20 @@ fastify.post('/stop', async (request, reply) => {
   return reply.send({ ok: true })
 })
 
+// STREAM-005: restart Liquidsoap after stale HLS segments (watchdog)
+fastify.post('/restart', async (request, reply) => {
+  const { channelId, slug, broadcastId } = request.body as {
+    channelId: string
+    slug: string
+    broadcastId: string
+  }
+  if (!channelId || !slug || !broadcastId) {
+    return reply.status(400).send({ error: 'channelId, slug, and broadcastId required' })
+  }
+
+  await stopChannel(channelId)
+  await spawnChannel(channelId, slug, broadcastId)
+  return reply.send({ ok: true, restarted: true })
+})
+
 await fastify.listen({ port: PORT, host: '0.0.0.0' })

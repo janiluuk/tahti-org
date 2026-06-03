@@ -296,6 +296,34 @@ export default function ReleaseOpsPanel({
             >
               Export JSON
             </button>
+            <button
+              type="button"
+              style={{ fontSize: '0.9rem' }}
+              disabled={isPending}
+              onClick={() => {
+                setError(null)
+                startTransition(async () => {
+                  const res = await fetchReleaseExportJson(releaseId)
+                  if (res.error || !res.json) {
+                    setError(res.error ?? 'Export failed')
+                    return
+                  }
+                  try {
+                    const pack = JSON.parse(res.json) as { musicbrainzPrefill?: string }
+                    const text = pack.musicbrainzPrefill
+                    if (!text) {
+                      setError('Export missing MusicBrainz prefill')
+                      return
+                    }
+                    await navigator.clipboard.writeText(text)
+                  } catch {
+                    setError('Could not copy MusicBrainz prefill')
+                  }
+                })
+              }}
+            >
+              Copy MusicBrainz prefill
+            </button>
             <a
               href={MUSICBRAINZ_SUBMIT_URL}
               target="_blank"

@@ -64,6 +64,12 @@ backup_minio() {
   MIRROR_BUCKETS=(audio covers backups)
   TOTAL_SYNCED=0
 
+  count_objects() {
+    local alias="$1"
+    local bucket="$2"
+    mc ls --recursive "${alias}/${bucket}/" 2>/dev/null | wc -l | tr -d ' '
+  }
+
   for bucket in "${MIRROR_BUCKETS[@]}"; do
     log "Mirroring $bucket → DR..."
     RESULT=$(mc mirror \
@@ -74,17 +80,22 @@ backup_minio() {
       "${SRC_ALIAS}/${bucket}/" \
       "${DST_ALIAS}/${bucket}/" 2>&1)
     log "$bucket: $RESULT"
+
+    SRC_COUNT=$(count_objects "$SRC_ALIAS" "$bucket")
+    DST_COUNT=$(count_objects "$DST_ALIAS" "$bucket")
+    log "$bucket object count: primary=$SRC_COUNT dr=$DST_COUNT"
+    if [[ "$SRC_COUNT" -gt 0 ]]; then
+      local max=$((SRC_COUNT + SRC_COUNT / 100 + 1))
+      if [[ "$DST_COUNT" -lt "$SRC_COUNT" ]] || [[ "$DST_COUNT" -gt "$max" ]]; then
+        log "WARNING: $bucket DR count outside 1% of primary (expected ~$SRC_COUNT)"
+      else
+        log "$bucket DR mirror count OK (within 1%)"
+      fi
+    fi
     ((TOTAL_SYNCED++)) || true
   done
 
   log "Mirror complete — $TOTAL_SYNCED buckets synced"
-
-  AUDIO_COUNT=$(mc ls "${DST_ALIAS}/audio/" 2>/dev/null | wc -l || echo "0")
-  if [[ "$AUDIO_COUNT" -gt 0 ]]; then
-    log "DR audio/ has $AUDIO_COUNT objects ✓"
-  else
-    log "WARNING: DR audio/ is empty — first run or upstream empty"
-  fi
 }
 
 backup_restore_test() {

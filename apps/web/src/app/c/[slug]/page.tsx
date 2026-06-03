@@ -19,11 +19,14 @@ import type {
 } from '@tahti/shared'
 import { Heading, PageShell, Row, Text } from '@/components/ui'
 import { LiveBadge } from '@/components/ui/from-tahti-ui'
+import { SafePlainText } from '@/components/safe-plain-text'
 
 interface ChannelResponse {
   slug: string
   state: string
   hlsUrl: string | null
+  nextBroadcastAt: string | null
+  nextBroadcastNote: string | null
   galleryMode: ChannelGalleryMode
   slideshowImages: string[]
   textLayerMode: ChannelTextLayerMode
@@ -131,8 +134,42 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               </div>
               {channel.state === 'LIVE' && <LiveBadge />}
             </Row>
-            {channel.user.bio && <Text tone="secondary">{channel.user.bio}</Text>}
+            {channel.user.bio && (
+              <SafePlainText
+                text={channel.user.bio}
+                style={{ marginTop: '0.35rem', color: '#555' }}
+              />
+            )}
           </header>
+
+          {channel.state !== 'LIVE' && (channel.nextBroadcastAt || channel.nextBroadcastNote) && (
+            <div
+              role="status"
+              style={{
+                marginBottom: '1rem',
+                padding: '0.75rem 1rem',
+                background: '#f0f4ff',
+                borderRadius: 8,
+                border: '1px solid #c7d2fe',
+              }}
+            >
+              <strong>Next broadcast</strong>
+              {channel.nextBroadcastAt && (
+                <div style={{ marginTop: '0.25rem' }}>
+                  {new Date(channel.nextBroadcastAt).toLocaleString(undefined, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </div>
+              )}
+              {channel.nextBroadcastNote && (
+                <SafePlainText
+                  text={channel.nextBroadcastNote}
+                  style={{ marginTop: '0.25rem', color: '#444' }}
+                />
+              )}
+            </div>
+          )}
 
           <ChannelTextLayerView
             mode={channel.textLayerMode}
@@ -228,24 +265,23 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       )}
                       <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.title}</div>
                       {item.description && (
-                        <p style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}>
-                          {item.description}
-                        </p>
+                        <SafePlainText
+                          text={item.description}
+                          style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}
+                        />
                       )}
                       {item.commentary && (
-                        <div
+                        <SafePlainText
+                          text={item.commentary}
                           style={{
                             color: '#444',
                             margin: '0 0 0.75rem',
                             fontSize: '0.9rem',
                             lineHeight: 1.5,
-                            whiteSpace: 'pre-wrap',
                             borderLeft: '3px solid #ddd',
                             paddingLeft: '0.75rem',
                           }}
-                        >
-                          {item.commentary}
-                        </div>
+                        />
                       )}
                       {item.durationSec != null && (
                         <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
@@ -257,7 +293,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         <TracklistView entries={item.tracklist} />
                       )}
                       {item.audioUrl && (
-                        <audio controls src={item.audioUrl} style={{ width: '100%' }} />
+                        <audio
+                          controls
+                          src={item.audioUrl}
+                          style={{ width: '100%' }}
+                          data-testid="channel-archive-player"
+                        />
                       )}
                       <ArchiveDownloadButton
                         channelSlug={slug}

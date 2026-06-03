@@ -15,6 +15,7 @@ import CollectionsPanel from './collections-panel'
 import ChannelGalleryPanel from './channel-gallery-panel'
 import ChannelTextLayerPanel from './channel-text-layer-panel'
 import ProgrammePanel from './programme-panel'
+import ChannelSchedulePanel from './channel-schedule-panel'
 import type { ProgrammeItemRow } from './programme-actions'
 import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
@@ -166,6 +167,12 @@ export default async function DashboardPage() {
   let downloadGateSummary: {
     artistFollowerCount: number
     totals: { repostAcks: number; blockedAttempts: number }
+    daily?: Array<{
+      date: string
+      repostAcks: number
+      blockedAttempts: number
+      countedDownloads: number
+    }>
     items: Array<{
       archiveItemId: string
       title: string
@@ -425,6 +432,22 @@ export default async function DashboardPage() {
 
   const mixcloudStatus = await fetchMixcloudStatus()
 
+  let channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null } = {
+    nextBroadcastAt: null,
+    nextBroadcastNote: null,
+  }
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/channel/schedule`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) channelSchedule = (await res.json()) as typeof channelSchedule
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <PageShell size="md" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
       <Row between className="ui-row--gap-3">
@@ -481,6 +504,13 @@ export default async function DashboardPage() {
       {user.channel && channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
 
       {user.channel && channelProgramme && <ProgrammePanel initial={channelProgramme} />}
+
+      {user.channel && (
+        <ChannelSchedulePanel
+          initialAt={channelSchedule.nextBroadcastAt}
+          initialNote={channelSchedule.nextBroadcastNote}
+        />
+      )}
 
       {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
 
@@ -564,6 +594,7 @@ export default async function DashboardPage() {
                         controls
                         src={play.audioUrl}
                         style={{ margin: '0 0 0.75rem', width: '100%' }}
+                        data-testid="dashboard-archive-player"
                       />
                     )}
                   </div>

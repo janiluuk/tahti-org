@@ -56,7 +56,7 @@ Legacy wrappers (`backup-postgres.sh`, `backup-minio.sh`, `restore-test.sh`, `op
 
 1. Stop API, web, and workers so nothing writes during restore.
 2. `mc cat tahti/backups/pg/<LATEST>.sql.gz | gunzip | docker exec -i tahti_postgres psql -U tahti -d tahti`
-3. Run `pnpm db:migrate:deploy` if schema drifted since backup.
+3. Run `./scripts/db-migrate-deploy.sh` (or `make db-migrate-deploy`) if schema drifted since backup.
 4. Bring services back; smoke-test `/health` and ledger row count vs pre-incident export.
 
 ## MinIO backup and restore

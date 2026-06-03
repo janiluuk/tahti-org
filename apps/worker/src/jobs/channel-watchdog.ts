@@ -1,0 +1,104 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+import type { Job } from 'bullmq'
+import type { PrismaClient } from '@tahti/db'
+import { createClient } from 'redis'
+import { hlsSegmentAgeSecFromFs, hlsSegmentAgeSecFromMinio } from '../lib/hls-segment-age.js'
+import { restartChannelLiquidsoap } from '../lib/orchestrator.js'
+
+const STALE_SEC = parseInt(process.env.HLS_STALE_SECONDS ?? '20', 10)
+const HLS_ROOT = process.env.HLS_SEGMENT_ROOT ?? ''
+const HLS_MINIO_PREFIX = process.env.HLS_MINIO_PREFIX ?? ''
+const MINIO_BUCKET = process.env.MINIO_BUCKET ?? 'tahti'
+const RESTART_WINDOW_MS = 10 * 60 * 1000
+const MAX_RESTARTS = 2
+
+function redisUrl(): string {
+  return process.env.REDIS_URL ?? 'redis://localhost:6379'
+}
+
+async function recordRestart(channelId: string): Promise<number> {
+  const client = createClient({ url: redisUrl() })
+  await client.connect()
+  try {
+    const key = `channel:watchdog:restarts:${channelId}`
+    const now = Date.now()
+    await client.zAdd(key, { score: now, value: String(now) })
+    await client.zRemRangeByScore(key, 0, now - RESTART_WINDOW_MS)
+    await client.expire(key, 900)
+    return await client.zCard(key)
+  } finally {
+    await client.quit().catch(() => undefined)
+  }
+}
+
+async function segmentAgeSec(channelId: string): Promise<number | null> {
+  if (HLS_ROOT) {
+    const age = await hlsSegmentAgeSecFromFs(HLS_ROOT, channelId)
+    if (age !== null) return age
+  }
+  if (HLS_MINIO_PREFIX) {
+    return hlsSegmentAgeSecFromMinio(MINIO_BUCKET, `${HLS_MINIO_PREFIX}/${channelId}`)
+  }
+  return null
+}
+
+export async function processChannelWatchdogJob(
+  prisma: PrismaClient,
+  _job: Job,
+): Promise<{ checked: number; restarted: number; skipped: number }> {
+  const live = await prisma.channel.findMany({
+    where: { state: 'LIVE' },
+    select: {
+      id: true,
+      slug: true,
+      broadcasts: {
+        where: { endedAt: null },
+        orderBy: { startedAt: 'desc' },
+        take: 1,
+        select: { id: true },
+      },
+    },
+  })
+
+  let restarted = 0
+  let skipped = 0
+
+  for (const ch of live) {
+    const broadcastId = ch.broadcasts[0]?.id
+    if (!broadcastId) {
+      skipped++
+      continue
+    }
+
+    const age = await segmentAgeSec(ch.id)
+    if (age === null) {
+      skipped++
+      continue
+    }
+    if (age <= STALE_SEC) continue
+
+    const restartCount = await recordRestart(ch.id)
+    if (restartCount > MAX_RESTARTS) {
+      console.error(
+        `[channel-watchdog] ${ch.slug}: segment stale ${age.toFixed(0)}s but restart cap hit (${restartCount} in 10m)`,
+      )
+      skipped++
+      continue
+    }
+
+    try {
+      await restartChannelLiquidsoap(ch.id, ch.slug, broadcastId)
+      restarted++
+      console.warn(
+        `[channel-watchdog] restarted ${ch.slug} (segment age ${age.toFixed(0)}s > ${STALE_SEC}s)`,
+      )
+    } catch (err) {
+      console.error(`[channel-watchdog] restart failed for ${ch.slug}:`, err)
+      skipped++
+    }
+  }
+
+  return { checked: live.length, restarted, skipped }
+}

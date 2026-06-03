@@ -3,9 +3,8 @@
 
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
+import { ChatReactSchema } from '@tahti/shared'
 import { config } from '../../config.js'
-
-const ALLOWED_EMOJIS = ['💜', '🔥', '🎶', '🎵', '🌟', '👏', '✨']
 
 // In-memory rate limit: max 3 reactions per fingerprint per 5s window
 const reactBucket = new Map<string, { count: number; reset: number }>()
@@ -35,11 +34,11 @@ const chatReactRoute: FastifyPluginAsync = async (fastify) => {
   // POST /api/chat/:slug/react { emoji: string }
   fastify.post('/api/chat/:slug/react', async (request, reply) => {
     const { slug } = request.params as { slug: string }
-    const { emoji } = (request.body as { emoji?: string }) ?? {}
-
-    if (!emoji || !ALLOWED_EMOJIS.includes(emoji)) {
-      return reply.status(400).send({ error: 'Invalid emoji' })
+    const parsed = ChatReactSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid emoji' })
     }
+    const { emoji } = parsed.data
 
     const ip = request.ip ?? '0.0.0.0'
     const ua = (request.headers['user-agent'] as string | undefined) ?? ''

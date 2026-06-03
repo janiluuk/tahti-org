@@ -3,22 +3,25 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
+import { NewsletterSubscribeSchema } from '@tahti/shared'
 import { sendMail } from '../../lib/email.js'
 import { config } from '../../config.js'
+
+function zodError(
+  reply: { status: (n: number) => { send: (b: unknown) => unknown } },
+  err: { issues: Array<{ message?: string }> },
+) {
+  return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
+}
 
 // M13 — public newsletter subscription endpoints (no auth required)
 const newsletterPublicRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/newsletter/subscribe — listener subscribes to an artist
   fastify.post('/api/newsletter/subscribe', async (request, reply) => {
-    const body = request.body as { artistUsername?: string; email?: string }
-
-    const email = body.email?.trim().toLowerCase()
-    const artistUsername = body.artistUsername?.trim()
-
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return reply.status(400).send({ error: 'Valid email is required' })
-    }
-    if (!artistUsername) return reply.status(400).send({ error: 'artistUsername is required' })
+    const parsed = NewsletterSubscribeSchema.safeParse(request.body)
+    if (!parsed.success) return zodError(reply, parsed.error)
+    const email = parsed.data.email.toLowerCase()
+    const artistUsername = parsed.data.artistUsername
 
     const artist = await fastify.prisma.user.findUnique({
       where: { username: artistUsername },

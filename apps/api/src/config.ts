@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { readSecret } from './lib/read-secret.js'
+
+const docsPass = readSecret('DOCS_PASS', 'DOCS_PASS_FILE', 'changeme')
+if (process.env.NODE_ENV === 'production' && docsPass === 'changeme') {
+  console.warn(
+    '[config] DOCS_PASS is default "changeme" — set DOCS_PASS or DOCS_PASS_FILE in production',
+  )
+}
+
 export const config = {
   nodeEnv: (process.env.NODE_ENV ?? 'development') as 'development' | 'test' | 'production',
   port: parseInt(process.env.PORT ?? '3001', 10),
@@ -77,6 +86,10 @@ export const config = {
     authMaxPerMin: parseInt(process.env.RATE_LIMIT_AUTH_MAX ?? '10', 10),
     /** When true (default), allow requests if Redis is unreachable. */
     redisFailOpen: process.env.RATE_LIMIT_REDIS_FAIL_OPEN !== 'false',
+  },
+  swagger: {
+    docsUser: readSecret('DOCS_USER', 'DOCS_USER_FILE', 'tahti'),
+    docsPass,
   },
   mixcloud: {
     clientId: process.env.MIXCLOUD_CLIENT_ID ?? '',

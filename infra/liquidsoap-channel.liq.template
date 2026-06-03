@@ -26,6 +26,8 @@ archive = playlist(
 )
 archive = crossfade(duration=3., archive)
 archive = normalize(target=-14., archive)
+# ARTIST-003: buffer archive before fallback switch so first listener does not hit an empty segment.
+archive = delay(delay=3., archive)
 
 # --- THE MAGIC: live-or-archive fallback ---
 # track_sensitive=false means: switch immediately when live ends, not at the next track boundary.

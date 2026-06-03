@@ -174,6 +174,34 @@ describe('Persona journeys', () => {
       })
       expect(stream.statusCode).toBe(200)
       expect(stream.json().rtmp?.server).toBeTruthy()
+
+      const archive = await app.inject({
+        method: 'GET',
+        url: '/api/me/archive',
+        headers: { cookie },
+      })
+      expect(archive.statusCode).toBe(200)
+
+      const gates = await app.inject({
+        method: 'GET',
+        url: '/api/me/download-gate-stats',
+        headers: { cookie },
+      })
+      expect(gates.statusCode).toBe(200)
+      expect(gates.json().items).toBeDefined()
+
+      const channelItems = await app.inject({
+        method: 'GET',
+        url: `/api/channels/${artistSlug}/items`,
+      })
+      expect(channelItems.statusCode).toBe(200)
+
+      const embed = await app.inject({
+        method: 'GET',
+        url: `/api/v1/embed/c/${artistSlug}`,
+      })
+      expect(embed.statusCode).toBe(200)
+      expect(embed.json().profileUrl).toContain(`/u/${artistSlug}`)
     })
   })
 

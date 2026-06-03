@@ -11,10 +11,31 @@ export async function spawnChannelLiquidsoap(
 ): Promise<void> {
   const res = await fetch(`${config.orchestratorUrl}/spawn`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${config.internalSecret}`,
+    },
     body: JSON.stringify({ channelId, slug, broadcastId }),
   })
   if (!res.ok) {
     throw new Error(`Orchestrator returned ${res.status}`)
+  }
+}
+
+export async function restartChannelLiquidsoap(
+  channelId: string,
+  slug: string,
+  broadcastId: string,
+): Promise<void> {
+  const res = await fetch(`${config.orchestratorUrl}/restart`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${config.internalSecret}`,
+    },
+    body: JSON.stringify({ channelId, slug, broadcastId }),
+  })
+  if (!res.ok) {
+    throw new Error(`Orchestrator restart returned ${res.status}`)
   }
 }

@@ -30,6 +30,10 @@ x-app-env: &app-env
   ICECAST_HOST: icecast:8000
   RTMP_INGEST_HOST: rtmp-ingest
   HLS_BASE_URL: http://localhost:9000/hls-live
+  HLS_SEGMENT_ROOT: /hls
+  HLS_MINIO_BUCKET: hls-live
+  HLS_MINIO_PREFIX: hls-live
+  HLS_STALE_SECONDS: "20"
   APP_URL: http://localhost:${WEB_PORT:-3010}
   API_URL: http://localhost:${API_PORT:-3011}
 
@@ -204,6 +208,8 @@ services:
       dockerfile: apps/worker/Dockerfile
     environment:
       <<: *app-env
+    volumes:
+      - stack_hls:/hls:ro
     depends_on:
       api:
         condition: service_healthy
@@ -217,10 +223,12 @@ services:
     environment:
       <<: *app-env
       PORT: "3003"
+      HLS_VOLUME: tahti_stack_hls
     ports:
       - "${ORCHESTRATOR_PORT:-3003}:3003"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - stack_hls:/hls
     depends_on:
       api:
         condition: service_healthy
@@ -237,3 +245,5 @@ volumes:
   stack_postgres:
   stack_redis:
   stack_minio:
+  stack_hls:
+    name: tahti_stack_hls

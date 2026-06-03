@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
+import { ReleaseTrackInputSchema, ReleaseTrackUploadSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
 import { mediaQueue } from '../../lib/queue.js'
@@ -18,13 +19,13 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { id: releaseId } = request.params as { id: string }
-      const body = request.body as {
-        title?: string
-        durationSec?: number
-        archiveItemId?: string
-        isrc?: string
-        explicit?: boolean
+      const parsed = ReleaseTrackInputSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
       }
+      const body = parsed.data
 
       const release = await fastify.prisma.release.findFirst({
         where: { id: releaseId, userId: user.id },
@@ -32,19 +33,16 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!release) return reply.status(404).send({ error: 'Release not found' })
 
-      const title = body.title?.trim()
-      if (!title) return reply.status(400).send({ error: 'title is required' })
-
       const position = release._count.tracks + 1
 
       const track = await fastify.prisma.releaseTrack.create({
         data: {
           releaseId,
           position,
-          title,
+          title: body.title,
           durationSec: body.durationSec ?? null,
           archiveItemId: body.archiveItemId ?? null,
-          isrc: body.isrc?.trim() || null,
+          isrc: body.isrc ?? null,
           explicit: body.explicit ?? false,
           status: 'PENDING',
         },
@@ -61,7 +59,13 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { id: releaseId, trackId } = request.params as { id: string; trackId: string }
-      const body = request.body as { filename?: string; contentType?: string }
+      const parsed = ReleaseTrackUploadSchema.safeParse(request.body ?? {})
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
+      }
+      const body = parsed.data
 
       const release = await fastify.prisma.release.findFirst({
         where: { id: releaseId, userId: user.id },

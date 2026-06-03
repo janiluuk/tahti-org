@@ -411,6 +411,8 @@ model Channel {
   textLayerText      String               @default("")
   textLayerAlign     ChannelTextLayerAlign @default(CENTER)
   videoBackgroundUrl String?              // M26: YouTube/Vimeo or image URL for channel backdrop
+  nextBroadcastAt    DateTime?            // LISTENER-002: optional next live time for offline listeners
+  nextBroadcastNote  String?              // e.g. "Weekly show — Thursdays 22:00 EET"
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 

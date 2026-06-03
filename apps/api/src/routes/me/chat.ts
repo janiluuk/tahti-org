@@ -2,8 +2,16 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { ChatAnnouncementSchema, ChatBanSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { recordMentions } from '../../lib/mentions.js'
+
+function zodError(
+  reply: { status: (n: number) => { send: (b: unknown) => unknown } },
+  err: { issues: Array<{ message?: string }> },
+) {
+  return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
+}
 
 const meChat: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/chat/announcements { body: string }
@@ -12,11 +20,9 @@ const meChat: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { body: text } = (request.body as { body?: string }) ?? {}
-
-      if (!text || typeof text !== 'string' || text.trim().length === 0) {
-        return reply.status(400).send({ error: 'body is required' })
-      }
+      const parsed = ChatAnnouncementSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const text = parsed.data.body
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
@@ -38,7 +44,7 @@ const meChat: FastifyPluginAsync = async (fastify) => {
       }
 
       const announcement = await fastify.prisma.channelAnnouncement.create({
-        data: { channelId: channel.id, body: text.trim().slice(0, 500) },
+        data: { channelId: channel.id, body: text },
       })
 
       // Record @-mentions (fire-and-forget; never block the response)
@@ -79,11 +85,9 @@ const meChat: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/chat/ban { fingerprintHash: string }
   fastify.post('/api/me/chat/ban', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const { fingerprintHash } = (request.body as { fingerprintHash?: string }) ?? {}
-
-    if (!fingerprintHash || typeof fingerprintHash !== 'string') {
-      return reply.status(400).send({ error: 'fingerprintHash is required' })
-    }
+    const parsed = ChatBanSchema.safeParse(request.body)
+    if (!parsed.success) return zodError(reply, parsed.error)
+    const { fingerprintHash } = parsed.data
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { userId: user.id },

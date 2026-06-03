@@ -4,7 +4,7 @@ STACK_NAME ?= tahti
 COMPOSE    := docker compose -f infra/docker-compose.dev.yml
 STACK      := docker compose -f infra/docker-compose.stack.yml
 
-.PHONY: help dev dev-down ci-check stack-up stack-seed stack-down stack-deploy e2e-screenshots build build-website build-orchestrator push deploy deploy-staging rollback secrets-check logs
+.PHONY: help dev dev-down ci-check stack-up stack-seed stack-down stack-deploy db-migrate-deploy e2e-screenshots build build-website build-orchestrator push deploy deploy-staging rollback secrets-check logs
 
 help:
 	@echo "Usage: make <target>"
@@ -18,6 +18,7 @@ help:
 	@echo "  stack-seed       stack-up + screenshot demo fixtures"
 	@echo "  stack-down       Stop the full Docker stack"
 	@echo "  stack-deploy     Rsync + stack-up on lab host (SSH_PROXY_JUMP / DEPLOY_HOST)"
+	@echo "  db-migrate-deploy  prisma migrate deploy (DATABASE_URL required; see ops/DEPLOY.md)"
 	@echo "  e2e-screenshots  Local only: stack + seed + Playwright captures"
 	@echo ""
 	@echo "Build"
@@ -63,6 +64,9 @@ stack-down:
 
 stack-deploy:
 	./scripts/remote-stack-deploy.sh
+
+db-migrate-deploy:
+	./scripts/db-migrate-deploy.sh
 
 e2e-screenshots:
 	./scripts/e2e-screenshots.sh
@@ -115,6 +119,7 @@ deploy-staging:
 # ── Production ────────────────────────────────────────────────────────────────
 deploy:
 	@test -n "$(TAG)" || (echo "TAG is required: make deploy TAG=<git-sha>"; exit 1)
+	@if [ -n "$${DATABASE_URL:-}" ]; then TAG=$(TAG) ./scripts/db-migrate-deploy.sh --image; else echo "WARN: DATABASE_URL unset — run db-migrate-deploy before traffic (ops/DEPLOY.md)"; fi
 	TAG=$(TAG) docker stack deploy \
 		--with-registry-auth \
 		--prune \

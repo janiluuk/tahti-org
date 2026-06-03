@@ -1,24 +1,53 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-const ORCHESTRATOR_URL = process.env.ORCHESTRATOR_URL ?? 'http://localhost:3003'
+const ORCHESTRATOR_URL = (process.env.ORCHESTRATOR_URL ?? 'http://localhost:3003').replace(
+  /\/$/,
+  '',
+)
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
 
-/** Ask the orchestrator to stop Liquidsoap for a channel (M20 weekly cap enforcement). */
-export async function stopOrchestratorChannel(channelId: string): Promise<void> {
+async function orchestratorPost(
+  path: string,
+  body: Record<string, string>,
+  opts?: { warnOnly?: boolean },
+): Promise<void> {
   try {
-    const res = await fetch(`${ORCHESTRATOR_URL}/stop`, {
+    const res = await fetch(`${ORCHESTRATOR_URL}${path}`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${INTERNAL_SECRET}`,
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${INTERNAL_SECRET}`,
       },
-      body: JSON.stringify({ channelId }),
+      body: JSON.stringify(body),
     })
     if (!res.ok) {
-      console.warn(`[worker] orchestrator stop ${channelId}: HTTP ${res.status}`)
+      const msg = `Orchestrator ${path} returned ${res.status}`
+      if (opts?.warnOnly) {
+        console.warn(`[worker] ${msg}`)
+        return
+      }
+      throw new Error(msg)
     }
   } catch (err) {
-    console.warn(`[worker] orchestrator stop ${channelId} failed:`, err)
+    if (opts?.warnOnly) {
+      console.warn(`[worker] orchestrator ${path} failed:`, err)
+      return
+    }
+    throw err
   }
+}
+
+/** M20 weekly cap enforcement — stop Liquidsoap for a channel. */
+export async function stopOrchestratorChannel(channelId: string): Promise<void> {
+  await orchestratorPost('/stop', { channelId }, { warnOnly: true })
+}
+
+/** STREAM-005: restart Liquidsoap after stale HLS segments. */
+export async function restartChannelLiquidsoap(
+  channelId: string,
+  slug: string,
+  broadcastId: string,
+): Promise<void> {
+  await orchestratorPost('/restart', { channelId, slug, broadcastId })
 }

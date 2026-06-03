@@ -51,6 +51,8 @@ flowchart TB
 | `tests/e2e/journeys/artist.sh` | Studio + ingest (sourced by main script) |
 | `tests/e2e/journeys/member.sh` | Governance + fan sub (sourced by main script) |
 | `tests/e2e/user-journeys.mjs` | Same personas in Playwright (needs `APP_URL` + seeded fixtures) |
+| `tests/e2e/journeys/dashboard-player.sh` | Dashboard studio APIs + channel/embed player data (in `user-journeys.sh`) |
+| `tests/e2e/dashboard-player.mjs` | Playwright: dashboard navigation + archive/live players |
 | `apps/api/src/routes/journeys/persona-journeys.test.ts` | Listener / artist / member API paths (Vitest) |
 
 ```bash
@@ -59,6 +61,10 @@ SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://... API_URL=http://localhost:300
 
 # Local Playwright
 API_URL=http://localhost:3011 APP_URL=http://localhost:3010 pnpm test:e2e:journeys:web
+
+# Dashboard + player only
+pnpm test:e2e:dashboard-player
+pnpm test:e2e:dashboard-player:web
 ```
 
 Seed fixtures: `cd apps/api && DATABASE_URL=... pnpm exec tsx scripts/seed-e2e-screenshots.ts` or `make stack-up --seed`.

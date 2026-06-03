@@ -49,6 +49,18 @@ export const ReleaseTrackInputSchema = z.object({
   title: z.string().trim().min(1, 'track title is required').max(200),
   durationSec: z.number().int().positive().optional(),
   archiveItemId: z.string().min(1).optional(),
+  isrc: z
+    .string()
+    .trim()
+    .max(15)
+    .optional()
+    .transform((s) => (s === '' ? null : (s ?? null))),
+  explicit: z.boolean().optional(),
+})
+
+export const ReleaseTrackUploadSchema = z.object({
+  filename: z.string().trim().max(255).optional(),
+  contentType: z.string().trim().max(100).optional(),
 })
 
 export const CreateReleaseSchema = z.object({

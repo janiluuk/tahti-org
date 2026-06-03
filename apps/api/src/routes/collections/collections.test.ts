@@ -47,6 +47,16 @@ describe('M23 — collections and RSS', () => {
     await app.close()
   })
 
+  it('rejects invalid collection create body', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/collections',
+      headers: { cookie },
+      payload: { name: '' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
   it('creates a collection, adds archive item, and serves public JSON + RSS', async () => {
     const create = await app.inject({
       method: 'POST',

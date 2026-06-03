@@ -125,6 +125,51 @@ export function computeReleaseChecklist(release: ReleaseForChecklist): ReleaseCh
 
 export const MUSICBRAINZ_SUBMIT_URL = 'https://musicbrainz.org/release/add'
 
+export interface MusicBrainzPrefillRelease {
+  title: string
+  type: string
+  releaseDate: Date
+  description: string | null
+  upc: string | null
+  pLine: string | null
+  cLine: string | null
+  labelImprint: string | null
+  credits: unknown
+  tracks: Array<{ position: number; title: string; isrc: string | null }>
+  user: { username: string; displayName: string }
+}
+
+/** Plain-text clipboard helper for MusicBrainz “Add release” (M30). */
+export function buildMusicBrainzPrefill(release: MusicBrainzPrefillRelease): string {
+  const date = release.releaseDate.toISOString().slice(0, 10)
+  const credits = Array.isArray(release.credits)
+    ? (release.credits as ReleaseCredit[])
+        .filter((c) => c?.name?.trim())
+        .map((c) => `${c.role}: ${c.name}`)
+    : []
+
+  const lines = [
+    '=== Tahti → MusicBrainz prefill ===',
+    `Release title: ${release.title}`,
+    `Release type: ${release.type}`,
+    `Release date: ${date}`,
+    `Artist credit: ${release.user.displayName} (@${release.user.username})`,
+    release.description ? `Annotation: ${release.description}` : null,
+    release.upc ? `Barcode (UPC/EAN): ${release.upc}` : null,
+    release.labelImprint ? `Label: ${release.labelImprint}` : null,
+    release.pLine ? `P-line: ${release.pLine}` : null,
+    release.cLine ? `C-line: ${release.cLine}` : null,
+    credits.length > 0 ? `Credits:\n${credits.map((c) => `  - ${c}`).join('\n')}` : null,
+    '',
+    'Tracklist:',
+    ...release.tracks.map((t) => `  ${t.position}. ${t.title}${t.isrc ? ` — ISRC ${t.isrc}` : ''}`),
+    '',
+    `Submit: ${MUSICBRAINZ_SUBMIT_URL}`,
+  ]
+
+  return lines.filter((line): line is string => line !== null).join('\n')
+}
+
 export const MUSICBRAINZ_GUIDE_STEPS = [
   'Export JSON from the release ops panel (or copy UPC, ISRC, credits, P/C-lines).',
   'Open MusicBrainz “Add release” and choose the release type (Album, EP, Single, etc.).',

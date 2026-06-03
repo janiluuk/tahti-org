@@ -3,8 +3,8 @@
 
 import { HeadBucketCommand } from '@aws-sdk/client-s3'
 import type { PrismaClient } from '@tahti/db'
-import { createClient } from 'redis'
 import { config } from '../config.js'
+import { getRedisClient } from './redis.js'
 import { s3 } from './minio.js'
 
 export type DependencyState = 'up' | 'down' | 'skipped'
@@ -54,19 +54,16 @@ async function checkPostgres(prisma: PrismaClient): Promise<DependencyCheck> {
 
 async function checkRedis(): Promise<DependencyCheck> {
   const start = Date.now()
-  let client: ReturnType<typeof createClient> | null = null
   try {
-    client = createClient({ url: config.redisUrl })
     await withTimeout('redis', async () => {
-      await client!.connect()
-      const pong = await client!.ping()
+      const client = await getRedisClient()
+      if (!client) throw new Error('redis unavailable')
+      const pong = await client.ping()
       if (pong !== 'PONG') throw new Error(`unexpected ping: ${pong}`)
     })
     return ok('redis', true, Date.now() - start)
   } catch (err) {
     return fail('redis', true, Date.now() - start, String(err))
-  } finally {
-    await client?.quit().catch(() => undefined)
   }
 }
 
