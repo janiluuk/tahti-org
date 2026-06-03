@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
-import { csvRow } from '../../lib/csv.js'
+import { sendCsv } from '../../lib/csv.js'
 
 const fanSubPayoutRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/me/fan-sub-payouts', { preHandler: requireAuth }, async (request, reply) => {
@@ -83,8 +83,10 @@ const fanSubPayoutRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
-      const lines = [
-        csvRow([
+      return sendCsv(
+        reply,
+        'fan-subscribers.csv',
+        [
           'username',
           'email',
           'tier',
@@ -93,27 +95,18 @@ const fanSubPayoutRoutes: FastifyPluginAsync = async (fastify) => {
           'started_at',
           'current_period_end',
           'canceled_at',
+        ],
+        subs.map((s) => [
+          s.subscriber.username,
+          s.subscriber.email,
+          s.tierName,
+          s.amountCents,
+          s.state,
+          s.startedAt.toISOString(),
+          s.currentPeriodEnd.toISOString(),
+          s.canceledAt?.toISOString() ?? '',
         ]),
-      ]
-      for (const s of subs) {
-        lines.push(
-          csvRow([
-            s.subscriber.username,
-            s.subscriber.email,
-            s.tierName,
-            s.amountCents,
-            s.state,
-            s.startedAt.toISOString(),
-            s.currentPeriodEnd.toISOString(),
-            s.canceledAt?.toISOString() ?? '',
-          ]),
-        )
-      }
-
-      return reply
-        .header('Content-Type', 'text/csv; charset=utf-8')
-        .header('Content-Disposition', 'attachment; filename="fan-subscribers.csv"')
-        .send(lines.join('\n') + '\n')
+      )
     },
   )
 }

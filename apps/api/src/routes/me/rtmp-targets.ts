@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { CreateRtmpTargetSchema, PatchRtmpTargetSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { encryptStreamKey, decryptStreamKey } from '../../lib/stream-key-enc.js'
 import { auditLog } from '../../lib/audit.js'
@@ -16,8 +17,6 @@ const PROVIDER_RTMP_URLS: Record<string, string> = {
   INSTAGRAM: 'rtmps://live-upload.instagram.com:443/rtmp',
   CUSTOM: '',
 }
-
-const VALID_PROVIDERS = Object.keys(PROVIDER_RTMP_URLS)
 
 const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/rtmp-targets — list targets (stream keys masked)
@@ -49,25 +48,13 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/rtmp-targets — add a new target
   fastify.post('/api/me/rtmp-targets', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const body = request.body as {
-      provider?: string
-      label?: string
-      rtmpUrl?: string
-      streamKey?: string
-      alwaysMirror?: boolean
+    const parsed = CreateRtmpTargetSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
     }
+    const body = parsed.data
 
-    const provider = (body.provider ?? 'CUSTOM').toUpperCase()
-    if (!VALID_PROVIDERS.includes(provider)) {
-      return reply.status(400).send({ error: 'Invalid provider' })
-    }
-
-    const label = body.label?.trim()
-    if (!label) return reply.status(400).send({ error: 'label is required' })
-
-    const streamKey = body.streamKey?.trim()
-    if (!streamKey) return reply.status(400).send({ error: 'streamKey is required' })
-
+    const provider = body.provider
     const rtmpUrl = provider === 'CUSTOM' ? body.rtmpUrl?.trim() : PROVIDER_RTMP_URLS[provider]
 
     if (!rtmpUrl)
@@ -84,21 +71,13 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ error: 'Maximum 5 RTMP targets per channel' })
     }
 
-    const streamKeyEnc = encryptStreamKey(streamKey)
+    const streamKeyEnc = encryptStreamKey(body.streamKey)
 
     const target = await fastify.prisma.rtmpTarget.create({
       data: {
         channelId: channel.id,
-        provider: provider as
-          | 'YOUTUBE'
-          | 'TWITCH'
-          | 'FACEBOOK'
-          | 'KICK'
-          | 'TIKTOK'
-          | 'MIXCLOUD_LIVE'
-          | 'INSTAGRAM'
-          | 'CUSTOM',
-        label: label.slice(0, 64),
+        provider,
+        label: body.label,
         rtmpUrl,
         streamKeyEnc,
         alwaysMirror: body.alwaysMirror === true && user.tier === 'STUDIO',
@@ -117,7 +96,7 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
       action: 'RTMP_TARGET_ADD',
       actorId: user.id,
       targetId: target.id,
-      meta: { provider, label },
+      meta: { provider, label: body.label },
     })
 
     return reply.status(201).send(target)
@@ -127,7 +106,11 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch('/api/me/rtmp-targets/:id', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
     const { id } = request.params as { id: string }
-    const body = request.body as { enabled?: boolean; streamKey?: string; label?: string }
+    const parsed = PatchRtmpTargetSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+    }
+    const body = parsed.data
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { userId: user.id },
@@ -141,9 +124,13 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
     if (!target) return reply.status(404).send({ error: 'Target not found' })
 
     const update: Record<string, unknown> = {}
-    if (typeof body.enabled === 'boolean') update.enabled = body.enabled
-    if (body.label?.trim()) update.label = body.label.trim().slice(0, 64)
-    if (body.streamKey?.trim()) update.streamKeyEnc = encryptStreamKey(body.streamKey.trim())
+    if (body.enabled !== undefined) update.enabled = body.enabled
+    if (body.label) update.label = body.label
+    if (body.streamKey) update.streamKeyEnc = encryptStreamKey(body.streamKey)
+
+    if (Object.keys(update).length === 0) {
+      return reply.status(400).send({ error: 'Nothing to update' })
+    }
 
     await fastify.prisma.rtmpTarget.update({ where: { id }, data: update })
 

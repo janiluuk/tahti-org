@@ -101,7 +101,7 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Add `GrantDisbursement` model + annual grant cron + `/transparency/grants/:year` | The grant engine is "what makes Tahti a nonprofit" and is entirely absent | M9 (done) |
 | [x] | Add board **role** (`User.isBoard` + `requireBoard`) so role checks stop using `isMember` as a proxy | Board-only actions are now gated properly; `admin/ledger` now uses `requireBoard` (manual ledger entries are board/treasurer-only) | M10 (done) |
 | [x] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
-| [~] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | Governance motions/votes on Zod (`packages/shared/src/dto/governance.ts`); ledger/rtmp remain | ongoing hardening |
+| [~] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | Governance, RTMP targets, fan tiers/subscribe on Zod; ledger remains | ongoing hardening |
 | [ ] | **M30 release-ops toolkit** — guided MusicBrainz submit, Revelator pre-fill from same release record | Producers need more than smart links; open-catalog + identifiers are table stakes for serious releases | M30 / Phase 6b |
 | [x] | **Tracklist @artist tags** — editable tracklist rows with `@handle` autocomplete; link to `/u/:handle`; M15 `TRACKLIST` mention surface | DJs credit guests and collaborators; hearthis-style tracklists without a social graph | M22 |
 | [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
@@ -513,7 +513,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | Governance done; fansubs/releases partial |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
-| [~] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` in `lib/csv.ts`; members export migrated |
+| [x] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` — members, audit, fan-subscriber exports |
 | [ ] | **PLAT-025** | Remove `eslint.ignoreDuringBuilds` in web Dockerfile once lint clean in CI | P3 |
 | [x] | **PLAT-026** | Reconcile tier enum in AGENT.md (`FREE/PAID` vs `FREE/ARTIST/STUDIO`) | P2 |
 
