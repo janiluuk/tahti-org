@@ -43,6 +43,7 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
                 title: true,
                 durationSec: true,
                 archiveItemId: true,
+                streamKey: true,
               },
             },
           },
@@ -96,16 +97,27 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
       user.releases.map(async (release) => ({
         ...release,
         artworkUrl: await resolveReleaseArtworkUrl(release),
-        tracks: release.tracks.map((track) => ({
-          ...track,
-          playUrl: track.archiveItemId
-            ? (playUrlByArchiveId.get(track.archiveItemId) ?? null)
-            : null,
-          channelItemUrl:
-            track.archiveItemId && channelSlug
-              ? `/c/${channelSlug}#archive-item-${track.archiveItemId}`
-              : null,
-        })),
+        tracks: await Promise.all(
+          release.tracks.map(async (track) => {
+            let playUrl: string | null = null
+            if (track.archiveItemId) {
+              playUrl = playUrlByArchiveId.get(track.archiveItemId) ?? null
+            } else if (track.streamKey) {
+              playUrl = await presignedGetUrl(track.streamKey, 3600)
+            }
+            return {
+              position: track.position,
+              title: track.title,
+              durationSec: track.durationSec,
+              archiveItemId: track.archiveItemId,
+              playUrl,
+              channelItemUrl:
+                track.archiveItemId && channelSlug
+                  ? `/c/${channelSlug}#archive-item-${track.archiveItemId}`
+                  : null,
+            }
+          }),
+        ),
       })),
     )
 

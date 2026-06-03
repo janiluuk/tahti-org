@@ -41,7 +41,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
 
       const release = await fastify.prisma.release.findFirst({
         where: { smartLinkSlug, state: 'PUBLISHED' },
-        select: { id: true, userId: true },
+        select: { id: true, userId: true, user: { select: { tier: true } } },
       })
       if (!release) return reply.status(404).send({ error: 'Release not found' })
 
@@ -62,18 +62,36 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
       const isFanSub =
         byUserId && (await isActiveFanSubscriber(fastify.prisma, release.userId, byUserId))
 
+      const artistPaid = release.user.tier !== 'FREE'
+      const canFlac = Boolean(track.flacKey) && (isFanSub || artistPaid)
+      const wantSource = query.format === 'source'
       const wantFlac = query.format === 'flac'
-      if (wantFlac && !isFanSub) {
+
+      if (wantSource && !isFanSub) {
         return reply
           .status(403)
-          .send({ error: 'FLAC download requires an active fan subscription' })
+          .send({ error: 'Original source download requires an active fan subscription' })
+      }
+      if (wantFlac && !canFlac) {
+        return reply.status(403).send({
+          error: isFanSub
+            ? 'FLAC is not available for this track'
+            : 'FLAC download requires a paid artist channel or fan subscription',
+        })
+      }
+      if (wantSource && !track.sourceKey) {
+        return reply.status(409).send({ error: 'Original source file not available for this track' })
       }
 
-      const objectKey = wantFlac
-        ? (track.flacKey ?? track.sourceKey)
-        : (track.streamKey ?? track.sourceKey)
+      const objectKey = wantSource
+        ? track.sourceKey!
+        : wantFlac
+          ? track.flacKey!
+          : (track.streamKey ?? track.sourceKey)
 
       if (!objectKey) return reply.status(409).send({ error: 'Track file not available yet' })
+
+      const servedFormat = wantSource ? 'source' : wantFlac ? 'flac' : 'opus'
 
       // Anti-fraud — same logic as archive downloads
       const salt = dailySalt()
@@ -165,7 +183,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           channelId: channel?.id ?? '',
           releaseTrackId: track.id,
-          format: wantFlac ? 'flac' : 'opus256',
+          format: wantSource ? 'source' : wantFlac ? 'flac' : 'opus256',
           byUserId,
           byFingerprint,
           byIpHash,
@@ -177,7 +195,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       const url = await presignedGetUrl(objectKey, 300)
-      return reply.send({ url, format: wantFlac ? 'flac' : 'opus', counted: countedAt !== null })
+      return reply.send({ url, format: servedFormat, counted: countedAt !== null })
     },
   )
 }

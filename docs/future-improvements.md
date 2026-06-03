@@ -62,7 +62,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | ~~P1~~ | ~~60-second grace + orchestrator stop~~ — done |
 | ~~P1~~ | ~~Archive FLAC for paid broadcast archives~~ — done |
 | ~~P2~~ | ~~Post-broadcast upgrade CTA~~ — done |
-| P2 | Reconcile docs: `FREE/ARTIST/STUDIO` in code vs `FREE/PAID` in AGENT.md |
+| ~~P2~~ | ~~Reconcile docs: `FREE/ARTIST/STUDIO` in code vs `FREE/PAID` in AGENT.md~~ — `ArtistTier` enum in AGENT.md matches code |
 
 ### M18 — Downloads
 | P | Item |
@@ -71,7 +71,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | ~~P2~~ | ~~Release-track downloads~~ — done (basic) |
 | ~~P2~~ | ~~Tor exit / datacenter IP allowlist~~ — `DOWNLOAD_NO_COUNT_CIDRS` + bot UA (done) |
 | ~~P2~~ | ~~Nightly fraud-scan cron (velocity anomalies)~~ — done |
-| P2 | FLAC/source formats for all release-track tiers (parity with archive) |
+| ~~P2~~ | ~~FLAC/source formats for all release-track tiers (parity with archive)~~ — paid artist + fan-sub FLAC; fan-sub `format=source` |
 
 ### M11 — Hardening (remaining)
 | P | Item |
@@ -88,7 +88,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Release track upload + transcode queue~~ — presigned upload + worker job (done) |
-| P1 | Link `ReleaseTrack.archiveItemId` to playable audio on profile |
+| ~~P1~~ | ~~Link `ReleaseTrack.archiveItemId` to playable audio on profile~~ — archive playback + `streamKey` presigned preview |
 | ~~P1~~ | ~~Open Graph on `/u/[username]`~~ — done |
 | ~~P2~~ | ~~Smart link + DSP editor~~ — done |
 | P2 | Artwork upload to MinIO for releases |
