@@ -37,6 +37,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         description: true,
         artworkUrl: true,
         smartLinkSlug: true,
+        smartLinkViewCount: true,
         smartLinkTargets: true,
         upc: true,
         musicbrainzReleaseId: true,

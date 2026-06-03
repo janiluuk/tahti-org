@@ -28,6 +28,7 @@ interface ReleaseSummary {
   description?: string | null
   artworkUrl?: string | null
   smartLinkSlug: string
+  smartLinkViewCount?: number
   smartLinkTargets: Record<string, string> | null
   upc?: string | null
   musicbrainzReleaseId?: string | null
@@ -144,6 +145,9 @@ export default function ReleasesPanel({
                     <>
                       <Link href={`/r/${r.smartLinkSlug}`} style={{ fontSize: '0.8rem' }}>
                         Smart link
+                        {typeof r.smartLinkViewCount === 'number' && r.smartLinkViewCount > 0
+                          ? ` (${r.smartLinkViewCount} views)`
+                          : ''}
                       </Link>
                       <button
                         type="button"

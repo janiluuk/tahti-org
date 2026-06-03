@@ -18,6 +18,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         releaseDate: true,
         artworkUrl: true,
         smartLinkTargets: true,
+        smartLinkViewCount: true,
         description: true,
         upc: true,
         musicbrainzReleaseId: true,
@@ -52,6 +53,11 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (!release) return reply.status(404).send({ error: 'Release not found' })
 
+    await fastify.prisma.release.update({
+      where: { id: release.id },
+      data: { smartLinkViewCount: { increment: 1 } },
+    })
+
     const profileUrl = `${config.appUrl}/u/${release.user.username}`
     const releaseUrl = `${profileUrl}#release-${release.id}`
     const targets =
@@ -82,6 +88,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         artworkUrl: release.artworkUrl,
         description: release.description,
         smartLinkSlug,
+        smartLinkViewCount: release.smartLinkViewCount + 1,
         upc: release.upc,
         pLine: release.pLine,
         cLine: release.cLine,

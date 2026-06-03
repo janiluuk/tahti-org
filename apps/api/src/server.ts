@@ -41,6 +41,8 @@ import transparencyRoutes from './routes/transparency/index.js'
 import adminLedgerRoutes from './routes/admin/ledger.js'
 import governanceRoutes from './routes/governance/index.js'
 import downloadRoutes from './routes/downloads/archive.js'
+import artistFollowRoutes from './routes/engagement/artist-follows.js'
+import archiveRepostRoutes from './routes/engagement/archive-repost.js'
 import meGrantsRoutes from './routes/me/grants.js'
 import adminGrantsRoutes from './routes/admin/grants.js'
 import fanTierRoutes from './routes/fansubs/tiers.js'
@@ -51,6 +53,7 @@ import membershipRoutes from './routes/me/membership.js'
 import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
 import adminMembersRoutes from './routes/admin/members.js'
 import adminAuditRoutes from './routes/admin/audit.js'
+import adminVenueRoutes from './routes/admin/venues.js'
 import meReleaseRoutes from './routes/releases/me.js'
 import releaseTrackRoutes from './routes/releases/tracks.js'
 import releaseDownloadRoutes from './routes/downloads/release.js'
@@ -204,6 +207,8 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M18: downloads as first-class action (engagement units)
   await fastify.register(downloadRoutes)
+  await fastify.register(artistFollowRoutes)
+  await fastify.register(archiveRepostRoutes)
 
   // M9: annual grant disbursements
   await fastify.register(meGrantsRoutes)
@@ -224,6 +229,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M11: audit exports
   await fastify.register(adminAuditRoutes)
+  await fastify.register(adminVenueRoutes)
 
   // M12: artist profile + releases + audio upload pipeline
   await fastify.register(meReleaseRoutes)

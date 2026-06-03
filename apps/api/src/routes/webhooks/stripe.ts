@@ -121,6 +121,7 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
           message: err instanceof Error ? err.message : String(err),
         },
       })
+      return reply.status(500).send({ error: 'Webhook handler failed', received: false })
     }
 
     return reply.send({ received: true })

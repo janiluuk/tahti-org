@@ -2,6 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { archivePlaybackKey } from '@tahti/shared'
+import { presignedGetUrl } from '../../lib/minio.js'
 
 // M12: public artist profile at tahti.live/u/<username>
 const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
@@ -11,6 +13,7 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
     const user = await fastify.prisma.user.findUnique({
       where: { username },
       select: {
+        id: true,
         username: true,
         displayName: true,
         bio: true,
@@ -33,7 +36,12 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
             smartLinkSlug: true,
             tracks: {
               orderBy: { position: 'asc' },
-              select: { position: true, title: true, durationSec: true },
+              select: {
+                position: true,
+                title: true,
+                durationSec: true,
+                archiveItemId: true,
+              },
             },
           },
         },
@@ -61,6 +69,39 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (!user) return reply.status(404).send({ error: 'Artist not found' })
 
+    const archiveIds = user.releases.flatMap((r) =>
+      r.tracks.map((t) => t.archiveItemId).filter((id): id is string => Boolean(id)),
+    )
+
+    const playUrlByArchiveId = new Map<string, string | null>()
+    if (archiveIds.length > 0) {
+      const items = await fastify.prisma.archiveItem.findMany({
+        where: {
+          id: { in: archiveIds },
+          status: 'READY',
+          channel: { userId: user.id },
+        },
+        select: { id: true, mp3Key: true, flacKey: true },
+      })
+      for (const item of items) {
+        const key = archivePlaybackKey(item)
+        playUrlByArchiveId.set(item.id, key ? await presignedGetUrl(key, 3600) : null)
+      }
+    }
+
+    const channelSlug = user.channel?.slug ?? null
+    const releases = user.releases.map((release) => ({
+      ...release,
+      tracks: release.tracks.map((track) => ({
+        ...track,
+        playUrl: track.archiveItemId ? (playUrlByArchiveId.get(track.archiveItemId) ?? null) : null,
+        channelItemUrl:
+          track.archiveItemId && channelSlug
+            ? `/c/${channelSlug}#archive-item-${track.archiveItemId}`
+            : null,
+      })),
+    }))
+
     return reply.send({
       artist: {
         username: user.username,
@@ -72,7 +113,7 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
         tier: user.tier,
       },
       channel: user.channel,
-      releases: user.releases,
+      releases,
       fanTiers: user.fanTiers,
       collections: user.collections.map(({ _count, ...c }) => ({
         slug: c.slug,

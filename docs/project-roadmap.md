@@ -74,19 +74,19 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
 | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + chat token join), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth), shared `lib/csv.ts`. Deferred: Upptime, **backup/DR infra + restore drills** (see [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)), structured request logging |
-| **M12** Profile + releases | 🟡 Partial | Release CRUD, `TrackStatus` + audio fields on `ReleaseTrack`, track upload + transcode queue, public profile, OG, smart links, DSP editor. Deferred: profile playback via `archiveItemId`, release artwork to MinIO |
+| **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor; **profile track playback** via linked `archiveItemId`. Deferred: release artwork to MinIO |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
-| **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, **web `/embed/r/[id]` + `/embed/c/[slug]`** (iframe-safe headers). Deferred: social auto-post, smart-link analytics |
-| **M24** Per-content visuals | 🟡 Partial | Channel **gallery modes**: static strip + **Twisted Wave GLSL** (WebGL shaders, user image URLs). Per-item `bannerUrl`, `backgroundUrl`, `slideshowUrls` on archive metadata. Deferred: YouTube/Vimeo backdrop, per-item visualMode on playback page |
+| **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard. Deferred: social auto-post |
+| **M24** Per-content visuals | 🟡 Partial | Channel gallery modes + **per-item banner/background/slideshow** on `/c/:slug` archive list. Deferred: YouTube/Vimeo backdrop |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
 | **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
-| **M17** Venue calendar | 🟡 Partial | `venue` schema (Venue/VenueBroadcast), `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`, venue + broadcast create endpoints. Deferred: admin verification UI |
+| **M17** Venue calendar | 🟡 Partial | Venue API + iCal; **`POST /api/admin/venues/:slug/verify`** for board. Deferred: admin web UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
 | **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
-| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto file tags; lossless → FLAC; **repost/follow download gates** (follow, repost-ack, channel download UI) |
+| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** (`ArtistFollow`, `ArchiveRepostAck`, channel UI). Deferred: gate analytics |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | `ArchiveItemVersion` model, upload/activate API, worker transcode job, dashboard version panel (stable public item id). Deferred: release-track versions |
-| **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, MusicBrainz guide; UPC/ISRC on `/r/:slug` |
+| **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`. Deferred: Discogs API |
 | **M29** Backup & DR | 🟡 Partial | `scripts/backup-*.sh`, `restore-test.sh`; **`ops/RUNBOOK.md`**. Deferred: pgBackRest, offsite buckets, operator drills |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: 45/55-min API→UI polish edge cases |
 
@@ -111,7 +111,7 @@ as their own checklist so they don't get lost between milestones.
 | [ ] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | Design-system drift; duplicate styling maintenance | M12 / DX |
 | [ ] | `@tahti/ui`: add `lint` script to Turbo pipeline | CI AGPL pass but no ESLint on UI package | CI |
 | [ ] | Consolidate e2e seed scripts (`scripts/seed-e2e-screenshots.ts` vs `apps/api/scripts/`) | Two entrypoints, easy to run wrong one in Docker | CI / DX |
-| [ ] | Stripe webhook: metric/alert when handler throws (today returns `{ received: true }` anyway) | Silent membership/fan-sub activation failures | M19 hardening |
+| [x] | Stripe webhook: return **500** on handler failure (Stripe retries; audit log retained) | Silent membership/fan-sub activation failures | M19 hardening |
 | [ ] | Automate `db push` / migrate in deploy pipeline (OPS-002) | Manual schema step blocks reliable rollouts | M0 / Phase 2 |
 | [x] | Document local test prerequisites in README (`docker compose up postgres redis -d`, `pnpm ci:check`) | Onboarding friction; tests fail opaque without DB | M11 |
 | [~] | **Postgres backup pipeline** — pgBackRest (or `pg_dump` interim) → MinIO `backups/pg/` → UpCloud offsite; daily cron + age alert | Artist uploads, ledger, memberships are irreplaceable; RPO 1h per `infra-strategy.md` | M29 / Phase 2b |
@@ -332,7 +332,7 @@ Artists need more than a smart link and a Revelator upload: the **official** sid
 
 | Done | Capability | Notes |
 |:---:|---|---|
-| [~] | **MusicBrainz submission** | MBID fields + submit link + guide steps + MusicBrainz URL on smart link |
+| [~] | **MusicBrainz submission** | MBID fields + submit link + **in-panel guide** + MusicBrainz URL on smart link |
 | [~] | **ISRC + UPC/EAN** | Release ops capture; display on `/r/:slug` |
 | [~] | **Credits & roles** | Dashboard credits editor; JSON export |
 | [~] | **Copyright lines** | P/C-line + label imprint |
