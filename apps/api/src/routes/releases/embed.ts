@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { OEmbedQuerySchema } from '@tahti/shared'
 import { config } from '../../config.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
@@ -11,9 +12,13 @@ import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 const embedRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /oembed?url=<release-or-channel-url>&format=json
   fastify.get('/oembed', async (request, reply) => {
-    const { url } = request.query as { url?: string; format?: string }
-
-    if (!url) return reply.status(400).send({ error: 'url parameter is required' })
+    const parsed = OEmbedQuerySchema.safeParse(request.query)
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.issues[0]?.message ?? 'Invalid query',
+      })
+    }
+    const { url } = parsed.data
 
     let embedUrl: string
     let title: string

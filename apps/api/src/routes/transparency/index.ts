@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { TransparencyYearQuerySchema } from '@tahti/shared'
+import { TransparencyYearQuerySchema, yearFromPathParams } from '@tahti/shared'
 
 // Public, CORS-open transparency endpoints.
 // These expose the nonprofit's financial data per AGPL principle 6.
@@ -66,9 +66,8 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/transparency/grants/:year — published artist grant report (M9)
   // Anonymized per artist's publicAttribution choice (publishedAs).
   fastify.get('/api/v1/transparency/grants/:year', async (request, reply) => {
-    const { year } = request.params as { year: string }
-    const forYear = parseInt(year, 10)
-    if (Number.isNaN(forYear)) {
+    const forYear = yearFromPathParams(request.params)
+    if (forYear === null) {
       return reply.status(400).send({ error: 'Invalid year' })
     }
 

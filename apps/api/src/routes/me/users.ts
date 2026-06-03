@@ -2,12 +2,19 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { UserSearchQuerySchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 // M22 — username autocomplete for tracklist @tags
 const meUsersRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/me/users/search', { preHandler: requireAuth }, async (request, reply) => {
-    const q = ((request.query as { q?: string }).q ?? '').trim().toLowerCase()
+    const parsed = UserSearchQuerySchema.safeParse(request.query)
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.issues[0]?.message ?? 'Invalid query',
+      })
+    }
+    const q = (parsed.data.q ?? '').trim().toLowerCase()
     if (q.length < 2) return reply.send([])
 
     const users = await fastify.prisma.user.findMany({
