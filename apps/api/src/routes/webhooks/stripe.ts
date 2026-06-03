@@ -9,6 +9,7 @@ import {
   recordFanSubPayment,
 } from '../../lib/fansub.js'
 import { activateMembership } from '../../lib/membership.js'
+import { auditLog } from '../../lib/audit.js'
 
 // Stripe webhook for fan-subscription lifecycle. Encapsulated in its own plugin
 // so the raw-body parser (needed for signature verification) does not affect the
@@ -110,6 +111,16 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
       }
     } catch (err) {
       request.log.error({ err, type: event.type }, 'stripe webhook handler error')
+      await auditLog(fastify.prisma, {
+        action: 'STRIPE_WEBHOOK_ERROR',
+        actorId: 'system',
+        targetId: event.id ?? event.type,
+        meta: {
+          eventType: event.type,
+          eventId: event.id,
+          message: err instanceof Error ? err.message : String(err),
+        },
+      })
     }
 
     return reply.send({ received: true })
