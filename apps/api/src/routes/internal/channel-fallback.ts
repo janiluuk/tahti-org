@@ -48,6 +48,33 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
 
     return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
   })
+
+  /** M27: Liquidsoap (or ops) reports which archive item started — drives fair shuffle. */
+  fastify.post('/internal/channels/:channelId/fallback-played', async (request, reply) => {
+    const { channelId } = request.params as { channelId: string }
+    const auth = (request.headers['authorization'] as string | undefined) ?? ''
+    if (auth !== `Bearer ${config.internalSecret}`) {
+      return reply.status(401).send({ error: 'unauthorized' })
+    }
+
+    const body = request.body as { archiveItemId?: string }
+    if (!body?.archiveItemId || typeof body.archiveItemId !== 'string') {
+      return reply.status(400).send({ error: 'archiveItemId required' })
+    }
+
+    const item = await fastify.prisma.archiveItem.findFirst({
+      where: { id: body.archiveItemId, channelId },
+      select: { id: true },
+    })
+    if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+    await fastify.prisma.archiveItem.update({
+      where: { id: item.id },
+      data: { lastFallbackPlayedAt: new Date() },
+    })
+
+    return reply.send({ ok: true })
+  })
 }
 
 export default channelFallbackRoute
