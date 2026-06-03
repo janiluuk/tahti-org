@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 export * from './dto/auth.js'
+export * from './dto/governance.js'
 export * from './dto/channel.js'
 export * from './dto/archive.js'
 export * from './dto/archive-metadata.js'

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { CreateMotionSchema, PatchMotionSchema, VoteMotionSchema } from '@tahti/shared'
 import { requireMember, requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 
@@ -14,9 +15,6 @@ import { auditLog } from '../../lib/audit.js'
 // To avoid a bandwagon effect, per-choice tallies are hidden while a motion is
 // OPEN and only revealed once it CLOSES. The requesting member can always see
 // whether (and how) they voted.
-
-const VALID_CHOICES = ['YES', 'NO', 'ABSTAIN'] as const
-type Choice = (typeof VALID_CHOICES)[number]
 
 const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/v1/governance/members — members-only directory (PRH register view)
@@ -89,37 +87,18 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireBoard },
     async (request, reply) => {
       const user = request.sessionUser!
-      const body = request.body as {
-        title?: string
-        description?: string
-        openAt?: string
-        closeAt?: string
-        advisory?: boolean
+      const parsed = CreateMotionSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
       }
-
-      const title = body.title?.trim()
-      const description = body.description?.trim()
-      if (!title) return reply.status(400).send({ error: 'title is required' })
-      if (!description) return reply.status(400).send({ error: 'description is required' })
-      if (!body.openAt || !body.closeAt) {
-        return reply.status(400).send({ error: 'openAt and closeAt are required' })
-      }
-
-      const openAt = new Date(body.openAt)
-      const closeAt = new Date(body.closeAt)
-      if (Number.isNaN(openAt.getTime()) || Number.isNaN(closeAt.getTime())) {
-        return reply.status(400).send({ error: 'openAt and closeAt must be valid dates' })
-      }
-      if (closeAt <= openAt) {
-        return reply.status(400).send({ error: 'closeAt must be after openAt' })
-      }
+      const { title, description, openAt, closeAt, advisory } = parsed.data
 
       const motion = await fastify.prisma.motion.create({
         data: {
-          title: title.slice(0, 200),
-          description: description.slice(0, 10000),
+          title,
+          description,
           proposedBy: user.id,
-          advisory: body.advisory !== false,
+          advisory: advisory !== false,
           openAt,
           closeAt,
           state: 'DRAFT',
@@ -188,23 +167,27 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { id } = request.params as { id: string }
-      const body = request.body as { state?: string; title?: string; description?: string }
+      const parsed = PatchMotionSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const body = parsed.data
 
       const motion = await fastify.prisma.motion.findUnique({ where: { id } })
       if (!motion) return reply.status(404).send({ error: 'Motion not found' })
 
       // Title/description edits allowed only while still in DRAFT.
       const data: Record<string, unknown> = {}
-      if (body.title?.trim() || body.description?.trim()) {
+      if (body.title || body.description) {
         if (motion.state !== 'DRAFT') {
           return reply.status(409).send({ error: 'Can only edit a motion while it is a draft' })
         }
-        if (body.title?.trim()) data.title = body.title.trim().slice(0, 200)
-        if (body.description?.trim()) data.description = body.description.trim().slice(0, 10000)
+        if (body.title) data.title = body.title
+        if (body.description) data.description = body.description
       }
 
       if (body.state) {
-        const target = body.state.toUpperCase()
+        const target = body.state
         const valid: Record<string, string> = { DRAFT: 'OPEN', OPEN: 'CLOSED' }
         if (target !== valid[motion.state]) {
           return reply
@@ -235,12 +218,11 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { id } = request.params as { id: string }
-      const body = request.body as { choice?: string }
-
-      const choice = body.choice?.toUpperCase()
-      if (!choice || !VALID_CHOICES.includes(choice as Choice)) {
-        return reply.status(400).send({ error: 'choice must be YES, NO, or ABSTAIN' })
+      const parsed = VoteMotionSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
       }
+      const choice = parsed.data.choice
 
       const motion = await fastify.prisma.motion.findUnique({ where: { id } })
       if (!motion) return reply.status(404).send({ error: 'Motion not found' })
@@ -261,7 +243,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       await fastify.prisma.vote.create({
-        data: { motionId: id, userId: user.id, choice: choice as Choice },
+        data: { motionId: id, userId: user.id, choice },
       })
 
       await auditLog(fastify.prisma, {

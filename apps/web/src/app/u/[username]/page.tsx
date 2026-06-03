@@ -4,6 +4,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { LiveBadge } from '@/components/ui/from-tahti-ui'
 
 async function fetchProfile(username: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -83,27 +84,23 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const { artist, channel, releases, links, collections = [] } = data
 
   return (
-    <div style={{ maxWidth: 720, margin: '3rem auto', padding: '0 1rem', fontFamily: 'system-ui' }}>
+    <div className="brand-public">
       <header style={{ marginBottom: '2rem' }}>
-        <h1 style={{ margin: '0 0 0.25rem' }}>{artist.displayName}</h1>
-        <p style={{ color: '#666', margin: 0 }}>@{artist.username}</p>
+        <h1>{artist.displayName}</h1>
+        <p className="brand-muted" style={{ margin: 0 }}>
+          @{artist.username}
+        </p>
         {channel?.state === 'LIVE' && (
-          <p style={{ color: '#16a34a', fontWeight: 600, marginTop: '0.5rem' }}>
-            ● Broadcasting now
+          <p style={{ marginTop: '0.5rem' }}>
+            <LiveBadge />
           </p>
         )}
         {artist.bio && <p style={{ marginTop: '1rem', lineHeight: 1.6 }}>{artist.bio}</p>}
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-          {links.channel && (
-            <Link href={links.channel} style={{ color: '#2563eb' }}>
-              Channel →
-            </Link>
-          )}
-          <Link href={links.subscribe} style={{ color: '#2563eb' }}>
-            Support →
-          </Link>
+          {links.channel && <Link href={links.channel}>Channel →</Link>}
+          <Link href={links.subscribe}>Support →</Link>
           {artist.tipJarUrl && (
-            <a href={artist.tipJarUrl} style={{ color: '#2563eb' }} rel="noopener noreferrer">
+            <a href={artist.tipJarUrl} rel="noopener noreferrer">
               Tip jar ↗
             </a>
           )}
@@ -115,17 +112,20 @@ export default async function ArtistProfilePage({ params }: { params: { username
           <h2 style={{ fontSize: '1.25rem' }}>Collections</h2>
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {collections.map((c) => (
-              <li key={c.slug} style={{ padding: '0.75rem 0', borderBottom: '1px solid #eee' }}>
-                <Link href={c.url} style={{ fontWeight: 600, color: '#2563eb' }}>
+              <li
+                key={c.slug}
+                style={{ padding: '0.75rem 0', borderBottom: '1px solid var(--card2)' }}
+              >
+                <Link href={c.url} style={{ fontWeight: 600 }}>
                   {c.name}
                 </Link>
-                <span style={{ color: '#888', fontSize: '0.85rem' }}>
+                <span className="brand-muted" style={{ fontSize: '0.85rem' }}>
                   {' '}
                   · {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
                   {c.isFeatured && ' · Featured'}
                 </span>
                 {c.description && (
-                  <p style={{ color: '#555', margin: '0.35rem 0 0', fontSize: '0.9rem' }}>
+                  <p className="brand-muted" style={{ margin: '0.35rem 0 0', fontSize: '0.9rem' }}>
                     {c.description}
                   </p>
                 )}
@@ -138,28 +138,28 @@ export default async function ArtistProfilePage({ params }: { params: { username
       <section>
         <h2 style={{ fontSize: '1.25rem' }}>Releases</h2>
         {releases.length === 0 ? (
-          <p style={{ color: '#999' }}>No published releases yet.</p>
+          <p className="brand-muted">No published releases yet.</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {releases.map((r) => (
               <li
                 id={`release-${r.id}`}
                 key={r.id}
-                style={{ padding: '1rem 0', borderBottom: '1px solid #eee' }}
+                style={{ padding: '1rem 0', borderBottom: '1px solid var(--card2)' }}
               >
                 <div style={{ fontWeight: 600 }}>
                   {r.title}{' '}
-                  <span style={{ color: '#888', fontWeight: 400, fontSize: '0.85rem' }}>
+                  <span className="brand-muted" style={{ fontWeight: 400, fontSize: '0.85rem' }}>
                     {r.type} · {new Date(r.releaseDate).toLocaleDateString()}
                   </span>
                 </div>
                 {r.description && (
-                  <p style={{ color: '#555', margin: '0.5rem 0', fontSize: '0.9rem' }}>
+                  <p className="brand-muted" style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>
                     {r.description}
                   </p>
                 )}
                 {r.tracks.length > 0 && (
-                  <ol style={{ margin: '0.5rem 0 0', paddingLeft: '1.25rem', color: '#444' }}>
+                  <ol style={{ margin: '0.5rem 0 0', paddingLeft: '1.25rem' }}>
                     {r.tracks.map((t) => (
                       <li
                         key={t.position}
@@ -176,10 +176,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
                           />
                         )}
                         {t.channelItemUrl && !t.playUrl && (
-                          <Link
-                            href={t.channelItemUrl}
-                            style={{ fontSize: '0.85rem', color: '#2563eb' }}
-                          >
+                          <Link href={t.channelItemUrl} style={{ fontSize: '0.85rem' }}>
                             Listen on channel
                           </Link>
                         )}

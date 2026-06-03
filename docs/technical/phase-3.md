@@ -193,7 +193,7 @@ Create `/etc/cron.d/tahti-backup`:
 30 3 * * * root /srv/tahti/scripts/backup.sh status >> /var/log/tahti-backup.log 2>&1 || true
 
 # Weekly restore test (Sunday 05:00)
-0 5 * * 0 root /srv/tahti/scripts/restore-test.sh >> /var/log/tahti-restore-test.log 2>&1
+0 5 * * 0 root /srv/tahti/scripts/backup.sh restore-test >> /var/log/tahti-restore-test.log 2>&1
 ```
 
 Create `/srv/tahti/scripts/backup-postgres.sh`:
