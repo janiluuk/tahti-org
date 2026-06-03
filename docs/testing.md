@@ -19,3 +19,4 @@ pnpm --filter @tahti/db db:generate
 - Prefer `cleanupUsersByEmailPrefix(prisma, 'my-prefix-')` for artist fixtures.
 - Use `allocateMemberNumber(prisma)` instead of hard-coded `memberNumber` bands (PLAT-012).
 - Vitest: `maxWorkers: 1` in root `vitest.config.ts` until Testcontainers lands.
+- CI applies schema with `db push`; `prisma migrate status` runs only after `prisma/migrations` exists.
