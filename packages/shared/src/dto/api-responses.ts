@@ -49,6 +49,30 @@ export const ChannelScheduleViewSchema = z.object({
   nextBroadcastNote: z.string().nullable(),
 })
 
+export const DownloadGateItemDetailResponseSchema = z.object({
+  repostToDownload: z.boolean(),
+  followToDownload: z.boolean(),
+  artistFollowerCount: z.number().int().nonnegative(),
+  repostAckCount: z.number().int().nonnegative(),
+  blockedDownloadAttempts: z.number().int().nonnegative(),
+  countedDownloadCount: z.number().int().nonnegative(),
+})
+
+export const ApiStatusResponseSchema = z.object({
+  status: z.enum(['ok', 'degraded', 'down']),
+  version: z.string(),
+  uptimeSec: z.number().int().nonnegative(),
+  checks: z.record(
+    z.object({
+      state: z.string(),
+      critical: z.boolean(),
+      latencyMs: z.number().optional(),
+      detail: z.string().optional(),
+    }),
+  ),
+  ts: z.string().datetime(),
+})
+
 export const PublicChannelUserSchema = z.object({
   username: z.string(),
   displayName: z.string(),

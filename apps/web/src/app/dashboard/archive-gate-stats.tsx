@@ -19,6 +19,7 @@ export function ArchiveGateStats({
     artistFollowerCount: number
     repostAckCount: number
     blockedDownloadAttempts: number
+    countedDownloadCount: number
   } | null>(null)
 
   useEffect(() => {
@@ -56,6 +57,11 @@ export function ArchiveGateStats({
       {(repostToDownload || followToDownload) && stats.blockedDownloadAttempts > 0 && (
         <div>
           Blocked download attempts: <strong>{stats.blockedDownloadAttempts}</strong>
+        </div>
+      )}
+      {(repostToDownload || followToDownload) && (
+        <div>
+          Counted downloads (14d): <strong>{stats.countedDownloadCount}</strong>
         </div>
       )}
     </div>

@@ -111,7 +111,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
   })
 
-  it('ends broadcast on RTMP on_done', async () => {
+  it('ends broadcast on RTMP on_done and enqueues partial archive finalize', async () => {
     await app.inject({
       method: 'POST',
       url: '/internal/rtmp/on_publish',
@@ -140,6 +140,38 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
     expect(ended?.endedAt).toBeTruthy()
     expect(enqueueFinalizeBroadcastRecording).toHaveBeenCalledWith(ended!.id)
+  })
+
+  it('ends broadcast on Icecast disconnect and enqueues partial archive finalize', async () => {
+    enqueueFinalizeBroadcastRecording.mockClear()
+
+    await app.inject({
+      method: 'POST',
+      url: '/internal/icecast/on_connect',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `mount=/live/${SLUG}&pass=${liveSourcePass}`,
+    })
+
+    const disconnect = await app.inject({
+      method: 'POST',
+      url: '/internal/icecast/on_disconnect',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `mount=/live/${SLUG}`,
+    })
+    expect(disconnect.statusCode).toBe(200)
+
+    const ended = await prisma.broadcast.findFirst({
+      where: { channelId },
+      orderBy: { startedAt: 'desc' },
+    })
+    expect(ended?.endedAt).toBeTruthy()
+    expect(enqueueFinalizeBroadcastRecording).toHaveBeenCalledWith(ended!.id)
+
+    await prisma.broadcast.deleteMany({ where: { channelId } })
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { state: 'OFFLINE', goneLiveAt: null },
+    })
   })
 
   it('allows Icecast on_connect with urlencoded mount and pass', async () => {
