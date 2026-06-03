@@ -19,8 +19,7 @@ const registerRoute: FastifyPluginAsync = async (fastify) => {
       })
     }
 
-    const { email, password, username, displayName } = parsed.data
-    const hcaptchaToken = (request.body as { hcaptchaToken?: string }).hcaptchaToken
+    const { email, password, username, displayName, hcaptchaToken } = parsed.data
     if (!(await verifyHcaptcha(hcaptchaToken))) {
       return reply.status(400).send({ error: 'hCaptcha verification failed' })
     }

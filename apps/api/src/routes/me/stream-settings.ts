@@ -50,10 +50,15 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { id: true, slug: true },
+        select: { id: true, slug: true, state: true },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      if (channel.state === 'LIVE') {
+        return reply.status(409).send({
+          error: 'Go offline before rotating the RTMP stream key',
+        })
+      }
 
       const newKey = `${channel.slug}__${nanoid(32)}`
       const newHash = await hashPassword(newKey)
@@ -76,10 +81,15 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { id: true },
+        select: { id: true, state: true },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      if (channel.state === 'LIVE') {
+        return reply.status(409).send({
+          error: 'Go offline before rotating the Icecast password',
+        })
+      }
 
       const newPass = nanoid(24)
       const newHash = await hashPassword(newPass)

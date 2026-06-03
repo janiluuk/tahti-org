@@ -19,6 +19,7 @@ export const RegisterSchema = z.object({
     .min(1, 'Display name is required')
     .max(64, 'Display name too long')
     .trim(),
+  hcaptchaToken: z.string().optional(),
 })
 
 export type RegisterInput = z.infer<typeof RegisterSchema>
