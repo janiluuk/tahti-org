@@ -49,6 +49,11 @@ export const ChannelScheduleViewSchema = z.object({
   nextBroadcastNote: z.string().nullable(),
 })
 
+export const DownloadUrlResponseSchema = z.object({
+  url: z.string().url(),
+  counted: z.boolean(),
+})
+
 export const DownloadGateItemDetailResponseSchema = z.object({
   repostToDownload: z.boolean(),
   followToDownload: z.boolean(),

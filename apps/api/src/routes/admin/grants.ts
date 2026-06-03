@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { yearFromPathParams } from '@tahti/shared'
 import { buildGrantPreview, runAnnualGrantCalc } from '@tahti/ledger'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
@@ -19,9 +20,8 @@ const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const { year } = request.params as { year: string }
-      const forYear = parseInt(year, 10)
-      if (Number.isNaN(forYear)) {
+      const forYear = yearFromPathParams(request.params)
+      if (forYear === null) {
         return reply.status(400).send({ error: 'Invalid year' })
       }
       const preview = await buildGrantPreview(fastify.prisma, forYear)
@@ -34,9 +34,8 @@ const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireBoard },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { year } = request.params as { year: string }
-      const forYear = parseInt(year, 10)
-      if (Number.isNaN(forYear)) {
+      const forYear = yearFromPathParams(request.params)
+      if (forYear === null) {
         return reply.status(400).send({ error: 'Invalid year' })
       }
 

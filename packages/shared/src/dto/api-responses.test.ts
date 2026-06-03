@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest'
 import {
   DownloadGateItemDetailResponseSchema,
   DownloadGateStatsResponseSchema,
+  DownloadUrlResponseSchema,
 } from './api-responses.js'
 import { zodOpenApiComponents } from '../openapi-zod.js'
 
@@ -15,6 +16,14 @@ describe('api response schemas', () => {
       items: [],
       totals: { repostAcks: 1, blockedAttempts: 0, countedDownloads: 3 },
       daily: [{ date: '2026-06-01', repostAcks: 1, blockedAttempts: 0, countedDownloads: 3 }],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('parses download URL response', () => {
+    const parsed = DownloadUrlResponseSchema.safeParse({
+      url: 'https://minio.example/presigned',
+      counted: true,
     })
     expect(parsed.success).toBe(true)
   })
