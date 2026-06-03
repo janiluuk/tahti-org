@@ -6,6 +6,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
+import { markChatCaptchaVerified } from '../../lib/chat-captcha.js'
 
 // Rate limit: 10 tokens per IP per minute
 const tokenBucket = new Map<string, { count: number; reset: number }>()
@@ -81,6 +82,8 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
       { sub, channel: `channel:${slug}`, info: { supporter } },
       3600,
     )
+
+    await markChatCaptchaVerified(channel.id, fingerprint)
 
     return reply.send({ token, handle: cleanHandle, fingerprint, supporter })
   })

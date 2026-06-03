@@ -58,7 +58,7 @@ Last reviewed: 2026-06-03 (audit pass)
 ### M20 — Tier gating
 | P | Item |
 |---|---|
-| P2 | 45 / 55-minute warning copy polish |
+| ~~P2~~ | ~~45 / 55-minute warning copy polish~~ — `warningLevel` on broadcast-usage API + dashboard (done) |
 | ~~P1~~ | ~~60-second grace + orchestrator stop~~ — done |
 | ~~P1~~ | ~~Archive FLAC for paid broadcast archives~~ — done |
 | ~~P2~~ | ~~Post-broadcast upgrade CTA~~ — done |
@@ -78,8 +78,8 @@ Last reviewed: 2026-06-03 (audit pass)
 |---|---|
 | P1 | pgBackRest + MinIO offsite backup **runbooks** wired and tested (`ops/RUNBOOK.md`) |
 | P1 | Self-hosted **Upptime** pointing at `/api/v1/status` |
-| P1 | Stripe webhook failure metrics (handler errors currently swallowed with `{ received: true }`) |
-| P2 | hCaptcha on first chat message (token join only today) |
+| ~~P1~~ | ~~Stripe webhook failure metrics~~ — Prometheus counters on `/metrics` (done) |
+| ~~P2~~ | ~~hCaptcha on first chat message~~ — token join marks Redis; publish proxy requires verification (done) |
 | P2 | ACRCloud cost watchdog |
 | P2 | Rate-limit tuning per route from config |
 | ~~P2~~ | ~~Structured logging (pino) + request IDs~~ — `x-request-id` + JSON response logs (done) |
@@ -99,7 +99,8 @@ Last reviewed: 2026-06-03 (audit pass)
 |---|---|
 | ~~P1~~ | ~~Hearthis-style metadata defaults on upload~~ — done |
 | P2 | Editable tracklists on archive items |
-| P2 | Repost/follow download gates |
+| ~~P2~~ | ~~Repost/follow download gates~~ — done |
+| ~~P2~~ | ~~Channel gate funnel dashboard~~ — `GET /api/me/download-gate-stats` (done) |
 
 ### M23 — Collections (remaining)
 | P | Item |

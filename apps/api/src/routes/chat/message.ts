@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
 
 // Centrifugo proxy publish webhook.
 // Centrifugo calls this before allowing a client to publish.
@@ -32,6 +33,10 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
     if (!channel) return reply.status(404).send({ error: 'channel not found' })
 
     if (fingerprint) {
+      const verified = await isChatCaptchaVerified(channel.id, fingerprint)
+      if (!verified) {
+        return reply.status(403).send({ error: 'captcha_required' })
+      }
       const ban = await fastify.prisma.chatBan.findUnique({
         where: {
           channelId_fingerprintHash: { channelId: channel.id, fingerprintHash: fingerprint },

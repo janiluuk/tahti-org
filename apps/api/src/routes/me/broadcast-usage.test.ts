@@ -71,6 +71,7 @@ describe('M20 — broadcast usage', () => {
     expect(res.json().inGrace).toBe(true)
     expect(res.json().atCap).toBe(true)
     expect(res.json().blocked).toBe(false)
+    expect(res.json().warningLevel).toBe('grace')
     expect(res.json().unlimited).toBe(false)
   })
 
@@ -101,6 +102,7 @@ describe('M20 — broadcast usage', () => {
       headers: { cookie: freeCookie },
     })
     expect(usage.json().blocked).toBe(true)
+    expect(usage.json().warningLevel).toBe('blocked')
   })
 
   it('denies unknown mount via Icecast form-encoded body', async () => {

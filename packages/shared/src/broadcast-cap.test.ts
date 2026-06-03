@@ -9,6 +9,7 @@ import {
   FREE_WEEKLY_HARD_CAP_SEC,
   FREE_WEEKLY_LIVE_GRACE_SEC,
   canAcceptSourceConnect,
+  broadcastWarningLevel,
 } from './broadcast-cap.js'
 
 describe('broadcast-cap', () => {
@@ -29,6 +30,23 @@ describe('broadcast-cap', () => {
     expect(FREE_WEEKLY_LIVE_CAP_SEC).toBe(3600)
     expect(FREE_WEEKLY_LIVE_GRACE_SEC).toBe(60)
     expect(FREE_WEEKLY_HARD_CAP_SEC).toBe(3660)
+  })
+
+  it('broadcastWarningLevel prefers 55m over 45m when both apply', () => {
+    const cap = {
+      allowed: true as const,
+      secondsUsed: 55 * 60,
+      secondsRemaining: 300,
+      warnings: [45 * 60, 55 * 60],
+      inGrace: false,
+    }
+    expect(broadcastWarningLevel(cap)).toBe('55m')
+  })
+
+  it('broadcastWarningLevel returns blocked when not allowed', () => {
+    expect(broadcastWarningLevel({ allowed: false, reason: 'weekly_cap', secondsUsed: 4000 })).toBe(
+      'blocked',
+    )
   })
 
   it('canAcceptSourceConnect denies new connect during grace', () => {
