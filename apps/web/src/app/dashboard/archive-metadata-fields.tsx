@@ -317,8 +317,8 @@ export function ArchiveMetadataFields({
           style={{ marginTop: 2 }}
         />
         <span>
-          Use auto-detected file tags (BPM, key, genre, description from embedded tags when you
-          leave fields empty)
+          Use auto-detected tags (embedded file tags when present; otherwise BPM and key are
+          analyzed from the audio — first ~2 minutes for long files)
           {(detectedBpm != null || detectedKey) && (
             <span style={{ color: '#666' }}>
               {' '}

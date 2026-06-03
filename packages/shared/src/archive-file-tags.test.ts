@@ -2,7 +2,12 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { describe, expect, it } from 'vitest'
-import { mergeDetectedArchiveMetadata, parseArchiveFileTags } from './archive-file-tags.js'
+import {
+  frequencyToPitchClass,
+  mergeDetectedArchiveMetadata,
+  mergeParsedArchiveTags,
+  parseArchiveFileTags,
+} from './archive-file-tags.js'
 
 describe('parseArchiveFileTags', () => {
   it('reads BPM and key from common tag names', () => {
@@ -18,6 +23,46 @@ describe('parseArchiveFileTags', () => {
     })
     expect(tags.genre).toBe('Techno')
     expect(tags.description).toBe('Recorded live at Klubi')
+  })
+})
+
+describe('mergeParsedArchiveTags', () => {
+  it('keeps embedded BPM/key over acoustic', () => {
+    const merged = mergeParsedArchiveTags(
+      {
+        bpm: 128,
+        key: 'Am',
+        genre: null,
+        description: null,
+        recordingLocation: null,
+        mixVersion: null,
+      },
+      { bpm: 120, key: 'C' },
+    )
+    expect(merged.bpm).toBe(128)
+    expect(merged.key).toBe('Am')
+  })
+
+  it('fills missing BPM/key from acoustic', () => {
+    const merged = mergeParsedArchiveTags(
+      {
+        bpm: null,
+        key: null,
+        genre: null,
+        description: null,
+        recordingLocation: null,
+        mixVersion: null,
+      },
+      { bpm: 126, key: 'F#' },
+    )
+    expect(merged.bpm).toBe(126)
+    expect(merged.key).toBe('F#')
+  })
+})
+
+describe('frequencyToPitchClass', () => {
+  it('maps A440 to A', () => {
+    expect(frequencyToPitchClass(440)).toBe('A')
   })
 })
 

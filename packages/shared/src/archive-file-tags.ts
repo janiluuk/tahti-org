@@ -64,6 +64,28 @@ export type ArchiveItemForTagMerge = {
   useDetectedBpmKey: boolean
 }
 
+/** Prefer embedded tags; fill BPM/key from acoustic analysis when missing. */
+export function mergeParsedArchiveTags(
+  embedded: ParsedArchiveFileTags,
+  acoustic: Pick<ParsedArchiveFileTags, 'bpm' | 'key'>,
+): ParsedArchiveFileTags {
+  return {
+    ...embedded,
+    bpm: embedded.bpm ?? acoustic.bpm ?? null,
+    key: embedded.key ?? acoustic.key ?? null,
+  }
+}
+
+const PITCH_CLASS_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const
+
+/** Map fundamental frequency (Hz) to a pitch class label, e.g. 440 → "A". */
+export function frequencyToPitchClass(hz: number): string | null {
+  if (!Number.isFinite(hz) || hz < 20 || hz > 5000) return null
+  const midi = Math.round(12 * Math.log2(hz / 440) + 69)
+  const idx = ((midi % 12) + 12) % 12
+  return PITCH_CLASS_NAMES[idx] ?? null
+}
+
 /**
  * Fill empty metadata fields from embedded file tags.
  * Skipped entirely when `useDetectedBpmKey` is false (artist opts out of auto tags).

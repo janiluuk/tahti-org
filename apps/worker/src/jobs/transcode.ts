@@ -7,8 +7,14 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
 import { prisma } from '@tahti/db'
-import { isLosslessSource, mergeDetectedArchiveMetadata, parseArchiveFileTags } from '@tahti/shared'
+import {
+  isLosslessSource,
+  mergeDetectedArchiveMetadata,
+  mergeParsedArchiveTags,
+  parseArchiveFileTags,
+} from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 
 function ffprobeFormat(filePath: string): Promise<{ duration: number; format: string }> {
   return new Promise((resolve, reject) => {
@@ -64,7 +70,7 @@ function ffprobeEmbeddedTags(filePath: string): Promise<Record<string, unknown>>
   })
 }
 
-function tagFieldsFromFile(
+async function buildTagPatch(
   item: {
     description: string | null
     genre: string | null
@@ -73,14 +79,29 @@ function tagFieldsFromFile(
     mixVersion: string | null
     useDetectedBpmKey: boolean
   },
-  tags: Record<string, unknown>,
-): Record<string, unknown> {
-  const parsed = parseArchiveFileTags(tags)
-  const patch: Record<string, unknown> = {
-    ...mergeDetectedArchiveMetadata(item, parsed),
+  embeddedTags: Record<string, unknown>,
+  rawPath: string,
+  tmpDir: string,
+  durationSec: number,
+): Promise<Record<string, unknown>> {
+  const embedded = parseArchiveFileTags(embeddedTags)
+  let merged = embedded
+
+  if (item.useDetectedBpmKey && (embedded.bpm == null || embedded.key == null)) {
+    const analysisWav = join(tmpDir, 'analysis.wav')
+    await prepareAnalysisWav(rawPath, analysisWav, durationSec)
+    const acoustic = await analyzeAudioAcoustics(analysisWav, {
+      needBpm: embedded.bpm == null,
+      needKey: embedded.key == null,
+    })
+    merged = mergeParsedArchiveTags(embedded, acoustic)
   }
-  if (parsed.bpm != null) patch.bpmDetected = parsed.bpm
-  if (parsed.key != null) patch.keyDetected = parsed.key
+
+  const patch: Record<string, unknown> = {
+    ...mergeDetectedArchiveMetadata(item, merged),
+  }
+  if (merged.bpm != null) patch.bpmDetected = merged.bpm
+  if (merged.key != null) patch.keyDetected = merged.key
   return patch
 }
 
@@ -107,7 +128,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
 
     const sourceMeta = await ffprobeFormat(rawPath)
     const embeddedTags = await ffprobeEmbeddedTags(rawPath).catch(() => ({}))
-    const tagPatch = tagFieldsFromFile(item, embeddedTags)
+    const tagPatch = await buildTagPatch(item, embeddedTags, rawPath, tmpDir, sourceMeta.duration)
     const lossless = isLosslessSource(sourceMeta.format)
 
     if (lossless) {
