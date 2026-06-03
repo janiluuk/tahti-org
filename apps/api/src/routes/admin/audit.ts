@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireBoard } from '../../plugins/auth.js'
-import { csvRow } from '../../lib/csv.js'
+import { sendCsv } from '../../lib/csv.js'
 
 // M11: board/treasurer audit log export for compliance review.
 const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
@@ -21,9 +21,11 @@ const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
         take: 50_000,
       })
 
-      const header = csvRow(['id', 'createdAt', 'action', 'actorId', 'targetId', 'meta'])
-      const lines = rows.map((r) =>
-        csvRow([
+      return sendCsv(
+        reply,
+        'tahti-audit-log.csv',
+        ['id', 'createdAt', 'action', 'actorId', 'targetId', 'meta'],
+        rows.map((r) => [
           r.id.toString(),
           r.createdAt.toISOString(),
           r.action,
@@ -32,11 +34,6 @@ const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
           JSON.stringify(r.meta ?? {}),
         ]),
       )
-
-      return reply
-        .header('Content-Type', 'text/csv; charset=utf-8')
-        .header('Content-Disposition', 'attachment; filename="tahti-audit-log.csv"')
-        .send([header, ...lines].join('\n'))
     },
   )
 }

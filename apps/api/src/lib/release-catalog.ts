@@ -40,7 +40,9 @@ export function catalogPatchFromBody(
   body: unknown,
 ): { ok: true; data: Record<string, unknown> } | { ok: false; error: string } {
   const parsed = ReleaseCatalogPatchSchema.safeParse(body)
-  if (!parsed.success) return { ok: false, error: 'Invalid catalog fields' }
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid catalog fields' }
+  }
 
   const data: Record<string, unknown> = {}
   const f = parsed.data

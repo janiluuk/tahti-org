@@ -4,9 +4,10 @@ These are **“for dummies”** walkthroughs: short steps, no jargon where we ca
 
 | Guide | Who it is for | Start here |
 |-------|----------------|------------|
-| **[For viewers](for-viewers.md)** | Anyone listening, chatting, or supporting an artist | Tune in, chat, subscribe, downloads |
-| **[For artists](for-artists.md)** | Members building a profile, releases, and fan support | Dashboard, profile, fan tiers, releases |
-| **[For streamers](for-streamers.md)** | Members going **live** with OBS, Mixxx, or similar | RTMP, stream key, going LIVE, limits |
+| **[For viewers](for-viewers.md)** | **Listeners** — tune in, chat, fan subscribe (no coop account required) | Tune in, chat, subscribe, downloads |
+| **[For members](for-members.md)** | **Cooperative members** — €40/year, governance, voting | `/governance`, membership on dashboard |
+| **[For artists](for-artists.md)** | **Artists** — members with a channel, releases, fan tiers | Dashboard, profile, fan tiers, releases |
+| **[For streamers](for-streamers.md)** | **Live broadcast** (subset of artist) — OBS, Mixxx, etc. | RTMP, stream key, going LIVE, limits |
 | **[Multistream / simulcast](multistream-simulcast.md)** | Mirror Tahti live to Twitch, YouTube, Kick, etc. | Paste each platform’s **stream key** in dashboard |
 
 **Quick URLs (replace with real host in production):**
@@ -63,7 +64,7 @@ flowchart TD
 | Fan subscriptions & grants | [engagement-and-fansubs.md](../engagement-and-fansubs.md) |
 | Profile, smart links, embeds | [profile-and-promo-toolkit.md](../profile-and-promo-toolkit.md) |
 | Screen map & screenshots | [user-flows.md](../user-flows.md) |
-| Technical user journeys | [journey-artist.md](../technical/journey-artist.md), [journey-listener.md](../technical/journey-listener.md) |
+| Technical user journeys | [journey-listener.md](../technical/journey-listener.md), [journey-member.md](../technical/journey-member.md), [journey-artist.md](../technical/journey-artist.md) |
 
 ---
 

@@ -37,22 +37,23 @@ export default async function SubscribePage({ params }: { params: { username: st
   }
 
   return (
-    <div
-      style={{
-        maxWidth: 760,
-        margin: '3rem auto',
-        padding: '0 1rem',
-        fontFamily: 'system-ui, sans-serif',
-      }}
-    >
-      <a href={`/c/${data.artist.username}`} style={{ color: '#888', fontSize: '0.85rem' }}>
+    <div className="brand-public" style={{ maxWidth: 760 }}>
+      <a
+        href={`/u/${data.artist.username}`}
+        className="brand-muted"
+        style={{ fontSize: '0.85rem' }}
+      >
         ← {data.artist.displayName}
       </a>
       <h1 style={{ margin: '0.5rem 0 0.25rem' }}>Support {data.artist.displayName}</h1>
-      {data.artist.bio && <p style={{ color: '#666', marginBottom: '2rem' }}>{data.artist.bio}</p>}
+      {data.artist.bio && (
+        <p className="brand-muted" style={{ marginBottom: '2rem', lineHeight: 1.6 }}>
+          {data.artist.bio}
+        </p>
+      )}
 
       {data.tiers.length === 0 ? (
-        <p style={{ color: '#999' }}>This artist hasn&apos;t set up fan subscriptions yet.</p>
+        <p className="brand-muted">This artist hasn&apos;t set up fan subscriptions yet.</p>
       ) : (
         <TierCards
           username={data.artist.username}

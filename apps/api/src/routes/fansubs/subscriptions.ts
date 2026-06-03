@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { FanSubCheckoutSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import {
   stripeEnabled,
@@ -25,9 +26,11 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const subscriber = request.sessionUser!
       const { username } = request.params as { username: string }
-      const { tierId } = (request.body as { tierId?: string }) ?? {}
-
-      if (!tierId) return reply.status(400).send({ error: 'tierId is required' })
+      const parsed = FanSubCheckoutSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const { tierId } = parsed.data
 
       const artist = await fastify.prisma.user.findUnique({
         where: { username },

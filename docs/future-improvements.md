@@ -77,7 +77,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~pgBackRest + MinIO offsite backup **runbooks** wired and tested (`ops/RUNBOOK.md`)~~ — unified `scripts/backup.sh` + `install-crons.sh` |
-| P1 | Self-hosted **Upptime** pointing at `/api/v1/status` |
+| ~~P1~~ | ~~Self-hosted **Upptime** pointing at `/api/v1/status`~~ — `ops/upptime/` example config + RUNBOOK (deploy is ops) |
 | ~~P1~~ | ~~Stripe webhook failure metrics~~ — Prometheus counters on `/metrics` (done) |
 | ~~P2~~ | ~~hCaptcha on first chat message~~ — token join marks Redis; publish proxy requires verification (done) |
 | P2 | ACRCloud cost watchdog |
@@ -128,7 +128,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | P1 | PgBouncer before API horizontal scale | `scaling-node-distribution.md` |
 | P2 | Swagger `/docs` auth from secrets, rotate default password | PLAT-005 |
 | P2 | Redis-down policy for rate limit + sessions documented and tested | PLAT-006 |
-| P2 | `@fastify/formbody` coverage for RTMP callbacks (Icecast done) | PLAT-004 |
+| ~~P2~~ | ~~`@fastify/formbody` coverage for RTMP callbacks (Icecast done)~~ — `ingest.test.ts` (done) | PLAT-004 |
 
 ---
 

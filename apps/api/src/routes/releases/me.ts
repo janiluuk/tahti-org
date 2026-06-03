@@ -4,16 +4,13 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import { requireAuth } from '../../plugins/auth.js'
-import { parseSmartLinkTargets } from '../../lib/smartlink.js'
 import {
   buildReleaseExportPack,
   catalogPatchFromBody,
   releaseCatalogSelect,
 } from '../../lib/release-catalog.js'
-import { computeReleaseChecklist } from '@tahti/shared'
+import { computeReleaseChecklist, CreateReleaseSchema, PatchReleaseSchema } from '@tahti/shared'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
-
-const VALID_TYPES = ['SINGLE', 'EP', 'ALBUM', 'COMPILATION', 'REMIX'] as const
 
 function slugify(title: string): string {
   return title
@@ -21,6 +18,15 @@ function slugify(title: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .slice(0, 40)
+}
+
+function zodError(
+  reply: { status: (n: number) => { send: (b: unknown) => unknown } },
+  err: {
+    issues: Array<{ message?: string }>
+  },
+) {
+  return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
 }
 
 const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
@@ -70,28 +76,15 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/api/me/releases', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
-    const body = request.body as {
-      title?: string
-      type?: string
-      releaseDate?: string
-      description?: string
-      artworkUrl?: string
-      tracks?: Array<{ title: string; durationSec?: number; archiveItemId?: string }>
-    }
+    const parsed = CreateReleaseSchema.safeParse(request.body)
+    if (!parsed.success) return zodError(reply, parsed.error)
+    const body = parsed.data
 
-    const title = body.title?.trim()
-    if (!title) return reply.status(400).send({ error: 'title is required' })
-    const type = (body.type ?? 'SINGLE').toUpperCase()
-    if (!VALID_TYPES.includes(type as (typeof VALID_TYPES)[number])) {
-      return reply.status(400).send({ error: 'Invalid release type' })
-    }
-    if (!body.releaseDate) return reply.status(400).send({ error: 'releaseDate is required' })
-    const releaseDate = new Date(body.releaseDate)
-    if (Number.isNaN(releaseDate.getTime())) {
+    if (Number.isNaN(body.releaseDate.getTime())) {
       return reply.status(400).send({ error: 'Invalid releaseDate' })
     }
 
-    const baseSlug = `${user.username}-${slugify(title)}`
+    const baseSlug = `${user.username}-${slugify(body.title)}`
     let smartLinkSlug = baseSlug
     for (let i = 0; i < 5; i++) {
       const clash = await fastify.prisma.release.findUnique({ where: { smartLinkSlug } })
@@ -103,16 +96,16 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
     const release = await fastify.prisma.release.create({
       data: {
         userId: user.id,
-        title,
-        type: type as 'SINGLE',
-        releaseDate,
-        description: body.description?.trim() || null,
-        artworkUrl: body.artworkUrl?.trim() || null,
+        title: body.title,
+        type: body.type,
+        releaseDate: body.releaseDate,
+        description: body.description ?? null,
+        artworkUrl: body.artworkUrl ?? null,
         smartLinkSlug,
         tracks: {
           create: tracks.map((t, i) => ({
             position: i + 1,
-            title: t.title.trim(),
+            title: t.title,
             durationSec: t.durationSec ?? null,
             archiveItemId: t.archiveItemId ?? null,
           })),
@@ -127,11 +120,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch('/api/me/releases/:id', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
     const { id } = request.params as { id: string }
-    const body = request.body as {
-      state?: string
-      smartLinkTargets?: unknown
-      description?: string
-    }
+    const parsed = PatchReleaseSchema.safeParse(request.body)
+    if (!parsed.success) return zodError(reply, parsed.error)
+    const body = parsed.data
 
     const existing = await fastify.prisma.release.findFirst({
       where: { id, userId: user.id },
@@ -147,24 +138,18 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
     } = {}
 
     if (body.smartLinkTargets !== undefined) {
-      const parsed = parseSmartLinkTargets(body.smartLinkTargets)
-      if (typeof parsed === 'string') return reply.status(400).send({ error: parsed })
-      data.smartLinkTargets = parsed
+      data.smartLinkTargets = body.smartLinkTargets ?? {}
     }
     if (body.description !== undefined) {
-      data.description = body.description?.trim() || null
+      data.description = body.description || null
     }
 
     if (body.state) {
-      const state = body.state.toUpperCase()
-      if (!['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(state)) {
-        return reply.status(400).send({ error: 'Invalid state' })
-      }
-      if (state === 'PUBLISHED' && existing._count.tracks < 1) {
+      if (body.state === 'PUBLISHED' && existing._count.tracks < 1) {
         return reply.status(400).send({ error: 'Add at least one track before publishing' })
       }
-      data.state = state as 'PUBLISHED'
-      data.publishedAt = state === 'PUBLISHED' ? new Date() : null
+      data.state = body.state
+      data.publishedAt = body.state === 'PUBLISHED' ? new Date() : null
     }
 
     const release = await fastify.prisma.release.update({
