@@ -228,6 +228,25 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 .mockup-frame.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
+/* Screenshot showcases (e2e captures + callouts) */
+.shot-browser{background:#1e2a3a;border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.6);max-width:960px;margin:0 auto}
+.shot-stage{position:relative;background:#0d1626;line-height:0}
+.shot-stage img{width:100%;height:auto;display:block}
+.shot-annot{position:absolute;z-index:2;display:flex;align-items:flex-start;gap:8px;max-width:min(220px,42vw);pointer-events:none}
+.shot-annot.pos-tr{flex-direction:row-reverse;text-align:right}
+.shot-annot.pos-bl,.shot-annot.pos-br{align-items:flex-end}
+.shot-pin{width:11px;height:11px;border-radius:50%;background:var(--amber);flex-shrink:0;margin-top:3px;box-shadow:0 0 0 4px rgba(240,165,0,0.35);animation:shotPulse 2s ease-in-out infinite}
+@keyframes shotPulse{0%,100%{box-shadow:0 0 0 4px rgba(240,165,0,0.35)}50%{box-shadow:0 0 0 8px rgba(240,165,0,0.15)}}
+.shot-callout{background:rgba(10,15,30,0.92);border:1px solid rgba(0,188,212,0.45);border-radius:8px;padding:8px 11px;font-size:12px;line-height:1.45;color:var(--text);backdrop-filter:blur(8px)}
+.shot-callout strong{display:block;font-family:var(--font-head);font-size:10px;letter-spacing:1.5px;color:var(--cyan);margin-bottom:3px;font-weight:600}
+.shot-caption{font-size:12px;color:var(--muted);margin-top:14px;text-align:center}
+.shot-caption code{font-size:11px;color:var(--cyan)}
+.mockup-tabs{flex-wrap:wrap;max-width:100%}
+@media(max-width:640px){
+  .shot-annot{font-size:11px;max-width:min(160px,38vw)}
+  .shot-callout{padding:6px 8px}
+}
+
 /* Browser chrome */
 .browser{background:#1e2a3a;border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.6);max-width:900px}
 .browser-bar{background:#16202e;padding:12px 16px;display:flex;align-items:center;gap:12px}
@@ -947,469 +966,172 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   </div>
 </section>
 
-<!-- APP MOCKUPS -->
+<!-- APP MOCKUPS (e2e screenshots) -->
 <section id="mockups">
   <div class="section-inner">
     <h2 class="s-h2 reveal">How it looks.</h2>
-    <div class="s-sub cyan reveal reveal-delay-1">Mockups of the core app views.</div>
+    <div class="s-sub cyan reveal reveal-delay-1">Real screens from the private beta — annotated.</div>
+    <p class="s-lead reveal reveal-delay-2" style="max-width:720px">Captured from the running app with demo data (<code>screenshot-demo</code>). What you ship is what listeners see.</p>
 
     <div class="mockup-tabs reveal reveal-delay-2">
-      <button class="mtab active" onclick="switchMockup('channel',this)">Channel Page</button>
-      <button class="mtab" onclick="switchMockup('dashboard',this)">Artist Dashboard</button>
-      <button class="mtab" onclick="switchMockup('mobile',this)">Mobile</button>
-      <button class="mtab" onclick="switchMockup('live',this)">Live + Chat</button>
-      <button class="mtab" onclick="switchMockup('247',this)">24/7 Channel</button>
-      <button class="mtab" onclick="switchMockup('stash',this)">Private Stash</button>
+      <button class="mtab active" onclick="switchMockup('channel',this)">Channel</button>
+      <button class="mtab" onclick="switchMockup('dashboard',this)">Dashboard</button>
+      <button class="mtab" onclick="switchMockup('profile',this)">Profile</button>
+      <button class="mtab" onclick="switchMockup('subscribe',this)">Fan tiers</button>
+      <button class="mtab" onclick="switchMockup('smartlink',this)">Smart link</button>
+      <button class="mtab" onclick="switchMockup('transparency',this)">Transparency</button>
     </div>
 
-    <!-- CHANNEL PAGE MOCKUP -->
     <div class="mockup-frame active" id="mock-channel">
-      <div class="browser reveal reveal-delay-3">
+      <div class="shot-browser reveal reveal-delay-3">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">https://<b>dj-moonrise</b>.tahti.live</div>
+          <div class="browser-url">https://tahti.live/<b>c/screenshot-demo</b></div>
         </div>
-        <div class="browser-content">
-          <div class="ch-header">
-            <div class="ch-logo">TAHTI</div>
-            <div style="font-size:13px;color:var(--muted);font-family:var(--font-head)">dj-moonrise</div>
-            <div class="ch-live"><div class="signal-dot"></div> LIVE</div>
+        <div class="shot-stage">
+          <img src="/screenshots/08-channel.png" alt="Tahti channel page — live player and archive" width="1280" height="720" loading="lazy">
+          <div class="shot-annot" style="top:6%;left:4%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>ONE URL</strong>Your channel — live when you broadcast, archive rotation when you don't.</div>
           </div>
-          <div class="ch-body">
-            <div class="ch-main">
-              <div class="ch-player-card">
-                <div class="ch-cover">🌙</div>
-                <div style="flex:1">
-                  <div class="ch-track-info">
-                    <h3>Moonrise Sessions — Live</h3>
-                    <p>Ambient Electronic · <span style="color:var(--cyan)">FLAC</span> · Helsinki</p>
-                  </div>
-                  <div class="ch-waveform" id="waveform">
-                    <!-- bars injected by JS -->
-                  </div>
-                  <div class="ch-controls">
-                    <button class="ch-btn">▶</button>
-                    <span class="ch-time">24:37</span>
-                    <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px"><div style="width:38%;height:100%;background:var(--cyan);border-radius:2px"></div></div>
-                    <div class="ch-quality">FLAC</div>
-                  </div>
-                </div>
-              </div>
-
-              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
-                <div style="background:var(--card2);border-radius:6px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--amber)">47</div><div style="font-size:10px;color:var(--muted)">LISTENING NOW</div></div>
-                <div style="background:var(--card2);border-radius:6px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--cyan)">1,247</div><div style="font-size:10px;color:var(--muted)">PLAYS THIS MONTH</div></div>
-                <div style="background:var(--card2);border-radius:6px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:700;color:var(--green)">89</div><div style="font-size:10px;color:var(--muted)">DOWNLOADS</div></div>
-              </div>
-
-              <div style="display:flex;gap:10px;margin-bottom:20px">
-                <button style="background:var(--purple);color:white;border:none;border-radius:6px;padding:10px 20px;font-size:13px;cursor:pointer;font-weight:600">💜 Subscribe €5/mo</button>
-                <button style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text);border-radius:6px;padding:10px 20px;font-size:13px;cursor:pointer">⬇ Download</button>
-                <button style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--text);border-radius:6px;padding:10px 20px;font-size:13px;cursor:pointer">🔗 Share</button>
-              </div>
-
-              <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">RECENT SETS</div>
-              <div style="display:flex;flex-direction:column;gap:6px">
-                <div style="background:var(--card2);border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px">
-                  <div>▶ Late Night Drift Vol. 3</div><div style="color:var(--muted);font-size:11px">1h 42m · FLAC</div>
-                </div>
-                <div style="background:var(--card2);border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:13px">
-                  <div>▶ Helsinki Winter Session</div><div style="color:var(--muted);font-size:11px">2h 08m · FLAC</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="ch-sidebar">
-              <div class="pinned-msg">
-                <div class="pin-label">📌 PINNED</div>
-                <em style="font-size:12px">Tonight 22:00 UTC — ambient set, three new originals</em>
-              </div>
-              <div class="ch-sidebar"><h4>LIVE CHAT</h4>
-                <div class="chat-msg"><span class="handle cyan">moonglow_42</span> this track is killing me 🔥</div>
-                <div class="chat-msg"><span class="handle amber">midnight_dj</span> what synth is this?</div>
-                <div class="chat-msg"><span class="handle green">tallinn_owl</span> tuned in from Tallinn 🇪🇪</div>
-                <div class="chat-msg"><span class="handle" style="color:var(--muted)">ghost</span> first time here — this is amazing</div>
-                <div class="chat-msg"><span class="handle artist">you (artist)</span> @midnight_dj — Prophet 5</div>
-                <div class="chat-msg"><span class="handle cyan">harmonic.air</span> transition at 14:00 🙌</div>
-                <div class="chat-input">
-                  <input placeholder="Say something..." type="text">
-                  <button class="chat-send">↑</button>
-                </div>
-              </div>
-            </div>
+          <div class="shot-annot pos-tr" style="top:14%;right:3%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>PLAYER</strong>Lossless stream with track title and listen controls.</div>
+          </div>
+          <div class="shot-annot" style="bottom:18%;left:5%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>ARCHIVE</strong>Previous sets in rotation — fair play, no algorithmic feed.</div>
           </div>
         </div>
       </div>
+      <p class="shot-caption reveal reveal-delay-4">Public channel at <code>/c/your-handle</code> — embeddable on your profile and site.</p>
     </div>
 
-    <!-- DASHBOARD MOCKUP -->
     <div class="mockup-frame" id="mock-dashboard">
-      <div class="browser">
+      <div class="shot-browser reveal">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
           <div class="browser-url">https://tahti.live/<b>dashboard</b></div>
         </div>
-        <div class="browser-content">
-          <div class="ch-header">
-            <div class="ch-logo">TAHTI</div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+        <div class="shot-stage">
+          <img src="/screenshots/12-dashboard.png" alt="Artist dashboard — stream settings and archive" width="1280" height="720" loading="lazy">
+          <div class="shot-annot" style="top:8%;left:22%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>BROADCAST</strong>Stream key, mount point, and connection test before you go live.</div>
           </div>
-          <div class="db-layout">
-            <div class="db-sidebar">
-              <div class="db-nav-item active">▶ Channel</div>
-              <div class="db-nav-item">📈 Stats</div>
-              <div class="db-nav-item">📁 Archive</div>
-              <div class="db-nav-item">💰 Revenue</div>
-              <div class="db-nav-item">📧 Newsletter</div>
-              <div class="db-nav-item">🔗 Smart Links</div>
-              <div class="db-nav-item">📡 Distribution</div>
-              <div class="db-nav-item">⚙ Settings</div>
-            </div>
-            <div class="db-main">
-              <div class="db-status-bar">
-                <div>
-                  <div class="db-live"><div class="signal-dot"></div> LIVE NOW</div>
-                  <div class="db-live-count">47 listeners · 24:37 elapsed</div>
-                </div>
-                <button class="db-btn-primary">⏹ End Broadcast</button>
-              </div>
-
-              <div class="db-stream-key">
-                <label>ICECAST STREAM KEY</label>
-                <div class="db-key-row">
-                  <div class="db-key-val">••••••••••••••••••••••</div>
-                  <button class="db-copy">Copy</button>
-                  <button class="db-test">Test Connection</button>
-                </div>
-                <div style="font-size:11px;color:var(--muted);margin-top:8px">Server: icecast.tahti.live:8000 · Mount: /dj-moonrise · FLAC/Icecast</div>
-              </div>
-
-              <div class="db-stats">
-                <div class="db-stat"><div class="db-stat-num">1,247</div><div class="db-stat-label">Plays this month</div></div>
-                <div class="db-stat"><div class="db-stat-num" style="color:var(--green)">89</div><div class="db-stat-label">Downloads</div></div>
-                <div class="db-stat"><div class="db-stat-num" style="color:var(--purple)">3</div><div class="db-stat-label">Fan subscribers</div></div>
-                <div class="db-stat"><div class="db-stat-num" style="color:var(--cyan)">€15</div><div class="db-stat-label">Revenue this month</div></div>
-              </div>
-
-              <div style="background:#1a2340;border-radius:8px;padding:16px 20px;margin-bottom:16px">
-                <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">RECENT ARCHIVE</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-                    <div>📻 Late Night Drift Vol. 3 <span style="color:var(--muted);font-size:11px;margin-left:8px">In rotation</span></div>
-                    <div style="display:flex;gap:8px"><span style="color:var(--muted);font-size:11px">1h 42m</span><button style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer">Edit</button></div>
-                  </div>
-                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0">
-                    <div>📻 Helsinki Winter Session</div>
-                    <div style="display:flex;gap:8px"><span style="color:var(--muted);font-size:11px">2h 08m</span><button style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer">Edit</button></div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="db-actions">
-                <button class="db-btn-secondary">📤 Upload Release</button>
-                <button class="db-btn-secondary">📧 Send Newsletter</button>
-                <button class="db-btn-secondary">📡 Push to Mixcloud</button>
-              </div>
-            </div>
+          <div class="shot-annot pos-tr" style="top:12%;right:4%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>CHANNEL</strong>Gallery, text layer, and stream settings in one place.</div>
+          </div>
+          <div class="shot-annot" style="bottom:12%;left:24%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>ARCHIVE</strong>Upload sets, edit metadata, control 24/7 rotation.</div>
           </div>
         </div>
       </div>
+      <p class="shot-caption">Artist home base — everything you need between sets.</p>
     </div>
 
-    <!-- MOBILE MOCKUP -->
-    <div class="mockup-frame" id="mock-mobile">
-      <div class="mobile-wrap">
-        <div>
-          <div style="text-align:center;font-size:12px;color:var(--muted);letter-spacing:2px;margin-bottom:16px">LISTENER VIEW</div>
-          <div class="phone">
-            <div class="phone-notch"></div>
-            <div class="phone-content">
-              <div class="ph-header">
-                <div class="ph-logo">TAHTI</div>
-                <div class="ph-menu">≡</div>
-              </div>
-              <div class="ph-live-band"><div class="signal-dot" style="width:7px;height:7px"></div> LIVE · DJ MOONRISE</div>
-              <div class="ph-cover">
-                🌙
-                <div class="ph-cover-overlay">
-                  <div class="ph-artist">dj-moonrise</div>
-                  <div class="ph-track">Moonrise Sessions · Ambient Set #12</div>
-                </div>
-              </div>
-              <div class="ph-player">
-                <div class="ph-waveform" id="ph-waveform"></div>
-                <div class="ph-controls">
-                  <button class="ph-btn-skip">⏮</button>
-                  <button class="ph-btn-play">▶</button>
-                  <button class="ph-btn-skip">⏭</button>
-                </div>
-                <div class="ph-quality">
-                  <div class="ph-quality-badge">FLAC</div>
-                  <div class="ph-time">24:37 / LIVE</div>
-                </div>
-              </div>
-              <div class="ph-fansub">
-                <div><p>Support dj-moonrise</p><span>Subscribers get FLAC + fan chat</span></div>
-                <button class="ph-fansub-btn">€5/mo</button>
-              </div>
-              <div class="ph-chat">
-                <h4>LIVE CHAT</h4>
-                <div class="ph-msg"><span class="handle cyan">moonglow_42</span> this track 🔥</div>
-                <div class="ph-msg"><span class="handle amber">midnight_dj</span> what synth?</div>
-                <div class="ph-msg"><span class="handle green">tallinn_owl</span> 🇪🇪 tuned in!</div>
-                <div class="ph-chat-input">
-                  <input placeholder="Say something..." type="text">
-                  <button>↑</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div style="text-align:center;font-size:12px;color:var(--muted);letter-spacing:2px;margin-bottom:16px">PROFILE PAGE</div>
-          <div class="phone">
-            <div class="phone-notch"></div>
-            <div class="phone-content">
-              <div class="ph-header">
-                <div class="ph-logo">TAHTI</div>
-                <div class="ph-menu">≡</div>
-              </div>
-              <div style="padding:20px">
-                <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#7c4dff,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px">🌙</div>
-                <div style="font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:4px">dj-moonrise</div>
-                <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Ambient Electronic · Helsinki · since 2019</div>
-                <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:16px">Synthesizer explorer. Late night sets for late night people. All sets recorded in lossless.</div>
-                <div style="background:var(--card2);border-radius:8px;padding:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
-                  <div><div style="font-size:10px;color:var(--muted);letter-spacing:1px">CHANNEL</div><div style="font-size:13px;margin-top:2px"><div class="signal-dot" style="width:6px;height:6px;display:inline-block;margin-right:6px"></div>LIVE NOW</div></div>
-                  <button style="background:var(--cyan);color:#0a0f1e;border:none;border-radius:6px;padding:8px 14px;font-size:12px;cursor:pointer;font-weight:600">Tune in</button>
-                </div>
-                <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">RELEASES</div>
-                <div style="display:flex;flex-direction:column;gap:6px">
-                  <div style="background:var(--card2);border-radius:6px;padding:10px;display:flex;align-items:center;gap:10px">
-                    <div style="width:36px;height:36px;background:linear-gradient(135deg,#7c4dff,#00e676);border-radius:4px;flex-shrink:0"></div>
-                    <div><div style="font-size:13px;font-weight:500">Drift EP</div><div style="font-size:11px;color:var(--muted)">2024 · 4 tracks · FLAC</div></div>
-                  </div>
-                  <div style="background:var(--card2);border-radius:6px;padding:10px;display:flex;align-items:center;gap:10px">
-                    <div style="width:36px;height:36px;background:linear-gradient(135deg,#f0a500,#ff6b6b);border-radius:4px;flex-shrink:0"></div>
-                    <div><div style="font-size:13px;font-weight:500">Winter Session Archive</div><div style="font-size:11px;color:var(--muted)">2024 · Live Mix · 2h 08m</div></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- LIVE STREAM + CHAT MOCKUP -->
-    <div class="mockup-frame" id="mock-live">
-      <div class="browser reveal reveal-delay-3">
+    <div class="mockup-frame" id="mock-profile">
+      <div class="shot-browser reveal">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">tahti.live/<b>neon-ghost</b></div>
+          <div class="browser-url">https://tahti.live/u/<b>screenshot-demo</b></div>
         </div>
-        <div class="browser-content">
-          <div class="live-header">
-            <div class="live-artist-name">NEON GHOST</div>
-            <div class="live-meta">
-              <div class="listener-count">247 listeners</div>
-              <div class="ch-live"><div class="signal-dot"></div> LIVE</div>
-            </div>
+        <div class="shot-stage">
+          <img src="/screenshots/09-profile.png" alt="Public artist profile" width="1280" height="720" loading="lazy">
+          <div class="shot-annot" style="top:10%;left:5%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>BIO</strong>Label-quality page — what shows up when someone searches your name.</div>
           </div>
-          <div class="ch-body">
-            <div class="ch-main">
-              <div class="live-player-card">
-                <div class="live-artist-row">
-                  <div class="live-avatar" style="background:linear-gradient(135deg,#1a0060,#004060)">👾</div>
-                  <div class="live-name-block">
-                    <div class="name">Neon Ghost</div>
-                    <div class="handle">tahti.live/neon-ghost · Helsinki, FI</div>
-                  </div>
-                </div>
-                <div class="broadcasting-badge"><div class="signal-dot"></div>BROADCASTING NOW — 47 MIN IN</div>
-                <div class="now-playing-title">Crystalline Shore</div>
-                <div class="now-playing-sub">Ambient Set · Lossless 24-bit/96 kHz</div>
-                <div id="live-waveform" class="ch-waveform" style="height:36px;margin-bottom:12px"></div>
-                <div class="ch-controls">
-                  <button class="ch-btn">▶</button>
-                  <div class="ch-time">47:23</div>
-                  <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;position:relative;margin:0 8px"><div style="position:absolute;left:0;top:0;bottom:0;width:62%;background:var(--cyan);border-radius:2px"></div></div>
-                  <div class="ch-time">1:14:00</div>
-                  <div class="ch-quality">LOSSLESS</div>
-                </div>
-              </div>
-              <div class="upcoming-label">UP NEXT</div>
-              <div class="upcoming-item next"><div class="up-icon">🌙</div><div><div class="up-title">Twilight Protocol</div><div class="up-time">Tonight 23:00 UTC · 90 min set</div></div></div>
-              <div class="upcoming-item"><div class="up-icon">🎵</div><div><div class="up-title">Archive: Neon Shore EP</div><div class="up-time">Plays automatically after live ends</div></div></div>
-            </div>
-            <div class="ch-sidebar">
-              <div class="pinned-msg"><div class="pin-label">📌 PINNED</div><em>Neon Shore EP out Friday — pre-save link in bio</em></div>
-              <h4>LIVE CHAT <span style="color:var(--green);margin-left:6px;font-size:10px">● 247</span></h4>
-              <div class="chat-msg"><span class="handle cyan">@aurora_fi</span>this bassline 🔥🔥</div>
-              <div class="chat-msg"><span class="handle green">@kai_studio</span>been waiting for this set</div>
-              <div class="chat-msg"><span class="handle artist">neon-ghost</span>thank you! glad you're here ❤️</div>
-              <div class="chat-msg"><span class="handle amber">@mia.waves</span>sound quality is incredible on lossless</div>
-              <div class="chat-msg"><span class="handle cyan">@aurora_fi</span>is this the vhs mix or new material?</div>
-              <div class="chat-msg"><span class="handle artist">neon-ghost</span>mix of both — surprise at 50 min 👾</div>
-              <div class="chat-input">
-                <input type="text" placeholder="Say something…">
-                <button class="chat-send">→</button>
-              </div>
-            </div>
+          <div class="shot-annot pos-tr" style="top:28%;right:4%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>RELEASES</strong>Timeline of albums and singles — lossless originals preserved.</div>
+          </div>
+          <div class="shot-annot" style="bottom:14%;left:6%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>CHANNEL</strong>Embedded player — listeners tune in without leaving your profile.</div>
           </div>
         </div>
       </div>
+      <p class="shot-caption">No follower counts. No likes. A home page, not a social feed.</p>
     </div>
 
-    <!-- 24/7 CHANNEL MOCKUP (between live sets — archive mode) -->
-    <div class="mockup-frame" id="mock-247">
-      <div class="browser reveal reveal-delay-3">
+    <div class="mockup-frame" id="mock-subscribe">
+      <div class="shot-browser reveal">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">tahti.live/<b>neon-ghost</b></div>
+          <div class="browser-url">https://tahti.live/u/<b>screenshot-demo/subscribe</b></div>
         </div>
-        <div class="browser-content">
-          <div class="live-header">
-            <div>
-              <div class="live-artist-name">NEON GHOST</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:2px">tahti.live/neon-ghost · always on</div>
-            </div>
-            <div class="live-meta">
-              <div class="listener-count">12 listening</div>
-              <div class="offline-badge">📻 ARCHIVE</div>
-            </div>
+        <div class="shot-stage">
+          <img src="/screenshots/10-subscribe.png" alt="Fan subscription tiers" width="1280" height="720" loading="lazy">
+          <div class="shot-annot" style="top:18%;left:8%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>TIERS</strong>You set prices — Stripe Connect, 0% platform cut on fan subs.</div>
           </div>
-          <div class="ch-body">
-            <div class="ch-main">
-              <div class="live-player-card">
-                <div style="font-size:10px;letter-spacing:2px;color:var(--amber);margin-bottom:10px">NEXT LIVE BROADCAST</div>
-                <div class="countdown-row">
-                  <div class="cdr-unit"><div class="cdr-num">06</div><div class="cdr-lbl">HRS</div></div>
-                  <div class="cdr-unit"><div class="cdr-num">24</div><div class="cdr-lbl">MIN</div></div>
-                  <div class="cdr-unit"><div class="cdr-num">38</div><div class="cdr-lbl">SEC</div></div>
-                  <div class="cdr-unit"><div class="cdr-num">—</div><div class="cdr-lbl" style="white-space:nowrap">FRI 22:00</div></div>
-                </div>
-                <div style="font-family:var(--font-head);font-size:13px;font-weight:600;margin-bottom:4px;color:var(--amber)">Twilight Protocol — Live Set</div>
-                <div style="font-size:11px;color:var(--muted);margin-bottom:16px">90 min · ambient/electronic · 🔔 Set a reminder</div>
-                <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:14px"></div>
-                <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">NOW PLAYING FROM ARCHIVE</div>
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-                  <div style="width:44px;height:44px;border-radius:6px;background:linear-gradient(135deg,#1a0060,#004060);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🌌</div>
-                  <div>
-                    <div style="font-family:var(--font-head);font-size:13px;font-weight:600">Neon Shore EP — Full Broadcast</div>
-                    <div style="font-size:11px;color:var(--muted)">Recorded live · Mar 2026 · 1h 14m</div>
-                  </div>
-                </div>
-                <div class="ch-controls">
-                  <button class="ch-btn">▶</button>
-                  <div class="ch-time">23:41</div>
-                  <div style="flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;position:relative;margin:0 8px"><div style="position:absolute;left:0;top:0;bottom:0;width:32%;background:var(--amber);border-radius:2px"></div></div>
-                  <div class="ch-time">1:14:00</div>
-                  <div class="ch-quality">MP3 HQ</div>
-                </div>
-              </div>
-              <div class="upcoming-label" style="margin-top:4px">ARCHIVE — ALL BROADCASTS</div>
-              <div class="archive-row"><div class="archive-cover" style="background:linear-gradient(135deg,#1a0060,#004060)">🌌</div><div class="archive-info"><div class="title">Neon Shore EP</div><div class="meta">Mar 2026 · 1h 14m</div></div><div class="archive-dur">1:14:00</div></div>
-              <div class="archive-row"><div class="archive-cover" style="background:linear-gradient(135deg,#003040,#001040)">❄️</div><div class="archive-info"><div class="title">Winter Session Archive</div><div class="meta">Dec 2024 · 2h 08m</div></div><div class="archive-dur">2:08:00</div></div>
-              <div class="archive-row"><div class="archive-cover" style="background:linear-gradient(135deg,#400010,#200030)">🎛</div><div class="archive-info"><div class="title">Late Night Drift Vol.3</div><div class="meta">Nov 2024 · 1h 40m</div></div><div class="archive-dur">1:40:00</div></div>
-            </div>
-            <div class="ch-sidebar">
-              <div class="pinned-msg"><div class="pin-label">📌 PINNED</div><em>Next live set Friday 22:00 UTC — Twilight Protocol</em></div>
-              <h4>CHAT</h4>
-              <div class="chat-msg"><span class="handle cyan">@aurora_fi</span>love that the archive just keeps playing 🙌</div>
-              <div class="chat-msg"><span class="handle green">@kai_studio</span>reminder set for Friday</div>
-              <div class="chat-msg"><span class="handle amber">@mia.waves</span>this neon shore ep is so good</div>
-              <div class="chat-input">
-                <input type="text" placeholder="Say something…">
-                <button class="chat-send">→</button>
-              </div>
-            </div>
+          <div class="shot-annot pos-tr" style="top:22%;right:5%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>PERKS</strong>Chat badge, downloads, early access — defined per tier.</div>
+          </div>
           </div>
         </div>
       </div>
+      <p class="shot-caption">Direct support without a middleman taking a slice.</p>
     </div>
 
-    <!-- PRIVATE STASH MOCKUP -->
-    <div class="mockup-frame" id="mock-stash">
-      <div class="browser reveal reveal-delay-3">
+    <div class="mockup-frame" id="mock-smartlink">
+      <div class="shot-browser reveal">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">tahti.live/<b>app</b>/stash</div>
+          <div class="browser-url">https://tahti.live/<b>r/northern-lights-ep</b></div>
         </div>
-        <div class="browser-content" style="background:#0d1626;padding:20px;min-height:420px">
-          <div class="stash-toolbar">
-            <div class="stash-title-block">
-              <div class="title">My Stash</div>
-              <div class="sub">Private storage · 4.2 GB used of 20 GB · Paid plan</div>
-            </div>
-            <div class="stash-actions">
-              <button class="stash-btn share">+ Upload</button>
-              <button class="stash-btn share">Share folder</button>
-            </div>
+        <div class="shot-stage">
+          <img src="/screenshots/11-smart-link.png" alt="Release smart link" width="1280" height="720" loading="lazy">
+          <div class="shot-annot" style="top:12%;left:50%;transform:translateX(-50%)">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>ONE LINK</strong>Every platform from a single URL — auto-generated when you publish.</div>
           </div>
-          <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">WIP TRACKS</div>
-          <div class="stash-file playing">
-            <div class="stash-lock">🔒</div>
-            <div class="stash-file-info">
-              <div class="stash-file-name">crystalline-shore-v3.flac</div>
-              <div class="stash-file-meta">FLAC 24-bit/48kHz · 12.3 MB · Modified 2h ago · 2 comments</div>
-            </div>
-            <div class="stash-file-actions">
-              <button class="stash-btn">▶</button>
-              <button class="stash-btn share">Share link</button>
-              <button class="stash-btn">↓</button>
-            </div>
+          <div class="shot-annot" style="bottom:20%;left:8%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>ANALYTICS</strong>Clicks per platform — aggregate only, no cookies.</div>
           </div>
-          <div class="stash-file">
-            <div class="stash-lock">🔒</div>
-            <div class="stash-file-info">
-              <div class="stash-file-name">neon-protocol-rough-v1.wav</div>
-              <div class="stash-file-meta">WAV 24-bit · 8.7 MB · Modified yesterday · 0 comments</div>
-            </div>
-            <div class="stash-file-actions">
-              <button class="stash-btn">▶</button>
-              <button class="stash-btn share">Share link</button>
-              <button class="stash-btn">↓</button>
-            </div>
-          </div>
-          <div class="stash-file">
-            <div class="stash-lock">🔒</div>
-            <div class="stash-file-info">
-              <div class="stash-file-name">twilight-protocol-stems.zip</div>
-              <div class="stash-file-meta">ZIP · 340 MB · Stems export · 5 comments</div>
-            </div>
-            <div class="stash-file-actions">
-              <button class="stash-btn">▶</button>
-              <button class="stash-btn share">Share link</button>
-              <button class="stash-btn">↓</button>
-            </div>
-          </div>
-          <div class="stash-shared-box">
-            <div class="stash-shared-lbl">SHARED ACCESS</div>
-            <div class="stash-collab-row" style="margin-bottom:8px">
-              <div class="stash-collab-avatar">KV</div>
-              <div class="stash-collab-info">
-                <div class="stash-collab-name">@kai_studio</div>
-                <div class="stash-collab-meta">Read-only · 2 files · Link expires in 5 days</div>
-              </div>
-              <button class="stash-revoke">Revoke</button>
-            </div>
-            <div class="stash-collab-row">
-              <div class="stash-collab-avatar" style="background:linear-gradient(135deg,#00bcd4,#00e676)">MA</div>
-              <div class="stash-collab-info">
-                <div class="stash-collab-name">@mastering_ak</div>
-                <div class="stash-collab-meta">Download · 1 file · Permanent link</div>
-              </div>
-              <button class="stash-revoke">Revoke</button>
-            </div>
+          <div class="shot-annot pos-tr" style="bottom:18%;right:6%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>TAHTI FLAC</strong>Best-quality download always listed alongside Spotify &amp; Bandcamp.</div>
           </div>
         </div>
       </div>
+      <p class="shot-caption">Paste in bio, press email, or newsletter — pre-release countdown mode when needed.</p>
+    </div>
+
+    <div class="mockup-frame" id="mock-transparency">
+      <div class="shot-browser reveal">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://tahti.live/<b>transparency</b></div>
+        </div>
+        <div class="shot-stage">
+          <img src="/screenshots/06-transparency.png" alt="Transparency dashboard — grant pool" width="1280" height="720" loading="lazy">
+          <div class="shot-annot" style="top:14%;left:6%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>GRANT POOL</strong>Surplus revenue shared by engagement — formula published in full.</div>
+          </div>
+          <div class="shot-annot pos-tr" style="top:20%;right:5%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>OPEN BOOKS</strong>Membership fees, costs, and payouts — no black box.</div>
+          </div>
+          <div class="shot-annot" style="bottom:16%;left:8%">
+            <span class="shot-pin"></span>
+            <div class="shot-callout"><strong>METHODOLOGY</strong>How engagement units are counted — linked from every stat.</div>
+          </div>
+        </div>
+      </div>
+      <p class="shot-caption">Cooperative economics you can audit — <code>/transparency/methodology</code> for the full formula.</p>
     </div>
 
   </div>
 </section>
+
 
 <!-- MOCKUP: ARTIST PROFILE PAGE -->
 <section id="mockup-profile">
@@ -1418,98 +1140,24 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     <div class="s-sub reveal reveal-delay-1" style="color:var(--lavender)">Your permanent home on the internet.</div>
     <p class="s-lead reveal reveal-delay-2">A label-quality bio page — not a social feed. Bio, releases, channel embed. What shows up when someone googles you, clicks from a flyer, or lands from a press mention. No follower counts. No likes. No algorithm.</p>
 
-    <div class="browser reveal reveal-delay-3">
+    <div class="shot-browser reveal reveal-delay-3">
       <div class="browser-bar">
         <div class="browser-dots"><span></span><span></span><span></span></div>
-        <div class="browser-url">https://tahti.live/u/<b>dj-moonrise</b></div>
+        <div class="browser-url">https://tahti.live/u/<b>screenshot-demo</b></div>
       </div>
-      <div class="browser-content">
-        <div class="ch-header">
-          <div class="ch-logo">TAHTI</div>
-          <div style="font-size:12px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+      <div class="shot-stage">
+        <img src="/screenshots/09-profile.png" alt="Artist profile page" width="1280" height="720" loading="lazy">
+        <div class="shot-annot" style="top:8%;left:4%">
+          <span class="shot-pin"></span>
+          <div class="shot-callout"><strong>SEO</strong>JSON-LD MusicGroup — what Google indexes when someone searches you.</div>
         </div>
-
-        <!-- Hero cover -->
-        <div class="prof-cover">
-          <div class="prof-cover-overlay"></div>
-          <div class="prof-avatar">🌙</div>
+        <div class="shot-annot pos-tr" style="top:32%;right:3%">
+          <span class="shot-pin"></span>
+          <div class="shot-callout"><strong>NO SOCIAL GRAPH</strong>No followers, likes, or comments — a label page.</div>
         </div>
-
-        <!-- Name + CTAs -->
-        <div class="prof-info-row">
-          <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-              <div class="prof-name">dj-moonrise</div>
-              <div class="prof-live-badge"><div class="signal-dot" style="width:6px;height:6px"></div> ON AIR NOW</div>
-            </div>
-            <div class="prof-meta-line">
-              <span>Helsinki</span><span>·</span><span>Ambient Electronic</span><span>·</span><span>Member since 2023</span>
-            </div>
-          </div>
-          <div class="prof-cta-row">
-            <button class="prof-cta-btn">▶ Tune in live</button>
-            <button class="prof-sub-btn">💜 Support €5/mo</button>
-          </div>
-        </div>
-
-        <!-- Bio -->
-        <div class="prof-bio">
-          Synthesizer explorer. Late night sets for late night people. All sessions recorded lossless — what you hear is what was played. Based in Helsinki, broadcasting since 2019.
-          <div style="margin-top:8px;display:flex;gap:6px">
-            <span style="font-size:10px;background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:4px;color:var(--muted)">ambient</span>
-            <span style="font-size:10px;background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:4px;color:var(--muted)">electronic</span>
-            <span style="font-size:10px;background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:4px;color:var(--muted)">synthesizer</span>
-          </div>
-        </div>
-
-        <!-- Releases -->
-        <div style="padding:16px 22px 0">
-          <div class="prof-sec-label">RELEASES</div>
-          <div class="prof-release-item">
-            <div class="prof-release-art" style="background:linear-gradient(135deg,#7c4dff,#00e676)"></div>
-            <div class="prof-release-info"><h4>Drift EP</h4><p>2024 · EP · 4 tracks</p></div>
-            <div class="prof-rel-btns">
-              <button style="color:var(--cyan);border-color:rgba(0,188,212,0.3)">🔗 Links</button>
-              <button>▶ Play</button>
-            </div>
-          </div>
-          <div class="prof-release-item">
-            <div class="prof-release-art" style="background:linear-gradient(135deg,#f0a500,#ff6b6b)"></div>
-            <div class="prof-release-info"><h4>Analog Summer</h4><p>2023 · EP · 3 tracks</p></div>
-            <div class="prof-rel-btns">
-              <button style="color:var(--cyan);border-color:rgba(0,188,212,0.3)">🔗 Links</button>
-              <button>▶ Play</button>
-            </div>
-          </div>
-          <div class="prof-release-item" style="border-bottom:none">
-            <div class="prof-release-art" style="background:linear-gradient(135deg,#00bcd4,#7c4dff)"></div>
-            <div class="prof-release-info"><h4>Winter Session 2024</h4><p>2024 · Live Mix · 2h 08m · FLAC</p></div>
-            <div class="prof-rel-btns">
-              <button>⬇ Download</button>
-              <button>▶ Play</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Channel embed -->
-        <div class="prof-embed-row">
-          <div class="prof-embed-cover">🌙</div>
-          <div class="prof-embed-info">
-            <div class="prof-embed-live-line"><div class="signal-dot" style="width:5px;height:5px"></div> LIVE NOW · 47 listening</div>
-            <h5>Moonrise Sessions — Ambient Set #12</h5>
-            <p>dj-moonrise · FLAC</p>
-            <div class="prof-embed-prog"><div class="prof-embed-prog-fill"></div></div>
-          </div>
-          <button style="background:var(--cyan);color:#0a0f1e;border:none;border-radius:5px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">Open →</button>
-        </div>
-
-        <!-- External links -->
-        <div class="prof-ext-row">
-          <span class="prof-ext-btn">🎵 Bandcamp</span>
-          <span class="prof-ext-btn">📸 Instagram</span>
-          <span class="prof-ext-btn">☁ SoundCloud</span>
-          <span class="prof-ext-btn">🐘 Mastodon</span>
-          <span class="prof-ext-btn">🌐 djmoonrise.fi</span>
+        <div class="shot-annot" style="bottom:12%;left:5%">
+          <span class="shot-pin"></span>
+          <div class="shot-callout"><strong>PRESS KIT</strong>Studio tier: bios, hi-res photos, tech rider — one link for journalists.</div>
         </div>
       </div>
     </div>
@@ -1541,91 +1189,24 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     <div class="s-sub reveal reveal-delay-1">One link. Every platform. Pre-release mode.</div>
     <p class="s-lead reveal reveal-delay-2">Generated automatically when you publish. Paste it in your Instagram bio, Substack, press email. The page logs which platform each listener clicks — no cookies, no personal data.</p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start" class="reveal reveal-delay-2">
-
-      <!-- Published state -->
-      <div>
-        <div style="font-size:10px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:12px">PUBLISHED</div>
-        <div class="browser" style="max-width:420px;margin:0 auto">
-          <div class="browser-bar">
-            <div class="browser-dots"><span></span><span></span><span></span></div>
-            <div class="browser-url">tahti.live/<b>r/drift-ep</b></div>
-          </div>
-          <div class="browser-content">
-            <div class="sl-wrap">
-              <div class="sl-cover-art" style="background:linear-gradient(135deg,#7c4dff 0%,#00e676 100%)"></div>
-              <div class="sl-title-h2">Drift EP</div>
-              <div class="sl-title-meta">dj-moonrise · EP · 4 tracks · 2024</div>
-              <div class="sl-artist-quote">"Recorded live to tape, mixed in one take. Sides A and B are meant to be played together."</div>
-              <div class="sl-btns">
-                <div class="sl-btn">
-                  <div class="sl-btn-icon" style="background:#1db954">🎵</div>
-                  <span class="sl-btn-name">Spotify</span>
-                  <span class="sl-btn-action">Stream</span>
-                  <span class="sl-btn-arrow">→</span>
-                </div>
-                <div class="sl-btn">
-                  <div class="sl-btn-icon" style="background:#fc3c44">🍎</div>
-                  <span class="sl-btn-name">Apple Music</span>
-                  <span class="sl-btn-action">Stream</span>
-                  <span class="sl-btn-arrow">→</span>
-                </div>
-                <div class="sl-btn">
-                  <div class="sl-btn-icon" style="background:#1da0c3">🎸</div>
-                  <span class="sl-btn-name">Bandcamp</span>
-                  <span class="sl-btn-action">Buy / Free DL</span>
-                  <span class="sl-btn-arrow">→</span>
-                </div>
-                <div class="sl-btn" style="border-color:rgba(0,188,212,0.3)">
-                  <div class="sl-btn-icon" style="background:rgba(0,188,212,0.15)">⭐</div>
-                  <span class="sl-btn-name" style="color:var(--cyan)">tahti.live</span>
-                  <span class="sl-btn-action" style="color:var(--cyan)">FLAC · best quality</span>
-                  <span class="sl-btn-arrow" style="color:var(--cyan)">→</span>
-                </div>
-              </div>
-              <div class="sl-powered-by">Powered by <span style="color:var(--amber)">tahti.live</span> · @dj-moonrise</div>
-            </div>
-          </div>
+    <div class="shot-browser reveal reveal-delay-2" style="max-width:520px;margin:0 auto">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">https://tahti.live/<b>r/northern-lights-ep</b></div>
+      </div>
+      <div class="shot-stage">
+        <img src="/screenshots/11-smart-link.png" alt="Smart link page" width="1280" height="720" loading="lazy">
+        <div class="shot-annot" style="top:10%;left:50%;transform:translateX(-50%)">
+          <span class="shot-pin"></span>
+          <div class="shot-callout"><strong>PUBLISHED</strong>Platform buttons + Tahti FLAC — live on release day.</div>
+        </div>
+        <div class="shot-annot" style="bottom:22%;left:6%">
+          <span class="shot-pin"></span>
+          <div class="shot-callout"><strong>PRE-RELEASE</strong>Countdown + email capture builds your list before drop.</div>
         </div>
       </div>
-
-      <!-- Pre-release state -->
-      <div>
-        <div style="font-size:10px;letter-spacing:2px;color:var(--amber);text-align:center;margin-bottom:12px">PRE-RELEASE MODE</div>
-        <div class="browser" style="max-width:420px;margin:0 auto">
-          <div class="browser-bar">
-            <div class="browser-dots"><span></span><span></span><span></span></div>
-            <div class="browser-url">tahti.live/<b>r/winter-25</b></div>
-          </div>
-          <div class="browser-content">
-            <div class="sl-wrap">
-              <div class="sl-cover-art" style="background:linear-gradient(135deg,#0a2040 0%,#00bcd4 100%)"></div>
-              <div class="sl-title-h2">Winter Session 2026</div>
-              <div class="sl-title-meta">dj-moonrise · Live Mix · Releasing Jun 1, 2026</div>
-              <div class="sl-countdown-box">
-                <div class="sl-countdown-lbl">DROPS IN</div>
-                <div class="sl-countdown-nums">
-                  <div class="sl-cd-unit"><div class="sl-cd-num">03</div><div class="sl-cd-lbl">DAYS</div></div>
-                  <div class="sl-cd-unit"><div class="sl-cd-num">14</div><div class="sl-cd-lbl">HRS</div></div>
-                  <div class="sl-cd-unit"><div class="sl-cd-num">22</div><div class="sl-cd-lbl">MIN</div></div>
-                </div>
-              </div>
-              <div class="sl-notify-box">
-                <div class="sl-notify-label">GET NOTIFIED WHEN THIS DROPS</div>
-                <div class="sl-notify-row">
-                  <input class="sl-notify-input" type="email" placeholder="your@email.com">
-                  <button class="sl-notify-btn">Notify me</button>
-                </div>
-                <div class="sl-notify-small">Goes to the artist's newsletter list. Unsubscribe anytime.</div>
-              </div>
-              <div style="opacity:0.35;font-size:12px;color:var(--muted);text-align:center;padding:8px 0;border:1px dashed rgba(255,255,255,0.12);border-radius:6px">Platforms available on release day</div>
-              <div class="sl-powered-by" style="margin-top:16px">Powered by <span style="color:var(--amber)">tahti.live</span> · @dj-moonrise</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
+    <p class="shot-caption reveal reveal-delay-3" style="margin-top:16px">Pre-release mode swaps platform buttons for a countdown and notify form.</p>
 
     <div class="cards-3" style="margin-top:20px">
       <div class="card reveal reveal-delay-1">
@@ -1654,100 +1235,33 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     <div class="s-sub green reveal reveal-delay-1">Your numbers. Your grant estimate. No black box.</div>
     <p class="s-lead reveal reveal-delay-2">See plays, downloads, fan subscribers, and your running engagement-unit tally — the number that determines your annual grant share. Every step of the formula is visible. No surprise at year end.</p>
 
-    <div class="browser reveal reveal-delay-3">
+    <div class="shot-browser reveal reveal-delay-3">
       <div class="browser-bar">
         <div class="browser-dots"><span></span><span></span><span></span></div>
-        <div class="browser-url">https://tahti.live/<b>dashboard/stats</b></div>
+        <div class="browser-url">https://tahti.live/<b>transparency</b></div>
       </div>
-      <div class="browser-content">
-        <div class="ch-header">
-          <div class="ch-logo">TAHTI</div>
-          <div style="font-size:12px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+      <div class="shot-stage">
+        <img src="/screenshots/06-transparency.png" alt="Transparency and grant dashboard" width="1280" height="720" loading="lazy">
+        <div class="shot-annot" style="top:12%;left:5%">
+          <span class="shot-pin"></span>
+          <div class="shot-callout"><strong>YOUR SHARE</strong>Engagement units → estimated grant — updated as you broadcast.</div>
         </div>
-        <div class="db-layout">
-          <div class="db-sidebar">
-            <div class="db-nav-item">▶ Channel</div>
-            <div class="db-nav-item active">📈 Stats</div>
-            <div class="db-nav-item">📁 Archive</div>
-            <div class="db-nav-item">💰 Revenue</div>
-            <div class="db-nav-item">📧 Newsletter</div>
-            <div class="db-nav-item">🔗 Smart Links</div>
-            <div class="db-nav-item">📡 Distribution</div>
-            <div class="db-nav-item">⚙ Settings</div>
-          </div>
-          <div class="db-main" style="padding:18px">
-
-            <!-- Overview stats -->
-            <div class="db-stats" style="margin-bottom:14px">
-              <div class="db-stat"><div class="db-stat-num">1,247</div><div class="db-stat-label">Plays this month</div></div>
-              <div class="db-stat"><div class="db-stat-num" style="color:var(--green)">89</div><div class="db-stat-label">Downloads</div></div>
-              <div class="db-stat"><div class="db-stat-num" style="color:var(--purple)">3</div><div class="db-stat-label">Fan subscribers</div></div>
-              <div class="db-stat"><div class="db-stat-num" style="color:var(--cyan)">€15</div><div class="db-stat-label">Fan-sub / mo</div></div>
-            </div>
-
-            <!-- Plays chart -->
-            <div class="an-chart-wrap">
-              <div class="an-chart-head">
-                <div class="an-chart-lbl">PLAYS — LAST 30 DAYS</div>
-                <div class="an-period-group">
-                  <button class="an-period">7d</button>
-                  <button class="an-period active">30d</button>
-                  <button class="an-period">All</button>
-                </div>
-              </div>
-              <div class="an-bars-wrap" id="an-bars"></div>
-              <div class="an-date-row"><span>May 1</span><span>May 10</span><span>May 20</span><span>Today</span></div>
-            </div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-
-              <!-- Engagement units formula -->
-              <div class="an-units-wrap">
-                <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px">ENGAGEMENT UNITS — 2026</div>
-                <div class="an-unit-row">
-                  <span class="an-unit-lbl">89 free downloads × 1</span>
-                  <span class="an-unit-val" style="color:var(--cyan)">89</span>
-                </div>
-                <div class="an-unit-bar"><div class="an-unit-fill" style="width:32%;background:var(--cyan)"></div></div>
-                <div class="an-unit-row">
-                  <span class="an-unit-lbl">15 paid downloads × 5</span>
-                  <span class="an-unit-val" style="color:var(--amber)">75</span>
-                </div>
-                <div class="an-unit-bar"><div class="an-unit-fill" style="width:27%;background:var(--amber)"></div></div>
-                <div class="an-unit-row">
-                  <span class="an-unit-lbl">€180/yr fan-subs × 1</span>
-                  <span class="an-unit-val" style="color:var(--purple)">180</span>
-                </div>
-                <div class="an-unit-bar"><div class="an-unit-fill" style="width:65%;background:var(--purple)"></div></div>
-                <div class="an-grant-box">
-                  <div>
-                    <div class="an-grant-lbl">Est. grant — year end</div>
-                    <div class="an-grant-sub">344 units · at Y2 pool size</div>
-                  </div>
-                  <div class="an-grant-amt">~€31</div>
-                </div>
-              </div>
-
-              <!-- Top tracks + countries -->
-              <div style="display:flex;flex-direction:column;gap:12px">
-                <div class="an-tbl-wrap">
-                  <div class="an-tbl-lbl">TOP TRACKS</div>
-                  <div class="an-tbl-row"><span class="an-tbl-rank">1</span><span class="an-tbl-name">Drift Vol. 3</span><span class="an-tbl-val">482</span></div>
-                  <div class="an-tbl-row"><span class="an-tbl-rank">2</span><span class="an-tbl-name">Helsinki Winter</span><span class="an-tbl-val">311</span></div>
-                  <div class="an-tbl-row"><span class="an-tbl-rank">3</span><span class="an-tbl-name">Late Night Drift</span><span class="an-tbl-val">178</span></div>
-                  <div class="an-tbl-row"><span class="an-tbl-rank">4</span><span class="an-tbl-name">Analog Summer</span><span class="an-tbl-val">89</span></div>
-                </div>
-                <div class="an-tbl-wrap">
-                  <div class="an-tbl-lbl">TOP COUNTRIES</div>
-                  <div class="an-tbl-row"><span class="an-tbl-rank">🇫🇮</span><span class="an-tbl-name">Finland</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:42%"></div></div><span class="an-ctry-pct">42%</span></div>
-                  <div class="an-tbl-row"><span class="an-tbl-rank">🇩🇪</span><span class="an-tbl-name">Germany</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:18%"></div></div><span class="an-ctry-pct">18%</span></div>
-                  <div class="an-tbl-row"><span class="an-tbl-rank">🇸🇪</span><span class="an-tbl-name">Sweden</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:12%"></div></div><span class="an-ctry-pct">12%</span></div>
-                  <div class="an-tbl-row"><span class="an-tbl-rank">🇪🇪</span><span class="an-tbl-name">Estonia</span><div class="an-ctry-bar-bg"><div class="an-ctry-bar-fill" style="width:8%"></div></div><span class="an-ctry-pct">8%</span></div>
-                </div>
-              </div>
-
-            </div>
-          </div>
+        <div class="shot-annot pos-tr" style="top:18%;right:4%">
+          <span class="shot-pin"></span>
+          <div class="shot-callout"><strong>FORMULA</strong>Every weight published — no surprise at year end.</div>
+        </div>
+      </div>
+    </div>
+    <div class="shot-browser reveal reveal-delay-4" style="margin-top:24px;max-width:720px">
+      <div class="browser-bar">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url">https://tahti.live/<b>transparency/methodology</b></div>
+      </div>
+      <div class="shot-stage">
+        <img src="/screenshots/07-transparency-methodology.png" alt="Grant methodology documentation" width="1280" height="720" loading="lazy">
+        <div class="shot-annot" style="top:8%;left:4%">
+          <span class="shot-pin"></span>
+          <div class="shot-callout"><strong>METHODOLOGY</strong>Step-by-step: how plays, downloads, and fan subs become units.</div>
         </div>
       </div>
     </div>
