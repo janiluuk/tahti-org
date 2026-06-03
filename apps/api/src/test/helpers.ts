@@ -169,6 +169,7 @@ export async function cleanupUsersByEmailPrefix(prisma: PrismaClient, prefix: st
     where: { OR: [{ artistUserId: { in: ids } }, { subscriberUserId: { in: ids } }] },
   })
   await prisma.fanTier.deleteMany({ where: { artistUserId: { in: ids } } })
+  await prisma.collection.deleteMany({ where: { userId: { in: ids } } })
   await prisma.release.deleteMany({ where: { userId: { in: ids } } })
   await prisma.grantDisbursement.deleteMany({ where: { userId: { in: ids } } })
   await prisma.ledgerEntry.deleteMany({ where: { externalRef: { contains: 'fansub:' } } })
@@ -194,6 +195,7 @@ export async function cleanupUsersByMemberNumbers(prisma: PrismaClient, numbers:
     where: { OR: [{ artistUserId: { in: ids } }, { subscriberUserId: { in: ids } }] },
   })
   await prisma.fanTier.deleteMany({ where: { artistUserId: { in: ids } } })
+  await prisma.collection.deleteMany({ where: { userId: { in: ids } } })
   await prisma.release.deleteMany({ where: { userId: { in: ids } } })
   await prisma.grantDisbursement.deleteMany({ where: { userId: { in: ids } } })
   await prisma.vote.deleteMany({ where: { userId: { in: ids } } })

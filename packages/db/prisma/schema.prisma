@@ -414,6 +414,8 @@ model ArchiveItem {
   durationSec   Int?
   fileSizeBytes BigInt
   status        ArchiveItemStatus @default(PENDING)
+  isPublic      Boolean           @default(true)
+  isFallback    Boolean           @default(false)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
@@ -421,6 +423,7 @@ model ArchiveItem {
   collectionItems CollectionItem[]
 
   @@index([channelId, createdAt(sort: Desc)])
+  @@index([channelId, isPublic, status])
   @@schema("channel")
 }
 

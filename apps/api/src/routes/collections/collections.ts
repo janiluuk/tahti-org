@@ -171,7 +171,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/v1/collections/:slug', async (request, reply) => {
     const { slug } = request.params as { slug: string }
 
-    const col = await fastify.prisma.collection.findUnique({
+    const col = await fastify.prisma.collection.findFirst({
       where: { slug, isPublic: true },
       include: {
         user: { select: { username: true, displayName: true } },
@@ -193,7 +193,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/v1/collections/:slug/rss.xml', async (request, reply) => {
     const { slug } = request.params as { slug: string }
 
-    const col = await fastify.prisma.collection.findUnique({
+    const col = await fastify.prisma.collection.findFirst({
       where: { slug, isPublic: true },
       include: {
         user: { select: { username: true, displayName: true } },
