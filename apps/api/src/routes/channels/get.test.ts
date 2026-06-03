@@ -53,6 +53,27 @@ describe('GET /api/channels/:slug', () => {
     expect(res.statusCode).toBe(404)
   })
 
+  it('serializes nextBroadcastAt as ISO-8601 when set', async () => {
+    const at = new Date('2026-06-15T18:30:00.000Z')
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { nextBroadcastAt: at, nextBroadcastNote: 'Test show' },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/channels/channel-get-testuser',
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().nextBroadcastAt).toBe(at.toISOString())
+    expect(res.json().nextBroadcastNote).toBe('Test show')
+
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { nextBroadcastAt: null, nextBroadcastNote: null },
+    })
+  })
+
   it('returns 200 with channel data for known slug', async () => {
     const res = await app.inject({
       method: 'GET',

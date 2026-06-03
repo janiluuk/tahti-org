@@ -12,44 +12,54 @@ import {
 } from '@tahti/shared/broadcast-cap'
 
 const broadcastUsageRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/api/me/broadcast-usage', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const cap = await checkBroadcastCap(fastify.prisma, user.id, user.tier)
+  fastify.get(
+    '/api/me/broadcast-usage',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M20: weekly live cap usage and warning level',
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const cap = await checkBroadcastCap(fastify.prisma, user.id, user.tier)
 
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { id: true, state: true },
-    })
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true, state: true },
+      })
 
-    const recentBroadcast = channel
-      ? await fastify.prisma.broadcast.findFirst({
-          where: {
-            channelId: channel.id,
-            endedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-          },
-          orderBy: { endedAt: 'desc' },
-          select: { endedAt: true },
-        })
-      : null
+      const recentBroadcast = channel
+        ? await fastify.prisma.broadcast.findFirst({
+            where: {
+              channelId: channel.id,
+              endedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+            },
+            orderBy: { endedAt: 'desc' },
+            select: { endedAt: true },
+          })
+        : null
 
-    const blocked = !cap.allowed
-    const warnings = cap.allowed ? cap.warnings : []
+      const blocked = !cap.allowed
+      const warnings = cap.allowed ? cap.warnings : []
 
-    return reply.send({
-      tier: user.tier,
-      unlimited: isUnlimitedLiveTier(user.tier),
-      weeklyCapSeconds: FREE_WEEKLY_LIVE_CAP_SEC,
-      graceSeconds: FREE_WEEKLY_LIVE_GRACE_SEC,
-      secondsUsed: cap.secondsUsed,
-      secondsRemaining: cap.allowed ? cap.secondsRemaining : 0,
-      warnings,
-      warningLevel: cap.allowed ? broadcastWarningLevel(cap) : 'blocked',
-      inGrace: cap.allowed ? cap.inGrace : false,
-      atCap: cap.allowed ? cap.inGrace : true,
-      blocked,
-      showUpgradeCta: user.tier === 'FREE' && !!recentBroadcast && channel?.state !== 'LIVE',
-    })
-  })
+      return reply.send({
+        tier: user.tier,
+        unlimited: isUnlimitedLiveTier(user.tier),
+        weeklyCapSeconds: FREE_WEEKLY_LIVE_CAP_SEC,
+        graceSeconds: FREE_WEEKLY_LIVE_GRACE_SEC,
+        secondsUsed: cap.secondsUsed,
+        secondsRemaining: cap.allowed ? cap.secondsRemaining : 0,
+        warnings,
+        warningLevel: cap.allowed ? broadcastWarningLevel(cap) : 'blocked',
+        inGrace: cap.allowed ? cap.inGrace : false,
+        atCap: cap.allowed ? cap.inGrace : true,
+        blocked,
+        showUpgradeCta: user.tier === 'FREE' && !!recentBroadcast && channel?.state !== 'LIVE',
+      })
+    },
+  )
 }
 
 export default broadcastUsageRoutes
