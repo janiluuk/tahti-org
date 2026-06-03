@@ -51,9 +51,10 @@ export default function MultistreamHelpPage() {
       </p>
       <h1 style={{ marginTop: '1rem' }}>Multistream setup</h1>
       <p>
-        Stream <strong>once</strong> from OBS to Tahti. In the dashboard <strong>Multistream</strong>{' '}
-        section, add each other platform and paste its <strong>stream key</strong> (from that
-        platform&apos;s site — not a Tahti login and not a Google/Twitch API key).
+        Stream <strong>once</strong> from OBS to Tahti. In the dashboard{' '}
+        <strong>Multistream</strong> section, add each other platform and paste its{' '}
+        <strong>stream key</strong> (from that platform&apos;s site — not a Tahti login and not a
+        Google/Twitch API key).
       </p>
 
       <h2>Quick steps</h2>
@@ -62,8 +63,12 @@ export default function MultistreamHelpPage() {
         <li>
           Dashboard → <strong>Multistream</strong> → <strong>Add destination</strong>.
         </li>
-        <li>Choose platform, label, paste key, save. Keep <strong>Active</strong> checked.</li>
-        <li>Go live on Tahti (OBS → Tahti RTMP). Other sites receive the mirror while you are Live.</li>
+        <li>
+          Choose platform, label, paste key, save. Keep <strong>Active</strong> checked.
+        </li>
+        <li>
+          Go live on Tahti (OBS → Tahti RTMP). Other sites receive the mirror while you are Live.
+        </li>
       </ol>
 
       <h2>Where to copy keys</h2>

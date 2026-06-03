@@ -21,8 +21,7 @@ export const RTMP_PROVIDER_HELP: Record<
 > = {
   YOUTUBE: {
     ingestHint: 'rtmp://a.rtmp.youtube.com/live2',
-    keySteps:
-      'YouTube Studio → Create → Go live → Stream → copy the stream key (not an API key).',
+    keySteps: 'YouTube Studio → Create → Go live → Stream → copy the stream key (not an API key).',
     docUrl: 'https://studio.youtube.com/',
   },
   TWITCH: {
@@ -42,7 +41,8 @@ export const RTMP_PROVIDER_HELP: Record<
   },
   TIKTOK: {
     ingestHint: 'rtmp://push-rtmp.tiktok.com/live/',
-    keySteps: 'TikTok Live Studio → RTMP settings → stream key (if RTMP is enabled for your account).',
+    keySteps:
+      'TikTok Live Studio → RTMP settings → stream key (if RTMP is enabled for your account).',
   },
   MIXCLOUD_LIVE: {
     ingestHint: 'rtmp://broadcast.mixcloud.com/live',
@@ -56,7 +56,6 @@ export const RTMP_PROVIDER_HELP: Record<
   },
   CUSTOM: {
     ingestHint: 'You provide the full RTMP URL',
-    keySteps:
-      'Paste RTMP URL + stream key from the service (Restream, LinkedIn, radio CDN, etc.).',
+    keySteps: 'Paste RTMP URL + stream key from the service (Restream, LinkedIn, radio CDN, etc.).',
   },
 }

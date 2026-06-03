@@ -77,8 +77,8 @@ export async function spawnChannel(
   const templateRaw = await readFile(TEMPLATE_PATH, 'utf8')
   let config = templateRaw
     .replace(/\{\{CHANNEL_ID\}\}/g, channelId)
+    .replace(/\{\{ICECAST_LIVE_URL\}\}/g, `${ICECAST_BASE_URL}/live/${slug}`)
     .replace(/\{\{LIVE_SOURCE_PASSWORD\}\}/g, channel.liveSourcePass)
-    .replace(/\{\{HARBOR_INPUT_PORT\}\}/g, '8001')
     .replace(/\{\{HARBOR_NOWPLAYING_PORT\}\}/g, '8002')
     .replace(/\{\{FALLBACK_MODE\}\}/g, channel.fallbackMode)
     .replace(/\{\{API_URL\}\}/g, API_URL)
@@ -105,6 +105,7 @@ export async function spawnChannel(
   const cmd = [
     'docker run -d',
     `--name ${containerName}`,
+    `--network ${DOCKER_NETWORK}`,
     '--restart unless-stopped',
     `-v ${HLS_VOLUME}:/hls`,
     `-v ${RECORDINGS_VOLUME}:/recordings`,

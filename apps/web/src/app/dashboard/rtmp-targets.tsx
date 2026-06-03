@@ -113,8 +113,7 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
         Send one stream from OBS to Tahti; we mirror the same live audio to Twitch, YouTube, and
         other services. For each destination, paste the <strong>stream key</strong> from that
         platform&apos;s creator dashboard — not a Tahti password and not a Google/Twitch API key.
-        See the{' '}
-        <a href={GUIDE_PATH}>multistream setup guide</a> for each platform.
+        See the <a href={GUIDE_PATH}>multistream setup guide</a> for each platform.
       </p>
 
       {targets.length === 0 && !adding && (
@@ -288,7 +287,9 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
 
           {form.provider === 'CUSTOM' && (
             <div style={{ marginBottom: '0.75rem' }}>
-              <label style={{ fontSize: '0.8rem', color: '#555' }}>RTMP URL (required for Custom)</label>
+              <label style={{ fontSize: '0.8rem', color: '#555' }}>
+                RTMP URL (required for Custom)
+              </label>
               <input
                 value={form.rtmpUrl}
                 onChange={(e) => setForm((f) => ({ ...f, rtmpUrl: e.target.value }))}

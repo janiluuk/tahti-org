@@ -25,15 +25,33 @@ export default function MembershipPanel({
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  if (isMember) {
-    function openPortal() {
-      startTransition(async () => {
-        const res = await startMembershipPortal()
-        if (res.error) setError(res.error)
-        else if (res.portalUrl) window.location.href = res.portalUrl
-      })
-    }
+  function openPortal() {
+    startTransition(async () => {
+      const res = await startMembershipPortal()
+      if (res.error) setError(res.error)
+      else if (res.portalUrl) window.location.href = res.portalUrl
+    })
+  }
 
+  function pay() {
+    setError(null)
+    setMessage(null)
+    startTransition(async () => {
+      const res = await startMembershipCheckout()
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      if (res.checkoutUrl) {
+        window.location.href = res.checkoutUrl
+        return
+      }
+      setMessage(`Membership activated — member #${res.memberNumber}`)
+      router.refresh()
+    })
+  }
+
+  if (isMember) {
     return (
       <section
         style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
@@ -59,24 +77,6 @@ export default function MembershipPanel({
         </button>
       </section>
     )
-  }
-
-  function pay() {
-    setError(null)
-    setMessage(null)
-    startTransition(async () => {
-      const res = await startMembershipCheckout()
-      if (res.error) {
-        setError(res.error)
-        return
-      }
-      if (res.checkoutUrl) {
-        window.location.href = res.checkoutUrl
-        return
-      }
-      setMessage(`Membership activated — member #${res.memberNumber}`)
-      router.refresh()
-    })
   }
 
   return (
