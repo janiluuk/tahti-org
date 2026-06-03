@@ -124,7 +124,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | P | Item | Tracks as |
 |---|---|---|
 | [~] | Branch protection: all `ci.yml` jobs required on merge | PLAT-002 — see `.github/BRANCH_PROTECTION.md` |
-| P1 | Automate DB migrate in deploy (no manual `db push` after release) | OPS-002, PLAT — |
+| [~] | Automate DB migrate in deploy (no manual `db push` after release) | OPS-002 — `scripts/db-migrate-deploy.sh`, `ops/DEPLOY.md` |
 | P1 | PgBouncer before API horizontal scale | `scaling-node-distribution.md` |
 | P2 | Swagger `/docs` auth from secrets, rotate default password | PLAT-005 |
 | P2 | Redis-down policy for rate limit + sessions documented and tested | PLAT-006 |

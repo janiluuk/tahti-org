@@ -509,8 +509,8 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
-| [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Studio shell + public brand on login/join/transparency/channel/profile/governance/subscribe/embed |
-| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | Ledger + governance + fansubs + RTMP + releases + **collections CRUD** |
+| [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Studio shell + public brand on login/join/transparency/channel/profile/governance/subscribe/embed/smart link |
+| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | + chat react/announcements/ban, release track create/upload |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [x] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` — members, audit, fan-subscriber exports |
@@ -539,7 +539,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | [ ] | **STREAM-003** Ingest DNS failover has 30s dead window — OBS connections to failed ingest node must manually reconnect | Architecture review | M3 / Phase 4 |
 | [ ] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | Journey: Artist J2 | M4 |
 | [ ] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | Journey: Artist J2 | M3 |
-| [ ] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | Journey: Listener J2 | M3 |
+| [~] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | `delay(3.)` on archive branch before live fallback | M3 |
 | [~] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Live player shows “Buffering live stream…” (LISTENER-001) | M3 |
 | [~] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | `nextBroadcastAt` / `nextBroadcastNote` on channel + dashboard + public page | M5 |
 
@@ -552,7 +552,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | [ ] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Architecture review | M4 |
 | [ ] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Architecture review | M3 |
 | [ ] | **OPS-001** No structured log correlation across edge encoder → Liquidsoap → recording containers for a single broadcast session | Journey: Ops J3 | M11 |
-| [ ] | **OPS-002** DB migration is a manual step after deploy — must be automated in CI before service update | Journey: Ops J2 | M0 |
+| [~] | **OPS-002** DB migration is a manual step after deploy — must be automated in CI before service update | `scripts/db-migrate-deploy.sh`, `ops/DEPLOY.md`, `make deploy` when `DATABASE_URL` set | M0 |
 
 ### LOW — improvements for polish
 

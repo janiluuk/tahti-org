@@ -3,6 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { SafePlainText } from '@/components/safe-plain-text'
 
 const SERVICE_LABELS: Record<string, string> = {
   spotify: 'Spotify',
@@ -64,7 +65,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
   const tracksWithIsrc = data.release.tracks.filter((t) => t.isrc?.trim())
 
   return (
-    <div className="brand-public brand-public--center">
+    <>
       {data.release.artworkUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -83,7 +84,10 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         {new Date(data.release.releaseDate).toLocaleDateString()}
       </p>
       {data.release.description && (
-        <p style={{ lineHeight: 1.5, marginBottom: '1.5rem' }}>{data.release.description}</p>
+        <SafePlainText
+          text={data.release.description}
+          style={{ lineHeight: 1.5, marginBottom: '1.5rem' }}
+        />
       )}
 
       {(data.release.upc ||
@@ -160,6 +164,6 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         {' · '}
         <a href={data.embedUrl}>Embed</a>
       </p>
-    </div>
+    </>
   )
 }
