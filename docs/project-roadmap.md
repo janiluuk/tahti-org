@@ -108,7 +108,7 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; suite now runs on every PR with Postgres + Redis services | CI |
 | [x] | Consolidate CI: lint job, vital-flows e2e, user-journey e2e, AGPL check, website Docker | Single `ci.yml` gate; Playwright screenshots stay local-only (`scripts/e2e-screenshots.sh`) | CI |
 | [x] | Full local Docker stack (`stack-up.sh`, ports 3010/3011) + scaling node doc | Dev/stakeholder demos without host port clashes; ops handover reference | M11 / Phase 2 |
-| [ ] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | Design-system drift; duplicate styling maintenance | M12 / DX |
+| [~] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | Phase 2: `/c/*` layout + `LiveBadge`; dashboard stays light shell | M12 / DX |
 | [x] | `@tahti/ui`: add `lint` script to Turbo pipeline | `packages/ui` ESLint via `turbo lint` | CI |
 | [x] | Consolidate e2e seed scripts (`scripts/seed-e2e-screenshots.ts` vs `apps/api/scripts/`) | Root script re-exports `apps/api/scripts/seed-e2e-screenshots.ts` | CI / DX |
 | [x] | Stripe webhook: return **500** on handler failure (Stripe retries; audit log retained) | Silent membership/fan-sub activation failures | M19 hardening |
@@ -509,11 +509,11 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
-| [ ] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | P1 |
-| [ ] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | P1 |
+| [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | `/c`, `/u`, `/r` brand layouts + dark tokens |
+| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | Governance done; fansubs/releases partial |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
-| [ ] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | P3 |
+| [~] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` in `lib/csv.ts`; members export migrated |
 | [ ] | **PLAT-025** | Remove `eslint.ignoreDuringBuilds` in web Dockerfile once lint clean in CI | P3 |
 | [x] | **PLAT-026** | Reconcile tier enum in AGENT.md (`FREE/PAID` vs `FREE/ARTIST/STUDIO`) | P2 |
 
