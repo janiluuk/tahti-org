@@ -98,7 +98,11 @@ async function registerCrons() {
   const queue = new Queue('media', { connection })
 
   for (const job of WORKER_CRON_JOBS) {
-    await queue.add(job.name, {}, { repeat: { pattern: job.pattern }, jobId: job.jobId })
+    await queue.add(
+      job.name,
+      {},
+      { repeat: { pattern: job.pattern }, jobId: job.jobId },
+    )
   }
 
   await queue.close()

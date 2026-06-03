@@ -4,7 +4,6 @@
 import type { ReactNode } from 'react'
 import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
-import '@/components/brand-public.css'
 
 /** Channel routes use @tahti/ui dark-brand styles (PLAT-020 phase 2). */
 export default function ChannelLayout({ children }: { children: ReactNode }) {

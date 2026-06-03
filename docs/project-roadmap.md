@@ -87,7 +87,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`. Deferred: Discogs API |
-| **M29** Backup & DR | 🟡 Partial | `scripts/backup-*.sh`, `restore-test.sh`; **`ops/RUNBOOK.md`**. Deferred: pgBackRest, offsite buckets, operator drills |
+| **M29** Backup & DR | 🟡 Partial | Unified **`scripts/backup.sh`** (postgres, minio, restore-test, status); **`ops/RUNBOOK.md`**, `install-crons.sh`. Deferred: pgBackRest, offsite buckets, operator drills |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API (`45m`/`55m`/`grace`/`blocked`) + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: further copy polish |
 
 ### Improvements identified during the audit (added to the roadmap)
@@ -512,7 +512,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [ ] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | P1 |
 | [ ] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | P1 |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
-| [ ] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
+| [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [ ] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | P3 |
 | [ ] | **PLAT-025** | Remove `eslint.ignoreDuringBuilds` in web Dockerfile once lint clean in CI | P3 |
 | [x] | **PLAT-026** | Reconcile tier enum in AGENT.md (`FREE/PAID` vs `FREE/ARTIST/STUDIO`) | P2 |
