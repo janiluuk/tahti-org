@@ -113,7 +113,13 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get(
     '/api/me/archive/:id/download-gate-stats',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M22: per-archive-item download gate funnel (14-day counted downloads)',
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const { id } = request.params as { id: string }
@@ -128,17 +134,33 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
-      const [artistFollowerCount, repostAckCount, blockedDownloads] = await Promise.all([
-        fastify.prisma.artistFollow.count({ where: { artistUserId: user.id } }),
-        fastify.prisma.archiveRepostAck.count({ where: { archiveItemId: item.id } }),
-        fastify.prisma.download.count({
-          where: {
-            archiveItemId: item.id,
-            countedAt: null,
-            reason: { in: ['gate_repost', 'gate_follow'] },
-          },
-        }),
-      ])
+      const since = new Date(
+        Date.UTC(
+          new Date().getUTCFullYear(),
+          new Date().getUTCMonth(),
+          new Date().getUTCDate() - (GATE_DAILY_SERIES_DAYS - 1),
+        ),
+      )
+
+      const [artistFollowerCount, repostAckCount, blockedDownloads, countedDownloads] =
+        await Promise.all([
+          fastify.prisma.artistFollow.count({ where: { artistUserId: user.id } }),
+          fastify.prisma.archiveRepostAck.count({ where: { archiveItemId: item.id } }),
+          fastify.prisma.download.count({
+            where: {
+              archiveItemId: item.id,
+              countedAt: null,
+              reason: { in: ['gate_repost', 'gate_follow'] },
+            },
+          }),
+          fastify.prisma.download.count({
+            where: {
+              archiveItemId: item.id,
+              countedAt: { not: null },
+              createdAt: { gte: since },
+            },
+          }),
+        ])
 
       return reply.send({
         repostToDownload: item.repostToDownload,
@@ -146,6 +168,7 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
         artistFollowerCount,
         repostAckCount,
         blockedDownloadAttempts: blockedDownloads,
+        countedDownloadCount: countedDownloads,
       })
     },
   )

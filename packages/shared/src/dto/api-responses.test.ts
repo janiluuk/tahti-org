@@ -2,7 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { DownloadGateStatsResponseSchema } from './api-responses.js'
+import {
+  DownloadGateItemDetailResponseSchema,
+  DownloadGateStatsResponseSchema,
+} from './api-responses.js'
 import { zodOpenApiComponents } from '../openapi-zod.js'
 
 describe('api response schemas', () => {
@@ -12,6 +15,18 @@ describe('api response schemas', () => {
       items: [],
       totals: { repostAcks: 1, blockedAttempts: 0, countedDownloads: 3 },
       daily: [{ date: '2026-06-01', repostAcks: 1, blockedAttempts: 0, countedDownloads: 3 }],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('parses per-item download gate detail', () => {
+    const parsed = DownloadGateItemDetailResponseSchema.safeParse({
+      repostToDownload: true,
+      followToDownload: false,
+      artistFollowerCount: 1,
+      repostAckCount: 2,
+      blockedDownloadAttempts: 0,
+      countedDownloadCount: 4,
     })
     expect(parsed.success).toBe(true)
   })
