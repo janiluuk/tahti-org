@@ -44,8 +44,9 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
     if (!subject) return reply.status(400).send({ error: 'subject is required' })
     if (!bodyMd) return reply.status(400).send({ error: 'bodyMd is required' })
 
+    const subscribersOnly = (request.body as { subscribersOnly?: boolean }).subscribersOnly ?? false
     const draft = await fastify.prisma.newsletterDraft.create({
-      data: { userId: user.id, subject, bodyMd, state: 'DRAFT' },
+      data: { userId: user.id, subject, bodyMd, state: 'DRAFT', subscribersOnly },
     })
 
     return reply.status(201).send(draft)
@@ -79,7 +80,6 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const { draftId } = request.params as { draftId: string }
       const body = (request.body as { audience?: string }) ?? {}
-      const audience = body.audience === 'fans' ? 'fans' : 'all'
 
       const draft = await fastify.prisma.newsletterDraft.findFirst({
         where: { id: draftId, userId: user.id },
@@ -104,8 +104,9 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       let subscriberIds: string[]
+      const fanAudience = body.audience === 'fans' || draft.subscribersOnly
 
-      if (audience === 'fans') {
+      if (fanAudience) {
         if (!(await artistOffersFanNewsletter(fastify.prisma, user.id))) {
           return reply.status(400).send({
             error: 'Add FAN_NEWSLETTER to an active fan tier before sending fan-only mail',
@@ -123,7 +124,7 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
       if (subscriberIds.length === 0) {
         return reply.status(400).send({
           error:
-            audience === 'fans'
+            fanAudience
               ? 'No confirmed fan subscribers on your list'
               : 'No confirmed subscribers to send to',
         })
@@ -147,7 +148,11 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
       // Enqueue the dispatch job
       await mediaQueue.add('newsletter-dispatch', { draftId, userId: user.id })
 
-      return reply.send({ draftId, queued: subscriberIds.length, audience })
+      return reply.send({
+        draftId,
+        queued: subscriberIds.length,
+        audience: fanAudience ? 'fans' : 'all',
+      })
     },
   )
 }

@@ -63,6 +63,8 @@ import venueRoutes from './routes/venues/venues.js'
 import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
+import meArchiveRoutes from './routes/me/archive.js'
+import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { config } from './config.js'
 
@@ -249,6 +251,12 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M18: public release-track downloads with anti-fraud
   await fastify.register(releaseDownloadRoutes)
+
+  // M22/M24/M25: archive item metadata edit + channel slideshow
+  await fastify.register(meArchiveRoutes)
+
+  // M23: collections + RSS feeds
+  await fastify.register(collectionRoutes)
 
   return fastify
 }

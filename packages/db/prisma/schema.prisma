@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs", "release", "newsletter", "venue"]
+  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs", "release", "newsletter", "venue", "media"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -223,6 +223,14 @@ enum MentionSurface {
   @@schema("core")
 }
 
+enum CollectionType {
+  MIX_SERIES
+  ALBUM
+  CUSTOM
+
+  @@schema("media")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model User {
@@ -272,6 +280,7 @@ model User {
   mentionsReceived      Mention[]                @relation("MentionTarget")
   mentionsMuted         MentionMute[]            @relation("MuterMutes")
   mentionsMutedBy       MentionMute[]            @relation("MuteTarget")
+  collections           Collection[]
 
   @@schema("core")
 }
@@ -333,6 +342,7 @@ model Channel {
   totalListenerHours BigInt       @default(0)
   goneLiveAt         DateTime?
   metaStreamOptOut   Boolean      @default(false)
+  slideshowImages    String[]     // M24: ordered cover image URLs for channel page
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -395,6 +405,9 @@ model ArchiveItem {
   channel       Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
   title         String
   description   String?
+  tracklist     Json?             // M22: [{startSec: number, title: string}]
+  bannerUrl     String?           // M24: custom banner image URL
+  commentary    String?           // M25: artist commentary (Markdown)
   rawKey        String
   mp3Key        String?
   flacKey       String?
@@ -404,7 +417,8 @@ model ArchiveItem {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
-  mixUpload     MixUpload?
+  mixUpload      MixUpload?
+  collectionItems CollectionItem[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@schema("channel")
@@ -638,6 +652,7 @@ model Release {
   smartLinkTargets Json?        // {spotify, apple, tidal, bandcamp, ...}
   state            ReleaseState @default(DRAFT)
   publishedAt      DateTime?
+  commentary       String?      // M25: artist notes on the release (Markdown)
   // M7 — Revelator DSP distribution
   revelatorId      String?
   revelatorStatus  String?      // pending | submitted | delivered | failed
@@ -719,9 +734,10 @@ model NewsletterDraft {
   user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject     String
   bodyMd      String
-  state       NewsletterDraftState @default(DRAFT)
-  scheduledAt DateTime?
-  sentAt      DateTime?
+  state            NewsletterDraftState @default(DRAFT)
+  subscribersOnly  Boolean              @default(false) // M19: send only to fan-subscribers
+  scheduledAt      DateTime?
+  sentAt           DateTime?
   createdAt   DateTime             @default(now())
 
   sends NewsletterSend[]
@@ -815,4 +831,40 @@ model MentionMute {
 
   @@id([muterId, targetUserId])
   @@schema("core")
+}
+
+// ── Collections + catalog UX (M23) ───────────────────────────────────────────
+
+model Collection {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug        String         @unique
+  name        String
+  description String?
+  type        CollectionType @default(CUSTOM)
+  isPublic    Boolean        @default(true)
+  coverUrl    String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  items CollectionItem[]
+
+  @@index([userId, isPublic])
+  @@schema("media")
+}
+
+model CollectionItem {
+  id            String      @id @default(cuid())
+  collectionId  String
+  collection    Collection  @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  archiveItemId String?
+  archiveItem   ArchiveItem? @relation(fields: [archiveItemId], references: [id], onDelete: SetNull)
+  releaseId     String?
+  position      Int
+  createdAt     DateTime    @default(now())
+
+  @@unique([collectionId, position])
+  @@index([collectionId, position])
+  @@schema("media")
 }

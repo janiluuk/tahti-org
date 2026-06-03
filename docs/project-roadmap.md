@@ -233,10 +233,12 @@ See `competitive-gaps-hearthis.md` for full gap list.
 
 | Done | Milestone | Summary |
 |:---:|---|---|
-| [ ] | **M22** | Per-item metadata + editable tracklists |
-| [ ] | **M23** | Collections (albums, mix series e.g. “Trance sets”) + RSS |
-| [ ] | **M24** | Per-content visuals: banner, slideshow, YouTube/Vimeo backdrop |
+| [~] | **M22** | Per-item metadata + editable tracklists |
+| [~] | **M23** | Collections (albums, mix series e.g. “Trance sets”) + RSS |
+| [~] | **M24** | Per-content visuals: banner, slideshow, YouTube/Vimeo backdrop |
 | [ ] | **M25** | Artist commentary (+ optional listener comments if AGM approves) |
+| [ ] | **M26** | Customisable radio/channel page: video background, per-album visualisations, theme picker — designer app for live show visuals |
+| [ ] | **M27** | 24/7 archive stream with automated scheduling and annotations: picks up previous live sets in fair rotation; moderator users control the programme list; audio visualisations per set; as automated as possible (ACRCloud tracklist sync feeds annotations) |
 
 ## Phase 7 — Implementation: pro audio editor
 
