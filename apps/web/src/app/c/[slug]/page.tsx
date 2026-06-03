@@ -163,9 +163,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 </div>
               )}
               {channel.nextBroadcastNote && (
-                <div style={{ marginTop: '0.25rem', color: '#444' }}>
-                  {channel.nextBroadcastNote}
-                </div>
+                <SafePlainText
+                  text={channel.nextBroadcastNote}
+                  style={{ marginTop: '0.25rem', color: '#444' }}
+                />
               )}
             </div>
           )}
@@ -264,24 +265,23 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       )}
                       <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.title}</div>
                       {item.description && (
-                        <p style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}>
-                          {item.description}
-                        </p>
+                        <SafePlainText
+                          text={item.description}
+                          style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}
+                        />
                       )}
                       {item.commentary && (
-                        <div
+                        <SafePlainText
+                          text={item.commentary}
                           style={{
                             color: '#444',
                             margin: '0 0 0.75rem',
                             fontSize: '0.9rem',
                             lineHeight: 1.5,
-                            whiteSpace: 'pre-wrap',
                             borderLeft: '3px solid #ddd',
                             paddingLeft: '0.75rem',
                           }}
-                        >
-                          {item.commentary}
-                        </div>
+                        />
                       )}
                       {item.durationSec != null && (
                         <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>

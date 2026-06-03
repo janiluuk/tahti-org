@@ -123,7 +123,7 @@ Last reviewed: 2026-06-03 (audit pass)
 
 | P | Item | Tracks as |
 |---|---|---|
-| P1 | Branch protection: all `ci.yml` jobs required on merge | PLAT-002 |
+| [~] | Branch protection: all `ci.yml` jobs required on merge | PLAT-002 — see `.github/BRANCH_PROTECTION.md` |
 | P1 | Automate DB migrate in deploy (no manual `db push` after release) | OPS-002, PLAT — |
 | P1 | PgBouncer before API horizontal scale | `scaling-node-distribution.md` |
 | P2 | Swagger `/docs` auth from secrets, rotate default password | PLAT-005 |

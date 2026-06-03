@@ -167,6 +167,12 @@ export default async function DashboardPage() {
   let downloadGateSummary: {
     artistFollowerCount: number
     totals: { repostAcks: number; blockedAttempts: number }
+    daily?: Array<{
+      date: string
+      repostAcks: number
+      blockedAttempts: number
+      countedDownloads: number
+    }>
     items: Array<{
       archiveItemId: string
       title: string

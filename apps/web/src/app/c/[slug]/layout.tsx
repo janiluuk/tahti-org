@@ -4,9 +4,9 @@
 import type { ReactNode } from 'react'
 import '@/components/brand-public.css'
 
-export default function LoginLayout({ children }: { children: ReactNode }) {
+export default function ChannelLayout({ children }: { children: ReactNode }) {
   return (
-    <div data-tahti-ui="brand" className="brand-public brand-public--center">
+    <div data-tahti-ui="brand" className="brand-public">
       {children}
     </div>
   )

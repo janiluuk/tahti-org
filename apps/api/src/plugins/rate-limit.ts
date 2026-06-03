@@ -9,6 +9,7 @@ import fp from 'fastify-plugin'
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
 import { config } from '../config.js'
 import { getRedisClient } from '../lib/redis.js'
+import { rateLimitWhenRedisUnavailable } from '../lib/rate-limit-fallback.js'
 
 interface RateLimitConfig {
   max: number
@@ -33,11 +34,7 @@ async function checkLimit(
 ): Promise<{ ok: boolean; remaining: number; resetSec: number }> {
   const rd = await getRedisClient()
   if (!rd) {
-    return {
-      ok: config.rateLimit.redisFailOpen,
-      remaining: config.rateLimit.redisFailOpen ? 999 : 0,
-      resetSec: limit.windowSec,
-    }
+    return rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec)
   }
   const key = `rl:${limit.keyPrefix ?? 'api'}:${ip}:${Math.floor(Date.now() / (limit.windowSec * 1000))}`
 
@@ -69,11 +66,9 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
     const isAuthRoute = AUTH_ROUTES.some((r) => request.url.startsWith(r))
     const limit = isAuthRoute ? authLimit() : defaultLimit()
 
-    const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() => ({
-      ok: config.rateLimit.redisFailOpen,
-      remaining: config.rateLimit.redisFailOpen ? 999 : 0,
-      resetSec: 60,
-    }))
+    const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
+      rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec),
+    )
 
     reply.header('X-RateLimit-Remaining', remaining)
     reply.header('X-RateLimit-Reset', resetSec)

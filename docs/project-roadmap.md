@@ -318,7 +318,7 @@ See `competitive-gaps-hearthis.md` for full gap list.
 | [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug` smart links |
 | [~] | **M28** | **Track version history** — archive + release-track versions; activate; stable public ids |
 | [~] | **M24** | Channel gallery/text layers + **channel video backdrop**; per-item banner/slideshow; YouTube/Vimeo on archive items |
-| [~] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
+| [x] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
 | [~] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; per-collection visual themes deferred |
 | [~] | **M27** | **Programme API** + dashboard rotation editor; `fallback.m3u` respects `isFallback`, ordered/fair shuffle; live auto-archive joins rotation. Deferred: moderator roles, ACRCloud annotation cron, per-set visualisations |
 
@@ -489,7 +489,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
 | [x] | **PLAT-001** | Stripe webhook dead-letter log + alert when `activateMembership` / fan-sub handlers fail | P1 |
-| [ ] | **PLAT-002** | Require branch protection on all `ci.yml` jobs (lint, test, both e2e, AGPL) | P1 |
+| [~] | **PLAT-002** | Require branch protection on all `ci.yml` jobs (lint, test, both e2e, AGPL) | `.github/BRANCH_PROTECTION.md` — enable **All checks** in repo settings | P1 |
 | [ ] | **PLAT-003** | PgBouncer before scaling API replicas (`docs/scaling-node-distribution.md`) | P1 |
 | [x] | **PLAT-004** | Internal ingest routes: shared `@fastify/formbody` + integration tests for RTMP + Icecast | `ingest.test.ts` |
 | [~] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | `DOCS_*_FILE` + prod warning on default pass | P2 |
@@ -509,7 +509,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
-| [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Public brand + dashboard `data-tahti-ui="studio"` |
+| [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Studio shell + public brand on login/join/transparency/channel/profile/governance/subscribe/embed |
 | [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | Ledger + governance + fansubs + RTMP + releases + **collections CRUD** |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
