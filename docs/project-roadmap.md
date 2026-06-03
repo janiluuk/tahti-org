@@ -101,14 +101,14 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Add `GrantDisbursement` model + annual grant cron + `/transparency/grants/:year` | The grant engine is "what makes Tahti a nonprofit" and is entirely absent | M9 (done) |
 | [x] | Add board **role** (`User.isBoard` + `requireBoard`) so role checks stop using `isMember` as a proxy | Board-only actions are now gated properly; `admin/ledger` now uses `requireBoard` (manual ledger entries are board/treasurer-only) | M10 (done) |
 | [x] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
-| [~] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | Governance, RTMP targets, fan tiers/subscribe on Zod; ledger remains | ongoing hardening |
+| [x] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | Governance, RTMP, fan tiers, **admin ledger** on Zod; multi-section CSV export unchanged | ongoing hardening |
 | [ ] | **M30 release-ops toolkit** — guided MusicBrainz submit, Revelator pre-fill from same release record | Producers need more than smart links; open-catalog + identifiers are table stakes for serious releases | M30 / Phase 6b |
 | [x] | **Tracklist @artist tags** — editable tracklist rows with `@handle` autocomplete; link to `/u/:handle`; M15 `TRACKLIST` mention surface | DJs credit guests and collaborators; hearthis-style tracklists without a social graph | M22 |
 | [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
 | [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; suite now runs on every PR with Postgres + Redis services | CI |
 | [x] | Consolidate CI: lint job, vital-flows e2e, user-journey e2e, AGPL check, website Docker | Single `ci.yml` gate; Playwright screenshots stay local-only (`scripts/e2e-screenshots.sh`) | CI |
 | [x] | Full local Docker stack (`stack-up.sh`, ports 3010/3011) + scaling node doc | Dev/stakeholder demos without host port clashes; ops handover reference | M11 / Phase 2 |
-| [~] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | Phase 2: `/c/*` layout + `LiveBadge`; dashboard stays light shell | M12 / DX |
+| [~] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | `/c`, `/u`, `/r` brand layouts; **`/dashboard` studio shell** (`brand-studio.css`) | M12 / DX |
 | [x] | `@tahti/ui`: add `lint` script to Turbo pipeline | `packages/ui` ESLint via `turbo lint` | CI |
 | [x] | Consolidate e2e seed scripts (`scripts/seed-e2e-screenshots.ts` vs `apps/api/scripts/`) | Root script re-exports `apps/api/scripts/seed-e2e-screenshots.ts` | CI / DX |
 | [x] | Stripe webhook: return **500** on handler failure (Stripe retries; audit log retained) | Silent membership/fan-sub activation failures | M19 hardening |
@@ -491,7 +491,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [x] | **PLAT-001** | Stripe webhook dead-letter log + alert when `activateMembership` / fan-sub handlers fail | P1 |
 | [ ] | **PLAT-002** | Require branch protection on all `ci.yml` jobs (lint, test, both e2e, AGPL) | P1 |
 | [ ] | **PLAT-003** | PgBouncer before scaling API replicas (`docs/scaling-node-distribution.md`) | P1 |
-| [ ] | **PLAT-004** | Internal ingest routes: shared `@fastify/formbody` + integration tests for RTMP + Icecast | P2 |
+| [x] | **PLAT-004** | Internal ingest routes: shared `@fastify/formbody` + integration tests for RTMP + Icecast | `ingest.test.ts` |
 | [ ] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | P2 |
 | [x] | **PLAT-006** | Rate-limit policy doc: fail-open vs fail-closed when Redis unavailable | P2 |
 
@@ -509,8 +509,8 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
-| [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | `/c`, `/u`, `/r` brand layouts + dark tokens |
-| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | Governance done; fansubs/releases partial |
+| [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Public brand + dashboard `data-tahti-ui="studio"` |
+| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | Ledger + governance + fansubs + RTMP; releases ad-hoc |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [x] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` — members, audit, fan-subscriber exports |

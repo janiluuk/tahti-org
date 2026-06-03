@@ -128,7 +128,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | P1 | PgBouncer before API horizontal scale | `scaling-node-distribution.md` |
 | P2 | Swagger `/docs` auth from secrets, rotate default password | PLAT-005 |
 | P2 | Redis-down policy for rate limit + sessions documented and tested | PLAT-006 |
-| P2 | `@fastify/formbody` coverage for RTMP callbacks (Icecast done) | PLAT-004 |
+| ~~P2~~ | ~~`@fastify/formbody` coverage for RTMP callbacks (Icecast done)~~ — `ingest.test.ts` (done) | PLAT-004 |
 
 ---
 

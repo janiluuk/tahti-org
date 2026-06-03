@@ -2,6 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import {
+  CreateLedgerEntrySchema,
+  LedgerExportQuerySchema,
+  LedgerListQuerySchema,
+} from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { csvRow } from '../../lib/csv.js'
@@ -15,53 +20,23 @@ const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/admin/ledger — create a manual ledger entry
   fastify.post('/api/admin/ledger', { preHandler: requireBoard }, async (request, reply) => {
     const user = request.sessionUser!
-    const body = request.body as {
-      category?: string
-      amountCents?: number
-      currency?: string
-      description?: string
-      externalRef?: string
-      periodStart?: string
-      periodEnd?: string
+    const parsed = CreateLedgerEntrySchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.issues[0]?.message ?? 'Invalid request body',
+      })
     }
-
-    const validCategories = [
-      'REVENUE_SUBSCRIPTION',
-      'REVENUE_DISTRIBUTION',
-      'REVENUE_GRANT_INBOUND',
-      'REVENUE_DONATION',
-      'COST_INFRASTRUCTURE',
-      'COST_DISTRIBUTION_PASSTHROUGH',
-      'COST_OPERATIONS',
-      'COST_SALARY',
-      'COST_AUDIT',
-      'COST_PROFESSIONAL_SERVICES',
-      'GRANT_DISBURSEMENT',
-      'RESERVE_TRANSFER',
-    ]
-
-    if (!body.category || !validCategories.includes(body.category)) {
-      return reply.status(400).send({ error: 'Valid category is required' })
-    }
-    if (!body.amountCents || typeof body.amountCents !== 'number' || body.amountCents <= 0) {
-      return reply.status(400).send({ error: 'amountCents must be a positive number' })
-    }
-    if (!body.description?.trim()) {
-      return reply.status(400).send({ error: 'description is required' })
-    }
-    if (!body.periodStart || !body.periodEnd) {
-      return reply.status(400).send({ error: 'periodStart and periodEnd are required' })
-    }
+    const body = parsed.data
 
     const entry = await fastify.prisma.ledgerEntry.create({
       data: {
-        category: body.category as 'REVENUE_SUBSCRIPTION',
-        amountCents: BigInt(Math.round(body.amountCents)),
+        category: body.category,
+        amountCents: BigInt(body.amountCents),
         currency: body.currency ?? 'EUR',
-        description: body.description.trim(),
-        externalRef: body.externalRef?.trim() ?? null,
-        periodStart: new Date(body.periodStart),
-        periodEnd: new Date(body.periodEnd),
+        description: body.description,
+        externalRef: body.externalRef ?? null,
+        periodStart: body.periodStart,
+        periodEnd: body.periodEnd,
         createdBy: user.id,
       },
     })
@@ -82,7 +57,13 @@ const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/admin/ledger?year=YYYY&month=MM — list entries for period
   fastify.get('/api/admin/ledger', { preHandler: requireBoard }, async (request, reply) => {
-    const { year, month } = request.query as { year?: string; month?: string }
+    const parsed = LedgerListQuerySchema.safeParse(request.query)
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.issues[0]?.message ?? 'Invalid query',
+      })
+    }
+    const { year, month } = parsed.data
 
     const periodStart = year
       ? new Date(`${year}-${month ?? '01'}-01`)
@@ -90,7 +71,7 @@ const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
 
     const periodEnd =
       year && month
-        ? new Date(parseInt(year), parseInt(month), 0) // last day of month
+        ? new Date(parseInt(year, 10), parseInt(month, 10), 0)
         : new Date(new Date().getFullYear(), 11, 31)
 
     const entries = await fastify.prisma.ledgerEntry.findMany({
@@ -116,9 +97,13 @@ const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/admin/ledger/export.csv',
     { preHandler: requireBoard },
     async (request, reply) => {
-      const { year } = request.query as { year?: string }
-      const y = year ? parseInt(year, 10) : new Date().getFullYear()
-      if (Number.isNaN(y)) return reply.status(400).send({ error: 'Invalid year' })
+      const parsed = LedgerExportQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid year',
+        })
+      }
+      const y = parsed.data.year ? parseInt(parsed.data.year, 10) : new Date().getFullYear()
 
       const start = new Date(Date.UTC(y, 0, 1))
       const end = new Date(Date.UTC(y + 1, 0, 1))

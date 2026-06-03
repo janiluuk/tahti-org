@@ -3,6 +3,7 @@
 
 export * from './dto/auth.js'
 export * from './dto/governance.js'
+export * from './dto/ledger.js'
 export * from './dto/rtmp-targets.js'
 export * from './dto/fan-tier.js'
 export * from './dto/channel.js'
