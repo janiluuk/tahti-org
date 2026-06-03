@@ -75,7 +75,9 @@ export default async function CollectionPage({
         <p style={{ color: '#666', margin: 0 }}>
           {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
         </p>
-        {data.description && <p style={{ marginTop: '1rem', lineHeight: 1.6 }}>{data.description}</p>}
+        {data.description && (
+          <p style={{ marginTop: '1rem', lineHeight: 1.6 }}>{data.description}</p>
+        )}
         <p style={{ marginTop: '1rem' }}>
           <a href={rssUrl} style={{ color: '#2563eb' }}>
             RSS feed ↗
@@ -88,10 +90,7 @@ export default async function CollectionPage({
       ) : (
         <ol style={{ listStyle: 'none', padding: 0 }}>
           {data.items.map((item) => (
-            <li
-              key={item.id}
-              style={{ padding: '1rem 0', borderBottom: '1px solid #eee' }}
-            >
+            <li key={item.id} style={{ padding: '1rem 0', borderBottom: '1px solid #eee' }}>
               {item.archiveItem && (
                 <>
                   <div style={{ fontWeight: 600 }}>{item.archiveItem.title}</div>

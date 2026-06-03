@@ -2,10 +2,7 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import {
-  ARCHIVE_METADATA_DEFAULTS,
-  ArchiveMetadataFieldsSchema,
-} from './archive-metadata.js'
+import { ARCHIVE_METADATA_DEFAULTS, ArchiveMetadataFieldsSchema } from './archive-metadata.js'
 
 describe('ArchiveMetadataFieldsSchema', () => {
   it('accepts full hearthis-style metadata payload', () => {

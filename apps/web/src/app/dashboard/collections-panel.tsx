@@ -96,26 +96,21 @@ export default function CollectionsPanel({
         </a>
       </div>
       <p style={{ color: '#666', fontSize: '0.875rem' }}>
-        Group mixes or releases into series (e.g. &quot;Trance sets&quot;). Public collections appear on
-        your profile with RSS feeds.
+        Group mixes or releases into series (e.g. &quot;Trance sets&quot;). Public collections
+        appear on your profile with RSS feeds.
       </p>
 
       {initial.length > 0 && (
         <ul style={{ listStyle: 'none', padding: 0, margin: '1rem 0' }}>
           {initial.map((c) => (
-            <li
-              key={c.id}
-              style={{ padding: '0.75rem 0', borderBottom: '1px solid #f0f0f0' }}
-            >
+            <li key={c.id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #f0f0f0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
                 <span>
                   <strong>{c.name}</strong> · {c._count?.items ?? c.items?.length ?? 0} item(s) ·{' '}
                   <a href={`/u/${username}/c/${c.slug}`} style={{ color: '#2563eb' }}>
                     /c/{c.slug}
                   </a>
-                  {c.isPublic && (
-                    <span style={{ color: '#888', fontSize: '0.8rem' }}> · RSS</span>
-                  )}
+                  {c.isPublic && <span style={{ color: '#888', fontSize: '0.8rem' }}> · RSS</span>}
                 </span>
                 <span style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
@@ -146,7 +141,9 @@ export default function CollectionsPanel({
                 </ol>
               )}
               {addSlug === c.slug && (
-                <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div
+                  style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}
+                >
                   <select
                     value={pickArchive}
                     onChange={(e) => {

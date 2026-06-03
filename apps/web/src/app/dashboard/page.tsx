@@ -223,8 +223,9 @@ export default async function DashboardPage() {
   }
 
   let archiveItems: ArchiveItem[] = []
-  let archiveItemsForEdit: Array<Record<string, unknown> & { id: string; title: string; status: string }> =
-    []
+  let archiveItemsForEdit: Array<
+    Record<string, unknown> & { id: string; title: string; status: string }
+  > = []
   if (user.channel) {
     try {
       const res = await fetch(`${apiUrl}/api/channels/${user.channel.slug}/items`, {

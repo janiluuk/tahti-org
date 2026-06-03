@@ -6,7 +6,6 @@ import {
   ArchiveMetadataFieldsSchema,
   ArchiveMetadataPatchSchema,
   type ArchiveMetadataFields,
-  type ArchiveMetadataPatch,
 } from '@tahti/shared'
 
 export const archiveItemMetadataSelect = {
@@ -87,13 +86,15 @@ function fieldsToPrismaData(fields: ArchiveMetadataFields): Record<string, unkno
   if (fields.description !== undefined) data.description = fields.description || null
   if (fields.tracklist !== undefined) data.tracklist = fields.tracklist
   if (fields.bannerUrl !== undefined) data.bannerUrl = parseOptionalUrl(fields.bannerUrl)
-  if (fields.backgroundUrl !== undefined) data.backgroundUrl = parseOptionalUrl(fields.backgroundUrl)
+  if (fields.backgroundUrl !== undefined)
+    data.backgroundUrl = parseOptionalUrl(fields.backgroundUrl)
   if (fields.slideshowUrls !== undefined) data.slideshowUrls = fields.slideshowUrls
   if (fields.commentary !== undefined) data.commentary = fields.commentary || null
   if (fields.taggedNote !== undefined) data.taggedNote = fields.taggedNote || null
   if (fields.genre !== undefined) data.genre = fields.genre || null
   if (fields.genreCustom !== undefined) data.genreCustom = fields.genreCustom || null
-  if (fields.recordingLocation !== undefined) data.recordingLocation = fields.recordingLocation || null
+  if (fields.recordingLocation !== undefined)
+    data.recordingLocation = fields.recordingLocation || null
   if (fields.subGenres !== undefined) data.subGenres = fields.subGenres
   if (fields.contentType !== undefined) data.contentType = fields.contentType
   if (fields.mixVersion !== undefined) data.mixVersion = fields.mixVersion || null
@@ -120,11 +121,13 @@ export function metadataForNewUpload(input?: unknown): Record<string, unknown> {
   }
 }
 
-export function metadataPatchFromBody(body: unknown): {
-  ok: true
-  title?: string
-  data: Record<string, unknown>
-} | { ok: false; error: string } {
+export function metadataPatchFromBody(body: unknown):
+  | {
+      ok: true
+      title?: string
+      data: Record<string, unknown>
+    }
+  | { ok: false; error: string } {
   const parsed = ArchiveMetadataPatchSchema.safeParse(body)
   if (!parsed.success) {
     return { ok: false, error: 'Invalid metadata' }

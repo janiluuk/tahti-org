@@ -65,8 +65,14 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     if (!name) return reply.status(400).send({ error: 'name is required' })
 
     const slug =
-      body.slug?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') ??
-      `${user.username}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30)}`
+      body.slug
+        ?.trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-') ??
+      `${user.username}-${name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .slice(0, 30)}`
 
     const type = (body.type?.toUpperCase() ?? 'CUSTOM') as (typeof VALID_TYPES)[number]
     if (!VALID_TYPES.includes(type)) {
@@ -405,7 +411,11 @@ function buildRss(opts: {
 }
 
 function escXml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
 export default collectionRoutes

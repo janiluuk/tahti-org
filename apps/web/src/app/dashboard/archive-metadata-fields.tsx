@@ -143,7 +143,12 @@ const fieldStyle = {
   fontSize: '0.95rem',
 } as const
 
-const labelStyle = { display: 'block', marginBottom: '0.25rem', fontWeight: 500, fontSize: '0.9rem' } as const
+const labelStyle = {
+  display: 'block',
+  marginBottom: '0.25rem',
+  fontWeight: 500,
+  fontSize: '0.9rem',
+} as const
 
 export function ArchiveMetadataFields({
   state,

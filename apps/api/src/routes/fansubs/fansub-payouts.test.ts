@@ -4,7 +4,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import { processFanSubPayouts, processFanSubChurn } from '../../../../worker/src/jobs/fansub-payouts.js'
+import {
+  processFanSubPayouts,
+  processFanSubChurn,
+} from '../../../../worker/src/jobs/fansub-payouts.js'
 import { cleanupUsersByEmailPrefix } from '../../test/helpers.js'
 import { hashPassword } from '../../lib/password.js'
 
@@ -12,7 +15,6 @@ const PREFIX = 'fansub-payout-test-'
 
 describe('M19 — fan-sub payout and churn crons', () => {
   let artistId: string
-  let subscriptionId: string
   let payoutId: string
 
   beforeAll(async () => {
@@ -65,7 +67,6 @@ describe('M19 — fan-sub payout and churn crons', () => {
         currentPeriodEnd: new Date(Date.now() + 7 * 24 * 3600 * 1000),
       },
     })
-    subscriptionId = sub.id
 
     const payout = await prisma.fanSubPayout.create({
       data: {

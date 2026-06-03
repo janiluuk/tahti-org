@@ -132,9 +132,7 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
         {showMeta ? '▼ Hide metadata' : '▶ Show metadata (genre, BPM, license…)'}
       </button>
 
-      {showMeta && (
-        <ArchiveMetadataFields state={meta} onChange={setMeta} disabled={isLoading} />
-      )}
+      {showMeta && <ArchiveMetadataFields state={meta} onChange={setMeta} disabled={isLoading} />}
 
       <button
         type="submit"
