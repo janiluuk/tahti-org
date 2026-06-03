@@ -30,7 +30,6 @@ concurrency:
 
 env:
   NODE_VERSION: "20"
-  PNPM_VERSION: "9"
 
 jobs:
   website-docker:
@@ -52,9 +51,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Version is read from the root package.json "packageManager" field;
+      # passing `version:` here too makes action-setup@v4 error on the conflict.
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - uses: actions/setup-node@v4
         with:
@@ -115,9 +114,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Version is read from the root package.json "packageManager" field;
+      # passing `version:` here too makes action-setup@v4 error on the conflict.
       - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
 
       - uses: actions/setup-node@v4
         with:
