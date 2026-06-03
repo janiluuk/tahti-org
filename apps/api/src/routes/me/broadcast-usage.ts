@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { BroadcastUsageResponseSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import {
   broadcastWarningLevel,
@@ -19,6 +20,7 @@ const broadcastUsageRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description: 'M20: weekly live cap usage and warning level',
+        response: openApiResponse(BroadcastUsageResponseSchema, 'BroadcastUsage'),
       },
     },
     async (request, reply) => {

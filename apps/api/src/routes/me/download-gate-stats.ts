@@ -5,7 +5,9 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   DownloadGateItemDetailResponseSchema,
   DownloadGateStatsResponseSchema,
+  IdParamSchema,
   openApiResponse,
+  parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { buildGateDailySeries, GATE_DAILY_SERIES_DAYS } from '../../lib/download-gate-daily.js'
@@ -129,7 +131,9 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const item = await fastify.prisma.archiveItem.findFirst({
         where: { id, channel: { userId: user.id } },

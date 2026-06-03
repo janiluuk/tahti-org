@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { ChannelEgressResponseSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { buildEgressDailySeries, EGRESS_DAILY_SERIES_DAYS } from '../../lib/channel-egress-daily.js'
 
@@ -14,6 +15,7 @@ const channelEgressRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description: 'STREAM-006: attributed download egress (30-day UTC series)',
+        response: openApiResponse(ChannelEgressResponseSchema, 'ChannelEgress'),
       },
     },
     async (request, reply) => {

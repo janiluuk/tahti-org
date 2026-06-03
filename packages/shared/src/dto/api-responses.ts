@@ -10,7 +10,7 @@ export const EgressDailyPointSchema = z.object({
 })
 
 export const ChannelEgressResponseSchema = z.object({
-  windowDays: z.number().int().positive(),
+  windowDays: z.number().int().min(1),
   totalBytes: z.number().int().nonnegative(),
   totalDownloads: z.number().int().nonnegative(),
   daily: z.array(EgressDailyPointSchema),
@@ -31,6 +31,19 @@ export const DownloadGateItemStatsSchema = z.object({
   repostAckCount: z.number().int().nonnegative(),
   blockedDownloadAttempts: z.number().int().nonnegative(),
   countedDownloadCount: z.number().int().nonnegative(),
+})
+
+export const LiveDailyPointSchema = z.object({
+  date: z.string(),
+  liveSeconds: z.number().int().nonnegative(),
+  broadcastCount: z.number().int().nonnegative(),
+})
+
+export const ChannelLiveStatsResponseSchema = z.object({
+  windowDays: z.number().int().min(1),
+  totalLiveSeconds: z.number().int().nonnegative(),
+  totalBroadcasts: z.number().int().nonnegative(),
+  daily: z.array(LiveDailyPointSchema),
 })
 
 export const DownloadGateStatsResponseSchema = z.object({

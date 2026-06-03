@@ -5,7 +5,9 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   CreateVenueBroadcastSchema,
   CreateVenueSchema,
+  SlugParamSchema,
   VenueCalendarQuerySchema,
+  parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
@@ -45,7 +47,9 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/v1/venues/:slug',
     { schema: { tags: ['venues'], description: 'M17: public venue profile' } },
     async (request, reply) => {
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
 
       const venue = await fastify.prisma.venue.findUnique({
         where: { slug },
@@ -70,7 +74,9 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/v1/venues/:slug/broadcasts',
     { schema: { tags: ['venues'], description: 'M17: venue broadcast calendar (JSON)' } },
     async (request, reply) => {
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
       const parsedQuery = VenueCalendarQuerySchema.safeParse(request.query)
       if (!parsedQuery.success) {
         return reply.status(400).send({
@@ -106,7 +112,9 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/v1/venues/:slug/calendar.ics',
     { schema: { tags: ['venues'], description: 'M17: venue iCalendar feed' } },
     async (request, reply) => {
-      const { slug } = request.params as { slug: string }
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
 
       const venue = await fastify.prisma.venue.findUnique({
         where: { slug, verifiedAt: { not: null } },
