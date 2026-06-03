@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 /**
- * Playwright user-journey e2e — viewer, artist, streamer (docs/guides).
+ * Playwright user-journey e2e — listener, artist, member (docs/guides).
  *
  *   API_URL=http://localhost:3011 APP_URL=http://localhost:3010 node tests/e2e/user-journeys.mjs
  *
@@ -17,7 +17,7 @@ const API = process.env.API_URL ?? 'http://localhost:3011'
 const FIXTURE = {
   password: process.env.E2E_DEMO_PASS ?? 'screenshot-demo-pass',
   artistEmail: process.env.E2E_DEMO_ARTIST_EMAIL ?? 'screenshot-artist@e2e.tahti.live',
-  fanEmail: process.env.E2E_DEMO_FAN_EMAIL ?? 'screenshot-fan@e2e.tahti.live',
+  memberEmail: process.env.E2E_DEMO_MEMBER_EMAIL ?? 'screenshot-fan@e2e.tahti.live',
   artist: process.env.E2E_DEMO_ARTIST_USER ?? 'screenshot-demo',
   smartLinkSlug: process.env.E2E_DEMO_SMART_SLUG ?? 'northern-lights-ep',
 }
@@ -83,8 +83,8 @@ async function main() {
 
   const browser = await chromium.launch({ headless: true })
 
-  // ── Viewer journey ─────────────────────────────────────────────────────────
-  console.log('\n── Viewer journey (Playwright) ──')
+  // ── Listener journey ───────────────────────────────────────────────────────
+  console.log('\n── Listener journey (Playwright) ──')
   const pub = await browser.newContext({ viewport: { width: 1280, height: 800 } })
   const pubPage = await pub.newPage()
 
@@ -142,6 +142,19 @@ async function main() {
     await streamCtx.close()
   } catch (e) {
     fail('streamer journey', e.message)
+  }
+
+  // ── Member journey ─────────────────────────────────────────────────────────
+  console.log('\n── Member journey (Playwright) ──')
+  try {
+    const memberCookie = await apiLogin(FIXTURE.memberEmail, FIXTURE.password)
+    const memberCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+    await memberCtx.addCookies([memberCookie])
+    const govPage = await memberCtx.newPage()
+    await pageLoads(govPage, '/governance', 'governance page', { text: 'Member governance' })
+    await memberCtx.close()
+  } catch (e) {
+    fail('member journey', e.message)
   }
 
   await browser.close()

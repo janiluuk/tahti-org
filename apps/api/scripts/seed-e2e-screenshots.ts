@@ -16,16 +16,20 @@ const ARTIST = {
   username: 'screenshot-demo',
   displayName: 'Screenshot Demo Artist',
 }
-const FAN = {
+const MEMBER = {
   email: 'screenshot-fan@e2e.tahti.live',
   username: 'screenshot-fan',
-  displayName: 'Screenshot Fan',
+  displayName: 'Screenshot Member',
 }
+
+const DEMO_MOTION_TITLE = 'E2E advisory motion'
 
 async function main() {
   const passwordHash = await hashPassword(PASS)
 
-  for (const email of [ARTIST.email, FAN.email]) {
+  await prisma.motion.deleteMany({ where: { title: DEMO_MOTION_TITLE } })
+
+  for (const email of [ARTIST.email, MEMBER.email]) {
     const existing = await prisma.user.findUnique({
       where: { email },
       select: { id: true, channel: { select: { id: true } } },
@@ -113,12 +117,12 @@ async function main() {
     },
   })
 
-  const fan = await prisma.user.create({
+  const member = await prisma.user.create({
     data: {
-      email: FAN.email,
+      email: MEMBER.email,
       passwordHash,
-      username: FAN.username,
-      displayName: FAN.displayName,
+      username: MEMBER.username,
+      displayName: MEMBER.displayName,
       emailVerifiedAt: new Date(),
       isMember: true,
       memberNumber: 99002,
@@ -127,10 +131,41 @@ async function main() {
     },
   })
 
+  const tier = await prisma.fanTier.findFirst({
+    where: { artistUserId: artist.id },
+    select: { name: true, amountCents: true },
+  })
+  if (tier) {
+    await prisma.fanSubscription.create({
+      data: {
+        artistUserId: artist.id,
+        subscriberUserId: member.id,
+        tierName: tier.name,
+        amountCents: tier.amountCents,
+        state: 'ACTIVE',
+        stripeSubscriptionId: 'e2e_sub_screenshot',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+    })
+  }
+
+  const now = new Date()
+  await prisma.motion.create({
+    data: {
+      title: DEMO_MOTION_TITLE,
+      description: 'Seeded open motion for journey e2e.',
+      proposedBy: artist.id,
+      advisory: true,
+      state: 'OPEN',
+      openAt: new Date(now.getTime() - 60_000),
+      closeAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+    },
+  })
+
   const verifyToken = generateVerificationToken()
   await prisma.emailVerification.create({
     data: {
-      userId: fan.id,
+      userId: member.id,
       token: verifyToken,
       expiresAt: verificationExpiresAt(),
     },
@@ -141,8 +176,10 @@ async function main() {
       {
         password: PASS,
         artist: ARTIST.username,
-        fan: FAN.username,
+        member: MEMBER.username,
+        fan: MEMBER.username,
         smartLinkSlug: release.smartLinkSlug,
+        motionTitle: DEMO_MOTION_TITLE,
         verifyToken,
       },
       null,

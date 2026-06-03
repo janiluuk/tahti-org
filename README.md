@@ -109,6 +109,7 @@ API_URL=http://localhost:3001 pnpm test:e2e
 SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/tahti \
   API_URL=http://localhost:3001 APP_URL=http://localhost:3010 pnpm test:e2e:journeys
 # With web up: pnpm test:e2e:journeys:web
+# Persona scripts (source helpers + fixtures first): journeys/listener|artist|member.sh
 ```
 
 ## CI releases
