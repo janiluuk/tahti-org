@@ -79,9 +79,45 @@ export async function fetchReleaseExportJson(
   return { error: null, json: await res.text() }
 }
 
+export async function fetchReleaseExportCsv(
+  id: string,
+): Promise<{ error: string | null; csv?: string }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${id}/export.csv`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Export failed' }
+  }
+  return { error: null, csv: await res.text() }
+}
+
+export type ReleaseTrackCatalogRow = {
+  id: string
+  title: string
+  isrc: string
+  musicbrainzRecordingId: string
+}
+
+export type ReleaseCatalogPayload = {
+  upc?: string | null
+  musicbrainzReleaseId?: string | null
+  musicbrainzArtistId?: string | null
+  pLine?: string | null
+  cLine?: string | null
+  labelImprint?: string | null
+  credits?: ReleaseCredit[]
+  tracks?: Array<{
+    id: string
+    isrc?: string | null
+    musicbrainzRecordingId?: string | null
+  }>
+}
+
 export async function updateReleaseCatalog(
   id: string,
-  payload: Record<string, string | null | ReleaseCredit[]>,
+  payload: ReleaseCatalogPayload,
 ): Promise<{ error: string | null; checklist?: unknown }> {
   const res = await fetch(`${apiUrl}/api/me/releases/${id}/catalog`, {
     method: 'PATCH',

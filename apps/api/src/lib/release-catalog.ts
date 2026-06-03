@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { ReleaseCatalogPatchSchema } from '@tahti/shared'
+import {
+  ReleaseCatalogPatchSchema,
+  type ReleaseCatalogPatch,
+  buildReleaseExportCsv,
+} from '@tahti/shared'
+
+export { buildReleaseExportCsv }
 
 export const releaseCatalogSelect = {
   id: true,
@@ -38,7 +44,9 @@ export const releaseCatalogSelect = {
 
 export function catalogPatchFromBody(
   body: unknown,
-): { ok: true; data: Record<string, unknown> } | { ok: false; error: string } {
+):
+  | { ok: true; data: Record<string, unknown>; trackPatches: ReleaseCatalogPatch['tracks'] }
+  | { ok: false; error: string } {
   const parsed = ReleaseCatalogPatchSchema.safeParse(body)
   if (!parsed.success) return { ok: false, error: 'Invalid catalog fields' }
 
@@ -53,8 +61,11 @@ export function catalogPatchFromBody(
   if (f.cLine !== undefined) data.cLine = f.cLine?.trim() || null
   if (f.labelImprint !== undefined) data.labelImprint = f.labelImprint?.trim() || null
   if (f.credits !== undefined) data.credits = f.credits
-  if (Object.keys(data).length === 0) return { ok: false, error: 'No catalog fields to update' }
-  return { ok: true, data }
+  const trackPatches = f.tracks
+  if (Object.keys(data).length === 0 && !trackPatches?.length) {
+    return { ok: false, error: 'No catalog fields to update' }
+  }
+  return { ok: true, data, trackPatches }
 }
 
 export function buildReleaseExportPack(release: {

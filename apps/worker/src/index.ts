@@ -13,9 +13,10 @@ import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
 import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
-import { processFanSubPayouts } from './jobs/fan-sub-payout.js'
+import { processFanSubPayoutsJob } from './jobs/fan-sub-payout.js'
 import { processFanSubExpire } from './jobs/fan-sub-expire.js'
 import { processDownloadFraudScanJob } from './jobs/download-fraud-scan.js'
+import { processTorExitListSyncJob } from './jobs/tor-exit-list-sync.js'
 import {
   processMembershipLapseJob,
   processMembershipRenewalJob,
@@ -55,11 +56,13 @@ const worker = new Worker(
       const summary = await processWeeklyBroadcastReset(prisma)
       console.log('[worker] weekly-broadcast-reset:', JSON.stringify(summary))
     } else if (job.name === 'fan-sub-payout') {
-      const summary = await processFanSubPayouts(prisma)
+      const summary = await processFanSubPayoutsJob(prisma)
       console.log('[worker] fan-sub-payout:', JSON.stringify(summary))
     } else if (job.name === 'fan-sub-expire') {
       const summary = await processFanSubExpire(prisma)
       console.log('[worker] fan-sub-expire:', JSON.stringify(summary))
+    } else if (job.name === 'tor-exit-list-sync') {
+      await processTorExitListSyncJob(job)
     } else if (job.name === 'download-fraud-scan') {
       await processDownloadFraudScanJob(job)
     } else if (job.name === 'membership-renewal-reminder') {
@@ -133,6 +136,13 @@ async function registerCrons() {
     'fan-sub-expire',
     {},
     { repeat: { pattern: '0 5 * * *' }, jobId: 'fan-sub-expire-cron' },
+  )
+
+  // M18: refresh Tor exit list in Redis (05:30 UTC, before fraud scan)
+  await queue.add(
+    'tor-exit-list-sync',
+    {},
+    { repeat: { pattern: '30 5 * * *' }, jobId: 'tor-exit-list-sync-cron' },
   )
 
   // M18: flag suspicious download spikes for board review (06:00 UTC)

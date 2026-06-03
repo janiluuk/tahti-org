@@ -131,6 +131,41 @@ describe('M18 — archive downloads + engagement units', () => {
     expect(counted).toBe(2)
   })
 
+  it('does not count downloads with bot user agents', async () => {
+    const botIp = '203.0.113.88'
+    const byIpHash = ipHashForTest(botIp)
+    const day = new Date().toISOString().slice(0, 10)
+    const salt = createHash('sha256').update(`${config.internalSecret}:${day}`).digest('hex')
+    const byFingerprint = createHash('sha256').update(`bot-fp:${salt}`).digest('hex')
+    const seenAt = new Date(Date.now() - 25 * HOUR_MS)
+    await prisma.download.create({
+      data: {
+        channelId,
+        archiveItemId: itemId,
+        format: 'mp3_320',
+        byFingerprint: 'bot-ip-seed',
+        byIpHash,
+        countedAt: seenAt,
+        weight: 1,
+        bytes: 0,
+        createdAt: seenAt,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/c/${SLUG}/archive/${itemId}/download?fp=bot-fp`,
+      headers: { 'x-forwarded-for': botIp, 'user-agent': 'python-requests/2.31' },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().counted).toBe(false)
+
+    const row = await prisma.download.findFirst({
+      where: { channelId, byFingerprint },
+    })
+    expect(row?.reason).toBe('bot_ua')
+  })
+
   it('dedups a repeat download from the same fingerprint within 30 days', async () => {
     const byIpHash = ipHashForTest(TEST_IP)
     const seenAt = new Date(Date.now() - 25 * HOUR_MS)
