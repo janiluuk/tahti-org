@@ -5,7 +5,8 @@
 # CI also tags main as YYmmdd-buildnr (e.g. 260603-1) — see .github/workflows/ci.yml release job
 #
 # Required secrets (repository):
-#   REGISTRY_USER, REGISTRY_PASSWORD   — registry.tahti.live credentials
+#   REGISTRY_PASSWORD   — registry.tahti.live (user defaults to tahti; override via REGISTRY_USER)
+#   REGISTRY_USER       — optional
 #   DEPLOY_SSH_PRIVATE_KEY             — ed25519 key authorized on staging + prod nodes
 #
 # Required variables (repository or environment):
@@ -34,9 +35,37 @@ env:
   PNPM_VERSION: "9"
 
 jobs:
+  preflight:
+    name: Check deploy secrets
+    runs-on: ubuntu-24.04
+    outputs:
+      registry: ${{ steps.check.outputs.registry }}
+      staging: ${{ steps.check.outputs.staging }}
+    steps:
+      - id: check
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          STAGING_HOST: ${{ vars.STAGING_HOST }}
+        run: |
+          if [[ -n "${REGISTRY_PASSWORD}" ]]; then
+            echo "registry=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::REGISTRY_PASSWORD not set — skipping registry build/push"
+            echo "registry=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -n "${DEPLOY_KEY}" && -n "${STAGING_HOST}" ]]; then
+            echo "staging=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Deploy staging skipped (need DEPLOY_SSH_PRIVATE_KEY and STAGING_HOST)"
+            echo "staging=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # ── Build all images ─────────────────────────────────────────────────────────
   build:
     name: Build & push images
+    needs: preflight
+    if: needs.preflight.outputs.registry == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
@@ -45,9 +74,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Login to registry
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER || 'tahti' }}
         run: |
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | \
-            docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+          echo "$REGISTRY_PASSWORD" | \
+            docker login ${{ env.REGISTRY }} -u "$REGISTRY_USER" --password-stdin
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -115,7 +147,10 @@ jobs:
   # ── Deploy staging ───────────────────────────────────────────────────────────
   deploy-staging:
     name: Deploy staging
-    needs: build
+    needs: [preflight, build]
+    if: >-
+      needs.preflight.outputs.staging == 'true' &&
+      needs.build.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: staging

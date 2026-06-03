@@ -45,6 +45,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preflight:
+    name: Check deploy key
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-24.04
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          if [[ -n "${DEPLOY_KEY}" ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::DEPLOY_SSH_PRIVATE_KEY not set — skipping lab stack deploy"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
   changes:
     name: Stack paths changed
     if: >-
@@ -88,8 +110,10 @@ jobs:
 
   deploy:
     name: Rsync and stack-up on remote
-    needs: changes
-    if: needs.changes.outputs.deploy == 'true'
+    needs: [preflight, changes]
+    if: >-
+      needs.preflight.outputs.ready == 'true' &&
+      needs.changes.outputs.deploy == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
@@ -123,15 +147,6 @@ jobs:
             echo "WEB_PORT=${WEB_PORT}"
             echo "API_PORT=${API_PORT}"
           } >> "$GITHUB_ENV"
-
-      - name: Require deploy key
-        env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-        run: |
-          if [[ -z "${DEPLOY_KEY}" ]]; then
-            echo "::error::Set repository secret DEPLOY_SSH_PRIVATE_KEY"
-            exit 1
-          fi
 
       - name: Configure SSH
         run: |

@@ -32,14 +32,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Rsync and docker compose up
-    runs-on: ubuntu-latest
+  preflight:
+    name: Check deploy key
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          if [[ -n "${DEPLOY_KEY}" ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::DEPLOY_SSH_PRIVATE_KEY not set — skipping production deploy"
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  deploy:
+    name: Rsync and docker compose up
+    needs: preflight
+    if: >-
+      needs.preflight.outputs.ready == 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main'))
+    runs-on: ubuntu-latest
     env:
       DEPLOY_JUMP_USER: ${{ vars.DEPLOY_JUMP_USER }}
       DEPLOY_JUMP_HOST: ${{ vars.DEPLOY_JUMP_HOST }}
@@ -69,15 +93,6 @@ jobs:
             echo "DEPLOY_APP_PORT=${DEPLOY_APP_PORT:-8090}"
             echo "SSH_PROXY_JUMP=${jump_user}@${jump_host}:${jump_port}"
           } >> "$GITHUB_ENV"
-
-      - name: Require deploy key
-        env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-        run: |
-          if [ -z "${DEPLOY_KEY}" ]; then
-            echo "::error::Set repository secret DEPLOY_SSH_PRIVATE_KEY (see workflow header)."
-            exit 1
-          fi
 
       - name: Configure SSH agent
         run: |
