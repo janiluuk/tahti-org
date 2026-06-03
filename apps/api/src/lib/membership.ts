@@ -10,7 +10,7 @@ import { config } from '../config.js'
 export async function activateMembership(
   prisma: PrismaClient,
   userId: string,
-  opts: { stripeSessionId: string; amountCents?: number },
+  opts: { stripeSessionId: string; amountCents?: number; stripeCustomerId?: string },
 ) {
   const amountCents = opts.amountCents ?? config.membership.priceCents
   const now = new Date()
@@ -43,6 +43,7 @@ export async function activateMembership(
         memberNumber,
         memberSince: now,
         tier: 'ARTIST',
+        ...(opts.stripeCustomerId ? { stripeCustomerId: opts.stripeCustomerId } : {}),
       },
     })
 

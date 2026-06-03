@@ -262,7 +262,7 @@ describe('M19 — fan-to-artist subscriptions', () => {
     expect(Number(grant?.amountCents)).toBe(90_000) // whole pool to the only artist
   })
 
-  it('cancels a subscription', async () => {
+  it('cancels a subscription but keeps perks until period end', async () => {
     const sub = await prisma.fanSubscription.findFirst({ where: { subscriberUserId: fan.id } })
     const res = await app.inject({
       method: 'POST',
@@ -271,6 +271,9 @@ describe('M19 — fan-to-artist subscriptions', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().state).toBe('CANCELED')
+    expect(res.json().accessUntil).toBeTruthy()
+    const { isActiveFanSubscriber } = await import('../../lib/fansub.js')
+    expect(await isActiveFanSubscriber(prisma, artist.id, fan.id)).toBe(true)
   })
 
   it('webhook: subscription.created then invoice.paid activates + pays out', async () => {

@@ -4,7 +4,12 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
-import { stripeEnabled, createCheckoutSession } from '../../lib/stripe.js'
+import {
+  stripeEnabled,
+  createCheckoutSession,
+  createStripeCustomer,
+  createBillingPortalSession,
+} from '../../lib/stripe.js'
 import { activateMembership } from '../../lib/membership.js'
 
 const membershipRoutes: FastifyPluginAsync = async (fastify) => {
@@ -74,6 +79,46 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
   )
+
+  // POST /api/me/membership/portal — Stripe Customer Portal (receipts, payment method)
+  fastify.post('/api/me/membership/portal', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+
+    if (!user.isMember) {
+      return reply.status(400).send({ error: 'Active membership required' })
+    }
+
+    if (!stripeEnabled) {
+      return reply.status(400).send({
+        error: 'Billing portal is only available when Stripe is configured',
+      })
+    }
+
+    let customerId = user.stripeCustomerId
+    if (!customerId) {
+      try {
+        customerId = await createStripeCustomer({ email: user.email, userId: user.id })
+        await fastify.prisma.user.update({
+          where: { id: user.id },
+          data: { stripeCustomerId: customerId },
+        })
+      } catch (err) {
+        request.log.error({ err }, 'stripe customer creation failed')
+        return reply.status(502).send({ error: 'Could not open billing portal' })
+      }
+    }
+
+    try {
+      const session = await createBillingPortalSession({
+        customerId,
+        returnUrl: `${config.appUrl}/dashboard?membership=portal`,
+      })
+      return reply.send({ portalUrl: session.url })
+    } catch (err) {
+      request.log.error({ err }, 'billing portal failed')
+      return reply.status(502).send({ error: 'Could not open billing portal' })
+    }
+  })
 }
 
 export default membershipRoutes

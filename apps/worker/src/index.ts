@@ -11,6 +11,8 @@ import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
 import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
+import { processFanSubPayouts } from './jobs/fan-sub-payout.js'
+import { processFanSubExpire } from './jobs/fan-sub-expire.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -40,6 +42,12 @@ const worker = new Worker(
     } else if (job.name === 'weekly-broadcast-reset') {
       const summary = await processWeeklyBroadcastReset(prisma)
       console.log('[worker] weekly-broadcast-reset:', JSON.stringify(summary))
+    } else if (job.name === 'fan-sub-payout') {
+      const summary = await processFanSubPayouts(prisma)
+      console.log('[worker] fan-sub-payout:', JSON.stringify(summary))
+    } else if (job.name === 'fan-sub-expire') {
+      const summary = await processFanSubExpire(prisma)
+      console.log('[worker] fan-sub-expire:', JSON.stringify(summary))
     } else if (job.name === 'annual-grant-calc') {
       // Default to the prior calendar year (matches Finnish fiscal year).
       const { year } = job.data as { year?: number }
@@ -91,6 +99,20 @@ async function registerCrons() {
     'weekly-broadcast-reset',
     {},
     { repeat: { pattern: '0 0 * * 1' }, jobId: 'weekly-broadcast-reset-cron' },
+  )
+
+  // M19: settle fan-sub payouts (Connect destination charges) daily at 04:00 UTC
+  await queue.add(
+    'fan-sub-payout',
+    {},
+    { repeat: { pattern: '0 4 * * *' }, jobId: 'fan-sub-payout-cron' },
+  )
+
+  // M19: expire lapsed fan subscriptions daily at 05:00 UTC
+  await queue.add(
+    'fan-sub-expire',
+    {},
+    { repeat: { pattern: '0 5 * * *' }, jobId: 'fan-sub-expire-cron' },
   )
 
   await queue.close()

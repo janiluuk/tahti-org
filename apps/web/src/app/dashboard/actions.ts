@@ -108,6 +108,22 @@ export async function createFanTier(params: {
   return { error: null }
 }
 
+export async function startMembershipPortal(): Promise<{
+  error: string | null
+  portalUrl?: string
+}> {
+  const response = await fetch(`${apiUrl}/api/me/membership/portal`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    return { error: (data as { error?: string }).error ?? 'Could not open billing portal' }
+  }
+  return { error: null, portalUrl: (data as { portalUrl?: string }).portalUrl }
+}
+
 export async function startMembershipCheckout(): Promise<{
   error: string | null
   checkoutUrl?: string

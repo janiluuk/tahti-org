@@ -9,7 +9,11 @@ import {
   createFanSubCheckoutSession,
 } from '../../lib/stripe.js'
 import { config } from '../../config.js'
-import { activateSubscription, recordFanSubPayment } from '../../lib/fansub.js'
+import {
+  activateSubscription,
+  markFanSubCanceledAtPeriodEnd,
+  recordFanSubPayment,
+} from '../../lib/fansub.js'
 
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -164,12 +168,17 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!sub) return reply.status(404).send({ error: 'Subscription not found' })
 
-      const updated = await fastify.prisma.fanSubscription.update({
+      await markFanSubCanceledAtPeriodEnd(fastify.prisma, { subscriptionId: id })
+      const updated = await fastify.prisma.fanSubscription.findUnique({
         where: { id },
-        data: { state: 'CANCELED', canceledAt: new Date() },
         select: { id: true, state: true, canceledAt: true, currentPeriodEnd: true },
       })
-      return reply.send(updated)
+      return reply.send({
+        ...updated,
+        accessUntil: updated!.currentPeriodEnd,
+        message:
+          'Canceled — fan perks remain until the end of the billing period, then 7 days grace.',
+      })
     },
   )
 }

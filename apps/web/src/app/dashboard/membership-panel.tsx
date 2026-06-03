@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { startMembershipCheckout } from './actions'
+import { startMembershipCheckout, startMembershipPortal } from './actions'
 
 export default function MembershipPanel({
   status,
@@ -26,6 +26,14 @@ export default function MembershipPanel({
   const [error, setError] = useState<string | null>(null)
 
   if (isMember) {
+    function openPortal() {
+      startTransition(async () => {
+        const res = await startMembershipPortal()
+        if (res.error) setError(res.error)
+        else if (res.portalUrl) window.location.href = res.portalUrl
+      })
+    }
+
     return (
       <section
         style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
@@ -34,6 +42,21 @@ export default function MembershipPanel({
         <p style={{ color: '#16a34a', marginTop: '0.5rem' }}>
           Active member #{memberNumber ?? '—'} — thank you for supporting the cooperative.
         </p>
+        <button
+          type="button"
+          onClick={openPortal}
+          disabled={isPending}
+          style={{
+            marginTop: '0.75rem',
+            background: 'none',
+            border: '1px solid #ccc',
+            borderRadius: 4,
+            padding: '0.4rem 0.8rem',
+            cursor: 'pointer',
+          }}
+        >
+          {isPending ? 'Opening…' : 'Manage billing'}
+        </button>
       </section>
     )
   }

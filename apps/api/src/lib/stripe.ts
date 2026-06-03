@@ -154,6 +154,19 @@ export async function createConnectAccountLink(params: {
   return data.url
 }
 
+/** Stripe Customer Portal for membership billing history and payment method. */
+export async function createBillingPortalSession(params: {
+  customerId: string
+  returnUrl: string
+}): Promise<{ url: string }> {
+  const data = (await stripePost('/billing_portal/sessions', {
+    customer: params.customerId,
+    return_url: params.returnUrl,
+  })) as { url?: string }
+  if (!data.url) throw new Error('Stripe Billing Portal returned no url')
+  return { url: data.url }
+}
+
 /** Fan-subscription Checkout — destination charge with 2% application fee. */
 export async function createFanSubCheckoutSession(params: {
   customerId: string

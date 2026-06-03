@@ -17,7 +17,9 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         type: true,
         releaseDate: true,
         artworkUrl: true,
-        user: { select: { username: true, displayName: true } },
+        smartLinkTargets: true,
+        description: true,
+        user: { select: { username: true, displayName: true, avatarUrl: true } },
       },
     })
 
@@ -25,6 +27,10 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
 
     const profileUrl = `${config.appUrl}/u/${release.user.username}`
     const releaseUrl = `${profileUrl}#release-${release.id}`
+    const targets =
+      release.smartLinkTargets && typeof release.smartLinkTargets === 'object'
+        ? (release.smartLinkTargets as Record<string, string>)
+        : {}
 
     return reply.send({
       release: {
@@ -33,10 +39,14 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         type: release.type,
         releaseDate: release.releaseDate,
         artworkUrl: release.artworkUrl,
+        description: release.description,
+        smartLinkSlug,
       },
       artist: release.user,
       profileUrl,
       releaseUrl,
+      targets,
+      embedUrl: `${config.appUrl}/embed/r/${release.id}`,
     })
   })
 }
