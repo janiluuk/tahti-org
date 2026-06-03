@@ -779,6 +779,7 @@ model Release {
   title            String
   type             ReleaseType
   artworkUrl       String?
+  artworkKey       String?      // M12: cover image in MinIO (presigned for public URLs)
   releaseDate      DateTime
   description      String?
   smartLinkSlug    String       @unique
@@ -831,7 +832,32 @@ model ReleaseTrack {
   status           TrackStatus @default(PENDING)
   createdAt        DateTime    @default(now())
 
+  versions         ReleaseTrackVersion[]
+
   @@unique([releaseId, position])
+  @@schema("release")
+}
+
+// M28: audio file versions for a release track (stable public track id).
+model ReleaseTrackVersion {
+  id               String      @id @default(cuid())
+  releaseTrackId   String
+  releaseTrack     ReleaseTrack @relation(fields: [releaseTrackId], references: [id], onDelete: Cascade)
+  versionNumber    Int
+  versionLabel     String
+  sourceKey        String
+  sourceFormat     String?
+  sourceSampleRate Int?
+  sourceBitDepth   Int?
+  streamKey        String?
+  flacKey          String?
+  durationSec      Int?
+  status           TrackStatus @default(PENDING)
+  isActive         Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+
+  @@unique([releaseTrackId, versionNumber])
+  @@index([releaseTrackId, createdAt(sort: Desc)])
   @@schema("release")
 }
 

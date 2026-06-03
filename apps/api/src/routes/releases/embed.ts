@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { config } from '../../config.js'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 
 // M14 — oEmbed discovery endpoint + embed metadata
 // oEmbed spec: https://oembed.com/
@@ -30,6 +31,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           id: true,
           title: true,
           artworkUrl: true,
+          artworkKey: true,
           user: { select: { username: true, displayName: true } },
         },
       })
@@ -39,7 +41,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       authorName = release.user.displayName
       authorUrl = `${config.appUrl}/u/${release.user.username}`
       embedUrl = `${config.appUrl}/embed/r/${release.id}`
-      thumbnailUrl = release.artworkUrl ?? undefined
+      thumbnailUrl = (await resolveReleaseArtworkUrl(release)) ?? undefined
     } else {
       // Match channel: APP_URL/c/<slug>
       const channelMatch = url.match(/\/c\/([^/?#]+)/)
@@ -86,6 +88,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         title: true,
         type: true,
         artworkUrl: true,
+        artworkKey: true,
         smartLinkSlug: true,
         user: { select: { username: true, displayName: true } },
         tracks: {
@@ -97,11 +100,13 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (!release) return reply.status(404).send({ error: 'Release not found' })
 
+    const artworkUrl = await resolveReleaseArtworkUrl(release)
+
     return reply.send({
       id: release.id,
       title: release.title,
       type: release.type,
-      artworkUrl: release.artworkUrl,
+      artworkUrl,
       smartLinkSlug: release.smartLinkSlug,
       artist: release.user,
       tracks: release.tracks.map((t) => ({

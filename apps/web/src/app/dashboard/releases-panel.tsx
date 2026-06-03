@@ -9,6 +9,8 @@ import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
 import { createRelease, publishRelease, updateReleaseSmartLinks } from './release-actions'
 import ReleaseOpsPanel, { parseCredits } from './release-ops-panel'
+import { ReleaseArtworkUpload } from './release-artwork-upload'
+import { ReleaseTrackVersionPanel } from './release-track-version-panel'
 
 const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
   { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
@@ -38,7 +40,7 @@ interface ReleaseSummary {
   labelImprint?: string | null
   credits?: unknown
   revelatorStatus?: string | null
-  tracks?: Array<{ isrc: string | null }>
+  tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
 }
@@ -174,6 +176,16 @@ export default function ReleasesPanel({
                   )}
                 </span>
               </div>
+              <ReleaseArtworkUpload releaseId={r.id} artworkUrl={r.artworkUrl} />
+              {(r.tracks ?? []).map((t) => (
+                <ReleaseTrackVersionPanel
+                  key={t.id}
+                  releaseId={r.id}
+                  trackId={t.id}
+                  trackTitle={t.title}
+                  trackStatus={t.status ?? 'PENDING'}
+                />
+              ))}
               <ReleaseOpsPanel
                 releaseId={r.id}
                 releaseTitle={r.title}

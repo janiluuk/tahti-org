@@ -18,3 +18,7 @@ export async function enqueueTranscode(itemId: string): Promise<void> {
 export async function enqueueVersionTranscode(versionId: string): Promise<void> {
   await mediaQueue.add('transcode-archive-version', { versionId })
 }
+
+export async function enqueueReleaseTrackVersionTranscode(versionId: string): Promise<void> {
+  await mediaQueue.add('transcode-release-track-version', { versionId })
+}

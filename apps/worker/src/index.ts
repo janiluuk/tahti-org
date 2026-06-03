@@ -7,6 +7,7 @@ import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
 import { processTranscodeVersionJob } from './jobs/transcode-version.js'
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
+import { processTranscodeReleaseTrackVersionJob } from './jobs/transcode-release-track-version.js'
 import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
 import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
@@ -31,6 +32,8 @@ const worker = new Worker(
       await processTranscodeVersionJob(job)
     } else if (job.name === 'transcode-release-track') {
       await processTranscodeReleaseTrackJob(job)
+    } else if (job.name === 'transcode-release-track-version') {
+      await processTranscodeReleaseTrackVersionJob(job)
     } else if (job.name === 'mixcloud-upload') {
       await processMixcloudUploadJob(job)
     } else if (job.name === 'newsletter-dispatch') {

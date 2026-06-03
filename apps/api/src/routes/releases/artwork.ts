@@ -1,0 +1,74 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+import type { FastifyPluginAsync } from 'fastify'
+import { nanoid } from 'nanoid'
+import { ReleaseArtworkCompleteSchema, ReleaseArtworkPrepareSchema } from '@tahti/shared'
+import { requireAuth } from '../../plugins/auth.js'
+import { presignedPutUrl } from '../../lib/minio.js'
+import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+
+const PRESIGN_TTL_SEC = 900
+const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
+  async function ownedRelease(userId: string, releaseId: string) {
+    return fastify.prisma.release.findFirst({
+      where: { id: releaseId, userId },
+      select: { id: true, user: { select: { username: true } } },
+    })
+  }
+
+  fastify.post(
+    '/api/me/releases/:id/artwork/prepare',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const parsed = ReleaseArtworkPrepareSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
+      const release = await ownedRelease(user.id, id)
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const ext = parsed.data.filename.includes('.') ? parsed.data.filename.split('.').pop() : 'jpg'
+      const uploadKey = `releases/${release.user.username}/${id}/artwork-${nanoid(8)}.${ext}`
+      const uploadUrl = await presignedPutUrl(uploadKey, parsed.data.contentType, PRESIGN_TTL_SEC)
+      const expiresAt = new Date(Date.now() + PRESIGN_TTL_SEC * 1000).toISOString()
+
+      return reply.send({ uploadKey, uploadUrl, expiresAt })
+    },
+  )
+
+  fastify.post(
+    '/api/me/releases/:id/artwork/complete',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const parsed = ReleaseArtworkCompleteSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+
+      const user = request.sessionUser!
+      const { id } = request.params as { id: string }
+      const release = await ownedRelease(user.id, id)
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const prefix = `releases/${release.user.username}/${id}/`
+      if (!parsed.data.uploadKey.startsWith(prefix)) {
+        return reply.status(403).send({ error: 'Upload does not belong to this release' })
+      }
+
+      const updated = await fastify.prisma.release.update({
+        where: { id },
+        data: { artworkKey: parsed.data.uploadKey, artworkUrl: null },
+        select: { id: true, artworkKey: true, artworkUrl: true },
+      })
+
+      const artworkUrl = await resolveReleaseArtworkUrl(updated)
+      return reply.send({ artworkUrl, artworkKey: updated.artworkKey })
+    },
+  )
+}
+
+export default releaseArtworkRoutes

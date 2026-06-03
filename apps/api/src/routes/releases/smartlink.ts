@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { config } from '../../config.js'
+import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 
 // M14 (partial): public smart link resolves to artist profile + release anchor.
 const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
@@ -17,6 +18,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         type: true,
         releaseDate: true,
         artworkUrl: true,
+        artworkKey: true,
         smartLinkTargets: true,
         smartLinkViewCount: true,
         description: true,
@@ -53,6 +55,8 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (!release) return reply.status(404).send({ error: 'Release not found' })
 
+    const artworkUrl = await resolveReleaseArtworkUrl(release)
+
     await fastify.prisma.release.update({
       where: { id: release.id },
       data: { smartLinkViewCount: { increment: 1 } },
@@ -85,7 +89,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         title: release.title,
         type: release.type,
         releaseDate: release.releaseDate,
-        artworkUrl: release.artworkUrl,
+        artworkUrl,
         description: release.description,
         smartLinkSlug,
         smartLinkViewCount: release.smartLinkViewCount + 1,

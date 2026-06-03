@@ -95,3 +95,110 @@ export async function updateReleaseCatalog(
   }
   return { error: null, checklist: (data as { checklist?: unknown }).checklist }
 }
+
+export async function prepareReleaseArtworkUpload(
+  releaseId: string,
+  body: { filename: string; contentType: string },
+): Promise<{ uploadKey?: string; uploadUrl?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${releaseId}/artwork/prepare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Prepare failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function completeReleaseArtworkUpload(
+  releaseId: string,
+  uploadKey: string,
+): Promise<{ artworkUrl?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${releaseId}/artwork/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ uploadKey }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Upload failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function fetchReleaseTrackVersions(
+  releaseId: string,
+  trackId: string,
+): Promise<{ versions?: import('@tahti/shared').ReleaseTrackVersionRow[]; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${releaseId}/tracks/${trackId}/versions`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to load versions' }
+  }
+  return { versions: await res.json(), error: null }
+}
+
+export async function prepareReleaseTrackVersionUpload(
+  releaseId: string,
+  trackId: string,
+  body: { filename: string; contentType: string },
+): Promise<{ uploadId?: string; uploadUrl?: string; error: string | null }> {
+  const res = await fetch(
+    `${apiUrl}/api/me/releases/${releaseId}/tracks/${trackId}/versions/prepare`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Prepare failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function completeReleaseTrackVersionUpload(
+  releaseId: string,
+  trackId: string,
+  body: { uploadId: string; versionLabel: string },
+): Promise<{ error: string | null }> {
+  const res = await fetch(
+    `${apiUrl}/api/me/releases/${releaseId}/tracks/${trackId}/versions/complete`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Complete failed' }
+  }
+  return { error: null }
+}
+
+export async function activateReleaseTrackVersion(
+  releaseId: string,
+  trackId: string,
+  versionId: string,
+): Promise<{ error: string | null }> {
+  const res = await fetch(
+    `${apiUrl}/api/me/releases/${releaseId}/tracks/${trackId}/versions/${versionId}/activate`,
+    { method: 'POST', headers: { Cookie: sessionHeader() }, cache: 'no-store' },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Activate failed' }
+  }
+  return { error: null }
+}

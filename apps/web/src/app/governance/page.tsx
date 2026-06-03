@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { cookies } from 'next/headers'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import MotionCard, { type MotionSummary } from './motion-card'
 import NewMotionForm from './new-motion-form'
@@ -84,6 +85,12 @@ export default async function GovernancePage() {
       </p>
 
       {me.isBoard && <NewMotionForm />}
+
+      {me.isBoard && (
+        <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          <Link href="/governance/venues">Venue verification (board) →</Link>
+        </p>
+      )}
 
       <section style={{ marginBottom: '3rem' }}>
         <h2 style={{ fontSize: '1rem', color: '#444', marginBottom: '1rem' }}>Motions</h2>

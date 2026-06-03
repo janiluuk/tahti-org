@@ -74,18 +74,18 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
 | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + chat token join), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth), shared `lib/csv.ts`. Deferred: Upptime, **backup/DR infra + restore drills** (see [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)), structured request logging |
-| **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor; **profile track playback** via linked `archiveItemId`. Deferred: release artwork to MinIO |
+| **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor, profile playback; **cover art upload to MinIO** (`artworkKey` + presigned URLs). Deferred: bulk import |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard. Deferred: social auto-post |
 | **M24** Per-content visuals | 🟡 Partial | Channel gallery modes + **per-item banner/background/slideshow** on `/c/:slug` archive list. Deferred: YouTube/Vimeo backdrop |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
 | **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
-| **M17** Venue calendar | 🟡 Partial | Venue API + iCal; **`POST /api/admin/venues/:slug/verify`** for board. Deferred: admin web UI |
+| **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
 | **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
 | **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** (`ArtistFollow`, `ArchiveRepostAck`, channel UI). Deferred: gate analytics |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
-| **M28** Track version history | 🟡 Partial | `ArchiveItemVersion` model, upload/activate API, worker transcode job, dashboard version panel (stable public item id). Deferred: release-track versions |
+| **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`. Deferred: Discogs API |
 | **M29** Backup & DR | 🟡 Partial | `scripts/backup-*.sh`, `restore-test.sh`; **`ops/RUNBOOK.md`**. Deferred: pgBackRest, offsite buckets, operator drills |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: 45/55-min API→UI polish edge cases |
@@ -294,7 +294,7 @@ Can ship incrementally during beta.
 
 | Done | Milestone | Summary | Priority |
 |:---:|---|---|---|
-| [~] | **M12** | Profile + releases + smart links (playback + artwork remain) | High |
+| [~] | **M12** | Profile + releases + smart links + MinIO cover art | High |
 | [~] | **M30** | Release ops toolkit (MusicBrainz, catalog metadata, release checklist) | Medium |
 | [~] | **M20** | Tier gating polish, upgrade UX | High |
 | [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
@@ -303,7 +303,7 @@ Can ship incrementally during beta.
 | [x] | **M6** | Multistream RTMP targets | Medium |
 | [x] | **M16** | Tahti Radio meta-stream | Medium |
 | [x] | **M15** | Artist @-mentions | Low |
-| [~] | **M17** | Venue API + iCal; admin verification UI remain | Low |
+| [~] | **M17** | Venue API + iCal + board verification UI | Low |
 | [~] | **M11** | Rate limits, hCaptcha, audit export, OpenAPI; Upptime + backup/DR drills remain | High before Y2 audit |
 
 **Exit criteria:** profile URL shareable; downloads + fan-subs used by ≥10 beta artists.
@@ -318,7 +318,7 @@ See `competitive-gaps-hearthis.md` for full gap list.
 |:---:|---|---|
 | [~] | **M22** | Per-item metadata + editable tracklists with **@artist tagging** (dashboard tracklist editor wired) |
 | [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug` smart links |
-| [~] | **M28** | **Track version history** — upload new audio as a version; activate version; stable public archive item id |
+| [~] | **M28** | **Track version history** — archive + release-track versions; activate; stable public ids |
 | [~] | **M24** | Per-content visuals: channel Twisted Wave GLSL gallery + static strip; per-item banner/slideshow URLs. Deferred: YouTube/Vimeo backdrop |
 | [~] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
 | [ ] | **M26** | Customisable radio/channel page: video background, per-album visualisations, theme picker — designer app for live show visuals |

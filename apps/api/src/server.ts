@@ -56,6 +56,8 @@ import adminAuditRoutes from './routes/admin/audit.js'
 import adminVenueRoutes from './routes/admin/venues.js'
 import meReleaseRoutes from './routes/releases/me.js'
 import releaseTrackRoutes from './routes/releases/tracks.js'
+import releaseTrackVersionRoutes from './routes/releases/track-versions.js'
+import releaseArtworkRoutes from './routes/releases/artwork.js'
 import releaseDownloadRoutes from './routes/downloads/release.js'
 import embedRoutes from './routes/releases/embed.js'
 import publicProfileRoutes from './routes/profile/public.js'
@@ -234,6 +236,8 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M12: artist profile + releases + audio upload pipeline
   await fastify.register(meReleaseRoutes)
   await fastify.register(releaseTrackRoutes)
+  await fastify.register(releaseTrackVersionRoutes)
+  await fastify.register(releaseArtworkRoutes)
   await fastify.register(publicProfileRoutes)
   await fastify.register(smartlinkRoutes)
 

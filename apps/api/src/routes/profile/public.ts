@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { archivePlaybackKey } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 
 // M12: public artist profile at tahti.live/u/<username>
 const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
@@ -31,6 +32,7 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
             title: true,
             type: true,
             artworkUrl: true,
+            artworkKey: true,
             releaseDate: true,
             description: true,
             smartLinkSlug: true,
@@ -90,17 +92,22 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const channelSlug = user.channel?.slug ?? null
-    const releases = user.releases.map((release) => ({
-      ...release,
-      tracks: release.tracks.map((track) => ({
-        ...track,
-        playUrl: track.archiveItemId ? (playUrlByArchiveId.get(track.archiveItemId) ?? null) : null,
-        channelItemUrl:
-          track.archiveItemId && channelSlug
-            ? `/c/${channelSlug}#archive-item-${track.archiveItemId}`
+    const releases = await Promise.all(
+      user.releases.map(async (release) => ({
+        ...release,
+        artworkUrl: await resolveReleaseArtworkUrl(release),
+        tracks: release.tracks.map((track) => ({
+          ...track,
+          playUrl: track.archiveItemId
+            ? (playUrlByArchiveId.get(track.archiveItemId) ?? null)
             : null,
+          channelItemUrl:
+            track.archiveItemId && channelSlug
+              ? `/c/${channelSlug}#archive-item-${track.archiveItemId}`
+              : null,
+        })),
       })),
-    }))
+    )
 
     return reply.send({
       artist: {
