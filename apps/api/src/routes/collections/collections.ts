@@ -227,14 +227,21 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: 'itemIds must match collection items exactly' })
       }
 
-      await fastify.prisma.$transaction(
-        itemIds.map((id, index) =>
-          fastify.prisma.collectionItem.update({
-            where: { id },
-            data: { position: index + 1 },
-          }),
-        ),
-      )
+      // Two-phase update avoids @@unique([collectionId, position]) collisions while swapping.
+      await fastify.prisma.$transaction(async (tx) => {
+        for (let i = 0; i < itemIds.length; i++) {
+          await tx.collectionItem.update({
+            where: { id: itemIds[i] },
+            data: { position: -(i + 1) },
+          })
+        }
+        for (let i = 0; i < itemIds.length; i++) {
+          await tx.collectionItem.update({
+            where: { id: itemIds[i] },
+            data: { position: i + 1 },
+          })
+        }
+      })
 
       const items = await fastify.prisma.collectionItem.findMany({
         where: { collectionId: col.id },
