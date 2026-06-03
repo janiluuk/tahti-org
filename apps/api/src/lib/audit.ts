@@ -20,6 +20,9 @@ interface AuditParams {
     | 'VOTE_CAST'
     | 'GRANT_RUN'
     | 'STRIPE_WEBHOOK_ERROR'
+    | 'DOWNLOAD_FRAUD_ALERT'
+    | 'MEMBERSHIP_RENEWAL_REMINDER'
+    | 'MEMBERSHIP_LAPSED'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

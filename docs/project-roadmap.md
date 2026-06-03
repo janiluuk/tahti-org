@@ -63,7 +63,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | Milestone | State | Evidence / notes |
 |---|---|---|
 | **M0** Skeleton | ✅ Done | pnpm + Turborepo monorepo, AGPL headers, CI, `/health`, `/source`, footer link |
-| **M1** Accounts + membership | 🟡 Partial | Email/password signup, email verify, sessions; verify → `PENDING_PAYMENT`; `POST /api/me/membership/checkout` (Stripe Checkout via REST when configured, dev-direct otherwise); webhook `checkout.session.completed` → `REVENUE_SUBSCRIPTION` ledger + `isMember` + member number; **`POST /api/me/membership/portal`** + dashboard “Manage billing” when Stripe configured; board CSV export. Deferred: renewal reminder emails |
+| **M1** Accounts + membership | 🟡 Partial | Email/password signup, email verify, sessions; verify → `PENDING_PAYMENT`; `POST /api/me/membership/checkout` (Stripe Checkout via REST when configured, dev-direct otherwise); webhook `checkout.session.completed` → `REVENUE_SUBSCRIPTION` ledger + `isMember` + member number; **`POST /api/me/membership/portal`** + dashboard “Manage billing” when Stripe configured; board CSV export; **renewal reminder** + **membership lapse** worker crons (~30d before expiry, 365d ARTIST tier). Deferred: Stripe subscription renewal (annual manual renew path) |
 | **M2** Channel + archive upload | ✅ Done | Presigned S3-multipart upload (resolves Topic 5 → option A), transcode worker, channel page |
 | **M3** Live ingress + orchestrator | ✅ Done | Icecast + RTMP webhooks, orchestrator + Liquidsoap template, HLS player. Path-based routing `/c/<slug>` (resolves Topic 9 → option B/C). WebRTC browser-live deferred (Topic 6) |
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
@@ -77,11 +77,11 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor, profile playback; **cover art upload to MinIO** (`artworkKey` + presigned URLs). Deferred: bulk import |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard. Deferred: social auto-post |
-| **M24** Per-content visuals | 🟡 Partial | Channel gallery modes + **per-item banner/background/slideshow** on `/c/:slug` archive list. Deferred: YouTube/Vimeo backdrop |
+| **M24** Per-content visuals | 🟡 Partial | Channel gallery modes + **per-item banner/background/slideshow** on `/c/:slug`; **YouTube/Vimeo** background via `parseVideoEmbedUrl` + muted iframe backdrop |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
 | **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
 | **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI |
-| **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
+| **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold; **download-fraud-scan** daily cron → `DOWNLOAD_FRAUD_ALERT` audit. Deferred: Tor/bot allowlist |
 | **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
 | **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + **gate stats** on dashboard. Deferred: gate funnel charts |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
@@ -319,7 +319,7 @@ See `competitive-gaps-hearthis.md` for full gap list.
 | [~] | **M22** | Per-item metadata + editable tracklists with **@artist tagging** (dashboard tracklist editor wired) |
 | [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug` smart links |
 | [~] | **M28** | **Track version history** — archive + release-track versions; activate; stable public ids |
-| [~] | **M24** | Per-content visuals: channel Twisted Wave GLSL gallery + static strip; per-item banner/slideshow URLs. Deferred: YouTube/Vimeo backdrop |
+| [~] | **M24** | Per-content visuals: channel Twisted Wave GLSL gallery + static strip; per-item banner/slideshow; YouTube/Vimeo backdrop on archive items |
 | [~] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
 | [ ] | **M26** | Customisable radio/channel page: video background, per-album visualisations, theme picker — designer app for live show visuals |
 | [ ] | **M27** | 24/7 archive stream with automated scheduling and annotations: picks up previous live sets in fair rotation; moderator users control the programme list; audio visualisations per set; as automated as possible (ACRCloud tracklist sync feeds annotations) |

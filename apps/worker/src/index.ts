@@ -15,6 +15,11 @@ import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
 import { processFanSubPayouts } from './jobs/fan-sub-payout.js'
 import { processFanSubExpire } from './jobs/fan-sub-expire.js'
+import { processDownloadFraudScanJob } from './jobs/download-fraud-scan.js'
+import {
+  processMembershipLapseJob,
+  processMembershipRenewalJob,
+} from './jobs/membership-lifecycle.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -54,6 +59,12 @@ const worker = new Worker(
     } else if (job.name === 'fan-sub-expire') {
       const summary = await processFanSubExpire(prisma)
       console.log('[worker] fan-sub-expire:', JSON.stringify(summary))
+    } else if (job.name === 'download-fraud-scan') {
+      await processDownloadFraudScanJob(job)
+    } else if (job.name === 'membership-renewal-reminder') {
+      await processMembershipRenewalJob(job)
+    } else if (job.name === 'membership-lapse') {
+      await processMembershipLapseJob(job)
     } else if (job.name === 'annual-grant-calc') {
       // Default to the prior calendar year (matches Finnish fiscal year).
       const { year } = job.data as { year?: number }
@@ -119,6 +130,27 @@ async function registerCrons() {
     'fan-sub-expire',
     {},
     { repeat: { pattern: '0 5 * * *' }, jobId: 'fan-sub-expire-cron' },
+  )
+
+  // M18: flag suspicious download spikes for board review (06:00 UTC)
+  await queue.add(
+    'download-fraud-scan',
+    {},
+    { repeat: { pattern: '0 6 * * *' }, jobId: 'download-fraud-scan-cron' },
+  )
+
+  // M1: renewal reminder emails ~30 days before annual membership expires (07:00 UTC)
+  await queue.add(
+    'membership-renewal-reminder',
+    {},
+    { repeat: { pattern: '0 7 * * *' }, jobId: 'membership-renewal-reminder-cron' },
+  )
+
+  // M1: lapse memberships past 365 days without renewal (08:00 UTC)
+  await queue.add(
+    'membership-lapse',
+    {},
+    { repeat: { pattern: '0 8 * * *' }, jobId: 'membership-lapse-cron' },
   )
 
   await queue.close()

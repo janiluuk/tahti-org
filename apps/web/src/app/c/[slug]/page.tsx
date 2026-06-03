@@ -10,6 +10,7 @@ import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
 import { ArchiveDownloadButton } from './archive-download'
+import { ArchiveVideoBackdrop, resolveArchiveBackground } from './archive-item-backdrop'
 import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
@@ -147,104 +148,108 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               <p style={{ color: '#999' }}>No archive items yet.</p>
             ) : (
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                {items.map((item) => (
-                  <li
-                    key={item.id}
-                    id={`archive-item-${item.id}`}
-                    style={{
-                      padding: '1rem 0',
-                      borderBottom: '1px solid #eee',
-                      ...(item.backgroundUrl
-                        ? {
-                            backgroundImage: `linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url(${item.backgroundUrl})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                          }
-                        : {}),
-                    }}
-                  >
-                    {item.bannerUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.bannerUrl}
-                        alt=""
-                        style={{
-                          width: '100%',
-                          maxHeight: 200,
-                          objectFit: 'cover',
-                          borderRadius: 8,
-                          marginBottom: '0.75rem',
-                        }}
+                {items.map((item) => {
+                  const { imageUrl, videoEmbedUrl } = resolveArchiveBackground(item.backgroundUrl)
+                  return (
+                    <li
+                      key={item.id}
+                      id={`archive-item-${item.id}`}
+                      style={{
+                        padding: '1rem 0',
+                        borderBottom: '1px solid #eee',
+                        ...(imageUrl
+                          ? {
+                              backgroundImage: `linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url(${imageUrl})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                            }
+                          : {}),
+                      }}
+                    >
+                      {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
+                      {item.bannerUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.bannerUrl}
+                          alt=""
+                          style={{
+                            width: '100%',
+                            maxHeight: 200,
+                            objectFit: 'cover',
+                            borderRadius: 8,
+                            marginBottom: '0.75rem',
+                          }}
+                        />
+                      )}
+                      {item.slideshowUrls && item.slideshowUrls.length > 0 && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: '0.35rem',
+                            overflowX: 'auto',
+                            marginBottom: '0.75rem',
+                          }}
+                        >
+                          {item.slideshowUrls.map((url) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              key={url}
+                              src={url}
+                              alt=""
+                              style={{
+                                height: 72,
+                                width: 72,
+                                objectFit: 'cover',
+                                borderRadius: 4,
+                                flexShrink: 0,
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.title}</div>
+                      {item.description && (
+                        <p style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}>
+                          {item.description}
+                        </p>
+                      )}
+                      {item.commentary && (
+                        <div
+                          style={{
+                            color: '#444',
+                            margin: '0 0 0.75rem',
+                            fontSize: '0.9rem',
+                            lineHeight: 1.5,
+                            whiteSpace: 'pre-wrap',
+                            borderLeft: '3px solid #ddd',
+                            paddingLeft: '0.75rem',
+                          }}
+                        >
+                          {item.commentary}
+                        </div>
+                      )}
+                      {item.durationSec != null && (
+                        <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+                          {Math.floor(item.durationSec / 60)}:
+                          {String(item.durationSec % 60).padStart(2, '0')}
+                        </div>
+                      )}
+                      {item.tracklist && item.tracklist.length > 0 && (
+                        <TracklistView entries={item.tracklist} />
+                      )}
+                      {item.audioUrl && (
+                        <audio controls src={item.audioUrl} style={{ width: '100%' }} />
+                      )}
+                      <ArchiveDownloadButton
+                        channelSlug={slug}
+                        artistUsername={channel.user.username}
+                        itemId={item.id}
+                        repostToDownload={Boolean(item.repostToDownload)}
+                        followToDownload={Boolean(item.followToDownload)}
                       />
-                    )}
-                    {item.slideshowUrls && item.slideshowUrls.length > 0 && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          gap: '0.35rem',
-                          overflowX: 'auto',
-                          marginBottom: '0.75rem',
-                        }}
-                      >
-                        {item.slideshowUrls.map((url) => (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            key={url}
-                            src={url}
-                            alt=""
-                            style={{
-                              height: 72,
-                              width: 72,
-                              objectFit: 'cover',
-                              borderRadius: 4,
-                              flexShrink: 0,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                    <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.title}</div>
-                    {item.description && (
-                      <p style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}>
-                        {item.description}
-                      </p>
-                    )}
-                    {item.commentary && (
-                      <div
-                        style={{
-                          color: '#444',
-                          margin: '0 0 0.75rem',
-                          fontSize: '0.9rem',
-                          lineHeight: 1.5,
-                          whiteSpace: 'pre-wrap',
-                          borderLeft: '3px solid #ddd',
-                          paddingLeft: '0.75rem',
-                        }}
-                      >
-                        {item.commentary}
-                      </div>
-                    )}
-                    {item.durationSec != null && (
-                      <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
-                        {Math.floor(item.durationSec / 60)}:
-                        {String(item.durationSec % 60).padStart(2, '0')}
-                      </div>
-                    )}
-                    {item.tracklist && item.tracklist.length > 0 && (
-                      <TracklistView entries={item.tracklist} />
-                    )}
-                    {item.audioUrl && (
-                      <audio controls src={item.audioUrl} style={{ width: '100%' }} />
-                    )}
-                    <ArchiveDownloadButton
-                      channelSlug={slug}
-                      artistUsername={channel.user.username}
-                      itemId={item.id}
-                      repostToDownload={Boolean(item.repostToDownload)}
-                      followToDownload={Boolean(item.followToDownload)}
-                    />
-                  </li>
-                ))}
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </section>
