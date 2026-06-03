@@ -94,7 +94,7 @@ export function PosterWallGallery({ images }: GalleryImagesProps) {
       disposeTex()
       disposeScene(renderer, host, [
         ...meshes.map((m) => m.geometry),
-        ...meshes.map((m) => (m.material as THREE.Material)),
+        ...meshes.map((m) => m.material as THREE.Material),
       ])
     }
   }, [images])

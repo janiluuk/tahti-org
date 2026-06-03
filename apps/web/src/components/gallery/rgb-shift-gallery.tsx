@@ -90,9 +90,13 @@ export function RgbShiftGallery({ images }: GalleryImagesProps) {
       pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1
       pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1
     }
-    root.addEventListener('scroll', () => {
-      camera.position.x = root.scrollLeft / 120 + host.clientWidth / 240
-    }, { passive: true })
+    root.addEventListener(
+      'scroll',
+      () => {
+        camera.position.x = root.scrollLeft / 120 + host.clientWidth / 240
+      },
+      { passive: true },
+    )
     renderer.domElement.addEventListener('pointermove', onMove)
 
     const ro = new ResizeObserver(() => resizeGalleryRenderer(renderer, camera, host))

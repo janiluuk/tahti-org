@@ -2,11 +2,7 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import {
-  renderPrometheusMetrics,
-  summarizeChecks,
-  type DependencyCheck,
-} from './health-checks.js'
+import { renderPrometheusMetrics, summarizeChecks, type DependencyCheck } from './health-checks.js'
 
 describe('health-checks helpers', () => {
   it('summarizeChecks marks outage when critical dependency is down', () => {

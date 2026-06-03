@@ -9,7 +9,5 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function Input({ mono, className, ...props }: InputProps) {
-  return (
-    <input className={cn('ui-input', mono && 'ui-input--mono', className)} {...props} />
-  )
+  return <input className={cn('ui-input', mono && 'ui-input--mono', className)} {...props} />
 }

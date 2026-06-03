@@ -8,7 +8,11 @@ import HlsPlayer from './hls-player'
 import ReactionsOverlay from './reactions'
 import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
-import type { ChannelGalleryMode, ChannelTextLayerAlignment, ChannelTextLayerMode } from '@tahti/shared'
+import type {
+  ChannelGalleryMode,
+  ChannelTextLayerAlignment,
+  ChannelTextLayerMode,
+} from '@tahti/shared'
 import { Badge, Heading, PageShell, Row, Text } from '@/components/ui'
 
 interface ChannelResponse {

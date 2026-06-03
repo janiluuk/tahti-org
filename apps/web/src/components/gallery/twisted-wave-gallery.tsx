@@ -106,7 +106,10 @@ export function TwistedWaveGallery({ images }: GalleryImagesProps) {
     const onScroll = () => {
       const now = performance.now()
       const dt = Math.max(now - lastScrollTs, 1)
-      scrollPower = Math.min(1, scrollPower + (Math.abs(root.scrollLeft - lastScrollLeft) / dt) * 0.02)
+      scrollPower = Math.min(
+        1,
+        scrollPower + (Math.abs(root.scrollLeft - lastScrollLeft) / dt) * 0.02,
+      )
       lastScrollLeft = root.scrollLeft
       lastScrollTs = now
     }
@@ -146,10 +149,7 @@ export function TwistedWaveGallery({ images }: GalleryImagesProps) {
       renderer.domElement.removeEventListener('pointermove', onMove)
       renderer.domElement.removeEventListener('pointerleave', onLeave)
       disposeTex()
-      disposeScene(renderer, host, [
-        ...meshes.map((m) => m.geometry),
-        ...materials,
-      ])
+      disposeScene(renderer, host, [...meshes.map((m) => m.geometry), ...materials])
     }
   }, [images])
 

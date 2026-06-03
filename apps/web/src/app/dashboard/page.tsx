@@ -17,7 +17,11 @@ import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
 import { Button, Heading, Link, PageShell, Panel, Row, Text } from '@/components/ui'
-import type { ChannelGalleryMode, ChannelTextLayerAlignment, ChannelTextLayerMode } from '@tahti/shared'
+import type {
+  ChannelGalleryMode,
+  ChannelTextLayerAlignment,
+  ChannelTextLayerMode,
+} from '@tahti/shared'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }
@@ -334,8 +338,7 @@ export default async function DashboardPage() {
       </Row>
 
       <Text tone="secondary" style={{ marginTop: '0.5rem' }}>
-        Welcome back, {user.displayName} ·{' '}
-        <Link href="/governance">Member governance</Link>
+        Welcome back, {user.displayName} · <Link href="/governance">Member governance</Link>
       </Text>
 
       {membershipInfo && (
@@ -359,8 +362,7 @@ export default async function DashboardPage() {
             </Link>
           </Text>
           <Text size="sm" tone={user.channel.state === 'LIVE' ? 'success' : 'muted'}>
-            <strong>Status:</strong>{' '}
-            {user.channel.state === 'LIVE' ? 'Live' : 'Offline'}
+            <strong>Status:</strong> {user.channel.state === 'LIVE' ? 'Live' : 'Offline'}
           </Text>
         </Panel>
       )}

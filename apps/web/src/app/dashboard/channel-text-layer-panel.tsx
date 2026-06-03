@@ -72,8 +72,7 @@ export default function ChannelTextLayerPanel({
       headerTight
       description={
         <>
-          Add a stylized headline on your public channel page. Five CSS text effects are inspired
-          by{' '}
+          Add a stylized headline on your public channel page. Five CSS text effects are inspired by{' '}
           <Link href={CHANNEL_TEXT_LAYER_SOURCE_URL} target="_blank" rel="noopener noreferrer">
             freefrontend.com/css-text-effects
           </Link>

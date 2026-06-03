@@ -191,14 +191,22 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     const nextText =
       parsed.data.textLayerText !== undefined ? parsed.data.textLayerText : channel.textLayerText
     if (nextMode !== 'NONE' && nextText.trim().length === 0) {
-      return { ok: false, status: 400, error: 'textLayerText is required when a text effect is enabled' }
+      return {
+        ok: false,
+        status: 400,
+        error: 'textLayerText is required when a text effect is enabled',
+      }
     }
 
     const updated = await fastify.prisma.channel.update({
       where: { id: channel.id },
       data: {
-        ...(parsed.data.textLayerMode !== undefined ? { textLayerMode: parsed.data.textLayerMode } : {}),
-        ...(parsed.data.textLayerText !== undefined ? { textLayerText: parsed.data.textLayerText } : {}),
+        ...(parsed.data.textLayerMode !== undefined
+          ? { textLayerMode: parsed.data.textLayerMode }
+          : {}),
+        ...(parsed.data.textLayerText !== undefined
+          ? { textLayerText: parsed.data.textLayerText }
+          : {}),
         ...(parsed.data.textLayerAlign !== undefined
           ? { textLayerAlign: parsed.data.textLayerAlign }
           : {}),
