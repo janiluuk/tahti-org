@@ -116,6 +116,39 @@ describe('M23 — collections and RSS', () => {
     expect(rss.body).toContain('Sunset Mix')
   })
 
+  it('rejects invalid collection type and duplicate slug', async () => {
+    const badType = await app.inject({
+      method: 'POST',
+      url: '/api/me/collections',
+      headers: { cookie },
+      payload: { name: 'Bad', type: 'NOT_A_KIND' },
+    })
+    expect(badType.statusCode).toBe(400)
+
+    const dupSlug = `${username}-dup-test`
+    const first = await app.inject({
+      method: 'POST',
+      url: '/api/me/collections',
+      headers: { cookie },
+      payload: { name: 'First', slug: dupSlug },
+    })
+    expect(first.statusCode).toBe(201)
+
+    const second = await app.inject({
+      method: 'POST',
+      url: '/api/me/collections',
+      headers: { cookie },
+      payload: { name: 'Second', slug: dupSlug },
+    })
+    expect(second.statusCode).toBe(409)
+
+    await app.inject({
+      method: 'DELETE',
+      url: `/api/me/collections/${dupSlug}`,
+      headers: { cookie },
+    })
+  })
+
   it('removes collection items and deletes the collection', async () => {
     const list = await app.inject({
       method: 'GET',
