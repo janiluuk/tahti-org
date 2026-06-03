@@ -79,6 +79,7 @@ Full bucket swap only during DR cutover — document DNS/Caddy target before swi
 
 ## Monitoring
 
+- **Upptime** (public status page): [`ops/upptime/README.md`](upptime/README.md) — monitors `/api/v1/status` and `/health`.
 - Backup age: `./scripts/backup.sh status` (env: `BACKUP_WARN_AGE_HOURS=26`, `BACKUP_PAGE_AGE_HOURS=48`).
 - Cron runs status check daily at 03:30 UTC after backup (see `install-crons.sh`).
 - Weekly restore-test log: `/var/log/tahti-restore-test.log`

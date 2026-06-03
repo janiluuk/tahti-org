@@ -1,0 +1,35 @@
+# Example Upptime site list — copy into your Upptime repo .upptimerc.yml
+# Replace BASE_API and BASE_APP with production URLs.
+
+owner: tahti-ry
+repo: status
+sites:
+  - name: Tahti API (status)
+    url: https://api.tahti.live/api/v1/status
+    expectedStatusCodes:
+      - 200
+    maxResponseTime: 8000
+
+  - name: Tahti API (health)
+    url: https://api.tahti.live/health
+    expectedStatusCodes:
+      - 200
+    maxResponseTime: 5000
+
+  - name: Tahti web (home)
+    url: https://app.tahti.live/
+    expectedStatusCodes:
+      - 200
+    maxResponseTime: 10000
+
+  - name: Tahti transparency
+    url: https://app.tahti.live/transparency
+    expectedStatusCodes:
+      - 200
+    maxResponseTime: 10000
+
+statusPage:
+  cname: status.tahti.live
+  name: Tahti status
+  introTitle: Tahti platform status
+  introMessage: Live and archive radio for artist members. This page is independent of artist channels.

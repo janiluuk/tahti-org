@@ -66,6 +66,20 @@ describe('M12 — releases and public profile', () => {
     expect(pub.json().state).toBe('PUBLISHED')
   })
 
+  it('rejects invalid release type via Zod', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/releases',
+      headers: { cookie },
+      payload: {
+        title: 'Bad Type',
+        type: 'MIXTAPE',
+        releaseDate: '2026-02-01',
+      },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
   it('shows published releases on public profile only', async () => {
     const profile = await app.inject({
       method: 'GET',
