@@ -33,6 +33,23 @@ export async function createRelease(params: {
   return { error: null }
 }
 
+export async function updateReleaseSmartLinks(
+  id: string,
+  smartLinkTargets: Record<string, string>,
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ smartLinkTargets }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to update smart links' }
+  }
+  return { error: null }
+}
+
 export async function publishRelease(id: string): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/releases/${id}`, {
     method: 'PATCH',

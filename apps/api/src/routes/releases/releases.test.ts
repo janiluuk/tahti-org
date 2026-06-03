@@ -99,6 +99,27 @@ describe('M12 — releases and public profile', () => {
     expect(link.json().embedUrl).toContain(`/embed/r/${release!.id}`)
   })
 
+  it('updates smart link targets on a release', async () => {
+    const release = await prisma.release.findFirst({
+      where: { user: { username }, state: 'PUBLISHED' },
+    })
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: {
+        smartLinkTargets: { tidal: 'https://listen.tidal.com/album/1' },
+      },
+    })
+    expect(patch.statusCode).toBe(200)
+
+    const link = await app.inject({
+      method: 'GET',
+      url: `/api/v1/r/${release!.smartLinkSlug}`,
+    })
+    expect(link.json().targets.tidal).toContain('tidal.com')
+  })
+
   it('rejects publishing a release with no tracks', async () => {
     const create = await app.inject({
       method: 'POST',

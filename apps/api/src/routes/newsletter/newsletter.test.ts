@@ -176,4 +176,75 @@ describe('M13 — newsletter', () => {
     })
     expect(res.statusCode).toBe(429)
   })
+
+  it('queues fan-only sends when audience=fans and tier has FAN_NEWSLETTER', async () => {
+    const { hashPassword } = await import('../../lib/password.js')
+    const passwordHash = await hashPassword('testpassword')
+    const fanUser = await prisma.user.create({
+      data: {
+        email: `${PREFIX}fansub@example.com`,
+        passwordHash,
+        username: 'newsletter-fan-user',
+        displayName: 'Fan User',
+        emailVerifiedAt: new Date(),
+      },
+    })
+
+    await prisma.fanTier.create({
+      data: {
+        artistUserId: artistId,
+        name: 'Patron',
+        amountCents: 1000,
+        perks: ['FAN_NEWSLETTER'],
+        active: true,
+      },
+    })
+    await prisma.fanSubscription.create({
+      data: {
+        artistUserId: artistId,
+        subscriberUserId: fanUser.id,
+        tierName: 'Patron',
+        amountCents: 1000,
+        stripeSubscriptionId: 'sub_nl_fan',
+        state: 'ACTIVE',
+        currentPeriodEnd: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+      },
+    })
+    await prisma.newsletterSubscriber.create({
+      data: {
+        artistUserId: artistId,
+        email: `${PREFIX}fansub@example.com`,
+        confirmedAt: new Date(),
+        unsubToken: 'unsub-fan-only',
+      },
+    })
+    await prisma.newsletterSubscriber.create({
+      data: {
+        artistUserId: artistId,
+        email: 'public-only@example.com',
+        confirmedAt: new Date(),
+        unsubToken: 'unsub-public-only',
+      },
+    })
+
+    const draftRes = await app.inject({
+      method: 'POST',
+      url: '/api/me/newsletter/drafts',
+      headers: { cookie: artistCookie },
+      payload: { subject: 'Fans only', bodyMd: 'Secret update' },
+    })
+    const draftId = draftRes.json().id
+
+    const send = await app.inject({
+      method: 'POST',
+      url: `/api/me/newsletter/send/${draftId}`,
+      headers: { cookie: artistCookie },
+      payload: { audience: 'fans' },
+    })
+    expect(send.statusCode).toBe(200)
+    expect(send.json().audience).toBe('fans')
+    expect(send.json().queued).toBe(1)
+
+    await prisma.user.delete({ where: { id: fanUser.id } })
+  })
 })

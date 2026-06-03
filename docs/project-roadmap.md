@@ -39,7 +39,7 @@ closed beta → **M7–M9, M19** (money + grants) → remaining features → han
 
 Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 `docs/AGENT.md` milestones. Verified by running `pnpm typecheck` (passes),
-`pnpm lint` + `pnpm format:check` (clean), and `pnpm test` (195 tests pass with Postgres up).
+`pnpm lint` + `pnpm format:check` (clean), and `pnpm test` (200 tests pass with Postgres up).
 
 | Milestone | State | Evidence / notes |
 |---|---|---|
@@ -55,14 +55,14 @@ Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
 | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha lib, audit log. **Added:** `GET /api/v1/status`, `GET /api/admin/audit/export.csv`, `GET /api/admin/ledger/export.csv?year=`, shared `lib/csv.ts`, **hCaptcha on chat token join**. Deferred: Upptime, backup runbook drills |
-| **M12** Profile + releases | 🟡 Partial | Release schema + CRUD + public profile, web `/u/[username]` with **Open Graph**, **`/r/:slug` smart-link landing** (DSP targets from `smartLinkTargets` JSON), dashboard releases. **Added:** `TrackStatus` enum + audio fields on `ReleaseTrack`, upload/transcode pipeline, per-tier download URLs. Deferred: `ReleaseTrack.archiveItemId` on profile playback, dashboard editor for DSP targets |
+| **M12** Profile + releases | 🟡 Partial | Release schema + CRUD + public profile, web `/u/[username]` with **Open Graph**, **`/r/:slug` smart-link landing**, **dashboard DSP URL editor** (`PATCH /api/me/releases/:id`). **Added:** `TrackStatus` enum + audio fields on `ReleaseTrack`, upload/transcode pipeline, per-tier download URLs. Deferred: `ReleaseTrack.archiveItemId` on profile playback |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, **web `/embed/r/[id]` + `/embed/c/[slug]`** (iframe-safe headers). Deferred: social auto-post, smart-link analytics |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
 | **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
 | **M17** Venue calendar | 🟡 Partial | `venue` schema (Venue/VenueBroadcast), `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`, venue + broadcast create endpoints. Deferred: admin verification UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
-| **M19** Fan-subs | 🟡 Partial | Tiers, subscribe/cancel, webhook lifecycle, ledger split, subscribe page + dashboard. **Added:** Stripe Connect Express onboarding + subscription Checkout (REST), `charges_enabled` gate, **7-day churn grace** on cancel, **`fan-sub-payout`** + **`fan-sub-expire`** worker crons. Deferred: fan-only chat/newsletter perks |
+| **M19** Fan-subs | 🟡 Partial | Tiers, subscribe/cancel, webhook lifecycle, ledger split, subscribe page + dashboard. **Added:** Connect + Checkout, churn grace, payout/expire crons, **perk codes** (`FAN_CHAT`, `FAN_NEWSLETTER`), fan-only Centrifugo channel + newsletter `audience: fans`, supporter badge in public chat. Deferred: newsletter send UI for fan-only audience |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: 45/55-min API→UI polish edge cases |
 
 ### Improvements identified during the audit (added to the roadmap)

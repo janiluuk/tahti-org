@@ -213,7 +213,9 @@ export default function FanSubscriptionsPanel({
           style={{ padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
         />
         <textarea
-          placeholder="Perks, one per line (optional)"
+          placeholder={
+            'Perks, one per line. Use FAN_CHAT or FAN_NEWSLETTER for gated perks; FLAC for lossless downloads.'
+          }
           value={perks}
           onChange={(e) => setPerks(e.target.value)}
           rows={3}

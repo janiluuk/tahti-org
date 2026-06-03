@@ -333,4 +333,29 @@ describe('M19 — fan-to-artist subscriptions', () => {
     expect(payout?.grossCents).toBe(1000)
     expect(payout?.netToArtistCents).toBe(921) // €10 → artist €9.21
   })
+
+  it('fan chat access requires FAN_CHAT perk and active subscription', async () => {
+    await prisma.fanTier.updateMany({
+      where: { artistUserId: artist.id },
+      data: { perks: ['FLAC', 'FAN_CHAT'] },
+    })
+
+    const access = await app.inject({
+      method: 'GET',
+      url: '/api/chat/fansub-artist/access',
+      headers: { cookie: fanCookie },
+    })
+    expect(access.statusCode).toBe(200)
+    expect(access.json().fanChatEnabled).toBe(true)
+    expect(access.json().isSupporter).toBe(true)
+    expect(access.json().canJoinFanChat).toBe(true)
+
+    const token = await app.inject({
+      method: 'POST',
+      url: '/api/chat/fansub-artist/fan-token',
+      headers: { cookie: fanCookie },
+    })
+    expect(token.statusCode).toBe(200)
+    expect(token.json().channel).toBe('channel:fansub-artist:fans')
+  })
 })

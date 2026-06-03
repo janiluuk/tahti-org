@@ -3,6 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import ChatPanel from './chat-panel'
+import FanChatPanel from './fan-chat-panel'
 import HlsPlayer from './hls-player'
 import ReactionsOverlay from './reactions'
 
@@ -156,7 +157,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
         </div>
 
         {/* Chat panel — docked on the right */}
-        <ChatPanel slug={slug} announcements={announcements} />
+        <div>
+          <ChatPanel slug={slug} announcements={announcements} />
+          <FanChatPanel slug={slug} />
+        </div>
       </div>
     </div>
   )

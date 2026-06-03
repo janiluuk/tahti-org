@@ -163,6 +163,8 @@ export default async function DashboardPage() {
     type: string
     state: string
     releaseDate: string
+    smartLinkSlug: string
+    smartLinkTargets: Record<string, string> | null
     _count: { tracks: number }
   }> = []
   try {

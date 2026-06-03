@@ -33,7 +33,7 @@ Last reviewed: 2026-06-03
 | P0 | ~~**Stripe Connect Express** onboarding + live Checkout~~ — wired (REST API); payout cron still open |
 | P1 | ~~`charges_enabled` gate on subscribe page~~ — done (Topic 10 option A) |
 | P1 | Payout transfer cron + failed-payout retry |
-| P2 | Fan-only chat / newsletter perks enforcement |
+| ~~P2~~ | ~~Fan-only chat / newsletter perks enforcement~~ — tier codes `FAN_CHAT` / `FAN_NEWSLETTER` (2026-06-03) |
 | P2 | Churn handling (`customer.subscription.deleted` → grace period UX) |
 
 ### M20 — Tier gating
