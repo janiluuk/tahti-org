@@ -61,6 +61,21 @@ export async function completeUpload(params: {
   return response.json()
 }
 
+export async function getArchiveItemStatus(
+  itemId: string,
+): Promise<{ status: string; title: string }> {
+  const response = await fetch(`${apiUrl}/api/me/archive/${itemId}`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}))
+    throw new Error((body as { error?: string }).error ?? 'Failed to load archive status')
+  }
+  const data = (await response.json()) as { status: string; title: string }
+  return { status: data.status, title: data.title }
+}
+
 export async function postAnnouncement(
   body: string,
 ): Promise<{ error: string | null; id?: string }> {

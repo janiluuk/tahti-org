@@ -510,7 +510,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
 | [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Studio shell + public brand on login/join/transparency/channel/profile/governance/subscribe/embed/smart link |
-| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | + chat token, react/announcements/ban, release track create/upload |
+| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | + profile, chat proxy, ingest webhooks, item-ready, register hcaptcha |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [x] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` — members, audit, fan-subscriber exports |
@@ -559,9 +559,9 @@ Issues identified from streaming architecture review and user journey analysis. 
 | ID | Issue | Raised by | Phase to fix |
 |:---|---|---|---|
 | [ ] | **STREAM-010** Graceful drain on Liquidsoap stop may emit an incomplete final HLS segment — listeners hear a cut instead of a fade | Architecture review | M3 |
-| [ ] | **ARTIST-004** Upload progress bar shows browser→MinIO upload only, not transcode progress — artist thinks "nothing is happening" during transcode | Journey: Artist J4 | M2 |
+| [~] | **ARTIST-004** Upload progress bar shows browser→MinIO upload only, not transcode progress — artist thinks "nothing is happening" during transcode | Dashboard polls archive status after upload (ARTIST-004) | M2 |
 | [~] | **LISTENER-003** Anonymous listener sets a handle in localStorage but it resets if cookies cleared — confusing return identity | `tahti_chat_handle` cookie + localStorage fallback on join | M5 |
-| [ ] | **DIRECTOR-001** Grant calculation preview has no anomaly detection — director must manually spot-check 200 rows for bot activity | Journey: Director J1 | M9 |
+| [x] | **DIRECTOR-001** Grant calculation preview has no anomaly detection — director must manually spot-check 200 rows for bot activity | API preview + board UI on `/governance` | M9 |
 
 ---
 

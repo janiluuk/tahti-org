@@ -5,7 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
 import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
-import { broadcastSessionLogFields } from '@tahti/shared'
+import { broadcastSessionLogFields, RtmpWebhookBodySchema } from '@tahti/shared'
 import { enqueueFinalizeBroadcastRecording } from '../../lib/queue.js'
 
 // nginx-rtmp sends form-encoded bodies to on_publish / on_done / on_update
@@ -15,8 +15,11 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
     '/internal/rtmp/on_publish',
     { config: { rawBody: true } },
     async (request, reply) => {
-      const body = request.body as Record<string, string>
-      const streamName: string = body.name ?? ''
+      const parsed = RtmpWebhookBodySchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send('invalid')
+      }
+      const streamName = parsed.data.name
 
       const channel = await fastify.prisma.channel.findFirst({
         where: {
@@ -81,8 +84,9 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
 
   // Called by nginx-rtmp when a stream disconnects.
   fastify.post('/internal/rtmp/on_done', async (request, reply) => {
-    const body = request.body as Record<string, string>
-    const streamName: string = body.name ?? ''
+    const parsed = RtmpWebhookBodySchema.safeParse(request.body)
+    if (!parsed.success) return reply.status(200).send('ok')
+    const streamName = parsed.data.name
 
     const channel = await fastify.prisma.channel.findFirst({
       where: { slug: streamName.split('__')[0] },
