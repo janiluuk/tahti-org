@@ -4,7 +4,10 @@
 import { describe, it, expect } from 'vitest'
 import {
   ChannelArchiveParamsSchema,
+  ReleaseIdTrackIdParamsSchema,
   ReleaseTrackDownloadParamsSchema,
+  ReleaseTrackParamsSchema,
+  SmartLinkSlugParamSchema,
   parseRouteParams,
   SlugParamSchema,
 } from './params.js'
@@ -29,5 +32,24 @@ describe('route param schemas', () => {
         trackId: 'trk1',
       }),
     ).toEqual({ smartLinkSlug: 'my-release', trackId: 'trk1' })
+  })
+
+  it('parses release track params', () => {
+    expect(parseRouteParams(ReleaseTrackParamsSchema, { id: 'rel1', trackId: 'trk1' })).toEqual({
+      id: 'rel1',
+      trackId: 'trk1',
+    })
+  })
+
+  it('parses release id + track id params', () => {
+    expect(
+      parseRouteParams(ReleaseIdTrackIdParamsSchema, { releaseId: 'rel1', trackId: 'trk1' }),
+    ).toEqual({ releaseId: 'rel1', trackId: 'trk1' })
+  })
+
+  it('parses smart link slug', () => {
+    expect(parseRouteParams(SmartLinkSlugParamSchema, { smartLinkSlug: 'ep-2026' })).toEqual({
+      smartLinkSlug: 'ep-2026',
+    })
   })
 })

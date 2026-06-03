@@ -3,7 +3,13 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
-import { ReleaseTrackVersionCompleteSchema, ReleaseTrackVersionPrepareSchema } from '@tahti/shared'
+import {
+  ReleaseIdTrackIdParamsSchema,
+  ReleaseTrackVersionCompleteSchema,
+  ReleaseTrackVersionParamsSchema,
+  ReleaseTrackVersionPrepareSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { ensureInitialReleaseTrackVersion, syncActiveVersionToTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
@@ -29,7 +35,9 @@ const releaseTrackVersionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { releaseId, trackId } = request.params as { releaseId: string; trackId: string }
+      const routeParams = parseRouteParams(ReleaseIdTrackIdParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { releaseId, trackId } = routeParams
 
       const track = await ownedTrack(user.id, releaseId, trackId)
       if (!track) return reply.status(404).send({ error: 'Track not found' })
@@ -64,7 +72,9 @@ const releaseTrackVersionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
-      const { releaseId, trackId } = request.params as { releaseId: string; trackId: string }
+      const routeParams = parseRouteParams(ReleaseIdTrackIdParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { releaseId, trackId } = routeParams
       const track = await ownedTrack(user.id, releaseId, trackId)
       if (!track) return reply.status(404).send({ error: 'Track not found' })
 
@@ -93,7 +103,9 @@ const releaseTrackVersionRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
-      const { releaseId, trackId } = request.params as { releaseId: string; trackId: string }
+      const routeParams = parseRouteParams(ReleaseIdTrackIdParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { releaseId, trackId } = routeParams
       const track = await ownedTrack(user.id, releaseId, trackId)
       if (!track) return reply.status(404).send({ error: 'Track not found' })
 
@@ -136,11 +148,9 @@ const releaseTrackVersionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { releaseId, trackId, versionId } = request.params as {
-        releaseId: string
-        trackId: string
-        versionId: string
-      }
+      const routeParams = parseRouteParams(ReleaseTrackVersionParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { releaseId, trackId, versionId } = routeParams
 
       const track = await ownedTrack(user.id, releaseId, trackId)
       if (!track) return reply.status(404).send({ error: 'Track not found' })

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { UsernameParamSchema, parseRouteParams } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
@@ -10,7 +11,9 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { username } = request.params as { username: string }
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { username } = routeParams
 
       const artist = await fastify.prisma.user.findUnique({
         where: { username },
@@ -38,7 +41,9 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { username } = request.params as { username: string }
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { username } = routeParams
 
       const artist = await fastify.prisma.user.findUnique({
         where: { username },
@@ -59,7 +64,9 @@ const artistFollowRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { username } = request.params as { username: string }
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { username } = routeParams
 
       const artist = await fastify.prisma.user.findUnique({
         where: { username },

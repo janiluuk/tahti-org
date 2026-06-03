@@ -2,13 +2,16 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { SmartLinkSlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { config } from '../../config.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 
 // M14 (partial): public smart link resolves to artist profile + release anchor.
 const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/v1/r/:smartLinkSlug', async (request, reply) => {
-    const { smartLinkSlug } = request.params as { smartLinkSlug: string }
+    const routeParams = parseRouteParams(SmartLinkSlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { smartLinkSlug } = routeParams
 
     const release = await fastify.prisma.release.findFirst({
       where: { smartLinkSlug, state: 'PUBLISHED' },

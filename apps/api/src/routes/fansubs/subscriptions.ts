@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { FanSubCheckoutSchema } from '@tahti/shared'
+import {
+  FanSubCheckoutSchema,
+  IdParamSchema,
+  UsernameParamSchema,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import {
   stripeEnabled,
@@ -25,7 +30,9 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const subscriber = request.sessionUser!
-      const { username } = request.params as { username: string }
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { username } = routeParams
       const parsed = FanSubCheckoutSchema.safeParse(request.body)
       if (!parsed.success) {
         return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
@@ -164,7 +171,9 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
     { preHandler: requireAuth },
     async (request, reply) => {
       const user = request.sessionUser!
-      const { id } = request.params as { id: string }
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
 
       const sub = await fastify.prisma.fanSubscription.findFirst({
         where: { id, subscriberUserId: user.id },

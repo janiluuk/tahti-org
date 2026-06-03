@@ -25,8 +25,22 @@ export const ReleaseTrackDownloadParamsSchema = z.object({
   trackId: IdParamSchema.shape.id,
 })
 
-export const CollectionSlugParamSchema = z.object({
-  slug: z.string().min(1).max(64),
+export const SmartLinkSlugParamSchema = z.object({
+  smartLinkSlug: z.string().min(1).max(64),
+})
+
+export const ReleaseTrackParamsSchema = z.object({
+  id: IdParamSchema.shape.id,
+  trackId: IdParamSchema.shape.id,
+})
+
+export const ReleaseIdTrackIdParamsSchema = z.object({
+  releaseId: IdParamSchema.shape.id,
+  trackId: IdParamSchema.shape.id,
+})
+
+export const ReleaseTrackVersionParamsSchema = ReleaseIdTrackIdParamsSchema.extend({
+  versionId: IdParamSchema.shape.id,
 })
 
 export function parseRouteParams<T extends z.ZodTypeAny>(

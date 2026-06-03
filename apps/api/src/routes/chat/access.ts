@@ -2,13 +2,16 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { SlugParamSchema, parseRouteParams } from '@tahti/shared'
 import { artistOffersFanChat, subscriberHasFanChat } from '../../lib/fan-perks.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 
 const chatAccessRoute: FastifyPluginAsync = async (fastify) => {
   // GET /api/chat/:slug/access — public chat + fan-chat eligibility for current session
   fastify.get('/api/chat/:slug/access', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },

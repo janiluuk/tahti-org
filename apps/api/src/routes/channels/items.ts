@@ -2,13 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { archivePlaybackKey } from '@tahti/shared'
+import { SlugParamSchema, archivePlaybackKey, parseRouteParams } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { serializeArchiveItem } from '../../lib/archive-metadata.js'
 
 const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/channels/:slug/items', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { slug } = routeParams
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },
