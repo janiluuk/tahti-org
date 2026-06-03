@@ -47,13 +47,13 @@ Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 | **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence (uncommitted working tree) |
 | **M6** Multistream RTMP | ✅ Done | Per-channel targets, encrypted stream keys, `alwaysMirror` gated to STUDIO |
 | **M7** Distribution (Mixcloud/Revelator) | ❌ Not started | No `packages/revelator` or `packages/mixcloud` |
-| **M8** Transparency ledger | 🟡 Partial | Append-only ledger, monthly rollup worker, public `/transparency` API. Missing: `/transparency/grants/:year` endpoint (depends on M9) |
-| **M9** Annual grant calc | ❌ Not started | No `GrantDisbursement` model; no engagement/listener-hour data pipeline to feed it |
-| **M10** Member governance | ⏳ In progress | No `Motion`/`Vote` models yet. `admin/ledger` explicitly defers role checks here. **Picked as the next milestone to implement** |
+| **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
+| **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
+| **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
 | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha lib, audit log present. Missing: backups runbook wiring, status page, audit CSV export |
 | **M12** Profile + releases | ❌ Not started | No `Release`/`ReleaseTrack` models |
 | **M13–M17** Newsletter, promo, tagging, radio, venues | ❌ Not started | — |
-| **M18** Downloads first-class | ❌ Not started | No `engagement.Download` model |
+| **M18** Downloads first-class | 🟡 Partial | `engagement.Download` model + archive download endpoint with per-IP/fingerprint rate limit, 30-day dedup, per-track cap, grant-unit weighting. Deferred: 24h net-new-IP threshold, Tor/bot allowlist, fraud-scan cron, release-track + FLAC/source formats |
 | **M19** Fan-subs | ❌ Not started | No Stripe Connect onboarding |
 | **M20** Tier gating | 🟡 Partial | 3-tier enum `FREE/ARTIST/STUDIO` exists (diverges from spec's `FREE/PAID`); weekly-cap fields on `User`. Free-tier broadcast cap + MP3/FLAC manifest split not enforced |
 
@@ -65,13 +65,13 @@ as their own checklist so they don't get lost between milestones.
 | Done | Improvement | Why it matters | Suggested milestone |
 |:---:|---|---|---|
 | [ ] | Wire Stripe Checkout for €40 membership + webhook → `REVENUE_SUBSCRIPTION` ledger entry | M1 currently activates membership with no payment; this is core to the nonprofit money flow | M1 finish / Phase 4 |
-| [ ] | Add `GrantDisbursement` model + annual grant cron + `/transparency/grants/:year` | The grant engine is "what makes Tahti a nonprofit" and is entirely absent | M9 |
-| [ ] | Add board/treasurer **role** so `admin/ledger` stops using `isMember` as a proxy | Treasurer-only and board-only actions are currently gated on plain membership | M10 (this pass) |
+| [x] | Add `GrantDisbursement` model + annual grant cron + `/transparency/grants/:year` | The grant engine is "what makes Tahti a nonprofit" and is entirely absent | M9 (done) |
+| [x] | Add board **role** (`User.isBoard` + `requireBoard`) so role checks stop using `isMember` as a proxy | Board-only actions are now gated properly; `admin/ledger` can adopt `requireBoard` next | M10 (done) |
 | [ ] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
 | [ ] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | AGENT.md acceptance criteria require Zod validation on every endpoint; several routes hand-roll validation | ongoing hardening |
 | [ ] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fix before third parties depend on it | M8 polish |
 | [ ] | Document ephemeral test DB story for CI + local (`pnpm test` needs Postgres) | Integration tests silently fail without a DB; document/seed it | M11 |
-| [ ] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | M9's grant formula needs real inputs; today nothing records engagement units | M18/M19 → M9 |
+| [~] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | Download → unit pipeline is live (M18); fan-sub euro input lands with M19 | M18 (done) / M19 → M9 |
 
 ---
 
@@ -179,11 +179,11 @@ Required before first **real** membership money and first grant cycle.
 
 | Done | Milestone | Summary | Owner |
 |:---:|---|---|---|
-| [x] | **M8** | Public transparency ledger + monthly rollup API (grants/:year still pending M9) | Dev |
+| [x] | **M8** | Public transparency ledger + monthly rollup API + grants/:year report | Dev |
 | [ ] | **M7** | Mixcloud upload + Revelator wizard (€8/release) | Dev |
-| [ ] | **M9** | Annual engagement-unit grant cron + payout + report | Dev |
+| [x] | **M9** | Annual engagement-unit grant cron + report (`packages/ledger`, payout transfer pending Stripe Connect / M19) | Dev |
 | [ ] | **M19** | Fan-subscriptions (Stripe Connect, 0% org take, 2% ops fee) | Dev |
-| [~] | **M10** (core) | Member directory, motions, voting, bylaws display — **in progress this pass** (advisory voting per Topic 11) | Dev |
+| [x] | **M10** (core) | Member directory, motions, advisory voting (Topic 11), governance portal | Dev |
 
 **Test matrix:**
 
@@ -191,8 +191,8 @@ Required before first **real** membership money and first grant cycle.
 |:---:|---|
 | [ ] | Stripe membership + webhook → ledger entry |
 | [ ] | Fan-sub: listener pays → artist Connect payout → 2% ops fee line |
-| [ ] | Download → engagement unit increments (see `engagement-and-fansubs.md`) |
-| [ ] | Grant dry-run on synthetic Y1 data matches spreadsheet |
+| [x] | Download → engagement unit increments (see `engagement-and-fansubs.md`) |
+| [x] | Grant dry-run on synthetic data matches hand calc within 1 cent (`packages/ledger`, `admin/grants.test.ts`) |
 | [ ] | `/transparency` matches ledger exports |
 
 ---

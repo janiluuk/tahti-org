@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat", "ledger", "governance"]
+  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -78,6 +78,18 @@ enum LedgerCategory {
   COST_PROFESSIONAL_SERVICES
   GRANT_DISBURSEMENT
   RESERVE_TRANSFER
+  FAN_SUB_GROSS_RECEIVED
+  FAN_SUB_NET_TO_ARTIST
+  FAN_SUB_OPERATIONAL_FEE
+
+  @@schema("ledger")
+}
+
+enum GrantState {
+  PENDING
+  CONFIRMED
+  PAID
+  UNCLAIMED
 
   @@schema("ledger")
 }
@@ -96,6 +108,7 @@ enum AuditAction {
   MOTION_OPEN
   MOTION_CLOSE
   VOTE_CAST
+  GRANT_RUN
 
   @@schema("governance")
 }
@@ -150,6 +163,7 @@ model User {
   channel            Channel?
   motionsProposed    Motion[]
   votes              Vote[]
+  grants             GrantDisbursement[]
 
   @@schema("core")
 }
@@ -327,6 +341,30 @@ model MonthlyRollup {
   @@schema("ledger")
 }
 
+// M9 — annual engagement-unit-weighted grant disbursements. One row per
+// eligible artist per fiscal year. Append-only in spirit: a finalized year's
+// rows are not recomputed (see docs/planning-decisions.md Topic 8).
+model GrantDisbursement {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  forYear      Int
+  units        Int
+  amountCents  BigInt
+  state        GrantState @default(PENDING)
+  payoutMethod String?
+  payoutRef    String?
+  notifiedAt   DateTime?
+  confirmedAt  DateTime?
+  paidAt       DateTime?
+  publishedAs  String
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, forYear])
+  @@index([forYear])
+  @@schema("ledger")
+}
+
 // ── Governance schema ─────────────────────────────────────────────────────────
 
 model AuditLog {
@@ -377,4 +415,31 @@ model Vote {
   @@id([motionId, userId])
   @@index([motionId])
   @@schema("governance")
+}
+
+// ── Engagement (M18) ──────────────────────────────────────────────────────────
+// Every download is logged for grant accounting. A row that counts toward grants
+// has `countedAt` set and a `weight` (1 free, 5 fan-subscriber). Rows that don't
+// count (dedup, per-track cap, fraud) keep countedAt NULL with a `reason`.
+// See docs/engagement-and-fansubs.md.
+
+model Download {
+  id             BigInt    @id @default(autoincrement())
+  channelId      String
+  archiveItemId  String?
+  releaseTrackId String?
+  format         String
+  byUserId       String?
+  byFingerprint  String
+  byIpHash       String
+  bytes          Int       @default(0)
+  countedAt      DateTime?
+  reason         String?
+  weight         Int       @default(1)
+  createdAt      DateTime  @default(now())
+
+  @@index([channelId, countedAt])
+  @@index([byFingerprint, archiveItemId])
+  @@index([archiveItemId, createdAt])
+  @@schema("engagement")
 }

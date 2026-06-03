@@ -32,6 +32,9 @@ import rtmpTargetRoutes from './routes/me/rtmp-targets.js'
 import transparencyRoutes from './routes/transparency/index.js'
 import adminLedgerRoutes from './routes/admin/ledger.js'
 import governanceRoutes from './routes/governance/index.js'
+import downloadRoutes from './routes/downloads/archive.js'
+import meGrantsRoutes from './routes/me/grants.js'
+import adminGrantsRoutes from './routes/admin/grants.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { config } from './config.js'
 
@@ -93,6 +96,13 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M10: member governance (motions + advisory voting)
   await fastify.register(governanceRoutes)
+
+  // M18: downloads as first-class action (engagement units)
+  await fastify.register(downloadRoutes)
+
+  // M9: annual grant disbursements
+  await fastify.register(meGrantsRoutes)
+  await fastify.register(adminGrantsRoutes)
 
   return fastify
 }

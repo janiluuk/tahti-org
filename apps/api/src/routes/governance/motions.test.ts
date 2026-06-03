@@ -117,8 +117,14 @@ describe('M10 — member governance', () => {
       headers: { cookie: memberCookie },
     })
     expect(res.statusCode).toBe(200)
-    const numbers = res.json().map((m: { memberNumber: number }) => m.memberNumber)
-    expect(numbers).toEqual([1, 2, 3])
+    // The DB is shared across test files, so other suites may have members
+    // present. Assert only that this suite's fixtures appear in member-number
+    // order (the directory is ordered by memberNumber asc).
+    const numbers: number[] = res
+      .json()
+      .map((m: { memberNumber: number }) => m.memberNumber)
+    const ours = numbers.filter((n) => [1, 2, 3].includes(n))
+    expect(ours).toEqual([1, 2, 3])
   })
 
   it('forbids non-board members from posting a motion', async () => {

@@ -57,6 +57,36 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
     })
   })
 
+  // GET /api/v1/transparency/grants/:year — published artist grant report (M9)
+  // Anonymized per artist's publicAttribution choice (publishedAs).
+  fastify.get('/api/v1/transparency/grants/:year', async (request, reply) => {
+    const { year } = request.params as { year: string }
+    const forYear = parseInt(year, 10)
+    if (Number.isNaN(forYear)) {
+      return reply.status(400).send({ error: 'Invalid year' })
+    }
+
+    const grants = await fastify.prisma.grantDisbursement.findMany({
+      where: { forYear },
+      orderBy: { amountCents: 'desc' },
+      select: { publishedAs: true, units: true, amountCents: true, state: true },
+    })
+
+    const totalCents = grants.reduce((s, g) => s + g.amountCents, 0n)
+
+    return reply.send({
+      year: forYear,
+      totalCents: totalCents.toString(),
+      grantCount: grants.length,
+      grants: grants.map((g) => ({
+        publishedAs: g.publishedAs,
+        units: g.units,
+        amountCents: g.amountCents.toString(),
+        state: g.state,
+      })),
+    })
+  })
+
   // GET /api/v1/transparency/ytd — current year running summary
   fastify.get('/api/v1/transparency/ytd', async (_request, reply) => {
     const year = new Date().getFullYear().toString()

@@ -18,6 +18,7 @@ interface AuditParams {
     | 'MOTION_OPEN'
     | 'MOTION_CLOSE'
     | 'VOTE_CAST'
+    | 'GRANT_RUN'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

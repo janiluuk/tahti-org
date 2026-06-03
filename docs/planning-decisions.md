@@ -382,7 +382,7 @@ Date decided:
 
 ## Topic 8 — Grant formula: consolidate M9 spec to use engagement units
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (engagement units; implemented in `packages/ledger`)  
 **Blocks:** M9 (annual grant calculation)  
 **Must decide before:** M9 development begins
 
@@ -414,15 +414,33 @@ The listener-hours formula is explicitly listed as an anti-pattern in AGENT.md (
 
 ```
 Authoritative formula:
-  engagement_units =
-  Minimum threshold to qualify:
-  Per-artist cap (%):
-  Unclaimed grant handling:
-  fan_sub weight (€1 = N units):
-  Spec updates needed (AGENT.md M9 — delete listener-hours formula):
-Owner:
-Date decided:
+  engagement_units(A) = (free_downloads × 1) + (paid_downloads × 5)
+                        + (fan_sub_euros_received × 1)
+  grant(A) = (units(A) / total_eligible_units) × grant_pool
+  grant_pool = annual_surplus − 10% operating reserve
+  Minimum threshold to qualify: 5 engagement units (below → rolls to next year)
+  Per-artist cap (%): none hard-coded (board review catches outliers); revisit if needed
+  Unclaimed grant handling: GrantState.UNCLAIMED → rolls into next year's pool
+  fan_sub weight (€1 = N units): €1 received = 1 unit (so €5/mo = 60 units/yr)
+  Spec updates needed: AGENT.md M9 listener-hours formula is superseded; the
+    engagement-unit formula in engagement-and-fansubs.md is authoritative.
+Owner: Dev
+Date decided: 2026-06-03
 ```
+
+**Implementation note (2026-06-03):** M9 implemented in `packages/ledger`.
+- `allocateGrants()` is a pure, deterministic largest-remainder (Hamilton)
+  allocator — sums to the pool exactly (zero rounding drift), 10% reserve, 5-unit
+  eligibility threshold. Unit-tested incl. the spec's worked example.
+- `runAnnualGrantCalc(prisma, year)` reads the year's `MonthlyRollup` surpluses
+  and counted `engagement.Download` weights per channel→artist, allocates, and
+  writes `GrantDisbursement` rows + `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER`
+  ledger entries (append-only; refuses to re-run a finalized year).
+- Fan-sub euros contribute 0 until M19 ships (the term is wired but inputs are
+  empty). Listener-hours are **not** used.
+- Surfaced via `POST /api/admin/grants/run/:year` (board), `GET
+  /api/v1/transparency/grants/:year` (public, anonymized), `GET /api/me/grants`.
+- Worker cron `annual-grant-calc` runs 03:00 on March 1 for the prior year.
 
 ---
 
@@ -741,10 +759,11 @@ Record decisions here as they are made, in date order.
 | 5 | Upload resumability | **A** — S3 multipart via presigned part URLs (no tusd). Implemented in `routes/uploads/*`. | 2026-06-03 | Dev |
 | 9 | Subdomain routing | **B/C** — path-based `/c/<slug>` for MVP; subdomains deferred. | 2026-06-03 | Dev |
 | 11 | AGM voting legality | **C** — M10 voting is **advisory** for Y1; `Motion.advisory` flag; upgrade after bylaws amendment. | 2026-06-03 | Dev / Board |
+| 8 | Grant formula | **Engagement units** (downloads ×1/×5 + fan-sub €×1), 10% reserve, 5-unit floor; implemented in `packages/ledger`. Listener-hours dropped. | 2026-06-03 | Dev |
 
 > Topics 4, 5, and 9 are marked retroactively from the shipped MVP code — they
 > were decided implicitly by implementation and are recorded here for the audit
-> trail. Remaining `OPEN` topics (1, 2, 3, 6, 7, 8, 10, 12–15) still need explicit
+> trail. Remaining `OPEN` topics (1, 2, 3, 6, 7, 10, 12–15) still need explicit
 > resolution before their milestones.
 
 ---

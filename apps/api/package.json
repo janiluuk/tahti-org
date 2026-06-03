@@ -17,6 +17,7 @@
     "@fastify/cookie": "^9.4.0",
     "@fastify/sensible": "^5.6.0",
     "@tahti/db": "workspace:*",
+    "@tahti/ledger": "workspace:*",
     "@tahti/shared": "workspace:*",
     "argon2": "^0.40.3",
     "bullmq": "^5.12.0",
