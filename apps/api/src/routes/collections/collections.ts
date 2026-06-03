@@ -108,6 +108,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         name?: string
         description?: string
         isPublic?: boolean
+        isFeatured?: boolean
         coverUrl?: string
       }
 
@@ -121,6 +122,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.name !== undefined) data.name = body.name.trim().slice(0, 100)
       if (body.description !== undefined) data.description = body.description.slice(0, 1000) || null
       if (body.isPublic !== undefined) data.isPublic = body.isPublic
+      if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
       if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl.trim() || null
 
       const updated = await fastify.prisma.collection.update({ where: { id: col.id }, data })

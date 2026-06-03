@@ -66,6 +66,23 @@ export async function reorderCollectionItems(
   return { error: null }
 }
 
+export async function updateCollection(
+  slug: string,
+  params: { isFeatured?: boolean; isPublic?: boolean },
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(params),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to update collection' }
+  }
+  return { error: null }
+}
+
 export async function deleteCollection(slug: string): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}`, {
     method: 'DELETE',

@@ -21,6 +21,15 @@ interface SmartLinkTrack {
   position: number
 }
 
+interface FeaturedCollection {
+  slug: string
+  name: string
+  type: string
+  description: string | null
+  itemCount: number
+  url: string
+}
+
 interface SmartLinkResponse {
   release: {
     id: string
@@ -36,6 +45,7 @@ interface SmartLinkResponse {
     musicbrainzUrl: string | null
   }
   artist: { username: string; displayName: string; avatarUrl: string | null }
+  featuredCollections?: FeaturedCollection[]
   profileUrl: string
   releaseUrl: string
   targets: Record<string, string>
@@ -129,6 +139,32 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
               </a>
             </div>
           )}
+        </div>
+      )}
+
+      {data.featuredCollections && data.featuredCollections.length > 0 && (
+        <div
+          style={{
+            textAlign: 'left',
+            marginBottom: '1.5rem',
+            padding: '0.75rem 1rem',
+            background: '#f8f8f8',
+            borderRadius: 8,
+          }}
+        >
+          <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: '#666' }}>
+            From this artist
+          </p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {data.featuredCollections.map((c) => (
+              <li key={c.slug} style={{ marginBottom: '0.35rem' }}>
+                <Link href={c.url} style={{ color: '#2563eb', fontWeight: 600 }}>
+                  {c.name}
+                </Link>
+                <span style={{ color: '#888', fontSize: '0.8rem' }}> · {c.itemCount} item(s)</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

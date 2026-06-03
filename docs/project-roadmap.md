@@ -84,7 +84,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
 | **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
 | **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; **auto file tags** (BPM, key, genre, description); **lossless uploads → FLAC only**. Deferred: repost/follow download gates |
-| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS with CDN enclosure URLs, release items, profile + `/u/:user/c/:slug` + dashboard collections panel. Deferred: drag reorder, featured collections on smart links |
+| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, profile + smart-link **featured collections**, item reorder API + dashboard controls. Deferred: drag-and-drop UI polish |
 | **M28** Track version history | 🟡 Partial | `ArchiveItemVersion` model, upload/activate API, worker transcode job, dashboard version panel (stable public item id). Deferred: release-track versions |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export; UPC/ISRC on `/r/:slug`. Deferred: guided MusicBrainz submit |
 | **M29** Backup & DR | 🟡 Partial | `scripts/backup-*.sh`, `restore-test.sh`; **`ops/RUNBOOK.md`**. Deferred: pgBackRest, offsite buckets, operator drills |
@@ -317,7 +317,7 @@ See `competitive-gaps-hearthis.md` for full gap list.
 | Done | Milestone | Summary |
 |:---:|---|---|
 | [~] | **M22** | Per-item metadata + editable tracklists with **@artist tagging** (dashboard tracklist editor wired) |
-| [~] | **M23** | Collections (albums, mix series e.g. “Trance sets”) + RSS |
+| [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug` smart links |
 | [~] | **M28** | **Track version history** — upload new audio as a version; activate version; stable public archive item id |
 | [~] | **M24** | Per-content visuals: channel Twisted Wave GLSL gallery + static strip; per-item banner/slideshow URLs. Deferred: YouTube/Vimeo backdrop |
 | [~] | **M25** | Artist commentary on archive items (dashboard + public channel page) |

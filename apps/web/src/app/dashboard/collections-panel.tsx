@@ -10,6 +10,7 @@ import {
   createCollection,
   deleteCollection,
   reorderCollectionItems,
+  updateCollection,
 } from './collection-actions'
 
 interface CollectionRow {
@@ -18,6 +19,7 @@ interface CollectionRow {
   name: string
   type: string
   isPublic: boolean
+  isFeatured?: boolean
   _count?: { items: number }
   items?: Array<{
     id: string
@@ -100,6 +102,15 @@ export default function CollectionsPanel({
     })
   }
 
+  function toggleFeatured(slug: string, isFeatured: boolean) {
+    setError(null)
+    startTransition(async () => {
+      const res = await updateCollection(slug, { isFeatured })
+      if (res.error) setError(res.error)
+      else router.refresh()
+    })
+  }
+
   function remove(slug: string) {
     if (!confirm(`Delete collection "${slug}"?`)) return
     startTransition(async () => {
@@ -134,8 +145,22 @@ export default function CollectionsPanel({
                     /c/{c.slug}
                   </a>
                   {c.isPublic && <span style={{ color: '#888', fontSize: '0.8rem' }}> · RSS</span>}
+                  {c.isFeatured && (
+                    <span style={{ color: '#16a34a', fontSize: '0.8rem' }}> · Featured</span>
+                  )}
                 </span>
-                <span style={{ display: 'flex', gap: '0.5rem' }}>
+                <span style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  {c.isPublic && (
+                    <label style={{ fontSize: '0.8rem', display: 'flex', gap: '0.25rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(c.isFeatured)}
+                        disabled={isPending}
+                        onChange={(e) => toggleFeatured(c.slug, e.target.checked)}
+                      />
+                      Featured
+                    </label>
+                  )}
                   <button
                     type="button"
                     onClick={() => setAddSlug(c.slug)}

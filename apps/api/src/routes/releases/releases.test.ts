@@ -98,6 +98,7 @@ describe('M12 — releases and public profile', () => {
     expect(link.json().releaseUrl).toContain('release-')
     expect(link.json().targets.spotify).toContain('spotify.com')
     expect(link.json().embedUrl).toContain(`/embed/r/${release!.id}`)
+    expect(Array.isArray(link.json().featuredCollections)).toBe(true)
   })
 
   it('updates smart link targets on a release', async () => {

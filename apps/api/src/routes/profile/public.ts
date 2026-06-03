@@ -44,7 +44,7 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
         },
         collections: {
           where: { isPublic: true },
-          orderBy: { createdAt: 'desc' },
+          orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
           take: 12,
           select: {
             slug: true,
@@ -52,6 +52,7 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
             type: true,
             description: true,
             coverUrl: true,
+            isFeatured: true,
             _count: { select: { items: true } },
           },
         },
@@ -79,6 +80,7 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
         type: c.type,
         description: c.description,
         coverUrl: c.coverUrl,
+        isFeatured: c.isFeatured,
         itemCount: _count.items,
         url: `/u/${user.username}/c/${c.slug}`,
       })),
