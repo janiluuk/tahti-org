@@ -5,14 +5,25 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { prepareUpload, completeUpload } from './actions'
+import { prepareUpload, completeUpload, getArchiveItemStatus } from './actions'
 import {
   ArchiveMetadataFields,
   defaultMetadataFormState,
   metadataFormToPayload,
 } from './archive-metadata-fields'
 
-type UploadState = 'idle' | 'preparing' | 'uploading' | 'completing' | 'done' | 'error'
+type UploadState =
+  | 'idle'
+  | 'preparing'
+  | 'uploading'
+  | 'completing'
+  | 'transcoding'
+  | 'done'
+  | 'error'
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) {
   const router = useRouter()
@@ -68,12 +79,26 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
       })
 
       setState('completing')
-      await completeUpload({
+      const { itemId, status: initialStatus } = await completeUpload({
         uploadId,
         etag,
         title,
         metadata: metadataFormToPayload(meta),
       })
+
+      if (initialStatus !== 'READY') {
+        setState('transcoding')
+        setProgress(0)
+        for (let attempt = 0; attempt < 90; attempt++) {
+          const { status } = await getArchiveItemStatus(itemId)
+          if (status === 'READY') break
+          if (status === 'FAILED') {
+            throw new Error('Transcoding failed — try uploading again')
+          }
+          setProgress(Math.min(99, Math.round(((attempt + 1) / 90) * 100)))
+          await sleep(2000)
+        }
+      }
 
       setState('done')
       if (fileRef.current) fileRef.current.value = ''
@@ -87,7 +112,11 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
     }
   }
 
-  const isLoading = state === 'preparing' || state === 'uploading' || state === 'completing'
+  const isLoading =
+    state === 'preparing' ||
+    state === 'uploading' ||
+    state === 'completing' ||
+    state === 'transcoding'
 
   return (
     <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
@@ -150,7 +179,8 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
       >
         {state === 'preparing' && 'Preparing...'}
         {state === 'uploading' && `Uploading ${progress}%`}
-        {state === 'completing' && 'Processing...'}
+        {state === 'completing' && 'Registering upload...'}
+        {state === 'transcoding' && `Transcoding… ${progress}%`}
         {(state === 'idle' || state === 'done' || state === 'error') && 'Upload'}
       </button>
 

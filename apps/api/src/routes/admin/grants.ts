@@ -2,13 +2,27 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { runAnnualGrantCalc } from '@tahti/ledger'
+import { buildGrantPreview, runAnnualGrantCalc } from '@tahti/ledger'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 
 // M9 — board-triggered annual grant calculation. The same routine runs on the
 // March 1 cron in the worker; this endpoint lets the board run/preview it.
 const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/api/admin/grants/preview/:year',
+    { preHandler: requireBoard },
+    async (request, reply) => {
+      const { year } = request.params as { year: string }
+      const forYear = parseInt(year, 10)
+      if (Number.isNaN(forYear)) {
+        return reply.status(400).send({ error: 'Invalid year' })
+      }
+      const preview = await buildGrantPreview(fastify.prisma, forYear)
+      return reply.send(preview)
+    },
+  )
+
   fastify.post(
     '/api/admin/grants/run/:year',
     { preHandler: requireBoard },
