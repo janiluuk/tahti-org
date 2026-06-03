@@ -5,7 +5,11 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { config } from '../../config.js'
-import { cleanupUsersByEmailPrefix, createReadyArchiveItem, createTestArtist } from '../../test/helpers.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createReadyArchiveItem,
+  createTestArtist,
+} from '../../test/helpers.js'
 
 const PREFIX = 'fallback-played-'
 

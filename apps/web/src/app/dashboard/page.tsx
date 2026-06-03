@@ -16,10 +16,7 @@ import ChannelGalleryPanel from './channel-gallery-panel'
 import ChannelTextLayerPanel from './channel-text-layer-panel'
 import ProgrammePanel from './programme-panel'
 import type { ProgrammeItemRow } from './programme-actions'
-import {
-  DownloadGateSummaryPanel,
-  type GateSummaryItem,
-} from './download-gate-summary'
+import { DownloadGateSummaryPanel, type GateSummaryItem } from './download-gate-summary'
 import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'

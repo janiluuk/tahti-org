@@ -52,10 +52,7 @@ export function DownloadGateSummaryPanel({
             <tr key={row.archiveItemId} style={{ borderBottom: '1px solid #f3f4f6' }}>
               <td style={{ padding: '0.4rem 0' }}>{row.title}</td>
               <td style={{ color: '#666' }}>
-                {[
-                  row.repostToDownload ? 'repost' : null,
-                  row.followToDownload ? 'follow' : null,
-                ]
+                {[row.repostToDownload ? 'repost' : null, row.followToDownload ? 'follow' : null]
                   .filter(Boolean)
                   .join(', ') || '—'}
               </td>
