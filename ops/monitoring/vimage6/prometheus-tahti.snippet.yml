@@ -1,0 +1,72 @@
+# Append to /opt/monitoring/prometheus/config/prometheus.yml on vimage6
+# (managed by ops/monitoring/vimage6/deploy.sh — search marker tahti-vital-services)
+
+  # --- tahti-vital-services (managed by tahti-org) ---
+
+  - job_name: tahti_api_metrics
+    scrape_interval: 30s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["192.168.2.100:3011"]
+        labels:
+          environment: lab
+          host: vimage
+          site: tahti
+
+  - job_name: tahti_blackbox
+    scrape_interval: 30s
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://192.168.2.100:3011/health
+          - http://192.168.2.100:3011/api/v1/status
+          - http://192.168.2.100:3010/
+          - http://192.168.2.100:8090/health
+          - http://192.168.2.100:8000/health
+          - http://192.168.2.100:9000/minio/health/live
+          - http://192.168.2.100:3003/health
+          - http://192.168.2.100:8100/
+        labels:
+          environment: lab
+          host: vimage
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+      - source_labels: [__param_target]
+        regex: '.*/health$'
+        target_label: probe
+        replacement: health
+      - source_labels: [__param_target]
+        regex: '.*/api/v1/status$'
+        target_label: probe
+        replacement: status
+      - source_labels: [__param_target]
+        regex: '.*:3010/.*'
+        target_label: probe
+        replacement: web
+      - source_labels: [__param_target]
+        regex: '.*:8090/.*'
+        target_label: probe
+        replacement: website
+      - source_labels: [__param_target]
+        regex: '.*:8000/.*'
+        target_label: probe
+        replacement: chat
+      - source_labels: [__param_target]
+        regex: '.*minio.*'
+        target_label: probe
+        replacement: minio
+      - source_labels: [__param_target]
+        regex: '.*:3003/.*'
+        target_label: probe
+        replacement: orchestrator
+      - source_labels: [__param_target]
+        regex: '.*:8100/.*'
+        target_label: probe
+        replacement: icecast

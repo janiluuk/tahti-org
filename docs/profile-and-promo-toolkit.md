@@ -42,7 +42,8 @@ URL: `tahti.live/u/<handle>`
 3. **Releases timeline**
    - Reverse chronological by default
    - Each entry: cover art, title, release type (single/EP/album/comp/remix),
-     date, primary tracklist (first 5 tracks shown, expandable), description
+     date, primary tracklist (first 5 tracks shown, expandable; **tagged artists
+     link to `/u/:handle`**), description
      (~300 chars), smart link, embed widget
    - Drag-to-reorder for "featured" override (artist can pin a release to top)
 

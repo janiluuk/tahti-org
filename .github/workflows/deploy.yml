@@ -2,6 +2,7 @@
 #
 # push to main  → build images → push to registry → deploy staging → smoke test
 # git tag v*.*.*  → (after staging smoke) → deploy production (requires manual approval)
+# CI also tags main as YYmmdd-buildnr (e.g. 260603-1) — see .github/workflows/ci.yml release job
 #
 # Required secrets (repository):
 #   REGISTRY_USER, REGISTRY_PASSWORD   — registry.tahti.live credentials

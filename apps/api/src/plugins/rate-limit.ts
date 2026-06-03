@@ -55,6 +55,8 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
     if (
       request.url.startsWith('/internal/') ||
       request.url === '/health' ||
+      request.url === '/metrics' ||
+      request.url === '/api/v1/status' ||
       request.url === '/source'
     ) {
       return

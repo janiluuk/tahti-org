@@ -116,4 +116,51 @@ describe('M22/M24/M25 — archive metadata and slideshow', () => {
     })
     expect(channel?.slideshowImages).toHaveLength(2)
   })
+
+  it('sets twisted wave gallery mode via PATCH /api/me/channel/gallery', async () => {
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/gallery',
+      headers: { cookie },
+      payload: {
+        galleryMode: 'TWISTED_WAVE_GLSL',
+        slideshowImages: ['https://cdn.example/wave1.jpg', 'https://cdn.example/wave2.jpg'],
+      },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json().galleryMode).toBe('TWISTED_WAVE_GLSL')
+
+    const publicChannel = await app.inject({
+      method: 'GET',
+      url: '/api/channels/archive-meta-artist',
+    })
+    expect(publicChannel.statusCode).toBe(200)
+    expect(publicChannel.json().galleryMode).toBe('TWISTED_WAVE_GLSL')
+    expect(publicChannel.json().slideshowImages).toHaveLength(2)
+  })
+
+  it('sets cosmic neon text layer via PATCH /api/me/channel/text-layer', async () => {
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/text-layer',
+      headers: { cookie },
+      payload: {
+        textLayerMode: 'COSMIC_NEON',
+        textLayerText: 'Live on Tahti',
+        textLayerAlign: 'LEFT',
+      },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json().textLayerMode).toBe('COSMIC_NEON')
+    expect(patch.json().textLayerText).toBe('Live on Tahti')
+
+    const publicChannel = await app.inject({
+      method: 'GET',
+      url: '/api/channels/archive-meta-artist',
+    })
+    expect(publicChannel.statusCode).toBe(200)
+    expect(publicChannel.json().textLayerMode).toBe('COSMIC_NEON')
+    expect(publicChannel.json().textLayerText).toBe('Live on Tahti')
+    expect(publicChannel.json().textLayerAlign).toBe('LEFT')
+  })
 })

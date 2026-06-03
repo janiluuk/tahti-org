@@ -112,6 +112,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | Milestone | Notes |
 |---|---|
 | **M7** | Mixcloud OAuth UI + Revelator DSP wizard |
+| **M30** | Release ops toolkit — MusicBrainz submission, ISRC/UPC/credits, release checklist, export pack |
 | **M21** | Browser audio editor |
 | **M24–M28** | Visuals, commentary, custom radio page, 24/7 scheduler, track version history |
 

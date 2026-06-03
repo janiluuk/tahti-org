@@ -119,7 +119,7 @@ This phase corresponds to milestones M0–M5 in `docs/AGENT.md`.
 | 1 | Provision 3 staging VMs (manager + 2 workers, 2 vCPU each) | UpCloud — can be smaller than prod |
 | 2 | Init 3-node Swarm, assign node labels | Follow `docker-stack.yml` header |
 | 3 | Create staging secrets (use random values, not real keys) | Separate `docker secret create` run on staging manager |
-| 4 | Update GitHub Actions: deploy to staging on every push to `main`, deploy to production on tag `v*` | Two deploy jobs, same Makefile target |
+| 4 | Update GitHub Actions: deploy to staging on every push to `main`, deploy to production on tag `v*`; CI auto-tags `YYmmdd-buildnr` on each green `main` build | Two deploy jobs, same Makefile target |
 | 5 | Add DNS: `staging.tahti.live` → staging edge node | Verify Caddy + TLS works |
 | 6 | Run smoke test suite against staging after every deploy | Basic curl checks for `/health` endpoints |
 
@@ -131,9 +131,19 @@ This phase corresponds to milestones M0–M5 in `docs/AGENT.md`.
 
 ## Phase 6 — Distribution, transparency, grants (Month 5–9)
 
-**Goal:** an artist can publish a release to Spotify via Revelator, the transparency ledger is public, and the grant disbursement system is tested.
+**Goal:** an artist can publish a release to Spotify via Revelator, the transparency ledger is public, and the grant disbursement system is tested. **Stretch (Month 8–12):** first **M30 release-ops** pieces ship — MusicBrainz-guided submission and a release checklist — so catalog metadata is not re-entered on every external site.
 
 This phase covers M6–M11 in `docs/AGENT.md`. Infra additions are minor (new worker queues already provisioned); the work is mostly application-level.
+
+### Application deliverables
+
+| Track | Milestone | Outcome |
+|-------|-----------|---------|
+| DSP delivery | **M7** | Mixcloud OAuth + upload; Revelator wizard → Spotify/Apple/Tidal |
+| Catalog metadata | **M30** (incremental) | MusicBrainz submission flow + MBIDs on releases; ISRC/UPC/credits on release model; release-day checklist wizard |
+| Money + governance | **M8–M10, M19** | Ledger, grants, fan-subs |
+
+M30 does **not** replace M7 — it handles the **official/catalog** layer (MusicBrainz, identifiers, credits, society checklists) while M7 handles **store delivery**.
 
 ### Infra additions
 
@@ -148,6 +158,26 @@ This phase covers M6–M11 in `docs/AGENT.md`. Infra additions are minor (new wo
 - At least one release successfully delivered to Spotify via Revelator.
 - Transparency ledger at `app.tahti.live/transparency` shows real ledger entries.
 - Grant disbursement dry-run completes without errors on Q4 synthetic data.
+- *(M30 stretch)* At least one beta artist completes MusicBrainz submission from the dashboard and sees MBID links on their smart link page.
+
+---
+
+## Phase 6b — Release ops toolkit (Month 9–14, overlaps Phase 6–8)
+
+**Goal:** artists have a **variety of release tooling** in one dashboard — the bureaucratic/metadata work is guided, not scattered across MusicBrainz, DSP portals, and spreadsheet templates.
+
+See [project-roadmap.md §Phase 6b](./project-roadmap.md#phase-6b--release-ops--catalog-metadata-m30) for the full checklist. Build order:
+
+1. Extend `Release` / `ReleaseTrack` with ISRC, UPC, credits, P/C lines, `musicbrainzReleaseId`, `musicbrainzRecordingIds[]`
+2. Dashboard **Release checklist** wizard (metadata → identifiers → optional MusicBrainz → M7 DSP → publish smart link)
+3. **MusicBrainz** integration: pre-fill from Tahti release, submit via MusicBrainz XML/API or export for Picard; store MBIDs
+4. **Export pack** (JSON/CSV) for label copy and third-party tools
+5. Post-release **claim links** (Spotify for Artists, Apple Music for Artists) — checklist only
+
+**Exit criteria:**
+- Artist creates release in Tahti, walks checklist, submits to MusicBrainz without leaving the dashboard (or with one Picard export step documented).
+- Smart link `/r/:slug` shows ISRC + MusicBrainz link when present.
+- No duplicate metadata entry between Tahti release form and MusicBrainz fields.
 
 ---
 

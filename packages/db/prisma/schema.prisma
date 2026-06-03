@@ -39,6 +39,37 @@ enum ChannelState {
   @@schema("channel")
 }
 
+enum ChannelGalleryMode {
+  NONE
+  STATIC_SLIDESHOW
+  TWISTED_WAVE_GLSL
+  ZOOM_BLUR_GLSL
+  RGB_SHIFT_GLSL
+  POSTER_WALL_GLSL
+  SHATTER_CAROUSEL_GLSL
+
+  @@schema("channel")
+}
+
+enum ChannelTextLayerMode {
+  NONE
+  GRADIENT_SHIMMER
+  COSMIC_NEON
+  LAYERED_WAVE_3D
+  SHIMMER_LINES
+  GHOST_ECHO
+
+  @@schema("channel")
+}
+
+enum ChannelTextLayerAlign {
+  LEFT
+  CENTER
+  RIGHT
+
+  @@schema("channel")
+}
+
 enum ArchiveItemStatus {
   PENDING
   PROCESSING
@@ -243,6 +274,7 @@ enum MentionSurface {
   ANNOUNCEMENT
   RELEASE
   NEWSLETTER
+  TRACKLIST
 
   @@schema("core")
 }
@@ -365,8 +397,12 @@ model Channel {
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
   goneLiveAt         DateTime?
-  metaStreamOptOut   Boolean      @default(false)
-  slideshowImages    String[]     // M24: ordered cover image URLs for channel page
+  metaStreamOptOut   Boolean              @default(false)
+  galleryMode        ChannelGalleryMode   @default(NONE)
+  slideshowImages    String[]             // M24: ordered image URLs for channel gallery
+  textLayerMode      ChannelTextLayerMode @default(NONE)
+  textLayerText      String               @default("")
+  textLayerAlign     ChannelTextLayerAlign @default(CENTER)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -429,7 +465,7 @@ model ArchiveItem {
   channel       Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
   title         String
   description   String?
-  tracklist     Json?             // M22: [{startSec, title, artist?}]
+  tracklist     Json?             // M22: [{startSec, title, artist?, artistUsername?}]
   bannerUrl     String?           // M24: cover image URL
   backgroundUrl String?           // per-track background image
   slideshowUrls String[]          // ordered images for track page slideshow

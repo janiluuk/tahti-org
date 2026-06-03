@@ -3,7 +3,21 @@
 
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
+import { Inter, Space_Grotesk } from 'next/font/google'
+import { SiteFooter } from '@/components/ui'
 import './globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Tahti — your channel, always on',
@@ -12,23 +26,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body>
         <main>{children}</main>
-        <footer
-          style={{
-            padding: '1rem',
-            marginTop: '2rem',
-            borderTop: '1px solid #eee',
-            fontSize: '0.875rem',
-            color: '#666',
-          }}
-        >
-          <p>
-            Tahti ry — nonprofit broadcasting platform for independent artists.{' '}
-            <a href="https://github.com/tahtiapp/tahti">Source code (AGPL-3.0)</a>
-          </p>
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   )

@@ -136,6 +136,7 @@ Check [future-improvements.md](../future-improvements.md) for the live backlog. 
 - **Newsletter UI** on dashboard may be limited — drafts/sends exist in the API.
 - **Full release audio pipeline** (upload WAV → auto derivatives everywhere) is still growing; v1 focuses on metadata + smart links.
 - **DSP distribution** (automatic Spotify upload via Revelator, etc.) is not the same as smart-link buttons.
+- **Release ops (planned, M30):** MusicBrainz entry submission, ISRC/UPC, credits, and a release checklist — see [project-roadmap.md](../project-roadmap.md#phase-6b--release-ops--catalog-metadata-m30).
 
 ---
 

@@ -54,7 +54,13 @@ export const ARCHIVE_LICENSE_LABELS: Record<(typeof ARCHIVE_LICENSES)[number], s
 export const TracklistEntrySchema = z.object({
   startSec: z.number().min(0),
   title: z.string().min(1).max(200),
+  /** Plain-text artist credit (ACRCloud, external guests). */
   artist: z.string().max(120).optional(),
+  /** Tahti @handle when the played artist is a member (M22 + M15). */
+  artistUsername: z
+    .string()
+    .regex(/^[a-z0-9_-]{2,32}$/i)
+    .optional(),
 })
 
 export const ArchiveMetadataFieldsSchema = z.object({
