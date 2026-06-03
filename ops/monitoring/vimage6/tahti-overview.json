@@ -1,0 +1,311 @@
+{
+  "title": "Tahti — lab overview",
+  "uid": "tahti-overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "tags": ["tahti", "app", "monitor.dudeisland.eu"],
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "type": "query",
+        "label": "Environment",
+        "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+        "query": "label_values(tahti_users_registered_total, environment)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "API metrics scrape up",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": { "text": "UP", "color": "green" },
+                "0": { "text": "DOWN", "color": "red" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "expr": "up{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{host}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Registered users",
+      "description": "All user accounts (from GET /metrics).",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "tahti_users_registered_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{environment}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Active users today (UTC)",
+      "description": "Distinct users with a new session since UTC midnight.",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "tahti_users_active_today{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{environment}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Load average (1m) — vimage",
+      "description": "node_exporter on the lab host (192.168.2.100).",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 2, "unit": "short" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "node_load1{instance=\"vimage\"}",
+          "legendFormat": "vimage",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "API healthy",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 4, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": { "text": "HEALTHY", "color": "green" },
+                "0": { "text": "UNHEALTHY", "color": "red" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "expr": "tahti_api_healthy{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{host}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "HTTP 5xx (last 1h)",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 4, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 10 }] } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "sum(increase(tahti_http_requests_total{job=\"tahti_api_metrics\",status_class=\"5xx\",environment=~\"$environment\"}[1h])) or vector(0)",
+          "legendFormat": "5xx",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Audit errors (24h)",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 4, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "tahti_audit_errors_24h{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{environment}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Stripe webhook failures (total)",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 4, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "tahti_stripe_webhook_handler_failures_total{job=\"tahti_api_metrics\",environment=~\"$environment\"} + tahti_stripe_webhook_verify_failures_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "stripe",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "HTTP response time (avg, ms)",
+      "description": "In-process counter average since API start; resets on deploy.",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "targets": [
+        {
+          "expr": "rate(tahti_http_request_duration_ms_sum{job=\"tahti_api_metrics\",environment=~\"$environment\"}[5m]) / rate(tahti_http_request_duration_ms_count{job=\"tahti_api_metrics\",environment=~\"$environment\"}[5m])",
+          "legendFormat": "API avg",
+          "refId": "A"
+        },
+        {
+          "expr": "max(tahti_dependency_check_latency_ms{job=\"tahti_api_metrics\",dependency=\"postgres\",environment=~\"$environment\"})",
+          "legendFormat": "postgres check",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "External probe duration (s)",
+      "description": "Blackbox probes from monitor host to lab endpoints.",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "targets": [
+        {
+          "expr": "probe_duration_seconds{job=\"tahti_blackbox\",environment=~\"$environment\",probe=~\"health|status|web\"}",
+          "legendFormat": "{{probe}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Load average — vimage",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "targets": [
+        {
+          "expr": "node_load1{instance=\"vimage\"}",
+          "legendFormat": "1m",
+          "refId": "A"
+        },
+        {
+          "expr": "node_load5{instance=\"vimage\"}",
+          "legendFormat": "5m",
+          "refId": "B"
+        },
+        {
+          "expr": "node_load15{instance=\"vimage\"}",
+          "legendFormat": "15m",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "HTTP errors by class",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "lineWidth": 2, "stacking": { "mode": "normal" } } } },
+      "targets": [
+        {
+          "expr": "sum by (status_class) (rate(tahti_http_requests_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}[5m]))",
+          "legendFormat": "{{status_class}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Users over time",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 22, "w": 24, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "targets": [
+        {
+          "expr": "tahti_users_registered_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "registered",
+          "refId": "A"
+        },
+        {
+          "expr": "tahti_users_active_today{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "active today",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Endpoints monitored",
+      "type": "text",
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 4 },
+      "options": {
+        "mode": "markdown",
+        "content": "Grafana on **monitor.dudeisland.eu** (vimage6) scrapes the **lab stack on vimage** (`192.168.2.100`).\n\n| Source | Metric |\n|--------|--------|\n| `GET /metrics` | Users, deps, HTTP counters, Stripe webhook failures |\n| `job=node` | Load average (`instance=vimage`) |\n| `job=tahti_blackbox` | External latency + probe up/down |\n\nDeploy: `./ops/monitoring/vimage6/deploy.sh`"
+      }
+    }
+  ]
+}
