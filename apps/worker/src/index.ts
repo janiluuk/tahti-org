@@ -20,6 +20,7 @@ import {
   processMembershipLapseJob,
   processMembershipRenewalJob,
 } from './jobs/membership-lifecycle.js'
+import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -65,6 +66,8 @@ const worker = new Worker(
       await processMembershipRenewalJob(job)
     } else if (job.name === 'membership-lapse') {
       await processMembershipLapseJob(job)
+    } else if (job.name === 'revelator-deliver') {
+      await processRevelatorDeliverJob(job)
     } else if (job.name === 'annual-grant-calc') {
       // Default to the prior calendar year (matches Finnish fiscal year).
       const { year } = job.data as { year?: number }

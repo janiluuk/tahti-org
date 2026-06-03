@@ -187,6 +187,50 @@ export async function completeReleaseTrackVersionUpload(
   return { error: null }
 }
 
+export async function submitReleaseToRevelator(
+  id: string,
+): Promise<{ error: string | null; revelatorStatus?: string }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${id}/revelator/submit`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    return { error: (data as { error?: string }).error ?? 'DSP submit failed' }
+  }
+  return {
+    error: null,
+    revelatorStatus: (data as { revelatorStatus?: string }).revelatorStatus,
+  }
+}
+
+export async function fetchRevelatorStatus(
+  id: string,
+): Promise<{ revelatorStatus: string | null; revelatorId: string | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${id}/revelator`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return {
+      revelatorStatus: null,
+      revelatorId: null,
+      error: (data as { error?: string }).error ?? 'Failed to load DSP status',
+    }
+  }
+  const data = (await res.json()) as {
+    revelatorStatus?: string | null
+    revelatorId?: string | null
+  }
+  return {
+    revelatorStatus: data.revelatorStatus ?? null,
+    revelatorId: data.revelatorId ?? null,
+    error: null,
+  }
+}
+
 export async function activateReleaseTrackVersion(
   releaseId: string,
   trackId: string,

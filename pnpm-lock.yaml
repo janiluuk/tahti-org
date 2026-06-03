@@ -68,6 +68,12 @@ importers:
       '@tahti/ledger':
         specifier: workspace:*
         version: link:../../packages/ledger
+      '@tahti/mixcloud':
+        specifier: workspace:*
+        version: link:../../packages/mixcloud
+      '@tahti/revelator':
+        specifier: workspace:*
+        version: link:../../packages/revelator
       '@tahti/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -93,9 +99,6 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
     devDependencies:
-      '@tahti/mixcloud':
-        specifier: workspace:*
-        version: link:../../packages/mixcloud
       '@types/node':
         specifier: ^24.0.0
         version: 24.12.4
@@ -169,6 +172,9 @@ importers:
       '@tahti/mixcloud':
         specifier: workspace:*
         version: link:../../packages/mixcloud
+      '@tahti/revelator':
+        specifier: workspace:*
+        version: link:../../packages/revelator
       '@tahti/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -241,6 +247,18 @@ importers:
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
+
+  packages/revelator:
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.41
+      typescript:
+        specifier: ^5.5.2
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@20.19.41)
 
   packages/shared:
     dependencies:

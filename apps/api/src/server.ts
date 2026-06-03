@@ -63,6 +63,7 @@ import embedRoutes from './routes/releases/embed.js'
 import publicProfileRoutes from './routes/profile/public.js'
 import smartlinkRoutes from './routes/releases/smartlink.js'
 import mixcloudRoutes from './routes/me/mixcloud.js'
+import revelatorRoutes from './routes/me/revelator.js'
 import newsletterPublicRoutes from './routes/newsletter/public.js'
 import newsletterMeRoutes from './routes/newsletter/me.js'
 import venueRoutes from './routes/venues/venues.js'
@@ -250,6 +251,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M7: Mixcloud upload for archive items
   await fastify.register(mixcloudRoutes)
+  await fastify.register(revelatorRoutes)
 
   // M13: newsletter (public + artist-facing)
   await fastify.register(newsletterPublicRoutes)

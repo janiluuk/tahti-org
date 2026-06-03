@@ -40,6 +40,7 @@ interface ReleaseSummary {
   labelImprint?: string | null
   credits?: unknown
   revelatorStatus?: string | null
+  revelatorId?: string | null
   tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
@@ -212,6 +213,8 @@ export default function ReleasesPanel({
                     },
                   ]
                 }
+                revelatorStatus={r.revelatorStatus}
+                revelatorId={r.revelatorId}
               />
             </li>
           ))}

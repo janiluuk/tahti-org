@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { Suspense } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import UploadForm from './upload-form'
@@ -17,6 +18,8 @@ import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
+import { MixcloudConnect } from './mixcloud-connect'
+import { fetchMixcloudStatus } from './mixcloud-actions'
 import { Button, Heading, Link, PageShell, Panel, Row, Text } from '@/components/ui'
 import type {
   ChannelGalleryMode,
@@ -362,6 +365,8 @@ export default async function DashboardPage() {
     (t) => t.active && t.perks.some((p) => p === 'FAN_NEWSLETTER'),
   )
 
+  const mixcloudStatus = await fetchMixcloudStatus()
+
   return (
     <PageShell size="md" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
       <Row between className="ui-row--gap-3">
@@ -418,6 +423,18 @@ export default async function DashboardPage() {
 
       {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
 
+      {user.channel && (
+        <Suspense fallback={null}>
+          <MixcloudConnect
+            initial={{
+              connected: mixcloudStatus.connected,
+              configured: mixcloudStatus.configured,
+            }}
+            apiUrl={apiUrl}
+          />
+        </Suspense>
+      )}
+
       {user.channel && <AnnouncementsPanel initial={announcements} />}
 
       {user.channel && (
@@ -469,7 +486,12 @@ export default async function DashboardPage() {
                 const play = archiveItems.find((a) => a.id === item.id)
                 return (
                   <div key={item.id}>
-                    <ArchiveEditor item={item} />
+                    <ArchiveEditor
+                      item={item}
+                      mixcloudConnected={mixcloudStatus.connected}
+                      mixcloudConfigured={mixcloudStatus.configured}
+                      apiUrl={apiUrl}
+                    />
                     {play?.audioUrl && (
                       <audio
                         controls

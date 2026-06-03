@@ -16,11 +16,18 @@ import {
 import { TracklistEditor } from './tracklist-editor'
 import { ArchiveVersionPanel } from './archive-version-panel'
 import { ArchiveGateStats } from './archive-gate-stats'
+import { ArchiveMixcloudUpload } from './archive-mixcloud'
 
 export default function ArchiveEditor({
   item,
+  mixcloudConnected,
+  mixcloudConfigured,
+  apiUrl,
 }: {
   item: Record<string, unknown> & { id: string; title: string; status: string }
+  mixcloudConnected: boolean
+  mixcloudConfigured: boolean
+  apiUrl: string
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -117,6 +124,14 @@ export default function ArchiveEditor({
           />
 
           <ArchiveVersionPanel itemId={item.id} itemStatus={item.status} />
+
+          <ArchiveMixcloudUpload
+            itemId={item.id}
+            itemStatus={item.status}
+            mixcloudConnected={mixcloudConnected}
+            mixcloudConfigured={mixcloudConfigured}
+            apiUrl={apiUrl}
+          />
 
           <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
             <button

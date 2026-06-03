@@ -319,6 +319,7 @@ model User {
   weeklyLiveSecondsUsed Int        @default(0)
   weeklyLiveResetAt     DateTime?
   mentionsEnabled       Boolean    @default(true)
+  mixcloudAccessTokenEnc String?   // M7: OAuth access token (AES-GCM, same key as RTMP)
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 

@@ -69,7 +69,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
 | **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence |
 | **M6** Multistream RTMP | ✅ Done | Per-channel targets, encrypted stream keys, `alwaysMirror` gated to STUDIO |
-| **M7** Distribution (Mixcloud) | 🟡 Partial | `packages/mixcloud` client (stub mode when MIXCLOUD_CLIENT_ID unset), `MixUpload` model, `mixcloud-upload` worker job, `POST /api/me/archive/:itemId/mixcloud` + status GET. Deferred: Revelator DSP (`packages/revelator`), Mixcloud OAuth UI, release submission wizard. **See also M30** (MusicBrainz + release-ops tooling) |
+| **M7** Distribution (Mixcloud + Revelator) | 🟡 Partial | Mixcloud OAuth connect + archive upload queue; `packages/revelator` stub/live submit + **Revelator wizard** in release ops (pre-fills catalog). Deferred: royalty sync cron, tiered €8/release billing, Mixcloud OAuth in production credentials |
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
@@ -270,7 +270,7 @@ Required before first **real** membership money and first grant cycle.
 | Done | Milestone | Summary | Owner |
 |:---:|---|---|---|
 | [x] | **M8** | Public transparency ledger + monthly rollup API + grants/:year report | Dev |
-| [ ] | **M7** | Mixcloud upload + Revelator wizard (€8/release) | Dev |
+| [~] | **M7** | Mixcloud OAuth + upload; Revelator submit from release ops (€8/release billing deferred) | Dev |
 | [ ] | **M30** | **Release ops toolkit** — MusicBrainz submission, ISRC/UPC/credits, release checklist (official metadata out of the way) | Dev |
 | [x] | **M9** | Annual engagement-unit grant cron + report (`packages/ledger`, payout transfer pending Stripe Connect / M19) | Dev |
 | [~] | **M19** | Fan-subscriptions: Connect, Checkout, crons, perks; live payout retry + newsletter fan UI remain | Dev |

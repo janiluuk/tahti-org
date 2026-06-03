@@ -60,4 +60,12 @@ export const config = {
   membership: {
     priceCents: parseInt(process.env.MEMBERSHIP_PRICE_CENTS ?? '4000', 10),
   },
+  mixcloud: {
+    clientId: process.env.MIXCLOUD_CLIENT_ID ?? '',
+    clientSecret: process.env.MIXCLOUD_CLIENT_SECRET ?? '',
+    redirectUri:
+      process.env.MIXCLOUD_OAUTH_REDIRECT_URI ??
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/mixcloud/oauth/callback`,
+    oauthStateCookie: 'tahti_mixcloud_oauth',
+  },
 }

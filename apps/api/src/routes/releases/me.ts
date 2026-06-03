@@ -49,6 +49,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         labelImprint: true,
         credits: true,
         revelatorStatus: true,
+        revelatorId: true,
         tracks: {
           orderBy: { position: 'asc' },
           select: { id: true, position: true, title: true, isrc: true, status: true },

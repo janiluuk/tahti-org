@@ -49,12 +49,12 @@ export async function uploadToMixcloud(
   const fs = await import('node:fs/promises')
   const audioBytes = await fs.readFile(params.audioPath)
   const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' })
-  form.append('mp3', audioBlob, 'mix.mp3')
+  form.append('mp3', audioBlob as unknown as Blob, 'mix.mp3')
 
   if (params.picturePath) {
     const picBytes = await fs.readFile(params.picturePath)
     const picBlob = new Blob([picBytes], { type: 'image/jpeg' })
-    form.append('picture', picBlob, 'cover.jpg')
+    form.append('picture', picBlob as unknown as Blob, 'cover.jpg')
   }
 
   const res = await fetch(
@@ -73,6 +73,11 @@ export async function uploadToMixcloud(
     key,
     url: `https://www.mixcloud.com${key}`,
   }
+}
+
+export function buildMixcloudAuthorizeUrl(clientId: string, redirectUri: string): string {
+  const params = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri })
+  return `https://www.mixcloud.com/oauth/authorize?${params}`
 }
 
 export interface MixcloudOAuthParams {
