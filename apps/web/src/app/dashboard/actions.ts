@@ -88,3 +88,39 @@ export async function deleteAnnouncement(id: string): Promise<{ error: string | 
   }
   return { error: null }
 }
+
+export async function createFanTier(params: {
+  name: string
+  amountCents: number
+  description?: string
+  perks?: string[]
+}): Promise<{ error: string | null }> {
+  const response = await fetch(`${apiUrl}/api/me/fan-tiers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(params),
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to create tier' }
+  }
+  return { error: null }
+}
+
+export async function setFanTierActive(
+  id: string,
+  active: boolean,
+): Promise<{ error: string | null }> {
+  const response = await fetch(`${apiUrl}/api/me/fan-tiers/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ active }),
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to update tier' }
+  }
+  return { error: null }
+}

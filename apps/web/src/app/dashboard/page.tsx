@@ -7,6 +7,7 @@ import UploadForm from './upload-form.js'
 import StreamSettingsPanel from './stream-settings.js'
 import RtmpTargetsPanel from './rtmp-targets.js'
 import AnnouncementsPanel from './announcements-panel.js'
+import FanSubscriptionsPanel from './fan-subscriptions.js'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }
@@ -110,6 +111,26 @@ export default async function DashboardPage() {
     }
   }
 
+  let fanTiers: Array<{
+    id: string
+    name: string
+    amountCents: number
+    description: string | null
+    perks: string[]
+    active: boolean
+  }> = []
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/fan-tiers`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) fanTiers = (await res.json()) as typeof fanTiers
+    } catch {
+      // ignore
+    }
+  }
+
   let archiveItems: ArchiveItem[] = []
   if (user.channel) {
     try {
@@ -188,6 +209,8 @@ export default async function DashboardPage() {
       {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
 
       {user.channel && <AnnouncementsPanel initial={announcements} />}
+
+      {user.channel && <FanSubscriptionsPanel initial={fanTiers} username={user.username} />}
 
       {user.channel && (
         <section

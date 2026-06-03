@@ -436,8 +436,9 @@ Date decided: 2026-06-03
   and counted `engagement.Download` weights per channel→artist, allocates, and
   writes `GrantDisbursement` rows + `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER`
   ledger entries (append-only; refuses to re-run a finalized year).
-- Fan-sub euros contribute 0 until M19 ships (the term is wired but inputs are
-  empty). Listener-hours are **not** used.
+- Fan-sub euros now contribute to units (M19 shipped): `computeEngagementUnits`
+  sums `FanSubPayout.grossCents` per artist for the year (1 unit per euro) in
+  addition to download weight. Listener-hours are **not** used.
 - Surfaced via `POST /api/admin/grants/run/:year` (board), `GET
   /api/v1/transparency/grants/:year` (public, anonymized), `GET /api/me/grants`.
 - Worker cron `annual-grant-calc` runs 03:00 on March 1 for the prior year.
@@ -492,7 +493,7 @@ Date decided:
 
 ## Topic 10 — Stripe Connect KYC gap (fan-subs onboarding UX)
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (A — block Checkout until `charges_enabled`)  
 **Blocks:** M19 (fan-subscriptions)  
 **Must decide before:** M19 UI design
 
@@ -527,13 +528,22 @@ Collect subscriber email + intent (no card yet). When KYC clears, email subscrib
 ### Decision
 
 ```
-Chosen option:
-Dashboard state during KYC:
-Listener-facing message during KYC:
-Spec updates needed (AGENT.md M19, phase-11.md):
-Owner:
-Date decided:
+Chosen option: A — block Checkout until Stripe reports charges_enabled = true
+Dashboard state during KYC: tiers editable, but a banner "Finish Stripe
+  onboarding to start receiving payments"; subscribe link shows the same.
+Listener-facing message during KYC: subscribe page renders tiers but the
+  Subscribe button is disabled with "Subscriptions open soon".
+Spec updates needed (AGENT.md M19, phase-11.md): note A; revisit waitlist (C) post-beta.
+Owner: Dev
+Date decided: 2026-06-03
 ```
+
+**Implementation note (2026-06-03):** M19 core shipped without the live Stripe
+boundary, so the KYC gate is not yet enforced in code. The subscribe endpoint
+already fails closed: when Stripe is configured it returns `501` until Checkout
+is wired (no silent free subscriptions), and when it is not configured (dev/test)
+it activates directly. Wiring real Connect Express + the `charges_enabled` gate
+(option A) is part of the remaining Stripe integration.
 
 ---
 
@@ -760,10 +770,11 @@ Record decisions here as they are made, in date order.
 | 9 | Subdomain routing | **B/C** — path-based `/c/<slug>` for MVP; subdomains deferred. | 2026-06-03 | Dev |
 | 11 | AGM voting legality | **C** — M10 voting is **advisory** for Y1; `Motion.advisory` flag; upgrade after bylaws amendment. | 2026-06-03 | Dev / Board |
 | 8 | Grant formula | **Engagement units** (downloads ×1/×5 + fan-sub €×1), 10% reserve, 5-unit floor; implemented in `packages/ledger`. Listener-hours dropped. | 2026-06-03 | Dev |
+| 10 | Stripe Connect KYC gap | **A** — block Checkout until `charges_enabled`; tiers editable during KYC with a banner. (Live Stripe wiring still pending.) | 2026-06-03 | Dev |
 
 > Topics 4, 5, and 9 are marked retroactively from the shipped MVP code — they
 > were decided implicitly by implementation and are recorded here for the audit
-> trail. Remaining `OPEN` topics (1, 2, 3, 6, 7, 10, 12–15) still need explicit
+> trail. Remaining `OPEN` topics (1, 2, 3, 6, 7, 12–15) still need explicit
 > resolution before their milestones.
 
 ---

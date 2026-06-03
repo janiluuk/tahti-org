@@ -35,6 +35,9 @@ import governanceRoutes from './routes/governance/index.js'
 import downloadRoutes from './routes/downloads/archive.js'
 import meGrantsRoutes from './routes/me/grants.js'
 import adminGrantsRoutes from './routes/admin/grants.js'
+import fanTierRoutes from './routes/fansubs/tiers.js'
+import fanSubscriptionRoutes from './routes/fansubs/subscriptions.js'
+import stripeWebhookRoutes from './routes/webhooks/stripe.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { config } from './config.js'
 
@@ -103,6 +106,11 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M9: annual grant disbursements
   await fastify.register(meGrantsRoutes)
   await fastify.register(adminGrantsRoutes)
+
+  // M19: fan-to-artist subscriptions
+  await fastify.register(fanTierRoutes)
+  await fastify.register(fanSubscriptionRoutes)
+  await fastify.register(stripeWebhookRoutes)
 
   return fastify
 }
