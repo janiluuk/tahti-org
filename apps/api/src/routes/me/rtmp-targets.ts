@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
@@ -63,12 +63,10 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
     const streamKey = body.streamKey?.trim()
     if (!streamKey) return reply.status(400).send({ error: 'streamKey is required' })
 
-    const rtmpUrl =
-      provider === 'CUSTOM'
-        ? body.rtmpUrl?.trim()
-        : PROVIDER_RTMP_URLS[provider]
+    const rtmpUrl = provider === 'CUSTOM' ? body.rtmpUrl?.trim() : PROVIDER_RTMP_URLS[provider]
 
-    if (!rtmpUrl) return reply.status(400).send({ error: 'rtmpUrl is required for CUSTOM provider' })
+    if (!rtmpUrl)
+      return reply.status(400).send({ error: 'rtmpUrl is required for CUSTOM provider' })
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { userId: user.id },
@@ -92,7 +90,14 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
         streamKeyEnc,
         alwaysMirror: body.alwaysMirror === true && user.tier === 'STUDIO',
       },
-      select: { id: true, provider: true, label: true, rtmpUrl: true, alwaysMirror: true, enabled: true },
+      select: {
+        id: true,
+        provider: true,
+        label: true,
+        rtmpUrl: true,
+        alwaysMirror: true,
+        enabled: true,
+      },
     })
 
     await auditLog(fastify.prisma, {
@@ -106,35 +111,31 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   // PATCH /api/me/rtmp-targets/:id — toggle enabled / update stream key
-  fastify.patch(
-    '/api/me/rtmp-targets/:id',
-    { preHandler: requireAuth },
-    async (request, reply) => {
-      const user = request.sessionUser!
-      const { id } = request.params as { id: string }
-      const body = request.body as { enabled?: boolean; streamKey?: string; label?: string }
+  fastify.patch('/api/me/rtmp-targets/:id', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const { id } = request.params as { id: string }
+    const body = request.body as { enabled?: boolean; streamKey?: string; label?: string }
 
-      const channel = await fastify.prisma.channel.findUnique({
-        where: { userId: user.id },
-        select: { id: true },
-      })
-      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+    const channel = await fastify.prisma.channel.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    })
+    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const target = await fastify.prisma.rtmpTarget.findFirst({
-        where: { id, channelId: channel.id },
-      })
-      if (!target) return reply.status(404).send({ error: 'Target not found' })
+    const target = await fastify.prisma.rtmpTarget.findFirst({
+      where: { id, channelId: channel.id },
+    })
+    if (!target) return reply.status(404).send({ error: 'Target not found' })
 
-      const update: Record<string, unknown> = {}
-      if (typeof body.enabled === 'boolean') update.enabled = body.enabled
-      if (body.label?.trim()) update.label = body.label.trim().slice(0, 64)
-      if (body.streamKey?.trim()) update.streamKeyEnc = encryptStreamKey(body.streamKey.trim())
+    const update: Record<string, unknown> = {}
+    if (typeof body.enabled === 'boolean') update.enabled = body.enabled
+    if (body.label?.trim()) update.label = body.label.trim().slice(0, 64)
+    if (body.streamKey?.trim()) update.streamKeyEnc = encryptStreamKey(body.streamKey.trim())
 
-      await fastify.prisma.rtmpTarget.update({ where: { id }, data: update })
+    await fastify.prisma.rtmpTarget.update({ where: { id }, data: update })
 
-      return reply.send({ ok: true })
-    },
-  )
+    return reply.send({ ok: true })
+  })
 
   // DELETE /api/me/rtmp-targets/:id
   fastify.delete(

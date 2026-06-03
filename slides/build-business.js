@@ -544,7 +544,7 @@ async function main() {
         head: 'Profile + releases',
         sub: 'The artist\u2019s home on the internet',
         rows: [
-          ['URL', 'tahti.fi/u/<handle>'],
+          ['URL', 'tahti.live/u/<handle>'],
           ['Bio', 'Markdown, rich'],
           ['Releases', 'Albums, EPs, singles'],
           ['Upload formats', 'WAV, FLAC, MP3, AAC'],

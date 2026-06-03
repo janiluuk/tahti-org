@@ -43,7 +43,7 @@ sequenceDiagram
     participant Ops as Ops engineer
     participant VPS as VPS (UpCloud Helsinki)
     participant GH as GitHub
-    participant Reg as registry.tahti.fi
+    participant Reg as registry.tahti.live
     participant DNS as DNS registrar
 
     Ops->>VPS: Provision 2 vCPU / 4 GB VPS in Helsinki
@@ -59,8 +59,8 @@ sequenceDiagram
     GH->>Reg: Push tahti/website:<sha>
     GH->>VPS: SSH: TAG=<sha> docker compose up -d
 
-    Ops->>DNS: Set A record tahti.fi → VPS IP
-    Ops->>VPS: curl -I https://tahti.fi
+    Ops->>DNS: Set A record tahti.live → VPS IP
+    Ops->>VPS: curl -I https://tahti.live
     VPS-->>Ops: HTTP/2 200 — TLS active ✓
     Ops->>GH: Note in ops log: Phase 1 complete
 ```
@@ -75,7 +75,7 @@ sequenceDiagram
 sequenceDiagram
     participant Dev as Developer
     participant GH as GitHub Actions
-    participant Reg as registry.tahti.fi
+    participant Reg as registry.tahti.live
     participant STG as Staging Swarm
     participant ProdMgr as Production Swarm manager
 
@@ -99,7 +99,7 @@ sequenceDiagram
     ProdMgr->>ProdMgr: Rolling update (start-first order)
     ProdMgr-->>GH: All services updated ✓
 
-    GH->>GH: Smoke test: curl https://tahti.fi/health && curl https://api.tahti.fi/health
+    GH->>GH: Smoke test: curl https://tahti.live/health && curl https://api.tahti.live/health
     GH-->>Ops: ✓ v1.2.3 deployed to production
 ```
 
@@ -118,10 +118,10 @@ sequenceDiagram
     Alert-->>Ops: PagerDuty/email: "postgres_down CRITICAL"
     Note over Ops: 02:30 local time
 
-    Ops->>Graf: grafana.tahti.fi → check postgres panel
+    Ops->>Graf: grafana.tahti.live → check postgres panel
     Graf-->>Ops: Postgres: no data since 02:22, connection errors visible
 
-    Ops->>VPS: SSH root@tahti.fi
+    Ops->>VPS: SSH root@tahti.live
     Ops->>VPS: docker stack ps tahti --filter desired-state=running
     VPS-->>Ops: tahti_postgres.1 → State: Failed, Error: OOM
 
@@ -176,7 +176,7 @@ sequenceDiagram
     Script->>TMP: docker rm -f <temp-container>
     Script-->>Cron: Exit 0
 
-    Note over Log: On failure: send email to ops@tahti.fi
+    Note over Log: On failure: send email to ops@tahti.live
 ```
 
 ---

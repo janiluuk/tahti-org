@@ -11,7 +11,7 @@ set -euo pipefail
 HOST=jani@192.168.2.100
 SITE_DIR=/srv/giggi-site
 TAG="${TAG:-$(git rev-parse --short HEAD)}"
-REGISTRY="${REGISTRY:-registry.tahti.fi}"
+REGISTRY="${REGISTRY:-registry.tahti.live}"
 
 echo "── Deploying tag=$TAG to $HOST:$SITE_DIR ────────────────"
 

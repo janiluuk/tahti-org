@@ -210,7 +210,7 @@ plays in fallback rotation. UI shows "you've used 200 MB" without limit warnings
   chat scroll
 
 **Done when:** I start broadcasting from any source (OBS, Mixxx, browser) →
-my channel.tahti.fi plays the live audio within 5 seconds. I stop broadcasting
+my channel.tahti.live plays the live audio within 5 seconds. I stop broadcasting
 → archive starts playing within 10 seconds, no silence.
 
 ### M4 — Auto-archive of live broadcasts
@@ -377,7 +377,7 @@ track-level comments). It's closer to a label site or a Linktree-meets-Bandcamp.
 
 **Profile structure:**
 
-- `tahti.fi/u/<handle>` — the artist's permanent URL
+- `tahti.live/u/<handle>` — the artist's permanent URL
 - Hero section: name, location, "currently broadcasting" indicator with link to
   channel, primary CTA (custom — could be "tune in," "buy the album," "subscribe")
 - Bio: rich-text (Markdown), supports paragraphs, headings, images, embedded
@@ -477,7 +477,7 @@ enum ReleaseState { DRAFT PUBLISHED ARCHIVED }
 
 **Done when:** I can fill out a bio with formatting and images, upload a 24-bit
 WAV album with cover art, publish the release, and the profile page renders at
-`tahti.fi/u/<handle>` with the release in the timeline, smart link generated,
+`tahti.live/u/<handle>` with the release in the timeline, smart link generated,
 and Open Graph card showing correctly when shared on social media.
 
 ### M13 — Newsletter & fan email list (NEW for v5)
@@ -532,8 +532,8 @@ real-world utility.
 
 **Embed widget (oEmbed + iframe):**
 
-- Every release has an embed URL: `tahti.fi/embed/r/<release-id>`
-- Every channel has an embed URL: `tahti.fi/embed/c/<slug>`
+- Every release has an embed URL: `tahti.live/embed/r/<release-id>`
+- Every channel has an embed URL: `tahti.live/embed/c/<slug>`
 - Renders a lightweight player (cover art, play button, current track) in a
   customizable color theme
 - oEmbed discovery endpoint at `/oembed?url=...` so paste-into-Substack /
@@ -544,7 +544,7 @@ real-world utility.
 
 **Smart links (one URL → all DSPs):**
 
-- Every release auto-generates a smart link: `tahti.fi/r/<slug>`
+- Every release auto-generates a smart link: `tahti.live/r/<slug>`
 - Landing page: cover art, release title, artist, list of streaming services
   (Spotify, Apple, Tidal, Amazon, Deezer, Bandcamp, SoundCloud, Mixcloud, YouTube
   Music — only the ones the artist has set targets for)
@@ -602,7 +602,7 @@ graph implied — tagging is just human-readable cross-references, like links.
 - Newsletter compose
 
 **Tag resolution:**
-- `@handle` → `tahti.fi/u/<handle>` with the artist's display name
+- `@handle` → `tahti.live/u/<handle>` with the artist's display name
 - Unknown handles render as plain text (no broken links)
 - Tags in user-generated content (chat) are validated at send time; deleted
   artists' tags render as `@deleted-user`
@@ -637,7 +637,7 @@ Multistreamed to Mixcloud Live. Live-only — no curation, no archive replay.
   less-broadcast channels)
 - Picker hands off: re-encodes the chosen channel's HLS into the meta-stream's
   own HLS output
-- Tahti Radio HLS published at `radio.tahti.fi` via Bunny CDN
+- Tahti Radio HLS published at `radio.tahti.live` via Bunny CDN
 - Tahti Radio simultaneously pushes RTMP to Mixcloud Live at the org's
   `mixcloud.com/tahti-radio` account
 - When zero channels are live: falls back to `services/tahti-radio/placeholder.flac`
@@ -648,7 +648,7 @@ Multistreamed to Mixcloud Live. Live-only — no curation, no archive replay.
 - When OFF, channel is excluded from picker pool
 
 **Listener-hour attribution:**
-- Listeners on `radio.tahti.fi` are counted toward the originating channel's
+- Listeners on `radio.tahti.live` are counted toward the originating channel's
   listener-hour counter (vanity metric only; doesn't affect grants under v6)
 
 **No multistream to YouTube/Twitch.** Both will copyright-strike a stream
@@ -669,9 +669,9 @@ broadcasts happening at their location. No booking marketplace, no ticketing.
 
 **Scope:**
 - New account type `VENUE` (separate from `ARTIST`)
-- Public venue directory at `tahti.fi/venues`
-- Venue profile pages at `tahti.fi/v/<slug>`
-- iCalendar feeds at `tahti.fi/v/<slug>/calendar.ics`
+- Public venue directory at `tahti.live/venues`
+- Venue profile pages at `tahti.live/v/<slug>`
+- iCalendar feeds at `tahti.live/v/<slug>/calendar.ics`
 - JSON API at `/v1/venues/<slug>/broadcasts`
 
 **Data model in `services/api`:**
@@ -785,11 +785,11 @@ take (operationally break-even, 2% covers Stripe + GDPR + support).
 1. Dashboard → "Fan Subscriptions" → "Enable"
 2. Stripe Connect Express onboarding (KYC: ID, bank, tax forms)
 3. Once approved (1-3 days), artist defines tiers
-4. Tiers go live on `tahti.fi/u/<handle>/subscribe`
+4. Tiers go live on `tahti.live/u/<handle>/subscribe`
 
 **Listener subscribe flow:**
 1. On artist's channel page or profile: "Support [artist name]" button
-2. Routes to `tahti.fi/u/<handle>/subscribe`
+2. Routes to `tahti.live/u/<handle>/subscribe`
 3. Choose tier → Stripe Checkout
 4. On successful payment, account created automatically (email + Stripe
    customer ID); confirmation email sent with password setup link
@@ -1185,7 +1185,7 @@ guides that fill in the artist's current credentials. See
 implementation:
 
 - `GET /v1/me/broadcast/guides/obs` returns a personalized Markdown guide for OBS:
-  - The artist's current RTMP server URL (`rtmp://rtmp.tahti.fi/live`)
+  - The artist's current RTMP server URL (`rtmp://rtmp.tahti.live/live`)
   - Their current stream key (revealed once, rotatable)
   - Recommended OBS settings (1920×1080 placeholder, 30 fps, AAC 128k, x264 veryfast, 2500 kbps)
   - Audio-only setup (recommended): set video to "color source" with their cover art, set audio to their interface

@@ -90,7 +90,7 @@ We do not engineer the product around listener metrics. Listener-hours are vanit
 
 **What this rules out:**
 
-- A "Most Played This Week" chart on tahti.fi.
+- A "Most Played This Week" chart on tahti.live.
 - A leaderboard of top artists by listener count.
 - Surfacing listener data to artists in ways that gamify behavior ("you lost 3 listeners — try posting more!").
 - Tahti-branded merchandise the artist did not consent to.

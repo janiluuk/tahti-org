@@ -180,7 +180,7 @@ Date decided:
 
 ## Topic 4 — Auth library: Lucia (deprecated) vs better-auth vs next-auth
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (custom session + argon2 — see decision log)  
 **Blocks:** M1 (artist accounts)  
 **Must decide before:** M1 development begins
 
@@ -230,7 +230,7 @@ Date decided:
 
 ## Topic 5 — Upload resumability: tus vs S3 multipart
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (option A, S3 multipart — see decision log)  
 **Blocks:** M2 (archive uploads)  
 **Must decide before:** M2 development begins
 
@@ -428,32 +428,32 @@ Date decided:
 
 ## Topic 9 — Next.js subdomain routing: channel slugs as subdomains
 
-**Status:** `OPEN`  
-**Blocks:** M3 (channel page at `slug.tahti.fi`)  
+**Status:** `DECIDED` (path-based for MVP — see decision log)  
+**Blocks:** M3 (channel page at `slug.tahti.live`)  
 **Must decide before:** web app scaffold begins
 
 ### Background
 
-Caddy is configured to route `*.tahti.fi` → `web:3000` with header `X-Tahti-Channel-Slug: {labels.0}`. But Next.js App Router has no built-in subdomain routing. The web app needs a `middleware.ts` that reads this header and rewrites the path.
+Caddy is configured to route `*.tahti.live` → `web:3000` with header `X-Tahti-Channel-Slug: {labels.0}`. But Next.js App Router has no built-in subdomain routing. The web app needs a `middleware.ts` that reads this header and rewrites the path.
 
-Additionally: channel slugs as subdomains require wildcard TLS (`*.tahti.fi`). Let's Encrypt wildcard certs require DNS challenge (not HTTP challenge), which means Caddy needs a DNS provider plugin. Traficom/Finnish registrars may not have a Caddy-compatible DNS challenge plugin.
+Additionally: channel slugs as subdomains require wildcard TLS (`*.tahti.live`). Let's Encrypt wildcard certs require DNS challenge (not HTTP challenge), which means Caddy needs a DNS provider plugin. Traficom/Finnish registrars may not have a Caddy-compatible DNS challenge plugin.
 
 ### Options
 
 **A — middleware.ts rewrites + wildcard TLS via Caddy DNS challenge**  
 `middleware.ts` reads `X-Tahti-Channel-Slug` and rewrites to `/c/[slug]`. Caddy uses DNS-01 challenge via the registrar's API.  
 - Need to verify: does the domain registrar support Caddy DNS plugins (Cloudflare DNS API, Route 53, or generic ACME DNS)?  
-- Pro: Clean URL (`slug.tahti.fi`)  
+- Pro: Clean URL (`slug.tahti.live`)  
 - Con: DNS challenge adds complexity and a dependency on the registrar's API  
 
-**B — Path-based routing: `tahti.fi/c/slug`**  
-No subdomains. Channels live at `tahti.fi/c/djname`. Simpler TLS (single cert), no DNS challenge needed.  
+**B — Path-based routing: `tahti.live/c/slug`**  
+No subdomains. Channels live at `tahti.live/c/djname`. Simpler TLS (single cert), no DNS challenge needed.  
 - Pro: Simplest implementation  
 - Pro: Standard ACME HTTP challenge works  
 - Con: Less memorable URL  
-- Con: Doesn't match the spec's `slug.tahti.fi` promise  
+- Con: Doesn't match the spec's `slug.tahti.live` promise  
 
-**C — Hybrid: `tahti.fi/c/slug` in MVP, add subdomains post-beta**  
+**C — Hybrid: `tahti.live/c/slug` in MVP, add subdomains post-beta**  
 Ship with path-based routing. Add subdomain support as a later enhancement once the registrar DNS situation is confirmed.  
 - Pro: Unblocks development  
 - Pro: DNS challenge complexity deferred  
@@ -521,7 +521,7 @@ Date decided:
 
 ## Topic 11 — AGM/voting: Finnish yhdistys law compliance
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (advisory voting for Y1 — see decision log)  
 **Blocks:** M10 (member governance UI), Bylaws finalization  
 **Must decide before:** M10 design AND bylaws are filed with PRH
 
@@ -559,13 +559,21 @@ Ship M10 as advisory voting. After bylaws are filed and year 1 is running, propo
 ### Decision
 
 ```
-Chosen option:
-Bylaws clause status (exists? lawyer reviewed?):
-M10 legal status for Y1 (binding / advisory):
-Spec updates needed (AGENT.md M10, governance-and-legal.md):
-Owner:
-Date decided:
+Chosen option: C — ship M10 voting as ADVISORY for Y1; upgrade to binding after a
+  bylaws amendment authorizes electronic asynchronous voting.
+Bylaws clause status (exists? lawyer reviewed?): not yet — flagged for legal review
+M10 legal status for Y1 (binding / advisory): ADVISORY
+Spec updates needed (AGENT.md M10, governance-and-legal.md): note advisory status;
+  motions carry an `advisory` flag (default true) in the data model.
+Owner: Dev / Board
+Date decided: 2026-06-03
 ```
+
+**Implementation note (2026-06-03):** M10 motions/voting built with this in mind.
+Each `Motion` has an `advisory` boolean (default `true`). Results are surfaced as
+advisory tallies; binding AGM decisions still require a live meeting until the
+bylaws clause lands. Once Option A's clause is filed with PRH, set new motions'
+`advisory = false`.
 
 ---
 
@@ -729,7 +737,15 @@ Record decisions here as they are made, in date order.
 
 | # | Topic | Decision summary | Date | Owner |
 |---|-------|-----------------|------|-------|
-| — | — | — | — | — |
+| 4 | Auth library | Custom session + argon2 (Lucia not adopted). Implemented in `apps/api/src/lib/session.ts` + `password.ts`. | 2026-06-03 | Dev |
+| 5 | Upload resumability | **A** — S3 multipart via presigned part URLs (no tusd). Implemented in `routes/uploads/*`. | 2026-06-03 | Dev |
+| 9 | Subdomain routing | **B/C** — path-based `/c/<slug>` for MVP; subdomains deferred. | 2026-06-03 | Dev |
+| 11 | AGM voting legality | **C** — M10 voting is **advisory** for Y1; `Motion.advisory` flag; upgrade after bylaws amendment. | 2026-06-03 | Dev / Board |
+
+> Topics 4, 5, and 9 are marked retroactively from the shipped MVP code — they
+> were decided implicitly by implementation and are recorded here for the audit
+> trail. Remaining `OPEN` topics (1, 2, 3, 6, 7, 8, 10, 12–15) still need explicit
+> resolution before their milestones.
 
 ---
 

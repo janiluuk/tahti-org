@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import UploadForm from './upload-form.js'
 import StreamSettingsPanel from './stream-settings.js'
 import RtmpTargetsPanel from './rtmp-targets.js'
+import AnnouncementsPanel from './announcements-panel.js'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }
@@ -22,6 +23,7 @@ interface MeResponse {
   emailVerifiedAt: string | null
   membership: { status: string; activatedAt: string | null } | null
   channel: { slug: string; state: string } | null
+  storage: { usedBytes: string; softTargetBytes: string } | null
 }
 
 interface RtmpTarget {
@@ -89,7 +91,23 @@ export default async function DashboardPage() {
         cache: 'no-store',
       })
       if (res.ok) rtmpTargets = (await res.json()) as RtmpTarget[]
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  let announcements: Array<{ id: string; body: string; createdAt: string }> = []
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/chat/${user.channel.slug}/announcements`, {
+        cache: 'no-store',
+      })
+      if (res.ok) {
+        announcements = (await res.json()) as typeof announcements
+      }
+    } catch {
+      // ignore
+    }
   }
 
   let archiveItems: ArchiveItem[] = []
@@ -126,7 +144,12 @@ export default async function DashboardPage() {
         </form>
       </div>
 
-      <p style={{ color: '#555', marginTop: '0.5rem' }}>Welcome back, {user.displayName}</p>
+      <p style={{ color: '#555', marginTop: '0.5rem' }}>
+        Welcome back, {user.displayName} ·{' '}
+        <a href="/governance" style={{ color: '#2563eb' }}>
+          Member governance
+        </a>
+      </p>
 
       {user.channel && (
         <section
@@ -141,7 +164,7 @@ export default async function DashboardPage() {
           <p style={{ margin: '0.25rem 0' }}>
             <strong>URL:</strong>{' '}
             <a href={`/c/${user.channel.slug}`}>
-              <code>{user.channel.slug}.tahti.fi</code>
+              <code>{user.channel.slug}.tahti.live</code>
             </a>
           </p>
           <p style={{ margin: '0.25rem 0' }}>
@@ -153,13 +176,18 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      {user.channel && streamSettings && (
-        <StreamSettingsPanel initial={streamSettings} />
+      {user.storage && (
+        <StorageBar
+          usedBytes={Number(user.storage.usedBytes)}
+          softTargetBytes={Number(user.storage.softTargetBytes)}
+        />
       )}
 
-      {user.channel && (
-        <RtmpTargetsPanel initial={rtmpTargets} />
-      )}
+      {user.channel && streamSettings && <StreamSettingsPanel initial={streamSettings} />}
+
+      {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
+
+      {user.channel && <AnnouncementsPanel initial={announcements} />}
 
       {user.channel && (
         <section
@@ -205,6 +233,57 @@ export default async function DashboardPage() {
             </ul>
           )}
         </section>
+      )}
+    </div>
+  )
+}
+
+function StorageBar({
+  usedBytes,
+  softTargetBytes,
+}: {
+  usedBytes: number
+  softTargetBytes: number
+}) {
+  const usedMB = usedBytes / (1024 * 1024)
+  const targetMB = softTargetBytes / (1024 * 1024)
+  const pct = Math.min(100, Math.round((usedBytes / softTargetBytes) * 100))
+  const isNearLimit = pct >= 80
+
+  function fmt(mb: number): string {
+    return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${Math.round(mb)} MB`
+  }
+
+  return (
+    <div
+      style={{
+        marginTop: '2rem',
+        padding: '1rem 1.5rem',
+        border: '1px solid #eee',
+        borderRadius: 8,
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+        <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>Storage</span>
+        <span style={{ fontSize: '0.875rem', color: isNearLimit ? '#dc2626' : '#666' }}>
+          {fmt(usedMB)} / {fmt(targetMB)}
+        </span>
+      </div>
+      <div style={{ background: '#f0f0f0', borderRadius: 4, height: 6, overflow: 'hidden' }}>
+        <div
+          style={{
+            height: '100%',
+            width: `${pct}%`,
+            background: isNearLimit ? '#dc2626' : '#2563eb',
+            borderRadius: 4,
+            transition: 'width 0.3s',
+          }}
+        />
+      </div>
+      {isNearLimit && (
+        <p style={{ margin: '0.4rem 0 0', fontSize: '0.8rem', color: '#dc2626' }}>
+          You&apos;re approaching your soft storage target. Contact us if you need more space.
+        </p>
       )}
     </div>
   )

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
 import { buildApp } from '../../server.js'
@@ -33,8 +33,8 @@ describe('POST /api/auth/login', () => {
             slug: 'login-test-user',
             liveSourceMount: '/live/login-test-user',
             liveSourcePass: 'dummypass',
-              liveSourcePassHash: 'dummy',
-              rtmpStreamKey: 'dummyslug__dummykey',
+            liveSourcePassHash: 'dummy',
+            rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },
@@ -109,8 +109,8 @@ describe('POST /api/auth/login', () => {
             slug: 'login-test-unverified',
             liveSourceMount: '/live/login-test-unverified',
             liveSourcePass: 'dummypass',
-              liveSourcePassHash: 'dummy',
-              rtmpStreamKey: 'dummyslug__dummykey',
+            liveSourcePassHash: 'dummy',
+            rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },
@@ -215,8 +215,8 @@ describe('GET /api/auth/verify', () => {
             slug: 'login-test-verify',
             liveSourceMount: '/live/login-test-verify',
             liveSourcePass: 'dummypass',
-              liveSourcePassHash: 'dummy',
-              rtmpStreamKey: 'dummyslug__dummykey',
+            liveSourcePassHash: 'dummy',
+            rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },
@@ -262,8 +262,8 @@ describe('GET /api/auth/verify', () => {
             slug: 'login-test-expired',
             liveSourceMount: '/live/login-test-expired',
             liveSourcePass: 'dummypass',
-              liveSourcePassHash: 'dummy',
-              rtmpStreamKey: 'dummyslug__dummykey',
+            liveSourcePassHash: 'dummy',
+            rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Copyright (C) 2024 Tahti ry <https://tahti.fi>
+# Copyright (C) 2024 Tahti ry <https://tahti.live>
 #
 # Build from repo root:
 #   docker build -f apps/worker/Dockerfile -t tahti/worker .

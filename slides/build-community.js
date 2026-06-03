@@ -464,7 +464,7 @@ async function main() {
       [
         { text: 'https://', options: { color: COL.textDim, fontSize: 22 } },
         { text: 'your-name', options: { color: COL.amber, fontSize: 22, bold: true } },
-        { text: '.tahti.fi', options: { color: COL.cyan, fontSize: 22, bold: true } },
+        { text: '.tahti.live', options: { color: COL.cyan, fontSize: 22, bold: true } },
       ],
       {
         x: 0.7,
@@ -942,7 +942,7 @@ async function main() {
     })
     s.addText(
       [
-        { text: 'https://tahti.fi/u/', options: { color: COL.textDim, fontSize: 20 } },
+        { text: 'https://tahti.live/u/', options: { color: COL.textDim, fontSize: 20 } },
         { text: 'your-handle', options: { color: COL.amber, fontSize: 20, bold: true } },
       ],
       {
@@ -1866,7 +1866,7 @@ async function main() {
           },
         ],
         rows: [
-          ['URL', 'tahti.fi/v/<venue-slug>'],
+          ['URL', 'tahti.live/v/<venue-slug>'],
           ['Calendar', 'iCalendar feed + JSON API'],
           ['Booking', 'Direct \u2014 we don\u2019t mediate'],
           ['Verification', 'Manual, ~3 business days'],
@@ -2382,7 +2382,7 @@ async function main() {
       })
     }
 
-    s.addText('TAHTI  ry  \u00B7  HELSINKI  \u00B7  AGPL-3.0  \u00B7  hello@tahti.fi', {
+    s.addText('TAHTI  ry  \u00B7  HELSINKI  \u00B7  AGPL-3.0  \u00B7  hello@tahti.live', {
       x: 0.7,
       y: 6.95,
       w: 12.0,

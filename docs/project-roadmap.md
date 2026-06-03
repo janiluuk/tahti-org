@@ -3,8 +3,12 @@
 Master task list to go from **documentation package → funded nonprofit → working
 platform → tested beta → operation by Tahti ry** (with trained member-operators).
 
-**Status today:** specs, infra templates, and financial model exist; **application
-code is not started** (`docs/AGENT.md` milestones M0–M20).
+**Status today (updated 2026-06-03):** specs, infra templates, and financial
+model exist **and the application code is well underway**. The MVP broadcasting
+stack (M0–M6), the transparency ledger (M8), and hardening basics (M11 partial)
+are implemented with a green test suite. See the
+[Build audit](#build-audit--current-state-2026-06-03) below for the
+milestone-by-milestone breakdown of what is done, partial, and not started.
 
 **Target Year 1 plan:** 200 paying members · founding grant for capex/growth ·
 first AGM · handover-ready ops by month 12–18. Ops balance without a fixed
@@ -24,6 +28,50 @@ Use this as a GitHub Project / issue checklist (`- [ ]` = open).
 
 **Recommended build order:** legal + grants in parallel with **MVP (M0–M5)** →
 closed beta → **M7–M9, M19** (money + grants) → remaining features → handover.
+
+---
+
+## Build audit — current state (2026-06-03)
+
+Audit of the actual code in `apps/`, `services/`, and `packages/` against the
+`docs/AGENT.md` milestones. Verified by reading the source and running
+`pnpm typecheck` (passes) and `pnpm test` (57 tests pass with Postgres up).
+
+| Milestone | State | Evidence / notes |
+|---|---|---|
+| **M0** Skeleton | ✅ Done | pnpm + Turborepo monorepo, AGPL headers, CI, `/health`, `/source`, footer link |
+| **M1** Accounts + membership | 🟡 Partial | Email/password signup, email verify, sessions, member roster. **Stripe €40 payment + webhook → ledger is NOT wired** — membership activates without payment |
+| **M2** Channel + archive upload | ✅ Done | Presigned S3-multipart upload (resolves Topic 5 → option A), transcode worker, channel page |
+| **M3** Live ingress + orchestrator | ✅ Done | Icecast + RTMP webhooks, orchestrator + Liquidsoap template, HLS player. Path-based routing `/c/<slug>` (resolves Topic 9 → option B/C). WebRTC browser-live deferred (Topic 6) |
+| **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
+| **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence (uncommitted working tree) |
+| **M6** Multistream RTMP | ✅ Done | Per-channel targets, encrypted stream keys, `alwaysMirror` gated to STUDIO |
+| **M7** Distribution (Mixcloud/Revelator) | ❌ Not started | No `packages/revelator` or `packages/mixcloud` |
+| **M8** Transparency ledger | 🟡 Partial | Append-only ledger, monthly rollup worker, public `/transparency` API. Missing: `/transparency/grants/:year` endpoint (depends on M9) |
+| **M9** Annual grant calc | ❌ Not started | No `GrantDisbursement` model; no engagement/listener-hour data pipeline to feed it |
+| **M10** Member governance | ⏳ In progress | No `Motion`/`Vote` models yet. `admin/ledger` explicitly defers role checks here. **Picked as the next milestone to implement** |
+| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha lib, audit log present. Missing: backups runbook wiring, status page, audit CSV export |
+| **M12** Profile + releases | ❌ Not started | No `Release`/`ReleaseTrack` models |
+| **M13–M17** Newsletter, promo, tagging, radio, venues | ❌ Not started | — |
+| **M18** Downloads first-class | ❌ Not started | No `engagement.Download` model |
+| **M19** Fan-subs | ❌ Not started | No Stripe Connect onboarding |
+| **M20** Tier gating | 🟡 Partial | 3-tier enum `FREE/ARTIST/STUDIO` exists (diverges from spec's `FREE/PAID`); weekly-cap fields on `User`. Free-tier broadcast cap + MP3/FLAC manifest split not enforced |
+
+### Improvements identified during the audit (added to the roadmap)
+
+These are gaps and quality items found while reading the code. They are tracked
+as their own checklist so they don't get lost between milestones.
+
+| Done | Improvement | Why it matters | Suggested milestone |
+|:---:|---|---|---|
+| [ ] | Wire Stripe Checkout for €40 membership + webhook → `REVENUE_SUBSCRIPTION` ledger entry | M1 currently activates membership with no payment; this is core to the nonprofit money flow | M1 finish / Phase 4 |
+| [ ] | Add `GrantDisbursement` model + annual grant cron + `/transparency/grants/:year` | The grant engine is "what makes Tahti a nonprofit" and is entirely absent | M9 |
+| [ ] | Add board/treasurer **role** so `admin/ledger` stops using `isMember` as a proxy | Treasurer-only and board-only actions are currently gated on plain membership | M10 (this pass) |
+| [ ] | Reconcile tier model: code uses `FREE/ARTIST/STUDIO`, AGENT.md says `FREE/PAID` | Spec/code drift will cause confusion in M20 gating and pricing copy | M20 / doc fix |
+| [ ] | Adopt Zod schemas on newer routes (admin/ledger, rtmp-targets, governance) | AGENT.md acceptance criteria require Zod validation on every endpoint; several routes hand-roll validation | ongoing hardening |
+| [ ] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fix before third parties depend on it | M8 polish |
+| [ ] | Document ephemeral test DB story for CI + local (`pnpm test` needs Postgres) | Integration tests silently fail without a DB; document/seed it | M11 |
+| [ ] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | M9's grant formula needs real inputs; today nothing records engagement units | M18/M19 → M9 |
 
 ---
 
@@ -81,7 +129,7 @@ Goal: secure **≥€20k** to bridge Year 1 deficit (`financial-model.md`).
 | [ ] | Helsinki business fiber contract (symmetric gigabit) | Director | hardware | `infra-strategy.md` |
 | [ ] | UpCloud Helsinki account for spillover/static | Dev | — | `infra-strategy.md` |
 | [ ] | Backup colocation / DR target chosen | Dev | — | `infra-strategy.md` |
-| [ ] | Domain **tahti.fm** + DNS → Caddy on owned edge | Dev | association exists | `infra/Caddyfile` |
+| [ ] | Domain **tahti.live** + DNS → Caddy on owned edge | Dev | association exists | `infra/Caddyfile` |
 | [ ] | Docker Swarm (or Compose staging) from `infra/docker-stack.yml` | Dev | hardware | `infra/docker-stack.yml` |
 | [ ] | Secrets management (Docker secrets / sops) documented | Dev | stack up | — |
 | [ ] | Staging environment mirrors production topology | Dev | M0 | — |
@@ -100,12 +148,12 @@ Minimum to put **20–50 scene artists** on air. Full acceptance criteria in
 
 | Done | Milestone | Summary | Owner |
 |:---:|---|---|---|
-| [ ] | **M0** | Monorepo, AGPL, CI, dev compose, `/health`, `/source` | Dev |
-| [ ] | **M1** | Artist signup, email verify, €40 membership, member register export | Dev |
-| [ ] | **M2** | Channel, resumable archive upload, transcode pipeline | Dev |
-| [ ] | **M3** | Icecast + RTMP + browser live; Liquidsoap per channel; public channel page | Dev |
-| [ ] | **M4** | Auto-archive live sets to archive | Dev |
-| [ ] | **M5** | Live chat (Centrifugo), announcements, moderation | Dev |
+| [x] | **M0** | Monorepo, AGPL, CI, dev compose, `/health`, `/source` | Dev |
+| [~] | **M1** | Artist signup, email verify, member register export (**€40 Stripe payment not yet wired**) | Dev |
+| [x] | **M2** | Channel, resumable archive upload, transcode pipeline | Dev |
+| [x] | **M3** | Icecast + RTMP; Liquidsoap per channel; public channel page (browser live deferred) | Dev |
+| [x] | **M4** | Auto-archive live sets to archive | Dev |
+| [x] | **M5** | Live chat (Centrifugo), announcements, moderation, reactions, presence | Dev |
 | [ ] | **M20** (partial) | Free tier: 1 hr/week live + MP3; paid: FLAC + unlimited live | Dev |
 
 **MVP test matrix (must pass before inviting beta artists):**
@@ -131,11 +179,11 @@ Required before first **real** membership money and first grant cycle.
 
 | Done | Milestone | Summary | Owner |
 |:---:|---|---|---|
-| [ ] | **M8** | Public transparency ledger + monthly rollup API | Dev |
+| [x] | **M8** | Public transparency ledger + monthly rollup API (grants/:year still pending M9) | Dev |
 | [ ] | **M7** | Mixcloud upload + Revelator wizard (€8/release) | Dev |
 | [ ] | **M9** | Annual engagement-unit grant cron + payout + report | Dev |
 | [ ] | **M19** | Fan-subscriptions (Stripe Connect, 0% org take, 2% ops fee) | Dev |
-| [ ] | **M10** (core) | Member directory, motions, voting, bylaws display | Dev |
+| [~] | **M10** (core) | Member directory, motions, voting, bylaws display — **in progress this pass** (advisory voting per Topic 11) | Dev |
 
 **Test matrix:**
 

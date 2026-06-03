@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { PrismaClient } from '@tahti/db'
 
@@ -14,6 +14,10 @@ interface AuditParams {
     | 'LEDGER_ENTRY_CREATE'
     | 'MEMBER_SUSPEND'
     | 'MEMBER_REINSTATE'
+    | 'MOTION_CREATE'
+    | 'MOTION_OPEN'
+    | 'MOTION_CLOSE'
+    | 'VOTE_CAST'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

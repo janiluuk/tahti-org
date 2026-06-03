@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 'use client'
 
@@ -11,11 +11,7 @@ interface StreamSettings {
   hlsUrl: string
 }
 
-export default function StreamSettingsPanel({
-  initial,
-}: {
-  initial: StreamSettings
-}) {
+export default function StreamSettingsPanel({ initial }: { initial: StreamSettings }) {
   const [settings, setSettings] = useState(initial)
   const [rotating, setRotating] = useState<'rtmp' | 'icecast' | null>(null)
 
@@ -42,14 +38,20 @@ export default function StreamSettingsPanel({
   }
 
   return (
-    <div style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}>
+    <div
+      style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
+    >
       <h2 style={{ margin: '0 0 1.25rem' }}>Go Live</h2>
 
       <div style={{ marginBottom: '1.5rem' }}>
         <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>OBS / Streamlabs (RTMP)</h3>
         <Row label="Server" value={settings.rtmp.server} />
         <Row label="Stream Key" value={settings.rtmp.streamKey} />
-        <RotateButton label="Rotate RTMP key" loading={rotating === 'rtmp'} onClick={() => rotateKey('rtmp')} />
+        <RotateButton
+          label="Rotate RTMP key"
+          loading={rotating === 'rtmp'}
+          onClick={() => rotateKey('rtmp')}
+        />
       </div>
 
       <div style={{ marginBottom: '1.5rem' }}>

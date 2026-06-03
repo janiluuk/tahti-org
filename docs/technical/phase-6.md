@@ -12,7 +12,7 @@
 
 ```mermaid
 flowchart TD
-    A[Artist submits release\napp.tahti.fi/releases/new] --> API
+    A[Artist submits release\napp.tahti.live/releases/new] --> API
 
     API --> PG1[INSERT releases\nstatus=draft]
 
@@ -64,7 +64,7 @@ graph TB
     GD --> LE
 
     subgraph "Public dashboard"
-        PD[app.tahti.fi/transparency\nread-only, no auth required]
+        PD[app.tahti.live/transparency\nread-only, no auth required]
     end
 
     LE -- SELECT only --> PD
@@ -172,10 +172,10 @@ echo -n "<postmark-api-key>" | docker secret create smtp_password -
 make deploy TAG=$(git rev-parse --short HEAD)
 ```
 
-DKIM and SPF DNS records for `tahti.fi`:
+DKIM and SPF DNS records for `tahti.live`:
 ```
-TXT  pm._domainkey.tahti.fi   → <postmark-dkim-value>
-TXT  tahti.fi                 → "v=spf1 include:spf.mtasv.net ~all"
+TXT  pm._domainkey.tahti.live   → <postmark-dkim-value>
+TXT  tahti.live                 → "v=spf1 include:spf.mtasv.net ~all"
 ```
 
 ## Exit criteria
@@ -184,7 +184,7 @@ TXT  tahti.fi                 → "v=spf1 include:spf.mtasv.net ~all"
 |-------|--------|----------|
 | Release to Spotify | Submit a real release | Appears on Spotify in 1–3 days |
 | Revelator royalty sync | Trigger job manually | Royalties appear in ledger |
-| Transparency ledger | Open app.tahti.fi/transparency | Shows real ledger entries |
+| Transparency ledger | Open app.tahti.live/transparency | Shows real ledger entries |
 | Grant calculation | `POST /admin/grants/calculate` | Returns realistic preview |
 | Grant disbursement dry-run | Run with `dry_run: true` | No money moved, log shows amounts |
 | Mixcloud upload | End a stream with MC connected | Recording on Mixcloud within 30 min |

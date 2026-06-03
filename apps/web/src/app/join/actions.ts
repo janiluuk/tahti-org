@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 'use server'
 
@@ -10,6 +10,7 @@ interface RegisterInput {
   password: string
   username: string
   displayName: string
+  hcaptchaToken?: string
 }
 
 export async function register(
@@ -27,7 +28,7 @@ export async function register(
     const response = await fetch(`${apiUrl}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(parsed.data),
+      body: JSON.stringify({ ...parsed.data, hcaptchaToken: input.hcaptchaToken }),
     })
 
     const data = (await response.json()) as { message?: string; userId?: string; error?: string }

@@ -1,20 +1,70 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { register } from './actions'
+
+const HCAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ?? ''
+
+declare global {
+  interface Window {
+    hcaptcha?: {
+      render(container: string | HTMLElement, params: Record<string, string>): string
+      getResponse(widgetId?: string): string
+      reset(widgetId?: string): void
+    }
+    onHcaptchaLoad?: () => void
+  }
+}
 
 export default function JoinPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [pending, setPending] = useState(false)
+  const captchaRef = useRef<HTMLDivElement>(null)
+  const widgetIdRef = useRef<string | undefined>(undefined)
+
+  // Load hCaptcha script and render widget when site key is configured
+  useEffect(() => {
+    if (!HCAPTCHA_SITE_KEY) return
+
+    const render = () => {
+      if (!captchaRef.current || !window.hcaptcha) return
+      widgetIdRef.current = window.hcaptcha.render(captchaRef.current, {
+        sitekey: HCAPTCHA_SITE_KEY,
+        theme: 'light',
+      })
+    }
+
+    if (window.hcaptcha) {
+      render()
+    } else {
+      window.onHcaptchaLoad = render
+      const script = document.createElement('script')
+      script.src = 'https://js.hcaptcha.com/1/api.js?onload=onHcaptchaLoad&render=explicit'
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setPending(true)
     setError(null)
+
+    const hcaptchaToken =
+      HCAPTCHA_SITE_KEY && window.hcaptcha
+        ? window.hcaptcha.getResponse(widgetIdRef.current)
+        : undefined
+
+    if (HCAPTCHA_SITE_KEY && !hcaptchaToken) {
+      setError('Please complete the captcha')
+      setPending(false)
+      return
+    }
 
     const form = new FormData(e.currentTarget)
     const result = await register({
@@ -22,11 +72,13 @@ export default function JoinPage() {
       password: form.get('password') as string,
       username: form.get('username') as string,
       displayName: form.get('displayName') as string,
+      hcaptchaToken,
     })
 
     setPending(false)
     if (result.error) {
       setError(result.error)
+      window.hcaptcha?.reset(widgetIdRef.current)
     } else {
       setSuccess(true)
     }
@@ -77,7 +129,7 @@ export default function JoinPage() {
 
         <label>
           <span style={{ display: 'block', marginBottom: 4 }}>
-            Username <small>(your channel URL: tahti.fi/u/&lt;username&gt;)</small>
+            Username <small>(your channel URL: tahti.live/u/&lt;username&gt;)</small>
           </span>
           <input
             name="username"
@@ -100,6 +152,8 @@ export default function JoinPage() {
             style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
           />
         </label>
+
+        {HCAPTCHA_SITE_KEY && <div ref={captchaRef} />}
 
         <button
           type="submit"

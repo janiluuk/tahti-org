@@ -72,10 +72,10 @@ configs:
 services:
 
   # ───────────────────────────────────────────────────────────────────────────
-  # Website — static marketing site (tahti.fi / www.tahti.fi)
+  # Website — static marketing site (tahti.live / www.tahti.live)
   # ───────────────────────────────────────────────────────────────────────────
   website:
-    image: registry.tahti.fi/tahti/website:${TAG:-latest}
+    image: registry.tahti.live/tahti/website:${TAG:-latest}
     networks: [edge]
     volumes:
       - type: bind
@@ -195,7 +195,7 @@ services:
   # API — Fastify backend
   # ───────────────────────────────────────────────────────────────────────────
   api:
-    image: registry.tahti.fi/tahti/api:${TAG:-latest}
+    image: registry.tahti.live/tahti/api:${TAG:-latest}
     networks: [internal, edge]
     environment:
       NODE_ENV: production
@@ -204,8 +204,8 @@ services:
       MINIO_ENDPOINT: minio
       MINIO_PORT: "9000"
       CENTRIFUGO_HOST: chat
-      PUBLIC_CDN_BASE: https://cdn.tahti.fi
-      PUBLIC_HLS_BASE: https://stream.tahti.fi
+      PUBLIC_CDN_BASE: https://cdn.tahti.live
+      PUBLIC_HLS_BASE: https://stream.tahti.live
       SESSION_SECRET_FILE: /run/secrets/session_secret
       RTMP_KEY_FILE: /run/secrets/rtmp_key_encryption_key
       CENTRIFUGO_SECRET_FILE: /run/secrets/centrifugo_secret
@@ -239,7 +239,7 @@ services:
   # Workers — media transcoding, distribution, light fanout
   # ───────────────────────────────────────────────────────────────────────────
   worker-media:
-    image: registry.tahti.fi/tahti/worker:${TAG:-latest}
+    image: registry.tahti.live/tahti/worker:${TAG:-latest}
     command: ["node", "dist/index.js", "--queues=transcode-archive,record-live,fingerprint"]
     networks: [internal]
     environment:
@@ -258,7 +258,7 @@ services:
         limits: { cpus: "4", memory: 4G }
 
   worker-dist:
-    image: registry.tahti.fi/tahti/worker:${TAG:-latest}
+    image: registry.tahti.live/tahti/worker:${TAG:-latest}
     command: ["node", "dist/index.js", "--queues=mixcloud-upload,revelator-deliver,revelator-royalty-sync"]
     networks: [internal]
     environment:
@@ -275,7 +275,7 @@ services:
         limits: { cpus: "1", memory: 1G }
 
   worker-light:
-    image: registry.tahti.fi/tahti/worker:${TAG:-latest}
+    image: registry.tahti.live/tahti/worker:${TAG:-latest}
     command: ["node", "dist/index.js", "--queues=stats-rollup,chat-cleanup,chat-ban-rotate"]
     networks: [internal]
     environment:
@@ -293,13 +293,13 @@ services:
   # Orchestrator — spawns per-channel Liquidsoap containers
   # ───────────────────────────────────────────────────────────────────────────
   orchestrator:
-    image: registry.tahti.fi/tahti/orchestrator:${TAG:-latest}
+    image: registry.tahti.live/tahti/orchestrator:${TAG:-latest}
     networks: [internal]
     environment:
       DATABASE_URL: postgres://tahti@postgres:5432/tahti
       REDIS_URL: redis://redis:6379
       DOCKER_HOST: unix:///var/run/docker.sock
-      CHANNEL_IMAGE: registry.tahti.fi/tahti/liquidsoap:latest
+      CHANNEL_IMAGE: registry.tahti.live/tahti/liquidsoap:latest
       CHANNEL_NETWORK: tahti_internal
       HLS_VOLUME: hls_shared
       RECORDINGS_VOLUME: recordings_shared
@@ -356,15 +356,15 @@ services:
         limits: { cpus: "2", memory: 1G }
 
   # ───────────────────────────────────────────────────────────────────────────
-  # Web — Next.js artist app (app.tahti.fi + per-channel subdomains)
+  # Web — Next.js artist app (app.tahti.live + per-channel subdomains)
   # ───────────────────────────────────────────────────────────────────────────
   web:
-    image: registry.tahti.fi/tahti/web:${TAG:-latest}
+    image: registry.tahti.live/tahti/web:${TAG:-latest}
     networks: [internal, edge]
     environment:
-      NEXT_PUBLIC_API_BASE: https://api.tahti.fi
-      NEXT_PUBLIC_CHAT_BASE: https://chat.tahti.fi
-      NEXT_PUBLIC_HLS_BASE: https://stream.tahti.fi
+      NEXT_PUBLIC_API_BASE: https://api.tahti.live
+      NEXT_PUBLIC_CHAT_BASE: https://chat.tahti.live
+      NEXT_PUBLIC_HLS_BASE: https://stream.tahti.live
       INTERNAL_API_BASE: http://api:3000
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
@@ -431,7 +431,7 @@ services:
     networks: [internal, edge]
     environment:
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/session_secret
-      GF_SERVER_ROOT_URL: https://grafana.tahti.fi
+      GF_SERVER_ROOT_URL: https://grafana.tahti.live
       GF_SERVER_SERVE_FROM_SUB_PATH: "false"
     secrets: [session_secret]
     volumes:
