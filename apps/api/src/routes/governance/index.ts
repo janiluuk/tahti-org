@@ -8,9 +8,12 @@ import {
   IdParamSchema,
   MotionDetailSchema,
   MotionListSchema,
+  MotionRefResponseSchema,
   PatchMotionSchema,
+  VoteCastResponseSchema,
   VoteMotionSchema,
   openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireMember, requireBoard } from '../../plugins/auth.js'
@@ -106,7 +109,15 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/v1/governance/motions — board posts a motion (starts as DRAFT)
   fastify.post(
     '/api/v1/governance/motions',
-    { preHandler: requireBoard },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponses([
+          { status: 201, schema: MotionRefResponseSchema, name: 'MotionRef' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const parsed = CreateMotionSchema.safeParse(request.body)
@@ -193,7 +204,13 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // PATCH /api/v1/governance/motions/:id — board state transitions (open/close)
   fastify.patch(
     '/api/v1/governance/motions/:id',
-    { preHandler: requireBoard },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionRefResponseSchema, 'MotionRef'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)
@@ -246,7 +263,15 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/v1/governance/motions/:id/vote — one vote per member while OPEN
   fastify.post(
     '/api/v1/governance/motions/:id/vote',
-    { preHandler: requireMember },
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponses([
+          { status: 201, schema: VoteCastResponseSchema, name: 'VoteCast' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)

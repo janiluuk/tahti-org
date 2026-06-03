@@ -2,45 +2,59 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { SlugParamSchema, parseRouteParams } from '@tahti/shared'
+import {
+  ChatPresenceResponseSchema,
+  SlugParamSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { config } from '../../config.js'
 
 const chatPresenceRoute: FastifyPluginAsync = async (fastify) => {
   // GET /api/channels/:slug/presence — listener count from Centrifugo
-  fastify.get('/api/channels/:slug/presence', async (request, reply) => {
-    const routeParams = parseRouteParams(SlugParamSchema, request.params)
-    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-    const { slug } = routeParams
+  fastify.get(
+    '/api/channels/:slug/presence',
+    {
+      schema: {
+        tags: ['chat'],
+        response: openApiResponse(ChatPresenceResponseSchema, 'ChatPresence'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
 
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { slug },
-      select: { id: true },
-    })
-
-    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-
-    try {
-      const res = await fetch(`${config.centrifugo.apiUrl}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `apikey ${config.centrifugo.apiKey}`,
-        },
-        body: JSON.stringify({
-          method: 'presence_stats',
-          params: { channel: `channel:${slug}` },
-        }),
-        signal: AbortSignal.timeout(2000),
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { slug },
+        select: { id: true },
       })
 
-      if (!res.ok) return reply.send({ numClients: 0 })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      const data = (await res.json()) as { result?: { num_clients?: number } }
-      return reply.send({ numClients: data.result?.num_clients ?? 0 })
-    } catch {
-      return reply.send({ numClients: 0 })
-    }
-  })
+      try {
+        const res = await fetch(`${config.centrifugo.apiUrl}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `apikey ${config.centrifugo.apiKey}`,
+          },
+          body: JSON.stringify({
+            method: 'presence_stats',
+            params: { channel: `channel:${slug}` },
+          }),
+          signal: AbortSignal.timeout(2000),
+        })
+
+        if (!res.ok) return reply.send({ numClients: 0 })
+
+        const data = (await res.json()) as { result?: { num_clients?: number } }
+        return reply.send({ numClients: data.result?.num_clients ?? 0 })
+      } catch {
+        return reply.send({ numClients: 0 })
+      }
+    },
+  )
 }
 
 export default chatPresenceRoute
