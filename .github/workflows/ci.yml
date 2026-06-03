@@ -408,19 +408,7 @@ jobs:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Export OpenAPI spec (JSON)
-        run: |
-          cat > /tmp/export-spec.ts << 'EOF'
-          import { buildApp } from './apps/api/src/server.ts'
-          import { writeFileSync } from 'node:fs'
-
-          const app = await buildApp({ logger: false })
-          await app.ready()
-          const spec = app.swagger()
-          writeFileSync('openapi.json', JSON.stringify(spec, null, 2))
-          await app.close()
-          console.log('OpenAPI spec written — ' + JSON.stringify(spec).length + ' bytes')
-          EOF
-          pnpm --filter @tahti/api exec tsx /tmp/export-spec.ts
+        run: pnpm --filter @tahti/api exec tsx scripts/export-openapi.ts
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
