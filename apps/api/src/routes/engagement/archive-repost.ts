@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
+import { DownloadGatesQuerySchema, RepostAckBodySchema } from '@tahti/shared'
 import { config } from '../../config.js'
 import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
 
@@ -19,7 +20,13 @@ function fingerprintFromRequest(fp: string | undefined, userAgent: string | unde
 const archiveRepostRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/v1/c/:slug/archive/:itemId/download-gates', async (request, reply) => {
     const { slug, itemId } = request.params as { slug: string; itemId: string }
-    const query = request.query as { fp?: string }
+    const parsedQuery = DownloadGatesQuerySchema.safeParse(request.query)
+    if (!parsedQuery.success) {
+      return reply.status(400).send({
+        error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+      })
+    }
+    const query = parsedQuery.data
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },
@@ -51,9 +58,19 @@ const archiveRepostRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/api/v1/c/:slug/archive/:itemId/repost-ack', async (request, reply) => {
     const { slug, itemId } = request.params as { slug: string; itemId: string }
-    const body = (request.body ?? {}) as { fp?: string }
-    const query = request.query as { fp?: string }
-    const fp = body.fp ?? query.fp
+    const parsedBody = RepostAckBodySchema.safeParse(request.body ?? {})
+    if (!parsedBody.success) {
+      return reply.status(400).send({
+        error: parsedBody.error.issues[0]?.message ?? 'Invalid body',
+      })
+    }
+    const parsedQuery = DownloadGatesQuerySchema.safeParse(request.query)
+    if (!parsedQuery.success) {
+      return reply.status(400).send({
+        error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+      })
+    }
+    const fp = parsedBody.data.fp ?? parsedQuery.data.fp
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },

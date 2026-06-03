@@ -5,7 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
-import { evaluateDownloadCountPolicy } from '@tahti/shared'
+import { evaluateDownloadCountPolicy, ReleaseDownloadQuerySchema } from '@tahti/shared'
 import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
@@ -36,7 +36,13 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
         smartLinkSlug: string
         trackId: string
       }
-      const query = request.query as { fp?: string; format?: string }
+      const parsedQuery = ReleaseDownloadQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply.status(400).send({
+          error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
+      const query = parsedQuery.data
 
       const release = await fastify.prisma.release.findFirst({
         where: { smartLinkSlug, state: 'PUBLISHED' },

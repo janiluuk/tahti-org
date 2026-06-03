@@ -3,7 +3,11 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
-import { archivePlaybackKey, evaluateDownloadCountPolicy } from '@tahti/shared'
+import {
+  ArchiveDownloadQuerySchema,
+  archivePlaybackKey,
+  evaluateDownloadCountPolicy,
+} from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
@@ -39,7 +43,13 @@ function sha256(input: string): string {
 const downloadRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/v1/c/:slug/archive/:itemId/download', async (request, reply) => {
     const { slug, itemId } = request.params as { slug: string; itemId: string }
-    const query = request.query as { fp?: string; format?: string }
+    const parsedQuery = ArchiveDownloadQuerySchema.safeParse(request.query)
+    if (!parsedQuery.success) {
+      return reply.status(400).send({
+        error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+      })
+    }
+    const query = parsedQuery.data
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },
