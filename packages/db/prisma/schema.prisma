@@ -501,9 +501,31 @@ model ArchiveItem {
 
   mixUpload      MixUpload?
   collectionItems CollectionItem[]
+  versions        ArchiveItemVersion[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
+  @@schema("channel")
+}
+
+// M28: audio file versions for a single archive track (stable public item id).
+model ArchiveItemVersion {
+  id            String            @id @default(cuid())
+  archiveItemId String
+  archiveItem   ArchiveItem       @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  versionLabel  String
+  rawKey        String
+  mp3Key        String?
+  flacKey       String?
+  durationSec   Int?
+  fileSizeBytes BigInt            @default(0)
+  status        ArchiveItemStatus @default(PENDING)
+  isActive      Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+
+  @@unique([archiveItemId, versionNumber])
+  @@index([archiveItemId, createdAt(sort: Desc)])
   @@schema("channel")
 }
 

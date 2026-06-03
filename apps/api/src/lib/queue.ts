@@ -14,3 +14,7 @@ export const mediaQueue = new Queue('media', { connection })
 export async function enqueueTranscode(itemId: string): Promise<void> {
   await mediaQueue.add('transcode-archive', { itemId })
 }
+
+export async function enqueueVersionTranscode(versionId: string): Promise<void> {
+  await mediaQueue.add('transcode-archive-version', { versionId })
+}

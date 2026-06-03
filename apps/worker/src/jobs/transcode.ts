@@ -6,7 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma } from '@tahti/db'
+import { prisma, ensureInitialVersion } from '@tahti/db'
 import {
   isLosslessSource,
   mergeDetectedArchiveMetadata,
@@ -147,6 +147,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
           ...tagPatch,
         },
       })
+      await ensureInitialVersion(prisma, itemId)
       return
     }
 
@@ -164,6 +165,8 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         ...tagPatch,
       },
     })
+
+    await ensureInitialVersion(prisma, itemId)
   } catch (err) {
     await prisma.archiveItem.update({
       where: { id: itemId },
