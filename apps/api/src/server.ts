@@ -45,8 +45,14 @@ import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
 import adminMembersRoutes from './routes/admin/members.js'
 import adminAuditRoutes from './routes/admin/audit.js'
 import meReleaseRoutes from './routes/releases/me.js'
+import releaseTrackRoutes from './routes/releases/tracks.js'
+import embedRoutes from './routes/releases/embed.js'
 import publicProfileRoutes from './routes/profile/public.js'
 import smartlinkRoutes from './routes/releases/smartlink.js'
+import mixcloudRoutes from './routes/me/mixcloud.js'
+import newsletterPublicRoutes from './routes/newsletter/public.js'
+import newsletterMeRoutes from './routes/newsletter/me.js'
+import venueRoutes from './routes/venues/venues.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import { config } from './config.js'
 
@@ -134,10 +140,24 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M11: audit exports
   await fastify.register(adminAuditRoutes)
 
-  // M12: artist profile + releases
+  // M12: artist profile + releases + audio upload pipeline
   await fastify.register(meReleaseRoutes)
+  await fastify.register(releaseTrackRoutes)
   await fastify.register(publicProfileRoutes)
   await fastify.register(smartlinkRoutes)
+
+  // M14: embed widget + oEmbed
+  await fastify.register(embedRoutes)
+
+  // M7: Mixcloud upload for archive items
+  await fastify.register(mixcloudRoutes)
+
+  // M13: newsletter (public + artist-facing)
+  await fastify.register(newsletterPublicRoutes)
+  await fastify.register(newsletterMeRoutes)
+
+  // M17: venue directory + iCalendar feeds
+  await fastify.register(venueRoutes)
 
   return fastify
 }

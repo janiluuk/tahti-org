@@ -5,6 +5,9 @@ import { Worker, Queue } from 'bullmq'
 import { prisma } from '@tahti/db'
 import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
+import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
+import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
+import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
 import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
@@ -21,6 +24,12 @@ const worker = new Worker(
   async (job) => {
     if (job.name === 'transcode-archive') {
       await processTranscodeJob(job)
+    } else if (job.name === 'transcode-release-track') {
+      await processTranscodeReleaseTrackJob(job)
+    } else if (job.name === 'mixcloud-upload') {
+      await processMixcloudUploadJob(job)
+    } else if (job.name === 'newsletter-dispatch') {
+      await processNewsletterDispatch(job)
     } else if (job.name === 'archive-broadcast') {
       await processArchiveBroadcastJob(job)
     } else if (job.name === 'monthly-ledger-rollup') {
