@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
 import { config } from '../../config.js'
+import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
 
 // nginx-rtmp sends form-encoded bodies to on_publish / on_done / on_update
 const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
@@ -26,6 +27,8 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
           rtmpStreamKey: true,
           rtmpStreamKeyHash: true,
           state: true,
+          userId: true,
+          user: { select: { tier: true } },
         },
       })
 
@@ -38,6 +41,12 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
       if (!valid) {
         fastify.log.warn({ slug: channel.slug }, 'rtmp on_publish: invalid stream key')
         return reply.status(403).send('denied')
+      }
+
+      const cap = await checkBroadcastCap(fastify.prisma, channel.userId, channel.user.tier)
+      if (!canAcceptSourceConnect(cap, channel.state)) {
+        fastify.log.info({ slug: channel.slug }, 'rtmp on_publish: weekly live cap reached')
+        return reply.status(403).send('weekly_cap')
       }
 
       // Create broadcast record and mark channel LIVE

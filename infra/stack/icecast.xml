@@ -1,0 +1,50 @@
+<icecast>
+    <location>Helsinki, Finland</location>
+    <admin>ops@tahti.live</admin>
+
+    <limits>
+        <clients>1000</clients>
+        <sources>50</sources>
+        <queue-size>524288</queue-size>
+        <client-timeout>30</client-timeout>
+        <header-timeout>15</header-timeout>
+        <source-timeout>10</source-timeout>
+        <burst-on-connect>1</burst-on-connect>
+        <burst-size>65536</burst-size>
+    </limits>
+
+    <authentication>
+        <source-password>dev_source</source-password>
+        <relay-password>dev_relay</relay-password>
+        <admin-user>admin</admin-user>
+        <admin-password>dev_admin</admin-password>
+    </authentication>
+
+    <hostname>localhost</hostname>
+
+    <listen-socket>
+        <port>8000</port>
+    </listen-socket>
+
+    <mount type="default">
+        <authentication type="url">
+            <option name="mount_add"    value="http://api:3001/internal/icecast/on_connect"/>
+            <option name="mount_remove" value="http://api:3001/internal/icecast/on_disconnect"/>
+            <option name="listener_add" value="http://api:3001/internal/icecast/on_listen"/>
+            <option name="headers"      value="Authorization"/>
+        </authentication>
+        <max-listeners>-1</max-listeners>
+    </mount>
+
+    <paths>
+        <logdir>/var/log/icecast</logdir>
+        <webroot>/usr/share/icecast/web</webroot>
+        <adminroot>/usr/share/icecast/admin</adminroot>
+    </paths>
+
+    <logging>
+        <accesslog>access.log</accesslog>
+        <errorlog>error.log</errorlog>
+        <loglevel>3</loglevel>
+    </logging>
+</icecast>

@@ -1,0 +1,93 @@
+[
+  {
+    "id": "01-home",
+    "file": "01-home.png",
+    "url": "/",
+    "label": "Home",
+    "auth": "public"
+  },
+  {
+    "id": "02-join",
+    "file": "02-join.png",
+    "url": "/join",
+    "label": "Join (register)",
+    "auth": "public"
+  },
+  {
+    "id": "03-login",
+    "file": "03-login.png",
+    "url": "/login",
+    "label": "Login",
+    "auth": "public"
+  },
+  {
+    "id": "04-verify",
+    "file": "04-verify.png",
+    "url": "/verify",
+    "label": "Verify email (landing)",
+    "auth": "public"
+  },
+  {
+    "id": "05-verify-token",
+    "file": "05-verify-token.png",
+    "url": "/verify?token=mHbt9iMEducQxzsWNxawibCW21MOO8jP",
+    "label": "Verify email (with token)",
+    "auth": "public"
+  },
+  {
+    "id": "06-transparency",
+    "file": "06-transparency.png",
+    "url": "/transparency",
+    "label": "Transparency dashboard",
+    "auth": "public"
+  },
+  {
+    "id": "07-transparency-methodology",
+    "file": "07-transparency-methodology.png",
+    "url": "/transparency/methodology",
+    "label": "Grant methodology",
+    "auth": "public"
+  },
+  {
+    "id": "08-channel",
+    "file": "08-channel.png",
+    "url": "/c/screenshot-demo",
+    "label": "Channel (artist)",
+    "auth": "public"
+  },
+  {
+    "id": "09-profile",
+    "file": "09-profile.png",
+    "url": "/u/screenshot-demo",
+    "label": "Public profile",
+    "auth": "public"
+  },
+  {
+    "id": "10-subscribe",
+    "file": "10-subscribe.png",
+    "url": "/u/screenshot-demo/subscribe",
+    "label": "Fan subscribe",
+    "auth": "public"
+  },
+  {
+    "id": "11-smart-link",
+    "file": "11-smart-link.png",
+    "url": "/r/northern-lights-ep",
+    "label": "Smart link redirect",
+    "auth": "public"
+  },
+  {
+    "id": "12-dashboard",
+    "file": "12-dashboard.png",
+    "url": "/dashboard",
+    "label": "Artist dashboard",
+    "auth": "artist"
+  },
+  {
+    "id": "13-governance",
+    "file": "13-governance.png",
+    "url": "/governance",
+    "label": "Member governance",
+    "auth": "fan"
+  }
+]

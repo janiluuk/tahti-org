@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { csvRow } from '../../lib/csv.js'
 
 // Treasurer-only: manually create ledger entries (infrastructure bills,
 // salaries, donations, grants received, etc.). Gated to board members
@@ -109,6 +110,81 @@ const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
       })),
     )
   })
+
+  // GET /api/admin/ledger/export.csv?year=YYYY — auditor-ready ledger export (M11)
+  fastify.get(
+    '/api/admin/ledger/export.csv',
+    { preHandler: requireBoard },
+    async (request, reply) => {
+      const { year } = request.query as { year?: string }
+      const y = year ? parseInt(year, 10) : new Date().getFullYear()
+      if (Number.isNaN(y)) return reply.status(400).send({ error: 'Invalid year' })
+
+      const start = new Date(Date.UTC(y, 0, 1))
+      const end = new Date(Date.UTC(y + 1, 0, 1))
+
+      const entries = await fastify.prisma.ledgerEntry.findMany({
+        where: { periodStart: { gte: start, lt: end } },
+        orderBy: [{ periodStart: 'asc' }, { id: 'asc' }],
+      })
+
+      const rollups = await fastify.prisma.monthlyRollup.findMany({
+        where: { yearMonth: { startsWith: `${y}-` } },
+        orderBy: { yearMonth: 'asc' },
+      })
+
+      const lines: string[] = []
+      lines.push('# Tahti ry ledger export')
+      lines.push(`# Year: ${y}`)
+      lines.push('')
+      lines.push(csvRow(['section', 'yearMonth', 'category', 'amountCents', 'surplusCents']))
+      for (const r of rollups) {
+        const by = r.byCategory as Record<string, string>
+        for (const [cat, cents] of Object.entries(by)) {
+          lines.push(csvRow(['rollup', r.yearMonth, cat, cents, r.surplus.toString()]))
+        }
+        if (Object.keys(by).length === 0) {
+          lines.push(csvRow(['rollup', r.yearMonth, '', '', r.surplus.toString()]))
+        }
+      }
+      lines.push('')
+      lines.push(
+        csvRow([
+          'id',
+          'createdAt',
+          'category',
+          'amountCents',
+          'currency',
+          'description',
+          'externalRef',
+          'periodStart',
+          'periodEnd',
+          'createdBy',
+        ]),
+      )
+      for (const e of entries) {
+        lines.push(
+          csvRow([
+            e.id.toString(),
+            e.createdAt.toISOString(),
+            e.category,
+            e.amountCents.toString(),
+            e.currency,
+            e.description,
+            e.externalRef,
+            e.periodStart.toISOString(),
+            e.periodEnd.toISOString(),
+            e.createdBy,
+          ]),
+        )
+      }
+
+      return reply
+        .header('Content-Type', 'text/csv; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="tahti-ledger-${y}.csv"`)
+        .send(lines.join('\n'))
+    },
+  )
 }
 
 export default adminLedgerRoutes

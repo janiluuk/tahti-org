@@ -19,6 +19,28 @@ function getTransporter(): nodemailer.Transporter {
   return _transporter
 }
 
+export interface MailOptions {
+  to: string
+  subject: string
+  text: string
+  html?: string
+  headers?: Record<string, string>
+}
+
+export async function sendMail(opts: MailOptions): Promise<void> {
+  await getTransporter().sendMail({
+    from: config.email.from,
+    to: opts.to,
+    subject: opts.subject,
+    text: opts.text,
+    html: opts.html,
+    headers: {
+      'X-Source-Code': config.sourceRepoUrl,
+      ...opts.headers,
+    },
+  })
+}
+
 export async function sendVerificationEmail(
   to: string,
   displayName: string,

@@ -3,11 +3,15 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import UploadForm from './upload-form.js'
-import StreamSettingsPanel from './stream-settings.js'
-import RtmpTargetsPanel from './rtmp-targets.js'
-import AnnouncementsPanel from './announcements-panel.js'
-import FanSubscriptionsPanel from './fan-subscriptions.js'
+import UploadForm from './upload-form'
+import StreamSettingsPanel from './stream-settings'
+import RtmpTargetsPanel from './rtmp-targets'
+import AnnouncementsPanel from './announcements-panel'
+import FanSubscriptionsPanel from './fan-subscriptions'
+import ReleasesPanel from './releases-panel'
+import MembershipPanel from './membership-panel'
+import BroadcastUsageBanner from './broadcast-usage'
+import UpgradeCta from './upgrade-cta'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }
@@ -111,6 +115,66 @@ export default async function DashboardPage() {
     }
   }
 
+  type MembershipInfo = {
+    status: string
+    isMember: boolean
+    memberNumber: number | null
+    priceCents: number
+    emailVerified: boolean
+  }
+  let membershipInfo: MembershipInfo | null = null
+  try {
+    const res = await fetch(`${apiUrl}/api/me/membership`, {
+      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+      cache: 'no-store',
+    })
+    if (res.ok) membershipInfo = (await res.json()) as MembershipInfo
+  } catch {
+    // ignore
+  }
+
+  type BroadcastUsageInfo = {
+    unlimited: boolean
+    secondsUsed: number
+    secondsRemaining: number | null
+    warnings: number[]
+    atCap: boolean
+    inGrace?: boolean
+    blocked?: boolean
+    showUpgradeCta?: boolean
+    weeklyCapSeconds: number
+  }
+  let broadcastUsage: BroadcastUsageInfo | null = null
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/broadcast-usage`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) broadcastUsage = (await res.json()) as BroadcastUsageInfo
+    } catch {
+      // ignore
+    }
+  }
+
+  let releases: Array<{
+    id: string
+    title: string
+    type: string
+    state: string
+    releaseDate: string
+    _count: { tracks: number }
+  }> = []
+  try {
+    const res = await fetch(`${apiUrl}/api/me/releases`, {
+      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+      cache: 'no-store',
+    })
+    if (res.ok) releases = (await res.json()) as typeof releases
+  } catch {
+    // ignore
+  }
+
   let fanTiers: Array<{
     id: string
     name: string
@@ -172,6 +236,16 @@ export default async function DashboardPage() {
         </a>
       </p>
 
+      {membershipInfo && (
+        <MembershipPanel
+          status={membershipInfo.status}
+          isMember={membershipInfo.isMember}
+          memberNumber={membershipInfo.memberNumber}
+          priceCents={membershipInfo.priceCents}
+          emailVerified={membershipInfo.emailVerified}
+        />
+      )}
+
       {user.channel && (
         <section
           style={{
@@ -182,6 +256,8 @@ export default async function DashboardPage() {
           }}
         >
           <h2 style={{ margin: '0 0 1rem' }}>Your channel</h2>
+          <BroadcastUsageBanner usage={broadcastUsage} />
+          <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
           <p style={{ margin: '0.25rem 0' }}>
             <strong>URL:</strong>{' '}
             <a href={`/c/${user.channel.slug}`}>
@@ -211,6 +287,8 @@ export default async function DashboardPage() {
       {user.channel && <AnnouncementsPanel initial={announcements} />}
 
       {user.channel && <FanSubscriptionsPanel initial={fanTiers} username={user.username} />}
+
+      {user.channel && <ReleasesPanel initial={releases} username={user.username} />}
 
       {user.channel && (
         <section

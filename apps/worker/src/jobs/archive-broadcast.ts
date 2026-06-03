@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
 import { prisma } from '@tahti/db'
+import { isUnlimitedLiveTier } from '@tahti/shared/broadcast-cap'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 
 function ffmpegToMp3(inputPath: string, outputPath: string): Promise<void> {
@@ -15,6 +16,17 @@ function ffmpegToMp3(inputPath: string, outputPath: string): Promise<void> {
       .audioFilters('loudnorm=I=-14:TP=-1.5:LRA=11:print_format=none')
       .audioBitrate('192k')
       .format('mp3')
+      .on('error', reject)
+      .on('end', () => resolve())
+      .save(outputPath)
+  })
+}
+
+function ffmpegToFlac(inputPath: string, outputPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .audioCodec('flac')
+      .format('flac')
       .on('error', reject)
       .on('end', () => resolve())
       .save(outputPath)
@@ -35,7 +47,15 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
 
   const broadcast = await prisma.broadcast.findUnique({
     where: { id: broadcastId },
-    include: { channel: { select: { id: true, slug: true } } },
+    include: {
+      channel: {
+        select: {
+          id: true,
+          slug: true,
+          user: { select: { tier: true } },
+        },
+      },
+    },
   })
 
   if (!broadcast) throw new Error(`Broadcast ${broadcastId} not found`)
@@ -53,6 +73,14 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
     await downloadToFile(broadcast.recordingKey, rawPath)
     await ffmpegToMp3(rawPath, mp3Path)
 
+    let flacKey: string | null = null
+    if (isUnlimitedLiveTier(broadcast.channel.user.tier)) {
+      const flacPath = join(tmpDir, 'output.flac')
+      await ffmpegToFlac(rawPath, flacPath)
+      flacKey = `flac/${broadcast.channel.slug}/broadcast-${broadcastId}.flac`
+      await uploadFile(flacKey, flacPath, 'audio/flac')
+    }
+
     const durationSec = await ffprobeGetDuration(mp3Path)
     const mp3Key = `mp3/${broadcast.channel.slug}/broadcast-${broadcastId}.mp3`
 
@@ -67,6 +95,7 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         title,
         rawKey: broadcast.recordingKey,
         mp3Key,
+        flacKey,
         durationSec,
         fileSizeBytes: 0,
         status: 'READY',

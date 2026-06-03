@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { createFanTier, setFanTierActive } from './actions.js'
+import { createFanTier, setFanTierActive } from './actions'
 
 interface FanTier {
   id: string

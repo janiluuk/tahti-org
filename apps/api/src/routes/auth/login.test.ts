@@ -245,7 +245,7 @@ describe('GET /api/auth/verify', () => {
       include: { membership: true },
     })
     expect(updated!.emailVerifiedAt).toBeDefined()
-    expect(updated!.membership!.status).toBe('ACTIVE')
+    expect(updated!.membership!.status).toBe('PENDING_PAYMENT')
   })
 
   it('returns 400 for an expired token', async () => {

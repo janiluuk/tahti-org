@@ -44,8 +44,11 @@ export const config = {
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY ?? '',
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? '',
-    // When false (no key configured, e.g. dev/test), the fan-sub flow activates
-    // subscriptions directly instead of redirecting to Stripe Checkout.
+    // When false (no key configured, e.g. dev/test), checkout flows activate
+    // directly instead of redirecting to Stripe Checkout.
     enabled: !!process.env.STRIPE_SECRET_KEY,
+  },
+  membership: {
+    priceCents: parseInt(process.env.MEMBERSHIP_PRICE_CENTS ?? '4000', 10),
   },
 }

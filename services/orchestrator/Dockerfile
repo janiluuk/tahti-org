@@ -6,7 +6,7 @@
 #   docker build -f services/orchestrator/Dockerfile -t tahti/orchestrator .
 
 FROM node:20-alpine
-RUN apk add --no-cache docker-cli && \
+RUN apk add --no-cache docker-cli openssl && \
     corepack enable && corepack prepare pnpm@9 --activate && \
     npm install -g tsx@4
 

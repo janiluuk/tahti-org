@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { prepareUpload, completeUpload } from './actions.js'
+import { prepareUpload, completeUpload } from './actions'
 
 type UploadState = 'idle' | 'preparing' | 'uploading' | 'completing' | 'done' | 'error'
 

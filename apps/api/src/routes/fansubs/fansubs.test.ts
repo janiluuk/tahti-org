@@ -2,8 +2,10 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { createHash } from 'node:crypto'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
+import { config } from '../../config.js'
 import { hashPassword } from '../../lib/password.js'
 import { createSession } from '../../lib/session.js'
 import { runAnnualGrantCalc } from '@tahti/ledger'
@@ -16,7 +18,6 @@ async function makeUser(opts: {
   username: string
   displayName: string
   withChannel?: boolean
-  memberNumber?: number
 }) {
   const passwordHash = await hashPassword('testpassword')
   return prisma.user.create({
@@ -27,7 +28,6 @@ async function makeUser(opts: {
       displayName: opts.displayName,
       emailVerifiedAt: new Date(),
       isMember: true,
-      memberNumber: opts.memberNumber,
       ...(opts.withChannel
         ? {
             channel: {
@@ -65,13 +65,11 @@ describe('M19 — fan-to-artist subscriptions', () => {
       username: 'fansub-artist',
       displayName: 'Fan Artist',
       withChannel: true,
-      memberNumber: 8001,
     })
     fan = await makeUser({
       email: `${PREFIX}fan@example.com`,
       username: 'fansub-fan',
       displayName: 'Super Fan',
-      memberNumber: 8002,
     })
     artistCookie = `tahti_session=${(await createSession(prisma, artist.id)).id}`
     fanCookie = `tahti_session=${(await createSession(prisma, fan.id)).id}`
@@ -201,6 +199,24 @@ describe('M19 — fan-to-artist subscriptions', () => {
         status: 'READY',
       },
     })
+    const day = new Date().toISOString().slice(0, 10)
+    const salt = createHash('sha256').update(`${config.internalSecret}:${day}`).digest('hex')
+    const byIpHash = createHash('sha256').update(`127.0.0.1:${salt}`).digest('hex')
+    const seenAt = new Date(Date.now() - 25 * 60 * 60 * 1000)
+    await prisma.download.create({
+      data: {
+        channelId: artist.channel!.id,
+        archiveItemId: item.id,
+        format: 'mp3_320',
+        byFingerprint: 'fansub-ip-seed',
+        byIpHash,
+        countedAt: null,
+        reason: 'new_ip',
+        weight: 1,
+        bytes: 0,
+        createdAt: seenAt,
+      },
+    })
     const res = await app.inject({
       method: 'GET',
       url: `/api/v1/c/fansub-artist/archive/${item.id}/download?fp=fan-fp`,
@@ -211,6 +227,7 @@ describe('M19 — fan-to-artist subscriptions', () => {
       where: { channelId: artist.channel!.id, byUserId: fan.id },
     })
     expect(dl?.weight).toBe(5)
+    expect(dl?.countedAt).not.toBeNull()
   })
 
   it('M9: fan-sub euros + paid downloads feed engagement units', async () => {
@@ -260,7 +277,6 @@ describe('M19 — fan-to-artist subscriptions', () => {
       email: `${PREFIX}fan2@example.com`,
       username: 'fansub-fan2',
       displayName: 'Second Fan',
-      memberNumber: 8003,
     })
     const stripeSubId = `sub_test_${fan2.id}`
 

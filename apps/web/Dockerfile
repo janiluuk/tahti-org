@@ -22,6 +22,7 @@ RUN pnpm install --frozen-lockfile
 # ── Build ─────────────────────────────────────────────────────────────────────
 
 FROM deps AS builder
+COPY tsconfig.base.json ./tsconfig.base.json
 COPY packages/shared/src ./packages/shared/src
 COPY apps/web/           ./apps/web/
 ENV NEXT_TELEMETRY_DISABLED=1

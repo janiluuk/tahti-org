@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { postAnnouncement, deleteAnnouncement } from './actions.js'
+import { postAnnouncement, deleteAnnouncement } from './actions'
 
 interface Announcement {
   id: string

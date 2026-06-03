@@ -81,25 +81,28 @@ describe('M9 — annual grant calculation', () => {
     await prisma.monthlyRollup.deleteMany({ where: { yearMonth: { startsWith: `${YEAR}-` } } })
     await prisma.user.deleteMany({ where: { email: { startsWith: TEST_EMAIL_PREFIX } } })
 
+    const { cleanupUsersByMemberNumbers } = await import('../../test/helpers.js')
+    await cleanupUsersByMemberNumbers(prisma, [97201, 97202, 97203])
+
     const board = await makeArtist({
       email: `${TEST_EMAIL_PREFIX}board@example.com`,
       username: 'grants-board',
       displayName: 'Grants Board',
       isBoard: true,
-      memberNumber: 9001,
+      memberNumber: 97201,
     })
     artistA = await makeArtist({
       email: `${TEST_EMAIL_PREFIX}a@example.com`,
       username: 'grants-artist-a',
       displayName: 'Artist A',
-      memberNumber: 9002,
+      memberNumber: 97202,
     })
     artistB = await makeArtist({
       email: `${TEST_EMAIL_PREFIX}b@example.com`,
       username: 'grants-artist-b',
       displayName: 'Artist B',
       publicAttribution: false,
-      memberNumber: 9003,
+      memberNumber: 97203,
     })
 
     boardCookie = `tahti_session=${(await createSession(prisma, board.id)).id}`
@@ -133,8 +136,10 @@ describe('M9 — annual grant calculation', () => {
     await prisma.ledgerEntry.deleteMany({ where: { externalRef: { contains: `:${YEAR}:` } } })
     await prisma.ledgerEntry.deleteMany({ where: { externalRef: `reserve:${YEAR}` } })
     await prisma.monthlyRollup.deleteMany({ where: { yearMonth: { startsWith: `${YEAR}-` } } })
-    for (const c of [artistA, artistB]) {
-      await prisma.download.deleteMany({ where: { channelId: c.channel!.id } })
+    if (artistA?.channel && artistB?.channel) {
+      for (const c of [artistA, artistB]) {
+        await prisma.download.deleteMany({ where: { channelId: c.channel.id } })
+      }
     }
     await prisma.user.deleteMany({ where: { email: { startsWith: TEST_EMAIL_PREFIX } } })
     await app.close()
@@ -203,7 +208,7 @@ describe('M9 — annual grant calculation', () => {
     const names = body.grants.map((g: { publishedAs: string }) => g.publishedAs)
     // Artist A opted into public attribution; B did not → anonymized.
     expect(names).toContain('Artist A')
-    expect(names).toContain('Channel #9003')
+    expect(names).toContain('Channel #97203')
   })
 
   it('lets an artist see their own grant', async () => {

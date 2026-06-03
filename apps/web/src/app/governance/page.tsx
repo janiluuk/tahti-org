@@ -3,8 +3,8 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import MotionCard, { type MotionSummary } from './motion-card.js'
-import NewMotionForm from './new-motion-form.js'
+import MotionCard, { type MotionSummary } from './motion-card'
+import NewMotionForm from './new-motion-form'
 
 interface MeResponse {
   displayName: string

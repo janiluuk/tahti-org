@@ -1,0 +1,166 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
+
+import type { FastifyPluginAsync } from 'fastify'
+import { nanoid } from 'nanoid'
+import { requireAuth } from '../../plugins/auth.js'
+import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
+import { mediaQueue } from '../../lib/queue.js'
+
+const PRESIGN_TTL_SEC = 900
+const ACCEPTED_FORMATS = ['audio/wav', 'audio/flac', 'audio/mpeg', 'audio/aac', 'audio/x-aiff']
+
+const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
+  // POST /api/me/releases/:id/tracks — add a metadata-only track (no file)
+  fastify.post(
+    '/api/me/releases/:id/tracks',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id: releaseId } = request.params as { id: string }
+      const body = request.body as {
+        title?: string
+        durationSec?: number
+        archiveItemId?: string
+        isrc?: string
+        explicit?: boolean
+      }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id: releaseId, userId: user.id },
+        include: { _count: { select: { tracks: true } } },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const title = body.title?.trim()
+      if (!title) return reply.status(400).send({ error: 'title is required' })
+
+      const position = release._count.tracks + 1
+
+      const track = await fastify.prisma.releaseTrack.create({
+        data: {
+          releaseId,
+          position,
+          title,
+          durationSec: body.durationSec ?? null,
+          archiveItemId: body.archiveItemId ?? null,
+          isrc: body.isrc?.trim() || null,
+          explicit: body.explicit ?? false,
+          status: 'PENDING',
+        },
+      })
+
+      return reply.status(201).send(track)
+    },
+  )
+
+  // POST /api/me/releases/:id/tracks/:trackId/upload — presigned URL for source audio
+  fastify.post(
+    '/api/me/releases/:id/tracks/:trackId/upload',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id: releaseId, trackId } = request.params as { id: string; trackId: string }
+      const body = request.body as { filename?: string; contentType?: string }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id: releaseId, userId: user.id },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const track = await fastify.prisma.releaseTrack.findFirst({
+        where: { id: trackId, releaseId },
+      })
+      if (!track) return reply.status(404).send({ error: 'Track not found' })
+
+      const contentType = body.contentType ?? 'audio/mpeg'
+      if (!ACCEPTED_FORMATS.includes(contentType)) {
+        return reply.status(400).send({
+          error: `Unsupported format. Accepted: ${ACCEPTED_FORMATS.join(', ')}`,
+        })
+      }
+
+      const ext = (body.filename ?? 'audio').split('.').pop() ?? 'mp3'
+      const key = `releases/${user.username}/${releaseId}/${trackId}-${nanoid(8)}.${ext}`
+
+      const uploadUrl = await presignedPutUrl(key, contentType, PRESIGN_TTL_SEC)
+      const expiresAt = new Date(Date.now() + PRESIGN_TTL_SEC * 1000).toISOString()
+
+      await fastify.prisma.releaseTrack.update({
+        where: { id: trackId },
+        data: { sourceKey: key, status: 'PENDING' },
+      })
+
+      return reply.send({ uploadUrl, sourceKey: key, expiresAt })
+    },
+  )
+
+  // POST /api/me/releases/:id/tracks/:trackId/finalize — trigger transcode after upload
+  fastify.post(
+    '/api/me/releases/:id/tracks/:trackId/finalize',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id: releaseId, trackId } = request.params as { id: string; trackId: string }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id: releaseId, userId: user.id },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const track = await fastify.prisma.releaseTrack.findFirst({
+        where: { id: trackId, releaseId },
+      })
+      if (!track) return reply.status(404).send({ error: 'Track not found' })
+      if (!track.sourceKey) return reply.status(400).send({ error: 'No source file uploaded' })
+
+      await fastify.prisma.releaseTrack.update({
+        where: { id: trackId },
+        data: { status: 'SCANNING' },
+      })
+
+      await mediaQueue.add('transcode-release-track', { trackId })
+
+      return reply.send({ trackId, status: 'scanning' })
+    },
+  )
+
+  // GET /api/me/releases/:id/tracks/:trackId/download — signed download URL (Studio tier)
+  fastify.get(
+    '/api/me/releases/:id/tracks/:trackId/download',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const { id: releaseId, trackId } = request.params as { id: string; trackId: string }
+      const { format } = request.query as { format?: string }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id: releaseId, userId: user.id },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const track = await fastify.prisma.releaseTrack.findFirst({
+        where: { id: trackId, releaseId },
+      })
+      if (!track) return reply.status(404).send({ error: 'Track not found' })
+      if (track.status !== 'READY') {
+        return reply.status(409).send({ error: 'Track not ready yet' })
+      }
+
+      const wantFlac = format === 'flac'
+      if (wantFlac && user.tier === 'FREE') {
+        return reply.status(403).send({ error: 'FLAC download requires a paid tier' })
+      }
+
+      const key = wantFlac
+        ? (track.flacKey ?? track.sourceKey)
+        : (track.streamKey ?? track.sourceKey)
+      if (!key) return reply.status(404).send({ error: 'Download not available' })
+
+      const url = await presignedGetUrl(key, 300)
+      return reply.send({ url, format: wantFlac ? 'flac' : 'opus', expiresInSec: 300 })
+    },
+  )
+}
+
+export default releaseTrackRoutes

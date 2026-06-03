@@ -2,6 +2,8 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { config } from '../../config.js'
+import { liveHlsUrl } from '../../lib/stream-quality.js'
 
 const channelGetRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/channels/:slug', async (request, reply) => {
@@ -18,6 +20,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
             displayName: true,
             bio: true,
             avatarUrl: true,
+            tier: true,
           },
         },
       },
@@ -27,7 +30,12 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
       return reply.status(404).send({ error: 'Channel not found' })
     }
 
-    return reply.send(channel)
+    const hlsUrl =
+      channel.state === 'LIVE'
+        ? liveHlsUrl(config.hlsBaseUrl, channel.slug, channel.user.tier)
+        : null
+
+    return reply.send({ ...channel, hlsUrl })
   })
 }
 

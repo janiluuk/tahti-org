@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
+import { recordMentions } from '../../lib/mentions.js'
 
 const meChat: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/chat/announcements { body: string }
@@ -39,6 +40,11 @@ const meChat: FastifyPluginAsync = async (fastify) => {
       const announcement = await fastify.prisma.channelAnnouncement.create({
         data: { channelId: channel.id, body: text.trim().slice(0, 500) },
       })
+
+      // Record @-mentions (fire-and-forget; never block the response)
+      recordMentions(fastify.prisma, user.id, text, 'ANNOUNCEMENT', announcement.id).catch((e) =>
+        fastify.log.warn(e, 'mention record failed'),
+      )
 
       return reply.status(201).send(announcement)
     },

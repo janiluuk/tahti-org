@@ -4,6 +4,7 @@
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
+import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 
 // Rate limit: 10 tokens per IP per minute
 const tokenBucket = new Map<string, { count: number; reset: number }>()
@@ -25,11 +26,20 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
   // Issues a Centrifugo connection JWT. handle stored in localStorage by the client.
   fastify.post('/api/chat/:slug/token', async (request, reply) => {
     const { slug } = request.params as { slug: string }
-    const { handle } = (request.body as { handle?: string }) ?? {}
+    const { handle, hcaptchaToken } =
+      (request.body as {
+        handle?: string
+        hcaptchaToken?: string
+      }) ?? {}
 
     const ip = request.ip ?? '0.0.0.0'
     if (!checkRateLimit(ip)) {
       return reply.status(429).send({ error: 'Too many requests' })
+    }
+
+    const captchaOk = await verifyHcaptcha(hcaptchaToken)
+    if (!captchaOk) {
+      return reply.status(400).send({ error: 'hCaptcha verification failed' })
     }
 
     const channel = await fastify.prisma.channel.findUnique({

@@ -40,6 +40,8 @@ These rules are constitutional. They are not changeable by management decision. 
 | File | Purpose |
 |---|---|
 | [`docs/AGENT.md`](docs/AGENT.md) | Coding-agent brief — repo, milestones M0-M20, data model, anti-patterns |
+| [`docs/project-roadmap.md`](docs/project-roadmap.md) | Build audit, phase checklist, milestone status |
+| [`docs/future-improvements.md`](docs/future-improvements.md) | Deferred milestones + engineering efficiency backlog |
 | [`docs/governance-and-legal.md`](docs/governance-and-legal.md) | Yhdistys structure, bylaws (§1-12), AGPL implications, AGM mechanics |
 | [`docs/profile-and-promo-toolkit.md`](docs/profile-and-promo-toolkit.md) | Profile, release model, embed/smartlink/social/newsletter/analytics specs |
 | [`docs/engagement-and-fansubs.md`](docs/engagement-and-fansubs.md) | Engagement-unit grant formula + fan-to-artist subscription product spec |
@@ -65,6 +67,18 @@ These rules are constitutional. They are not changeable by management decision. 
 |---|---|
 | [`slides/Tahti-Community.pptx`](slides/Tahti-Community.pptx) | Artist-facing deck — for founding-cohort recruitment + scene press |
 | [`slides/Tahti-Business.pptx`](slides/Tahti-Business.pptx) | Governance + sustainability deck — for board candidates, grant officers, auditors |
+
+## Running tests
+
+API and package tests need **Postgres** with the Prisma schema applied:
+
+```bash
+docker compose -f infra/docker-compose.dev.yml up -d postgres
+cd packages/db && pnpm db:migrate:test
+cd ../.. && pnpm test
+```
+
+Optional bash e2e against a running API: `API_URL=http://localhost:3001 pnpm test:e2e`.
 
 ## Headline numbers (base case)
 

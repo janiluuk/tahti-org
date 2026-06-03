@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs"]
+  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs", "release", "newsletter", "venue"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -24,6 +24,7 @@ enum ArtistTier {
 
 enum MembershipStatus {
   PENDING_EMAIL
+  PENDING_PAYMENT
   ACTIVE
   SUSPENDED
   RESIGNED
@@ -147,6 +148,78 @@ enum FanSubPayoutState {
   @@schema("fansubs")
 }
 
+enum ReleaseType {
+  SINGLE
+  EP
+  ALBUM
+  COMPILATION
+  REMIX
+
+  @@schema("release")
+}
+
+enum ReleaseState {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+
+  @@schema("release")
+}
+
+enum TrackStatus {
+  PENDING
+  SCANNING
+  TRANSCODING
+  READY
+  FAILED
+
+  @@schema("release")
+}
+
+enum MixUploadStatus {
+  PENDING
+  UPLOADING
+  DONE
+  FAILED
+
+  @@schema("release")
+}
+
+enum NewsletterDraftState {
+  DRAFT
+  QUEUED
+  SENT
+
+  @@schema("newsletter")
+}
+
+enum NewsletterSendState {
+  QUEUED
+  SENT
+  FAILED
+  BOUNCED
+
+  @@schema("newsletter")
+}
+
+enum VenueBroadcastState {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  CANCELED
+
+  @@schema("venue")
+}
+
+enum MentionSurface {
+  BIO
+  ANNOUNCEMENT
+  RELEASE
+  NEWSLETTER
+
+  @@schema("core")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model User {
@@ -172,19 +245,28 @@ model User {
   storageUsedBytes      BigInt     @default(0)
   weeklyLiveSecondsUsed Int        @default(0)
   weeklyLiveResetAt     DateTime?
+  mentionsEnabled       Boolean    @default(true)
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
-  sessions            Session[]
-  emailVerifications  EmailVerification[]
-  membership          Membership?
-  channel             Channel?
-  motionsProposed     Motion[]
-  votes               Vote[]
-  grants              GrantDisbursement[]
-  fanTiers            FanTier[]
-  fanSubsAsArtist     FanSubscription[]   @relation("ArtistFanSubs")
-  fanSubsAsSubscriber FanSubscription[]   @relation("SubscriberFanSubs")
+  sessions              Session[]
+  emailVerifications    EmailVerification[]
+  membership            Membership?
+  channel               Channel?
+  motionsProposed       Motion[]
+  votes                 Vote[]
+  grants                GrantDisbursement[]
+  fanTiers              FanTier[]
+  fanSubsAsArtist       FanSubscription[]        @relation("ArtistFanSubs")
+  fanSubsAsSubscriber   FanSubscription[]        @relation("SubscriberFanSubs")
+  releases              Release[]
+  mixUploads            MixUpload[]
+  newsletterSubscribers NewsletterSubscriber[]   @relation("ArtistSubscribers")
+  newsletterDrafts      NewsletterDraft[]
+  mentionsSent          Mention[]                @relation("MentionerMentions")
+  mentionsReceived      Mention[]                @relation("MentionTarget")
+  mentionsMuted         MentionMute[]            @relation("MuterMutes")
+  mentionsMutedBy       MentionMute[]            @relation("MuteTarget")
 
   @@schema("core")
 }
@@ -245,6 +327,7 @@ model Channel {
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
   goneLiveAt         DateTime?
+  metaStreamOptOut   Boolean      @default(false)
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -309,11 +392,14 @@ model ArchiveItem {
   description   String?
   rawKey        String
   mp3Key        String?
+  flacKey       String?
   durationSec   Int?
   fileSizeBytes BigInt
   status        ArchiveItemStatus @default(PENDING)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
+
+  mixUpload     MixUpload?
 
   @@index([channelId, createdAt(sort: Desc)])
   @@schema("channel")
@@ -530,4 +616,198 @@ model FanSubPayout {
   @@index([fanSubscriptionId, forPeriodStart])
   @@index([artistUserId, forPeriodStart])
   @@schema("fansubs")
+}
+
+// ── Artist profile releases (M12 + M7 distribution) ────────────────────────
+
+model Release {
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  type             ReleaseType
+  artworkUrl       String?
+  releaseDate      DateTime
+  description      String?
+  smartLinkSlug    String       @unique
+  smartLinkTargets Json?        // {spotify, apple, tidal, bandcamp, ...}
+  state            ReleaseState @default(DRAFT)
+  publishedAt      DateTime?
+  // M7 — Revelator DSP distribution
+  revelatorId      String?
+  revelatorStatus  String?      // pending | submitted | delivered | failed
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  tracks ReleaseTrack[]
+
+  @@index([userId, releaseDate])
+  @@index([userId, state])
+  @@schema("release")
+}
+
+model ReleaseTrack {
+  id               String      @id @default(cuid())
+  releaseId        String
+  release          Release     @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  position         Int
+  title            String
+  isrc             String?
+  durationSec      Int?
+  archiveItemId    String?
+  // M12 — audio file pipeline
+  sourceKey        String?     // original uploaded file in MinIO
+  sourceFormat     String?     // wav | flac | mp3 | aac | aiff
+  sourceSampleRate Int?
+  sourceBitDepth   Int?
+  streamKey        String?     // Opus 256 kbps derivative
+  flacKey          String?     // FLAC 16/44 derivative (Studio tier download)
+  fingerprint      String?
+  explicit         Boolean     @default(false)
+  status           TrackStatus @default(PENDING)
+  createdAt        DateTime    @default(now())
+
+  @@unique([releaseId, position])
+  @@schema("release")
+}
+
+// M7 — Mixcloud upload for archive items (mixes)
+model MixUpload {
+  id            String          @id @default(cuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+  archiveItemId String          @unique
+  archiveItem   ArchiveItem     @relation(fields: [archiveItemId], references: [id])
+  mixcloudUrl   String?
+  mixcloudKey   String?
+  status        MixUploadStatus @default(PENDING)
+  error         String?
+  queuedAt      DateTime        @default(now())
+  completedAt   DateTime?
+
+  @@schema("release")
+}
+
+// ── Newsletter schema (M13) ──────────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id             String    @id @default(cuid())
+  artistUserId   String
+  artist         User      @relation("ArtistSubscribers", fields: [artistUserId], references: [id], onDelete: Cascade)
+  email          String
+  confirmedAt    DateTime?
+  unsubscribedAt DateTime?
+  confirmToken   String?   @unique
+  unsubToken     String    @unique
+  createdAt      DateTime  @default(now())
+
+  sends NewsletterSend[]
+
+  @@unique([artistUserId, email])
+  @@index([artistUserId, confirmedAt])
+  @@schema("newsletter")
+}
+
+model NewsletterDraft {
+  id          String               @id @default(cuid())
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     String
+  bodyMd      String
+  state       NewsletterDraftState @default(DRAFT)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime             @default(now())
+
+  sends NewsletterSend[]
+
+  @@index([userId, state])
+  @@schema("newsletter")
+}
+
+model NewsletterSend {
+  id           String              @id @default(cuid())
+  draftId      String
+  draft        NewsletterDraft     @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  subscriberId String
+  subscriber   NewsletterSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  state        NewsletterSendState @default(QUEUED)
+  sentAt       DateTime?
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  bouncedAt    DateTime?
+  createdAt    DateTime            @default(now())
+
+  @@index([draftId, state])
+  @@schema("newsletter")
+}
+
+// ── Venue schema (M17) ───────────────────────────────────────────────────────
+
+model Venue {
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  name          String
+  address       String
+  city          String
+  countryCode   String    @default("FI")
+  latitude      Float?
+  longitude     Float?
+  capacity      Int?
+  description   String?
+  externalLinks Json?
+  photos        String[]
+  verifiedAt    DateTime?
+  createdBy     String
+  createdAt     DateTime  @default(now())
+
+  broadcasts VenueBroadcast[]
+
+  @@schema("venue")
+}
+
+model VenueBroadcast {
+  id           String              @id @default(cuid())
+  venueId      String
+  venue        Venue               @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  artistUserId String
+  startAt      DateTime
+  endAt        DateTime?
+  description  String?
+  channelId    String?
+  state        VenueBroadcastState @default(SCHEDULED)
+  createdAt    DateTime            @default(now())
+
+  @@index([venueId, startAt])
+  @@index([artistUserId, startAt])
+  @@schema("venue")
+}
+
+// ── Artist @-mentions (M15) ──────────────────────────────────────────────────
+
+model Mention {
+  id              String         @id @default(cuid())
+  mentionerUserId String
+  mentioner       User           @relation("MentionerMentions", fields: [mentionerUserId], references: [id], onDelete: Cascade)
+  targetUserId    String
+  target          User           @relation("MentionTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  surface         MentionSurface
+  sourceId        String         // bio userId | announcement id | release id | draft id
+  notifiedAt      DateTime?
+  createdAt       DateTime       @default(now())
+
+  @@unique([mentionerUserId, targetUserId, surface, sourceId])
+  @@index([targetUserId, notifiedAt])
+  @@schema("core")
+}
+
+model MentionMute {
+  muterId      String
+  muter        User    @relation("MuterMutes", fields: [muterId], references: [id], onDelete: Cascade)
+  targetUserId String
+  target       User    @relation("MuteTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@id([muterId, targetUserId])
+  @@schema("core")
 }

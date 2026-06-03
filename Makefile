@@ -2,8 +2,9 @@ REGISTRY   ?= registry.tahti.live
 TAG        ?= $(shell git rev-parse --short HEAD)
 STACK_NAME ?= tahti
 COMPOSE    := docker compose -f infra/docker-compose.dev.yml
+STACK      := docker compose -f infra/docker-compose.stack.yml
 
-.PHONY: help dev dev-down build build-website build-orchestrator push deploy deploy-staging rollback secrets-check logs
+.PHONY: help dev dev-down ci-check stack-up stack-seed stack-down e2e-screenshots build build-website build-orchestrator push deploy deploy-staging rollback secrets-check logs
 
 help:
 	@echo "Usage: make <target>"
@@ -12,6 +13,11 @@ help:
 	@echo "  dev              Start all local infra (postgres, redis, minio, chat, website, mailhog)"
 	@echo "  dev-website      Build and start only the website container"
 	@echo "  dev-down         Stop and remove local infra containers"
+	@echo "  ci-check         Lint + format + typecheck (same as CI lint/typecheck jobs)"
+	@echo "  stack-up         Full app stack in Docker (no screenshot seed)"
+	@echo "  stack-seed       stack-up + screenshot demo fixtures"
+	@echo "  stack-down       Stop the full Docker stack"
+	@echo "  e2e-screenshots  Local only: stack + seed + Playwright captures"
 	@echo ""
 	@echo "Build"
 	@echo "  build            Build all app images (website api web worker orchestrator)"
@@ -41,6 +47,21 @@ dev-website:
 
 dev-down:
 	$(COMPOSE) down
+
+ci-check:
+	./scripts/ci-check.sh
+
+stack-up:
+	./scripts/stack-up.sh
+
+stack-seed:
+	./scripts/stack-up.sh --seed
+
+stack-down:
+	./scripts/stack-up.sh --down
+
+e2e-screenshots:
+	./scripts/e2e-screenshots.sh
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 build: build-website build-api build-web build-worker build-orchestrator

@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid'
 import { hashPassword } from '../../lib/password.js'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
+import { liveHlsUrl } from '../../lib/stream-quality.js'
 
 const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/stream-settings — returns ingest URLs + masked credentials
@@ -35,7 +36,7 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         mount: channel.liveSourceMount,
         password: channel.liveSourcePass,
       },
-      hlsUrl: `${config.hlsBaseUrl}/${channel.slug}/stream.m3u8`,
+      hlsUrl: liveHlsUrl(config.hlsBaseUrl, channel.slug, user.tier),
     })
   })
 

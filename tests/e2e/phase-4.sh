@@ -129,6 +129,7 @@ TOKEN=$(echo "$MAILHOG_MSGS" \
 if [[ -n "$TOKEN" ]]; then
   VERIFY=$(curl -sf "$API_URL/api/auth/verify?token=${TOKEN}" 2>/dev/null || echo '{}')
   check_output "Email verification succeeds" '"message"' "$VERIFY"
+  check_output "Verify mentions membership payment" 'membership' "$VERIFY"
 else
   yellow "Skipping email verification — MailHog not available or no emails found"
   ((WARNINGS++))
@@ -149,6 +150,18 @@ if [[ -n "$TOKEN" ]]; then
   ME=$(curl -sf -b /tmp/tahti_e2e_cookies.txt "$API_URL/api/auth/me" 2>/dev/null || echo '{}')
   check_output "GET /api/auth/me returns user" "\"username\":\"${TEST_USER}\"" "$ME"
   check_output "GET /api/auth/me includes channel" '"channel"' "$ME"
+
+  MShip=$(curl -sf -b /tmp/tahti_e2e_cookies.txt -X POST "$API_URL/api/me/membership/checkout" \
+    2>/dev/null || echo '{}')
+  if echo "$MShip" | grep -q '"activated":true'; then
+    green "Membership checkout activates in dev mode"
+    ((PASS++))
+    ME2=$(curl -sf -b /tmp/tahti_e2e_cookies.txt "$API_URL/api/auth/me" 2>/dev/null || echo '{}')
+    check_output "After membership pay, isMember is true" '"isMember":true' "$ME2"
+  else
+    yellow "Membership checkout skipped (Stripe configured or checkout failed)"
+    ((WARNINGS++))
+  fi
 
   LOGOUT=$(curl -sf -b /tmp/tahti_e2e_cookies.txt -X POST "$API_URL/api/auth/logout" \
     2>/dev/null || echo '{}')

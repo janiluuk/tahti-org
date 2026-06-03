@@ -5,6 +5,8 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
+    // Shared Postgres — run test files sequentially to avoid memberNumber races.
+    fileParallelism: false,
     environment: 'node',
     setupFiles: ['src/test/setup.ts'],
     env: {

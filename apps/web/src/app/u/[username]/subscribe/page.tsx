@@ -2,7 +2,7 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { notFound } from 'next/navigation'
-import TierCards from './tier-cards.js'
+import TierCards from './tier-cards'
 
 interface TiersResponse {
   artist: {
