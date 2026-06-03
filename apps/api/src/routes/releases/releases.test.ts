@@ -159,6 +159,7 @@ describe('M12 — releases and public profile', () => {
         upc: '1234567890123',
         musicbrainzReleaseId: 'a1b2c3d4-5678-90ab-cdef-1234567890ab',
         pLine: '℗ 2026 Tahti Demo',
+        credits: [{ role: 'writer', name: 'Demo Artist' }],
       },
     })
     expect(patch.statusCode).toBe(200)
@@ -167,6 +168,7 @@ describe('M12 — releases and public profile', () => {
     expect(patch.json().checklist.find((s: { id: string }) => s.id === 'identifiers')?.done).toBe(
       true,
     )
+    expect(patch.json().credits).toEqual([{ role: 'writer', name: 'Demo Artist' }])
 
     const exp = await app.inject({
       method: 'GET',

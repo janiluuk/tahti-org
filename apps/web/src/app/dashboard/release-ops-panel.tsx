@@ -5,9 +5,12 @@
 
 import { useState, useTransition } from 'react'
 import {
+  COLLECTING_SOCIETY_POINTERS,
   MUSICBRAINZ_SUBMIT_URL,
   POST_RELEASE_CLAIM_LINKS,
+  RELEASE_CREDIT_ROLES,
   type ReleaseChecklistItem,
+  type ReleaseCredit,
 } from '@tahti/shared'
 import { fetchReleaseExportJson, updateReleaseCatalog } from './release-actions'
 
@@ -20,27 +23,53 @@ type CatalogState = {
   labelImprint: string
 }
 
+const EMPTY_CREDIT: ReleaseCredit = { role: 'writer', name: '' }
+
+function parseCredits(value: unknown): ReleaseCredit[] {
+  if (!Array.isArray(value)) return []
+  return value.filter(
+    (row): row is ReleaseCredit =>
+      row &&
+      typeof row === 'object' &&
+      typeof (row as ReleaseCredit).name === 'string' &&
+      RELEASE_CREDIT_ROLES.includes((row as ReleaseCredit).role),
+  )
+}
+
 export default function ReleaseOpsPanel({
   releaseId,
   releaseTitle,
   smartLinkSlug,
   initial,
+  initialCredits,
   checklist: initialChecklist,
 }: {
   releaseId: string
   releaseTitle: string
   smartLinkSlug: string
   initial: CatalogState
+  initialCredits: ReleaseCredit[]
   checklist: ReleaseChecklistItem[]
 }) {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(initial)
+  const [credits, setCredits] = useState<ReleaseCredit[]>(
+    initialCredits.length > 0 ? initialCredits : [],
+  )
   const [checklist, setChecklist] = useState(initialChecklist)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function save() {
     setError(null)
+    const trimmedCredits = credits
+      .map((c) => ({
+        role: c.role,
+        name: c.name.trim(),
+        ...(c.artistUsername?.trim() ? { artistUsername: c.artistUsername.trim() } : {}),
+      }))
+      .filter((c) => c.name.length > 0)
+
     startTransition(async () => {
       const res = await updateReleaseCatalog(releaseId, {
         upc: form.upc.trim() || null,
@@ -49,6 +78,7 @@ export default function ReleaseOpsPanel({
         pLine: form.pLine.trim() || null,
         cLine: form.cLine.trim() || null,
         labelImprint: form.labelImprint.trim() || null,
+        credits: trimmedCredits,
       })
       if (res.error) {
         setError(res.error)
@@ -157,6 +187,73 @@ export default function ReleaseOpsPanel({
             </label>
           </div>
 
+          <div style={{ marginTop: '1rem', maxWidth: 560 }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+              Credits & roles
+            </div>
+            {credits.length === 0 && (
+              <p style={{ fontSize: '0.85rem', color: '#888', margin: '0 0 0.5rem' }}>
+                No credits yet — add writers, performers, producers, etc.
+              </p>
+            )}
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 0.5rem' }}>
+              {credits.map((credit, index) => (
+                <li
+                  key={index}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '120px 1fr auto',
+                    gap: '0.35rem',
+                    marginBottom: '0.35rem',
+                    alignItems: 'center',
+                  }}
+                >
+                  <select
+                    value={credit.role}
+                    disabled={isPending}
+                    onChange={(e) => {
+                      const next = [...credits]
+                      next[index] = { ...credit, role: e.target.value as ReleaseCredit['role'] }
+                      setCredits(next)
+                    }}
+                  >
+                    {RELEASE_CREDIT_ROLES.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    value={credit.name}
+                    placeholder="Name"
+                    disabled={isPending}
+                    onChange={(e) => {
+                      const next = [...credits]
+                      next[index] = { ...credit, name: e.target.value }
+                      setCredits(next)
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => setCredits(credits.filter((_, i) => i !== index))}
+                    style={{ fontSize: '0.85rem' }}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => setCredits([...credits, { ...EMPTY_CREDIT }])}
+              style={{ fontSize: '0.85rem' }}
+            >
+              Add credit
+            </button>
+          </div>
+
           {error && <p style={{ color: '#b91c1c', fontSize: '0.9rem' }}>{error}</p>}
 
           <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -210,8 +307,31 @@ export default function ReleaseOpsPanel({
               ))}
             </ul>
           </div>
+
+          <div style={{ marginTop: '1rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+              Collecting societies
+            </div>
+            <p style={{ fontSize: '0.8rem', color: '#666', margin: '0 0 0.5rem' }}>
+              Register your works and recordings with the relevant PRO — Tahti does not file on your
+              behalf.
+            </p>
+            <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem' }}>
+              {COLLECTING_SOCIETY_POINTERS.map((society) => (
+                <li key={society.id} style={{ marginBottom: '0.35rem' }}>
+                  <a href={society.url} target="_blank" rel="noreferrer">
+                    {society.label}
+                  </a>
+                  <span style={{ color: '#888' }}> ({society.region})</span>
+                  <span style={{ color: '#666' }}> — {society.hint}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
     </div>
   )
 }
+
+export { parseCredits }

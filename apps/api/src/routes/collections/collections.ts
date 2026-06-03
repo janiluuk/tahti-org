@@ -2,6 +2,7 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { archivePlaybackKey } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
@@ -15,6 +16,7 @@ const collectionItemInclude = {
       title: true,
       durationSec: true,
       mp3Key: true,
+      flacKey: true,
       bannerUrl: true,
       description: true,
       createdAt: true,
@@ -342,6 +344,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
             description: true,
             durationSec: true,
             mp3Key: true,
+            flacKey: true,
             createdAt: true,
           },
         },
@@ -358,7 +361,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         description: i.description ?? '',
         pubDate: i.createdAt,
         duration: i.durationSec ?? 0,
-        enclosureUrl: publicMediaUrl(i.mp3Key),
+        enclosureUrl: publicMediaUrl(archivePlaybackKey(i)),
         guid: `${config.appUrl}/c/${channel.slug}#${i.id}`,
       })),
     })
@@ -383,6 +386,7 @@ type CollectionItemRow = {
     description: string | null
     durationSec: number | null
     mp3Key: string | null
+    flacKey: string | null
     createdAt: Date
   } | null
   release: {
@@ -402,7 +406,7 @@ function collectionRssItems(items: CollectionItemRow[], username: string): RssIt
         description: i.archiveItem.description ?? '',
         pubDate: i.archiveItem.createdAt,
         duration: i.archiveItem.durationSec ?? 0,
-        enclosureUrl: publicMediaUrl(i.archiveItem.mp3Key),
+        enclosureUrl: publicMediaUrl(archivePlaybackKey(i.archiveItem)),
         guid: `${config.appUrl}/u/${username}/c/item/${i.archiveItem.id}`,
       })
     } else if (i.release) {

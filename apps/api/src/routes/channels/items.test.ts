@@ -63,6 +63,8 @@ describe('GET /api/channels/:slug/items', () => {
         fileSizeBytes: 0,
         durationSec: 180,
         status: 'READY',
+        isPublic: true,
+        commentary: 'Thanks for listening — recorded live at Klubi.',
       },
     })
 
@@ -101,5 +103,31 @@ describe('GET /api/channels/:slug/items', () => {
     expect(items).toHaveLength(1)
     expect(items[0].title).toBe('Ready Track')
     expect(items[0].audioUrl).toBe('https://minio.test/get')
+    expect(items[0].commentary).toBe('Thanks for listening — recorded live at Klubi.')
+  })
+
+  it('serves flac when item has no mp3', async () => {
+    await prisma.archiveItem.create({
+      data: {
+        channelId,
+        title: 'Lossless Track',
+        rawKey: 'raw/channel-items-testuser/lossless.flac',
+        flacKey: 'flac/channel-items-testuser/lossless.flac',
+        fileSizeBytes: 0,
+        durationSec: 240,
+        status: 'READY',
+        isPublic: true,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/channels/channel-items-testuser/items',
+    })
+    expect(res.statusCode).toBe(200)
+    const items = res.json()
+    expect(items).toHaveLength(2)
+    const lossless = items.find((i: { title: string }) => i.title === 'Lossless Track')
+    expect(lossless.audioUrl).toBe('https://minio.test/get')
   })
 })

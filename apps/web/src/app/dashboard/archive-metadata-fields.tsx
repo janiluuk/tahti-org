@@ -306,20 +306,30 @@ export function ArchiveMetadataFields({
         </label>
       </div>
 
-      {(detectedBpm != null || detectedKey) && (
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-          <input
-            type="checkbox"
-            checked={state.useDetectedBpmKey}
-            disabled={disabled}
-            onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
-          />
-          Use auto-detected BPM/key
-          {detectedBpm != null && ` (${detectedBpm} BPM`}
-          {detectedKey && `, ${detectedKey}`}
-          {detectedBpm != null && ')'}
-        </label>
-      )}
+      <label
+        style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.9rem' }}
+      >
+        <input
+          type="checkbox"
+          checked={state.useDetectedBpmKey}
+          disabled={disabled}
+          onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
+          style={{ marginTop: 2 }}
+        />
+        <span>
+          Use auto-detected file tags (BPM, key, genre, description from embedded tags when you
+          leave fields empty)
+          {(detectedBpm != null || detectedKey) && (
+            <span style={{ color: '#666' }}>
+              {' '}
+              — detected:{' '}
+              {[detectedBpm != null ? `${detectedBpm} BPM` : null, detectedKey ?? null]
+                .filter(Boolean)
+                .join(', ')}
+            </span>
+          )}
+        </span>
+      </label>
 
       <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
         <input

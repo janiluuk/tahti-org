@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
+import { archivePlaybackKey } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { config } from '../../config.js'
@@ -51,10 +52,11 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
     })
     if (!item) return reply.status(404).send({ error: 'Archive item not found' })
     const wantFlac = query.format === 'flac' && item.flacKey && channel.user.tier !== 'FREE'
-    const objectKey = wantFlac ? item.flacKey! : item.mp3Key
+    const objectKey = wantFlac ? item.flacKey! : archivePlaybackKey(item)
     if (!objectKey) {
       return reply.status(409).send({ error: 'No downloadable file for this item' })
     }
+    const servedFlac = wantFlac || (!item.mp3Key && Boolean(item.flacKey))
 
     const salt = dailySalt()
     const fingerprintInput = query.fp?.trim() || `${request.headers['user-agent'] ?? 'unknown'}`
@@ -135,7 +137,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       data: {
         channelId: channel.id,
         archiveItemId: item.id,
-        format: wantFlac ? 'flac' : query.format === 'opus256' ? 'opus256' : 'mp3_320',
+        format: servedFlac ? 'flac' : query.format === 'opus256' ? 'opus256' : 'mp3_320',
         byUserId,
         byFingerprint,
         byIpHash,

@@ -15,6 +15,12 @@ const SERVICE_LABELS: Record<string, string> = {
   amazon: 'Amazon Music',
 }
 
+interface SmartLinkTrack {
+  title: string
+  isrc: string | null
+  position: number
+}
+
 interface SmartLinkResponse {
   release: {
     id: string
@@ -23,6 +29,11 @@ interface SmartLinkResponse {
     releaseDate: string
     artworkUrl: string | null
     description: string | null
+    upc: string | null
+    pLine: string | null
+    cLine: string | null
+    tracks: SmartLinkTrack[]
+    musicbrainzUrl: string | null
   }
   artist: { username: string; displayName: string; avatarUrl: string | null }
   profileUrl: string
@@ -40,6 +51,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
   const data = (await res.json()) as SmartLinkResponse
 
   const services = Object.entries(data.targets).filter(([, url]) => url?.trim())
+  const tracksWithIsrc = data.release.tracks.filter((t) => t.isrc?.trim())
 
   return (
     <div
@@ -72,6 +84,52 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         <p style={{ color: '#444', lineHeight: 1.5, marginBottom: '1.5rem' }}>
           {data.release.description}
         </p>
+      )}
+
+      {(data.release.upc ||
+        data.release.pLine ||
+        data.release.cLine ||
+        tracksWithIsrc.length > 0 ||
+        data.release.musicbrainzUrl) && (
+        <div
+          style={{
+            textAlign: 'left',
+            fontSize: '0.85rem',
+            color: '#555',
+            marginBottom: '1.5rem',
+            padding: '0.75rem 1rem',
+            background: '#f8f8f8',
+            borderRadius: 8,
+          }}
+        >
+          {data.release.upc && (
+            <div style={{ marginBottom: '0.35rem' }}>
+              <strong>UPC:</strong> {data.release.upc}
+            </div>
+          )}
+          {data.release.pLine && (
+            <div style={{ marginBottom: '0.35rem' }}>{data.release.pLine}</div>
+          )}
+          {data.release.cLine && (
+            <div style={{ marginBottom: '0.35rem' }}>{data.release.cLine}</div>
+          )}
+          {tracksWithIsrc.length > 0 && (
+            <ul style={{ margin: '0.5rem 0 0', paddingLeft: '1.2rem' }}>
+              {tracksWithIsrc.map((track) => (
+                <li key={track.position}>
+                  {track.title}: {track.isrc}
+                </li>
+              ))}
+            </ul>
+          )}
+          {data.release.musicbrainzUrl && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <a href={data.release.musicbrainzUrl} style={{ color: '#2563eb' }}>
+                View on MusicBrainz
+              </a>
+            </div>
+          )}
+        </div>
       )}
 
       {services.length > 0 ? (

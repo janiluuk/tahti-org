@@ -44,6 +44,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         pLine: true,
         cLine: true,
         labelImprint: true,
+        credits: true,
         revelatorStatus: true,
         tracks: {
           orderBy: { position: 'asc' },

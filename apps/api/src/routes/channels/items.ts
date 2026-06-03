@@ -2,6 +2,7 @@
 // Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { archivePlaybackKey } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { serializeArchiveItem } from '../../lib/archive-metadata.js'
 
@@ -29,6 +30,7 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
         durationSec: true,
         fileSizeBytes: true,
         mp3Key: true,
+        flacKey: true,
         createdAt: true,
         releasedAt: true,
         genre: true,
@@ -43,13 +45,15 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
         useDetectedBpmKey: true,
         bannerUrl: true,
         license: true,
+        commentary: true,
         tracklist: true,
       },
     })
 
     const itemsWithUrls = await Promise.all(
       items.map(async (item) => {
-        const audioUrl = item.mp3Key ? await presignedGetUrl(item.mp3Key, 3600) : null
+        const playbackKey = archivePlaybackKey(item)
+        const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
         return {
           ...serializeArchiveItem(item),
           fileSizeBytes: Number(item.fileSizeBytes),

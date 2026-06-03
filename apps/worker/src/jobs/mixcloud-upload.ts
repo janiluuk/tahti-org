@@ -6,6 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { prisma } from '@tahti/db'
+import { archivePlaybackKey } from '@tahti/shared'
 import { uploadToMixcloud } from '@tahti/mixcloud'
 import { downloadToFile } from '../lib/minio.js'
 
@@ -15,7 +16,7 @@ export async function processMixcloudUploadJob(job: Job): Promise<void> {
   const upload = await prisma.mixUpload.findUnique({
     where: { id: mixUploadId },
     include: {
-      archiveItem: { select: { title: true, mp3Key: true, rawKey: true } },
+      archiveItem: { select: { title: true, mp3Key: true, flacKey: true, rawKey: true } },
     },
   })
 
@@ -29,7 +30,7 @@ export async function processMixcloudUploadJob(job: Job): Promise<void> {
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-mixcloud-'))
 
   try {
-    const audioKey = upload.archiveItem.mp3Key ?? upload.archiveItem.rawKey
+    const audioKey = archivePlaybackKey(upload.archiveItem) ?? upload.archiveItem.rawKey
     const audioPath = join(tmpDir, 'mix.mp3')
     await downloadToFile(audioKey, audioPath)
 
