@@ -41,7 +41,7 @@ closed beta → **M7–M9, M19** (money + grants) → remaining features → han
 
 Audit of the actual code in `apps/`, `services/`, `packages/`, and `website/`
 against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
-`pnpm test` (~230 tests, Postgres required, `maxWorkers: 1`), and CI jobs in
+`pnpm test` (~410 tests, Postgres required, `maxWorkers: 1`), and CI jobs in
 `.github/workflows/ci.yml`.
 
 ### Work completed (high level)
@@ -107,8 +107,8 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Fix `runningsurplus` → `runningSurplus` key in `/transparency/ytd` response | Typo in a public API field; fixed (API + web consumer) before third parties depend on it | M8 polish (done) |
 | [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; suite now runs on every PR with Postgres + Redis services | CI |
 | [x] | Consolidate CI: lint job, vital-flows e2e, user-journey e2e, AGPL check, website Docker | Single `ci.yml` gate; Playwright screenshots stay local-only (`scripts/e2e-screenshots.sh`) | CI |
-| [x] | Full local Docker stack (`stack-up.sh`, ports 3010/3011) + scaling node doc | Dev/stakeholder demos without host port clashes; ops handover reference | M11 / Phase 2 |
-| [~] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | `/c`, `/u`, `/r` brand layouts; **`/dashboard` studio shell** (`brand-studio.css`) | M12 / DX |
+| [x] | Full local Docker stack (`stack-up.sh`, ports 7777/3011) + scaling node doc | Dev/stakeholder demos without host port clashes; ops handover reference | M11 / Phase 2 |
+| [x] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | `PublicBrandShell` / `StudioShell` route layouts; `@tahti/ui` on auth, transparency, governance, `/c` `/u` `/r`, embed | M12 / DX |
 | [x] | `@tahti/ui`: add `lint` script to Turbo pipeline | `packages/ui` ESLint via `turbo lint` | CI |
 | [x] | Consolidate e2e seed scripts (`scripts/seed-e2e-screenshots.ts` vs `apps/api/scripts/`) | Root script re-exports `apps/api/scripts/seed-e2e-screenshots.ts` | CI / DX |
 | [x] | Stripe webhook: return **500** on handler failure (Stripe retries; audit log retained) | Silent membership/fan-sub activation failures | M19 hardening |
@@ -501,16 +501,16 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 |:---:|---|---|---|
 | [~] | **PLAT-010** | Turbo remote cache in CI | `remoteCache` in `turbo.json`; `TURBO_TOKEN` + `TURBO_TEAM` on lint/typecheck — see `.github/TURBO_REMOTE_CACHE.md` |
 | [x] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | `apps/api/src/lib/redis.ts` | P2 |
-| [~] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | `allocateMemberNumber()` test helper (dynamic member #); Testcontainers deferred | P2 |
+| [~] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | `allocateMemberNumber()` + auto member # in `createTestArtist` when `isMember`; Testcontainers + `maxWorkers` bump deferred | P2 |
 | [x] | **PLAT-013** | Website Docker: mount large media (`bg-audio.mp3`, hero video) from host like `output_vhs.mp4` | `.dockerignore`, stack + local compose binds | P3 |
-| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | + fan-tier CRUD, release tracks/versions/artwork, collections me, archive versions, gallery/text-layer, chat access/fan-token, mentions, revelator, newsletter send |
+| [x] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | JSON routes documented; CSV/metrics/webhook/plain-text ingest skipped by design |
 
 ### Refactors (maintainability)
 
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
-| [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Studio shell + public brand on login/join/transparency/channel/profile/governance/subscribe/embed/smart link |
-| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | + path params on me/archive, releases, newsletter, embed, admin venues; query Zod on collections, venues, mixcloud |
+| [x] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Route layouts + shells; forms/stats on auth/transparency; Callout/LiveBadge on channel + embed; dashboard studio tokens |
+| [x] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | Path/query Zod on public + me routes; `TransparencyYearQuerySchema` added; archive/catalog patches use shared schemas |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [x] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` — members, audit, fan-subscriber exports |

@@ -2,14 +2,24 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { renderHttpMetricLines } from '../lib/http-metrics.js'
 import { renderPrometheusMetrics, runDependencyChecks } from '../lib/health-checks.js'
+import {
+  collectPlatformMetrics,
+  renderPlatformMetricLines,
+} from '../lib/platform-metrics.js'
 import { renderStripeWebhookMetricLines } from '../lib/stripe-webhook-metrics.js'
 
 const metricsRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get('/metrics', async (_request, reply) => {
-    const checks = await runDependencyChecks(fastify.prisma)
+    const [checks, platform] = await Promise.all([
+      runDependencyChecks(fastify.prisma),
+      collectPlatformMetrics(fastify.prisma),
+    ])
     const lines = [
       renderPrometheusMetrics(checks, Math.floor(process.uptime())).trimEnd(),
+      ...renderPlatformMetricLines(platform),
+      ...renderHttpMetricLines(),
       ...renderStripeWebhookMetricLines(),
     ]
     return reply

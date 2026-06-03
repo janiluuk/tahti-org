@@ -29,23 +29,23 @@ export default async function GovernanceVenuesPage() {
 
   if (!isBoard) {
     return (
-      <div style={{ maxWidth: 700, margin: '3rem auto', padding: '0 1rem' }}>
+      <>
         <h1>Venue verification</h1>
-        <p style={{ color: '#666' }}>Board access required.</p>
+        <p className="brand-muted">Board access required.</p>
         <Link href="/governance">← Back to governance</Link>
-      </div>
+      </>
     )
   }
 
   const { venues, error } = await fetchAdminVenues()
 
   return (
-    <div style={{ maxWidth: 900, margin: '3rem auto', padding: '0 1rem' }}>
+    <>
       <p style={{ marginBottom: '0.5rem' }}>
         <Link href="/governance">← Member governance</Link>
       </p>
       <h1 style={{ marginBottom: '0.25rem' }}>Venue verification</h1>
-      <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+      <p className="brand-muted" style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>
         Verified venues appear in the public directory. Unverified listings stay hidden until
         approved.
       </p>
@@ -54,6 +54,6 @@ export default async function GovernanceVenuesPage() {
       ) : (
         <VenueAdminPanel initial={venues ?? []} />
       )}
-    </div>
+    </>
   )
 }

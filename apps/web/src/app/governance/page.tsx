@@ -44,13 +44,13 @@ export default async function GovernancePage() {
 
   if (!me.isMember) {
     return (
-      <div style={{ maxWidth: 700, margin: '3rem auto', padding: '0 1rem' }}>
+      <>
         <h1>Member governance</h1>
-        <p style={{ color: '#666' }}>
+        <p className="brand-muted">
           This area is for Tahti ry members. Activate your membership to take part in motions and
           voting.
         </p>
-      </div>
+      </>
     )
   }
 
@@ -71,16 +71,9 @@ export default async function GovernancePage() {
   const members: Member[] = membersRes.ok ? ((await membersRes.json()) as Member[]) : []
 
   return (
-    <div
-      style={{
-        maxWidth: 820,
-        margin: '3rem auto',
-        padding: '0 1rem',
-        fontFamily: 'system-ui, sans-serif',
-      }}
-    >
-      <h1 style={{ marginBottom: '0.25rem' }}>Member governance</h1>
-      <p style={{ color: '#666', marginBottom: '2rem' }}>
+    <>
+      <h1>Member governance</h1>
+      <p className="brand-muted" style={{ marginBottom: '2rem' }}>
         Motions and voting for Tahti ry members. Voting is currently <strong>advisory</strong> —
         binding decisions are confirmed at a live AGM until the bylaws authorize electronic voting.
       </p>
@@ -149,6 +142,6 @@ export default async function GovernancePage() {
           </table>
         </div>
       </section>
-    </div>
+    </>
   )
 }

@@ -4,6 +4,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { PublicBrandShell } from '@/components/public-brand-shell'
+import { Button, Callout, FormField, Input } from '@/components/ui/from-tahti-ui'
 import { register } from './actions'
 
 const HCAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ?? ''
@@ -26,7 +28,6 @@ export default function JoinPage() {
   const captchaRef = useRef<HTMLDivElement>(null)
   const widgetIdRef = useRef<string | undefined>(undefined)
 
-  // Load hCaptcha script and render widget when site key is configured
   useEffect(() => {
     if (!HCAPTCHA_SITE_KEY) return
 
@@ -86,90 +87,59 @@ export default function JoinPage() {
 
   if (success) {
     return (
-      <div style={{ maxWidth: 480, margin: '4rem auto', padding: '0 1rem' }}>
+      <PublicBrandShell center>
         <h1>Check your email</h1>
-        <p>
+        <p className="brand-muted">
           We&apos;ve sent a verification link to your email address. Click it to activate your
           account.
         </p>
-      </div>
+      </PublicBrandShell>
     )
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: '4rem auto', padding: '0 1rem' }}>
+    <PublicBrandShell center>
       <h1>Create an artist account</h1>
       <form
         onSubmit={handleSubmit}
         style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
       >
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <Callout label="Error">{error}</Callout>}
 
-        <label>
-          <span style={{ display: 'block', marginBottom: 4 }}>Email</span>
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
-          />
-        </label>
+        <FormField label="Email">
+          <Input name="email" type="email" required autoComplete="email" />
+        </FormField>
 
-        <label>
-          <span style={{ display: 'block', marginBottom: 4 }}>Display name</span>
-          <input
-            name="displayName"
-            type="text"
-            required
-            autoComplete="name"
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
-          />
-        </label>
+        <FormField label="Display name">
+          <Input name="displayName" type="text" required autoComplete="name" />
+        </FormField>
 
-        <label>
-          <span style={{ display: 'block', marginBottom: 4 }}>
-            Username <small>(your channel URL: tahti.live/u/&lt;username&gt;)</small>
-          </span>
-          <input
+        <FormField label="Username (tahti.live/u/…)">
+          <Input
             name="username"
             type="text"
             required
             pattern="[a-z0-9_-]+"
             autoComplete="username"
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
           />
-        </label>
+        </FormField>
 
-        <label>
-          <span style={{ display: 'block', marginBottom: 4 }}>Password</span>
-          <input
+        <FormField label="Password">
+          <Input
             name="password"
             type="password"
             required
             minLength={8}
             autoComplete="new-password"
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
           />
-        </label>
+        </FormField>
 
         {HCAPTCHA_SITE_KEY && <div ref={captchaRef} />}
 
-        <button
-          type="submit"
-          disabled={pending}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: '#000',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            cursor: pending ? 'not-allowed' : 'pointer',
-          }}
-        >
+        <Button type="submit" disabled={pending}>
           {pending ? 'Creating account…' : 'Create account'}
-        </button>
+        </Button>
       </form>
-    </div>
+    </PublicBrandShell>
   )
 }

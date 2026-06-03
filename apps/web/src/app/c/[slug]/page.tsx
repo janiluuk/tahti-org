@@ -17,8 +17,8 @@ import type {
   ChannelTextLayerMode,
   TracklistEntry,
 } from '@tahti/shared'
-import { Heading, PageShell, Row, Text } from '@/components/ui'
-import { LiveBadge } from '@/components/ui/from-tahti-ui'
+import { Row } from '@/components/ui'
+import { Callout, LiveBadge } from '@/components/ui/from-tahti-ui'
 import { SafePlainText } from '@/components/safe-plain-text'
 
 interface ChannelResponse {
@@ -93,234 +93,216 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
 
   return (
-    <PageShell size="lg" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
-        <div>
-          {channelBackdrop.videoEmbedUrl && (
-            <ArchiveVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
-          )}
-          {channelBackdrop.imageUrl && !channelBackdrop.videoEmbedUrl && (
-            <div
-              style={{
-                width: '100%',
-                maxHeight: 220,
-                marginBottom: '1rem',
-                borderRadius: 8,
-                overflow: 'hidden',
-                background: `center/cover no-repeat url(${channelBackdrop.imageUrl})`,
-                minHeight: 120,
-              }}
-            />
-          )}
-          <header style={{ marginBottom: '1.5rem' }}>
-            <Row className="ui-row--gap-3" style={{ marginBottom: '0.5rem' }}>
-              {channel.user.avatarUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={channel.user.avatarUrl}
-                  alt={channel.user.displayName}
-                  width={64}
-                  height={64}
-                  style={{ borderRadius: '50%' }}
-                />
-              )}
-              <div>
-                <Heading level={1} style={{ marginBottom: '0.15rem' }}>
-                  {channel.user.displayName}
-                </Heading>
-                <Text size="sm" tone="muted">
-                  @{channel.user.username}
-                </Text>
-              </div>
-              {channel.state === 'LIVE' && <LiveBadge />}
-            </Row>
-            {channel.user.bio && (
-              <SafePlainText
-                text={channel.user.bio}
-                style={{ marginTop: '0.35rem', color: '#555' }}
+    <div className="channel-grid">
+      <div>
+        {channelBackdrop.videoEmbedUrl && (
+          <ArchiveVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
+        )}
+        {channelBackdrop.imageUrl && !channelBackdrop.videoEmbedUrl && (
+          <div
+            style={{
+              width: '100%',
+              maxHeight: 220,
+              marginBottom: '1rem',
+              borderRadius: 8,
+              overflow: 'hidden',
+              background: `center/cover no-repeat url(${channelBackdrop.imageUrl})`,
+              minHeight: 120,
+            }}
+          />
+        )}
+        <header style={{ marginBottom: '1.5rem' }}>
+          <Row className="ui-row--gap-3" style={{ marginBottom: '0.5rem' }}>
+            {channel.user.avatarUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={channel.user.avatarUrl}
+                alt={channel.user.displayName}
+                width={64}
+                height={64}
+                style={{ borderRadius: '50%' }}
               />
             )}
-          </header>
-
-          {channel.state !== 'LIVE' && (channel.nextBroadcastAt || channel.nextBroadcastNote) && (
-            <div
-              role="status"
-              style={{
-                marginBottom: '1rem',
-                padding: '0.75rem 1rem',
-                background: '#f0f4ff',
-                borderRadius: 8,
-                border: '1px solid #c7d2fe',
-              }}
-            >
-              <strong>Next broadcast</strong>
-              {channel.nextBroadcastAt && (
-                <div style={{ marginTop: '0.25rem' }}>
-                  {new Date(channel.nextBroadcastAt).toLocaleString(undefined, {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  })}
-                </div>
-              )}
-              {channel.nextBroadcastNote && (
-                <SafePlainText
-                  text={channel.nextBroadcastNote}
-                  style={{ marginTop: '0.25rem', color: '#444' }}
-                />
-              )}
+            <div>
+              <h1 style={{ marginBottom: '0.15rem' }}>{channel.user.displayName}</h1>
+              <p className="brand-muted" style={{ margin: 0, fontSize: '0.9rem' }}>
+                @{channel.user.username}
+              </p>
             </div>
+            {channel.state === 'LIVE' && <LiveBadge />}
+          </Row>
+          {channel.user.bio && (
+            <SafePlainText
+              text={channel.user.bio}
+              className="brand-muted"
+              style={{ marginTop: '0.35rem' }}
+            />
           )}
+        </header>
 
-          <ChannelTextLayerView
-            mode={channel.textLayerMode}
-            text={channel.textLayerText}
-            align={channel.textLayerAlign}
-          />
-
-          <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
-
-          {/* HLS player + reactions overlay (only when live) */}
-          {hlsUrl && (
-            <div
-              style={{
-                position: 'relative',
-                background: '#111',
-                borderRadius: 8,
-                overflow: 'hidden',
-                minHeight: 80,
-              }}
-            >
-              <div style={{ padding: '0.75rem' }}>
-                <HlsPlayer url={hlsUrl} />
-              </div>
-              <ReactionsOverlay slug={slug} />
-            </div>
-          )}
-
-          <section style={{ marginTop: '2rem' }}>
-            <h2 style={{ margin: '0 0 1rem' }}>Archive</h2>
-
-            {items.length === 0 ? (
-              <p style={{ color: '#999' }}>No archive items yet.</p>
-            ) : (
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                {items.map((item) => {
-                  const { imageUrl, videoEmbedUrl } = resolveArchiveBackground(item.backgroundUrl)
-                  return (
-                    <li
-                      key={item.id}
-                      id={`archive-item-${item.id}`}
-                      style={{
-                        padding: '1rem 0',
-                        borderBottom: '1px solid #eee',
-                        ...(imageUrl
-                          ? {
-                              backgroundImage: `linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url(${imageUrl})`,
-                              backgroundSize: 'cover',
-                              backgroundPosition: 'center',
-                            }
-                          : {}),
-                      }}
-                    >
-                      {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
-                      {item.bannerUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.bannerUrl}
-                          alt=""
-                          style={{
-                            width: '100%',
-                            maxHeight: 200,
-                            objectFit: 'cover',
-                            borderRadius: 8,
-                            marginBottom: '0.75rem',
-                          }}
-                        />
-                      )}
-                      {item.slideshowUrls && item.slideshowUrls.length > 0 && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            gap: '0.35rem',
-                            overflowX: 'auto',
-                            marginBottom: '0.75rem',
-                          }}
-                        >
-                          {item.slideshowUrls.map((url) => (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              key={url}
-                              src={url}
-                              alt=""
-                              style={{
-                                height: 72,
-                                width: 72,
-                                objectFit: 'cover',
-                                borderRadius: 4,
-                                flexShrink: 0,
-                              }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.title}</div>
-                      {item.description && (
-                        <SafePlainText
-                          text={item.description}
-                          style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}
-                        />
-                      )}
-                      {item.commentary && (
-                        <SafePlainText
-                          text={item.commentary}
-                          style={{
-                            color: '#444',
-                            margin: '0 0 0.75rem',
-                            fontSize: '0.9rem',
-                            lineHeight: 1.5,
-                            borderLeft: '3px solid #ddd',
-                            paddingLeft: '0.75rem',
-                          }}
-                        />
-                      )}
-                      {item.durationSec != null && (
-                        <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
-                          {Math.floor(item.durationSec / 60)}:
-                          {String(item.durationSec % 60).padStart(2, '0')}
-                        </div>
-                      )}
-                      {item.tracklist && item.tracklist.length > 0 && (
-                        <TracklistView entries={item.tracklist} />
-                      )}
-                      {item.audioUrl && (
-                        <audio
-                          controls
-                          src={item.audioUrl}
-                          style={{ width: '100%' }}
-                          data-testid="channel-archive-player"
-                        />
-                      )}
-                      <ArchiveDownloadButton
-                        channelSlug={slug}
-                        artistUsername={channel.user.username}
-                        itemId={item.id}
-                        repostToDownload={Boolean(item.repostToDownload)}
-                        followToDownload={Boolean(item.followToDownload)}
-                      />
-                    </li>
-                  )
+        {channel.state !== 'LIVE' && (channel.nextBroadcastAt || channel.nextBroadcastNote) && (
+          <Callout label="Next broadcast" variant="cyan">
+            {channel.nextBroadcastAt && (
+              <span>
+                {new Date(channel.nextBroadcastAt).toLocaleString(undefined, {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
                 })}
-              </ul>
+              </span>
             )}
-          </section>
-        </div>
+            {channel.nextBroadcastNote && (
+              <>
+                {channel.nextBroadcastAt && <br />}
+                <SafePlainText text={channel.nextBroadcastNote} />
+              </>
+            )}
+          </Callout>
+        )}
 
-        {/* Chat panel — docked on the right */}
-        <div>
-          <ChatPanel slug={slug} announcements={announcements} />
-          <FanChatPanel slug={slug} />
-        </div>
+        <ChannelTextLayerView
+          mode={channel.textLayerMode}
+          text={channel.textLayerText}
+          align={channel.textLayerAlign}
+        />
+
+        <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
+
+        {/* HLS player + reactions overlay (only when live) */}
+        {hlsUrl && (
+          <div className="channel-player-wrap">
+            <div style={{ padding: '0.75rem' }}>
+              <HlsPlayer url={hlsUrl} />
+            </div>
+            <ReactionsOverlay slug={slug} />
+          </div>
+        )}
+
+        <section style={{ marginTop: '2rem' }}>
+          <h2 style={{ margin: '0 0 1rem' }}>Archive</h2>
+
+          {items.length === 0 ? (
+            <p className="brand-muted">No archive items yet.</p>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {items.map((item) => {
+                const { imageUrl, videoEmbedUrl } = resolveArchiveBackground(item.backgroundUrl)
+                return (
+                  <li
+                    key={item.id}
+                    id={`archive-item-${item.id}`}
+                    className="channel-archive-item"
+                    style={{
+                      ...(imageUrl
+                        ? {
+                            backgroundImage: `linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url(${imageUrl})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                          }
+                        : {}),
+                    }}
+                  >
+                    {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
+                    {item.bannerUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.bannerUrl}
+                        alt=""
+                        style={{
+                          width: '100%',
+                          maxHeight: 200,
+                          objectFit: 'cover',
+                          borderRadius: 8,
+                          marginBottom: '0.75rem',
+                        }}
+                      />
+                    )}
+                    {item.slideshowUrls && item.slideshowUrls.length > 0 && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: '0.35rem',
+                          overflowX: 'auto',
+                          marginBottom: '0.75rem',
+                        }}
+                      >
+                        {item.slideshowUrls.map((url) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            key={url}
+                            src={url}
+                            alt=""
+                            style={{
+                              height: 72,
+                              width: 72,
+                              objectFit: 'cover',
+                              borderRadius: 4,
+                              flexShrink: 0,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.title}</div>
+                    {item.description && (
+                      <SafePlainText
+                        text={item.description}
+                        className="brand-muted"
+                        style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}
+                      />
+                    )}
+                    {item.commentary && (
+                      <SafePlainText
+                        text={item.commentary}
+                        className="brand-muted"
+                        style={{
+                          margin: '0 0 0.75rem',
+                          fontSize: '0.9rem',
+                          lineHeight: 1.5,
+                          borderLeft: '3px solid var(--card2)',
+                          paddingLeft: '0.75rem',
+                        }}
+                      />
+                    )}
+                    {item.durationSec != null && (
+                      <div
+                        className="brand-muted"
+                        style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}
+                      >
+                        {Math.floor(item.durationSec / 60)}:
+                        {String(item.durationSec % 60).padStart(2, '0')}
+                      </div>
+                    )}
+                    {item.tracklist && item.tracklist.length > 0 && (
+                      <TracklistView entries={item.tracklist} />
+                    )}
+                    {item.audioUrl && (
+                      <audio
+                        controls
+                        src={item.audioUrl}
+                        style={{ width: '100%' }}
+                        data-testid="channel-archive-player"
+                      />
+                    )}
+                    <ArchiveDownloadButton
+                      channelSlug={slug}
+                      artistUsername={channel.user.username}
+                      itemId={item.id}
+                      repostToDownload={Boolean(item.repostToDownload)}
+                      followToDownload={Boolean(item.followToDownload)}
+                    />
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
       </div>
-    </PageShell>
+
+      {/* Chat panel — docked on the right */}
+      <div>
+        <ChatPanel slug={slug} announcements={announcements} />
+        <FanChatPanel slug={slug} />
+      </div>
+    </div>
   )
 }

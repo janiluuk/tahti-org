@@ -3,6 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { LiveBadge } from '@/components/ui/from-tahti-ui'
 import HlsPlayer from '../../../c/[slug]/hls-player'
 
 interface EmbedChannel {
@@ -42,25 +43,12 @@ export default async function ChannelEmbedPage({ params }: { params: { slug: str
             href={channel.profileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: '#93c5fd', fontSize: '0.8rem' }}
+            style={{ fontSize: '0.8rem' }}
           >
             @{channel.artist.username} on Tahti
           </Link>
         </div>
-        {channel.state === 'LIVE' && (
-          <span
-            style={{
-              background: '#dc2626',
-              color: '#fff',
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              padding: '0.2rem 0.5rem',
-              borderRadius: 4,
-            }}
-          >
-            LIVE
-          </span>
-        )}
+        {channel.state === 'LIVE' && <LiveBadge />}
       </div>
 
       {channel.hlsUrl ? (

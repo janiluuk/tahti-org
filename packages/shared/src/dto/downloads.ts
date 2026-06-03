@@ -28,10 +28,3 @@ export const AuditExportQuerySchema = z.object({
   since: z.string().datetime().optional(),
   until: z.string().datetime().optional(),
 })
-
-export const TransparencyYearQuerySchema = z.object({
-  year: z
-    .string()
-    .regex(/^\d{4}$/)
-    .optional(),
-})

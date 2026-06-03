@@ -6,7 +6,13 @@ import type { FastifyPluginAsync } from 'fastify'
 import { buildMixcloudAuthorizeUrl, exchangeMixcloudCode } from '@tahti/mixcloud'
 import {
   ArchiveItemIdParamSchema,
+  MixcloudConnectionStatusSchema,
+  MixcloudDisconnectSchema,
   MixcloudOAuthCallbackQuerySchema,
+  MixcloudQueueResponseSchema,
+  MixcloudUploadStatusSchema,
+  openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -18,18 +24,29 @@ const OAUTH_STATE_MAX_AGE_SEC = 600
 
 // M7 — Mixcloud OAuth + archive mix upload
 const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/api/me/mixcloud', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const row = await fastify.prisma.user.findUnique({
-      where: { id: user.id },
-      select: { mixcloudAccessTokenEnc: true },
-    })
-    const configured = Boolean(config.mixcloud.clientId && config.mixcloud.clientSecret)
-    return reply.send({
-      connected: Boolean(row?.mixcloudAccessTokenEnc),
-      configured,
-    })
-  })
+  fastify.get(
+    '/api/me/mixcloud',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M7: Mixcloud connection status',
+        response: openApiResponse(MixcloudConnectionStatusSchema, 'MixcloudConnectionStatus'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const row = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { mixcloudAccessTokenEnc: true },
+      })
+      const configured = Boolean(config.mixcloud.clientId && config.mixcloud.clientSecret)
+      return reply.send({
+        connected: Boolean(row?.mixcloudAccessTokenEnc),
+        configured,
+      })
+    },
+  )
 
   fastify.get(
     '/api/me/mixcloud/oauth/start',
@@ -92,18 +109,38 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
     }
   })
 
-  fastify.delete('/api/me/mixcloud', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    await fastify.prisma.user.update({
-      where: { id: user.id },
-      data: { mixcloudAccessTokenEnc: null },
-    })
-    return reply.send({ connected: false })
-  })
+  fastify.delete(
+    '/api/me/mixcloud',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M7: disconnect Mixcloud',
+        response: openApiResponse(MixcloudDisconnectSchema, 'MixcloudDisconnect'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      await fastify.prisma.user.update({
+        where: { id: user.id },
+        data: { mixcloudAccessTokenEnc: null },
+      })
+      return reply.send({ connected: false })
+    },
+  )
 
   fastify.post(
     '/api/me/archive/:itemId/mixcloud',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M7: queue archive mix upload to Mixcloud',
+        response: openApiResponses([
+          { status: 202, schema: MixcloudQueueResponseSchema, name: 'MixcloudQueueResponse' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(ArchiveItemIdParamSchema, request.params)
@@ -151,7 +188,14 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get(
     '/api/me/archive/:itemId/mixcloud',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'M7: Mixcloud upload status for an archive item',
+        response: openApiResponse(MixcloudUploadStatusSchema, 'MixcloudUploadStatus'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(ArchiveItemIdParamSchema, request.params)

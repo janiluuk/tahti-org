@@ -11,7 +11,7 @@
 #   LAB_PATH / DEPLOY_PATH     — default /srv/tahti
 #   LAB_USER / DEPLOY_USER     — default root
 #   SSH_PROXY_JUMP             — e.g. pi@sparkki.dudeisland.eu:4322
-#   WEB_PORT                   — default 3010 (host publish for web)
+#   WEB_PORT                   — default 7000 on lab host (7777 for local stack-up.sh)
 #   API_PORT                   — default 3011 (host publish for api)
 #
 set -euo pipefail
@@ -33,7 +33,7 @@ HOST="${LAB_HOST:-${DEPLOY_HOST:-192.168.2.100}}"
 REMOTE_PATH="${LAB_PATH:-${DEPLOY_PATH:-/srv/tahti}}"
 REMOTE_USER="${LAB_USER:-${DEPLOY_USER:-root}}"
 PROXY_JUMP="${SSH_PROXY_JUMP:-}"
-WEB_PORT="${WEB_PORT:-3010}"
+WEB_PORT="${WEB_PORT:-7000}"
 API_PORT="${API_PORT:-3011}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

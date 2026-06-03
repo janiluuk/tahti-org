@@ -8,9 +8,12 @@ import {
   SlugParamSchema,
   VenueBroadcastCalendarSchema,
   VenueCalendarQuerySchema,
+  VenueBroadcastRecordSchema,
   VenueDirectoryListSchema,
   VenuePublicProfileSchema,
+  VenueRecordSchema,
   openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -162,39 +165,61 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // POST /api/v1/venues — create venue (auth required, unverified until board approves)
-  fastify.post('/api/v1/venues', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const parsed = CreateVenueSchema.safeParse(request.body)
-    if (!parsed.success) return zodError(reply, parsed.error)
-    const body = parsed.data
-
-    const existing = await fastify.prisma.venue.findUnique({ where: { slug: body.slug } })
-    if (existing) return reply.status(409).send({ error: 'Slug already taken' })
-
-    const venue = await fastify.prisma.venue.create({
-      data: {
-        slug: body.slug,
-        name: body.name,
-        address: body.address,
-        city: body.city,
-        countryCode: body.countryCode ?? 'FI',
-        description: body.description?.trim() || null,
-        capacity: body.capacity ?? null,
-        latitude: body.latitude ?? null,
-        longitude: body.longitude ?? null,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        externalLinks: (body.externalLinks ?? null) as any,
-        createdBy: user.id,
+  fastify.post(
+    '/api/v1/venues',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['venues'],
+        description: 'M17: create venue (pending board verification)',
+        response: openApiResponses([
+          { status: 201, schema: VenueRecordSchema, name: 'VenueRecord' },
+        ]),
       },
-    })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = CreateVenueSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const body = parsed.data
 
-    return reply.status(201).send(venue)
-  })
+      const existing = await fastify.prisma.venue.findUnique({ where: { slug: body.slug } })
+      if (existing) return reply.status(409).send({ error: 'Slug already taken' })
+
+      const venue = await fastify.prisma.venue.create({
+        data: {
+          slug: body.slug,
+          name: body.name,
+          address: body.address,
+          city: body.city,
+          countryCode: body.countryCode ?? 'FI',
+          description: body.description?.trim() || null,
+          capacity: body.capacity ?? null,
+          latitude: body.latitude ?? null,
+          longitude: body.longitude ?? null,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          externalLinks: (body.externalLinks ?? null) as any,
+          createdBy: user.id,
+        },
+      })
+
+      return reply.status(201).send(venue)
+    },
+  )
 
   // POST /api/v1/venues/:slug/broadcasts — add a broadcast event
   fastify.post(
     '/api/v1/venues/:slug/broadcasts',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['venues'],
+        description: 'M17: schedule a venue broadcast',
+        response: openApiResponses([
+          { status: 201, schema: VenueBroadcastRecordSchema, name: 'VenueBroadcastRecord' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(SlugParamSchema, request.params)

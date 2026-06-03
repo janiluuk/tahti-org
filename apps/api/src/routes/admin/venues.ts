@@ -2,31 +2,55 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { SlugParamSchema, parseRouteParams } from '@tahti/shared'
+import {
+  AdminVenueListSchema,
+  SlugParamSchema,
+  VenueRecordSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 
 // M17: board verifies venue listings before they appear in the public directory.
 const adminVenueRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/api/admin/venues', { preHandler: requireBoard }, async (_request, reply) => {
-    const venues = await fastify.prisma.venue.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        city: true,
-        countryCode: true,
-        verifiedAt: true,
-        createdAt: true,
-        createdBy: true,
+  fastify.get(
+    '/api/admin/venues',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'M17: list all venues (board)',
+        response: openApiResponse(AdminVenueListSchema, 'AdminVenueList'),
       },
-    })
-    return reply.send(venues)
-  })
+    },
+    async (_request, reply) => {
+      const venues = await fastify.prisma.venue.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          city: true,
+          countryCode: true,
+          verifiedAt: true,
+          createdAt: true,
+          createdBy: true,
+        },
+      })
+      return reply.send(venues)
+    },
+  )
 
   fastify.post(
     '/api/admin/venues/:slug/verify',
-    { preHandler: requireBoard },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'M17: verify a venue listing',
+        response: openApiResponse(VenueRecordSchema, 'VenueRecord'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -44,7 +68,14 @@ const adminVenueRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/admin/venues/:slug/unverify',
-    { preHandler: requireBoard },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'M17: remove venue verification',
+        response: openApiResponse(VenueRecordSchema, 'VenueRecord'),
+      },
+    },
     async (request, reply) => {
       const routeParams = parseRouteParams(SlugParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })

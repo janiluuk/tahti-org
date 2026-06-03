@@ -85,7 +85,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const { artist, channel, releases, links, collections = [] } = data
 
   return (
-    <div className="brand-public">
+    <>
       <header style={{ marginBottom: '2rem' }}>
         <h1>{artist.displayName}</h1>
         <p className="brand-muted" style={{ margin: 0 }}>
@@ -192,6 +192,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
           </ul>
         )}
       </section>
-    </div>
+    </>
   )
 }

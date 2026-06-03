@@ -22,7 +22,7 @@
       - targets:
           - http://192.168.2.100:3011/health
           - http://192.168.2.100:3011/api/v1/status
-          - http://192.168.2.100:3010/
+          - http://192.168.2.100:7000/
           - http://192.168.2.100:8090/health
           - http://192.168.2.100:8000/health
           - http://192.168.2.100:9000/minio/health/live
@@ -47,7 +47,7 @@
         target_label: probe
         replacement: status
       - source_labels: [__param_target]
-        regex: '.*:3010/.*'
+        regex: '.*:7000/.*'
         target_label: probe
         replacement: web
       - source_labels: [__param_target]

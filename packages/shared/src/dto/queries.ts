@@ -22,6 +22,14 @@ export function yearFromPathParams(params: unknown): number | null {
   return parseInt(parsed.data.year, 10)
 }
 
+/** `GET /api/v1/transparency/monthly_rollup?year=YYYY` */
+export const TransparencyYearQuerySchema = z.object({
+  year: z
+    .string()
+    .regex(/^\d{4}$/)
+    .optional(),
+})
+
 export const CollectionListQuerySchema = z.object({
   expand: z.literal('items').optional(),
 })

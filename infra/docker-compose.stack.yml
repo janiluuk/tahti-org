@@ -1,7 +1,7 @@
 # Full local Tahti stack — infra + API + web + worker + orchestrator.
 # Not Swarm; use: ./scripts/stack-up.sh
 #
-# App UI:     http://localhost:3010  (override WEB_PORT)
+# App UI:     http://localhost:7777  (override WEB_PORT)
 # API:        http://localhost:3011  (override API_PORT)
 # MailHog:    http://localhost:8025
 # MinIO:      http://localhost:9001  (tahti / tahti_dev_secret)
@@ -34,7 +34,7 @@ x-app-env: &app-env
   HLS_MINIO_BUCKET: hls-live
   HLS_MINIO_PREFIX: hls-live
   HLS_STALE_SECONDS: "20"
-  APP_URL: http://localhost:${WEB_PORT:-3010}
+  APP_URL: http://localhost:${WEB_PORT:-7777}
   API_URL: http://localhost:${API_PORT:-3011}
 
 services:
@@ -113,7 +113,7 @@ services:
       --admin_secret=dev
       --api_key=dev
       --token_hmac_secret_key=dev_secret_do_not_use_in_prod
-      --allowed_origins=http://localhost:3010,http://localhost:3000
+      --allowed_origins=http://localhost:7777,http://localhost:3000
       --presence=true
       --history_size=100
       --history_ttl=86400s
@@ -191,7 +191,7 @@ services:
       API_URL: http://api:3001
       PORT: "3000"
     ports:
-      - "${WEB_PORT:-3010}:3000"
+      - "${WEB_PORT:-7777}:3000"
     depends_on:
       api:
         condition: service_healthy

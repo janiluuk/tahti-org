@@ -44,5 +44,7 @@ describe('GET /metrics', () => {
     expect(res.statusCode).toBe(200)
     expect(res.headers['content-type']).toContain('text/plain')
     expect(res.body).toContain('tahti_dependency_up{dependency="postgres"}')
+    expect(res.body).toContain('tahti_users_registered_total')
+    expect(res.body).toContain('tahti_http_requests_total')
   })
 })

@@ -9,7 +9,7 @@
 # Repository variables (optional — defaults in remote-stack-deploy.sh / deploy-production):
 #   DEPLOY_JUMP_HOST, DEPLOY_JUMP_USER, DEPLOY_JUMP_PORT
 #   DEPLOY_HOST, DEPLOY_PATH, DEPLOY_USER
-#   STACK_WEB_PORT (default 3010), STACK_API_PORT (default 3011)
+#   STACK_WEB_PORT (default 7000 on vimage lab), STACK_API_PORT (default 3011)
 #
 # Triggers:
 #   - workflow_dispatch (manual; optional --seed, --no-cache)
@@ -123,7 +123,7 @@ jobs:
       DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
       DEPLOY_USER: ${{ vars.DEPLOY_USER }}
-      WEB_PORT: ${{ vars.STACK_WEB_PORT || '3010' }}
+      WEB_PORT: ${{ vars.STACK_WEB_PORT || '7000' }}
       API_PORT: ${{ vars.STACK_API_PORT || '3011' }}
 
     steps:

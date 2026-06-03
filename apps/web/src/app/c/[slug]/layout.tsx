@@ -2,12 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import '@/components/brand-public.css'
+import { PublicBrandShell } from '@/components/public-brand-shell'
 
 export default function ChannelLayout({ children }: { children: ReactNode }) {
-  return (
-    <div data-tahti-ui="brand" className="brand-public">
-      {children}
-    </div>
-  )
+  return <PublicBrandShell wide>{children}</PublicBrandShell>
 }

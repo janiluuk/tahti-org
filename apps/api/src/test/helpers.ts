@@ -27,6 +27,9 @@ export async function allocateMemberNumber(prisma: PrismaClient): Promise<number
 }
 
 export async function createTestArtist(prisma: PrismaClient, opts: TestArtistOptions) {
+  const memberNumber =
+    opts.memberNumber ?? (opts.isMember ? await allocateMemberNumber(prisma) : undefined)
+
   const passwordHash = await hashPassword('testpassword')
   const liveSourcePass = `pass-${opts.username}`
   const liveSourcePassHash = await hashPassword(liveSourcePass)
@@ -40,7 +43,7 @@ export async function createTestArtist(prisma: PrismaClient, opts: TestArtistOpt
       tier: opts.tier ?? 'FREE',
       isMember: opts.isMember ?? false,
       isBoard: opts.isBoard ?? false,
-      memberNumber: opts.memberNumber,
+      memberNumber,
       memberSince: opts.isMember ? new Date() : undefined,
       emailVerifiedAt: opts.emailVerified !== false ? new Date() : null,
       weeklyLiveSecondsUsed: opts.weeklyLiveSecondsUsed ?? 0,

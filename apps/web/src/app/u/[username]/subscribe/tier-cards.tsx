@@ -5,6 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button, Callout } from '@/components/ui/from-tahti-ui'
 import { subscribe } from './actions'
 
 interface Tier {
@@ -55,17 +56,9 @@ export default function TierCards({
   return (
     <div>
       {message && (
-        <p
-          style={{
-            padding: '0.75rem 1rem',
-            background: '#f0f9ff',
-            border: '1px solid #bae6fd',
-            borderRadius: 8,
-            margin: '0 0 1.5rem',
-          }}
-        >
+        <Callout label="Status" variant="cyan">
           {message}
-        </p>
+        </Callout>
       )}
       <div
         style={{
@@ -77,20 +70,19 @@ export default function TierCards({
         {tiers.map((t) => (
           <div
             key={t.id}
-            style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: 12,
-              padding: '1.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
+            className="brand-panel"
+            style={{ display: 'flex', flexDirection: 'column' }}
           >
             <h3 style={{ margin: '0 0 0.25rem' }}>{t.name}</h3>
             <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>
               {eur(t.amountCents)}
               <span style={{ fontSize: '0.9rem', fontWeight: 400, color: '#888' }}>/mo</span>
             </div>
-            {t.description && <p style={{ color: '#666', marginTop: '0.5rem' }}>{t.description}</p>}
+            {t.description && (
+              <p className="brand-muted" style={{ marginTop: '0.5rem' }}>
+                {t.description}
+              </p>
+            )}
             {t.perks.length > 0 && (
               <ul
                 style={{
@@ -105,31 +97,24 @@ export default function TierCards({
                 ))}
               </ul>
             )}
-            <button
-              onClick={() => onSubscribe(t.id)}
+            <Button
+              type="button"
+              variant="primary"
               disabled={isPending || !paymentsReady}
               title={!paymentsReady ? 'Subscriptions open soon' : undefined}
-              style={{
-                marginTop: 'auto',
-                background: paymentsReady ? '#16a34a' : '#9ca3af',
-                color: 'white',
-                border: 'none',
-                borderRadius: 6,
-                padding: '0.6rem 1rem',
-                cursor: paymentsReady ? 'pointer' : 'not-allowed',
-                fontWeight: 600,
-              }}
+              onClick={() => onSubscribe(t.id)}
+              style={{ marginTop: 'auto' }}
             >
               {isPending && pendingId === t.id
                 ? 'Subscribing…'
                 : paymentsReady
                   ? 'Subscribe'
                   : 'Subscriptions open soon'}
-            </button>
+            </Button>
           </div>
         ))}
       </div>
-      <p style={{ color: '#888', fontSize: '0.8rem', marginTop: '1.5rem' }}>
+      <p className="brand-muted" style={{ fontSize: '0.8rem', marginTop: '1.5rem' }}>
         Direct to artist. 0% org take. A 2% fee covers payment processing and compliance.
       </p>
     </div>

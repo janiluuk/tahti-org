@@ -64,38 +64,34 @@ export default async function CollectionPage({
   const rssUrl = data.links?.rss ?? `${apiUrl}/api/v1/collections/${params.slug}/rss.xml`
 
   return (
-    <div style={{ maxWidth: 720, margin: '3rem auto', padding: '0 1rem', fontFamily: 'system-ui' }}>
+    <>
       <p style={{ margin: 0 }}>
-        <Link href={`/u/${data.user.username}`} style={{ color: '#2563eb' }}>
-          ← {data.user.displayName}
-        </Link>
+        <Link href={`/u/${data.user.username}`}>← {data.user.displayName}</Link>
       </p>
       <header style={{ margin: '1.5rem 0 2rem' }}>
         <h1 style={{ margin: '0 0 0.25rem' }}>{data.name}</h1>
-        <p style={{ color: '#666', margin: 0 }}>
+        <p className="brand-muted" style={{ margin: 0 }}>
           {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
         </p>
         {data.description && (
           <p style={{ marginTop: '1rem', lineHeight: 1.6 }}>{data.description}</p>
         )}
         <p style={{ marginTop: '1rem' }}>
-          <a href={rssUrl} style={{ color: '#2563eb' }}>
-            RSS feed ↗
-          </a>
+          <a href={rssUrl}>RSS feed ↗</a>
         </p>
       </header>
 
       {data.items.length === 0 ? (
-        <p style={{ color: '#999' }}>This collection is empty.</p>
+        <p className="brand-muted">This collection is empty.</p>
       ) : (
         <ol style={{ listStyle: 'none', padding: 0 }}>
           {data.items.map((item) => (
-            <li key={item.id} style={{ padding: '1rem 0', borderBottom: '1px solid #eee' }}>
+            <li key={item.id} className="channel-archive-item">
               {item.archiveItem && (
                 <>
                   <div style={{ fontWeight: 600 }}>{item.archiveItem.title}</div>
                   {item.archiveItem.durationSec != null && (
-                    <span style={{ color: '#888', fontSize: '0.85rem' }}>
+                    <span className="brand-muted" style={{ fontSize: '0.85rem' }}>
                       {Math.floor(item.archiveItem.durationSec / 60)}:
                       {String(item.archiveItem.durationSec % 60).padStart(2, '0')}
                     </span>
@@ -104,13 +100,10 @@ export default async function CollectionPage({
               )}
               {item.release && (
                 <div>
-                  <Link
-                    href={`/r/${item.release.smartLinkSlug}`}
-                    style={{ fontWeight: 600, color: '#2563eb' }}
-                  >
+                  <Link href={`/r/${item.release.smartLinkSlug}`} style={{ fontWeight: 600 }}>
                     {item.release.title}
                   </Link>
-                  <span style={{ color: '#888', fontSize: '0.85rem' }}>
+                  <span className="brand-muted" style={{ fontSize: '0.85rem' }}>
                     {' '}
                     · {item.release.type} ·{' '}
                     {new Date(item.release.releaseDate).toLocaleDateString()}
@@ -121,6 +114,6 @@ export default async function CollectionPage({
           ))}
         </ol>
       )}
-    </div>
+    </>
   )
 }

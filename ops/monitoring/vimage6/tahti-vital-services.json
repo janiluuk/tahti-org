@@ -217,7 +217,7 @@
       "gridPos": { "x": 0, "y": 23, "w": 24, "h": 4 },
       "options": {
         "mode": "markdown",
-        "content": "| Probe | URL |\n|-------|-----|\n| API health | `http://192.168.2.100:3011/health` |\n| API status | `http://192.168.2.100:3011/api/v1/status` |\n| Web app | `http://192.168.2.100:3010/` |\n| Marketing site | `http://192.168.2.100:8090/health` |\n| Centrifugo chat | `http://192.168.2.100:8000/health` |\n| MinIO | `http://192.168.2.100:9000/minio/health/live` |\n| Orchestrator | `http://192.168.2.100:3003/health` |\n| Icecast | `http://192.168.2.100:8100/` |\n\nDependency gauges come from **`GET /metrics`** on the Tahti API (postgres, redis, minio, centrifugo, orchestrator, icecast)."
+        "content": "| Probe | URL |\n|-------|-----|\n| API health | `http://192.168.2.100:3011/health` |\n| API status | `http://192.168.2.100:3011/api/v1/status` |\n| Web app | `http://192.168.2.100:7000/` |\n| Marketing site | `http://192.168.2.100:8090/health` |\n| Centrifugo chat | `http://192.168.2.100:8000/health` |\n| MinIO | `http://192.168.2.100:9000/minio/health/live` |\n| Orchestrator | `http://192.168.2.100:3003/health` |\n| Icecast | `http://192.168.2.100:8100/` |\n\nDependency gauges come from **`GET /metrics`** on the Tahti API (postgres, redis, minio, centrifugo, orchestrator, icecast)."
       }
     }
   ]

@@ -5,7 +5,9 @@ import { describe, it, expect } from 'vitest'
 import {
   CollectionListQuerySchema,
   MeReleaseTrackDownloadQuerySchema,
+  MixcloudOAuthCallbackQuerySchema,
   OEmbedQuerySchema,
+  TransparencyYearQuerySchema,
   VenueCalendarQuerySchema,
   yearFromPathParams,
 } from './queries.js'
@@ -40,5 +42,16 @@ describe('query schemas', () => {
   it('parses me release track download format', () => {
     expect(MeReleaseTrackDownloadQuerySchema.safeParse({ format: 'flac' }).success).toBe(true)
     expect(MeReleaseTrackDownloadQuerySchema.safeParse({ format: 'wav' }).success).toBe(false)
+  })
+
+  it('parses transparency monthly rollup year query', () => {
+    expect(TransparencyYearQuerySchema.safeParse({ year: '2026' }).success).toBe(true)
+    expect(TransparencyYearQuerySchema.safeParse({}).success).toBe(true)
+    expect(TransparencyYearQuerySchema.safeParse({ year: '20xx' }).success).toBe(false)
+  })
+
+  it('parses mixcloud oauth callback query', () => {
+    expect(MixcloudOAuthCallbackQuerySchema.safeParse({ code: 'abc' }).success).toBe(true)
+    expect(MixcloudOAuthCallbackQuerySchema.safeParse({ error: 'denied' }).success).toBe(true)
   })
 })

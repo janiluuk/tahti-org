@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import Link from 'next/link'
+import { Stat, StatGrid } from '@/components/ui/from-tahti-ui'
+
 interface MonthlyRollup {
   yearMonth: string
   byCategory: Record<string, string>
@@ -68,41 +71,26 @@ export default async function TransparencyPage() {
   const totalRevenue = revenueKeys.reduce((s, k) => s + parseInt(ytd.byCategory[k] ?? '0', 10), 0)
   const totalCosts = costKeys.reduce((s, k) => s + parseInt(ytd.byCategory[k] ?? '0', 10), 0)
 
+  const surplusPositive = parseInt(ytd.runningSurplus, 10) >= 0
+
   return (
-    <div
-      style={{
-        maxWidth: 860,
-        margin: '3rem auto',
-        padding: '0 1rem',
-        fontFamily: 'system-ui, sans-serif',
-      }}
-    >
-      <h1 style={{ marginBottom: '0.25rem' }}>Transparency</h1>
-      <p style={{ color: '#666', marginBottom: '2.5rem' }}>
+    <>
+      <h1>Transparency</h1>
+      <p className="brand-muted" style={{ marginBottom: '2.5rem' }}>
         Tahti ry is a Finnish registered nonprofit. All income, costs, and artist grants are
-        published here.{' '}
-        <a href="/transparency/methodology" style={{ color: '#555' }}>
-          Methodology ↗
-        </a>
+        published here. <Link href="/transparency/methodology">Methodology ↗</Link>
       </p>
 
-      {/* YTD summary cards */}
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1rem',
-          marginBottom: '2.5rem',
-        }}
-      >
-        <SummaryCard label={`${ytd.year} Revenue`} value={formatEur(totalRevenue)} positive />
-        <SummaryCard label={`${ytd.year} Costs`} value={formatEur(totalCosts)} />
-        <SummaryCard
-          label="Running surplus"
-          value={formatEur(ytd.runningSurplus)}
-          positive={parseInt(ytd.runningSurplus, 10) >= 0}
-          subtitle={`${ytd.monthsFinalized} month${ytd.monthsFinalized !== 1 ? 's' : ''} finalized`}
-        />
+      <section style={{ marginBottom: '2.5rem' }}>
+        <StatGrid cols={3}>
+          <Stat value={formatEur(totalRevenue)} label={`${ytd.year} Revenue`} accent="green" />
+          <Stat value={formatEur(totalCosts)} label={`${ytd.year} Costs`} accent="cyan" />
+          <Stat
+            value={formatEur(ytd.runningSurplus)}
+            label={`Running surplus · ${ytd.monthsFinalized} mo. finalized`}
+            accent={surplusPositive ? 'green' : 'lavender'}
+          />
+        </StatGrid>
       </section>
 
       {/* Category breakdown */}
@@ -201,31 +189,7 @@ export default async function TransparencyPage() {
           </a>
         </p>
       </footer>
-    </div>
-  )
-}
-
-function SummaryCard({
-  label,
-  value,
-  positive,
-  subtitle,
-}: {
-  label: string
-  value: string
-  positive?: boolean
-  subtitle?: string
-}) {
-  return (
-    <div style={{ padding: '1rem 1.25rem', border: '1px solid #eee', borderRadius: 8 }}>
-      <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.25rem' }}>{label}</div>
-      <div style={{ fontSize: '1.4rem', fontWeight: 700, color: positive ? '#16a34a' : '#111' }}>
-        {value}
-      </div>
-      {subtitle && (
-        <div style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.15rem' }}>{subtitle}</div>
-      )}
-    </div>
+    </>
   )
 }
 

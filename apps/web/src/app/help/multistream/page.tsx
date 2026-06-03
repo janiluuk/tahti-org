@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Link from 'next/link'
+import { PublicBrandShell } from '@/components/public-brand-shell'
 
 const PLATFORMS: { name: string; steps: string; url?: string }[] = [
   {
@@ -45,7 +46,7 @@ const PLATFORMS: { name: string; steps: string; url?: string }[] = [
 
 export default function MultistreamHelpPage() {
   return (
-    <article style={{ maxWidth: 720, margin: '2rem auto', padding: '0 1.5rem', lineHeight: 1.6 }}>
+    <PublicBrandShell>
       <p>
         <Link href="/dashboard">← Dashboard</Link>
       </p>
@@ -74,14 +75,14 @@ export default function MultistreamHelpPage() {
       <h2>Where to copy keys</h2>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
         <thead>
-          <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
+          <tr style={{ borderBottom: '2px solid var(--card2)', textAlign: 'left' }}>
             <th style={{ padding: '0.5rem 0' }}>Platform</th>
             <th style={{ padding: '0.5rem 0' }}>Steps</th>
           </tr>
         </thead>
         <tbody>
           {PLATFORMS.map((p) => (
-            <tr key={p.name} style={{ borderBottom: '1px solid #f0f0f0' }}>
+            <tr key={p.name} style={{ borderBottom: '1px solid var(--card2)' }}>
               <td style={{ padding: '0.6rem 0.5rem 0.6rem 0', verticalAlign: 'top' }}>
                 {p.url ? (
                   <a href={p.url} target="_blank" rel="noopener noreferrer">
@@ -91,7 +92,7 @@ export default function MultistreamHelpPage() {
                   p.name
                 )}
               </td>
-              <td style={{ padding: '0.6rem 0', color: '#444' }}>{p.steps}</td>
+              <td style={{ padding: '0.6rem 0', color: 'var(--muted)' }}>{p.steps}</td>
             </tr>
           ))}
         </tbody>
@@ -104,9 +105,9 @@ export default function MultistreamHelpPage() {
         <li>Your OBS → Tahti key is separate; that one stays in Stream settings only.</li>
       </ul>
 
-      <p style={{ color: '#666', fontSize: '0.9rem' }}>
+      <p className="brand-muted" style={{ fontSize: '0.9rem' }}>
         Full guide in the repo: <code>docs/guides/multistream-simulcast.md</code>
       </p>
-    </article>
+    </PublicBrandShell>
   )
 }

@@ -17,7 +17,7 @@ help:
 	@echo "  stack-up         Full app stack in Docker (no screenshot seed)"
 	@echo "  stack-seed       stack-up + screenshot demo fixtures"
 	@echo "  stack-down       Stop the full Docker stack"
-	@echo "  stack-deploy     Rsync + stack-up on lab host (SSH_PROXY_JUMP / DEPLOY_HOST)"
+	@echo "  stack-deploy     Rsync + stack-up on lab host (WEB_PORT=7000 on vimage; SSH required)"
 	@echo "  db-migrate-deploy  prisma migrate deploy (DATABASE_URL required; see ops/DEPLOY.md)"
 	@echo "  e2e-screenshots  Local only: stack + seed + Playwright captures"
 	@echo ""

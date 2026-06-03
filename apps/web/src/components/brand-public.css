@@ -20,6 +20,44 @@
   text-align: center;
 }
 
+[data-tahti-ui='brand'] .brand-public--wide {
+  max-width: 1120px;
+}
+
+[data-tahti-ui='brand'] .embed-chrome {
+  margin: 0;
+  padding: 0.75rem;
+  min-height: 100%;
+  box-sizing: border-box;
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .channel-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2rem;
+}
+
+@media (max-width: 900px) {
+  [data-tahti-ui='brand'] .channel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-tahti-ui='brand'] .channel-archive-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--card2);
+}
+
+[data-tahti-ui='brand'] .channel-player-wrap {
+  position: relative;
+  background: #111;
+  border-radius: var(--radius, 8px);
+  overflow: hidden;
+  min-height: 80px;
+}
+
 [data-tahti-ui='brand'] .brand-public {
   max-width: 720px;
   margin: 3rem auto;

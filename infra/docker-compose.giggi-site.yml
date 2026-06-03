@@ -145,7 +145,7 @@ services:
       SMTP_HOST: mailhog
       SMTP_PORT: "1025"
       SMTP_FROM: "Tahti <noreply@tahti.live>"
-      APP_URL: ${APP_URL:-http://localhost:3000}
+      APP_URL: ${APP_URL:-http://localhost:7777}
       API_URL: ${API_URL:-http://localhost:3001}
       MINIO_ENDPOINT: http://minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-tahti}
@@ -174,7 +174,7 @@ services:
     networks:
       - giggi-net
     ports:
-      - "127.0.0.1:3000:3000"   # Next.js — reverse-proxy only
+      - "127.0.0.1:7777:3000"   # Next.js — reverse-proxy only
 
   worker:
     image: ${REGISTRY:-registry.tahti.live}/tahti/worker:${TAG:-latest}

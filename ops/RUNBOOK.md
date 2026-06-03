@@ -22,11 +22,16 @@ docker service rollback tahti_web
 # repeat for worker-media, worker-light, chat, orchestrator, website
 ```
 
-**Lab Compose stack** (ports 3010/3011):
+**Lab Compose stack on vimage** (ports **7000** / **3011** — Grafana blackbox probes `:7000`):
 
 ```bash
-cd /srv/tahti && TAG=<git-sha> ./scripts/stack-up.sh
+cd /srv/tahti
+export WEB_PORT=7000 API_PORT=3011
+./scripts/stack-up.sh
 ```
+
+Compose file: `infra/docker-compose.stack.yml` (there is no separate `docker/` script dir).
+Local dev uses `./scripts/stack-up.sh` with default `WEB_PORT=7777`.
 
 ## Backup (unified script)
 

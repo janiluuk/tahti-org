@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import Link from 'next/link'
+import { PublicBrandShell } from '@/components/public-brand-shell'
+import { Callout } from '@/components/ui/from-tahti-ui'
+
 interface Props {
   searchParams: { token?: string }
 }
@@ -10,10 +14,12 @@ export default async function VerifyPage({ searchParams }: Props) {
 
   if (!token) {
     return (
-      <div style={{ maxWidth: 480, margin: '4rem auto', padding: '0 1rem' }}>
+      <PublicBrandShell center>
         <h1>Invalid verification link</h1>
-        <p>This link is missing a token. Please use the link from your email.</p>
-      </div>
+        <p className="brand-muted">
+          This link is missing a token. Please use the link from your email.
+        </p>
+      </PublicBrandShell>
     )
   }
 
@@ -40,14 +46,18 @@ export default async function VerifyPage({ searchParams }: Props) {
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: '4rem auto', padding: '0 1rem' }}>
+    <PublicBrandShell center>
       <h1>{isError ? 'Verification failed' : 'Email verified!'}</h1>
-      <p style={{ color: isError ? 'red' : 'green' }}>{message}</p>
+      {isError ? (
+        <Callout label="Error">{message}</Callout>
+      ) : (
+        <p className="brand-muted">{message}</p>
+      )}
       {!isError && (
-        <p>
-          <a href="/login">Log in to your account</a>
+        <p style={{ marginTop: '1rem' }}>
+          <Link href="/login">Log in to your account</Link>
         </p>
       )}
-    </div>
+    </PublicBrandShell>
   )
 }

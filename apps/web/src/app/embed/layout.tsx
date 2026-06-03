@@ -3,19 +3,12 @@
 
 import type { ReactNode } from 'react'
 import '@/components/brand-public.css'
+import '@tahti/ui/src/components.css'
 
-// Minimal chrome for iframe embeds (M14) — no site footer or navigation.
+/** Minimal chrome for iframe embeds (M14) — brand tokens, no site nav. */
 export default function EmbedLayout({ children }: { children: ReactNode }) {
   return (
-    <div
-      data-tahti-ui="public"
-      style={{
-        margin: 0,
-        padding: '0.75rem',
-        minHeight: '100%',
-        boxSizing: 'border-box',
-      }}
-    >
+    <div data-tahti-ui="brand" className="embed-chrome">
       {children}
     </div>
   )

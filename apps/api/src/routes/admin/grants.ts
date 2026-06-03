@@ -5,9 +5,10 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   GrantPreviewResponseSchema,
   GrantRunResponseSchema,
+  YearPathParamSchema,
   openApiResponse,
   openApiResponses,
-  yearFromPathParams,
+  parseRouteParams,
 } from '@tahti/shared'
 import { buildGrantPreview, runAnnualGrantCalc } from '@tahti/ledger'
 import { requireBoard } from '../../plugins/auth.js'
@@ -27,10 +28,9 @@ const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const forYear = yearFromPathParams(request.params)
-      if (forYear === null) {
-        return reply.status(400).send({ error: 'Invalid year' })
-      }
+      const routeParams = parseRouteParams(YearPathParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid year' })
+      const forYear = parseInt(routeParams.year, 10)
       const preview = await buildGrantPreview(fastify.prisma, forYear)
       return reply.send(preview)
     },
@@ -50,10 +50,9 @@ const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
-      const forYear = yearFromPathParams(request.params)
-      if (forYear === null) {
-        return reply.status(400).send({ error: 'Invalid year' })
-      }
+      const routeParams = parseRouteParams(YearPathParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid year' })
+      const forYear = parseInt(routeParams.year, 10)
 
       const summary = await runAnnualGrantCalc(fastify.prisma, forYear)
 

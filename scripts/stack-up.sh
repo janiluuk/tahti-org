@@ -19,7 +19,7 @@ COMPOSE_FILE="$ROOT/infra/docker-compose.stack.yml"
 COMPOSE=(docker compose -f "$COMPOSE_FILE")
 
 # Defaults avoid clashing with host dev (Giggi on :3000, local Postgres on :5432).
-export WEB_PORT="${WEB_PORT:-3010}"
+export WEB_PORT="${WEB_PORT:-7777}"
 export API_PORT="${API_PORT:-3011}"
 SEED=false
 DOWN=false

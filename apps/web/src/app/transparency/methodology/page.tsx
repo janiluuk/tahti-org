@@ -1,23 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import Link from 'next/link'
+
 export default function MethodologyPage() {
   return (
-    <div
-      style={{
-        maxWidth: 760,
-        margin: '3rem auto',
-        padding: '0 1rem',
-        fontFamily: 'system-ui, sans-serif',
-        lineHeight: 1.6,
-      }}
-    >
+    <>
       <h1>Transparency methodology</h1>
-      <p style={{ color: '#666' }}>
+      <p className="brand-muted">
         How Tahti ry records and publishes its financial data.{' '}
-        <a href="/transparency" style={{ color: '#555' }}>
-          ← Back to transparency dashboard
-        </a>
+        <Link href="/transparency">← Back to transparency dashboard</Link>
       </p>
 
       <section style={{ marginTop: '2rem' }}>
@@ -189,6 +181,6 @@ export default function MethodologyPage() {
           </a>
         </p>
       </footer>
-    </div>
+    </>
   )
 }

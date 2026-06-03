@@ -95,7 +95,7 @@ Run the same lint, format, and typecheck gates as CI locally:
 pnpm ci:check
 ```
 
-Full app stack in Docker (API, web, worker, postgres, redis, minio — ports **3010** / **3011**):
+Full app stack in Docker (API, web, worker, postgres, redis, minio — ports **7777** / **3011**):
 
 ```bash
 make stack-up          # or ./scripts/stack-up.sh --seed for demo fixtures
@@ -107,7 +107,7 @@ Optional bash e2e against a running API:
 ```bash
 API_URL=http://localhost:3001 pnpm test:e2e
 SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/tahti \
-  API_URL=http://localhost:3001 APP_URL=http://localhost:3010 pnpm test:e2e:journeys
+  API_URL=http://localhost:3011 APP_URL=http://localhost:7777 pnpm test:e2e:journeys
 # With web up: pnpm test:e2e:journeys:web
 # Dashboard + player (web): pnpm test:e2e:dashboard-player:web
 # Persona scripts (source helpers + fixtures first): journeys/listener|artist|member.sh

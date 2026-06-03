@@ -4,7 +4,7 @@
 #   ./ops/monitoring/vimage6/deploy.sh
 #
 # Installs:
-#   - Grafana dashboard → /opt/monitoring/grafana/provisioning/dashboards/tahti-vital-services.json
+#   - Grafana dashboards → tahti-overview.json, tahti-vital-services.json
 #   - Blackbox exporter (if missing) on :9115
 #   - Prometheus scrape jobs (appended once) for Tahti /metrics + HTTP probes
 #
@@ -24,6 +24,9 @@ ssh "$HOST" "mkdir -p '${BLACKBOX_DIR}' '${GRAFANA_DASH_DIR}'"
 scp "${ROOT}/ops/monitoring/vimage6/blackbox.yml" \
   "${HOST}:${BLACKBOX_DIR}/blackbox.yml"
 
+scp "${ROOT}/ops/monitoring/vimage6/tahti-overview.json" \
+  "${HOST}:${GRAFANA_DASH_DIR}/tahti-overview.json"
+
 scp "${ROOT}/ops/monitoring/vimage6/tahti-vital-services.json" \
   "${HOST}:${GRAFANA_DASH_DIR}/tahti-vital-services.json"
 
@@ -33,6 +36,14 @@ if ! ssh "$HOST" "grep -q '${MARKER}' '${PROM_DIR}/prometheus.yml' 2>/dev/null";
 else
   echo "==> Prometheus snippet already present — skipping append"
 fi
+
+echo "==> Syncing lab web probe port (7000)"
+ssh "$HOST" "sed -i \
+  -e 's|http://192.168.2.100:7777/|http://192.168.2.100:7000/|g' \
+  -e 's|http://192.168.2.100:3010/|http://192.168.2.100:7000/|g' \
+  -e \"s|regex: '.*:7777/.*'|regex: '.*:7000/.*'|g\" \
+  -e \"s|regex: '.*:3010/.*'|regex: '.*:7000/.*'|g\" \
+  '${PROM_DIR}/prometheus.yml' 2>/dev/null || true"
 
 if ! ssh "$HOST" "docker ps --format '{{.Names}}' | grep -qx monitoring-blackbox"; then
   echo "==> Starting blackbox exporter"
@@ -52,4 +63,6 @@ ssh "$HOST" "docker kill -s HUP monitoring-prometheus 2>/dev/null || docker rest
 ssh "$HOST" "docker restart monitoring-grafana"
 
 echo ""
-echo "Done. Open Grafana on vimage6 → dashboard 'Tahti vital services' (uid: tahti-vital-services)."
+echo "Done. Open Grafana (monitor.dudeisland.eu / vimage6):"
+echo "  - Tahti — lab overview (uid: tahti-overview)"
+echo "  - Tahti vital services (uid: tahti-vital-services)"

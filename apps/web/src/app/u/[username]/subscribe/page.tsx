@@ -38,7 +38,7 @@ export default async function SubscribePage({ params }: { params: { username: st
   }
 
   return (
-    <div className="brand-public" style={{ maxWidth: 760 }}>
+    <div style={{ maxWidth: 760 }}>
       <a
         href={`/u/${data.artist.username}`}
         className="brand-muted"

@@ -4,6 +4,7 @@
 import { randomUUID } from 'node:crypto'
 import fp from 'fastify-plugin'
 import type { FastifyPluginAsync } from 'fastify'
+import { recordHttpRequest } from '../lib/http-metrics.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -41,6 +42,7 @@ const requestLogPlugin: FastifyPluginAsync = async (fastify) => {
     }
     if (request.sessionUser?.id) entry.userId = request.sessionUser.id
 
+    recordHttpRequest(reply.statusCode, entry.responseTimeMs as number)
     request.log.info(entry)
   })
 }

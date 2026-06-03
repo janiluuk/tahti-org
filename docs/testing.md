@@ -17,6 +17,6 @@ pnpm --filter @tahti/db db:generate
 ## Test data isolation
 
 - Prefer `cleanupUsersByEmailPrefix(prisma, 'my-prefix-')` for artist fixtures.
-- Use `allocateMemberNumber(prisma)` instead of hard-coded `memberNumber` bands (PLAT-012).
+- `createTestArtist(..., { isMember: true })` auto-allocates `memberNumber` when omitted; or call `allocateMemberNumber(prisma)` explicitly (PLAT-012).
 - Vitest: `maxWorkers: 1` in root `vitest.config.ts` until Testcontainers lands.
 - CI applies schema with `db push`; `prisma migrate status` runs only after `prisma/migrations` exists.

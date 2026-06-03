@@ -284,6 +284,48 @@ export const VenuePublicProfileSchema = z
   })
   .passthrough()
 
+export const VenueRecordSchema = z.object({ id: z.string(), slug: z.string() }).passthrough()
+
+export const VenueBroadcastRecordSchema = z.object({ id: z.string() }).passthrough()
+
+export const AdminVenueListEntrySchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  name: z.string(),
+  city: z.string(),
+  countryCode: z.string(),
+  verifiedAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+  createdBy: z.string(),
+})
+
+export const AdminVenueListSchema = z.array(AdminVenueListEntrySchema)
+
+export const MixcloudConnectionStatusSchema = z.object({
+  connected: z.boolean(),
+  configured: z.boolean(),
+})
+
+export const MixcloudDisconnectSchema = z.object({
+  connected: z.literal(false),
+})
+
+export const MixcloudQueueResponseSchema = z.object({
+  mixUploadId: z.string(),
+  status: z.string(),
+})
+
+export const MixcloudUploadStatusSchema = z.object({
+  status: z.string(),
+  mixcloudUrl: z.string().nullable(),
+  error: z.string().nullable(),
+  completedAt: z.coerce.date().nullable(),
+})
+
+export const InternalWebhookOkSchema = z.object({
+  ok: z.literal(true),
+})
+
 export const PublicChannelUserSchema = z.object({
   username: z.string(),
   displayName: z.string(),
