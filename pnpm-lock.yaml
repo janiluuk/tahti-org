@@ -68,6 +68,12 @@ importers:
       '@tahti/ledger':
         specifier: workspace:*
         version: link:../../packages/ledger
+      '@tahti/mixcloud':
+        specifier: workspace:*
+        version: link:../../packages/mixcloud
+      '@tahti/revelator':
+        specifier: workspace:*
+        version: link:../../packages/revelator
       '@tahti/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -93,9 +99,6 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
     devDependencies:
-      '@tahti/mixcloud':
-        specifier: workspace:*
-        version: link:../../packages/mixcloud
       '@types/node':
         specifier: ^24.0.0
         version: 24.12.4
@@ -169,6 +172,9 @@ importers:
       '@tahti/mixcloud':
         specifier: workspace:*
         version: link:../../packages/mixcloud
+      '@tahti/revelator':
+        specifier: workspace:*
+        version: link:../../packages/revelator
       '@tahti/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -181,6 +187,9 @@ importers:
       nodemailer:
         specifier: ^6.9.14
         version: 6.10.1
+      redis:
+        specifier: ^6.0.0
+        version: 6.0.0
     devDependencies:
       '@types/fluent-ffmpeg':
         specifier: ^2.1.25
@@ -241,6 +250,18 @@ importers:
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
+
+  packages/revelator:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.12.4
+      typescript:
+        specifier: ^5.5.2
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.1(@types/node@24.12.4)
 
   packages/shared:
     dependencies:

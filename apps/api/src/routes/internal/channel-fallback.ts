@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { archivePlaybackKey } from '@tahti/shared'
 import { config } from '../../config.js'
+import { buildFallbackPlaybackRows, renderFallbackM3u } from '../../lib/fallback-playlist.js'
 
 // Liquidsoap calls this to get the current fallback playlist for a channel.
 // Returns an extended M3U with HTTP URLs to archive playback files (MP3 or FLAC).
@@ -17,31 +17,36 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       return reply.status(401).send('unauthorized')
     }
 
+    const channel = await fastify.prisma.channel.findUnique({
+      where: { id: channelId },
+      select: { fallbackMode: true },
+    })
+    if (!channel) {
+      return reply.status(404).send('channel not found')
+    }
+
     const items = await fastify.prisma.archiveItem.findMany({
       where: {
         channelId,
         status: 'READY',
         OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
       },
-      orderBy: { createdAt: 'asc' },
-      select: { id: true, title: true, mp3Key: true, flacKey: true, durationSec: true },
+      select: {
+        id: true,
+        title: true,
+        mp3Key: true,
+        flacKey: true,
+        durationSec: true,
+        isFallback: true,
+        fallbackOrder: true,
+        lastFallbackPlayedAt: true,
+      },
     })
 
-    if (items.length === 0) {
-      // Return a silent fallback so Liquidsoap doesn't crash
-      return reply.header('Content-Type', 'audio/x-mpegurl').send('#EXTM3U\n# no items yet\n')
-    }
+    const rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
+    const body = renderFallbackM3u(rows, config.minio.publicEndpoint, config.minio.bucket)
 
-    const lines: string[] = ['#EXTM3U']
-    for (const item of items) {
-      const playbackKey = archivePlaybackKey(item)
-      if (!playbackKey) continue
-      const duration = item.durationSec ?? -1
-      lines.push(`#EXTINF:${duration},${item.title}`)
-      lines.push(`${config.minio.publicEndpoint}/${config.minio.bucket}/${playbackKey}`)
-    }
-
-    return reply.header('Content-Type', 'audio/x-mpegurl').send(lines.join('\n') + '\n')
+    return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
   })
 }
 

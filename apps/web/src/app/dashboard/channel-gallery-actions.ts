@@ -17,6 +17,7 @@ function sessionHeader() {
 export async function updateChannelGallery(payload: {
   galleryMode?: ChannelGalleryMode
   slideshowImages?: string[]
+  videoBackgroundUrl?: string | null
 }): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/channel/gallery`, {
     method: 'PATCH',

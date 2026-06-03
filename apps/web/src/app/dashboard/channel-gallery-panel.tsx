@@ -23,11 +23,16 @@ const SIMPLE_MODES = CHANNEL_GALLERY_MODES.filter((m) => m === 'NONE' || m === '
 export default function ChannelGalleryPanel({
   initial,
 }: {
-  initial: { galleryMode: ChannelGalleryMode; slideshowImages: string[] }
+  initial: {
+    galleryMode: ChannelGalleryMode
+    slideshowImages: string[]
+    videoBackgroundUrl?: string | null
+  }
 }) {
   const router = useRouter()
   const [galleryMode, setGalleryMode] = useState<ChannelGalleryMode>(initial.galleryMode)
   const [imageLines, setImageLines] = useState(initial.slideshowImages.join('\n'))
+  const [videoBackgroundUrl, setVideoBackgroundUrl] = useState(initial.videoBackgroundUrl ?? '')
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -45,7 +50,12 @@ export default function ChannelGalleryPanel({
     }
 
     startTransition(async () => {
-      const res = await updateChannelGallery({ galleryMode, slideshowImages })
+      const videoUrl = videoBackgroundUrl.trim()
+      const res = await updateChannelGallery({
+        galleryMode,
+        slideshowImages,
+        videoBackgroundUrl: videoUrl ? videoUrl : null,
+      })
       if (res.error) {
         setError(res.error)
         return
@@ -106,6 +116,22 @@ export default function ChannelGalleryPanel({
           cross-origin access (CORS) from your channel page.
         </Alert>
       )}
+
+      <Field
+        label="Channel video backdrop (optional)"
+        htmlFor="video-background"
+        hint="HTTPS image URL or YouTube/Vimeo watch link — muted backdrop on your channel page."
+      >
+        <input
+          id="video-background"
+          type="url"
+          value={videoBackgroundUrl}
+          disabled={isPending}
+          placeholder="https://www.youtube.com/watch?v=…"
+          onChange={(e) => setVideoBackgroundUrl(e.target.value)}
+          style={{ width: '100%', padding: '0.5rem', fontFamily: 'inherit' }}
+        />
+      </Field>
 
       {galleryMode !== 'NONE' && (
         <Field

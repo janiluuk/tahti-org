@@ -9,6 +9,8 @@ import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
 import { createRelease, publishRelease, updateReleaseSmartLinks } from './release-actions'
 import ReleaseOpsPanel, { parseCredits } from './release-ops-panel'
+import { ReleaseArtworkUpload } from './release-artwork-upload'
+import { ReleaseTrackVersionPanel } from './release-track-version-panel'
 
 const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
   { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
@@ -28,6 +30,7 @@ interface ReleaseSummary {
   description?: string | null
   artworkUrl?: string | null
   smartLinkSlug: string
+  smartLinkViewCount?: number
   smartLinkTargets: Record<string, string> | null
   upc?: string | null
   musicbrainzReleaseId?: string | null
@@ -37,7 +40,8 @@ interface ReleaseSummary {
   labelImprint?: string | null
   credits?: unknown
   revelatorStatus?: string | null
-  tracks?: Array<{ isrc: string | null }>
+  revelatorId?: string | null
+  tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
 }
@@ -144,6 +148,9 @@ export default function ReleasesPanel({
                     <>
                       <Link href={`/r/${r.smartLinkSlug}`} style={{ fontSize: '0.8rem' }}>
                         Smart link
+                        {typeof r.smartLinkViewCount === 'number' && r.smartLinkViewCount > 0
+                          ? ` (${r.smartLinkViewCount} views)`
+                          : ''}
                       </Link>
                       <button
                         type="button"
@@ -170,6 +177,16 @@ export default function ReleasesPanel({
                   )}
                 </span>
               </div>
+              <ReleaseArtworkUpload releaseId={r.id} artworkUrl={r.artworkUrl} />
+              {(r.tracks ?? []).map((t) => (
+                <ReleaseTrackVersionPanel
+                  key={t.id}
+                  releaseId={r.id}
+                  trackId={t.id}
+                  trackTitle={t.title}
+                  trackStatus={t.status ?? 'PENDING'}
+                />
+              ))}
               <ReleaseOpsPanel
                 releaseId={r.id}
                 releaseTitle={r.title}
@@ -196,6 +213,8 @@ export default function ReleasesPanel({
                     },
                   ]
                 }
+                revelatorStatus={r.revelatorStatus}
+                revelatorId={r.revelatorId}
               />
             </li>
           ))}

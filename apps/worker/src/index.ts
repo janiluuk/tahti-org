@@ -7,6 +7,7 @@ import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
 import { processTranscodeVersionJob } from './jobs/transcode-version.js'
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
+import { processTranscodeReleaseTrackVersionJob } from './jobs/transcode-release-track-version.js'
 import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
 import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
@@ -14,6 +15,12 @@ import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
 import { processFanSubPayouts } from './jobs/fan-sub-payout.js'
 import { processFanSubExpire } from './jobs/fan-sub-expire.js'
+import { processDownloadFraudScanJob } from './jobs/download-fraud-scan.js'
+import {
+  processMembershipLapseJob,
+  processMembershipRenewalJob,
+} from './jobs/membership-lifecycle.js'
+import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -31,6 +38,8 @@ const worker = new Worker(
       await processTranscodeVersionJob(job)
     } else if (job.name === 'transcode-release-track') {
       await processTranscodeReleaseTrackJob(job)
+    } else if (job.name === 'transcode-release-track-version') {
+      await processTranscodeReleaseTrackVersionJob(job)
     } else if (job.name === 'mixcloud-upload') {
       await processMixcloudUploadJob(job)
     } else if (job.name === 'newsletter-dispatch') {
@@ -51,6 +60,14 @@ const worker = new Worker(
     } else if (job.name === 'fan-sub-expire') {
       const summary = await processFanSubExpire(prisma)
       console.log('[worker] fan-sub-expire:', JSON.stringify(summary))
+    } else if (job.name === 'download-fraud-scan') {
+      await processDownloadFraudScanJob(job)
+    } else if (job.name === 'membership-renewal-reminder') {
+      await processMembershipRenewalJob(job)
+    } else if (job.name === 'membership-lapse') {
+      await processMembershipLapseJob(job)
+    } else if (job.name === 'revelator-deliver') {
+      await processRevelatorDeliverJob(job)
     } else if (job.name === 'annual-grant-calc') {
       // Default to the prior calendar year (matches Finnish fiscal year).
       const { year } = job.data as { year?: number }
@@ -116,6 +133,27 @@ async function registerCrons() {
     'fan-sub-expire',
     {},
     { repeat: { pattern: '0 5 * * *' }, jobId: 'fan-sub-expire-cron' },
+  )
+
+  // M18: flag suspicious download spikes for board review (06:00 UTC)
+  await queue.add(
+    'download-fraud-scan',
+    {},
+    { repeat: { pattern: '0 6 * * *' }, jobId: 'download-fraud-scan-cron' },
+  )
+
+  // M1: renewal reminder emails ~30 days before annual membership expires (07:00 UTC)
+  await queue.add(
+    'membership-renewal-reminder',
+    {},
+    { repeat: { pattern: '0 7 * * *' }, jobId: 'membership-renewal-reminder-cron' },
+  )
+
+  // M1: lapse memberships past 365 days without renewal (08:00 UTC)
+  await queue.add(
+    'membership-lapse',
+    {},
+    { repeat: { pattern: '0 8 * * *' }, jobId: 'membership-lapse-cron' },
   )
 
   await queue.close()

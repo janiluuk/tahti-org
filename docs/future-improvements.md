@@ -44,8 +44,8 @@ Last reviewed: 2026-06-03 (audit pass)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Stripe Customer Portal~~ — `POST /api/me/membership/portal` (done) |
-| P1 | Renewal reminder emails before lapse |
-| P2 | Membership lapse → downgrade tier to `FREE` automatically |
+| ~~P1~~ | ~~Renewal reminder emails before lapse~~ — worker cron (done) |
+| ~~P2~~ | ~~Membership lapse → downgrade tier to `FREE` automatically~~ — worker cron (done) |
 
 ### M19 — Fan subscriptions
 | P | Item |
@@ -70,7 +70,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | ~~P1~~ | ~~24h net-new-IP threshold~~ — done |
 | ~~P2~~ | ~~Release-track downloads~~ — done (basic) |
 | P2 | Tor exit / datacenter IP allowlist |
-| P2 | Nightly fraud-scan cron (velocity anomalies) |
+| ~~P2~~ | ~~Nightly fraud-scan cron (velocity anomalies)~~ — done |
 | P2 | FLAC/source formats for all release-track tiers (parity with archive) |
 
 ### M11 — Hardening (remaining)
@@ -111,7 +111,7 @@ Last reviewed: 2026-06-03 (audit pass)
 ### Still largely open
 | Milestone | Notes |
 |---|---|
-| **M7** | Mixcloud OAuth UI + Revelator DSP wizard |
+| **M7** | Revelator royalty sync, €8/release Stripe, production OAuth credentials |
 | **M30** | Release ops toolkit — MusicBrainz submission, ISRC/UPC/credits, release checklist, export pack |
 | **M21** | Browser audio editor |
 | **M24–M28** | Visuals, commentary, custom radio page, 24/7 scheduler, track version history |

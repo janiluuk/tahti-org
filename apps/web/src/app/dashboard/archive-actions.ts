@@ -105,3 +105,22 @@ export async function activateArchiveVersion(
   }
   return { versions: await res.json(), error: null }
 }
+
+export async function fetchDownloadGateStats(itemId: string): Promise<{
+  stats?: {
+    artistFollowerCount: number
+    repostAckCount: number
+    blockedDownloadAttempts: number
+  }
+  error: string | null
+}> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/download-gate-stats`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to load gate stats' }
+  }
+  return { stats: await res.json(), error: null }
+}

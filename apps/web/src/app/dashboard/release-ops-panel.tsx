@@ -6,13 +6,18 @@
 import { useState, useTransition } from 'react'
 import {
   COLLECTING_SOCIETY_POINTERS,
+  MUSICBRAINZ_GUIDE_STEPS,
   MUSICBRAINZ_SUBMIT_URL,
   POST_RELEASE_CLAIM_LINKS,
   RELEASE_CREDIT_ROLES,
   type ReleaseChecklistItem,
   type ReleaseCredit,
 } from '@tahti/shared'
-import { fetchReleaseExportJson, updateReleaseCatalog } from './release-actions'
+import {
+  fetchReleaseExportJson,
+  submitReleaseToRevelator,
+  updateReleaseCatalog,
+} from './release-actions'
 
 type CatalogState = {
   upc: string
@@ -43,6 +48,8 @@ export default function ReleaseOpsPanel({
   initial,
   initialCredits,
   checklist: initialChecklist,
+  revelatorStatus: initialRevelatorStatus,
+  revelatorId: initialRevelatorId,
 }: {
   releaseId: string
   releaseTitle: string
@@ -50,6 +57,8 @@ export default function ReleaseOpsPanel({
   initial: CatalogState
   initialCredits: ReleaseCredit[]
   checklist: ReleaseChecklistItem[]
+  revelatorStatus?: string | null
+  revelatorId?: string | null
 }) {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(initial)
@@ -57,8 +66,12 @@ export default function ReleaseOpsPanel({
     initialCredits.length > 0 ? initialCredits : [],
   )
   const [checklist, setChecklist] = useState(initialChecklist)
+  const [revelatorStatus, setRevelatorStatus] = useState(initialRevelatorStatus ?? null)
+  const revelatorId = initialRevelatorId ?? null
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  const canSubmitRevelator = !revelatorStatus || revelatorStatus === 'failed'
 
   function save() {
     setError(null)
@@ -291,6 +304,55 @@ export default function ReleaseOpsPanel({
             >
               Add on MusicBrainz →
             </a>
+          </div>
+
+          <div
+            style={{ marginTop: '1rem', padding: '0.75rem', background: '#fff', borderRadius: 6 }}
+          >
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+              Revelator DSP delivery (M7)
+            </div>
+            <p style={{ fontSize: '0.85rem', color: '#666', margin: '0 0 0.5rem' }}>
+              Submits catalog metadata from this release to Revelator (Spotify, Apple, etc.).
+              Requires UPC or ISRC on every track. Pre-fills from the fields above.
+            </p>
+            {revelatorStatus && (
+              <p style={{ fontSize: '0.9rem', margin: '0 0 0.5rem' }}>
+                Status: <strong>{revelatorStatus}</strong>
+                {revelatorId && <span style={{ color: '#666' }}> · id {revelatorId}</span>}
+              </p>
+            )}
+            <button
+              type="button"
+              disabled={isPending || !canSubmitRevelator}
+              onClick={() => {
+                setError(null)
+                startTransition(async () => {
+                  const res = await submitReleaseToRevelator(releaseId)
+                  if (res.error) {
+                    setError(res.error)
+                    return
+                  }
+                  if (res.revelatorStatus) setRevelatorStatus(res.revelatorStatus)
+                })
+              }}
+              style={{ fontSize: '0.9rem' }}
+            >
+              {isPending ? 'Submitting…' : 'Submit to Revelator'}
+            </button>
+          </div>
+
+          <div style={{ marginTop: '1rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+              MusicBrainz submission guide
+            </div>
+            <ol style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#444' }}>
+              {MUSICBRAINZ_GUIDE_STEPS.map((step) => (
+                <li key={step} style={{ marginBottom: '0.35rem' }}>
+                  {step}
+                </li>
+              ))}
+            </ol>
           </div>
 
           <div style={{ marginTop: '1rem' }}>

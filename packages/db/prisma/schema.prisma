@@ -169,6 +169,9 @@ enum AuditAction {
   VOTE_CAST
   GRANT_RUN
   STRIPE_WEBHOOK_ERROR
+  DOWNLOAD_FRAUD_ALERT
+  MEMBERSHIP_RENEWAL_REMINDER
+  MEMBERSHIP_LAPSED
 
   @@schema("governance")
 }
@@ -316,6 +319,7 @@ model User {
   weeklyLiveSecondsUsed Int        @default(0)
   weeklyLiveResetAt     DateTime?
   mentionsEnabled       Boolean    @default(true)
+  mixcloudAccessTokenEnc String?   // M7: OAuth access token (AES-GCM, same key as RTMP)
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
@@ -338,6 +342,8 @@ model User {
   mentionsMuted         MentionMute[]            @relation("MuterMutes")
   mentionsMutedBy       MentionMute[]            @relation("MuteTarget")
   collections           Collection[]
+  artistFollowers       ArtistFollow[]       @relation("ArtistFollowers")
+  artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
 
   @@schema("core")
 }
@@ -404,6 +410,7 @@ model Channel {
   textLayerMode      ChannelTextLayerMode @default(NONE)
   textLayerText      String               @default("")
   textLayerAlign     ChannelTextLayerAlign @default(CENTER)
+  videoBackgroundUrl String?              // M26: YouTube/Vimeo or image URL for channel backdrop
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -495,9 +502,11 @@ model ArchiveItem {
   fileSizeBytes BigInt
   status        ArchiveItemStatus @default(PENDING)
   isPublic      Boolean           @default(true)
-  isFallback    Boolean           @default(false)
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  isFallback           Boolean           @default(false)
+  fallbackOrder        Int?              // M27: position in ordered offline rotation
+  lastFallbackPlayedAt DateTime?         // M27: fair shuffle — least recent first
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
   mixUpload      MixUpload?
   collectionItems CollectionItem[]
@@ -675,6 +684,32 @@ model Download {
   @@schema("engagement")
 }
 
+// M22: lightweight artist follow (unlock follow-gated downloads; not a social graph).
+model ArtistFollow {
+  followerUserId String
+  artistUserId   String
+  follower       User     @relation("ArtistFollowing", fields: [followerUserId], references: [id], onDelete: Cascade)
+  artist         User     @relation("ArtistFollowers", fields: [artistUserId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@id([followerUserId, artistUserId])
+  @@index([artistUserId])
+  @@schema("engagement")
+}
+
+// M22: listener acknowledged sharing (repost-gated downloads).
+model ArchiveRepostAck {
+  id            String   @id @default(cuid())
+  archiveItemId String
+  byUserId      String?
+  byFingerprint String
+  createdAt     DateTime @default(now())
+
+  @@unique([archiveItemId, byFingerprint])
+  @@index([archiveItemId])
+  @@schema("engagement")
+}
+
 // ── Fan-to-artist subscriptions (M19) ─────────────────────────────────────────
 // Listeners subscribe directly to an artist. Money flows to the artist via
 // Stripe Connect minus Stripe fees and a 2% operational fee (passthrough, not
@@ -751,10 +786,12 @@ model Release {
   title            String
   type             ReleaseType
   artworkUrl       String?
+  artworkKey       String?      // M12: cover image in MinIO (presigned for public URLs)
   releaseDate      DateTime
   description      String?
   smartLinkSlug    String       @unique
   smartLinkTargets Json?        // {spotify, apple, tidal, bandcamp, ...}
+  smartLinkViewCount Int        @default(0) // M14: public /r/:slug loads
   state            ReleaseState @default(DRAFT)
   publishedAt      DateTime?
   commentary       String?      // M25: artist notes on the release (Markdown)
@@ -802,7 +839,32 @@ model ReleaseTrack {
   status           TrackStatus @default(PENDING)
   createdAt        DateTime    @default(now())
 
+  versions         ReleaseTrackVersion[]
+
   @@unique([releaseId, position])
+  @@schema("release")
+}
+
+// M28: audio file versions for a release track (stable public track id).
+model ReleaseTrackVersion {
+  id               String      @id @default(cuid())
+  releaseTrackId   String
+  releaseTrack     ReleaseTrack @relation(fields: [releaseTrackId], references: [id], onDelete: Cascade)
+  versionNumber    Int
+  versionLabel     String
+  sourceKey        String
+  sourceFormat     String?
+  sourceSampleRate Int?
+  sourceBitDepth   Int?
+  streamKey        String?
+  flacKey          String?
+  durationSec      Int?
+  status           TrackStatus @default(PENDING)
+  isActive         Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+
+  @@unique([releaseTrackId, versionNumber])
+  @@index([releaseTrackId, createdAt(sort: Desc)])
   @@schema("release")
 }
 

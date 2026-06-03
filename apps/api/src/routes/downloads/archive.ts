@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto'
 import { archivePlaybackKey } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
+import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
 import { config } from '../../config.js'
 
 // M18 — downloads as a first-class action with engagement-unit accounting.
@@ -48,9 +49,66 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
 
     const item = await fastify.prisma.archiveItem.findFirst({
       where: { id: itemId, channelId: channel.id, status: 'READY' },
-      select: { id: true, mp3Key: true, flacKey: true, fileSizeBytes: true },
+      select: {
+        id: true,
+        mp3Key: true,
+        flacKey: true,
+        fileSizeBytes: true,
+        repostToDownload: true,
+        followToDownload: true,
+      },
     })
     if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+    const salt = dailySalt()
+    const fingerprintInput = query.fp?.trim() || `${request.headers['user-agent'] ?? 'unknown'}`
+    const byFingerprint = sha256(`${fingerprintInput}:${salt}`)
+    const byUserId = request.sessionUser?.id ?? null
+
+    const gates = await resolveDownloadGateStatus(fastify.prisma, {
+      artistUserId: channel.userId,
+      archiveItemId: item.id,
+      repostToDownload: item.repostToDownload,
+      followToDownload: item.followToDownload,
+      byUserId,
+      byFingerprint,
+      skipGates: byUserId === channel.userId,
+    })
+    if (!gates.canDownload) {
+      const missing: string[] = []
+      if (gates.repostRequired && !gates.repostSatisfied) missing.push('repost')
+      if (gates.followRequired && !gates.followSatisfied) missing.push('follow')
+      const gateReason =
+        missing.includes('repost') && !missing.includes('follow')
+          ? 'gate_repost'
+          : missing.includes('follow')
+            ? 'gate_follow'
+            : 'gate_repost'
+      await fastify.prisma.download.create({
+        data: {
+          channelId: channel.id,
+          archiveItemId: item.id,
+          format: 'gate',
+          byUserId,
+          byFingerprint,
+          byIpHash: sha256(`${request.ip}:${salt}`),
+          bytes: 0,
+          countedAt: null,
+          reason: gateReason,
+          weight: 0,
+        },
+      })
+      return reply.status(403).send({
+        error:
+          missing.includes('follow') && !byUserId
+            ? 'Sign in and follow this artist to download'
+            : missing.includes('follow')
+              ? 'Follow this artist to download'
+              : 'Acknowledge sharing this track to download',
+        gates: missing,
+      })
+    }
+
     const wantFlac = query.format === 'flac' && item.flacKey && channel.user.tier !== 'FREE'
     const objectKey = wantFlac ? item.flacKey! : archivePlaybackKey(item)
     if (!objectKey) {
@@ -58,9 +116,6 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
     }
     const servedFlac = wantFlac || (!item.mp3Key && Boolean(item.flacKey))
 
-    const salt = dailySalt()
-    const fingerprintInput = query.fp?.trim() || `${request.headers['user-agent'] ?? 'unknown'}`
-    const byFingerprint = sha256(`${fingerprintInput}:${salt}`)
     const byIpHash = sha256(`${request.ip}:${salt}`)
 
     // Rate limit by fingerprint OR IP (whichever trips first).
@@ -92,7 +147,6 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Determine grant weight. An active fan-subscriber to this artist (M19)
     // gets a 5× paid-download weight; everyone else is a free download.
-    const byUserId = request.sessionUser?.id ?? null
     const weight =
       byUserId && (await isActiveFanSubscriber(fastify.prisma, channel.userId, byUserId)) ? 5 : 1
 

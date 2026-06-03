@@ -17,3 +17,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 export * from '@prisma/client'
 export { ensureInitialVersion, syncActiveVersionToItem } from './archive-versions.js'
+export {
+  ensureInitialReleaseTrackVersion,
+  syncActiveVersionToTrack,
+} from './release-track-versions.js'

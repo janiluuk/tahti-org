@@ -321,7 +321,9 @@ enum FanSubPayoutState { PENDING PAID FAILED REFUNDED }
 
 ## Worker jobs
 
-- `download-fraud-scan` — daily, flags artists with >20× day-over-day download growth for manual review
+- `download-fraud-scan` — daily 06:00 UTC, flags channels with >20× day-over-day counted download growth (`DOWNLOAD_FRAUD_ALERT` audit)
+- `membership-renewal-reminder` — daily 07:00 UTC, email ~30 days before annual membership expiry (deduped via audit log)
+- `membership-lapse` — daily 08:00 UTC, suspends ARTIST memberships older than 365 days without renewal
 - `download-unit-rollup` — every 15 min, aggregates eligible downloads into `engagement_units_daily` table
 - `fan-sub-payout-cron` — daily, processes Stripe Connect transfers for fan-subs whose billing period closed
 - `fan-sub-grant-units-rollup` — monthly, aggregates fan-sub euros received per artist

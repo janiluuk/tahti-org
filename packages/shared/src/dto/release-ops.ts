@@ -124,6 +124,16 @@ export function computeReleaseChecklist(release: ReleaseForChecklist): ReleaseCh
 }
 
 export const MUSICBRAINZ_SUBMIT_URL = 'https://musicbrainz.org/release/add'
+
+export const MUSICBRAINZ_GUIDE_STEPS = [
+  'Export JSON from the release ops panel (or copy UPC, ISRC, credits, P/C-lines).',
+  'Open MusicBrainz “Add release” and choose the release type (Album, EP, Single, etc.).',
+  'Enter the release title, artist credit, and date — match your Tahti release date.',
+  'Add medium and tracklist rows; paste ISRCs from your export when you have them.',
+  'Add label, catalog number, and barcode (UPC/EAN) if applicable.',
+  'Save the release, then copy the release MBID back into Tahti.',
+  'Optional: add an artist MBID for the primary artist credit.',
+] as const
 export const COLLECTING_SOCIETY_POINTERS = [
   {
     id: 'teosto',

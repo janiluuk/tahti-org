@@ -387,9 +387,10 @@ export function ArchiveMetadataFields({
           />
         </label>
         <label>
-          <span style={labelStyle}>Background image URL</span>
+          <span style={labelStyle}>Background URL (image or YouTube/Vimeo)</span>
           <input
             type="url"
+            placeholder="https://… or https://youtu.be/…"
             value={state.backgroundUrl}
             disabled={disabled}
             onChange={(e) => set({ backgroundUrl: e.target.value })}

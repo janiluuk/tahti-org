@@ -110,6 +110,7 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
           break
       }
     } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
       request.log.error({ err, type: event.type }, 'stripe webhook handler error')
       await auditLog(fastify.prisma, {
         action: 'STRIPE_WEBHOOK_ERROR',
@@ -118,9 +119,14 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
         meta: {
           eventType: event.type,
           eventId: event.id,
-          message: err instanceof Error ? err.message : String(err),
+          message,
         },
       })
+      // Permanent data errors: ack so Stripe does not retry forever.
+      if (message === 'User not found') {
+        return reply.send({ received: true })
+      }
+      return reply.status(500).send({ error: 'Webhook handler failed', received: false })
     }
 
     return reply.send({ received: true })

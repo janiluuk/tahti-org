@@ -99,6 +99,9 @@ describe('M12 — releases and public profile', () => {
     expect(link.json().targets.spotify).toContain('spotify.com')
     expect(link.json().embedUrl).toContain(`/embed/r/${release!.id}`)
     expect(Array.isArray(link.json().featuredCollections)).toBe(true)
+
+    const after = await prisma.release.findUnique({ where: { id: release!.id } })
+    expect(after!.smartLinkViewCount).toBeGreaterThanOrEqual(1)
   })
 
   it('updates smart link targets on a release', async () => {

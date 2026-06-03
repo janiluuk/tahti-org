@@ -89,6 +89,10 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
     const startedAt = broadcast.startedAt
     const title = `Live set — ${startedAt.toISOString().slice(0, 10)}`
 
+    const rotationCount = await prisma.archiveItem.count({
+      where: { channelId: broadcast.channel.id, isFallback: true },
+    })
+
     const archiveItem = await prisma.archiveItem.create({
       data: {
         channelId: broadcast.channel.id,
@@ -104,6 +108,8 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         license: 'ALL_RIGHTS_RESERVED',
         releasedAt: startedAt,
         isPublic: true,
+        isFallback: true,
+        fallbackOrder: rotationCount,
         useDetectedBpmKey: true,
         description: `Auto-archived live broadcast from ${startedAt.toISOString()}`,
       },

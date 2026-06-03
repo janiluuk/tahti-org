@@ -55,7 +55,14 @@ interface ProfileResponse {
     type: string
     releaseDate: string
     description: string | null
-    tracks: Array<{ position: number; title: string; durationSec: number | null }>
+    tracks: Array<{
+      position: number
+      title: string
+      durationSec: number | null
+      archiveItemId?: string | null
+      playUrl?: string | null
+      channelItemUrl?: string | null
+    }>
   }>
   links: { channel: string | null; subscribe: string }
   collections?: Array<{
@@ -154,10 +161,28 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 {r.tracks.length > 0 && (
                   <ol style={{ margin: '0.5rem 0 0', paddingLeft: '1.25rem', color: '#444' }}>
                     {r.tracks.map((t) => (
-                      <li key={t.position}>
+                      <li
+                        key={t.position}
+                        id={t.archiveItemId ? `archive-item-${t.archiveItemId}` : undefined}
+                      >
                         {t.title}
                         {t.durationSec != null &&
                           ` (${Math.floor(t.durationSec / 60)}:${String(t.durationSec % 60).padStart(2, '0')})`}
+                        {t.playUrl && (
+                          <audio
+                            controls
+                            src={t.playUrl}
+                            style={{ display: 'block', width: '100%', marginTop: '0.35rem' }}
+                          />
+                        )}
+                        {t.channelItemUrl && !t.playUrl && (
+                          <Link
+                            href={t.channelItemUrl}
+                            style={{ fontSize: '0.85rem', color: '#2563eb' }}
+                          >
+                            Listen on channel
+                          </Link>
+                        )}
                       </li>
                     ))}
                   </ol>

@@ -41,6 +41,8 @@ import transparencyRoutes from './routes/transparency/index.js'
 import adminLedgerRoutes from './routes/admin/ledger.js'
 import governanceRoutes from './routes/governance/index.js'
 import downloadRoutes from './routes/downloads/archive.js'
+import artistFollowRoutes from './routes/engagement/artist-follows.js'
+import archiveRepostRoutes from './routes/engagement/archive-repost.js'
 import meGrantsRoutes from './routes/me/grants.js'
 import adminGrantsRoutes from './routes/admin/grants.js'
 import fanTierRoutes from './routes/fansubs/tiers.js'
@@ -51,13 +53,17 @@ import membershipRoutes from './routes/me/membership.js'
 import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
 import adminMembersRoutes from './routes/admin/members.js'
 import adminAuditRoutes from './routes/admin/audit.js'
+import adminVenueRoutes from './routes/admin/venues.js'
 import meReleaseRoutes from './routes/releases/me.js'
 import releaseTrackRoutes from './routes/releases/tracks.js'
+import releaseTrackVersionRoutes from './routes/releases/track-versions.js'
+import releaseArtworkRoutes from './routes/releases/artwork.js'
 import releaseDownloadRoutes from './routes/downloads/release.js'
 import embedRoutes from './routes/releases/embed.js'
 import publicProfileRoutes from './routes/profile/public.js'
 import smartlinkRoutes from './routes/releases/smartlink.js'
 import mixcloudRoutes from './routes/me/mixcloud.js'
+import revelatorRoutes from './routes/me/revelator.js'
 import newsletterPublicRoutes from './routes/newsletter/public.js'
 import newsletterMeRoutes from './routes/newsletter/me.js'
 import venueRoutes from './routes/venues/venues.js'
@@ -65,7 +71,9 @@ import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
 import meArchiveRoutes from './routes/me/archive.js'
+import meProgrammeRoutes from './routes/me/programme.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
+import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
@@ -204,6 +212,8 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M18: downloads as first-class action (engagement units)
   await fastify.register(downloadRoutes)
+  await fastify.register(artistFollowRoutes)
+  await fastify.register(archiveRepostRoutes)
 
   // M9: annual grant disbursements
   await fastify.register(meGrantsRoutes)
@@ -224,10 +234,13 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M11: audit exports
   await fastify.register(adminAuditRoutes)
+  await fastify.register(adminVenueRoutes)
 
   // M12: artist profile + releases + audio upload pipeline
   await fastify.register(meReleaseRoutes)
   await fastify.register(releaseTrackRoutes)
+  await fastify.register(releaseTrackVersionRoutes)
+  await fastify.register(releaseArtworkRoutes)
   await fastify.register(publicProfileRoutes)
   await fastify.register(smartlinkRoutes)
 
@@ -239,6 +252,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M7: Mixcloud upload for archive items
   await fastify.register(mixcloudRoutes)
+  await fastify.register(revelatorRoutes)
 
   // M13: newsletter (public + artist-facing)
   await fastify.register(newsletterPublicRoutes)
@@ -258,7 +272,9 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M22/M24/M25: archive item metadata edit + channel slideshow
   await fastify.register(meArchiveRoutes)
+  await fastify.register(meProgrammeRoutes)
   await fastify.register(meArchiveVersionRoutes)
+  await fastify.register(meDownloadGateStatsRoutes)
   await fastify.register(meUsersRoutes)
 
   // M23: collections + RSS feeds

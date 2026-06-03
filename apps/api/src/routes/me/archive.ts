@@ -81,12 +81,16 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     })
 
     if (patch.data.tracklist !== undefined && Array.isArray(updated.tracklist)) {
-      recordTracklistMentions(
-        fastify.prisma,
-        user.id,
-        updated.tracklist as TracklistEntry[],
-        id,
-      ).catch((e) => fastify.log.warn(e, 'tracklist mention record failed'))
+      try {
+        await recordTracklistMentions(
+          fastify.prisma,
+          user.id,
+          updated.tracklist as TracklistEntry[],
+          id,
+        )
+      } catch (e) {
+        fastify.log.warn(e, 'tracklist mention record failed')
+      }
     }
 
     return reply.send(serializeArchiveItem(updated))
@@ -96,7 +100,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     const user = request.sessionUser!
     const channel = await fastify.prisma.channel.findUnique({
       where: { userId: user.id },
-      select: { galleryMode: true, slideshowImages: true },
+      select: { galleryMode: true, slideshowImages: true, videoBackgroundUrl: true },
     })
     if (!channel) return reply.status(404).send({ error: 'Channel not found' })
     return reply.send(channel)
@@ -106,15 +110,28 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     userId: string,
     body: unknown,
   ): Promise<
-    | { ok: true; galleryMode: string; slideshowImages: string[] }
+    | {
+        ok: true
+        galleryMode: string
+        slideshowImages: string[]
+        videoBackgroundUrl: string | null
+      }
     | { ok: false; status: number; error: string }
   > {
     const parsed = ChannelGalleryPatchSchema.safeParse(body)
     if (!parsed.success) {
       return { ok: false, status: 400, error: parsed.error.issues[0]?.message ?? 'Invalid body' }
     }
-    if (parsed.data.galleryMode === undefined && parsed.data.slideshowImages === undefined) {
-      return { ok: false, status: 400, error: 'galleryMode or slideshowImages required' }
+    if (
+      parsed.data.galleryMode === undefined &&
+      parsed.data.slideshowImages === undefined &&
+      parsed.data.videoBackgroundUrl === undefined
+    ) {
+      return {
+        ok: false,
+        status: 400,
+        error: 'galleryMode, slideshowImages, or videoBackgroundUrl required',
+      }
     }
 
     const channel = await fastify.prisma.channel.findUnique({
@@ -130,8 +147,11 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         ...(parsed.data.slideshowImages !== undefined
           ? { slideshowImages: parsed.data.slideshowImages }
           : {}),
+        ...(parsed.data.videoBackgroundUrl !== undefined
+          ? { videoBackgroundUrl: parsed.data.videoBackgroundUrl }
+          : {}),
       },
-      select: { galleryMode: true, slideshowImages: true },
+      select: { galleryMode: true, slideshowImages: true, videoBackgroundUrl: true },
     })
 
     return { ok: true, ...updated }
@@ -143,6 +163,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({
       galleryMode: result.galleryMode,
       slideshowImages: result.slideshowImages,
+      videoBackgroundUrl: result.videoBackgroundUrl,
     })
   })
 

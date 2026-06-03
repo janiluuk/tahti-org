@@ -9,6 +9,7 @@ import { prisma } from '@tahti/db'
 import { archivePlaybackKey } from '@tahti/shared'
 import { uploadToMixcloud } from '@tahti/mixcloud'
 import { downloadToFile } from '../lib/minio.js'
+import { decryptStreamKey } from '../lib/stream-key-enc.js'
 
 export async function processMixcloudUploadJob(job: Job): Promise<void> {
   const { mixUploadId } = job.data as { mixUploadId: string }
@@ -16,6 +17,7 @@ export async function processMixcloudUploadJob(job: Job): Promise<void> {
   const upload = await prisma.mixUpload.findUnique({
     where: { id: mixUploadId },
     include: {
+      user: { select: { mixcloudAccessTokenEnc: true } },
       archiveItem: { select: { title: true, mp3Key: true, flacKey: true, rawKey: true } },
     },
   })
@@ -34,10 +36,12 @@ export async function processMixcloudUploadJob(job: Job): Promise<void> {
     const audioPath = join(tmpDir, 'mix.mp3')
     await downloadToFile(audioKey, audioPath)
 
-    // Access token stored per-user; for now we read from a future user.mixcloudToken field.
-    // Until OAuth wiring is complete, stub mode kicks in (MIXCLOUD_CLIENT_ID not set in dev).
+    const accessToken = upload.user.mixcloudAccessTokenEnc
+      ? decryptStreamKey(upload.user.mixcloudAccessTokenEnc)
+      : ''
+
     const result = await uploadToMixcloud({
-      accessToken: '', // populated via user.mixcloudToken once OAuth is wired
+      accessToken,
       name: upload.archiveItem.title,
       audioPath,
     })

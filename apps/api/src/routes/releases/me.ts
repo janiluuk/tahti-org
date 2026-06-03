@@ -11,6 +11,7 @@ import {
   releaseCatalogSelect,
 } from '../../lib/release-catalog.js'
 import { computeReleaseChecklist } from '@tahti/shared'
+import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 
 const VALID_TYPES = ['SINGLE', 'EP', 'ALBUM', 'COMPILATION', 'REMIX'] as const
 
@@ -36,7 +37,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         releaseDate: true,
         description: true,
         artworkUrl: true,
+        artworkKey: true,
         smartLinkSlug: true,
+        smartLinkViewCount: true,
         smartLinkTargets: true,
         upc: true,
         musicbrainzReleaseId: true,
@@ -46,18 +49,22 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         labelImprint: true,
         credits: true,
         revelatorStatus: true,
+        revelatorId: true,
         tracks: {
           orderBy: { position: 'asc' },
-          select: { id: true, position: true, title: true, isrc: true },
+          select: { id: true, position: true, title: true, isrc: true, status: true },
         },
         _count: { select: { tracks: true } },
       },
     })
     return reply.send(
-      releases.map((r) => ({
-        ...r,
-        checklist: computeReleaseChecklist(r),
-      })),
+      await Promise.all(
+        releases.map(async (r) => ({
+          ...r,
+          artworkUrl: await resolveReleaseArtworkUrl(r),
+          checklist: computeReleaseChecklist(r),
+        })),
+      ),
     )
   })
 
