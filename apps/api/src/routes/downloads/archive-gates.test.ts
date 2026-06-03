@@ -110,6 +110,11 @@ describe('M22 — repost/follow download gates', () => {
     })
     expect(blocked.statusCode).toBe(403)
 
+    const gateLog = await prisma.download.count({
+      where: { archiveItemId: gatedItemId, reason: { in: ['gate_repost', 'gate_follow'] } },
+    })
+    expect(gateLog).toBeGreaterThanOrEqual(1)
+
     await app.inject({
       method: 'POST',
       url: `/api/v1/c/${SLUG}/archive/${gatedItemId}/repost-ack`,

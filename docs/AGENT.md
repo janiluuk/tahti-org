@@ -1146,7 +1146,8 @@ model Vote {
   @@schema("governance")
 }
 
-enum ArtistTier { FREE PAID }
+enum ArtistTier { FREE ARTIST STUDIO }
+// Product copy may say "paid" — maps to ARTIST (€40/yr member) and STUDIO (higher tier).
 enum ChannelState { OFFLINE LIVE STARTING FAILED }
 enum ArchiveSource { UPLOAD LIVE_RECORDING }
 enum TrackState { UPLOADING SCANNING TRANSCODING READY FAILED TAKEDOWN }

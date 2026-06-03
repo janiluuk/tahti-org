@@ -15,6 +15,7 @@ import {
 } from './archive-metadata-fields'
 import { TracklistEditor } from './tracklist-editor'
 import { ArchiveVersionPanel } from './archive-version-panel'
+import { ArchiveGateStats } from './archive-gate-stats'
 
 export default function ArchiveEditor({
   item,
@@ -108,6 +109,12 @@ export default function ArchiveEditor({
           />
 
           <TracklistEditor value={tracklist} onChange={setTracklist} disabled={isPending} />
+
+          <ArchiveGateStats
+            itemId={item.id}
+            repostToDownload={meta.repostToDownload}
+            followToDownload={meta.followToDownload}
+          />
 
           <ArchiveVersionPanel itemId={item.id} itemStatus={item.status} />
 

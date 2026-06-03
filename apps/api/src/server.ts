@@ -71,6 +71,7 @@ import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
 import meArchiveRoutes from './routes/me/archive.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
+import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
@@ -269,6 +270,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M22/M24/M25: archive item metadata edit + channel slideshow
   await fastify.register(meArchiveRoutes)
   await fastify.register(meArchiveVersionRoutes)
+  await fastify.register(meDownloadGateStatsRoutes)
   await fastify.register(meUsersRoutes)
 
   // M23: collections + RSS feeds

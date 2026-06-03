@@ -78,6 +78,26 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       const missing: string[] = []
       if (gates.repostRequired && !gates.repostSatisfied) missing.push('repost')
       if (gates.followRequired && !gates.followSatisfied) missing.push('follow')
+      const gateReason =
+        missing.includes('repost') && !missing.includes('follow')
+          ? 'gate_repost'
+          : missing.includes('follow')
+            ? 'gate_follow'
+            : 'gate_repost'
+      await fastify.prisma.download.create({
+        data: {
+          channelId: channel.id,
+          archiveItemId: item.id,
+          format: 'gate',
+          byUserId,
+          byFingerprint,
+          byIpHash: sha256(`${request.ip}:${salt}`),
+          bytes: 0,
+          countedAt: null,
+          reason: gateReason,
+          weight: 0,
+        },
+      })
       return reply.status(403).send({
         error:
           missing.includes('follow') && !byUserId
