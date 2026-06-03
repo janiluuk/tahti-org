@@ -154,6 +154,24 @@ describe('M9 — annual grant calculation', () => {
     expect(res.statusCode).toBe(403)
   })
 
+  it('GET preview returns dry-run allocations and anomaly flags (DIRECTOR-001)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/admin/grants/preview/${YEAR}`,
+      headers: { cookie: boardCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      grantCount: number
+      poolCents: number
+      artists: Array<{ username: string; anomalies: Array<{ code: string }> }>
+    }
+    expect(body.grantCount).toBe(2)
+    expect(body.poolCents).toBe(90_000)
+    const artistB = body.artists.find((a) => a.username === 'grants-artist-b')
+    expect(artistB?.anomalies.some((a) => a.code === 'ANONYMOUS_GRANT')).toBe(true)
+  })
+
   it('computes grants: €900 pool split 60/40 within 1 cent', async () => {
     const res = await app.inject({
       method: 'POST',
