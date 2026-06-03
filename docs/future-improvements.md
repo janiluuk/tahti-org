@@ -68,8 +68,8 @@ Last reviewed: 2026-06-03
 | P1 | Release audio upload pipeline (WAV/FLAC → Opus/HLS/FLAC derivatives per AGENT.md) |
 | P1 | Link `ReleaseTrack.archiveItemId` to playable audio on profile |
 | ~~P1~~ | ~~Open Graph on `/u/[username]`~~ — done |
-| P2 | Smart link targets JSON + DSP buttons (M14); artwork upload to MinIO |
-| ~~P2~~ | ~~Basic smart links `/r/:slug`~~ — done |
+| ~~P2~~ | ~~Smart link targets JSON + DSP buttons~~ — dashboard editor + `/r/:slug` (2026-06-03) |
+| P2 | Artwork upload to MinIO for releases |
 | P2 | Press kit (Studio tier) |
 
 ### Not started (Phase 5+)
