@@ -31,7 +31,7 @@ concurrency:
 
 env:
   REGISTRY: registry.tahti.live
-  NODE_VERSION: "20"
+  NODE_VERSION: "24"
   PNPM_VERSION: "9"
 
 jobs:

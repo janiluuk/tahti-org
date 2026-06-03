@@ -5,7 +5,7 @@
 # Build from repo root:
 #   docker build -f apps/api/Dockerfile -t tahti/api .
 
-FROM node:20-alpine
+FROM node:24-alpine
 RUN apk add --no-cache python3 make g++ openssl openssl-dev && \
     corepack enable && corepack prepare pnpm@9 --activate && \
     npm install -g tsx@4

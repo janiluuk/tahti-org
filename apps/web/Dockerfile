@@ -5,7 +5,7 @@
 # Build from repo root:
 #   docker build -f apps/web/Dockerfile -t tahti/web .
 
-FROM node:20-alpine AS deps
+FROM node:24-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
@@ -30,7 +30,7 @@ RUN cd apps/web && pnpm build
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
 
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 RUN corepack enable && corepack prepare pnpm@9 --activate && \
     addgroup -g 1001 nodejs && adduser -u 1001 -G nodejs -s /bin/sh -D nextjs
 WORKDIR /app
