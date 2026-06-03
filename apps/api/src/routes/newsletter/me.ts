@@ -123,10 +123,9 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (subscriberIds.length === 0) {
         return reply.status(400).send({
-          error:
-            fanAudience
-              ? 'No confirmed fan subscribers on your list'
-              : 'No confirmed subscribers to send to',
+          error: fanAudience
+            ? 'No confirmed fan subscribers on your list'
+            : 'No confirmed subscribers to send to',
         })
       }
 

@@ -4,10 +4,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import {
-  processFanSubPayouts,
-  processFanSubChurn,
-} from '../../../../worker/src/jobs/fansub-payouts.js'
+import { processFanSubPayouts } from '../../../../worker/src/jobs/fan-sub-payout.js'
+import { processFanSubExpire } from '../../../../worker/src/jobs/fan-sub-expire.js'
 import { cleanupUsersByEmailPrefix } from '../../test/helpers.js'
 import { hashPassword } from '../../lib/password.js'
 
@@ -29,7 +27,8 @@ describe('M19 — fan-sub payout and churn crons', () => {
         displayName: 'Payout Artist',
         emailVerifiedAt: new Date(),
         isMember: true,
-        stripeCustomerId: 'acct_test_connect',
+        stripeConnectAccountId: 'acct_test_connect',
+        stripeConnectChargesEnabled: true,
       },
     })
     artistId = artist.id
@@ -100,20 +99,20 @@ describe('M19 — fan-sub payout and churn crons', () => {
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
   })
 
-  it('marks pending payouts as PAID without Stripe key (dev stub)', async () => {
-    await processFanSubPayouts({} as never)
+  it('marks pending payouts as PAID when Connect is enabled', async () => {
+    await processFanSubPayouts(prisma)
 
     const payout = await prisma.fanSubPayout.findUnique({ where: { id: payoutId } })
     expect(payout?.state).toBe('PAID')
     expect(payout?.paidAt).toBeTruthy()
-    expect(payout?.stripeTransferId).toMatch(/^tr_dev_/)
+    expect(payout?.stripeTransferId).toBe('connect_destination')
   })
 
   it('expires subscriptions past currentPeriodEnd', async () => {
     const before = await prisma.fanSubscription.count({
       where: { artistUserId: artistId, state: 'EXPIRED' },
     })
-    await processFanSubChurn({} as never)
+    await processFanSubExpire(prisma)
     const after = await prisma.fanSubscription.count({
       where: { artistUserId: artistId, state: 'EXPIRED' },
     })

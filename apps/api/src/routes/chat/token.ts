@@ -71,10 +71,9 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
     if (ban) return reply.status(403).send({ error: 'banned' })
 
-    const supporter =
-      request.sessionUser?.id
-        ? await isActiveFanSubscriber(fastify.prisma, channel.userId, request.sessionUser.id)
-        : false
+    const supporter = request.sessionUser?.id
+      ? await isActiveFanSubscriber(fastify.prisma, channel.userId, request.sessionUser.id)
+      : false
 
     // sub encodes handle + fingerprint; info carries supporter badge for Centrifugo
     const sub = `${cleanHandle}#${fingerprint}`

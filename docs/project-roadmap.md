@@ -39,7 +39,7 @@ closed beta → **M7–M9, M19** (money + grants) → remaining features → han
 
 Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 `docs/AGENT.md` milestones. Verified by running `pnpm typecheck` (passes),
-`pnpm lint` + `pnpm format:check` (clean), and `pnpm test` (200 tests pass with Postgres up).
+`pnpm lint` + `pnpm format:check` (clean), and `pnpm test` (~230 tests pass with Postgres up).
 
 | Milestone | State | Evidence / notes |
 |---|---|---|
