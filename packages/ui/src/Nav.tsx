@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
+
 import React from 'react'
 
 interface NavProps {
@@ -14,7 +17,9 @@ export function Nav({ ctaLabel = 'Apply for Beta', ctaHref = '#cta', children }:
         TAHTI
       </a>
       {children}
-      <a href={ctaHref} className="nav-cta">{ctaLabel.toUpperCase()}</a>
+      <a href={ctaHref} className="nav-cta">
+        {ctaLabel.toUpperCase()}
+      </a>
     </nav>
   )
 }

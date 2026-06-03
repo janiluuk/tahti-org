@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
+
 import React from 'react'
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -5,12 +8,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 export function Input({ mono, className = '', ...props }: InputProps) {
-  return (
-    <input
-      className={`input${mono ? ' mono' : ''} ${className}`.trim()}
-      {...props}
-    />
-  )
+  return <input className={`input${mono ? ' mono' : ''} ${className}`.trim()} {...props} />
 }
 
 export interface FormFieldProps {

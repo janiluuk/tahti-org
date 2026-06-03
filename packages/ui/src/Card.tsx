@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
+
 import React from 'react'
 
 type Accent = 'amber' | 'cyan' | 'green' | 'purple' | 'coral' | 'lavender'
@@ -42,7 +45,13 @@ export interface ToolCardProps {
   className?: string
 }
 
-export function ToolCard({ icon, title, subtitle, accent = 'cyan', className = '' }: ToolCardProps) {
+export function ToolCard({
+  icon,
+  title,
+  subtitle,
+  accent = 'cyan',
+  className = '',
+}: ToolCardProps) {
   return (
     <div className={`tool-card ${className}`} style={{ borderLeftColor: `var(--${accent})` }}>
       <div className="tool-icon">{icon}</div>
