@@ -5,7 +5,12 @@ import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
-import { evaluateDownloadCountPolicy, ReleaseDownloadQuerySchema } from '@tahti/shared'
+import {
+  ReleaseDownloadQuerySchema,
+  ReleaseTrackDownloadParamsSchema,
+  evaluateDownloadCountPolicy,
+  parseRouteParams,
+} from '@tahti/shared'
 import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
@@ -38,10 +43,11 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
-      const { smartLinkSlug, trackId } = request.params as {
-        smartLinkSlug: string
-        trackId: string
+      const routeParams = parseRouteParams(ReleaseTrackDownloadParamsSchema, request.params)
+      if (!routeParams) {
+        return reply.status(400).send({ error: 'Invalid path parameters' })
       }
+      const { smartLinkSlug, trackId } = routeParams
       const parsedQuery = ReleaseDownloadQuerySchema.safeParse(request.query)
       if (!parsedQuery.success) {
         return reply.status(400).send({

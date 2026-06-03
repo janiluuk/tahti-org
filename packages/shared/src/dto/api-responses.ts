@@ -57,6 +57,12 @@ export const DownloadGateStatsResponseSchema = z.object({
   daily: z.array(GateDailyPointSchema),
 })
 
+export const ChannelFunnelResponseSchema = z.object({
+  downloadGates: DownloadGateStatsResponseSchema,
+  live: ChannelLiveStatsResponseSchema,
+  egress: ChannelEgressResponseSchema,
+})
+
 export const ChannelScheduleViewSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable(),
   nextBroadcastNote: z.string().nullable(),

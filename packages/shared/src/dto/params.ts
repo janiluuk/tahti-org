@@ -20,6 +20,15 @@ export const ChannelArchiveParamsSchema = z.object({
   itemId: IdParamSchema.shape.id,
 })
 
+export const ReleaseTrackDownloadParamsSchema = z.object({
+  smartLinkSlug: z.string().min(1).max(64),
+  trackId: IdParamSchema.shape.id,
+})
+
+export const CollectionSlugParamSchema = z.object({
+  slug: z.string().min(1).max(64),
+})
+
 export function parseRouteParams<T extends z.ZodTypeAny>(
   schema: T,
   params: unknown,

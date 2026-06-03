@@ -3,6 +3,7 @@
 
 import { describe, it, expect } from 'vitest'
 import {
+  ChannelFunnelResponseSchema,
   ChannelLiveStatsResponseSchema,
   DownloadGateItemDetailResponseSchema,
   DownloadGateStatsResponseSchema,
@@ -12,6 +13,30 @@ import {
 import { zodOpenApiComponents } from '../openapi-zod.js'
 
 describe('api response schemas', () => {
+  it('parses channel funnel shape', () => {
+    const parsed = ChannelFunnelResponseSchema.safeParse({
+      downloadGates: {
+        artistFollowerCount: 0,
+        items: [],
+        totals: { repostAcks: 0, blockedAttempts: 0, countedDownloads: 0 },
+        daily: [],
+      },
+      live: {
+        windowDays: 14,
+        totalLiveSeconds: 0,
+        totalBroadcasts: 0,
+        daily: [],
+      },
+      egress: {
+        windowDays: 30,
+        totalBytes: 0,
+        totalDownloads: 0,
+        daily: [],
+      },
+    })
+    expect(parsed.success).toBe(true)
+  })
+
   it('parses channel live stats shape', () => {
     const parsed = ChannelLiveStatsResponseSchema.safeParse({
       windowDays: 14,

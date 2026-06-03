@@ -208,29 +208,20 @@ export default async function DashboardPage() {
       // ignore
     }
     try {
-      const res = await fetch(`${apiUrl}/api/me/download-gate-stats`, {
+      const res = await fetch(`${apiUrl}/api/me/channel-funnel-stats`, {
         headers: { Cookie: `tahti_session=${sessionCookie.value}` },
         cache: 'no-store',
       })
-      if (res.ok) downloadGateSummary = (await res.json()) as typeof downloadGateSummary
-    } catch {
-      // ignore
-    }
-    try {
-      const res = await fetch(`${apiUrl}/api/me/channel-egress`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) channelEgress = (await res.json()) as typeof channelEgress
-    } catch {
-      // ignore
-    }
-    try {
-      const res = await fetch(`${apiUrl}/api/me/channel-live-stats`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) channelLiveStats = (await res.json()) as typeof channelLiveStats
+      if (res.ok) {
+        const funnel = (await res.json()) as {
+          downloadGates: NonNullable<typeof downloadGateSummary>
+          live: NonNullable<typeof channelLiveStats>
+          egress: NonNullable<typeof channelEgress>
+        }
+        downloadGateSummary = funnel.downloadGates
+        channelLiveStats = funnel.live
+        channelEgress = funnel.egress
+      }
     } catch {
       // ignore
     }

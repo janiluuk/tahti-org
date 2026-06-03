@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { ChannelArchiveParamsSchema, parseRouteParams, SlugParamSchema } from './params.js'
+import {
+  ChannelArchiveParamsSchema,
+  ReleaseTrackDownloadParamsSchema,
+  parseRouteParams,
+  SlugParamSchema,
+} from './params.js'
 
 describe('route param schemas', () => {
   it('parses channel archive params', () => {
@@ -15,5 +20,14 @@ describe('route param schemas', () => {
 
   it('rejects empty slug', () => {
     expect(SlugParamSchema.safeParse({ slug: '' }).success).toBe(false)
+  })
+
+  it('parses release track download params', () => {
+    expect(
+      parseRouteParams(ReleaseTrackDownloadParamsSchema, {
+        smartLinkSlug: 'my-release',
+        trackId: 'trk1',
+      }),
+    ).toEqual({ smartLinkSlug: 'my-release', trackId: 'trk1' })
   })
 })
