@@ -48,6 +48,7 @@ import adminGrantsRoutes from './routes/admin/grants.js'
 import fanTierRoutes from './routes/fansubs/tiers.js'
 import fanSubscriptionRoutes from './routes/fansubs/subscriptions.js'
 import fanConnectRoutes from './routes/fansubs/connect.js'
+import fanSubPayoutRoutes from './routes/fansubs/payouts.js'
 import stripeWebhookRoutes from './routes/webhooks/stripe.js'
 import membershipRoutes from './routes/me/membership.js'
 import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
@@ -77,6 +78,8 @@ import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
+import requestLogPlugin from './plugins/request-log.js'
+import { apiLoggerConfig } from './lib/logger.js'
 import { config } from './config.js'
 
 export interface BuildOptions {
@@ -85,7 +88,7 @@ export interface BuildOptions {
 
 export async function buildApp(opts: BuildOptions = {}) {
   const fastify = Fastify({
-    logger: opts.logger ?? config.nodeEnv !== 'test',
+    logger: apiLoggerConfig(opts.logger),
     trustProxy: true,
   })
 
@@ -159,6 +162,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(cookie)
   await fastify.register(formbody)
   await fastify.register(sensible)
+  await fastify.register(requestLogPlugin)
   await fastify.register(dbPlugin)
   await fastify.register(authPlugin)
   await fastify.register(rateLimitPlugin)
@@ -223,6 +227,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(fanTierRoutes)
   await fastify.register(fanSubscriptionRoutes)
   await fastify.register(fanConnectRoutes)
+  await fastify.register(fanSubPayoutRoutes)
   await fastify.register(stripeWebhookRoutes)
 
   // M1: annual membership payment

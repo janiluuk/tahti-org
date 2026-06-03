@@ -224,6 +224,7 @@ export default async function DashboardPage() {
     chargesEnabled: true,
     detailsSubmitted: true,
   }
+  let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0 }
   if (user.channel) {
     try {
       const res = await fetch(`${apiUrl}/api/me/fan-subs/connect`, {
@@ -231,6 +232,15 @@ export default async function DashboardPage() {
         cache: 'no-store',
       })
       if (res.ok) fanConnect = (await res.json()) as typeof fanConnect
+    } catch {
+      // ignore
+    }
+    try {
+      const res = await fetch(`${apiUrl}/api/me/fan-sub-payouts`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) fanPayoutStats = (await res.json()) as typeof fanPayoutStats
     } catch {
       // ignore
     }
@@ -465,7 +475,13 @@ export default async function DashboardPage() {
       {user.channel && <AnnouncementsPanel initial={announcements} />}
 
       {user.channel && (
-        <FanSubscriptionsPanel initial={fanTiers} username={user.username} connect={fanConnect} />
+        <FanSubscriptionsPanel
+          initial={fanTiers}
+          username={user.username}
+          apiUrl={apiUrl}
+          connect={fanConnect}
+          payoutStats={fanPayoutStats}
+        />
       )}
 
       {user.channel && (

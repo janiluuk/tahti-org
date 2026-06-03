@@ -30,11 +30,28 @@ function eur(cents: number): string {
 export default function FanSubscriptionsPanel({
   initial,
   username,
+  apiUrl,
   connect,
+  payoutStats,
 }: {
   initial: FanTier[]
   username: string
+  apiUrl: string
   connect: ConnectStatus
+  payoutStats?: {
+    pending: number
+    failed: number
+    paidLast30Days: number
+    activeSubscribers?: number
+    recent?: Array<{
+      id: string
+      state: string
+      tierName: string
+      grossCents: number
+      netToArtistCents: number
+      createdAt: string
+    }>
+  }
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -111,6 +128,47 @@ export default function FanSubscriptionsPanel({
         Fans subscribe directly to you. You keep the revenue minus Stripe fees and a 2% operational
         fee. Subscribers get the 5× download weighting that boosts your annual grant.
       </p>
+
+      {payoutStats && (
+        <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
+          <p style={{ margin: '0 0 0.35rem' }}>
+            {payoutStats.activeSubscribers ?? 0} active subscriber
+            {(payoutStats.activeSubscribers ?? 0) === 1 ? '' : 's'}
+            {payoutStats.pending > 0 && ` · ${payoutStats.pending} payout pending`}
+            {payoutStats.failed > 0 && (
+              <span style={{ color: '#b45309' }}>
+                {' '}
+                · {payoutStats.failed} failed (Stripe transfer retried daily)
+              </span>
+            )}
+            {payoutStats.paidLast30Days > 0 && ` · ${payoutStats.paidLast30Days} paid (30d)`}
+            {' · '}
+            <a href={`${apiUrl}/api/me/fan-subscribers/export.csv`} style={{ color: '#2563eb' }}>
+              Export subscribers (CSV)
+            </a>
+          </p>
+          {payoutStats.recent && payoutStats.recent.length > 0 && (
+            <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', borderBottom: '1px solid #eee' }}>
+                  <th>Tier</th>
+                  <th>Net</th>
+                  <th>State</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payoutStats.recent.map((p) => (
+                  <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td>{p.tierName}</td>
+                    <td>{eur(p.netToArtistCents)}</td>
+                    <td>{p.state}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
 
       {needsStripe && (
         <div

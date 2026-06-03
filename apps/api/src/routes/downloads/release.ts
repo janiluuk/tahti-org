@@ -5,7 +5,9 @@ import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
+import { evaluateDownloadCountPolicy } from '@tahti/shared'
 import { config } from '../../config.js'
+import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 
 // M18 — public release-track downloads with the same anti-fraud stack as
 // archive-item downloads. Reuses the Download table (releaseTrackId column).
@@ -125,6 +127,19 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
         if (countedForTrack >= PER_TRACK_CAP) {
           countedAt = null
           reason = 'per_track_cap'
+        }
+      }
+
+      if (countedAt) {
+        const policy = evaluateDownloadCountPolicy({
+          clientIp: request.ip ?? '0.0.0.0',
+          userAgent: request.headers['user-agent'],
+          noCountCidrs: await getDownloadNoCountCidrs(),
+          trustOverrideIps: config.download.trustOverrideIps,
+        })
+        if (!policy.shouldCount) {
+          countedAt = null
+          reason = policy.reason
         }
       }
 
