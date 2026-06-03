@@ -478,6 +478,7 @@ export default async function DashboardPage() {
         <FanSubscriptionsPanel
           initial={fanTiers}
           username={user.username}
+          apiUrl={apiUrl}
           connect={fanConnect}
           payoutStats={fanPayoutStats}
         />

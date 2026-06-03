@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
+import { csvRow } from '../../lib/csv.js'
 
 const fanSubPayoutRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/me/fan-sub-payouts', { preHandler: requireAuth }, async (request, reply) => {
@@ -26,6 +27,60 @@ const fanSubPayoutRoutes: FastifyPluginAsync = async (fastify) => {
 
     return reply.send({ pending, failed, paidLast30Days: paidRecent })
   })
+
+  // M19: GDPR data-subject export for the artist's fan subscribers
+  fastify.get(
+    '/api/me/fan-subscribers/export.csv',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const subs = await fastify.prisma.fanSubscription.findMany({
+        where: { artistUserId: user.id },
+        orderBy: { startedAt: 'asc' },
+        select: {
+          tierName: true,
+          amountCents: true,
+          state: true,
+          startedAt: true,
+          currentPeriodEnd: true,
+          canceledAt: true,
+          subscriber: { select: { username: true, email: true } },
+        },
+      })
+
+      const lines = [
+        csvRow([
+          'username',
+          'email',
+          'tier',
+          'amount_cents',
+          'state',
+          'started_at',
+          'current_period_end',
+          'canceled_at',
+        ]),
+      ]
+      for (const s of subs) {
+        lines.push(
+          csvRow([
+            s.subscriber.username,
+            s.subscriber.email,
+            s.tierName,
+            s.amountCents,
+            s.state,
+            s.startedAt.toISOString(),
+            s.currentPeriodEnd.toISOString(),
+            s.canceledAt?.toISOString() ?? '',
+          ]),
+        )
+      }
+
+      return reply
+        .header('Content-Type', 'text/csv; charset=utf-8')
+        .header('Content-Disposition', 'attachment; filename="fan-subscribers.csv"')
+        .send(lines.join('\n') + '\n')
+    },
+  )
 }
 
 export default fanSubPayoutRoutes

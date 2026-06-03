@@ -8,6 +8,7 @@ import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
 import { config } from '../../config.js'
+import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 
 // M18 — downloads as a first-class action with engagement-unit accounting.
 //
@@ -179,7 +180,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       const policy = evaluateDownloadCountPolicy({
         clientIp: request.ip ?? '0.0.0.0',
         userAgent: String(request.headers['user-agent'] ?? ''),
-        noCountCidrs: config.download.noCountCidrs,
+        noCountCidrs: await getDownloadNoCountCidrs(),
         trustOverrideIps: config.download.trustOverrideIps,
       })
       if (!policy.shouldCount) {
