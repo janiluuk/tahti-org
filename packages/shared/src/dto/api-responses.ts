@@ -115,7 +115,7 @@ export const DownloadGateItemDetailResponseSchema = z.object({
 })
 
 export const ApiStatusResponseSchema = z.object({
-  status: z.enum(['ok', 'degraded', 'down']),
+  status: z.enum(['operational', 'degraded', 'outage']),
   version: z.string(),
   uptimeSec: z.number().int().nonnegative(),
   checks: z.record(
@@ -128,6 +128,161 @@ export const ApiStatusResponseSchema = z.object({
   ),
   ts: z.string().datetime(),
 })
+
+export const RadioNowPlayingSchema = z
+  .object({
+    live: z.boolean(),
+    channel: z.unknown().nullable(),
+  })
+  .passthrough()
+
+export const ChannelProgrammeItemViewSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  status: z.string(),
+  durationSec: z.number().nullable(),
+  isFallback: z.boolean(),
+  fallbackOrder: z.number().int().nullable(),
+  lastFallbackPlayedAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+})
+
+export const ChannelProgrammeViewSchema = z.object({
+  fallbackMode: z.enum(['shuffle', 'ordered']),
+  items: z.array(ChannelProgrammeItemViewSchema),
+})
+
+export const StreamSettingsResponseSchema = z.object({
+  rtmp: z.object({
+    server: z.string(),
+    streamKey: z.string(),
+  }),
+  icecast: z.object({
+    server: z.string(),
+    mount: z.string(),
+    password: z.string(),
+    hint: z.string(),
+  }),
+  hlsUrl: z.string(),
+})
+
+export const StreamKeyRotateResponseSchema = z.object({
+  rtmpStreamKey: z.string(),
+})
+
+export const IcecastPassRotateResponseSchema = z.object({
+  liveSourcePass: z.string(),
+})
+
+export const MembershipStatusResponseSchema = z.object({
+  status: z.string(),
+  isMember: z.boolean(),
+  memberNumber: z.number().int().nullable(),
+  memberSince: z.coerce.date().nullable(),
+  tier: z.string(),
+  priceCents: z.number().int(),
+  emailVerified: z.boolean(),
+})
+
+export const StripeCheckoutUrlResponseSchema = z.object({
+  checkoutUrl: z.string().nullable(),
+  sessionId: z.string(),
+})
+
+export const MembershipDevActivateResponseSchema = z.object({
+  activated: z.literal(true),
+  memberNumber: z.number().int(),
+  message: z.string(),
+})
+
+export const MembershipCheckoutResponseSchema = z.union([
+  StripeCheckoutUrlResponseSchema,
+  MembershipDevActivateResponseSchema,
+])
+
+export const BillingPortalUrlResponseSchema = z.object({
+  portalUrl: z.string().nullable(),
+})
+
+export const FanSubCheckoutUrlResponseSchema = z.object({
+  checkoutUrl: z.string().nullable(),
+  sessionId: z.string(),
+})
+
+export const FanSubActivatedResponseSchema = z.object({
+  activated: z.literal(true),
+  subscriptionId: z.string(),
+  tierName: z.string(),
+  amountCents: z.number().int(),
+  currentPeriodEnd: z.coerce.date(),
+})
+
+export const FanSubSubscriptionViewSchema = z.object({
+  id: z.string(),
+  tierName: z.string(),
+  amountCents: z.number().int(),
+  state: z.string(),
+  currentPeriodEnd: z.coerce.date(),
+  canceledAt: z.coerce.date().nullable(),
+  artist: z.object({
+    username: z.string(),
+    displayName: z.string(),
+  }),
+})
+
+export const FanSubSubscriptionListSchema = z.array(FanSubSubscriptionViewSchema)
+
+export const FanSubCancelResponseSchema = z.object({
+  id: z.string(),
+  state: z.string(),
+  canceledAt: z.coerce.date().nullable(),
+  currentPeriodEnd: z.coerce.date(),
+  accessUntil: z.coerce.date(),
+  message: z.string(),
+})
+
+export const FanConnectStatusResponseSchema = z.object({
+  stripeConfigured: z.boolean(),
+  accountId: z.string().nullable(),
+  chargesEnabled: z.boolean(),
+  detailsSubmitted: z.boolean(),
+  paymentsReady: z.boolean(),
+})
+
+export const FanConnectOnboardResponseSchema = z.object({
+  onboardingUrl: z.string().url(),
+  accountId: z.string(),
+})
+
+export const VenueBroadcastCalendarSchema = z.object({
+  venue: z.object({
+    id: z.string(),
+    name: z.string(),
+    slug: z.string(),
+  }),
+  broadcasts: z.array(z.unknown()),
+})
+
+export const VenueDirectoryEntrySchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  name: z.string(),
+  city: z.string(),
+  countryCode: z.string().nullable(),
+  capacity: z.number().int().nullable(),
+  description: z.string().nullable(),
+})
+
+export const VenueDirectoryListSchema = z.array(VenueDirectoryEntrySchema)
+
+export const VenuePublicProfileSchema = z
+  .object({
+    id: z.string(),
+    slug: z.string(),
+    name: z.string(),
+    broadcasts: z.array(z.unknown()),
+  })
+  .passthrough()
 
 export const PublicChannelUserSchema = z.object({
   username: z.string(),

@@ -2,6 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import {
+  FanConnectOnboardResponseSchema,
+  FanConnectStatusResponseSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import {
@@ -26,48 +31,64 @@ async function syncConnectStatus(
 
 const fanConnectRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/fan-subs/connect — Connect onboarding status for the dashboard
-  fastify.get('/api/me/fan-subs/connect', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
+  fastify.get(
+    '/api/me/fan-subs/connect',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        response: openApiResponse(FanConnectStatusResponseSchema, 'FanConnectStatus'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
 
-    if (!stripeEnabled) {
-      return reply.send({
-        stripeConfigured: false,
-        accountId: null,
-        chargesEnabled: true,
-        detailsSubmitted: true,
-        paymentsReady: true,
-      })
-    }
+      if (!stripeEnabled) {
+        return reply.send({
+          stripeConfigured: false,
+          accountId: null,
+          chargesEnabled: true,
+          detailsSubmitted: true,
+          paymentsReady: true,
+        })
+      }
 
-    if (!user.stripeConnectAccountId) {
-      return reply.send({
-        stripeConfigured: true,
-        accountId: null,
-        chargesEnabled: false,
-        detailsSubmitted: false,
-        paymentsReady: false,
-      })
-    }
+      if (!user.stripeConnectAccountId) {
+        return reply.send({
+          stripeConfigured: true,
+          accountId: null,
+          chargesEnabled: false,
+          detailsSubmitted: false,
+          paymentsReady: false,
+        })
+      }
 
-    try {
-      const snapshot = await syncConnectStatus(fastify, user.id, user.stripeConnectAccountId)
-      return reply.send({
-        stripeConfigured: true,
-        accountId: snapshot.id,
-        chargesEnabled: snapshot.chargesEnabled,
-        detailsSubmitted: snapshot.detailsSubmitted,
-        paymentsReady: snapshot.chargesEnabled,
-      })
-    } catch (err) {
-      request.log.error({ err }, 'fan-subs connect status sync failed')
-      return reply.status(502).send({ error: 'Could not load Stripe Connect status' })
-    }
-  })
+      try {
+        const snapshot = await syncConnectStatus(fastify, user.id, user.stripeConnectAccountId)
+        return reply.send({
+          stripeConfigured: true,
+          accountId: snapshot.id,
+          chargesEnabled: snapshot.chargesEnabled,
+          detailsSubmitted: snapshot.detailsSubmitted,
+          paymentsReady: snapshot.chargesEnabled,
+        })
+      } catch (err) {
+        request.log.error({ err }, 'fan-subs connect status sync failed')
+        return reply.status(502).send({ error: 'Could not load Stripe Connect status' })
+      }
+    },
+  )
 
   // POST /api/me/fan-subs/connect/onboard — create/resume Express onboarding
   fastify.post(
     '/api/me/fan-subs/connect/onboard',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        response: openApiResponse(FanConnectOnboardResponseSchema, 'FanConnectOnboard'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
 

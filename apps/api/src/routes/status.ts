@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { ApiStatusResponseSchema, openApiResponse } from '@tahti/shared'
 import { runDependencyChecks, summarizeChecks } from '../lib/health-checks.js'
 
 // M11: public status surface (feeds self-hosted Upptime, Grafana, external monitors).
@@ -12,6 +13,7 @@ const statusRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['admin'],
         description: 'M11: dependency health for Upptime and ops monitors (200 or 503)',
+        response: openApiResponse(ApiStatusResponseSchema, 'ApiStatus'),
       },
     },
     async (_request, reply) => {
