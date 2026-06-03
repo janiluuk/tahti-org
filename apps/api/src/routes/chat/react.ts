@@ -22,13 +22,14 @@ function checkReactLimit(key: string): boolean {
   return true
 }
 
-// Periodically prune stale entries
-setInterval(() => {
+// Periodically prune stale entries (unref so one-shot scripts can exit)
+const pruneTimer = setInterval(() => {
   const now = Date.now()
   for (const [k, v] of reactBucket) {
     if (now > v.reset) reactBucket.delete(k)
   }
 }, 60_000)
+pruneTimer.unref()
 
 const chatReactRoute: FastifyPluginAsync = async (fastify) => {
   // POST /api/chat/:slug/react { emoji: string }
