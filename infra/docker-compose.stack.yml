@@ -208,8 +208,10 @@ services:
       dockerfile: apps/worker/Dockerfile
     environment:
       <<: *app-env
+      RECORDINGS_ROOT: /recordings
     volumes:
       - stack_hls:/hls:ro
+      - stack_recordings:/recordings:ro
     depends_on:
       api:
         condition: service_healthy
@@ -224,11 +226,13 @@ services:
       <<: *app-env
       PORT: "3003"
       HLS_VOLUME: tahti_stack_hls
+      RECORDINGS_VOLUME: tahti_stack_recordings
     ports:
       - "${ORCHESTRATOR_PORT:-3003}:3003"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - stack_hls:/hls
+      - stack_recordings:/recordings
     depends_on:
       api:
         condition: service_healthy
@@ -247,3 +251,5 @@ volumes:
   stack_minio:
   stack_hls:
     name: tahti_stack_hls
+  stack_recordings:
+    name: tahti_stack_recordings

@@ -11,7 +11,13 @@ import { auditLog } from '../../lib/audit.js'
 const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/admin/grants/preview/:year',
-    { preHandler: requireBoard },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'DIRECTOR-001: dry-run grant split with per-artist anomaly flags',
+      },
+    },
     async (request, reply) => {
       const { year } = request.params as { year: string }
       const forYear = parseInt(year, 10)

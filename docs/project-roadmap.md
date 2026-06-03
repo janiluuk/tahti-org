@@ -503,7 +503,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [x] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | `apps/api/src/lib/redis.ts` | P2 |
 | [ ] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | P2 |
 | [ ] | **PLAT-013** | Website Docker: mount large media (`bg-audio.mp3`, hero video) from host like `output_vhs.mp4` | P3 |
-| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | channel-egress, download-gate-stats, schedule via `zod-to-json-schema` |
+| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | + grant preview, broadcast-usage in `/docs` components |
 
 ### Refactors (maintainability)
 
@@ -537,11 +537,11 @@ Issues identified from streaming architecture review and user journey analysis. 
 |:---|---|---|---|
 | [ ] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | Architecture review | M3 |
 | [ ] | **STREAM-003** Ingest DNS failover has 30s dead window — OBS connections to failed ingest node must manually reconnect | Architecture review | M3 / Phase 4 |
-| [ ] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | Journey: Artist J2 | M4 |
-| [~] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | API returns 409 while `LIVE`; hot rotation deferred | M3 |
+| [~] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | `finalize-broadcast-recording` on disconnect; stack `recordings` volume for worker | M4 |
+| [~] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | API returns 409 while `LIVE` (RTMP + Icecast rotate) | M3 |
 | [~] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | `delay(3.)` on archive branch before live fallback | M3 |
 | [~] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Live player shows “Buffering live stream…” (LISTENER-001) | M3 |
-| [~] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | `nextBroadcastAt` / `nextBroadcastNote` on channel + dashboard + public page | M5 |
+| [x] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | API + dashboard schedule panel + public `/c/:slug` banner | M5 |
 
 ### MEDIUM — affects operations and cost attribution
 
@@ -551,7 +551,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | [ ] | **STREAM-007** Single Icecast node — Mixxx/Traktor users have no failover | Architecture review | Phase 5 / pre-launch |
 | [ ] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Architecture review | M4 |
 | [ ] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Architecture review | M3 |
-| [ ] | **OPS-001** No structured log correlation across edge encoder → Liquidsoap → recording containers for a single broadcast session | Journey: Ops J3 | M11 |
+| [~] | **OPS-001** No structured log correlation across edge encoder → Liquidsoap → recording containers for a single broadcast session | `broadcastSessionId` on ingest, orchestrator, watchdog, finalize, archive jobs | M11 |
 | [~] | **OPS-002** DB migration is a manual step after deploy — must be automated in CI before service update | `scripts/db-migrate-deploy.sh`, `ops/DEPLOY.md`, `make deploy` when `DATABASE_URL` set | M0 |
 
 ### LOW — improvements for polish

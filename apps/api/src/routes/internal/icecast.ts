@@ -5,7 +5,12 @@ import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
 import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
-import { IcecastConnectSchema, IcecastDisconnectSchema } from '@tahti/shared'
+import {
+  broadcastSessionLogFields,
+  IcecastConnectSchema,
+  IcecastDisconnectSchema,
+} from '@tahti/shared'
+import { enqueueFinalizeBroadcastRecording } from '../../lib/queue.js'
 
 // Icecast URL auth callbacks.
 // Icecast sends: mount, user, pass (plus optional ip, agent) as form-encoded body.
@@ -59,7 +64,15 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
       fastify.log.error({ err }, 'orchestrator spawn failed (icecast)'),
     )
 
-    fastify.log.info({ slug, broadcastId: broadcast.id }, 'icecast source connected')
+    fastify.log.info(
+      broadcastSessionLogFields({
+        broadcastId: broadcast.id,
+        channelId: channel.id,
+        slug,
+        source: 'ICECAST',
+      }),
+      'icecast source connected',
+    )
     return reply.status(200).send('ok')
   })
 
@@ -86,6 +99,20 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: broadcast.id },
         data: { endedAt: new Date() },
       })
+      enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>
+        fastify.log.error(
+          {
+            err,
+            ...broadcastSessionLogFields({
+              broadcastId: broadcast.id,
+              channelId: channel.id,
+              slug,
+              source: 'ICECAST',
+            }),
+          },
+          'finalize-broadcast-recording enqueue failed',
+        ),
+      )
     }
 
     await fastify.prisma.channel.update({
@@ -93,7 +120,17 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
       data: { state: 'OFFLINE', goneLiveAt: null },
     })
 
-    fastify.log.info({ slug }, 'icecast source disconnected')
+    fastify.log.info(
+      broadcast
+        ? broadcastSessionLogFields({
+            broadcastId: broadcast.id,
+            channelId: channel.id,
+            slug,
+            source: 'ICECAST',
+          })
+        : { slug, channelId: channel.id },
+      'icecast source disconnected',
+    )
     return reply.status(200).send('ok')
   })
 

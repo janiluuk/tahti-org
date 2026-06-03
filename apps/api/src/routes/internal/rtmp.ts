@@ -5,7 +5,8 @@ import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
 import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
-import { RtmpWebhookBodySchema } from '@tahti/shared'
+import { broadcastSessionLogFields, RtmpWebhookBodySchema } from '@tahti/shared'
+import { enqueueFinalizeBroadcastRecording } from '../../lib/queue.js'
 
 // nginx-rtmp sends form-encoded bodies to on_publish / on_done / on_update
 const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
@@ -68,7 +69,15 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.log.error({ err }, 'orchestrator spawn failed'),
       )
 
-      fastify.log.info({ slug: channel.slug, broadcastId: broadcast.id }, 'rtmp stream started')
+      fastify.log.info(
+        broadcastSessionLogFields({
+          broadcastId: broadcast.id,
+          channelId: channel.id,
+          slug: channel.slug,
+          source: 'RTMP',
+        }),
+        'rtmp stream started',
+      )
       return reply.status(200).send('allowed')
     },
   )
@@ -97,6 +106,20 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: broadcast.id },
         data: { endedAt: new Date() },
       })
+      enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>
+        fastify.log.error(
+          {
+            err,
+            ...broadcastSessionLogFields({
+              broadcastId: broadcast.id,
+              channelId: channel.id,
+              slug: channel.slug,
+              source: 'RTMP',
+            }),
+          },
+          'finalize-broadcast-recording enqueue failed',
+        ),
+      )
     }
 
     await fastify.prisma.channel.update({
@@ -104,7 +127,17 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
       data: { state: 'OFFLINE', goneLiveAt: null },
     })
 
-    fastify.log.info({ slug: channel.slug, broadcastId: broadcast?.id }, 'rtmp stream ended')
+    fastify.log.info(
+      broadcast
+        ? broadcastSessionLogFields({
+            broadcastId: broadcast.id,
+            channelId: channel.id,
+            slug: channel.slug,
+            source: 'RTMP',
+          })
+        : { slug: channel.slug, channelId: channel.id },
+      'rtmp stream ended',
+    )
     return reply.status(200).send('ok')
   })
 

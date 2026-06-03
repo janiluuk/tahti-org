@@ -6,45 +6,58 @@ import { config } from '../../config.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
 
 const channelGetRoute: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/api/channels/:slug', async (request, reply) => {
-    const { slug } = request.params as { slug: string }
+  fastify.get(
+    '/api/channels/:slug',
+    {
+      schema: {
+        tags: ['channel'],
+        description: 'Public channel page payload (LISTENER-002 schedule + HLS when live)',
+      },
+    },
+    async (request, reply) => {
+      const { slug } = request.params as { slug: string }
 
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { slug },
-      select: {
-        slug: true,
-        state: true,
-        nextBroadcastAt: true,
-        nextBroadcastNote: true,
-        galleryMode: true,
-        slideshowImages: true,
-        textLayerMode: true,
-        textLayerText: true,
-        textLayerAlign: true,
-        videoBackgroundUrl: true,
-        user: {
-          select: {
-            username: true,
-            displayName: true,
-            bio: true,
-            avatarUrl: true,
-            tier: true,
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { slug },
+        select: {
+          slug: true,
+          state: true,
+          nextBroadcastAt: true,
+          nextBroadcastNote: true,
+          galleryMode: true,
+          slideshowImages: true,
+          textLayerMode: true,
+          textLayerText: true,
+          textLayerAlign: true,
+          videoBackgroundUrl: true,
+          user: {
+            select: {
+              username: true,
+              displayName: true,
+              bio: true,
+              avatarUrl: true,
+              tier: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    if (!channel) {
-      return reply.status(404).send({ error: 'Channel not found' })
-    }
+      if (!channel) {
+        return reply.status(404).send({ error: 'Channel not found' })
+      }
 
-    const hlsUrl =
-      channel.state === 'LIVE'
-        ? liveHlsUrl(config.hlsBaseUrl, channel.slug, channel.user.tier)
-        : null
+      const hlsUrl =
+        channel.state === 'LIVE'
+          ? liveHlsUrl(config.hlsBaseUrl, channel.slug, channel.user.tier)
+          : null
 
-    return reply.send({ ...channel, hlsUrl })
-  })
+      return reply.send({
+        ...channel,
+        nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
+        hlsUrl,
+      })
+    },
+  )
 }
 
 export default channelGetRoute

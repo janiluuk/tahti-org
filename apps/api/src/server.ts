@@ -84,9 +84,12 @@ import requestLogPlugin from './plugins/request-log.js'
 import { apiLoggerConfig } from './lib/logger.js'
 import { config } from './config.js'
 import {
+  BroadcastUsageResponseSchema,
   ChannelEgressResponseSchema,
   ChannelScheduleViewSchema,
   DownloadGateStatsResponseSchema,
+  GrantPreviewResponseSchema,
+  PublicChannelViewSchema,
   zodOpenApiComponents,
 } from '@tahti/shared'
 
@@ -125,6 +128,9 @@ export async function buildApp(opts: BuildOptions = {}) {
           ChannelEgress: ChannelEgressResponseSchema,
           DownloadGateStats: DownloadGateStatsResponseSchema,
           ChannelSchedule: ChannelScheduleViewSchema,
+          GrantPreview: GrantPreviewResponseSchema,
+          BroadcastUsage: BroadcastUsageResponseSchema,
+          PublicChannel: PublicChannelViewSchema,
         }),
       },
       tags: [

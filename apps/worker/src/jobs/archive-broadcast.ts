@@ -8,6 +8,7 @@ import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
 import { prisma } from '@tahti/db'
 import { isUnlimitedLiveTier } from '@tahti/shared/broadcast-cap'
+import { broadcastSessionLogFields } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 
 function ffmpegToMp3(inputPath: string, outputPath: string): Promise<void> {
@@ -59,8 +60,21 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
   })
 
   if (!broadcast) throw new Error(`Broadcast ${broadcastId} not found`)
+  const base = broadcastSessionLogFields({
+    broadcastId,
+    channelId: broadcast.channel.id,
+    slug: broadcast.channel.slug,
+    source: broadcast.source,
+  })
+
   if (!broadcast.recordingKey) {
-    console.log(`[worker] broadcast ${broadcastId} has no recording, skipping`)
+    console.log(
+      JSON.stringify({
+        ...base,
+        msg: 'no recordingKey, skipping archive',
+        component: 'archive-broadcast',
+      }),
+    )
     return
   }
 
@@ -119,8 +133,23 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
       where: { id: broadcastId },
       data: { archiveItemId: archiveItem.id },
     })
+    console.log(
+      JSON.stringify({
+        ...base,
+        archiveItemId: archiveItem.id,
+        msg: 'broadcast archived',
+        component: 'archive-broadcast',
+      }),
+    )
   } catch (err) {
-    console.error(`[worker] archive-broadcast ${broadcastId} failed:`, err)
+    console.error(
+      JSON.stringify({
+        ...base,
+        err: String(err),
+        msg: 'archive failed',
+        component: 'archive-broadcast',
+      }),
+    )
     throw err
   } finally {
     await rm(tmpDir, { recursive: true, force: true })

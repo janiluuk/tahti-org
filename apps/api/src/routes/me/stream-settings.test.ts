@@ -12,7 +12,7 @@ import {
 
 const PREFIX = 'stream-rotate-'
 
-describe('POST /api/me/stream-settings/rtmp/rotate', () => {
+describe('stream-settings rotate', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let cookie: string
   let channelId: string
@@ -27,7 +27,7 @@ describe('POST /api/me/stream-settings/rtmp/rotate', () => {
       username: 'stream-rotate-user',
       tier: 'ARTIST',
       isMember: true,
-      memberNumber: 98540,
+      memberNumber: 98542,
     })
     cookie = await sessionCookieFor(prisma, artist.id)
     channelId = (
@@ -43,20 +43,18 @@ describe('POST /api/me/stream-settings/rtmp/rotate', () => {
     await app.close()
   })
 
-  it('returns 409 when channel is LIVE (ARTIST-002)', async () => {
+  it('POST rtmp/rotate returns 409 when LIVE (ARTIST-002)', async () => {
     await prisma.channel.update({ where: { id: channelId }, data: { state: 'LIVE' } })
-
     const res = await app.inject({
       method: 'POST',
       url: '/api/me/stream-settings/rtmp/rotate',
       headers: { cookie },
     })
     expect(res.statusCode).toBe(409)
-
     await prisma.channel.update({ where: { id: channelId }, data: { state: 'OFFLINE' } })
   })
 
-  it('rotates key when offline', async () => {
+  it('POST rtmp/rotate succeeds when offline', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/me/stream-settings/rtmp/rotate',
@@ -64,5 +62,16 @@ describe('POST /api/me/stream-settings/rtmp/rotate', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().rtmpStreamKey).toContain('stream-rotate-user__')
+  })
+
+  it('POST icecast/rotate returns 409 when LIVE (ARTIST-002)', async () => {
+    await prisma.channel.update({ where: { id: channelId }, data: { state: 'LIVE' } })
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/stream-settings/icecast/rotate',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(409)
+    await prisma.channel.update({ where: { id: channelId }, data: { state: 'OFFLINE' } })
   })
 })
