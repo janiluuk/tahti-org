@@ -1,8 +1,10 @@
-# CI — website Docker build (always) + monorepo lint/test/agpl-check (when pnpm-lock.yaml exists)
+# CI — website Docker build + monorepo lint/typecheck, tests, and AGPL header check.
 #
-# Monorepo jobs (lint-typecheck, test, agpl-check) activate automatically once
-# pnpm-lock.yaml is committed (Phase 4 M0 scaffold). Until then only the website
-# image build runs.
+# NOTE: these jobs previously carried `if: hashFiles('pnpm-lock.yaml') != ''`.
+# hashFiles() is only valid inside a job's steps (it reads $GITHUB_WORKSPACE
+# after checkout); at the job level it makes GitHub reject the whole workflow at
+# startup ("workflow file issue", 0 jobs, 0s). The monorepo is committed, so the
+# guard is removed and the jobs always run.
 #
 # e2e-phase4 is a separate workflow (e2e-phase4.yml) — it runs against a live
 # deployment and must be triggered manually or via deploy hooks.
@@ -44,7 +46,6 @@ jobs:
 
   lint-typecheck:
     name: Lint & typecheck
-    if: hashFiles('pnpm-lock.yaml') != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 15
 
@@ -78,7 +79,6 @@ jobs:
 
   test:
     name: Unit + integration tests
-    if: hashFiles('pnpm-lock.yaml') != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -147,7 +147,6 @@ jobs:
 
   agpl-check:
     name: AGPL header check
-    if: hashFiles('pnpm-lock.yaml') != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 5
 
