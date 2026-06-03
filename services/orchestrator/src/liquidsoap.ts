@@ -14,6 +14,8 @@ const TEMPLATE_PATH = process.env.LIQUIDSOAP_TEMPLATE ?? '/srv/liquidsoap-channe
 const HLS_VOLUME = process.env.HLS_VOLUME ?? 'tahti_hls_shared'
 const RECORDINGS_VOLUME = process.env.RECORDINGS_VOLUME ?? 'tahti_recordings_shared'
 const API_URL = process.env.API_URL ?? 'http://api:3001'
+const ICECAST_BASE_URL = (process.env.ICECAST_BASE_URL ?? 'http://icecast:8000').replace(/\/$/, '')
+const DOCKER_NETWORK = process.env.CHANNEL_NETWORK ?? 'tahti-stack_default'
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
 
 function decryptKey(enc: string): string {

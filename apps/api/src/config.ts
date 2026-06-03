@@ -36,7 +36,16 @@ export const config = {
   orchestratorUrl: process.env.ORCHESTRATOR_URL ?? 'http://localhost:3003',
   hlsBaseUrl: process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live',
   rtmpIngestHost: process.env.RTMP_INGEST_HOST ?? 'localhost',
+  /** Internal hostname:port for Liquidsoap pull and ops (e.g. icecast:8000). */
   icecastHost: process.env.ICECAST_HOST ?? 'localhost:8100',
+  /** Public ingest URL shown in dashboard (e.g. https://ingest-icecast.tahti.live or http://localhost:8100). */
+  icecastPublicUrl:
+    process.env.ICECAST_PUBLIC_URL ??
+    (process.env.ICECAST_HOST?.startsWith('http')
+      ? process.env.ICECAST_HOST
+      : `http://${process.env.ICECAST_HOST ?? 'localhost:8100'}`),
+  /** Base URL Liquidsoap uses to pull live Icecast mounts (no trailing slash). */
+  icecastBaseUrl: process.env.ICECAST_BASE_URL ?? 'http://localhost:8100',
   rtmpKeyEncKey:
     process.env.RTMP_KEY_ENC_KEY ??
     'dev0000000000000000000000000000000000000000000000000000000000000',

@@ -12,6 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "bash tests/e2e/vital-flows.sh",
+    "test:e2e:journeys": "bash tests/e2e/user-journeys.sh",
+    "test:e2e:journeys:web": "node tests/e2e/user-journeys.mjs",
     "screenshots": "bash scripts/e2e-screenshots.sh",
     "test:e2e:phase4": "bash tests/e2e/phase-4.sh",
     "format": "prettier --write \"**/*.{ts,tsx,js,json}\" --ignore-path .gitignore",

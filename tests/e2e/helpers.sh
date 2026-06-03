@@ -68,3 +68,27 @@ e2e_summary() {
   echo "   RESULT: PASSED ✓"
   return 0
 }
+
+e2e_app_reachable() {
+  local path="${1:-/}"
+  e2e_http_code "$APP_URL$path" | grep -q '^200$'
+}
+
+e2e_api_login() {
+  local email="$1"
+  local pass="$2"
+  rm -f "$COOKIE_JAR"
+  local code
+  code=$(e2e_http_code -c "$COOKIE_JAR" -X POST "$API_URL/api/auth/login" \
+    -H 'Content-Type: application/json' \
+    -d "{\"email\":\"$email\",\"password\":\"$pass\"}")
+  [[ "$code" == "200" ]]
+}
+
+e2e_seed_journey_fixtures() {
+  if [[ -z "${DATABASE_URL:-}" ]]; then
+    e2e_yellow "DATABASE_URL unset — skip journey fixture seed"
+    return 1
+  fi
+  (cd "$(dirname "$0")/../../apps/api" && pnpm exec tsx scripts/seed-e2e-screenshots.ts) >/dev/null
+}

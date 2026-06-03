@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
-import { config } from '../../config.js'
+import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
 
 // nginx-rtmp sends form-encoded bodies to on_publish / on_done / on_update
@@ -60,7 +60,7 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       // Tell orchestrator to ensure Liquidsoap is running for this channel
-      spawnLiquidsoap(channel.id, channel.slug, broadcast.id).catch((err: unknown) =>
+      spawnChannelLiquidsoap(channel.id, channel.slug, broadcast.id).catch((err: unknown) =>
         fastify.log.error({ err }, 'orchestrator spawn failed'),
       )
 
@@ -107,21 +107,6 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/internal/rtmp/on_update', async (_request, reply) => {
     return reply.status(200).send('ok')
   })
-}
-
-async function spawnLiquidsoap(
-  channelId: string,
-  slug: string,
-  broadcastId: string,
-): Promise<void> {
-  const res = await fetch(`${config.orchestratorUrl}/spawn`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ channelId, slug, broadcastId }),
-  })
-  if (!res.ok) {
-    throw new Error(`Orchestrator returned ${res.status}`)
-  }
 }
 
 export default rtmpRoutes

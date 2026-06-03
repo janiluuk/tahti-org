@@ -32,9 +32,10 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         streamKey: channel.rtmpStreamKey,
       },
       icecast: {
-        server: `http://${config.icecastHost}`,
+        server: config.icecastPublicUrl.replace(/\/$/, ''),
         mount: channel.liveSourceMount,
         password: channel.liveSourcePass,
+        hint: 'Audio-only DJ apps (Mixxx, Traktor, butt) — not OBS. Same live show as RTMP.',
       },
       hlsUrl: liveHlsUrl(config.hlsBaseUrl, channel.slug, user.tier),
     })
