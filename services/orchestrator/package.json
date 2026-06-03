@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "fastify": "^4.28.0",
-    "@tahti/db": "workspace:*"
+    "@tahti/db": "workspace:*",
+    "@tahti/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

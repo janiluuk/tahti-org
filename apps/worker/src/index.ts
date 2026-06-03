@@ -11,6 +11,7 @@ import { processTranscodeReleaseTrackVersionJob } from './jobs/transcode-release
 import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
 import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
+import { processFinalizeBroadcastRecordingJob } from './jobs/finalize-broadcast-recording.js'
 import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
 import { processFanSubPayoutsJob } from './jobs/fan-sub-payout.js'
@@ -48,6 +49,8 @@ const worker = new Worker(
       await processMixcloudUploadJob(job)
     } else if (job.name === 'newsletter-dispatch') {
       await processNewsletterDispatch(job)
+    } else if (job.name === 'finalize-broadcast-recording') {
+      await processFinalizeBroadcastRecordingJob(job)
     } else if (job.name === 'archive-broadcast') {
       await processArchiveBroadcastJob(job)
     } else if (job.name === 'monthly-ledger-rollup') {

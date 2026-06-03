@@ -302,6 +302,9 @@ importers:
       '@tahti/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@tahti/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       fastify:
         specifier: ^4.28.0
         version: 4.29.1

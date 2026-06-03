@@ -5,6 +5,7 @@ import type { Job } from 'bullmq'
 import type { PrismaClient } from '@tahti/db'
 import { createClient } from 'redis'
 import { hlsSegmentAgeSecFromFs, hlsSegmentAgeSecFromMinio } from '../lib/hls-segment-age.js'
+import { broadcastSessionLogFields } from '@tahti/shared'
 import { restartChannelLiquidsoap } from '../lib/orchestrator.js'
 
 const STALE_SEC = parseInt(process.env.HLS_STALE_SECONDS ?? '20', 10)
@@ -92,7 +93,16 @@ export async function processChannelWatchdogJob(
       await restartChannelLiquidsoap(ch.id, ch.slug, broadcastId)
       restarted++
       console.warn(
-        `[channel-watchdog] restarted ${ch.slug} (segment age ${age.toFixed(0)}s > ${STALE_SEC}s)`,
+        JSON.stringify({
+          ...broadcastSessionLogFields({
+            broadcastId,
+            channelId: ch.id,
+            slug: ch.slug,
+          }),
+          segmentAgeSec: age,
+          msg: 'liquidsoap restarted after stale HLS',
+          component: 'channel-watchdog',
+        }),
       )
     } catch (err) {
       console.error(`[channel-watchdog] restart failed for ${ch.slug}:`, err)
