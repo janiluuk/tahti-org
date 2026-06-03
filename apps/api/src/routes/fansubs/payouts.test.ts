@@ -79,4 +79,16 @@ describe('GET /api/me/fan-sub-payouts', () => {
     expect(body.activeSubscribers).toBeGreaterThanOrEqual(1)
     expect(body.recent.length).toBeGreaterThanOrEqual(1)
   })
+
+  it('exports fan subscribers as CSV for GDPR', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/fan-subscribers/export.csv',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-type']).toContain('text/csv')
+    expect(res.body).toContain('fan-payouts-api-fan@example.com')
+    expect(res.body).toContain('Supporter')
+  })
 })

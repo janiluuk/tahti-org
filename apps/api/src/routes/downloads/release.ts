@@ -7,6 +7,7 @@ import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { evaluateDownloadCountPolicy } from '@tahti/shared'
 import { config } from '../../config.js'
+import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 
 // M18 — public release-track downloads with the same anti-fraud stack as
 // archive-item downloads. Reuses the Download table (releaseTrackId column).
@@ -133,7 +134,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
         const policy = evaluateDownloadCountPolicy({
           clientIp: request.ip ?? '0.0.0.0',
           userAgent: request.headers['user-agent'],
-          noCountCidrs: config.download.noCountCidrs,
+          noCountCidrs: await getDownloadNoCountCidrs(),
           trustOverrideIps: config.download.trustOverrideIps,
         })
         if (!policy.shouldCount) {

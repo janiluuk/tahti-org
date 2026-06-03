@@ -30,11 +30,13 @@ function eur(cents: number): string {
 export default function FanSubscriptionsPanel({
   initial,
   username,
+  apiUrl,
   connect,
   payoutStats,
 }: {
   initial: FanTier[]
   username: string
+  apiUrl: string
   connect: ConnectStatus
   payoutStats?: {
     pending: number
@@ -140,6 +142,10 @@ export default function FanSubscriptionsPanel({
               </span>
             )}
             {payoutStats.paidLast30Days > 0 && ` · ${payoutStats.paidLast30Days} paid (30d)`}
+            {' · '}
+            <a href={`${apiUrl}/api/me/fan-subscribers/export.csv`} style={{ color: '#2563eb' }}>
+              Export subscribers (CSV)
+            </a>
           </p>
           {payoutStats.recent && payoutStats.recent.length > 0 && (
             <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
