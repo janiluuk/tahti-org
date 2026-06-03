@@ -98,7 +98,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Hearthis-style metadata defaults on upload~~ — done |
-| P2 | Editable tracklists on archive items |
+| ~~P2~~ | ~~Editable tracklists on archive items~~ — dashboard `TracklistEditor` |
 | ~~P2~~ | ~~Repost/follow download gates~~ — done |
 | ~~P2~~ | ~~Channel gate funnel dashboard~~ — `GET /api/me/download-gate-stats` (done) |
 
