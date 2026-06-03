@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { AuditExportQuerySchema } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { sendCsv } from '../../lib/csv.js'
 
@@ -11,7 +12,13 @@ const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
     '/api/admin/audit/export.csv',
     { preHandler: requireBoard },
     async (request, reply) => {
-      const { since, until } = request.query as { since?: string; until?: string }
+      const parsed = AuditExportQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
+      const { since, until } = parsed.data
       const from = since ? new Date(since) : new Date(Date.now() - 90 * 86400_000)
       const to = until ? new Date(until) : new Date()
 

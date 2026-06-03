@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { TransparencyYearQuerySchema } from '@tahti/shared'
 
 // Public, CORS-open transparency endpoints.
 // These expose the nonprofit's financial data per AGPL principle 6.
@@ -15,8 +16,13 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /api/v1/transparency/monthly_rollup?year=YYYY
   fastify.get('/api/v1/transparency/monthly_rollup', async (request, reply) => {
-    const { year } = request.query as { year?: string }
-    const targetYear = year ?? new Date().getFullYear().toString()
+    const parsed = TransparencyYearQuerySchema.safeParse(request.query)
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: parsed.error.issues[0]?.message ?? 'Invalid query',
+      })
+    }
+    const targetYear = parsed.data.year ?? new Date().getFullYear().toString()
     const prefix = `${targetYear}-`
 
     const rollups = await fastify.prisma.monthlyRollup.findMany({

@@ -85,4 +85,41 @@ describe('GET /api/me/download-gate-stats', () => {
     expect(body.items[0]?.countedDownloadCount).toBeGreaterThanOrEqual(1)
     expect(body.daily.length).toBeGreaterThan(0)
   })
+
+  it('per-item endpoint includes countedDownloadCount for last 14 days', async () => {
+    const item = await prisma.archiveItem.create({
+      data: {
+        channelId,
+        title: 'Per-item gate',
+        rawKey: 'raw/per-item.mp3',
+        mp3Key: 'mp3/per-item.mp3',
+        durationSec: 60,
+        fileSizeBytes: 1000,
+        status: 'READY',
+        followToDownload: true,
+      },
+    })
+
+    await prisma.download.create({
+      data: {
+        channelId,
+        archiveItemId: item.id,
+        format: 'mp3_320',
+        byFingerprint: 'per-item-fp',
+        byIpHash: 'per-item-ip',
+        bytes: 5000,
+        reason: 'gate_follow',
+        countedAt: new Date(),
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${item.id}/download-gate-stats`,
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { countedDownloadCount: number }
+    expect(body.countedDownloadCount).toBeGreaterThanOrEqual(1)
+  })
 })

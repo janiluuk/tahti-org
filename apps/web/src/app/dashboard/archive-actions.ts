@@ -111,6 +111,7 @@ export async function fetchDownloadGateStats(itemId: string): Promise<{
     artistFollowerCount: number
     repostAckCount: number
     blockedDownloadAttempts: number
+    countedDownloadCount: number
   }
   error: string | null
 }> {

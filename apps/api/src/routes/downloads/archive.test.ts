@@ -87,6 +87,15 @@ describe('M18 — archive downloads + engagement units', () => {
     expect(res.statusCode).toBe(404)
   })
 
+  it('returns 400 for invalid download format query', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/c/${SLUG}/archive/${itemId}/download?format=wav`,
+      headers: dlHeaders,
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
   it('does not count the first download from a brand-new IP (24h threshold)', async () => {
     const res = await app.inject({
       method: 'GET',
