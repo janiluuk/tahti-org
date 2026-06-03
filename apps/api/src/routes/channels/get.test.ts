@@ -30,7 +30,9 @@ describe('GET /api/channels/:slug', () => {
           create: {
             slug: 'channel-get-testuser',
             liveSourceMount: '/live/channel-get-testuser',
-            liveSourcePassHash: 'dummy',
+            liveSourcePass: 'dummypass',
+              liveSourcePassHash: 'dummy',
+              rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },

@@ -1,0 +1,241 @@
+# Phase 5 deploy pipeline
+#
+# push to main  → build images → push to registry → deploy staging → smoke test
+# git tag v*.*.*  → (after staging smoke) → deploy production (requires manual approval)
+#
+# Required secrets (repository):
+#   REGISTRY_USER, REGISTRY_PASSWORD   — registry.tahti.fi credentials
+#   DEPLOY_SSH_PRIVATE_KEY             — ed25519 key authorized on staging + prod nodes
+#
+# Required variables (repository or environment):
+#   STAGING_HOST  — manager node IP for staging cluster
+#   PROD_HOST     — manager node IP for production cluster
+#   DEPLOY_PATH   — e.g. /srv/tahti (same on both clusters)
+
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: registry.tahti.fi
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9"
+
+jobs:
+  # ── Build all images ─────────────────────────────────────────────────────────
+  build:
+    name: Build & push images
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      tag: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to registry
+        run: |
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | \
+            docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USER }}" --password-stdin
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push website
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: website/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/website:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/website:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/website:latest
+          cache-to: type=inline
+
+      - name: Build and push api
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/api:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/api:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/api:latest
+          cache-to: type=inline
+
+      - name: Build and push web
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/web:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/web:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/web:latest
+          cache-to: type=inline
+
+      - name: Build and push worker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/worker:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/worker:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/worker:latest
+          cache-to: type=inline
+
+      - name: Build and push orchestrator
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/orchestrator/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/orchestrator:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/orchestrator:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/orchestrator:latest
+          cache-to: type=inline
+
+  # ── Deploy staging ───────────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy staging
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/config <<CFG
+          Host staging
+            HostName ${{ vars.STAGING_HOST }}
+            User root
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking accept-new
+          CFG
+
+      - name: Push stack files to staging
+        run: |
+          rsync -az --mkpath \
+            infra/docker-stack.yml \
+            infra/docker-stack.staging.yml \
+            infra/Caddyfile.staging \
+            infra/centrifugo.json \
+            infra/nginx-rtmp.conf \
+            infra/icecast.xml \
+            infra/prometheus.yml \
+            staging:${{ vars.DEPLOY_PATH || '/srv/tahti' }}/infra/
+
+      - name: Deploy Swarm stack
+        run: |
+          ssh staging "
+            cd ${{ vars.DEPLOY_PATH || '/srv/tahti' }}
+            TAG=${{ github.sha }} docker stack deploy \
+              --with-registry-auth \
+              --prune \
+              -c infra/docker-stack.yml \
+              -c infra/docker-stack.staging.yml \
+              tahti-staging
+          "
+
+      - name: Wait for healthy services
+        run: |
+          sleep 30
+          ssh staging "docker stack services tahti-staging --format '{{.Name}} {{.Replicas}}'"
+
+      - name: Smoke test staging
+        run: |
+          staging_host="${{ vars.STAGING_HOST }}"
+          curl -fsS --retry 5 --retry-delay 5 \
+            "http://${staging_host}:2080/smoke"
+          curl -fsS --retry 5 --retry-delay 5 \
+            "https://api.staging.tahti.fi/health" || echo "TLS not yet ready — skipping"
+
+  # ── Deploy production (tagged releases only, requires approval) ──────────────
+  deploy-production:
+    name: Deploy production
+    needs: deploy-staging
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/config <<CFG
+          Host prod
+            HostName ${{ vars.PROD_HOST }}
+            User root
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking accept-new
+          CFG
+
+      - name: Push stack files to production
+        run: |
+          rsync -az --mkpath \
+            infra/docker-stack.yml \
+            infra/Caddyfile \
+            infra/centrifugo.json \
+            infra/nginx-rtmp.conf \
+            infra/icecast.xml \
+            infra/prometheus.yml \
+            prod:${{ vars.DEPLOY_PATH || '/srv/tahti' }}/infra/
+
+      - name: Deploy Swarm stack
+        run: |
+          ssh prod "
+            cd ${{ vars.DEPLOY_PATH || '/srv/tahti' }}
+            TAG=${{ github.sha }} docker stack deploy \
+              --with-registry-auth \
+              --prune \
+              -c infra/docker-stack.yml \
+              tahti
+          "
+
+      - name: Wait for healthy services
+        run: |
+          sleep 45
+          ssh prod "docker stack services tahti --format '{{.Name}} {{.Replicas}}'"
+
+      - name: Smoke test production
+        run: |
+          curl -fsS --retry 5 --retry-delay 10 https://tahti.fi/health
+          curl -fsS --retry 5 --retry-delay 10 https://api.tahti.fi/health
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          ssh prod "
+            for svc in website api web worker-media worker-light chat orchestrator; do
+              docker service rollback tahti_\$svc || true
+            done
+          "

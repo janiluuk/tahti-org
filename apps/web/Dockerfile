@@ -12,9 +12,10 @@ WORKDIR /app
 COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/db/package.json     ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
-COPY apps/api/package.json        ./apps/api/
-COPY apps/worker/package.json     ./apps/worker/
-COPY apps/web/package.json        ./apps/web/
+COPY apps/api/package.json             ./apps/api/
+COPY apps/worker/package.json          ./apps/worker/
+COPY apps/web/package.json             ./apps/web/
+COPY services/orchestrator/package.json ./services/orchestrator/
 
 RUN pnpm install --frozen-lockfile
 
@@ -37,9 +38,10 @@ WORKDIR /app
 COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/db/package.json     ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
-COPY apps/api/package.json        ./apps/api/
-COPY apps/worker/package.json     ./apps/worker/
-COPY apps/web/package.json        ./apps/web/
+COPY apps/api/package.json             ./apps/api/
+COPY apps/worker/package.json          ./apps/worker/
+COPY apps/web/package.json             ./apps/web/
+COPY services/orchestrator/package.json ./services/orchestrator/
 
 RUN pnpm install --frozen-lockfile --prod
 

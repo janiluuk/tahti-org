@@ -18,6 +18,14 @@ import completeUploadRoute from './routes/uploads/complete.js'
 import channelGetRoute from './routes/channels/get.js'
 import channelItemsRoute from './routes/channels/items.js'
 import itemReadyRoute from './routes/internal/item-ready.js'
+import rtmpRoutes from './routes/internal/rtmp.js'
+import icecastRoutes from './routes/internal/icecast.js'
+import channelFallbackRoute from './routes/internal/channel-fallback.js'
+import streamSettingsRoutes from './routes/me/stream-settings.js'
+import chatTokenRoute from './routes/chat/token.js'
+import chatMessageRoute from './routes/chat/message.js'
+import chatAnnouncementsRoute from './routes/chat/announcements.js'
+import meChat from './routes/me/chat.js'
 import { config } from './config.js'
 
 export interface BuildOptions {
@@ -53,6 +61,18 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(channelGetRoute)
   await fastify.register(channelItemsRoute)
   await fastify.register(itemReadyRoute)
+
+  // M3: live ingest webhooks + stream settings
+  await fastify.register(rtmpRoutes)
+  await fastify.register(icecastRoutes)
+  await fastify.register(channelFallbackRoute)
+  await fastify.register(streamSettingsRoutes)
+
+  // M5: chat
+  await fastify.register(chatTokenRoute)
+  await fastify.register(chatMessageRoute)
+  await fastify.register(chatAnnouncementsRoute)
+  await fastify.register(meChat)
 
   return fastify
 }

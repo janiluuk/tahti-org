@@ -1,0 +1,96 @@
+version: "3.9"
+
+# Staging overrides — applied on top of docker-stack.yml for the staging cluster.
+#
+# Usage:
+#   TAG=<sha> docker stack deploy \
+#     -c infra/docker-stack.yml \
+#     -c infra/docker-stack.staging.yml \
+#     tahti-staging
+#
+# Staging differences vs production:
+#   - Single replica everywhere (less hardware, ok to have brief downtime)
+#   - Staging-specific domain labels in Caddy
+#   - STAGING=true env var in API + web for banner/debug features
+#   - Smaller memory / CPU limits
+#   - No worker-dist (distribution jobs don't run in staging)
+#   - Smoke-test endpoint exposed at /smoke
+
+services:
+
+  website:
+    environment:
+      STAGING: "true"
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.25", memory: 128M }
+
+  api:
+    environment:
+      STAGING: "true"
+      APP_URL: https://app.staging.tahti.fi
+      API_URL: https://api.staging.tahti.fi
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.5", memory: 512M }
+
+  web:
+    environment:
+      NEXT_PUBLIC_API_BASE: https://api.staging.tahti.fi
+      NEXT_PUBLIC_CHAT_BASE: https://chat.staging.tahti.fi
+      NEXT_PUBLIC_HLS_BASE: https://stream.staging.tahti.fi
+      INTERNAL_API_BASE: http://api:3001
+      STAGING: "true"
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.5", memory: 512M }
+
+  worker-media:
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "2", memory: 2G }
+
+  worker-dist:
+    deploy:
+      replicas: 0
+
+  worker-light:
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.5", memory: 256M }
+
+  orchestrator:
+    deploy:
+      replicas: 1
+
+  chat:
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "0.5", memory: 512M }
+
+  icecast:
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "1", memory: 512M }
+
+  rtmp-ingest:
+    deploy:
+      replicas: 1
+      resources:
+        limits: { cpus: "1", memory: 512M }
+
+  caddy:
+    configs:
+      - source: caddyfile_staging
+        target: /etc/caddy/Caddyfile
+
+configs:
+  caddyfile_staging:
+    file: ./Caddyfile.staging

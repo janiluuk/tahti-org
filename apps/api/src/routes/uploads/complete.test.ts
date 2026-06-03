@@ -44,7 +44,9 @@ describe('POST /api/uploads/complete', () => {
           create: {
             slug: channelSlug,
             liveSourceMount: `/live/${channelSlug}`,
-            liveSourcePassHash: 'dummy',
+            liveSourcePass: 'dummypass',
+              liveSourcePassHash: 'dummy',
+              rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },
