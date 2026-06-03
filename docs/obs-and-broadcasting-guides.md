@@ -56,7 +56,7 @@ dialog opens.
 In the settings dialog, click **Stream** in the left sidebar.
 
 - **Service:** select *Custom...*
-- **Server:** `rtmp://rtmp.tahti.fi/live` *(copy)*
+- **Server:** `rtmp://rtmp.tahti.live/live` *(copy)*
 - **Stream Key:** `<channel-id>__<rotating-secret>` *(copy — keep this private)*
 
 Click *Apply*.
@@ -119,7 +119,7 @@ In the *Sources* panel:
 
 Click **Start Streaming** in the bottom-right of OBS.
 
-After about 5 seconds, your channel at `<your-slug>.tahti.fi` will be live.
+After about 5 seconds, your channel at `<your-slug>.tahti.live` will be live.
 Your dashboard will show *LIVE* status. Listeners can tune in.
 
 **Step 8 — when you're done**
@@ -176,7 +176,7 @@ In the left sidebar, click **Live Broadcasting**.
 
 - **Server connection 1:**
   - **Type:** Icecast 2
-  - **Host:** `icecast.tahti.fi`
+  - **Host:** `icecast.tahti.live`
   - **Mount:** `/live/<channel-slug>` *(copy)*
   - **Port:** `8000`
   - **Login:** `source`
@@ -228,7 +228,7 @@ In the preferences sidebar, click **Broadcasting**.
 **Step 3 — configure server**
 
 - **Server Type:** Icecast 2
-- **Address:** `icecast.tahti.fi`
+- **Address:** `icecast.tahti.live`
 - **Port:** `8000`
 - **Mount Path:** `/live/<channel-slug>` *(copy)*
 - **Password:** `<your-source-password>` *(copy)*
@@ -268,7 +268,7 @@ In butt, click **Settings**.
 
 - **Server settings:**
   - **Type:** Icecast
-  - **Address:** `icecast.tahti.fi`
+  - **Address:** `icecast.tahti.live`
   - **Port:** `8000`
   - **Password:** `<your-source-password>` *(copy)*
   - **Icecast mountpoint:** `/live/<channel-slug>` *(copy)*

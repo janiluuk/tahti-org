@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
 import { RegisterSchema, LoginSchema, VerifyEmailSchema } from './auth.js'

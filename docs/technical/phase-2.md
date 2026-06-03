@@ -3,7 +3,7 @@
 **Goal:** any developer can clone the repo, run `make dev`, and have all infrastructure services running locally within 2 minutes. CI builds the website image and pushes it on every merge to `main`.
 
 **Timeline:** Week 2–4  
-**Entry state:** Phase 1 complete, tahti.fi is live.  
+**Entry state:** Phase 1 complete, tahti.live is live.  
 **New services (local only):** postgres, redis, minio, chat, icecast, rtmp-ingest, mailhog.
 
 ---
@@ -51,7 +51,7 @@ graph LR
 
     subgraph "CI job: website"
         GH --> Build[docker build\nwebsite/]
-        Build --> Push2[docker push\nregistry.tahti.fi\ntahti/website:sha]
+        Build --> Push2[docker push\nregistry.tahti.live\ntahti/website:sha]
         Push2 --> Deploy[SSH → make deploy\nTAG=sha]
     end
 
@@ -150,7 +150,7 @@ docker compose -f infra/docker-compose.dev.yml down -v
 |--------|-------|-----------|
 | `REGISTRY_PASSWORD` | Docker registry password | GitHub → Settings → Secrets |
 | `DEPLOY_SSH_KEY` | Private key for deploy user on VPS | GitHub → Settings → Secrets |
-| `DEPLOY_HOST` | `192.168.2.100` or `tahti.fi` | — |
+| `DEPLOY_HOST` | `192.168.2.100` or `tahti.live` | — |
 
 ### Website CI (`.github/workflows/website.yml`)
 
@@ -163,7 +163,7 @@ on:
     paths: ["website/**", "docker-compose.yml"]
 
 env:
-  REGISTRY: registry.tahti.fi
+  REGISTRY: registry.tahti.live
   IMAGE: tahti/website
 
 jobs:
@@ -221,4 +221,4 @@ Or edit the port in `infra/docker-compose.dev.yml` locally (do not commit).
 | Redis accessible | `redis-cli -p 6379 ping` | `PONG` |
 | MinIO accessible | `curl -s http://localhost:9000/minio/health/live` | `200` |
 | CI green | Push a whitespace change to `website/index.html` | Workflow passes in < 3 min |
-| Registry push works | `docker pull registry.tahti.fi/tahti/website:latest` | Pulls successfully |
+| Registry push works | `docker pull registry.tahti.live/tahti/website:latest` | Pulls successfully |

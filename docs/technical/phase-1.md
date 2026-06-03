@@ -1,6 +1,6 @@
 # Phase 1 — Website live
 
-**Goal:** `tahti.fi` and `www.tahti.fi` serve the marketing site over HTTPS with a valid Let's Encrypt certificate. No manual steps after `git push` to main.
+**Goal:** `tahti.live` and `www.tahti.live` serve the marketing site over HTTPS with a valid Let's Encrypt certificate. No manual steps after `git push` to main.
 
 **Timeline:** Week 1–2  
 **Entry state:** domain registered at Traficom, single VPS provisioned (UpCloud Helsinki, 2 vCPU / 4 GB).  
@@ -21,12 +21,12 @@ graph TB
         direction TB
         Caddy[Caddy 2\nport 80 / 443\nACME auto-TLS]
         Website[website\nnginx:1.27-alpine\nport 80 internal]
-        Reg[Docker Registry v2\nregistry.tahti.fi:5000]
+        Reg[Docker Registry v2\nregistry.tahti.live:5000]
         Swarm[Docker Swarm\nsingle-node manager]
     end
 
     subgraph DNS ["DNS — Traficom / registrar"]
-        A_rec["A  tahti.fi → VPS IP\nA  www.tahti.fi → VPS IP\nA  registry.tahti.fi → VPS IP"]
+        A_rec["A  tahti.live → VPS IP\nA  www.tahti.live → VPS IP\nA  registry.tahti.live → VPS IP"]
     end
 
     V -- HTTPS 443 --> Caddy
@@ -41,7 +41,7 @@ graph TB
 sequenceDiagram
     participant Dev as Developer
     participant GH as GitHub Actions
-    participant Reg as registry.tahti.fi
+    participant Reg as registry.tahti.live
     participant VPS as VPS Swarm manager
 
     Dev->>GH: git push main
@@ -88,14 +88,14 @@ docker run -d \
   registry:2
 ```
 
-Add a Caddy route to proxy `registry.tahti.fi` → `localhost:5000` (add to Caddyfile, reload).
+Add a Caddy route to proxy `registry.tahti.live` → `localhost:5000` (add to Caddyfile, reload).
 
 ### 4 — Build and push the website image
 
 ```bash
 # On your local machine
 make build-website TAG=init
-docker save registry.tahti.fi/tahti/website:init | ssh root@<vps-ip> docker load
+docker save registry.tahti.live/tahti/website:init | ssh root@<vps-ip> docker load
 # Or from CI once the registry DNS is live:
 make push TAG=init
 ```
@@ -116,7 +116,7 @@ configs:
   caddyfile: { file: ./Caddyfile }
 services:
   website:
-    image: registry.tahti.fi/tahti/website:${TAG:-latest}
+    image: registry.tahti.live/tahti/website:${TAG:-latest}
     networks: [edge]
     deploy:
       replicas: 1
@@ -145,9 +145,9 @@ TAG=init docker stack deploy -c infra/docker-stack-phase1.yml tahti
 
 At your registrar, set:
 ```
-A    tahti.fi          →  <VPS IP>
-A    www.tahti.fi      →  <VPS IP>
-A    registry.tahti.fi →  <VPS IP>
+A    tahti.live          →  <VPS IP>
+A    www.tahti.live      →  <VPS IP>
+A    registry.tahti.live →  <VPS IP>
 ```
 
 TTL 300 for rapid iteration; raise to 3600 after confirming TLS.
@@ -155,14 +155,14 @@ TTL 300 for rapid iteration; raise to 3600 after confirming TLS.
 ### 7 — Verify
 
 ```bash
-curl -I https://tahti.fi
+curl -I https://tahti.live
 # HTTP/2 200
 # server: Caddy
 
-curl -I https://www.tahti.fi
+curl -I https://www.tahti.live
 # HTTP/2 200 (Caddy redirects www → apex or serves both)
 
-curl -s https://tahti.fi | grep -c "Tahti"
+curl -s https://tahti.live | grep -c "Tahti"
 # Should be > 0
 ```
 
@@ -183,14 +183,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build
         run: |
-          docker build -t registry.tahti.fi/tahti/website:${{ github.sha }} website/
+          docker build -t registry.tahti.live/tahti/website:${{ github.sha }} website/
       - name: Push
         run: |
-          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login registry.tahti.fi -u tahti --password-stdin
-          docker push registry.tahti.fi/tahti/website:${{ github.sha }}
+          echo ${{ secrets.REGISTRY_PASSWORD }} | docker login registry.tahti.live -u tahti --password-stdin
+          docker push registry.tahti.live/tahti/website:${{ github.sha }}
       - name: Deploy
         run: |
-          ssh -o StrictHostKeyChecking=no deploy@tahti.fi \
+          ssh -o StrictHostKeyChecking=no deploy@tahti.live \
             "TAG=${{ github.sha }} make -C /srv/tba-platform deploy"
 ```
 
@@ -198,11 +198,11 @@ jobs:
 
 | Check | Command | Expected |
 |-------|---------|----------|
-| HTTPS responds | `curl -I https://tahti.fi` | HTTP/2 200 |
-| Certificate valid | `curl -v https://tahti.fi 2>&1 \| grep issuer` | Let's Encrypt |
-| www redirects | `curl -I https://www.tahti.fi` | 200 or 301→apex |
-| `/health` works | `curl https://tahti.fi/health` | `ok` |
-| Response time | `curl -w "%{time_total}" -o /dev/null https://tahti.fi` | < 0.3 s |
+| HTTPS responds | `curl -I https://tahti.live` | HTTP/2 200 |
+| Certificate valid | `curl -v https://tahti.live 2>&1 \| grep issuer` | Let's Encrypt |
+| www redirects | `curl -I https://www.tahti.live` | 200 or 301→apex |
+| `/health` works | `curl https://tahti.live/health` | `ok` |
+| Response time | `curl -w "%{time_total}" -o /dev/null https://tahti.live` | < 0.3 s |
 | CI deploys | Push a whitespace change to `website/index.html` | Redeploys within 3 min |
 
 ## What is NOT deployed yet

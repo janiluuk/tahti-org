@@ -1,12 +1,13 @@
 # syntax=docker/dockerfile:1
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Copyright (C) 2024 Tahti ry <https://tahti.fi>
+# Copyright (C) 2024 Tahti ry <https://tahti.live>
 #
 # Build from repo root:
 #   docker build -f services/orchestrator/Dockerfile -t tahti/orchestrator .
 
 FROM node:20-alpine
-RUN corepack enable && corepack prepare pnpm@9 --activate && \
+RUN apk add --no-cache docker-cli && \
+    corepack enable && corepack prepare pnpm@9 --activate && \
     npm install -g tsx@4
 
 WORKDIR /app

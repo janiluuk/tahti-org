@@ -1,11 +1,11 @@
-# CI/CD — marketing website (tahti.fi)
+# CI/CD — marketing website (tahti.live)
 #
 # Triggered on any push to main that touches website/ or infra/Caddyfile.
 # Builds the nginx image, pushes to the self-hosted registry, and triggers
 # a rolling update on the production Swarm via SSH.
 #
 # Required repository secrets:
-#   REGISTRY_PASSWORD   — password for registry.tahti.fi
+#   REGISTRY_PASSWORD   — password for registry.tahti.live
 #   DEPLOY_SSH_KEY      — private key for the deploy user on the production node
 #   DEPLOY_HOST         — production node IP or hostname
 
@@ -26,7 +26,7 @@ on:
         required: false
 
 env:
-  REGISTRY: registry.tahti.fi
+  REGISTRY: registry.tahti.live
   IMAGE: tahti/website
 
 jobs:
@@ -95,7 +95,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             sleep 10
-            curl -sf https://tahti.fi/health | grep -q "ok" || (echo "Health check failed"; exit 1)
+            curl -sf https://tahti.live/health | grep -q "ok" || (echo "Health check failed"; exit 1)
             echo "✓ Production health check passed"
 
       - name: Notify on failure

@@ -1,25 +1,25 @@
 {
-    email ops@tahti.fi
+    email ops@tahti.live
     admin 0.0.0.0:2019
 }
 
 # ── Staging: marketing site ───────────────────────────────────────────────────
-staging.tahti.fi {
+staging.tahti.live {
     encode zstd gzip
     reverse_proxy website:80
 }
 
 # ── Staging: artist app ───────────────────────────────────────────────────────
-app.staging.tahti.fi {
+app.staging.tahti.live {
     encode zstd gzip
     reverse_proxy web:3000
 }
 
 # ── Staging: API ──────────────────────────────────────────────────────────────
-api.staging.tahti.fi {
+api.staging.tahti.live {
     encode zstd gzip
     @cors method OPTIONS
-    header @cors Access-Control-Allow-Origin "https://staging.tahti.fi https://app.staging.tahti.fi"
+    header @cors Access-Control-Allow-Origin "https://staging.tahti.live https://app.staging.tahti.live"
     header @cors Access-Control-Allow-Credentials "true"
     header @cors Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     header @cors Access-Control-Allow-Headers "Content-Type, Authorization"
@@ -27,7 +27,7 @@ api.staging.tahti.fi {
 }
 
 # ── Staging: chat WebSocket ───────────────────────────────────────────────────
-chat.staging.tahti.fi {
+chat.staging.tahti.live {
     @ws header Connection *Upgrade*
     @ws header Upgrade websocket
     reverse_proxy @ws chat:8000
@@ -35,7 +35,7 @@ chat.staging.tahti.fi {
 }
 
 # ── Staging: HLS streams ──────────────────────────────────────────────────────
-stream.staging.tahti.fi {
+stream.staging.tahti.live {
     encode gzip
     header Access-Control-Allow-Origin "*"
     header Cache-Control "public, max-age=2, s-maxage=10"
@@ -44,7 +44,7 @@ stream.staging.tahti.fi {
 }
 
 # ── Staging: per-channel wildcard ─────────────────────────────────────────────
-*.staging.tahti.fi {
+*.staging.tahti.live {
     @valid expression {labels.1} == "staging" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream"
     encode zstd gzip
     reverse_proxy @valid web:3000 {

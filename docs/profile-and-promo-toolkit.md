@@ -20,7 +20,7 @@ profile. Three things to keep in mind:
 
 ## The artist profile page
 
-URL: `tahti.fi/u/<handle>`
+URL: `tahti.live/u/<handle>`
 
 ### Sections
 
@@ -87,7 +87,7 @@ URL: `tahti.fi/u/<handle>`
 - Twitter Card: `summary_large_image`
 - JSON-LD: `MusicGroup` schema with embedded `MusicAlbum` entries
 - Sitemap: every published release gets its own sitemap entry
-- Canonical URL is `tahti.fi/u/<handle>`; custom domain (Studio) sets canonical
+- Canonical URL is `tahti.live/u/<handle>`; custom domain (Studio) sets canonical
   to the custom domain version
 
 ### Performance
@@ -166,9 +166,9 @@ the imperceptible quality benefit.
 ### Embed widget
 
 URL pattern:
-- `tahti.fi/embed/r/<release-id>` — single release player
-- `tahti.fi/embed/c/<channel-slug>` — channel "now playing" player
-- `tahti.fi/embed/u/<handle>` — artist profile mini-widget
+- `tahti.live/embed/r/<release-id>` — single release player
+- `tahti.live/embed/c/<channel-slug>` — channel "now playing" player
+- `tahti.live/embed/u/<handle>` — artist profile mini-widget
 
 Implementation:
 - Separate Next.js app under `services/embed`, no shared chrome
@@ -179,12 +179,12 @@ Implementation:
 - HLS.js loaded only when play is clicked (lazy)
 
 oEmbed discovery:
-- `GET /oembed?url=https://tahti.fi/r/abc&format=json` returns oEmbed JSON
+- `GET /oembed?url=https://tahti.live/r/abc&format=json` returns oEmbed JSON
 - WordPress, Substack, Notion, Ghost auto-embed when artist pastes a release URL
 
 ### Smart links
 
-URL pattern: `tahti.fi/r/<smart-link-slug>`
+URL pattern: `tahti.live/r/<smart-link-slug>`
 
 Page renders:
 - Cover art

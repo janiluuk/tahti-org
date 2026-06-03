@@ -228,7 +228,7 @@ When a subscriber cancels:
 
 ### Subscribe page design
 
-On `tahti.fi/u/<handle>/subscribe`:
+On `tahti.live/u/<handle>/subscribe`:
 - Artist hero (same as profile)
 - Intro text: why subscribe (artist-written)
 - Tier cards: name, price, benefits

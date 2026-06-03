@@ -1,6 +1,6 @@
 <icecast>
     <location>Helsinki, Finland</location>
-    <admin>ops@tahti.fi</admin>
+    <admin>ops@tahti.live</admin>
 
     <limits>
         <clients>1000</clients>
@@ -21,7 +21,7 @@
         <admin-password>REPLACE_VIA_ENV</admin-password>
     </authentication>
 
-    <hostname>ingest-icecast.tahti.fi</hostname>
+    <hostname>ingest-icecast.tahti.live</hostname>
 
     <listen-socket>
         <port>8000</port>

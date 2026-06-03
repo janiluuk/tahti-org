@@ -1,4 +1,4 @@
-REGISTRY   ?= registry.tahti.fi
+REGISTRY   ?= registry.tahti.live
 TAG        ?= $(shell git rev-parse --short HEAD)
 STACK_NAME ?= tahti
 COMPOSE    := docker compose -f infra/docker-compose.dev.yml

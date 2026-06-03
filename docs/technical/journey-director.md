@@ -81,7 +81,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant DIR as Director
-    participant Web as app.tahti.fi/agm
+    participant Web as app.tahti.live/agm
     participant Artists as Artist members
     participant Board as Board
 
@@ -100,7 +100,7 @@ sequenceDiagram
     Board->>DIR: Board formally adopts results
 
     DIR->>Web: Publish AGM minutes (within 30 days, per bylaws)
-    Web-->>Artists: Minutes available at app.tahti.fi/transparency
+    Web-->>Artists: Minutes available at app.tahti.live/transparency
 ```
 
 ---
@@ -129,7 +129,7 @@ flowchart TD
     end
 
     subgraph "Public dashboard"
-        PD[app.tahti.fi/transparency\n— no auth required\n— updates in real time]
+        PD[app.tahti.live/transparency\n— no auth required\n— updates in real time]
 
         PD_REV[Revenue: €X this year]
         PD_COST[Costs: €Y this year]
@@ -184,7 +184,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant A as Artist (Veera)
-    participant Email as ops@tahti.fi
+    participant Email as ops@tahti.live
     participant DIR as Director
     participant API as Admin API
     participant PG as Postgres

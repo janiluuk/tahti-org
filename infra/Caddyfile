@@ -1,23 +1,23 @@
 {
-    email ops@tahti.fi
+    email ops@tahti.live
     admin 0.0.0.0:2019
 }
 
 # ── Marketing site ────────────────────────────────────────────────────────────
-tahti.fi, www.tahti.fi {
+tahti.live, www.tahti.live {
     encode zstd gzip
     reverse_proxy website:80
 }
 
 # ── Artist app ────────────────────────────────────────────────────────────────
-app.tahti.fi {
+app.tahti.live {
     encode zstd gzip
     reverse_proxy web:3000
 }
 
 # ── Per-channel landing pages — wildcard subdomain routing ───────────────────
-*.tahti.fi {
-    @app host app.tahti.fi
+*.tahti.live {
+    @app host app.tahti.live
     @valid expression {labels.0} != "www" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream" && {labels.0} != "cdn" && {labels.0} != "ingest-icecast" && {labels.0} != "minio" && {labels.0} != "grafana"
     encode zstd gzip
     reverse_proxy @valid web:3000 {
@@ -29,10 +29,10 @@ app.tahti.fi {
 }
 
 # ── Artist API ────────────────────────────────────────────────────────────────
-api.tahti.fi {
+api.tahti.live {
     encode zstd gzip
     @cors method OPTIONS
-    header @cors Access-Control-Allow-Origin "https://tahti.fi https://app.tahti.fi"
+    header @cors Access-Control-Allow-Origin "https://tahti.live https://app.tahti.live"
     header @cors Access-Control-Allow-Credentials "true"
     header @cors Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     header @cors Access-Control-Allow-Headers "Content-Type, Authorization"
@@ -40,7 +40,7 @@ api.tahti.fi {
 }
 
 # ── Centrifugo WebSocket for live chat ────────────────────────────────────────
-chat.tahti.fi {
+chat.tahti.live {
     @ws header Connection *Upgrade*
     @ws header Upgrade websocket
     reverse_proxy @ws chat:8000
@@ -48,7 +48,7 @@ chat.tahti.fi {
 }
 
 # ── Public HLS streams — served direct; UpCloud Helsinki mirrors for spillover ─
-stream.tahti.fi {
+stream.tahti.live {
     encode gzip
     header Access-Control-Allow-Origin "*"
     header Cache-Control "public, max-age=2, s-maxage=10"
@@ -57,25 +57,25 @@ stream.tahti.fi {
 }
 
 # ── CDN origin for archive items, covers, waveforms ──────────────────────────
-cdn.tahti.fi {
+cdn.tahti.live {
     reverse_proxy minio:9000
     header Cache-Control "public, max-age=86400"
 }
 
 # ── Icecast ingest ────────────────────────────────────────────────────────────
-ingest-icecast.tahti.fi {
+ingest-icecast.tahti.live {
     reverse_proxy icecast:8000
 }
 
 # ── MinIO admin console — restrict to ops IPs ────────────────────────────────
-minio.tahti.fi {
+minio.tahti.live {
     @allowed remote_ip 127.0.0.1/32 10.0.0.0/8
     reverse_proxy @allowed minio:9001
     respond 403
 }
 
 # ── Grafana dashboards — restrict to ops IPs ─────────────────────────────────
-grafana.tahti.fi {
+grafana.tahti.live {
     @allowed remote_ip 127.0.0.1/32 10.0.0.0/8
     reverse_proxy @allowed grafana:3000
     respond 403

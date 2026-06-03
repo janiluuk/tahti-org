@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 generator client {
   provider        = "prisma-client-js"
@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat"]
+  schemas  = ["core", "channel", "chat", "ledger", "governance"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -55,6 +55,67 @@ enum BroadcastSource {
   @@schema("channel")
 }
 
+enum RtmpTargetProvider {
+  YOUTUBE
+  TWITCH
+  FACEBOOK
+  MIXCLOUD_LIVE
+  CUSTOM
+
+  @@schema("channel")
+}
+
+enum LedgerCategory {
+  REVENUE_SUBSCRIPTION
+  REVENUE_DISTRIBUTION
+  REVENUE_GRANT_INBOUND
+  REVENUE_DONATION
+  COST_INFRASTRUCTURE
+  COST_DISTRIBUTION_PASSTHROUGH
+  COST_OPERATIONS
+  COST_SALARY
+  COST_AUDIT
+  COST_PROFESSIONAL_SERVICES
+  GRANT_DISBURSEMENT
+  RESERVE_TRANSFER
+
+  @@schema("ledger")
+}
+
+enum AuditAction {
+  CHAT_BAN
+  CHAT_UNBAN
+  CHAT_MESSAGE_DELETE
+  STREAM_KEY_ROTATE
+  RTMP_TARGET_ADD
+  RTMP_TARGET_DELETE
+  LEDGER_ENTRY_CREATE
+  MEMBER_SUSPEND
+  MEMBER_REINSTATE
+  MOTION_CREATE
+  MOTION_OPEN
+  MOTION_CLOSE
+  VOTE_CAST
+
+  @@schema("governance")
+}
+
+enum MotionState {
+  DRAFT
+  OPEN
+  CLOSED
+
+  @@schema("governance")
+}
+
+enum VoteChoice {
+  YES
+  NO
+  ABSTAIN
+
+  @@schema("governance")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model User {
@@ -70,6 +131,7 @@ model User {
   tipJarUrl             String?
   tier                  ArtistTier @default(FREE)
   isMember              Boolean    @default(false)
+  isBoard               Boolean    @default(false)
   memberNumber          Int?       @unique
   memberSince           DateTime?
   publicAttribution     Boolean    @default(true)
@@ -86,6 +148,8 @@ model User {
   emailVerifications EmailVerification[]
   membership         Membership?
   channel            Channel?
+  motionsProposed    Motion[]
+  votes              Vote[]
 
   @@schema("core")
 }
@@ -153,6 +217,7 @@ model Channel {
   broadcasts     Broadcast[]
   announcements  ChannelAnnouncement[]
   chatBans       ChatBan[]
+  rtmpTargets    RtmpTarget[]
 
   @@schema("channel")
 }
@@ -182,17 +247,23 @@ model ChannelAnnouncement {
   @@schema("channel")
 }
 
-// ── Chat schema ───────────────────────────────────────────────────────────────
+// Encrypted stream key stored as base64(nonce+ciphertext); key comes from
+// RTMP_KEY_ENC_KEY env var (32-byte hex). plaintext key never stored unencrypted.
+model RtmpTarget {
+  id           String             @id @default(cuid())
+  channelId    String
+  channel      Channel            @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  provider     RtmpTargetProvider
+  label        String
+  rtmpUrl      String
+  streamKeyEnc String
+  alwaysMirror Boolean            @default(false)
+  enabled      Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
-model ChatBan {
-  id              String   @id @default(cuid())
-  channelId       String
-  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  fingerprintHash String
-  bannedAt        DateTime @default(now())
-
-  @@unique([channelId, fingerprintHash])
-  @@schema("chat")
+  @@index([channelId])
+  @@schema("channel")
 }
 
 model ArchiveItem {
@@ -211,4 +282,99 @@ model ArchiveItem {
 
   @@index([channelId, createdAt(sort: Desc)])
   @@schema("channel")
+}
+
+// ── Chat schema ───────────────────────────────────────────────────────────────
+
+model ChatBan {
+  id              String   @id @default(cuid())
+  channelId       String
+  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  fingerprintHash String
+  bannedAt        DateTime @default(now())
+
+  @@unique([channelId, fingerprintHash])
+  @@schema("chat")
+}
+
+// ── Ledger schema (append-only) ───────────────────────────────────────────────
+
+model LedgerEntry {
+  id           BigInt          @id @default(autoincrement())
+  category     LedgerCategory
+  amountCents  BigInt
+  currency     String          @default("EUR")
+  description  String
+  externalRef  String?
+  periodStart  DateTime
+  periodEnd    DateTime
+  createdAt    DateTime        @default(now())
+  createdBy    String
+
+  @@index([category, periodStart])
+  @@index([createdAt])
+  @@schema("ledger")
+}
+
+model MonthlyRollup {
+  yearMonth   String   @id
+  byCategory  Json
+  surplus     BigInt
+  finalizedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@schema("ledger")
+}
+
+// ── Governance schema ─────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         BigInt      @id @default(autoincrement())
+  action     AuditAction
+  actorId    String
+  targetId   String?
+  meta       Json?
+  createdAt  DateTime    @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@schema("governance")
+}
+
+// ── Member governance (M10) ───────────────────────────────────────────────────
+// Voting is ADVISORY for Y1 (see docs/planning-decisions.md Topic 11). Binding
+// AGM decisions require a live meeting until the bylaws authorize asynchronous
+// electronic voting; `advisory` flips to false once that clause is filed.
+
+model Motion {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  proposedBy  String
+  proposer    User        @relation(fields: [proposedBy], references: [id])
+  advisory    Boolean     @default(true)
+  openAt      DateTime
+  closeAt     DateTime
+  state       MotionState @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  votes Vote[]
+
+  @@index([state, closeAt])
+  @@schema("governance")
+}
+
+model Vote {
+  motionId String
+  motion   Motion     @relation(fields: [motionId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  choice   VoteChoice
+  castAt   DateTime   @default(now())
+
+  @@id([motionId, userId])
+  @@index([motionId])
+  @@schema("governance")
 }

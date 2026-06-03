@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import Fastify from 'fastify'
 import cookie from '@fastify/cookie'
@@ -25,7 +25,14 @@ import streamSettingsRoutes from './routes/me/stream-settings.js'
 import chatTokenRoute from './routes/chat/token.js'
 import chatMessageRoute from './routes/chat/message.js'
 import chatAnnouncementsRoute from './routes/chat/announcements.js'
+import chatReactRoute from './routes/chat/react.js'
+import chatPresenceRoute from './routes/chat/presence.js'
 import meChat from './routes/me/chat.js'
+import rtmpTargetRoutes from './routes/me/rtmp-targets.js'
+import transparencyRoutes from './routes/transparency/index.js'
+import adminLedgerRoutes from './routes/admin/ledger.js'
+import governanceRoutes from './routes/governance/index.js'
+import rateLimitPlugin from './plugins/rate-limit.js'
 import { config } from './config.js'
 
 export interface BuildOptions {
@@ -42,6 +49,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(sensible)
   await fastify.register(dbPlugin)
   await fastify.register(authPlugin)
+  await fastify.register(rateLimitPlugin)
 
   // Add Source-Code header for AGPL §13 compliance
   fastify.addHook('onSend', async (_request, reply) => {
@@ -72,7 +80,19 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(chatTokenRoute)
   await fastify.register(chatMessageRoute)
   await fastify.register(chatAnnouncementsRoute)
+  await fastify.register(chatReactRoute)
+  await fastify.register(chatPresenceRoute)
   await fastify.register(meChat)
+
+  // M6: RTMP multistream targets
+  await fastify.register(rtmpTargetRoutes)
+
+  // M8: transparency ledger
+  await fastify.register(transparencyRoutes)
+  await fastify.register(adminLedgerRoutes)
+
+  // M10: member governance (motions + advisory voting)
+  await fastify.register(governanceRoutes)
 
   return fastify
 }

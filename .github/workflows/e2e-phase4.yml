@@ -3,8 +3,8 @@
 # Triggered manually or via a deploy hook (e.g. after `make deploy`).
 #
 # Required secrets:
-#   E2E_API_URL    — Fastify API base URL  (e.g. https://api.tahti.fi)
-#   E2E_APP_URL    — Next.js web base URL  (e.g. https://app.tahti.fi)
+#   E2E_API_URL    — Fastify API base URL  (e.g. https://api.tahti.live)
+#   E2E_APP_URL    — Next.js web base URL  (e.g. https://app.tahti.live)
 #   E2E_MAILHOG_URL — MailHog base URL     (optional; skip token tests if absent)
 
 name: E2E — Phase 4
