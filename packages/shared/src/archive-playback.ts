@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 /** ffprobe format names for lossless uploads — keep FLAC, do not derive MP3. */
 export const LOSSLESS_SOURCE_FORMATS = [

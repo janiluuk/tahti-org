@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 /** Where artists get stream keys — shown in dashboard Multistream form. */
 export const RTMP_PROVIDERS = [

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 // Mixcloud Upload API client (M7).
 // Mixcloud's upload API accepts a multipart form POST with the mix file and metadata.

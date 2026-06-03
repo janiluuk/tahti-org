@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 // Pure, deterministic grant allocation. No I/O — given a year's surplus and
 // each artist's engagement units, it produces exact per-artist grant amounts
