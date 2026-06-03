@@ -13,7 +13,7 @@ import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
 import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
-import { processFanSubPayouts } from './jobs/fan-sub-payout.js'
+import { processFanSubPayoutsJob } from './jobs/fan-sub-payout.js'
 import { processFanSubExpire } from './jobs/fan-sub-expire.js'
 import { processDownloadFraudScanJob } from './jobs/download-fraud-scan.js'
 import {
@@ -55,7 +55,7 @@ const worker = new Worker(
       const summary = await processWeeklyBroadcastReset(prisma)
       console.log('[worker] weekly-broadcast-reset:', JSON.stringify(summary))
     } else if (job.name === 'fan-sub-payout') {
-      const summary = await processFanSubPayouts(prisma)
+      const summary = await processFanSubPayoutsJob(prisma)
       console.log('[worker] fan-sub-payout:', JSON.stringify(summary))
     } else if (job.name === 'fan-sub-expire') {
       const summary = await processFanSubExpire(prisma)

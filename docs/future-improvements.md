@@ -50,10 +50,10 @@ Last reviewed: 2026-06-03 (audit pass)
 ### M19 — Fan subscriptions
 | P | Item |
 |---|---|
-| P1 | Payout transfer cron: live Stripe transfer + failed-payout retry queue |
+| ~~P1~~ | ~~Payout transfer cron: live Stripe transfer + failed-payout retry queue~~ — `@tahti/ledger` + worker transfer retry (done) |
 | ~~P2~~ | ~~Fan-only chat / newsletter perks~~ — `FAN_CHAT` / `FAN_NEWSLETTER` codes (done) |
 | ~~P2~~ | ~~Churn grace on `customer.subscription.deleted`~~ — worker + tests (done) |
-| P2 | Dashboard UI: send newsletter draft to `audience: fans` only |
+| ~~P2~~ | ~~Dashboard UI: send newsletter draft to `audience: fans` only~~ — done |
 
 ### M20 — Tier gating
 | P | Item |
@@ -69,7 +69,7 @@ Last reviewed: 2026-06-03 (audit pass)
 |---|---|
 | ~~P1~~ | ~~24h net-new-IP threshold~~ — done |
 | ~~P2~~ | ~~Release-track downloads~~ — done (basic) |
-| P2 | Tor exit / datacenter IP allowlist |
+| ~~P2~~ | ~~Tor exit / datacenter IP allowlist~~ — `DOWNLOAD_NO_COUNT_CIDRS` + bot UA (done) |
 | ~~P2~~ | ~~Nightly fraud-scan cron (velocity anomalies)~~ — done |
 | P2 | FLAC/source formats for all release-track tiers (parity with archive) |
 
@@ -82,7 +82,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | P2 | hCaptcha on first chat message (token join only today) |
 | P2 | ACRCloud cost watchdog |
 | P2 | Rate-limit tuning per route from config |
-| P2 | Structured logging (pino) + request IDs |
+| ~~P2~~ | ~~Structured logging (pino) + request IDs~~ — `x-request-id` + JSON response logs (done) |
 
 ### M12 — Profile + releases (remaining)
 | P | Item |

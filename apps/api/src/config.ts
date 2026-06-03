@@ -60,6 +60,16 @@ export const config = {
   membership: {
     priceCents: parseInt(process.env.MEMBERSHIP_PRICE_CENTS ?? '4000', 10),
   },
+  download: {
+    noCountCidrs: (process.env.DOWNLOAD_NO_COUNT_CIDRS ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+    trustOverrideIps: (process.env.DOWNLOAD_TRUST_OVERRIDE_IPS ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+  },
   mixcloud: {
     clientId: process.env.MIXCLOUD_CLIENT_ID ?? '',
     clientSecret: process.env.MIXCLOUD_CLIENT_SECRET ?? '',
