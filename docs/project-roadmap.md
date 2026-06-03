@@ -83,7 +83,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, **FLAC for paid artists + fan subs**, **source for fan subs**), 24h net-new-IP threshold; **download-fraud-scan** cron; **Tor/datacenter CIDR + bot UA** do not count (`DOWNLOAD_NO_COUNT_CIDRS`, trust overrides); **daily Tor exit sync** (worker → Redis + bundled list via `scripts/sync-tor-exit-list.mjs`). Deferred: ops cron for bundled file refresh in deploy |
 | **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, **Stripe transfer retry** (`packages/ledger`), payout dashboard + `GET /api/me/fan-sub-payouts`, **subscriber CSV export** (`GET /api/me/fan-subscribers/export.csv`). Deferred: automated deletion workflow UI |
-| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/download-gate-stats`, dashboard table + **14-day UTC chart**). Deferred: richer analytics |
+| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/download-gate-stats` with per-mix counted downloads + **14-day UTC chart**). Deferred: HLS/listener funnel |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`. Deferred: Discogs API |
@@ -500,10 +500,10 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
 | [ ] | **PLAT-010** | Turbo remote cache in CI | P2 |
-| [~] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | `apps/api/src/lib/redis.ts` | P2 |
+| [x] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | `apps/api/src/lib/redis.ts` | P2 |
 | [ ] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | P2 |
 | [ ] | **PLAT-013** | Website Docker: mount large media (`bg-audio.mp3`, hero video) from host like `output_vhs.mp4` | P3 |
-| [ ] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | P2 |
+| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | channel-egress, download-gate-stats, schedule via `zod-to-json-schema` |
 
 ### Refactors (maintainability)
 

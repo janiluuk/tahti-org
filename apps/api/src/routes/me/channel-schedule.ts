@@ -14,15 +14,28 @@ function zodError(
 
 /** LISTENER-002 — artist sets when they plan to go live next. */
 const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/api/me/channel/schedule', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { nextBroadcastAt: true, nextBroadcastNote: true },
-    })
-    if (!channel) return reply.status(404).send({ error: 'No channel' })
-    return reply.send(channel)
-  })
+  fastify.get(
+    '/api/me/channel/schedule',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'LISTENER-002: next planned broadcast',
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { nextBroadcastAt: true, nextBroadcastNote: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'No channel' })
+      return reply.send({
+        nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
+        nextBroadcastNote: channel.nextBroadcastNote,
+      })
+    },
+  )
 
   fastify.patch('/api/me/channel/schedule', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
@@ -53,7 +66,10 @@ const channelScheduleRoutes: FastifyPluginAsync = async (fastify) => {
       data,
       select: { nextBroadcastAt: true, nextBroadcastNote: true },
     })
-    return reply.send(updated)
+    return reply.send({
+      nextBroadcastAt: updated.nextBroadcastAt?.toISOString() ?? null,
+      nextBroadcastNote: updated.nextBroadcastNote,
+    })
   })
 }
 
