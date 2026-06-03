@@ -407,6 +407,9 @@ jobs:
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db exec prisma generate
+
       - name: Export OpenAPI spec (JSON)
         run: pnpm --filter @tahti/api exec tsx scripts/export-openapi.ts
         env:
