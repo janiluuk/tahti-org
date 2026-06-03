@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { createHash } from 'node:crypto'
-import { archivePlaybackKey } from '@tahti/shared'
+import { archivePlaybackKey, evaluateDownloadCountPolicy } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
@@ -18,7 +18,7 @@ import { config } from '../../config.js'
 // A download that doesn't count toward grants still succeeds for the listener;
 // it is logged with countedAt = NULL and a `reason`.
 //
-// Tor/bot allowlist (engagement-and-fansubs.md §6) is deferred.
+// Tor/datacenter CIDRs + bot UA: downloads succeed but do not count (engagement-and-fansubs.md §6).
 
 const HOUR_MS = 60 * 60 * 1000
 const DAY_MS = 24 * HOUR_MS
@@ -172,6 +172,19 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       if (countedForTrack >= PER_TRACK_CAP) {
         countedAt = null
         reason = 'per_track_cap'
+      }
+    }
+
+    if (countedAt) {
+      const policy = evaluateDownloadCountPolicy({
+        clientIp: request.ip ?? '0.0.0.0',
+        userAgent: String(request.headers['user-agent'] ?? ''),
+        noCountCidrs: config.download.noCountCidrs,
+        trustOverrideIps: config.download.trustOverrideIps,
+      })
+      if (!policy.shouldCount) {
+        countedAt = null
+        reason = policy.reason
       }
     }
 

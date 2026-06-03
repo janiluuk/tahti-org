@@ -73,7 +73,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
-| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + chat token join), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth), shared `lib/csv.ts`. Deferred: Upptime, **backup/DR infra + restore drills** (see [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)), structured request logging |
+| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + chat token join), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth), shared `lib/csv.ts`, **structured request logging** (`x-request-id`). Deferred: Upptime, **backup/DR infra + restore drills** (see [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)) |
 | **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor, profile playback; **cover art upload to MinIO** (`artworkKey` + presigned URLs). Deferred: bulk import |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard. Deferred: social auto-post |
@@ -81,7 +81,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
 | **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
 | **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI |
-| **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold; **download-fraud-scan** daily cron → `DOWNLOAD_FRAUD_ALERT` audit. Deferred: Tor/bot allowlist |
+| **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold; **download-fraud-scan** cron; **Tor/datacenter CIDR + bot UA** do not count (`DOWNLOAD_NO_COUNT_CIDRS`, trust overrides). Deferred: maintained Tor exit list automation |
 | **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, payout/expire crons + tests. Deferred: live payout transfer retries, fan-only newsletter send UI |
 | **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + **gate stats** on dashboard. Deferred: gate funnel charts |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
@@ -273,7 +273,7 @@ Required before first **real** membership money and first grant cycle.
 | [~] | **M7** | Mixcloud OAuth + upload; Revelator submit from release ops (€8/release billing deferred) | Dev |
 | [ ] | **M30** | **Release ops toolkit** — MusicBrainz submission, ISRC/UPC/credits, release checklist (official metadata out of the way) | Dev |
 | [x] | **M9** | Annual engagement-unit grant cron + report (`packages/ledger`, payout transfer pending Stripe Connect / M19) | Dev |
-| [~] | **M19** | Fan-subscriptions: Connect, Checkout, crons, perks; live payout retry + newsletter fan UI remain | Dev |
+| [~] | **M19** | Fan-subscriptions: Connect, Checkout, crons, perks, fan newsletter UI, payout transfer retry; royalty sync deferred | Dev |
 | [x] | **M10** (core) | Member directory, motions, advisory voting (Topic 11), governance portal | Dev |
 
 **Test matrix:**

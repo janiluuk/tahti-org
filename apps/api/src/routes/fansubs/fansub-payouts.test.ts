@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import { processFanSubPayouts } from '../../../../worker/src/jobs/fan-sub-payout.js'
+import { processFanSubPayouts } from '@tahti/ledger'
 import { processFanSubExpire } from '../../../../worker/src/jobs/fan-sub-expire.js'
 import { cleanupUsersByEmailPrefix } from '../../test/helpers.js'
 import { hashPassword } from '../../lib/password.js'

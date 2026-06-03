@@ -31,10 +31,12 @@ export default function FanSubscriptionsPanel({
   initial,
   username,
   connect,
+  payoutStats,
 }: {
   initial: FanTier[]
   username: string
   connect: ConnectStatus
+  payoutStats?: { pending: number; failed: number; paidLast30Days: number }
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -111,6 +113,16 @@ export default function FanSubscriptionsPanel({
         Fans subscribe directly to you. You keep the revenue minus Stripe fees and a 2% operational
         fee. Subscribers get the 5× download weighting that boosts your annual grant.
       </p>
+
+      {payoutStats && (payoutStats.pending > 0 || payoutStats.failed > 0) && (
+        <p style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
+          Payouts: {payoutStats.pending} pending
+          {payoutStats.failed > 0 && (
+            <span style={{ color: '#b45309' }}> · {payoutStats.failed} failed (retried daily)</span>
+          )}
+          {payoutStats.paidLast30Days > 0 && ` · ${payoutStats.paidLast30Days} paid (30d)`}
+        </p>
+      )}
 
       {needsStripe && (
         <div
