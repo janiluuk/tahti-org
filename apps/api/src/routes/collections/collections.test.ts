@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
@@ -222,6 +222,26 @@ describe('M23 — collections and RSS', () => {
     })
     expect(reorder.statusCode).toBe(200)
     expect(reorder.json().items[0].id).toBe(reversed[0])
+  })
+
+  it('marks a collection as featured via PATCH', async () => {
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/collections/${collectionSlug}`,
+      headers: { cookie },
+      payload: { isFeatured: true },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json().isFeatured).toBe(true)
+
+    const profile = await app.inject({
+      method: 'GET',
+      url: `/api/v1/u/${username}/profile`,
+    })
+    const featured = profile
+      .json()
+      .collections.find((c: { slug: string; isFeatured: boolean }) => c.slug === collectionSlug)
+    expect(featured?.isFeatured).toBe(true)
   })
 
   it('removes collection items and deletes the collection', async () => {

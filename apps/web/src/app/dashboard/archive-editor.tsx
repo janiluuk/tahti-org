@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import type { TracklistEntry } from '@tahti/shared'
 import { updateArchiveMetadata } from './archive-actions'
 import {
   ArchiveMetadataFields,
@@ -12,6 +13,8 @@ import {
   metadataFromApi,
   type ArchiveMetadataFormState,
 } from './archive-metadata-fields'
+import { TracklistEditor } from './tracklist-editor'
+import { ArchiveVersionPanel } from './archive-version-panel'
 
 export default function ArchiveEditor({
   item,
@@ -22,6 +25,9 @@ export default function ArchiveEditor({
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState(item.title)
   const [meta, setMeta] = useState<ArchiveMetadataFormState>(() => metadataFromApi(item))
+  const [tracklist, setTracklist] = useState<TracklistEntry[] | null>(
+    (item.tracklist as TracklistEntry[] | null) ?? null,
+  )
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -30,6 +36,7 @@ export default function ArchiveEditor({
     startTransition(async () => {
       const res = await updateArchiveMetadata(item.id, {
         title: title.trim(),
+        tracklist,
         ...metadataFormToPayload(meta),
       })
       if (res.error) {
@@ -99,6 +106,10 @@ export default function ArchiveEditor({
             detectedBpm={detectedBpm ?? null}
             detectedKey={detectedKey ?? null}
           />
+
+          <TracklistEditor value={tracklist} onChange={setTracklist} disabled={isPending} />
+
+          <ArchiveVersionPanel itemId={item.id} itemStatus={item.status} />
 
           <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
             <button

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 // Redis token-bucket rate limiting for Fastify.
 // Applied globally — individual routes can override limits via config.

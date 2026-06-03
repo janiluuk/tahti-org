@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Worker, Queue } from 'bullmq'
 import { prisma } from '@tahti/db'
 import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
+import { processTranscodeVersionJob } from './jobs/transcode-version.js'
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
 import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
 import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
@@ -26,6 +27,8 @@ const worker = new Worker(
   async (job) => {
     if (job.name === 'transcode-archive') {
       await processTranscodeJob(job)
+    } else if (job.name === 'transcode-archive-version') {
+      await processTranscodeVersionJob(job)
     } else if (job.name === 'transcode-release-track') {
       await processTranscodeReleaseTrackJob(job)
     } else if (job.name === 'mixcloud-upload') {

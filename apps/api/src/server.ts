@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Fastify from 'fastify'
 import cookie from '@fastify/cookie'
@@ -65,6 +65,7 @@ import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
 import meArchiveRoutes from './routes/me/archive.js'
+import meArchiveVersionRoutes from './routes/me/archive-versions.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
@@ -257,6 +258,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M22/M24/M25: archive item metadata edit + channel slideshow
   await fastify.register(meArchiveRoutes)
+  await fastify.register(meArchiveVersionRoutes)
   await fastify.register(meUsersRoutes)
 
   // M23: collections + RSS feeds

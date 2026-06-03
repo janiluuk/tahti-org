@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
@@ -98,6 +98,7 @@ describe('M12 — releases and public profile', () => {
     expect(link.json().releaseUrl).toContain('release-')
     expect(link.json().targets.spotify).toContain('spotify.com')
     expect(link.json().embedUrl).toContain(`/embed/r/${release!.id}`)
+    expect(Array.isArray(link.json().featuredCollections)).toBe(true)
   })
 
   it('updates smart link targets on a release', async () => {
@@ -159,6 +160,7 @@ describe('M12 — releases and public profile', () => {
         upc: '1234567890123',
         musicbrainzReleaseId: 'a1b2c3d4-5678-90ab-cdef-1234567890ab',
         pLine: '℗ 2026 Tahti Demo',
+        credits: [{ role: 'writer', name: 'Demo Artist' }],
       },
     })
     expect(patch.statusCode).toBe(200)
@@ -167,6 +169,7 @@ describe('M12 — releases and public profile', () => {
     expect(patch.json().checklist.find((s: { id: string }) => s.id === 'identifiers')?.done).toBe(
       true,
     )
+    expect(patch.json().credits).toEqual([{ role: 'writer', name: 'Demo Artist' }])
 
     const exp = await app.inject({
       method: 'GET',

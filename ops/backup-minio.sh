@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Copyright (C) 2024 Tahti ry <https://tahti.live>
+# Copyright (C) 2026 Tahti ry <https://tahti.live>
 #
 # Mirror MinIO audio/covers buckets to UpCloud Helsinki for offsite DR.
 # Run daily via cron: 30 3 * * * /srv/tahti/ops/backup-minio.sh

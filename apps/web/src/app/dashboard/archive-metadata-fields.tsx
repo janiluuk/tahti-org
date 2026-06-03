@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 'use client'
 
@@ -306,20 +306,30 @@ export function ArchiveMetadataFields({
         </label>
       </div>
 
-      {(detectedBpm != null || detectedKey) && (
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
-          <input
-            type="checkbox"
-            checked={state.useDetectedBpmKey}
-            disabled={disabled}
-            onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
-          />
-          Use auto-detected BPM/key
-          {detectedBpm != null && ` (${detectedBpm} BPM`}
-          {detectedKey && `, ${detectedKey}`}
-          {detectedBpm != null && ')'}
-        </label>
-      )}
+      <label
+        style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.9rem' }}
+      >
+        <input
+          type="checkbox"
+          checked={state.useDetectedBpmKey}
+          disabled={disabled}
+          onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
+          style={{ marginTop: 2 }}
+        />
+        <span>
+          Use auto-detected tags (embedded file tags when present; otherwise BPM and key are
+          analyzed from the audio — first ~2 minutes for long files)
+          {(detectedBpm != null || detectedKey) && (
+            <span style={{ color: '#666' }}>
+              {' '}
+              — detected:{' '}
+              {[detectedBpm != null ? `${detectedBpm} BPM` : null, detectedKey ?? null]
+                .filter(Boolean)
+                .join(', ')}
+            </span>
+          )}
+        </span>
+      </label>
 
       <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
         <input

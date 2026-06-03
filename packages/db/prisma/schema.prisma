@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 generator client {
   provider        = "prisma-client-js"
@@ -501,9 +501,31 @@ model ArchiveItem {
 
   mixUpload      MixUpload?
   collectionItems CollectionItem[]
+  versions        ArchiveItemVersion[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
+  @@schema("channel")
+}
+
+// M28: audio file versions for a single archive track (stable public item id).
+model ArchiveItemVersion {
+  id            String            @id @default(cuid())
+  archiveItemId String
+  archiveItem   ArchiveItem       @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  versionLabel  String
+  rawKey        String
+  mp3Key        String?
+  flacKey       String?
+  durationSec   Int?
+  fileSizeBytes BigInt            @default(0)
+  status        ArchiveItemStatus @default(PENDING)
+  isActive      Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+
+  @@unique([archiveItemId, versionNumber])
+  @@index([archiveItemId, createdAt(sort: Desc)])
   @@schema("channel")
 }
 
@@ -937,6 +959,7 @@ model Collection {
   description String?
   type        CollectionType @default(CUSTOM)
   isPublic    Boolean        @default(true)
+  isFeatured  Boolean        @default(false) // M23: highlight on profile + smart links
   coverUrl    String?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt

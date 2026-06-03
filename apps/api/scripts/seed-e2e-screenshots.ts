@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 /**
  * Seeds deterministic users for visual e2e screenshots.
  * Run (stack): docker compose exec api tsx apps/api/scripts/seed-e2e-screenshots.ts

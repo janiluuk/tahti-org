@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
 
@@ -124,6 +124,58 @@ export function computeReleaseChecklist(release: ReleaseForChecklist): ReleaseCh
 }
 
 export const MUSICBRAINZ_SUBMIT_URL = 'https://musicbrainz.org/release/add'
+export const COLLECTING_SOCIETY_POINTERS = [
+  {
+    id: 'teosto',
+    region: 'Finland',
+    label: 'Teosto',
+    url: 'https://www.teosto.fi/en/',
+    hint: 'Register works and performers for public performance and broadcast royalties.',
+  },
+  {
+    id: 'gramex',
+    region: 'Finland',
+    label: 'Gramex',
+    url: 'https://www.gramex.fi/en/',
+    hint: 'Neighbouring rights for recordings — register master recordings and performers.',
+  },
+  {
+    id: 'prs',
+    region: 'UK',
+    label: 'PRS for Music',
+    url: 'https://www.prsformusic.com/',
+    hint: 'Register compositions for UK public performance and broadcast.',
+  },
+  {
+    id: 'ppl',
+    region: 'UK',
+    label: 'PPL',
+    url: 'https://www.ppluk.com/',
+    hint: 'Register sound recordings for UK neighbouring-rights collection.',
+  },
+  {
+    id: 'gema',
+    region: 'Germany',
+    label: 'GEMA',
+    url: 'https://www.gema.de/en/',
+    hint: 'Register musical works for German public performance rights.',
+  },
+  {
+    id: 'ascap',
+    region: 'USA',
+    label: 'ASCAP',
+    url: 'https://www.ascap.com/',
+    hint: 'Performance rights organisation for songwriters and publishers.',
+  },
+  {
+    id: 'bmi',
+    region: 'USA',
+    label: 'BMI',
+    url: 'https://www.bmi.com/',
+    hint: 'Alternative US PRO — register if you are a BMI affiliate.',
+  },
+] as const
+
 export const POST_RELEASE_CLAIM_LINKS = [
   { id: 'spotify', label: 'Spotify for Artists', url: 'https://artists.spotify.com/' },
   { id: 'apple', label: 'Apple Music for Artists', url: 'https://artists.apple.com/' },

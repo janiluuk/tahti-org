@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 'use server'
 
 import { cookies } from 'next/headers'
+import type { ReleaseCredit } from '@tahti/shared'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -80,7 +81,7 @@ export async function fetchReleaseExportJson(
 
 export async function updateReleaseCatalog(
   id: string,
-  payload: Record<string, string | null>,
+  payload: Record<string, string | null | ReleaseCredit[]>,
 ): Promise<{ error: string | null; checklist?: unknown }> {
   const res = await fetch(`${apiUrl}/api/me/releases/${id}/catalog`, {
     method: 'PATCH',

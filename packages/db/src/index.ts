@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { PrismaClient } from '@prisma/client'
 
@@ -16,3 +16,4 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export * from '@prisma/client'
+export { ensureInitialVersion, syncActiveVersionToItem } from './archive-versions.js'

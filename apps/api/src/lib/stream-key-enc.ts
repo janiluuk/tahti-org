@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 // Symmetric encryption for RTMP target stream keys at rest.
 // Algorithm: AES-256-GCM with a random 12-byte nonce per value.

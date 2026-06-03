@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Queue } from 'bullmq'
 import { config } from '../config.js'
@@ -13,4 +13,8 @@ export const mediaQueue = new Queue('media', { connection })
 
 export async function enqueueTranscode(itemId: string): Promise<void> {
   await mediaQueue.add('transcode-archive', { itemId })
+}
+
+export async function enqueueVersionTranscode(versionId: string): Promise<void> {
+  await mediaQueue.add('transcode-archive-version', { versionId })
 }

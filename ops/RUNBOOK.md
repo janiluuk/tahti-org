@@ -1,0 +1,69 @@
+# Tahti operations runbook
+
+Procedures for deploy, rollback, and disaster recovery. Config and application code
+live in Git; this document covers **data** recovery (Postgres, MinIO).
+
+## Prerequisites
+
+- SSH access to the manager node (`DEPLOY_SSH_PRIVATE_KEY` in CI)
+- `mc` alias configured for `registry.tahti.live` and backup bucket (see `scripts/backup-postgres.sh`)
+- Docker Swarm stack name: `tahti` (production) or `tahti-staging`
+
+## Deploy and rollback
+
+Production deploys run via [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)
+on `v*.*.*` tags after staging smoke. Lab stack: [`deploy-lab-stack.yml`](../.github/workflows/deploy-lab-stack.yml).
+
+**Rollback a single service** (production Swarm):
+
+```bash
+docker service rollback tahti_api
+docker service rollback tahti_web
+# repeat for worker-media, worker-light, chat, orchestrator, website
+```
+
+**Lab Compose stack** (ports 3010/3011):
+
+```bash
+cd /srv/tahti && TAG=<git-sha> ./scripts/stack-up.sh
+```
+
+## Postgres backup and restore
+
+Daily dumps: `scripts/backup-postgres.sh` → `mc pipe tahti/backups/pg/YYYYMMDD-HHMMSS.sql.gz`
+
+**Restore to a throwaway database** (verify backup integrity — same as weekly cron):
+
+```bash
+./scripts/restore-test.sh
+```
+
+**Restore production** (maintenance window; destructive):
+
+1. Stop API, web, and workers so nothing writes during restore.
+2. `mc cat tahti/backups/pg/<LATEST>.sql.gz | gunzip | docker exec -i tahti_postgres psql -U tahti -d tahti`
+3. Run `pnpm db:migrate:deploy` if schema drifted since backup.
+4. Bring services back; smoke-test `/health` and ledger row count vs pre-incident export.
+
+## MinIO backup and restore
+
+Mirror: `scripts/backup-minio.sh` (see `ops/backup-minio.sh` on the host).
+
+**Restore a prefix** (e.g. one artist’s archive):
+
+```bash
+mc mirror tahti/backups/minio/<date>/ tahti/media/ --overwrite
+```
+
+Full bucket swap only during DR cutover — document DNS/Caddy target before switching.
+
+## DR read-only cutover (outline)
+
+1. Promote UpCloud replica Postgres + object storage per `docs/technical/infra-strategy.md`.
+2. Point Caddy at read-only API origin; disable uploads and live ingest in env.
+3. Post incident review + restore-test within 7 days.
+
+## Monitoring
+
+- Backup age alert: >26h WARN, >48h page (see `docs/technical/journey-ops.md`).
+- Weekly restore-test log: `/var/log/tahti-restore-test.log`

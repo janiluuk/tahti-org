@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
@@ -63,6 +63,7 @@ interface ProfileResponse {
     name: string
     type: string
     description: string | null
+    isFeatured?: boolean
     itemCount: number
     url: string
   }>
@@ -114,6 +115,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 <span style={{ color: '#888', fontSize: '0.85rem' }}>
                   {' '}
                   · {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
+                  {c.isFeatured && ' · Featured'}
                 </span>
                 {c.description && (
                   <p style={{ color: '#555', margin: '0.35rem 0 0', fontSize: '0.9rem' }}>

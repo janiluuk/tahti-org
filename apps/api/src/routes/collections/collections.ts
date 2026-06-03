@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { archivePlaybackKey } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
@@ -15,6 +16,7 @@ const collectionItemInclude = {
       title: true,
       durationSec: true,
       mp3Key: true,
+      flacKey: true,
       bannerUrl: true,
       description: true,
       createdAt: true,
@@ -106,6 +108,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         name?: string
         description?: string
         isPublic?: boolean
+        isFeatured?: boolean
         coverUrl?: string
       }
 
@@ -119,6 +122,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.name !== undefined) data.name = body.name.trim().slice(0, 100)
       if (body.description !== undefined) data.description = body.description.slice(0, 1000) || null
       if (body.isPublic !== undefined) data.isPublic = body.isPublic
+      if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
       if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl.trim() || null
 
       const updated = await fastify.prisma.collection.update({ where: { id: col.id }, data })
@@ -342,6 +346,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
             description: true,
             durationSec: true,
             mp3Key: true,
+            flacKey: true,
             createdAt: true,
           },
         },
@@ -358,7 +363,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         description: i.description ?? '',
         pubDate: i.createdAt,
         duration: i.durationSec ?? 0,
-        enclosureUrl: publicMediaUrl(i.mp3Key),
+        enclosureUrl: publicMediaUrl(archivePlaybackKey(i)),
         guid: `${config.appUrl}/c/${channel.slug}#${i.id}`,
       })),
     })
@@ -383,6 +388,7 @@ type CollectionItemRow = {
     description: string | null
     durationSec: number | null
     mp3Key: string | null
+    flacKey: string | null
     createdAt: Date
   } | null
   release: {
@@ -402,7 +408,7 @@ function collectionRssItems(items: CollectionItemRow[], username: string): RssIt
         description: i.archiveItem.description ?? '',
         pubDate: i.archiveItem.createdAt,
         duration: i.archiveItem.durationSec ?? 0,
-        enclosureUrl: publicMediaUrl(i.archiveItem.mp3Key),
+        enclosureUrl: publicMediaUrl(archivePlaybackKey(i.archiveItem)),
         guid: `${config.appUrl}/u/${username}/c/item/${i.archiveItem.id}`,
       })
     } else if (i.release) {

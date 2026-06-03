@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { notFound } from 'next/navigation'
 import ChatPanel from './chat-panel'
@@ -38,6 +38,7 @@ interface ArchiveItem {
   id: string
   title: string
   description: string | null
+  commentary: string | null
   durationSec: number | null
   audioUrl: string | null
   createdAt: string
@@ -147,6 +148,21 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       <p style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}>
                         {item.description}
                       </p>
+                    )}
+                    {item.commentary && (
+                      <div
+                        style={{
+                          color: '#444',
+                          margin: '0 0 0.75rem',
+                          fontSize: '0.9rem',
+                          lineHeight: 1.5,
+                          whiteSpace: 'pre-wrap',
+                          borderLeft: '3px solid #ddd',
+                          paddingLeft: '0.75rem',
+                        }}
+                      >
+                        {item.commentary}
+                      </div>
                     )}
                     {item.durationSec != null && (
                       <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>

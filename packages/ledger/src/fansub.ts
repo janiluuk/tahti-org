@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 // Pure money split for a single fan-subscription charge. Given the gross amount
 // a fan paid, returns the Stripe processing fee, the 2% operational fee the org

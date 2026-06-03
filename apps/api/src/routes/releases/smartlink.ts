@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
 import { config } from '../../config.js'
@@ -27,7 +27,26 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           orderBy: { position: 'asc' },
           select: { title: true, isrc: true, position: true },
         },
-        user: { select: { username: true, displayName: true, avatarUrl: true } },
+        user: {
+          select: {
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+            collections: {
+              where: { isPublic: true, isFeatured: true },
+              orderBy: { createdAt: 'desc' },
+              take: 6,
+              select: {
+                slug: true,
+                name: true,
+                type: true,
+                description: true,
+                coverUrl: true,
+                _count: { select: { items: true } },
+              },
+            },
+          },
+        },
       },
     })
 
@@ -44,6 +63,16 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
       ? `https://musicbrainz.org/release/${release.musicbrainzReleaseId}`
       : null
 
+    const featuredCollections = release.user.collections.map(({ _count, ...c }) => ({
+      slug: c.slug,
+      name: c.name,
+      type: c.type,
+      description: c.description,
+      coverUrl: c.coverUrl,
+      itemCount: _count.items,
+      url: `/u/${release.user.username}/c/${c.slug}`,
+    }))
+
     return reply.send({
       release: {
         id: release.id,
@@ -59,7 +88,12 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         tracks: release.tracks,
         musicbrainzUrl,
       },
-      artist: release.user,
+      artist: {
+        username: release.user.username,
+        displayName: release.user.displayName,
+        avatarUrl: release.user.avatarUrl,
+      },
+      featuredCollections,
       profileUrl,
       releaseUrl,
       targets,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.live>
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 'use client'
 
@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
 import { createRelease, publishRelease, updateReleaseSmartLinks } from './release-actions'
-import ReleaseOpsPanel from './release-ops-panel'
+import ReleaseOpsPanel, { parseCredits } from './release-ops-panel'
 
 const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
   { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
@@ -35,6 +35,7 @@ interface ReleaseSummary {
   pLine?: string | null
   cLine?: string | null
   labelImprint?: string | null
+  credits?: unknown
   revelatorStatus?: string | null
   tracks?: Array<{ isrc: string | null }>
   checklist?: ReleaseChecklistItem[]
@@ -181,6 +182,7 @@ export default function ReleasesPanel({
                   cLine: r.cLine ?? '',
                   labelImprint: r.labelImprint ?? '',
                 }}
+                initialCredits={parseCredits(r.credits)}
                 checklist={
                   r.checklist ?? [
                     { id: 'metadata', label: 'Release metadata', done: false },
