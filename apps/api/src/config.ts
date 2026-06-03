@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 export const config = {
   nodeEnv: (process.env.NODE_ENV ?? 'development') as 'development' | 'test' | 'production',
@@ -14,7 +14,7 @@ export const config = {
     port: parseInt(process.env.SMTP_PORT ?? '1025', 10),
     user: process.env.SMTP_USER ?? '',
     pass: process.env.SMTP_PASS ?? '',
-    from: process.env.SMTP_FROM ?? 'Tahti <noreply@tahti.fi>',
+    from: process.env.SMTP_FROM ?? 'Tahti <noreply@tahti.live>',
   },
   appUrl: process.env.APP_URL ?? 'http://localhost:3000',
   apiUrl: process.env.API_URL ?? 'http://localhost:3001',
@@ -37,4 +37,15 @@ export const config = {
   hlsBaseUrl: process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live',
   rtmpIngestHost: process.env.RTMP_INGEST_HOST ?? 'localhost',
   icecastHost: process.env.ICECAST_HOST ?? 'localhost:8100',
+  rtmpKeyEncKey:
+    process.env.RTMP_KEY_ENC_KEY ??
+    'dev0000000000000000000000000000000000000000000000000000000000000',
+  hcaptchaSecret: process.env.HCAPTCHA_SECRET ?? 'dev',
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY ?? '',
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? '',
+    // When false (no key configured, e.g. dev/test), the fan-sub flow activates
+    // subscriptions directly instead of redirecting to Stripe Checkout.
+    enabled: !!process.env.STRIPE_SECRET_KEY,
+  },
 }

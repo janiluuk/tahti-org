@@ -180,7 +180,7 @@ Date decided:
 
 ## Topic 4 — Auth library: Lucia (deprecated) vs better-auth vs next-auth
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (custom session + argon2 — see decision log)  
 **Blocks:** M1 (artist accounts)  
 **Must decide before:** M1 development begins
 
@@ -230,7 +230,7 @@ Date decided:
 
 ## Topic 5 — Upload resumability: tus vs S3 multipart
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (option A, S3 multipart — see decision log)  
 **Blocks:** M2 (archive uploads)  
 **Must decide before:** M2 development begins
 
@@ -382,7 +382,7 @@ Date decided:
 
 ## Topic 8 — Grant formula: consolidate M9 spec to use engagement units
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (engagement units; implemented in `packages/ledger`)  
 **Blocks:** M9 (annual grant calculation)  
 **Must decide before:** M9 development begins
 
@@ -414,46 +414,65 @@ The listener-hours formula is explicitly listed as an anti-pattern in AGENT.md (
 
 ```
 Authoritative formula:
-  engagement_units =
-  Minimum threshold to qualify:
-  Per-artist cap (%):
-  Unclaimed grant handling:
-  fan_sub weight (€1 = N units):
-  Spec updates needed (AGENT.md M9 — delete listener-hours formula):
-Owner:
-Date decided:
+  engagement_units(A) = (free_downloads × 1) + (paid_downloads × 5)
+                        + (fan_sub_euros_received × 1)
+  grant(A) = (units(A) / total_eligible_units) × grant_pool
+  grant_pool = annual_surplus − 10% operating reserve
+  Minimum threshold to qualify: 5 engagement units (below → rolls to next year)
+  Per-artist cap (%): none hard-coded (board review catches outliers); revisit if needed
+  Unclaimed grant handling: GrantState.UNCLAIMED → rolls into next year's pool
+  fan_sub weight (€1 = N units): €1 received = 1 unit (so €5/mo = 60 units/yr)
+  Spec updates needed: AGENT.md M9 listener-hours formula is superseded; the
+    engagement-unit formula in engagement-and-fansubs.md is authoritative.
+Owner: Dev
+Date decided: 2026-06-03
 ```
+
+**Implementation note (2026-06-03):** M9 implemented in `packages/ledger`.
+- `allocateGrants()` is a pure, deterministic largest-remainder (Hamilton)
+  allocator — sums to the pool exactly (zero rounding drift), 10% reserve, 5-unit
+  eligibility threshold. Unit-tested incl. the spec's worked example.
+- `runAnnualGrantCalc(prisma, year)` reads the year's `MonthlyRollup` surpluses
+  and counted `engagement.Download` weights per channel→artist, allocates, and
+  writes `GrantDisbursement` rows + `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER`
+  ledger entries (append-only; refuses to re-run a finalized year).
+- Fan-sub euros now contribute to units (M19 shipped): `computeEngagementUnits`
+  sums `FanSubPayout.grossCents` per artist for the year (1 unit per euro) in
+  addition to download weight. Listener-hours are **not** used.
+- Surfaced via `POST /api/admin/grants/run/:year` (board), `GET
+  /api/v1/transparency/grants/:year` (public, anonymized), `GET /api/me/grants`.
+- Worker cron `annual-grant-calc` runs 03:00 on March 1 for the prior year.
 
 ---
 
 ## Topic 9 — Next.js subdomain routing: channel slugs as subdomains
 
-**Status:** `OPEN`  
-**Blocks:** M3 (channel page at `slug.tahti.fi`)  
+**Status:** `DECIDED` (path-based for MVP — see decision log)  
+**Blocks:** M3 (channel page at `slug.tahti.live`)  
 **Must decide before:** web app scaffold begins
 
 ### Background
 
-Caddy is configured to route `*.tahti.fi` → `web:3000` with header `X-Tahti-Channel-Slug: {labels.0}`. But Next.js App Router has no built-in subdomain routing. The web app needs a `middleware.ts` that reads this header and rewrites the path.
+Caddy is configured to route `*.tahti.live` → `web:3000` with header `X-Tahti-Channel-Slug: {labels.0}`. But Next.js App Router has no built-in subdomain routing. The web app needs a `middleware.ts` that reads this header and rewrites the path.
 
-Additionally: channel slugs as subdomains require wildcard TLS (`*.tahti.fi`). Let's Encrypt wildcard certs require DNS challenge (not HTTP challenge), which means Caddy needs a DNS provider plugin. Traficom/Finnish registrars may not have a Caddy-compatible DNS challenge plugin.
+Additionally: channel slugs as subdomains require wildcard TLS (`*.tahti.live`). Let's Encrypt wildcard certs require DNS challenge (not HTTP challenge), which means Caddy needs a DNS provider plugin. Traficom/Finnish registrars may not have a Caddy-compatible DNS challenge plugin.
 
 ### Options
 
 **A — middleware.ts rewrites + wildcard TLS via Caddy DNS challenge**  
 `middleware.ts` reads `X-Tahti-Channel-Slug` and rewrites to `/c/[slug]`. Caddy uses DNS-01 challenge via the registrar's API.  
 - Need to verify: does the domain registrar support Caddy DNS plugins (Cloudflare DNS API, Route 53, or generic ACME DNS)?  
-- Pro: Clean URL (`slug.tahti.fi`)  
+- Pro: Clean URL (`slug.tahti.live`)  
 - Con: DNS challenge adds complexity and a dependency on the registrar's API  
 
-**B — Path-based routing: `tahti.fi/c/slug`**  
-No subdomains. Channels live at `tahti.fi/c/djname`. Simpler TLS (single cert), no DNS challenge needed.  
+**B — Path-based routing: `tahti.live/c/slug`**  
+No subdomains. Channels live at `tahti.live/c/djname`. Simpler TLS (single cert), no DNS challenge needed.  
 - Pro: Simplest implementation  
 - Pro: Standard ACME HTTP challenge works  
 - Con: Less memorable URL  
-- Con: Doesn't match the spec's `slug.tahti.fi` promise  
+- Con: Doesn't match the spec's `slug.tahti.live` promise  
 
-**C — Hybrid: `tahti.fi/c/slug` in MVP, add subdomains post-beta**  
+**C — Hybrid: `tahti.live/c/slug` in MVP, add subdomains post-beta**  
 Ship with path-based routing. Add subdomain support as a later enhancement once the registrar DNS situation is confirmed.  
 - Pro: Unblocks development  
 - Pro: DNS challenge complexity deferred  
@@ -474,7 +493,7 @@ Date decided:
 
 ## Topic 10 — Stripe Connect KYC gap (fan-subs onboarding UX)
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (A — block Checkout until `charges_enabled`)  
 **Blocks:** M19 (fan-subscriptions)  
 **Must decide before:** M19 UI design
 
@@ -509,19 +528,28 @@ Collect subscriber email + intent (no card yet). When KYC clears, email subscrib
 ### Decision
 
 ```
-Chosen option:
-Dashboard state during KYC:
-Listener-facing message during KYC:
-Spec updates needed (AGENT.md M19, phase-11.md):
-Owner:
-Date decided:
+Chosen option: A — block Checkout until Stripe reports charges_enabled = true
+Dashboard state during KYC: tiers editable, but a banner "Finish Stripe
+  onboarding to start receiving payments"; subscribe link shows the same.
+Listener-facing message during KYC: subscribe page renders tiers but the
+  Subscribe button is disabled with "Subscriptions open soon".
+Spec updates needed (AGENT.md M19, phase-11.md): note A; revisit waitlist (C) post-beta.
+Owner: Dev
+Date decided: 2026-06-03
 ```
+
+**Implementation note (2026-06-03):** M19 core shipped without the live Stripe
+boundary, so the KYC gate is not yet enforced in code. The subscribe endpoint
+already fails closed: when Stripe is configured it returns `501` until Checkout
+is wired (no silent free subscriptions), and when it is not configured (dev/test)
+it activates directly. Wiring real Connect Express + the `charges_enabled` gate
+(option A) is part of the remaining Stripe integration.
 
 ---
 
 ## Topic 11 — AGM/voting: Finnish yhdistys law compliance
 
-**Status:** `OPEN`  
+**Status:** `DECIDED` (advisory voting for Y1 — see decision log)  
 **Blocks:** M10 (member governance UI), Bylaws finalization  
 **Must decide before:** M10 design AND bylaws are filed with PRH
 
@@ -559,13 +587,21 @@ Ship M10 as advisory voting. After bylaws are filed and year 1 is running, propo
 ### Decision
 
 ```
-Chosen option:
-Bylaws clause status (exists? lawyer reviewed?):
-M10 legal status for Y1 (binding / advisory):
-Spec updates needed (AGENT.md M10, governance-and-legal.md):
-Owner:
-Date decided:
+Chosen option: C — ship M10 voting as ADVISORY for Y1; upgrade to binding after a
+  bylaws amendment authorizes electronic asynchronous voting.
+Bylaws clause status (exists? lawyer reviewed?): not yet — flagged for legal review
+M10 legal status for Y1 (binding / advisory): ADVISORY
+Spec updates needed (AGENT.md M10, governance-and-legal.md): note advisory status;
+  motions carry an `advisory` flag (default true) in the data model.
+Owner: Dev / Board
+Date decided: 2026-06-03
 ```
+
+**Implementation note (2026-06-03):** M10 motions/voting built with this in mind.
+Each `Motion` has an `advisory` boolean (default `true`). Results are surfaced as
+advisory tallies; binding AGM decisions still require a live meeting until the
+bylaws clause lands. Once Option A's clause is filed with PRH, set new motions'
+`advisory = false`.
 
 ---
 
@@ -729,7 +765,17 @@ Record decisions here as they are made, in date order.
 
 | # | Topic | Decision summary | Date | Owner |
 |---|-------|-----------------|------|-------|
-| — | — | — | — | — |
+| 4 | Auth library | Custom session + argon2 (Lucia not adopted). Implemented in `apps/api/src/lib/session.ts` + `password.ts`. | 2026-06-03 | Dev |
+| 5 | Upload resumability | **A** — S3 multipart via presigned part URLs (no tusd). Implemented in `routes/uploads/*`. | 2026-06-03 | Dev |
+| 9 | Subdomain routing | **B/C** — path-based `/c/<slug>` for MVP; subdomains deferred. | 2026-06-03 | Dev |
+| 11 | AGM voting legality | **C** — M10 voting is **advisory** for Y1; `Motion.advisory` flag; upgrade after bylaws amendment. | 2026-06-03 | Dev / Board |
+| 8 | Grant formula | **Engagement units** (downloads ×1/×5 + fan-sub €×1), 10% reserve, 5-unit floor; implemented in `packages/ledger`. Listener-hours dropped. | 2026-06-03 | Dev |
+| 10 | Stripe Connect KYC gap | **A** — block Checkout until `charges_enabled`; tiers editable during KYC with a banner. (Live Stripe wiring still pending.) | 2026-06-03 | Dev |
+
+> Topics 4, 5, and 9 are marked retroactively from the shipped MVP code — they
+> were decided implicitly by implementation and are recorded here for the audit
+> trail. Remaining `OPEN` topics (1, 2, 3, 6, 7, 12–15) still need explicit
+> resolution before their milestones.
 
 ---
 

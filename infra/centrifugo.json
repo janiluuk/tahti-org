@@ -1,6 +1,6 @@
 {
   "log_level": "info",
-  "allowed_origins": ["https://tahti.fi", "https://www.tahti.fi", "https://app.tahti.fi"],
+  "allowed_origins": ["https://tahti.live", "https://www.tahti.live", "https://app.tahti.live"],
   "websocket_compression": true,
   "client_anonymous": false,
   "history_size": 100,
@@ -14,6 +14,14 @@
       "join_leave": true,
       "history_size": 200,
       "history_ttl": "1h",
+      "subscribe_proxy_enabled": false
+    },
+    {
+      "name": "reactions",
+      "presence": false,
+      "join_leave": false,
+      "history_size": 0,
+      "history_ttl": "0s",
       "subscribe_proxy_enabled": false
     }
   ]

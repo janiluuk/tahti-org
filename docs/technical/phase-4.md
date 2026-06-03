@@ -15,11 +15,11 @@ graph TB
     subgraph Artists
         OBS[OBS / Streamlabs\nRTMP stream]
         MX[Mixxx / Traktor / butt\nIcecast source]
-        Browser[Artist browser\napp.tahti.fi]
+        Browser[Artist browser\napp.tahti.live]
     end
 
     subgraph Listeners
-        LBrowser[Listener browser\nchannelslug.tahti.fi]
+        LBrowser[Listener browser\nchannelslug.tahti.live]
     end
 
     subgraph "Edge (Caddy)"
@@ -88,12 +88,12 @@ graph TB
 ```mermaid
 sequenceDiagram
     participant A as Artist
-    participant Web as Next.js (app.tahti.fi)
+    participant Web as Next.js (app.tahti.live)
     participant API as Fastify API
     participant PG as Postgres
     participant MH as Postmark (email)
 
-    A->>Web: Open app.tahti.fi/join
+    A->>Web: Open app.tahti.live/join
     Web->>A: Registration form (name, email, password, invite code)
     A->>Web: Submit form
     Web->>API: POST /api/auth/register
@@ -117,10 +117,10 @@ sequenceDiagram
     participant Orch as Orchestrator
     participant LS as Liquidsoap (channel container)
     participant HLS as hls_shared volume
-    participant CDN as stream.tahti.fi (Caddy)
+    participant CDN as stream.tahti.live (Caddy)
     participant L as Listener browser
 
-    OBS->>RTMP: RTMP connect (rtmp://ingest.tahti.fi:1935/live/<stream_key>)
+    OBS->>RTMP: RTMP connect (rtmp://ingest.tahti.live:1935/live/<stream_key>)
     RTMP->>API: POST /internal/rtmp/on_publish {key, stream_name}
     API->>API: Validate stream key → look up artist channel
     API->>PG: INSERT broadcasts (channel_id, started_at)
@@ -189,13 +189,13 @@ sequenceDiagram
     participant CH as Centrifugo
     participant RD as Redis
 
-    L->>Web: Open channelslug.tahti.fi
+    L->>Web: Open channelslug.tahti.live
     Web->>API: GET /api/channels/slug/token (server-side render)
     API->>API: Generate Centrifugo JWT (sub=anon_fingerprint)
     API-->>Web: { channel_token }
     Web-->>L: Page with embedded token
 
-    L->>CH: WebSocket connect (wss://chat.tahti.fi)
+    L->>CH: WebSocket connect (wss://chat.tahti.live)
     L->>CH: Subscribe to channel:slug
     CH->>RD: Store presence record
     CH-->>L: Last 100 messages from history
@@ -230,7 +230,7 @@ gantt
 
 ### 4b — Channel + archive (M2, Weeks 5–6)
 
-**Deliverable:** artist can upload an MP3, see it transcoded and listed in their channel. Listeners can visit `slug.tahti.fi` and play the archive item.
+**Deliverable:** artist can upload an MP3, see it transcoded and listed in their channel. Listeners can visit `slug.tahti.live` and play the archive item.
 
 ### 4c — Live broadcast (M3–M4, Weeks 7–10)
 
@@ -253,10 +253,10 @@ docker stack services tahti
 docker exec -it $(docker ps -qf name=tahti_api) node dist/migrate.js
 
 # Verify API health
-curl https://api.tahti.fi/health
+curl https://api.tahti.live/health
 
 # Verify chat WebSocket
-wscat -c wss://chat.tahti.fi/connection/websocket
+wscat -c wss://chat.tahti.live/connection/websocket
 
 # Check worker queues are processing
 docker logs $(docker ps -qf name=tahti_worker-media) | tail -20
@@ -266,7 +266,7 @@ docker logs $(docker ps -qf name=tahti_worker-media) | tail -20
 
 | Check | Method | Expected |
 |-------|--------|----------|
-| Artist registration | Sign up at app.tahti.fi | Email arrives in < 30s |
+| Artist registration | Sign up at app.tahti.live | Email arrives in < 30s |
 | Email verification | Click link in email | Dashboard opens |
 | Archive upload | Upload 10 min MP3 | Ready in < 5 min |
 | Live stream | OBS → RTMP → listener | Audio in < 10s delay |

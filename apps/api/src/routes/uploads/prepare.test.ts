@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
@@ -43,8 +43,8 @@ describe('POST /api/uploads/prepare', () => {
             slug: 'prepare-upload-testuser',
             liveSourceMount: '/live/prepare-upload-testuser',
             liveSourcePass: 'dummypass',
-              liveSourcePassHash: 'dummy',
-              rtmpStreamKey: 'dummyslug__dummykey',
+            liveSourcePassHash: 'dummy',
+            rtmpStreamKey: 'dummyslug__dummykey',
             rtmpStreamKeyHash: 'dummy',
           },
         },

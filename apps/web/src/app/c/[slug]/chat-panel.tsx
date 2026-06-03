@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 'use client'
 
@@ -34,6 +34,7 @@ export default function ChatPanel({
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
   const [error, setError] = useState<string | null>(null)
+  const [listenerCount, setListenerCount] = useState<number | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const msgIdRef = useRef(1)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -44,10 +45,32 @@ export default function ChatPanel({
     if (saved) setHandle(saved)
   }, [])
 
+  // Poll listener count every 30s
+  useEffect(() => {
+    let cancelled = false
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/channels/${slug}/presence`)
+        if (!res.ok || cancelled) return
+        const data = (await res.json()) as { numClients: number }
+        setListenerCount(data.numClients)
+      } catch {
+        // ignore — presence is best-effort
+      }
+    }
+    void poll()
+    const t = setInterval(() => void poll(), 30_000)
+    return () => {
+      cancelled = true
+      clearInterval(t)
+    }
+  }, [slug])
+
   // Connect to Centrifugo when we have a token
   useEffect(() => {
     if (!token) return
-    const wsUrl = process.env.NEXT_PUBLIC_CENTRIFUGO_WS ?? 'ws://localhost:8000/connection/websocket'
+    const wsUrl =
+      process.env.NEXT_PUBLIC_CENTRIFUGO_WS ?? 'ws://localhost:8000/connection/websocket'
     const ws = new WebSocket(wsUrl)
     wsRef.current = ws
     setStatus('connecting')
@@ -86,7 +109,10 @@ export default function ChatPanel({
           if (msg.text) {
             const id = `${Date.now()}-${Math.random()}`
             setMessages((prev) =>
-              [...prev, { id, handle: msg.handle ?? 'anon', text: msg.text!, ts: msg.ts ?? Date.now() }].slice(-100),
+              [
+                ...prev,
+                { id, handle: msg.handle ?? 'anon', text: msg.text!, ts: msg.ts ?? Date.now() },
+              ].slice(-100),
             )
           }
         }
@@ -157,12 +183,20 @@ export default function ChatPanel({
         overflow: 'hidden',
       }}
     >
-      <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #eee', fontWeight: 600 }}>
+      <div
+        style={{
+          padding: '0.75rem 1rem',
+          borderBottom: '1px solid #eee',
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+        }}
+      >
         Chat
         {status === 'connected' && (
           <span
             style={{
-              marginLeft: '0.5rem',
               fontSize: '0.7rem',
               background: '#16a34a',
               color: '#fff',
@@ -171,6 +205,11 @@ export default function ChatPanel({
             }}
           >
             live
+          </span>
+        )}
+        {listenerCount !== null && listenerCount > 0 && (
+          <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#888', fontWeight: 400 }}>
+            {listenerCount} {listenerCount === 1 ? 'listener' : 'listeners'}
           </span>
         )}
       </div>
@@ -195,10 +234,7 @@ export default function ChatPanel({
       )}
 
       {/* Message list */}
-      <div
-        ref={scrollRef}
-        style={{ flex: 1, overflowY: 'auto', padding: '0.75rem 1rem' }}
-      >
+      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '0.75rem 1rem' }}>
         {messages.length === 0 && status !== 'connected' && (
           <p style={{ color: '#aaa', fontSize: '0.85rem', textAlign: 'center', marginTop: '2rem' }}>
             channel is quiet right now — say hi
@@ -234,7 +270,9 @@ export default function ChatPanel({
               placeholder="Your handle"
               value={pendingHandle}
               onChange={(e) => setPendingHandle(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') void joinChat(pendingHandle) }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void joinChat(pendingHandle)
+              }}
               maxLength={32}
               style={{
                 flex: 1,
@@ -265,7 +303,9 @@ export default function ChatPanel({
               placeholder="Say something…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') sendMessage() }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') sendMessage()
+              }}
               maxLength={500}
               disabled={status !== 'connected'}
               style={{

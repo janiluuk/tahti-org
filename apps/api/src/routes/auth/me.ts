@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
@@ -18,6 +18,11 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
       select: { slug: true, state: true },
     })
 
+    const storageInfo = await fastify.prisma.user.findUnique({
+      where: { id: user.id },
+      select: { storageUsedBytes: true, softTargetBytes: true },
+    })
+
     return reply.send({
       id: user.id,
       email: user.email,
@@ -25,8 +30,14 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
       displayName: user.displayName,
       tier: user.tier,
       emailVerifiedAt: user.emailVerifiedAt,
+      isMember: user.isMember,
+      isBoard: user.isBoard,
       membership,
       channel,
+      storage: {
+        usedBytes: storageInfo?.storageUsedBytes?.toString() ?? '0',
+        softTargetBytes: storageInfo?.softTargetBytes?.toString() ?? '524288000',
+      },
     })
   })
 }

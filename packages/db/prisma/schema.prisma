@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 generator client {
   provider        = "prisma-client-js"
@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat"]
+  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -55,6 +55,98 @@ enum BroadcastSource {
   @@schema("channel")
 }
 
+enum RtmpTargetProvider {
+  YOUTUBE
+  TWITCH
+  FACEBOOK
+  MIXCLOUD_LIVE
+  CUSTOM
+
+  @@schema("channel")
+}
+
+enum LedgerCategory {
+  REVENUE_SUBSCRIPTION
+  REVENUE_DISTRIBUTION
+  REVENUE_GRANT_INBOUND
+  REVENUE_DONATION
+  COST_INFRASTRUCTURE
+  COST_DISTRIBUTION_PASSTHROUGH
+  COST_OPERATIONS
+  COST_SALARY
+  COST_AUDIT
+  COST_PROFESSIONAL_SERVICES
+  GRANT_DISBURSEMENT
+  RESERVE_TRANSFER
+  FAN_SUB_GROSS_RECEIVED
+  FAN_SUB_NET_TO_ARTIST
+  FAN_SUB_OPERATIONAL_FEE
+
+  @@schema("ledger")
+}
+
+enum GrantState {
+  PENDING
+  CONFIRMED
+  PAID
+  UNCLAIMED
+
+  @@schema("ledger")
+}
+
+enum AuditAction {
+  CHAT_BAN
+  CHAT_UNBAN
+  CHAT_MESSAGE_DELETE
+  STREAM_KEY_ROTATE
+  RTMP_TARGET_ADD
+  RTMP_TARGET_DELETE
+  LEDGER_ENTRY_CREATE
+  MEMBER_SUSPEND
+  MEMBER_REINSTATE
+  MOTION_CREATE
+  MOTION_OPEN
+  MOTION_CLOSE
+  VOTE_CAST
+  GRANT_RUN
+
+  @@schema("governance")
+}
+
+enum MotionState {
+  DRAFT
+  OPEN
+  CLOSED
+
+  @@schema("governance")
+}
+
+enum VoteChoice {
+  YES
+  NO
+  ABSTAIN
+
+  @@schema("governance")
+}
+
+enum FanSubState {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  EXPIRED
+
+  @@schema("fansubs")
+}
+
+enum FanSubPayoutState {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+
+  @@schema("fansubs")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model User {
@@ -70,6 +162,7 @@ model User {
   tipJarUrl             String?
   tier                  ArtistTier @default(FREE)
   isMember              Boolean    @default(false)
+  isBoard               Boolean    @default(false)
   memberNumber          Int?       @unique
   memberSince           DateTime?
   publicAttribution     Boolean    @default(true)
@@ -82,10 +175,16 @@ model User {
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
-  sessions           Session[]
-  emailVerifications EmailVerification[]
-  membership         Membership?
-  channel            Channel?
+  sessions            Session[]
+  emailVerifications  EmailVerification[]
+  membership          Membership?
+  channel             Channel?
+  motionsProposed     Motion[]
+  votes               Vote[]
+  grants              GrantDisbursement[]
+  fanTiers            FanTier[]
+  fanSubsAsArtist     FanSubscription[]   @relation("ArtistFanSubs")
+  fanSubsAsSubscriber FanSubscription[]   @relation("SubscriberFanSubs")
 
   @@schema("core")
 }
@@ -153,6 +252,7 @@ model Channel {
   broadcasts     Broadcast[]
   announcements  ChannelAnnouncement[]
   chatBans       ChatBan[]
+  rtmpTargets    RtmpTarget[]
 
   @@schema("channel")
 }
@@ -182,17 +282,23 @@ model ChannelAnnouncement {
   @@schema("channel")
 }
 
-// ── Chat schema ───────────────────────────────────────────────────────────────
+// Encrypted stream key stored as base64(nonce+ciphertext); key comes from
+// RTMP_KEY_ENC_KEY env var (32-byte hex). plaintext key never stored unencrypted.
+model RtmpTarget {
+  id           String             @id @default(cuid())
+  channelId    String
+  channel      Channel            @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  provider     RtmpTargetProvider
+  label        String
+  rtmpUrl      String
+  streamKeyEnc String
+  alwaysMirror Boolean            @default(false)
+  enabled      Boolean            @default(true)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
-model ChatBan {
-  id              String   @id @default(cuid())
-  channelId       String
-  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  fingerprintHash String
-  bannedAt        DateTime @default(now())
-
-  @@unique([channelId, fingerprintHash])
-  @@schema("chat")
+  @@index([channelId])
+  @@schema("channel")
 }
 
 model ArchiveItem {
@@ -211,4 +317,217 @@ model ArchiveItem {
 
   @@index([channelId, createdAt(sort: Desc)])
   @@schema("channel")
+}
+
+// ── Chat schema ───────────────────────────────────────────────────────────────
+
+model ChatBan {
+  id              String   @id @default(cuid())
+  channelId       String
+  channel         Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  fingerprintHash String
+  bannedAt        DateTime @default(now())
+
+  @@unique([channelId, fingerprintHash])
+  @@schema("chat")
+}
+
+// ── Ledger schema (append-only) ───────────────────────────────────────────────
+
+model LedgerEntry {
+  id           BigInt          @id @default(autoincrement())
+  category     LedgerCategory
+  amountCents  BigInt
+  currency     String          @default("EUR")
+  description  String
+  externalRef  String?
+  periodStart  DateTime
+  periodEnd    DateTime
+  createdAt    DateTime        @default(now())
+  createdBy    String
+
+  @@index([category, periodStart])
+  @@index([createdAt])
+  @@schema("ledger")
+}
+
+model MonthlyRollup {
+  yearMonth   String   @id
+  byCategory  Json
+  surplus     BigInt
+  finalizedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@schema("ledger")
+}
+
+// M9 — annual engagement-unit-weighted grant disbursements. One row per
+// eligible artist per fiscal year. Append-only in spirit: a finalized year's
+// rows are not recomputed (see docs/planning-decisions.md Topic 8).
+model GrantDisbursement {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  forYear      Int
+  units        Int
+  amountCents  BigInt
+  state        GrantState @default(PENDING)
+  payoutMethod String?
+  payoutRef    String?
+  notifiedAt   DateTime?
+  confirmedAt  DateTime?
+  paidAt       DateTime?
+  publishedAs  String
+  createdAt    DateTime   @default(now())
+
+  @@unique([userId, forYear])
+  @@index([forYear])
+  @@schema("ledger")
+}
+
+// ── Governance schema ─────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         BigInt      @id @default(autoincrement())
+  action     AuditAction
+  actorId    String
+  targetId   String?
+  meta       Json?
+  createdAt  DateTime    @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  @@schema("governance")
+}
+
+// ── Member governance (M10) ───────────────────────────────────────────────────
+// Voting is ADVISORY for Y1 (see docs/planning-decisions.md Topic 11). Binding
+// AGM decisions require a live meeting until the bylaws authorize asynchronous
+// electronic voting; `advisory` flips to false once that clause is filed.
+
+model Motion {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  proposedBy  String
+  proposer    User        @relation(fields: [proposedBy], references: [id])
+  advisory    Boolean     @default(true)
+  openAt      DateTime
+  closeAt     DateTime
+  state       MotionState @default(DRAFT)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  votes Vote[]
+
+  @@index([state, closeAt])
+  @@schema("governance")
+}
+
+model Vote {
+  motionId String
+  motion   Motion     @relation(fields: [motionId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  choice   VoteChoice
+  castAt   DateTime   @default(now())
+
+  @@id([motionId, userId])
+  @@index([motionId])
+  @@schema("governance")
+}
+
+// ── Engagement (M18) ──────────────────────────────────────────────────────────
+// Every download is logged for grant accounting. A row that counts toward grants
+// has `countedAt` set and a `weight` (1 free, 5 fan-subscriber). Rows that don't
+// count (dedup, per-track cap, fraud) keep countedAt NULL with a `reason`.
+// See docs/engagement-and-fansubs.md.
+
+model Download {
+  id             BigInt    @id @default(autoincrement())
+  channelId      String
+  archiveItemId  String?
+  releaseTrackId String?
+  format         String
+  byUserId       String?
+  byFingerprint  String
+  byIpHash       String
+  bytes          Int       @default(0)
+  countedAt      DateTime?
+  reason         String?
+  weight         Int       @default(1)
+  createdAt      DateTime  @default(now())
+
+  @@index([channelId, countedAt])
+  @@index([byFingerprint, archiveItemId])
+  @@index([archiveItemId, createdAt])
+  @@schema("engagement")
+}
+
+// ── Fan-to-artist subscriptions (M19) ─────────────────────────────────────────
+// Listeners subscribe directly to an artist. Money flows to the artist via
+// Stripe Connect minus Stripe fees and a 2% operational fee (passthrough, not
+// org revenue — bylaws §11.b). Fan-sub euros and 5× paid-download weighting feed
+// the M9 grant formula. See docs/engagement-and-fansubs.md.
+
+model FanTier {
+  id           String   @id @default(cuid())
+  artistUserId String
+  artist       User     @relation(fields: [artistUserId], references: [id], onDelete: Cascade)
+  name         String
+  amountCents  Int
+  description  String?
+  perks        String[]
+  active       Boolean  @default(true)
+  position     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([artistUserId, active])
+  @@schema("fansubs")
+}
+
+model FanSubscription {
+  id                   String      @id @default(cuid())
+  artistUserId         String
+  subscriberUserId     String
+  artist               User        @relation("ArtistFanSubs", fields: [artistUserId], references: [id], onDelete: Cascade)
+  subscriber           User        @relation("SubscriberFanSubs", fields: [subscriberUserId], references: [id], onDelete: Cascade)
+  tierName             String
+  amountCents          Int
+  stripeSubscriptionId String      @unique
+  state                FanSubState @default(ACTIVE)
+  startedAt            DateTime    @default(now())
+  currentPeriodEnd     DateTime
+  canceledAt           DateTime?
+  createdAt            DateTime    @default(now())
+
+  payouts FanSubPayout[]
+
+  @@unique([artistUserId, subscriberUserId])
+  @@index([artistUserId, state])
+  @@index([subscriberUserId, state])
+  @@schema("fansubs")
+}
+
+model FanSubPayout {
+  id                String            @id @default(cuid())
+  fanSubscriptionId String
+  fanSubscription   FanSubscription   @relation(fields: [fanSubscriptionId], references: [id], onDelete: Cascade)
+  artistUserId      String
+  forPeriodStart    DateTime
+  forPeriodEnd      DateTime
+  grossCents        Int
+  stripeFeeCents    Int
+  orgFeeCents       Int
+  netToArtistCents  Int
+  stripeTransferId  String?
+  state             FanSubPayoutState @default(PENDING)
+  paidAt            DateTime?
+  createdAt         DateTime          @default(now())
+
+  @@index([fanSubscriptionId, forPeriodStart])
+  @@index([artistUserId, forPeriodStart])
+  @@schema("fansubs")
 }

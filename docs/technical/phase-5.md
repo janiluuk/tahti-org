@@ -68,9 +68,9 @@ flowchart TD
 
     CI --> BuildAll["Build all images\napi, web, website,\nworker, orchestrator"]
 
-    BuildAll --> PushRegistry[Push to registry.tahti.fi\nwith :sha tag]
+    BuildAll --> PushRegistry[Push to registry.tahti.live\nwith :sha tag]
 
-    PushRegistry --> DeployStaging["Deploy to staging\nstaging.tahti.fi\nautomatic on every push"]
+    PushRegistry --> DeployStaging["Deploy to staging\nstaging.tahti.live\nautomatic on every push"]
 
     DeployStaging --> SmokeStaging{Smoke tests\npass?}
 
@@ -80,7 +80,7 @@ flowchart TD
     TagRelease -- "No (regular push)" --> Done1[Done — staging only]
     TagRelease -- "Yes (v*.*.*)" --> Approval{Manual approval\nin GitHub UI}
 
-    Approval -- Approved --> DeployProd["Deploy to production\ntahti.fi"]
+    Approval -- Approved --> DeployProd["Deploy to production\ntahti.live"]
     DeployProd --> SmokeProd{Smoke tests\npass?}
     SmokeProd -- No --> Rollback[make rollback\nalert ops]
     SmokeProd -- Yes --> Done2[Done ✓]
@@ -91,7 +91,7 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     participant CI as GitHub Actions
-    participant Reg as registry.tahti.fi
+    participant Reg as registry.tahti.live
     participant MGR as Swarm manager
     participant W1 as Worker node 1
     participant W2 as Worker node 2
@@ -168,7 +168,7 @@ docker node update --label-add role=ingest <ingest-node-id>
 
 Staging uses a separate `infra/docker-stack.staging.yml` that overrides:
 - Fewer replicas (1 each instead of 2-3)
-- Staging domain (`staging.tahti.fi`)
+- Staging domain (`staging.tahti.live`)
 - Separate Swarm secrets (real keys but throw-away data)
 
 ```bash
@@ -190,8 +190,8 @@ services:
     deploy:
       replicas: 1
     environment:
-      NEXT_PUBLIC_API_BASE: https://api.staging.tahti.fi
-      NEXT_PUBLIC_CHAT_BASE: https://chat.staging.tahti.fi
+      NEXT_PUBLIC_API_BASE: https://api.staging.tahti.live
+      NEXT_PUBLIC_CHAT_BASE: https://chat.staging.tahti.live
   website:
     deploy:
       replicas: 1
@@ -229,7 +229,7 @@ jobs:
       - name: Push to registry
         run: |
           echo "${{ secrets.REGISTRY_PASSWORD }}" |
-            docker login registry.tahti.fi -u tahti --password-stdin
+            docker login registry.tahti.live -u tahti --password-stdin
           make push TAG=${{ github.sha }}
 
   deploy-staging:
@@ -250,8 +250,8 @@ jobs:
       - name: Smoke test staging
         run: |
           sleep 30
-          curl -f https://staging.tahti.fi/health
-          curl -f https://api.staging.tahti.fi/health
+          curl -f https://staging.tahti.live/health
+          curl -f https://api.staging.tahti.live/health
 
   deploy-production:
     needs: deploy-staging
@@ -270,8 +270,8 @@ jobs:
       - name: Smoke test production
         run: |
           sleep 30
-          curl -f https://tahti.fi/health
-          curl -f https://api.tahti.fi/health
+          curl -f https://tahti.live/health
+          curl -f https://api.tahti.live/health
       - name: Rollback on failure
         if: failure()
         uses: appleboy/ssh-action@v1
@@ -288,7 +288,7 @@ jobs:
 |-------|--------|----------|
 | 3-node Swarm healthy | `docker node ls` on manager | All nodes `Ready Active` |
 | Services spread across nodes | `docker stack ps tahti` | api/web on Worker1+2 |
-| Push deploys staging | Push a commit | staging.tahti.fi updated < 5 min |
+| Push deploys staging | Push a commit | staging.tahti.live updated < 5 min |
 | Tag deploys production | Create `git tag v0.1.0 && git push --tags` | Requires approval, then deploys |
 | Rollback works | `make rollback` | All services step back to previous image |
 | No data cross-contamination | Query staging DB | Only staging test artists visible |

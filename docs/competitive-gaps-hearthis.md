@@ -143,7 +143,7 @@ Conflicts with “no track-level comments” in current profile spec — **updat
 - [ ] **`Collection`** model: `{slug, title, description, coverUrl, kind}` where `kind` = `album` | `mix_series` | `podcast` | `custom`
 - [ ] **`CollectionItem`** join: ordered list of `archive_item_id` and/or `release_id`
 - [ ] Dashboard: create “Techno sets”, drag mixes in, reorder
-- [ ] Public URL: `tahti.fi/u/<handle>/c/<collection-slug>` with same visual modes as §2
+- [ ] Public URL: `tahti.live/u/<handle>/c/<collection-slug>` with same visual modes as §2
 - [ ] **RSS/Atom** per collection + per artist (enclosures point to MP3/FLAC URLs per tier policy)
 - [ ] Smart link block on profile: featured collections above full release timeline
 

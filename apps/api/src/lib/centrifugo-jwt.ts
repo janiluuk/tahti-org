@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Copyright (C) 2024 Tahti ry <https://tahti.fi>
+// Copyright (C) 2024 Tahti ry <https://tahti.live>
 
 import { createHmac } from 'node:crypto'
 import { config } from '../config.js'
@@ -15,9 +15,7 @@ export function signCentrifugoToken(payload: Record<string, unknown>, ttlSec = 3
 
   const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
   const body = base64url(JSON.stringify(claims))
-  const sig = createHmac('sha256', config.centrifugo.jwtSecret)
-    .update(`${header}.${body}`)
-    .digest()
+  const sig = createHmac('sha256', config.centrifugo.jwtSecret).update(`${header}.${body}`).digest()
 
   return `${header}.${body}.${base64url(sig)}`
 }

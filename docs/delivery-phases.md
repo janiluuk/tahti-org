@@ -6,7 +6,7 @@ Practical engineering phases for taking the platform from a local repo to a live
 
 ## Phase 1 — Website live (Week 1–2)
 
-**Goal:** tahti.fi serves the marketing site over HTTPS with no manual steps after `git push`.
+**Goal:** tahti.live serves the marketing site over HTTPS with no manual steps after `git push`.
 
 **Entry state:** domain registered, single VPS provisioned (UpCloud / Hetzner, 2 vCPU / 4 GB).
 
@@ -20,14 +20,14 @@ Practical engineering phases for taking the platform from a local repo to a live
 | 4 | Build website image locally | `make build-website TAG=init` |
 | 5 | Push to registry (or load directly for now) | `docker save … \| ssh host docker load` |
 | 6 | Deploy minimal stack (website + caddy only) | `TAG=init docker stack deploy -c infra/docker-stack-website-only.yml tahti` |
-| 7 | Point DNS A record for `tahti.fi` + `www.tahti.fi` → VPS IP | Traficom / DNS provider |
-| 8 | Verify Caddy auto-TLS works | `curl -I https://tahti.fi` → 200 |
+| 7 | Point DNS A record for `tahti.live` + `www.tahti.live` → VPS IP | Traficom / DNS provider |
+| 8 | Verify Caddy auto-TLS works | `curl -I https://tahti.live` → 200 |
 
 **Exit criteria:**
-- `https://tahti.fi` loads the marketing page with a valid Let's Encrypt cert.
+- `https://tahti.live` loads the marketing page with a valid Let's Encrypt cert.
 - Response time < 300 ms from Helsinki on uncached hit.
 
-**Blocker if skipped:** visitors see a broken domain. Marketing and grant applications reference tahti.fi — ship this first.
+**Blocker if skipped:** visitors see a broken domain. Marketing and grant applications reference tahti.live — ship this first.
 
 ---
 
@@ -43,8 +43,8 @@ Practical engineering phases for taking the platform from a local repo to a live
 | 2 | Write `api/.env.dev.example` with all env vars documented | API not containerised in dev — runs on host with `pnpm dev` |
 | 3 | Write `web/.env.dev.example` | Next.js public vars |
 | 4 | Add `.gitignore` entries for `infra/stack.env` and all `*.env` files | Prevent accidental secret commits |
-| 5 | Set up self-hosted container registry on the manager VPS | `docker run -d -p 5000:5000 --restart=always --name registry registry:2` then proxy via Caddy at `registry.tahti.fi` |
-| 6 | Add GitHub Actions workflow for website CI | `.github/workflows/website.yml` — build, push to `registry.tahti.fi` on merge to main |
+| 5 | Set up self-hosted container registry on the manager VPS | `docker run -d -p 5000:5000 --restart=always --name registry registry:2` then proxy via Caddy at `registry.tahti.live` |
+| 6 | Add GitHub Actions workflow for website CI | `.github/workflows/website.yml` — build, push to `registry.tahti.live` on merge to main |
 | 7 | Smoke-test: `make build-website && make push && make deploy TAG=<sha>` | Verify website redeploys in < 30 s |
 
 **Exit criteria:**
@@ -66,7 +66,7 @@ Practical engineering phases for taking the platform from a local repo to a live
 | 3 | Verify Postgres is healthy | `docker exec $(docker ps -qf name=tahti_postgres) pg_isready -U tahti` |
 | 4 | Set up daily Postgres backup to MinIO | Cronjob: `pg_dump \| gzip \| mc pipe tahti/backups/pg/$(date +%Y%m%d).sql.gz` |
 | 5 | Set up MinIO bucket lifecycle policy | Archive uploads to cold storage after 90 days |
-| 6 | Verify MinIO is reachable at `cdn.tahti.fi` (behind Caddy) | `curl -I https://cdn.tahti.fi/minio/health/live` |
+| 6 | Verify MinIO is reachable at `cdn.tahti.live` (behind Caddy) | `curl -I https://cdn.tahti.live/minio/health/live` |
 | 7 | Set up offsite backup (rclone to Backblaze B2 or UpCloud Object Storage) | Run weekly from a cron on the manager |
 | 8 | Test restore from backup | Spin up a throwaway postgres container, restore, verify row counts |
 
@@ -89,14 +89,14 @@ This phase corresponds to milestones M0–M5 in `docs/AGENT.md`.
 - API and Next.js web containerised with their Dockerfiles
 - Artist registration, login, channel creation working
 - `make deploy` ships all five app images (website, api, web, worker, orchestrator)
-- Smoke test: sign up at `app.tahti.fi`, create a channel
+- Smoke test: sign up at `app.tahti.live`, create a channel
 
 **4b — Archive uploads (M2)**
 - MinIO buckets created (`audio`, `covers`, `waveforms`)
 - Upload flow end-to-end: drag MP3 → presigned URL → MinIO → worker transcodes → archive shows in channel
 
 **4c — Live broadcasting (M3–M5)**
-- OBS → RTMP ingest → Liquidsoap → HLS → `stream.tahti.fi` → listener
+- OBS → RTMP ingest → Liquidsoap → HLS → `stream.tahti.live` → listener
 - Icecast ingress for Mixxx/Traktor artists
 - Auto-archive of live broadcasts
 - Live chat (Centrifugo) working on the channel page
@@ -110,7 +110,7 @@ This phase corresponds to milestones M0–M5 in `docs/AGENT.md`.
 
 ## Phase 5 — Staging cluster (Month 3–4, parallel with Phase 4)
 
-**Goal:** a second environment (`staging.tahti.fi`) that is structurally identical to production but uses separate VMs and throw-away data, so deploys can be validated before hitting production.
+**Goal:** a second environment (`staging.tahti.live`) that is structurally identical to production but uses separate VMs and throw-away data, so deploys can be validated before hitting production.
 
 ### Steps
 
@@ -120,7 +120,7 @@ This phase corresponds to milestones M0–M5 in `docs/AGENT.md`.
 | 2 | Init 3-node Swarm, assign node labels | Follow `docker-stack.yml` header |
 | 3 | Create staging secrets (use random values, not real keys) | Separate `docker secret create` run on staging manager |
 | 4 | Update GitHub Actions: deploy to staging on every push to `main`, deploy to production on tag `v*` | Two deploy jobs, same Makefile target |
-| 5 | Add DNS: `staging.tahti.fi` → staging edge node | Verify Caddy + TLS works |
+| 5 | Add DNS: `staging.tahti.live` → staging edge node | Verify Caddy + TLS works |
 | 6 | Run smoke test suite against staging after every deploy | Basic curl checks for `/health` endpoints |
 
 **Exit criteria:**
@@ -142,11 +142,11 @@ This phase covers M6–M11 in `docs/AGENT.md`. Infra additions are minor (new wo
 | Add `worker-dist` replica to 2 | Revelator / Mixcloud jobs are slow; parallel processing prevents queue backup |
 | Add ACRCloud webhook endpoint to API | Fingerprint matching for royalty tracking |
 | Add Stripe Connect environment variable to `stack.env` | Fan subscriptions (M19) need this from the start for key rotation |
-| Configure Postmark sending domain (DKIM/SPF) for `tahti.fi` | Required before newsletter feature ships |
+| Configure Postmark sending domain (DKIM/SPF) for `tahti.live` | Required before newsletter feature ships |
 
 **Exit criteria:**
 - At least one release successfully delivered to Spotify via Revelator.
-- Transparency ledger at `app.tahti.fi/transparency` shows real ledger entries.
+- Transparency ledger at `app.tahti.live/transparency` shows real ledger entries.
 - Grant disbursement dry-run completes without errors on Q4 synthetic data.
 
 ---

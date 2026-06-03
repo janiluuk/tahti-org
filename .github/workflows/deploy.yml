@@ -4,7 +4,7 @@
 # git tag v*.*.*  → (after staging smoke) → deploy production (requires manual approval)
 #
 # Required secrets (repository):
-#   REGISTRY_USER, REGISTRY_PASSWORD   — registry.tahti.fi credentials
+#   REGISTRY_USER, REGISTRY_PASSWORD   — registry.tahti.live credentials
 #   DEPLOY_SSH_PRIVATE_KEY             — ed25519 key authorized on staging + prod nodes
 #
 # Required variables (repository or environment):
@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REGISTRY: registry.tahti.fi
+  REGISTRY: registry.tahti.live
   NODE_VERSION: "20"
   PNPM_VERSION: "9"
 
@@ -171,7 +171,7 @@ jobs:
           curl -fsS --retry 5 --retry-delay 5 \
             "http://${staging_host}:2080/smoke"
           curl -fsS --retry 5 --retry-delay 5 \
-            "https://api.staging.tahti.fi/health" || echo "TLS not yet ready — skipping"
+            "https://api.staging.tahti.live/health" || echo "TLS not yet ready — skipping"
 
   # ── Deploy production (tagged releases only, requires approval) ──────────────
   deploy-production:
@@ -228,8 +228,8 @@ jobs:
 
       - name: Smoke test production
         run: |
-          curl -fsS --retry 5 --retry-delay 10 https://tahti.fi/health
-          curl -fsS --retry 5 --retry-delay 10 https://api.tahti.fi/health
+          curl -fsS --retry 5 --retry-delay 10 https://tahti.live/health
+          curl -fsS --retry 5 --retry-delay 10 https://api.tahti.live/health
 
       - name: Rollback on failure
         if: failure()

@@ -11,12 +11,12 @@ journey
     title Artist lifecycle on Tahti
     section Discovery
       Hears about Tahti from another artist  : 5 : Artist
-      Visits tahti.fi                        : 4 : Artist
+      Visits tahti.live                        : 4 : Artist
       Reads what the platform offers         : 4 : Artist
       Checks pricing (€40/year)              : 3 : Artist
     section Onboarding
       Receives invite from beta recruitment  : 5 : Artist, Director
-      Signs up at app.tahti.fi               : 4 : Artist
+      Signs up at app.tahti.live               : 4 : Artist
       Verifies email                         : 3 : Artist
       Sets up artist profile                 : 4 : Artist
       Creates first channel                  : 5 : Artist
@@ -45,19 +45,19 @@ journey
 ```mermaid
 sequenceDiagram
     participant A as Artist (Joonas, DJ)
-    participant TF as tahti.fi
-    participant APP as app.tahti.fi
+    participant TF as tahti.live
+    participant APP as app.tahti.live
     participant API as API
     participant Email as Postmark email
 
     Note over A: Joonas hears about Tahti at Äänipaja event in Helsinki
-    A->>TF: Opens tahti.fi on phone
+    A->>TF: Opens tahti.live on phone
     TF-->>A: Marketing site — sees "Your radio station" pitch
     A->>TF: Reads pricing section (€40/year)
     A->>TF: Clicks "Join the beta" → waiting list form
     Note over A: 3 days pass — Director sends invite
 
-    A->>APP: Opens invite link (app.tahti.fi/join?invite=xxx)
+    A->>APP: Opens invite link (app.tahti.live/join?invite=xxx)
     APP-->>A: Registration form
     A->>APP: Fills in: name, email, password
     APP->>API: POST /api/auth/register
@@ -85,9 +85,9 @@ sequenceDiagram
     participant CH as Channel page
     participant L as Listener (Maija)
 
-    A->>Guide: Reads tahti.fi/docs/obs-guide
+    A->>Guide: Reads tahti.live/docs/obs-guide
     A->>OBS: Opens OBS, adds RTMP server
-    Note over A,OBS: server: rtmp://ingest.tahti.fi:1935/live\nstream key: copied from dashboard
+    Note over A,OBS: server: rtmp://ingest.tahti.live:1935/live\nstream key: copied from dashboard
 
     A->>OBS: Clicks "Start Streaming"
     OBS->>RTMP: RTMP connect with stream key
@@ -96,8 +96,8 @@ sequenceDiagram
     API->>LS: Spawn channel container
     LS-->>CH: HLS segments begin flowing
 
-    Note over CH: slug.tahti.fi now shows LIVE badge
-    L->>CH: Opens slug.tahti.fi (someone shared the link)
+    Note over CH: slug.tahti.live now shows LIVE badge
+    L->>CH: Opens slug.tahti.live (someone shared the link)
     CH-->>L: Page loads, audio player
     L->>CH: Clicks play
     CH-->>L: Audio starts (6–9s delay behind live)
@@ -129,7 +129,7 @@ sequenceDiagram
 
     Note over A: Riitta uses Mixxx with a mixer — doesn't want OBS
     A->>A: Opens dashboard, copies Icecast credentials
-    Note over A,MX: server: ingest.tahti.fi:8000\nmount: /live/riitta-slug\npassword: from dashboard
+    Note over A,MX: server: ingest.tahti.live:8000\nmount: /live/riitta-slug\npassword: from dashboard
 
     A->>MX: Configures Icecast output in Mixxx preferences
     A->>MX: Clicks "Enable Live Broadcasting"
@@ -150,7 +150,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant A as Artist
-    participant APP as app.tahti.fi
+    participant APP as app.tahti.live
     participant API as API
     participant MN as MinIO
     participant WM as worker-media
@@ -188,7 +188,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant A as Artist
-    participant APP as app.tahti.fi
+    participant APP as app.tahti.live
     participant API as API
     participant RD as Redis
     participant WD as worker-dist
@@ -249,7 +249,7 @@ sequenceDiagram
     end
 
     API->>PG: INSERT ledger_entries (grant-round-closed, year: 2025)
-    Note over A: Artist opens app.tahti.fi/transparency
+    Note over A: Artist opens app.tahti.live/transparency
     A->>A: Sees their entry in the public ledger — amount, date, year
 ```
 

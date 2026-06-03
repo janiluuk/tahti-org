@@ -3,7 +3,7 @@
 # Tests registration, email verification, login, session, and channel creation.
 #
 # Usage:
-#   APP_URL=https://app.tahti.fi API_URL=https://api.tahti.fi ./tests/e2e/phase-4.sh
+#   APP_URL=https://app.tahti.live API_URL=https://api.tahti.live ./tests/e2e/phase-4.sh
 #
 # Environment variables:
 #   APP_URL   — Next.js web base URL (default: http://localhost:3000)
@@ -81,7 +81,7 @@ echo ""
 echo "── Artist registration flow ──────────────────────────────"
 
 UNIQUE=$(date +%s)
-TEST_EMAIL="phase4-e2e-${UNIQUE}@test.tahti.fi"
+TEST_EMAIL="phase4-e2e-${UNIQUE}@test.tahti.live"
 TEST_USER="e2eartist${UNIQUE}"
 
 REGISTER=$(curl -sf -X POST "$API_URL/api/auth/register" \
@@ -166,7 +166,7 @@ echo "── Credential validation ───────────────
 
 BADLOGIN=$(curl -sf -o /dev/null -w '%{http_code}' -X POST "$API_URL/api/auth/login" \
   -H 'Content-Type: application/json' \
-  -d '{"email":"nobody@tahti.fi","password":"wrongpassword"}' \
+  -d '{"email":"nobody@tahti.live","password":"wrongpassword"}' \
   2>/dev/null || echo '000')
 check_output "Login with wrong creds returns 401" '401' "$BADLOGIN"
 
