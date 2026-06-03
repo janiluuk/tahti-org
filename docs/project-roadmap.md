@@ -503,7 +503,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [x] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | `apps/api/src/lib/redis.ts` | P2 |
 | [ ] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | P2 |
 | [ ] | **PLAT-013** | Website Docker: mount large media (`bg-audio.mp3`, hero video) from host like `output_vhs.mp4` | P3 |
-| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | channel-egress, download-gate-stats, schedule via `zod-to-json-schema` |
+| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | + grant preview, broadcast-usage in `/docs` components |
 
 ### Refactors (maintainability)
 
@@ -541,7 +541,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | [~] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | API returns 409 while `LIVE` (RTMP + Icecast rotate) | M3 |
 | [~] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | `delay(3.)` on archive branch before live fallback | M3 |
 | [~] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Live player shows “Buffering live stream…” (LISTENER-001) | M3 |
-| [~] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | `nextBroadcastAt` / `nextBroadcastNote` on channel + dashboard + public page | M5 |
+| [x] | **LISTENER-002** No "artist coming back soon" signal — listener who tunes in during offline period has no indication when next broadcast is | API + dashboard schedule panel + public `/c/:slug` banner | M5 |
 
 ### MEDIUM — affects operations and cost attribution
 

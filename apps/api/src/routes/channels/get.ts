@@ -43,7 +43,11 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
         ? liveHlsUrl(config.hlsBaseUrl, channel.slug, channel.user.tier)
         : null
 
-    return reply.send({ ...channel, hlsUrl })
+    return reply.send({
+      ...channel,
+      nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
+      hlsUrl,
+    })
   })
 }
 

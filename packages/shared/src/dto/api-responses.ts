@@ -48,3 +48,45 @@ export const ChannelScheduleViewSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable(),
   nextBroadcastNote: z.string().nullable(),
 })
+
+export const GrantAnomalySchema = z.object({
+  code: z.enum(['DOMINANT_IP', 'HIGH_UNIT_SHARE', 'ANONYMOUS_GRANT']),
+  message: z.string(),
+})
+
+export const GrantPreviewArtistSchema = z.object({
+  userId: z.string(),
+  username: z.string(),
+  displayName: z.string(),
+  publicAttribution: z.boolean(),
+  units: z.number(),
+  amountCents: z.number().int(),
+  anomalies: z.array(GrantAnomalySchema),
+})
+
+export const GrantPreviewResponseSchema = z.object({
+  forYear: z.number().int(),
+  alreadyRun: z.boolean(),
+  surplusCents: z.number().int(),
+  reserveCents: z.number().int(),
+  poolCents: z.number().int(),
+  totalUnits: z.number(),
+  grantCount: z.number().int(),
+  unallocatedCents: z.number().int(),
+  artists: z.array(GrantPreviewArtistSchema),
+})
+
+export const BroadcastUsageResponseSchema = z.object({
+  tier: z.string(),
+  unlimited: z.boolean(),
+  weeklyCapSeconds: z.number().int(),
+  graceSeconds: z.number().int(),
+  secondsUsed: z.number().int(),
+  secondsRemaining: z.number().int(),
+  warnings: z.array(z.string()),
+  warningLevel: z.enum(['none', '45m', '55m', 'grace', 'blocked']),
+  inGrace: z.boolean(),
+  atCap: z.boolean(),
+  blocked: z.boolean(),
+  showUpgradeCta: z.boolean(),
+})
