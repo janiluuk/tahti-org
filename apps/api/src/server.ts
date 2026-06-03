@@ -79,6 +79,7 @@ import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import requestLogPlugin from './plugins/request-log.js'
+import { apiLoggerConfig } from './lib/logger.js'
 import { config } from './config.js'
 
 export interface BuildOptions {
@@ -87,7 +88,7 @@ export interface BuildOptions {
 
 export async function buildApp(opts: BuildOptions = {}) {
   const fastify = Fastify({
-    logger: opts.logger ?? config.nodeEnv !== 'test',
+    logger: apiLoggerConfig(opts.logger),
     trustProxy: true,
   })
 
