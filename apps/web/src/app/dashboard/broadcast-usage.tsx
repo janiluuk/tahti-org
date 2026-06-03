@@ -11,6 +11,7 @@ interface BroadcastUsage {
   blocked?: boolean
   showUpgradeCta?: boolean
   weeklyCapSeconds: number
+  warningLevel?: '45m' | '55m' | 'grace' | null
 }
 
 function fmtMinutes(sec: number): string {
@@ -53,7 +54,7 @@ export default function BroadcastUsageBanner({ usage }: { usage: BroadcastUsage 
           }}
         />
       </div>
-      {usage.inGrace ? (
+      {usage.warningLevel === 'grace' || usage.inGrace ? (
         <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#92400e' }}>
           Weekly hour reached — wrapping up live (about a minute). Archive plays until Monday 00:00
           UTC.
@@ -63,13 +64,13 @@ export default function BroadcastUsageBanner({ usage }: { usage: BroadcastUsage 
           Your weekly hour is up — archive plays until Monday 00:00 UTC. Upgrade to unlimited live +
           lossless FLAC.
         </p>
-      ) : usage.warnings.includes(45 * 60) ? (
-        <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#92400e' }}>
-          You&apos;ve broadcast 45 minutes this week — 15 minutes left until Monday.
-        </p>
-      ) : usage.warnings.includes(55 * 60) ? (
+      ) : usage.warningLevel === '55m' ? (
         <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#92400e' }}>
           You&apos;ve broadcast 55 minutes this week — 5 minutes left until Monday.
+        </p>
+      ) : usage.warningLevel === '45m' ? (
+        <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#92400e' }}>
+          You&apos;ve broadcast 45 minutes this week — 15 minutes left until Monday.
         </p>
       ) : null}
     </div>
