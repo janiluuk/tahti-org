@@ -36,7 +36,7 @@ export async function processMixcloudUploadJob(job: Job): Promise<void> {
     // Access token stored per-user; for now we read from a future user.mixcloudToken field.
     // Until OAuth wiring is complete, stub mode kicks in (MIXCLOUD_CLIENT_ID not set in dev).
     const result = await uploadToMixcloud({
-      accessToken: '',  // populated via user.mixcloudToken once OAuth is wired
+      accessToken: '', // populated via user.mixcloudToken once OAuth is wired
       name: upload.archiveItem.title,
       audioPath,
     })

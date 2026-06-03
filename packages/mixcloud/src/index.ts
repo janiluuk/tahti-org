@@ -12,17 +12,19 @@ export interface MixcloudUploadParams {
   accessToken: string
   name: string
   description?: string
-  audioPath: string        // local file path
-  picturePath?: string     // optional cover art
+  audioPath: string // local file path
+  picturePath?: string // optional cover art
   tags?: string[]
 }
 
 export interface MixcloudUploadResult {
-  key: string    // e.g. "/artistname/mix-title/"
-  url: string    // https://www.mixcloud.com/artistname/mix-title/
+  key: string // e.g. "/artistname/mix-title/"
+  url: string // https://www.mixcloud.com/artistname/mix-title/
 }
 
-export async function uploadToMixcloud(params: MixcloudUploadParams): Promise<MixcloudUploadResult> {
+export async function uploadToMixcloud(
+  params: MixcloudUploadParams,
+): Promise<MixcloudUploadResult> {
   const clientId = process.env.MIXCLOUD_CLIENT_ID
 
   if (!clientId) {

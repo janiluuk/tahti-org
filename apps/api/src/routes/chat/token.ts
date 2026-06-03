@@ -26,10 +26,11 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
   // Issues a Centrifugo connection JWT. handle stored in localStorage by the client.
   fastify.post('/api/chat/:slug/token', async (request, reply) => {
     const { slug } = request.params as { slug: string }
-    const { handle, hcaptchaToken } = (request.body as {
-      handle?: string
-      hcaptchaToken?: string
-    }) ?? {}
+    const { handle, hcaptchaToken } =
+      (request.body as {
+        handle?: string
+        hcaptchaToken?: string
+      }) ?? {}
 
     const ip = request.ip ?? '0.0.0.0'
     if (!checkRateLimit(ip)) {

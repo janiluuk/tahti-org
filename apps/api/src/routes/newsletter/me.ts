@@ -8,25 +8,29 @@ import { mediaQueue } from '../../lib/queue.js'
 // M13 — artist newsletter management (auth required)
 const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/newsletter/subscribers — subscriber count + recent growth
-  fastify.get('/api/me/newsletter/subscribers', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
+  fastify.get(
+    '/api/me/newsletter/subscribers',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
 
-    const [total, confirmed, recent] = await Promise.all([
-      fastify.prisma.newsletterSubscriber.count({ where: { artistUserId: user.id } }),
-      fastify.prisma.newsletterSubscriber.count({
-        where: { artistUserId: user.id, confirmedAt: { not: null }, unsubscribedAt: null },
-      }),
-      fastify.prisma.newsletterSubscriber.count({
-        where: {
-          artistUserId: user.id,
-          confirmedAt: { not: null, gte: new Date(Date.now() - 30 * 24 * 3600 * 1000) },
-          unsubscribedAt: null,
-        },
-      }),
-    ])
+      const [total, confirmed, recent] = await Promise.all([
+        fastify.prisma.newsletterSubscriber.count({ where: { artistUserId: user.id } }),
+        fastify.prisma.newsletterSubscriber.count({
+          where: { artistUserId: user.id, confirmedAt: { not: null }, unsubscribedAt: null },
+        }),
+        fastify.prisma.newsletterSubscriber.count({
+          where: {
+            artistUserId: user.id,
+            confirmedAt: { not: null, gte: new Date(Date.now() - 30 * 24 * 3600 * 1000) },
+            unsubscribedAt: null,
+          },
+        }),
+      ])
 
-    return reply.send({ total, confirmed, newLast30Days: recent })
-  })
+      return reply.send({ total, confirmed, newLast30Days: recent })
+    },
+  )
 
   // POST /api/me/newsletter/drafts — save a draft
   fastify.post('/api/me/newsletter/drafts', { preHandler: requireAuth }, async (request, reply) => {

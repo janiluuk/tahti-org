@@ -112,7 +112,10 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
       externalLinks?: unknown
     }
 
-    const slug = body.slug?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-')
+    const slug = body.slug
+      ?.trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
     if (!slug) return reply.status(400).send({ error: 'slug is required' })
     const name = body.name?.trim()
     if (!name) return reply.status(400).send({ error: 'name is required' })
@@ -206,7 +209,9 @@ function buildIcs(
 
   for (const b of broadcasts) {
     const dtstart = formatIcsDate(b.startAt)
-    const dtend = b.endAt ? formatIcsDate(b.endAt) : formatIcsDate(new Date(b.startAt.getTime() + 2 * 3600 * 1000))
+    const dtend = b.endAt
+      ? formatIcsDate(b.endAt)
+      : formatIcsDate(new Date(b.startAt.getTime() + 2 * 3600 * 1000))
     lines.push(
       'BEGIN:VEVENT',
       `UID:${b.id}@tahti.live`,
@@ -224,7 +229,10 @@ function buildIcs(
 }
 
 function formatIcsDate(d: Date): string {
-  return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+  return d
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}/, '')
 }
 
 export default venueRoutes

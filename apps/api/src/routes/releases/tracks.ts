@@ -152,7 +152,9 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'FLAC download requires a paid tier' })
       }
 
-      const key = wantFlac ? (track.flacKey ?? track.sourceKey) : track.streamKey ?? track.sourceKey
+      const key = wantFlac
+        ? (track.flacKey ?? track.sourceKey)
+        : (track.streamKey ?? track.sourceKey)
       if (!key) return reply.status(404).send({ error: 'Download not available' })
 
       const url = await presignedGetUrl(key, 300)
