@@ -2,6 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import {
+  DownloadGateItemDetailResponseSchema,
+  DownloadGateStatsResponseSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { buildGateDailySeries, GATE_DAILY_SERIES_DAYS } from '../../lib/download-gate-daily.js'
 
@@ -14,6 +19,7 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description: 'M22: follow/repost download gate funnel (14-day UTC series)',
+        response: openApiResponse(DownloadGateStatsResponseSchema, 'DownloadGateStats'),
       },
     },
     async (request, reply) => {
@@ -118,6 +124,7 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['channel'],
         description: 'M22: per-archive-item download gate funnel (14-day counted downloads)',
+        response: openApiResponse(DownloadGateItemDetailResponseSchema, 'DownloadGateItemDetail'),
       },
     },
     async (request, reply) => {

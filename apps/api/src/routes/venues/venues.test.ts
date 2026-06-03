@@ -98,6 +98,12 @@ describe('M17 — venue calendar', () => {
   })
 
   it('GET broadcasts JSON feed and calendar.ics', async () => {
+    const bad = await app.inject({
+      method: 'GET',
+      url: `/api/v1/venues/${venueSlug}/broadcasts?from=not-a-date`,
+    })
+    expect(bad.statusCode).toBe(400)
+
     const json = await app.inject({
       method: 'GET',
       url: `/api/v1/venues/${venueSlug}/broadcasts`,

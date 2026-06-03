@@ -31,7 +31,13 @@ const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/admin/grants/run/:year',
-    { preHandler: requireBoard },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'M9: run annual grant calculation for a calendar year',
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const forYear = yearFromPathParams(request.params)

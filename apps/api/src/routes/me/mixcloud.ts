@@ -4,6 +4,7 @@
 import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
 import { buildMixcloudAuthorizeUrl, exchangeMixcloudCode } from '@tahti/mixcloud'
+import { MixcloudOAuthCallbackQuerySchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { mediaQueue } from '../../lib/queue.js'
@@ -49,7 +50,11 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   fastify.get('/api/me/mixcloud/oauth/callback', async (request, reply) => {
-    const code = (request.query as { code?: string }).code
+    const parsedQuery = MixcloudOAuthCallbackQuerySchema.safeParse(request.query)
+    if (!parsedQuery.success) {
+      return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
+    }
+    const code = parsedQuery.data.code
     if (!code) {
       return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
     }

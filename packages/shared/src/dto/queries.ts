@@ -21,3 +21,22 @@ export function yearFromPathParams(params: unknown): number | null {
   if (!parsed.success) return null
   return parseInt(parsed.data.year, 10)
 }
+
+export const CollectionListQuerySchema = z.object({
+  expand: z.literal('items').optional(),
+})
+
+export const VenueCalendarQuerySchema = z.object({
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+})
+
+export const MixcloudOAuthCallbackQuerySchema = z.object({
+  code: z.string().min(1).max(512).optional(),
+  error: z.string().max(128).optional(),
+})
+
+/** Studio release track download (`?format=flac` only; default MP3/stream key). */
+export const MeReleaseTrackDownloadQuerySchema = z.object({
+  format: z.literal('flac').optional(),
+})

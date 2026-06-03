@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { MeReleaseTrackDownloadQuerySchema } from '@tahti/shared'
 import { nanoid } from 'nanoid'
 import { ReleaseTrackInputSchema, ReleaseTrackUploadSchema } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -136,7 +137,12 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { id: releaseId, trackId } = request.params as { id: string; trackId: string }
-      const { format } = request.query as { format?: string }
+      const parsedQuery = MeReleaseTrackDownloadQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply.status(400).send({
+          error: parsedQuery.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
 
       const release = await fastify.prisma.release.findFirst({
         where: { id: releaseId, userId: user.id },
@@ -151,7 +157,7 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(409).send({ error: 'Track not ready yet' })
       }
 
-      const wantFlac = format === 'flac'
+      const wantFlac = parsedQuery.data.format === 'flac'
       if (wantFlac && user.tier === 'FREE') {
         return reply.status(403).send({ error: 'FLAC download requires a paid tier' })
       }
