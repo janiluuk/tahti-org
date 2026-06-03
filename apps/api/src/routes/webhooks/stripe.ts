@@ -3,7 +3,11 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { constructWebhookEvent } from '../../lib/stripe.js'
-import { activateSubscription, recordFanSubPayment } from '../../lib/fansub.js'
+import {
+  activateSubscription,
+  markFanSubCanceledAtPeriodEnd,
+  recordFanSubPayment,
+} from '../../lib/fansub.js'
 import { activateMembership } from '../../lib/membership.js'
 
 // Stripe webhook for fan-subscription lifecycle. Encapsulated in its own plugin
@@ -38,9 +42,11 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
         case 'checkout.session.completed': {
           if (meta.type !== 'membership' || !meta.userId) break
           const amount = obj.amount_total != null ? Number(obj.amount_total) : undefined
+          const customerId = obj.customer != null ? String(obj.customer) : undefined
           await activateMembership(fastify.prisma, meta.userId, {
             stripeSessionId: String(obj.id),
             amountCents: amount,
+            stripeCustomerId: customerId,
           })
           break
         }
@@ -83,10 +89,18 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         case 'customer.subscription.deleted': {
-          const subId = String(obj.id)
-          await fastify.prisma.fanSubscription.updateMany({
-            where: { stripeSubscriptionId: subId },
-            data: { state: 'CANCELED', canceledAt: new Date() },
+          await markFanSubCanceledAtPeriodEnd(fastify.prisma, {
+            stripeSubscriptionId: String(obj.id),
+          })
+          break
+        }
+
+        case 'account.updated': {
+          const accountId = String(obj.id ?? '')
+          if (!accountId) break
+          await fastify.prisma.user.updateMany({
+            where: { stripeConnectAccountId: accountId },
+            data: { stripeConnectChargesEnabled: obj.charges_enabled === true },
           })
           break
         }

@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 import { verifyHcaptcha } from '../../lib/hcaptcha.js'
+import { isActiveFanSubscriber } from '../../lib/fansub.js'
 
 // Rate limit: 10 tokens per IP per minute
 const tokenBucket = new Map<string, { count: number; reset: number }>()
@@ -44,7 +45,7 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { slug },
-      select: { id: true },
+      select: { id: true, userId: true },
     })
 
     if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -74,7 +75,16 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
     const sub = `${cleanHandle}#${fingerprint}`
     const token = signCentrifugoToken({ sub, channel: `channel:${slug}` }, 3600)
 
-    return reply.send({ token, handle: cleanHandle, fingerprint })
+    let supporter = false
+    if (request.sessionUser) {
+      supporter = await isActiveFanSubscriber(
+        fastify.prisma,
+        channel.userId,
+        request.sessionUser.id,
+      )
+    }
+
+    return reply.send({ token, handle: cleanHandle, fingerprint, supporter })
   })
 }
 

@@ -10,16 +10,10 @@
 
 settings.log.level := 3
 
-# --- Live input via Icecast harbor ---
-live_source = input.harbor(
-  "/live",
-  port={{HARBOR_INPUT_PORT}},
-  password="{{LIVE_SOURCE_PASSWORD}}",
-  buffer=4.,
-  max=20.,
-  on_connect=fun (h) -> log("Live source connected from #{h[\"X-Forwarded-For\"]}"),
-  on_disconnect=fun () -> log("Live source disconnected")
-)
+# --- Live input: pull from central Icecast mount (Mixxx / Traktor / butt) ---
+# Artist connects to ingest Icecast; Liquidsoap reads the same mount over HTTP.
+live_icecast = input.http("{{ICECAST_LIVE_URL}}")
+live_source = mksafe(live_icecast)
 
 # --- Archive playlist (the fallback) ---
 # Hot-reloads when the artist changes their archive rotation

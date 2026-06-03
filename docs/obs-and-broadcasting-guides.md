@@ -4,6 +4,16 @@ Every member gets one-click access to a personalized setup guide for their
 preferred broadcasting tool. The guide includes their current credentials,
 recommended settings, and a "test connection" button.
 
+## Multistream to Twitch, YouTube, and other sites
+
+Artists do **not** wire OBS to each platform separately. They stream once to Tahti,
+then add **Multistream** destinations in the dashboard (stream key per platform).
+
+Step-by-step for every supported service: **[guides/multistream-simulcast.md](guides/multistream-simulcast.md)**.
+In the web app: `/help/multistream`.
+
+---
+
 ## Coverage
 
 Each artist's `/me/broadcast/guides/:tool` endpoint generates a personalized

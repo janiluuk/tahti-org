@@ -30,10 +30,10 @@ Last reviewed: 2026-06-03
 ### M19 — Fan subscriptions
 | P | Item |
 |---|---|
-| P0 | **Stripe Connect Express** onboarding + live Checkout (currently `501` when key set but unwired) |
-| P1 | `charges_enabled` gate on subscribe page (Topic 10 — option A decided) |
+| P0 | ~~**Stripe Connect Express** onboarding + live Checkout~~ — wired (REST API); payout cron still open |
+| P1 | ~~`charges_enabled` gate on subscribe page~~ — done (Topic 10 option A) |
 | P1 | Payout transfer cron + failed-payout retry |
-| P2 | Fan-only chat / newsletter perks enforcement |
+| ~~P2~~ | ~~Fan-only chat / newsletter perks enforcement~~ — tier codes `FAN_CHAT` / `FAN_NEWSLETTER` (2026-06-03) |
 | P2 | Churn handling (`customer.subscription.deleted` → grace period UX) |
 
 ### M20 — Tier gating
@@ -68,8 +68,8 @@ Last reviewed: 2026-06-03
 | P1 | Release audio upload pipeline (WAV/FLAC → Opus/HLS/FLAC derivatives per AGENT.md) |
 | P1 | Link `ReleaseTrack.archiveItemId` to playable audio on profile |
 | ~~P1~~ | ~~Open Graph on `/u/[username]`~~ — done |
-| P2 | Smart link targets JSON + DSP buttons (M14); artwork upload to MinIO |
-| ~~P2~~ | ~~Basic smart links `/r/:slug`~~ — done |
+| ~~P2~~ | ~~Smart link targets JSON + DSP buttons~~ — dashboard editor + `/r/:slug` (2026-06-03) |
+| P2 | Artwork upload to MinIO for releases |
 | P2 | Press kit (Studio tier) |
 
 ### Not started (Phase 5+)
@@ -89,7 +89,8 @@ Last reviewed: 2026-06-03
 |---|---|---|
 | P1 | **Playwright** smoke tests for dashboard + `/u/[username]` + `/c/[slug]` | Catches RSC/regression bugs bash e2e misses |
 | P1 | Document local test DB in README (`docker compose up postgres -d`) | Faster onboarding; pairs with CI Postgres |
-| P2 | Shared `TestContext` fixture (single `beforeAll` app + cleanup registry) | Less boilerplate across 25+ test files |
+| ~~P2~~ | ~~Vitest coverage for embed, newsletter, venues, Connect, webhooks~~ | Done: 191 API/workspace tests (2026-06-03) |
+| P2 | Shared `TestContext` fixture (single `beforeAll` app + cleanup registry) | Less boilerplate across 40+ test files |
 | P2 | Ephemeral DB per Vitest worker (Testcontainers) | Eliminates `memberNumber` collision hacks |
 | P2 | Contract tests for public `/api/v1/*` JSON shapes | Safe mobile/third-party consumers |
 
@@ -144,3 +145,4 @@ These stay in `docs/project-roadmap.md` Phases 0–2 but are listed here for vis
 - Vitest journey tests + `tests/e2e/vital-flows.sh` + CI `ci.yml` (lint + vital-flows-e2e)
 - M11 partial: audit CSV, ledger CSV, `/api/v1/status`
 - M12 partial: release schema, profile API, `/u/[username]` page, dashboard drafts
+- M14 embed web pages; M19 Connect + Checkout; +48 Vitest files (embed, newsletter, venues, Connect, webhooks, RTMP, etc.)

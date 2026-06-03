@@ -5,7 +5,17 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { createRelease, publishRelease } from './release-actions'
+import Link from 'next/link'
+import { createRelease, publishRelease, updateReleaseSmartLinks } from './release-actions'
+
+const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
+  { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
+  { key: 'apple', label: 'Apple Music', placeholder: 'https://music.apple.com/...' },
+  { key: 'bandcamp', label: 'Bandcamp', placeholder: 'https://artist.bandcamp.com/...' },
+  { key: 'soundcloud', label: 'SoundCloud', placeholder: 'https://soundcloud.com/...' },
+  { key: 'youtube', label: 'YouTube Music', placeholder: 'https://music.youtube.com/...' },
+  { key: 'tidal', label: 'Tidal', placeholder: 'https://listen.tidal.com/...' },
+]
 
 interface ReleaseSummary {
   id: string
@@ -13,6 +23,8 @@ interface ReleaseSummary {
   type: string
   state: string
   releaseDate: string
+  smartLinkSlug: string
+  smartLinkTargets: Record<string, string> | null
   _count: { tracks: number }
 }
 
@@ -27,6 +39,8 @@ export default function ReleasesPanel({
   const [isPending, startTransition] = useTransition()
   const [title, setTitle] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [targets, setTargets] = useState<Record<string, string>>({})
 
   function addRelease() {
     setError(null)
@@ -54,6 +68,34 @@ export default function ReleasesPanel({
     })
   }
 
+  function openSmartLinks(r: ReleaseSummary) {
+    const existing =
+      r.smartLinkTargets && typeof r.smartLinkTargets === 'object'
+        ? (r.smartLinkTargets as Record<string, string>)
+        : {}
+    setTargets(existing)
+    setEditingId(r.id)
+    setError(null)
+  }
+
+  function saveSmartLinks() {
+    if (!editingId) return
+    setError(null)
+    const cleaned: Record<string, string> = {}
+    for (const [k, v] of Object.entries(targets)) {
+      if (v.trim()) cleaned[k] = v.trim()
+    }
+    startTransition(async () => {
+      const res = await updateReleaseSmartLinks(editingId, cleaned)
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      setEditingId(null)
+      router.refresh()
+    })
+  }
+
   return (
     <section
       style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
@@ -65,8 +107,8 @@ export default function ReleasesPanel({
         </a>
       </div>
       <p style={{ color: '#666', fontSize: '0.875rem' }}>
-        Publish releases on your profile. Full audio upload pipeline coming later — v1 uses track
-        metadata (link archive items in a future update).
+        Publish releases on your profile. Add DSP smart links for the public landing page at{' '}
+        <code>/r/your-slug</code>.
       </p>
 
       {initial.length > 0 && (
@@ -75,27 +117,94 @@ export default function ReleasesPanel({
             <li
               key={r.id}
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '0.5rem 0',
+                padding: '0.75rem 0',
                 borderBottom: '1px solid #f0f0f0',
               }}
             >
-              <span>
-                {r.title} · {r.state} · {r._count.tracks} track(s)
-              </span>
-              {r.state === 'DRAFT' && (
-                <button
-                  onClick={() => publish(r.id)}
-                  disabled={isPending}
-                  style={{ border: '1px solid #ccc', borderRadius: 4, padding: '0.2rem 0.5rem' }}
-                >
-                  Publish
-                </button>
-              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+                <span>
+                  {r.title} · {r.state} · {r._count.tracks} track(s)
+                </span>
+                <span style={{ display: 'flex', gap: '0.35rem' }}>
+                  {r.state === 'PUBLISHED' && (
+                    <>
+                      <Link href={`/r/${r.smartLinkSlug}`} style={{ fontSize: '0.8rem' }}>
+                        Smart link
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => openSmartLinks(r)}
+                        style={{ border: '1px solid #ccc', borderRadius: 4, fontSize: '0.8rem' }}
+                      >
+                        DSP URLs
+                      </button>
+                    </>
+                  )}
+                  {r.state === 'DRAFT' && (
+                    <button
+                      type="button"
+                      onClick={() => publish(r.id)}
+                      disabled={isPending}
+                      style={{
+                        border: '1px solid #ccc',
+                        borderRadius: 4,
+                        padding: '0.2rem 0.5rem',
+                      }}
+                    >
+                      Publish
+                    </button>
+                  )}
+                </span>
+              </div>
             </li>
           ))}
         </ul>
+      )}
+
+      {editingId && (
+        <div
+          style={{
+            marginBottom: '1rem',
+            padding: '1rem',
+            background: '#f9fafb',
+            borderRadius: 8,
+            border: '1px solid #e5e7eb',
+          }}
+        >
+          <p style={{ margin: '0 0 0.75rem', fontWeight: 600, fontSize: '0.9rem' }}>
+            Streaming links
+          </p>
+          {DSP_FIELDS.map((f) => (
+            <label
+              key={f.key}
+              style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}
+            >
+              {f.label}
+              <input
+                type="url"
+                value={targets[f.key] ?? ''}
+                onChange={(e) => setTargets((t) => ({ ...t, [f.key]: e.target.value }))}
+                placeholder={f.placeholder}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  marginTop: '0.2rem',
+                  padding: '0.4rem',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                }}
+              />
+            </label>
+          ))}
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+            <button type="button" onClick={saveSmartLinks} disabled={isPending}>
+              Save links
+            </button>
+            <button type="button" onClick={() => setEditingId(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
 
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
@@ -106,6 +215,7 @@ export default function ReleasesPanel({
           style={{ flex: 1, padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
         />
         <button
+          type="button"
           onClick={addRelease}
           disabled={isPending}
           style={{

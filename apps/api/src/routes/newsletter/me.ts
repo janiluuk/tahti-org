@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
 import { mediaQueue } from '../../lib/queue.js'
+import { artistOffersFanNewsletter, fanOnlyNewsletterSubscriberIds } from '../../lib/fan-perks.js'
 
 // M13 — artist newsletter management (auth required)
 const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
@@ -77,6 +78,8 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       const { draftId } = request.params as { draftId: string }
+      const body = (request.body as { audience?: string }) ?? {}
+      const audience = body.audience === 'fans' ? 'fans' : 'all'
 
       const draft = await fastify.prisma.newsletterDraft.findFirst({
         where: { id: draftId, userId: user.id },
@@ -100,22 +103,38 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      // Get confirmed subscribers
-      const subscribers = await fastify.prisma.newsletterSubscriber.findMany({
-        where: { artistUserId: user.id, confirmedAt: { not: null }, unsubscribedAt: null },
-        select: { id: true },
-      })
+      let subscriberIds: string[]
 
-      if (subscribers.length === 0) {
-        return reply.status(400).send({ error: 'No confirmed subscribers to send to' })
+      if (audience === 'fans') {
+        if (!(await artistOffersFanNewsletter(fastify.prisma, user.id))) {
+          return reply.status(400).send({
+            error: 'Add FAN_NEWSLETTER to an active fan tier before sending fan-only mail',
+          })
+        }
+        subscriberIds = await fanOnlyNewsletterSubscriberIds(fastify.prisma, user.id)
+      } else {
+        const subscribers = await fastify.prisma.newsletterSubscriber.findMany({
+          where: { artistUserId: user.id, confirmedAt: { not: null }, unsubscribedAt: null },
+          select: { id: true },
+        })
+        subscriberIds = subscribers.map((s) => s.id)
+      }
+
+      if (subscriberIds.length === 0) {
+        return reply.status(400).send({
+          error:
+            audience === 'fans'
+              ? 'No confirmed fan subscribers on your list'
+              : 'No confirmed subscribers to send to',
+        })
       }
 
       // Create send rows in bulk and update draft state
       await fastify.prisma.$transaction([
         fastify.prisma.newsletterSend.createMany({
-          data: subscribers.map((s) => ({
+          data: subscriberIds.map((subscriberId) => ({
             draftId,
-            subscriberId: s.id,
+            subscriberId,
             state: 'QUEUED',
           })),
         }),
@@ -128,7 +147,7 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
       // Enqueue the dispatch job
       await mediaQueue.add('newsletter-dispatch', { draftId, userId: user.id })
 
-      return reply.send({ draftId, queued: subscribers.length })
+      return reply.send({ draftId, queued: subscriberIds.length, audience })
     },
   )
 }

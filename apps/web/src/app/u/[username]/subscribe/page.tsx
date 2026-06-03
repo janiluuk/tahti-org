@@ -19,6 +19,7 @@ interface TiersResponse {
     description: string | null
     perks: string[]
   }>
+  paymentsReady: boolean
 }
 
 export default async function SubscribePage({ params }: { params: { username: string } }) {
@@ -53,7 +54,11 @@ export default async function SubscribePage({ params }: { params: { username: st
       {data.tiers.length === 0 ? (
         <p style={{ color: '#999' }}>This artist hasn&apos;t set up fan subscriptions yet.</p>
       ) : (
-        <TierCards username={data.artist.username} tiers={data.tiers} />
+        <TierCards
+          username={data.artist.username}
+          tiers={data.tiers}
+          paymentsReady={data.paymentsReady}
+        />
       )}
     </div>
   )

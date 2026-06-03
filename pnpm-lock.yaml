@@ -93,6 +93,9 @@ importers:
         specifier: ^6.0.0
         version: 6.0.0
     devDependencies:
+      '@tahti/mixcloud':
+        specifier: workspace:*
+        version: link:../../packages/mixcloud
       '@types/node':
         specifier: ^20.14.0
         version: 20.19.41

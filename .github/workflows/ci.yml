@@ -239,6 +239,97 @@ jobs:
             kill "$(cat /tmp/tahti-api.pid)" 2>/dev/null || true
           fi
 
+  user-journeys-e2e:
+    name: User journey e2e (viewer, artist, streamer)
+    needs: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tahti
+          POSTGRES_PASSWORD: tahti_test
+          POSTGRES_DB: tahti_test
+        options: >-
+          --health-cmd "pg_isready -U tahti -d tahti_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 3s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
+    env:
+      DATABASE_URL: postgres://tahti:tahti_test@localhost:5432/tahti_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      HCAPTCHA_SECRET: dev
+      PORT: "3001"
+      STRIPE_SECRET_KEY: ""
+      STRIPE_WEBHOOK_SECRET: ""
+      SEED_JOURNEY_FIXTURES: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      - name: Push DB schema
+        run: pnpm --filter @tahti/db db:migrate:test
+
+      - name: Seed journey fixtures
+        run: cd apps/api && pnpm exec tsx scripts/seed-e2e-screenshots.ts
+
+      - name: Start API server
+        working-directory: apps/api
+        run: |
+          pnpm exec tsx src/index.ts &
+          echo $! > /tmp/tahti-api-journey.pid
+
+      - name: Wait for API health
+        run: |
+          for i in $(seq 1 45); do
+            if curl -sf http://localhost:3001/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::API did not become healthy"
+          exit 1
+
+      - name: Run user journey e2e (API + optional web)
+        run: bash tests/e2e/user-journeys.sh
+
+      - name: Stop API server
+        if: always()
+        run: |
+          if [[ -f /tmp/tahti-api-journey.pid ]]; then
+            kill "$(cat /tmp/tahti-api-journey.pid)" 2>/dev/null || true
+          fi
+
   agpl-check:
     name: AGPL header check
     runs-on: ubuntu-24.04
@@ -348,6 +439,7 @@ jobs:
       - typecheck
       - test
       - vital-flows-e2e
+      - user-journeys-e2e
       - agpl-check
     runs-on: ubuntu-24.04
     steps:
@@ -359,5 +451,6 @@ jobs:
           ok "${{ needs.typecheck.result }}" || { echo "typecheck failed"; exit 1; }
           ok "${{ needs.test.result }}" || { echo "test failed"; exit 1; }
           ok "${{ needs.vital-flows-e2e.result }}" || { echo "vital-flows-e2e failed"; exit 1; }
+          ok "${{ needs.user-journeys-e2e.result }}" || { echo "user-journeys-e2e failed"; exit 1; }
           ok "${{ needs.agpl-check.result }}" || { echo "agpl-check failed"; exit 1; }
           echo "All checks passed ✓"

@@ -16,6 +16,7 @@ interface ChatMessage {
   handle: string
   text: string
   ts: number
+  supporter?: boolean
 }
 
 const HANDLE_KEY = 'tahti_chat_handle'
@@ -30,6 +31,7 @@ export default function ChatPanel({
   const [handle, setHandle] = useState<string>('')
   const [pendingHandle, setPendingHandle] = useState('')
   const [token, setToken] = useState<string | null>(null)
+  const [supporter, setSupporter] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
@@ -146,10 +148,11 @@ export default function ChatPanel({
         return
       }
       if (!res.ok) throw new Error('Failed to get token')
-      const data = (await res.json()) as { token: string; handle: string }
+      const data = (await res.json()) as { token: string; handle: string; supporter?: boolean }
       localStorage.setItem(HANDLE_KEY, data.handle)
       setHandle(data.handle)
       setToken(data.token)
+      setSupporter(!!data.supporter)
     } catch {
       setError('Could not join chat. Try again.')
     }
@@ -163,7 +166,7 @@ export default function ChatPanel({
         id: msgIdRef.current++,
         publish: {
           channel: `channel:${slug}`,
-          data: { handle, text, ts: Date.now() },
+          data: { handle, text, ts: Date.now(), supporter: supporter || undefined },
         },
       }),
     )
@@ -243,6 +246,21 @@ export default function ChatPanel({
         {messages.map((m) => (
           <div key={m.id} style={{ marginBottom: '0.5rem', fontSize: '0.85rem' }}>
             <span style={{ fontWeight: 600, color: '#555' }}>{m.handle}</span>
+            {m.supporter && (
+              <span
+                style={{
+                  marginLeft: '0.25rem',
+                  fontSize: '0.65rem',
+                  background: '#dbeafe',
+                  color: '#1d4ed8',
+                  padding: '0.05rem 0.3rem',
+                  borderRadius: 3,
+                  verticalAlign: 'middle',
+                }}
+              >
+                supporter
+              </span>
+            )}
             <span style={{ color: '#333', marginLeft: '0.4rem' }}>{m.text}</span>
           </div>
         ))}

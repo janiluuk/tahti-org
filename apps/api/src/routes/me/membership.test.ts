@@ -102,6 +102,16 @@ describe('M1 — membership payment', () => {
     expect(res.statusCode).toBe(409)
   })
 
+  it('billing portal requires Stripe (dev mode returns 400)', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/membership/portal',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json().error).toMatch(/Stripe/i)
+  })
+
   it('webhook checkout.session.completed is idempotent', async () => {
     const passwordHash = await hashPassword('testpassword')
     const pending = await prisma.user.create({

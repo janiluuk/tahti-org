@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { createFanTier, setFanTierActive } from './actions'
+import { createFanTier, setFanTierActive, startFanSubConnectOnboarding } from './actions'
 
 interface FanTier {
   id: string
@@ -16,6 +16,13 @@ interface FanTier {
   active: boolean
 }
 
+interface ConnectStatus {
+  stripeConfigured: boolean
+  paymentsReady: boolean
+  chargesEnabled: boolean
+  detailsSubmitted: boolean
+}
+
 function eur(cents: number): string {
   return `€${(cents / 100).toFixed(2)}`
 }
@@ -23,9 +30,11 @@ function eur(cents: number): string {
 export default function FanSubscriptionsPanel({
   initial,
   username,
+  connect,
 }: {
   initial: FanTier[]
   username: string
+  connect: ConnectStatus
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -34,6 +43,7 @@ export default function FanSubscriptionsPanel({
   const [description, setDescription] = useState('')
   const [perks, setPerks] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [connectError, setConnectError] = useState<string | null>(null)
 
   function add() {
     setError(null)
@@ -71,6 +81,22 @@ export default function FanSubscriptionsPanel({
     })
   }
 
+  function startConnect() {
+    setConnectError(null)
+    startTransition(async () => {
+      const res = await startFanSubConnectOnboarding()
+      if (res.error) {
+        setConnectError(res.error)
+        return
+      }
+      if (res.onboardingUrl) {
+        window.location.href = res.onboardingUrl
+      }
+    })
+  }
+
+  const needsStripe = connect.stripeConfigured && !connect.paymentsReady
+
   return (
     <section
       style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
@@ -85,6 +111,44 @@ export default function FanSubscriptionsPanel({
         Fans subscribe directly to you. You keep the revenue minus Stripe fees and a 2% operational
         fee. Subscribers get the 5× download weighting that boosts your annual grant.
       </p>
+
+      {needsStripe && (
+        <div
+          style={{
+            marginTop: '1rem',
+            padding: '1rem',
+            background: '#fffbeb',
+            border: '1px solid #fcd34d',
+            borderRadius: 8,
+          }}
+        >
+          <p style={{ margin: '0 0 0.75rem', fontSize: '0.9rem' }}>
+            Finish Stripe onboarding to start receiving fan subscription payments. You can set up
+            tiers now; the subscribe button stays disabled until Stripe approves your account.
+          </p>
+          {connectError && (
+            <p style={{ color: '#dc2626', margin: '0 0 0.5rem', fontSize: '0.85rem' }}>
+              {connectError}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={startConnect}
+            disabled={isPending}
+            style={{
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: 4,
+              padding: '0.5rem 1rem',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+          >
+            {isPending ? 'Opening Stripe…' : 'Connect with Stripe'}
+          </button>
+        </div>
+      )}
 
       {initial.length > 0 && (
         <ul style={{ listStyle: 'none', padding: 0, margin: '1rem 0' }}>
@@ -149,7 +213,9 @@ export default function FanSubscriptionsPanel({
           style={{ padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
         />
         <textarea
-          placeholder="Perks, one per line (optional)"
+          placeholder={
+            'Perks, one per line. Use FAN_CHAT or FAN_NEWSLETTER for gated perks; FLAC for lossless downloads.'
+          }
           value={perks}
           onChange={(e) => setPerks(e.target.value)}
           rows={3}

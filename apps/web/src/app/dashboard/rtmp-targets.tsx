@@ -4,6 +4,11 @@
 'use client'
 
 import { useState } from 'react'
+import {
+  RTMP_PROVIDERS,
+  RTMP_PROVIDER_HELP,
+  type RtmpProviderValue,
+} from '../../lib/rtmp-provider-help'
 
 interface RtmpTarget {
   id: string
@@ -14,20 +19,21 @@ interface RtmpTarget {
   enabled: boolean
 }
 
-const PROVIDERS = [
-  { value: 'YOUTUBE', label: 'YouTube Live' },
-  { value: 'TWITCH', label: 'Twitch' },
-  { value: 'FACEBOOK', label: 'Facebook Live' },
-  { value: 'MIXCLOUD_LIVE', label: 'Mixcloud Live' },
-  { value: 'CUSTOM', label: 'Custom RTMP' },
-]
+const GUIDE_PATH = '/help/multistream'
 
 export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] }) {
   const [targets, setTargets] = useState(initial)
   const [adding, setAdding] = useState(false)
-  const [form, setForm] = useState({ provider: 'YOUTUBE', label: '', streamKey: '', rtmpUrl: '' })
+  const [form, setForm] = useState({
+    provider: 'YOUTUBE' as RtmpProviderValue,
+    label: '',
+    streamKey: '',
+    rtmpUrl: '',
+  })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const help = RTMP_PROVIDER_HELP[form.provider]
 
   async function addTarget() {
     setSaving(true)
@@ -81,12 +87,13 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '1rem',
+          marginBottom: '0.5rem',
         }}
       >
-        <h2 style={{ margin: 0 }}>Multistream</h2>
+        <h2 style={{ margin: 0 }}>Multistream (simulcast)</h2>
         {targets.length < 5 && !adding && (
           <button
+            type="button"
             onClick={() => setAdding(true)}
             style={{
               padding: '0.35rem 0.8rem',
@@ -97,14 +104,22 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
               fontSize: '0.85rem',
             }}
           >
-            + Add target
+            + Add destination
           </button>
         )}
       </div>
 
+      <p style={{ color: '#555', fontSize: '0.875rem', margin: '0 0 1rem', lineHeight: 1.5 }}>
+        Send one stream from OBS to Tahti; we mirror the same live audio to Twitch, YouTube, and
+        other services. For each destination, paste the <strong>stream key</strong> from that
+        platform&apos;s creator dashboard — not a Tahti password and not a Google/Twitch API key.
+        See the <a href={GUIDE_PATH}>multistream setup guide</a> for each platform.
+      </p>
+
       {targets.length === 0 && !adding && (
         <p style={{ color: '#aaa', fontSize: '0.875rem' }}>
-          Add a YouTube, Twitch, or custom RTMP target to simulcast your live broadcasts.
+          No destinations yet. Add YouTube, Twitch, Kick, Facebook, TikTok, Mixcloud, Instagram
+          (RTMP), or a custom RTMP URL.
         </p>
       )}
 
@@ -122,7 +137,7 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
           <span style={{ flex: 1, fontWeight: 500, fontSize: '0.875rem' }}>
             {t.label}
             <span style={{ marginLeft: '0.4rem', fontSize: '0.75rem', color: '#888' }}>
-              {PROVIDERS.find((p) => p.value === t.provider)?.label ?? t.provider}
+              {RTMP_PROVIDERS.find((p) => p.value === t.provider)?.label ?? t.provider}
             </span>
           </span>
           <label
@@ -143,6 +158,7 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
             Active
           </label>
           <button
+            type="button"
             onClick={() => void deleteTarget(t.id)}
             style={{
               padding: '0.2rem 0.5rem',
@@ -181,7 +197,9 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
               <label style={{ fontSize: '0.8rem', color: '#555' }}>Platform</label>
               <select
                 value={form.provider}
-                onChange={(e) => setForm((f) => ({ ...f, provider: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, provider: e.target.value as RtmpProviderValue }))
+                }
                 style={{
                   display: 'block',
                   width: '100%',
@@ -191,7 +209,7 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
                   marginTop: '0.25rem',
                 }}
               >
-                {PROVIDERS.map((p) => (
+                {RTMP_PROVIDERS.map((p) => (
                   <option key={p.value} value={p.value}>
                     {p.label}
                   </option>
@@ -200,7 +218,7 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
             </div>
             <div>
               <label style={{ fontSize: '0.8rem', color: '#555' }}>
-                {'Label (e.g. "My YouTube")'}
+                Label (e.g. &quot;My Twitch&quot;)
               </label>
               <input
                 value={form.label}
@@ -218,13 +236,43 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
             </div>
           </div>
 
+          <div
+            style={{
+              marginBottom: '0.75rem',
+              padding: '0.6rem 0.75rem',
+              background: '#eff6ff',
+              borderRadius: 4,
+              fontSize: '0.8rem',
+              color: '#1e3a5f',
+              lineHeight: 1.45,
+            }}
+          >
+            <strong>Where to get the key:</strong> {help.keySteps}
+            {help.docUrl && (
+              <>
+                {' '}
+                <a href={help.docUrl} target="_blank" rel="noopener noreferrer">
+                  Open platform ↗
+                </a>
+              </>
+            )}
+            {form.provider !== 'CUSTOM' && (
+              <div style={{ marginTop: '0.35rem', color: '#64748b', fontFamily: 'monospace' }}>
+                Tahti ingest: {help.ingestHint}
+              </div>
+            )}
+          </div>
+
           <div style={{ marginBottom: '0.75rem' }}>
-            <label style={{ fontSize: '0.8rem', color: '#555' }}>Stream Key</label>
+            <label style={{ fontSize: '0.8rem', color: '#555' }}>
+              Stream key from {RTMP_PROVIDERS.find((p) => p.value === form.provider)?.label}
+            </label>
             <input
               type="password"
               value={form.streamKey}
               onChange={(e) => setForm((f) => ({ ...f, streamKey: e.target.value }))}
-              placeholder="Paste your stream key here"
+              placeholder="Paste stream key — never share publicly"
+              autoComplete="off"
               style={{
                 display: 'block',
                 width: '100%',
@@ -239,7 +287,9 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
 
           {form.provider === 'CUSTOM' && (
             <div style={{ marginBottom: '0.75rem' }}>
-              <label style={{ fontSize: '0.8rem', color: '#555' }}>RTMP URL</label>
+              <label style={{ fontSize: '0.8rem', color: '#555' }}>
+                RTMP URL (required for Custom)
+              </label>
               <input
                 value={form.rtmpUrl}
                 onChange={(e) => setForm((f) => ({ ...f, rtmpUrl: e.target.value }))}
@@ -263,6 +313,7 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
+              type="button"
               onClick={() => void addTarget()}
               disabled={saving || !form.label || !form.streamKey}
               style={{
@@ -275,9 +326,10 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
                 fontSize: '0.85rem',
               }}
             >
-              {saving ? 'Saving…' : 'Add target'}
+              {saving ? 'Saving…' : 'Save destination'}
             </button>
             <button
+              type="button"
               onClick={() => {
                 setAdding(false)
                 setError(null)

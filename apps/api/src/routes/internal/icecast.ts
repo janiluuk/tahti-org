@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { verifyPassword } from '../../lib/password.js'
+import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
 
 // Icecast URL auth callbacks.
@@ -51,6 +52,10 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
       where: { id: channel.id },
       data: { state: 'LIVE', goneLiveAt: new Date() },
     })
+
+    spawnChannelLiquidsoap(channel.id, slug, broadcast.id).catch((err: unknown) =>
+      fastify.log.error({ err }, 'orchestrator spawn failed (icecast)'),
+    )
 
     fastify.log.info({ slug, broadcastId: broadcast.id }, 'icecast source connected')
     return reply.status(200).send('ok')

@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import { requireAuth } from '../../plugins/auth.js'
+import { parseSmartLinkTargets } from '../../lib/smartlink.js'
 
 const VALID_TYPES = ['SINGLE', 'EP', 'ALBUM', 'COMPILATION', 'REMIX'] as const
 
@@ -21,7 +22,14 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
     const releases = await fastify.prisma.release.findMany({
       where: { userId: user.id },
       orderBy: { releaseDate: 'desc' },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        type: true,
+        state: true,
+        releaseDate: true,
+        smartLinkSlug: true,
+        smartLinkTargets: true,
         tracks: { orderBy: { position: 'asc' }, select: { id: true, position: true, title: true } },
         _count: { select: { tracks: true } },
       },
@@ -88,7 +96,11 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch('/api/me/releases/:id', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
     const { id } = request.params as { id: string }
-    const body = request.body as { state?: string }
+    const body = request.body as {
+      state?: string
+      smartLinkTargets?: unknown
+      description?: string
+    }
 
     const existing = await fastify.prisma.release.findFirst({
       where: { id, userId: user.id },
@@ -96,7 +108,22 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
     })
     if (!existing) return reply.status(404).send({ error: 'Release not found' })
 
-    const data: { state?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'; publishedAt?: Date | null } = {}
+    const data: {
+      state?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+      publishedAt?: Date | null
+      smartLinkTargets?: Record<string, string>
+      description?: string | null
+    } = {}
+
+    if (body.smartLinkTargets !== undefined) {
+      const parsed = parseSmartLinkTargets(body.smartLinkTargets)
+      if (typeof parsed === 'string') return reply.status(400).send({ error: parsed })
+      data.smartLinkTargets = parsed
+    }
+    if (body.description !== undefined) {
+      data.description = body.description?.trim() || null
+    }
+
     if (body.state) {
       const state = body.state.toUpperCase()
       if (!['DRAFT', 'PUBLISHED', 'ARCHIVED'].includes(state)) {

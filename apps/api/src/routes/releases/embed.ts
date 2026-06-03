@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { config } from '../../config.js'
+import { presignedGetUrl } from '../../lib/minio.js'
 
 // M14 — oEmbed discovery endpoint + embed metadata
 // oEmbed spec: https://oembed.com/
@@ -136,8 +137,31 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
       artist: channel.user,
       embedUrl: `${config.appUrl}/embed/c/${slug}`,
       profileUrl: `${config.appUrl}/u/${channel.user.username}`,
-      hlsUrl: `${process.env.HLS_BASE_URL ?? ''}/${slug}/index.m3u8`,
+      hlsUrl: channel.state === 'LIVE' ? `${config.hlsBaseUrl}/${slug}/index.m3u8` : null,
     })
+  })
+
+  // GET /api/v1/embed/r/:id/tracks/:trackId/play — short-lived stream URL for embed player
+  fastify.get('/api/v1/embed/r/:id/tracks/:trackId/play', async (request, reply) => {
+    const { id, trackId } = request.params as { id: string; trackId: string }
+
+    const release = await fastify.prisma.release.findFirst({
+      where: { id, state: 'PUBLISHED' },
+      select: { id: true },
+    })
+    if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+    const track = await fastify.prisma.releaseTrack.findFirst({
+      where: { id: trackId, releaseId: release.id, status: 'READY' },
+      select: { streamKey: true, sourceKey: true, title: true },
+    })
+    if (!track) return reply.status(404).send({ error: 'Track not found or not ready' })
+
+    const key = track.streamKey ?? track.sourceKey
+    if (!key) return reply.status(409).send({ error: 'Track file not available yet' })
+
+    const url = await presignedGetUrl(key, 300)
+    return reply.send({ url, title: track.title, expiresInSec: 300 })
   })
 }
 

@@ -3,6 +3,7 @@
 
 import type { PrismaClient } from '@tahti/db'
 import { computeFanSubSplit } from '@tahti/ledger'
+import { stripeEnabled } from './stripe.js'
 
 // Shared fan-subscription lifecycle used by both the dev/test direct-activation
 // path and the production Stripe webhook handler, so the two never diverge.
@@ -59,6 +60,8 @@ export async function recordFanSubPayment(
   },
 ) {
   const split = computeFanSubSplit(args.grossCents)
+  // With Connect destination charges, net funds route on payment; cron marks PAID.
+  const settleNow = !stripeEnabled
 
   return prisma.$transaction(async (tx) => {
     const payout = await tx.fanSubPayout.create({
@@ -71,8 +74,9 @@ export async function recordFanSubPayment(
         stripeFeeCents: split.stripeFeeCents,
         orgFeeCents: split.orgFeeCents,
         netToArtistCents: split.netToArtistCents,
-        state: 'PAID',
-        paidAt: new Date(),
+        state: settleNow ? 'PAID' : 'PENDING',
+        paidAt: settleNow ? new Date() : null,
+        stripeTransferId: settleNow ? 'dev_settled' : null,
       },
     })
 
@@ -124,5 +128,45 @@ export async function isActiveFanSubscriber(
     where: { artistUserId_subscriberUserId: { artistUserId, subscriberUserId } },
     select: { state: true, currentPeriodEnd: true },
   })
-  return !!sub && sub.state === 'ACTIVE' && sub.currentPeriodEnd > new Date()
+  if (!sub) return false
+  const now = new Date()
+  if (sub.state === 'EXPIRED' || sub.state === 'PAST_DUE') return false
+  if (sub.state === 'ACTIVE') return sub.currentPeriodEnd > now
+  if (sub.state === 'CANCELED') {
+    const graceEnd = new Date(sub.currentPeriodEnd.getTime() + 7 * 24 * 60 * 60 * 1000)
+    return now < graceEnd
+  }
+  return false
+}
+
+/** User or Stripe canceled — perks continue until currentPeriodEnd. */
+export async function markFanSubCanceledAtPeriodEnd(
+  prisma: PrismaClient,
+  opts: { subscriptionId?: string; stripeSubscriptionId?: string },
+) {
+  const where = opts.subscriptionId
+    ? { id: opts.subscriptionId }
+    : { stripeSubscriptionId: opts.stripeSubscriptionId! }
+
+  return prisma.fanSubscription.updateMany({
+    where,
+    data: { state: 'CANCELED', canceledAt: new Date() },
+  })
+}
+
+const GRACE_MS = 7 * 24 * 60 * 60 * 1000
+
+/** Close subscriptions past access window (period end, or period end + 7d if canceled). */
+export async function expireLapsedFanSubscriptions(prisma: PrismaClient) {
+  const now = new Date()
+  const graceCutoff = new Date(now.getTime() - GRACE_MS)
+  const active = await prisma.fanSubscription.updateMany({
+    where: { state: 'ACTIVE', currentPeriodEnd: { lt: now } },
+    data: { state: 'EXPIRED' },
+  })
+  const canceled = await prisma.fanSubscription.updateMany({
+    where: { state: 'CANCELED', currentPeriodEnd: { lt: graceCutoff } },
+    data: { state: 'EXPIRED' },
+  })
+  return active.count + canceled.count
 }

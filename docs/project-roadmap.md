@@ -39,12 +39,12 @@ closed beta → **M7–M9, M19** (money + grants) → remaining features → han
 
 Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 `docs/AGENT.md` milestones. Verified by running `pnpm typecheck` (passes),
-`pnpm lint` + `pnpm format:check` (clean), and `pnpm test` (139 tests pass with Postgres up).
+`pnpm lint` + `pnpm format:check` (clean), and `pnpm test` (200 tests pass with Postgres up).
 
 | Milestone | State | Evidence / notes |
 |---|---|---|
 | **M0** Skeleton | ✅ Done | pnpm + Turborepo monorepo, AGPL headers, CI, `/health`, `/source`, footer link |
-| **M1** Accounts + membership | 🟡 Partial | Email/password signup, email verify, sessions; verify → `PENDING_PAYMENT`; `POST /api/me/membership/checkout` (Stripe Checkout via REST when configured, dev-direct otherwise); webhook `checkout.session.completed` → `REVENUE_SUBSCRIPTION` ledger + `isMember` + member number; board CSV export. Deferred: renewal reminders, Stripe Customer Portal |
+| **M1** Accounts + membership | 🟡 Partial | Email/password signup, email verify, sessions; verify → `PENDING_PAYMENT`; `POST /api/me/membership/checkout` (Stripe Checkout via REST when configured, dev-direct otherwise); webhook `checkout.session.completed` → `REVENUE_SUBSCRIPTION` ledger + `isMember` + member number; **`POST /api/me/membership/portal`** + dashboard “Manage billing” when Stripe configured; board CSV export. Deferred: renewal reminder emails |
 | **M2** Channel + archive upload | ✅ Done | Presigned S3-multipart upload (resolves Topic 5 → option A), transcode worker, channel page |
 | **M3** Live ingress + orchestrator | ✅ Done | Icecast + RTMP webhooks, orchestrator + Liquidsoap template, HLS player. Path-based routing `/c/<slug>` (resolves Topic 9 → option B/C). WebRTC browser-live deferred (Topic 6) |
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
@@ -55,14 +55,14 @@ Audit of the actual code in `apps/`, `services/`, and `packages/` against the
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
 | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha lib, audit log. **Added:** `GET /api/v1/status`, `GET /api/admin/audit/export.csv`, `GET /api/admin/ledger/export.csv?year=`, shared `lib/csv.ts`, **hCaptcha on chat token join**. Deferred: Upptime, backup runbook drills |
-| **M12** Profile + releases | 🟡 Partial | Release schema + CRUD + public profile, web `/u/[username]` with **Open Graph**, **`/r/:slug` smart links**, dashboard releases. **Added:** `TrackStatus` enum + audio fields on `ReleaseTrack` (sourceKey/streamKey/flacKey/fingerprint), `POST /api/me/releases/:id/tracks`, upload presigned URL + finalize endpoints, `transcode-release-track` worker (Opus 256 + FLAC 16/44 derivatives), per-tier download URLs. Release tracks also support album tracks, EP/compilation tracks, and other recorded material — not just DJ sets. Deferred: embed widget (web/Next.js page at `/embed/r/:id`, `/embed/c/:slug`) |
+| **M12** Profile + releases | 🟡 Partial | Release schema + CRUD + public profile, web `/u/[username]` with **Open Graph**, **`/r/:slug` smart-link landing**, **dashboard DSP URL editor** (`PATCH /api/me/releases/:id`). **Added:** `TrackStatus` enum + audio fields on `ReleaseTrack`, upload/transcode pipeline, per-tier download URLs. Deferred: `ReleaseTrack.archiveItemId` on profile playback |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
-| **M14** Embed/promo | 🟡 Partial | `GET /oembed`, `GET /api/v1/embed/r/:id`, `GET /api/v1/embed/c/:slug`. Deferred: web Next.js `/embed/r/[id]` and `/embed/c/[slug]` render pages, social auto-post, smart-link analytics |
-| **M15** Artist @-mentions | ❌ Not started | — |
-| **M16** Tahti Radio meta-stream | ❌ Not started | — |
+| **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, **web `/embed/r/[id]` + `/embed/c/[slug]`** (iframe-safe headers). Deferred: social auto-post, smart-link analytics |
+| **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
+| **M16** Tahti Radio meta-stream | ✅ Done | `services/tahti-radio`, `GET /api/v1/radio` proxy |
 | **M17** Venue calendar | 🟡 Partial | `venue` schema (Venue/VenueBroadcast), `GET /api/v1/venues`, `GET /api/v1/venues/:slug`, `GET /api/v1/venues/:slug/broadcasts`, `GET /api/v1/venues/:slug/calendar.ics`, venue + broadcast create endpoints. Deferred: admin verification UI |
-| **M18** Downloads first-class | 🟡 Partial | Download endpoint + rate limit, dedup, per-track cap, fan-sub 5× weight, **24h net-new-IP threshold**, archive **FLAC** when `format=flac` and artist is paid. Deferred: Tor/bot allowlist, fraud-scan cron, release-track downloads (endpoint present, needs track.streamKey populated) |
-| **M19** Fan-subs | 🟡 Partial | `fansubs` schema (FanTier/FanSubscription/FanSubPayout); tier CRUD, subscribe/cancel, Stripe webhook (signature-verified) lifecycle; deterministic fee split (Stripe + 2% org fee) → 3 ledger entries; 5× download weight + fan-sub-euro units feed M9; public subscribe page + dashboard panel. Deferred: live Stripe Checkout/Connect Express onboarding (the network boundary), payout-transfer + churn crons, fan-only chat/newsletter |
+| **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, FLAC gate), 24h net-new-IP threshold. Deferred: Tor/bot allowlist, fraud-scan cron |
+| **M19** Fan-subs | 🟡 Partial | Tiers, subscribe/cancel, webhook lifecycle, ledger split, subscribe page + dashboard. **Added:** Connect + Checkout, churn grace, payout/expire crons, **perk codes** (`FAN_CHAT`, `FAN_NEWSLETTER`), fan-only Centrifugo channel + newsletter `audience: fans`, supporter badge in public chat. Deferred: newsletter send UI for fan-only audience |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: 45/55-min API→UI polish edge cases |
 
 ### Improvements identified during the audit (added to the roadmap)
@@ -376,7 +376,8 @@ unless maintenance team works unpaid until surplus and capex is deferred.
 | Who owns the org? | `governance-and-legal.md`, `strategy-and-product.md` |
 | How do grants to artists work? | `engagement-and-fansubs.md` |
 | Gaps vs hearthis.at? | `competitive-gaps-hearthis.md` |
-| How to broadcast? | `obs-and-broadcasting-guides.md` |
+| How to broadcast? | `guides/for-streamers.md` + `obs-and-broadcasting-guides.md` |
+| Plain-language guides (artist / viewer / streamer) | `guides/README.md` |
 | Infra choices? | `infra-strategy.md` |
 
 ---

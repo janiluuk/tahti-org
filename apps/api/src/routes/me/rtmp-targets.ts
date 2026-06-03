@@ -10,9 +10,14 @@ const PROVIDER_RTMP_URLS: Record<string, string> = {
   YOUTUBE: 'rtmp://a.rtmp.youtube.com/live2',
   TWITCH: 'rtmp://live.twitch.tv/app',
   FACEBOOK: 'rtmps://live-api-s.facebook.com:443/rtmp',
+  KICK: 'rtmp://fa723fc1b171.ngwitch.tv/app',
+  TIKTOK: 'rtmp://push-rtmp.tiktok.com/live/',
   MIXCLOUD_LIVE: 'rtmp://broadcast.mixcloud.com/live',
+  INSTAGRAM: 'rtmps://live-upload.instagram.com:443/rtmp',
   CUSTOM: '',
 }
+
+const VALID_PROVIDERS = Object.keys(PROVIDER_RTMP_URLS)
 
 const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/rtmp-targets — list targets (stream keys masked)
@@ -53,7 +58,7 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const provider = (body.provider ?? 'CUSTOM').toUpperCase()
-    if (!['YOUTUBE', 'TWITCH', 'FACEBOOK', 'MIXCLOUD_LIVE', 'CUSTOM'].includes(provider)) {
+    if (!VALID_PROVIDERS.includes(provider)) {
       return reply.status(400).send({ error: 'Invalid provider' })
     }
 
@@ -84,7 +89,15 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
     const target = await fastify.prisma.rtmpTarget.create({
       data: {
         channelId: channel.id,
-        provider: provider as 'YOUTUBE' | 'TWITCH' | 'FACEBOOK' | 'MIXCLOUD_LIVE' | 'CUSTOM',
+        provider: provider as
+          | 'YOUTUBE'
+          | 'TWITCH'
+          | 'FACEBOOK'
+          | 'KICK'
+          | 'TIKTOK'
+          | 'MIXCLOUD_LIVE'
+          | 'INSTAGRAM'
+          | 'CUSTOM',
         label: label.slice(0, 64),
         rtmpUrl,
         streamKeyEnc,

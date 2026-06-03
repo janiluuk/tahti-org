@@ -19,7 +19,15 @@ function eur(cents: number): string {
   return `€${(cents / 100).toFixed(2)}`
 }
 
-export default function TierCards({ username, tiers }: { username: string; tiers: Tier[] }) {
+export default function TierCards({
+  username,
+  tiers,
+  paymentsReady,
+}: {
+  username: string
+  tiers: Tier[]
+  paymentsReady: boolean
+}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
@@ -99,19 +107,24 @@ export default function TierCards({ username, tiers }: { username: string; tiers
             )}
             <button
               onClick={() => onSubscribe(t.id)}
-              disabled={isPending}
+              disabled={isPending || !paymentsReady}
+              title={!paymentsReady ? 'Subscriptions open soon' : undefined}
               style={{
                 marginTop: 'auto',
-                background: '#16a34a',
+                background: paymentsReady ? '#16a34a' : '#9ca3af',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
                 padding: '0.6rem 1rem',
-                cursor: 'pointer',
+                cursor: paymentsReady ? 'pointer' : 'not-allowed',
                 fontWeight: 600,
               }}
             >
-              {isPending && pendingId === t.id ? 'Subscribing…' : 'Subscribe'}
+              {isPending && pendingId === t.id
+                ? 'Subscribing…'
+                : paymentsReady
+                  ? 'Subscribe'
+                  : 'Subscriptions open soon'}
             </button>
           </div>
         ))}

@@ -79,6 +79,15 @@ describe('M12 — releases and public profile', () => {
     const release = await prisma.release.findFirst({
       where: { user: { username }, state: 'PUBLISHED' },
     })
+    await prisma.release.update({
+      where: { id: release!.id },
+      data: {
+        smartLinkTargets: {
+          spotify: 'https://open.spotify.com/album/1',
+          bandcamp: 'https://x.bandcamp.com',
+        },
+      },
+    })
     const link = await app.inject({
       method: 'GET',
       url: `/api/v1/r/${release!.smartLinkSlug}`,
@@ -86,6 +95,29 @@ describe('M12 — releases and public profile', () => {
     expect(link.statusCode).toBe(200)
     expect(link.json().releaseUrl).toContain(`/u/${username}`)
     expect(link.json().releaseUrl).toContain('release-')
+    expect(link.json().targets.spotify).toContain('spotify.com')
+    expect(link.json().embedUrl).toContain(`/embed/r/${release!.id}`)
+  })
+
+  it('updates smart link targets on a release', async () => {
+    const release = await prisma.release.findFirst({
+      where: { user: { username }, state: 'PUBLISHED' },
+    })
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: {
+        smartLinkTargets: { tidal: 'https://listen.tidal.com/album/1' },
+      },
+    })
+    expect(patch.statusCode).toBe(200)
+
+    const link = await app.inject({
+      method: 'GET',
+      url: `/api/v1/r/${release!.smartLinkSlug}`,
+    })
+    expect(link.json().targets.tidal).toContain('tidal.com')
   })
 
   it('rejects publishing a release with no tracks', async () => {

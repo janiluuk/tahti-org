@@ -35,6 +35,16 @@ These rules are constitutional. They are not changeable by management decision. 
 | [`docs/financial-model.md`](docs/financial-model.md) | Headline 3-year model — revenue, cost, surplus, grant pool |
 | [`docs/budget-detailed.md`](docs/budget-detailed.md) | Line-item monthly budget + break-even sensitivity analysis |
 
+### User guides (plain language)
+
+| File | Purpose |
+|---|---|
+| [`docs/guides/README.md`](docs/guides/README.md) | Index — who should read which guide |
+| [`docs/guides/for-viewers.md`](docs/guides/for-viewers.md) | Listeners & fans: listen, chat, subscribe, smart links |
+| [`docs/guides/for-artists.md`](docs/guides/for-artists.md) | Members: dashboard, profile, releases, fan tiers |
+| [`docs/guides/for-streamers.md`](docs/guides/for-streamers.md) | Going live: OBS, RTMP, limits, multistream |
+| [`docs/guides/multistream-simulcast.md`](docs/guides/multistream-simulcast.md) | Simulcast to Twitch, YouTube, Kick, etc. (stream keys per platform) |
+
 ### Implementation documents (for the agent + director)
 
 | File | Purpose |
@@ -78,7 +88,14 @@ cd packages/db && pnpm db:migrate:test
 cd ../.. && pnpm test
 ```
 
-Optional bash e2e against a running API: `API_URL=http://localhost:3001 pnpm test:e2e`.
+Optional bash e2e against a running API:
+
+```bash
+API_URL=http://localhost:3001 pnpm test:e2e
+SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/tahti \
+  API_URL=http://localhost:3001 APP_URL=http://localhost:3010 pnpm test:e2e:journeys
+# With web up: pnpm test:e2e:journeys:web
+```
 
 ## Headline numbers (base case)
 

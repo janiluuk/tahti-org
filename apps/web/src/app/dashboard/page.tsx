@@ -163,6 +163,8 @@ export default async function DashboardPage() {
     type: string
     state: string
     releaseDate: string
+    smartLinkSlug: string
+    smartLinkTargets: Record<string, string> | null
     _count: { tracks: number }
   }> = []
   try {
@@ -190,6 +192,29 @@ export default async function DashboardPage() {
         cache: 'no-store',
       })
       if (res.ok) fanTiers = (await res.json()) as typeof fanTiers
+    } catch {
+      // ignore
+    }
+  }
+
+  let fanConnect: {
+    stripeConfigured: boolean
+    paymentsReady: boolean
+    chargesEnabled: boolean
+    detailsSubmitted: boolean
+  } = {
+    stripeConfigured: false,
+    paymentsReady: true,
+    chargesEnabled: true,
+    detailsSubmitted: true,
+  }
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/fan-subs/connect`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) fanConnect = (await res.json()) as typeof fanConnect
     } catch {
       // ignore
     }
@@ -286,7 +311,9 @@ export default async function DashboardPage() {
 
       {user.channel && <AnnouncementsPanel initial={announcements} />}
 
-      {user.channel && <FanSubscriptionsPanel initial={fanTiers} username={user.username} />}
+      {user.channel && (
+        <FanSubscriptionsPanel initial={fanTiers} username={user.username} connect={fanConnect} />
+      )}
 
       {user.channel && <ReleasesPanel initial={releases} username={user.username} />}
 

@@ -93,6 +93,61 @@ export async function createReadyArchiveItem(
   })
 }
 
+export async function cleanupNewsletterForUserIds(prisma: PrismaClient, userIds: string[]) {
+  if (userIds.length === 0) return
+  const drafts = await prisma.newsletterDraft.findMany({
+    where: { userId: { in: userIds } },
+    select: { id: true },
+  })
+  const draftIds = drafts.map((d) => d.id)
+  if (draftIds.length > 0) {
+    await prisma.newsletterSend.deleteMany({ where: { draftId: { in: draftIds } } })
+  }
+  await prisma.newsletterDraft.deleteMany({ where: { userId: { in: userIds } } })
+  await prisma.newsletterSubscriber.deleteMany({ where: { artistUserId: { in: userIds } } })
+}
+
+export async function cleanupVenuesBySlugPrefix(prisma: PrismaClient, prefix: string) {
+  const venues = await prisma.venue.findMany({
+    where: { slug: { startsWith: prefix } },
+    select: { id: true },
+  })
+  const ids = venues.map((v) => v.id)
+  if (ids.length === 0) return
+  await prisma.venueBroadcast.deleteMany({ where: { venueId: { in: ids } } })
+  await prisma.venue.deleteMany({ where: { id: { in: ids } } })
+}
+
+export async function createPublishedReleaseWithTrack(
+  prisma: PrismaClient,
+  userId: string,
+  opts?: { smartLinkSlug?: string; streamKey?: string; flacKey?: string },
+) {
+  const slug = opts?.smartLinkSlug ?? `rel-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  return prisma.release.create({
+    data: {
+      userId,
+      title: 'Embed Test Release',
+      type: 'SINGLE',
+      releaseDate: new Date('2026-01-01'),
+      smartLinkSlug: slug,
+      state: 'PUBLISHED',
+      publishedAt: new Date(),
+      tracks: {
+        create: {
+          position: 1,
+          title: 'Main Track',
+          durationSec: 200,
+          status: 'READY',
+          streamKey: opts?.streamKey ?? 'streams/embed-test.opus',
+          flacKey: opts?.flacKey,
+        },
+      },
+    },
+    include: { tracks: true },
+  })
+}
+
 export async function cleanupUsersByEmailPrefix(prisma: PrismaClient, prefix: string) {
   const users = await prisma.user.findMany({
     where: { email: { startsWith: prefix } },
@@ -101,6 +156,14 @@ export async function cleanupUsersByEmailPrefix(prisma: PrismaClient, prefix: st
   const ids = users.map((u) => u.id)
   if (ids.length === 0) return
 
+  await prisma.mention.deleteMany({
+    where: { OR: [{ mentionerUserId: { in: ids } }, { targetUserId: { in: ids } }] },
+  })
+  await prisma.mentionMute.deleteMany({
+    where: { OR: [{ muterId: { in: ids } }, { targetUserId: { in: ids } }] },
+  })
+  await prisma.mixUpload.deleteMany({ where: { userId: { in: ids } } })
+  await cleanupNewsletterForUserIds(prisma, ids)
   await prisma.fanSubPayout.deleteMany({ where: { artistUserId: { in: ids } } })
   await prisma.fanSubscription.deleteMany({
     where: { OR: [{ artistUserId: { in: ids } }, { subscriberUserId: { in: ids } }] },

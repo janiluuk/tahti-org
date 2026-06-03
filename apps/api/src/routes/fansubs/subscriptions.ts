@@ -3,8 +3,17 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
-import { stripeEnabled } from '../../lib/stripe.js'
-import { activateSubscription, recordFanSubPayment } from '../../lib/fansub.js'
+import {
+  stripeEnabled,
+  createStripeCustomer,
+  createFanSubCheckoutSession,
+} from '../../lib/stripe.js'
+import { config } from '../../config.js'
+import {
+  activateSubscription,
+  markFanSubCanceledAtPeriodEnd,
+  recordFanSubPayment,
+} from '../../lib/fansub.js'
 
 const PERIOD_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -22,7 +31,11 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const artist = await fastify.prisma.user.findUnique({
         where: { username },
-        select: { id: true },
+        select: {
+          id: true,
+          stripeConnectAccountId: true,
+          stripeConnectChargesEnabled: true,
+        },
       })
       if (!artist) return reply.status(404).send({ error: 'Artist not found' })
 
@@ -48,12 +61,50 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(409).send({ error: 'Already subscribed to this artist' })
       }
 
-      // Production: create a Stripe Checkout session and let the webhook
-      // activate the subscription. That network call needs the Stripe SDK +
-      // live keys (the remaining wiring step), so we fail loudly rather than
-      // silently granting a free subscription.
+      // Production: Stripe Checkout (Connect destination charge). Block until the
+      // artist's Connect account can accept charges (Topic 10 — option A).
       if (stripeEnabled) {
-        return reply.status(501).send({ error: 'Stripe Checkout is not wired yet' })
+        if (!artist.stripeConnectAccountId || !artist.stripeConnectChargesEnabled) {
+          return reply.status(503).send({ error: 'Subscriptions open soon for this artist' })
+        }
+
+        let customerId = subscriber.stripeCustomerId
+        if (!customerId) {
+          try {
+            customerId = await createStripeCustomer({
+              email: subscriber.email,
+              userId: subscriber.id,
+            })
+            await fastify.prisma.user.update({
+              where: { id: subscriber.id },
+              data: { stripeCustomerId: customerId },
+            })
+          } catch (err) {
+            request.log.error({ err }, 'fan-sub customer creation failed')
+            return reply.status(502).send({ error: 'Could not start checkout' })
+          }
+        }
+
+        try {
+          const session = await createFanSubCheckoutSession({
+            customerId,
+            connectedAccountId: artist.stripeConnectAccountId,
+            successUrl: `${config.appUrl}/u/${username}/subscribe?subscribed=1`,
+            cancelUrl: `${config.appUrl}/u/${username}/subscribe?canceled=1`,
+            tierName: tier.name,
+            amountCents: tier.amountCents,
+            metadata: {
+              artistUserId: artist.id,
+              subscriberUserId: subscriber.id,
+              tierName: tier.name,
+              amountCents: String(tier.amountCents),
+            },
+          })
+          return reply.send({ checkoutUrl: session.url, sessionId: session.id })
+        } catch (err) {
+          request.log.error({ err }, 'fan-sub checkout failed')
+          return reply.status(502).send({ error: 'Could not start checkout' })
+        }
       }
 
       // Dev/test: activate immediately and record the first period's payment.
@@ -117,12 +168,17 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!sub) return reply.status(404).send({ error: 'Subscription not found' })
 
-      const updated = await fastify.prisma.fanSubscription.update({
+      await markFanSubCanceledAtPeriodEnd(fastify.prisma, { subscriptionId: id })
+      const updated = await fastify.prisma.fanSubscription.findUnique({
         where: { id },
-        data: { state: 'CANCELED', canceledAt: new Date() },
         select: { id: true, state: true, canceledAt: true, currentPeriodEnd: true },
       })
-      return reply.send(updated)
+      return reply.send({
+        ...updated,
+        accessUntil: updated!.currentPeriodEnd,
+        message:
+          'Canceled — fan perks remain until the end of the billing period, then 7 days grace.',
+      })
     },
   )
 }

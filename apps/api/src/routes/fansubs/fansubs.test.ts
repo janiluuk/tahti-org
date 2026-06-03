@@ -119,6 +119,7 @@ describe('M19 — fan-to-artist subscriptions', () => {
     expect(pub.statusCode).toBe(200)
     expect(pub.json().tiers).toHaveLength(1)
     expect(pub.json().tiers[0].amountCents).toBe(500)
+    expect(pub.json().paymentsReady).toBe(true)
   })
 
   it('rejects an out-of-range tier price', async () => {
@@ -261,7 +262,7 @@ describe('M19 — fan-to-artist subscriptions', () => {
     expect(Number(grant?.amountCents)).toBe(90_000) // whole pool to the only artist
   })
 
-  it('cancels a subscription', async () => {
+  it('cancels a subscription but keeps perks until period end', async () => {
     const sub = await prisma.fanSubscription.findFirst({ where: { subscriberUserId: fan.id } })
     const res = await app.inject({
       method: 'POST',
@@ -270,6 +271,9 @@ describe('M19 — fan-to-artist subscriptions', () => {
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().state).toBe('CANCELED')
+    expect(res.json().accessUntil).toBeTruthy()
+    const { isActiveFanSubscriber } = await import('../../lib/fansub.js')
+    expect(await isActiveFanSubscriber(prisma, artist.id, fan.id)).toBe(true)
   })
 
   it('webhook: subscription.created then invoice.paid activates + pays out', async () => {
@@ -328,5 +332,30 @@ describe('M19 — fan-to-artist subscriptions', () => {
     const payout = await prisma.fanSubPayout.findFirst({ where: { fanSubscriptionId: sub!.id } })
     expect(payout?.grossCents).toBe(1000)
     expect(payout?.netToArtistCents).toBe(921) // €10 → artist €9.21
+  })
+
+  it('fan chat access requires FAN_CHAT perk and active subscription', async () => {
+    await prisma.fanTier.updateMany({
+      where: { artistUserId: artist.id },
+      data: { perks: ['FLAC', 'FAN_CHAT'] },
+    })
+
+    const access = await app.inject({
+      method: 'GET',
+      url: '/api/chat/fansub-artist/access',
+      headers: { cookie: fanCookie },
+    })
+    expect(access.statusCode).toBe(200)
+    expect(access.json().fanChatEnabled).toBe(true)
+    expect(access.json().isSupporter).toBe(true)
+    expect(access.json().canJoinFanChat).toBe(true)
+
+    const token = await app.inject({
+      method: 'POST',
+      url: '/api/chat/fansub-artist/fan-token',
+      headers: { cookie: fanCookie },
+    })
+    expect(token.statusCode).toBe(200)
+    expect(token.json().channel).toBe('channel:fansub-artist:fans')
   })
 })

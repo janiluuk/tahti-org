@@ -32,6 +32,15 @@ flowchart TB
   trans --> method
 ```
 
+## Automated journey e2e
+
+| Script | Covers |
+|--------|--------|
+| `tests/e2e/user-journeys.sh` | Viewer, artist, streamer, fan paths (API + optional web curl) |
+| `tests/e2e/user-journeys.mjs` | Same journeys in Playwright (needs `APP_URL` + seeded fixtures) |
+
+Seed fixtures: `cd apps/api && DATABASE_URL=... pnpm exec tsx scripts/seed-e2e-screenshots.ts` or `make stack-seed`.
+
 ## Flows → screens
 
 ### New member (fan)
