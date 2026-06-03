@@ -103,6 +103,11 @@ Six income streams:
 | Org operational fee (2%) | -€36 | -€504 | -€3,072 | -€3,612 |
 | **Net to artists (direct)** | **€1,622** | **€22,705** | **€138,394** | **€162,721** |
 
+Per-artist illustrations (membership + fan-subs + small grant → **+€50**,
+membership only → **−€50**, one supporter ≈ break-even) are in
+[`engagement-and-fansubs.md`](engagement-and-fansubs.md#artist-year-economics--worked-examples).
+Source of truth: `packages/ledger/src/artist-year-economics.ts`.
+
 ### Total artist economic outcome
 
 | | Y1 | Y2 | Y3 | Cumulative |

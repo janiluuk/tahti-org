@@ -1,0 +1,29 @@
+---
+description: Run lint and format before finishing code changes (matches CI Lint job)
+alwaysApply: true
+---
+
+# CI quality gate — lint and format
+
+GitHub Actions job **Lint & format** runs exactly:
+
+```bash
+pnpm lint          # turbo ESLint, all packages including @tahti/web next lint
+pnpm format:check  # Prettier — fails on any unformatted ts/tsx/js/json
+```
+
+Before you **commit**, **open/update a PR**, or tell the user a task is complete:
+
+1. Run `pnpm lint` and fix all ESLint errors (max-warnings 0 in API/worker/packages).
+2. Run `pnpm format:check`. If it fails, run `pnpm format` then re-check.
+3. Prefer `pnpm ci:check` once (lint + format + typecheck) when you touched TypeScript.
+
+Do not skip this because local `pnpm test` passed — CI blocks merge on lint/format even when tests are skipped on older PRs.
+
+Common failures:
+
+- **Prettier** — edit left trailing whitespace or long lines; run `pnpm format`.
+- **@tahti/web** — `next lint` runs in turbo; fix React/hooks/import issues in `apps/web`.
+- **New packages** — must have a `lint` script in `package.json` to be picked up by turbo.
+
+If CI reports `lint failed` in the aggregate job, open the **Lint & format** workflow step log (ESLint vs Prettier).

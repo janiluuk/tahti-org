@@ -102,6 +102,16 @@ describe('M12 — releases and public profile', () => {
 
     const after = await prisma.release.findUnique({ where: { id: release!.id } })
     expect(after!.smartLinkViewCount).toBeGreaterThanOrEqual(1)
+
+    await prisma.releaseTrack.updateMany({
+      where: { releaseId: release!.id },
+      data: { streamKey: 'streams/profile-preview.opus', status: 'READY' },
+    })
+    const withPlayback = await app.inject({
+      method: 'GET',
+      url: `/api/v1/u/${username}/profile`,
+    })
+    expect(withPlayback.json().releases[0].tracks[0].playUrl).toMatch(/^https?:\/\//)
   })
 
   it('updates smart link targets on a release', async () => {

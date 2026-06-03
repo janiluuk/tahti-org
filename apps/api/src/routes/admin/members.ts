@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireBoard } from '../../plugins/auth.js'
-import { csvRow } from '../../lib/csv.js'
+import { sendCsv } from '../../lib/csv.js'
 
 // PRH-compliant member register export (CSV).
 const adminMembersRoutes: FastifyPluginAsync = async (fastify) => {
@@ -24,16 +24,11 @@ const adminMembersRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
-      const header = csvRow([
-        'memberNumber',
-        'displayName',
-        'email',
-        'username',
-        'memberSince',
-        'membershipStatus',
-      ])
-      const rows = members.map((m) =>
-        csvRow([
+      return sendCsv(
+        reply,
+        'tahti-members.csv',
+        ['memberNumber', 'displayName', 'email', 'username', 'memberSince', 'membershipStatus'],
+        members.map((m) => [
           m.memberNumber ?? '',
           m.displayName,
           m.email,
@@ -42,12 +37,6 @@ const adminMembersRoutes: FastifyPluginAsync = async (fastify) => {
           m.membership?.status ?? '',
         ]),
       )
-
-      const csv = [header, ...rows].join('\n')
-      return reply
-        .header('Content-Type', 'text/csv; charset=utf-8')
-        .header('Content-Disposition', 'attachment; filename="tahti-members.csv"')
-        .send(csv)
     },
   )
 }

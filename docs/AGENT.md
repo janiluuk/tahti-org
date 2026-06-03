@@ -174,6 +174,8 @@ tahti/
 
 Use pnpm workspaces. Top-level `LICENSE` is AGPL-3.0. Every source file starts with the standard AGPL header.
 
+**CI quality gate (agents):** Before finishing any code change, run `pnpm ci:check` (or at minimum `pnpm lint` then `pnpm format:check`). The GitHub **Lint & format** job fails on ESLint *or* Prettier — fix with `pnpm format` when format:check fails. See `.cursor/rules/ci-lint-before-done.mdc`.
+
 ## Milestones (build in order, do not skip)
 
 ### M0 — Skeleton (1 day of agent time)

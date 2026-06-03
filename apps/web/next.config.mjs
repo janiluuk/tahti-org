@@ -4,7 +4,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
-  transpilePackages: ['@tahti/shared'],
+  transpilePackages: ['@tahti/shared', '@tahti/ui'],
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: false },
   async headers() {

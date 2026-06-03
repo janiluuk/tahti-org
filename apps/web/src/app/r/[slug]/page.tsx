@@ -64,15 +64,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
   const tracksWithIsrc = data.release.tracks.filter((t) => t.isrc?.trim())
 
   return (
-    <div
-      style={{
-        maxWidth: 420,
-        margin: '3rem auto',
-        padding: '0 1.5rem',
-        fontFamily: 'system-ui, sans-serif',
-        textAlign: 'center',
-      }}
-    >
+    <div className="brand-public brand-public--center">
       {data.release.artworkUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -84,16 +76,14 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         />
       )}
       <h1 style={{ margin: '0 0 0.25rem', fontSize: '1.75rem' }}>{data.release.title}</h1>
-      <p style={{ color: '#666', margin: '0 0 0.5rem' }}>
+      <p className="brand-muted" style={{ margin: '0 0 0.5rem' }}>
         {data.artist.displayName} · {data.release.type}
       </p>
-      <p style={{ color: '#888', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+      <p className="brand-muted" style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>
         {new Date(data.release.releaseDate).toLocaleDateString()}
       </p>
       {data.release.description && (
-        <p style={{ color: '#444', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-          {data.release.description}
-        </p>
+        <p style={{ lineHeight: 1.5, marginBottom: '1.5rem' }}>{data.release.description}</p>
       )}
 
       {(data.release.upc ||
@@ -101,17 +91,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         data.release.cLine ||
         tracksWithIsrc.length > 0 ||
         data.release.musicbrainzUrl) && (
-        <div
-          style={{
-            textAlign: 'left',
-            fontSize: '0.85rem',
-            color: '#555',
-            marginBottom: '1.5rem',
-            padding: '0.75rem 1rem',
-            background: '#f8f8f8',
-            borderRadius: 8,
-          }}
-        >
+        <div className="brand-panel">
           {data.release.upc && (
             <div style={{ marginBottom: '0.35rem' }}>
               <strong>UPC:</strong> {data.release.upc}
@@ -134,34 +114,27 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
           )}
           {data.release.musicbrainzUrl && (
             <div style={{ marginTop: '0.5rem' }}>
-              <a href={data.release.musicbrainzUrl} style={{ color: '#2563eb' }}>
-                View on MusicBrainz
-              </a>
+              <a href={data.release.musicbrainzUrl}>View on MusicBrainz</a>
             </div>
           )}
         </div>
       )}
 
       {data.featuredCollections && data.featuredCollections.length > 0 && (
-        <div
-          style={{
-            textAlign: 'left',
-            marginBottom: '1.5rem',
-            padding: '0.75rem 1rem',
-            background: '#f8f8f8',
-            borderRadius: 8,
-          }}
-        >
-          <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: '#666' }}>
+        <div className="brand-panel">
+          <p className="brand-muted" style={{ margin: '0 0 0.5rem', fontSize: '0.85rem' }}>
             From this artist
           </p>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {data.featuredCollections.map((c) => (
               <li key={c.slug} style={{ marginBottom: '0.35rem' }}>
-                <Link href={c.url} style={{ color: '#2563eb', fontWeight: 600 }}>
+                <Link href={c.url} style={{ fontWeight: 600 }}>
                   {c.name}
                 </Link>
-                <span style={{ color: '#888', fontSize: '0.8rem' }}> · {c.itemCount} item(s)</span>
+                <span className="brand-muted" style={{ fontSize: '0.8rem' }}>
+                  {' '}
+                  · {c.itemCount} item(s)
+                </span>
               </li>
             ))}
           </ul>
@@ -169,51 +142,23 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
       )}
 
       {services.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="brand-cta-row">
           {services.map(([key, url]) => (
-            <a
-              key={key}
-              href={url}
-              rel="noopener noreferrer"
-              style={{
-                display: 'block',
-                padding: '0.75rem 1rem',
-                background: '#111',
-                color: '#fff',
-                borderRadius: 8,
-                textDecoration: 'none',
-                fontWeight: 600,
-              }}
-            >
+            <a key={key} href={url} rel="noopener noreferrer" className="brand-cta-dark">
               {SERVICE_LABELS[key] ?? key}
             </a>
           ))}
         </div>
       ) : (
-        <Link
-          href={data.releaseUrl}
-          style={{
-            display: 'inline-block',
-            padding: '0.75rem 1.25rem',
-            background: '#2563eb',
-            color: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            fontWeight: 600,
-          }}
-        >
+        <Link href={data.releaseUrl} className="brand-cta">
           Listen on Tahti
         </Link>
       )}
 
-      <p style={{ marginTop: '2rem', fontSize: '0.85rem' }}>
-        <Link href={data.profileUrl} style={{ color: '#2563eb' }}>
-          @{data.artist.username}
-        </Link>
+      <p className="brand-muted" style={{ marginTop: '2rem', fontSize: '0.85rem' }}>
+        <Link href={data.profileUrl}>@{data.artist.username}</Link>
         {' · '}
-        <a href={data.embedUrl} style={{ color: '#2563eb' }}>
-          Embed
-        </a>
+        <a href={data.embedUrl}>Embed</a>
       </p>
     </div>
   )

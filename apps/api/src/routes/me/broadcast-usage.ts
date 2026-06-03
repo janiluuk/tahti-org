@@ -4,8 +4,10 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
 import {
+  broadcastWarningLevel,
   checkBroadcastCap,
   FREE_WEEKLY_LIVE_CAP_SEC,
+  FREE_WEEKLY_LIVE_GRACE_SEC,
   isUnlimitedLiveTier,
 } from '@tahti/shared/broadcast-cap'
 
@@ -30,16 +32,21 @@ const broadcastUsageRoutes: FastifyPluginAsync = async (fastify) => {
         })
       : null
 
+    const blocked = !cap.allowed
+    const warnings = cap.allowed ? cap.warnings : []
+
     return reply.send({
       tier: user.tier,
       unlimited: isUnlimitedLiveTier(user.tier),
       weeklyCapSeconds: FREE_WEEKLY_LIVE_CAP_SEC,
+      graceSeconds: FREE_WEEKLY_LIVE_GRACE_SEC,
       secondsUsed: cap.secondsUsed,
       secondsRemaining: cap.allowed ? cap.secondsRemaining : 0,
-      warnings: cap.allowed ? cap.warnings : [],
+      warnings,
+      warningLevel: cap.allowed ? broadcastWarningLevel(cap) : 'blocked',
       inGrace: cap.allowed ? cap.inGrace : false,
       atCap: cap.allowed ? cap.inGrace : true,
-      blocked: !cap.allowed,
+      blocked,
       showUpgradeCta: user.tier === 'FREE' && !!recentBroadcast && channel?.state !== 'LIVE',
     })
   })

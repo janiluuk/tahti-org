@@ -6,7 +6,7 @@ live in Git; this document covers **data** recovery (Postgres, MinIO).
 ## Prerequisites
 
 - SSH access to the manager node (`DEPLOY_SSH_PRIVATE_KEY` in CI)
-- `mc` alias configured for `registry.tahti.live` and backup bucket (see `scripts/backup-postgres.sh`)
+- `mc` alias configured for `registry.tahti.live` and backup bucket (see `scripts/backup.sh`)
 - Docker Swarm stack name: `tahti` (production) or `tahti-staging`
 
 ## Deploy and rollback
@@ -28,14 +28,28 @@ docker service rollback tahti_web
 cd /srv/tahti && TAG=<git-sha> ./scripts/stack-up.sh
 ```
 
-## Postgres backup and restore
+## Backup (unified script)
 
-Daily dumps: `scripts/backup-postgres.sh` → `mc pipe tahti/backups/pg/YYYYMMDD-HHMMSS.sql.gz`
+All backup operations use **`scripts/backup.sh`**:
+
+| Command | Purpose |
+|---|---|
+| `./scripts/backup.sh` or `all` | Postgres dump + MinIO DR mirror (daily cron) |
+| `postgres` | `pg_dump` → `mc pipe tahti/backups/pg/YYYYMMDD-HHMMSS.sql.gz` |
+| `minio` | Mirror `audio`, `covers`, `backups` to DR alias |
+| `restore-test` | Weekly restore to throwaway Postgres (Sunday cron) |
+| `status` | Print backup age; exit 1 if >26h, 2 if >48h (monitoring) |
+
+Install host cron: `sudo ./scripts/install-crons.sh` → `/etc/cron.d/tahti-backup`
+
+Legacy wrappers (`backup-postgres.sh`, `backup-minio.sh`, `restore-test.sh`, `ops/backup-*.sh`) forward to `backup.sh`.
+
+## Postgres backup and restore
 
 **Restore to a throwaway database** (verify backup integrity — same as weekly cron):
 
 ```bash
-./scripts/restore-test.sh
+./scripts/backup.sh restore-test
 ```
 
 **Restore production** (maintenance window; destructive):
@@ -47,7 +61,7 @@ Daily dumps: `scripts/backup-postgres.sh` → `mc pipe tahti/backups/pg/YYYYMMDD
 
 ## MinIO backup and restore
 
-Mirror: `scripts/backup-minio.sh` (see `ops/backup-minio.sh` on the host).
+Mirror: `./scripts/backup.sh minio` (included in `backup.sh all`).
 
 **Restore a prefix** (e.g. one artist’s archive):
 
@@ -65,5 +79,7 @@ Full bucket swap only during DR cutover — document DNS/Caddy target before swi
 
 ## Monitoring
 
-- Backup age alert: >26h WARN, >48h page (see `docs/technical/journey-ops.md`).
+- Backup age: `./scripts/backup.sh status` (env: `BACKUP_WARN_AGE_HOURS=26`, `BACKUP_PAGE_AGE_HOURS=48`).
+- Cron runs status check daily at 03:30 UTC after backup (see `install-crons.sh`).
 - Weekly restore-test log: `/var/log/tahti-restore-test.log`
+- Worker BullMQ crons: `apps/worker/src/cron-manifest.ts`

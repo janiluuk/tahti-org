@@ -58,11 +58,11 @@ Last reviewed: 2026-06-03 (audit pass)
 ### M20 — Tier gating
 | P | Item |
 |---|---|
-| P2 | 45 / 55-minute warning copy polish |
+| ~~P2~~ | ~~45 / 55-minute warning copy polish~~ — `warningLevel` on broadcast-usage API + dashboard (done) |
 | ~~P1~~ | ~~60-second grace + orchestrator stop~~ — done |
 | ~~P1~~ | ~~Archive FLAC for paid broadcast archives~~ — done |
 | ~~P2~~ | ~~Post-broadcast upgrade CTA~~ — done |
-| P2 | Reconcile docs: `FREE/ARTIST/STUDIO` in code vs `FREE/PAID` in AGENT.md |
+| ~~P2~~ | ~~Reconcile docs: `FREE/ARTIST/STUDIO` in code vs `FREE/PAID` in AGENT.md~~ — `ArtistTier` enum in AGENT.md matches code |
 
 ### M18 — Downloads
 | P | Item |
@@ -71,42 +71,43 @@ Last reviewed: 2026-06-03 (audit pass)
 | ~~P2~~ | ~~Release-track downloads~~ — done (basic) |
 | ~~P2~~ | ~~Tor exit / datacenter IP allowlist~~ — `DOWNLOAD_NO_COUNT_CIDRS` + bot UA (done) |
 | ~~P2~~ | ~~Nightly fraud-scan cron (velocity anomalies)~~ — done |
-| P2 | FLAC/source formats for all release-track tiers (parity with archive) |
+| ~~P2~~ | ~~FLAC/source formats for all release-track tiers (parity with archive)~~ — paid artist + fan-sub FLAC; fan-sub `format=source` |
 
 ### M11 — Hardening (remaining)
 | P | Item |
 |---|---|
-| P1 | pgBackRest + MinIO offsite backup **runbooks** wired and tested (`ops/RUNBOOK.md`) |
+| ~~P1~~ | ~~pgBackRest + MinIO offsite backup **runbooks** wired and tested (`ops/RUNBOOK.md`)~~ — unified `scripts/backup.sh` + `install-crons.sh` |
 | P1 | Self-hosted **Upptime** pointing at `/api/v1/status` |
-| P1 | Stripe webhook failure metrics (handler errors currently swallowed with `{ received: true }`) |
-| P2 | hCaptcha on first chat message (token join only today) |
+| ~~P1~~ | ~~Stripe webhook failure metrics~~ — Prometheus counters on `/metrics` (done) |
+| ~~P2~~ | ~~hCaptcha on first chat message~~ — token join marks Redis; publish proxy requires verification (done) |
 | P2 | ACRCloud cost watchdog |
-| P2 | Rate-limit tuning per route from config |
+| ~~P2~~ | ~~Rate-limit tuning per route from config~~ — `RATE_LIMIT_*` + `DOWNLOAD_RATE_*` env; see `docs/technical/rate-limit-policy.md` |
 | ~~P2~~ | ~~Structured logging (pino) + request IDs~~ — `x-request-id` + JSON response logs (done) |
 
 ### M12 — Profile + releases (remaining)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Release track upload + transcode queue~~ — presigned upload + worker job (done) |
-| P1 | Link `ReleaseTrack.archiveItemId` to playable audio on profile |
+| ~~P1~~ | ~~Link `ReleaseTrack.archiveItemId` to playable audio on profile~~ — archive playback + `streamKey` presigned preview |
 | ~~P1~~ | ~~Open Graph on `/u/[username]`~~ — done |
 | ~~P2~~ | ~~Smart link + DSP editor~~ — done |
-| P2 | Artwork upload to MinIO for releases |
+| ~~P2~~ | ~~Artwork upload to MinIO for releases~~ — presigned artwork routes |
 | P2 | Press kit (Studio tier) |
 
 ### M22 — Archive metadata (remaining)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Hearthis-style metadata defaults on upload~~ — done |
-| P2 | Editable tracklists on archive items |
-| P2 | Repost/follow download gates |
+| ~~P2~~ | ~~Editable tracklists on archive items~~ — dashboard `TracklistEditor` |
+| ~~P2~~ | ~~Repost/follow download gates~~ — done |
+| ~~P2~~ | ~~Channel gate funnel dashboard~~ — `GET /api/me/download-gate-stats` (done) |
 
 ### M23 — Collections (remaining)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Collections CRUD + RSS + profile page~~ — done |
-| P2 | Drag reorder in dashboard |
-| P2 | Featured collections on smart-link landing |
+| ~~P2~~ | ~~Drag reorder in dashboard~~ — `PUT /api/me/collections/:slug/reorder` |
+| ~~P2~~ | ~~Featured collections on smart-link landing~~ — `/r/:slug` + API |
 
 ### Still largely open
 | Milestone | Notes |

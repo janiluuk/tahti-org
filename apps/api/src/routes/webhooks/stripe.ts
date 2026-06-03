@@ -10,6 +10,10 @@ import {
 } from '../../lib/fansub.js'
 import { activateMembership } from '../../lib/membership.js'
 import { auditLog } from '../../lib/audit.js'
+import {
+  recordStripeWebhookHandlerFailure,
+  recordStripeWebhookVerifyFailure,
+} from '../../lib/stripe-webhook-metrics.js'
 
 // Stripe webhook for fan-subscription lifecycle. Encapsulated in its own plugin
 // so the raw-body parser (needed for signature verification) does not affect the
@@ -31,6 +35,7 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       event = constructWebhookEvent(raw, sig)
     } catch (err) {
+      recordStripeWebhookVerifyFailure()
       request.log.warn({ err }, 'stripe webhook verification failed')
       return reply.status(400).send({ error: 'Invalid signature' })
     }
@@ -110,6 +115,7 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
           break
       }
     } catch (err) {
+      recordStripeWebhookHandlerFailure()
       const message = err instanceof Error ? err.message : String(err)
       request.log.error({ err, type: event.type }, 'stripe webhook handler error')
       await auditLog(fastify.prisma, {

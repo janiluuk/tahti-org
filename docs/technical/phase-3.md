@@ -187,13 +187,13 @@ docker run --rm \
 Create `/etc/cron.d/tahti-backup`:
 ```cron
 # Postgres daily backup at 03:00
-0 3 * * * root /srv/tahti/scripts/backup-postgres.sh >> /var/log/tahti-backup.log 2>&1
+0 3 * * * root /srv/tahti/scripts/backup.sh all >> /var/log/tahti-backup.log 2>&1
 
 # MinIO mirror at 04:00
-0 4 * * * root /srv/tahti/scripts/backup-minio.sh >> /var/log/tahti-backup.log 2>&1
+30 3 * * * root /srv/tahti/scripts/backup.sh status >> /var/log/tahti-backup.log 2>&1 || true
 
 # Weekly restore test (Sunday 05:00)
-0 5 * * 0 root /srv/tahti/scripts/restore-test.sh >> /var/log/tahti-restore-test.log 2>&1
+0 5 * * 0 root /srv/tahti/scripts/backup.sh restore-test >> /var/log/tahti-restore-test.log 2>&1
 ```
 
 Create `/srv/tahti/scripts/backup-postgres.sh`:

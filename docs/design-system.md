@@ -557,3 +557,21 @@ Triggered via IntersectionObserver when the element enters the viewport.
 ```
 
 Mobile channel view uses a phone-shaped layout with cover art fullwidth, controls below, chat as a collapsible bottom sheet.
+
+---
+
+## `packages/ui` adoption (PLAT-020)
+
+The shared React package lives in `packages/ui/` (dark-brand components: `Button`, `Card`, `Callout`, `Stat`, …). The Next.js app currently uses **`apps/web/src/components/ui/`** with a **light dashboard shell** (`--tahti-*` tokens) and brand tokens for public surfaces.
+
+**Phase 1 (done):** worker cron manifest; unified `scripts/backup.sh`.
+
+**Phase 2 (in progress):**
+
+1. Add `@tahti/ui` as a workspace dependency in `apps/web` (`transpilePackages`).
+2. Use package components on **dark public routes** first (`/c/:slug`, `/u/:username`, `/r/:slug`) where tokens match `docs/design-system.md`.
+3. Keep dashboard on light `--tahti-*` tokens until a deliberate dashboard dark-theme pass.
+
+**Phase 3:** Collapse duplicate primitives — re-export or replace `apps/web/src/components/ui/button.tsx` where APIs align.
+
+Do not import `packages/ui` CSS into the light dashboard without scoping — token names (`--bg`, `--text`) differ from `--tahti-bg` / `--tahti-text`.

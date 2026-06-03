@@ -19,6 +19,7 @@ import type { ProgrammeItemRow } from './programme-actions'
 import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
+import { DownloadGateSummaryPanel } from './download-gate-summary'
 import UpgradeCta from './upgrade-cta'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
@@ -154,6 +155,7 @@ export default async function DashboardPage() {
     secondsUsed: number
     secondsRemaining: number | null
     warnings: number[]
+    warningLevel?: 'none' | '45m' | '55m' | 'grace' | 'blocked'
     atCap: boolean
     inGrace?: boolean
     blocked?: boolean
@@ -161,6 +163,18 @@ export default async function DashboardPage() {
     weeklyCapSeconds: number
   }
   let broadcastUsage: BroadcastUsageInfo | null = null
+  let downloadGateSummary: {
+    artistFollowerCount: number
+    totals: { repostAcks: number; blockedAttempts: number }
+    items: Array<{
+      archiveItemId: string
+      title: string
+      repostToDownload: boolean
+      followToDownload: boolean
+      repostAckCount: number
+      blockedDownloadAttempts: number
+    }>
+  } | null = null
   if (user.channel) {
     try {
       const res = await fetch(`${apiUrl}/api/me/broadcast-usage`, {
@@ -168,6 +182,15 @@ export default async function DashboardPage() {
         cache: 'no-store',
       })
       if (res.ok) broadcastUsage = (await res.json()) as BroadcastUsageInfo
+    } catch {
+      // ignore
+    }
+    try {
+      const res = await fetch(`${apiUrl}/api/me/download-gate-stats`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) downloadGateSummary = (await res.json()) as typeof downloadGateSummary
     } catch {
       // ignore
     }
@@ -431,6 +454,7 @@ export default async function DashboardPage() {
         <Panel title="Your channel">
           <BroadcastUsageBanner usage={broadcastUsage} />
           <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
+          <DownloadGateSummaryPanel summary={downloadGateSummary} />
           <Text size="sm" style={{ margin: '0.25rem 0' }}>
             <strong>URL:</strong>{' '}
             <Link href={`/c/${user.channel.slug}`}>

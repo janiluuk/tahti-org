@@ -191,6 +191,78 @@ Per bylaws §11.b: the 2% fee is **operational, not revenue**. If the org
 generates surplus from this line item in any year, it rolls into the next
 year's artist grant pool.
 
+### Artist year economics — worked examples
+
+These scenarios show **one artist's personal P&L** for a fiscal year:
+Tahti membership (what they pay the org) plus fan-sub income (what fans pay
+them, net of Stripe and the 2% fee) plus any **M9 engagement grant** (from the
+org surplus pool, separate from fan-sub passthrough).
+
+Per charge at **€5/month** (EU card): Stripe ≈ **€0.45** (2.9% + €0.30),
+Tahti operational fee **€0.10** (2%), artist net **€4.45**. The formulas are
+implemented in `packages/ledger/src/artist-year-economics.ts` (`SCENARIO_*`
+constants); tests lock the numbers below.
+
+**Net profit (year)** = net from fan-subs + annual grant − Tahti membership.
+
+#### Example A — ~€50 net profit (music + modest supporters)
+
+**Story:** Long Doe publishes on Tahti, pays **€40/year** membership, keeps
+**2 fans at €5/month for 10 months**, and receives a small **€1** engagement
+grant from the annual pool.
+
+| Line (artist perspective) | Amount |
+|---|---|
+| Fan subscriptions (gross) | +€100.00 (2 × €5 × 10 mo) |
+| Stripe processing | −€9.00 (20 charges × ~€0.45) |
+| Tahti operational fee (2%) | −€2.00 (20 × €0.10) |
+| **Net from fan-subs** | **+€89.00** |
+| Annual engagement grant (M9) | +€1.00 |
+| Tahti membership (Artist tier) | −€40.00 |
+| **Net profit (year)** | **+€50.00** |
+
+Long keeps **€89** via Stripe Connect during the year; the **€1** grant and
+**€40** membership sit on top of that for a **€50** personal surplus after
+platform costs.
+
+#### Example B — −€50 net (paid platform, no fan income)
+
+**Story:** Casey uploads music and pays for Tahti but never attracts paying
+fan-subscribers. Only cost is membership — **€50** in this example (e.g. list
+price or first-year bundle above the default €40).
+
+| Line (artist perspective) | Amount |
+|---|---|
+| Fan subscriptions (gross) | €0.00 |
+| Net from fan-subs | €0.00 |
+| Annual engagement grant | €0.00 |
+| Tahti membership | −€50.00 |
+| **Net profit (year)** | **−€50.00** |
+
+No grant eligibility without engagement units; fan-sub tooling still works but
+generates no offsetting income.
+
+#### Example C — ~break even (one supporter covers membership)
+
+**Story:** River has **one fan at €5/month for 9 months** against **€40**
+membership. Fan-sub net is **€40.05** (9 × €4.45); after membership the year
+is within a few cents of zero.
+
+| Line (artist perspective) | Amount |
+|---|---|
+| Fan subscriptions (gross) | +€45.00 (1 × €5 × 9 mo) |
+| Stripe processing | −€4.05 (9 × ~€0.45) |
+| Tahti operational fee (2%) | −€0.90 (9 × €0.10) |
+| **Net from fan-subs** | **+€40.05** |
+| Annual engagement grant | €0.00 |
+| Tahti membership | −€40.00 |
+| **Net profit (year)** | **≈ €0.00** (+€0.05) |
+
+This is the minimum viable supporter story: **one dedicated fan for most of a
+year** roughly pays for the artist's Tahti seat. Extra fans, paid downloads
+(5× grant weight), and grant pool share improve the outcome (see grant formula
+above).
+
 ### Subscriber accounts
 
 Fan-subscribers have full user accounts:

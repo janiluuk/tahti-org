@@ -17,8 +17,14 @@ interface RateLimitConfig {
 }
 
 const AUTH_ROUTES = ['/api/auth/register', '/api/auth/login', '/api/chat']
-const DEFAULT_LIMIT: RateLimitConfig = { max: 120, windowSec: 60 }
-const AUTH_LIMIT: RateLimitConfig = { max: 10, windowSec: 60 }
+
+function defaultLimit(): RateLimitConfig {
+  return { max: config.rateLimit.apiMaxPerMin, windowSec: 60 }
+}
+
+function authLimit(): RateLimitConfig {
+  return { max: config.rateLimit.authMaxPerMin, windowSec: 60 }
+}
 
 let redis: ReturnType<typeof createClient> | null = null
 
@@ -64,11 +70,11 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
 
     const ip = request.ip ?? '0.0.0.0'
     const isAuthRoute = AUTH_ROUTES.some((r) => request.url.startsWith(r))
-    const limit = isAuthRoute ? AUTH_LIMIT : DEFAULT_LIMIT
+    const limit = isAuthRoute ? authLimit() : defaultLimit()
 
     const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() => ({
-      ok: true,
-      remaining: 999,
+      ok: config.rateLimit.redisFailOpen,
+      remaining: config.rateLimit.redisFailOpen ? 999 : 0,
       resetSec: 60,
     }))
 

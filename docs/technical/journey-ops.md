@@ -153,12 +153,12 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Cron as Weekly cron (Sunday 05:00)
-    participant Script as restore-test.sh
+    participant Script as backup.sh restore-test
     participant S3 as UpCloud bucket
     participant TMP as Temp postgres container
     participant Log as /var/log/tahti-restore-test.log
 
-    Cron->>Script: Run /srv/tahti/scripts/restore-test.sh
+    Cron->>Script: Run /srv/tahti/scripts/backup.sh restore-test
 
     Script->>S3: mc ls tahti-backups/pg/ | tail -1 → get latest backup
     Script->>S3: mc get tahti-backups/pg/20260519-030000.sql.gz /tmp/latest.sql.gz

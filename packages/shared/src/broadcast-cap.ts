@@ -11,6 +11,21 @@ export const FREE_WEEKLY_LIVE_GRACE_SEC = 60
 export const FREE_WEEKLY_HARD_CAP_SEC = FREE_WEEKLY_LIVE_CAP_SEC + FREE_WEEKLY_LIVE_GRACE_SEC
 export const WARN_SECONDS = [45 * 60, 55 * 60] as const
 
+export type BroadcastWarningLevel = 'none' | '45m' | '55m' | 'grace' | 'blocked'
+
+/** Dashboard-friendly cap warning (55m before 45m when both thresholds crossed). */
+export function broadcastWarningLevel(
+  cap: BroadcastCapResult,
+  blocked = !cap.allowed,
+): BroadcastWarningLevel {
+  if (blocked) return 'blocked'
+  if (!cap.allowed) return 'blocked'
+  if (cap.inGrace) return 'grace'
+  if (cap.warnings.includes(55 * 60)) return '55m'
+  if (cap.warnings.includes(45 * 60)) return '45m'
+  return 'none'
+}
+
 export function isUnlimitedLiveTier(tier: ArtistTier): boolean {
   return tier !== 'FREE'
 }

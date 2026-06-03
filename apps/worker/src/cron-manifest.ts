@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+/** Repeatable BullMQ cron jobs — single manifest for ops and registration. */
+export interface CronJobSpec {
+  /** BullMQ job name (must match worker handler). */
+  name: string
+  /** Standard cron pattern (UTC). */
+  pattern: string
+  /** Stable jobId prevents duplicate repeatable entries on worker restart. */
+  jobId: string
+  /** Human note for runbooks / dashboards. */
+  description: string
+}
+
+export const WORKER_CRON_JOBS: CronJobSpec[] = [
+  {
+    name: 'monthly-ledger-rollup',
+    pattern: '0 2 2 * *',
+    jobId: 'monthly-ledger-rollup-cron',
+    description: 'Monthly ledger rollup (2nd of month, 02:00 UTC)',
+  },
+  {
+    name: 'annual-grant-calc',
+    pattern: '0 3 1 3 *',
+    jobId: 'annual-grant-calc-cron',
+    description: 'Annual grant calculation (1 March, 03:00 UTC)',
+  },
+  {
+    name: 'broadcast-cap-tick',
+    pattern: '* * * * *',
+    jobId: 'broadcast-cap-tick-cron',
+    description: 'M20: free-tier live cap tick every minute',
+  },
+  {
+    name: 'weekly-broadcast-reset',
+    pattern: '0 0 * * 1',
+    jobId: 'weekly-broadcast-reset-cron',
+    description: 'M20: reset weekly broadcast counters (Monday 00:00 UTC)',
+  },
+  {
+    name: 'fan-sub-payout',
+    pattern: '0 4 * * *',
+    jobId: 'fan-sub-payout-cron',
+    description: 'M19: fan-sub Stripe Connect payouts (04:00 UTC)',
+  },
+  {
+    name: 'fan-sub-expire',
+    pattern: '0 5 * * *',
+    jobId: 'fan-sub-expire-cron',
+    description: 'M19: expire lapsed fan subscriptions (05:00 UTC)',
+  },
+  {
+    name: 'tor-exit-list-sync',
+    pattern: '30 5 * * *',
+    jobId: 'tor-exit-list-sync-cron',
+    description: 'M18: sync Tor exit CIDRs to Redis (05:30 UTC)',
+  },
+  {
+    name: 'download-fraud-scan',
+    pattern: '0 6 * * *',
+    jobId: 'download-fraud-scan-cron',
+    description: 'M18: download velocity fraud scan (06:00 UTC)',
+  },
+  {
+    name: 'membership-renewal-reminder',
+    pattern: '0 7 * * *',
+    jobId: 'membership-renewal-reminder-cron',
+    description: 'M1: membership renewal reminder emails (07:00 UTC)',
+  },
+  {
+    name: 'membership-lapse',
+    pattern: '0 8 * * *',
+    jobId: 'membership-lapse-cron',
+    description: 'M1: lapse memberships past renewal window (08:00 UTC)',
+  },
+]

@@ -60,6 +60,7 @@ describe('M18 — release track downloads', () => {
         passwordHash,
         username: 'rel-dl-artist',
         displayName: 'Rel DL Artist',
+        tier: 'ARTIST',
         emailVerifiedAt: new Date(),
         channel: {
           create: {
@@ -157,13 +158,14 @@ describe('M18 — release track downloads', () => {
     expect(dl?.weight).toBe(5)
   })
 
-  it('requires fan subscription for FLAC format', async () => {
+  it('allows FLAC for paid artists (parity with archive) and fan subs', async () => {
     const anon = await app.inject({
       method: 'GET',
       url: `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?format=flac&fp=x`,
       headers: dlHeaders,
     })
-    expect(anon.statusCode).toBe(403)
+    expect(anon.statusCode).toBe(200)
+    expect(anon.json().format).toBe('flac')
 
     const fan = await app.inject({
       method: 'GET',
@@ -172,6 +174,48 @@ describe('M18 — release track downloads', () => {
     })
     expect(fan.statusCode).toBe(200)
     expect(fan.json().format).toBe('flac')
+  })
+
+  it('requires fan subscription or paid artist for FLAC on FREE tier', async () => {
+    await prisma.user.update({ where: { id: artistId }, data: { tier: 'FREE' } })
+
+    const anon = await app.inject({
+      method: 'GET',
+      url: `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?format=flac&fp=free-anon`,
+      headers: dlHeaders,
+    })
+    expect(anon.statusCode).toBe(403)
+
+    const fan = await app.inject({
+      method: 'GET',
+      url: `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?format=flac&fp=free-fan`,
+      headers: { ...dlHeaders, cookie: fanCookie },
+    })
+    expect(fan.statusCode).toBe(200)
+
+    await prisma.user.update({ where: { id: artistId }, data: { tier: 'ARTIST' } })
+  })
+
+  it('serves original source to fan subscribers when format=source', async () => {
+    await prisma.releaseTrack.update({
+      where: { id: trackId },
+      data: { sourceKey: 'uploads/rel-source.wav' },
+    })
+
+    const anon = await app.inject({
+      method: 'GET',
+      url: `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?format=source&fp=src-anon`,
+      headers: dlHeaders,
+    })
+    expect(anon.statusCode).toBe(403)
+
+    const fan = await app.inject({
+      method: 'GET',
+      url: `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?format=source&fp=src-fan`,
+      headers: { ...dlHeaders, cookie: fanCookie },
+    })
+    expect(fan.statusCode).toBe(200)
+    expect(fan.json().format).toBe('source')
   })
 
   it('deduplicates repeat downloads within 30 days', async () => {

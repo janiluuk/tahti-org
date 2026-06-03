@@ -3,12 +3,18 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { renderPrometheusMetrics, runDependencyChecks } from '../lib/health-checks.js'
+import { renderStripeWebhookMetricLines } from '../lib/stripe-webhook-metrics.js'
 
 const metricsRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get('/metrics', async (_request, reply) => {
     const checks = await runDependencyChecks(fastify.prisma)
-    const body = renderPrometheusMetrics(checks, Math.floor(process.uptime()))
-    return reply.header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8').send(body)
+    const lines = [
+      renderPrometheusMetrics(checks, Math.floor(process.uptime())).trimEnd(),
+      ...renderStripeWebhookMetricLines(),
+    ]
+    return reply
+      .header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8')
+      .send(`${lines.join('\n')}\n`)
   })
 }
 
