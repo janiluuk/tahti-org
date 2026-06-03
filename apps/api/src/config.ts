@@ -69,6 +69,14 @@ export const config = {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
+    ratePerHour: parseInt(process.env.DOWNLOAD_RATE_PER_HOUR ?? '5', 10),
+    ratePerDay: parseInt(process.env.DOWNLOAD_RATE_PER_DAY ?? '20', 10),
+  },
+  rateLimit: {
+    apiMaxPerMin: parseInt(process.env.RATE_LIMIT_API_MAX ?? '120', 10),
+    authMaxPerMin: parseInt(process.env.RATE_LIMIT_AUTH_MAX ?? '10', 10),
+    /** When true (default), allow requests if Redis is unreachable. */
+    redisFailOpen: process.env.RATE_LIMIT_REDIS_FAIL_OPEN !== 'false',
   },
   mixcloud: {
     clientId: process.env.MIXCLOUD_CLIENT_ID ?? '',

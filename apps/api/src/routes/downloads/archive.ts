@@ -9,6 +9,7 @@ import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
 import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
+import { downloadRateLimits } from '../../lib/download-limits.js'
 
 // M18 — downloads as a first-class action with engagement-unit accounting.
 //
@@ -25,8 +26,6 @@ const HOUR_MS = 60 * 60 * 1000
 const DAY_MS = 24 * HOUR_MS
 const DEDUP_WINDOW_MS = 30 * DAY_MS
 const PER_TRACK_CAP = 10
-const RATE_PER_HOUR = 5
-const RATE_PER_DAY = 20
 
 function dailySalt(): string {
   const day = new Date().toISOString().slice(0, 10)
@@ -139,7 +138,8 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       }),
     ])
 
-    if (lastHour >= RATE_PER_HOUR || lastDay >= RATE_PER_DAY) {
+    const { perHour, perDay } = downloadRateLimits()
+    if (lastHour >= perHour || lastDay >= perDay) {
       return reply
         .header('Retry-After', '3600')
         .status(429)

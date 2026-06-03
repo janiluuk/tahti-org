@@ -81,7 +81,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | ~~P1~~ | ~~Stripe webhook failure metrics~~ — Prometheus counters on `/metrics` (done) |
 | ~~P2~~ | ~~hCaptcha on first chat message~~ — token join marks Redis; publish proxy requires verification (done) |
 | P2 | ACRCloud cost watchdog |
-| P2 | Rate-limit tuning per route from config |
+| ~~P2~~ | ~~Rate-limit tuning per route from config~~ — `RATE_LIMIT_*` + `DOWNLOAD_RATE_*` env; see `docs/technical/rate-limit-policy.md` |
 | ~~P2~~ | ~~Structured logging (pino) + request IDs~~ — `x-request-id` + JSON response logs (done) |
 
 ### M12 — Profile + releases (remaining)
@@ -91,14 +91,14 @@ Last reviewed: 2026-06-03 (audit pass)
 | ~~P1~~ | ~~Link `ReleaseTrack.archiveItemId` to playable audio on profile~~ — archive playback + `streamKey` presigned preview |
 | ~~P1~~ | ~~Open Graph on `/u/[username]`~~ — done |
 | ~~P2~~ | ~~Smart link + DSP editor~~ — done |
-| P2 | Artwork upload to MinIO for releases |
+| ~~P2~~ | ~~Artwork upload to MinIO for releases~~ — presigned artwork routes |
 | P2 | Press kit (Studio tier) |
 
 ### M22 — Archive metadata (remaining)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Hearthis-style metadata defaults on upload~~ — done |
-| P2 | Editable tracklists on archive items |
+| ~~P2~~ | ~~Editable tracklists on archive items~~ — dashboard `TracklistEditor` |
 | ~~P2~~ | ~~Repost/follow download gates~~ — done |
 | ~~P2~~ | ~~Channel gate funnel dashboard~~ — `GET /api/me/download-gate-stats` (done) |
 
@@ -106,8 +106,8 @@ Last reviewed: 2026-06-03 (audit pass)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Collections CRUD + RSS + profile page~~ — done |
-| P2 | Drag reorder in dashboard |
-| P2 | Featured collections on smart-link landing |
+| ~~P2~~ | ~~Drag reorder in dashboard~~ — `PUT /api/me/collections/:slug/reorder` |
+| ~~P2~~ | ~~Featured collections on smart-link landing~~ — `/r/:slug` + API |
 
 ### Still largely open
 | Milestone | Notes |

@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { requireAuth } from '../../plugins/auth.js'
+import { buildGateDailySeries } from '../../lib/download-gate-daily.js'
 
 /** M22: aggregate follow/repost gate engagement for the artist dashboard. */
 const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -20,6 +21,7 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
           artistFollowerCount: 0,
           items: [],
           totals: { repostAcks: 0, blockedAttempts: 0 },
+          daily: [],
         })
       }
 
@@ -68,6 +70,8 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
         blockedDownloadAttempts: blockedMap.get(item.id) ?? 0,
       }))
 
+      const daily = await buildGateDailySeries(fastify.prisma, channel.id)
+
       return reply.send({
         artistFollowerCount: followerCount,
         items,
@@ -75,6 +79,7 @@ const downloadGateStatsRoutes: FastifyPluginAsync = async (fastify) => {
           repostAcks: items.reduce((s, i) => s + i.repostAckCount, 0),
           blockedAttempts: items.reduce((s, i) => s + i.blockedDownloadAttempts, 0),
         },
+        daily,
       })
     },
   )

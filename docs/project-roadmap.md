@@ -83,7 +83,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + **release-track** downloads (dedup, rate limit, fan-sub 5×, **FLAC for paid artists + fan subs**, **source for fan subs**), 24h net-new-IP threshold; **download-fraud-scan** cron; **Tor/datacenter CIDR + bot UA** do not count (`DOWNLOAD_NO_COUNT_CIDRS`, trust overrides); **daily Tor exit sync** (worker → Redis + bundled list via `scripts/sync-tor-exit-list.mjs`). Deferred: ops cron for bundled file refresh in deploy |
 | **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, **Stripe transfer retry** (`packages/ledger`), payout dashboard + `GET /api/me/fan-sub-payouts`, **subscriber CSV export** (`GET /api/me/fan-subscribers/export.csv`). Deferred: automated deletion workflow UI |
-| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/download-gate-stats`, dashboard table). Deferred: time-series charts |
+| **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/download-gate-stats`, dashboard table + **14-day UTC chart**). Deferred: richer analytics |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`. Deferred: Discogs API |
@@ -110,7 +110,7 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Full local Docker stack (`stack-up.sh`, ports 3010/3011) + scaling node doc | Dev/stakeholder demos without host port clashes; ops handover reference | M11 / Phase 2 |
 | [ ] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | Design-system drift; duplicate styling maintenance | M12 / DX |
 | [x] | `@tahti/ui`: add `lint` script to Turbo pipeline | `packages/ui` ESLint via `turbo lint` | CI |
-| [ ] | Consolidate e2e seed scripts (`scripts/seed-e2e-screenshots.ts` vs `apps/api/scripts/`) | Two entrypoints, easy to run wrong one in Docker | CI / DX |
+| [x] | Consolidate e2e seed scripts (`scripts/seed-e2e-screenshots.ts` vs `apps/api/scripts/`) | Root script re-exports `apps/api/scripts/seed-e2e-screenshots.ts` | CI / DX |
 | [x] | Stripe webhook: return **500** on handler failure (Stripe retries; audit log retained) | Silent membership/fan-sub activation failures | M19 hardening |
 | [~] | Automate `db push` / migrate in deploy pipeline (OPS-002) | `db-push` service in `stack-up.sh`; production website-only deploy still manual | M0 / Phase 2 |
 | [x] | Document local test prerequisites in README (`docker compose up postgres redis -d`, `pnpm ci:check`) | Onboarding friction; tests fail opaque without DB | M11 |
@@ -490,12 +490,12 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
-| [ ] | **PLAT-001** | Stripe webhook dead-letter log + alert when `activateMembership` / fan-sub handlers fail | P1 |
+| [x] | **PLAT-001** | Stripe webhook dead-letter log + alert when `activateMembership` / fan-sub handlers fail | P1 |
 | [ ] | **PLAT-002** | Require branch protection on all `ci.yml` jobs (lint, test, both e2e, AGPL) | P1 |
 | [ ] | **PLAT-003** | PgBouncer before scaling API replicas (`docs/scaling-node-distribution.md`) | P1 |
 | [ ] | **PLAT-004** | Internal ingest routes: shared `@fastify/formbody` + integration tests for RTMP + Icecast | P2 |
 | [ ] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | P2 |
-| [ ] | **PLAT-006** | Rate-limit policy doc: fail-open vs fail-closed when Redis unavailable | P2 |
+| [x] | **PLAT-006** | Rate-limit policy doc: fail-open vs fail-closed when Redis unavailable | P2 |
 
 ### Optimisations (performance & cost)
 
@@ -513,7 +513,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 |:---:|---|---|---|
 | [ ] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | P1 |
 | [ ] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | P1 |
-| [ ] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
+| [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [ ] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [ ] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | P3 |
 | [ ] | **PLAT-025** | Remove `eslint.ignoreDuringBuilds` in web Dockerfile once lint clean in CI | P3 |
