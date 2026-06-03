@@ -82,7 +82,12 @@ export default function CollectionsPanel({
     })
   }
 
-  function moveItem(collectionSlug: string, items: NonNullable<CollectionRow['items']>, index: number, dir: -1 | 1) {
+  function moveItem(
+    collectionSlug: string,
+    items: NonNullable<CollectionRow['items']>,
+    index: number,
+    dir: -1 | 1,
+  ) {
     const next = index + dir
     if (next < 0 || next >= items.length) return
     const ids = [...items].sort((a, b) => a.position - b.position).map((i) => i.id)
@@ -150,13 +155,20 @@ export default function CollectionsPanel({
                 </span>
               </div>
               {c.items && c.items.length > 0 && (
-                <ol style={{ margin: '0.5rem 0 0', paddingLeft: 0, listStyle: 'none', color: '#555' }}>
+                <ol
+                  style={{ margin: '0.5rem 0 0', paddingLeft: 0, listStyle: 'none', color: '#555' }}
+                >
                   {[...c.items]
                     .sort((a, b) => a.position - b.position)
                     .map((it, idx, sorted) => (
                       <li
                         key={it.id}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: 4 }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          marginBottom: 4,
+                        }}
                       >
                         <span style={{ flex: 1 }}>
                           {it.archiveItem?.title ?? it.release?.title ?? 'Item'}

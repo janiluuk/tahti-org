@@ -12,10 +12,6 @@ export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
 
 export function Alert({ variant = 'info', className, role = 'alert', ...props }: AlertProps) {
   return (
-    <div
-      role={role}
-      className={cn('ui-alert', `ui-alert--${variant}`, className)}
-      {...props}
-    />
+    <div role={role} className={cn('ui-alert', `ui-alert--${variant}`, className)} {...props} />
   )
 }

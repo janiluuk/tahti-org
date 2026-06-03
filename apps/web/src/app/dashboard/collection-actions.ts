@@ -53,15 +53,12 @@ export async function reorderCollectionItems(
   slug: string,
   itemIds: string[],
 ): Promise<{ error: string | null }> {
-  const res = await fetch(
-    `${apiUrl}/api/me/collections/${encodeURIComponent(slug)}/reorder`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
-      body: JSON.stringify({ itemIds }),
-      cache: 'no-store',
-    },
-  )
+  const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}/reorder`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ itemIds }),
+    cache: 'no-store',
+  })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to reorder' }

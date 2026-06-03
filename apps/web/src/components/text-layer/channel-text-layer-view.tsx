@@ -8,10 +8,7 @@ import { isActiveTextLayer } from '@tahti/shared'
 import { LayeredWave3DText } from './layered-wave-3d-text'
 import './text-layer.css'
 
-const MODE_CLASS: Record<
-  Exclude<ChannelTextLayerMode, 'NONE' | 'LAYERED_WAVE_3D'>,
-  string
-> = {
+const MODE_CLASS: Record<Exclude<ChannelTextLayerMode, 'NONE' | 'LAYERED_WAVE_3D'>, string> = {
   GRADIENT_SHIMMER: 'text-layer--gradient-shimmer',
   COSMIC_NEON: 'text-layer--cosmic-neon',
   SHIMMER_LINES: 'text-layer--shimmer-lines',
@@ -43,7 +40,10 @@ export function ChannelTextLayerView({
   if (!effectClass) return null
 
   return (
-    <div className={`text-layer ${effectClass} ${alignClass(align)}`} aria-label="Channel text layer">
+    <div
+      className={`text-layer ${effectClass} ${alignClass(align)}`}
+      aria-label="Channel text layer"
+    >
       <h2 className="text-layer__heading">{text}</h2>
     </div>
   )

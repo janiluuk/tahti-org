@@ -90,10 +90,7 @@ export function ShatterCarouselGallery({ images }: GalleryImagesProps) {
         vertexShader: VERTEX,
         fragmentShader: FRAGMENT,
       })
-      mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(3.2, 1.8, GRID, GRID),
-        material,
-      )
+      mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.8, GRID, GRID), material)
       scene.add(mesh)
     })
 

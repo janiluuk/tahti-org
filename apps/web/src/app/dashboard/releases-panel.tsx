@@ -187,7 +187,11 @@ export default function ReleasesPanel({
                     { id: 'identifiers', label: 'UPC / ISRC', done: false },
                     { id: 'musicbrainz', label: 'MusicBrainz', done: false },
                     { id: 'dsp', label: 'DSP / smart links', done: false },
-                    { id: 'published', label: 'Published on profile', done: r.state === 'PUBLISHED' },
+                    {
+                      id: 'published',
+                      label: 'Published on profile',
+                      done: r.state === 'PUBLISHED',
+                    },
                   ]
                 }
               />

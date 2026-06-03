@@ -75,9 +75,7 @@ export function computeReleaseChecklist(release: ReleaseForChecklist): ReleaseCh
     Object.keys(release.smartLinkTargets as object).length > 0
 
   const metadataDone =
-    Boolean(release.title?.trim()) &&
-    Boolean(release.releaseDate) &&
-    release.tracks.length > 0
+    Boolean(release.title?.trim()) && Boolean(release.releaseDate) && release.tracks.length > 0
 
   const identifiersDone =
     Boolean(release.upc?.trim()) || release.tracks.every((t) => Boolean(t.isrc?.trim()))
@@ -129,5 +127,9 @@ export const MUSICBRAINZ_SUBMIT_URL = 'https://musicbrainz.org/release/add'
 export const POST_RELEASE_CLAIM_LINKS = [
   { id: 'spotify', label: 'Spotify for Artists', url: 'https://artists.spotify.com/' },
   { id: 'apple', label: 'Apple Music for Artists', url: 'https://artists.apple.com/' },
-  { id: 'youtube', label: 'YouTube Official Artist Channel', url: 'https://www.youtube.com/artist' },
+  {
+    id: 'youtube',
+    label: 'YouTube Official Artist Channel',
+    url: 'https://www.youtube.com/artist',
+  },
 ] as const

@@ -36,9 +36,9 @@ export const releaseCatalogSelect = {
   },
 } as const
 
-export function catalogPatchFromBody(body: unknown):
-  | { ok: true; data: Record<string, unknown> }
-  | { ok: false; error: string } {
+export function catalogPatchFromBody(
+  body: unknown,
+): { ok: true; data: Record<string, unknown> } | { ok: false; error: string } {
   const parsed = ReleaseCatalogPatchSchema.safeParse(body)
   if (!parsed.success) return { ok: false, error: 'Invalid catalog fields' }
 

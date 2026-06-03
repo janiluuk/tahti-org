@@ -64,7 +64,9 @@ export async function publishRelease(id: string): Promise<{ error: string | null
   return { error: null }
 }
 
-export async function fetchReleaseExportJson(id: string): Promise<{ error: string | null; json?: string }> {
+export async function fetchReleaseExportJson(
+  id: string,
+): Promise<{ error: string | null; json?: string }> {
   const res = await fetch(`${apiUrl}/api/me/releases/${id}/export.json`, {
     headers: { Cookie: sessionHeader() },
     cache: 'no-store',

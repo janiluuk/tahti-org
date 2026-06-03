@@ -65,15 +65,27 @@ export default function ReleaseOpsPanel({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        style={{ fontSize: '0.9rem', border: '1px solid #ccc', borderRadius: 4, padding: '0.25rem 0.6rem' }}
+        style={{
+          fontSize: '0.9rem',
+          border: '1px solid #ccc',
+          borderRadius: 4,
+          padding: '0.25rem 0.6rem',
+        }}
       >
         {open ? 'Hide' : 'Release ops'} ({doneCount}/{checklist.length})
       </button>
 
       {open && (
-        <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fafafa', borderRadius: 8 }}>
+        <div
+          style={{
+            marginTop: '0.75rem',
+            padding: '0.75rem',
+            background: '#fafafa',
+            borderRadius: 8,
+          }}
+        >
           <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.75rem' }}>
-            Catalog metadata for MusicBrainz, distributors, and smart link ({smartLinkSlug}).
+            Catalog metadata for <strong>{releaseTitle}</strong> — smart link /r/{smartLinkSlug}.
           </p>
 
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem' }}>
@@ -174,7 +186,12 @@ export default function ReleaseOpsPanel({
             >
               Export JSON
             </button>
-            <a href={MUSICBRAINZ_SUBMIT_URL} target="_blank" rel="noreferrer" style={{ fontSize: '0.9rem' }}>
+            <a
+              href={MUSICBRAINZ_SUBMIT_URL}
+              target="_blank"
+              rel="noreferrer"
+              style={{ fontSize: '0.9rem' }}
+            >
               Add on MusicBrainz →
             </a>
           </div>

@@ -86,7 +86,11 @@
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "orientation": "horizontal" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "orientation": "horizontal"
+      },
       "targets": [
         {
           "expr": "probe_success{job=\"tahti_blackbox\",environment=~\"$environment\"}",
@@ -122,7 +126,11 @@
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "orientation": "horizontal" },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "orientation": "horizontal"
+      },
       "targets": [
         {
           "expr": "tahti_dependency_up{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
@@ -138,7 +146,9 @@
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 9, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
-      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2 } }
+      },
       "targets": [
         {
           "expr": "tahti_dependency_check_latency_ms{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
@@ -153,7 +163,9 @@
       "type": "timeseries",
       "gridPos": { "x": 12, "y": 9, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
-      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2 } }
+      },
       "targets": [
         {
           "expr": "probe_duration_seconds{job=\"tahti_blackbox\",environment=~\"$environment\"}",

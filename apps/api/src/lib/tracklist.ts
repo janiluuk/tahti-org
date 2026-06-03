@@ -51,9 +51,7 @@ export async function recordTracklistMentions(
 ): Promise<void> {
   const handles = [
     ...new Set(
-      tracklist
-        .map((e) => e.artistUsername?.toLowerCase())
-        .filter((h): h is string => Boolean(h)),
+      tracklist.map((e) => e.artistUsername?.toLowerCase()).filter((h): h is string => Boolean(h)),
     ),
   ]
   if (handles.length === 0) return

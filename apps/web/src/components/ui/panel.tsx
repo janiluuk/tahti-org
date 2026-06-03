@@ -39,9 +39,7 @@ export function Panel({
       {...props}
     >
       {hasHeader ? (
-        <header
-          className={cn('ui-panel__header', headerTight && 'ui-panel__header--tight')}
-        >
+        <header className={cn('ui-panel__header', headerTight && 'ui-panel__header--tight')}>
           {title != null ? (
             typeof title === 'string' ? (
               <h2 className="ui-heading ui-heading--2">{title}</h2>

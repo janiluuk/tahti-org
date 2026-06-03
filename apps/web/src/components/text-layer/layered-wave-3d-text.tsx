@@ -29,7 +29,11 @@ export function LayeredWave3DText({
   const frameRef = useRef(0)
 
   const alignClass =
-    align === 'LEFT' ? 'text-layer--left' : align === 'RIGHT' ? 'text-layer--right' : 'text-layer--center'
+    align === 'LEFT'
+      ? 'text-layer--left'
+      : align === 'RIGHT'
+        ? 'text-layer--right'
+        : 'text-layer--center'
 
   const onMove = useCallback((e: React.PointerEvent) => {
     const el = hostRef.current
