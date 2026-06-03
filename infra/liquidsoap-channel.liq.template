@@ -16,7 +16,9 @@ live_icecast = input.http("{{ICECAST_LIVE_URL}}")
 live_source = mksafe(live_icecast)
 
 # --- Archive playlist (the fallback) ---
-# Hot-reloads when the artist changes their archive rotation
+# Hot-reloads when the artist changes their archive rotation.
+# Fair shuffle: POST {{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback-played
+# with Bearer internal secret when a new archive track starts (updates lastFallbackPlayedAt).
 archive_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u"
 archive = playlist(
   mode="{{FALLBACK_MODE}}",      # "shuffle" or "ordered"

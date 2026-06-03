@@ -16,6 +16,7 @@ import ChannelGalleryPanel from './channel-gallery-panel'
 import ChannelTextLayerPanel from './channel-text-layer-panel'
 import ProgrammePanel from './programme-panel'
 import type { ProgrammeItemRow } from './programme-actions'
+import { DownloadGateSummaryPanel, type GateSummaryItem } from './download-gate-summary'
 import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import BroadcastUsageBanner from './broadcast-usage'
@@ -159,6 +160,7 @@ export default async function DashboardPage() {
     blocked?: boolean
     showUpgradeCta?: boolean
     weeklyCapSeconds: number
+    warningLevel?: '45m' | '55m' | 'grace' | null
   }
   let broadcastUsage: BroadcastUsageInfo | null = null
   if (user.channel) {
@@ -168,6 +170,23 @@ export default async function DashboardPage() {
         cache: 'no-store',
       })
       if (res.ok) broadcastUsage = (await res.json()) as BroadcastUsageInfo
+    } catch {
+      // ignore
+    }
+  }
+
+  let gateSummary: {
+    artistFollowerCount: number
+    totals: { repostAcks: number; blockedAttempts: number }
+    items: GateSummaryItem[]
+  } | null = null
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/download-gate-stats`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) gateSummary = (await res.json()) as typeof gateSummary
     } catch {
       // ignore
     }
@@ -447,6 +466,8 @@ export default async function DashboardPage() {
       {user.channel && channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
 
       {user.channel && channelProgramme && <ProgrammePanel initial={channelProgramme} />}
+
+      {user.channel && <DownloadGateSummaryPanel summary={gateSummary} />}
 
       {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
 

@@ -296,7 +296,7 @@ Can ship incrementally during beta.
 |:---:|---|---|---|
 | [~] | **M12** | Profile + releases + smart links + MinIO cover art | High |
 | [~] | **M30** | Release ops toolkit (MusicBrainz, catalog metadata, release checklist) | Medium |
-| [~] | **M20** | Tier gating polish, upgrade UX | High |
+| [~] | **M20** | Tier gating polish (`warningLevel` API + dashboard copy), upgrade UX | High |
 | [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
 | [~] | **M14** | Embed pages done; social auto-post + analytics remain | Medium |
 | [~] | **M13** | Newsletter API + worker; SES + bounce webhook remain | Medium |
@@ -316,13 +316,13 @@ See `competitive-gaps-hearthis.md` for full gap list.
 
 | Done | Milestone | Summary |
 |:---:|---|---|
-| [~] | **M22** | Per-item metadata + editable tracklists with **@artist tagging** (dashboard tracklist editor wired) |
+| [~] | **M22** | Per-item metadata + tracklists; **channel gate funnel** summary on dashboard |
 | [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug` smart links |
 | [~] | **M28** | **Track version history** — archive + release-track versions; activate; stable public ids |
 | [~] | **M24** | Channel gallery/text layers + **channel video backdrop**; per-item banner/slideshow; YouTube/Vimeo on archive items |
 | [~] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
 | [~] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; per-collection visual themes deferred |
-| [~] | **M27** | **Programme API** + dashboard rotation editor; `fallback.m3u` respects `isFallback`, ordered/fair shuffle; live auto-archive joins rotation. Deferred: moderator roles, ACRCloud annotation cron, per-set visualisations |
+| [~] | **M27** | Programme API + dashboard; `fallback.m3u` + **`POST …/fallback-played`** for fair shuffle. Deferred: moderator roles, ACRCloud annotations, Liquidsoap hook |
 
 ## Phase 6b — Release ops & catalog metadata (**M30**)
 
