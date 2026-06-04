@@ -3,7 +3,9 @@
 
 @import '@tahti/ui/src/tokens.css';
 
-[data-tahti-ui='brand'] {
+/* Light auth/marketing pages only — do not remap tokens on channel/profile shells. */
+[data-tahti-ui='brand'].brand-public,
+[data-tahti-ui='brand'] .brand-public {
   --font-body: var(--tahti-font-body, system-ui, sans-serif);
   --font-head: var(--tahti-font-display, system-ui, sans-serif);
   --text: var(--tahti-text, #111);
