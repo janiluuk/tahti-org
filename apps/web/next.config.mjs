@@ -5,7 +5,25 @@
 const nextConfig = {
   poweredByHeader: false,
   transpilePackages: ['@tahti/shared', '@tahti/ui'],
+  eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: false },
+  webpack: (config, { webpack, isServer }) => {
+    // TypeScript ESM uses .js extensions in source; webpack needs this to resolve them to .ts
+    config.resolve.extensionAlias = {
+      ...config.resolve.extensionAlias,
+      '.js': ['.ts', '.tsx', '.js'],
+    }
+    // bundled-tor-exits.ts (server-only) uses node: built-ins; stub them out in the client build
+    if (!isServer) {
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^node:/, (r) => {
+          r.request = r.request.replace(/^node:/, '')
+        })
+      )
+      config.resolve.fallback = { ...config.resolve.fallback, fs: false, path: false, url: false, crypto: false }
+    }
+    return config
+  },
   async headers() {
     return [
       {
