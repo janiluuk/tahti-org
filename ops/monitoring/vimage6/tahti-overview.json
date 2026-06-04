@@ -155,7 +155,21 @@
       "type": "stat",
       "gridPos": { "x": 6, "y": 4, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
-      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 10 }] } } },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 10 }
+            ]
+          }
+        }
+      },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
       "targets": [
         {
@@ -207,7 +221,9 @@
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
-      "fieldConfig": { "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2 } }
+      },
       "targets": [
         {
           "expr": "rate(tahti_http_request_duration_ms_sum{job=\"tahti_api_metrics\",environment=~\"$environment\"}[5m]) / rate(tahti_http_request_duration_ms_count{job=\"tahti_api_metrics\",environment=~\"$environment\"}[5m])",
@@ -228,7 +244,9 @@
       "type": "timeseries",
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
-      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "fieldConfig": {
+        "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2 } }
+      },
       "targets": [
         {
           "expr": "probe_duration_seconds{job=\"tahti_blackbox\",environment=~\"$environment\",probe=~\"health|status|web\"}",
@@ -243,7 +261,9 @@
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
-      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } }
+      },
       "targets": [
         {
           "expr": "node_load1{instance=\"vimage\"}",
@@ -268,7 +288,12 @@
       "type": "timeseries",
       "gridPos": { "x": 12, "y": 16, "w": 12, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
-      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "lineWidth": 2, "stacking": { "mode": "normal" } } } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "stacking": { "mode": "normal" } }
+        }
+      },
       "targets": [
         {
           "expr": "sum by (status_class) (rate(tahti_http_requests_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}[5m]))",
@@ -283,7 +308,9 @@
       "type": "timeseries",
       "gridPos": { "x": 0, "y": 22, "w": 24, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
-      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } } },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } }
+      },
       "targets": [
         {
           "expr": "tahti_users_registered_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
