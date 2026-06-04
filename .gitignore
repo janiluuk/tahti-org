@@ -22,8 +22,9 @@ dist/
 *.tgz
 *.tar.gz
 
-# Large media — not tracked; preserved on server between deploys (see scripts/lab-stack-up.sh)
+# Large media — marketing hero assets are tracked under website/
 *.mp4
+!website/output_vhs.mp4
 
 # E2E screenshot tooling (generated locally)
 docs/e2e-screenshots/.seed-output.json

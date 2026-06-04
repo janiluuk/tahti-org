@@ -13,11 +13,7 @@
 #   SSH_PROXY_JUMP           — e.g. pi@sparkki.dudeisland.eu:4322 (GitHub Actions / remote deploy)
 #   DEPLOY_APP_PORT          — default 8090
 #
-# NOTE: website/output_vhs.mp4 and bg-audio.mp3 are bind-mounted at runtime (not in the image).
-#       output_vhs.mp4 is not tracked in git. It is preserved across
-#       deployments because rsync does not run --delete. For a fresh server,
-#       copy it once manually:
-#         scp website/output_vhs.mp4 website/bg-audio.mp3 root@192.168.2.100:/srv/tahti/media/
+# NOTE: website/bg-audio.mp3 and output_vhs.mp4 are tracked in git and baked into the website image.
 #
 set -euo pipefail
 
@@ -60,13 +56,11 @@ echo "==> Remote: tear down"
 ssh_remote "[ -d '${REMOTE_PATH}' ] && cd '${REMOTE_PATH}' && docker compose down --remove-orphans 2>/dev/null || true"
 
 # --- 2. Sync project files ---
-# *.mp4 is excluded: not in git, but preserved on the server between deploys.
 echo "==> Sync → ${REMOTE_USER}@${HOST}:${REMOTE_PATH}"
 ssh_remote "mkdir -p '${REMOTE_PATH}'"
 rsync "${RSYNC_FLAGS[@]}" \
   -e "$RSYNC_RSH" \
   --exclude .git \
-  --exclude '*.mp4' \
   --exclude node_modules \
   ./ "${REMOTE_USER}@${HOST}:${REMOTE_PATH}/"
 
