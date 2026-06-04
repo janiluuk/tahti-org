@@ -12,6 +12,7 @@ WORKDIR /app
 COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/db/package.json     ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/ui/package.json     ./packages/ui/
 COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
 COPY apps/web/package.json             ./apps/web/
@@ -23,7 +24,9 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS builder
 COPY tsconfig.base.json ./tsconfig.base.json
+COPY packages/shared/tsconfig.json ./packages/shared/tsconfig.json
 COPY packages/shared/src ./packages/shared/src
+COPY packages/ui/src     ./packages/ui/src
 COPY apps/web/           ./apps/web/
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN cd apps/web && pnpm build
@@ -39,6 +42,7 @@ WORKDIR /app
 COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/db/package.json     ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
+COPY packages/ui/package.json     ./packages/ui/
 COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
 COPY apps/web/package.json             ./apps/web/
@@ -46,8 +50,9 @@ COPY services/orchestrator/package.json ./services/orchestrator/
 
 RUN pnpm install --frozen-lockfile --prod
 
-# Shared source needed for workspace symlink resolution
+# Shared/UI source needed for workspace symlink resolution at runtime
 COPY packages/shared/src ./packages/shared/src
+COPY packages/ui/src     ./packages/ui/src
 
 # Compiled Next.js output + static assets
 COPY --from=builder /app/apps/web/.next ./apps/web/.next

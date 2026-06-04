@@ -1,0 +1,29 @@
+{
+  "log_level": "info",
+  "allowed_origins": ["http://localhost:17777", "http://localhost:3000"],
+  "api_key": "dev",
+  "token_hmac_secret_key": "dev_secret_do_not_use_in_prod",
+  "admin": true,
+  "admin_password": "dev",
+  "admin_secret": "dev",
+  "history_size": 100,
+  "history_ttl": "24h",
+  "presence": true,
+  "join_leave": true,
+  "namespaces": [
+    {
+      "name": "channel",
+      "presence": true,
+      "join_leave": true,
+      "history_size": 200,
+      "history_ttl": "24h"
+    },
+    {
+      "name": "reactions",
+      "presence": false,
+      "join_leave": false,
+      "history_size": 0,
+      "history_ttl": "0s"
+    }
+  ]
+}
