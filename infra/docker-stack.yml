@@ -46,6 +46,7 @@ volumes:
   minio_data:
   caddy_data:
   caddy_config:
+  caddy_logs:
   hls_shared:
   recordings_shared:
   archive_cache_shared:
@@ -311,6 +312,24 @@ services:
       resources:
         limits: { cpus: "1", memory: 512M }
 
+  worker-edge-log:
+    image: registry.tahti.live/tahti/worker:${TAG:-latest}
+    command: ["node", "dist/index.js", "--queues=edge-log"]
+    networks: [internal]
+    environment:
+      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      REDIS_URL: redis://redis:6379
+      CADDY_HLS_ACCESS_LOG: /var/log/caddy/hls-access.log
+    secrets: [pg_password]
+    volumes:
+      - caddy_logs:/var/log/caddy:ro
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == edge]
+      resources:
+        limits: { cpus: "0.25", memory: 256M }
+
   # ───────────────────────────────────────────────────────────────────────────
   # Orchestrator — spawns per-channel Liquidsoap containers
   # ───────────────────────────────────────────────────────────────────────────
@@ -423,6 +442,7 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
+      - caddy_logs:/var/log/caddy
     configs:
       - source: caddyfile
         target: /etc/caddy/Caddyfile

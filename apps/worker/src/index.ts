@@ -26,6 +26,7 @@ import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
 import { processRevelatorRoyaltySyncJob } from './jobs/revelator-royalty-sync.js'
 import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
 import { processHlsMinioSyncJob } from './jobs/hls-minio-sync.js'
+import { processHlsCaddyEgressSyncJob } from './jobs/hls-caddy-egress-sync.js'
 import {
   processArchiveFallbackCacheSyncJob,
   processWarmArchiveFallbackCacheJob,
@@ -67,6 +68,11 @@ const worker = new Worker(
       const summary = await processHlsMinioSyncJob(prisma, job)
       if (summary.uploaded > 0) {
         console.log('[worker] hls-minio-sync:', JSON.stringify(summary))
+      }
+    } else if (job.name === 'hls-caddy-egress-sync') {
+      const summary = await processHlsCaddyEgressSyncJob(job)
+      if (summary.lines > 0) {
+        console.log('[worker] hls-caddy-egress-sync:', JSON.stringify(summary))
       }
     } else if (job.name === 'warm-archive-fallback-cache') {
       const summary = await processWarmArchiveFallbackCacheJob(prisma, job)
@@ -124,8 +130,10 @@ worker.on('failed', (job, err) => {
 // Register repeatable cron jobs — idempotent (BullMQ deduplicates by key)
 async function registerCrons() {
   const queue = new Queue('media', { connection })
+  const hasCaddyLog = Boolean(process.env.CADDY_HLS_ACCESS_LOG)
 
   for (const job of WORKER_CRON_JOBS) {
+    if (job.name === 'hls-caddy-egress-sync' && !hasCaddyLog) continue
     await queue.add(job.name, {}, { repeat: { pattern: job.pattern }, jobId: job.jobId })
   }
 

@@ -16,4 +16,7 @@ export function estimateLiveHlsBytes(liveSeconds: number, tier: ArtistTier): num
 }
 
 export const LIVE_HLS_ESTIMATE_NOTE =
-  'Live HLS is estimated at one listener × tier bitrate (192 kbps MP3 free, ~1411 kbps FLAC paid). Edge byte counters deferred.'
+  'Live HLS is estimated at one listener × tier bitrate (192 kbps MP3 free, ~1411 kbps FLAC paid). Edge byte counters appear when Caddy access logs are enabled.'
+
+export const LIVE_HLS_MEASURED_NOTE =
+  'Live HLS includes measured bytes from Caddy edge logs (stream.tahti.live). Days without edge data still use the one-listener bitrate estimate.'

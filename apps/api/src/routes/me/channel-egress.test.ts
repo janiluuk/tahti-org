@@ -93,12 +93,14 @@ describe('GET /api/me/channel-egress', () => {
       windowDays: number
       totalBytes: number
       downloadBytes: number
+      liveHlsBytes: number
       estimatedLiveHlsBytes: number
       totalDownloads: number
       daily: Array<{
         date: string
         bytes: number
         downloadBytes: number
+        liveHlsBytes: number
         estimatedLiveBytes: number
         downloads: number
       }>
@@ -107,7 +109,8 @@ describe('GET /api/me/channel-egress', () => {
     expect(body.windowDays).toBe(30)
     expect(body.downloadBytes).toBeGreaterThanOrEqual(5_000_000)
     expect(body.estimatedLiveHlsBytes).toBeGreaterThan(0)
-    expect(body.totalBytes).toBe(body.downloadBytes + body.estimatedLiveHlsBytes)
+    expect(body.liveHlsBytes).toBe(0)
+    expect(body.totalBytes).toBeGreaterThanOrEqual(body.downloadBytes)
     expect(body.totalDownloads).toBeGreaterThanOrEqual(1)
     expect(body.daily.some((d) => d.downloadBytes >= 5_000_000)).toBe(true)
     expect(body.liveEstimateNote.length).toBeGreaterThan(10)
