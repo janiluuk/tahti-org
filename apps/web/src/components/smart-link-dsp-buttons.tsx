@@ -8,9 +8,24 @@ import type { ReactNode } from 'react'
 function IconSpotify() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M2.5 5c3.5-2.2 7.5-2.2 11 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M3 8c3-1.8 7-1.8 10 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M4 11c2-1.2 6-1.2 8 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M2.5 5c3.5-2.2 7.5-2.2 11 0"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M3 8c3-1.8 7-1.8 10 0"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4 11c2-1.2 6-1.2 8 0"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -18,7 +33,13 @@ function IconSpotify() {
 function IconApple() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M6.5 11.5V5l6-1.5v2.5L6.5 7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M6.5 11.5V5l6-1.5v2.5L6.5 7.5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       <circle cx="5" cy="11.5" r="1.5" fill="currentColor" />
     </svg>
   )
@@ -27,7 +48,12 @@ function IconApple() {
 function IconSoundCloud() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M2 11h11a2.5 2.5 0 0 0 0-5 4 4 0 0 0-7.5-1.5A2.5 2.5 0 0 0 2 8v3z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <path
+        d="M2 11h11a2.5 2.5 0 0 0 0-5 4 4 0 0 0-7.5-1.5A2.5 2.5 0 0 0 2 8v3z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
@@ -35,8 +61,18 @@ function IconSoundCloud() {
 function IconTidal() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M2 7.5c1-1.5 2-1.5 3 0s2 1.5 3 0 2-1.5 3 0 2 1.5 3 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <path d="M2 10c1-1.5 2-1.5 3 0s2 1.5 3 0 2-1.5 3 0 2 1.5 3 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path
+        d="M2 7.5c1-1.5 2-1.5 3 0s2 1.5 3 0 2-1.5 3 0 2 1.5 3 0"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M2 10c1-1.5 2-1.5 3 0s2 1.5 3 0 2-1.5 3 0 2 1.5 3 0"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -73,7 +109,12 @@ function IconDeezer() {
 function IconAmazon() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M3 9.5c2.5 2.5 7.5 2.5 10 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path
+        d="M3 9.5c2.5 2.5 7.5 2.5 10 0"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
       <path d="M12.5 11.5l1.5-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       <circle cx="8" cy="5.5" r="3" stroke="currentColor" strokeWidth="1.3" />
     </svg>
@@ -94,8 +135,18 @@ function IconTahti() {
 function IconLink() {
   return (
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M7 9a3.5 3.5 0 0 0 5 0l1.5-1.5a3.5 3.5 0 0 0-5-5L7 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <path d="M9 7a3.5 3.5 0 0 0-5 0L2.5 8.5a3.5 3.5 0 0 0 5 5L9 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path
+        d="M7 9a3.5 3.5 0 0 0 5 0l1.5-1.5a3.5 3.5 0 0 0-5-5L7 4"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <path
+        d="M9 7a3.5 3.5 0 0 0-5 0L2.5 8.5a3.5 3.5 0 0 0 5 5L9 12"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
