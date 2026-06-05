@@ -802,6 +802,9 @@ model Release {
   // M7 — Revelator DSP distribution
   revelatorId      String?
   revelatorStatus  String?      // pending | submitted | delivered | failed
+  distributionFeeCents Int?
+  distributionPaidAt   DateTime?
+  distributionStripeSessionId String? @unique
   // M30 — release ops / catalog metadata
   upc                    String?
   musicbrainzReleaseId   String?

@@ -69,6 +69,11 @@ export const config = {
   membership: {
     priceCents: parseInt(process.env.MEMBERSHIP_PRICE_CENTS ?? '4000', 10),
   },
+  distribution: {
+    artistFeeCents: parseInt(process.env.DISTRIBUTION_FEE_CENTS ?? '800', 10),
+    passThroughCents: parseInt(process.env.DISTRIBUTION_PASSTHROUGH_CENTS ?? '500', 10),
+    studioIncludedPerYear: parseInt(process.env.STUDIO_INCLUDED_RELEASES_PER_YEAR ?? '12', 10),
+  },
   download: {
     noCountCidrs: (process.env.DOWNLOAD_NO_COUNT_CIDRS ?? '')
       .split(',')

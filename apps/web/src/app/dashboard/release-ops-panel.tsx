@@ -15,6 +15,7 @@ import {
 } from '@tahti/shared'
 import {
   fetchReleaseExportJson,
+  fetchRevelatorBilling,
   fetchRevelatorRoyalties,
   submitReleaseToRevelator,
   updateReleaseCatalog,
@@ -80,11 +81,34 @@ export default function ReleaseOpsPanel({
     }>
   >([])
   const [royaltiesLoaded, setRoyaltiesLoaded] = useState(false)
+  const [billing, setBilling] = useState<{
+    paid: boolean
+    feeCents: number
+    waived: boolean
+    studioIncludedRemaining: number | null
+  } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const canSubmitRevelator = !revelatorStatus || revelatorStatus === 'failed'
   const showRoyalties = revelatorStatus === 'submitted' || revelatorStatus === 'delivered'
+
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    void fetchRevelatorBilling(releaseId).then((res) => {
+      if (cancelled || res.error) return
+      setBilling({
+        paid: res.paid,
+        feeCents: res.feeCents,
+        waived: res.waived,
+        studioIncludedRemaining: res.studioIncludedRemaining,
+      })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [open, releaseId])
 
   useEffect(() => {
     if (!open || !showRoyalties || royaltiesLoaded) return
@@ -328,6 +352,18 @@ export default function ReleaseOpsPanel({
                 {revelatorId && <span className="studio-text-muted-sm"> · id {revelatorId}</span>}
               </p>
             )}
+            {billing && !billing.paid && (
+              <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
+                {billing.feeCents === 0 && billing.studioIncludedRemaining != null
+                  ? `Studio included slot (${billing.studioIncludedRemaining} left this year)`
+                  : `Distribution fee: ${formatMoney(billing.feeCents, 'EUR')}`}
+              </p>
+            )}
+            {billing?.paid && (
+              <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
+                {billing.waived ? 'Fee waived (Studio included)' : 'Distribution fee paid'}
+              </p>
+            )}
             <button
               type="button"
               disabled={isPending || !canSubmitRevelator}
@@ -335,16 +371,25 @@ export default function ReleaseOpsPanel({
                 setError(null)
                 startTransition(async () => {
                   const res = await submitReleaseToRevelator(releaseId)
+                  if (res.checkoutUrl) {
+                    window.location.href = res.checkoutUrl
+                    return
+                  }
                   if (res.error) {
                     setError(res.error)
                     return
                   }
                   if (res.revelatorStatus) setRevelatorStatus(res.revelatorStatus)
+                  setBilling((prev) => (prev ? { ...prev, paid: true } : prev))
                 })
               }}
               className="studio-btn-ghost"
             >
-              {isPending ? 'Submitting…' : 'Submit to Revelator'}
+              {isPending
+                ? 'Submitting…'
+                : billing && !billing.paid && billing.feeCents > 0
+                  ? `Pay ${formatMoney(billing.feeCents, 'EUR')} & submit`
+                  : 'Submit to Revelator'}
             </button>
             {showRoyalties && (
               <div className="studio-mt-md">

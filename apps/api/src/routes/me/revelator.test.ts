@@ -63,7 +63,24 @@ describe('M7 — Revelator submit routes', () => {
     await app.close()
   })
 
-  it('queues Revelator delivery for a release with identifiers', async () => {
+  it('requires distribution payment before submit', async () => {
+    const unpaid = await app.inject({
+      method: 'POST',
+      url: `/api/me/releases/${releaseId}/revelator/submit`,
+      headers: { cookie },
+    })
+    expect(unpaid.statusCode).toBe(402)
+  })
+
+  it('queues Revelator delivery after checkout', async () => {
+    const checkout = await app.inject({
+      method: 'POST',
+      url: `/api/me/releases/${releaseId}/revelator/checkout`,
+      headers: { cookie },
+    })
+    expect(checkout.statusCode).toBe(200)
+    expect(checkout.json().paid).toBe(true)
+
     const res = await app.inject({
       method: 'POST',
       url: `/api/me/releases/${releaseId}/revelator/submit`,
