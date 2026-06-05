@@ -275,6 +275,14 @@ describe('Persona journeys', () => {
       expect(preview.statusCode).toBe(200)
       expect(preview.json().forYear).toBe(2031)
 
+      const members = await app.inject({
+        method: 'GET',
+        url: '/api/admin/members',
+        headers: { cookie: boardCookie },
+      })
+      expect(members.statusCode).toBe(200)
+      expect(Array.isArray(members.json())).toBe(true)
+
       const exportCsv = await app.inject({
         method: 'GET',
         url: '/api/admin/members/export.csv',
