@@ -439,11 +439,15 @@ export const PublicProfileViewSchema = z.object({
       isFeatured: z.boolean(),
       itemCount: z.number().int(),
       url: z.string(),
+      rssUrl: z.string(),
     }),
   ),
   links: z.object({
     channel: z.string().nullable(),
     subscribe: z.string(),
+    feeds: z.object({
+      archive: z.string().nullable(),
+    }),
   }),
 })
 

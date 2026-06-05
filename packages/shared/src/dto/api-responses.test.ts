@@ -114,7 +114,11 @@ describe('api response schemas', () => {
       releases: [],
       fanTiers: [],
       collections: [],
-      links: { channel: '/c/dj1', subscribe: '/u/dj1/subscribe' },
+      links: {
+        channel: '/c/dj1',
+        subscribe: '/u/dj1/subscribe',
+        feeds: { archive: 'https://api.example/u/dj1/rss.xml' },
+      },
     })
     expect(parsed.success).toBe(true)
   })

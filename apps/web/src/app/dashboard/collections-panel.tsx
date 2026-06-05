@@ -12,6 +12,7 @@ import {
   reorderCollectionItems,
   updateCollection,
 } from './collection-actions'
+import { collectionRssUrl } from '@/lib/rss-feeds'
 
 interface CollectionRow {
   id: string
@@ -20,6 +21,8 @@ interface CollectionRow {
   type: string
   isPublic: boolean
   isFeatured?: boolean
+  coverUrl?: string | null
+  description?: string | null
   _count?: { items: number }
   items?: Array<{
     id: string
@@ -32,11 +35,13 @@ interface CollectionRow {
 export default function CollectionsPanel({
   initial,
   username,
+  apiUrl,
   archiveItems,
   publishedReleases,
 }: {
   initial: CollectionRow[]
   username: string
+  apiUrl: string
   archiveItems: Array<{ id: string; title: string }>
   publishedReleases: Array<{ id: string; title: string }>
 }) {
@@ -45,6 +50,10 @@ export default function CollectionsPanel({
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [addSlug, setAddSlug] = useState<string | null>(null)
+  const [editCoverSlug, setEditCoverSlug] = useState<string | null>(null)
+  const [editDescSlug, setEditDescSlug] = useState<string | null>(null)
+  const [coverDraft, setCoverDraft] = useState('')
+  const [descDraft, setDescDraft] = useState('')
   const [pickArchive, setPickArchive] = useState('')
   const [pickRelease, setPickRelease] = useState('')
 
@@ -128,6 +137,48 @@ export default function CollectionsPanel({
     })
   }
 
+  function openCoverEdit(c: CollectionRow) {
+    setEditCoverSlug(c.slug)
+    setCoverDraft(c.coverUrl ?? '')
+    setError(null)
+  }
+
+  function saveCover(slug: string) {
+    setError(null)
+    startTransition(async () => {
+      const trimmed = coverDraft.trim()
+      const res = await updateCollection(slug, { coverUrl: trimmed || null })
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      setEditCoverSlug(null)
+      setCoverDraft('')
+      router.refresh()
+    })
+  }
+
+  function openDescEdit(c: CollectionRow) {
+    setEditDescSlug(c.slug)
+    setDescDraft(c.description ?? '')
+    setError(null)
+  }
+
+  function saveDescription(slug: string) {
+    setError(null)
+    startTransition(async () => {
+      const trimmed = descDraft.trim()
+      const res = await updateCollection(slug, { description: trimmed || null })
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      setEditDescSlug(null)
+      setDescDraft('')
+      router.refresh()
+    })
+  }
+
   function remove(slug: string) {
     if (!confirm(`Delete collection "${slug}"?`)) return
     startTransition(async () => {
@@ -154,13 +205,39 @@ export default function CollectionsPanel({
           {initial.map((c) => (
             <li key={c.id} className="studio-item-row--list">
               <div className="studio-card-row">
-                <span>
-                  <strong>{c.name}</strong> · {c._count?.items ?? c.items?.length ?? 0} item(s) ·{' '}
-                  <a href={`/u/${username}/c/${c.slug}`} className="studio-link-cta">
-                    /c/{c.slug}
-                  </a>
-                  {c.isPublic && <span className="studio-text-muted-sm"> · RSS</span>}
-                  {c.isFeatured && <span className="studio-badge--success"> · Featured</span>}
+                <span className="studio-collection-row-title">
+                  {c.coverUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={c.coverUrl}
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="studio-collection-thumb"
+                    />
+                  ) : (
+                    <span className="studio-collection-thumb-ph" aria-hidden />
+                  )}
+                  <span>
+                    <strong>{c.name}</strong> · {c._count?.items ?? c.items?.length ?? 0} item(s) ·{' '}
+                    <a href={`/u/${username}/c/${c.slug}`} className="studio-link-cta">
+                      /c/{c.slug}
+                    </a>
+                    {c.isPublic && (
+                      <span className="studio-text-muted-sm">
+                        {' '}
+                        ·{' '}
+                        <a
+                          href={collectionRssUrl(apiUrl, c.slug)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          RSS
+                        </a>
+                      </span>
+                    )}
+                    {c.isFeatured && <span className="studio-badge--success"> · Featured</span>}
+                  </span>
                 </span>
                 <span className="studio-actions">
                   {c.isPublic && (
@@ -174,6 +251,22 @@ export default function CollectionsPanel({
                       Featured
                     </label>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => openCoverEdit(c)}
+                    disabled={isPending}
+                    className="studio-btn-ghost"
+                  >
+                    Cover
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openDescEdit(c)}
+                    disabled={isPending}
+                    className="studio-btn-ghost"
+                  >
+                    Description
+                  </button>
                   <button
                     type="button"
                     onClick={() => setAddSlug(c.slug)}
@@ -192,6 +285,64 @@ export default function CollectionsPanel({
                   </button>
                 </span>
               </div>
+              {editCoverSlug === c.slug && (
+                <div className="studio-row studio-row--wrap studio-mt-md">
+                  <input
+                    value={coverDraft}
+                    onChange={(e) => setCoverDraft(e.target.value)}
+                    placeholder="Cover image URL (HTTPS, square works best)"
+                    className="studio-input studio-flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => saveCover(c.slug)}
+                    disabled={isPending}
+                    className="studio-btn-primary"
+                  >
+                    Save cover
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditCoverSlug(null)
+                      setCoverDraft('')
+                    }}
+                    className="studio-btn-ghost"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+              {editDescSlug === c.slug && (
+                <div className="studio-row studio-row--wrap studio-mt-md">
+                  <textarea
+                    value={descDraft}
+                    onChange={(e) => setDescDraft(e.target.value)}
+                    placeholder="Short description for profile and RSS"
+                    className="studio-input studio-flex-1"
+                    rows={3}
+                    maxLength={1000}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => saveDescription(c.slug)}
+                    disabled={isPending}
+                    className="studio-btn-primary"
+                  >
+                    Save description
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditDescSlug(null)
+                      setDescDraft('')
+                    }}
+                    className="studio-btn-ghost"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
               {c.items && c.items.length > 0 && (
                 <ol className="studio-list studio-mt-sm studio-text-muted-sm">
                   {[...c.items]

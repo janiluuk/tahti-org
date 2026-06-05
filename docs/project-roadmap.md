@@ -73,10 +73,10 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
-| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha, audit log, `/api/v1/status`, OpenAPI `/docs`, structured logging, Stripe webhook + backup age on `/metrics`, **ACRCloud identify counters** (inactive until `ACRCLOUD_ENABLED`), **status monitor GHA** + **Upptime config** + **`bootstrap.sh`**, **`/help/tier-limits`**. Deferred: live Upptime fork deploy (`status.tahti.live`) |
+| [~] | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha, audit log, `/api/v1/status`, OpenAPI `/docs`, structured logging, Stripe webhook + backup age on `/metrics`, **ACRCloud identify counters** (inactive until `ACRCLOUD_ENABLED`), **status monitor GHA** + **Upptime config** + **`bootstrap.sh`**, **`/help/tier-limits`**, **status link in app footer** (`status.tahti.live`), **interim public `/status` page** (reads `/api/v1/status`). Deferred: live Upptime fork deploy |
 | **M12** Profile + releases | 🟢 Done | Release CRUD, smart links, DSP editor, profile playback, cover art, JSON-LD/ISR, sitemap, press kit JSON, CSV bulk import |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in API, artist draft + send, `newsletter-dispatch` worker, per-tier limits; **listener opt-in UI** on `/c/:slug` and `/u/:username`; **bounce webhook** (`POST /api/webhooks/email/bounce` — Postmark + SNS), **`ops/EMAIL.md`**. Deferred: dedicated SES API transport if SMTP limits hit |
-| **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard; **DSP click tracking** (`POST /api/smartlink/click`, `GET /api/me/releases/:id/analytics`); **Mastodon + Bluesky auto-post v0** (access token / app password, release/live triggers, manual post, worker retry). Deferred: Twitter OAuth |
+| **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard; **DSP click tracking** (`POST /api/smartlink/click`, `GET /api/me/releases/:id/analytics`); **Mastodon + Bluesky auto-post v0**; **Twitter/X OAuth 2.0 PKCE** (connect, toggles, manual post, worker dispatch). Deferred: Instagram |
 | **M24** Per-content visuals | 🟡 Partial | Channel gallery + **channel video backdrop** + per-item banner/background/slideshow on `/c/:slug`; **YouTube/Vimeo** via `parseVideoEmbedUrl` |
 | **M15** Artist @-mentions | 🟡 Partial | `lib/mentions.ts`, bio/announcement hooks, mute + settings API, **daily digest worker**, **`GET /api/v1/u/:handle/mentions`** (public opt-in), `@handle` links in plain text |
 | **M16** Tahti Radio meta-stream | 🟡 Partial | `services/tahti-radio`, `GET /api/v1/radio` proxy, **`lastFeaturedAt` + history**, internal radio API, **public `/radio` page** |
@@ -85,8 +85,8 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M19** Fan-subs | 🟢 Done | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perks, payout dashboard, subscriber export, fan portal, GDPR export/deletion, admin execute + purge cron |
 | **M21** Admin panel | 🟢 Done | **`/admin` shell** (board guard), **dashboard**, **stream manager** + **force-offline**, **user directory** + suspend, **fan-sub payout queue**, **ledger UI**, **support tickets**, **beta application queue** (`/admin/beta` approve/reject + password setup links), **board resolutions**, **audit log viewer**, **annual report generator**, stats APIs + **`CronRun`** logging |
 | **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/channel-funnel-stats` + split endpoints; 14-day charts). Deferred: per-listener HLS metrics |
-| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
-| **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
+| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard; **per-artist archive RSS** (`/api/v1/u/:handle/rss.xml`); feed links on profile + dashboard |
+| **M28** Track version history | 🟢 Done | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids via active-version sync) |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`; claim links (Spotify, Apple, YouTube). Deferred: Discogs API |
 | **M29** Backup & DR | 🟡 Partial | **`scripts/backup.sh`** (postgres, minio DR mirror, restore-test, status + DR age); **`scripts/backup-drill.sh`** + quarterly cron; **`ops/RUNBOOK.md`** restore + drill table; `install-crons.sh`; `/metrics` backup gauge. Deferred: pgBackRest PITR |
 | **M20** Tier gating | 🟢 Done | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API + **upgrade CTA**, HLS tier split, **`/help/tier-limits`**, vital-flows e2e |
@@ -181,7 +181,7 @@ Goal: secure **≥€20k** to bridge Year 1 deficit (`financial-model.md`).
 | [ ] | Docker Swarm (or Compose staging) from `infra/docker-stack.yml` | Dev | hardware | `infra/docker-stack.yml` |
 | [x] | Secrets management (Docker secrets / sops) documented | Dev | stack up | `ops/secrets-management.md` |
 | [ ] | Staging environment mirrors production topology | Dev | M0 | — |
-| [ ] | Monitoring + alerting (uptime, disk, Liquidsoap health) | Dev | stack up | — |
+| [x] | Monitoring + alerting (uptime, disk, Liquidsoap health) | Dev | stack up | `ops/monitoring/vimage6/` Grafana + Prometheus |
 | [ ] | Negotiate 10 Gbps fiber quote for Y3 (risk item in financial model) | Director | Y1 running | `financial-model.md` |
 
 **Exit criteria:** staging URL serves health checks; production hardware racked;
@@ -316,12 +316,12 @@ See `competitive-gaps-hearthis.md` for full gap list.
 | Done | Milestone | Summary |
 |:---:|---|---|
 | [~] | **M22** | Per-item metadata + editable tracklists with **@artist tagging** (dashboard tracklist editor wired) |
-| [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug` smart links |
-| [~] | **M28** | **Track version history** — archive + release-track versions; activate; stable public ids |
+| [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug`; **artist archive feed at `/api/v1/u/:handle/rss.xml`** |
 | [~] | **M24** | Channel gallery/text layers + **channel video backdrop**; per-item banner/slideshow; YouTube/Vimeo on archive items |
 | [x] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
-| [~] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; per-collection visual themes deferred |
-| [~] | **M27** | **Programme API** + dashboard rotation editor; `fallback.m3u` respects `isFallback`, ordered/fair shuffle; live auto-archive joins rotation. Deferred: moderator roles, ACRCloud annotation cron, per-set visualisations |
+| [~] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; **collection cover + description edit** + **item thumbnails** on profile and `/u/:handle/c/:slug`; per-collection slideshow/video themes deferred |
+| [x] | **M27** | **Programme API** + dashboard rotation editor; `fallback.m3u` respects `isFallback`, ordered/fair shuffle; live auto-archive joins rotation. Deferred: moderator roles, ACRCloud annotation cron, per-set visualisations |
+| [x] | **M28** | **Track version history** — archive + release-track versions; activate; stable public ids via active version sync |
 
 ## Phase 6b — Release ops & catalog metadata (**M30**)
 
@@ -494,7 +494,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 |:---:|---|---|---|
 | [x] | **PLAT-001** | Stripe webhook dead-letter log + alert when `activateMembership` / fan-sub handlers fail | P1 |
 | [~] | **PLAT-002** | Require branch protection on all `ci.yml` jobs (lint, test, both e2e, AGPL) | `.github/BRANCH_PROTECTION.md` — enable **All checks** in repo settings | P1 |
-| [~] | **PLAT-003** | PgBouncer before scaling API replicas (`docs/scaling-node-distribution.md`) | Runbook section added; stack service deferred | P1 |
+| [x] | **PLAT-003** | PgBouncer before scaling API replicas (`docs/scaling-node-distribution.md`) | Lab + Swarm stack wired (`infra/pgbouncer/`); prod cutover on next deploy | P1 |
 | [x] | **PLAT-004** | Internal ingest routes: shared `@fastify/formbody` + integration tests for RTMP + Icecast | `ingest.test.ts` |
 | [x] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | `DOCS_*_FILE` on API in `docker-stack.yml`; `readSecret` + prod warning; RUNBOOK rotation | P2 |
 | [x] | **PLAT-006** | Rate-limit policy doc: fail-open vs fail-closed when Redis unavailable | P2 |

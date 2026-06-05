@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProfilePageLayout, SafePlainText } from '@tahti/ui'
+import { collectionRssUrl } from '@/lib/rss-feeds'
 
 async function fetchCollection(slug: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -19,6 +20,7 @@ interface CollectionResponse {
   name: string
   description: string | null
   type: string
+  coverUrl?: string | null
   user: { username: string; displayName: string }
   items: Array<{
     id: string
@@ -35,6 +37,7 @@ interface CollectionResponse {
       type: string
       smartLinkSlug: string
       releaseDate: string
+      artworkUrl: string | null
     } | null
   }>
   links?: { page?: string; rss?: string }
@@ -54,6 +57,22 @@ export async function generateMetadata({
   return {
     title: `${data.name} — ${data.user.displayName}`,
     description: data.description ?? `${data.name} on Tahti`,
+    alternates: {
+      types: {
+        'application/rss+xml': [
+          {
+            url:
+              data.links?.rss ??
+              collectionRssUrl(process.env.API_URL ?? 'http://localhost:3001', params.slug),
+          },
+        ],
+      },
+    },
+    openGraph: {
+      title: data.name,
+      description: data.description ?? `${data.name} on Tahti`,
+      ...(data.coverUrl ? { images: [{ url: data.coverUrl }] } : {}),
+    },
   }
 }
 
@@ -66,7 +85,7 @@ export default async function CollectionPage({
   if (!data || data.user.username !== params.username) notFound()
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const rssUrl = data.links?.rss ?? `${apiUrl}/api/v1/collections/${params.slug}/rss.xml`
+  const rssUrl = data.links?.rss ?? collectionRssUrl(apiUrl, params.slug)
 
   return (
     <ProfilePageLayout
@@ -75,6 +94,12 @@ export default async function CollectionPage({
           <Link href={`/u/${data.user.username}`} className="prof-back-link">
             ← {data.user.displayName}
           </Link>
+          {data.coverUrl && (
+            <div className="prof-collection-hero-cover">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={data.coverUrl} alt="" />
+            </div>
+          )}
           <h1 className="prof-page-title">{data.name}</h1>
           <p className="prof-list-meta">
             {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
@@ -92,31 +117,44 @@ export default async function CollectionPage({
         {data.items.length === 0 ? (
           <p className="prof-list-meta">This collection is empty.</p>
         ) : (
-          <ol className="prof-list">
-            {data.items.map((item) => (
-              <li key={item.id} className="prof-list-item">
-                {item.archiveItem && (
-                  <>
-                    <div className="prof-collection-title">{item.archiveItem.title}</div>
-                    {item.archiveItem.durationSec != null && (
-                      <span className="prof-list-meta">
-                        {formatDuration(item.archiveItem.durationSec)}
-                      </span>
+          <ol className="prof-list prof-collection-items">
+            {data.items.map((item) => {
+              const thumbUrl = item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null
+              return (
+                <li key={item.id} className="prof-collection-item-row">
+                  <div className="prof-collection-cover prof-collection-cover--item">
+                    {thumbUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={thumbUrl} alt="" width={40} height={40} />
+                    ) : (
+                      <span className="prof-collection-cover-ph" aria-hidden />
                     )}
-                  </>
-                )}
-                {item.release && (
-                  <div>
-                    <Link href={`/r/${item.release.smartLinkSlug}`}>{item.release.title}</Link>
-                    <span className="prof-list-meta">
-                      {' '}
-                      · {item.release.type} ·{' '}
-                      {new Date(item.release.releaseDate).toLocaleDateString()}
-                    </span>
                   </div>
-                )}
-              </li>
-            ))}
+                  <div className="prof-collection-item-body">
+                    {item.archiveItem && (
+                      <>
+                        <div className="prof-collection-title">{item.archiveItem.title}</div>
+                        {item.archiveItem.durationSec != null && (
+                          <span className="prof-list-meta">
+                            {formatDuration(item.archiveItem.durationSec)}
+                          </span>
+                        )}
+                      </>
+                    )}
+                    {item.release && (
+                      <>
+                        <Link href={`/r/${item.release.smartLinkSlug}`}>{item.release.title}</Link>
+                        <span className="prof-list-meta">
+                          {' '}
+                          · {item.release.type} ·{' '}
+                          {new Date(item.release.releaseDate).toLocaleDateString()}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
           </ol>
         )}
       </section>

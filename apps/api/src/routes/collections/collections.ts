@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import {
   AddCollectionItemSchema,
   ChannelArchiveParamsSchema,
@@ -11,6 +11,7 @@ import {
   ReorderCollectionSchema,
   CollectionPublicViewSchema,
   SlugParamSchema,
+  UsernameParamSchema,
   archivePlaybackKey,
   openApiResponse,
   parseRouteParams,
@@ -364,44 +365,89 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
     const { slug } = routeParams
 
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { slug },
-      select: {
-        slug: true,
-        user: { select: { username: true, displayName: true, bio: true } },
-        archiveItems: {
-          where: { status: 'READY', isPublic: true },
-          orderBy: { createdAt: 'desc' },
-          take: 50,
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            durationSec: true,
-            mp3Key: true,
-            flacKey: true,
-            createdAt: true,
-          },
-        },
-      },
-    })
+    const channel = await loadChannelArchiveRssSource(fastify, slug)
     if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-    const xml = buildRss({
-      title: `${channel.user.displayName} — Tahti`,
-      description: channel.user.bio ?? `${channel.user.displayName} on Tahti`,
-      link: `${config.appUrl}/u/${channel.user.username}`,
-      items: channel.archiveItems.map((i) => ({
-        title: i.title,
-        description: i.description ?? '',
-        pubDate: i.createdAt,
-        duration: i.durationSec ?? 0,
-        enclosureUrl: publicMediaUrl(archivePlaybackKey(i)),
-        guid: `${config.appUrl}/c/${channel.slug}#${i.id}`,
-      })),
-    })
+    return reply
+      .header('Content-Type', 'application/rss+xml; charset=utf-8')
+      .send(buildChannelArchiveRssXml(channel))
+  })
 
-    return reply.header('Content-Type', 'application/rss+xml; charset=utf-8').send(xml)
+  // GET /api/v1/u/:username/rss.xml — artist archive RSS (podcast clients use @handle)
+  fastify.get('/api/v1/u/:username/rss.xml', async (request, reply) => {
+    const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const { username } = routeParams
+
+    const user = await fastify.prisma.user.findUnique({
+      where: { username },
+      select: { channel: { select: { slug: true } } },
+    })
+    if (!user?.channel) return reply.status(404).send({ error: 'Artist not found' })
+
+    const channel = await loadChannelArchiveRssSource(fastify, user.channel.slug)
+    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+    return reply
+      .header('Content-Type', 'application/rss+xml; charset=utf-8')
+      .send(buildChannelArchiveRssXml(channel))
+  })
+}
+
+type ChannelArchiveRssSource = {
+  slug: string
+  user: { username: string; displayName: string; bio: string | null }
+  archiveItems: Array<{
+    id: string
+    title: string
+    description: string | null
+    durationSec: number | null
+    mp3Key: string | null
+    flacKey: string | null
+    createdAt: Date
+  }>
+}
+
+async function loadChannelArchiveRssSource(
+  fastify: Pick<FastifyInstance, 'prisma'>,
+  slug: string,
+): Promise<ChannelArchiveRssSource | null> {
+  return fastify.prisma.channel.findUnique({
+    where: { slug },
+    select: {
+      slug: true,
+      user: { select: { username: true, displayName: true, bio: true } },
+      archiveItems: {
+        where: { status: 'READY', isPublic: true },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          durationSec: true,
+          mp3Key: true,
+          flacKey: true,
+          createdAt: true,
+        },
+      },
+    },
+  })
+}
+
+function buildChannelArchiveRssXml(channel: ChannelArchiveRssSource): string {
+  return buildRss({
+    title: `${channel.user.displayName} — Tahti`,
+    description: channel.user.bio ?? `${channel.user.displayName} on Tahti`,
+    link: `${config.appUrl}/u/${channel.user.username}`,
+    items: channel.archiveItems.map((i) => ({
+      title: i.title,
+      description: i.description ?? '',
+      pubDate: i.createdAt,
+      duration: i.durationSec ?? 0,
+      enclosureUrl: publicMediaUrl(archivePlaybackKey(i)),
+      guid: `${config.appUrl}/c/${channel.slug}#${i.id}`,
+    })),
   })
 }
 

@@ -416,6 +416,7 @@ export default async function DashboardPage() {
     name: string
     type: string
     isPublic: boolean
+    coverUrl?: string | null
     _count?: { items: number }
     items?: Array<{
       id: string
@@ -592,7 +593,7 @@ export default async function DashboardPage() {
         />
       )}
 
-      {socialSettings && <SocialPromoPanel initial={socialSettings} />}
+      {socialSettings && <SocialPromoPanel initial={socialSettings} apiUrl={apiUrl} />}
 
       <PrivacyPanel username={user.username} apiUrl={apiUrl} />
 
@@ -701,6 +702,7 @@ export default async function DashboardPage() {
           <CollectionsPanel
             initial={collections}
             username={user.username}
+            apiUrl={apiUrl}
             archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
             publishedReleases={publishedReleases}
           />

@@ -14,7 +14,7 @@ Production rolls must apply schema changes **before** API/worker/web replicas st
 CI and local tests use `prisma db push` (`db:migrate:test`). Production uses **`prisma migrate deploy`** (`db:migrate`).
 
 ```bash
-# Manager node — DATABASE_URL from Docker secret or env file
+# Manager node — DATABASE_URL must target **postgres:5432** directly (not PgBouncer)
 export DATABASE_URL='postgresql://tahti:…@postgres:5432/tahti'
 ./scripts/db-migrate-deploy.sh
 

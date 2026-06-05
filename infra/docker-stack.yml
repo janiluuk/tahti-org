@@ -1,5 +1,9 @@
 version: "3.9"
 
+# App DB connections use PgBouncer (PLAT-003). Migrations use direct postgres:5432 — see db-migrate-deploy.sh.
+x-db-pool-env: &db-pool-env
+  DATABASE_URL: postgres://tahti@pgbouncer:6432/tahti?pgbouncer=true
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Tahti — production Swarm stack
 #
@@ -69,6 +73,7 @@ secrets:
   chat_fingerprint_salt:     { external: true }
   revelator_api_key:         { external: true }
   mixcloud_client_secret:    { external: true }
+  twitter_client_secret:     { external: true }
   smtp_password:             { external: true }
   docs_user:                 { external: true }
   docs_pass:                 { external: true }
@@ -138,6 +143,39 @@ services:
       restart_policy: { condition: any, delay: 5s, max_attempts: 5 }
       resources:
         limits: { cpus: "2", memory: 4G }
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # PgBouncer — transaction pool before scaling api / worker replicas (PLAT-003)
+  # ───────────────────────────────────────────────────────────────────────────
+  pgbouncer:
+    image: edoburu/pgbouncer:1.22.1-p0
+    networks: [internal]
+    environment:
+      DB_HOST: postgres
+      DB_USER: tahti
+      DB_NAME: tahti
+      AUTH_TYPE: scram-sha-256
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: "500"
+      DEFAULT_POOL_SIZE: "30"
+    secrets: [pg_password]
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        export DB_PASSWORD="$$(cat /run/secrets/pg_password)"
+        exec /entrypoint.sh
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "6432"]
+      interval: 10s
+      retries: 5
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.role == db]
+      restart_policy: { condition: any, delay: 5s }
+      resources:
+        limits: { cpus: "0.5", memory: 256M }
 
   # ───────────────────────────────────────────────────────────────────────────
   # Redis — API sessions, BullMQ queues, Centrifugo backplane, presence
@@ -215,8 +253,8 @@ services:
     image: registry.tahti.live/tahti/api:${TAG:-latest}
     networks: [internal, edge]
     environment:
+      <<: *db-pool-env
       NODE_ENV: production
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: "9000"
@@ -241,11 +279,14 @@ services:
       CHAT_FINGERPRINT_SALT_FILE: /run/secrets/chat_fingerprint_salt
       REVELATOR_API_KEY_FILE: /run/secrets/revelator_api_key
       MIXCLOUD_CLIENT_SECRET_FILE: /run/secrets/mixcloud_client_secret
+      TWITTER_CLIENT_SECRET_FILE: /run/secrets/twitter_client_secret
       SMTP_PASSWORD_FILE: /run/secrets/smtp_password
       DOCS_USER_FILE: /run/secrets/docs_user
       DOCS_PASS_FILE: /run/secrets/docs_pass
       MIXCLOUD_CLIENT_ID: ${MIXCLOUD_CLIENT_ID:-}
       MIXCLOUD_OAUTH_REDIRECT_URI: ${MIXCLOUD_OAUTH_REDIRECT_URI:-}
+      TWITTER_CLIENT_ID: ${TWITTER_CLIENT_ID:-}
+      TWITTER_OAUTH_REDIRECT_URI: ${TWITTER_OAUTH_REDIRECT_URI:-}
       EMAIL_BOUNCE_WEBHOOK_SECRET: ${EMAIL_BOUNCE_WEBHOOK_SECRET:-}
     secrets:
       - pg_password
@@ -255,6 +296,7 @@ services:
       - chat_fingerprint_salt
       - revelator_api_key
       - mixcloud_client_secret
+      - twitter_client_secret
       - smtp_password
       - docs_user
       - docs_pass
@@ -280,7 +322,7 @@ services:
     command: ["node", "dist/index.js", "--queues=transcode-archive,record-live,fingerprint"]
     networks: [internal]
     environment:
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      <<: *db-pool-env
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: "9000"
@@ -306,7 +348,7 @@ services:
     command: ["node", "dist/index.js", "--queues=mixcloud-upload,revelator-deliver,revelator-royalty-sync"]
     networks: [internal]
     environment:
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      <<: *db-pool-env
       REDIS_URL: redis://redis:6379
       REVELATOR_API_KEY_FILE: /run/secrets/revelator_api_key
       MIXCLOUD_CLIENT_SECRET_FILE: /run/secrets/mixcloud_client_secret
@@ -324,7 +366,7 @@ services:
     command: ["node", "dist/index.js", "--queues=stats-rollup,chat-cleanup,chat-ban-rotate"]
     networks: [internal]
     environment:
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      <<: *db-pool-env
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: "9000"
@@ -344,7 +386,7 @@ services:
     command: ["node", "dist/index.js", "--queues=edge-log"]
     networks: [internal]
     environment:
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      <<: *db-pool-env
       REDIS_URL: redis://redis:6379
       CADDY_HLS_ACCESS_LOG: /var/log/caddy/hls-access.log
     secrets: [pg_password]
@@ -364,7 +406,7 @@ services:
     image: registry.tahti.live/tahti/orchestrator:${TAG:-latest}
     networks: [internal]
     environment:
-      DATABASE_URL: postgres://tahti@postgres:5432/tahti
+      <<: *db-pool-env
       REDIS_URL: redis://redis:6379
       DOCKER_HOST: unix:///var/run/docker.sock
       CHANNEL_IMAGE: registry.tahti.live/tahti/liquidsoap:latest

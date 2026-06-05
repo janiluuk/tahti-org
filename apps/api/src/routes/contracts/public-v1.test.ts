@@ -70,6 +70,7 @@ describe('Public API v1 contracts', () => {
     })
     expect(body.links).toMatchObject({
       channel: expect.stringContaining('/c/'),
+      feeds: { archive: expect.stringContaining('/rss.xml') },
     })
   })
 

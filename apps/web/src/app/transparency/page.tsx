@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Heading, Link, Text } from '@tahti/ui'
+import { statusPageUrl } from '@/lib/status-page'
 
 interface MonthlyRollup {
   yearMonth: string
@@ -42,6 +43,7 @@ function categoryLabel(code: string): string {
 
 export default async function TransparencyPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  const statusUrl = statusPageUrl()
 
   const [ytdRes, rollupRes, resolutionsRes] = await Promise.all([
     fetch(`${apiUrl}/api/v1/transparency/ytd`, { cache: 'no-store' }),
@@ -179,6 +181,8 @@ export default async function TransparencyPage() {
           <br />
           All figures in EUR. Data updated monthly after board approval.{' '}
           <a href="https://github.com/tahtiapp/tahti">Source code (AGPL-3.0)</a>
+          {' · '}
+          <a href={statusUrl}>Platform status</a>
         </p>
       </footer>
     </>

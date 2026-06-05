@@ -179,6 +179,17 @@ describe('M23 — collections and RSS', () => {
     expect(rss.body).toContain('Sunset Mix')
   })
 
+  it('serves artist archive RSS at /api/v1/u/:username/rss.xml', async () => {
+    const rss = await app.inject({
+      method: 'GET',
+      url: `/api/v1/u/${username}/rss.xml`,
+    })
+    expect(rss.statusCode).toBe(200)
+    expect(rss.headers['content-type']).toContain('rss+xml')
+    expect(rss.body).toContain('Sunset Mix')
+    expect(rss.body).toContain('<enclosure')
+  })
+
   it('rejects invalid collection type and duplicate slug', async () => {
     const badType = await app.inject({
       method: 'POST',
@@ -261,6 +272,25 @@ describe('M23 — collections and RSS', () => {
       .json()
       .collections.find((c: { slug: string; isFeatured: boolean }) => c.slug === collectionSlug)
     expect(featured?.isFeatured).toBe(true)
+  })
+
+  it('updates collection cover URL via PATCH', async () => {
+    const cover = 'https://cdn.example.com/collection-cover.jpg'
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/collections/${collectionSlug}`,
+      headers: { cookie },
+      payload: { coverUrl: cover },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json().coverUrl).toBe(cover)
+
+    const pub = await app.inject({
+      method: 'GET',
+      url: `/api/v1/collections/${collectionSlug}`,
+    })
+    expect(pub.statusCode).toBe(200)
+    expect(pub.json().coverUrl).toBe(cover)
   })
 
   it('removes collection items and deletes the collection', async () => {

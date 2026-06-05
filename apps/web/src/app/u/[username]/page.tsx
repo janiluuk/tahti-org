@@ -34,6 +34,9 @@ export async function generateMetadata({
   return {
     title: `${artist.displayName} (@${artist.username})`,
     description,
+    alternates: data.links.feeds?.archive
+      ? { types: { 'application/rss+xml': [{ url: data.links.feeds.archive }] } }
+      : undefined,
     openGraph: {
       title: artist.displayName,
       description,
@@ -70,15 +73,17 @@ interface ProfileResponse {
       channelItemUrl?: string | null
     }>
   }>
-  links: { channel: string | null; subscribe: string }
+  links: { channel: string | null; subscribe: string; feeds?: { archive: string | null } }
   collections?: Array<{
     slug: string
     name: string
     type: string
     description: string | null
+    coverUrl?: string | null
     isFeatured?: boolean
     itemCount: number
     url: string
+    rssUrl?: string
   }>
 }
 
@@ -131,20 +136,50 @@ export default async function ArtistProfilePage({ params }: { params: { username
           artistDisplayName={artist.displayName}
         />
 
+        {links.feeds?.archive && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Podcasts &amp; feeds</div>
+            <p className="prof-list-meta prof-list-meta--spaced">
+              <a href={links.feeds.archive} rel="alternate">
+                Archive RSS ↗
+              </a>
+              {' · subscribe in Apple Podcasts, Overcast, or any RSS reader'}
+            </p>
+          </section>
+        )}
+
         {collections.length > 0 && (
           <section className="prof-section">
             <div className="prof-sec-label">Collections</div>
-            <ul className="prof-list">
+            <ul className="prof-list prof-collection-list">
               {collections.map((c) => (
-                <li key={c.slug} className="prof-list-item">
-                  <Link href={c.url}>{c.name}</Link>
-                  <div className="prof-list-meta">
-                    {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
-                    {c.isFeatured && ' · Featured'}
+                <li key={c.slug} className="prof-collection-row">
+                  <div className="prof-collection-cover">
+                    {c.coverUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.coverUrl} alt="" width={56} height={56} />
+                    ) : (
+                      <span className="prof-collection-cover-ph" aria-hidden />
+                    )}
                   </div>
-                  {c.description && (
-                    <p className="prof-list-meta prof-list-meta--tight">{c.description}</p>
-                  )}
+                  <div>
+                    <Link href={c.url}>{c.name}</Link>
+                    <div className="prof-list-meta">
+                      {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
+                      {c.isFeatured && ' · Featured'}
+                      {c.rssUrl && (
+                        <>
+                          {' · '}
+                          <a href={c.rssUrl} rel="alternate">
+                            RSS ↗
+                          </a>
+                        </>
+                      )}
+                    </div>
+                    {c.description && (
+                      <p className="prof-list-meta prof-list-meta--tight">{c.description}</p>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>

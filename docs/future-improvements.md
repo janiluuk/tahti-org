@@ -110,8 +110,10 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Collections CRUD + RSS + profile page~~ — done |
+| ~~P2~~ | ~~Per-artist archive RSS~~ — `/api/v1/u/:handle/rss.xml` + profile/dashboard links |
 | ~~P2~~ | ~~Drag reorder in dashboard~~ — `PUT /api/me/collections/:slug/reorder` |
 | ~~P2~~ | ~~Featured collections on smart-link landing~~ — `/r/:slug` + API |
+| P3 | Per-collection video/slideshow themes (M26 deferred) | Backlog |
 
 ### Still largely open
 | Milestone | Notes |
@@ -182,7 +184,7 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 | ~~P1~~ | ~~Merge vital-flows into CI~~ — done | — |
 | P1 | `user-journeys-e2e` required in branch protection | Guides-backed paths always verified |
 | P2 | `pnpm test --coverage` threshold (e.g. 60% on `apps/api`) | Untested money paths visible |
-| P2 | Docker stack smoke job in CI (build + health, weekly) | Catches Dockerfile drift |
+| P2 | Docker stack smoke job in CI (build + health, weekly) | Catches Dockerfile drift | **Done** — `.github/workflows/stack-smoke.yml` + `scripts/stack-smoke.sh` |
 | P3 | Preview deployments per PR | Stakeholder review |
 
 ### Code quality

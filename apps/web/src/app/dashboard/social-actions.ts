@@ -28,6 +28,14 @@ export type SocialSettings = {
     onChannelLive: boolean
     postTemplate: string
   }
+  twitter: {
+    connected: boolean
+    accountLabel: string | null
+    onReleasePublished: boolean
+    onChannelLive: boolean
+    postTemplate: string
+    configured: boolean
+  }
 }
 
 export async function saveMastodonSocial(input: {
@@ -115,7 +123,7 @@ export async function disconnectBluesky(): Promise<{ error: string | null }> {
 }
 
 export async function postSocialManual(
-  platform: 'MASTODON' | 'BLUESKY',
+  platform: 'MASTODON' | 'BLUESKY' | 'TWITTER',
   message: string,
 ): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/social/post`, {
@@ -127,6 +135,39 @@ export async function postSocialManual(
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Post failed' }
+  }
+  revalidatePath('/dashboard')
+  return { error: null }
+}
+
+export async function saveTwitterSocial(input: {
+  onReleasePublished: boolean
+  onChannelLive: boolean
+  postTemplate: string
+}): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/social/twitter`, {
+    method: 'PATCH',
+    headers: { Cookie: sessionHeader(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Could not save Twitter settings' }
+  }
+  revalidatePath('/dashboard')
+  return { error: null }
+}
+
+export async function disconnectTwitter(): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/social/twitter`, {
+    method: 'DELETE',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Disconnect failed' }
   }
   revalidatePath('/dashboard')
   return { error: null }

@@ -30,8 +30,16 @@ export const BlueskyConnectSchema = z.object({
 
 export const SocialManualPostSchema = z.object({
   message: z.string().trim().min(1).max(500),
-  platform: z.enum(['MASTODON', 'BLUESKY']).default('MASTODON'),
+  platform: z.enum(['MASTODON', 'BLUESKY', 'TWITTER']).default('MASTODON'),
 })
+
+export const TwitterSocialPatchSchema = z.object({
+  onReleasePublished: z.boolean().optional(),
+  onChannelLive: z.boolean().optional(),
+  postTemplate: z.string().trim().min(1).max(280).optional(),
+})
+
+export type TwitterSocialPatchInput = z.infer<typeof TwitterSocialPatchSchema>
 
 export const SocialPlatformStatusSchema = z.object({
   connected: z.boolean(),
@@ -44,11 +52,14 @@ export const SocialPlatformStatusSchema = z.object({
 export const SocialSettingsViewSchema = z.object({
   mastodon: SocialPlatformStatusSchema,
   bluesky: SocialPlatformStatusSchema,
+  twitter: SocialPlatformStatusSchema.extend({
+    configured: z.boolean(),
+  }),
 })
 
 export const SocialPostLogSchema = z.object({
   id: z.string(),
-  platform: z.enum(['MASTODON', 'BLUESKY']),
+  platform: z.enum(['MASTODON', 'BLUESKY', 'TWITTER']),
   trigger: z.string(),
   state: z.enum(['PENDING', 'SENT', 'FAILED']),
   message: z.string(),

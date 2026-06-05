@@ -218,6 +218,7 @@ enum FanSubState {
 enum SocialPlatform {
   MASTODON
   BLUESKY
+  TWITTER
 
   @@schema("core")
 }

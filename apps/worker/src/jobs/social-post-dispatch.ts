@@ -54,6 +54,26 @@ async function postToBluesky(params: {
   return data.uri
 }
 
+async function postToTwitter(accessToken: string, text: string): Promise<string> {
+  const res = await fetch('https://api.twitter.com/2/tweets', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ text: text.slice(0, 280) }),
+  })
+  const data = (await res.json()) as { data?: { id: string }; detail?: string; title?: string }
+  if (!res.ok || !data.data?.id) {
+    throw new Error(data.detail ?? data.title ?? `Twitter post failed (${res.status})`)
+  }
+  return data.data.id
+}
+
+function decodeTwitterTokens(enc: string): { accessToken: string; refreshToken?: string } {
+  return JSON.parse(decryptStreamKey(enc)) as { accessToken: string; refreshToken?: string }
+}
+
 export async function processSocialPostDispatchJob(prisma: PrismaClient, postId: string) {
   const post = await prisma.socialPost.findUnique({ where: { id: postId } })
   if (!post || post.state === 'SENT') return
@@ -70,19 +90,26 @@ export async function processSocialPostDispatchJob(prisma: PrismaClient, postId:
   }
 
   try {
-    const token = decryptStreamKey(conn.accessTokenEnc)
-    const externalId =
-      conn.platform === 'BLUESKY'
-        ? await postToBluesky({
-            accessJwt: token,
-            did: conn.externalAccountId ?? conn.instanceUrl,
-            text: post.message,
-          })
-        : await postToMastodon({
-            instanceUrl: conn.instanceUrl,
-            accessToken: token,
-            status: post.message,
-          })
+    const tokenEnc = conn.accessTokenEnc
+    let externalId: string
+    if (conn.platform === 'BLUESKY') {
+      const token = decryptStreamKey(tokenEnc)
+      externalId = await postToBluesky({
+        accessJwt: token,
+        did: conn.externalAccountId ?? conn.instanceUrl,
+        text: post.message,
+      })
+    } else if (conn.platform === 'TWITTER') {
+      const tokens = decodeTwitterTokens(tokenEnc)
+      externalId = await postToTwitter(tokens.accessToken, post.message)
+    } else {
+      const token = decryptStreamKey(tokenEnc)
+      externalId = await postToMastodon({
+        instanceUrl: conn.instanceUrl,
+        accessToken: token,
+        status: post.message,
+      })
+    }
     await prisma.socialPost.update({
       where: { id: postId },
       data: { state: 'SENT', externalId, sentAt: new Date(), attempts: { increment: 1 } },

@@ -97,7 +97,7 @@ describe('M14 — social auto-post', () => {
     expect(res.json().bluesky.connected).toBe(false)
   })
 
-  it('GET /api/me/social returns both platforms', async () => {
+  it('GET /api/me/social returns all platforms', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/me/social',
@@ -106,6 +106,8 @@ describe('M14 — social auto-post', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json().mastodon.accountLabel).toBe('https://mastodon.example')
     expect(res.json().bluesky.connected).toBe(false)
+    expect(res.json().twitter.connected).toBe(false)
+    expect(res.json().twitter.configured).toBe(false)
   })
 
   it('PUT bluesky connect stores connection', async () => {

@@ -28,6 +28,12 @@ sites:
       - 200
     maxResponseTime: 10000
 
+  - name: Tahti status page
+    url: https://app.tahti.live/status
+    expectedStatusCodes:
+      - 200
+    maxResponseTime: 10000
+
 statusPage:
   cname: status.tahti.live
   name: Tahti status

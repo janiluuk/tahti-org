@@ -68,7 +68,12 @@ export async function reorderCollectionItems(
 
 export async function updateCollection(
   slug: string,
-  params: { isFeatured?: boolean; isPublic?: boolean },
+  params: {
+    isFeatured?: boolean
+    isPublic?: boolean
+    coverUrl?: string | null
+    description?: string | null
+  },
 ): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}`, {
     method: 'PATCH',

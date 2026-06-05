@@ -1,0 +1,28 @@
+# Weekly full-stack smoke — build compose stack, probe health (future-improvements P2).
+# Not on every PR (15–30 min). Catches Dockerfile / compose drift.
+
+name: Stack smoke
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stack-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Build stack and probe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stack up, probe, tear down
+        run: bash scripts/stack-smoke.sh

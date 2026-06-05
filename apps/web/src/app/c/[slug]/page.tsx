@@ -21,6 +21,7 @@ import type {
 } from '@tahti/shared'
 import { Heading, Row, Text, ChannelPageLayout, LiveBadge, SafePlainText } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
+import { channelArchiveRssUrl } from '@/lib/rss-feeds'
 
 interface ChannelResponse {
   slug: string
@@ -186,7 +187,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
 
           <section className="ch-archive-section">
-            <h2 className="ch-section-label">Archive</h2>
+            <div className="ch-archive-section-head">
+              <h2 className="ch-section-label">Archive</h2>
+              <a href={channelArchiveRssUrl(apiUrl, slug)} className="ch-rss-link" rel="alternate">
+                RSS ↗
+              </a>
+            </div>
 
             {items.length === 0 ? (
               <p className="ch-archive-empty">No archive items yet.</p>

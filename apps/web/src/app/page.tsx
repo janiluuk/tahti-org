@@ -4,8 +4,10 @@
 import Link from 'next/link'
 import { BrandLogo } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
+import { statusPageUrl } from '@/lib/status-page'
 
 export default function GatewayPage() {
+  const statusUrl = statusPageUrl()
   return (
     <>
       <BgCanvas />
@@ -87,6 +89,10 @@ export default function GatewayPage() {
             <Link href="/apply" className="gateway-footer__link">
               Apply for the beta
             </Link>
+            <span className="gateway-footer__sep">·</span>
+            <a href={statusUrl} className="gateway-footer__link">
+              Status
+            </a>
             <span className="gateway-footer__sep">·</span>
             <a href="https://tahti.live" className="gateway-footer__link">
               tahti.live

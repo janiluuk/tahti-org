@@ -213,3 +213,25 @@ export function mapPlatformStatus(
     postTemplate: conn?.postTemplate ?? defaultTemplate,
   }
 }
+
+export async function loadSocialSettings(prisma: PrismaClient, userId: string) {
+  const [mastodon, bluesky, twitter] = await Promise.all([
+    prisma.socialConnection.findUnique({
+      where: { userId_platform: { userId, platform: 'MASTODON' } },
+    }),
+    prisma.socialConnection.findUnique({
+      where: { userId_platform: { userId, platform: 'BLUESKY' } },
+    }),
+    prisma.socialConnection.findUnique({
+      where: { userId_platform: { userId, platform: 'TWITTER' } },
+    }),
+  ])
+  return {
+    mastodon: mapPlatformStatus(mastodon, DEFAULT_SOCIAL_TEMPLATE),
+    bluesky: mapPlatformStatus(bluesky, DEFAULT_SOCIAL_TEMPLATE),
+    twitter: {
+      ...mapPlatformStatus(twitter, DEFAULT_SOCIAL_TEMPLATE),
+      configured: Boolean(config.twitter.clientId),
+    },
+  }
+}
