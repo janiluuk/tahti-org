@@ -68,6 +68,9 @@ export default async function ListenPage() {
           <BrandLogo />
           <Heading level={1}>Listen</Heading>
           <Text tone="muted">Independent artists broadcasting live and on-demand.</Text>
+          <p className="listen-header__meta">
+            <a href="/radio">Tahti Radio</a> — fair-rotation meta-stream when members are live
+          </p>
         </header>
 
         {empty ? (

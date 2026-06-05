@@ -15,6 +15,9 @@ export default function AdminFinancialPage() {
           <Link href="/admin/financial/fansubs">Fan subscriptions &amp; payout queue</Link>
         </li>
         <li>
+          <Link href="/admin/financial/legacy-members">Legacy membership migration queue</Link>
+        </li>
+        <li>
           <Link href="/transparency">Public transparency page</Link>
         </li>
         <li>

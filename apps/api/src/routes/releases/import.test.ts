@@ -54,4 +54,14 @@ Import Two,EP,2026-05-15,Part 2`
     const count = await prisma.release.count({ where: { userId, state: 'DRAFT' } })
     expect(count).toBeGreaterThanOrEqual(2)
   })
+
+  it('rejects CSV missing required columns', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/releases/import',
+      headers: { cookie },
+      payload: { csv: 'title,date\nOnly Title,2026-01-01' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
 })

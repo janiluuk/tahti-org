@@ -8,6 +8,10 @@ vi.mock('../../lib/stream-key-enc.js', () => ({
   decryptStreamKey: (enc: string) => enc.replace(/^enc:/, ''),
 }))
 
+vi.mock('../../lib/queue.js', () => ({
+  mediaQueue: { add: vi.fn().mockResolvedValue(undefined) },
+}))
+
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
@@ -119,5 +123,36 @@ describe('M14 — social auto-post', () => {
     expect(res.json().bluesky.connected).toBe(true)
     expect(res.json().bluesky.onChannelLive).toBe(true)
     expect(res.json().mastodon.connected).toBe(true)
+  })
+
+  it('POST /api/me/social/post queues manual Mastodon post', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/social/post',
+      headers: { cookie },
+      payload: { platform: 'MASTODON', message: 'Hello from Tahti test' },
+    })
+    expect(res.statusCode).toBe(201)
+    expect(res.json().platform).toBe('MASTODON')
+    expect(res.json().state).toBe('PENDING')
+
+    const post = await prisma.socialPost.findFirst({
+      where: { userId, trigger: 'manual' },
+      orderBy: { createdAt: 'desc' },
+    })
+    expect(post?.message).toBe('Hello from Tahti test')
+  })
+
+  it('DELETE /api/me/social/mastodon removes connection', async () => {
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/me/social/mastodon',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const conn = await prisma.socialConnection.findUnique({
+      where: { userId_platform: { userId, platform: 'MASTODON' } },
+    })
+    expect(conn).toBeNull()
   })
 })

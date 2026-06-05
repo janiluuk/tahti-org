@@ -23,6 +23,33 @@ describe('M19 — account deletion execute', () => {
     await app.ready()
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
 
+    const orphanChannels = await prisma.channel.findMany({
+      where: { slug: { startsWith: 'acct-del-' } },
+      select: { id: true, userId: true },
+    })
+    if (orphanChannels.length > 0) {
+      const orphanUserIds = orphanChannels.map((c) => c.userId)
+      await prisma.supportTicket.deleteMany({ where: { artistId: { in: orphanUserIds } } })
+      for (const ch of orphanChannels) {
+        await prisma.download.deleteMany({ where: { channelId: ch.id } })
+      }
+      await prisma.channel.deleteMany({ where: { slug: { startsWith: 'acct-del-' } } })
+      await prisma.user.deleteMany({ where: { id: { in: orphanUserIds } } })
+    }
+
+    const stale = await prisma.user.findMany({
+      where: { username: { startsWith: 'acct-del-' } },
+      select: { id: true, channel: { select: { id: true } } },
+    })
+    if (stale.length > 0) {
+      const staleIds = stale.map((u) => u.id)
+      await prisma.supportTicket.deleteMany({ where: { artistId: { in: staleIds } } })
+      for (const u of stale) {
+        if (u.channel) await prisma.download.deleteMany({ where: { channelId: u.channel.id } })
+      }
+      await prisma.user.deleteMany({ where: { id: { in: staleIds } } })
+    }
+
     const board = await createTestArtist(prisma, {
       email: `${PREFIX}board@example.com`,
       username: 'acct-del-board',
@@ -51,6 +78,15 @@ describe('M19 — account deletion execute', () => {
     await prisma.supportTicket.deleteMany({})
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
     await app.close()
+  })
+
+  it('POST delete-account requires board role', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/admin/users/${targetId}/delete-account`,
+      headers: { cookie: await sessionCookieFor(prisma, targetId) },
+    })
+    expect(res.statusCode).toBe(403)
   })
 
   it('POST delete-account anonymizes user', async () => {
