@@ -5,13 +5,12 @@ import type { Job } from 'bullmq'
 import type { PrismaClient } from '@tahti/db'
 import { syncChannelHlsToMinio } from '../lib/hls-minio-sync.js'
 
-const HLS_ROOT = process.env.HLS_SEGMENT_ROOT ?? ''
-
 export async function processHlsMinioSyncJob(
   prisma: PrismaClient,
   _job: Job,
 ): Promise<{ channels: number; uploaded: number; skipped: number }> {
-  if (!HLS_ROOT) {
+  const hlsRoot = process.env.HLS_SEGMENT_ROOT ?? ''
+  if (!hlsRoot) {
     return { channels: 0, uploaded: 0, skipped: 0 }
   }
 
@@ -24,7 +23,7 @@ export async function processHlsMinioSyncJob(
   let skipped = 0
 
   for (const ch of live) {
-    const result = await syncChannelHlsToMinio(HLS_ROOT, ch.id, ch.slug)
+    const result = await syncChannelHlsToMinio(hlsRoot, ch.id, ch.slug)
     uploaded += result.uploaded
     skipped += result.skipped
   }

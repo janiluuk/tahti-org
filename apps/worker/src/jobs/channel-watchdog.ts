@@ -10,8 +10,7 @@ import { restartChannelLiquidsoap } from '../lib/orchestrator.js'
 
 const STALE_SEC = parseInt(process.env.HLS_STALE_SECONDS ?? '20', 10)
 const HLS_ROOT = process.env.HLS_SEGMENT_ROOT ?? ''
-const HLS_MINIO_PREFIX = process.env.HLS_MINIO_PREFIX ?? ''
-const MINIO_BUCKET = process.env.MINIO_BUCKET ?? 'tahti'
+const HLS_BUCKET = process.env.HLS_MINIO_BUCKET ?? 'hls-live'
 const RESTART_WINDOW_MS = 10 * 60 * 1000
 const MAX_RESTARTS = 2
 
@@ -34,15 +33,12 @@ async function recordRestart(channelId: string): Promise<number> {
   }
 }
 
-async function segmentAgeSec(channelId: string): Promise<number | null> {
+async function segmentAgeSec(channelId: string, slug: string): Promise<number | null> {
   if (HLS_ROOT) {
     const age = await hlsSegmentAgeSecFromFs(HLS_ROOT, channelId)
     if (age !== null) return age
   }
-  if (HLS_MINIO_PREFIX) {
-    return hlsSegmentAgeSecFromMinio(MINIO_BUCKET, `${HLS_MINIO_PREFIX}/${channelId}`)
-  }
-  return null
+  return hlsSegmentAgeSecFromMinio(HLS_BUCKET, slug)
 }
 
 export async function processChannelWatchdogJob(
@@ -73,7 +69,7 @@ export async function processChannelWatchdogJob(
       continue
     }
 
-    const age = await segmentAgeSec(ch.id)
+    const age = await segmentAgeSec(ch.id, ch.slug)
     if (age === null) {
       skipped++
       continue
