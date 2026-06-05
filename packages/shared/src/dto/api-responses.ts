@@ -491,6 +491,18 @@ export const GovernanceMemberViewSchema = z.object({
 
 export const GovernanceMemberListSchema = z.array(GovernanceMemberViewSchema)
 
+/** Board-only PRH register preview (includes email; use export.csv for official file). */
+export const AdminMemberRegisterRowSchema = z.object({
+  memberNumber: z.number().int().nullable(),
+  displayName: z.string(),
+  email: z.string().email(),
+  username: z.string(),
+  memberSince: z.coerce.date().nullable(),
+  membershipStatus: z.string().nullable(),
+})
+
+export const AdminMemberRegisterListSchema = z.array(AdminMemberRegisterRowSchema)
+
 export const MotionVoteTallySchema = z.object({
   YES: z.number().int(),
   NO: z.number().int(),

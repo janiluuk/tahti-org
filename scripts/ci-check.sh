@@ -22,4 +22,8 @@ echo "── CI check: typecheck ───────────────�
 pnpm typecheck
 
 echo ""
+echo "── CI check: Tor exit list freshness (M18) ───────────────"
+node scripts/check-tor-exit-list-fresh.mjs
+
+echo ""
 echo "✓ ci-check passed (lint, format, typecheck)"

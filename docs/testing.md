@@ -10,7 +10,8 @@ pnpm --filter @tahti/db db:generate
 
 ## Commands
 
-- `pnpm ci:check` — lint, format, typecheck
+- `pnpm ci:check` — lint, format, typecheck, bundled Tor exit list freshness
+- `pnpm tor-exit:check` — M18 bundled list not empty/stale (max 30 days)
 - `pnpm test` — Vitest (single worker; shared Postgres)
 - `pnpm test:e2e:journeys` — bash persona journeys (listener, artist, member, director, ops)
 - `pnpm test:e2e:journeys:all` — vital-flows + user-journeys + Vitest `persona-journeys.test.ts`

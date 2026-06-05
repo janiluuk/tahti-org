@@ -12,7 +12,7 @@ import {
 
 const PREFIX = 'admin-members-'
 
-describe('GET /api/admin/members/export.csv', () => {
+describe('admin member register', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let boardCookie: string
   let memberEmail: string
@@ -44,7 +44,29 @@ describe('GET /api/admin/members/export.csv', () => {
     await app.close()
   })
 
-  it('requires board role', async () => {
+  it('GET /api/admin/members requires board role', async () => {
+    const member = await prisma.user.findFirst({ where: { email: memberEmail } })
+    const cookie = await sessionCookieFor(prisma, member!.id)
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/admin/members',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(403)
+  })
+
+  it('GET /api/admin/members returns JSON register rows', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/admin/members',
+      headers: { cookie: boardCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const rows = res.json() as Array<{ email: string; memberNumber: number }>
+    expect(rows.some((r) => r.email === memberEmail && r.memberNumber === 98201)).toBe(true)
+  })
+
+  it('GET /api/admin/members/export.csv requires board role', async () => {
     const member = await prisma.user.findFirst({ where: { email: memberEmail } })
     const cookie = await sessionCookieFor(prisma, member!.id)
     const res = await app.inject({
@@ -55,7 +77,7 @@ describe('GET /api/admin/members/export.csv', () => {
     expect(res.statusCode).toBe(403)
   })
 
-  it('returns CSV with member rows', async () => {
+  it('GET /api/admin/members/export.csv returns CSV with member rows', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/admin/members/export.csv',

@@ -2,12 +2,54 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { CsvExportBodySchema, openApiResponse } from '@tahti/shared'
+import type { PrismaClient } from '@tahti/db'
+import { AdminMemberRegisterListSchema, CsvExportBodySchema, openApiResponse } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { sendCsv } from '../../lib/csv.js'
 
-// PRH-compliant member register export (CSV).
+const memberRegisterSelect = {
+  memberNumber: true,
+  displayName: true,
+  email: true,
+  username: true,
+  memberSince: true,
+  membership: { select: { status: true } },
+} as const
+
+async function fetchMemberRegister(prisma: PrismaClient) {
+  const members = await prisma.user.findMany({
+    where: { isMember: true },
+    orderBy: [{ memberNumber: 'asc' }],
+    select: memberRegisterSelect,
+  })
+
+  return members.map((m) => ({
+    memberNumber: m.memberNumber,
+    displayName: m.displayName,
+    email: m.email,
+    username: m.username,
+    memberSince: m.memberSince,
+    membershipStatus: m.membership?.status ?? null,
+  }))
+}
+
+// PRH-compliant member register (board/treasurer).
 const adminMembersRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/api/admin/members',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'M10: member register preview for board (includes email)',
+        response: openApiResponse(AdminMemberRegisterListSchema, 'AdminMemberRegisterList'),
+      },
+    },
+    async (_request, reply) => {
+      return reply.send(await fetchMemberRegister(fastify.prisma))
+    },
+  )
+
   fastify.get(
     '/api/admin/members/export.csv',
     {
@@ -18,18 +60,7 @@ const adminMembersRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const members = await fastify.prisma.user.findMany({
-        where: { isMember: true },
-        orderBy: [{ memberNumber: 'asc' }],
-        select: {
-          memberNumber: true,
-          displayName: true,
-          email: true,
-          username: true,
-          memberSince: true,
-          membership: { select: { activatedAt: true, status: true } },
-        },
-      })
+      const members = await fetchMemberRegister(fastify.prisma)
 
       return sendCsv(
         reply,
@@ -41,7 +72,7 @@ const adminMembersRoutes: FastifyPluginAsync = async (fastify) => {
           m.email,
           m.username,
           m.memberSince?.toISOString() ?? '',
-          m.membership?.status ?? '',
+          m.membershipStatus ?? '',
         ]),
       )
     },
