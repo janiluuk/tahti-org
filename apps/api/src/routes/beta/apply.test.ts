@@ -38,7 +38,7 @@ describe('POST /api/beta/apply', () => {
         name: 'DJ Test',
         email: 'beta-applicant@example.com',
         artistType: 'DJ / live electronics',
-        links: 'https://soundcloud.com/example',
+        links: ['https://soundcloud.com/example', 'https://bandcamp.com/example'],
         message: 'OBS + Mixxx setup',
       },
     })
@@ -65,6 +65,7 @@ describe('POST /api/beta/apply', () => {
     })
     expect(application?.status).toBe('PENDING')
     expect(application?.name).toBe('DJ Test')
+    expect(application?.links).toBe('https://soundcloud.com/example\nhttps://bandcamp.com/example')
   })
 
   it('rejects invalid email', async () => {

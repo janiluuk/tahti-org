@@ -19,8 +19,9 @@ const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-chan
 
 const fastify = Fastify({ logger: true })
 
-// All routes require the internal Bearer secret
+// Operational routes require the internal Bearer secret (/health is public liveness).
 fastify.addHook('preHandler', async (request, reply) => {
+  if (request.routerPath === '/health') return
   const auth = (request.headers['authorization'] as string | undefined) ?? ''
   if (auth !== `Bearer ${INTERNAL_SECRET}`) {
     return reply.status(401).send({ error: 'Unauthorized' })

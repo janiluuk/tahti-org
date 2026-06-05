@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { BETA_SUPPORT_INBOX, smtpTransportOptions } from '@tahti/shared'
 import nodemailer from 'nodemailer'
 import { config } from '../config.js'
 
@@ -8,13 +9,14 @@ let _transporter: nodemailer.Transporter | null = null
 
 function getTransporter(): nodemailer.Transporter {
   if (!_transporter) {
-    _transporter = nodemailer.createTransport({
-      host: config.email.host,
-      port: config.email.port,
-      auth: config.email.user ? { user: config.email.user, pass: config.email.pass } : undefined,
-      // In dev (mailhog), TLS is not required
-      secure: config.isProd,
-    })
+    _transporter = nodemailer.createTransport(
+      smtpTransportOptions({
+        host: config.email.host,
+        port: config.email.port,
+        user: config.email.user,
+        pass: config.email.pass,
+      }),
+    )
   }
   return _transporter
 }
@@ -58,7 +60,10 @@ export async function sendBetaApplicationEmail(opts: {
     `Email: ${opts.email}`,
     `Artist type: ${opts.artistType}`,
   ]
-  if (opts.links?.trim()) lines.push(`Links: ${opts.links.trim()}`)
+  if (opts.links?.trim()) {
+    const linkLines = opts.links.trim().split('\n').filter(Boolean)
+    lines.push('Links:', ...linkLines.map((link) => `  ${link}`))
+  }
   if (opts.message?.trim()) {
     lines.push('', 'Message:', opts.message.trim())
   }
@@ -71,7 +76,7 @@ export async function sendBetaApplicationEmail(opts: {
     .join('')
 
   await sendMail({
-    to: config.email.supportInbox,
+    to: BETA_SUPPORT_INBOX,
     replyTo: opts.email,
     subject: `Beta application: ${opts.name}`,
     text,

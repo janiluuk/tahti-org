@@ -94,7 +94,7 @@
       "targets": [
         {
           "expr": "probe_success{job=\"tahti_blackbox\",environment=~\"$environment\"}",
-          "legendFormat": "{{probe}}",
+          "legendFormat": "{{service}}",
           "instant": true,
           "refId": "A"
         }
@@ -169,7 +169,7 @@
       "targets": [
         {
           "expr": "probe_duration_seconds{job=\"tahti_blackbox\",environment=~\"$environment\"}",
-          "legendFormat": "{{probe}}",
+          "legendFormat": "{{service}}",
           "refId": "A"
         }
       ]
@@ -205,7 +205,7 @@
       "targets": [
         {
           "expr": "1 - probe_success{job=\"tahti_blackbox\",environment=~\"$environment\"}",
-          "legendFormat": "{{probe}}",
+          "legendFormat": "{{service}}",
           "refId": "A"
         }
       ]

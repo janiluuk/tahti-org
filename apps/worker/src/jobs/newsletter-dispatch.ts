@@ -3,6 +3,7 @@
 
 import type { Job } from 'bullmq'
 import nodemailer from 'nodemailer'
+import { smtpTransportOptions } from '@tahti/shared'
 import { prisma } from '@tahti/db'
 
 const SMTP_HOST = process.env.SMTP_HOST ?? 'localhost'
@@ -17,12 +18,14 @@ const BATCH_SIZE = 50
 let _transport: nodemailer.Transporter | null = null
 function getTransport(): nodemailer.Transporter {
   if (!_transport) {
-    _transport = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASS } : undefined,
-      secure: process.env.NODE_ENV === 'production',
-    })
+    _transport = nodemailer.createTransport(
+      smtpTransportOptions({
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      }),
+    )
   }
   return _transport
 }

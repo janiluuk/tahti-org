@@ -754,6 +754,38 @@
   max-width: 100%;
 }
 
+.auth-card--dark form .ui-btn.auth-link-row-btn {
+  width: auto;
+  min-width: 2.25rem;
+  flex-shrink: 0;
+  padding-inline: var(--tahti-space-2);
+}
+
+.auth-link-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tahti-space-2);
+  width: 100%;
+}
+
+.auth-link-row {
+  display: flex;
+  gap: var(--tahti-space-2);
+  align-items: center;
+  width: 100%;
+}
+
+.auth-link-row .ui-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.auth-link-row-add {
+  align-self: flex-start;
+  width: auto !important;
+  max-width: none !important;
+}
+
 /* ---- Listen / channel directory ---- */
 .listen-shell {
   min-height: 100vh;

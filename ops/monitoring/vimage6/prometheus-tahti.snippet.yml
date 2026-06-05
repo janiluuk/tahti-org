@@ -1,13 +1,10 @@
-# Append to /opt/monitoring/prometheus/config/prometheus.yml on vimage6
-# (managed by ops/monitoring/vimage6/deploy.sh — search marker tahti-vital-services)
-
   # --- tahti-vital-services (managed by tahti-org) ---
 
   - job_name: tahti_api_metrics
     scrape_interval: 30s
     metrics_path: /metrics
     static_configs:
-      - targets: ["192.168.2.100:3011"]
+      - targets: ["192.168.2.100:15011"]
         labels:
           environment: lab
           host: vimage
@@ -20,17 +17,16 @@
       module: [http_2xx]
     static_configs:
       - targets:
-          - http://192.168.2.100:3011/health
-          - http://192.168.2.100:3011/api/v1/status
-          - http://192.168.2.100:3010/
+          - http://192.168.2.100:15011/health
+          - http://192.168.2.100:17777/
           - http://192.168.2.100:8090/health
-          - http://192.168.2.100:8000/health
-          - http://192.168.2.100:9000/minio/health/live
-          - http://192.168.2.100:3003/health
-          - http://192.168.2.100:8100/
+          - http://192.168.2.100:18000/health
+          - http://192.168.2.100:19000/minio/health/live
+          - http://192.168.2.100:18100/status-json.xsl
         labels:
           environment: lab
           host: vimage
+          layer: lab
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -40,33 +36,115 @@
         replacement: 127.0.0.1:9115
       - source_labels: [__param_target]
         regex: '.*/health$'
-        target_label: probe
-        replacement: health
+        target_label: service
+        replacement: api-health
       - source_labels: [__param_target]
-        regex: '.*/api/v1/status$'
-        target_label: probe
-        replacement: status
-      - source_labels: [__param_target]
-        regex: '.*:3010/.*'
-        target_label: probe
+        regex: '.*:17777/.*'
+        target_label: service
         replacement: web
       - source_labels: [__param_target]
         regex: '.*:8090/.*'
-        target_label: probe
+        target_label: service
         replacement: website
       - source_labels: [__param_target]
-        regex: '.*:8000/.*'
-        target_label: probe
+        regex: '.*:18000/.*'
+        target_label: service
         replacement: chat
       - source_labels: [__param_target]
         regex: '.*minio.*'
-        target_label: probe
+        target_label: service
         replacement: minio
       - source_labels: [__param_target]
-        regex: '.*:3003/.*'
-        target_label: probe
-        replacement: orchestrator
-      - source_labels: [__param_target]
-        regex: '.*:8100/.*'
-        target_label: probe
+        regex: '.*:18100/status-json\\.xsl$'
+        target_label: service
         replacement: icecast
+
+  - job_name: tahti_blackbox_orchestrator
+    scrape_interval: 30s
+    metrics_path: /probe
+    params:
+      module: [http_2xx_or_401]
+    static_configs:
+      - targets:
+          - http://192.168.2.100:15003/health
+        labels:
+          environment: lab
+          host: vimage
+          layer: lab
+          service: orchestrator
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+
+  - job_name: tahti_blackbox_public
+    scrape_interval: 60s
+    metrics_path: /probe
+    params:
+      module: [http_2xx_ssl]
+    static_configs:
+      - targets:
+          - https://api.tahti.live/health
+          - https://app.tahti.live/
+          - https://tahti.live/
+          - https://chat.tahti.live/
+          - https://webmail.tahti.live/
+          - https://grafana.tahti.live/
+        labels:
+          environment: production
+          layer: public
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+      - source_labels: [__param_target]
+        regex: 'https://api\\.tahti\\.live.*'
+        target_label: service
+        replacement: api
+      - source_labels: [__param_target]
+        regex: 'https://app\\.tahti\\.live.*'
+        target_label: service
+        replacement: app
+      - source_labels: [__param_target]
+        regex: 'https://tahti\\.live.*'
+        target_label: service
+        replacement: marketing
+      - source_labels: [__param_target]
+        regex: 'https://chat\\.tahti\\.live.*'
+        target_label: service
+        replacement: chat
+      - source_labels: [__param_target]
+        regex: 'https://webmail\\.tahti\\.live.*'
+        target_label: service
+        replacement: webmail
+      - source_labels: [__param_target]
+        regex: 'https://grafana\\.tahti\\.live.*'
+        target_label: service
+        replacement: grafana
+
+  - job_name: tahti_blackbox_tcp
+    scrape_interval: 60s
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+          - mail.tahti.live:587
+        labels:
+          environment: production
+          service: smtp
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115
+
+  # --- end tahti-vital-services ---

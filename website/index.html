@@ -538,7 +538,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 <nav>
   <div class="nav-logo"><div class="nav-logo-bar"></div>TAHTI</div>
   <div class="nav-dots" id="navDots"></div>
-  <a href="#cta" class="nav-cta">APPLY FOR BETA</a>
+  <a href="https://app.tahti.live/apply" class="nav-cta">APPLY FOR BETA</a>
 </nav>
 
 <!-- HERO -->
@@ -550,7 +550,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
       <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
       <div class="hero-cta-row reveal reveal-delay-3">
-        <a href="#cta" class="btn-primary">Apply for beta →</a>
+        <a href="https://app.tahti.live/apply" class="btn-primary">Apply for beta →</a>
         <a href="#broadcast" class="btn-secondary">See how it works</a>
       </div>
       <div class="hero-footer reveal reveal-delay-4">
@@ -1773,41 +1773,9 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     <div class="apply-form-wrap reveal reveal-delay-3" id="apply-wrap">
       <div class="apply-form-title">Apply for the private beta</div>
       <div class="apply-form-sub">We're inviting 30–50 working artists from EU electronic scenes. All applications are reviewed personally.</div>
-      <form id="apply-form" novalidate>
-        <div class="apply-row-2">
-          <div class="apply-field">
-            <label for="af-name">Your name</label>
-            <input id="af-name" type="text" name="name" placeholder="DJ Moonrise" required>
-          </div>
-          <div class="apply-field">
-            <label for="af-email">Email address</label>
-            <input id="af-email" type="email" name="email" placeholder="you@example.com" required>
-          </div>
-        </div>
-        <div class="apply-field">
-          <label for="af-type">What kind of artist are you?</label>
-          <input id="af-type" type="text" name="artist_type" placeholder="DJ / producer / live electronics / experimental…" required>
-        </div>
-        <div class="apply-field">
-          <label for="af-links">Links to your music (optional)</label>
-          <input id="af-links" type="text" name="links" placeholder="SoundCloud, Mixcloud, Bandcamp, personal site…">
-        </div>
-        <div class="apply-field">
-          <label for="af-msg">Anything else?</label>
-          <textarea id="af-msg" name="message" rows="3" placeholder="Tell us about your setup, what you broadcast, what frustrates you about existing platforms…"></textarea>
-        </div>
-        <div class="apply-submit-row">
-          <button type="submit" class="cta-btn" id="apply-submit" style="margin:0">APPLY FOR BETA</button>
-          <div class="apply-submit-note">No spam. We reply personally to every<br>application.</div>
-        </div>
-      </form>
-      <div id="apply-success">
-        <div class="ok-icon">✓</div>
-        <div class="ok-title">Application received</div>
-        <div class="ok-body">We'll be in touch at the email you provided.<br>The first round of invitations goes out in early 2025.</div>
-      </div>
-      <div id="apply-error">
-        Something went wrong — please email us directly at <a href="mailto:support@tahti.live">support@tahti.live</a>
+      <div class="apply-submit-row">
+        <a href="https://app.tahti.live/apply" class="cta-btn" style="margin:0">APPLY FOR BETA →</a>
+        <div class="apply-submit-note">No spam. We reply personally to every<br>application.</div>
       </div>
     </div>
 
@@ -2581,58 +2549,6 @@ function switchMockup(id, btn) {
   btn.classList.add('active');
 }
 
-// ===== APPLY FORM =====
-(function() {
-  const API_BASE =
-    location.hostname === 'localhost' || location.hostname === '127.0.0.1'
-      ? 'http://localhost:3001'
-      : 'https://api.tahti.live';
-  const ENDPOINT = API_BASE + '/api/beta/apply';
-
-  const form = document.getElementById('apply-form');
-  const btn  = document.getElementById('apply-submit');
-  const ok   = document.getElementById('apply-success');
-  const err  = document.getElementById('apply-error');
-  if (!form) return;
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!form.checkValidity()) { form.reportValidity(); return; }
-
-    const orig = btn.textContent;
-    btn.textContent = 'SENDING…';
-    btn.disabled = true;
-    err.style.display = 'none';
-
-    const fd = new FormData(form);
-    const payload = {
-      name: String(fd.get('name') ?? '').trim(),
-      email: String(fd.get('email') ?? '').trim(),
-      artistType: String(fd.get('artist_type') ?? '').trim(),
-      links: String(fd.get('links') ?? '').trim() || undefined,
-      message: String(fd.get('message') ?? '').trim() || undefined,
-    };
-
-    try {
-      const res = await fetch(ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        form.style.display = 'none';
-        ok.style.display = 'block';
-      } else {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Server error ' + res.status);
-      }
-    } catch (e) {
-      err.style.display = 'block';
-      btn.textContent = orig;
-      btn.disabled = false;
-    }
-  });
-})();
 </script>
 </body>
 </html>

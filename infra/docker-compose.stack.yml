@@ -15,9 +15,12 @@ x-app-env: &app-env
   SESSION_SECRET: dev-session-secret-do-not-use-in-prod
   INTERNAL_SECRET: dev-internal-secret-change-in-prod
   HCAPTCHA_SECRET: dev
-  SMTP_HOST: mailhog
-  SMTP_PORT: "1025"
-  SMTP_FROM: Tahti <noreply@tahti.live>
+  SMTP_HOST: ${SMTP_HOST:-mailhog}
+  SMTP_PORT: ${SMTP_PORT:-1025}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+  SMTP_FROM: ${SMTP_FROM:-Tahti <noreply@tahti.live>}
+  SUPPORT_INBOX: ${SUPPORT_INBOX:-support@tahti.live}
   MINIO_ENDPOINT: http://minio:9000
   MINIO_PUBLIC_ENDPOINT: http://localhost:19000
   MINIO_ACCESS_KEY: tahti
@@ -28,13 +31,14 @@ x-app-env: &app-env
   CENTRIFUGO_JWT_SECRET: dev_secret_do_not_use_in_prod
   ORCHESTRATOR_URL: http://orchestrator:3003
   ICECAST_HOST: icecast:8000
+  ICECAST_BASE_URL: http://icecast:8000
+  ICECAST_PUBLIC_URL: ${ICECAST_PUBLIC_URL:-http://localhost:${ICECAST_PORT:-18100}}
+  ICECAST_INGEST_HOSTS: ${ICECAST_INGEST_HOSTS:-}
   RTMP_INGEST_HOST: rtmp-ingest
   RTMP_INGEST_HEALTH_PORT: "8080"
   # STREAM-003: comma-separated public RTMP ingest hosts for OBS failover (second replica in prod)
   RTMP_INGEST_HOSTS: ""
-  ICECAST_PUBLIC_URL: http://localhost:${ICECAST_PORT:-18100}
   # STREAM-007: comma-separated public Icecast hosts for Mixxx failover (second replica in prod)
-  ICECAST_INGEST_HOSTS: ""
   ICECAST_INGEST_HEALTH_PATH: /status-json.xsl
   # STREAM-008 phase 3: optional AcoustID key for archive tracklist title lookup (https://acoustid.org/new-application)
   ACOUSTID_API_KEY: ""
@@ -49,8 +53,8 @@ x-app-env: &app-env
   HLS_MINIO_PREFIX: hls-live
   HLS_STALE_SECONDS: "20"
   ARCHIVE_CACHE_ROOT: /archive-cache
-  APP_URL: http://localhost:${WEB_PORT:-17777}
-  API_URL: http://localhost:${API_PORT:-15011}
+  APP_URL: ${APP_URL:-http://localhost:${WEB_PORT:-17777}}
+  API_URL: ${API_URL:-http://localhost:${API_PORT:-15011}}
 
 services:
 
@@ -139,8 +143,11 @@ services:
 
   icecast:
     image: moul/icecast:latest
+    user: "101:102"
+    entrypoint: ["/usr/bin/icecast2"]
+    command: ["-n", "-c", "/etc/icecast2/icecast.xml"]
     volumes:
-      - ./stack/icecast.xml:/etc/icecast.xml:ro
+      - ./stack/icecast.xml:/etc/icecast2/icecast.xml:ro
     ports:
       - "${ICECAST_PORT:-18100}:8000"
 
@@ -148,8 +155,11 @@ services:
   icecast-b:
     profiles: ["icecast-failover"]
     image: moul/icecast:latest
+    user: "101:102"
+    entrypoint: ["/usr/bin/icecast2"]
+    command: ["-n", "-c", "/etc/icecast2/icecast.xml"]
     volumes:
-      - ./stack/icecast.xml:/etc/icecast.xml:ro
+      - ./stack/icecast.xml:/etc/icecast2/icecast.xml:ro
     ports:
       - "${ICECAST_B_PORT:-18101}:8000"
 

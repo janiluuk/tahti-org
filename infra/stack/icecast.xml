@@ -20,7 +20,7 @@
         <admin-password>dev_admin</admin-password>
     </authentication>
 
-    <hostname>localhost</hostname>
+    <hostname>ingest-icecast.tahti.live</hostname>
 
     <listen-socket>
         <port>8000</port>
@@ -30,16 +30,14 @@
         <authentication type="url">
             <option name="mount_add"    value="http://api:3001/internal/icecast/on_connect"/>
             <option name="mount_remove" value="http://api:3001/internal/icecast/on_disconnect"/>
-            <option name="listener_add" value="http://api:3001/internal/icecast/on_listen"/>
-            <option name="headers"      value="Authorization"/>
         </authentication>
         <max-listeners>-1</max-listeners>
     </mount>
 
     <paths>
-        <logdir>/var/log/icecast</logdir>
-        <webroot>/usr/share/icecast/web</webroot>
-        <adminroot>/usr/share/icecast/admin</adminroot>
+        <logdir>/var/log/icecast2</logdir>
+        <webroot>/usr/share/icecast2/web</webroot>
+        <adminroot>/usr/share/icecast2/admin</adminroot>
     </paths>
 
     <logging>
