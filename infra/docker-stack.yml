@@ -22,6 +22,8 @@ version: "3.9"
 #   openssl rand -hex 32   | docker secret create chat_fingerprint_salt -
 #   echo -n "..." | docker secret create revelator_api_key -
 #   echo -n "..." | docker secret create mixcloud_client_secret -
+#   echo -n "tahti" | docker secret create docs_user -
+#   openssl rand -base64 24 | docker secret create docs_pass -
 #   echo -n "..." | docker secret create smtp_password -
 #
 # Deploy:
@@ -242,6 +244,8 @@ services:
       SMTP_PASSWORD_FILE: /run/secrets/smtp_password
       DOCS_USER_FILE: /run/secrets/docs_user
       DOCS_PASS_FILE: /run/secrets/docs_pass
+      MIXCLOUD_CLIENT_ID: ${MIXCLOUD_CLIENT_ID:-}
+      MIXCLOUD_OAUTH_REDIRECT_URI: ${MIXCLOUD_OAUTH_REDIRECT_URI:-}
     secrets:
       - pg_password
       - session_secret
@@ -307,6 +311,7 @@ services:
       REDIS_URL: redis://redis:6379
       REVELATOR_API_KEY_FILE: /run/secrets/revelator_api_key
       MIXCLOUD_CLIENT_SECRET_FILE: /run/secrets/mixcloud_client_secret
+      MIXCLOUD_CLIENT_ID: ${MIXCLOUD_CLIENT_ID:-}
     secrets: [pg_password, revelator_api_key, mixcloud_client_secret]
     deploy:
       replicas: 1

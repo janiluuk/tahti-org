@@ -69,7 +69,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
 | **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence |
 | **M6** Multistream RTMP | ✅ Done | Per-channel targets, encrypted stream keys, `alwaysMirror` gated to STUDIO |
-| **M7** Distribution (Mixcloud + Revelator) | 🟡 Partial | Mixcloud OAuth connect + archive upload queue; `packages/revelator` stub/live submit + **Revelator wizard**; **monthly royalty sync** + dashboard display; **€8/release Stripe billing** (Studio 12/yr included). Deferred: Mixcloud OAuth in production credentials |
+| **M7** Distribution (Mixcloud + Revelator) | 🟡 Partial | Mixcloud OAuth connect + archive upload queue; **`MIXCLOUD_CLIENT_SECRET_FILE`** wired on api/worker; prod setup in RUNBOOK; `packages/revelator` stub/live submit + **Revelator wizard**; **monthly royalty sync** + dashboard display; **€8/release Stripe billing** (Studio 12/yr included). Deferred: live Mixcloud app credentials on production stack |
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
@@ -492,7 +492,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [~] | **PLAT-002** | Require branch protection on all `ci.yml` jobs (lint, test, both e2e, AGPL) | `.github/BRANCH_PROTECTION.md` — enable **All checks** in repo settings | P1 |
 | [~] | **PLAT-003** | PgBouncer before scaling API replicas (`docs/scaling-node-distribution.md`) | Runbook section added; stack service deferred | P1 |
 | [x] | **PLAT-004** | Internal ingest routes: shared `@fastify/formbody` + integration tests for RTMP + Icecast | `ingest.test.ts` |
-| [~] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | `DOCS_*_FILE` on API in `docker-stack.yml`; `readSecret` + prod warning | P2 |
+| [x] | **PLAT-005** | Swagger `/docs` credentials via Docker secrets, not env defaults | `DOCS_*_FILE` on API in `docker-stack.yml`; `readSecret` + prod warning; RUNBOOK rotation | P2 |
 | [x] | **PLAT-006** | Rate-limit policy doc: fail-open vs fail-closed when Redis unavailable | P2 |
 
 ### Optimisations (performance & cost)

@@ -199,6 +199,9 @@ jobs:
         run: |
           ssh staging "
             cd ${{ vars.DEPLOY_PATH || '/srv/tahti' }}
+            set -a
+            [ -f stack.env ] && . stack.env
+            set +a
             TAG=${{ github.sha }} docker stack deploy \
               --with-registry-auth \
               --prune \
@@ -272,6 +275,9 @@ jobs:
         run: |
           ssh prod "
             cd ${{ vars.DEPLOY_PATH || '/srv/tahti' }}
+            set -a
+            [ -f stack.env ] && . stack.env
+            set +a
             TAG=${{ github.sha }} docker stack deploy \
               --with-registry-auth \
               --prune \
