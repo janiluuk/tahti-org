@@ -3,15 +3,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-const SERVICE_LABELS: Record<string, string> = {
-  spotify: 'Spotify',
-  apple: 'Apple Music',
-  tidal: 'Tidal',
-  bandcamp: 'Bandcamp',
-  soundcloud: 'SoundCloud',
-  youtube: 'YouTube Music',
-  deezer: 'Deezer',
-  amazon: 'Amazon Music',
+const SERVICE_META: Record<string, { label: string; action: string; emoji: string }> = {
+  spotify: { label: 'Spotify', action: 'Stream', emoji: '🎵' },
+  apple: { label: 'Apple Music', action: 'Stream', emoji: '🍎' },
+  tidal: { label: 'Tidal', action: 'Stream', emoji: '🌊' },
+  bandcamp: { label: 'Bandcamp', action: 'Buy / Free DL', emoji: '💿' },
+  soundcloud: { label: 'SoundCloud', action: 'Stream', emoji: '☁️' },
+  youtube: { label: 'YouTube Music', action: 'Stream', emoji: '▶️' },
+  deezer: { label: 'Deezer', action: 'Stream', emoji: '🎧' },
+  amazon: { label: 'Amazon Music', action: 'Stream', emoji: '🛒' },
+  tahti: { label: 'tahti.fi', action: 'FLAC · best quality', emoji: '★' },
+}
+
+function ServiceIcon({ service, emoji }: { service: string; emoji: string }) {
+  return (
+    <span className={`sl-btn-icon sl-btn-icon--${service}`} aria-hidden>
+      {emoji}
+    </span>
+  )
 }
 
 type Props = {
@@ -40,18 +49,24 @@ export function SmartLinkDspButtons({ smartLinkSlug, targets }: Props) {
 
   return (
     <div className="sl-btns">
-      {services.map(([key, url]) => (
-        <a
-          key={key}
-          href={url}
-          rel="noopener noreferrer"
-          className="sl-btn"
-          onClick={() => logClick(key)}
-        >
-          <span className="sl-btn-name">{SERVICE_LABELS[key] ?? key}</span>
-          <span className="sl-btn-arrow">→</span>
-        </a>
-      ))}
+      {services.map(([key, url]) => {
+        const meta = SERVICE_META[key] ?? { label: key, action: 'Listen', emoji: '🔗' }
+        const isPrimary = key === 'tahti'
+        return (
+          <a
+            key={key}
+            href={url}
+            rel="noopener noreferrer"
+            className={`sl-btn${isPrimary ? ' sl-btn--primary' : ''}`}
+            onClick={() => logClick(key)}
+          >
+            <ServiceIcon service={key} emoji={meta.emoji} />
+            <span className="sl-btn-name">{meta.label}</span>
+            <span className="sl-btn-action">{meta.action}</span>
+            <span className="sl-btn-arrow">→</span>
+          </a>
+        )
+      })}
     </div>
   )
 }

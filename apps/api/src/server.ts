@@ -70,6 +70,7 @@ import adminReportsRoutes from './routes/admin/reports.js'
 import adminAuditRoutes from './routes/admin/audit.js'
 import adminVenueRoutes from './routes/admin/venues.js'
 import supportContactRoutes from './routes/support/contact.js'
+import betaApplyRoutes from './routes/beta/apply.js'
 import meReleaseRoutes from './routes/releases/me.js'
 import releaseTrackRoutes from './routes/releases/tracks.js'
 import releaseTrackVersionRoutes from './routes/releases/track-versions.js'
@@ -100,6 +101,9 @@ import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
 import meChannelEgressRoutes from './routes/me/channel-egress.js'
 import meChannelLiveStatsRoutes from './routes/me/channel-live-stats.js'
 import meChannelFunnelStatsRoutes from './routes/me/channel-funnel-stats.js'
+import meStatsRoutes from './routes/me/stats.js'
+import meEndBroadcastRoutes from './routes/me/end-broadcast.js'
+import meStashRoutes from './routes/me/stash.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
@@ -438,6 +442,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminAuditRoutes)
   await fastify.register(adminVenueRoutes)
   await fastify.register(supportContactRoutes)
+  await fastify.register(betaApplyRoutes)
 
   // M12: artist profile + releases + audio upload pipeline
   await fastify.register(meReleaseRoutes)
@@ -489,6 +494,9 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meChannelEgressRoutes)
   await fastify.register(meChannelLiveStatsRoutes)
   await fastify.register(meChannelFunnelStatsRoutes)
+  await fastify.register(meStatsRoutes)
+  await fastify.register(meEndBroadcastRoutes)
+  await fastify.register(meStashRoutes)
   await fastify.register(meUsersRoutes)
 
   // M23: collections + RSS feeds

@@ -59,6 +59,8 @@ interface ProfileResponse {
     type: string
     releaseDate: string
     description: string | null
+    artworkUrl: string | null
+    smartLinkSlug: string
     tracks: Array<{
       position: number
       title: string
@@ -78,10 +80,6 @@ interface ProfileResponse {
     itemCount: number
     url: string
   }>
-}
-
-function formatDuration(sec: number): string {
-  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
 }
 
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
@@ -158,41 +156,41 @@ export default async function ArtistProfilePage({ params }: { params: { username
           {releases.length === 0 ? (
             <p className="prof-list-meta">No published releases yet.</p>
           ) : (
-            <ul className="prof-list">
-              {releases.map((r) => (
-                <li id={`release-${r.id}`} key={r.id} className="prof-list-item">
-                  <div>
-                    {r.title}{' '}
-                    <span className="prof-list-meta">
-                      {r.type} · {new Date(r.releaseDate).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {r.description && (
-                    <p className="prof-list-meta prof-list-meta--spaced">{r.description}</p>
-                  )}
-                  {r.tracks.length > 0 && (
-                    <ol className="prof-track-list">
-                      {r.tracks.map((t) => (
-                        <li
-                          key={t.position}
-                          id={t.archiveItemId ? `archive-item-${t.archiveItemId}` : undefined}
-                        >
-                          {t.title}
-                          {t.durationSec != null && ` (${formatDuration(t.durationSec)})`}
-                          {t.playUrl && (
-                            <audio controls src={t.playUrl} className="prof-track-audio" />
-                          )}
-                          {t.channelItemUrl && !t.playUrl && (
-                            <Link href={t.channelItemUrl} className="prof-channel-link">
-                              Listen on channel
-                            </Link>
-                          )}
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </li>
-              ))}
+            <ul className="prof-list prof-release-list">
+              {releases.map((r) => {
+                const firstPlay = r.tracks.find((t) => t.playUrl)?.playUrl
+                return (
+                  <li id={`release-${r.id}`} key={r.id} className="prof-release-row">
+                    <div className="prof-release-thumb">
+                      {r.artworkUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={r.artworkUrl} alt="" width={40} height={40} />
+                      ) : (
+                        <span className="prof-release-thumb-ph" aria-hidden />
+                      )}
+                    </div>
+                    <div className="prof-release-body">
+                      <div className="prof-release-title">{r.title}</div>
+                      <div className="prof-list-meta">
+                        {r.type} · {new Date(r.releaseDate).toLocaleDateString()}
+                      </div>
+                      {r.description && (
+                        <p className="prof-list-meta prof-list-meta--spaced">{r.description}</p>
+                      )}
+                    </div>
+                    <div className="prof-release-actions">
+                      <Link href={`/r/${r.smartLinkSlug}`} className="prof-release-action">
+                        Links →
+                      </Link>
+                      {firstPlay && (
+                        <a href={firstPlay} className="prof-release-action">
+                          Play ▶
+                        </a>
+                      )}
+                    </div>
+                  </li>
+                )
+              })}
             </ul>
           )}
         </section>

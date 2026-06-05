@@ -10,6 +10,8 @@ import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
 import { ArchiveDownloadButton } from './archive-download'
+import { BroadcastCountdown } from './broadcast-countdown'
+import { StickyLiveBar } from './sticky-live-bar'
 import { ArchiveVideoBackdrop, resolveArchiveBackground } from './archive-item-backdrop'
 import type {
   ChannelGalleryMode,
@@ -37,6 +39,7 @@ interface ChannelResponse {
     displayName: string
     bio: string | null
     avatarUrl: string | null
+    tier: string
   }
 }
 
@@ -48,6 +51,8 @@ interface ArchiveItem {
   durationSec: number | null
   audioUrl: string | null
   createdAt: string
+  genre?: string | null
+  genreCustom?: string | null
   tracklist?: TracklistEntry[] | null
   repostToDownload?: boolean
   followToDownload?: boolean
@@ -90,12 +95,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const hlsUrl = channel.hlsUrl
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
+  const isFlac = channel.user.tier === 'STUDIO' || channel.user.tier === 'ARTIST'
+  const tagSet = new Set<string>()
+  for (const item of items) {
+    if (item.genre?.trim()) tagSet.add(item.genre.trim())
+    if (item.genreCustom?.trim()) tagSet.add(item.genreCustom.trim())
+  }
+  const tags = [...tagSet].slice(0, 8)
 
   return (
     <ChannelPageLayout
       isLive={channel.state === 'LIVE'}
       main={
         <>
+          {channel.state === 'LIVE' && (
+            <StickyLiveBar slug={slug} artistName={channel.user.displayName} isFlac={isFlac} />
+          )}
           {channelBackdrop.videoEmbedUrl && (
             <ArchiveVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
           )}
@@ -130,6 +145,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             {channel.user.bio && (
               <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
             )}
+            {tags.length > 0 && (
+              <div className="prof-tags">
+                {tags.map((tag) => (
+                  <span key={tag} className="prof-tag-chip">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </header>
 
           <NewsletterSubscribeForm
@@ -137,23 +161,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             artistDisplayName={channel.user.displayName}
           />
 
-          {channel.state !== 'LIVE' && (channel.nextBroadcastAt || channel.nextBroadcastNote) && (
+          {channel.state !== 'LIVE' && channel.nextBroadcastAt && (
+            <BroadcastCountdown
+              targetIso={channel.nextBroadcastAt}
+              note={channel.nextBroadcastNote}
+            />
+          )}
+          {channel.state !== 'LIVE' && !channel.nextBroadcastAt && channel.nextBroadcastNote && (
             <div className="ch-next-broadcast" role="status">
-              <strong>Next broadcast</strong>
-              {channel.nextBroadcastAt && (
-                <div className="ch-next-broadcast-time">
-                  {new Date(channel.nextBroadcastAt).toLocaleString(undefined, {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  })}
-                </div>
-              )}
-              {channel.nextBroadcastNote && (
-                <SafePlainText
-                  text={channel.nextBroadcastNote}
-                  className="ch-next-broadcast-note"
-                />
-              )}
+              <SafePlainText text={channel.nextBroadcastNote} className="ch-next-broadcast-note" />
             </div>
           )}
 
@@ -170,7 +186,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
 
           <section className="ch-archive-section">
-            <h2>Archive</h2>
+            <h2 className="ch-section-label">Archive</h2>
 
             {items.length === 0 ? (
               <p className="ch-archive-empty">No archive items yet.</p>
@@ -188,10 +204,28 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       }
                     >
                       {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
-                      {item.bannerUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={item.bannerUrl} alt="" className="ch-archive-banner" />
-                      )}
+                      <div className="ch-archive-item-header">
+                        {item.bannerUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.bannerUrl} alt="" className="ch-archive-item-thumb" />
+                        )}
+                        <div className="ch-archive-item-meta">
+                          <div className="ch-archive-item-title">{item.title}</div>
+                          <div className="ch-archive-item-date">
+                            {new Date(item.createdAt).toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'short',
+                            })}
+                            {item.durationSec != null && (
+                              <>
+                                {' · '}
+                                {Math.floor(item.durationSec / 60)}:
+                                {String(item.durationSec % 60).padStart(2, '0')}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                       {item.slideshowUrls && item.slideshowUrls.length > 0 && (
                         <div className="ch-archive-slideshow">
                           {item.slideshowUrls.map((url) => (
@@ -200,7 +234,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                           ))}
                         </div>
                       )}
-                      <div className="ch-archive-item-title">{item.title}</div>
                       {item.description && (
                         <SafePlainText text={item.description} className="ch-archive-item-desc" />
                       )}
@@ -209,12 +242,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                           text={item.commentary}
                           className="ch-archive-item-commentary"
                         />
-                      )}
-                      {item.durationSec != null && (
-                        <div className="ch-archive-item-duration">
-                          {Math.floor(item.durationSec / 60)}:
-                          {String(item.durationSec % 60).padStart(2, '0')}
-                        </div>
                       )}
                       {item.tracklist && item.tracklist.length > 0 && (
                         <TracklistView entries={item.tracklist} />

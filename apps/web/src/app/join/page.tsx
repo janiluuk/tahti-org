@@ -3,7 +3,7 @@
 
 import { redirect } from 'next/navigation'
 
-/** Legacy /join URL — registration lives on the login page. */
+/** Legacy /join URL — beta applications live on /apply. */
 export default function JoinPage() {
-  redirect('/login?register')
+  redirect('/apply')
 }

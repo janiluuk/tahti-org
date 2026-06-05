@@ -174,7 +174,8 @@
 }
 
 [data-tahti-ui='brand'] .ch-archive-item--bg {
-  background-image: linear-gradient(rgba(10, 15, 30, 0.88), rgba(10, 15, 30, 0.88)), var(--ch-item-bg);
+  background-image:
+    linear-gradient(rgba(10, 15, 30, 0.88), rgba(10, 15, 30, 0.88)), var(--ch-item-bg);
   background-size: cover;
   background-position: center;
 }
@@ -265,6 +266,218 @@
 
 [data-tahti-ui='brand'] .ch-chat-announcements {
   padding: 0.75rem 1rem 0;
+}
+
+/* ── Custom HLS player card ─────────────────────────────────────────────── */
+
+[data-tahti-ui='brand'] .ch-player-audio-hidden {
+  display: none;
+}
+
+[data-tahti-ui='brand'] .ch-player-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-player-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+[data-tahti-ui='brand'] .ch-player-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+[data-tahti-ui='brand'] .ch-player-status-dot--live {
+  background: var(--green);
+  animation: channel-pulse 1.5s ease-in-out infinite;
+}
+
+[data-tahti-ui='brand'] .ch-player-status-label {
+  flex: 1;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-player-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
+  border-radius: var(--radius-pill);
+  padding: 0.15rem 0.5rem;
+}
+
+/* Waveform */
+[data-tahti-ui='brand'] .ch-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 48px;
+  padding: 4px 0;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .ch-wf-bar {
+  flex: 1;
+  min-width: 3px;
+  max-width: 8px;
+  height: var(--h, 8px);
+  background: var(--cyan);
+  border-radius: 2px;
+  opacity: 0.35;
+  transition: opacity 0.3s;
+}
+
+[data-tahti-ui='brand'] .ch-wf-bar--active {
+  opacity: 0.85;
+  animation: wf-pulse var(--dur, 0.7s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+
+@keyframes wf-pulse {
+  0% {
+    transform: scaleY(0.35);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+/* Controls */
+[data-tahti-ui='brand'] .ch-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-play-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--cyan);
+  color: #0a0f1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background 0.2s,
+    transform 0.15s;
+}
+
+[data-tahti-ui='brand'] .ch-play-btn:hover {
+  background: color-mix(in srgb, var(--cyan) 80%, white);
+  transform: scale(1.05);
+}
+
+[data-tahti-ui='brand'] .ch-play-btn--buffering {
+  background: var(--card2);
+  cursor: wait;
+}
+
+[data-tahti-ui='brand'] .ch-play-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: ch-spin 0.7s linear infinite;
+}
+
+@keyframes ch-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+[data-tahti-ui='brand'] .ch-player-progress-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .ch-player-time {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .ch-progress-bar:hover {
+  height: 6px;
+}
+
+[data-tahti-ui='brand'] .ch-progress-fill {
+  height: 100%;
+  background: var(--cyan);
+  border-radius: 2px;
+  transition: width 0.25s linear;
+}
+
+[data-tahti-ui='brand'] .ch-progress-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cyan);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+[data-tahti-ui='brand'] .ch-progress-bar:hover .ch-progress-thumb {
+  opacity: 1;
+}
+
+/* Responsive: collapse sidebar on mobile */
+@media (max-width: 768px) {
+  [data-tahti-ui='brand'] .ch-body {
+    grid-template-columns: 1fr;
+  }
+
+  [data-tahti-ui='brand'] .ch-sidebar {
+    border-top: 1px solid var(--border);
+    border-right: none;
+  }
+
+  [data-tahti-ui='brand'] .ch-main {
+    border-right: none;
+    padding: 16px;
+  }
 }
 
 [data-tahti-ui='brand'] .ch-reactions {
@@ -989,8 +1202,8 @@
 }
 
 [data-tahti-ui='brand'] .sl-cover-art {
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 200px;
   margin: 0 auto 18px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -1111,6 +1324,16 @@
   border-color: var(--cyan);
 }
 
+[data-tahti-ui='brand'] .sl-btn--primary {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cyan) 35%, transparent);
+}
+
+[data-tahti-ui='brand'] .sl-btn--primary:hover {
+  border-color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 8%, var(--card));
+}
+
 [data-tahti-ui='brand'] .sl-btn-name {
   flex: 1;
   font-size: 0.8125rem;
@@ -1146,4 +1369,346 @@
 
 [data-tahti-ui='brand'] .sl-footer a:hover {
   color: var(--amber);
+}
+
+/* ── Broadcast countdown timer (PLAT-035) ───────────────────────────────── */
+
+[data-tahti-ui='brand'] .ch-countdown {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin: 0 0 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-note {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-tiles {
+  display: inline-flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-tile {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56px;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-num {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-family: var(--font-head);
+  color: var(--amber);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-unit {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── Smart link DSP button icon (PLAT-031) ──────────────────────────────── */
+
+[data-tahti-ui='brand'] .sl-btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  letter-spacing: 0;
+  background: var(--card2);
+  border: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--spotify {
+  background: #1db95422;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--apple {
+  background: #fc3c4422;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--tahti {
+  background: color-mix(in srgb, var(--cyan) 20%, var(--card2));
+  color: var(--cyan);
+  font-size: 1rem;
+}
+
+[data-tahti-ui='brand'] .sl-btn-action {
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: right;
+  padding-right: 4px;
+}
+
+/* ── Archive item thumbnail (PLAT-032) ──────────────────────────────────── */
+
+[data-tahti-ui='brand'] .ch-archive-item-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-date {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ── Profile tag chips + release rows (PLAT-032) ────────────────────────── */
+
+[data-tahti-ui='brand'] .prof-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+[data-tahti-ui='brand'] .prof-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .prof-release-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .prof-release-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .prof-release-row:last-child {
+  border-bottom: none;
+}
+
+[data-tahti-ui='brand'] .prof-release-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .prof-release-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+[data-tahti-ui='brand'] .prof-release-thumb-ph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--card2), var(--border));
+}
+
+[data-tahti-ui='brand'] .prof-release-body {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .prof-release-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+[data-tahti-ui='brand'] .prof-release-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .prof-release-action {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cyan);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .prof-release-action:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px #22c55e88;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-text {
+  flex: 1;
+  font-size: 0.8125rem;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-listeners {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-flac-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-open {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cyan);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-open:hover {
+  text-decoration: underline;
+}
+
+/* ── Section label consistency (PLAT-034) ───────────────────────────────── */
+
+[data-tahti-ui='brand'] .ch-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Mobile player full-bleed layout (PLAT-037) ─────────────────────────── */
+
+@media (max-width: 480px) {
+  [data-tahti-ui='brand'] .ch-player-wrap {
+    padding: 0;
+  }
+
+  [data-tahti-ui='brand'] .ch-player-inner {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  [data-tahti-ui='brand'] .ch-player-card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 1rem;
+  }
+
+  [data-tahti-ui='brand'] .ch-waveform {
+    height: 36px;
+  }
+
+  [data-tahti-ui='brand'] .ch-wf-bar {
+    max-width: 6px;
+  }
+
+  [data-tahti-ui='brand'] .ch-play-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  [data-tahti-ui='brand'] .ch-player-time {
+    font-size: 0.7rem;
+  }
+
+  [data-tahti-ui='brand'] .ch-countdown-tiles {
+    gap: 6px;
+  }
+
+  [data-tahti-ui='brand'] .ch-countdown-tile {
+    min-width: 48px;
+    padding: 8px 10px;
+  }
+
+  [data-tahti-ui='brand'] .ch-countdown-num {
+    font-size: 1.4rem;
+  }
 }
