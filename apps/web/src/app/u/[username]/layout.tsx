@@ -2,12 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import '@/components/brand-public.css'
 
+/** Profile routes inherit brand-channel from app/u/layout.tsx */
 export default function ArtistPublicLayout({ children }: { children: ReactNode }) {
-  return (
-    <div data-tahti-ui="brand" className="brand-public">
-      {children}
-    </div>
-  )
+  return children
 }

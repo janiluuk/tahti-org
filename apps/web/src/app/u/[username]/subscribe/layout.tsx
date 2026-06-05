@@ -2,12 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import '@/components/brand-public.css'
 
+/** Subscribe inherits brand-channel from app/u/layout.tsx */
 export default function SubscribeLayout({ children }: { children: ReactNode }) {
-  return (
-    <div data-tahti-ui="brand" className="brand-public brand-public--center">
-      {children}
-    </div>
-  )
+  return children
 }

@@ -54,71 +54,29 @@ export default function TierCards({
 
   return (
     <div>
-      {message && (
-        <p
-          style={{
-            padding: '0.75rem 1rem',
-            background: '#f0f9ff',
-            border: '1px solid #bae6fd',
-            borderRadius: 8,
-            margin: '0 0 1.5rem',
-          }}
-        >
-          {message}
-        </p>
-      )}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          gap: '1rem',
-        }}
-      >
+      {message && <p className="tier-message">{message}</p>}
+      <div className="tier-grid">
         {tiers.map((t) => (
-          <div
-            key={t.id}
-            style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: 12,
-              padding: '1.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <h3 style={{ margin: '0 0 0.25rem' }}>{t.name}</h3>
-            <div style={{ fontSize: '1.75rem', fontWeight: 700 }}>
+          <div key={t.id} className="tier-card">
+            <h3>{t.name}</h3>
+            <div className="tier-price">
               {eur(t.amountCents)}
-              <span style={{ fontSize: '0.9rem', fontWeight: 400, color: '#888' }}>/mo</span>
+              <span className="tier-price-period">/mo</span>
             </div>
-            {t.description && <p style={{ color: '#666', marginTop: '0.5rem' }}>{t.description}</p>}
+            {t.description && <p className="tier-desc">{t.description}</p>}
             {t.perks.length > 0 && (
-              <ul
-                style={{
-                  paddingLeft: '1.1rem',
-                  margin: '0.75rem 0',
-                  color: '#444',
-                  fontSize: '0.9rem',
-                }}
-              >
+              <ul className="tier-perks">
                 {t.perks.map((p, i) => (
                   <li key={i}>{p}</li>
                 ))}
               </ul>
             )}
             <button
+              type="button"
+              className="tier-subscribe-btn"
               onClick={() => onSubscribe(t.id)}
               disabled={isPending || !paymentsReady}
               title={!paymentsReady ? 'Subscriptions open soon' : undefined}
-              style={{
-                marginTop: 'auto',
-                background: paymentsReady ? '#16a34a' : '#9ca3af',
-                color: 'white',
-                border: 'none',
-                borderRadius: 6,
-                padding: '0.6rem 1rem',
-                cursor: paymentsReady ? 'pointer' : 'not-allowed',
-                fontWeight: 600,
-              }}
             >
               {isPending && pendingId === t.id
                 ? 'Subscribing…'
@@ -129,7 +87,7 @@ export default function TierCards({
           </div>
         ))}
       </div>
-      <p style={{ color: '#888', fontSize: '0.8rem', marginTop: '1.5rem' }}>
+      <p className="tier-footnote">
         Direct to artist. 0% org take. A 2% fee covers payment processing and compliance.
       </p>
     </div>
