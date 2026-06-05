@@ -1,0 +1,44 @@
+# M18 — refresh bundled Tor exit IPs weekly (packages/shared/data/tor-exit-cidrs.txt).
+# Worker still syncs live list to Redis daily; this keeps the git fallback fresh for CI and cold starts.
+
+name: Tor exit list sync
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync and open PR
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch Tor bulk exit list
+        run: node scripts/sync-tor-exit-list.mjs
+
+      - name: Verify freshness
+        run: node scripts/check-tor-exit-list-fresh.mjs
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: 'chore(m18): refresh bundled Tor exit list'
+          title: 'chore(m18): refresh bundled Tor exit list'
+          body: |
+            Automated weekly sync from Tor Project bulk exit list.
+
+            - Worker Redis sync remains the runtime source (`tor-exit-list-sync` cron).
+            - Bundled file is fallback when Redis is empty and for CI freshness (`pnpm tor-exit:check`).
+          branch: automation/tor-exit-sync
+          delete-branch: true
+          labels: |
+            automation
+            m18

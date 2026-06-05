@@ -1,0 +1,29 @@
+# M11 — lightweight uptime checks until self-hosted Upptime is deployed (ops/upptime/).
+# Set repository variable STATUS_MONITOR_ENABLED=true to enable scheduled runs.
+
+name: Status monitor
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe production endpoints
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    if: github.event_name == 'workflow_dispatch' || vars.STATUS_MONITOR_ENABLED == 'true'
+
+    env:
+      API_URL: ${{ vars.STATUS_API_URL || 'https://api.tahti.live' }}
+      APP_URL: ${{ vars.STATUS_APP_URL || 'https://app.tahti.live' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check API and web surfaces
+        run: bash scripts/status-monitor.sh
