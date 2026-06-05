@@ -238,3 +238,117 @@
   margin: 0 auto;
   text-align: left;
 }
+
+/* ---- Prose (help, methodology) ---- */
+[data-tahti-ui='brand'] .brand-public .brand-prose h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 2rem 0 0.75rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose ol,
+[data-tahti-ui='brand'] .brand-public .brand-prose ul {
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose dl {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr;
+  gap: 0.5rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose dt {
+  font-weight: 600;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* ---- Governance cards ---- */
+[data-tahti-ui='brand'] .brand-public .brand-card {
+  padding: 1.25rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background: var(--card);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-card__meta {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-motion-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-motion-status--draft {
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-motion-status--open {
+  color: var(--tahti-success, #16a34a);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-motion-status--closed {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-vote-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-board-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-callout-panel {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--card2);
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table td.align-right {
+  text-align: right;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table .sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table .warn {
+  color: var(--tahti-warning, #d97706);
+}

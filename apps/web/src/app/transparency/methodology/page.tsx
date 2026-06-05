@@ -5,7 +5,7 @@ import { Heading, Link, Text } from '@tahti/ui'
 
 export default function MethodologyPage() {
   return (
-    <>
+    <div className="brand-prose">
       <Heading level={1}>Transparency methodology</Heading>
       <Text tone="muted">
         How Tahti ry records and publishes its financial data.{' '}
@@ -27,68 +27,64 @@ export default function MethodologyPage() {
 
       <section className="brand-section">
         <Heading level={2}>Revenue categories</Heading>
-        <dl style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '0.5rem 1rem' }}>
-          <dt style={{ fontWeight: 600, color: '#444' }}>REVENUE_SUBSCRIPTION</dt>
-          <dd style={{ margin: 0 }}>
+        <dl>
+          <dt>REVENUE_SUBSCRIPTION</dt>
+          <dd>
             Monthly membership fees from artist members (Artist and Studio tiers). Recorded at
             successful Stripe charge.
           </dd>
-          <dt style={{ fontWeight: 600, color: '#444' }}>REVENUE_DISTRIBUTION</dt>
-          <dd style={{ margin: 0 }}>
+          <dt>REVENUE_DISTRIBUTION</dt>
+          <dd>
             Distribution handling fees charged to artists for Revelator/DSP delivery (€3–5 per
             release). Pass-through cost is recorded separately.
           </dd>
-          <dt style={{ fontWeight: 600, color: '#444' }}>REVENUE_GRANT_INBOUND</dt>
-          <dd style={{ margin: 0 }}>
-            Grants received from public or private bodies (e.g. Taiteen edistämiskeskus).
-          </dd>
-          <dt style={{ fontWeight: 600, color: '#444' }}>REVENUE_DONATION</dt>
-          <dd style={{ margin: 0 }}>Voluntary donations from supporters.</dd>
+          <dt>REVENUE_GRANT_INBOUND</dt>
+          <dd>Grants received from public or private bodies (e.g. Taiteen edistämiskeskus).</dd>
+          <dt>REVENUE_DONATION</dt>
+          <dd>Voluntary donations from supporters.</dd>
         </dl>
       </section>
 
       <section className="brand-section">
         <Heading level={2}>Cost categories</Heading>
-        <dl style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '0.5rem 1rem' }}>
-          <dt style={{ fontWeight: 600, color: '#444' }}>COST_INFRASTRUCTURE</dt>
-          <dd style={{ margin: 0 }}>
+        <dl>
+          <dt>COST_INFRASTRUCTURE</dt>
+          <dd>
             Servers, bandwidth, colocation, domain registrations, TLS certificates, cloud services.
             Primarily owned hardware in Helsinki.
           </dd>
-          <dt style={{ fontWeight: 600, color: '#444' }}>COST_DISTRIBUTION_PASSTHROUGH</dt>
-          <dd style={{ margin: 0 }}>
-            Revelator API cost passed directly through to artists. Net zero for Tahti ry.
-          </dd>
-          <dt style={{ fontWeight: 600, color: '#444' }}>COST_OPERATIONS</dt>
-          <dd style={{ margin: 0 }}>
+          <dt>COST_DISTRIBUTION_PASSTHROUGH</dt>
+          <dd>Revelator API cost passed directly through to artists. Net zero for Tahti ry.</dd>
+          <dt>COST_OPERATIONS</dt>
+          <dd>
             Payment processing fees (Stripe), subscriptions, software licenses, office materials.
           </dd>
-          <dt style={{ fontWeight: 600, color: '#444' }}>COST_SALARY</dt>
-          <dd style={{ margin: 0 }}>
+          <dt>COST_SALARY</dt>
+          <dd>
             Board compensation and any paid professional roles. Published in aggregate, never
             per-person.
           </dd>
-          <dt style={{ fontWeight: 600, color: '#444' }}>COST_AUDIT</dt>
-          <dd style={{ margin: 0 }}>
+          <dt>COST_AUDIT</dt>
+          <dd>
             Annual statutory audit and accounting fees. Finnish associations law requires annual
             audit above certain thresholds.
           </dd>
-          <dt style={{ fontWeight: 600, color: '#444' }}>COST_PROFESSIONAL_SERVICES</dt>
-          <dd style={{ margin: 0 }}>Legal advice, translation, ad-hoc consulting.</dd>
+          <dt>COST_PROFESSIONAL_SERVICES</dt>
+          <dd>Legal advice, translation, ad-hoc consulting.</dd>
         </dl>
       </section>
 
       <section className="brand-section">
         <Heading level={2}>Disbursements</Heading>
-        <dl style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '0.5rem 1rem' }}>
-          <dt style={{ fontWeight: 600, color: '#444' }}>GRANT_DISBURSEMENT</dt>
-          <dd style={{ margin: 0 }}>
+        <dl>
+          <dt>GRANT_DISBURSEMENT</dt>
+          <dd>
             Annual artist grants paid to member channels. Calculated March 1 for the prior calendar
             year. Formula: (channel engagement units / total eligible units) × grant&nbsp;pool. A
             10% operating reserve is retained before the pool is calculated.
           </dd>
-          <dt style={{ fontWeight: 600, color: '#444' }}>RESERVE_TRANSFER</dt>
-          <dd style={{ margin: 0 }}>
+          <dt>RESERVE_TRANSFER</dt>
+          <dd>
             Movements to or from the operating reserve fund. The reserve target is 3 months of
             operating costs.
           </dd>
@@ -171,6 +167,6 @@ export default function MethodologyPage() {
           <a href="https://github.com/tahtiapp/tahti">Source code (AGPL-3.0)</a>
         </p>
       </footer>
-    </>
+    </div>
   )
 }

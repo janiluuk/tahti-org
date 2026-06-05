@@ -4,6 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { Alert, Button, Field, Heading, Input, Row, Stack, Textarea } from '@tahti/ui'
 import { createMotion } from './actions'
 
 function isoDaysFromNow(days: number): string {
@@ -40,106 +41,63 @@ export default function NewMotionForm() {
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          marginBottom: '2rem',
-          padding: '0.5rem 1rem',
-          border: '1px solid #2563eb',
-          color: '#2563eb',
-          background: '#fff',
-          borderRadius: 4,
-          cursor: 'pointer',
-        }}
-      >
-        + New motion
-      </button>
+      <div className="brand-section">
+        <Button variant="ghost" onClick={() => setOpen(true)}>
+          + New motion
+        </Button>
+      </div>
     )
   }
 
   return (
-    <div
-      style={{
-        marginBottom: '2rem',
-        padding: '1.25rem',
-        border: '1px solid #e5e7eb',
-        borderRadius: 8,
-      }}
-    >
-      <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.95rem' }}>New motion (saved as draft)</h3>
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Motion title"
-        style={inputStyle}
-      />
-      <textarea
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Describe the motion…"
-        rows={4}
-        style={{ ...inputStyle, resize: 'vertical' }}
-      />
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem' }}>
-        <label style={{ fontSize: '0.8rem', color: '#666' }}>
-          Opens
-          <input
-            type="datetime-local"
-            value={openAt}
-            onChange={(e) => setOpenAt(e.target.value)}
-            style={{ ...inputStyle, marginBottom: 0 }}
+    <div className="brand-card brand-section">
+      <Heading level={3}>New motion (saved as draft)</Heading>
+      <Stack gap={4}>
+        <Field label="Title">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Motion title"
           />
-        </label>
-        <label style={{ fontSize: '0.8rem', color: '#666' }}>
-          Closes
-          <input
-            type="datetime-local"
-            value={closeAt}
-            onChange={(e) => setCloseAt(e.target.value)}
-            style={{ ...inputStyle, marginBottom: 0 }}
+        </Field>
+        <Field label="Description">
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe the motion…"
+            rows={4}
           />
-        </label>
-      </div>
-      {error && <p style={{ color: '#dc2626', fontSize: '0.8rem' }}>{error}</p>}
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <button
-          onClick={submit}
-          disabled={pending || !title.trim() || !description.trim()}
-          style={{
-            padding: '0.45rem 1rem',
-            background: '#2563eb',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            cursor: 'pointer',
-          }}
-        >
-          {pending ? 'Saving…' : 'Create draft'}
-        </button>
-        <button
-          onClick={() => setOpen(false)}
-          style={{
-            padding: '0.45rem 1rem',
-            background: '#fff',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            cursor: 'pointer',
-          }}
-        >
-          Cancel
-        </button>
-      </div>
+        </Field>
+        <div className="brand-form-row">
+          <Field label="Opens">
+            <Input
+              type="datetime-local"
+              value={openAt}
+              onChange={(e) => setOpenAt(e.target.value)}
+            />
+          </Field>
+          <Field label="Closes">
+            <Input
+              type="datetime-local"
+              value={closeAt}
+              onChange={(e) => setCloseAt(e.target.value)}
+            />
+          </Field>
+        </div>
+        {error && <Alert variant="error">{error}</Alert>}
+        <Row gap={2}>
+          <Button
+            variant="primary"
+            onClick={submit}
+            disabled={pending || !title.trim() || !description.trim()}
+          >
+            {pending ? 'Saving…' : 'Create draft'}
+          </Button>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+        </Row>
+      </Stack>
     </div>
   )
-}
-
-const inputStyle: React.CSSProperties = {
-  display: 'block',
-  width: '100%',
-  padding: '0.5rem',
-  marginBottom: '0.75rem',
-  border: '1px solid #ddd',
-  borderRadius: 4,
-  fontSize: '0.875rem',
-  fontFamily: 'inherit',
 }

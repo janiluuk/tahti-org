@@ -24,7 +24,7 @@ alwaysApply: true
 | **Brand (dark)** | `/c`, `/u`, `/r`, marketing | `tokens.css`, `components.css`, `styles/brand-channel.css` |
 | **Studio (dark dashboard)** | `/dashboard` | `tokens.css`, `components.css`, `styles/brand-studio.css` |
 | **Admin (forms in mixed pages)** | root `globals.css` | `styles/admin-tokens.css`, `styles/admin-ui.css` |
-| **Auth / gateway (light)** | `/login`, `/join`, `/` | `styles/brand-public.css` + admin tokens as needed |
+| **Auth / gateway (light)** | `/login`, `/join`, `/`, `/help` | `styles/brand-public.css` + admin tokens as needed |
 | **Embed (dark minimal)** | `/embed` | `styles/embed.css` |
 
 ## Component map

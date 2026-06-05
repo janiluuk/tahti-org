@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import Link from 'next/link'
+import { Heading, Link, Text } from '@tahti/ui'
 
 const PLATFORMS: { name: string; steps: string; url?: string }[] = [
   {
@@ -45,19 +45,20 @@ const PLATFORMS: { name: string; steps: string; url?: string }[] = [
 
 export default function MultistreamHelpPage() {
   return (
-    <article style={{ maxWidth: 720, margin: '2rem auto', padding: '0 1.5rem', lineHeight: 1.6 }}>
-      <p>
+    <article className="brand-prose">
+      <Text size="sm">
         <Link href="/dashboard">← Dashboard</Link>
-      </p>
-      <h1 style={{ marginTop: '1rem' }}>Multistream setup</h1>
-      <p>
+      </Text>
+
+      <Heading level={1}>Multistream setup</Heading>
+      <Text>
         Stream <strong>once</strong> from OBS to Tahti. In the dashboard{' '}
         <strong>Multistream</strong> section, add each other platform and paste its{' '}
         <strong>stream key</strong> (from that platform&apos;s site — not a Tahti login and not a
         Google/Twitch API key).
-      </p>
+      </Text>
 
-      <h2>Quick steps</h2>
+      <Heading level={2}>Quick steps</Heading>
       <ol>
         <li>Get a stream key from the platform (see table below).</li>
         <li>
@@ -71,42 +72,44 @@ export default function MultistreamHelpPage() {
         </li>
       </ol>
 
-      <h2>Where to copy keys</h2>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-        <thead>
-          <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
-            <th style={{ padding: '0.5rem 0' }}>Platform</th>
-            <th style={{ padding: '0.5rem 0' }}>Steps</th>
-          </tr>
-        </thead>
-        <tbody>
-          {PLATFORMS.map((p) => (
-            <tr key={p.name} style={{ borderBottom: '1px solid #f0f0f0' }}>
-              <td style={{ padding: '0.6rem 0.5rem 0.6rem 0', verticalAlign: 'top' }}>
-                {p.url ? (
-                  <a href={p.url} target="_blank" rel="noopener noreferrer">
-                    {p.name}
-                  </a>
-                ) : (
-                  p.name
-                )}
-              </td>
-              <td style={{ padding: '0.6rem 0', color: '#444' }}>{p.steps}</td>
+      <Heading level={2}>Where to copy keys</Heading>
+      <div className="brand-table-wrap">
+        <table className="brand-table">
+          <thead>
+            <tr>
+              <th>Platform</th>
+              <th>Steps</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {PLATFORMS.map((p) => (
+              <tr key={p.name}>
+                <td>
+                  {p.url ? (
+                    <a href={p.url} target="_blank" rel="noopener noreferrer">
+                      {p.name}
+                    </a>
+                  ) : (
+                    p.name
+                  )}
+                </td>
+                <td>{p.steps}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <h2>Security</h2>
+      <Heading level={2}>Security</Heading>
       <ul>
         <li>Never post stream keys in chat, screenshots, or social posts.</li>
         <li>If a key leaks, reset it on the platform and update Tahti.</li>
         <li>Your OBS → Tahti key is separate; that one stays in Stream settings only.</li>
       </ul>
 
-      <p style={{ color: '#666', fontSize: '0.9rem' }}>
+      <Text size="sm" tone="muted">
         Full guide in the repo: <code>docs/guides/multistream-simulcast.md</code>
-      </p>
+      </Text>
     </article>
   )
 }
