@@ -86,4 +86,10 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     jobId: 'membership-lapse-cron',
     description: 'M1: lapse memberships past renewal window (08:00 UTC)',
   },
+  {
+    name: 'revelator-royalty-sync',
+    pattern: '0 4 5 * *',
+    jobId: 'revelator-royalty-sync-cron',
+    description: 'M7: pull Revelator royalty reports for prior month (5th, 04:00 UTC)',
+  },
 ]

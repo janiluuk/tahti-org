@@ -5,10 +5,15 @@ import { describe, it, expect } from 'vitest'
 import {
   ChannelFunnelResponseSchema,
   ChannelLiveStatsResponseSchema,
+  ChatAccessResponseSchema,
+  CsvExportBodySchema,
   DownloadGateItemDetailResponseSchema,
   DownloadGateStatsResponseSchema,
   DownloadGateStatusSchema,
   DownloadUrlResponseSchema,
+  FallbackM3uBodySchema,
+  PlainTextErrorSchema,
+  PrometheusMetricsBodySchema,
   PublicProfileViewSchema,
   SmartLinkViewSchema,
 } from './api-responses.js'
@@ -129,5 +134,22 @@ describe('api response schemas', () => {
     })
     expect(components.DownloadGateStats).toBeTruthy()
     expect(JSON.stringify(components.DownloadGateStats)).toContain('artistFollowerCount')
+  })
+
+  it('parses PLAT-014 plain-text and CSV response bodies', () => {
+    expect(PrometheusMetricsBodySchema.safeParse('# HELP x\nx 1').success).toBe(true)
+    expect(CsvExportBodySchema.safeParse('id,name\n1,test').success).toBe(true)
+    expect(FallbackM3uBodySchema.safeParse('#EXTM3U\n').success).toBe(true)
+    expect(PlainTextErrorSchema.safeParse('unauthorized').success).toBe(true)
+  })
+
+  it('parses chat access response', () => {
+    expect(
+      ChatAccessResponseSchema.safeParse({
+        fanChatEnabled: true,
+        isSupporter: false,
+        canJoinFanChat: false,
+      }).success,
+    ).toBe(true)
   })
 })

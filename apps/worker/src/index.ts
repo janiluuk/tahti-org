@@ -23,6 +23,7 @@ import {
   processMembershipRenewalJob,
 } from './jobs/membership-lifecycle.js'
 import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
+import { processRevelatorRoyaltySyncJob } from './jobs/revelator-royalty-sync.js'
 import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
 import { processHlsMinioSyncJob } from './jobs/hls-minio-sync.js'
 import { WORKER_CRON_JOBS } from './cron-manifest.js'
@@ -85,6 +86,9 @@ const worker = new Worker(
       await processMembershipLapseJob(job)
     } else if (job.name === 'revelator-deliver') {
       await processRevelatorDeliverJob(job)
+    } else if (job.name === 'revelator-royalty-sync') {
+      const summary = await processRevelatorRoyaltySyncJob(prisma, job)
+      console.log('[worker] revelator-royalty-sync:', JSON.stringify(summary))
     } else if (job.name === 'annual-grant-calc') {
       // Default to the prior calendar year (matches Finnish fiscal year).
       const { year } = job.data as { year?: number }

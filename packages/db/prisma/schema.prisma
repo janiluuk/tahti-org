@@ -335,6 +335,7 @@ model User {
   fanSubsAsArtist       FanSubscription[]        @relation("ArtistFanSubs")
   fanSubsAsSubscriber   FanSubscription[]        @relation("SubscriberFanSubs")
   releases              Release[]
+  revelatorRoyaltyReports RevelatorRoyaltyReport[]
   mixUploads            MixUpload[]
   newsletterSubscribers NewsletterSubscriber[]   @relation("ArtistSubscribers")
   newsletterDrafts      NewsletterDraft[]
@@ -814,9 +815,30 @@ model Release {
 
   tracks           ReleaseTrack[]
   collectionItems  CollectionItem[]
+  revelatorRoyaltyReports RevelatorRoyaltyReport[]
 
   @@index([userId, releaseDate])
   @@index([userId, state])
+  @@schema("release")
+}
+
+// M7 — Revelator royalty report snapshots (monthly sync, dashboard display)
+model RevelatorRoyaltyReport {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  releaseId   String
+  release     Release  @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  revelatorId String
+  periodStart DateTime
+  periodEnd   DateTime
+  amountCents Int
+  currency    String   @default("EUR")
+  streams     Int?
+  syncedAt    DateTime @default(now())
+
+  @@unique([releaseId, periodStart, periodEnd])
+  @@index([userId, periodEnd(sort: Desc)])
   @@schema("release")
 }
 

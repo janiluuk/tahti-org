@@ -16,6 +16,31 @@ export const ReleaseTrackVersionCompleteSchema = z.object({
 export type ReleaseTrackVersionPrepare = z.infer<typeof ReleaseTrackVersionPrepareSchema>
 export type ReleaseTrackVersionComplete = z.infer<typeof ReleaseTrackVersionCompleteSchema>
 
+export const ReleaseTrackVersionViewSchema = z.object({
+  id: z.string(),
+  versionNumber: z.number().int(),
+  versionLabel: z.string(),
+  status: z.string(),
+  isActive: z.boolean(),
+  durationSec: z.number().int().nullable(),
+  createdAt: z.string(),
+})
+
+export const ReleaseTrackVersionListSchema = z.array(ReleaseTrackVersionViewSchema)
+
+export const ReleaseTrackVersionPrepareResponseSchema = z.object({
+  uploadId: z.string(),
+  uploadUrl: z.string().url(),
+  expiresAt: z.string(),
+})
+
+export const ReleaseTrackVersionCreatedSchema = z.object({
+  versionId: z.string(),
+  versionNumber: z.number().int(),
+  versionLabel: z.string(),
+  status: z.string(),
+})
+
 export interface ReleaseTrackVersionRow {
   id: string
   versionNumber: number

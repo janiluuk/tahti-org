@@ -4,9 +4,12 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   ChatAnnouncementSchema,
+  ChatAnnouncementViewSchema,
   ChatBanSchema,
+  ChatOkResponseSchema,
   FingerprintHashParamSchema,
   IdParamSchema,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -23,7 +26,14 @@ const meChat: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/chat/announcements { body: string }
   fastify.post(
     '/api/me/chat/announcements',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponses([
+          { status: 201, schema: ChatAnnouncementViewSchema, name: 'ChatAnnouncementView' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const parsed = ChatAnnouncementSchema.safeParse(request.body)
@@ -91,29 +101,40 @@ const meChat: FastifyPluginAsync = async (fastify) => {
   )
 
   // POST /api/me/chat/ban { fingerprintHash: string }
-  fastify.post('/api/me/chat/ban', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const parsed = ChatBanSchema.safeParse(request.body)
-    if (!parsed.success) return zodError(reply, parsed.error)
-    const { fingerprintHash } = parsed.data
-
-    const channel = await fastify.prisma.channel.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    })
-
-    if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-
-    await fastify.prisma.chatBan.upsert({
-      where: {
-        channelId_fingerprintHash: { channelId: channel.id, fingerprintHash },
+  fastify.post(
+    '/api/me/chat/ban',
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponses([
+          { status: 201, schema: ChatOkResponseSchema, name: 'ChatOkResponse' },
+        ]),
       },
-      create: { channelId: channel.id, fingerprintHash },
-      update: { bannedAt: new Date() },
-    })
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = ChatBanSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const { fingerprintHash } = parsed.data
 
-    return reply.status(201).send({ ok: true })
-  })
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      await fastify.prisma.chatBan.upsert({
+        where: {
+          channelId_fingerprintHash: { channelId: channel.id, fingerprintHash },
+        },
+        create: { channelId: channel.id, fingerprintHash },
+        update: { bannedAt: new Date() },
+      })
+
+      return reply.status(201).send({ ok: true })
+    },
+  )
 
   // DELETE /api/me/chat/ban/:fingerprintHash
   fastify.delete(

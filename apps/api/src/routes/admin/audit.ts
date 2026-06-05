@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { AuditExportQuerySchema } from '@tahti/shared'
+import { AuditExportQuerySchema, CsvExportBodySchema, openApiResponse } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { sendCsv } from '../../lib/csv.js'
 
@@ -10,7 +10,13 @@ import { sendCsv } from '../../lib/csv.js'
 const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/admin/audit/export.csv',
-    { preHandler: requireBoard },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(CsvExportBodySchema, 'CsvExportBody'),
+      },
+    },
     async (request, reply) => {
       const parsed = AuditExportQuerySchema.safeParse(request.query)
       if (!parsed.success) {

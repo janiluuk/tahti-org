@@ -30,3 +30,9 @@ export const IcecastDisconnectSchema = z
 export const ItemReadyWebhookSchema = z.object({
   itemId: z.string().min(1, 'itemId is required'),
 })
+
+/** Plain-text ack/deny bodies from Icecast / nginx-rtmp callbacks. */
+export const IngestOkTextSchema = z.literal('ok')
+export const RtmpPublishAllowTextSchema = z.literal('allowed')
+export const IngestForbiddenTextSchema = z.enum(['denied', 'weekly_cap'])
+export const IngestInvalidTextSchema = z.literal('invalid')

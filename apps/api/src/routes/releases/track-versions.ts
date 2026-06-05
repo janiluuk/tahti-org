@@ -6,8 +6,13 @@ import { nanoid } from 'nanoid'
 import {
   ReleaseIdTrackIdParamsSchema,
   ReleaseTrackVersionCompleteSchema,
+  ReleaseTrackVersionCreatedSchema,
+  ReleaseTrackVersionListSchema,
   ReleaseTrackVersionParamsSchema,
+  ReleaseTrackVersionPrepareResponseSchema,
   ReleaseTrackVersionPrepareSchema,
+  openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { ensureInitialReleaseTrackVersion, syncActiveVersionToTrack } from '@tahti/db'
@@ -32,7 +37,12 @@ const releaseTrackVersionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get(
     '/api/me/releases/:releaseId/tracks/:trackId/versions',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponse(ReleaseTrackVersionListSchema, 'ReleaseTrackVersionList'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(ReleaseIdTrackIdParamsSchema, request.params)
@@ -64,7 +74,15 @@ const releaseTrackVersionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/releases/:releaseId/tracks/:trackId/versions/prepare',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponse(
+          ReleaseTrackVersionPrepareResponseSchema,
+          'ReleaseTrackVersionPrepareResponse',
+        ),
+      },
+    },
     async (request, reply) => {
       const parsed = ReleaseTrackVersionPrepareSchema.safeParse(request.body)
       if (!parsed.success) {
@@ -95,7 +113,18 @@ const releaseTrackVersionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/releases/:releaseId/tracks/:trackId/versions/complete',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponses([
+          {
+            status: 201,
+            schema: ReleaseTrackVersionCreatedSchema,
+            name: 'ReleaseTrackVersionCreated',
+          },
+        ]),
+      },
+    },
     async (request, reply) => {
       const parsed = ReleaseTrackVersionCompleteSchema.safeParse(request.body)
       if (!parsed.success) {
@@ -145,7 +174,12 @@ const releaseTrackVersionRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/releases/:releaseId/tracks/:trackId/versions/:versionId/activate',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponse(ReleaseTrackVersionListSchema, 'ReleaseTrackVersionList'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(ReleaseTrackVersionParamsSchema, request.params)

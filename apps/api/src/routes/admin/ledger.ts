@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   CreateLedgerEntrySchema,
+  CsvExportBodySchema,
   LedgerEntryCreatedSchema,
   LedgerEntryListSchema,
   LedgerExportQuerySchema,
@@ -121,7 +122,13 @@ const adminLedgerRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/admin/ledger/export.csv?year=YYYY — auditor-ready ledger export (M11)
   fastify.get(
     '/api/admin/ledger/export.csv',
-    { preHandler: requireBoard },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(CsvExportBodySchema, 'CsvExportBody'),
+      },
+    },
     async (request, reply) => {
       const parsed = LedgerExportQuerySchema.safeParse(request.query)
       if (!parsed.success) {

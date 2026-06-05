@@ -18,5 +18,6 @@ describe('WORKER_CRON_JOBS', () => {
     expect(names).toContain('download-fraud-scan')
     expect(names).toContain('broadcast-cap-tick')
     expect(names).toContain('membership-lapse')
+    expect(names).toContain('revelator-royalty-sync')
   })
 })

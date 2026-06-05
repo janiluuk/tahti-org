@@ -69,7 +69,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
 | **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence |
 | **M6** Multistream RTMP | ✅ Done | Per-channel targets, encrypted stream keys, `alwaysMirror` gated to STUDIO |
-| **M7** Distribution (Mixcloud + Revelator) | 🟡 Partial | Mixcloud OAuth connect + archive upload queue; `packages/revelator` stub/live submit + **Revelator wizard** in release ops (pre-fills catalog). Deferred: royalty sync cron, tiered €8/release billing, Mixcloud OAuth in production credentials |
+| **M7** Distribution (Mixcloud + Revelator) | 🟡 Partial | Mixcloud OAuth connect + archive upload queue; `packages/revelator` stub/live submit + **Revelator wizard** in release ops; **monthly royalty sync** cron + dashboard display. Deferred: tiered €8/release billing, Mixcloud OAuth in production credentials |
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
@@ -503,7 +503,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [x] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | `apps/api/src/lib/redis.ts` | P2 |
 | [~] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | `allocateMemberNumber()` test helper (dynamic member #); Testcontainers deferred | P2 |
 | [x] | **PLAT-013** | Website Docker: mount large media (`bg-audio.mp3`, hero video) from host like `output_vhs.mp4` | `.dockerignore`, stack + local compose binds | P3 |
-| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | + admin grants run, Revelator, Mixcloud, release artwork |
+| [x] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | All JSON + CSV/plaintext/redirect routes documented |
 
 ### Refactors (maintainability)
 

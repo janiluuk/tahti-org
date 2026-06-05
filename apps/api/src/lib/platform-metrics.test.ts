@@ -5,6 +5,7 @@ import { describe, it, expect, afterAll } from 'vitest'
 import { prisma } from '@tahti/db'
 import { hashPassword } from './password.js'
 import { createSession } from './session.js'
+import { auditLog } from './audit.js'
 import { collectPlatformMetrics, renderPlatformMetricLines } from './platform-metrics.js'
 
 const PREFIX = 'plat-metrics-'
@@ -38,5 +39,19 @@ describe('platform-metrics', () => {
     const text = renderPlatformMetricLines(snap).join('\n')
     expect(text).toContain('tahti_users_registered_total')
     expect(text).toContain('tahti_users_active_today')
+  })
+
+  it('counts audit errors in the last 24 hours', async () => {
+    await auditLog(prisma, {
+      action: 'STRIPE_WEBHOOK_ERROR',
+      actorId: userId,
+      meta: { test: true },
+    })
+
+    const snap = await collectPlatformMetrics(prisma)
+    expect(snap.auditErrors24h).toBeGreaterThanOrEqual(1)
+
+    const text = renderPlatformMetricLines(snap).join('\n')
+    expect(text).toContain('tahti_audit_errors_24h')
   })
 })

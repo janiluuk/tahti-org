@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   IdParamSchema,
   RevelatorReleaseStatusSchema,
+  RevelatorRoyaltyReportsSchema,
   RevelatorSubmitAcceptedSchema,
   openApiResponse,
   openApiResponses,
@@ -108,6 +109,106 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
       await mediaQueue.add('revelator-deliver', { releaseId: id })
 
       return reply.status(202).send({ releaseId: id, revelatorStatus: 'pending' as const })
+    },
+  )
+
+  fastify.get(
+    '/api/me/releases/:id/revelator/royalties',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description: 'M7: Revelator royalty reports synced for a release',
+        response: openApiResponse(RevelatorRoyaltyReportsSchema, 'RevelatorRoyaltyReports'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id, userId: user.id },
+        select: { id: true, title: true },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const rows = await fastify.prisma.revelatorRoyaltyReport.findMany({
+        where: { releaseId: id, userId: user.id },
+        orderBy: { periodEnd: 'desc' },
+        take: 24,
+        select: {
+          id: true,
+          releaseId: true,
+          periodStart: true,
+          periodEnd: true,
+          amountCents: true,
+          currency: true,
+          streams: true,
+          syncedAt: true,
+        },
+      })
+
+      return reply.send({
+        reports: rows.map((row) => ({
+          id: row.id,
+          releaseId: row.releaseId,
+          releaseTitle: release.title,
+          periodStart: row.periodStart.toISOString().slice(0, 10),
+          periodEnd: row.periodEnd.toISOString().slice(0, 10),
+          amountCents: row.amountCents,
+          currency: row.currency,
+          streams: row.streams,
+          syncedAt: row.syncedAt.toISOString(),
+        })),
+      })
+    },
+  )
+
+  fastify.get(
+    '/api/me/revelator/royalties',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description: 'M7: all Revelator royalty reports for the signed-in artist',
+        response: openApiResponse(RevelatorRoyaltyReportsSchema, 'RevelatorRoyaltyReports'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+
+      const rows = await fastify.prisma.revelatorRoyaltyReport.findMany({
+        where: { userId: user.id },
+        orderBy: { periodEnd: 'desc' },
+        take: 48,
+        select: {
+          id: true,
+          releaseId: true,
+          periodStart: true,
+          periodEnd: true,
+          amountCents: true,
+          currency: true,
+          streams: true,
+          syncedAt: true,
+          release: { select: { title: true } },
+        },
+      })
+
+      return reply.send({
+        reports: rows.map((row) => ({
+          id: row.id,
+          releaseId: row.releaseId,
+          releaseTitle: row.release.title,
+          periodStart: row.periodStart.toISOString().slice(0, 10),
+          periodEnd: row.periodEnd.toISOString().slice(0, 10),
+          amountCents: row.amountCents,
+          currency: row.currency,
+          streams: row.streams,
+          syncedAt: row.syncedAt.toISOString(),
+        })),
+      })
     },
   )
 }
