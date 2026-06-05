@@ -14,8 +14,10 @@ describe('http-metrics', () => {
 
   it('classifies status codes', () => {
     expect(statusClass(200)).toBe('2xx')
+    expect(statusClass(302)).toBe('3xx')
     expect(statusClass(404)).toBe('4xx')
     expect(statusClass(503)).toBe('5xx')
+    expect(statusClass(100)).toBe('other')
   })
 
   it('renders counters after recording', () => {
