@@ -64,8 +64,7 @@ export default function LoginPage() {
           </form>
 
           <Text size="sm" tone="muted" style={{ marginTop: '1.5rem' }}>
-            Don&apos;t have an account?{' '}
-            <Link href="/join">Apply for access</Link>
+            Don&apos;t have an account? <Link href="/join">Apply for access</Link>
           </Text>
         </div>
       </div>
