@@ -105,13 +105,13 @@ export default function ChannelGalleryPanel({
       </Field>
 
       {hint && (
-        <Text size="sm" tone="muted" style={{ marginBottom: '1rem' }}>
+        <Text size="sm" tone="muted" className="studio-mb-lg">
           {hint}
         </Text>
       )}
 
       {isWebGLGalleryMode(galleryMode) && (
-        <Alert variant="info" style={{ marginBottom: '1rem' }}>
+        <Alert variant="info" className="studio-mb-lg">
           WebGL galleries load your images as textures. URLs must be public HTTPS and allow
           cross-origin access (CORS) from your channel page.
         </Alert>
@@ -129,7 +129,7 @@ export default function ChannelGalleryPanel({
           disabled={isPending}
           placeholder="https://www.youtube.com/watch?v=…"
           onChange={(e) => setVideoBackgroundUrl(e.target.value)}
-          style={{ width: '100%', padding: '0.5rem', fontFamily: 'inherit' }}
+          className="studio-url-input"
         />
       </Field>
 

@@ -40,48 +40,42 @@ export default function BroadcastUsageBanner({ usage }: { usage: BroadcastUsage 
   const level = resolveWarningLevel(usage)
   const nearCap = level !== 'none'
 
+  const fillClass =
+    level === 'blocked'
+      ? 'studio-stat-box-fill studio-stat-box-fill--blocked'
+      : nearCap
+        ? 'studio-stat-box-fill studio-stat-box-fill--warn'
+        : 'studio-stat-box-fill'
+
   return (
-    <div
-      style={{
-        marginTop: '1rem',
-        padding: '1rem 1.5rem',
-        border: `1px solid ${nearCap ? '#fbbf24' : '#eee'}`,
-        borderRadius: 8,
-        background: nearCap ? '#fffbeb' : '#fafafa',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-        <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>Weekly live broadcasting</span>
-        <span style={{ fontSize: '0.875rem', color: level === 'blocked' ? '#dc2626' : '#666' }}>
+    <div className={`studio-stat-box${nearCap ? ' studio-stat-box--warn' : ''}`}>
+      <div className="studio-stat-box-header">
+        <span className="studio-stat-box-title">Weekly live broadcasting</span>
+        <span
+          className={`studio-text-sm${level === 'blocked' ? ' studio-text-error' : ' studio-text-muted-sm'}`}
+        >
           {fmtMinutes(used)} / {fmtMinutes(cap)}
         </span>
       </div>
-      <div style={{ background: '#f0f0f0', borderRadius: 4, height: 6, overflow: 'hidden' }}>
-        <div
-          style={{
-            height: '100%',
-            width: `${pct}%`,
-            background: level === 'blocked' ? '#dc2626' : '#2563eb',
-            borderRadius: 4,
-          }}
-        />
+      <div className="studio-stat-box-track">
+        <div className={fillClass} style={{ ['--studio-stat-pct' as string]: `${pct}%` }} />
       </div>
       {level === 'grace' ? (
-        <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#92400e' }}>
+        <p className="studio-text-warn studio-mt-sm">
           Weekly hour reached — wrapping up live (about a minute). Archive plays until Monday 00:00
           UTC.
         </p>
       ) : level === 'blocked' ? (
-        <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#92400e' }}>
+        <p className="studio-text-warn studio-mt-sm">
           Your weekly hour is up — archive plays until Monday 00:00 UTC. Upgrade to unlimited live +
           lossless FLAC.
         </p>
       ) : level === '55m' ? (
-        <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#92400e' }}>
+        <p className="studio-text-warn studio-mt-sm">
           You&apos;ve broadcast 55 minutes this week — 5 minutes left until Monday.
         </p>
       ) : level === '45m' ? (
-        <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#92400e' }}>
+        <p className="studio-text-warn studio-mt-sm">
           You&apos;ve broadcast 45 minutes this week — 15 minutes left until Monday.
         </p>
       ) : null}

@@ -141,21 +141,6 @@ export function metadataFromApi(item: Record<string, unknown>): ArchiveMetadataF
   }
 }
 
-const fieldStyle = {
-  width: '100%',
-  padding: '0.4rem 0.6rem',
-  border: '1px solid #ccc',
-  borderRadius: 4,
-  fontSize: '0.95rem',
-} as const
-
-const labelStyle = {
-  display: 'block',
-  marginBottom: '0.25rem',
-  fontWeight: 500,
-  fontSize: '0.9rem',
-} as const
-
 export function ArchiveMetadataFields({
   state,
   onChange,
@@ -172,15 +157,15 @@ export function ArchiveMetadataFields({
   const set = (patch: Partial<ArchiveMetadataFormState>) => onChange({ ...state, ...patch })
 
   return (
-    <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.75rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        <label>
-          <span style={labelStyle}>Genre</span>
+    <div className="studio-grid studio-mt-md">
+      <div className="studio-grid studio-grid--2">
+        <label className="studio-field">
+          <span className="studio-label">Genre</span>
           <select
             value={state.genre}
             disabled={disabled}
             onChange={(e) => set({ genre: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           >
             {ARCHIVE_GENRES.map((g) => (
               <option key={g} value={g}>
@@ -189,50 +174,50 @@ export function ArchiveMetadataFields({
             ))}
           </select>
         </label>
-        <label>
-          <span style={labelStyle}>Custom genre</span>
+        <label className="studio-field">
+          <span className="studio-label">Custom genre</span>
           <input
             type="text"
             placeholder="Not in the list?"
             value={state.genreCustom}
             disabled={disabled}
             onChange={(e) => set({ genreCustom: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           />
         </label>
       </div>
 
-      <label>
-        <span style={labelStyle}>Recording location</span>
+      <label className="studio-field">
+        <span className="studio-label">Recording location</span>
         <input
           type="text"
           placeholder="Helsinki, Finland"
           value={state.recordingLocation}
           disabled={disabled}
           onChange={(e) => set({ recordingLocation: e.target.value })}
-          style={fieldStyle}
+          className="studio-input"
         />
       </label>
 
-      <label>
-        <span style={labelStyle}>Sub-genres (comma-separated)</span>
+      <label className="studio-field">
+        <span className="studio-label">Sub-genres (comma-separated)</span>
         <input
           type="text"
           value={state.subGenres}
           disabled={disabled}
           onChange={(e) => set({ subGenres: e.target.value })}
-          style={fieldStyle}
+          className="studio-input"
         />
       </label>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-        <label>
-          <span style={labelStyle}>Type</span>
+      <div className="studio-grid studio-grid--3">
+        <label className="studio-field">
+          <span className="studio-label">Type</span>
           <select
             value={state.contentType}
             disabled={disabled}
             onChange={(e) => set({ contentType: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           >
             {ARCHIVE_CONTENT_TYPES.map((t) => (
               <option key={t} value={t}>
@@ -241,32 +226,32 @@ export function ArchiveMetadataFields({
             ))}
           </select>
         </label>
-        <label>
-          <span style={labelStyle}>Version</span>
+        <label className="studio-field">
+          <span className="studio-label">Version</span>
           <input
             type="text"
             placeholder="Original Mix"
             value={state.mixVersion}
             disabled={disabled}
             onChange={(e) => set({ mixVersion: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           />
         </label>
-        <label>
-          <span style={labelStyle}>Release date</span>
+        <label className="studio-field">
+          <span className="studio-label">Release date</span>
           <input
             type="datetime-local"
             value={state.releasedAt}
             disabled={disabled}
             onChange={(e) => set({ releasedAt: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           />
         </label>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-        <label>
-          <span style={labelStyle}>BPM</span>
+      <div className="studio-grid studio-grid--3">
+        <label className="studio-field">
+          <span className="studio-label">BPM</span>
           <input
             type="number"
             min={40}
@@ -275,27 +260,27 @@ export function ArchiveMetadataFields({
             value={state.bpm}
             disabled={disabled || state.useDetectedBpmKey}
             onChange={(e) => set({ bpm: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           />
         </label>
-        <label>
-          <span style={labelStyle}>Key</span>
+        <label className="studio-field">
+          <span className="studio-label">Key</span>
           <input
             type="text"
             placeholder="Em"
             value={state.musicalKey}
             disabled={disabled || state.useDetectedBpmKey}
             onChange={(e) => set({ musicalKey: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           />
         </label>
-        <label>
-          <span style={labelStyle}>License</span>
+        <label className="studio-field">
+          <span className="studio-label">License</span>
           <select
             value={state.license}
             disabled={disabled}
             onChange={(e) => set({ license: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           >
             {ARCHIVE_LICENSES.map((l) => (
               <option key={l} value={l}>
@@ -306,21 +291,18 @@ export function ArchiveMetadataFields({
         </label>
       </div>
 
-      <label
-        style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.9rem' }}
-      >
+      <label className="studio-label-row studio-row--start">
         <input
           type="checkbox"
           checked={state.useDetectedBpmKey}
           disabled={disabled}
           onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
-          style={{ marginTop: 2 }}
         />
         <span>
           Use auto-detected tags (embedded file tags when present; otherwise BPM and key are
           analyzed from the audio — first ~2 minutes for long files)
           {(detectedBpm != null || detectedKey) && (
-            <span style={{ color: '#666' }}>
+            <span className="studio-text-muted-sm">
               {' '}
               — detected:{' '}
               {[detectedBpm != null ? `${detectedBpm} BPM` : null, detectedKey ?? null]
@@ -331,7 +313,7 @@ export function ArchiveMetadataFields({
         </span>
       </label>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
+      <label className="studio-label-row">
         <input
           type="checkbox"
           checked={state.isAiGenerated}
@@ -341,73 +323,73 @@ export function ArchiveMetadataFields({
         Produced using AI technology
       </label>
 
-      <label>
-        <span style={labelStyle}>Description</span>
+      <label className="studio-field">
+        <span className="studio-label">Description</span>
         <textarea
           rows={2}
           value={state.description}
           disabled={disabled}
           onChange={(e) => set({ description: e.target.value })}
-          style={{ ...fieldStyle, resize: 'vertical' }}
+          className="studio-textarea"
         />
       </label>
 
-      <label>
-        <span style={labelStyle}>Commentary (liner notes)</span>
+      <label className="studio-field">
+        <span className="studio-label">Commentary (liner notes)</span>
         <textarea
           rows={3}
           value={state.commentary}
           disabled={disabled}
           onChange={(e) => set({ commentary: e.target.value })}
-          style={{ ...fieldStyle, resize: 'vertical' }}
+          className="studio-textarea"
         />
       </label>
 
-      <label>
-        <span style={labelStyle}>Tag people (@username in notes)</span>
+      <label className="studio-field">
+        <span className="studio-label">Tag people (@username in notes)</span>
         <textarea
           rows={2}
           placeholder="@collaborator — credit in description"
           value={state.taggedNote}
           disabled={disabled}
           onChange={(e) => set({ taggedNote: e.target.value })}
-          style={{ ...fieldStyle, resize: 'vertical' }}
+          className="studio-textarea"
         />
       </label>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        <label>
-          <span style={labelStyle}>Cover image URL</span>
+      <div className="studio-grid studio-grid--2">
+        <label className="studio-field">
+          <span className="studio-label">Cover image URL</span>
           <input
             type="url"
             value={state.bannerUrl}
             disabled={disabled}
             onChange={(e) => set({ bannerUrl: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           />
         </label>
-        <label>
-          <span style={labelStyle}>Background URL (image or YouTube/Vimeo)</span>
+        <label className="studio-field">
+          <span className="studio-label">Background URL (image or YouTube/Vimeo)</span>
           <input
             type="url"
             placeholder="https://… or https://youtu.be/…"
             value={state.backgroundUrl}
             disabled={disabled}
             onChange={(e) => set({ backgroundUrl: e.target.value })}
-            style={fieldStyle}
+            className="studio-input"
           />
         </label>
       </div>
 
-      <label>
-        <span style={labelStyle}>Slideshow image URLs (one per line, max 10)</span>
+      <label className="studio-field">
+        <span className="studio-label">Slideshow image URLs (one per line, max 10)</span>
         <textarea
           rows={2}
           placeholder="https://cdn.example/slide1.jpg"
           value={state.slideshowUrls}
           disabled={disabled}
           onChange={(e) => set({ slideshowUrls: e.target.value })}
-          style={{ ...fieldStyle, resize: 'vertical' }}
+          className="studio-textarea"
         />
       </label>
 
@@ -417,8 +399,8 @@ export function ArchiveMetadataFields({
         disabled={disabled}
       />
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', fontSize: '0.9rem' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+      <div className="studio-row studio-row--wrap studio-gap-lg studio-text-sm">
+        <label className="studio-label-row">
           <input
             type="checkbox"
             checked={state.isPublic}
@@ -427,7 +409,7 @@ export function ArchiveMetadataFields({
           />
           Public on channel
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <label className="studio-label-row">
           <input
             type="checkbox"
             checked={state.repostToDownload}
@@ -436,7 +418,7 @@ export function ArchiveMetadataFields({
           />
           Repost to download
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <label className="studio-label-row">
           <input
             type="checkbox"
             checked={state.followToDownload}

@@ -119,9 +119,9 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
     state === 'transcoding'
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
-      <div style={{ marginBottom: '0.75rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>Title</label>
+    <form onSubmit={handleSubmit} className="studio-mt-lg">
+      <div className="studio-field">
+        <label className="studio-label">Title</label>
         <input
           ref={titleRef}
           type="text"
@@ -129,54 +129,22 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
           maxLength={200}
           placeholder="Track or set title"
           disabled={isLoading}
-          style={{
-            width: '100%',
-            padding: '0.4rem 0.6rem',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            fontSize: '1rem',
-          }}
+          className="studio-input"
         />
       </div>
 
-      <div style={{ marginBottom: '0.75rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>
-          Audio file
-        </label>
+      <div className="studio-field">
+        <label className="studio-label">Audio file</label>
         <input ref={fileRef} type="file" accept="audio/*" required disabled={isLoading} />
       </div>
 
-      <button
-        type="button"
-        onClick={() => setShowMeta(!showMeta)}
-        style={{
-          marginBottom: '0.5rem',
-          background: 'none',
-          border: 'none',
-          color: '#2563eb',
-          cursor: 'pointer',
-          padding: 0,
-        }}
-      >
+      <button type="button" onClick={() => setShowMeta(!showMeta)} className="studio-link-toggle">
         {showMeta ? '▼ Hide metadata' : '▶ Show metadata (genre, BPM, license…)'}
       </button>
 
       {showMeta && <ArchiveMetadataFields state={meta} onChange={setMeta} disabled={isLoading} />}
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        style={{
-          marginTop: '1rem',
-          padding: '0.5rem 1.2rem',
-          background: '#2563eb',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 4,
-          cursor: isLoading ? 'not-allowed' : 'pointer',
-          opacity: isLoading ? 0.7 : 1,
-        }}
-      >
+      <button type="submit" disabled={isLoading} className="studio-btn-primary studio-mt-lg">
         {state === 'preparing' && 'Preparing...'}
         {state === 'uploading' && `Uploading ${progress}%`}
         {state === 'completing' && 'Registering upload...'}
@@ -185,12 +153,12 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
       </button>
 
       {state === 'done' && (
-        <p style={{ color: '#16a34a', marginTop: '0.5rem' }}>
+        <p className="studio-text-success studio-mt-sm">
           Uploaded! Transcoding in the background — edit metadata anytime below.
         </p>
       )}
 
-      {state === 'error' && <p style={{ color: '#dc2626', marginTop: '0.5rem' }}>{errorMsg}</p>}
+      {state === 'error' && <p className="studio-text-error studio-mt-sm">{errorMsg}</p>}
     </form>
   )
 }

@@ -115,42 +115,40 @@ export default function FanSubscriptionsPanel({
   const needsStripe = connect.stripeConfigured && !connect.paymentsReady
 
   return (
-    <section
-      style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>Fan subscriptions</h2>
-        <a href={`/u/${username}/subscribe`} style={{ fontSize: '0.85rem', color: '#2563eb' }}>
+    <section className="studio-panel-section">
+      <div className="studio-row--between">
+        <h2 className="studio-section-heading studio-m-0">Fan subscriptions</h2>
+        <a href={`/u/${username}/subscribe`} className="studio-link-cta">
           View public page ↗
         </a>
       </div>
-      <p style={{ color: '#666', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+      <p className="studio-help studio-mt-sm">
         Fans subscribe directly to you. You keep the revenue minus Stripe fees and a 2% operational
         fee. Subscribers get the 5× download weighting that boosts your annual grant.
       </p>
 
       {payoutStats && (
-        <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '0.5rem' }}>
-          <p style={{ margin: '0 0 0.35rem' }}>
+        <div className="studio-text-muted-sm studio-mt-sm">
+          <p className="studio-m-0 studio-mb-sm">
             {payoutStats.activeSubscribers ?? 0} active subscriber
             {(payoutStats.activeSubscribers ?? 0) === 1 ? '' : 's'}
             {payoutStats.pending > 0 && ` · ${payoutStats.pending} payout pending`}
             {payoutStats.failed > 0 && (
-              <span style={{ color: '#b45309' }}>
+              <span className="studio-text-warn">
                 {' '}
                 · {payoutStats.failed} failed (Stripe transfer retried daily)
               </span>
             )}
             {payoutStats.paidLast30Days > 0 && ` · ${payoutStats.paidLast30Days} paid (30d)`}
             {' · '}
-            <a href={`${apiUrl}/api/me/fan-subscribers/export.csv`} style={{ color: '#2563eb' }}>
+            <a href={`${apiUrl}/api/me/fan-subscribers/export.csv`} className="studio-link-cta">
               Export subscribers (CSV)
             </a>
           </p>
           {payoutStats.recent && payoutStats.recent.length > 0 && (
-            <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+            <table className="studio-table studio-table--sm">
               <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '1px solid #eee' }}>
+                <tr>
                   <th>Tier</th>
                   <th>Net</th>
                   <th>State</th>
@@ -158,7 +156,7 @@ export default function FanSubscriptionsPanel({
               </thead>
               <tbody>
                 {payoutStats.recent.map((p) => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                  <tr key={p.id}>
                     <td>{p.tierName}</td>
                     <td>{eur(p.netToArtistCents)}</td>
                     <td>{p.state}</td>
@@ -171,37 +169,19 @@ export default function FanSubscriptionsPanel({
       )}
 
       {needsStripe && (
-        <div
-          style={{
-            marginTop: '1rem',
-            padding: '1rem',
-            background: '#fffbeb',
-            border: '1px solid #fcd34d',
-            borderRadius: 8,
-          }}
-        >
-          <p style={{ margin: '0 0 0.75rem', fontSize: '0.9rem' }}>
+        <div className="studio-stripe-banner">
+          <p className="studio-m-0 studio-mb-md studio-text-sm">
             Finish Stripe onboarding to start receiving fan subscription payments. You can set up
             tiers now; the subscribe button stays disabled until Stripe approves your account.
           </p>
           {connectError && (
-            <p style={{ color: '#dc2626', margin: '0 0 0.5rem', fontSize: '0.85rem' }}>
-              {connectError}
-            </p>
+            <p className="studio-text-error studio-m-0 studio-mb-sm">{connectError}</p>
           )}
           <button
             type="button"
             onClick={startConnect}
             disabled={isPending}
-            style={{
-              background: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: 4,
-              padding: '0.5rem 1rem',
-              cursor: 'pointer',
-              fontWeight: 600,
-            }}
+            className="studio-btn-primary"
           >
             {isPending ? 'Opening Stripe…' : 'Connect with Stripe'}
           </button>
@@ -209,34 +189,20 @@ export default function FanSubscriptionsPanel({
       )}
 
       {initial.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0, margin: '1rem 0' }}>
+        <ul className="studio-list studio-mt-lg">
           {initial.map((t) => (
             <li
               key={t.id}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '0.6rem 0',
-                borderBottom: '1px solid #f0f0f0',
-                opacity: t.active ? 1 : 0.5,
-              }}
+              className={`studio-row--between studio-item-row${t.active ? '' : ' studio-tier-inactive'}`}
             >
               <span>
                 <strong>{t.name}</strong> · {eur(t.amountCents)}/mo
-                {t.description && <span style={{ color: '#888' }}> — {t.description}</span>}
+                {t.description && <span className="studio-text-muted-sm"> — {t.description}</span>}
               </span>
               <button
                 onClick={() => toggle(t.id, !t.active)}
                 disabled={isPending}
-                style={{
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                  padding: '0.25rem 0.6rem',
-                  background: 'none',
-                  cursor: 'pointer',
-                  fontSize: '0.8rem',
-                }}
+                className="studio-btn-ghost"
               >
                 {t.active ? 'Disable' : 'Enable'}
               </button>
@@ -245,13 +211,13 @@ export default function FanSubscriptionsPanel({
         </ul>
       )}
 
-      <div style={{ display: 'grid', gap: '0.5rem', marginTop: '1rem' }}>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+      <div className="studio-grid studio-mt-lg">
+        <div className="studio-row">
           <input
             placeholder="Tier name (e.g. Backer)"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            style={{ flex: 2, padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
+            className="studio-input studio-flex-1"
           />
           <input
             type="number"
@@ -260,15 +226,15 @@ export default function FanSubscriptionsPanel({
             step="1"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            style={{ width: 90, padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
+            className="studio-input studio-input--narrow"
           />
-          <span style={{ alignSelf: 'center', color: '#888' }}>€/mo</span>
+          <span className="studio-text-muted-sm">€/mo</span>
         </div>
         <input
           placeholder="Short description (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          style={{ padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
+          className="studio-input"
         />
         <textarea
           placeholder={
@@ -277,27 +243,10 @@ export default function FanSubscriptionsPanel({
           value={perks}
           onChange={(e) => setPerks(e.target.value)}
           rows={3}
-          style={{
-            padding: '0.5rem',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            fontFamily: 'inherit',
-          }}
+          className="studio-textarea"
         />
-        {error && <p style={{ color: '#dc2626', margin: 0, fontSize: '0.85rem' }}>{error}</p>}
-        <button
-          onClick={add}
-          disabled={isPending}
-          style={{
-            justifySelf: 'start',
-            background: '#2563eb',
-            color: 'white',
-            border: 'none',
-            borderRadius: 4,
-            padding: '0.5rem 1rem',
-            cursor: 'pointer',
-          }}
-        >
+        {error && <p className="studio-text-error studio-m-0">{error}</p>}
+        <button onClick={add} disabled={isPending} className="studio-btn-primary">
           {isPending ? 'Saving…' : 'Add tier'}
         </button>
       </div>

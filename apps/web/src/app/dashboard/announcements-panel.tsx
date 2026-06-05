@@ -46,47 +46,20 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
   }
 
   return (
-    <div
-      style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
-    >
-      <h2 style={{ margin: '0 0 1rem' }}>Pinned announcements</h2>
-      <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: '#666' }}>
+    <div className="studio-panel-section">
+      <h2 className="studio-section-heading">Pinned announcements</h2>
+      <p className="studio-help">
         Up to 3 pinned messages shown above the chat on your channel page.
       </p>
 
-      {announcements.length === 0 && (
-        <p style={{ color: '#aaa', fontSize: '0.875rem', marginBottom: '1rem' }}>
-          No announcements yet.
-        </p>
-      )}
+      {announcements.length === 0 && <p className="studio-empty">No announcements yet.</p>}
 
       {announcements.map((a) => (
-        <div
-          key={a.id}
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '0.75rem',
-            padding: '0.6rem 0.75rem',
-            marginBottom: '0.5rem',
-            background: '#fffbeb',
-            borderLeft: '3px solid #f59e0b',
-            borderRadius: 4,
-          }}
-        >
-          <span style={{ flex: 1, fontSize: '0.875rem' }}>{a.body}</span>
+        <div key={a.id} className="studio-announce-item">
+          <span className="studio-announce-item__body">{a.body}</span>
           <button
             onClick={() => void handleDelete(a.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#aaa',
-              fontSize: '1rem',
-              lineHeight: 1,
-              padding: '0 0.2rem',
-              flexShrink: 0,
-            }}
+            className="studio-btn-icon"
             aria-label="Delete announcement"
           >
             ×
@@ -94,7 +67,7 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
         </div>
       ))}
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+      <div className="studio-input-row">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -104,39 +77,20 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
           placeholder="Type an announcement…"
           maxLength={500}
           disabled={posting || announcements.length >= 3}
-          style={{
-            flex: 1,
-            padding: '0.4rem 0.6rem',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            fontSize: '0.875rem',
-          }}
+          className="studio-input studio-flex-1"
         />
         <button
           onClick={() => void handlePost()}
           disabled={posting || !draft.trim() || announcements.length >= 3}
-          style={{
-            padding: '0.4rem 0.9rem',
-            background: '#111',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            opacity: posting || !draft.trim() || announcements.length >= 3 ? 0.5 : 1,
-          }}
+          className="studio-btn-dark"
         >
           {posting ? 'Posting…' : 'Pin'}
         </button>
       </div>
 
-      {error && (
-        <p style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.5rem' }}>{error}</p>
-      )}
+      {error && <p className="studio-text-error studio-mt-sm">{error}</p>}
       {announcements.length >= 3 && (
-        <p style={{ color: '#888', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-          Remove one to add another (max 3).
-        </p>
+        <p className="studio-text-muted-sm studio-mt-sm">Remove one to add another (max 3).</p>
       )}
     </div>
   )

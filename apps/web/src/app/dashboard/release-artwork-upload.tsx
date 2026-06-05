@@ -57,18 +57,12 @@ export function ReleaseArtworkUpload({
   }
 
   return (
-    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+    <div className="studio-artwork-wrap">
       {artworkUrl && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={artworkUrl}
-          alt=""
-          width={80}
-          height={80}
-          style={{ objectFit: 'cover', borderRadius: 4, marginBottom: '0.35rem' }}
-        />
+        <img src={artworkUrl} alt="" width={80} height={80} className="studio-artwork-preview" />
       )}
-      <label style={{ display: 'block' }}>
+      <label className="studio-field--block">
         Cover art (MinIO)
         <input
           type="file"
@@ -78,11 +72,11 @@ export function ReleaseArtworkUpload({
             const f = e.target.files?.[0]
             if (f) void onFile(f)
           }}
-          style={{ display: 'block', marginTop: '0.25rem', fontSize: '0.8rem' }}
+          className="studio-file-input"
         />
       </label>
-      {uploading && <span style={{ color: '#666' }}> Uploading…</span>}
-      {error && <p style={{ color: '#dc2626', margin: '0.25rem 0 0' }}>{error}</p>}
+      {uploading && <span className="studio-text-muted-sm"> Uploading…</span>}
+      {error && <p className="studio-text-error studio-mt-sm studio-m-0">{error}</p>}
     </div>
   )
 }

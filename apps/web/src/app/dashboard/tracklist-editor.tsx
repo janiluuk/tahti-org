@@ -86,22 +86,13 @@ export function TracklistEditor({
   }, [activeRow, rows])
 
   return (
-    <fieldset style={{ border: 'none', padding: 0, margin: '1rem 0' }}>
-      <legend style={{ fontWeight: 600, marginBottom: '0.5rem' }}>Tracklist</legend>
-      <p style={{ fontSize: '0.85rem', color: '#666', margin: '0 0 0.75rem' }}>
+    <fieldset className="studio-fieldset">
+      <legend className="studio-legend">Tracklist</legend>
+      <p className="studio-text-muted-sm studio-m-0 studio-mb-md">
         Timestamps in seconds. Tag Tahti artists with <code>@handle</code> in the artist field.
       </p>
       {rows.map((row, i) => (
-        <div
-          key={i}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '5rem 1fr 1fr auto',
-            gap: '0.5rem',
-            marginBottom: '0.5rem',
-            alignItems: 'start',
-          }}
-        >
+        <div key={i} className="studio-track-grid">
           <input
             type="number"
             min={0}
@@ -113,7 +104,7 @@ export function TracklistEditor({
               next[i] = { ...next[i], startSec: e.target.value }
               sync(next)
             }}
-            style={{ width: '100%', padding: '0.35rem' }}
+            className="studio-input"
           />
           <input
             type="text"
@@ -125,9 +116,9 @@ export function TracklistEditor({
               next[i] = { ...next[i], title: e.target.value }
               sync(next)
             }}
-            style={{ width: '100%', padding: '0.35rem' }}
+            className="studio-input"
           />
-          <div style={{ position: 'relative' }}>
+          <div className="studio-relative">
             <input
               type="text"
               placeholder="Artist or @handle"
@@ -140,35 +131,15 @@ export function TracklistEditor({
                 next[i] = { ...next[i], artist: e.target.value }
                 sync(next)
               }}
-              style={{ width: '100%', padding: '0.35rem' }}
+              className="studio-input"
             />
             {activeRow === i && suggestions.length > 0 && (
-              <ul
-                style={{
-                  position: 'absolute',
-                  zIndex: 10,
-                  background: '#fff',
-                  border: '1px solid #ccc',
-                  listStyle: 'none',
-                  margin: 0,
-                  padding: 0,
-                  width: '100%',
-                  maxHeight: 160,
-                  overflow: 'auto',
-                }}
-              >
+              <ul className="studio-suggest-list">
                 {suggestions.map((u) => (
                   <li key={u.username}>
                     <button
                       type="button"
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '0.4rem 0.6rem',
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                      }}
+                      className="studio-suggest-item"
                       onMouseDown={(e) => {
                         e.preventDefault()
                         const next = [...rows]
@@ -177,7 +148,7 @@ export function TracklistEditor({
                         setSuggestions([])
                       }}
                     >
-                      @{u.username} <span style={{ color: '#888' }}>{u.displayName}</span>
+                      @{u.username} <span className="studio-text-muted-sm">{u.displayName}</span>
                     </button>
                   </li>
                 ))}
@@ -189,6 +160,7 @@ export function TracklistEditor({
             disabled={disabled || rows.length <= 1}
             onClick={() => sync(rows.filter((_, j) => j !== i))}
             aria-label="Remove row"
+            className="studio-btn-icon"
           >
             ×
           </button>
@@ -198,7 +170,7 @@ export function TracklistEditor({
         type="button"
         disabled={disabled}
         onClick={() => sync([...rows, { startSec: '0', title: '', artist: '' }])}
-        style={{ marginTop: '0.25rem' }}
+        className="studio-mt-sm studio-btn-ghost"
       >
         + Add track
       </button>

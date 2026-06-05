@@ -104,123 +104,60 @@ export default function ReleaseOpsPanel({
   const doneCount = checklist.filter((c) => c.done).length
 
   return (
-    <div style={{ marginTop: '0.75rem', borderTop: '1px solid #eee', paddingTop: '0.75rem' }}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        style={{
-          fontSize: '0.9rem',
-          border: '1px solid #ccc',
-          borderRadius: 4,
-          padding: '0.25rem 0.6rem',
-        }}
-      >
+    <div className="studio-divider">
+      <button type="button" onClick={() => setOpen(!open)} className="studio-btn-ghost">
         {open ? 'Hide' : 'Release ops'} ({doneCount}/{checklist.length})
       </button>
 
       {open && (
-        <div
-          style={{
-            marginTop: '0.75rem',
-            padding: '0.75rem',
-            background: '#fafafa',
-            borderRadius: 8,
-          }}
-        >
-          <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.75rem' }}>
+        <div className="studio-editor-panel studio-mt-md">
+          <p className="studio-text-muted-sm studio-m-0 studio-mb-md">
             Catalog metadata for <strong>{releaseTitle}</strong> — smart link /r/{smartLinkSlug}.
           </p>
 
-          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem' }}>
+          <ul className="studio-list studio-mb-lg">
             {checklist.map((step) => (
-              <li key={step.id} style={{ fontSize: '0.9rem', marginBottom: '0.35rem' }}>
-                <span style={{ marginRight: '0.35rem' }}>{step.done ? '✓' : '○'}</span>
+              <li key={step.id} className="studio-text-sm studio-mb-sm">
+                <span className="studio-mr-sm">{step.done ? '✓' : '○'}</span>
                 <strong>{step.label}</strong>
-                {step.hint && (
-                  <span style={{ color: '#888', marginLeft: '0.35rem' }}>— {step.hint}</span>
-                )}
+                {step.hint && <span className="studio-text-muted-sm"> — {step.hint}</span>}
               </li>
             ))}
           </ul>
 
-          <div style={{ display: 'grid', gap: '0.5rem', maxWidth: 480 }}>
-            <label>
-              UPC / EAN
-              <input
-                value={form.upc}
-                onChange={(e) => setForm({ ...form, upc: e.target.value })}
-                disabled={isPending}
-                style={{ display: 'block', width: '100%', marginTop: 2 }}
-              />
-            </label>
-            <label>
-              MusicBrainz release MBID
-              <input
-                value={form.musicbrainzReleaseId}
-                onChange={(e) => setForm({ ...form, musicbrainzReleaseId: e.target.value })}
-                disabled={isPending}
-                style={{ display: 'block', width: '100%', marginTop: 2 }}
-              />
-            </label>
-            <label>
-              MusicBrainz artist MBID
-              <input
-                value={form.musicbrainzArtistId}
-                onChange={(e) => setForm({ ...form, musicbrainzArtistId: e.target.value })}
-                disabled={isPending}
-                style={{ display: 'block', width: '100%', marginTop: 2 }}
-              />
-            </label>
-            <label>
-              P-line
-              <input
-                value={form.pLine}
-                onChange={(e) => setForm({ ...form, pLine: e.target.value })}
-                disabled={isPending}
-                style={{ display: 'block', width: '100%', marginTop: 2 }}
-              />
-            </label>
-            <label>
-              C-line
-              <input
-                value={form.cLine}
-                onChange={(e) => setForm({ ...form, cLine: e.target.value })}
-                disabled={isPending}
-                style={{ display: 'block', width: '100%', marginTop: 2 }}
-              />
-            </label>
-            <label>
-              Label imprint
-              <input
-                value={form.labelImprint}
-                onChange={(e) => setForm({ ...form, labelImprint: e.target.value })}
-                disabled={isPending}
-                style={{ display: 'block', width: '100%', marginTop: 2 }}
-              />
-            </label>
+          <div className="studio-grid studio-max-w-sm">
+            {(
+              [
+                ['UPC / EAN', 'upc'],
+                ['MusicBrainz release MBID', 'musicbrainzReleaseId'],
+                ['MusicBrainz artist MBID', 'musicbrainzArtistId'],
+                ['P-line', 'pLine'],
+                ['C-line', 'cLine'],
+                ['Label imprint', 'labelImprint'],
+              ] as const
+            ).map(([label, key]) => (
+              <label key={key} className="studio-field">
+                {label}
+                <input
+                  value={form[key]}
+                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                  disabled={isPending}
+                  className="studio-input studio-mt-sm"
+                />
+              </label>
+            ))}
           </div>
 
-          <div style={{ marginTop: '1rem', maxWidth: 560 }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-              Credits & roles
-            </div>
+          <div className="studio-mt-lg studio-max-w-md">
+            <div className="studio-text-strong-sm studio-mb-sm">Credits & roles</div>
             {credits.length === 0 && (
-              <p style={{ fontSize: '0.85rem', color: '#888', margin: '0 0 0.5rem' }}>
+              <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
                 No credits yet — add writers, performers, producers, etc.
               </p>
             )}
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 0.5rem' }}>
+            <ul className="studio-list studio-mb-sm">
               {credits.map((credit, index) => (
-                <li
-                  key={index}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '120px 1fr auto',
-                    gap: '0.35rem',
-                    marginBottom: '0.35rem',
-                    alignItems: 'center',
-                  }}
-                >
+                <li key={index} className="studio-grid studio-grid--credits">
                   <select
                     value={credit.role}
                     disabled={isPending}
@@ -229,6 +166,7 @@ export default function ReleaseOpsPanel({
                       next[index] = { ...credit, role: e.target.value as ReleaseCredit['role'] }
                       setCredits(next)
                     }}
+                    className="studio-input"
                   >
                     {RELEASE_CREDIT_ROLES.map((role) => (
                       <option key={role} value={role}>
@@ -245,12 +183,13 @@ export default function ReleaseOpsPanel({
                       next[index] = { ...credit, name: e.target.value }
                       setCredits(next)
                     }}
+                    className="studio-input"
                   />
                   <button
                     type="button"
                     disabled={isPending}
                     onClick={() => setCredits(credits.filter((_, i) => i !== index))}
-                    style={{ fontSize: '0.85rem' }}
+                    className="studio-btn-ghost"
                   >
                     Remove
                   </button>
@@ -261,21 +200,26 @@ export default function ReleaseOpsPanel({
               type="button"
               disabled={isPending}
               onClick={() => setCredits([...credits, { ...EMPTY_CREDIT }])}
-              style={{ fontSize: '0.85rem' }}
+              className="studio-btn-ghost"
             >
               Add credit
             </button>
           </div>
 
-          {error && <p style={{ color: '#b91c1c', fontSize: '0.9rem' }}>{error}</p>}
+          {error && <p className="studio-text-error">{error}</p>}
 
-          <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <button type="button" onClick={save} disabled={isPending}>
+          <div className="studio-actions studio-row--wrap studio-mt-md">
+            <button
+              type="button"
+              onClick={save}
+              disabled={isPending}
+              className="studio-btn-primary"
+            >
               {isPending ? 'Saving…' : 'Save catalog'}
             </button>
             <button
               type="button"
-              style={{ fontSize: '0.9rem' }}
+              className="studio-btn-ghost"
               disabled={isPending}
               onClick={() => {
                 startTransition(async () => {
@@ -298,7 +242,7 @@ export default function ReleaseOpsPanel({
             </button>
             <button
               type="button"
-              style={{ fontSize: '0.9rem' }}
+              className="studio-btn-ghost"
               disabled={isPending}
               onClick={() => {
                 setError(null)
@@ -328,26 +272,22 @@ export default function ReleaseOpsPanel({
               href={MUSICBRAINZ_SUBMIT_URL}
               target="_blank"
               rel="noreferrer"
-              style={{ fontSize: '0.9rem' }}
+              className="studio-link-cta"
             >
               Add on MusicBrainz →
             </a>
           </div>
 
-          <div
-            style={{ marginTop: '1rem', padding: '0.75rem', background: '#fff', borderRadius: 6 }}
-          >
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-              Revelator DSP delivery (M7)
-            </div>
-            <p style={{ fontSize: '0.85rem', color: '#666', margin: '0 0 0.5rem' }}>
+          <div className="studio-subsection studio-mt-lg">
+            <div className="studio-text-strong-sm studio-mb-sm">Revelator DSP delivery (M7)</div>
+            <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
               Submits catalog metadata from this release to Revelator (Spotify, Apple, etc.).
               Requires UPC or ISRC on every track. Pre-fills from the fields above.
             </p>
             {revelatorStatus && (
-              <p style={{ fontSize: '0.9rem', margin: '0 0 0.5rem' }}>
+              <p className="studio-text-sm studio-m-0 studio-mb-sm">
                 Status: <strong>{revelatorStatus}</strong>
-                {revelatorId && <span style={{ color: '#666' }}> · id {revelatorId}</span>}
+                {revelatorId && <span className="studio-text-muted-sm"> · id {revelatorId}</span>}
               </p>
             )}
             <button
@@ -364,30 +304,26 @@ export default function ReleaseOpsPanel({
                   if (res.revelatorStatus) setRevelatorStatus(res.revelatorStatus)
                 })
               }}
-              style={{ fontSize: '0.9rem' }}
+              className="studio-btn-ghost"
             >
               {isPending ? 'Submitting…' : 'Submit to Revelator'}
             </button>
           </div>
 
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-              MusicBrainz submission guide
-            </div>
-            <ol style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#444' }}>
+          <div className="studio-mt-lg">
+            <div className="studio-text-strong-sm studio-mb-sm">MusicBrainz submission guide</div>
+            <ol className="studio-list-indented studio-text-muted-sm">
               {MUSICBRAINZ_GUIDE_STEPS.map((step) => (
-                <li key={step} style={{ marginBottom: '0.35rem' }}>
+                <li key={step} className="studio-mb-sm">
                   {step}
                 </li>
               ))}
             </ol>
           </div>
 
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-              Post-release claim links
-            </div>
-            <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem' }}>
+          <div className="studio-mt-lg">
+            <div className="studio-text-strong-sm studio-mb-sm">Post-release claim links</div>
+            <ul className="studio-list-indented studio-text-sm">
               {POST_RELEASE_CLAIM_LINKS.map((link) => (
                 <li key={link.id}>
                   <a href={link.url} target="_blank" rel="noreferrer">
@@ -398,22 +334,20 @@ export default function ReleaseOpsPanel({
             </ul>
           </div>
 
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-              Collecting societies
-            </div>
-            <p style={{ fontSize: '0.8rem', color: '#666', margin: '0 0 0.5rem' }}>
+          <div className="studio-mt-lg">
+            <div className="studio-text-strong-sm studio-mb-sm">Collecting societies</div>
+            <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
               Register your works and recordings with the relevant PRO — Tahti does not file on your
               behalf.
             </p>
-            <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem' }}>
+            <ul className="studio-list-indented studio-text-sm">
               {COLLECTING_SOCIETY_POINTERS.map((society) => (
-                <li key={society.id} style={{ marginBottom: '0.35rem' }}>
+                <li key={society.id} className="studio-mb-sm">
                   <a href={society.url} target="_blank" rel="noreferrer">
                     {society.label}
                   </a>
-                  <span style={{ color: '#888' }}> ({society.region})</span>
-                  <span style={{ color: '#666' }}> — {society.hint}</span>
+                  <span className="studio-text-muted-sm"> ({society.region})</span>
+                  <span className="studio-text-muted-sm"> — {society.hint}</span>
                 </li>
               ))}
             </ul>

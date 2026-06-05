@@ -95,18 +95,18 @@ export function ReleaseTrackVersionPanel({
   if (loading) return null
   if (trackStatus !== 'READY' && trackStatus !== 'FAILED' && versions.length === 0) {
     return (
-      <p style={{ fontSize: '0.8rem', color: '#888', margin: '0.25rem 0' }}>
+      <p className="studio-text-muted-sm studio-my-xs">
         Upload audio for this track before managing versions.
       </p>
     )
   }
 
   return (
-    <details style={{ marginTop: '0.35rem', fontSize: '0.8rem' }}>
-      <summary style={{ cursor: 'pointer', color: '#2563eb' }}>Versions — {trackTitle}</summary>
-      <ul style={{ margin: '0.35rem 0', paddingLeft: '1.1rem' }}>
+    <details className="studio-details studio-mt-sm studio-text-sm">
+      <summary>Versions — {trackTitle}</summary>
+      <ul className="studio-list-indented">
         {versions.map((v) => (
-          <li key={v.id} style={{ marginBottom: '0.2rem' }}>
+          <li key={v.id} className="studio-mb-sm">
             v{v.versionNumber} {v.versionLabel} — {v.status}
             {v.isActive ? ' (active)' : ''}
             {v.status === 'READY' && !v.isActive && (
@@ -114,7 +114,7 @@ export function ReleaseTrackVersionPanel({
                 type="button"
                 disabled={isPending}
                 onClick={() => activate(v.id)}
-                style={{ marginLeft: '0.35rem', fontSize: '0.75rem' }}
+                className="studio-btn-ghost studio-ml-sm"
               >
                 Activate
               </button>
@@ -122,14 +122,14 @@ export function ReleaseTrackVersionPanel({
           </li>
         ))}
       </ul>
-      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="studio-row studio-row--wrap studio-gap-xs">
         <input
           placeholder="Version label"
           value={versionLabel}
           onChange={(e) => setVersionLabel(e.target.value)}
-          style={{ padding: '0.25rem', border: '1px solid #ccc', borderRadius: 4, flex: 1 }}
+          className="studio-input studio-flex-1"
         />
-        <label style={{ fontSize: '0.75rem' }}>
+        <label className="studio-text-muted-sm">
           New audio
           <input
             type="file"
@@ -139,11 +139,11 @@ export function ReleaseTrackVersionPanel({
               const f = e.target.files?.[0]
               if (f) void handleUpload(f)
             }}
-            style={{ display: 'block', marginTop: '0.15rem' }}
+            className="studio-file-input"
           />
         </label>
       </div>
-      {error && <p style={{ color: '#dc2626' }}>{error}</p>}
+      {error && <p className="studio-text-error">{error}</p>}
     </details>
   )
 }

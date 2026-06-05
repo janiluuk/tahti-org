@@ -97,7 +97,7 @@ export default function ChannelTextLayerPanel({
       </Field>
 
       {hint && (
-        <Text size="sm" tone="muted" style={{ marginBottom: '1rem' }}>
+        <Text size="sm" tone="muted" className="studio-mb-lg">
           {hint}
         </Text>
       )}

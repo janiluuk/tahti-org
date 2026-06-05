@@ -43,21 +43,21 @@ export default function ChannelSchedulePanel({
   }
 
   return (
-    <Panel title="Next broadcast" style={{ marginTop: '1.5rem' }}>
-      <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '0.75rem' }}>
+    <Panel title="Next broadcast" className="studio-mt-xl">
+      <p className="studio-text-muted-sm studio-mb-md">
         When you are offline, listeners see when you plan to go live next.
       </p>
-      <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+      <label className="studio-field--block studio-mb-sm">
         Date & time (local)
         <input
           type="datetime-local"
           value={at}
           onChange={(e) => setAt(e.target.value)}
           disabled={isPending}
-          style={{ display: 'block', width: '100%', marginTop: 2 }}
+          className="studio-input studio-mt-sm"
         />
       </label>
-      <label style={{ display: 'block', marginBottom: '0.75rem' }}>
+      <label className="studio-field--block studio-mb-md">
         Short note
         <input
           type="text"
@@ -65,15 +65,15 @@ export default function ChannelSchedulePanel({
           placeholder="e.g. Weekly — Thursdays 22:00 EET"
           onChange={(e) => setNote(e.target.value)}
           disabled={isPending}
-          style={{ display: 'block', width: '100%', marginTop: 2 }}
+          className="studio-input studio-mt-sm"
         />
       </label>
-      {error && <p style={{ color: '#b91c1c', fontSize: '0.9rem' }}>{error}</p>}
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <button type="button" onClick={save} disabled={isPending}>
+      {error && <p className="studio-text-error">{error}</p>}
+      <div className="studio-actions">
+        <button type="button" onClick={save} disabled={isPending} className="studio-btn-primary">
           {isPending ? 'Saving…' : 'Save schedule'}
         </button>
-        <button type="button" onClick={clear} disabled={isPending}>
+        <button type="button" onClick={clear} disabled={isPending} className="studio-btn-ghost">
           Clear
         </button>
       </div>

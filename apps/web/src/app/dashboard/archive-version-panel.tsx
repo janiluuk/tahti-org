@@ -93,35 +93,23 @@ export function ArchiveVersionPanel({
   if (itemStatus !== 'READY') return null
 
   return (
-    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e5e5e5' }}>
-      <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.95rem' }}>Audio versions</h4>
-      <p style={{ fontSize: '0.85rem', color: '#666', margin: '0 0 0.75rem' }}>
+    <div className="studio-divider">
+      <h4 className="studio-text-strong-sm studio-m-0 studio-mb-sm">Audio versions</h4>
+      <p className="studio-text-muted-sm studio-m-0 studio-mb-md">
         Upload a new mix under the same track URL. Listeners always hear the active version.
       </p>
 
       {loading ? (
-        <p style={{ fontSize: '0.85rem', color: '#888' }}>Loading versions…</p>
+        <p className="studio-text-muted-sm">Loading versions…</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem' }}>
+        <ul className="studio-list studio-mb-lg">
           {versions.map((v) => (
-            <li
-              key={v.id}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '0.5rem',
-                fontSize: '0.85rem',
-                padding: '0.35rem 0',
-              }}
-            >
+            <li key={v.id} className="studio-row--between studio-text-muted-sm">
               <span>
                 v{v.versionNumber} · {v.versionLabel}
-                {v.isActive && (
-                  <strong style={{ marginLeft: '0.35rem', color: '#16a34a' }}>active</strong>
-                )}
+                {v.isActive && <strong className="studio-badge--success"> active</strong>}
                 {v.status !== 'READY' && (
-                  <span style={{ marginLeft: '0.35rem', color: '#888' }}>({v.status})</span>
+                  <span className="studio-text-muted-sm"> ({v.status})</span>
                 )}
               </span>
               {!v.isActive && v.status === 'READY' && (
@@ -129,7 +117,7 @@ export function ArchiveVersionPanel({
                   type="button"
                   onClick={() => activate(v.id)}
                   disabled={isPending}
-                  style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem' }}
+                  className="studio-btn-ghost"
                 >
                   Set active
                 </button>
@@ -139,31 +127,22 @@ export function ArchiveVersionPanel({
         </ul>
       )}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+      <div className="studio-row studio-row--wrap">
         <input
           type="text"
           placeholder="Version label"
           value={versionLabel}
           onChange={(e) => setVersionLabel(e.target.value)}
           disabled={uploading}
-          style={{ padding: '0.35rem 0.5rem', fontSize: '0.85rem', minWidth: 140 }}
+          className="studio-input studio-input--grow"
         />
-        <label
-          style={{
-            fontSize: '0.85rem',
-            padding: '0.35rem 0.65rem',
-            background: uploading ? '#ccc' : '#111',
-            color: '#fff',
-            borderRadius: 4,
-            cursor: uploading ? 'default' : 'pointer',
-          }}
-        >
+        <label className={`studio-file-label${uploading ? ' studio-file-label--disabled' : ''}`}>
           {uploading ? 'Uploading…' : 'Upload new version'}
           <input
             type="file"
             accept="audio/*"
             disabled={uploading}
-            style={{ display: 'none' }}
+            className="studio-hidden-input"
             onChange={(e) => {
               const f = e.target.files?.[0]
               if (f) void handleUpload(f)
@@ -173,9 +152,7 @@ export function ArchiveVersionPanel({
         </label>
       </div>
 
-      {error && (
-        <p style={{ color: '#b91c1c', fontSize: '0.85rem', marginTop: '0.5rem' }}>{error}</p>
-      )}
+      {error && <p className="studio-text-error studio-mt-sm studio-m-0">{error}</p>}
     </div>
   )
 }

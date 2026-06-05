@@ -36,47 +36,33 @@ export function MixcloudConnect({
 
   if (!initial.configured) {
     return (
-      <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem' }}>
+      <p className="studio-text-muted-sm studio-mt-sm">
         Mixcloud OAuth is not configured on this server (set MIXCLOUD_CLIENT_ID).
       </p>
     )
   }
 
   return (
-    <div
-      style={{
-        marginTop: '1rem',
-        padding: '0.75rem 1rem',
-        border: '1px solid #eee',
-        borderRadius: 8,
-        maxWidth: 520,
-      }}
-    >
-      <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>Mixcloud (M7)</div>
-      {flash === 'connected' && (
-        <p style={{ color: '#166534', fontSize: '0.9rem' }}>Mixcloud account connected.</p>
-      )}
+    <div className="studio-mixcloud-box">
+      <div className="studio-text-strong-sm studio-mb-sm">Mixcloud (M7)</div>
+      {flash === 'connected' && <p className="studio-text-success">Mixcloud account connected.</p>}
       {flash === 'error' && (
-        <p style={{ color: '#b91c1c', fontSize: '0.9rem' }}>
-          Mixcloud connection failed. Try again.
-        </p>
+        <p className="studio-text-error">Mixcloud connection failed. Try again.</p>
       )}
       {flash === 'login' && (
-        <p style={{ color: '#b91c1c', fontSize: '0.9rem' }}>
-          Log in to Tahti before connecting Mixcloud.
-        </p>
+        <p className="studio-text-error">Log in to Tahti before connecting Mixcloud.</p>
       )}
-      <p style={{ fontSize: '0.85rem', color: '#666', margin: '0 0 0.5rem' }}>
+      <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
         Connect once, then upload READY archive mixes to Mixcloud from the archive editor.
       </p>
       {connected ? (
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.9rem', color: '#166534' }}>Connected</span>
+        <div className="studio-row">
+          <span className="studio-text-success">Connected</span>
           <button
             type="button"
             onClick={disconnect}
             disabled={isPending}
-            style={{ fontSize: '0.9rem' }}
+            className="studio-text-sm"
           >
             {isPending ? 'Disconnecting…' : 'Disconnect'}
           </button>
@@ -84,22 +70,12 @@ export function MixcloudConnect({
       ) : (
         <a
           href={`${apiUrl}/api/me/mixcloud/oauth/start`}
-          style={{
-            display: 'inline-block',
-            fontSize: '0.9rem',
-            padding: '0.35rem 0.75rem',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            textDecoration: 'none',
-            color: 'inherit',
-          }}
+          className="studio-btn-ghost studio-link-cta"
         >
           Connect Mixcloud →
         </a>
       )}
-      {error && (
-        <p style={{ color: '#b91c1c', fontSize: '0.9rem', marginTop: '0.35rem' }}>{error}</p>
-      )}
+      {error && <p className="studio-text-error studio-mt-sm studio-m-0">{error}</p>}
     </div>
   )
 }
