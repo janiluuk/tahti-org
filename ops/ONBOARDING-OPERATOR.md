@@ -109,7 +109,7 @@ rollback one service without data loss.
 
 - Grant preview tooling in admin (`/api/admin/grants`)
 - Engagement-unit formula (see `docs/transparency-policy.md`)
-- What to export before AGM (CSV, PRH filing checklist — see [`TREASURER.md`](TREASURER.md) when published)
+- What to export before AGM — [`TREASURER.md`](TREASURER.md); meeting flow — [`AGM-PLAYBOOK.md`](AGM-PLAYBOOK.md)
 
 ### Treasurer sign-off
 

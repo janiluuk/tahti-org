@@ -14,6 +14,8 @@
     "ci:check": "bash scripts/ci-check.sh",
     "tor-exit:check": "node scripts/check-tor-exit-list-fresh.mjs",
     "tor-exit:sync": "node scripts/sync-tor-exit-list.mjs",
+    "prod:check-m7": "bash scripts/check-mixcloud-prod.sh",
+    "prod:readiness": "bash scripts/check-prod-readiness.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "bash tests/e2e/vital-flows.sh",

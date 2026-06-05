@@ -237,4 +237,6 @@ OpenAPI UI: `https://api.tahti.live/docs`
 3. Store **client secret** as Swarm secret `mixcloud_client_secret` (mounted as `MIXCLOUD_CLIENT_SECRET_FILE` on **api** and **worker-media**).
 4. Redeploy stack; artists connect via Dashboard → Distribution → Mixcloud.
 
+**Verify on manager:** `./scripts/check-mixcloud-prod.sh` or `pnpm prod:check-m7` (see also `pnpm prod:readiness`).
+
 Without `MIXCLOUD_CLIENT_ID`, OAuth and uploads stay in stub mode (CI/dev).
