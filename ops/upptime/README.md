@@ -33,5 +33,6 @@ Set `API_URL` (e.g. `https://api.tahti.live`) and `APP_URL` (e.g. `https://app.t
 
 ## Related
 
+- **Interim monitor** (until Upptime fork is live): [`.github/workflows/status-monitor.yml`](../../.github/workflows/status-monitor.yml) + [`scripts/status-monitor.sh`](../../scripts/status-monitor.sh). Set repo variable `STATUS_MONITOR_ENABLED=true` and optional `STATUS_API_URL` / `STATUS_APP_URL`.
 - Backup age alerts: `./scripts/backup.sh status` (cron + exit codes)
 - Prometheus: `ops/monitoring/vimage6/`
