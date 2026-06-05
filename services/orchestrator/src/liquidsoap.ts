@@ -15,6 +15,8 @@ import { liveInputUrl } from './live-input.js'
 const execAsync = promisify(exec)
 
 const LIQUIDSOAP_IMAGE = process.env.LIQUIDSOAP_IMAGE ?? 'savonet/liquidsoap:v2.2.5'
+/** STREAM-010: allow Liquidsoap to flush the last HLS segment (4s × 4 segments). */
+const LIQUIDSOAP_STOP_TIMEOUT_SEC = parseInt(process.env.LIQUIDSOAP_STOP_TIMEOUT_SEC ?? '20', 10)
 const TEMPLATE_PATH = process.env.LIQUIDSOAP_TEMPLATE ?? '/srv/liquidsoap-channel.liq.template'
 const HLS_VOLUME = process.env.HLS_VOLUME ?? 'tahti_stack_hls'
 const RECORDINGS_VOLUME = process.env.RECORDINGS_VOLUME ?? 'tahti_recordings_shared'
@@ -165,7 +167,7 @@ export async function stopLiquidsoapContainer(channelId: string): Promise<void> 
   if (!containerName) return
 
   try {
-    await execAsync(`docker stop ${containerName}`)
+    await execAsync(`docker stop -t ${LIQUIDSOAP_STOP_TIMEOUT_SEC} ${containerName}`)
     await execAsync(`docker rm ${containerName}`)
   } catch (err) {
     console.error(`[orchestrator] failed to stop ${containerName}:`, err)

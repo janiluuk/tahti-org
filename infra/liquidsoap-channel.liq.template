@@ -48,7 +48,7 @@ radio = fallback(
 # --- Live recording: ffmpeg sidecar (STREAM-004) spawned by orchestrator ---
 # Reads Icecast or RTMP ingest directly; survives Liquidsoap restarts.
 
-# --- HLS output for listeners (the public-facing stream) ---
+# --- HLS output for listeners (M20: dual-bitrate — free MP3, paid FLAC manifest paths) ---
 output.file.hls(
   playlist="stream.m3u8",
   segments=4,
@@ -56,9 +56,8 @@ output.file.hls(
   segments_overhead=10,
   "/hls/{{CHANNEL_ID}}",
   [
-    ("opus_64k",  %ffmpeg(format="mpegts", %audio(codec="opus", b="64k"))),
-    ("opus_128k", %ffmpeg(format="mpegts", %audio(codec="opus", b="128k"))),
-    ("opus_256k", %ffmpeg(format="mpegts", %audio(codec="opus", b="256k")))
+    ("stream-mp3-192", %ffmpeg(format="mpegts", %audio(codec="libmp3lame", b="192k", ar=44100, ac=2))),
+    ("stream-flac", %ffmpeg(format="mpegts", %audio(codec="flac", samplerate=44100, channels=2)))
   ],
   radio
 )

@@ -276,7 +276,7 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | ID | Issue | Severity |
 |----|-------|----------|
 | STREAM-001 | HLS segments on shared Docker volume, not MinIO | CRITICAL — blocks horizontal scaling |
-| STREAM-002 | RTMP edge encoder → MP3 HTTP relay (phase 1); dual-bitrate + chromaprint deferred | HIGH (partial) |
+| STREAM-002 | RTMP edge encoder (#75) + dual-bitrate HLS (`stream-mp3-192` / `stream-flac`); chromaprint deferred | HIGH (partial) |
 | STREAM-003 | Ingest DNS failover has 30s dead window | HIGH |
 | STREAM-004 | ~~Recording is a Liquidsoap sidecar~~ — ffmpeg recorder sidecar (STREAM-004) | ~~HIGH~~ done |
 | STREAM-005 | No per-channel health watchdog — silent channels go undetected | HIGH |
@@ -284,4 +284,4 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | STREAM-007 | Single Icecast node — no redundancy for Mixxx users | MEDIUM |
 | STREAM-008 | chromaprint fingerprint runs post-broadcast only — no real-time tracklist | MEDIUM |
 | STREAM-009 | ~~Liquidsoap archive fallback reads from MinIO with no caching~~ — local cache volume + cron | ~~LOW~~ done |
-| STREAM-010 | No graceful drain on Liquidsoap container stop — last segment may be incomplete | LOW |
+| STREAM-010 | Liquidsoap stop uses `docker stop -t 20` to flush last HLS segment; audio fade deferred | LOW (partial) |
