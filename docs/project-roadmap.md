@@ -73,9 +73,9 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
-| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha, audit log, `/api/v1/status`, OpenAPI `/docs`, structured logging, Stripe webhook + backup age on `/metrics`, **ACRCloud identify counters** (inactive until `ACRCLOUD_ENABLED`), **status monitor GHA** + **Upptime config**, **`/help/tier-limits`**. Deferred: live Upptime fork deploy |
+| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha, audit log, `/api/v1/status`, OpenAPI `/docs`, structured logging, Stripe webhook + backup age on `/metrics`, **ACRCloud identify counters** (inactive until `ACRCLOUD_ENABLED`), **status monitor GHA** + **Upptime config** + **`bootstrap.sh`**, **`/help/tier-limits`**. Deferred: live Upptime fork deploy (`status.tahti.live`) |
 | **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor, **profile playback** (`archiveItemId` + `streamKey` presign); **cover art upload to MinIO** (`artworkKey` + presigned URLs). Deferred: bulk import |
-| **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week), **bounce webhook** (`POST /api/webhooks/email/bounce` — Postmark + SNS). Deferred: SES for broadcast sends (uses Postmark/SMTP for now) |
+| **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week), **bounce webhook** (`POST /api/webhooks/email/bounce` — Postmark + SNS), **`ops/EMAIL.md`** (Postmark + SES SMTP). Deferred: dedicated SES API transport if SMTP limits hit |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard. Deferred: social auto-post |
 | **M24** Per-content visuals | 🟡 Partial | Channel gallery + **channel video backdrop** + per-item banner/background/slideshow on `/c/:slug`; **YouTube/Vimeo** via `parseVideoEmbedUrl` |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
@@ -395,12 +395,13 @@ contractor**. Director may remain employed, but **members can operate it**.
 | [x] | `ops/RUNBOOK.md` — deploy, rollback, **Postgres + MinIO restore**, DR cutover | Dev |
 | [x] | `ops/BACKUP.md` — RPO/RTO table, cron schedule, offsite bucket names, escalation | Dev |
 | [x] | `ops/INCIDENTS.md` — outage comms, escalation | Dev |
-| [ ] | `ops/ONBOARDING-OPERATOR.md` — training syllabus | Director |
+| [x] | `ops/ONBOARDING-OPERATOR.md` — training syllabus (infra/support/treasurer tracks) | Dev |
 | [ ] | `ops/TREASURER.md` — ledger import, grant payout, PRH export | Treasurer |
 | [ ] | `ops/AGM-PLAYBOOK.md` — motions, voting, minutes template | Board |
-| [ ] | Architecture diagram (hardware, Swarm, data flows) | Dev |
-| [ ] | Credential inventory (who has access to what) | Director |
-| [ ] | Vendor contact list (fiber, UpCloud, Stripe, Revelator) | Director |
+| [x] | `ops/ARCHITECTURE.md` — Swarm topology + data-flow diagrams | Dev |
+| [x] | `ops/CREDENTIALS.md` — access matrix template (live data in board vault) | Dev |
+| [x] | `ops/VENDORS.md` — vendor contact template | Dev |
+| [x] | `ops/EMAIL.md` — Postmark + SES SMTP + bounce webhook setup | Dev |
 
 ### 8b — Operator training (target: 5 members by end Y1)
 

@@ -15,10 +15,11 @@ Set `API_URL` (e.g. `https://api.tahti.live`) and `APP_URL` (e.g. `https://app.t
 
 ## Quick start (fork Upptime template)
 
-1. Fork [upptime/upptime](https://github.com/upptime/upptime) or use the template on your org.
-2. Copy [`upptime.config.example.yml`](./upptime.config.example.yml) into the fork as `.upptimerc.yml` (or merge `sites` into your config).
-3. Set GitHub Actions secrets: `API_URL`, `APP_URL` if using env substitution in CI.
-4. Enable GitHub Pages on the Upptime repo for the public status site.
+1. **Probe production** (optional): `./ops/upptime/bootstrap.sh`
+2. Fork [upptime/upptime](https://github.com/upptime/upptime) or use the template on your org.
+3. Copy [`upptime.config.example.yml`](./upptime.config.example.yml) into the fork as `.upptimerc.yml` (or merge `sites` into your config).
+4. Set GitHub Actions secrets: `API_URL`, `APP_URL` if using env substitution in CI.
+5. Enable GitHub Pages on the Upptime repo for the public status site (`status.tahti.live`).
 
 ## API contract
 
