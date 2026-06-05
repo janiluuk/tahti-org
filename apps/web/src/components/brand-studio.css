@@ -1,22 +1,187 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
-/* Dashboard / studio — @tahti/ui tokens, light shell on dark tokens */
+/* Dashboard / studio — @tahti/ui tokens (PLAT-020) */
 
 [data-tahti-ui='studio'].tahti-studio {
   min-height: 100vh;
   font-family: var(--font-body);
   color: var(--text);
   background: var(--bg);
+  /* Bridge local @/components/ui tokens to dark studio palette */
+  --tahti-bg: var(--bg);
+  --tahti-surface: var(--card);
+  --tahti-surface-muted: var(--card2);
+  --tahti-border: var(--border);
+  --tahti-border-strong: color-mix(in srgb, var(--muted) 40%, transparent);
+  --tahti-text: var(--text);
+  --tahti-text-secondary: var(--muted);
+  --tahti-text-muted: var(--muted);
+  --tahti-primary: var(--cyan);
+  --tahti-primary-hover: color-mix(in srgb, var(--cyan) 85%, white);
+  --tahti-success-bg: color-mix(in srgb, var(--green) 12%, var(--card));
+  --tahti-warning-bg: color-mix(in srgb, var(--amber) 12%, var(--card));
+  --tahti-error-bg: color-mix(in srgb, var(--coral) 12%, var(--card));
+  --tahti-info-bg: color-mix(in srgb, var(--cyan) 12%, var(--card));
+}
+
+[data-tahti-ui='studio'] .studio-top-nav {
+  background: var(--card);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__logo {
+  font-family: var(--font-head);
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__link {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__link:hover {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__logout {
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__logout:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .db-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  min-height: calc(100vh - 52px);
+}
+
+[data-tahti-ui='studio'] .db-sidebar {
+  background: color-mix(in srgb, var(--bg) 85%, var(--card));
+  padding: 20px 0;
+  border-right: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .db-nav-item {
+  padding: 10px 20px;
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: color var(--ease), background var(--ease);
+  text-decoration: none;
+}
+
+[data-tahti-ui='studio'] .db-nav-item.active {
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
+  color: var(--cyan);
+  border-right: 2px solid var(--cyan);
+}
+
+[data-tahti-ui='studio'] .db-nav-item:hover:not(.active) {
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .db-main {
+  padding: 28px;
+  background: color-mix(in srgb, var(--bg) 85%, var(--card));
+  max-width: 960px;
+}
+
+[data-tahti-ui='studio'] .db-status-bar {
+  background: var(--card2);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  border-left: 3px solid var(--green);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+[data-tahti-ui='studio'] .db-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+[data-tahti-ui='studio'] .db-live-count {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+[data-tahti-ui='studio'] .signal-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: studio-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes studio-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+[data-tahti-ui='studio'] .studio-page-header {
+  margin-bottom: 1.5rem;
+}
+
+[data-tahti-ui='studio'] .studio-page-header h1 {
+  font-family: var(--font-head);
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+[data-tahti-ui='studio'] .studio-section-anchor {
+  scroll-margin-top: 1rem;
 }
 
 [data-tahti-ui='studio'] .ui-page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
 [data-tahti-ui='studio'] .ui-panel {
   background: var(--card);
-  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  border: 1px solid var(--border);
 }
 
 [data-tahti-ui='studio'] a {
@@ -27,4 +192,31 @@
 [data-tahti-ui='studio'] h2,
 [data-tahti-ui='studio'] .ui-heading {
   font-family: var(--font-head);
+}
+
+[data-tahti-ui='studio'] .studio-archive-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+[data-tahti-ui='studio'] .studio-archive-section h2 {
+  margin: 0 0 1rem;
+  font-size: 1.125rem;
+}
+
+@media (max-width: 768px) {
+  [data-tahti-ui='studio'] .db-layout {
+    grid-template-columns: 1fr;
+  }
+
+  [data-tahti-ui='studio'] .db-sidebar {
+    display: none;
+  }
+
+  [data-tahti-ui='studio'] .db-main {
+    padding: 16px;
+  }
 }

@@ -4,6 +4,6 @@
 /**
  * Re-exports from @tahti/ui for dark public surfaces (channel, profile, smart link).
  * Import package CSS once on those routes: tokens.css + components.css.
- * Dashboard stays on local @/components/ui (light shell).
+ * Dashboard uses brand-studio.css (dark studio shell).
  */
 export { Callout, Stat, StatGrid, LiveBadge, QualityBadge } from '@tahti/ui'
