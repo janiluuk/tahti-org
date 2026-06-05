@@ -45,6 +45,12 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'STREAM-001: mirror live HLS segments from volume to MinIO hls-live bucket',
   },
   {
+    name: 'archive-fallback-cache-sync',
+    pattern: '*/10 * * * *',
+    jobId: 'archive-fallback-cache-sync-cron',
+    description: 'STREAM-009: refresh local archive fallback cache for Liquidsoap',
+  },
+  {
     name: 'weekly-broadcast-reset',
     pattern: '0 0 * * 1',
     jobId: 'weekly-broadcast-reset-cron',

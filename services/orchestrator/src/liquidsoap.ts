@@ -8,6 +8,7 @@ import { createDecipheriv } from 'node:crypto'
 import { prisma } from '@tahti/db'
 import type { BroadcastSource } from '@tahti/db'
 import { spawnBroadcastRecorder, stopChannelRecorders, stopBroadcastRecorder } from './recorder.js'
+import { ARCHIVE_CACHE_VOLUME } from './docker-streaming.js'
 import { spawnEdgeEncoder, stopChannelEdgeEncoders } from './edge-encoder.js'
 import { liveInputUrl } from './live-input.js'
 
@@ -115,6 +116,7 @@ export async function spawnLiquidsoapContainer(
     '--restart unless-stopped',
     `-v ${HLS_VOLUME}:/hls`,
     `-v ${RECORDINGS_VOLUME}:/recordings`,
+    `-v ${ARCHIVE_CACHE_VOLUME}:/archive-cache`,
     `-v ${configPath}:/etc/liquidsoap/channel.liq:ro`,
     `-e CHANNEL_ID=${channelId}`,
     `-e BROADCAST_ID=${broadcastId}`,

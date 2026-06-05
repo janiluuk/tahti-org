@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { archivePlaybackKey } from '@tahti/shared'
-import type { FallbackMode } from '@tahti/shared'
+import { archivePlaybackKey } from './archive-playback.js'
+import type { FallbackMode } from './dto/channel-programme.js'
 
 export type FallbackSourceRow = {
   id: string
@@ -87,6 +87,33 @@ export function renderFallbackM3u(
     const duration = row.durationSec ?? -1
     lines.push(`#EXTINF:${duration},${row.title}`)
     lines.push(`${publicEndpoint}/${bucket}/${row.playbackKey}`)
+  }
+  return lines.join('\n') + '\n'
+}
+
+/** Safe filename for a MinIO playback key under a channel cache directory (STREAM-009). */
+export function localCacheBasename(playbackKey: string): string {
+  return playbackKey.replace(/\//g, '__')
+}
+
+export function channelArchiveCacheDir(cacheRoot: string, channelId: string): string {
+  return `${cacheRoot.replace(/\/$/, '')}/${channelId}`
+}
+
+/** M3U with absolute paths for Liquidsoap local playlist reload. */
+export function renderLocalFallbackM3u(
+  rows: FallbackPlaybackRow[],
+  channelCacheDir: string,
+): string {
+  if (rows.length === 0) {
+    return '#EXTM3U\n# no items yet\n'
+  }
+  const dir = channelCacheDir.replace(/\/$/, '')
+  const lines: string[] = ['#EXTM3U']
+  for (const row of rows) {
+    const duration = row.durationSec ?? -1
+    lines.push(`#EXTINF:${duration},${row.title}`)
+    lines.push(`${dir}/${localCacheBasename(row.playbackKey)}`)
   }
   return lines.join('\n') + '\n'
 }

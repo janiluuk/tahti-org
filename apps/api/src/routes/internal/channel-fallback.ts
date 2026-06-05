@@ -10,7 +10,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
-import { buildFallbackPlaybackRows, renderFallbackM3u } from '../../lib/fallback-playlist.js'
+import { buildFallbackPlaybackRows, renderFallbackM3u } from '@tahti/shared'
 
 // Liquidsoap calls this to get the current fallback playlist for a channel.
 // Returns an extended M3U with HTTP URLs to archive playback files (MP3 or FLAC).

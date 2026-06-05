@@ -283,5 +283,5 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | STREAM-006 | No per-channel bandwidth accounting — can't attribute costs | MEDIUM |
 | STREAM-007 | Single Icecast node — no redundancy for Mixxx users | MEDIUM |
 | STREAM-008 | chromaprint fingerprint runs post-broadcast only — no real-time tracklist | MEDIUM |
-| STREAM-009 | Liquidsoap archive fallback reads from MinIO with no caching — cold starts | LOW |
+| STREAM-009 | ~~Liquidsoap archive fallback reads from MinIO with no caching~~ — local cache volume + cron | ~~LOW~~ done |
 | STREAM-010 | No graceful drain on Liquidsoap container stop — last segment may be incomplete | LOW |

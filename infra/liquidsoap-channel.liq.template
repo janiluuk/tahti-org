@@ -14,14 +14,24 @@ live_icecast = input.http("{{LIVE_INPUT_URL}}")
 live_source = mksafe(live_icecast)
 
 # --- Archive playlist (the fallback) ---
-# Hot-reloads when the artist changes their archive rotation
-archive_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u"
-archive = playlist(
-  mode="{{FALLBACK_MODE}}",      # "shuffle" or "ordered"
-  reload=300,
-  reload_mode="rounds",
-  archive_url
-)
+# STREAM-009: prefer local cache synced from MinIO; remote M3U until first warm completes.
+archive_local_path = "/archive-cache/{{CHANNEL_ID}}/fallback.m3u"
+archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u"
+archive = if file.exists(archive_local_path) then
+  playlist(
+    mode="{{FALLBACK_MODE}}",
+    reload=300,
+    reload_mode="rounds",
+    archive_local_path
+  )
+else
+  playlist(
+    mode="{{FALLBACK_MODE}}",
+    reload=300,
+    reload_mode="rounds",
+    archive_remote_url
+  )
+end
 archive = crossfade(duration=3., archive)
 archive = normalize(target=-14., archive)
 # ARTIST-003: buffer archive before fallback switch so first listener does not hit an empty segment.

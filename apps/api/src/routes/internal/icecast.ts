@@ -14,7 +14,10 @@ import {
   openApiResponse,
   openApiResponses,
 } from '@tahti/shared'
-import { enqueueFinalizeBroadcastRecording } from '../../lib/queue.js'
+import {
+  enqueueFinalizeBroadcastRecording,
+  enqueueWarmArchiveFallbackCache,
+} from '../../lib/queue.js'
 
 // Icecast URL auth callbacks.
 // Icecast sends: mount, user, pass (plus optional ip, agent) as form-encoded body.
@@ -76,6 +79,13 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
 
       spawnChannelLiquidsoap(channel.id, slug, broadcast.id).catch((err: unknown) =>
         fastify.log.error({ err }, 'orchestrator spawn failed (icecast)'),
+      )
+
+      enqueueWarmArchiveFallbackCache(channel.id).catch((err: unknown) =>
+        fastify.log.error(
+          { err, channelId: channel.id },
+          'archive fallback cache warm enqueue failed',
+        ),
       )
 
       fastify.log.info(
