@@ -6,8 +6,6 @@
 **/.turbo
 **/*.log
 coverage
-output_vhs.mp4
-bg-audio.mp3
 slides
 img
 docs

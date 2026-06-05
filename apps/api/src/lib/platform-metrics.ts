@@ -16,7 +16,9 @@ function startOfUtcDay(): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
 }
 
-export async function collectPlatformMetrics(prisma: PrismaClient): Promise<PlatformMetricSnapshot> {
+export async function collectPlatformMetrics(
+  prisma: PrismaClient,
+): Promise<PlatformMetricSnapshot> {
   const dayStart = startOfUtcDay()
   const auditSince = new Date(Date.now() - 86_400_000)
 

@@ -337,6 +337,23 @@ export const ArtistFollowResponseSchema = z.object({
   following: z.boolean(),
 })
 
+export const ChannelCardSchema = z.object({
+  slug: z.string(),
+  state: z.string(),
+  goneLiveAt: z.string().datetime().nullable(),
+  nextBroadcastAt: z.string().datetime().nullable(),
+  nextBroadcastNote: z.string().nullable(),
+  user: PublicChannelUserSchema,
+})
+
+export const ChannelListResponseSchema = z.object({
+  live: z.array(ChannelCardSchema),
+  recent: z.array(ChannelCardSchema),
+})
+
+export type ChannelCard = z.infer<typeof ChannelCardSchema>
+export type ChannelListResponse = z.infer<typeof ChannelListResponseSchema>
+
 export const TransparencyMonthlyRollupSchema = z.object({
   yearMonth: z.string(),
   byCategory: z.record(z.unknown()),

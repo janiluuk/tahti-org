@@ -48,7 +48,6 @@ rsync -az \
   --exclude .turbo \
   --exclude .next \
   --exclude dist \
-  --exclude '*.mp4' \
   --exclude 'docs/e2e-screenshots/.seed-output.json' \
   ./ "${HOST}:${REMOTE_PATH}/"
 

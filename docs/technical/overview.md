@@ -34,6 +34,9 @@ gantt
     Phase 9 – Newsletter & promo toolkit (M13–M14) :p9, 2026-11-01, 2027-01-15
     Phase 10 – Community: tagging, Radio, venues (M15–M17) :p10, 2027-01-15, 2027-04-01
     Phase 11 – Engagement & fan-subs (M18–M20) :p11, 2027-04-01, 2027-06-30
+
+    section Operations & Governance
+    Phase 12 – Admin panel (M21)       :p12, 2027-07-01, 2027-09-01
 ```
 
 ## Closed beta: 15.6–1.8.2026
@@ -238,6 +241,7 @@ graph LR
 | 9 | [phase-9.md](phase-9.md) | M13–M14 | Newsletter, promo toolkit, embed, social auto-post |
 | 10 | [phase-10.md](phase-10.md) | M15–M17 | Artist tagging, Tahti Radio, venue calendar |
 | 11 | [phase-11.md](phase-11.md) | M18–M20 | Downloads, fan-subscriptions, tier gating |
+| 12 | [phase-12.md](phase-12.md) | M21 | Admin panel: users, streams, finance, health, support, governance |
 
 **Node placement & bottlenecks:** [scaling-node-distribution.md](../scaling-node-distribution.md) — Swarm labels, replica map, and what to scale when API, chat, transcode, DB, or egress saturates.
 
