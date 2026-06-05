@@ -352,3 +352,81 @@
 [data-tahti-ui='brand'] .brand-public .brand-table .warn {
   color: var(--tahti-warning, #d97706);
 }
+
+/* Phase 9 — listener newsletter opt-in on channel / profile */
+[data-tahti-ui='brand'] .brand-public .nl-subscribe {
+  margin: 1.25rem 0 1.5rem;
+  padding: 1rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  background: var(--card2);
+}
+
+[data-tahti-ui='brand'] .brand-public .nl-subscribe-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .nl-subscribe-desc {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .nl-subscribe-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .nl-subscribe-input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--muted) 30%, transparent);
+  background: var(--bg);
+  color: inherit;
+}
+
+[data-tahti-ui='brand'] .brand-public .nl-subscribe-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent, #7c3aed);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .brand-public .nl-subscribe-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='brand'] .brand-public .nl-subscribe-msg {
+  font-size: 0.875rem;
+  margin: 0.65rem 0 0;
+}
+
+[data-tahti-ui='brand'] .brand-public .nl-subscribe-msg--err {
+  color: var(--tahti-warning, #d97706);
+}
+
+[data-tahti-ui='brand'] .brand-public .mention-link {
+  color: var(--accent, #7c3aed);
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .brand-public .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

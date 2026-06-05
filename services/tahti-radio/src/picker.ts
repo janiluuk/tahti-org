@@ -21,10 +21,21 @@ export interface PickedChannel {
 
 const HLS_BASE = process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live'
 
-// lastFeaturedAt per channelId — resets on restart (in-memory is fine for M16)
-const lastFeatured = new Map<string, Date>()
+async function recordFeatured(channelId: string): Promise<void> {
+  const now = new Date()
+  await prisma.$transaction([
+    prisma.channel.update({
+      where: { id: channelId },
+      data: { lastFeaturedAt: now },
+    }),
+    prisma.radioFeatureLog.create({
+      data: { channelId, featuredAt: now },
+    }),
+  ])
+}
 
-export async function pickChannel(): Promise<PickedChannel | null> {
+/** Pick the next channel; persist rotation only when the featured channel changes. */
+export async function pickChannel(currentChannelId: string | null): Promise<PickedChannel | null> {
   const live = await prisma.channel.findMany({
     where: {
       state: 'LIVE',
@@ -34,21 +45,24 @@ export async function pickChannel(): Promise<PickedChannel | null> {
     select: {
       id: true,
       slug: true,
+      lastFeaturedAt: true,
       user: { select: { displayName: true } },
     },
   })
 
   if (live.length === 0) return null
 
-  // Sort by last featured ascending (never featured → epoch 0)
   live.sort((a, b) => {
-    const ta = lastFeatured.get(a.id)?.getTime() ?? 0
-    const tb = lastFeatured.get(b.id)?.getTime() ?? 0
+    const ta = a.lastFeaturedAt?.getTime() ?? 0
+    const tb = b.lastFeaturedAt?.getTime() ?? 0
     return ta - tb
   })
 
   const picked = live[0]!
-  lastFeatured.set(picked.id, new Date())
+
+  if (picked.id !== currentChannelId) {
+    await recordFeatured(picked.id)
+  }
 
   return {
     channelId: picked.id,

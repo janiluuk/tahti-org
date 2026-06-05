@@ -20,6 +20,9 @@ export const MetaStreamOptSchema = z.object({
   optOut: z.boolean({ required_error: 'optOut (boolean) is required' }),
 })
 
-export const MentionsEnabledSchema = z.object({
-  mentionsEnabled: z.boolean({ required_error: 'mentionsEnabled (boolean) is required' }),
-})
+export const MentionsEnabledSchema = z
+  .object({
+    mentionsEnabled: z.boolean().optional(),
+    publicMentionsEnabled: z.boolean().optional(),
+  })
+  .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })

@@ -34,6 +34,7 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
           displayName: true,
           username: true,
           tier: true,
+          suspendedAt: true,
         },
       })
 
@@ -47,6 +48,10 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
 
       if (!user.emailVerifiedAt) {
         return reply.status(403).send({ error: 'Please verify your email before logging in' })
+      }
+
+      if (user.suspendedAt) {
+        return reply.status(403).send({ error: 'This account has been suspended' })
       }
 
       const session = await createSession(fastify.prisma, user.id)

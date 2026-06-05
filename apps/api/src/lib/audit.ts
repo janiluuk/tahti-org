@@ -23,6 +23,11 @@ interface AuditParams {
     | 'DOWNLOAD_FRAUD_ALERT'
     | 'MEMBERSHIP_RENEWAL_REMINDER'
     | 'MEMBERSHIP_LAPSED'
+    | 'USER_SUSPEND'
+    | 'USER_UNSUSPEND'
+    | 'BOARD_ROLE_CHANGE'
+    | 'ENGAGEMENT_ADJUSTMENT'
+    | 'STREAM_FORCE_OFFLINE'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

@@ -2,7 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { RadioNowPlayingSchema, openApiResponse } from '@tahti/shared'
+import { RadioFeatureHistorySchema, RadioNowPlayingSchema, openApiResponse } from '@tahti/shared'
+import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
 
 const RADIO_URL = process.env.RADIO_SERVICE_URL ?? 'http://tahti-radio:3004'
 
@@ -26,6 +27,21 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         // Radio service unreachable — return offline state rather than 500
         return reply.send({ live: false, channel: null })
       }
+    },
+  )
+
+  fastify.get(
+    '/api/v1/radio/history',
+    {
+      schema: {
+        tags: ['radio'],
+        description: 'M16: last featured channels on Tahti Radio',
+        response: openApiResponse(RadioFeatureHistorySchema, 'RadioFeatureHistory'),
+      },
+    },
+    async (_request, reply) => {
+      const history = await getRadioFeatureHistory(fastify.prisma, 10)
+      return reply.send(history)
     },
   )
 }

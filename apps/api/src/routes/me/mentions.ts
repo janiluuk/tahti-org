@@ -33,12 +33,19 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
           .status(400)
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
       }
-      const { mentionsEnabled } = parsed.data
-      await fastify.prisma.user.update({
+      const data: { mentionsEnabled?: boolean; publicMentionsEnabled?: boolean } = {}
+      if (parsed.data.mentionsEnabled !== undefined) {
+        data.mentionsEnabled = parsed.data.mentionsEnabled
+      }
+      if (parsed.data.publicMentionsEnabled !== undefined) {
+        data.publicMentionsEnabled = parsed.data.publicMentionsEnabled
+      }
+      const updated = await fastify.prisma.user.update({
         where: { id: user.id },
-        data: { mentionsEnabled },
+        data,
+        select: { mentionsEnabled: true, publicMentionsEnabled: true },
       })
-      return reply.send({ mentionsEnabled })
+      return reply.send(updated)
     },
   )
 

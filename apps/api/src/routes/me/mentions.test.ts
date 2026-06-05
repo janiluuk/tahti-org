@@ -42,9 +42,19 @@ describe('M15 — mention settings API', () => {
     })
     expect(off.statusCode).toBe(200)
     expect(off.json().mentionsEnabled).toBe(false)
+    expect(off.json().publicMentionsEnabled).toBe(false)
 
     const user = await prisma.user.findUnique({ where: { username: 'mention-api-user' } })
     expect(user?.mentionsEnabled).toBe(false)
+
+    const pub = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/mentions/settings',
+      headers: { cookie },
+      payload: { publicMentionsEnabled: true },
+    })
+    expect(pub.statusCode).toBe(200)
+    expect(pub.json().publicMentionsEnabled).toBe(true)
 
     const bad = await app.inject({
       method: 'PATCH',

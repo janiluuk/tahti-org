@@ -872,8 +872,133 @@ export const AdminVenueListSchema = z.array(AdminVenueBoardSchema)
 
 export const AdminVenueUpdatedSchema = AdminVenueBoardSchema.passthrough()
 
+export const AdminMemberStatsSchema = z.object({
+  total: z.number().int().nonnegative(),
+  newThisMonth: z.number().int().nonnegative(),
+  lapsedThisMonth: z.number().int().nonnegative(),
+})
+
+export const AdminQueueStatsSchema = z.object({
+  name: z.string(),
+  waiting: z.number().int().nonnegative(),
+  active: z.number().int().nonnegative(),
+  delayed: z.number().int().nonnegative(),
+  failed: z.number().int().nonnegative(),
+})
+
+export const AdminQueueStatsListSchema = z.array(AdminQueueStatsSchema)
+
+export const AdminCronRunEntrySchema = z.object({
+  id: z.string(),
+  startedAt: z.coerce.date(),
+  finishedAt: z.coerce.date().nullable(),
+  outcome: z.string().nullable(),
+  errorMessage: z.string().nullable(),
+})
+
+export const AdminCronJobStatusSchema = z.object({
+  jobName: z.string(),
+  description: z.string(),
+  pattern: z.string(),
+  lastRun: AdminCronRunEntrySchema.nullable(),
+})
+
+export const AdminCronRunListSchema = z.array(AdminCronJobStatusSchema)
+
+export const AdminAuditRecentItemSchema = z.object({
+  id: z.string(),
+  action: z.string(),
+  actorId: z.string(),
+  targetId: z.string().nullable(),
+  createdAt: z.coerce.date(),
+})
+
+export const AdminAuditRecentListSchema = z.array(AdminAuditRecentItemSchema)
+
+export const AdminLiveStreamSchema = z.object({
+  channelId: z.string(),
+  slug: z.string(),
+  artistName: z.string(),
+  username: z.string(),
+  goneLiveAt: z.coerce.date().nullable(),
+  elapsedSec: z.number().int().nonnegative(),
+})
+
+export const AdminLiveStreamListSchema = z.object({
+  count: z.number().int().nonnegative(),
+  streams: z.array(AdminLiveStreamSchema),
+})
+
+export const AdminUserListItemSchema = z.object({
+  id: z.string(),
+  memberNumber: z.number().int().nullable(),
+  displayName: z.string(),
+  email: z.string(),
+  username: z.string(),
+  tier: z.string(),
+  isMember: z.boolean(),
+  isBoard: z.boolean(),
+  suspendedAt: z.coerce.date().nullable(),
+  channelState: z.string().nullable(),
+  memberSince: z.coerce.date().nullable(),
+  engagementUnitsYtd: z.number().int().nonnegative(),
+})
+
+export const AdminUserListResponseSchema = z.object({
+  page: z.number().int(),
+  limit: z.number().int(),
+  total: z.number().int(),
+  users: z.array(AdminUserListItemSchema),
+})
+
+export const AdminUserDetailSchema = z
+  .object({
+    id: z.string(),
+    email: z.string(),
+    username: z.string(),
+    displayName: z.string(),
+    tier: z.string(),
+    isMember: z.boolean(),
+    isBoard: z.boolean(),
+    memberNumber: z.number().int().nullable(),
+    memberSince: z.coerce.date().nullable(),
+    suspendedAt: z.coerce.date().nullable(),
+    suspendReason: z.string().nullable(),
+    engagementUnitsYtd: z.number().int(),
+    channel: z.unknown().nullable(),
+    fanSubscriptionsAsArtist: z.number().int(),
+    stripeConnectChargesEnabled: z.boolean(),
+  })
+  .passthrough()
+
 export const MentionsEnabledResponseSchema = z.object({
   mentionsEnabled: z.boolean(),
+  publicMentionsEnabled: z.boolean(),
+})
+
+export const PublicMentionItemSchema = z.object({
+  id: z.string(),
+  surface: z.string(),
+  createdAt: z.coerce.date(),
+  mentioner: z.object({
+    username: z.string(),
+    displayName: z.string(),
+  }),
+})
+
+export const PublicMentionListSchema = z.array(PublicMentionItemSchema)
+
+export const RadioFeatureHistoryItemSchema = z.object({
+  channelId: z.string(),
+  slug: z.string(),
+  artistName: z.string(),
+  featuredAt: z.coerce.date(),
+})
+
+export const RadioFeatureHistorySchema = z.array(RadioFeatureHistoryItemSchema)
+
+export const RadioFeaturedPatchSchema = z.object({
+  channelId: z.string().min(1),
 })
 
 export const MentionMutedResponseSchema = z.object({

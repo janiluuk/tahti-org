@@ -37,7 +37,7 @@ async function liqCommand(cmd: string): Promise<void> {
 }
 
 async function runPickLoop(): Promise<void> {
-  const picked = await pickChannel()
+  const picked = await pickChannel(current?.channelId ?? null)
 
   if (!picked) {
     // No live channels — signal Liquidsoap to fall back to placeholder
