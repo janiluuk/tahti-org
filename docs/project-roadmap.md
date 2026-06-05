@@ -69,7 +69,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
 | **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence |
 | **M6** Multistream RTMP | ✅ Done | Per-channel targets, encrypted stream keys, `alwaysMirror` gated to STUDIO |
-| **M7** Distribution (Mixcloud + Revelator) | 🟡 Partial | Mixcloud OAuth connect + archive upload queue; **`MIXCLOUD_CLIENT_SECRET_FILE`** wired on api/worker; prod setup in RUNBOOK; `packages/revelator` stub/live submit + **Revelator wizard**; **monthly royalty sync** + dashboard display; **€8/release Stripe billing** (Studio 12/yr included). Deferred: live Mixcloud app credentials on production stack |
+| **M7** Distribution (Mixcloud + Revelator) | 🟡 Partial | Mixcloud OAuth connect + archive upload queue; **`MIXCLOUD_CLIENT_SECRET_FILE`** wired on api/worker; prod setup in RUNBOOK; **`scripts/check-mixcloud-prod.sh`** + `pnpm prod:check-m7`; `packages/revelator` stub/live submit + **Revelator wizard**; **monthly royalty sync** + dashboard display; **€8/release Stripe billing** (Studio 12/yr included). Deferred: live Mixcloud app credentials on production stack (ops — run check script after configure) |
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
@@ -396,8 +396,8 @@ contractor**. Director may remain employed, but **members can operate it**.
 | [x] | `ops/BACKUP.md` — RPO/RTO table, cron schedule, offsite bucket names, escalation | Dev |
 | [x] | `ops/INCIDENTS.md` — outage comms, escalation | Dev |
 | [x] | `ops/ONBOARDING-OPERATOR.md` — training syllabus (infra/support/treasurer tracks) | Dev |
-| [ ] | `ops/TREASURER.md` — ledger import, grant payout, PRH export | Treasurer |
-| [ ] | `ops/AGM-PLAYBOOK.md` — motions, voting, minutes template | Board |
+| [x] | `ops/TREASURER.md` — ledger import, grant payout, PRH export checklist | Dev |
+| [x] | `ops/AGM-PLAYBOOK.md` — motions, voting, minutes template | Dev |
 | [x] | `ops/ARCHITECTURE.md` — Swarm topology + data-flow diagrams | Dev |
 | [x] | `ops/CREDENTIALS.md` — access matrix template (live data in board vault) | Dev |
 | [x] | `ops/VENDORS.md` — vendor contact template | Dev |
