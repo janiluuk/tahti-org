@@ -1,6 +1,16 @@
 # E2E screenshots (Docker stack)
 
-Full-page captures of the Tahti web app against the **Docker stack** (not host `next dev` on :3000).
+Full-page captures of the Tahti **web app** (`apps/web`) against the **Docker stack** (not host `next dev` on :3000).
+
+**Canonical location:** commit updated PNGs here only. Agents must **not** copy these into `website/` — the marketing site (`website/`) is off limits unless the user explicitly requests it (see `.cursor/rules/website-off-limits.mdc`).
+
+## When to update (agents)
+
+After meaningful **public UI** changes (layouts, brand shells, auth, channel, profile, dashboard, governance, transparency):
+
+1. Run the capture flow below on a machine with Docker.
+2. Commit changed files under `docs/e2e-screenshots/` (PNG + `manifest.json` if routes changed).
+3. Do **not** touch `website/screenshots/` unless the user asks.
 
 ## Reproduce (local only — not CI)
 
@@ -20,15 +30,15 @@ Via Make: `make e2e-screenshots`
 
 CI runs lint, tests, and `tests/e2e/vital-flows.sh` — not Playwright screenshots.
 
-## Ports (defaults)
+## Ports (stack defaults)
 
 | Service | URL |
 |---------|-----|
-| Web | http://localhost:3010 |
-| API | http://localhost:3011 |
-| MailHog | http://localhost:8025 |
+| Web | http://localhost:17777 |
+| API | http://localhost:15011 |
+| MailHog | http://localhost:18025 |
 
-Override with `WEB_PORT` / `API_PORT` when starting the stack.
+(`stack-up.sh` uses high ports to avoid clashing with local dev. Override with `WEB_PORT` / `API_PORT`.)
 
 ## Fixture credentials
 
@@ -39,12 +49,6 @@ Override with `WEB_PORT` / `API_PORT` when starting the stack.
 
 Username: `screenshot-demo` · Smart link slug: `northern-lights-ep`
 
-See `manifest.json` for route → file mapping.
-
-Copies used on the marketing site (`website/screenshots/`) power the annotated “How it looks” section on [tahti.live](https://tahti.live). Re-copy after re-capturing:
-
-```bash
-cp docs/e2e-screenshots/{06,07,08,09,10,11,12}-*.png website/screenshots/
-```
+See `manifest.json` for route → file mapping. Linked from `docs/user-flows.md`.
 
 Production node layout and scaling bottlenecks: [../scaling-node-distribution.md](../scaling-node-distribution.md).
