@@ -47,13 +47,13 @@ chat.tahti.live {
     reverse_proxy chat:8000
 }
 
-# ── Public HLS streams — served direct; UpCloud Helsinki mirrors for spillover ─
+# ── Public HLS streams — MinIO hls-live bucket (STREAM-001; synced from Liquidsoap volume) ─
 stream.tahti.live {
     encode gzip
     header Access-Control-Allow-Origin "*"
     header Cache-Control "public, max-age=2, s-maxage=10"
-    root * /srv/hls
-    file_server
+    rewrite * /hls-live{uri}
+    reverse_proxy minio:9000
 }
 
 # ── CDN origin for archive items, covers, waveforms ──────────────────────────

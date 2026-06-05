@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest'
 import { mkdir, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 
-vi.mock('./minio.js', () => ({
-  s3: { send: vi.fn().mockResolvedValue({}) },
+const { mockSend } = vi.hoisted(() => ({
+  mockSend: vi.fn(),
 }))
 
-import { syncChannelHlsToMinio } from './hls-minio-sync.js'
-import { s3 } from './minio.js'
+vi.mock('./minio.js', () => ({
+  s3: { send: mockSend },
+}))
+
+import { hlsObjectUpToDate, syncChannelHlsToMinio } from './hls-minio-sync.js'
 
 describe('syncChannelHlsToMinio', () => {
   const root = join(tmpdir(), `tahti-hls-sync-${process.pid}`)
@@ -28,9 +32,52 @@ describe('syncChannelHlsToMinio', () => {
     await rm(root, { recursive: true, force: true })
   })
 
+  beforeEach(() => {
+    mockSend.mockReset()
+    mockSend.mockRejectedValue(Object.assign(new Error('NotFound'), { name: 'NotFound' }))
+  })
+
   it('uploads segment files under slug prefix', async () => {
+    mockSend.mockImplementation(async (cmd) => {
+      if (cmd instanceof HeadObjectCommand) {
+        throw Object.assign(new Error('NotFound'), { name: 'NotFound' })
+      }
+      return {}
+    })
+
     const result = await syncChannelHlsToMinio(root, channelId, slug)
     expect(result.uploaded).toBeGreaterThan(0)
-    expect(s3.send).toHaveBeenCalled()
+    expect(mockSend.mock.calls.some(([cmd]) => cmd instanceof PutObjectCommand)).toBe(true)
+  })
+
+  it('skips objects already mirrored at the same size and mtime', async () => {
+    mockSend.mockImplementation(async (cmd) => {
+      if (cmd instanceof HeadObjectCommand) {
+        return { ContentLength: 8, LastModified: new Date() }
+      }
+      return {}
+    })
+
+    const result = await syncChannelHlsToMinio(root, channelId, slug)
+    expect(result.uploaded).toBe(0)
+    expect(result.skipped).toBeGreaterThan(0)
+    expect(mockSend.mock.calls.every(([cmd]) => !(cmd instanceof PutObjectCommand))).toBe(true)
+  })
+})
+
+describe('hlsObjectUpToDate', () => {
+  beforeEach(() => {
+    mockSend.mockReset()
+  })
+
+  it('returns false when object is missing', async () => {
+    mockSend.mockRejectedValue(Object.assign(new Error('NotFound'), { name: 'NotFound' }))
+    await expect(hlsObjectUpToDate('slug/seg.ts', 100, Date.now())).resolves.toBe(false)
+  })
+
+  it('returns true when remote matches local size and mtime', async () => {
+    const mtime = Date.now() - 5000
+    mockSend.mockResolvedValue({ ContentLength: 100, LastModified: new Date(mtime + 1000) })
+    await expect(hlsObjectUpToDate('slug/seg.ts', 100, mtime)).resolves.toBe(true)
   })
 })

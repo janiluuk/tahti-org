@@ -4,7 +4,7 @@
 import { readdir, stat } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import { createReadStream } from 'node:fs'
-import { PutObjectCommand } from '@aws-sdk/client-s3'
+import { HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import { s3 } from './minio.js'
 
 const HLS_BUCKET = process.env.HLS_MINIO_BUCKET ?? 'hls-live'
@@ -14,6 +14,33 @@ function contentType(name: string): string {
   if (name.endsWith('.m3u8')) return 'application/vnd.apple.mpegurl'
   if (name.endsWith('.ts') || name.endsWith('.m4s')) return 'video/mp2t'
   return 'application/octet-stream'
+}
+
+function isNotFound(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false
+  if ('name' in err && err.name === 'NotFound') return true
+  if ('$metadata' in err) {
+    const meta = (err as { $metadata?: { httpStatusCode?: number } }).$metadata
+    return meta?.httpStatusCode === 404
+  }
+  return false
+}
+
+/** True when MinIO already has an object at least as fresh as the local file. */
+export async function hlsObjectUpToDate(
+  key: string,
+  localSize: number,
+  localMtimeMs: number,
+): Promise<boolean> {
+  try {
+    const head = await s3.send(new HeadObjectCommand({ Bucket: HLS_BUCKET, Key: key }))
+    if (head.ContentLength !== localSize) return false
+    const remoteMs = head.LastModified?.getTime() ?? 0
+    return remoteMs >= localMtimeMs - 1000
+  } catch (err) {
+    if (isNotFound(err)) return false
+    throw err
+  }
 }
 
 async function collectFiles(dir: string, base: string, out: string[]): Promise<void> {
@@ -34,7 +61,7 @@ async function collectFiles(dir: string, base: string, out: string[]): Promise<v
   }
 }
 
-/** STREAM-001 interim: mirror Liquidsoap volume output into MinIO for multi-node Caddy. */
+/** STREAM-001: mirror Liquidsoap volume output into MinIO for multi-node Caddy. */
 export async function syncChannelHlsToMinio(
   root: string,
   channelId: string,
@@ -52,6 +79,10 @@ export async function syncChannelHlsToMinio(
     const src = join(channelDir, rel)
     try {
       const st = await stat(src)
+      if (await hlsObjectUpToDate(key, st.size, st.mtimeMs)) {
+        skipped++
+        continue
+      }
       const body = createReadStream(src)
       await s3.send(
         new PutObjectCommand({
