@@ -26,7 +26,7 @@ import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
 import UpgradeCta from './upgrade-cta'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
-import { Button, Heading, Link, PageShell, Panel, Row, Text } from '@/components/ui'
+import { Heading, Link, PageShell, Panel, Text } from '@tahti/ui'
 import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
@@ -473,19 +473,27 @@ export default async function DashboardPage() {
   }
 
   return (
-    <PageShell size="md" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
-      <Row between className="ui-row--gap-3">
+    <PageShell size="md">
+      <div id="studio-overview" className="studio-section-anchor studio-page-header">
         <Heading level={1}>Dashboard</Heading>
-        <form action="/api/auth/logout" method="POST">
-          <Button type="submit" variant="ghost">
-            Log out
-          </Button>
-        </form>
-      </Row>
+        <Text tone="secondary" style={{ marginTop: '0.5rem' }}>
+          Welcome back, {user.displayName}
+        </Text>
+      </div>
 
-      <Text tone="secondary" style={{ marginTop: '0.5rem' }}>
-        Welcome back, {user.displayName} · <Link href="/governance">Member governance</Link>
-      </Text>
+      {user.channel?.state === 'LIVE' && (
+        <div className="db-status-bar" role="status">
+          <div>
+            <div className="db-live">
+              <span className="signal-dot" aria-hidden />
+              LIVE NOW
+            </div>
+            <div className="db-live-count">
+              <Link href={`/c/${user.channel.slug}`}>View channel →</Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {membershipInfo && (
         <MembershipPanel
@@ -501,9 +509,11 @@ export default async function DashboardPage() {
         <Panel title="Your channel">
           <BroadcastUsageBanner usage={broadcastUsage} />
           <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
-          <DownloadGateSummaryPanel summary={downloadGateSummary} />
-          <ChannelLiveStatsPanel stats={channelLiveStats} />
-          <ChannelEgressPanel stats={channelEgress} />
+          <div id="studio-stats" className="studio-section-anchor">
+            <DownloadGateSummaryPanel summary={downloadGateSummary} />
+            <ChannelLiveStatsPanel stats={channelLiveStats} />
+            <ChannelEgressPanel stats={channelEgress} />
+          </div>
           <Text size="sm" style={{ margin: '0.25rem 0' }}>
             <strong>URL:</strong>{' '}
             <Link href={`/c/${user.channel.slug}`}>
@@ -523,78 +533,81 @@ export default async function DashboardPage() {
         />
       )}
 
-      {user.channel && streamSettings && <StreamSettingsPanel initial={streamSettings} />}
+      <div id="studio-settings" className="studio-section-anchor">
+        {user.channel && streamSettings && <StreamSettingsPanel initial={streamSettings} />}
 
-      {user.channel && channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
+        {user.channel && channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
 
-      {user.channel && channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
+        {user.channel && channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
 
-      {user.channel && channelProgramme && <ProgrammePanel initial={channelProgramme} />}
+        {user.channel && channelProgramme && <ProgrammePanel initial={channelProgramme} />}
 
-      {user.channel && (
-        <ChannelSchedulePanel
-          initialAt={channelSchedule.nextBroadcastAt}
-          initialNote={channelSchedule.nextBroadcastNote}
-        />
-      )}
-
-      {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
-
-      {user.channel && (
-        <Suspense fallback={null}>
-          <MixcloudConnect
-            initial={{
-              connected: mixcloudStatus.connected,
-              configured: mixcloudStatus.configured,
-            }}
-            apiUrl={apiUrl}
+        {user.channel && (
+          <ChannelSchedulePanel
+            initialAt={channelSchedule.nextBroadcastAt}
+            initialNote={channelSchedule.nextBroadcastNote}
           />
-        </Suspense>
-      )}
+        )}
 
-      {user.channel && <AnnouncementsPanel initial={announcements} />}
+        {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
+      </div>
+
+      <div id="studio-distribution" className="studio-section-anchor">
+        {user.channel && (
+          <Suspense fallback={null}>
+            <MixcloudConnect
+              initial={{
+                connected: mixcloudStatus.connected,
+                configured: mixcloudStatus.configured,
+              }}
+              apiUrl={apiUrl}
+            />
+          </Suspense>
+        )}
+
+        {user.channel && <AnnouncementsPanel initial={announcements} />}
+      </div>
+
+      <div id="studio-fans" className="studio-section-anchor">
+        {user.channel && (
+          <FanSubscriptionsPanel
+            initial={fanTiers}
+            username={user.username}
+            apiUrl={apiUrl}
+            connect={fanConnect}
+            payoutStats={fanPayoutStats}
+          />
+        )}
+      </div>
+
+      <div id="studio-newsletter" className="studio-section-anchor">
+        {user.channel && (
+          <NewsletterPanel
+            initialStats={newsletterStats}
+            initialDrafts={newsletterDrafts}
+            hasFanNewsletterPerk={hasFanNewsletterPerk}
+            tier={user.tier}
+          />
+        )}
+      </div>
+
+      <div id="studio-releases" className="studio-section-anchor">
+        {user.channel && <ReleasesPanel initial={releases} username={user.username} />}
+
+        {user.channel && (
+          <CollectionsPanel
+            initial={collections}
+            username={user.username}
+            archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
+            publishedReleases={publishedReleases}
+          />
+        )}
+      </div>
 
       {user.channel && (
-        <FanSubscriptionsPanel
-          initial={fanTiers}
-          username={user.username}
-          apiUrl={apiUrl}
-          connect={fanConnect}
-          payoutStats={fanPayoutStats}
-        />
-      )}
-
-      {user.channel && (
-        <NewsletterPanel
-          initialStats={newsletterStats}
-          initialDrafts={newsletterDrafts}
-          hasFanNewsletterPerk={hasFanNewsletterPerk}
-          tier={user.tier}
-        />
-      )}
-
-      {user.channel && <ReleasesPanel initial={releases} username={user.username} />}
-
-      {user.channel && (
-        <CollectionsPanel
-          initial={collections}
-          username={user.username}
-          archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
-          publishedReleases={publishedReleases}
-        />
-      )}
-
-      {user.channel && (
-        <section
-          style={{
-            marginTop: '2rem',
-            padding: '1.5rem',
-            border: '1px solid #eee',
-            borderRadius: 8,
-          }}
-        >
-          <h2 style={{ margin: '0 0 1rem' }}>Archive</h2>
-          <p style={{ color: '#666', fontSize: '0.875rem', margin: '0 0 0.5rem' }}>
+        <section id="studio-archive" className="studio-section-anchor studio-archive-section">
+          <h2>Archive</h2>
+          <p style={{ color: 'var(--muted)', fontSize: '0.875rem', margin: '0 0 0.5rem' }}>
             Upload with genre, type, BPM, license, and access options — like hearthis.at edit
             upload.
           </p>
@@ -602,7 +615,7 @@ export default async function DashboardPage() {
           <UploadForm />
 
           {archiveItemsForEdit.length === 0 ? (
-            <p style={{ color: '#999', marginTop: '1.5rem' }}>No archive items yet.</p>
+            <p style={{ color: 'var(--muted)', marginTop: '1.5rem' }}>No archive items yet.</p>
           ) : (
             <ul style={{ listStyle: 'none', padding: 0, marginTop: '1.5rem' }}>
               {archiveItemsForEdit.map((item) => {
@@ -655,22 +668,35 @@ function StorageBar({
       style={{
         marginTop: '2rem',
         padding: '1rem 1.5rem',
-        border: '1px solid #eee',
+        border: '1px solid var(--tahti-border)',
         borderRadius: 8,
+        background: 'var(--tahti-surface)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
         <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>Storage</span>
-        <span style={{ fontSize: '0.875rem', color: isNearLimit ? '#dc2626' : '#666' }}>
+        <span
+          style={{
+            fontSize: '0.875rem',
+            color: isNearLimit ? '#dc2626' : 'var(--tahti-text-muted)',
+          }}
+        >
           {fmt(usedMB)} / {fmt(targetMB)}
         </span>
       </div>
-      <div style={{ background: '#f0f0f0', borderRadius: 4, height: 6, overflow: 'hidden' }}>
+      <div
+        style={{
+          background: 'var(--tahti-surface-muted)',
+          borderRadius: 4,
+          height: 6,
+          overflow: 'hidden',
+        }}
+      >
         <div
           style={{
             height: '100%',
             width: `${pct}%`,
-            background: isNearLimit ? '#dc2626' : '#2563eb',
+            background: isNearLimit ? '#dc2626' : 'var(--tahti-primary)',
             borderRadius: 4,
             transition: 'width 0.3s',
           }}

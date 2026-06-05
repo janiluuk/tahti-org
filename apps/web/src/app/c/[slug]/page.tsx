@@ -17,10 +17,7 @@ import type {
   ChannelTextLayerMode,
   TracklistEntry,
 } from '@tahti/shared'
-import { Heading, Row, Text } from '@/components/ui'
-import { LiveBadge } from '@/components/ui/from-tahti-ui'
-import { ChannelPageLayout } from '@/components/channel/channel-page-layout'
-import { SafePlainText } from '@/components/safe-plain-text'
+import { Heading, Row, Text, ChannelPageLayout, LiveBadge, SafePlainText } from '@tahti/ui'
 
 interface ChannelResponse {
   slug: string

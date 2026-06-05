@@ -4,7 +4,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ProfileHero, ProfilePageLayout } from '@/components/profile/profile-page-layout'
+import { ProfileHero, ProfilePageLayout } from '@tahti/ui'
 
 async function fetchProfile(username: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'

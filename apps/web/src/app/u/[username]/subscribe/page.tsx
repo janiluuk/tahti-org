@@ -3,8 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ProfilePageLayout } from '@/components/profile/profile-page-layout'
-import { SafePlainText } from '@/components/safe-plain-text'
+import { ProfilePageLayout, SafePlainText } from '@tahti/ui'
 import TierCards from './tier-cards'
 
 interface TiersResponse {

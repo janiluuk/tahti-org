@@ -3,8 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { SmartLinkPageLayout } from '@/components/smart-link/smart-link-page-layout'
-import { SafePlainText } from '@/components/safe-plain-text'
+import { SmartLinkPageLayout, SafePlainText } from '@tahti/ui'
 
 const SERVICE_LABELS: Record<string, string> = {
   spotify: 'Spotify',
