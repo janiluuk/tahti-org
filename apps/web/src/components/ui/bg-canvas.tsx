@@ -471,18 +471,5 @@ export function BgCanvas() {
     }
   }, [])
 
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: -1,
-        background: '#0a0f1e',
-        display: 'block',
-      }}
-    />
-  )
+  return <canvas ref={canvasRef} className="bg-canvas" />
 }

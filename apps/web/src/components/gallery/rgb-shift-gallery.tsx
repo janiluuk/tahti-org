@@ -128,15 +128,10 @@ export function RgbShiftGallery({ images }: GalleryImagesProps) {
   return (
     <div
       ref={rootRef}
-      style={{
-        overflowX: 'auto',
-        borderRadius: 8,
-        marginBottom: '1.5rem',
-        background: '#0a0f1e',
-      }}
+      className="ch-gallery-scroll"
       aria-label="RGB Shift gallery — scroll horizontally"
     >
-      <div ref={hostRef} style={{ position: 'sticky', left: 0, width: '100%', height: 360 }} />
+      <div ref={hostRef} className="ch-gallery-host--sticky" />
     </div>
   )
 }

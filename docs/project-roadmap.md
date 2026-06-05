@@ -509,7 +509,7 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
-| [~] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Studio shell + public brand on login/join/transparency/channel/profile/governance/subscribe/embed/smart link |
+| [x] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Studio + public brand shells; channel/profile/governance/embed; dashboard `studio-*` CSS; gallery + tracklist on brand tokens |
 | [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | + path params on me/archive, releases, newsletter, embed, admin venues; query Zod on collections, venues, mixcloud |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |

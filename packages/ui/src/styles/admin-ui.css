@@ -411,6 +411,16 @@
 }
 
 /* ---- Auth / narrow page shell ---- */
+.bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: #0a0f1e;
+  display: block;
+}
+
 .auth-shell {
   min-height: 100vh;
   display: flex;

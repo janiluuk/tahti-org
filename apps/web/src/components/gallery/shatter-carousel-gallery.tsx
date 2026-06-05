@@ -155,7 +155,7 @@ export function ShatterCarouselGallery({ images }: GalleryImagesProps) {
         ) : null
       }
     >
-      <div ref={hostRef} style={{ width: '100%', height: '100%' }} />
+      <div ref={hostRef} className="ch-gallery-host--fill" />
     </GalleryShell>
   )
 }

@@ -156,17 +156,10 @@ export function TwistedWaveGallery({ images }: GalleryImagesProps) {
   return (
     <div
       ref={rootRef}
-      style={{
-        overflowX: 'auto',
-        overflowY: 'hidden',
-        borderRadius: 8,
-        marginBottom: '1.5rem',
-        background: '#0a0f1e',
-        scrollbarWidth: 'thin',
-      }}
+      className="ch-gallery-scroll ch-gallery-scroll--wave"
       aria-label="Twisted Wave gallery — scroll horizontally"
     >
-      <div ref={hostRef} style={{ position: 'sticky', left: 0, width: '100%', height: 360 }} />
+      <div ref={hostRef} className="ch-gallery-host--sticky" />
     </div>
   )
 }

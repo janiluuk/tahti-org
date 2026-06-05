@@ -100,16 +100,8 @@ export function PosterWallGallery({ images }: GalleryImagesProps) {
   }, [images])
 
   return (
-    <div
-      style={{
-        borderRadius: 8,
-        marginBottom: '1.5rem',
-        background: '#0a0f1e',
-        height: 360,
-      }}
-      aria-label="Poster scroll wall gallery"
-    >
-      <div ref={hostRef} style={{ width: '100%', height: '100%' }} />
+    <div className="ch-gallery-fixed" aria-label="Poster scroll wall gallery">
+      <div ref={hostRef} className="ch-gallery-host--fill" />
     </div>
   )
 }
