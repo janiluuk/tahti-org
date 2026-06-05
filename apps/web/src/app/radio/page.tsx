@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import { Heading, Link as UiLink, Stack, Text } from '@tahti/ui'
+import { BrandLogo } from '@tahti/ui'
+import { BgCanvas } from '@/components/ui/bg-canvas'
 
 export const revalidate = 30
 
@@ -51,55 +51,97 @@ async function fetchHistory(): Promise<RadioHistoryItem[]> {
   }
 }
 
+function formatFeaturedAt(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export default async function RadioPage() {
   const [now, history] = await Promise.all([fetchRadio(), fetchHistory()])
 
   return (
-    <Stack gap={6} className="brand-section">
-      <div>
-        <Text size="sm">
-          <UiLink href="/">← Home</UiLink>
-        </Text>
-        <Heading level={1}>Tahti Radio</Heading>
-        <Text tone="muted">
-          A fair-rotation meta-stream: when members are live, Tahti Radio relays one channel at a
-          time. No editorial curation — longest-waiting live channel goes next.
-        </Text>
-      </div>
+    <>
+      <BgCanvas />
+      <div className="listen-shell">
+        <header className="listen-header">
+          <BrandLogo />
+          <div className="listen-header__text">
+            <h1 className="listen-header__title">Tahti Radio</h1>
+            <p className="listen-header__sub">
+              Fair-rotation meta-stream — when members are live, one channel at a time, no editorial
+              picks.
+            </p>
+          </div>
+          <div className="listen-header__meta">
+            <a href="/listen" className="listen-radio-link">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                <path
+                  d="M10 3L5 8l5 5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              All channels
+            </a>
+          </div>
+        </header>
 
-      <section className="brand-card">
-        <Heading level={2}>Now playing</Heading>
-        {now.live && now.channel ? (
-          <Stack gap={2}>
-            <Text>
-              <strong>{now.channel.artistName}</strong> is live on{' '}
-              <Link href={`/c/${now.channel.slug}`}>/c/{now.channel.slug}</Link>
-            </Text>
-            <Text size="sm">
-              <Link href={`/c/${now.channel.slug}`}>Open channel →</Link>
-            </Text>
-          </Stack>
-        ) : (
-          <Text tone="muted">No member channel is live right now. Check back later.</Text>
-        )}
-      </section>
+        <section className="listen-section">
+          <div className={`listen-section__label${now.live ? ' listen-section__label--live' : ''}`}>
+            {now.live && <span className="listen-live-dot" aria-hidden />}
+            Now playing
+          </div>
 
-      {history.length > 0 ? (
-        <section className="brand-card">
-          <Heading level={2}>Recently featured</Heading>
-          <ul className="brand-section">
-            {history.map((item) => (
-              <li key={`${item.slug}-${item.featuredAt}`}>
-                <Link href={`/c/${item.slug}`}>{item.artistName}</Link>
-                <Text size="sm" tone="muted" as="span">
-                  {' '}
-                  · {new Date(item.featuredAt).toLocaleString()}
-                </Text>
-              </li>
-            ))}
-          </ul>
+          {now.live && now.channel ? (
+            <div className="radio-now-card">
+              <div className="radio-now-card__avatar">
+                <span className="radio-now-card__initial" aria-hidden>
+                  {now.channel.artistName.charAt(0).toUpperCase()}
+                </span>
+                <span className="signal-dot radio-now-card__pulse" aria-hidden />
+              </div>
+              <div className="radio-now-card__body">
+                <div className="radio-now-card__name">{now.channel.artistName}</div>
+                <div className="radio-now-card__badge">Live on Tahti Radio</div>
+              </div>
+              <a href={`/c/${now.channel.slug}`} className="radio-now-card__cta">
+                Open channel →
+              </a>
+            </div>
+          ) : (
+            <div className="radio-offline">
+              <span className="radio-offline__dot" aria-hidden />
+              No member channel is live right now — check back soon.
+            </div>
+          )}
         </section>
-      ) : null}
-    </Stack>
+
+        {history.length > 0 && (
+          <section className="listen-section">
+            <div className="listen-section__label">Recently featured</div>
+            <div className="radio-history">
+              {history.map((item) => (
+                <a
+                  key={`${item.slug}-${item.featuredAt}`}
+                  href={`/c/${item.slug}`}
+                  className="radio-history-item"
+                >
+                  <span className="radio-history-item__name">{item.artistName}</span>
+                  <span className="radio-history-item__time">
+                    {formatFeaturedAt(item.featuredAt)}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </>
   )
 }
