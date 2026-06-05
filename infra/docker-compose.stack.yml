@@ -29,6 +29,8 @@ x-app-env: &app-env
   ORCHESTRATOR_URL: http://orchestrator:3003
   ICECAST_HOST: icecast:8000
   RTMP_INGEST_HOST: rtmp-ingest
+  RTMP_INGEST_HEALTH_PORT: "8080"
+  ICECAST_PUBLIC_URL: http://localhost:${ICECAST_PORT:-18100}
   HLS_BASE_URL: http://localhost:19000/hls-live
   HLS_SEGMENT_ROOT: /hls
   HLS_MINIO_BUCKET: hls-live

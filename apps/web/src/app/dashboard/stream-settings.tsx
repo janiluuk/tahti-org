@@ -8,8 +8,8 @@ import { useState } from 'react'
 import { Button, CopyRow, Heading, Panel, Stack } from '@/components/ui'
 
 interface StreamSettings {
-  rtmp: { server: string; streamKey: string }
-  icecast: { server: string; mount: string; password: string }
+  rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
+  icecast: { server: string; mount: string; password: string; fallbackServers?: string[] }
   hlsUrl: string
 }
 
@@ -45,6 +45,9 @@ export default function StreamSettingsPanel({ initial }: { initial: StreamSettin
         <div>
           <Heading level={3}>OBS / Streamlabs (RTMP)</Heading>
           <CopyRow label="Server" value={settings.rtmp.server} />
+          {settings.rtmp.fallbackServers?.map((server) => (
+            <CopyRow key={server} label="Fallback server" value={server} />
+          ))}
           <CopyRow label="Stream Key" value={settings.rtmp.streamKey} />
           <Button
             variant="ghost"
@@ -60,6 +63,9 @@ export default function StreamSettingsPanel({ initial }: { initial: StreamSettin
         <div>
           <Heading level={3}>Mixxx / Traktor / butt (Icecast)</Heading>
           <CopyRow label="Server" value={settings.icecast.server} />
+          {settings.icecast.fallbackServers?.map((server) => (
+            <CopyRow key={server} label="Fallback server" value={server} />
+          ))}
           <CopyRow label="Mount" value={settings.icecast.mount} />
           <CopyRow label="Password" value={settings.icecast.password} />
           <Button
