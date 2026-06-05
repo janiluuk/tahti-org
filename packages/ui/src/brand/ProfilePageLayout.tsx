@@ -73,7 +73,7 @@ export function ProfileHero({
         </div>
       </div>
 
-      {bio && <SafePlainText text={bio} className="prof-bio" />}
+      {bio && <SafePlainText text={bio} className="prof-bio" linkMentions />}
 
       {isLive && channelHref && (
         <Link href={channelHref} className="prof-embed-row">

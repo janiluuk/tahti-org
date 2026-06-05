@@ -15,3 +15,14 @@ export function escapeHtml(text: string): string {
 export function plainTextToHtml(text: string): string {
   return escapeHtml(text).replace(/\n/g, '<br />')
 }
+
+const MENTION_HANDLE = /@([a-z0-9_-]{2,32})/gi
+
+/** Phase 10 — link @handles to public profiles (text must be escaped first). */
+export function plainTextWithMentionsToHtml(text: string, profilePathPrefix = '/u'): string {
+  return plainTextToHtml(text).replace(
+    MENTION_HANDLE,
+    (_match, handle: string) =>
+      `<a href="${profilePathPrefix}/${handle.toLowerCase()}" class="mention-link">@${handle}</a>`,
+  )
+}

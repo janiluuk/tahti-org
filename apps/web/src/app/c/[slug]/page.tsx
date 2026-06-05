@@ -19,6 +19,7 @@ import type {
   TracklistEntry,
 } from '@tahti/shared'
 import { Heading, Row, Text, ChannelPageLayout, LiveBadge, SafePlainText } from '@tahti/ui'
+import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 
 interface ChannelResponse {
   slug: string
@@ -128,9 +129,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               {channel.state === 'LIVE' && <LiveBadge />}
             </Row>
             {channel.user.bio && (
-              <SafePlainText text={channel.user.bio} className="ch-artist-bio" />
+              <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
             )}
           </header>
+
+          <NewsletterSubscribeForm
+            artistUsername={channel.user.username}
+            artistDisplayName={channel.user.displayName}
+          />
 
           {channel.state !== 'LIVE' && (channel.nextBroadcastAt || channel.nextBroadcastNote) && (
             <div className="ch-next-broadcast" role="status">

@@ -84,3 +84,22 @@ export const PatchReleaseSchema = z.object({
 })
 
 export type PatchReleaseInput = z.infer<typeof PatchReleaseSchema>
+
+/** Phase 9 — log DSP button click on smart link landing page */
+export const SmartLinkClickSchema = z.object({
+  smartLinkSlug: z.string().trim().min(1).max(80),
+  platform: z.string().trim().min(1).max(32),
+  referer: z.string().trim().max(2000).optional(),
+})
+
+export type SmartLinkClickInput = z.infer<typeof SmartLinkClickSchema>
+
+export const ReleaseAnalyticsSchema = z.object({
+  releaseId: z.string(),
+  smartLinkSlug: z.string(),
+  smartLinkViewCount: z.number().int().nonnegative(),
+  totalClicks: z.number().int().nonnegative(),
+  clicksByPlatform: z.record(z.number().int().nonnegative()),
+})
+
+export type ReleaseAnalytics = z.infer<typeof ReleaseAnalyticsSchema>

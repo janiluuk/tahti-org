@@ -4,17 +4,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { SmartLinkPageLayout, SafePlainText } from '@tahti/ui'
-
-const SERVICE_LABELS: Record<string, string> = {
-  spotify: 'Spotify',
-  apple: 'Apple Music',
-  tidal: 'Tidal',
-  bandcamp: 'Bandcamp',
-  soundcloud: 'SoundCloud',
-  youtube: 'YouTube Music',
-  deezer: 'Deezer',
-  amazon: 'Amazon Music',
-}
+import { SmartLinkDspButtons } from '@/components/smart-link-dsp-buttons'
 
 interface SmartLinkTrack {
   title: string
@@ -61,7 +51,6 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
   if (!res.ok) notFound()
   const data = (await res.json()) as SmartLinkResponse
 
-  const services = Object.entries(data.targets).filter(([, url]) => url?.trim())
   const tracksWithIsrc = data.release.tracks.filter((t) => t.isrc?.trim())
 
   return (
@@ -83,7 +72,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
       <p className="sl-title-meta">{new Date(data.release.releaseDate).toLocaleDateString()}</p>
 
       {data.release.description && (
-        <SafePlainText text={data.release.description} className="sl-artist-quote" />
+        <SafePlainText text={data.release.description} className="sl-artist-quote" linkMentions />
       )}
 
       {(data.release.upc ||
@@ -132,16 +121,9 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         </div>
       )}
 
-      {services.length > 0 ? (
-        <div className="sl-btns">
-          {services.map(([key, url]) => (
-            <a key={key} href={url} rel="noopener noreferrer" className="sl-btn">
-              <span className="sl-btn-name">{SERVICE_LABELS[key] ?? key}</span>
-              <span className="sl-btn-arrow">→</span>
-            </a>
-          ))}
-        </div>
-      ) : (
+      <SmartLinkDspButtons smartLinkSlug={params.slug} targets={data.targets} />
+
+      {Object.keys(data.targets).filter((k) => data.targets[k]?.trim()).length === 0 && (
         <Link href={data.releaseUrl} className="sl-primary-cta">
           Listen on Tahti
         </Link>

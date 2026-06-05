@@ -67,6 +67,9 @@ import releaseDownloadRoutes from './routes/downloads/release.js'
 import embedRoutes from './routes/releases/embed.js'
 import publicProfileRoutes from './routes/profile/public.js'
 import smartlinkRoutes from './routes/releases/smartlink.js'
+import smartlinkClickRoutes from './routes/releases/smartlink-click.js'
+import releaseAnalyticsRoutes from './routes/releases/analytics.js'
+import sitemapRoutes from './routes/sitemap.js'
 import mixcloudRoutes from './routes/me/mixcloud.js'
 import revelatorRoutes from './routes/me/revelator.js'
 import newsletterPublicRoutes from './routes/newsletter/public.js'
@@ -418,6 +421,9 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(releaseArtworkRoutes)
   await fastify.register(publicProfileRoutes)
   await fastify.register(smartlinkRoutes)
+  await fastify.register(smartlinkClickRoutes)
+  await fastify.register(releaseAnalyticsRoutes)
+  await fastify.register(sitemapRoutes)
 
   // M12 / M15: profile update (bio, social links) + mention detection
   await fastify.register(meProfileRoutes)

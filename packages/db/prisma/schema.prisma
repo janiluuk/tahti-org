@@ -823,9 +823,23 @@ model Release {
   tracks           ReleaseTrack[]
   collectionItems  CollectionItem[]
   revelatorRoyaltyReports RevelatorRoyaltyReport[]
+  smartLinkClicks  SmartLinkClick[]
 
   @@index([userId, releaseDate])
   @@index([userId, state])
+  @@schema("release")
+}
+
+model SmartLinkClick {
+  id        String   @id @default(cuid())
+  releaseId String
+  release   Release  @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  platform  String
+  referer   String?
+  createdAt DateTime @default(now())
+
+  @@index([releaseId, platform])
+  @@index([releaseId, createdAt])
   @@schema("release")
 }
 
