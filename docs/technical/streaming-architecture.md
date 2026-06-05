@@ -305,8 +305,8 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 
 | ID | Issue | Severity |
 |----|-------|----------|
-| STREAM-001 | ~~HLS segments on shared Docker volume~~ — `hls-minio-sync` cron | ~~CRITICAL~~ done |
-| STREAM-002 | RTMP edge encoder + dual-bitrate HLS (tier-gated FLAC/192k paths) | HIGH (partial) |
+| STREAM-001 | ~~HLS segments on shared Docker volume~~ — `hls-minio-sync` cron | done |
+| STREAM-002 | Per-channel ffmpeg edge encoder + dual-bitrate HLS (`stream-mp3-192` / `stream-flac`) | done |
 | STREAM-003 | Health-ranked fallbacks + prod replicas; DNS TTL 5–30s (`ops/ingest-dns.md`) | done |
 | STREAM-004 | ffmpeg recorder sidecar (STREAM-004) | done |
 | STREAM-005 | `channel-watchdog` worker cron + orchestrator restart | done |
