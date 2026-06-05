@@ -1,6 +1,12 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 /* Tahti UI component styles — import after tokens.css */
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* ---- Layout ---- */
 .ui-page {
   width: 100%;
@@ -229,10 +235,11 @@
   align-items: center;
   justify-content: center;
   gap: var(--tahti-space-2);
+  max-width: 100%;
   font-family: var(--tahti-font-body);
   font-size: var(--tahti-text-sm);
   font-weight: 500;
-  line-height: 1;
+  line-height: 1.25;
   border-radius: var(--tahti-radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
@@ -427,12 +434,14 @@
   flex-direction: column;
   justify-content: center;
   padding: var(--tahti-space-8) var(--tahti-space-4);
+  overflow-x: clip;
 }
 
 .auth-card {
   width: 100%;
   max-width: 400px;
   margin: 0 auto;
+  min-width: 0;
 }
 
 /* ---- Dark auth card (used over Three.js background) ---- */
@@ -443,6 +452,15 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--tahti-radius-lg);
   padding: var(--tahti-space-8);
+  overflow-wrap: break-word;
+}
+
+.auth-card--dark > *,
+.auth-card--dark form,
+.auth-card--dark [role='tabpanel'],
+.auth-card--dark .ui-stack {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .auth-card--dark .ui-heading,
@@ -493,6 +511,16 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+.auth-card--dark .ui-btn--ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #e8eaf6;
+}
+
+.auth-card--dark .ui-btn--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .auth-card--dark .brand-logo {
   color: #e8eaf6;
   margin-bottom: var(--tahti-space-8);
@@ -510,18 +538,82 @@
   display: flex;
   flex-direction: column;
   gap: var(--tahti-space-3);
+  width: 100%;
+  min-width: 0;
+  margin: var(--tahti-space-6) 0;
 }
 
 .auth-cta-stack .ui-btn {
+  display: flex;
   width: 100%;
+  max-width: 100%;
   justify-content: center;
   text-align: center;
   text-decoration: none;
+  white-space: normal;
 }
 
 .auth-card--dark .ui-heading--1 {
   color: #e8eaf6;
   margin-bottom: var(--tahti-space-3);
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--tahti-space-2);
+  width: 100%;
+  min-width: 0;
+  margin-bottom: var(--tahti-space-6);
+  padding: var(--tahti-space-1);
+  border-radius: var(--tahti-radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-tabs__tab {
+  appearance: none;
+  border: none;
+  border-radius: calc(var(--tahti-radius-md) - 2px);
+  background: transparent;
+  color: #8892a4;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: var(--tahti-space-2) var(--tahti-space-3);
+  cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.auth-tabs__tab:hover {
+  color: #e8eaf6;
+}
+
+.auth-tabs__tab--active {
+  background: rgba(240, 165, 0, 0.16);
+  color: #f0a500;
+}
+
+.auth-tab-switch {
+  width: 100%;
+  max-width: 100%;
+  margin-top: var(--tahti-space-6);
+}
+
+.auth-card .ui-field {
+  width: 100%;
+  min-width: 0;
+}
+
+.auth-card--dark form .ui-btn {
+  width: 100%;
+  max-width: 100%;
 }
 
 /* ---- Listen / channel directory ---- */

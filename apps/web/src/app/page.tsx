@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { BrandLogo, Heading, Link, Stack, Text } from '@tahti/ui'
+import Link from 'next/link'
+import { BrandLogo, Heading, Link as UiLink, Stack, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 
 export default function GatewayPage() {
@@ -17,19 +18,19 @@ export default function GatewayPage() {
           <Text tone="muted">A nonprofit platform built to support artists — not algorithms.</Text>
 
           <Stack gap={3} className="auth-cta-stack">
-            <a href="/listen" className="ui-btn ui-btn--primary ui-btn--lg">
+            <Link href="/listen" className="ui-btn ui-btn--primary ui-btn--lg">
               Listen now
-            </a>
-            <a href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
+            </Link>
+            <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
               Artist log in
-            </a>
-            <a href="/join" className="ui-btn ui-btn--ghost ui-btn--lg">
-              Apply for access
-            </a>
+            </Link>
+            <Link href="/login?register" className="ui-btn ui-btn--ghost ui-btn--lg">
+              Create an artist account
+            </Link>
           </Stack>
 
           <Text size="sm" tone="muted">
-            Learn more at <Link href="https://tahti.live">tahti.live</Link>
+            Learn more at <UiLink href="https://tahti.live">tahti.live</UiLink>
           </Text>
         </div>
       </div>

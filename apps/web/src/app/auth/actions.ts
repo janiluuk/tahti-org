@@ -4,11 +4,19 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { LoginSchema } from '@tahti/shared'
+import { LoginSchema, RegisterSchema } from '@tahti/shared'
 
 interface LoginInput {
   email: string
   password: string
+}
+
+interface RegisterInput {
+  email: string
+  password: string
+  username: string
+  displayName: string
+  hcaptchaToken?: string
 }
 
 export async function login(input: LoginInput): Promise<{ error: string | null }> {
@@ -35,7 +43,6 @@ export async function login(input: LoginInput): Promise<{ error: string | null }
       return { error: data.error ?? 'Login failed' }
     }
 
-    // Forward the session cookie set by the API to the browser
     const setCookieHeader = response.headers.get('set-cookie') ?? ''
     const match = setCookieHeader.match(/tahti_session=([^;]+)/)
     if (match) {
@@ -52,6 +59,36 @@ export async function login(input: LoginInput): Promise<{ error: string | null }
     }
 
     return { error: null }
+  } catch {
+    return { error: 'Could not reach the server — please try again' }
+  }
+}
+
+export async function register(
+  input: RegisterInput,
+): Promise<{ error: string | null; userId?: string }> {
+  const parsed = RegisterSchema.safeParse(input)
+  if (!parsed.success) {
+    const first = parsed.error.issues[0]
+    return { error: first?.message ?? 'Invalid input' }
+  }
+
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+
+  try {
+    const response = await fetch(`${apiUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...parsed.data, hcaptchaToken: input.hcaptchaToken }),
+    })
+
+    const data = (await response.json()) as { message?: string; userId?: string; error?: string }
+
+    if (!response.ok) {
+      return { error: data.error ?? 'Registration failed' }
+    }
+
+    return { error: null, userId: data.userId }
   } catch {
     return { error: 'Could not reach the server — please try again' }
   }
