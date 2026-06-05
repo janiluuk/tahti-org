@@ -71,6 +71,12 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'M19: expire lapsed fan subscriptions (05:00 UTC)',
   },
   {
+    name: 'fan-subscriber-purge',
+    pattern: '0 5 * * *',
+    jobId: 'fan-subscriber-purge-cron',
+    description: 'M19: cancel stale fan-subs for deleted accounts (05:00 UTC)',
+  },
+  {
     name: 'tor-exit-list-sync',
     pattern: '30 5 * * *',
     jobId: 'tor-exit-list-sync-cron',
