@@ -71,12 +71,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
     renderer.setSize(window.innerWidth, window.innerHeight)
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(
-      60,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      2000,
-    )
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000)
     camera.position.z = 400
 
     const palette: [number, number, number][] = [
@@ -89,52 +84,20 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
 
     // ── Gradient orbs ────────────────────────────────────────────────────────
     const gradientColors = [
-      {
-        color: new THREE.Color(0.94, 0.65, 0.0),
-        pos: [-200, 100, -200] as [number, number, number],
-        scale: 300,
-      },
-      {
-        color: new THREE.Color(0.0, 0.74, 0.83),
-        pos: [200, -80, -250] as [number, number, number],
-        scale: 350,
-      },
-      {
-        color: new THREE.Color(0.49, 0.3, 1.0),
-        pos: [0, 150, -300] as [number, number, number],
-        scale: 280,
-      },
-      {
-        color: new THREE.Color(0.0, 0.9, 0.46),
-        pos: [-150, -120, -180] as [number, number, number],
-        scale: 260,
-      },
-      {
-        color: new THREE.Color(1.0, 0.42, 0.42),
-        pos: [180, 120, -220] as [number, number, number],
-        scale: 240,
-      },
+      { color: new THREE.Color(0.94, 0.65, 0.0),  pos: [-200,  100, -200] as [number, number, number], scale: 300 },
+      { color: new THREE.Color(0.0,  0.74, 0.83), pos: [ 200,  -80, -250] as [number, number, number], scale: 350 },
+      { color: new THREE.Color(0.49, 0.3,  1.0),  pos: [   0,  150, -300] as [number, number, number], scale: 280 },
+      { color: new THREE.Color(0.0,  0.9,  0.46), pos: [-150, -120, -180] as [number, number, number], scale: 260 },
+      { color: new THREE.Color(1.0,  0.42, 0.42), pos: [ 180,  120, -220] as [number, number, number], scale: 240 },
     ]
     const gradientMeshes = gradientColors.map((cfg) => {
       const geo = new THREE.SphereGeometry(1, 32, 32)
-      const mat = new THREE.MeshBasicMaterial({
-        color: cfg.color,
-        transparent: true,
-        opacity: 0.2,
-        depthWrite: false,
-      })
+      const mat = new THREE.MeshBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.2, depthWrite: false })
       const mesh = new THREE.Mesh(geo, mat)
       mesh.position.set(...cfg.pos)
       mesh.scale.setScalar(cfg.scale)
       scene.add(mesh)
-      return {
-        mesh,
-        basePos: cfg.pos,
-        baseScale: cfg.scale,
-        speed: 0.3 + Math.random() * 0.4,
-        radius: 40 + Math.random() * 60,
-        phase: Math.random() * Math.PI * 2,
-      }
+      return { mesh, basePos: cfg.pos, baseScale: cfg.scale, speed: 0.3 + Math.random() * 0.4, radius: 40 + Math.random() * 60, phase: Math.random() * Math.PI * 2 }
     })
 
     // ── Floating rings ───────────────────────────────────────────────────────
@@ -153,30 +116,12 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
     for (let i = 0; i < 8; i++) {
       const geo = new THREE.TorusGeometry(30 + Math.random() * 50, 1.5, 8, 64)
       const c = ringPalette[i % ringPalette.length]
-      const mat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(c[0], c[1], c[2]),
-        transparent: true,
-        opacity: 0.25 + Math.random() * 0.15,
-        wireframe: true,
-      })
+      const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.25 + Math.random() * 0.15, wireframe: true })
       const mesh = new THREE.Mesh(geo, mat)
-      mesh.position.set(
-        (Math.random() - 0.5) * 700,
-        (Math.random() - 0.5) * 400,
-        -100 - Math.random() * 200,
-      )
+      mesh.position.set((Math.random() - 0.5) * 700, (Math.random() - 0.5) * 400, -100 - Math.random() * 200)
       mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0)
       scene.add(mesh)
-      ringObjs.push({
-        mesh,
-        rotSpeed: [
-          (Math.random() - 0.5) * 0.3,
-          (Math.random() - 0.5) * 0.2,
-          (Math.random() - 0.5) * 0.1,
-        ],
-        drift: (Math.random() - 0.5) * 0.15,
-        phase: Math.random() * Math.PI * 2,
-      })
+      ringObjs.push({ mesh, rotSpeed: [(Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.2, (Math.random() - 0.5) * 0.1], drift: (Math.random() - 0.5) * 0.15, phase: Math.random() * Math.PI * 2 })
     }
 
     // ── Shooting stars ───────────────────────────────────────────────────────
@@ -248,18 +193,9 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
     for (let i = 0; i < 15; i++) {
       const geo = new THREE.OctahedronGeometry(4 + Math.random() * 8, 0)
       const c = palette[Math.floor(Math.random() * palette.length)]
-      const mat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(c[0], c[1], c[2]),
-        transparent: true,
-        opacity: 0.22 + Math.random() * 0.2,
-        wireframe: true,
-      })
+      const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0], c[1], c[2]), transparent: true, opacity: 0.22 + Math.random() * 0.2, wireframe: true })
       const mesh = new THREE.Mesh(geo, mat)
-      mesh.position.set(
-        (Math.random() - 0.5) * 800,
-        (Math.random() - 0.5) * 500,
-        -50 - Math.random() * 150,
-      )
+      mesh.position.set((Math.random() - 0.5) * 800, (Math.random() - 0.5) * 500, -50 - Math.random() * 150)
       scene.add(mesh)
       diamondObjs.push({
         mesh,
@@ -284,25 +220,12 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       phases[i] = Math.random() * Math.PI * 2
       const c = palette[Math.floor(Math.random() * palette.length)]
       const bright = 0.15 + Math.random() * 0.35
-      col[i * 3] = c[0] * bright
-      col[i * 3 + 1] = c[1] * bright
-      col[i * 3 + 2] = c[2] * bright
+      col[i * 3] = c[0] * bright; col[i * 3 + 1] = c[1] * bright; col[i * 3 + 2] = c[2] * bright
     }
     const pGeo = new THREE.BufferGeometry()
     pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
     pGeo.setAttribute('color', new THREE.BufferAttribute(col, 3))
-    scene.add(
-      new THREE.Points(
-        pGeo,
-        new THREE.PointsMaterial({
-          size: 2,
-          vertexColors: true,
-          transparent: true,
-          opacity: 0.85,
-          sizeAttenuation: true,
-        }),
-      ),
-    )
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ size: 2, vertexColors: true, transparent: true, opacity: 0.85, sizeAttenuation: true })))
 
     // ── Waveform layers ──────────────────────────────────────────────────────
     const WAVES = 3,
@@ -323,12 +246,8 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       const wc = waveColors[w]
       for (let i = 0; i < WN; i++) {
         const t = i / (WN - 1)
-        wPos[i * 3] = (t - 0.5) * 900
-        wPos[i * 3 + 1] = 0
-        wPos[i * 3 + 2] = waveZ[w]
-        wCol[i * 3] = wc[0] * wc[3]
-        wCol[i * 3 + 1] = wc[1] * wc[3]
-        wCol[i * 3 + 2] = wc[2] * wc[3]
+        wPos[i * 3] = (t - 0.5) * 900; wPos[i * 3 + 1] = 0; wPos[i * 3 + 2] = waveZ[w]
+        wCol[i * 3] = wc[0] * wc[3]; wCol[i * 3 + 1] = wc[1] * wc[3]; wCol[i * 3 + 2] = wc[2] * wc[3]
       }
       const wg = new THREE.BufferGeometry()
       wg.setAttribute('position', new THREE.BufferAttribute(wPos, 3))
@@ -417,23 +336,13 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
     // ── Bass-pulse spheres ───────────────────────────────────────────────────
     const pulseSphere = new THREE.Mesh(
       new THREE.SphereGeometry(55, 24, 24),
-      new THREE.MeshBasicMaterial({
-        color: new THREE.Color(0.94, 0.65, 0.0),
-        transparent: true,
-        opacity: 0.0,
-        wireframe: true,
-      }),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(0.94, 0.65, 0.0), transparent: true, opacity: 0.0, wireframe: true }),
     )
     pulseSphere.position.z = -30
     scene.add(pulseSphere)
     const pulseSphere2 = new THREE.Mesh(
       new THREE.SphereGeometry(80, 20, 20),
-      new THREE.MeshBasicMaterial({
-        color: new THREE.Color(0.0, 0.74, 0.83),
-        transparent: true,
-        opacity: 0.0,
-        wireframe: true,
-      }),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(0.0, 0.74, 0.83), transparent: true, opacity: 0.0, wireframe: true }),
     )
     pulseSphere2.position.z = -40
     scene.add(pulseSphere2)
@@ -508,8 +417,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
         lastStarTime = t
         for (let i = 0; i < STAR_COUNT; i++) {
           if (!starData[i].active) {
-            starData[i].active = true
-            starData[i].life = 0
+            starData[i].active = true; starData[i].life = 0
             starData[i].maxLife = 0.8 + Math.random() * 1.2
             starPos[i * 3] = (Math.random() - 0.5) * 800
             starPos[i * 3 + 1] = 250 + Math.random() * 100
@@ -517,9 +425,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
             starData[i].vx = (Math.random() - 0.5) * 8
             starData[i].vy = -(6 + Math.random() * 8)
             const c = palette[Math.floor(Math.random() * palette.length)]
-            starCol[i * 3] = c[0]
-            starCol[i * 3 + 1] = c[1]
-            starCol[i * 3 + 2] = c[2]
+            starCol[i * 3] = c[0]; starCol[i * 3 + 1] = c[1]; starCol[i * 3 + 2] = c[2]
             break
           }
         }
@@ -529,13 +435,8 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
           starData[i].life += 0.016
           starPos[i * 3] += starData[i].vx
           starPos[i * 3 + 1] += starData[i].vy
-          starCol[i * 3] *= 0.98
-          starCol[i * 3 + 1] *= 0.98
-          starCol[i * 3 + 2] *= 0.98
-          if (starData[i].life / starData[i].maxLife >= 1) {
-            starData[i].active = false
-            starPos[i * 3 + 1] = -9999
-          }
+          starCol[i * 3] *= 0.98; starCol[i * 3 + 1] *= 0.98; starCol[i * 3 + 2] *= 0.98
+          if (starData[i].life / starData[i].maxLife >= 1) { starData[i].active = false; starPos[i * 3 + 1] = -9999 }
         }
       }
       starGeo.attributes.position.needsUpdate = true
@@ -566,9 +467,9 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       for (let i = 0; i < N; i++) {
         pos[i * 3] += vels[i * 2]
         pos[i * 3 + 1] += vels[i * 2 + 1] + Math.sin(t * 0.3 + phases[i]) * 0.03
-        if (pos[i * 3] > 450) pos[i * 3] = -450
+        if (pos[i * 3] > 450)  pos[i * 3] = -450
         if (pos[i * 3] < -450) pos[i * 3] = 450
-        if (pos[i * 3 + 1] > 250) pos[i * 3 + 1] = -250
+        if (pos[i * 3 + 1] > 250)  pos[i * 3 + 1] = -250
         if (pos[i * 3 + 1] < -250) pos[i * 3 + 1] = 250
       }
       pGeo.attributes.position.needsUpdate = true
