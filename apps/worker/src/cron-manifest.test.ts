@@ -20,4 +20,11 @@ describe('WORKER_CRON_JOBS', () => {
     expect(names).toContain('membership-lapse')
     expect(names).toContain('revelator-royalty-sync')
   })
+
+  it('includes streaming infrastructure crons', () => {
+    const names = new Set(WORKER_CRON_JOBS.map((j) => j.name))
+    expect(names).toContain('hls-minio-sync')
+    expect(names).toContain('channel-watchdog')
+    expect(names).toContain('archive-fallback-cache-sync')
+  })
 })
