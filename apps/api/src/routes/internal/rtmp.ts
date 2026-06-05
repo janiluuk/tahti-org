@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { verifyPassword } from '../../lib/password.js'
+import { verifyRtmpStreamName } from '../../lib/ingest-credentials.js'
 import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
 import {
@@ -51,6 +51,8 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
           slug: true,
           rtmpStreamKey: true,
           rtmpStreamKeyHash: true,
+          rtmpStreamKeyPreviousHash: true,
+          rtmpStreamKeyPreviousExpiresAt: true,
           state: true,
           userId: true,
           user: { select: { tier: true } },
@@ -62,7 +64,14 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send('denied')
       }
 
-      const valid = await verifyPassword(channel.rtmpStreamKeyHash, streamName)
+      const valid = await verifyRtmpStreamName(
+        channel.rtmpStreamKeyHash,
+        {
+          previousHash: channel.rtmpStreamKeyPreviousHash,
+          previousExpiresAt: channel.rtmpStreamKeyPreviousExpiresAt,
+        },
+        streamName,
+      )
       if (!valid) {
         fastify.log.warn({ slug: channel.slug }, 'rtmp on_publish: invalid stream key')
         return reply.status(403).send('denied')

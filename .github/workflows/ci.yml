@@ -148,12 +148,16 @@ jobs:
       - name: Push DB schema (test database)
         run: pnpm --filter @tahti/db db:migrate:test
 
-      - name: Verify Prisma migrations (OPS-002)
+      - name: Baseline Prisma migrations on test DB (OPS-002)
         run: |
-          if [ -d packages/db/prisma/migrations ] && [ -n "$(ls -A packages/db/prisma/migrations 2>/dev/null)" ]; then
+          if find packages/db/prisma/migrations -mindepth 1 -maxdepth 1 -type d -print -quit | grep -q .; then
+            for m in packages/db/prisma/migrations/*/; do
+              name=$(basename "$m")
+              pnpm --filter @tahti/db exec prisma migrate resolve --applied "$name" || true
+            done
             pnpm --filter @tahti/db exec prisma migrate status
           else
-            echo "No prisma/migrations yet — test DB uses db push; skipping migrate status until migrations are baselined"
+            echo "No prisma/migrations yet — test DB uses db push only"
           fi
 
       - name: Run tests

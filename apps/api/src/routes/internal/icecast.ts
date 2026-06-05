@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { verifyPassword } from '../../lib/password.js'
+import { verifyIcecastSourcePass } from '../../lib/ingest-credentials.js'
 import { spawnChannelLiquidsoap } from '../../lib/orchestrator.js'
 import { checkBroadcastCap, canAcceptSourceConnect } from '@tahti/shared/broadcast-cap'
 import {
@@ -48,6 +48,8 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           id: true,
           liveSourcePassHash: true,
+          liveSourcePassPreviousHash: true,
+          liveSourcePassPreviousExpiresAt: true,
           state: true,
           userId: true,
           user: { select: { tier: true } },
@@ -56,7 +58,14 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (!channel) return reply.status(403).send('denied')
 
-      const valid = await verifyPassword(channel.liveSourcePassHash, pass)
+      const valid = await verifyIcecastSourcePass(
+        channel.liveSourcePassHash,
+        {
+          previousHash: channel.liveSourcePassPreviousHash,
+          previousExpiresAt: channel.liveSourcePassPreviousExpiresAt,
+        },
+        pass,
+      )
       if (!valid) {
         fastify.log.warn({ slug }, 'icecast on_connect: invalid source password')
         return reply.status(403).send('denied')
