@@ -13,7 +13,13 @@ interface StreamSettings {
   hlsUrl: string
 }
 
-export default function StreamSettingsPanel({ initial }: { initial: StreamSettings }) {
+export default function StreamSettingsPanel({
+  initial,
+  isLive = false,
+}: {
+  initial: StreamSettings
+  isLive?: boolean
+}) {
   const [settings, setSettings] = useState(initial)
   const [rotating, setRotating] = useState<'rtmp' | 'icecast' | null>(null)
 
@@ -58,6 +64,11 @@ export default function StreamSettingsPanel({ initial }: { initial: StreamSettin
           >
             {rotating === 'rtmp' ? 'Rotating…' : 'Rotate RTMP key'}
           </Button>
+          {isLive && (
+            <p className="studio-text-sm studio-text-muted studio-m-0 studio-mt-sm">
+              While live, the previous RTMP key stays valid for 24 hours so OBS can keep streaming.
+            </p>
+          )}
         </div>
 
         <div>
@@ -77,6 +88,11 @@ export default function StreamSettingsPanel({ initial }: { initial: StreamSettin
           >
             {rotating === 'icecast' ? 'Rotating…' : 'Rotate Icecast password'}
           </Button>
+          {isLive && (
+            <p className="studio-text-sm studio-text-muted studio-m-0 studio-mt-sm">
+              While live, the previous Icecast password stays valid for 24 hours.
+            </p>
+          )}
         </div>
 
         <div>

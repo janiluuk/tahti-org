@@ -539,7 +539,9 @@ export default async function DashboardPage() {
       )}
 
       <div id="studio-settings" className="studio-section-anchor">
-        {user.channel && streamSettings && <StreamSettingsPanel initial={streamSettings} />}
+        {user.channel && streamSettings && (
+          <StreamSettingsPanel initial={streamSettings} isLive={user.channel.state === 'LIVE'} />
+        )}
 
         {user.channel?.state === 'LIVE' && (
           <Panel title="Live tracklist">
