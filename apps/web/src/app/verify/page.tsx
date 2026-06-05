@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { Alert, Heading, Link, Stack, Text } from '@tahti/ui'
+import { Alert, BrandLogo, Heading, Link, Stack, Text } from '@tahti/ui'
+import { BgCanvas } from '@/components/ui/bg-canvas'
 
 interface Props {
   searchParams: { token?: string }
@@ -12,10 +13,18 @@ export default async function VerifyPage({ searchParams }: Props) {
 
   if (!token) {
     return (
-      <div className="auth-card">
-        <Heading level={1}>Invalid verification link</Heading>
-        <Text tone="muted">This link is missing a token. Please use the link from your email.</Text>
-      </div>
+      <>
+        <BgCanvas />
+        <div className="auth-shell">
+          <div className="auth-card auth-card--dark">
+            <BrandLogo />
+            <Heading level={1}>Invalid verification link</Heading>
+            <Text tone="muted">
+              This link is missing a token. Please use the link from your email.
+            </Text>
+          </div>
+        </div>
+      </>
     )
   }
 
@@ -42,16 +51,22 @@ export default async function VerifyPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="auth-card">
-      <Stack gap={4}>
-        <Heading level={1}>{isError ? 'Verification failed' : 'Email verified!'}</Heading>
-        <Alert variant={isError ? 'error' : 'success'}>{message}</Alert>
-        {!isError && (
-          <Text>
-            <Link href="/login">Log in to your account</Link>
-          </Text>
-        )}
-      </Stack>
-    </div>
+    <>
+      <BgCanvas />
+      <div className="auth-shell">
+        <div className="auth-card auth-card--dark">
+          <BrandLogo />
+          <Stack gap={4}>
+            <Heading level={1}>{isError ? 'Verification failed' : 'Email verified!'}</Heading>
+            <Alert variant={isError ? 'error' : 'success'}>{message}</Alert>
+            {!isError && (
+              <Text>
+                <Link href="/login">Log in to your account</Link>
+              </Text>
+            )}
+          </Stack>
+        </div>
+      </div>
+    </>
   )
 }
