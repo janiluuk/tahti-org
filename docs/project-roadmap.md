@@ -535,7 +535,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 
 | ID | Issue | Raised by | Phase to fix |
 |:---|---|---|---|
-| [~] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | RTMP edge encoder (#75) + **dual-bitrate HLS** + **chromaprint at ingest** (STREAM-008); edge tier still single-node in dev stack | M3 |
+| [x] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | Per-channel **ffmpeg edge encoder** (orchestrator-spawned) + dual-bitrate HLS (`stream-mp3-192` / `stream-flac`); Icecast bypasses edge tier | M3 |
 | [x] | **STREAM-003** Ingest DNS failover has 30s dead window — OBS connections to failed ingest node must manually reconnect | Health-ranked fallbacks + prod replicas + `ops/ingest-dns.md` (TTL 5–30s) | M3 / Phase 4 |
 | [x] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | `finalize-broadcast-recording` on RTMP/Icecast disconnect → MinIO → `archive-broadcast`; stack `tahti_stack_recordings` volume | M4 |
 | [x] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | Hot rotation while `LIVE`: previous RTMP/Icecast credential valid 24h; offline rotation clears previous | M3 |

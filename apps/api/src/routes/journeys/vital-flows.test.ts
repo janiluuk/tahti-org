@@ -218,6 +218,42 @@ describe('Vital flows (E2E journeys)', () => {
     expect(paidCh.json().hlsUrl).toContain('stream-flac')
   })
 
+  it('hot rotation: previous RTMP key accepted at ingest after live rotate (ARTIST-002)', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}hot-rot@example.com`,
+      username: 'journey-hot-rot',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98104,
+    })
+    const cookie = await sessionCookieFor(prisma, artist.id)
+    const ch = await prisma.channel.findUniqueOrThrow({ where: { userId: artist.id } })
+    const oldKey = ch.rtmpStreamKey!
+
+    await prisma.channel.update({ where: { id: ch.id }, data: { state: 'LIVE' } })
+
+    const rotate = await app.inject({
+      method: 'POST',
+      url: '/api/me/stream-settings/rtmp/rotate',
+      headers: { cookie },
+    })
+    expect(rotate.statusCode).toBe(200)
+
+    const publish = await app.inject({
+      method: 'POST',
+      url: '/internal/rtmp/on_publish',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `name=${encodeURIComponent(oldKey)}`,
+    })
+    expect(publish.statusCode).toBe(200)
+
+    await prisma.broadcast.deleteMany({ where: { channelId: ch.id } })
+    await prisma.channel.update({
+      where: { id: ch.id },
+      data: { state: 'OFFLINE', goneLiveAt: null },
+    })
+  })
+
   it('public transparency endpoints respond', async () => {
     const cats = await app.inject({ method: 'GET', url: '/api/v1/transparency/categories' })
     expect(cats.statusCode).toBe(200)
