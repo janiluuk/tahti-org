@@ -177,6 +177,18 @@ Use pnpm workspaces. Top-level `LICENSE` is AGPL-3.0. Every source file starts w
 
 **CI quality gate (agents):** Before finishing any code change, run `pnpm ci:check` (or at minimum `pnpm lint` then `pnpm format:check`). The GitHub **Lint & format** job fails on ESLint *or* Prettier — fix with `pnpm format` when format:check fails. See `.cursor/rules/ci-lint-before-done.mdc`.
 
+**Marketing site (`website/`):** Off limits for agents unless the user explicitly asks. Do not edit landing HTML, nginx config, or `website/screenshots/`. See `.cursor/rules/website-off-limits.mdc`.
+
+## E2E screenshots (agents)
+
+After public UI changes, regenerate and commit captures under **`docs/e2e-screenshots/`** only:
+
+```bash
+./scripts/e2e-screenshots.sh
+```
+
+See `docs/e2e-screenshots/README.md` for ports, fixtures, and route → file mapping. Do **not** sync into `website/` without explicit user permission.
+
 ## UI components (READ BEFORE ANY FRONTEND WORK)
 
 **All UI lives in `packages/ui` (`@tahti/ui`).** Do not implement Button, Panel, layout shells, or brand chrome under `apps/web`. The web app imports from `@tahti/ui` (or `@/components/ui`, which re-exports the package).
@@ -1384,6 +1396,7 @@ archive fallback, live recording sidecar, HLS output, optional RTMP multistream.
   job postings, no application flows, no mediation. We are not Resident Advisor.
 - **v6:** Requiring accounts for free downloads. Anti-fraud relies on rate
   limits + fingerprint dedup. Accounts are required only for fan-subscribers.
+- **Modifying `website/` without explicit user request.** The tahti.live marketing site is separate from `apps/web`. UI screenshots go in `docs/e2e-screenshots/` only.
 
 ## What's explicitly NOT in this product
 

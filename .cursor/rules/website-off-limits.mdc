@@ -1,0 +1,18 @@
+---
+description: Do not modify website/ without explicit user permission
+globs:
+  - website/**
+alwaysApply: true
+---
+
+# Marketing site (`website/`) — off limits by default
+
+The `website/` directory is the **tahti.live static marketing site** (separate from `apps/web`). It has its own deploy pipeline and assets.
+
+## Rules for agents
+
+1. **Do not modify, add, or delete files under `website/`** unless the user explicitly asks in the current task (e.g. “update the landing page”, “change website nginx config”).
+2. **Do not copy screenshots or assets into `website/screenshots/`** as part of UI work, PR cleanup, or “helpful” sync. That folder is not maintained by agents.
+3. **UI screenshot updates belong in `docs/e2e-screenshots/` only** — see `docs/e2e-screenshots/README.md` and `docs/AGENT.md` (E2E screenshots).
+
+If the user wants marketing site assets refreshed, they will say so explicitly.
