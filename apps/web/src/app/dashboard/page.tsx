@@ -22,6 +22,7 @@ import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import PrivacyPanel from './privacy-panel'
 import SocialPromoPanel from './social-promo-panel'
+import type { SocialSettings } from './social-actions'
 import BroadcastUsageBanner from './broadcast-usage'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelEgressPanel } from './channel-egress-panel'
@@ -159,19 +160,13 @@ export default async function DashboardPage() {
     // ignore
   }
 
-  let socialSettings: {
-    connected: boolean
-    instanceUrl: string | null
-    onReleasePublished: boolean
-    onChannelLive: boolean
-    postTemplate: string
-  } | null = null
+  let socialSettings: SocialSettings | null = null
   try {
     const res = await fetch(`${apiUrl}/api/me/social`, {
       headers: { Cookie: `tahti_session=${sessionCookie.value}` },
       cache: 'no-store',
     })
-    if (res.ok) socialSettings = (await res.json()) as typeof socialSettings
+    if (res.ok) socialSettings = (await res.json()) as SocialSettings
   } catch {
     // ignore
   }

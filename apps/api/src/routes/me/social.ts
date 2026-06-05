@@ -3,19 +3,23 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  BlueskyConnectSchema,
+  DEFAULT_SOCIAL_TEMPLATE,
   MastodonConnectSchema,
-  SocialConnectionViewSchema,
   SocialManualPostSchema,
   SocialPostLogSchema,
+  SocialSettingsViewSchema,
   openApiResponse,
   openApiResponses,
-  DEFAULT_SOCIAL_TEMPLATE,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import {
-  encryptSocialToken,
+  createBlueskySession,
   decryptSocialToken,
+  encryptSocialToken,
   enqueueSocialPostDispatch,
+  mapPlatformStatus,
+  postToBluesky,
   postToMastodon,
 } from '../../lib/social-post.js'
 
@@ -26,21 +30,22 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        response: openApiResponse(SocialConnectionViewSchema, 'SocialConnectionView'),
+        response: openApiResponse(SocialSettingsViewSchema, 'SocialSettingsView'),
       },
     },
     async (request, reply) => {
       const user = request.sessionUser!
-      const conn = await fastify.prisma.socialConnection.findUnique({
-        where: { userId_platform: { userId: user.id, platform: 'MASTODON' } },
-      })
+      const [mastodon, bluesky] = await Promise.all([
+        fastify.prisma.socialConnection.findUnique({
+          where: { userId_platform: { userId: user.id, platform: 'MASTODON' } },
+        }),
+        fastify.prisma.socialConnection.findUnique({
+          where: { userId_platform: { userId: user.id, platform: 'BLUESKY' } },
+        }),
+      ])
       return reply.send({
-        platform: 'MASTODON' as const,
-        connected: Boolean(conn),
-        instanceUrl: conn?.instanceUrl ?? null,
-        onReleasePublished: conn?.onReleasePublished ?? false,
-        onChannelLive: conn?.onChannelLive ?? false,
-        postTemplate: conn?.postTemplate ?? DEFAULT_SOCIAL_TEMPLATE,
+        mastodon: mapPlatformStatus(mastodon, DEFAULT_SOCIAL_TEMPLATE),
+        bluesky: mapPlatformStatus(bluesky, DEFAULT_SOCIAL_TEMPLATE),
       })
     },
   )
@@ -51,7 +56,7 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        response: openApiResponse(SocialConnectionViewSchema, 'SocialConnectionView'),
+        response: openApiResponse(SocialSettingsViewSchema, 'SocialSettingsView'),
       },
     },
     async (request, reply) => {
@@ -87,7 +92,7 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const conn = await fastify.prisma.socialConnection.upsert({
+      await fastify.prisma.socialConnection.upsert({
         where: { userId_platform: { userId: user.id, platform: 'MASTODON' } },
         create: {
           userId: user.id,
@@ -109,27 +114,135 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
+      const [mastodon, bluesky] = await Promise.all([
+        fastify.prisma.socialConnection.findUnique({
+          where: { userId_platform: { userId: user.id, platform: 'MASTODON' } },
+        }),
+        fastify.prisma.socialConnection.findUnique({
+          where: { userId_platform: { userId: user.id, platform: 'BLUESKY' } },
+        }),
+      ])
       return reply.send({
-        platform: 'MASTODON' as const,
-        connected: true,
-        instanceUrl: conn.instanceUrl,
-        onReleasePublished: conn.onReleasePublished,
-        onChannelLive: conn.onChannelLive,
-        postTemplate: conn.postTemplate,
+        mastodon: mapPlatformStatus(mastodon, DEFAULT_SOCIAL_TEMPLATE),
+        bluesky: mapPlatformStatus(bluesky, DEFAULT_SOCIAL_TEMPLATE),
+      })
+    },
+  )
+
+  fastify.put(
+    '/api/me/social/bluesky',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(SocialSettingsViewSchema, 'SocialSettingsView'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = BlueskyConnectSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid request body',
+        })
+      }
+      const body = parsed.data
+      const existing = await fastify.prisma.socialConnection.findUnique({
+        where: { userId_platform: { userId: user.id, platform: 'BLUESKY' } },
+      })
+
+      let accessJwt: string
+      let did: string
+
+      if (body.appPassword) {
+        try {
+          const session = await createBlueskySession(body.handle, body.appPassword)
+          accessJwt = session.accessJwt
+          did = session.did
+        } catch (err) {
+          return reply.status(400).send({
+            error: err instanceof Error ? err.message : 'Could not verify Bluesky credentials',
+          })
+        }
+      } else if (existing) {
+        accessJwt = decryptSocialToken(existing.accessTokenEnc)
+        did = existing.externalAccountId ?? existing.instanceUrl
+      } else {
+        return reply.status(400).send({ error: 'App password is required' })
+      }
+
+      try {
+        await postToBluesky({
+          accessJwt,
+          did,
+          text: existing
+            ? 'Tahti social settings updated.'
+            : 'Tahti social auto-post connected — test post (you can delete this).',
+        })
+      } catch (err) {
+        return reply.status(400).send({
+          error: err instanceof Error ? err.message : 'Could not verify Bluesky credentials',
+        })
+      }
+
+      await fastify.prisma.socialConnection.upsert({
+        where: { userId_platform: { userId: user.id, platform: 'BLUESKY' } },
+        create: {
+          userId: user.id,
+          platform: 'BLUESKY',
+          instanceUrl: body.handle,
+          externalAccountId: did,
+          accessTokenEnc: encryptSocialToken(accessJwt),
+          onReleasePublished: body.onReleasePublished ?? false,
+          onChannelLive: body.onChannelLive ?? false,
+          postTemplate: body.postTemplate ?? DEFAULT_SOCIAL_TEMPLATE,
+        },
+        update: {
+          instanceUrl: body.handle,
+          externalAccountId: did,
+          ...(body.appPassword ? { accessTokenEnc: encryptSocialToken(accessJwt) } : {}),
+          ...(body.onReleasePublished !== undefined
+            ? { onReleasePublished: body.onReleasePublished }
+            : {}),
+          ...(body.onChannelLive !== undefined ? { onChannelLive: body.onChannelLive } : {}),
+          ...(body.postTemplate !== undefined ? { postTemplate: body.postTemplate } : {}),
+        },
+      })
+
+      const [mastodon, bluesky] = await Promise.all([
+        fastify.prisma.socialConnection.findUnique({
+          where: { userId_platform: { userId: user.id, platform: 'MASTODON' } },
+        }),
+        fastify.prisma.socialConnection.findUnique({
+          where: { userId_platform: { userId: user.id, platform: 'BLUESKY' } },
+        }),
+      ])
+      return reply.send({
+        mastodon: mapPlatformStatus(mastodon, DEFAULT_SOCIAL_TEMPLATE),
+        bluesky: mapPlatformStatus(bluesky, DEFAULT_SOCIAL_TEMPLATE),
       })
     },
   )
 
   fastify.delete(
     '/api/me/social/mastodon',
-    {
-      preHandler: requireAuth,
-      schema: { tags: ['releases'] },
-    },
+    { preHandler: requireAuth, schema: { tags: ['releases'] } },
     async (request, reply) => {
       const user = request.sessionUser!
       await fastify.prisma.socialConnection.deleteMany({
         where: { userId: user.id, platform: 'MASTODON' },
+      })
+      return reply.send({ ok: true })
+    },
+  )
+
+  fastify.delete(
+    '/api/me/social/bluesky',
+    { preHandler: requireAuth, schema: { tags: ['releases'] } },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      await fastify.prisma.socialConnection.deleteMany({
+        where: { userId: user.id, platform: 'BLUESKY' },
       })
       return reply.send({ ok: true })
     },
@@ -156,16 +269,16 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const conn = await fastify.prisma.socialConnection.findUnique({
-        where: { userId_platform: { userId: user.id, platform: 'MASTODON' } },
+        where: { userId_platform: { userId: user.id, platform: parsed.data.platform } },
       })
       if (!conn) {
-        return reply.status(400).send({ error: 'Connect Mastodon first' })
+        return reply.status(400).send({ error: `Connect ${parsed.data.platform} first` })
       }
 
       const post = await fastify.prisma.socialPost.create({
         data: {
           userId: user.id,
-          platform: 'MASTODON',
+          platform: parsed.data.platform,
           trigger: 'manual',
           message: parsed.data.message,
         },
@@ -174,6 +287,7 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.status(201).send({
         id: post.id,
+        platform: post.platform,
         trigger: post.trigger,
         state: post.state,
         message: post.message,
@@ -206,6 +320,7 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(
         rows.map((p) => ({
           id: p.id,
+          platform: p.platform,
           trigger: p.trigger,
           state: p.state,
           message: p.message,

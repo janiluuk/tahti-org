@@ -3,9 +3,15 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import type { PrismaClient } from '@tahti/db'
-import { AdminMemberRegisterListSchema, CsvExportBodySchema, openApiResponse } from '@tahti/shared'
+import {
+  AdminMemberRegisterListSchema,
+  CsvExportBodySchema,
+  LegacySubscriptionMemberListSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { sendCsv } from '../../lib/csv.js'
+import { stripeEnabled } from '../../lib/stripe.js'
 
 const memberRegisterSelect = {
   memberNumber: true,
@@ -75,6 +81,43 @@ const adminMembersRoutes: FastifyPluginAsync = async (fastify) => {
           m.membershipStatus ?? '',
         ]),
       )
+    },
+  )
+
+  fastify.get(
+    '/api/admin/members/legacy-subscriptions',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'M1: members without Stripe subscription (migration queue)',
+        response: openApiResponse(
+          LegacySubscriptionMemberListSchema,
+          'LegacySubscriptionMemberList',
+        ),
+      },
+    },
+    async (_request, reply) => {
+      if (!stripeEnabled) {
+        return reply.send([])
+      }
+      const rows = await fastify.prisma.user.findMany({
+        where: {
+          isMember: true,
+          stripeMembershipSubscriptionId: null,
+          deletedAt: null,
+        },
+        orderBy: [{ memberNumber: 'asc' }],
+        select: {
+          id: true,
+          memberNumber: true,
+          displayName: true,
+          email: true,
+          username: true,
+          memberSince: true,
+        },
+      })
+      return reply.send(rows)
     },
   )
 }

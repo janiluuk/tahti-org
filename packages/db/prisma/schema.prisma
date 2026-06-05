@@ -209,6 +209,7 @@ enum FanSubState {
 
 enum SocialPlatform {
   MASTODON
+  BLUESKY
 
   @@schema("core")
 }
@@ -387,6 +388,7 @@ model SocialConnection {
   user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   platform           SocialPlatform
   instanceUrl        String
+  externalAccountId  String?
   accessTokenEnc     String
   onReleasePublished Boolean        @default(false)
   onChannelLive      Boolean        @default(false)

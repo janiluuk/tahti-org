@@ -26,6 +26,34 @@ async function postToMastodon(params: {
   return String(data.id)
 }
 
+async function postToBluesky(params: {
+  accessJwt: string
+  did: string
+  text: string
+}): Promise<string> {
+  const res = await fetch('https://bsky.social/xrpc/com.atproto.repo.createRecord', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${params.accessJwt}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      repo: params.did,
+      collection: 'app.bsky.feed.post',
+      record: {
+        $type: 'app.bsky.feed.post',
+        text: params.text.slice(0, 300),
+        createdAt: new Date().toISOString(),
+      },
+    }),
+  })
+  const data = (await res.json()) as { uri?: string; message?: string }
+  if (!res.ok || !data.uri) {
+    throw new Error(data.message ?? `Bluesky post failed (${res.status})`)
+  }
+  return data.uri
+}
+
 export async function processSocialPostDispatchJob(prisma: PrismaClient, postId: string) {
   const post = await prisma.socialPost.findUnique({ where: { id: postId } })
   if (!post || post.state === 'SENT') return
@@ -42,11 +70,19 @@ export async function processSocialPostDispatchJob(prisma: PrismaClient, postId:
   }
 
   try {
-    const externalId = await postToMastodon({
-      instanceUrl: conn.instanceUrl,
-      accessToken: decryptStreamKey(conn.accessTokenEnc),
-      status: post.message,
-    })
+    const token = decryptStreamKey(conn.accessTokenEnc)
+    const externalId =
+      conn.platform === 'BLUESKY'
+        ? await postToBluesky({
+            accessJwt: token,
+            did: conn.externalAccountId ?? conn.instanceUrl,
+            text: post.message,
+          })
+        : await postToMastodon({
+            instanceUrl: conn.instanceUrl,
+            accessToken: token,
+            status: post.message,
+          })
     await prisma.socialPost.update({
       where: { id: postId },
       data: { state: 'SENT', externalId, sentAt: new Date(), attempts: { increment: 1 } },

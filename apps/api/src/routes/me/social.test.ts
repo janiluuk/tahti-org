@@ -18,7 +18,38 @@ import {
 
 const PREFIX = 'social-test-'
 
-describe('M14 — Mastodon social auto-post', () => {
+function mockSocialFetch() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (url: string | URL, init?: RequestInit) => {
+      const u = String(url)
+      if (u.includes('/api/v1/statuses')) {
+        return {
+          ok: true,
+          json: async () => ({ id: 'mastodon-status-1' }),
+        }
+      }
+      if (u.includes('com.atproto.server.createSession')) {
+        return {
+          ok: true,
+          json: async () => ({
+            accessJwt: 'bsky-jwt',
+            did: 'did:plc:test',
+          }),
+        }
+      }
+      if (u.includes('com.atproto.repo.createRecord')) {
+        return {
+          ok: true,
+          json: async () => ({ uri: 'at://did:plc:test/app.bsky.feed.post/abc' }),
+        }
+      }
+      throw new Error(`Unexpected fetch: ${u} ${init?.method ?? 'GET'}`)
+    }) as unknown as typeof fetch,
+  )
+}
+
+describe('M14 — social auto-post', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let cookie: string
   let userId: string
@@ -27,14 +58,7 @@ describe('M14 — Mastodon social auto-post', () => {
     app = await buildApp({ logger: false })
     await app.ready()
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
-
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => ({
-        ok: true,
-        json: async () => ({ id: 'mastodon-status-1' }),
-      })) as unknown as typeof fetch,
-    )
+    mockSocialFetch()
 
     const artist = await createTestArtist(prisma, {
       email: `${PREFIX}artist@example.com`,
@@ -64,17 +88,36 @@ describe('M14 — Mastodon social auto-post', () => {
       },
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json().connected).toBe(true)
-    expect(res.json().onReleasePublished).toBe(true)
+    expect(res.json().mastodon.connected).toBe(true)
+    expect(res.json().mastodon.onReleasePublished).toBe(true)
+    expect(res.json().bluesky.connected).toBe(false)
   })
 
-  it('GET /api/me/social returns connection', async () => {
+  it('GET /api/me/social returns both platforms', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/me/social',
       headers: { cookie },
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json().instanceUrl).toBe('https://mastodon.example')
+    expect(res.json().mastodon.accountLabel).toBe('https://mastodon.example')
+    expect(res.json().bluesky.connected).toBe(false)
+  })
+
+  it('PUT bluesky connect stores connection', async () => {
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/api/me/social/bluesky',
+      headers: { cookie },
+      payload: {
+        handle: 'artist.bsky.social',
+        appPassword: 'test-app-password',
+        onChannelLive: true,
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().bluesky.connected).toBe(true)
+    expect(res.json().bluesky.onChannelLive).toBe(true)
+    expect(res.json().mastodon.connected).toBe(true)
   })
 })
