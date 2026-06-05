@@ -218,7 +218,7 @@ failover stack promoted. Document exact DNS/Caddy cutover in `ops/RUNBOOK.md`.
 | [x] | Cron: PG daily 03:00, MinIO daily 04:00, restore test Sunday 05:00 (`/etc/cron.d/tahti-backup`) | Dev | `scripts/backup.sh` + `install-crons.sh` | `technical/phase-3.md` |
 | [x] | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call | Dev | `backup.sh status` + **`/metrics` `tahti_postgres_backup_age_hours`** + `prometheus-tahti-alerts.yml` | `technical/journey-ops.md` |
 | [ ] | pgBackRest (replace interim `pg_dump` when hardware stable) + WAL shipping | Dev | Postgres prod | `future-improvements.md` |
-| [ ] | Pre-destructive-op snapshot: `docker run … pg_dump` before migrations / volume resize | Dev | — | `technical/phase-7.md` |
+| [x] | Pre-destructive-op snapshot: `scripts/pre-destructive-db-snapshot.sh` before migrations / volume resize | Dev | — | `technical/phase-7.md` |
 | [~] | `ops/RUNBOOK.md` — restore Postgres, restore MinIO prefix, DR read-only cutover | Dev | restore test passed once | Phase 9 |
 | [ ] | Operator drill: restore from yesterday's backup without director (timed exercise) | Operators | RUNBOOK | Phase 9 §8b |
 | [ ] | DPA signed with UpCloud before storing artist/listener data offsite | Director | association | `infra-strategy.md` §GDPR |
@@ -268,7 +268,7 @@ Required before first **real** membership money and first grant cycle.
 | Done | Milestone | Summary | Owner |
 |:---:|---|---|---|
 | [x] | **M8** | Public transparency ledger + monthly rollup API + grants/:year report | Dev |
-| [~] | **M7** | Mixcloud OAuth + upload; Revelator submit + **€8/release billing** (Studio included slots) | Dev |
+| [~] | **M7** | Mixcloud OAuth + upload; Revelator submit + **€8/release billing** ✅ (Studio included slots) | Dev |
 | [ ] | **M30** | **Release ops toolkit** — MusicBrainz submission, ISRC/UPC/credits, release checklist (official metadata out of the way) | Dev |
 | [x] | **M9** | Annual engagement-unit grant cron + report (`packages/ledger`, payout transfer pending Stripe Connect / M19) | Dev |
 | [~] | **M19** | Fan-subscriptions: Connect, Checkout, crons, perks, fan newsletter UI, payout transfer retry; royalty sync deferred | Dev |
@@ -529,7 +529,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 |:---|---|---|---|
 | [x] | **STREAM-001** HLS segments written to shared Docker volume instead of MinIO — prevents adding a second Caddy or worker node | `hls-minio-sync` cron mirrors volume → `hls-live`; Caddy serves MinIO; watchdog uses slug prefix | M3 |
 | [ ] | **STREAM-004** Recording is a Liquidsoap sidecar — recording lost if Liquidsoap crashes mid-broadcast | Architecture review | M3 |
-| [~] | **STREAM-005** No per-channel health watchdog — silent/frozen channels go undetected until user reports | `channel-watchdog` worker cron + orchestrator `/restart` when segments stale | M3 |
+| [x] | **STREAM-005** No per-channel health watchdog — silent/frozen channels go undetected until user reports | `channel-watchdog` worker cron + orchestrator `/restart` when segments stale | M3 |
 
 ### HIGH — breaks artist or listener experience
 
@@ -537,7 +537,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 |:---|---|---|---|
 | [ ] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | Architecture review | M3 |
 | [ ] | **STREAM-003** Ingest DNS failover has 30s dead window — OBS connections to failed ingest node must manually reconnect | Architecture review | M3 / Phase 4 |
-| [~] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | `finalize-broadcast-recording` on RTMP/Icecast disconnect → MinIO → `archive-broadcast`; stack `tahti_stack_recordings` volume | M4 |
+| [x] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | `finalize-broadcast-recording` on RTMP/Icecast disconnect → MinIO → `archive-broadcast`; stack `tahti_stack_recordings` volume | M4 |
 | [~] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | API returns 409 while `LIVE` (RTMP + Icecast rotate); hot rotation deferred | M3 |
 | [~] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | `delay(3.)` on archive branch before live fallback | M3 |
 | [~] | **LISTENER-001** Mobile listener on slow 4G: HLS segment interval (3s) with 6–9s buffer means 10–15s initial load — needs explicit buffering indicator | Live player shows “Buffering live stream…” (LISTENER-001) | M3 |
