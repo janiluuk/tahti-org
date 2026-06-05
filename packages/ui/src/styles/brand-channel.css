@@ -610,6 +610,63 @@
   font-size: 0.85rem;
 }
 
+[data-tahti-ui='brand'] .prof-list-meta--tight {
+  margin: 0.35rem 0 0;
+}
+
+[data-tahti-ui='brand'] .prof-list-meta--spaced {
+  margin: 0.5rem 0;
+}
+
+[data-tahti-ui='brand'] .prof-list-meta--bio {
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+[data-tahti-ui='brand'] .prof-track-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-track-list li {
+  margin-bottom: 0.35rem;
+}
+
+[data-tahti-ui='brand'] .prof-track-audio {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
+[data-tahti-ui='brand'] .prof-channel-link {
+  font-size: 0.85rem;
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .prof-channel-link:hover {
+  color: var(--amber);
+}
+
+[data-tahti-ui='brand'] .prof-rss-row {
+  margin-top: 1rem;
+}
+
+[data-tahti-ui='brand'] .prof-rss-row a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .prof-rss-row a:hover {
+  color: var(--amber);
+}
+
+[data-tahti-ui='brand'] .prof-collection-title {
+  font-weight: 600;
+  color: var(--text);
+}
+
 [data-tahti-ui='brand'] .prof-back-link {
   display: inline-block;
   color: var(--muted);
@@ -764,6 +821,54 @@
 
 [data-tahti-ui='brand'] .sl-panel a {
   color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .sl-panel-row {
+  margin-bottom: 0.35rem;
+}
+
+[data-tahti-ui='brand'] .sl-panel-row:last-child {
+  margin-bottom: 0;
+}
+
+[data-tahti-ui='brand'] .sl-track-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+[data-tahti-ui='brand'] .sl-panel-action {
+  margin-top: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .sl-collection-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .sl-collection-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .sl-collection-item {
+  margin-bottom: 0.35rem;
+}
+
+[data-tahti-ui='brand'] .sl-collection-link {
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .sl-collection-link:hover {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .sl-collection-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 [data-tahti-ui='brand'] .sl-btns {

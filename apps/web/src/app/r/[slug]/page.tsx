@@ -93,18 +93,14 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         data.release.musicbrainzUrl) && (
         <div className="sl-panel">
           {data.release.upc && (
-            <div style={{ marginBottom: '0.35rem' }}>
+            <div className="sl-panel-row">
               <strong>UPC:</strong> {data.release.upc}
             </div>
           )}
-          {data.release.pLine && (
-            <div style={{ marginBottom: '0.35rem' }}>{data.release.pLine}</div>
-          )}
-          {data.release.cLine && (
-            <div style={{ marginBottom: '0.35rem' }}>{data.release.cLine}</div>
-          )}
+          {data.release.pLine && <div className="sl-panel-row">{data.release.pLine}</div>}
+          {data.release.cLine && <div className="sl-panel-row">{data.release.cLine}</div>}
           {tracksWithIsrc.length > 0 && (
-            <ul style={{ margin: '0.5rem 0 0', paddingLeft: '1.2rem' }}>
+            <ul className="sl-track-list">
               {tracksWithIsrc.map((track) => (
                 <li key={track.position}>
                   {track.title}: {track.isrc}
@@ -113,7 +109,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
             </ul>
           )}
           {data.release.musicbrainzUrl && (
-            <div style={{ marginTop: '0.5rem' }}>
+            <div className="sl-panel-action">
               <a href={data.release.musicbrainzUrl}>View on MusicBrainz</a>
             </div>
           )}
@@ -122,14 +118,14 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
 
       {data.featuredCollections && data.featuredCollections.length > 0 && (
         <div className="sl-panel">
-          <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem' }}>From this artist</p>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          <p className="sl-collection-label">From this artist</p>
+          <ul className="sl-collection-list">
             {data.featuredCollections.map((c) => (
-              <li key={c.slug} style={{ marginBottom: '0.35rem' }}>
-                <Link href={c.url} style={{ fontWeight: 600, color: 'var(--text)' }}>
+              <li key={c.slug} className="sl-collection-item">
+                <Link href={c.url} className="sl-collection-link">
                   {c.name}
                 </Link>
-                <span style={{ fontSize: '0.8rem' }}> · {c.itemCount} item(s)</span>
+                <span className="sl-collection-meta"> · {c.itemCount} item(s)</span>
               </li>
             ))}
           </ul>

@@ -48,11 +48,7 @@ export default async function SubscribePage({ params }: { params: { username: st
           </Link>
           <h1 className="prof-page-title">Support {data.artist.displayName}</h1>
           {data.artist.bio && (
-            <SafePlainText
-              text={data.artist.bio}
-              className="prof-list-meta"
-              style={{ marginBottom: '1.5rem', lineHeight: 1.6 }}
-            />
+            <SafePlainText text={data.artist.bio} className="prof-list-meta prof-list-meta--bio" />
           )}
         </>
       }

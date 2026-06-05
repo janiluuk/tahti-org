@@ -4,6 +4,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { ProfilePageLayout, SafePlainText } from '@tahti/ui'
 
 async function fetchCollection(slug: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -39,6 +40,10 @@ interface CollectionResponse {
   links?: { page?: string; rss?: string }
 }
 
+function formatDuration(sec: number): string {
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -64,63 +69,57 @@ export default async function CollectionPage({
   const rssUrl = data.links?.rss ?? `${apiUrl}/api/v1/collections/${params.slug}/rss.xml`
 
   return (
-    <div style={{ maxWidth: 720, margin: '3rem auto', padding: '0 1rem', fontFamily: 'system-ui' }}>
-      <p style={{ margin: 0 }}>
-        <Link href={`/u/${data.user.username}`} style={{ color: '#2563eb' }}>
-          ← {data.user.displayName}
-        </Link>
-      </p>
-      <header style={{ margin: '1.5rem 0 2rem' }}>
-        <h1 style={{ margin: '0 0 0.25rem' }}>{data.name}</h1>
-        <p style={{ color: '#666', margin: 0 }}>
-          {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
-        </p>
-        {data.description && (
-          <p style={{ marginTop: '1rem', lineHeight: 1.6 }}>{data.description}</p>
-        )}
-        <p style={{ marginTop: '1rem' }}>
-          <a href={rssUrl} style={{ color: '#2563eb' }}>
-            RSS feed ↗
-          </a>
-        </p>
-      </header>
-
-      {data.items.length === 0 ? (
-        <p style={{ color: '#999' }}>This collection is empty.</p>
-      ) : (
-        <ol style={{ listStyle: 'none', padding: 0 }}>
-          {data.items.map((item) => (
-            <li key={item.id} style={{ padding: '1rem 0', borderBottom: '1px solid #eee' }}>
-              {item.archiveItem && (
-                <>
-                  <div style={{ fontWeight: 600 }}>{item.archiveItem.title}</div>
-                  {item.archiveItem.durationSec != null && (
-                    <span style={{ color: '#888', fontSize: '0.85rem' }}>
-                      {Math.floor(item.archiveItem.durationSec / 60)}:
-                      {String(item.archiveItem.durationSec % 60).padStart(2, '0')}
+    <ProfilePageLayout
+      hero={
+        <>
+          <Link href={`/u/${data.user.username}`} className="prof-back-link">
+            ← {data.user.displayName}
+          </Link>
+          <h1 className="prof-page-title">{data.name}</h1>
+          <p className="prof-list-meta">
+            {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
+          </p>
+          {data.description && (
+            <SafePlainText text={data.description} className="prof-list-meta--spaced" />
+          )}
+          <p className="prof-rss-row">
+            <a href={rssUrl}>RSS feed ↗</a>
+          </p>
+        </>
+      }
+    >
+      <section className="prof-section">
+        {data.items.length === 0 ? (
+          <p className="prof-list-meta">This collection is empty.</p>
+        ) : (
+          <ol className="prof-list">
+            {data.items.map((item) => (
+              <li key={item.id} className="prof-list-item">
+                {item.archiveItem && (
+                  <>
+                    <div className="prof-collection-title">{item.archiveItem.title}</div>
+                    {item.archiveItem.durationSec != null && (
+                      <span className="prof-list-meta">
+                        {formatDuration(item.archiveItem.durationSec)}
+                      </span>
+                    )}
+                  </>
+                )}
+                {item.release && (
+                  <div>
+                    <Link href={`/r/${item.release.smartLinkSlug}`}>{item.release.title}</Link>
+                    <span className="prof-list-meta">
+                      {' '}
+                      · {item.release.type} ·{' '}
+                      {new Date(item.release.releaseDate).toLocaleDateString()}
                     </span>
-                  )}
-                </>
-              )}
-              {item.release && (
-                <div>
-                  <Link
-                    href={`/r/${item.release.smartLinkSlug}`}
-                    style={{ fontWeight: 600, color: '#2563eb' }}
-                  >
-                    {item.release.title}
-                  </Link>
-                  <span style={{ color: '#888', fontSize: '0.85rem' }}>
-                    {' '}
-                    · {item.release.type} ·{' '}
-                    {new Date(item.release.releaseDate).toLocaleDateString()}
-                  </span>
-                </div>
-              )}
-            </li>
-          ))}
-        </ol>
-      )}
-    </div>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+    </ProfilePageLayout>
   )
 }

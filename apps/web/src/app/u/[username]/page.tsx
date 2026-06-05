@@ -77,6 +77,10 @@ interface ProfileResponse {
   }>
 }
 
+function formatDuration(sec: number): string {
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
+}
+
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
   const data = await fetchProfile(params.username)
   if (!data) notFound()
@@ -112,9 +116,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
                   {c.isFeatured && ' · Featured'}
                 </div>
                 {c.description && (
-                  <p className="prof-list-meta" style={{ margin: '0.35rem 0 0' }}>
-                    {c.description}
-                  </p>
+                  <p className="prof-list-meta prof-list-meta--tight">{c.description}</p>
                 )}
               </li>
             ))}
@@ -137,32 +139,22 @@ export default async function ArtistProfilePage({ params }: { params: { username
                   </span>
                 </div>
                 {r.description && (
-                  <p className="prof-list-meta" style={{ margin: '0.5rem 0' }}>
-                    {r.description}
-                  </p>
+                  <p className="prof-list-meta prof-list-meta--spaced">{r.description}</p>
                 )}
                 {r.tracks.length > 0 && (
-                  <ol
-                    style={{ margin: '0.5rem 0 0', paddingLeft: '1.25rem', color: 'var(--text)' }}
-                  >
+                  <ol className="prof-track-list">
                     {r.tracks.map((t) => (
                       <li
                         key={t.position}
                         id={t.archiveItemId ? `archive-item-${t.archiveItemId}` : undefined}
-                        style={{ marginBottom: '0.35rem' }}
                       >
                         {t.title}
-                        {t.durationSec != null &&
-                          ` (${Math.floor(t.durationSec / 60)}:${String(t.durationSec % 60).padStart(2, '0')})`}
+                        {t.durationSec != null && ` (${formatDuration(t.durationSec)})`}
                         {t.playUrl && (
-                          <audio
-                            controls
-                            src={t.playUrl}
-                            style={{ display: 'block', width: '100%', marginTop: '0.35rem' }}
-                          />
+                          <audio controls src={t.playUrl} className="prof-track-audio" />
                         )}
                         {t.channelItemUrl && !t.playUrl && (
-                          <Link href={t.channelItemUrl} style={{ fontSize: '0.85rem' }}>
+                          <Link href={t.channelItemUrl} className="prof-channel-link">
                             Listen on channel
                           </Link>
                         )}
