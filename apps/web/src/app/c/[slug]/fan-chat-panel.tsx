@@ -112,7 +112,7 @@ export default function FanChatPanel({ slug }: { slug: string }) {
   if (!token && !error) return null
 
   return (
-    <section className="ch-chat-panel" style={{ height: 'auto', position: 'static', marginTop: 0 }}>
+    <section className="ch-chat-panel ch-chat-panel--sub">
       <div className="ch-chat-panel__head">
         <h4>FAN CHAT</h4>
         {status === 'connected' && <span className="ch-chat-live-badge">live</span>}
@@ -120,7 +120,7 @@ export default function FanChatPanel({ slug }: { slug: string }) {
       {error && <div className="ch-chat-error">{error}</div>}
       {token && (
         <>
-          <div ref={scrollRef} className="ch-chat-messages" style={{ maxHeight: 180 }}>
+          <div ref={scrollRef} className="ch-chat-messages ch-chat-messages--short">
             {messages.map((m) => (
               <div key={m.id} className="chat-msg">
                 <span className="handle supporter">{m.handle}</span>

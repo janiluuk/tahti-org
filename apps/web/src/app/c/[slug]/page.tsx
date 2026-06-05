@@ -100,19 +100,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           )}
           {channelBackdrop.imageUrl && !channelBackdrop.videoEmbedUrl && (
             <div
-              style={{
-                width: '100%',
-                maxHeight: 220,
-                marginBottom: '1rem',
-                borderRadius: 8,
-                overflow: 'hidden',
-                background: `center/cover no-repeat url(${channelBackdrop.imageUrl})`,
-                minHeight: 120,
-              }}
+              className="ch-channel-backdrop"
+              style={{ ['--ch-backdrop-image' as string]: `url(${channelBackdrop.imageUrl})` }}
             />
           )}
           <header className="ch-artist-header">
-            <Row className="ui-row--gap-3" style={{ marginBottom: '0.5rem' }}>
+            <Row className="ui-row--gap-3 ch-artist-header-row">
               {channel.user.avatarUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -120,11 +113,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   alt={channel.user.displayName}
                   width={64}
                   height={64}
-                  style={{ borderRadius: '50%' }}
+                  className="ch-artist-avatar"
                 />
               )}
               <div>
-                <Heading level={1} style={{ marginBottom: '0.15rem' }}>
+                <Heading level={1} className="ch-artist-name">
                   {channel.user.displayName}
                 </Heading>
                 <Text size="sm" tone="muted">
@@ -142,7 +135,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             <div className="ch-next-broadcast" role="status">
               <strong>Next broadcast</strong>
               {channel.nextBroadcastAt && (
-                <div style={{ marginTop: '0.25rem' }}>
+                <div className="ch-next-broadcast-time">
                   {new Date(channel.nextBroadcastAt).toLocaleString(undefined, {
                     dateStyle: 'medium',
                     timeStyle: 'short',
@@ -181,62 +174,28 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             {items.length === 0 ? (
               <p className="ch-archive-empty">No archive items yet.</p>
             ) : (
-              <ul style={{ listStyle: 'none', padding: 0 }}>
+              <ul className="ch-archive-list">
                 {items.map((item) => {
                   const { imageUrl, videoEmbedUrl } = resolveArchiveBackground(item.backgroundUrl)
                   return (
                     <li
                       key={item.id}
                       id={`archive-item-${item.id}`}
-                      className="ch-archive-item"
+                      className={`ch-archive-item${imageUrl ? ' ch-archive-item--bg' : ''}`}
                       style={
-                        imageUrl
-                          ? {
-                              backgroundImage: `linear-gradient(rgba(10,15,30,0.88), rgba(10,15,30,0.88)), url(${imageUrl})`,
-                              backgroundSize: 'cover',
-                              backgroundPosition: 'center',
-                            }
-                          : undefined
+                        imageUrl ? { ['--ch-item-bg' as string]: `url(${imageUrl})` } : undefined
                       }
                     >
                       {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
                       {item.bannerUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.bannerUrl}
-                          alt=""
-                          style={{
-                            width: '100%',
-                            maxHeight: 200,
-                            objectFit: 'cover',
-                            borderRadius: 8,
-                            marginBottom: '0.75rem',
-                          }}
-                        />
+                        <img src={item.bannerUrl} alt="" className="ch-archive-banner" />
                       )}
                       {item.slideshowUrls && item.slideshowUrls.length > 0 && (
-                        <div
-                          style={{
-                            display: 'flex',
-                            gap: '0.35rem',
-                            overflowX: 'auto',
-                            marginBottom: '0.75rem',
-                          }}
-                        >
+                        <div className="ch-archive-slideshow">
                           {item.slideshowUrls.map((url) => (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              key={url}
-                              src={url}
-                              alt=""
-                              style={{
-                                height: 72,
-                                width: 72,
-                                objectFit: 'cover',
-                                borderRadius: 4,
-                                flexShrink: 0,
-                              }}
-                            />
+                            <img key={url} src={url} alt="" />
                           ))}
                         </div>
                       )}
@@ -263,7 +222,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         <audio
                           controls
                           src={item.audioUrl}
-                          style={{ width: '100%' }}
+                          className="ch-archive-audio"
                           data-testid="channel-archive-player"
                         />
                       )}

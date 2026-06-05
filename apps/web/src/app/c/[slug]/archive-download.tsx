@@ -145,9 +145,9 @@ export function ArchiveDownloadButton({
     return (
       <button
         type="button"
+        className="ch-download-btn ch-download"
         onClick={() => void download()}
         disabled={loading}
-        style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}
       >
         {loading ? 'Preparing…' : 'Download'}
       </button>
@@ -157,41 +157,39 @@ export function ArchiveDownloadButton({
   const canDownload = gates?.canDownload ?? false
 
   return (
-    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem' }}>
+    <div className="ch-download">
       {repostToDownload && !gates?.repostSatisfied && (
-        <button
-          type="button"
-          onClick={() => void acknowledgeRepost()}
-          style={{ marginRight: '0.5rem' }}
-        >
+        <button type="button" className="ch-download-btn" onClick={() => void acknowledgeRepost()}>
           I shared this track
         </button>
       )}
       {followToDownload && (
         <button
           type="button"
+          className="ch-download-btn"
           onClick={() => void toggleFollow()}
           disabled={loading}
-          style={{ marginRight: '0.5rem' }}
         >
           {following ? 'Following' : 'Follow artist'}
         </button>
       )}
       {followToDownload && (
-        <span style={{ color: '#888' }}>
+        <span className="ch-download-alt">
           {' '}
-          or{' '}
-          <Link href={`/u/${artistUsername}/subscribe`} style={{ color: '#2563eb' }}>
-            subscribe
-          </Link>
+          or <Link href={`/u/${artistUsername}/subscribe`}>subscribe</Link>
         </span>
       )}
-      <div style={{ marginTop: '0.35rem' }}>
-        <button type="button" onClick={() => void download()} disabled={loading || !canDownload}>
+      <div className="ch-download-actions">
+        <button
+          type="button"
+          className="ch-download-btn"
+          onClick={() => void download()}
+          disabled={loading || !canDownload}
+        >
           {loading ? 'Preparing…' : 'Download'}
         </button>
       </div>
-      {error && <p style={{ color: '#b91c1c', margin: '0.35rem 0 0' }}>{error}</p>}
+      {error && <p className="ch-download-error">{error}</p>}
     </div>
   )
 }

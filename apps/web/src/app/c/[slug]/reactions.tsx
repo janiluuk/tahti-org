@@ -96,81 +96,31 @@ export default function ReactionsOverlay({ slug }: { slug: string }) {
   }
 
   return (
-    <div
-      ref={containerRef}
-      style={{ position: 'relative', overflow: 'hidden', height: '100%', width: '100%' }}
-    >
-      {/* Flying emojis */}
+    <div ref={containerRef} className="ch-reactions">
       {flying.map((fe) => (
         <span
           key={fe.id}
           aria-hidden="true"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: `${fe.x}%`,
-            fontSize: '1.6rem',
-            lineHeight: 1,
-            animation: 'tahti-fly-up 2.4s ease-out forwards',
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
+          className="ch-reaction-fly"
+          style={{ ['--ch-reaction-x' as string]: `${fe.x}%` }}
         >
           {fe.emoji}
         </span>
       ))}
 
-      {/* Emoji buttons */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '0.75rem',
-          right: '0.75rem',
-          display: 'flex',
-          gap: '0.35rem',
-          zIndex: 10,
-        }}
-      >
+      <div className="ch-reaction-bar">
         {EMOJIS.map((emoji) => (
           <button
             key={emoji}
+            type="button"
+            className="ch-reaction-btn"
             onClick={() => void fireReaction(emoji)}
             aria-label={`React with ${emoji}`}
-            style={{
-              background: 'rgba(0,0,0,0.5)',
-              border: 'none',
-              borderRadius: '50%',
-              width: 36,
-              height: 36,
-              fontSize: '1.1rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backdropFilter: 'blur(4px)',
-              transition: 'transform 0.1s',
-            }}
-            onMouseDown={(e) => {
-              const el = e.currentTarget as HTMLButtonElement
-              el.style.transform = 'scale(0.85)'
-            }}
-            onMouseUp={(e) => {
-              const el = e.currentTarget as HTMLButtonElement
-              el.style.transform = 'scale(1)'
-            }}
           >
             {emoji}
           </button>
         ))}
       </div>
-
-      <style>{`
-        @keyframes tahti-fly-up {
-          0%   { transform: translateY(0) scale(1);   opacity: 1; }
-          60%  { transform: translateY(-140px) scale(1.1); opacity: 0.9; }
-          100% { transform: translateY(-220px) scale(0.7); opacity: 0; }
-        }
-      `}</style>
     </div>
   )
 }
