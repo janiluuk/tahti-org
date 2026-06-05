@@ -13,14 +13,20 @@ export function ChannelHeader({ isLive }: ChannelHeaderProps) {
   return (
     <header className="ch-header">
       <Link href="/" className="ch-logo">
+        <span className="ch-logo__bar" aria-hidden />
         TAHTI
       </Link>
-      {isLive && (
-        <div className="ch-live">
-          <span className="signal-dot" aria-hidden />
-          LIVE
-        </div>
-      )}
+      <div className="ch-header__right">
+        {isLive && (
+          <div className="ch-live">
+            <span className="signal-dot" aria-hidden />
+            LIVE
+          </div>
+        )}
+        <Link href="/listen" className="ch-header__back">
+          All channels
+        </Link>
+      </div>
     </header>
   )
 }

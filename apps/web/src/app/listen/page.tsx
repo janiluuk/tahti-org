@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ChannelCard } from '@tahti/shared'
-import { BrandLogo, Heading, Text } from '@tahti/ui'
+import { BrandLogo } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 
 async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCard[] }> {
@@ -16,6 +16,33 @@ async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCa
   } catch {
     return { live: [], recent: [] }
   }
+}
+
+function LiveCard({ channel }: { channel: ChannelCard }) {
+  return (
+    <a href={`/c/${channel.slug}`} className="listen-live-card">
+      <div className="listen-live-card__avatar">
+        {channel.user.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={channel.user.avatarUrl} alt={channel.user.displayName} />
+        ) : (
+          <span className="listen-live-card__avatar-fallback">
+            {channel.user.displayName.charAt(0).toUpperCase()}
+          </span>
+        )}
+        <span className="listen-live-card__pulse" aria-hidden />
+      </div>
+      <div className="listen-live-card__body">
+        <div className="listen-live-card__live-badge">
+          <span className="listen-live-dot" />
+          Live now
+        </div>
+        <div className="listen-live-card__name">{channel.user.displayName}</div>
+        <div className="listen-live-card__handle">@{channel.user.username}</div>
+      </div>
+      <div className="listen-live-card__cta">Listen →</div>
+    </a>
+  )
 }
 
 function ChannelCardItem({ channel }: { channel: ChannelCard }) {
@@ -66,25 +93,51 @@ export default async function ListenPage() {
       <div className="listen-shell">
         <header className="listen-header">
           <BrandLogo />
-          <Heading level={1}>Listen</Heading>
-          <Text tone="muted">Independent artists broadcasting live and on-demand.</Text>
-          <p className="listen-header__meta">
-            <a href="/radio">Tahti Radio</a> — fair-rotation meta-stream when members are live
-          </p>
+          <div className="listen-header__text">
+            <h1 className="listen-header__title">Listen</h1>
+            <p className="listen-header__sub">
+              Independent artists broadcasting live and on-demand.
+            </p>
+          </div>
+          <div className="listen-header__meta">
+            <a href="/radio" className="listen-radio-link">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                <path
+                  d="M2 11 Q8 5 14 11"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M4.5 13 Q8 9 11.5 13"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <circle cx="8" cy="7" r="1.5" fill="currentColor" />
+              </svg>
+              Tahti Radio
+            </a>
+            <span className="listen-header__meta-sep">·</span>
+            <span>fair-rotation meta-stream</span>
+          </div>
         </header>
 
         {empty ? (
           <div className="listen-empty">
-            <Text tone="muted">No channels yet — check back soon.</Text>
+            <p className="listen-empty__text">No channels yet — check back soon.</p>
           </div>
         ) : (
           <>
             {live.length > 0 && (
               <section className="listen-section">
-                <div className="listen-section__label listen-section__label--live">● Live now</div>
-                <div className="listen-grid">
+                <div className="listen-section__label listen-section__label--live">
+                  <span className="listen-live-dot" />
+                  Live now
+                </div>
+                <div className="listen-live-grid">
                   {live.map((ch) => (
-                    <ChannelCardItem key={ch.slug} channel={ch} />
+                    <LiveCard key={ch.slug} channel={ch} />
                   ))}
                 </div>
               </section>

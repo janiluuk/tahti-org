@@ -40,10 +40,11 @@
   color: var(--amber);
 }
 
-/* Channel page layout (from index.html mockups) */
+/* Channel page layout */
 [data-tahti-ui='brand'] .ch-header {
   background: var(--card);
-  padding: 14px 24px;
+  padding: 0 24px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,19 +56,58 @@
 
 [data-tahti-ui='brand'] .ch-logo {
   font-family: var(--font-head);
-  font-size: 14px;
-  letter-spacing: 3px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
   color: var(--text);
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+[data-tahti-ui='brand'] .ch-logo__bar {
+  display: inline-block;
+  width: 3px;
+  height: 16px;
+  background: var(--amber);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-header__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+[data-tahti-ui='brand'] .ch-header__back {
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+[data-tahti-ui='brand'] .ch-header__back:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--muted) 60%, transparent);
 }
 
 [data-tahti-ui='brand'] .ch-live {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   color: var(--green);
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--green) 25%, transparent);
 }
 
 [data-tahti-ui='brand'] .signal-dot {
@@ -93,20 +133,31 @@
 
 [data-tahti-ui='brand'] .ch-body {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr 300px;
   min-height: calc(100vh - 52px);
 }
 
 [data-tahti-ui='brand'] .ch-main {
-  padding: 28px;
+  padding: 28px 32px;
   border-right: 1px solid var(--border);
+  min-width: 0;
 }
 
 [data-tahti-ui='brand'] .ch-sidebar {
-  padding: 20px;
+  padding: 20px 18px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background: color-mix(in srgb, var(--bg) 80%, var(--card));
+}
+
+@media (max-width: 768px) {
+  [data-tahti-ui='brand'] .ch-body {
+    grid-template-columns: 1fr;
+  }
+  [data-tahti-ui='brand'] .ch-sidebar {
+    border-top: 1px solid var(--border);
+  }
 }
 
 [data-tahti-ui='brand'] .ch-artist-header {
@@ -873,34 +924,55 @@
 
 [data-tahti-ui='brand'] .prof-cta-row {
   display: flex;
-  gap: 8px;
+  gap: 7px;
   flex-shrink: 0;
   flex-wrap: wrap;
+}
+
+[data-tahti-ui='brand'] .prof-cta-btn,
+[data-tahti-ui='brand'] .prof-sub-btn,
+[data-tahti-ui='brand'] .prof-tip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 7px 13px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s, background 0.15s;
 }
 
 [data-tahti-ui='brand'] .prof-cta-btn {
   background: var(--cyan);
   color: #0a0f1e;
   border: none;
-  border-radius: var(--radius-sm);
-  padding: 8px 14px;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .prof-cta-btn:hover {
+  opacity: 0.88;
 }
 
 [data-tahti-ui='brand'] .prof-sub-btn {
   background: color-mix(in srgb, var(--purple) 15%, transparent);
   border: 1px solid color-mix(in srgb, var(--purple) 35%, transparent);
   color: var(--lavender);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-size: 0.8125rem;
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .prof-sub-btn:hover {
+  background: color-mix(in srgb, var(--purple) 22%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-tip-btn {
+  background: color-mix(in srgb, var(--amber) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--amber) 28%, transparent);
+  color: var(--amber);
+}
+
+[data-tahti-ui='brand'] .prof-tip-btn:hover {
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
 }
 
 [data-tahti-ui='brand'] .prof-bio {
@@ -932,13 +1004,13 @@
 [data-tahti-ui='brand'] .prof-embed-cover {
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-sm);
+  border-radius: 9px;
   background: linear-gradient(135deg, var(--purple), var(--cyan));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
   flex-shrink: 0;
+  color: #fff;
 }
 
 [data-tahti-ui='brand'] .prof-embed-info {
