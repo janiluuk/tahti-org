@@ -45,6 +45,30 @@ radio = fallback(
   [live_source, archive, blank()]
 )
 
+# --- STREAM-010: graceful shutdown fade (orchestrator sends telnet graceful_shutdown) ---
+shutting_down = ref(false)
+
+def start_graceful_shutdown() =
+  shutting_down := true
+  thread.delay({{LIQUIDSOAP_FADE_SEC}}.)
+  shutdown(0)
+  "ok"
+end
+
+settings.server.telnet.set(true)
+settings.server.telnet.port.set({{LIQUIDSOAP_TELNET_PORT}})
+server.register(
+  "graceful_shutdown",
+  description="Fade out audio then exit (STREAM-010)",
+  start_graceful_shutdown
+)
+
+radio_out = switch(
+  track_sensitive=false,
+  [({ shutting_down() }, fade.out(type="log", duration={{LIQUIDSOAP_FADE_SEC}}., radio))],
+  radio
+)
+
 # --- Live recording: ffmpeg sidecar (STREAM-004) spawned by orchestrator ---
 # Reads Icecast or RTMP ingest directly; survives Liquidsoap restarts.
 
@@ -59,7 +83,7 @@ output.file.hls(
     ("stream-mp3-192", %ffmpeg(format="mpegts", %audio(codec="libmp3lame", b="192k", ar=44100, ac=2))),
     ("stream-flac", %ffmpeg(format="mpegts", %audio(codec="flac", samplerate=44100, channels=2)))
   ],
-  radio
+  radio_out
 )
 
 # --- Now-playing metadata endpoint ---
@@ -68,7 +92,7 @@ output.harbor(
   %mp3(bitrate=64),
   port={{HARBOR_NOWPLAYING_PORT}},
   mount="/now",
-  radio
+  radio_out
 )
 
 {{#RTMP_TARGETS}}
@@ -84,7 +108,7 @@ output.url(
     %audio(codec="aac", b="128k", ar=44100, ac=2),
     %video.raw(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)
   ),
-  mux(audio=radio, video=video.add_image(file="{{COVER_PATH}}", duration=infinity, blank()))
+  mux(audio=radio_out, video=video.add_image(file="{{COVER_PATH}}", duration=infinity, blank()))
 )
 {{/ALWAYS_MIRROR}}
 {{^ALWAYS_MIRROR}}

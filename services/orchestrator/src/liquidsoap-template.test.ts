@@ -23,4 +23,12 @@ describe('liquidsoap channel template', () => {
     const template = await readFile(templatePath, 'utf8')
     expect(template).toContain('delay(delay=3., archive)')
   })
+
+  it('registers telnet graceful shutdown fade (STREAM-010)', async () => {
+    const template = await readFile(templatePath, 'utf8')
+    expect(template).toContain('graceful_shutdown')
+    expect(template).toContain('radio_out')
+    expect(template).toContain('settings.server.telnet.set(true)')
+    expect(template).toContain('fade.out')
+  })
 })

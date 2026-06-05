@@ -558,7 +558,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 
 | ID | Issue | Raised by | Phase to fix |
 |:---|---|---|---|
-| [~] | **STREAM-010** Graceful drain on Liquidsoap stop may emit an incomplete final HLS segment — listeners hear a cut instead of a fade | `docker stop -t 20` before rm (4s × 4 segment buffer); audio fade deferred | M3 |
+| [~] | **STREAM-010** Graceful drain on Liquidsoap stop may emit an incomplete final HLS segment — listeners hear a cut instead of a fade | Telnet `graceful_shutdown` fades `radio_out` before exit; `docker stop -t 20` remains as backstop | M3 |
 | [~] | **ARTIST-004** Upload progress bar shows browser→MinIO upload only, not transcode progress — artist thinks "nothing is happening" during transcode | Dashboard polls archive status after upload with transcoding progress (ARTIST-004) | M2 |
 | [~] | **LISTENER-003** Anonymous listener sets a handle in localStorage but it resets if cookies cleared — confusing return identity | `tahti_chat_handle` cookie + localStorage fallback on join | M5 |
 | [x] | **DIRECTOR-001** Grant calculation preview has no anomaly detection — director must manually spot-check 200 rows for bot activity | API preview + board UI on `/governance` | M9 |
