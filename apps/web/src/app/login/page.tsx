@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Alert, BgCanvas, Button, Field, Heading, Input, Link, Stack, Text } from '@/components/ui'
 import { login } from './actions'
 
 export default function LoginPage() {
@@ -25,61 +26,49 @@ export default function LoginPage() {
       setError(result.error)
       setPending(false)
     } else {
-      // Full page navigation so the browser sends the new session cookie
       window.location.href = '/dashboard'
     }
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: '4rem auto', padding: '0 1rem' }}>
-      <h1>Log in</h1>
-      <form
-        onSubmit={handleSubmit}
-        style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}
-      >
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+    <>
+      <BgCanvas />
+      <div className="auth-shell">
+        <div className="auth-card auth-card--dark">
+          <Link href="/" className="brand-logo">
+            <span className="brand-logo-bar" aria-hidden />
+            TAHTI
+          </Link>
 
-        <label>
-          <span style={{ display: 'block', marginBottom: 4 }}>Email</span>
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
-          />
-        </label>
+          <Heading level={1}>Log in</Heading>
+          <Text tone="muted" style={{ marginBottom: '1.5rem' }}>
+            Enter your email and password to access your dashboard.
+          </Text>
 
-        <label>
-          <span style={{ display: 'block', marginBottom: 4 }}>Password</span>
-          <input
-            name="password"
-            type="password"
-            required
-            autoComplete="current-password"
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
-          />
-        </label>
+          <form onSubmit={handleSubmit}>
+            <Stack gap={4}>
+              {error && <Alert variant="error">{error}</Alert>}
 
-        <button
-          type="submit"
-          disabled={pending}
-          style={{
-            padding: '0.75rem 1.5rem',
-            background: '#000',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            cursor: pending ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {pending ? 'Logging in…' : 'Log in'}
-        </button>
-      </form>
+              <Field label="Email">
+                <Input name="email" type="email" required autoComplete="email" />
+              </Field>
 
-      <p style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
-        Don&apos;t have an account? <a href="/join">Create one</a>
-      </p>
-    </div>
+              <Field label="Password">
+                <Input name="password" type="password" required autoComplete="current-password" />
+              </Field>
+
+              <Button variant="primary" size="lg" type="submit" disabled={pending}>
+                {pending ? 'Logging in…' : 'Log in'}
+              </Button>
+            </Stack>
+          </form>
+
+          <Text size="sm" tone="muted" style={{ marginTop: '1.5rem' }}>
+            Don&apos;t have an account?{' '}
+            <Link href="/join">Apply for access</Link>
+          </Text>
+        </div>
+      </div>
+    </>
   )
 }

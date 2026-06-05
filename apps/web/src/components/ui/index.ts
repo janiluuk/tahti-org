@@ -28,6 +28,7 @@ export { Stack, Row, Divider, PageShell, Code, type PageSize, type StackGap } fr
 export { CopyRow, type CopyRowProps } from './copy-row'
 export { Link, type LinkProps } from './link'
 export { SiteFooter } from './site-footer'
+export { BgCanvas } from './bg-canvas'
 
 /** Design token names for programmatic use (prefer CSS variables in stylesheets). */
 export const tokens = {
