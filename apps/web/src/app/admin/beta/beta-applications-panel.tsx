@@ -189,7 +189,15 @@ export function BetaApplicationsPanel({ applications }: { applications: BetaAppl
                 <p className="admin-text-muted admin-beta-message">{app.message}</p>
               ) : null}
               {app.links ? (
-                <p className="admin-text-muted admin-beta-message">{app.links}</p>
+                <ul className="admin-text-muted admin-beta-message admin-beta-links">
+                  {app.links.split('\n').map((link) => (
+                    <li key={link}>
+                      <a href={link} target="_blank" rel="noopener noreferrer">
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               ) : null}
             </td>
             <td>{app.email}</td>

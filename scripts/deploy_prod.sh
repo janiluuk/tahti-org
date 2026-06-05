@@ -55,13 +55,23 @@ rsync -az \
 echo "==> Building images on ${HOST}"
 BUILD_ARGS=()
 [[ -n "$NO_CACHE" ]] && BUILD_ARGS+=(--no-cache)
+
+COMPOSE=(docker compose -f infra/docker-compose.stack.yml)
+if ssh_remote "test -f '${REMOTE_PATH}/infra/stack.env'"; then
+  COMPOSE+=(--env-file infra/stack.env)
+  echo "==> Using infra/stack.env for SMTP and production overrides"
+else
+  echo "==> WARN: infra/stack.env not found — outbound mail stays in Mailhog."
+  echo "    Copy infra/stack.env.vimage.example → infra/stack.env and set SMTP_PASS (relay via vimage6)."
+fi
+
 ssh_remote "cd '${REMOTE_PATH}' && \
-  docker compose -f infra/docker-compose.stack.yml build ${BUILD_ARGS[*]:-} api web worker orchestrator db-push"
+  ${COMPOSE[*]} build ${BUILD_ARGS[*]:-} api web worker orchestrator db-push"
 
 # ── Up ────────────────────────────────────────────────────────────────────────
 echo "==> Starting stack on ${HOST}"
 ssh_remote "cd '${REMOTE_PATH}' && \
-  docker compose -f infra/docker-compose.stack.yml up -d --remove-orphans"
+  ${COMPOSE[*]} up -d --remove-orphans"
 
 # ── Health ────────────────────────────────────────────────────────────────────
 echo "==> Waiting for API health..."

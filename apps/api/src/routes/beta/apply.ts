@@ -111,11 +111,23 @@ const betaApplyRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.log.error({ err }, 'beta apply ticket create failed')
       }
 
+      let emailSent = false
       try {
         await sendBetaApplicationEmail({ ...data, source })
+        emailSent = true
       } catch (err) {
         fastify.log.error({ err }, 'beta apply email failed')
+      }
+
+      if (!emailSent && !ticketId && !applicationId) {
         return reply.status(503).send({ error: 'Could not send application — try again later' })
+      }
+
+      if (!emailSent) {
+        fastify.log.warn(
+          { ticketId, applicationId },
+          'beta apply saved but notification email failed',
+        )
       }
 
       return reply.status(201).send({ ok: true as const, ticketId, applicationId })

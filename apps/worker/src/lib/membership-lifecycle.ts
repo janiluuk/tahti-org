@@ -3,9 +3,7 @@
 
 import type { PrismaClient } from '@tahti/db'
 import nodemailer from 'nodemailer'
-
-const MEMBERSHIP_TERM_MS = 365 * 24 * 60 * 60 * 1000
-const RENEWAL_REMINDER_BEFORE_MS = 30 * 24 * 60 * 60 * 1000
+import { smtpTransportOptions } from '@tahti/shared'
 
 const SMTP_HOST = process.env.SMTP_HOST ?? 'localhost'
 const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? '1025', 10)
@@ -14,15 +12,20 @@ const SMTP_PASS = process.env.SMTP_PASS ?? ''
 const SMTP_FROM = process.env.SMTP_FROM ?? 'Tahti <noreply@tahti.live>'
 const APP_URL = process.env.APP_URL ?? 'http://localhost:3000'
 
+const MEMBERSHIP_TERM_MS = 365 * 24 * 60 * 60 * 1000
+const RENEWAL_REMINDER_BEFORE_MS = 30 * 24 * 60 * 60 * 1000
+
 let _transport: nodemailer.Transporter | null = null
 function getTransport(): nodemailer.Transporter {
   if (!_transport) {
-    _transport = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASS } : undefined,
-      secure: process.env.NODE_ENV === 'production',
-    })
+    _transport = nodemailer.createTransport(
+      smtpTransportOptions({
+        host: SMTP_HOST,
+        port: SMTP_PORT,
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      }),
+    )
   }
   return _transport
 }

@@ -248,6 +248,14 @@
   max-width: 28rem;
 }
 
+.admin-beta-links {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
 .admin-beta-approve-form {
   display: flex;
   flex-direction: column;

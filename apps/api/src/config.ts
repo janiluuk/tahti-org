@@ -10,6 +10,13 @@ if (process.env.NODE_ENV === 'production' && docsPass === 'changeme') {
   )
 }
 
+const smtpHost = process.env.SMTP_HOST ?? 'localhost'
+if (process.env.NODE_ENV === 'production' && smtpHost === 'mailhog') {
+  console.warn(
+    '[config] SMTP_HOST is mailhog — outbound mail is captured locally only. For the vimage lab stack, relay via vimage6 (192.168.2.105); see infra/stack.env.vimage.example.',
+  )
+}
+
 export const config = {
   nodeEnv: (process.env.NODE_ENV ?? 'development') as 'development' | 'test' | 'production',
   port: parseInt(process.env.PORT ?? '3001', 10),
@@ -19,12 +26,12 @@ export const config = {
   sessionCookieName: 'tahti_session',
   sessionMaxAgeSec: 30 * 24 * 60 * 60, // 30 days
   email: {
-    host: process.env.SMTP_HOST ?? 'localhost',
+    host: smtpHost,
     port: parseInt(process.env.SMTP_PORT ?? '1025', 10),
     user: process.env.SMTP_USER ?? '',
-    pass: process.env.SMTP_PASS ?? '',
+    pass: readSecret('SMTP_PASS', 'SMTP_PASSWORD_FILE', ''),
     from: process.env.SMTP_FROM ?? 'Tahti <noreply@tahti.live>',
-    supportInbox: process.env.SUPPORT_INBOX ?? 'support@tahti.live',
+    supportInbox: process.env.SUPPORT_INBOX?.trim() || 'support@tahti.live',
     /** M13: shared secret for Postmark/SES bounce webhooks (`X-Tahti-Webhook-Secret`). */
     bounceWebhookSecret: process.env.EMAIL_BOUNCE_WEBHOOK_SECRET?.trim() ?? '',
   },
@@ -69,7 +76,11 @@ export const config = {
       ? process.env.ICECAST_HOST
       : `http://${process.env.ICECAST_HOST ?? 'localhost:8100'}`),
   /** Base URL Liquidsoap uses to pull live Icecast mounts (no trailing slash). */
-  icecastBaseUrl: process.env.ICECAST_BASE_URL ?? 'http://localhost:8100',
+  icecastBaseUrl:
+    process.env.ICECAST_BASE_URL ??
+    (process.env.ICECAST_HOST?.startsWith('http')
+      ? process.env.ICECAST_HOST
+      : `http://${process.env.ICECAST_HOST ?? 'localhost:8100'}`),
   rtmpKeyEncKey:
     process.env.RTMP_KEY_ENC_KEY ??
     'dev0000000000000000000000000000000000000000000000000000000000000',

@@ -102,7 +102,7 @@ export async function runDependencyChecks(prisma: PrismaClient): Promise<Depende
   ])
 
   const icecastUrl = config.icecastBaseUrl.replace(/\/$/, '')
-  const icecast = await checkHttp('icecast', `${icecastUrl}/`, false)
+  const icecast = await checkHttp('icecast', `${icecastUrl}/status-json.xsl`, false)
 
   return [postgres, redis, minio, centrifugo, orchestrator, icecast]
 }

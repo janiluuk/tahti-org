@@ -15,9 +15,50 @@ Nodemailer with `SMTP_*` environment variables.
 | `SMTP_FROM` | api, worker-light | Default From header |
 | `EMAIL_BOUNCE_WEBHOOK_SECRET` | api | Bounce webhook auth ([M13](#bounces)) |
 
-Local dev uses Mailhog (`infra/docker-compose.stack.yml`). Production uses a real provider.
+Local dev uses Mailhog (`infra/docker-compose.stack.yml`). Production Swarm typically uses Postmark or SES (below).
 
-## Postmark (recommended for launch)
+## Lab stack on vimage (relay via vimage6)
+
+The Docker stack on **vimage** (`192.168.2.100`, `deploy_prod.sh`) must **not** run its own MTA. Outbound mail submits to **docker-mailserver on vimage6** via **`mail.tahti.live:587`** (use the hostname, not the LAN IP — TLS cert is for `mail.tahti.live`).
+
+1. Ensure `noreply@tahti.live` exists on vimage6 (`docker exec vimage6-mailserver setup email add …`).
+2. Copy `infra/stack.env.vimage.example` → `infra/stack.env` on vimage (`chmod 600`), set `SMTP_PASS`, quote `SMTP_FROM`.
+3. Redeploy or recreate api/worker: `docker compose -f infra/docker-compose.stack.yml --env-file infra/stack.env up -d --force-recreate api worker`
+
+| Variable | Value |
+|----------|--------|
+| `SMTP_HOST` | `mail.tahti.live` |
+| `SMTP_PORT` | `587` |
+| `SMTP_USER` | `noreply@tahti.live` |
+| `SMTP_FROM` | `"Tahti <noreply@tahti.live>"` |
+| `APP_URL` | `https://app.tahti.live` (links in beta invite / verify mail) |
+
+Beta applications always notify **`support@tahti.live`** (hardcoded). Mailhog remains the compose default when `stack.env` is absent (capture only).
+
+### DKIM on vimage6 (lab relay)
+
+docker-mailserver signs all `@tahti.live` senders (including `noreply@tahti.live`) via `*@tahti.live` in OpenDKIM `SigningTable`, selector **`mail`**, DNS record `mail._domainkey.tahti.live`.
+
+Generate or refresh keys:
+
+```bash
+docker exec vimage6-mailserver setup config dkim domain tahti.live
+```
+
+If mail logs show `no signing table match` after adding a domain, sync persisted config into the running filter (or restart the container):
+
+```bash
+docker exec vimage6-mailserver bash -c '
+  cp -a /tmp/docker-mailserver/opendkim/* /etc/opendkim/
+  chown -R opendkim:opendkim /etc/opendkim
+  chmod -R 0700 /etc/opendkim/keys/
+  supervisorctl restart opendkim
+'
+```
+
+Confirm in `/var/log/mail/mail.log`: `DKIM-Signature field added (s=mail, d=tahti.live)`.
+
+## Postmark (recommended for Swarm launch)
 
 1. Create a Postmark **Server** for transactional + broadcast (or split servers).
 2. Verify domain `tahti.live` (DKIM + Return-Path).

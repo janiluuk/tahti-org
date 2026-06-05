@@ -3,14 +3,21 @@
 
 'use server'
 
+import { normalizeBetaApplyLinks } from '@tahti/shared'
+
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
 export async function submitBetaApplication(formData: FormData): Promise<{ error: string | null }> {
+  const rawLinks = formData
+    .getAll('links')
+    .map((value) => String(value).trim())
+    .filter(Boolean)
+
   const payload = {
     name: String(formData.get('name') ?? '').trim(),
     email: String(formData.get('email') ?? '').trim(),
     artistType: String(formData.get('artistType') ?? '').trim(),
-    links: String(formData.get('links') ?? '').trim() || undefined,
+    links: normalizeBetaApplyLinks(rawLinks.length ? rawLinks : undefined),
     message: String(formData.get('message') ?? '').trim() || undefined,
   }
 

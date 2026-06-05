@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { BETA_APPLY_MAX_LINKS } from '@tahti/shared'
 import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, Text, Textarea } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { submitBetaApplication } from './actions'
@@ -13,6 +14,7 @@ export function BetaApplyForm() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [linkRows, setLinkRows] = useState([0])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -25,6 +27,14 @@ export function BetaApplyForm() {
       return
     }
     setSent(true)
+  }
+
+  function addLinkRow() {
+    setLinkRows((rows) => (rows.length >= BETA_APPLY_MAX_LINKS ? rows : [...rows, rows.length]))
+  }
+
+  function removeLinkRow(index: number) {
+    setLinkRows((rows) => (rows.length <= 1 ? rows : rows.filter((_, i) => i !== index)))
   }
 
   if (sent) {
@@ -90,11 +100,45 @@ export function BetaApplyForm() {
               </Field>
 
               <Field label="Links to your music (optional)">
-                <Input
-                  name="links"
-                  maxLength={2000}
-                  placeholder="SoundCloud, Mixcloud, Bandcamp, personal site…"
-                />
+                <div className="auth-link-rows">
+                  {linkRows.map((rowId, index) => (
+                    <div className="auth-link-row" key={rowId}>
+                      <Input
+                        name="links"
+                        inputMode="url"
+                        maxLength={500}
+                        placeholder={
+                          index === 0
+                            ? 'SoundCloud, Mixcloud, Bandcamp, personal site…'
+                            : 'Another link…'
+                        }
+                      />
+                      {linkRows.length > 1 ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="auth-link-row-btn"
+                          aria-label="Remove link"
+                          onClick={() => removeLinkRow(index)}
+                        >
+                          −
+                        </Button>
+                      ) : null}
+                    </div>
+                  ))}
+                  {linkRows.length < BETA_APPLY_MAX_LINKS ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="auth-link-row-add"
+                      onClick={addLinkRow}
+                    >
+                      + Add another link
+                    </Button>
+                  ) : null}
+                </div>
               </Field>
 
               <Field label="Anything else?">
