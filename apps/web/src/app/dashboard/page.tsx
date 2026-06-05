@@ -30,6 +30,7 @@ import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
 import UpgradeCta from './upgrade-cta'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
+import { EndBroadcastBtn } from './end-broadcast-btn'
 import { Heading, Link, PageShell, Panel, Text } from '@tahti/ui'
 import type {
   ChannelGalleryMode,
@@ -490,6 +491,12 @@ export default async function DashboardPage() {
     }
   }
 
+  const statDlCount =
+    (downloadGateSummary as { totals: { countedDownloads?: number } } | null)?.totals
+      .countedDownloads ?? 0
+  const statBroadcasts =
+    (channelLiveStats as { totalBroadcasts: number } | null)?.totalBroadcasts ?? 0
+
   return (
     <PageShell size="md">
       <div id="studio-overview" className="studio-section-anchor studio-page-header">
@@ -509,6 +516,30 @@ export default async function DashboardPage() {
             <div className="db-live-count">
               <Link href={`/c/${user.channel.slug}`}>View channel →</Link>
             </div>
+          </div>
+          <EndBroadcastBtn />
+        </div>
+      )}
+
+      {user.channel && (
+        <div className="db-stat-tiles">
+          <div className="db-stat-tile db-stat-tile--amber">
+            <span className="db-stat-tile-value">{statDlCount + statBroadcasts}</span>
+            <span className="db-stat-tile-label">Archive plays</span>
+          </div>
+          <div className="db-stat-tile db-stat-tile--cyan">
+            <span className="db-stat-tile-value">{statDlCount}</span>
+            <span className="db-stat-tile-label">Downloads</span>
+          </div>
+          <div className="db-stat-tile db-stat-tile--purple">
+            <span className="db-stat-tile-value">{newsletterStats.confirmed}</span>
+            <span className="db-stat-tile-label">Subscribers</span>
+          </div>
+          <div className="db-stat-tile db-stat-tile--cyan">
+            <span className="db-stat-tile-value">
+              €{(fanPayoutStats.paidLast30Days / 100).toFixed(0)}
+            </span>
+            <span className="db-stat-tile-label">Revenue / mo</span>
           </div>
         </div>
       )}

@@ -257,3 +257,16 @@ export async function sendNewsletterDraft(params: {
     audience: (data as { audience?: string }).audience,
   }
 }
+
+export async function endBroadcast(): Promise<{ ok: boolean; error?: string }> {
+  const response = await fetch(`${apiUrl}/api/me/channel/end-broadcast`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    return { ok: false, error: (data as { error?: string }).error ?? 'Failed to end broadcast' }
+  }
+  return { ok: true }
+}

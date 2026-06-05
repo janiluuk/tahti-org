@@ -1040,3 +1040,226 @@
     padding: 16px;
   }
 }
+
+/* ── Dashboard stat tiles (PLAT-033) ────────────────────────────────────── */
+
+[data-tahti-ui='studio'] .db-stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  [data-tahti-ui='studio'] .db-stat-tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+[data-tahti-ui='studio'] .db-stat-tile {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+[data-tahti-ui='studio'] .db-stat-tile-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-family: var(--font-head);
+  line-height: 1;
+}
+
+[data-tahti-ui='studio'] .db-stat-tile--amber .db-stat-tile-value {
+  color: var(--amber);
+}
+
+[data-tahti-ui='studio'] .db-stat-tile--cyan .db-stat-tile-value {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .db-stat-tile--purple .db-stat-tile-value {
+  color: var(--purple, #a855f7);
+}
+
+[data-tahti-ui='studio'] .db-stat-tile-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+/* ── End Broadcast button (PLAT-033) ────────────────────────────────────── */
+
+[data-tahti-ui='studio'] .db-end-broadcast-btn {
+  background: var(--amber);
+  color: #0a0f1e;
+  border: none;
+  border-radius: var(--radius);
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+[data-tahti-ui='studio'] .db-end-broadcast-btn:hover {
+  background: color-mix(in srgb, var(--amber) 80%, white);
+}
+
+[data-tahti-ui='studio'] .db-end-broadcast-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* ── Stats page (PLAT-030) ──────────────────────────────────────────────── */
+
+[data-tahti-ui='studio'] .stats-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .stats-panel {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+[data-tahti-ui='studio'] .stats-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+[data-tahti-ui='studio'] .stats-panel-total {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .stats-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='studio'] .stats-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-tahti-ui='studio'] .stats-top-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+[data-tahti-ui='studio'] .stats-top-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+[data-tahti-ui='studio'] .stats-top-rank {
+  width: 16px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .stats-top-name {
+  flex: 1;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='studio'] .stats-top-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-tahti-ui='studio'] .stats-top-value--amber {
+  color: var(--amber);
+}
+
+[data-tahti-ui='studio'] .stats-top-value--cyan {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .stats-top-value--purple {
+  color: var(--purple, #a855f7);
+}
+
+[data-tahti-ui='studio'] .stats-engagement-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+[data-tahti-ui='studio'] .stats-eng-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+}
+
+[data-tahti-ui='studio'] .stats-eng-label {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .stats-eng-bar-wrap {
+  width: 80px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .stats-eng-bar {
+  display: block;
+  height: 100%;
+  width: var(--w, 50%);
+  border-radius: 2px;
+}
+
+[data-tahti-ui='studio'] .stats-eng-bar--cyan {
+  background: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .stats-eng-bar--amber {
+  background: var(--amber);
+}
+
+[data-tahti-ui='studio'] .stats-eng-bar--purple {
+  background: var(--purple, #a855f7);
+}
+
+[data-tahti-ui='studio'] .stats-eng-value {
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 32px;
+  text-align: right;
+}

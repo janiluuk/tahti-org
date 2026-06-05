@@ -1360,3 +1360,120 @@
 [data-tahti-ui='brand'] .sl-footer a:hover {
   color: var(--amber);
 }
+
+/* ── Broadcast countdown timer (PLAT-035) ───────────────────────────────── */
+
+[data-tahti-ui='brand'] .ch-countdown {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin: 0 0 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-note {
+  font-size: 0.85rem;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-tiles {
+  display: inline-flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-tile {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56px;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-num {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-family: var(--font-head);
+  color: var(--amber);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-unit {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── Smart link DSP button icon (PLAT-031) ──────────────────────────────── */
+
+[data-tahti-ui='brand'] .sl-btn-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+
+[data-tahti-ui='brand'] .sl-btn-action {
+  flex: 1;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: right;
+  padding-right: 4px;
+}
+
+/* ── Archive item thumbnail (PLAT-032) ──────────────────────────────────── */
+
+[data-tahti-ui='brand'] .ch-archive-item-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-date {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
