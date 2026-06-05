@@ -8,6 +8,7 @@ live in Git; this document covers **data** recovery (Postgres, MinIO).
 - SSH access to the manager node (`DEPLOY_SSH_PRIVATE_KEY` in CI)
 - `mc` alias configured for `registry.tahti.live` and backup bucket (see `scripts/backup.sh`)
 - Docker Swarm stack name: `tahti` (production) or `tahti-staging`
+- Production secrets: [`ops/secrets-management.md`](secrets-management.md)
 
 ## Deploy and rollback
 

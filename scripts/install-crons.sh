@@ -28,12 +28,23 @@ EOF
 chmod 644 "$CRON_D/tahti-backup"
 green "Installed: /etc/cron.d/tahti-backup (backup.sh all + status + restore-test)"
 
+cat > "$CRON_D/tahti-backup-drill" <<EOF
+# Quarterly operator backup drill (M29) — timed restore-test + status
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# 06:00 UTC on 1 Jan, Apr, Jul, Oct (after nightly backup window)
+0 6 1 1,4,7,10 * root ${SCRIPTS_DIR}/backup-drill.sh >> /var/log/tahti-backup-drill.log 2>&1
+EOF
+chmod 644 "$CRON_D/tahti-backup-drill"
+green "Installed: /etc/cron.d/tahti-backup-drill (quarterly backup-drill.sh)"
+
 # Remove legacy split cron file if present
 rm -f "$CRON_D/tahti-restore-test"
 
 # Ensure log files exist with correct permissions
-touch /var/log/tahti-backup.log /var/log/tahti-restore-test.log
-chmod 640 /var/log/tahti-backup.log /var/log/tahti-restore-test.log
+touch /var/log/tahti-backup.log /var/log/tahti-restore-test.log /var/log/tahti-backup-drill.log
+chmod 640 /var/log/tahti-backup.log /var/log/tahti-restore-test.log /var/log/tahti-backup-drill.log
 green "Log files created"
 
 echo ""
