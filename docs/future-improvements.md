@@ -82,7 +82,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | ~~P1~~ | ~~Stripe webhook failure metrics~~ — Prometheus counters on `/metrics` (done) |
 | ~~P2~~ | ~~hCaptcha on first chat message~~ — token join marks Redis; publish proxy requires verification (done) |
 | ~~P2~~ | ~~Backup age Prometheus alert~~ — `tahti_postgres_backup_age_hours` + `prometheus-tahti-alerts.yml` + Grafana panel |
-| P2 | ACRCloud cost watchdog |
+| P2 | ACRCloud cost watchdog | ~~done~~ — `tahti_acrcloud_identify_*` counters on `/metrics` + Prometheus burst alert |
 | ~~P2~~ | ~~Rate-limit tuning per route from config~~ — `RATE_LIMIT_*` + `DOWNLOAD_RATE_*` env; see `docs/technical/rate-limit-policy.md` |
 | ~~P2~~ | ~~Structured logging (pino) + request IDs~~ — `x-request-id` + JSON response logs (done) |
 

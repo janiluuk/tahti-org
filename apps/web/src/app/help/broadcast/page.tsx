@@ -96,6 +96,10 @@ export default function BroadcastHelpPage() {
       </ul>
 
       <Text size="sm" tone="muted">
+        Weekly hour cap and MP3 vs FLAC: <Link href="/help/tier-limits">tier limits guide</Link>
+      </Text>
+
+      <Text size="sm" tone="muted">
         Operator reference: <code>docs/obs-and-broadcasting-guides.md</code>
       </Text>
     </article>

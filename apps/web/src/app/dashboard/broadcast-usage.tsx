@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import Link from 'next/link'
+
 type WarningLevel = 'none' | '45m' | '55m' | 'grace' | 'blocked'
 
 interface BroadcastUsage {
@@ -67,7 +69,8 @@ export default function BroadcastUsageBanner({ usage }: { usage: BroadcastUsage 
         </p>
       ) : level === 'blocked' ? (
         <p className="studio-text-warn studio-mt-sm">
-          Your weekly hour is up — archive plays until Monday 00:00 UTC. Upgrade to unlimited live +
+          Your weekly hour is up — archive plays until Monday 00:00 UTC.{' '}
+          <Link href="/help/tier-limits">Free vs paid limits</Link> · Upgrade to unlimited live +
           lossless FLAC.
         </p>
       ) : level === '55m' ? (

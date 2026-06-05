@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { PrometheusMetricsBodySchema, openApiResponse } from '@tahti/shared'
 import { collectBackupMetrics, renderBackupMetricLines } from '../lib/backup-metrics.js'
+import { renderAcrcloudMetricLines } from '../lib/acrcloud-metrics.js'
 import { renderPrometheusMetrics, runDependencyChecks } from '../lib/health-checks.js'
 import { renderHttpMetricLines } from '../lib/http-metrics.js'
 import { collectPlatformMetrics, renderPlatformMetricLines } from '../lib/platform-metrics.js'
@@ -27,6 +28,7 @@ const metricsRoute: FastifyPluginAsync = async (fastify) => {
         ...renderHttpMetricLines(),
         ...renderPlatformMetricLines(platform),
         ...renderBackupMetricLines(backup),
+        ...renderAcrcloudMetricLines(),
         ...renderStripeWebhookMetricLines(),
       ]
       return reply
