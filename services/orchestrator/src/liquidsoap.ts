@@ -6,6 +6,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { promisify } from 'node:util'
 import { createDecipheriv } from 'node:crypto'
 import { prisma } from '@tahti/db'
+import { spawnBroadcastRecorder, stopChannelRecorders, stopBroadcastRecorder } from './recorder.js'
 
 const execAsync = promisify(exec)
 
@@ -39,13 +40,12 @@ export function getActiveChannels(): string[] {
   return [...activeChannels.keys()]
 }
 
-export async function spawnChannel(
+export async function spawnLiquidsoapContainer(
   channelId: string,
   slug: string,
   broadcastId: string,
 ): Promise<void> {
   if (activeChannels.has(channelId)) {
-    // Already running — no-op
     return
   }
 
@@ -122,7 +122,32 @@ export async function spawnChannel(
   activeChannels.set(channelId, containerName)
 }
 
-export async function stopChannel(channelId: string): Promise<void> {
+/** Ensure Liquidsoap + ffmpeg recorder sidecar for a live broadcast. */
+export async function spawnChannel(
+  channelId: string,
+  slug: string,
+  broadcastId: string,
+): Promise<void> {
+  await spawnLiquidsoapContainer(channelId, slug, broadcastId)
+
+  const broadcast = await prisma.broadcast.findUnique({
+    where: { id: broadcastId },
+    select: {
+      source: true,
+      channel: { select: { rtmpStreamKey: true } },
+    },
+  })
+  const source = broadcast?.source ?? 'ICECAST'
+  await spawnBroadcastRecorder(
+    channelId,
+    slug,
+    broadcastId,
+    source,
+    broadcast?.channel.rtmpStreamKey,
+  )
+}
+
+export async function stopLiquidsoapContainer(channelId: string): Promise<void> {
   const containerName = activeChannels.get(channelId)
   if (!containerName) return
 
@@ -130,9 +155,15 @@ export async function stopChannel(channelId: string): Promise<void> {
     await execAsync(`docker stop ${containerName}`)
     await execAsync(`docker rm ${containerName}`)
   } catch (err) {
-    // Container may already be gone
     console.error(`[orchestrator] failed to stop ${containerName}:`, err)
   }
 
   activeChannels.delete(channelId)
 }
+
+export async function stopChannel(channelId: string): Promise<void> {
+  await stopLiquidsoapContainer(channelId)
+  await stopChannelRecorders(channelId)
+}
+
+export { stopBroadcastRecorder }

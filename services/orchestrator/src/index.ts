@@ -3,7 +3,14 @@
 
 import Fastify from 'fastify'
 import { broadcastSessionLogFields } from '@tahti/shared'
-import { spawnChannel, stopChannel, getActiveChannels } from './liquidsoap.js'
+import {
+  spawnChannel,
+  stopChannel,
+  stopLiquidsoapContainer,
+  spawnLiquidsoapContainer,
+  getActiveChannels,
+} from './liquidsoap.js'
+import { getActiveRecorders } from './recorder.js'
 
 const PORT = parseInt(process.env.PORT ?? '3003', 10)
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
@@ -18,7 +25,11 @@ fastify.addHook('preHandler', async (request, reply) => {
   }
 })
 
-fastify.get('/health', async () => ({ ok: true, channels: getActiveChannels() }))
+fastify.get('/health', async () => ({
+  ok: true,
+  channels: getActiveChannels(),
+  recorders: getActiveRecorders(),
+}))
 
 // Spawn (or ensure running) the Liquidsoap container for a channel
 fastify.post('/spawn', async (request, reply) => {
@@ -60,11 +71,11 @@ fastify.post('/restart', async (request, reply) => {
     return reply.status(400).send({ error: 'channelId, slug, and broadcastId required' })
   }
 
-  await stopChannel(channelId)
-  await spawnChannel(channelId, slug, broadcastId)
+  await stopLiquidsoapContainer(channelId)
+  await spawnLiquidsoapContainer(channelId, slug, broadcastId)
   request.log.info(
     broadcastSessionLogFields({ broadcastId, channelId, slug }),
-    'liquidsoap restarted',
+    'liquidsoap restarted (recorder sidecar kept running)',
   )
   return reply.send({ ok: true, restarted: true })
 })

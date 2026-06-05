@@ -528,7 +528,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | ID | Issue | Raised by | Phase to fix |
 |:---|---|---|---|
 | [x] | **STREAM-001** HLS segments written to shared Docker volume instead of MinIO — prevents adding a second Caddy or worker node | `hls-minio-sync` cron mirrors volume → `hls-live`; Caddy serves MinIO; watchdog uses slug prefix | M3 |
-| [ ] | **STREAM-004** Recording is a Liquidsoap sidecar — recording lost if Liquidsoap crashes mid-broadcast | Architecture review | M3 |
+| [x] | **STREAM-004** Recording is a Liquidsoap sidecar — recording lost if Liquidsoap crashes mid-broadcast | ffmpeg recorder sidecar (RTMP/Icecast input); Liquidsoap WAV removed; finalize prefers `broadcast-{id}.wav` | M3 |
 | [x] | **STREAM-005** No per-channel health watchdog — silent/frozen channels go undetected until user reports | `channel-watchdog` worker cron + orchestrator `/restart` when segments stale | M3 |
 
 ### HIGH — breaks artist or listener experience

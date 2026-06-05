@@ -5,7 +5,37 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { mkdir, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { findLatestChannelRecording } from './channel-recording.js'
+import {
+  findChannelBroadcastRecording,
+  findLatestChannelRecording,
+  broadcastRecordingFileName,
+} from './channel-recording.js'
+
+describe('findChannelBroadcastRecording', () => {
+  const root = join(tmpdir(), `tahti-rec-bc-${Date.now()}`)
+  const channelId = 'ch-test'
+  const broadcastId = 'bc-sidecar'
+
+  beforeAll(async () => {
+    await mkdir(join(root, channelId), { recursive: true })
+    await writeFile(join(root, channelId, broadcastRecordingFileName(broadcastId)), 'sidecar')
+    await writeFile(join(root, channelId, 'legacy.wav'), 'legacy')
+  })
+
+  afterAll(async () => {
+    await rm(root, { recursive: true, force: true })
+  })
+
+  it('prefers ffmpeg sidecar file over legacy timestamped wav', async () => {
+    const path = await findChannelBroadcastRecording(
+      root,
+      channelId,
+      broadcastId,
+      new Date('2026-01-01T00:00:00Z'),
+    )
+    expect(path).toContain(`broadcast-${broadcastId}.wav`)
+  })
+})
 
 describe('findLatestChannelRecording', () => {
   const root = join(tmpdir(), `tahti-rec-test-${Date.now()}`)

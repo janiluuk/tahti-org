@@ -4,8 +4,7 @@
 # Each channel is a perpetual Liquidsoap process that:
 #   - listens for a live Icecast source from the artist
 #   - falls back to the channel's archive playlist when no live signal exists
-#   - records live broadcasts to disk for auto-archiving
-#   - exposes HLS for listeners
+#   - exposes HLS for listeners (live recording via ffmpeg sidecar — STREAM-004)
 #   - optionally multistreams to RTMP destinations
 
 settings.log.level := 3
@@ -37,17 +36,8 @@ radio = fallback(
   [live_source, archive, blank()]
 )
 
-# --- Live recording sidecar ---
-# Writes a WAV file ONLY while the live source is active.
-# Output filename rotates per session via reopen_when.
-output.file(
-  %wav(stereo=true, samplesize=24, channels=2),
-  reopen_when={ source.is_ready(live_source) },
-  reopen_on_metadata=false,
-  fallible=true,
-  "/recordings/{{CHANNEL_ID}}/live_$(year)$(month)$(day)_$(hour)$(min)$(sec).wav",
-  live_source
-)
+# --- Live recording: ffmpeg sidecar (STREAM-004) spawned by orchestrator ---
+# Reads Icecast or RTMP ingest directly; survives Liquidsoap restarts.
 
 # --- HLS output for listeners (the public-facing stream) ---
 output.file.hls(
