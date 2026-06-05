@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { Alert, Heading, Link, Stack, Text } from '@tahti/ui'
+
 interface Props {
   searchParams: { token?: string }
 }
@@ -10,9 +12,9 @@ export default async function VerifyPage({ searchParams }: Props) {
 
   if (!token) {
     return (
-      <div style={{ maxWidth: 480, margin: '4rem auto', padding: '0 1rem' }}>
-        <h1>Invalid verification link</h1>
-        <p>This link is missing a token. Please use the link from your email.</p>
+      <div className="auth-card">
+        <Heading level={1}>Invalid verification link</Heading>
+        <Text tone="muted">This link is missing a token. Please use the link from your email.</Text>
       </div>
     )
   }
@@ -40,14 +42,16 @@ export default async function VerifyPage({ searchParams }: Props) {
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: '4rem auto', padding: '0 1rem' }}>
-      <h1>{isError ? 'Verification failed' : 'Email verified!'}</h1>
-      <p style={{ color: isError ? 'red' : 'green' }}>{message}</p>
-      {!isError && (
-        <p>
-          <a href="/login">Log in to your account</a>
-        </p>
-      )}
+    <div className="auth-card">
+      <Stack gap={4}>
+        <Heading level={1}>{isError ? 'Verification failed' : 'Email verified!'}</Heading>
+        <Alert variant={isError ? 'error' : 'success'}>{message}</Alert>
+        {!isError && (
+          <Text>
+            <Link href="/login">Log in to your account</Link>
+          </Text>
+        )}
+      </Stack>
     </div>
   )
 }

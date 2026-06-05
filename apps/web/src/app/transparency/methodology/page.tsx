@@ -1,27 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { Heading, Link, Text } from '@tahti/ui'
+
 export default function MethodologyPage() {
   return (
-    <div
-      style={{
-        maxWidth: 760,
-        margin: '3rem auto',
-        padding: '0 1rem',
-        fontFamily: 'system-ui, sans-serif',
-        lineHeight: 1.6,
-      }}
-    >
-      <h1>Transparency methodology</h1>
-      <p style={{ color: '#666' }}>
+    <>
+      <Heading level={1}>Transparency methodology</Heading>
+      <Text tone="muted">
         How Tahti ry records and publishes its financial data.{' '}
-        <a href="/transparency" style={{ color: '#555' }}>
-          ← Back to transparency dashboard
-        </a>
-      </p>
+        <Link href="/transparency">← Back to transparency dashboard</Link>
+      </Text>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>Principles</h2>
+      <section className="brand-section">
+        <Heading level={2}>Principles</Heading>
         <p>
           Tahti ry is a Finnish registered nonprofit association (yhdistys, Y-tunnus 3368171-8). All
           income and expenditure is accounted for and published here monthly after board approval.
@@ -33,8 +25,8 @@ export default function MethodologyPage() {
         </p>
       </section>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>Revenue categories</h2>
+      <section className="brand-section">
+        <Heading level={2}>Revenue categories</Heading>
         <dl style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '0.5rem 1rem' }}>
           <dt style={{ fontWeight: 600, color: '#444' }}>REVENUE_SUBSCRIPTION</dt>
           <dd style={{ margin: 0 }}>
@@ -55,8 +47,8 @@ export default function MethodologyPage() {
         </dl>
       </section>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>Cost categories</h2>
+      <section className="brand-section">
+        <Heading level={2}>Cost categories</Heading>
         <dl style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '0.5rem 1rem' }}>
           <dt style={{ fontWeight: 600, color: '#444' }}>COST_INFRASTRUCTURE</dt>
           <dd style={{ margin: 0 }}>
@@ -86,8 +78,8 @@ export default function MethodologyPage() {
         </dl>
       </section>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>Disbursements</h2>
+      <section className="brand-section">
+        <Heading level={2}>Disbursements</Heading>
         <dl style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '0.5rem 1rem' }}>
           <dt style={{ fontWeight: 600, color: '#444' }}>GRANT_DISBURSEMENT</dt>
           <dd style={{ margin: 0 }}>
@@ -103,8 +95,8 @@ export default function MethodologyPage() {
         </dl>
       </section>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>How surplus is calculated</h2>
+      <section className="brand-section">
+        <Heading level={2}>How surplus is calculated</Heading>
         <p>
           Surplus = total revenue − total costs (including salaries and professional services).
           Disbursements and reserve transfers are not costs — they are allocations of the surplus.
@@ -113,8 +105,8 @@ export default function MethodologyPage() {
         </p>
       </section>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>Engagement units (grant formula)</h2>
+      <section className="brand-section">
+        <Heading level={2}>Engagement units (grant formula)</Heading>
         <p>
           Grants are allocated proportionally by <em>engagement units</em>, not passive
           listener-hours. An engagement unit is a weighted measure that rewards listener commitment:
@@ -135,8 +127,8 @@ export default function MethodologyPage() {
         </p>
       </section>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>Data pipeline</h2>
+      <section className="brand-section">
+        <Heading level={2}>Data pipeline</Heading>
         <ol>
           <li>
             Stripe webhooks automatically create <code>REVENUE_SUBSCRIPTION</code> entries.
@@ -156,8 +148,8 @@ export default function MethodologyPage() {
         </ol>
       </section>
 
-      <section style={{ marginTop: '2rem' }}>
-        <h2>Public API</h2>
+      <section className="brand-section">
+        <Heading level={2}>Public API</Heading>
         <p>All endpoints return JSON and are CORS-open for third-party use.</p>
         <ul>
           <li>
@@ -173,22 +165,12 @@ export default function MethodologyPage() {
         </ul>
       </section>
 
-      <footer
-        style={{
-          marginTop: '3rem',
-          borderTop: '1px solid #eee',
-          paddingTop: '1.5rem',
-          color: '#aaa',
-          fontSize: '0.8rem',
-        }}
-      >
+      <footer className="brand-footer">
         <p>
           Tahti ry — Y-tunnus 3368171-8 — Helsinki, Finland.{' '}
-          <a href="https://github.com/tahtiapp/tahti" style={{ color: '#999' }}>
-            Source code (AGPL-3.0)
-          </a>
+          <a href="https://github.com/tahtiapp/tahti">Source code (AGPL-3.0)</a>
         </p>
       </footer>
-    </div>
+    </>
   )
 }

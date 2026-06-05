@@ -38,6 +38,7 @@ alwaysApply: true
 | Live badge, stats | `LiveBadge`, `Stat`, `StatGrid`, `Callout` |
 | Marketing site | `MarketingButton`, `Nav`, `Card`, `SectionHeader` |
 | Escaped user text | `SafePlainText` |
+| Auth wordmark | `BrandLogo` |
 
 ## Adding a new component
 

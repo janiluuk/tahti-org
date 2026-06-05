@@ -4,8 +4,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import { Alert, Button, Field, Heading, Input, Stack, Text } from '@/components/ui'
+import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, Text } from '@tahti/ui'
 import { register } from './actions'
 
 const HCAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ?? ''
@@ -35,7 +34,7 @@ export default function JoinPage() {
       if (!captchaRef.current || !window.hcaptcha) return
       widgetIdRef.current = window.hcaptcha.render(captchaRef.current, {
         sitekey: HCAPTCHA_SITE_KEY,
-        theme: 'dark',
+        theme: 'light',
       })
     }
 
@@ -87,30 +86,25 @@ export default function JoinPage() {
 
   if (success) {
     return (
-      <>
-        <Link href="/" className="brand-logo">
-          <span className="brand-logo-bar" aria-hidden />
-          TAHTI
-        </Link>
+      <div className="auth-card">
+        <BrandLogo />
         <Heading level={1}>Check your email</Heading>
         <Text tone="muted">
           We&apos;ve sent a verification link to your email address. Click it to activate your
           account.
         </Text>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <Link href="/" className="brand-logo">
-        <span className="brand-logo-bar" aria-hidden />
-        TAHTI
-      </Link>
+    <div className="auth-card">
+      <BrandLogo />
       <Heading level={1}>Create an artist account</Heading>
-      <Text tone="muted" style={{ marginBottom: '1.5rem' }}>
+      <Text tone="muted">
         Invite-only during early access. Your channel URL will be tahti.live/u/yourname.
       </Text>
+
       <form onSubmit={handleSubmit}>
         <Stack gap={4}>
           {error && <Alert variant="error">{error}</Alert>}
@@ -150,6 +144,6 @@ export default function JoinPage() {
           </Button>
         </Stack>
       </form>
-    </>
+    </div>
   )
 }

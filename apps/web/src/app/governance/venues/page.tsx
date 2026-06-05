@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { cookies } from 'next/headers'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { Heading, Link, Text } from '@tahti/ui'
 import VenueAdminPanel from './venue-admin-panel'
 import { fetchAdminVenues } from './actions'
 
@@ -29,31 +29,29 @@ export default async function GovernanceVenuesPage() {
 
   if (!isBoard) {
     return (
-      <div style={{ maxWidth: 700, margin: '3rem auto', padding: '0 1rem' }}>
-        <h1>Venue verification</h1>
-        <p style={{ color: '#666' }}>Board access required.</p>
-        <Link href="/governance">← Back to governance</Link>
-      </div>
+      <>
+        <Heading level={1}>Venue verification</Heading>
+        <Text tone="muted">Board access required.</Text>
+        <Text>
+          <Link href="/governance">← Back to governance</Link>
+        </Text>
+      </>
     )
   }
 
   const { venues, error } = await fetchAdminVenues()
 
   return (
-    <div style={{ maxWidth: 900, margin: '3rem auto', padding: '0 1rem' }}>
-      <p style={{ marginBottom: '0.5rem' }}>
+    <>
+      <Text size="sm">
         <Link href="/governance">← Member governance</Link>
-      </p>
-      <h1 style={{ marginBottom: '0.25rem' }}>Venue verification</h1>
-      <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+      </Text>
+      <Heading level={1}>Venue verification</Heading>
+      <Text tone="muted">
         Verified venues appear in the public directory. Unverified listings stay hidden until
         approved.
-      </p>
-      {error ? (
-        <p style={{ color: '#dc2626' }}>{error}</p>
-      ) : (
-        <VenueAdminPanel initial={venues ?? []} />
-      )}
-    </div>
+      </Text>
+      {error ? <Text tone="error">{error}</Text> : <VenueAdminPanel initial={venues ?? []} />}
+    </>
   )
 }

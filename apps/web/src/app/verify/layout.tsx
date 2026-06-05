@@ -2,12 +2,9 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
+import { PublicBrandShell } from '@tahti/ui'
 import '@tahti/ui/src/styles/brand-public.css'
 
 export default function VerifyLayout({ children }: { children: ReactNode }) {
-  return (
-    <div data-tahti-ui="brand" className="brand-public brand-public--center">
-      {children}
-    </div>
-  )
+  return <PublicBrandShell center>{children}</PublicBrandShell>
 }

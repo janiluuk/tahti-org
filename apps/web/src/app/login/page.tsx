@@ -4,7 +4,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, BgCanvas, Button, Field, Heading, Input, Link, Stack, Text } from '@/components/ui'
+import { Alert, BrandLogo, Button, Field, Heading, Input, Link, Stack, Text } from '@tahti/ui'
+import { BgCanvas } from '@/components/ui/bg-canvas'
 import { login } from './actions'
 
 export default function LoginPage() {
@@ -35,15 +36,10 @@ export default function LoginPage() {
       <BgCanvas />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
-          <Link href="/" className="brand-logo">
-            <span className="brand-logo-bar" aria-hidden />
-            TAHTI
-          </Link>
+          <BrandLogo />
 
           <Heading level={1}>Log in</Heading>
-          <Text tone="muted" style={{ marginBottom: '1.5rem' }}>
-            Enter your email and password to access your dashboard.
-          </Text>
+          <Text tone="muted">Enter your email and password to access your dashboard.</Text>
 
           <form onSubmit={handleSubmit}>
             <Stack gap={4}>
@@ -63,7 +59,7 @@ export default function LoginPage() {
             </Stack>
           </form>
 
-          <Text size="sm" tone="muted" style={{ marginTop: '1.5rem' }}>
+          <Text size="sm" tone="muted">
             Don&apos;t have an account? <Link href="/join">Apply for access</Link>
           </Text>
         </div>

@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { cookies } from 'next/headers'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { Heading, Link, Text } from '@tahti/ui'
 import MotionCard, { type MotionSummary } from './motion-card'
 import NewMotionForm from './new-motion-form'
 import GrantPreviewPanel from './grant-preview-panel'
@@ -44,13 +44,13 @@ export default async function GovernancePage() {
 
   if (!me.isMember) {
     return (
-      <div style={{ maxWidth: 700, margin: '3rem auto', padding: '0 1rem' }}>
-        <h1>Member governance</h1>
-        <p style={{ color: '#666' }}>
+      <>
+        <Heading level={1}>Member governance</Heading>
+        <Text tone="muted">
           This area is for Tahti ry members. Activate your membership to take part in motions and
           voting.
-        </p>
-      </div>
+        </Text>
+      </>
     )
   }
 
@@ -71,76 +71,61 @@ export default async function GovernancePage() {
   const members: Member[] = membersRes.ok ? ((await membersRes.json()) as Member[]) : []
 
   return (
-    <div
-      style={{
-        maxWidth: 820,
-        margin: '3rem auto',
-        padding: '0 1rem',
-        fontFamily: 'system-ui, sans-serif',
-      }}
-    >
-      <h1 style={{ marginBottom: '0.25rem' }}>Member governance</h1>
-      <p style={{ color: '#666', marginBottom: '2rem' }}>
+    <>
+      <Heading level={1}>Member governance</Heading>
+      <Text tone="muted">
         Motions and voting for Tahti ry members. Voting is currently <strong>advisory</strong> —
         binding decisions are confirmed at a live AGM until the bylaws authorize electronic voting.
-      </p>
+      </Text>
 
       {me.isBoard && <NewMotionForm />}
 
       {me.isBoard && (
         <>
           <GrantPreviewPanel />
-          <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          <Text size="sm">
             <Link href="/governance/venues">Venue verification (board) →</Link>
-          </p>
+          </Text>
         </>
       )}
 
-      <section style={{ marginBottom: '3rem' }}>
-        <h2 style={{ fontSize: '1rem', color: '#444', marginBottom: '1rem' }}>Motions</h2>
+      <section className="brand-section">
+        <h2 className="brand-section__title">Motions</h2>
         {motions.length === 0 ? (
-          <p style={{ color: '#aaa' }}>No motions yet.</p>
+          <p className="brand-empty">No motions yet.</p>
         ) : (
           motions.map((m) => <MotionCard key={m.id} motion={m} isBoard={me.isBoard} />)
         )}
       </section>
 
-      <section>
-        <h2 style={{ fontSize: '1rem', color: '#444', marginBottom: '1rem' }}>
-          Member directory ({members.length})
-        </h2>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+      <section className="brand-section">
+        <h2 className="brand-section__title">Member directory ({members.length})</h2>
+        <div className="brand-table-wrap">
+          <table className="brand-table">
             <thead>
-              <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
-                <th style={{ padding: '0.5rem 0.75rem', color: '#666' }}>#</th>
-                <th style={{ padding: '0.5rem 0.75rem', color: '#666' }}>Member</th>
-                <th style={{ padding: '0.5rem 0.75rem', color: '#666' }}>Channel</th>
-                <th style={{ padding: '0.5rem 0.75rem', color: '#666' }}>Since</th>
+              <tr>
+                <th>#</th>
+                <th>Member</th>
+                <th>Channel</th>
+                <th>Since</th>
               </tr>
             </thead>
             <tbody>
               {members.map((m) => (
-                <tr key={m.username} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                  <td style={{ padding: '0.5rem 0.75rem', color: '#999' }}>
-                    {m.memberNumber ?? '—'}
-                  </td>
-                  <td style={{ padding: '0.5rem 0.75rem' }}>
+                <tr key={m.username}>
+                  <td className="brand-muted">{m.memberNumber ?? '—'}</td>
+                  <td>
                     {m.displayName}
-                    {m.isBoard && (
-                      <span style={{ marginLeft: '0.4rem', fontSize: '0.7rem', color: '#2563eb' }}>
-                        board
-                      </span>
-                    )}
+                    {m.isBoard && <span className="brand-badge">board</span>}
                   </td>
-                  <td style={{ padding: '0.5rem 0.75rem' }}>
+                  <td>
                     {m.channelSlug ? (
-                      <a href={`/c/${m.channelSlug}`}>{m.channelSlug}</a>
+                      <Link href={`/c/${m.channelSlug}`}>{m.channelSlug}</Link>
                     ) : (
-                      <span style={{ color: '#ccc' }}>—</span>
+                      <span className="brand-empty">—</span>
                     )}
                   </td>
-                  <td style={{ padding: '0.5rem 0.75rem', color: '#888' }}>
+                  <td className="brand-muted">
                     {m.memberSince ? new Date(m.memberSince).toLocaleDateString('fi-FI') : '—'}
                   </td>
                 </tr>
@@ -149,6 +134,6 @@ export default async function GovernancePage() {
           </table>
         </div>
       </section>
-    </div>
+    </>
   )
 }
