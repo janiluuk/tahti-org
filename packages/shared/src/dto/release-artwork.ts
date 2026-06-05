@@ -11,3 +11,14 @@ export const ReleaseArtworkPrepareSchema = z.object({
 export const ReleaseArtworkCompleteSchema = z.object({
   uploadKey: z.string().min(1).max(512),
 })
+
+export const ReleaseArtworkPrepareResponseSchema = z.object({
+  uploadKey: z.string(),
+  uploadUrl: z.string().url(),
+  expiresAt: z.string().datetime(),
+})
+
+export const ReleaseArtworkCompleteResponseSchema = z.object({
+  artworkUrl: z.string().nullable(),
+  artworkKey: z.string().nullable(),
+})
