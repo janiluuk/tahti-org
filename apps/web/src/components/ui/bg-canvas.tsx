@@ -18,7 +18,12 @@ export function BgCanvas() {
     renderer.setSize(window.innerWidth, window.innerHeight)
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000)
+    const camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      2000,
+    )
     camera.position.z = 400
 
     const palette: [number, number, number][] = [
@@ -105,7 +110,7 @@ export function BgCanvas() {
       mesh.position.set(
         (Math.random() - 0.5) * 700,
         (Math.random() - 0.5) * 400,
-        -100 - Math.random() * 200
+        -100 - Math.random() * 200,
       )
       mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0)
       scene.add(mesh)
@@ -154,10 +159,7 @@ export function BgCanvas() {
     const gridSpacing = 80
     const gridExtent = 600
     for (let x = -gridExtent; x <= gridExtent; x += gridSpacing) {
-      const pts = [
-        new THREE.Vector3(x, -gridExtent, -300),
-        new THREE.Vector3(x, gridExtent, -300),
-      ]
+      const pts = [new THREE.Vector3(x, -gridExtent, -300), new THREE.Vector3(x, gridExtent, -300)]
       const g = new THREE.BufferGeometry().setFromPoints(pts)
       const m = new THREE.LineBasicMaterial({
         color: new THREE.Color(0.0, 0.74, 0.83),
@@ -169,10 +171,7 @@ export function BgCanvas() {
       gridLines.push({ line })
     }
     for (let y = -gridExtent; y <= gridExtent; y += gridSpacing) {
-      const pts = [
-        new THREE.Vector3(-gridExtent, y, -300),
-        new THREE.Vector3(gridExtent, y, -300),
-      ]
+      const pts = [new THREE.Vector3(-gridExtent, y, -300), new THREE.Vector3(gridExtent, y, -300)]
       const g = new THREE.BufferGeometry().setFromPoints(pts)
       const m = new THREE.LineBasicMaterial({
         color: new THREE.Color(0.49, 0.3, 1.0),
@@ -205,7 +204,7 @@ export function BgCanvas() {
       mesh.position.set(
         (Math.random() - 0.5) * 800,
         (Math.random() - 0.5) * 500,
-        -50 - Math.random() * 150
+        -50 - Math.random() * 150,
       )
       scene.add(mesh)
       diamondObjs.push({
@@ -248,8 +247,8 @@ export function BgCanvas() {
           transparent: true,
           opacity: 0.85,
           sizeAttenuation: true,
-        })
-      )
+        }),
+      ),
     )
 
     // Waveform layers
@@ -295,8 +294,8 @@ export function BgCanvas() {
             transparent: true,
             opacity: 1,
             sizeAttenuation: true,
-          })
-        )
+          }),
+        ),
       )
       waveObjs.push({
         geo: wg,
@@ -314,7 +313,7 @@ export function BgCanvas() {
         transparent: true,
         opacity: 0.0,
         wireframe: true,
-      })
+      }),
     )
     pulseSphere.position.z = -30
     scene.add(pulseSphere)
@@ -325,7 +324,7 @@ export function BgCanvas() {
         transparent: true,
         opacity: 0.0,
         wireframe: true,
-      })
+      }),
     )
     pulseSphere2.position.z = -40
     scene.add(pulseSphere2)
