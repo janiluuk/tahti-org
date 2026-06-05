@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
-/* Public pages under [data-tahti-ui="brand"] — uses @tahti/ui tokens */
-
-@import '@tahti/ui/src/tokens.css';
+/* Public pages under [data-tahti-ui="brand"] — light theme for governance, help, etc. */
+/* Note: tokens.css is loaded globally via apps/web/src/app/globals.css — no import needed here. */
 
 /* Light auth/marketing pages only — do not remap tokens on channel/profile shells. */
 [data-tahti-ui='brand'].brand-public,
