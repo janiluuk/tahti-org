@@ -12,4 +12,8 @@ describe('liveInputUrl', () => {
   it('uses edge encoder relay for RTMP source', () => {
     expect(liveInputUrl('RTMP', 'artist-one')).toBe('http://tahti-edge-artist-one:8090/stream')
   })
+
+  it('uses Icecast mount for WEBRTC source', () => {
+    expect(liveInputUrl('WEBRTC', 'artist-one')).toBe('http://icecast:8000/live/artist-one')
+  })
 })

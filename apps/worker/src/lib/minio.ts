@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { S3Client, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, GetObjectCommand, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { createWriteStream, createReadStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
 import type { Readable } from 'node:stream'
@@ -37,4 +37,13 @@ export async function uploadFile(key: string, srcPath: string, contentType: stri
     ContentType: contentType,
   })
   await s3.send(command)
+}
+
+export async function objectByteSize(key: string): Promise<number | null> {
+  try {
+    const response = await s3.send(new HeadObjectCommand({ Bucket: MINIO_BUCKET, Key: key }))
+    return response.ContentLength ?? null
+  } catch {
+    return null
+  }
 }

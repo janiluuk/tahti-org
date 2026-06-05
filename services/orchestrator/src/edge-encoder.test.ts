@@ -15,6 +15,16 @@ describe('rtmpIngestUrl', () => {
       'rtmp://rtmp-ingest:1935/live/artist-one__secret',
     )
   })
+
+  it('uses slug alone when stream key is absent', () => {
+    expect(rtmpIngestUrl('artist-one', null)).toBe('rtmp://rtmp-ingest:1935/live/artist-one')
+  })
+})
+
+describe('edgeEncoderContainerName', () => {
+  it('is stable per channel slug (not per broadcast)', () => {
+    expect(edgeEncoderContainerName('my-artist')).toBe('tahti-edge-my-artist')
+  })
 })
 
 describe('edgeEncoderRelayUrl', () => {
@@ -33,5 +43,7 @@ describe('buildEdgeEncoderDockerCommand', () => {
     expect(cmd).toContain('libmp3lame')
     expect(cmd).toContain('http://0.0.0.0:8090/stream')
     expect(cmd).toContain('rtmp://rtmp-ingest:1935/live/artist-one__key')
+    expect(cmd).toContain('-reconnect 1')
+    expect(cmd).toContain('-listen 1')
   })
 })

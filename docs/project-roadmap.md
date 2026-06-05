@@ -550,7 +550,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | [x] | **STREAM-006** No per-channel bandwidth accounting — can't attribute egress costs per artist, can't inform resource limits or grant calculations | `GET /api/me/channel-egress` + dashboard 30d chart (downloads + **estimated live HLS** from broadcast duration; edge counters deferred) | M8 |
 | [ ] | **STREAM-007** Single Icecast node — Mixxx/Traktor users have no failover | Architecture review | Phase 5 / pre-launch |
 | [ ] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Architecture review | M4 |
-| [ ] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Architecture review | M3 |
+| [x] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Worker syncs fallback pool → shared `/archive-cache`; Liquidsoap prefers local M3U | M3 |
 | [x] | **OPS-001** No structured log correlation across edge encoder → Liquidsoap → recording containers for a single broadcast session | `broadcastSessionId` on ingest, orchestrator, watchdog, finalize, archive jobs | M11 |
 | [~] | **OPS-002** DB migration is a manual step after deploy — must be automated in CI before service update | `scripts/db-migrate-deploy.sh`, `ops/DEPLOY.md`, `make deploy`; CI `prisma migrate status` after test DB push | M0 |
 

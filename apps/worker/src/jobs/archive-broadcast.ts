@@ -10,6 +10,7 @@ import { prisma } from '@tahti/db'
 import { isUnlimitedLiveTier } from '@tahti/shared/broadcast-cap'
 import { broadcastSessionLogFields } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
 
 function ffmpegToMp3(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -141,6 +142,7 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         component: 'archive-broadcast',
       }),
     )
+    await enqueueWarmArchiveFallbackCache(broadcast.channel.id)
   } catch (err) {
     console.error(
       JSON.stringify({

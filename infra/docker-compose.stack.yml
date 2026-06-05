@@ -34,6 +34,7 @@ x-app-env: &app-env
   HLS_MINIO_BUCKET: hls-live
   HLS_MINIO_PREFIX: hls-live
   HLS_STALE_SECONDS: "20"
+  ARCHIVE_CACHE_ROOT: /archive-cache
   APP_URL: http://localhost:${WEB_PORT:-17777}
   API_URL: http://localhost:${API_PORT:-15011}
 
@@ -203,6 +204,7 @@ services:
     volumes:
       - stack_hls:/hls:ro
       - stack_recordings:/recordings:ro
+      - stack_archive_cache:/archive-cache
     depends_on:
       api:
         condition: service_healthy
@@ -221,12 +223,14 @@ services:
       RTMP_INGEST_URL: rtmp://rtmp-ingest:1935
       HLS_VOLUME: tahti_stack_hls
       RECORDINGS_VOLUME: tahti_stack_recordings
+      ARCHIVE_CACHE_VOLUME: tahti_stack_archive_cache
     ports:
       - "${ORCHESTRATOR_PORT:-15003}:3003"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - stack_hls:/hls
       - stack_recordings:/recordings
+      - stack_archive_cache:/archive-cache
     depends_on:
       api:
         condition: service_healthy
@@ -250,3 +254,5 @@ volumes:
     name: tahti_stack_hls
   stack_recordings:
     name: tahti_stack_recordings
+  stack_archive_cache:
+    name: tahti_stack_archive_cache

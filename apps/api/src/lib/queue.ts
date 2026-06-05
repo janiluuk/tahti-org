@@ -35,3 +35,16 @@ export async function enqueueFinalizeBroadcastRecording(broadcastId: string): Pr
     },
   )
 }
+
+/** STREAM-009: mirror fallback pool to local disk for Liquidsoap. */
+export async function enqueueWarmArchiveFallbackCache(channelId: string): Promise<void> {
+  await mediaQueue.add(
+    'warm-archive-fallback-cache',
+    { channelId },
+    {
+      jobId: `warm-archive-fallback-cache-${channelId}`,
+      removeOnComplete: true,
+      removeOnFail: 100,
+    },
+  )
+}

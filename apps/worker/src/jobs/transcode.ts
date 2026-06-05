@@ -14,6 +14,7 @@ import {
   parseArchiveFileTags,
 } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 
 function ffprobeFormat(filePath: string): Promise<{ duration: number; format: string }> {
@@ -148,6 +149,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         },
       })
       await ensureInitialVersion(prisma, itemId)
+      await enqueueWarmArchiveFallbackCache(item.channelId)
       return
     }
 
@@ -167,6 +169,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     })
 
     await ensureInitialVersion(prisma, itemId)
+    await enqueueWarmArchiveFallbackCache(item.channelId)
   } catch (err) {
     await prisma.archiveItem.update({
       where: { id: itemId },
