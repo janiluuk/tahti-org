@@ -28,4 +28,10 @@ Optional but recommended: also require **Generate OpenAPI spec** if you want Ope
 
 ## Release gate
 
-Pushes to `main` run the **Release (YYYY-MM-DD-buildnr)** job only after **All checks** succeeds, so tagged releases never skip the same bar as PRs.
+Pushes to `main` run the **Release images & changelog** job only after **All checks** succeeds. That job:
+
+- Tags the release `YYYY-MM-DD-buildnr` (display name `YYYY-MM-DD #N`)
+- Builds and pushes Docker images to `registry.tahti.live` with the release tag, commit SHA, and `latest`
+- Publishes a GitHub release whose body includes generated changelog notes
+
+The **deploy** workflow then rolls staging using the dated release tag (via `workflow_run` after CI).
