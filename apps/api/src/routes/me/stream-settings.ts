@@ -10,6 +10,10 @@ import {
   openApiResponse,
 } from '@tahti/shared'
 import { hashPassword } from '../../lib/password.js'
+import {
+  clearHotRotatePreviousFields,
+  hotRotatePreviousFields,
+} from '../../lib/ingest-credentials.js'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
@@ -105,22 +109,26 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { id: true, slug: true, state: true },
+        select: { id: true, slug: true, state: true, rtmpStreamKeyHash: true },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-      if (channel.state === 'LIVE') {
-        return reply.status(409).send({
-          error: 'Go offline before rotating the RTMP stream key',
-        })
-      }
 
       const newKey = `${channel.slug}__${nanoid(32)}`
       const newHash = await hashPassword(newKey)
+      const hotPrevious =
+        channel.state === 'LIVE'
+          ? hotRotatePreviousFields(channel.rtmpStreamKeyHash)
+          : clearHotRotatePreviousFields()
 
       await fastify.prisma.channel.update({
         where: { id: channel.id },
-        data: { rtmpStreamKey: newKey, rtmpStreamKeyHash: newHash },
+        data: {
+          rtmpStreamKey: newKey,
+          rtmpStreamKeyHash: newHash,
+          rtmpStreamKeyPreviousHash: hotPrevious.previousHash,
+          rtmpStreamKeyPreviousExpiresAt: hotPrevious.previousExpiresAt,
+        },
       })
 
       return reply.send({ rtmpStreamKey: newKey })
@@ -142,22 +150,26 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { id: true, state: true },
+        select: { id: true, state: true, liveSourcePassHash: true },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-      if (channel.state === 'LIVE') {
-        return reply.status(409).send({
-          error: 'Go offline before rotating the Icecast password',
-        })
-      }
 
       const newPass = nanoid(24)
       const newHash = await hashPassword(newPass)
+      const hotPrevious =
+        channel.state === 'LIVE'
+          ? hotRotatePreviousFields(channel.liveSourcePassHash)
+          : clearHotRotatePreviousFields()
 
       await fastify.prisma.channel.update({
         where: { id: channel.id },
-        data: { liveSourcePass: newPass, liveSourcePassHash: newHash },
+        data: {
+          liveSourcePass: newPass,
+          liveSourcePassHash: newHash,
+          liveSourcePassPreviousHash: hotPrevious.previousHash,
+          liveSourcePassPreviousExpiresAt: hotPrevious.previousExpiresAt,
+        },
       })
 
       return reply.send({ liveSourcePass: newPass })

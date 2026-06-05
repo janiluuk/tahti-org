@@ -401,6 +401,10 @@ model Channel {
   liveSourcePassHash String
   rtmpStreamKey      String
   rtmpStreamKeyHash  String
+  rtmpStreamKeyPreviousHash      String? // ARTIST-002 hot rotation grace
+  rtmpStreamKeyPreviousExpiresAt DateTime?
+  liveSourcePassPreviousHash      String?
+  liveSourcePassPreviousExpiresAt DateTime?
   webrtcTokenHash    String?
   fallbackMode       String       @default("shuffle")
   totalLiveHours     Float        @default(0)

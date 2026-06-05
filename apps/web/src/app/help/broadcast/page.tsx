@@ -89,7 +89,9 @@ export default function BroadcastHelpPage() {
           OBS or Mixxx.
         </li>
         <li>
-          <strong>Key leaked:</strong> rotate immediately in the dashboard; old keys stop working.
+          <strong>Key leaked:</strong> rotate immediately in the dashboard. When offline, old keys
+          stop working at once; while live, the previous key stays valid for 24 hours — update OBS
+          or your DJ app to the new credential as soon as you can.
         </li>
       </ul>
 

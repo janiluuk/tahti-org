@@ -185,6 +185,16 @@ jobs:
             infra/prometheus.yml \
             staging:${{ vars.DEPLOY_PATH || '/srv/tahti' }}/infra/
 
+      - name: Apply database migrations
+        run: |
+          ssh staging "
+            cd ${{ vars.DEPLOY_PATH || '/srv/tahti' }}
+            set -a
+            [ -f stack.env ] && . stack.env
+            set +a
+            TAG=${{ github.sha }} REGISTRY=registry.tahti.live ./scripts/db-migrate-deploy.sh --image
+          "
+
       - name: Deploy Swarm stack
         run: |
           ssh staging "
@@ -247,6 +257,16 @@ jobs:
             infra/icecast-b.xml \
             infra/prometheus.yml \
             prod:${{ vars.DEPLOY_PATH || '/srv/tahti' }}/infra/
+
+      - name: Apply database migrations
+        run: |
+          ssh prod "
+            cd ${{ vars.DEPLOY_PATH || '/srv/tahti' }}
+            set -a
+            [ -f stack.env ] && . stack.env
+            set +a
+            TAG=${{ github.sha }} REGISTRY=registry.tahti.live ./scripts/db-migrate-deploy.sh --image
+          "
 
       - name: Deploy Swarm stack
         run: |

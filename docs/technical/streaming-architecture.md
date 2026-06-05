@@ -109,7 +109,7 @@ Between raw RTMP/Icecast input and Liquidsoap, an FFmpeg edge encoder container:
 
 1. **Normalizes codec** — RTMP sources send AAC, MP3, or Opus at varying bitrates. The edge encoder outputs a consistent 320 kbps PCM or Opus stream regardless of input.
 2. **Produces two feeds** — a high-quality FLAC-compatible feed for paid channels and an MP3 feed for free channels, from a single source input.
-3. **Runs chromaprint fingerprint at ingest** — fpcalc sidecar posts segments every ~30s; archive job resolves titles via **AcoustID** when `ACOUSTID_API_KEY` is set (ACRCloud deferred).
+3. **Runs chromaprint fingerprint at ingest** — fpcalc sidecar posts segments every ~30s; **ACRCloud** identify on MP3 sample with **AcoustID** fallback.
 4. **Decouples ingest from Liquidsoap** — if Liquidsoap crashes and restarts mid-stream, the edge encoder continues receiving from the artist without dropping the connection. Liquidsoap reconnects to the edge encoder's output, not the artist's OBS.
 
 ```mermaid
@@ -154,8 +154,9 @@ RTMP uses the same pattern with `RTMP_INGEST_HOSTS` and nginx-RTMP `/health`.
 
 ```bash
 docker compose -f infra/docker-compose.stack.yml --profile rtmp-failover up -d rtmp-ingest-b
-# RTMP_INGEST_HOSTS=localhost:1935,localhost:1936  (health on ports 8080 / 8086)
 ```
+
+Ingest DNS TTL and verification: **`ops/ingest-dns.md`**.
 
 ---
 
@@ -243,9 +244,7 @@ graph LR
     API --> EE[Edge encoder per channel\nspawned on any worker node]
 ```
 
-If one ingest node fails, new connections go to the surviving node via DNS TTL expiry (TTL 30s for ingest subdomain). Existing connections that were on the failed node must reconnect — OBS auto-reconnects within 30s by default.
-
-**Known issue:** DNS failover has a 30s window where OBS connections attempt the dead node. See backlog item `STREAM-003`.
+If one ingest node fails, new connections use **health-ranked `fallbackServers`** from stream settings immediately; DNS TTL on RTMP A records (target **5–30s**) limits stale resolver cache. See `ops/ingest-dns.md`.
 
 ---
 
@@ -306,14 +305,14 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 
 | ID | Issue | Severity |
 |----|-------|----------|
-| STREAM-001 | HLS segments on shared Docker volume, not MinIO | CRITICAL — blocks horizontal scaling |
-| STREAM-002 | RTMP edge encoder (#75) + dual-bitrate HLS; chromaprint at ingest sidecar (STREAM-008) | HIGH (partial) |
-| STREAM-003 | Health-ranked ingest fallbacks on stream settings; multi-host env + low DNS TTL still ops | HIGH (partial) |
-| STREAM-004 | ~~Recording is a Liquidsoap sidecar~~ — ffmpeg recorder sidecar (STREAM-004) | ~~HIGH~~ done |
-| STREAM-005 | No per-channel health watchdog — silent channels go undetected | HIGH |
-| STREAM-006 | No per-channel bandwidth accounting — can't attribute costs | MEDIUM |
+| STREAM-001 | ~~HLS segments on shared Docker volume~~ — `hls-minio-sync` cron | ~~CRITICAL~~ done |
+| STREAM-002 | RTMP edge encoder + dual-bitrate HLS (tier-gated FLAC/192k paths) | HIGH (partial) |
+| STREAM-003 | Health-ranked fallbacks + prod replicas; DNS TTL 5–30s (`ops/ingest-dns.md`) | done |
+| STREAM-004 | ffmpeg recorder sidecar (STREAM-004) | done |
+| STREAM-005 | `channel-watchdog` worker cron + orchestrator restart | done |
+| STREAM-006 | Per-channel egress from Caddy access logs + dashboard chart | done |
 | STREAM-007 | Icecast `/status-json.xsl` + prod **`icecast-b`** + Caddy failover | done |
 | STREAM-008 | fpcalc sidecar, live tracklist, **ACRCloud** + AcoustID fallback | done |
-| STREAM-003 | Health-ranked fallbacks + prod **`rtmp-ingest-b`**; DNS TTL 5s ops | partial |
-| STREAM-009 | ~~Liquidsoap archive fallback reads from MinIO with no caching~~ — local cache volume + cron | ~~LOW~~ done |
-| STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop | LOW (done) |
+| STREAM-009 | Archive fallback local cache volume + cron | done |
+| STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop | done |
+| ARTIST-002 | Hot RTMP/Icecast credential rotation while live (24h grace) | done |

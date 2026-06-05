@@ -43,14 +43,32 @@ describe('stream-settings rotate', () => {
     await app.close()
   })
 
-  it('POST rtmp/rotate returns 409 when LIVE (ARTIST-002)', async () => {
+  it('POST rtmp/rotate succeeds while LIVE and keeps previous key valid (ARTIST-002)', async () => {
+    const before = await prisma.channel.findUniqueOrThrow({
+      where: { id: channelId },
+      select: { rtmpStreamKey: true, rtmpStreamKeyHash: true },
+    })
     await prisma.channel.update({ where: { id: channelId }, data: { state: 'LIVE' } })
+
     const res = await app.inject({
       method: 'POST',
       url: '/api/me/stream-settings/rtmp/rotate',
       headers: { cookie },
     })
-    expect(res.statusCode).toBe(409)
+    expect(res.statusCode).toBe(200)
+    const newKey = res.json().rtmpStreamKey as string
+    expect(newKey).not.toBe(before.rtmpStreamKey)
+
+    const after = await prisma.channel.findUniqueOrThrow({
+      where: { id: channelId },
+      select: {
+        rtmpStreamKeyPreviousHash: true,
+        rtmpStreamKeyPreviousExpiresAt: true,
+      },
+    })
+    expect(after.rtmpStreamKeyPreviousHash).toBe(before.rtmpStreamKeyHash)
+    expect(after.rtmpStreamKeyPreviousExpiresAt).toBeTruthy()
+
     await prisma.channel.update({ where: { id: channelId }, data: { state: 'OFFLINE' } })
   })
 
@@ -64,14 +82,15 @@ describe('stream-settings rotate', () => {
     expect(res.json().rtmpStreamKey).toContain('stream-rotate-user__')
   })
 
-  it('POST icecast/rotate returns 409 when LIVE (ARTIST-002)', async () => {
+  it('POST icecast/rotate succeeds while LIVE (ARTIST-002)', async () => {
     await prisma.channel.update({ where: { id: channelId }, data: { state: 'LIVE' } })
     const res = await app.inject({
       method: 'POST',
       url: '/api/me/stream-settings/icecast/rotate',
       headers: { cookie },
     })
-    expect(res.statusCode).toBe(409)
+    expect(res.statusCode).toBe(200)
+    expect(res.json().liveSourcePass).toHaveLength(24)
     await prisma.channel.update({ where: { id: channelId }, data: { state: 'OFFLINE' } })
   })
 })
