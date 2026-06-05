@@ -11,6 +11,12 @@ import { spawnBroadcastRecorder, stopChannelRecorders, stopBroadcastRecorder } f
 import { ARCHIVE_CACHE_VOLUME } from './docker-streaming.js'
 import { spawnEdgeEncoder, stopChannelEdgeEncoders } from './edge-encoder.js'
 import { liveInputUrl } from './live-input.js'
+import {
+  LIQUIDSOAP_FADE_SEC,
+  LIQUIDSOAP_TELNET_PORT,
+  liquidsoapGracefulShutdownShell,
+  liquidsoapGracefulShutdownWaitMs,
+} from './liquidsoap-shutdown.js'
 
 const execAsync = promisify(exec)
 
@@ -91,6 +97,8 @@ export async function spawnLiquidsoapContainer(
     .replace(/\{\{HARBOR_NOWPLAYING_PORT\}\}/g, '8002')
     .replace(/\{\{FALLBACK_MODE\}\}/g, channel.fallbackMode)
     .replace(/\{\{API_URL\}\}/g, API_URL)
+    .replace(/\{\{LIQUIDSOAP_TELNET_PORT\}\}/g, String(LIQUIDSOAP_TELNET_PORT))
+    .replace(/\{\{LIQUIDSOAP_FADE_SEC\}\}/g, String(LIQUIDSOAP_FADE_SEC))
 
   if (targets.length === 0) {
     // Strip the entire RTMP_TARGETS block
@@ -167,6 +175,7 @@ export async function stopLiquidsoapContainer(channelId: string): Promise<void> 
   if (!containerName) return
 
   try {
+    await requestLiquidsoapGracefulShutdown(containerName)
     await execAsync(`docker stop -t ${LIQUIDSOAP_STOP_TIMEOUT_SEC} ${containerName}`)
     await execAsync(`docker rm ${containerName}`)
   } catch (err) {
@@ -174,6 +183,16 @@ export async function stopLiquidsoapContainer(channelId: string): Promise<void> 
   }
 
   activeChannels.delete(channelId)
+}
+
+/** STREAM-010: telnet graceful_shutdown → fade → then docker stop. */
+export async function requestLiquidsoapGracefulShutdown(containerName: string): Promise<void> {
+  try {
+    await execAsync(liquidsoapGracefulShutdownShell(containerName))
+    await new Promise((resolve) => setTimeout(resolve, liquidsoapGracefulShutdownWaitMs()))
+  } catch (err) {
+    console.warn(`[orchestrator] graceful shutdown skipped for ${containerName}:`, err)
+  }
 }
 
 export async function stopChannel(channelId: string): Promise<void> {

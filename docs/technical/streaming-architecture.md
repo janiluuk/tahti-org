@@ -284,4 +284,4 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | STREAM-007 | Single Icecast node — no redundancy for Mixxx users | MEDIUM |
 | STREAM-008 | chromaprint fingerprint runs post-broadcast only — no real-time tracklist | MEDIUM |
 | STREAM-009 | ~~Liquidsoap archive fallback reads from MinIO with no caching~~ — local cache volume + cron | ~~LOW~~ done |
-| STREAM-010 | Liquidsoap stop uses `docker stop -t 20` to flush last HLS segment; audio fade deferred | LOW (partial) |
+| STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop | LOW (done) |
