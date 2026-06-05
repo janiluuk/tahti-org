@@ -46,6 +46,8 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
         emailVerified: !!user.emailVerifiedAt,
         renewalDueAt,
         hasStripeSubscription: !!user.stripeMembershipSubscriptionId,
+        subscriptionMigrationRequired:
+          user.isMember && !user.stripeMembershipSubscriptionId && stripeEnabled,
       })
     },
   )
@@ -80,7 +82,7 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      if (user.isMember && !user.stripeMembershipSubscriptionId) {
+      if (user.isMember && !stripeEnabled) {
         return reply.status(409).send({ error: 'You are already a member' })
       }
 

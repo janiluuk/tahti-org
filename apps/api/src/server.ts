@@ -93,6 +93,7 @@ import meProfileRoutes from './routes/me/profile.js'
 import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import meArchiveRoutes from './routes/me/archive.js'
 import meProgrammeRoutes from './routes/me/programme.js'
+import meSocialRoutes from './routes/me/social.js'
 import meChannelScheduleRoutes from './routes/me/channel-schedule.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
 import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
@@ -481,6 +482,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M22/M24/M25: archive item metadata edit + channel slideshow
   await fastify.register(meArchiveRoutes)
   await fastify.register(meProgrammeRoutes)
+  await fastify.register(meSocialRoutes)
   await fastify.register(meChannelScheduleRoutes)
   await fastify.register(meArchiveVersionRoutes)
   await fastify.register(meDownloadGateStatsRoutes)

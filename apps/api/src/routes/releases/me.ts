@@ -25,6 +25,7 @@ import {
 } from '@tahti/shared'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { parseReleaseImportCsv } from '../../lib/release-import.js'
+import { queueReleaseSocialPost } from '../../lib/social-post.js'
 
 function slugify(title: string): string {
   return title
@@ -204,6 +205,13 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         data,
         include: { tracks: { orderBy: { position: 'asc' } } },
       })
+
+      if (body.state === 'PUBLISHED' && existing.state !== 'PUBLISHED') {
+        queueReleaseSocialPost(fastify.prisma, user.id, id).catch((err: unknown) =>
+          request.log.warn({ err, releaseId: id }, 'social post enqueue failed'),
+        )
+      }
+
       return reply.send(release)
     },
   )

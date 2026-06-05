@@ -207,6 +207,20 @@ enum FanSubState {
   @@schema("fansubs")
 }
 
+enum SocialPlatform {
+  MASTODON
+
+  @@schema("core")
+}
+
+enum SocialPostState {
+  PENDING
+  SENT
+  FAILED
+
+  @@schema("core")
+}
+
 enum FanSubPayoutState {
   PENDING
   PAID
@@ -361,7 +375,46 @@ model User {
   supportTicketNotes    SupportTicketNote[]
   boardResolutionsCreated BoardResolution[]
   annualReportsGenerated  AnnualReport[]
+  socialConnections       SocialConnection[]
+  socialPosts             SocialPost[]
 
+  @@schema("core")
+}
+
+model SocialConnection {
+  id                 String         @id @default(cuid())
+  userId             String
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform           SocialPlatform
+  instanceUrl        String
+  accessTokenEnc     String
+  onReleasePublished Boolean        @default(false)
+  onChannelLive      Boolean        @default(false)
+  postTemplate       String         @default("New release: {release} by {artist} — {smart_link}")
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@unique([userId, platform])
+  @@schema("core")
+}
+
+model SocialPost {
+  id         String          @id @default(cuid())
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform   SocialPlatform
+  trigger    String
+  releaseId  String?
+  channelId  String?
+  message    String
+  state      SocialPostState @default(PENDING)
+  externalId String?
+  error      String?
+  attempts   Int             @default(0)
+  createdAt  DateTime        @default(now())
+  sentAt     DateTime?
+
+  @@index([userId, createdAt])
   @@schema("core")
 }
 

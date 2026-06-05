@@ -17,6 +17,7 @@ import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/bro
 import { processFanSubPayoutsJob } from './jobs/fan-sub-payout.js'
 import { processFanSubExpire } from './jobs/fan-sub-expire.js'
 import { processFanSubscriberPurgeJob } from './jobs/fan-subscriber-purge.js'
+import { processSocialPostDispatchJob } from './jobs/social-post-dispatch.js'
 import { processDownloadFraudScanJob } from './jobs/download-fraud-scan.js'
 import { processTorExitListSyncJob } from './jobs/tor-exit-list-sync.js'
 import {
@@ -102,6 +103,9 @@ const worker = new Worker(
         if (summary.canceled > 0) {
           console.log('[worker] fan-subscriber-purge:', JSON.stringify(summary))
         }
+      } else if (job.name === 'social-post-dispatch') {
+        const { postId } = job.data as { postId: string }
+        await processSocialPostDispatchJob(prisma, postId)
       } else if (job.name === 'tor-exit-list-sync') {
         await processTorExitListSyncJob(job)
       } else if (job.name === 'download-fraud-scan') {

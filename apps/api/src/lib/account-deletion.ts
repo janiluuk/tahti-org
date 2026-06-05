@@ -84,6 +84,8 @@ export async function executeAccountDeletion(
   ).count
 
   await prisma.newsletterSubscriber.deleteMany({ where: { email: user.email } })
+  await prisma.socialConnection.deleteMany({ where: { userId } })
+  await prisma.socialPost.deleteMany({ where: { userId } })
 
   await prisma.session.deleteMany({ where: { userId } })
   await prisma.emailVerification.deleteMany({ where: { userId } })

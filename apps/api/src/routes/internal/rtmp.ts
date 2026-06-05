@@ -19,6 +19,7 @@ import {
   enqueueFinalizeBroadcastRecording,
   enqueueWarmArchiveFallbackCache,
 } from '../../lib/queue.js'
+import { queueChannelLiveSocialPost } from '../../lib/social-post.js'
 
 // nginx-rtmp sends form-encoded bodies to on_publish / on_done / on_update
 const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
@@ -87,10 +88,19 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
         data: { channelId: channel.id, source: 'RTMP' },
       })
 
+      const wasOffline = channel.state === 'OFFLINE'
+
       await fastify.prisma.channel.update({
         where: { id: channel.id },
         data: { state: 'LIVE', goneLiveAt: new Date() },
       })
+
+      if (wasOffline) {
+        queueChannelLiveSocialPost(fastify.prisma, channel.userId, channel.id, channel.slug).catch(
+          (err: unknown) =>
+            fastify.log.warn({ err, slug: channel.slug }, 'channel live social post failed'),
+        )
+      }
 
       spawnChannelLiquidsoap(channel.id, channel.slug, broadcast.id).catch((err: unknown) =>
         fastify.log.error({ err }, 'orchestrator spawn failed'),

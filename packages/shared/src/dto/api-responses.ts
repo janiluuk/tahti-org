@@ -197,6 +197,7 @@ export const MembershipStatusResponseSchema = z.object({
   emailVerified: z.boolean(),
   renewalDueAt: z.coerce.date().nullable().optional(),
   hasStripeSubscription: z.boolean().optional(),
+  subscriptionMigrationRequired: z.boolean().optional(),
 })
 
 export const StripeCheckoutUrlResponseSchema = z.object({
