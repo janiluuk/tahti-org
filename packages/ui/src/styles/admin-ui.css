@@ -1092,6 +1092,150 @@
   font-size: var(--tahti-text-base);
 }
 
+/* ── Tahti Radio page ─────────────────────────────────────────────────── */
+.radio-now-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  margin-top: 0.75rem;
+  background: color-mix(in srgb, var(--tahti-primary) 8%, var(--tahti-surface));
+  border: 1px solid color-mix(in srgb, var(--tahti-primary) 25%, transparent);
+  border-radius: 12px;
+}
+
+.radio-now-card__avatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.radio-now-card__initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tahti-primary) 18%, var(--tahti-bg));
+  color: var(--tahti-primary);
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-family: var(--tahti-font-display, system-ui, sans-serif);
+}
+
+.radio-now-card__pulse {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+}
+
+.radio-now-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.radio-now-card__name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--tahti-text);
+  margin-bottom: 0.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radio-now-card__badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--tahti-primary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.radio-now-card__cta {
+  padding: 0.5rem 1rem;
+  background: var(--tahti-primary);
+  color: var(--tahti-bg);
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.radio-now-card__cta:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 540px) {
+  .radio-now-card {
+    flex-wrap: wrap;
+  }
+  .radio-now-card__cta {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.radio-offline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  margin-top: 0.75rem;
+  background: color-mix(in srgb, var(--tahti-text-muted) 6%, var(--tahti-surface));
+  border: 1px solid color-mix(in srgb, var(--tahti-text-muted) 14%, transparent);
+  border-radius: 12px;
+  color: var(--tahti-text-muted);
+  font-size: 0.9rem;
+}
+
+.radio-offline__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tahti-text-muted);
+  opacity: 0.35;
+  flex-shrink: 0;
+}
+
+.radio-history {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 0.75rem;
+}
+
+.radio-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.875rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+
+.radio-history-item:hover {
+  background: color-mix(in srgb, var(--tahti-primary) 10%, transparent);
+}
+
+.radio-history-item__name {
+  font-size: 0.875rem;
+  color: var(--tahti-text);
+  font-weight: 500;
+}
+
+.radio-history-item__time {
+  font-size: 0.75rem;
+  color: var(--tahti-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---- Site footer ---- */
 .ui-footer {
   padding: var(--tahti-space-4);

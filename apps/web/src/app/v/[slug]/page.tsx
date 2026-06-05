@@ -3,7 +3,7 @@
 
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { Heading, Link, Stack, Text } from '@tahti/ui'
+import { Heading, Link, Text } from '@tahti/ui'
 
 export const revalidate = 300
 
@@ -49,10 +49,13 @@ export async function generateMetadata({
   }
 }
 
-function formatWhen(iso: string): string {
+function formatDate(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -63,44 +66,92 @@ export default async function VenueProfilePage({ params }: { params: { slug: str
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const calendarUrl = `${apiUrl}/api/v1/venues/${encodeURIComponent(venue.slug)}/calendar.ics`
 
+  const upcoming = venue.broadcasts.filter((b) => b.state !== 'ENDED')
+  const past = venue.broadcasts.filter((b) => b.state === 'ENDED')
+
   return (
-    <Stack gap={6} className="brand-section">
-      <div>
-        <Text size="sm">
-          <Link href="/venues">← All venues</Link>
-        </Text>
+    <div className="brand-section">
+      <Text size="sm">
+        <Link href="/venues">← All venues</Link>
+      </Text>
+
+      <div className="venue-hero">
         <Heading level={1}>{venue.name}</Heading>
-        <Text tone="muted">
-          {venue.address}, {venue.city}
-          {venue.countryCode ? ` (${venue.countryCode})` : ''}
-        </Text>
-        {venue.capacity ? <Text tone="muted">Capacity: {venue.capacity}</Text> : null}
-        {venue.description ? <Text>{venue.description}</Text> : null}
+        <div className="venue-hero__meta">
+          <span className="venue-hero__location">
+            {venue.address}, {venue.city}
+            {venue.countryCode ? ` · ${venue.countryCode}` : ''}
+          </span>
+          {venue.capacity ? (
+            <span className="venue-hero__cap">Cap. {venue.capacity.toLocaleString()}</span>
+          ) : null}
+        </div>
+        {venue.description ? (
+          <Text tone="muted" className="venue-hero__desc">
+            {venue.description}
+          </Text>
+        ) : null}
         <Text size="sm">
-          <a href={calendarUrl} className="ui-link">
+          <a href={calendarUrl} className="ui-link venue-hero__cal">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <rect
+                x="1.5"
+                y="2.5"
+                width="13"
+                height="12"
+                rx="2"
+                stroke="currentColor"
+                strokeWidth="1.3"
+              />
+              <path d="M1.5 6.5h13" stroke="currentColor" strokeWidth="1.3" />
+              <path
+                d="M5 1.5v2M11 1.5v2"
+                stroke="currentColor"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+              />
+            </svg>
             Download calendar (.ics)
           </a>
         </Text>
       </div>
 
-      <section>
+      <section className="brand-section">
         <Heading level={2}>Upcoming broadcasts</Heading>
-        {venue.broadcasts.length === 0 ? (
+        {upcoming.length === 0 ? (
           <Text tone="muted">No upcoming broadcasts scheduled.</Text>
         ) : (
-          <ul className="brand-section">
-            {venue.broadcasts.map((b) => (
-              <li key={b.id} className="brand-card">
-                <Text>
-                  <strong>{formatWhen(b.startAt)}</strong>
-                  {b.endAt ? ` — ${formatWhen(b.endAt)}` : null}
-                </Text>
-                {b.description ? <Text tone="muted">{b.description}</Text> : null}
+          <ul className="venue-event-list">
+            {upcoming.map((b) => (
+              <li key={b.id} className="venue-event-card">
+                <div className="venue-event-card__time">{formatDate(b.startAt)}</div>
+                {b.endAt ? (
+                  <div className="venue-event-card__end">ends {formatDate(b.endAt)}</div>
+                ) : null}
+                {b.description ? (
+                  <div className="venue-event-card__desc">{b.description}</div>
+                ) : null}
               </li>
             ))}
           </ul>
         )}
       </section>
-    </Stack>
+
+      {past.length > 0 && (
+        <section className="brand-section">
+          <Heading level={2}>Past broadcasts</Heading>
+          <ul className="venue-event-list venue-event-list--past">
+            {past.map((b) => (
+              <li key={b.id} className="venue-event-card venue-event-card--past">
+                <div className="venue-event-card__time">{formatDate(b.startAt)}</div>
+                {b.description ? (
+                  <div className="venue-event-card__desc">{b.description}</div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
   )
 }
