@@ -32,13 +32,25 @@ export default function GatewayPage() {
           </Text>
 
           <Stack gap={3}>
-            <a href="/listen" className="ui-btn ui-btn--primary ui-btn--lg" style={{ width: '100%', justifyContent: 'center' }}>
+            <a
+              href="/listen"
+              className="ui-btn ui-btn--primary ui-btn--lg"
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
               Listen now
             </a>
-            <a href="/login" className="ui-btn ui-btn--secondary ui-btn--lg" style={{ width: '100%', justifyContent: 'center' }}>
+            <a
+              href="/login"
+              className="ui-btn ui-btn--secondary ui-btn--lg"
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
               Artist log in
             </a>
-            <a href="/join" className="ui-btn ui-btn--ghost ui-btn--lg" style={{ width: '100%', justifyContent: 'center' }}>
+            <a
+              href="/join"
+              className="ui-btn ui-btn--ghost ui-btn--lg"
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
               Apply for access
             </a>
           </Stack>
