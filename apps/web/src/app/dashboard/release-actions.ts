@@ -189,7 +189,24 @@ export async function completeReleaseTrackVersionUpload(
 
 export async function submitReleaseToRevelator(
   id: string,
-): Promise<{ error: string | null; revelatorStatus?: string }> {
+): Promise<{ error: string | null; revelatorStatus?: string; checkoutUrl?: string }> {
+  const checkout = await fetch(`${apiUrl}/api/me/releases/${id}/revelator/checkout`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  const checkoutData = (await checkout.json().catch(() => ({}))) as {
+    checkoutUrl?: string
+    paid?: boolean
+    error?: string
+  }
+  if (!checkout.ok) {
+    return { error: checkoutData.error ?? 'Distribution checkout failed' }
+  }
+  if (checkoutData.checkoutUrl) {
+    return { error: null, checkoutUrl: checkoutData.checkoutUrl }
+  }
+
   const res = await fetch(`${apiUrl}/api/me/releases/${id}/revelator/submit`, {
     method: 'POST',
     headers: { Cookie: sessionHeader() },
@@ -202,6 +219,42 @@ export async function submitReleaseToRevelator(
   return {
     error: null,
     revelatorStatus: (data as { revelatorStatus?: string }).revelatorStatus,
+  }
+}
+
+export async function fetchRevelatorBilling(id: string): Promise<{
+  paid: boolean
+  feeCents: number
+  waived: boolean
+  studioIncludedRemaining: number | null
+  error: string | null
+}> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${id}/revelator/billing`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return {
+      paid: false,
+      feeCents: 0,
+      waived: false,
+      studioIncludedRemaining: null,
+      error: (data as { error?: string }).error ?? 'Failed to load billing',
+    }
+  }
+  const data = (await res.json()) as {
+    paid?: boolean
+    feeCents?: number
+    waived?: boolean
+    studioIncludedRemaining?: number | null
+  }
+  return {
+    paid: data.paid ?? false,
+    feeCents: data.feeCents ?? 0,
+    waived: data.waived ?? false,
+    studioIncludedRemaining: data.studioIncludedRemaining ?? null,
+    error: null,
   }
 }
 

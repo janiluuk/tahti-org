@@ -14,6 +14,26 @@ export const RevelatorSubmitAcceptedSchema = z.object({
   revelatorStatus: z.literal('pending'),
 })
 
+export const RevelatorBillingStatusSchema = z.object({
+  paid: z.boolean(),
+  feeCents: z.number().int(),
+  waived: z.boolean(),
+  studioIncludedRemaining: z.number().int().nullable(),
+  distributionPaidAt: z.string().nullable(),
+})
+
+export const RevelatorCheckoutResponseSchema = z.union([
+  z.object({
+    checkoutUrl: z.string().url(),
+    sessionId: z.string(),
+  }),
+  z.object({
+    paid: z.literal(true),
+    feeCents: z.number().int(),
+    waived: z.boolean(),
+  }),
+])
+
 export const RevelatorRoyaltyReportRowSchema = z.object({
   id: z.string(),
   releaseId: z.string(),

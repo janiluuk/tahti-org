@@ -14,6 +14,8 @@ import {
   recordFanSubPayment,
 } from '../../lib/fansub.js'
 import { activateMembership, recordMembershipRenewal } from '../../lib/membership.js'
+import { recordDistributionPayment } from '../../lib/distribution-billing.js'
+import { config } from '../../config.js'
 import { auditLog } from '../../lib/audit.js'
 import {
   recordStripeWebhookHandlerFailure,
@@ -61,6 +63,17 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         switch (event.type) {
           case 'checkout.session.completed': {
+            if (meta.type === 'distribution' && meta.releaseId && meta.userId) {
+              const amount = obj.amount_total != null ? Number(obj.amount_total) : undefined
+              await recordDistributionPayment(fastify.prisma, {
+                releaseId: meta.releaseId,
+                userId: meta.userId,
+                amountCents: amount ?? config.distribution.artistFeeCents,
+                stripeSessionId: String(obj.id),
+              })
+              break
+            }
+
             if (meta.type !== 'membership' || !meta.userId) break
             const amount = obj.amount_total != null ? Number(obj.amount_total) : undefined
             const customerId = obj.customer != null ? String(obj.customer) : undefined

@@ -4,6 +4,7 @@
 import { randomUUID } from 'node:crypto'
 import fp from 'fastify-plugin'
 import type { FastifyPluginAsync } from 'fastify'
+import { recordHttpRequest } from '../lib/http-metrics.js'
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -27,8 +28,12 @@ const requestLogPlugin: FastifyPluginAsync = async (fastify) => {
   })
 
   fastify.addHook('onResponse', async (request, reply) => {
-    if (process.env.NODE_ENV === 'test') return
     const path = request.url.split('?')[0]
+    if (!QUIET_PATHS.has(path)) {
+      recordHttpRequest(reply.statusCode, Math.round(reply.elapsedTime))
+    }
+
+    if (process.env.NODE_ENV === 'test') return
     if (QUIET_PATHS.has(path)) return
 
     const entry: Record<string, string | number> = {

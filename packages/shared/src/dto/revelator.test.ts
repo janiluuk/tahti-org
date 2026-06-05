@@ -4,6 +4,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   RevelatorReleaseStatusSchema,
+  RevelatorBillingStatusSchema,
+  RevelatorCheckoutResponseSchema,
   RevelatorRoyaltyReportsSchema,
   RevelatorSubmitAcceptedSchema,
 } from './revelator.js'
@@ -24,6 +26,25 @@ describe('Revelator DTOs', () => {
       revelatorStatus: 'pending',
     })
     expect(parsed.success).toBe(true)
+  })
+
+  it('parses billing and checkout responses', () => {
+    expect(
+      RevelatorBillingStatusSchema.safeParse({
+        paid: false,
+        feeCents: 800,
+        waived: false,
+        studioIncludedRemaining: null,
+        distributionPaidAt: null,
+      }).success,
+    ).toBe(true)
+    expect(
+      RevelatorCheckoutResponseSchema.safeParse({
+        paid: true,
+        feeCents: 0,
+        waived: true,
+      }).success,
+    ).toBe(true)
   })
 
   it('parses royalty report list', () => {
