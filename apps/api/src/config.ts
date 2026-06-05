@@ -116,4 +116,6 @@ export const config = {
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/mixcloud/oauth/callback`,
     oauthStateCookie: 'tahti_mixcloud_oauth',
   },
+  /** STREAM-008: optional AcoustID key for live + archive tracklist title lookup. */
+  acoustidApiKey: process.env.ACOUSTID_API_KEY?.trim() ?? '',
 }

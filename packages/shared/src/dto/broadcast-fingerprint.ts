@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { TracklistEntrySchema } from './archive-metadata.js'
 
 export const BroadcastIdParamSchema = z.object({
   broadcastId: z.string().min(1),
@@ -24,6 +25,8 @@ export const LiveFingerprintSegmentSchema = z.object({
 export const LiveFingerprintsResponseSchema = z.object({
   broadcastId: z.string(),
   segments: z.array(LiveFingerprintSegmentSchema),
+  /** Collapsed track-boundary hints (AcoustID titles when configured). */
+  tracklist: z.array(TracklistEntrySchema).optional(),
 })
 
 export type LiveFingerprintSegment = z.infer<typeof LiveFingerprintSegmentSchema>

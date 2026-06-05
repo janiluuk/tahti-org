@@ -128,7 +128,9 @@ flowchart LR
 
 On broadcast end, `archive-broadcast` collapses fingerprint boundaries, optionally looks up each unique chromaprint via [AcoustID](https://acoustid.org/chromaprint), and writes `tracklist` entries on the auto-archived item.
 
-**Env:** `ACOUSTID_API_KEY` on `worker` (register at https://acoustid.org/new-application). Without a key, tracklist entries use generic “Track change (m:ss)” labels.
+While **LIVE**, listeners see a **Now playing** panel on `/c/:slug` that polls `GET /api/channels/:slug/live-fingerprints` every 30s (same tracklist shape as archive metadata).
+
+**Env:** `ACOUSTID_API_KEY` on **api** (live) and **worker** (archive). Register at https://acoustid.org/new-application. Without a key, tracklist entries use generic “Track change (m:ss)” labels.
 
 ---
 
@@ -147,6 +149,13 @@ docker compose -f infra/docker-compose.stack.yml --profile icecast-failover up -
 ```
 
 RTMP uses the same pattern with `RTMP_INGEST_HOSTS` and nginx-RTMP `/health`.
+
+**Local stack:** optional second RTMP node:
+
+```bash
+docker compose -f infra/docker-compose.stack.yml --profile rtmp-failover up -d rtmp-ingest-b
+# RTMP_INGEST_HOSTS=localhost:1935,localhost:1936  (health on ports 8080 / 8086)
+```
 
 ---
 
@@ -304,6 +313,6 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | STREAM-005 | No per-channel health watchdog — silent channels go undetected | HIGH |
 | STREAM-006 | No per-channel bandwidth accounting — can't attribute costs | MEDIUM |
 | STREAM-007 | Icecast `/status-json.xsl` health probe + `ICECAST_INGEST_HOSTS` fallbacks; optional `icecast-b` stack profile | MEDIUM (partial) |
-| STREAM-008 | Ingest fpcalc sidecar, live fingerprints API, archive tracklist + AcoustID lookup (`ACOUSTID_API_KEY`); ACRCloud deferred | MEDIUM (partial) |
+| STREAM-008 | Ingest fpcalc sidecar, live tracklist UI + API, archive/live AcoustID lookup; ACRCloud deferred | MEDIUM (partial) |
 | STREAM-009 | ~~Liquidsoap archive fallback reads from MinIO with no caching~~ — local cache volume + cron | ~~LOW~~ done |
 | STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop | LOW (done) |

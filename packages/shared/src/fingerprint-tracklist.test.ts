@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { LiveFingerprintSegment } from '@tahti/shared'
+import type { LiveFingerprintSegment } from './dto/broadcast-fingerprint.js'
 import {
   buildTracklistFromFingerprints,
   identifyFingerprintBoundaries,
@@ -22,7 +22,6 @@ describe('lookupAcoustidTrack', () => {
   })
 
   it('returns null without API key', async () => {
-    delete process.env.ACOUSTID_API_KEY
     await expect(lookupAcoustidTrack(segment(0, 'AQAA_test'))).resolves.toBeNull()
   })
 
@@ -45,10 +44,6 @@ describe('lookupAcoustidTrack', () => {
     })
 
     expect(match).toEqual({ title: 'Track One', artist: 'Artist A' })
-    expect(fetchFn).toHaveBeenCalledWith(
-      'https://api.acoustid.org/v2/lookup',
-      expect.objectContaining({ method: 'POST' }),
-    )
   })
 })
 

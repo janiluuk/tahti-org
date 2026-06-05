@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
 import HlsPlayer from './hls-player'
+import { LiveTracklistPanel } from './live-tracklist-panel'
 import ReactionsOverlay from './reactions'
 import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
@@ -167,6 +168,8 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               <ReactionsOverlay slug={slug} />
             </div>
           )}
+
+          {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
 
           <section className="ch-archive-section">
             <h2>Archive</h2>

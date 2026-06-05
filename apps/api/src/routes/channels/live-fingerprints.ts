@@ -8,6 +8,8 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { buildTracklistFromFingerprints } from '@tahti/shared'
+import { createAcoustidLookup } from '../../lib/acoustid-lookup.js'
 import { getBroadcastFingerprintSegments } from '../../lib/broadcast-fingerprint.js'
 
 const liveFingerprintsRoute: FastifyPluginAsync = async (fastify) => {
@@ -47,7 +49,14 @@ const liveFingerprintsRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       const segments = await getBroadcastFingerprintSegments(broadcast.id)
-      return reply.send({ broadcastId: broadcast.id, segments })
+      const lookup = await createAcoustidLookup()
+      const tracklist =
+        segments.length > 0 ? await buildTracklistFromFingerprints(segments, lookup) : []
+      return reply.send({
+        broadcastId: broadcast.id,
+        segments,
+        ...(tracklist.length > 0 ? { tracklist } : {}),
+      })
     },
   )
 }

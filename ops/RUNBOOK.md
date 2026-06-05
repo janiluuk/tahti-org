@@ -101,4 +101,11 @@ ICECAST_INGEST_HOSTS=https://icecast-a.tahti.live,https://icecast-b.tahti.live
 RTMP_INGEST_HOSTS=ingest-a.tahti.live,ingest-b.tahti.live
 ```
 
-Archive tracklist title lookup (STREAM-008 phase 3): `ACOUSTID_API_KEY` on **worker** — https://acoustid.org/new-application
+Archive tracklist title lookup (STREAM-008 phase 3): `ACOUSTID_API_KEY` on **worker** and **api** (live tracklist polling) — https://acoustid.org/new-application
+
+Optional local failover profiles:
+
+```bash
+docker compose -f infra/docker-compose.stack.yml --profile icecast-failover up -d icecast-b
+docker compose -f infra/docker-compose.stack.yml --profile rtmp-failover up -d rtmp-ingest-b
+```

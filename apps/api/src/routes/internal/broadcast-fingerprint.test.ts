@@ -105,6 +105,7 @@ describe('broadcast fingerprint ingest (STREAM-008)', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json().broadcastId).toBe(broadcastId)
     expect(res.json().segments.length).toBeGreaterThan(0)
+    expect(Array.isArray(res.json().tracklist)).toBe(true)
   })
 
   it('GET live-fingerprints 404 when channel offline', async () => {
