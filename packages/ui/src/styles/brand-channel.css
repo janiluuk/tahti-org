@@ -1477,3 +1477,66 @@
   color: var(--muted);
   margin-top: 2px;
 }
+
+/* ── Section label consistency (PLAT-034) ───────────────────────────────── */
+
+[data-tahti-ui='brand'] .ch-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* ── Mobile player full-bleed layout (PLAT-037) ─────────────────────────── */
+
+@media (max-width: 480px) {
+  [data-tahti-ui='brand'] .ch-player-wrap {
+    padding: 0;
+  }
+
+  [data-tahti-ui='brand'] .ch-player-inner {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  [data-tahti-ui='brand'] .ch-player-card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 1rem;
+  }
+
+  [data-tahti-ui='brand'] .ch-waveform {
+    height: 36px;
+  }
+
+  [data-tahti-ui='brand'] .ch-wf-bar {
+    max-width: 6px;
+  }
+
+  [data-tahti-ui='brand'] .ch-play-btn {
+    width: 48px;
+    height: 48px;
+  }
+
+  [data-tahti-ui='brand'] .ch-player-time {
+    font-size: 0.7rem;
+  }
+
+  [data-tahti-ui='brand'] .ch-countdown-tiles {
+    gap: 6px;
+  }
+
+  [data-tahti-ui='brand'] .ch-countdown-tile {
+    min-width: 48px;
+    padding: 8px 10px;
+  }
+
+  [data-tahti-ui='brand'] .ch-countdown-num {
+    font-size: 1.4rem;
+  }
+}

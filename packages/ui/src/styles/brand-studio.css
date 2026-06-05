@@ -1120,6 +1120,8 @@
 
 /* ── Stats page (PLAT-030) ──────────────────────────────────────────────── */
 
+/* Shared uppercase section label — use for "ICECAST STREAM KEY", "TOP TRACKS", etc. (PLAT-034) */
+[data-tahti-ui='studio'] .db-section-label,
 [data-tahti-ui='studio'] .stats-section-label {
   font-size: 0.7rem;
   font-weight: 700;
