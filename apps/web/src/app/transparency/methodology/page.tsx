@@ -3,7 +3,10 @@
 
 import { Heading, Link, Text } from '@tahti/ui'
 
+import { statusPageUrl } from '@/lib/status-page'
+
 export default function MethodologyPage() {
+  const statusUrl = statusPageUrl()
   return (
     <div className="brand-prose">
       <Heading level={1}>Transparency methodology</Heading>
@@ -165,6 +168,8 @@ export default function MethodologyPage() {
         <p>
           Tahti ry — Y-tunnus 3368171-8 — Helsinki, Finland.{' '}
           <a href="https://github.com/tahtiapp/tahti">Source code (AGPL-3.0)</a>
+          {' · '}
+          <a href={statusUrl}>Platform status</a>
         </p>
       </footer>
     </div>

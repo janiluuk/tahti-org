@@ -1069,6 +1069,30 @@
   gap: 1rem;
 }
 
+[data-tahti-ui='studio'] .studio-collection-row-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+[data-tahti-ui='studio'] .studio-collection-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .studio-collection-thumb-ph {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
+  border: 1px solid var(--border);
+}
+
 [data-tahti-ui='studio'] .studio-item-row {
   display: flex;
   align-items: center;

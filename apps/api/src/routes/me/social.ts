@@ -18,7 +18,7 @@ import {
   decryptSocialToken,
   encryptSocialToken,
   enqueueSocialPostDispatch,
-  mapPlatformStatus,
+  loadSocialSettings,
   postToBluesky,
   postToMastodon,
 } from '../../lib/social-post.js'
@@ -35,18 +35,7 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
-      const [mastodon, bluesky] = await Promise.all([
-        fastify.prisma.socialConnection.findUnique({
-          where: { userId_platform: { userId: user.id, platform: 'MASTODON' } },
-        }),
-        fastify.prisma.socialConnection.findUnique({
-          where: { userId_platform: { userId: user.id, platform: 'BLUESKY' } },
-        }),
-      ])
-      return reply.send({
-        mastodon: mapPlatformStatus(mastodon, DEFAULT_SOCIAL_TEMPLATE),
-        bluesky: mapPlatformStatus(bluesky, DEFAULT_SOCIAL_TEMPLATE),
-      })
+      return reply.send(await loadSocialSettings(fastify.prisma, user.id))
     },
   )
 
@@ -114,18 +103,7 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
-      const [mastodon, bluesky] = await Promise.all([
-        fastify.prisma.socialConnection.findUnique({
-          where: { userId_platform: { userId: user.id, platform: 'MASTODON' } },
-        }),
-        fastify.prisma.socialConnection.findUnique({
-          where: { userId_platform: { userId: user.id, platform: 'BLUESKY' } },
-        }),
-      ])
-      return reply.send({
-        mastodon: mapPlatformStatus(mastodon, DEFAULT_SOCIAL_TEMPLATE),
-        bluesky: mapPlatformStatus(bluesky, DEFAULT_SOCIAL_TEMPLATE),
-      })
+      return reply.send(await loadSocialSettings(fastify.prisma, user.id))
     },
   )
 
@@ -209,18 +187,7 @@ const meSocialRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
-      const [mastodon, bluesky] = await Promise.all([
-        fastify.prisma.socialConnection.findUnique({
-          where: { userId_platform: { userId: user.id, platform: 'MASTODON' } },
-        }),
-        fastify.prisma.socialConnection.findUnique({
-          where: { userId_platform: { userId: user.id, platform: 'BLUESKY' } },
-        }),
-      ])
-      return reply.send({
-        mastodon: mapPlatformStatus(mastodon, DEFAULT_SOCIAL_TEMPLATE),
-        bluesky: mapPlatformStatus(bluesky, DEFAULT_SOCIAL_TEMPLATE),
-      })
+      return reply.send(await loadSocialSettings(fastify.prisma, user.id))
     },
   )
 

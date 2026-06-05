@@ -10,6 +10,7 @@ Self-hosted status page using [Upptime](https://github.com/upptime/upptime). Mon
 | API liveness | `{API_URL}/health` | HTTP 200 |
 | Web app | `{APP_URL}/` | HTTP 200 |
 | Transparency | `{APP_URL}/transparency` | HTTP 200 |
+| Status page | `{APP_URL}/status` | HTTP 200 |
 
 Set `API_URL` (e.g. `https://api.tahti.live`) and `APP_URL` (e.g. `https://app.tahti.live`) in your Upptime repo secrets or fork config.
 
@@ -20,6 +21,7 @@ Set `API_URL` (e.g. `https://api.tahti.live`) and `APP_URL` (e.g. `https://app.t
 3. Copy [`upptime.config.example.yml`](./upptime.config.example.yml) into the fork as `.upptimerc.yml` (or merge `sites` into your config).
 4. Set GitHub Actions secrets: `API_URL`, `APP_URL` if using env substitution in CI.
 5. Enable GitHub Pages on the Upptime repo for the public status site (`status.tahti.live`).
+6. Web app links to the status page from `/`, `/transparency`, and `/transparency/methodology` (override with `STATUS_PAGE_URL` on web).
 
 ## API contract
 

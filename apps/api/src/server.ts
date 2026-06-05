@@ -97,6 +97,7 @@ import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import meArchiveRoutes from './routes/me/archive.js'
 import meProgrammeRoutes from './routes/me/programme.js'
 import meSocialRoutes from './routes/me/social.js'
+import socialTwitterRoutes from './routes/me/social-twitter.js'
 import meChannelScheduleRoutes from './routes/me/channel-schedule.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
 import meArchiveEditorRoutes from './routes/me/archive-editor.js'
@@ -494,6 +495,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meArchiveRoutes)
   await fastify.register(meProgrammeRoutes)
   await fastify.register(meSocialRoutes)
+  await fastify.register(socialTwitterRoutes)
   await fastify.register(meChannelScheduleRoutes)
   await fastify.register(meArchiveVersionRoutes)
   await fastify.register(meArchiveEditorRoutes)

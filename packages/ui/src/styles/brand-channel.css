@@ -628,6 +628,29 @@
   margin-top: 2rem;
 }
 
+[data-tahti-ui='brand'] .ch-archive-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-section-head .ch-section-label {
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .ch-rss-link {
+  font-size: 0.8125rem;
+  color: var(--cyan);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-rss-link:hover {
+  text-decoration: underline;
+}
+
 [data-tahti-ui='brand'] .ch-archive-section h2 {
   font-family: var(--font-head);
   font-size: 1.125rem;
@@ -1663,6 +1686,76 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(135deg, var(--card2), var(--border));
+}
+
+[data-tahti-ui='brand'] .prof-collection-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .prof-collection-row:last-child {
+  border-bottom: none;
+}
+
+[data-tahti-ui='brand'] .prof-collection-cover {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .prof-collection-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+[data-tahti-ui='brand'] .prof-collection-cover-ph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--card2), var(--border));
+}
+
+[data-tahti-ui='brand'] .prof-collection-hero-cover {
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin: 0 0 1rem;
+  border: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .prof-collection-hero-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row:last-child {
+  border-bottom: none;
+}
+
+[data-tahti-ui='brand'] .prof-collection-cover--item {
+  width: 40px;
+  height: 40px;
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-body {
+  flex: 1;
+  min-width: 0;
 }
 
 [data-tahti-ui='brand'] .prof-release-body {

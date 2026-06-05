@@ -53,7 +53,7 @@ BUILD_ARGS=()
 "${COMPOSE[@]}" build "${BUILD_ARGS[@]}" api web worker orchestrator db-push
 
 echo "── Starting stack ──"
-"${COMPOSE[@]}" up -d postgres redis minio mailhog chat icecast rtmp-ingest
+"${COMPOSE[@]}" up -d postgres pgbouncer redis minio mailhog chat icecast rtmp-ingest
 "${COMPOSE[@]}" up -d minio-init db-push
 "${COMPOSE[@]}" up -d api worker orchestrator web
 

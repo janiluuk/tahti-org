@@ -9,9 +9,11 @@ import { DEFAULT_SOCIAL_TEMPLATE } from '@tahti/shared'
 import {
   disconnectBluesky,
   disconnectMastodon,
+  disconnectTwitter,
   postSocialManual,
   saveBlueskySocial,
   saveMastodonSocial,
+  saveTwitterSocial,
   type SocialSettings,
 } from './social-actions'
 
@@ -83,7 +85,13 @@ function PlatformSection({
   )
 }
 
-export default function SocialPromoPanel({ initial }: { initial: SocialSettings }) {
+export default function SocialPromoPanel({
+  initial,
+  apiUrl,
+}: {
+  initial: SocialSettings
+  apiUrl: string
+}) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -106,6 +114,13 @@ export default function SocialPromoPanel({ initial }: { initial: SocialSettings 
     initial.bluesky.postTemplate || DEFAULT_SOCIAL_TEMPLATE,
   )
   const [blueskyManual, setBlueskyManual] = useState('')
+
+  const [twitterRelease, setTwitterRelease] = useState(initial.twitter.onReleasePublished)
+  const [twitterLive, setTwitterLive] = useState(initial.twitter.onChannelLive)
+  const [twitterTemplate, setTwitterTemplate] = useState(
+    initial.twitter.postTemplate || DEFAULT_SOCIAL_TEMPLATE,
+  )
+  const [twitterManual, setTwitterManual] = useState('')
 
   function saveMastodon() {
     setError(null)
@@ -256,11 +271,7 @@ export default function SocialPromoPanel({ initial }: { initial: SocialSettings 
 
       <PlatformSection
         title="Bluesky"
-        help={
-          <>
-            Create an app password at bsky.app → Settings → App passwords. Twitter OAuth deferred.
-          </>
-        }
+        help={<>Create an app password at bsky.app → Settings → App passwords.</>}
         connected={initial.bluesky.connected}
         accountLabel={initial.bluesky.accountLabel}
         pending={pending}
@@ -341,6 +352,99 @@ export default function SocialPromoPanel({ initial }: { initial: SocialSettings 
             {initial.bluesky.connected ? 'Update Bluesky' : 'Connect Bluesky'}
           </button>
         </div>
+      </PlatformSection>
+
+      <PlatformSection
+        title="X (Twitter)"
+        help={
+          <>
+            OAuth 2.0 connect — posts when configured below. Requires <code>TWITTER_CLIENT_ID</code>{' '}
+            on the server.
+          </>
+        }
+        connected={initial.twitter.connected}
+        accountLabel={initial.twitter.accountLabel}
+        pending={pending}
+        manualPost={twitterManual}
+        onManualPostChange={setTwitterManual}
+        onManualPost={() => {
+          if (!twitterManual.trim()) return
+          startTransition(async () => {
+            const res = await postSocialManual('TWITTER', twitterManual.trim())
+            if (res.error) setError(res.error)
+            else {
+              setTwitterManual('')
+              setMsg('X post queued.')
+            }
+          })
+        }}
+        manualPostLabel="Post to X"
+        onDisconnect={() => {
+          startTransition(async () => {
+            const res = await disconnectTwitter()
+            if (res.error) setError(res.error)
+            else router.refresh()
+          })
+        }}
+      >
+        {!initial.twitter.configured ? (
+          <p className="studio-text-muted-sm">X OAuth is not configured on this server.</p>
+        ) : initial.twitter.connected ? (
+          <>
+            <label className="studio-field studio-mt-sm">
+              Post template
+              <input
+                className="studio-input studio-mt-sm"
+                value={twitterTemplate}
+                onChange={(e) => setTwitterTemplate(e.target.value)}
+                maxLength={280}
+              />
+            </label>
+            <label className="studio-checkbox-row studio-mt-sm">
+              <input
+                type="checkbox"
+                checked={twitterRelease}
+                onChange={(e) => setTwitterRelease(e.target.checked)}
+              />
+              Auto-post when a release is published
+            </label>
+            <label className="studio-checkbox-row studio-mt-sm">
+              <input
+                type="checkbox"
+                checked={twitterLive}
+                onChange={(e) => setTwitterLive(e.target.checked)}
+              />
+              Auto-post when channel goes live
+            </label>
+            <div className="studio-actions studio-mt-md">
+              <button
+                type="button"
+                className="studio-btn-primary"
+                disabled={pending}
+                onClick={() => {
+                  startTransition(async () => {
+                    const res = await saveTwitterSocial({
+                      onReleasePublished: twitterRelease,
+                      onChannelLive: twitterLive,
+                      postTemplate: twitterTemplate,
+                    })
+                    if (res.error) setError(res.error)
+                    else {
+                      setMsg('X settings saved.')
+                      router.refresh()
+                    }
+                  })
+                }}
+              >
+                Update X settings
+              </button>
+            </div>
+          </>
+        ) : (
+          <a href={`${apiUrl}/api/me/social/twitter/oauth/start`} className="studio-btn-primary">
+            Connect X account
+          </a>
+        )}
       </PlatformSection>
 
       {msg ? <p className="studio-text-muted-sm studio-mt-sm">{msg}</p> : null}

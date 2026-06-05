@@ -35,5 +35,6 @@ check_json_status "${API_URL%/}/api/v1/status"
 check "API health" "${API_URL%/}/health"
 check "Web home" "${APP_URL%/}/"
 check "Transparency" "${APP_URL%/}/transparency"
+check "Status page" "${APP_URL%/}/status"
 
 echo "All status checks passed."

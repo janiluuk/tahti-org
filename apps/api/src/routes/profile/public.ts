@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { config } from '../../config.js'
 
 // M12: public artist profile at tahti.live/u/<username>
 const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
@@ -160,10 +161,14 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
           isFeatured: c.isFeatured,
           itemCount: _count.items,
           url: `/u/${user.username}/c/${c.slug}`,
+          rssUrl: `${config.apiUrl}/api/v1/collections/${c.slug}/rss.xml`,
         })),
         links: {
           channel: user.channel ? `/c/${user.channel.slug}` : null,
           subscribe: `/u/${user.username}/subscribe`,
+          feeds: {
+            archive: user.channel ? `${config.apiUrl}/api/v1/u/${user.username}/rss.xml` : null,
+          },
         },
       })
     },

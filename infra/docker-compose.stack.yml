@@ -10,7 +10,8 @@ name: tahti-stack
 
 x-app-env: &app-env
   NODE_ENV: production
-  DATABASE_URL: postgresql://tahti:tahti_dev@postgres:5432/tahti
+  # PLAT-003: transaction pool via PgBouncer (migrations use direct postgres in db-push)
+  DATABASE_URL: postgresql://tahti:tahti_dev@pgbouncer:6432/tahti?pgbouncer=true
   REDIS_URL: redis://redis:6379
   SESSION_SECRET: dev-session-secret-do-not-use-in-prod
   INTERNAL_SECRET: dev-internal-secret-change-in-prod
@@ -73,6 +74,25 @@ services:
       timeout: 5s
       retries: 12
       start_period: 10s
+
+  pgbouncer:
+    image: edoburu/pgbouncer:1.22.1-p0
+    environment:
+      DATABASE_URL: postgres://tahti:tahti_dev@postgres:5432/tahti
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: "200"
+      DEFAULT_POOL_SIZE: "25"
+    ports:
+      - "${PGBOUNCER_PORT:-16432}:6432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "6432"]
+      interval: 5s
+      timeout: 3s
+      retries: 8
+      start_period: 5s
 
   redis:
     image: redis:7-alpine
@@ -186,6 +206,8 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       <<: *app-env
+      # Migrations bypass PgBouncer (transaction pooling breaks Prisma migrate)
+      DATABASE_URL: postgresql://tahti:tahti_dev@postgres:5432/tahti
     depends_on:
       postgres:
         condition: service_healthy
@@ -202,7 +224,7 @@ services:
     ports:
       - "${API_PORT:-15011}:3001"
     depends_on:
-      postgres:
+      pgbouncer:
         condition: service_healthy
       redis:
         condition: service_healthy

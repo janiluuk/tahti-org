@@ -130,6 +130,14 @@ export const config = {
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/mixcloud/oauth/callback`,
     oauthStateCookie: 'tahti_mixcloud_oauth',
   },
+  /** M14: Twitter / X OAuth 2.0 PKCE (optional — set TWITTER_CLIENT_ID). */
+  twitter: {
+    clientId: process.env.TWITTER_CLIENT_ID ?? '',
+    clientSecret: readSecret('TWITTER_CLIENT_SECRET', 'TWITTER_CLIENT_SECRET_FILE', ''),
+    redirectUri:
+      process.env.TWITTER_OAUTH_REDIRECT_URI ??
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/social/twitter/oauth/callback`,
+  },
   /** STREAM-008: optional AcoustID key for live + archive tracklist title lookup. */
   acoustidApiKey: process.env.ACOUSTID_API_KEY?.trim() ?? '',
   acrcloud: {

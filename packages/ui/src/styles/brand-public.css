@@ -227,6 +227,81 @@
   color: var(--cyan);
 }
 
+[data-tahti-ui='brand'] .brand-public .status-page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__banner--operational {
+  background: color-mix(in srgb, var(--cyan) 15%, transparent);
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__banner--degraded {
+  background: color-mix(in srgb, #eab308 20%, transparent);
+  color: #ca8a04;
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__banner--outage {
+  background: color-mix(in srgb, #ef4444 15%, transparent);
+  color: #f87171;
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__meta {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin: 0 0 1.25rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__table-wrap {
+  overflow-x: auto;
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__table th,
+[data-tahti-ui='brand'] .brand-public .status-page__table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--muted) 15%, transparent);
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__up {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__down {
+  color: #f87171;
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__footer {
+  margin-top: 2rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .status-page__footer a {
+  color: var(--cyan);
+}
+
 [data-tahti-ui='brand'] .brand-public .brand-empty {
   color: var(--muted);
 }
