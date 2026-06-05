@@ -30,7 +30,10 @@ function fmtTime(secs: number): string {
 }
 
 // Waveform bars — 28 bars with staggered CSS animation heights
-const BAR_HEIGHTS = [8, 14, 22, 30, 18, 26, 34, 20, 12, 28, 36, 24, 16, 30, 22, 18, 32, 14, 26, 20, 16, 28, 38, 22, 18, 14, 26, 20]
+const BAR_HEIGHTS = [
+  8, 14, 22, 30, 18, 26, 34, 20, 12, 28, 36, 24, 16, 30, 22, 18, 32, 14, 26, 20, 16, 28, 38, 22, 18,
+  14, 26, 20,
+]
 
 export default function HlsPlayer({
   url,
@@ -171,7 +174,9 @@ export default function HlsPlayer({
         <span className="ch-player-status-label">
           {buffering ? 'Buffering…' : playing ? 'Live stream' : 'Ready to play'}
         </span>
-        <span className="ch-player-badge">{url.toLowerCase().includes('flac') ? 'FLAC' : 'HLS'}</span>
+        <span className="ch-player-badge">
+          {url.toLowerCase().includes('flac') ? 'FLAC' : 'HLS'}
+        </span>
       </div>
 
       {/* Waveform */}
@@ -223,7 +228,9 @@ export default function HlsPlayer({
             title={isLive ? 'Live stream' : 'Seek'}
           >
             <div className="ch-progress-fill" style={{ width: `${progress * 100}%` }} />
-            {!isLive && <div className="ch-progress-thumb" style={{ left: `${progress * 100}%` }} />}
+            {!isLive && (
+              <div className="ch-progress-thumb" style={{ left: `${progress * 100}%` }} />
+            )}
           </div>
           {!isLive && <span className="ch-player-time">{fmtTime(duration)}</span>}
         </div>
