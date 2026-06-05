@@ -8,6 +8,11 @@ import { createDecipheriv } from 'node:crypto'
 import { prisma } from '@tahti/db'
 import type { BroadcastSource } from '@tahti/db'
 import { spawnBroadcastRecorder, stopChannelRecorders, stopBroadcastRecorder } from './recorder.js'
+import {
+  spawnFingerprintIngest,
+  stopChannelFingerprintIngest,
+  stopFingerprintIngest,
+} from './fingerprint-ingest.js'
 import { ARCHIVE_CACHE_VOLUME } from './docker-streaming.js'
 import { spawnEdgeEncoder, stopChannelEdgeEncoders } from './edge-encoder.js'
 import { liveInputUrl } from './live-input.js'
@@ -168,6 +173,16 @@ export async function spawnChannel(
     source,
     broadcast?.channel.rtmpStreamKey,
   )
+
+  await spawnFingerprintIngest({
+    channelId,
+    slug,
+    broadcastId,
+    source,
+    rtmpStreamKey: broadcast?.channel.rtmpStreamKey,
+    apiUrl: API_URL,
+    internalSecret: INTERNAL_SECRET,
+  })
 }
 
 export async function stopLiquidsoapContainer(channelId: string): Promise<void> {
@@ -198,7 +213,8 @@ export async function requestLiquidsoapGracefulShutdown(containerName: string): 
 export async function stopChannel(channelId: string): Promise<void> {
   await stopLiquidsoapContainer(channelId)
   await stopChannelRecorders(channelId)
+  await stopChannelFingerprintIngest(channelId)
   await stopChannelEdgeEncoders(channelId)
 }
 
-export { stopBroadcastRecorder }
+export { stopBroadcastRecorder, stopFingerprintIngest }

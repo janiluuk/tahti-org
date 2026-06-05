@@ -535,8 +535,8 @@ Issues identified from streaming architecture review and user journey analysis. 
 
 | ID | Issue | Raised by | Phase to fix |
 |:---|---|---|---|
-| [~] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | RTMP edge encoder (#75) + **dual-bitrate HLS** (`stream-mp3-192` / `stream-flac`); chromaprint at ingest deferred | M3 |
-| [~] | **STREAM-003** Ingest DNS failover has 30s dead window — OBS connections to failed ingest node must manually reconnect | Health-ranked `fallbackServers` on `GET /api/me/stream-settings`; set `RTMP_INGEST_HOSTS` / `ICECAST_INGEST_HOSTS`; DNS TTL 5s still ops | M3 / Phase 4 |
+| [~] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | RTMP edge encoder (#75) + **dual-bitrate HLS** (`stream-mp3-192` / `stream-flac`); **chromaprint at ingest** sidecar (STREAM-008) | M3 |
+| [~] | **STREAM-003** Ingest DNS failover has 30s dead window — OBS connections to failed ingest node must manually reconnect | Health-ranked `fallbackServers` on `GET /api/me/stream-settings` (#79); DNS TTL 5s still ops | M3 / Phase 4 |
 | [x] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | `finalize-broadcast-recording` on RTMP/Icecast disconnect → MinIO → `archive-broadcast`; stack `tahti_stack_recordings` volume | M4 |
 | [~] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | API returns 409 while `LIVE` (RTMP + Icecast rotate); hot rotation deferred | M3 |
 | [x] | **ARTIST-003** Liquidsoap archive fallback has no warm-up period — first listener after offline transition may get buffer-empty | `delay(3.)` on archive branch before live fallback | M3 |
@@ -549,7 +549,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 |:---|---|---|---|
 | [x] | **STREAM-006** No per-channel bandwidth accounting — can't attribute egress costs per artist, can't inform resource limits or grant calculations | `GET /api/me/channel-egress` + dashboard 30d chart (downloads + live HLS from **Caddy access logs** via Redis; bitrate estimate fallback) | M8 |
 | [ ] | **STREAM-007** Single Icecast node — Mixxx/Traktor users have no failover | Architecture review | Phase 5 / pre-launch |
-| [ ] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Architecture review | M4 |
+| [~] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Alpine sidecar + `fpcalc` → Redis via `POST /internal/broadcast/:id/fingerprint-segment`; `GET /api/channels/:slug/live-fingerprints`; ACRCloud match deferred | M4 |
 | [x] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Worker syncs fallback pool → shared `/archive-cache`; Liquidsoap prefers local M3U | M3 |
 | [x] | **OPS-001** No structured log correlation across edge encoder → Liquidsoap → recording containers for a single broadcast session | `broadcastSessionId` on ingest, orchestrator, watchdog, finalize, archive jobs | M11 |
 | [~] | **OPS-002** DB migration is a manual step after deploy — must be automated in CI before service update | `scripts/db-migrate-deploy.sh`, `ops/DEPLOY.md`, `make deploy`; CI `prisma migrate status` after test DB push | M0 |
