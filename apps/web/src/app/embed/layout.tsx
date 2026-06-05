@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import '@/components/brand-public.css'
+import '@tahti/ui/src/styles/brand-public.css'
 
 // Minimal chrome for iframe embeds (M14) — no site footer or navigation.
 export default function EmbedLayout({ children }: { children: ReactNode }) {

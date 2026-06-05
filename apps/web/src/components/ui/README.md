@@ -1,43 +1,15 @@
-# Tahti UI (`@/components/ui`)
+# Tahti UI (`apps/web` re-export)
 
-Reusable React components and CSS tokens for `apps/web`.
-
-**Full style guide:** [`docs/style-guide.md`](../../../docs/style-guide.md)
-
-## Quick start
+**Do not add components here.** All UI is implemented in `packages/ui` (`@tahti/ui`).
 
 ```tsx
-import { Button, Panel, Field, Input, Alert, PageShell } from '@/components/ui'
-
-export function Example() {
-  return (
-    <PageShell size="md">
-      <Panel title="Settings">
-        <Field label="Display name" htmlFor="name">
-          <Input id="name" />
-        </Field>
-        <Alert variant="info">Changes apply immediately.</Alert>
-        <Button variant="primary">Save</Button>
-      </Panel>
-    </PageShell>
-  )
-}
+import { Button, Panel, ChannelPageLayout, StudioShell } from '@tahti/ui'
+// equivalent:
+import { Button, Panel } from '@/components/ui'
 ```
 
-## Components
+See `docs/design-system.md`, `docs/AGENT.md` (UI section), and `.cursor/rules/ui-library.mdc`.
 
-| Export | Purpose |
-|--------|---------|
-| `Button`, `ButtonGroup` | Actions |
-| `Input`, `Textarea`, `Select` | Form controls |
-| `Field`, `Label` | Label + control layout |
-| `Panel` | Dashboard sections |
-| `Heading`, `Text` | Typography |
-| `Badge` | LIVE pill, tags |
-| `Alert` | Inline feedback |
-| `Stack`, `Row`, `Divider`, `PageShell`, `Code` | Layout |
-| `CopyRow` | Label + monospace value + copy |
-| `Link` | Styled anchor |
-| `SiteFooter` | Global footer |
-| `cn` | Class name helper |
-| `tokens` | JS color constants (prefer CSS vars) |
+**Exceptions (app-only, not in `@tahti/ui`):**
+
+- `bg-canvas.tsx` — Three.js gateway background (depends on `three`)
