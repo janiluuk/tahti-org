@@ -707,3 +707,123 @@
   font-size: 0.8rem;
   margin-top: 1.5rem;
 }
+
+/* Smart link landing (/r/[slug]) */
+[data-tahti-ui='brand'] .sl-wrap {
+  padding: 24px 20px 3rem;
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+[data-tahti-ui='brand'] .sl-cover-art {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 18px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  object-fit: cover;
+}
+
+[data-tahti-ui='brand'] .sl-title-h2 {
+  font-family: var(--font-head);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 3px;
+}
+
+[data-tahti-ui='brand'] .sl-title-meta {
+  font-size: 0.6875rem;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+[data-tahti-ui='brand'] .sl-artist-quote {
+  background: var(--card2);
+  border-left: 3px solid var(--amber);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  font-size: 0.6875rem;
+  font-style: italic;
+  text-align: left;
+  margin-bottom: 14px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+[data-tahti-ui='brand'] .sl-panel {
+  background: var(--card2);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .sl-panel a {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .sl-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+[data-tahti-ui='brand'] .sl-btn {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  text-align: left;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color var(--ease);
+}
+
+[data-tahti-ui='brand'] .sl-btn:hover {
+  border-color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .sl-btn-name {
+  flex: 1;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+[data-tahti-ui='brand'] .sl-btn-arrow {
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+
+[data-tahti-ui='brand'] .sl-primary-cta {
+  display: inline-block;
+  padding: 0.75rem 1.25rem;
+  background: var(--amber);
+  color: #0a0f1e;
+  border-radius: var(--radius);
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 1rem;
+}
+
+[data-tahti-ui='brand'] .sl-footer {
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .sl-footer a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .sl-footer a:hover {
+  color: var(--amber);
+}

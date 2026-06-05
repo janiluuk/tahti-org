@@ -2,12 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import '@/components/brand-public.css'
 
-export default function SmartLinkLayout({ children }: { children: ReactNode }) {
-  return (
-    <div data-tahti-ui="brand" className="brand-public brand-public--center">
-      {children}
-    </div>
-  )
+/** Smart link slug pages inherit brand-channel from app/r/layout.tsx */
+export default function SmartLinkSlugLayout({ children }: { children: ReactNode }) {
+  return children
 }

@@ -3,6 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { SmartLinkPageLayout } from '@/components/smart-link/smart-link-page-layout'
 import { SafePlainText } from '@/components/safe-plain-text'
 
 const SERVICE_LABELS: Record<string, string> = {
@@ -65,29 +66,25 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
   const tracksWithIsrc = data.release.tracks.filter((t) => t.isrc?.trim())
 
   return (
-    <>
+    <SmartLinkPageLayout>
       {data.release.artworkUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={data.release.artworkUrl}
           alt=""
-          width={200}
-          height={200}
-          style={{ borderRadius: 12, objectFit: 'cover', marginBottom: '1.5rem' }}
+          className="sl-cover-art"
+          width={160}
+          height={160}
         />
       )}
-      <h1 style={{ margin: '0 0 0.25rem', fontSize: '1.75rem' }}>{data.release.title}</h1>
-      <p className="brand-muted" style={{ margin: '0 0 0.5rem' }}>
+      <h1 className="sl-title-h2">{data.release.title}</h1>
+      <p className="sl-title-meta">
         {data.artist.displayName} · {data.release.type}
       </p>
-      <p className="brand-muted" style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-        {new Date(data.release.releaseDate).toLocaleDateString()}
-      </p>
+      <p className="sl-title-meta">{new Date(data.release.releaseDate).toLocaleDateString()}</p>
+
       {data.release.description && (
-        <SafePlainText
-          text={data.release.description}
-          style={{ lineHeight: 1.5, marginBottom: '1.5rem' }}
-        />
+        <SafePlainText text={data.release.description} className="sl-artist-quote" />
       )}
 
       {(data.release.upc ||
@@ -95,7 +92,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         data.release.cLine ||
         tracksWithIsrc.length > 0 ||
         data.release.musicbrainzUrl) && (
-        <div className="brand-panel">
+        <div className="sl-panel">
           {data.release.upc && (
             <div style={{ marginBottom: '0.35rem' }}>
               <strong>UPC:</strong> {data.release.upc}
@@ -125,20 +122,15 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
       )}
 
       {data.featuredCollections && data.featuredCollections.length > 0 && (
-        <div className="brand-panel">
-          <p className="brand-muted" style={{ margin: '0 0 0.5rem', fontSize: '0.85rem' }}>
-            From this artist
-          </p>
+        <div className="sl-panel">
+          <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem' }}>From this artist</p>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {data.featuredCollections.map((c) => (
               <li key={c.slug} style={{ marginBottom: '0.35rem' }}>
-                <Link href={c.url} style={{ fontWeight: 600 }}>
+                <Link href={c.url} style={{ fontWeight: 600, color: 'var(--text)' }}>
                   {c.name}
                 </Link>
-                <span className="brand-muted" style={{ fontSize: '0.8rem' }}>
-                  {' '}
-                  · {c.itemCount} item(s)
-                </span>
+                <span style={{ fontSize: '0.8rem' }}> · {c.itemCount} item(s)</span>
               </li>
             ))}
           </ul>
@@ -146,24 +138,25 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
       )}
 
       {services.length > 0 ? (
-        <div className="brand-cta-row">
+        <div className="sl-btns">
           {services.map(([key, url]) => (
-            <a key={key} href={url} rel="noopener noreferrer" className="brand-cta-dark">
-              {SERVICE_LABELS[key] ?? key}
+            <a key={key} href={url} rel="noopener noreferrer" className="sl-btn">
+              <span className="sl-btn-name">{SERVICE_LABELS[key] ?? key}</span>
+              <span className="sl-btn-arrow">→</span>
             </a>
           ))}
         </div>
       ) : (
-        <Link href={data.releaseUrl} className="brand-cta">
+        <Link href={data.releaseUrl} className="sl-primary-cta">
           Listen on Tahti
         </Link>
       )}
 
-      <p className="brand-muted" style={{ marginTop: '2rem', fontSize: '0.85rem' }}>
+      <p className="sl-footer">
         <Link href={data.profileUrl}>@{data.artist.username}</Link>
         {' · '}
         <a href={data.embedUrl}>Embed</a>
       </p>
-    </>
+    </SmartLinkPageLayout>
   )
 }
