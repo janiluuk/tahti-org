@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { TOR_EXIT_REDIS_KEY, loadBundledTorExitCidrs } from '@tahti/shared'
+import { TOR_EXIT_REDIS_KEY } from '@tahti/shared'
+import { loadBundledTorExitCidrs } from '@tahti/shared/bundled-tor-exits'
 import { config } from '../config.js'
 import { getRedisClient } from './redis.js'
 

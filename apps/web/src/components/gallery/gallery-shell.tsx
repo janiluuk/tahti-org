@@ -4,7 +4,7 @@
 'use client'
 
 import type { CSSProperties, ReactNode } from 'react'
-import { cn } from '@tahti/ui'
+import { cn } from '@tahti/ui/src/lib/cn'
 
 export function GalleryShell({
   children,
