@@ -1509,25 +1509,54 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
   flex-shrink: 0;
-  letter-spacing: 0;
   background: var(--card2);
   border: 1px solid var(--border);
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--spotify {
   background: #1db95422;
+  color: #1db954;
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--apple {
   background: #fc3c4422;
+  color: #fc3c44;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--tidal {
+  background: rgba(0, 190, 255, 0.12);
+  color: #00beff;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--bandcamp {
+  background: rgba(29, 160, 195, 0.14);
+  color: #1da0c3;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--soundcloud {
+  background: rgba(255, 85, 0, 0.12);
+  color: #ff5500;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--youtube {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff4040;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--deezer {
+  background: rgba(239, 84, 102, 0.12);
+  color: #ef5466;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--amazon {
+  background: rgba(255, 153, 0, 0.12);
+  color: #ff9900;
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--tahti {
-  background: color-mix(in srgb, var(--cyan) 20%, var(--card2));
-  color: var(--cyan);
-  font-size: 1rem;
+  background: color-mix(in srgb, var(--amber) 15%, var(--card2));
+  color: var(--amber);
 }
 
 [data-tahti-ui='brand'] .sl-btn-action {

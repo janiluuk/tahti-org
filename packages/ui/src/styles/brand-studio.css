@@ -95,6 +95,49 @@
   color: var(--coral);
 }
 
+[data-tahti-ui='studio'] .studio-top-nav__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 5px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  margin-right: 4px;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--cyan) 20%, var(--card2));
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-head);
+  letter-spacing: 0;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__user-name {
+  font-size: 12.5px;
+  color: var(--text);
+  font-weight: 500;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__live-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+}
+
 [data-tahti-ui='studio'] .db-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -260,6 +303,57 @@
   flex-shrink: 0;
 }
 
+[data-tahti-ui='studio'] .db-header-welcome {
+  font-size: 0.85rem !important;
+}
+
+[data-tahti-ui='studio'] .db-header-channel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+[data-tahti-ui='studio'] .db-header-channel-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-tahti-ui='studio'] .db-header-channel-state--live {
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+  color: var(--green);
+}
+
+[data-tahti-ui='studio'] .db-offline-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+[data-tahti-ui='studio'] .db-header-channel-url {
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  font-family: monospace;
+}
+
+[data-tahti-ui='studio'] .db-header-channel-url:hover {
+  color: var(--cyan);
+}
+
 [data-tahti-ui='studio'] .studio-section-anchor {
   scroll-margin-top: 1rem;
 }
@@ -280,6 +374,23 @@
   padding-bottom: 1rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .ui-panel .ui-panel__header .ui-heading--2 {
+  position: relative;
+  padding-left: 11px;
+}
+
+[data-tahti-ui='studio'] .ui-panel .ui-panel__header .ui-heading--2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 3px;
+  width: 3px;
+  background: var(--cyan);
+  border-radius: 2px;
+  opacity: 0.7;
 }
 
 /* Studio-scoped inputs and selects */
@@ -1216,16 +1327,32 @@
   line-height: 1;
 }
 
+[data-tahti-ui='studio'] .db-stat-tile--amber {
+  border-top: 2px solid color-mix(in srgb, var(--amber) 45%, transparent);
+}
+
 [data-tahti-ui='studio'] .db-stat-tile--amber .db-stat-tile-value {
   color: var(--amber);
+}
+
+[data-tahti-ui='studio'] .db-stat-tile--cyan {
+  border-top: 2px solid color-mix(in srgb, var(--cyan) 45%, transparent);
 }
 
 [data-tahti-ui='studio'] .db-stat-tile--cyan .db-stat-tile-value {
   color: var(--cyan);
 }
 
+[data-tahti-ui='studio'] .db-stat-tile--purple {
+  border-top: 2px solid color-mix(in srgb, var(--purple, #a855f7) 45%, transparent);
+}
+
 [data-tahti-ui='studio'] .db-stat-tile--purple .db-stat-tile-value {
   color: var(--purple, #a855f7);
+}
+
+[data-tahti-ui='studio'] .db-stat-tile--green {
+  border-top: 2px solid color-mix(in srgb, #22c55e 45%, transparent);
 }
 
 [data-tahti-ui='studio'] .db-stat-tile--green .db-stat-tile-value {
@@ -1291,9 +1418,24 @@
     background 0.15s;
 }
 
+[data-tahti-ui='studio'] .db-quick-action::after {
+  content: '→';
+  font-size: 0.7rem;
+  opacity: 0;
+  margin-left: 2px;
+  transition: opacity 0.15s, transform 0.15s;
+  transform: translateX(-4px);
+}
+
 [data-tahti-ui='studio'] .db-quick-action:hover {
   border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
   background: color-mix(in srgb, var(--cyan) 8%, var(--card2));
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .db-quick-action:hover::after {
+  opacity: 0.7;
+  transform: translateX(0);
 }
 
 /* ── Stats page (PLAT-030) ──────────────────────────────────────────────── */

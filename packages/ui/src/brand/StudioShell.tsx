@@ -7,13 +7,15 @@ import { StudioTopNav } from './StudioTopNav'
 
 type StudioShellProps = {
   children: ReactNode
+  displayName?: string
+  isLive?: boolean
 }
 
 /** Dashboard shell — sidebar + top nav on @tahti/ui dark tokens. Import brand-studio.css on the route. */
-export function StudioShell({ children }: StudioShellProps) {
+export function StudioShell({ children, displayName, isLive }: StudioShellProps) {
   return (
     <div data-tahti-ui="studio" className="tahti-studio">
-      <StudioTopNav />
+      <StudioTopNav displayName={displayName} isLive={isLive} />
       <div className="db-layout">
         <StudioSidebar />
         <main className="db-main">{children}</main>

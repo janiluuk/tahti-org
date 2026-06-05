@@ -11,6 +11,11 @@
   background: var(--coral) !important;
 }
 
+.admin-user-avatar {
+  background: color-mix(in srgb, var(--coral) 20%, var(--card2)) !important;
+  color: var(--coral) !important;
+}
+
 .admin-shell .admin-main {
   padding: 2rem 2.5rem 4rem;
   max-width: 1200px;

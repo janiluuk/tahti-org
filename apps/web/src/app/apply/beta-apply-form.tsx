@@ -32,7 +32,7 @@ export function BetaApplyForm() {
       <>
         <BgCanvas />
         <div className="auth-shell">
-          <div className="auth-card auth-card--dark">
+          <div className="auth-card auth-card--dark auth-card--wide">
             <BrandLogo />
             <Heading level={1}>Application received</Heading>
             <Text tone="muted">
@@ -49,7 +49,7 @@ export function BetaApplyForm() {
     <>
       <BgCanvas />
       <div className="auth-shell">
-        <div className="auth-card auth-card--dark">
+        <div className="auth-card auth-card--dark auth-card--wide">
           <BrandLogo />
           <Heading level={1}>Apply for the private beta</Heading>
           <Text tone="muted">
