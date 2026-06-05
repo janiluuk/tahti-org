@@ -31,7 +31,7 @@ scrape_configs:
 
   - job_name: nginx-rtmp
     static_configs:
-      - targets: ['rtmp-ingest:8080']
+      - targets: ['rtmp-ingest:8080', 'rtmp-ingest-b:8080']
     metrics_path: /stat
 
   - job_name: caddy

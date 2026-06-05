@@ -118,4 +118,9 @@ export const config = {
   },
   /** STREAM-008: optional AcoustID key for live + archive tracklist title lookup. */
   acoustidApiKey: process.env.ACOUSTID_API_KEY?.trim() ?? '',
+  acrcloud: {
+    host: process.env.ACRCLOUD_HOST ?? 'identify-eu-west-1.acrcloud.com',
+    accessKey: readSecret('ACRCLOUD_ACCESS_KEY', 'ACRCLOUD_ACCESS_KEY_FILE', ''),
+    accessSecret: readSecret('ACRCLOUD_ACCESS_SECRET', 'ACRCLOUD_ACCESS_SECRET_FILE', ''),
+  },
 }

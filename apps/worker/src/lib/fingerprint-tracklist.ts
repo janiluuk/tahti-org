@@ -8,12 +8,16 @@ import {
   type LiveFingerprintSegment,
   type TracklistEntry,
 } from '@tahti/shared'
+import { readSecret } from './read-secret.js'
 
 export type { AcoustidLookupFn }
 
 export { lookupAcoustidTrack }
 
-const defaultLookup: AcoustidLookupFn = (seg) => lookupAcoustidTrack(seg)
+const defaultLookup: AcoustidLookupFn = (seg) =>
+  lookupAcoustidTrack(seg, {
+    apiKey: readSecret('ACOUSTID_API_KEY', 'ACOUSTID_API_KEY_FILE'),
+  })
 
 /** Worker archive job: optional AcoustID when ACOUSTID_API_KEY is set. */
 export async function buildTracklistFromFingerprints(

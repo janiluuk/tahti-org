@@ -31,6 +31,8 @@ services:
       STAGING: "true"
       APP_URL: https://app.staging.tahti.live
       API_URL: https://api.staging.tahti.live
+      ICECAST_INGEST_HOSTS: ""
+      RTMP_INGEST_HOSTS: ""
     deploy:
       replicas: 1
       resources:
@@ -77,14 +79,26 @@ services:
   icecast:
     deploy:
       replicas: 1
+      placement:
+        constraints: [node.labels.role == ingest]
       resources:
         limits: { cpus: "1", memory: 512M }
+
+  icecast-b:
+    deploy:
+      replicas: 0
 
   rtmp-ingest:
     deploy:
       replicas: 1
+      placement:
+        constraints: [node.labels.role == ingest]
       resources:
         limits: { cpus: "1", memory: 512M }
+
+  rtmp-ingest-b:
+    deploy:
+      replicas: 0
 
   caddy:
     configs:

@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { config } from '../../config.js'
 import { appendBroadcastFingerprintSegment } from '../../lib/broadcast-fingerprint.js'
+import { enrichFingerprintSegmentFromAcrcloud } from '../../lib/fingerprint-segment-enrich.js'
 
 const broadcastFingerprintInternalRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -49,10 +50,17 @@ const broadcastFingerprintInternalRoutes: FastifyPluginAsync = async (fastify) =
         return reply.status(409).send({ error: 'Broadcast ended' })
       }
 
-      await appendBroadcastFingerprintSegment(routeParams.broadcastId, {
-        ...parsed.data,
-        durationSec: parsed.data.durationSec ?? 12,
-      })
+      const durationSec = parsed.data.durationSec ?? 12
+      const enriched = await enrichFingerprintSegmentFromAcrcloud(
+        {
+          offsetSec: parsed.data.offsetSec,
+          durationSec,
+          fingerprint: parsed.data.fingerprint,
+        },
+        parsed.data.audioSampleBase64,
+      )
+
+      await appendBroadcastFingerprintSegment(routeParams.broadcastId, enriched)
       return reply.send({ ok: true })
     },
   )

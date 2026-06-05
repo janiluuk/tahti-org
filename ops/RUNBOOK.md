@@ -101,7 +101,20 @@ ICECAST_INGEST_HOSTS=https://icecast-a.tahti.live,https://icecast-b.tahti.live
 RTMP_INGEST_HOSTS=ingest-a.tahti.live,ingest-b.tahti.live
 ```
 
-Archive tracklist title lookup (STREAM-008 phase 3): `ACOUSTID_API_KEY` on **worker** and **api** (live tracklist polling) — https://acoustid.org/new-application
+Archive tracklist title lookup (STREAM-008): **ACRCloud** at ingest (MP3 sample from sidecar when `FINGERPRINT_SEND_AUDIO=1`) with **AcoustID** chromaprint fallback on archive/live polling.
+
+**Secrets on manager** (empty string disables lookup):
+
+```bash
+echo -n "$ACRCLOUD_KEY" | docker secret create acrcloud_access_key -
+echo -n "$ACRCLOUD_SECRET" | docker secret create acrcloud_access_secret -
+echo -n "$ACOUSTID_KEY" | docker secret create acoustid_api_key -
+```
+
+**Ingest replicas (prod Swarm):** label two nodes `ingest_id=a` and `ingest_id=b`; deploy `icecast`/`rtmp-ingest` on **a**, `icecast-b`/`rtmp-ingest-b` on **b**. DNS:
+
+- `ingest.tahti.live`, `ingest-b.tahti.live` → RTMP (port 1935 on each node)
+- `ingest-icecast.tahti.live`, `ingest-icecast-b.tahti.live` → Caddy → Icecast
 
 Optional local failover profiles:
 

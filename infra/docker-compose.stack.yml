@@ -38,6 +38,9 @@ x-app-env: &app-env
   ICECAST_INGEST_HEALTH_PATH: /status-json.xsl
   # STREAM-008 phase 3: optional AcoustID key for archive tracklist title lookup (https://acoustid.org/new-application)
   ACOUSTID_API_KEY: ""
+  ACRCLOUD_HOST: identify-eu-west-1.acrcloud.com
+  ACRCLOUD_ACCESS_KEY: ""
+  ACRCLOUD_ACCESS_SECRET: ""
   HLS_BASE_URL: http://localhost:19000/hls-live
   HLS_SEGMENT_ROOT: /hls
   HLS_MINIO_BUCKET: hls-live
@@ -252,6 +255,7 @@ services:
       HLS_VOLUME: tahti_stack_hls
       RECORDINGS_VOLUME: tahti_stack_recordings
       ARCHIVE_CACHE_VOLUME: tahti_stack_archive_cache
+      FINGERPRINT_SEND_AUDIO: "1"
     ports:
       - "${ORCHESTRATOR_PORT:-15003}:3003"
     volumes:

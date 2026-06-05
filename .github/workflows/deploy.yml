@@ -181,6 +181,7 @@ jobs:
             infra/centrifugo.json \
             infra/nginx-rtmp.conf \
             infra/icecast.xml \
+            infra/icecast-b.xml \
             infra/prometheus.yml \
             staging:${{ vars.DEPLOY_PATH || '/srv/tahti' }}/infra/
 
@@ -243,6 +244,7 @@ jobs:
             infra/centrifugo.json \
             infra/nginx-rtmp.conf \
             infra/icecast.xml \
+            infra/icecast-b.xml \
             infra/prometheus.yml \
             prod:${{ vars.DEPLOY_PATH || '/srv/tahti' }}/infra/
 

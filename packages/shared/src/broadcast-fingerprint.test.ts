@@ -61,4 +61,30 @@ describe('fingerprintsToTracklistEntries', () => {
       artist: 'Inner City',
     })
   })
+
+  it('uses pre-identified segment titles from ACRCloud ingest', () => {
+    const entries = fingerprintsToTracklistEntries([
+      {
+        offsetSec: 0,
+        durationSec: 12,
+        fingerprint: 'AQAA_one',
+        capturedAt: '2026-06-05T12:00:00.000Z',
+      },
+      {
+        offsetSec: 120,
+        durationSec: 12,
+        fingerprint: 'AQAA_two',
+        capturedAt: '2026-06-05T12:02:00.000Z',
+        title: 'Identified Live',
+        artist: 'DJ',
+        identifySource: 'acrcloud',
+      },
+    ])
+
+    expect(entries[1]).toEqual({
+      startSec: 120,
+      title: 'Identified Live',
+      artist: 'DJ',
+    })
+  })
 })

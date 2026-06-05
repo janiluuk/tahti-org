@@ -44,6 +44,14 @@ export function fingerprintsToTracklistEntries(
   if (boundaries.length === 0) return []
 
   return boundaries.map((seg, idx) => {
+    if (seg.title) {
+      return {
+        startSec: seg.offsetSec,
+        title: seg.title,
+        ...(seg.artist ? { artist: seg.artist } : {}),
+      }
+    }
+
     const identified = identifications?.[idx]
     if (identified?.title) {
       return {

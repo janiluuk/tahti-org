@@ -126,11 +126,11 @@ flowchart LR
     FP --> API[POST /internal/broadcast/:id/fingerprint-segment]
 ```
 
-On broadcast end, `archive-broadcast` collapses fingerprint boundaries, optionally looks up each unique chromaprint via [AcoustID](https://acoustid.org/chromaprint), and writes `tracklist` entries on the auto-archived item.
+On broadcast end, `archive-broadcast` collapses fingerprint boundaries and writes `tracklist` entries. Titles come from **ACRCloud** (12s MP3 sample posted by the ingest sidecar when `FINGERPRINT_SEND_AUDIO=1`) with **AcoustID** chromaprint fallback when ACRCloud is unset or misses.
 
 While **LIVE**, listeners see a **Now playing** panel on `/c/:slug` that polls `GET /api/channels/:slug/live-fingerprints` every 30s (same tracklist shape as archive metadata).
 
-**Env:** `ACOUSTID_API_KEY` on **api** (live) and **worker** (archive). Register at https://acoustid.org/new-application. Without a key, tracklist entries use generic “Track change (m:ss)” labels.
+**Env:** `ACRCLOUD_ACCESS_KEY` + `ACRCLOUD_ACCESS_SECRET` on **api** (Docker secrets in prod); `ACOUSTID_API_KEY` fallback on **api** + **worker**.
 
 ---
 
@@ -312,7 +312,8 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | STREAM-004 | ~~Recording is a Liquidsoap sidecar~~ — ffmpeg recorder sidecar (STREAM-004) | ~~HIGH~~ done |
 | STREAM-005 | No per-channel health watchdog — silent channels go undetected | HIGH |
 | STREAM-006 | No per-channel bandwidth accounting — can't attribute costs | MEDIUM |
-| STREAM-007 | Icecast `/status-json.xsl` health probe + `ICECAST_INGEST_HOSTS` fallbacks; optional `icecast-b` stack profile | MEDIUM (partial) |
-| STREAM-008 | Ingest fpcalc sidecar, live tracklist (channel/embed/dashboard), archive/live AcoustID; ACRCloud deferred | ~~MEDIUM~~ done |
+| STREAM-007 | Icecast `/status-json.xsl` + prod **`icecast-b`** + Caddy failover | done |
+| STREAM-008 | fpcalc sidecar, live tracklist, **ACRCloud** + AcoustID fallback | done |
+| STREAM-003 | Health-ranked fallbacks + prod **`rtmp-ingest-b`**; DNS TTL 5s ops | partial |
 | STREAM-009 | ~~Liquidsoap archive fallback reads from MinIO with no caching~~ — local cache volume + cron | ~~LOW~~ done |
 | STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop | LOW (done) |

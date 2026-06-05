@@ -69,6 +69,14 @@ export async function identifyFingerprintBoundaries(
   const identifications: Array<{ title: string; artist?: string } | null> = []
 
   for (const seg of boundaries) {
+    if (seg.title) {
+      identifications.push({
+        title: seg.title,
+        ...(seg.artist ? { artist: seg.artist } : {}),
+      })
+      continue
+    }
+
     if (!cache.has(seg.fingerprint)) {
       cache.set(seg.fingerprint, await lookup(seg))
     }

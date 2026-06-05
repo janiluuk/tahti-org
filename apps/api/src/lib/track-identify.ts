@@ -10,22 +10,36 @@ import {
 import { config } from '../config.js'
 import { getRedisClient } from './redis.js'
 
-function fingerprintCacheKey(fingerprint: string): string {
+function fingerprintCacheKey(prefix: string, fingerprint: string): string {
   const hash = createHash('sha256').update(fingerprint).digest('hex').slice(0, 32)
-  return `acoustid:fp:${hash}`
+  return `${prefix}:fp:${hash}`
 }
 
-/** Redis-backed AcoustID lookup for live tracklist polling (24h TTL per fingerprint). */
-export async function createAcoustidLookup(): Promise<AcoustidLookupFn> {
+/** Redis-backed track lookup: segment ACRCloud fields, then AcoustID (24h TTL). */
+export async function createTrackIdentifyLookup(): Promise<AcoustidLookupFn> {
   const apiKey = config.acoustidApiKey
-  const baseLookup: AcoustidLookupFn = (seg: LiveFingerprintSegment) =>
-    lookupAcoustidTrack(seg, { apiKey })
+  const baseLookup: AcoustidLookupFn = (seg: LiveFingerprintSegment) => {
+    if (seg.title) {
+      return Promise.resolve({
+        title: seg.title,
+        ...(seg.artist ? { artist: seg.artist } : {}),
+      })
+    }
+    return lookupAcoustidTrack(seg, { apiKey })
+  }
 
   const redis = await getRedisClient()
   if (!redis || !apiKey) return baseLookup
 
   return async (seg: LiveFingerprintSegment) => {
-    const key = fingerprintCacheKey(seg.fingerprint)
+    if (seg.title) {
+      return {
+        title: seg.title,
+        ...(seg.artist ? { artist: seg.artist } : {}),
+      }
+    }
+
+    const key = fingerprintCacheKey('acoustid', seg.fingerprint)
     try {
       const cached = await redis.get(key)
       if (cached === '__null__') return null
