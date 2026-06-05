@@ -5,7 +5,7 @@ import type { Job } from 'bullmq'
 import { stat } from 'node:fs/promises'
 import { prisma } from '@tahti/db'
 import { broadcastSessionLogFields } from '@tahti/shared'
-import { findLatestChannelRecording } from '../lib/channel-recording.js'
+import { findChannelBroadcastRecording } from '../lib/channel-recording.js'
 import { uploadFile } from '../lib/minio.js'
 import { enqueueArchiveBroadcast } from '../lib/queue.js'
 
@@ -44,9 +44,10 @@ export async function processFinalizeBroadcastRecordingJob(job: Job): Promise<vo
     return
   }
 
-  const localPath = await findLatestChannelRecording(
+  const localPath = await findChannelBroadcastRecording(
     RECORDINGS_ROOT,
     broadcast.channel.id,
+    broadcastId,
     broadcast.startedAt,
   )
 

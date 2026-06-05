@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Job } from 'bullmq'
 
-const { stat, prismaMock, findLatestChannelRecording, uploadFile, enqueueArchiveBroadcast } =
+const { stat, prismaMock, findChannelBroadcastRecording, uploadFile, enqueueArchiveBroadcast } =
   vi.hoisted(() => ({
     stat: vi.fn(),
     prismaMock: {
@@ -13,14 +13,14 @@ const { stat, prismaMock, findLatestChannelRecording, uploadFile, enqueueArchive
         update: vi.fn(),
       },
     },
-    findLatestChannelRecording: vi.fn(),
+    findChannelBroadcastRecording: vi.fn(),
     uploadFile: vi.fn(),
     enqueueArchiveBroadcast: vi.fn(),
   }))
 
 vi.mock('node:fs/promises', () => ({ stat }))
 vi.mock('@tahti/db', () => ({ prisma: prismaMock }))
-vi.mock('../lib/channel-recording.js', () => ({ findLatestChannelRecording }))
+vi.mock('../lib/channel-recording.js', () => ({ findChannelBroadcastRecording }))
 vi.mock('../lib/minio.js', () => ({ uploadFile }))
 vi.mock('../lib/queue.js', () => ({ enqueueArchiveBroadcast }))
 
@@ -45,14 +45,14 @@ describe('processFinalizeBroadcastRecordingJob', () => {
       source: 'RTMP',
       channel: { id: 'ch-1', slug: 'artist-one' },
     })
-    findLatestChannelRecording.mockResolvedValue('/recordings/ch-1/live.wav')
+    findChannelBroadcastRecording.mockResolvedValue('/recordings/ch-1/broadcast-bc-1.wav')
     stat.mockResolvedValue({ size: 500_000, isFile: () => true })
 
     await processFinalizeBroadcastRecordingJob(jobFor('bc-1'))
 
     expect(uploadFile).toHaveBeenCalledWith(
       'recordings/artist-one/broadcast-bc-1.wav',
-      '/recordings/ch-1/live.wav',
+      '/recordings/ch-1/broadcast-bc-1.wav',
       'audio/wav',
     )
     expect(prismaMock.broadcast.update).toHaveBeenCalledWith({
@@ -74,7 +74,7 @@ describe('processFinalizeBroadcastRecordingJob', () => {
 
     await processFinalizeBroadcastRecordingJob(jobFor('bc-2'))
 
-    expect(findLatestChannelRecording).not.toHaveBeenCalled()
+    expect(findChannelBroadcastRecording).not.toHaveBeenCalled()
     expect(uploadFile).not.toHaveBeenCalled()
   })
 })

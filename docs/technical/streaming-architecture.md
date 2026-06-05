@@ -278,7 +278,7 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | STREAM-001 | HLS segments on shared Docker volume, not MinIO | CRITICAL — blocks horizontal scaling |
 | STREAM-002 | No edge encoder tier — Liquidsoap receives raw RTMP directly | HIGH |
 | STREAM-003 | Ingest DNS failover has 30s dead window | HIGH |
-| STREAM-004 | Recording is a Liquidsoap sidecar — lost on Liquidsoap crash | HIGH |
+| STREAM-004 | ~~Recording is a Liquidsoap sidecar~~ — ffmpeg recorder sidecar (STREAM-004) | ~~HIGH~~ done |
 | STREAM-005 | No per-channel health watchdog — silent channels go undetected | HIGH |
 | STREAM-006 | No per-channel bandwidth accounting — can't attribute costs | MEDIUM |
 | STREAM-007 | Single Icecast node — no redundancy for Mixxx users | MEDIUM |

@@ -19,7 +19,7 @@ Last reviewed: 2026-06-03 (audit pass)
 
 **Top gaps to close before beta:**
 
-1. Streaming scale blockers (STREAM-004 recording sidecar; ~~STREAM-001~~ ~~STREAM-006~~ done; STREAM-005 watchdog done)
+1. Streaming scale blockers (~~STREAM-004~~ recording sidecar done; ~~STREAM-001~~ ~~STREAM-006~~ done; STREAM-005 watchdog done)
 2. Fan-sub live payout retry + M19 newsletter fan-only send UI
 3. ~~Wire `@tahti/ui` into dashboard/public pages~~ — PLAT-020 done
 4. ~~Backup runbooks + Upptime (M11)~~ — backup age on `/metrics`, Grafana panel + Prometheus alerts; Upptime deploy still ops

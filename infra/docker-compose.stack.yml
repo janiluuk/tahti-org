@@ -216,6 +216,9 @@ services:
     environment:
       <<: *app-env
       PORT: "3003"
+      FFMPEG_IMAGE: jrotting/ffmpeg:6-alpine
+      ICECAST_BASE_URL: http://icecast:8000
+      RTMP_INGEST_URL: rtmp://rtmp-ingest:1935
       HLS_VOLUME: tahti_stack_hls
       RECORDINGS_VOLUME: tahti_stack_recordings
     ports:
