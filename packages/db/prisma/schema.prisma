@@ -378,6 +378,7 @@ model User {
   annualReportsGenerated  AnnualReport[]
   socialConnections       SocialConnection[]
   socialPosts             SocialPost[]
+  stashFiles              StashFile[]
 
   @@schema("core")
 }
@@ -428,6 +429,41 @@ model Session {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@schema("core")
+}
+
+// PLAT-038: private WIP file storage
+model StashFile {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filename    String
+  objectKey   String       // MinIO key
+  contentType String
+  sizeBytes   BigInt
+  format      String?      // FLAC, WAV, MP3, ZIP, etc.
+  bitDepth    Int?
+  sampleRate  Int?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  shares      StashShare[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@schema("core")
+}
+
+model StashShare {
+  id              String     @id @default(cuid())
+  fileId          String
+  file            StashFile  @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  granteeUsername String?
+  token           String     @unique @default(cuid())
+  permission      String     @default("READ")
+  fileCount       Int        @default(1)
+  expiresAt       DateTime?
+  createdAt       DateTime   @default(now())
+
+  @@index([token])
   @@schema("core")
 }
 
