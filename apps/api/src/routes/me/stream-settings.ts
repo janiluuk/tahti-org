@@ -50,7 +50,8 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
       const rtmpHosts = parseIngestHostList(config.rtmpIngestHosts, config.rtmpIngestHost)
       const icecastHosts = parseIngestHostList(
         config.icecastIngestHosts,
-        config.icecastPublicUrl.replace(/^https?:\/\//, '').split('/')[0] ?? config.icecastPublicUrl,
+        config.icecastPublicUrl.replace(/^https?:\/\//, '').split('/')[0] ??
+          config.icecastPublicUrl,
       )
 
       const icecastScheme = config.icecastPublicUrl.startsWith('http://') ? 'http' : 'https'

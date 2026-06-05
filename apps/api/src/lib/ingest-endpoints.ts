@@ -18,12 +18,19 @@ export function parseIngestHostList(envList: string | undefined, primaryHost: st
       .filter(Boolean)
     if (fromEnv.length > 0) return fromEnv
   }
-  const host = primaryHost.replace(/^https?:\/\//, '').split('/')[0]?.split(':')[0]
+  const host = primaryHost
+    .replace(/^https?:\/\//, '')
+    .split('/')[0]
+    ?.split(':')[0]
   return host ? [host] : [primaryHost]
 }
 
 export function rtmpPublishUrl(host: string, port = 1935): string {
-  const bare = host.replace(/^rtmp:\/\//, '').split('/')[0]?.split(':')[0] ?? host
+  const bare =
+    host
+      .replace(/^rtmp:\/\//, '')
+      .split('/')[0]
+      ?.split(':')[0] ?? host
   return `rtmp://${bare}:${port}/live`
 }
 
@@ -84,7 +91,11 @@ export async function resolveRtmpIngestHosts(opts: {
   const ranked = await rankHosts(
     opts.hosts,
     (host) => {
-      const bare = host.replace(/^https?:\/\//, '').split('/')[0]?.split(':')[0] ?? host
+      const bare =
+        host
+          .replace(/^https?:\/\//, '')
+          .split('/')[0]
+          ?.split(':')[0] ?? host
       return `${scheme}://${bare}:${opts.healthPort}${opts.healthPath}`
     },
     rtmpCache,
