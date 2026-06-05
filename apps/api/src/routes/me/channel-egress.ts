@@ -14,7 +14,7 @@ const channelEgressRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'STREAM-006: attributed download egress (30-day UTC series)',
+        description: 'STREAM-006: download + estimated live HLS egress (30-day UTC series)',
         response: openApiResponse(ChannelEgressResponseSchema, 'ChannelEgress'),
       },
     },

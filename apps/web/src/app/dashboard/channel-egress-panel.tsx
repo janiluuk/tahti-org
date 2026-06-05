@@ -6,6 +6,8 @@ import { Panel, Text } from '@/components/ui'
 export interface EgressDailyPoint {
   date: string
   bytes: number
+  downloadBytes: number
+  estimatedLiveBytes: number
   downloads: number
 }
 
@@ -20,29 +22,35 @@ export function ChannelEgressPanel({
   stats: {
     windowDays: number
     totalBytes: number
+    downloadBytes: number
+    estimatedLiveHlsBytes: number
     totalDownloads: number
     daily: EgressDailyPoint[]
+    liveEstimateNote?: string
   } | null
 }) {
-  if (!stats || stats.totalDownloads === 0) return null
+  if (!stats || (stats.totalDownloads === 0 && stats.estimatedLiveHlsBytes === 0)) return null
 
   const max = Math.max(1, ...stats.daily.map((d) => d.bytes))
 
   return (
     <Panel
-      title="Download bandwidth (last 30 days)"
+      title="Bandwidth (last 30 days)"
       headerTight
       description={
         <Text size="sm" tone="muted">
-          Egress attributed from archive downloads — helps estimate hosting cost per channel.
+          Archive downloads plus estimated live HLS egress — helps attribute hosting cost per
+          channel.
         </Text>
       }
     >
       <Text size="sm" className="studio-mb-md">
-        <strong>{formatMb(stats.totalBytes)}</strong> served ·{' '}
-        <strong>{stats.totalDownloads}</strong> downloads
+        <strong>{formatMb(stats.totalBytes)}</strong> total ·{' '}
+        <strong>{formatMb(stats.downloadBytes)}</strong> downloads ·{' '}
+        <strong>{formatMb(stats.estimatedLiveHlsBytes)}</strong> live (est.) ·{' '}
+        <strong>{stats.totalDownloads}</strong> download events
       </Text>
-      <div role="img" aria-label="Download bandwidth chart" className="studio-chart">
+      <div role="img" aria-label="Bandwidth chart" className="studio-chart">
         {stats.daily.map((d) => {
           const h = Math.round((d.bytes / max) * 100)
           const minH = d.bytes > 0 ? 4 : 2
@@ -50,7 +58,7 @@ export function ChannelEgressPanel({
           return (
             <div
               key={d.date}
-              title={`${d.date}: ${formatMb(d.bytes)}, ${d.downloads} downloads`}
+              title={`${d.date}: ${formatMb(d.bytes)} total (${formatMb(d.downloadBytes)} dl + ${formatMb(d.estimatedLiveBytes)} live est.)`}
               className="studio-chart-bar studio-chart-bar--egress"
               style={{
                 ['--studio-bar-pct' as string]: `${barPct}%`,
@@ -61,7 +69,8 @@ export function ChannelEgressPanel({
         })}
       </div>
       <Text size="sm" tone="muted">
-        UTC daily totals (HLS live egress not included yet)
+        {stats.liveEstimateNote ??
+          'Live HLS uses a one-listener bitrate estimate until edge byte counters ship.'}
       </Text>
     </Panel>
   )
