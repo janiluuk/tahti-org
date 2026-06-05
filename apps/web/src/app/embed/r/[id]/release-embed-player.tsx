@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { Link, Text } from '@tahti/ui'
 
 interface Track {
   id: string
@@ -65,24 +65,18 @@ export default function ReleaseEmbedPlayer({ release }: { release: ReleaseEmbed 
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}>
+      <div className="embed-header">
         {release.artworkUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={release.artworkUrl}
-            alt=""
-            width={56}
-            height={56}
-            style={{ borderRadius: 6, objectFit: 'cover' }}
-          />
+          <img src={release.artworkUrl} alt="" className="embed-artwork" width={56} height={56} />
         )}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{release.title}</div>
+        <div className="embed-header__meta">
+          <p className="embed-header__title">{release.title}</p>
           <Link
             href={release.profileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: '#93c5fd', fontSize: '0.8rem' }}
+            className="embed-header__link"
           >
             {release.artist.displayName} on Tahti
           </Link>
@@ -90,53 +84,25 @@ export default function ReleaseEmbedPlayer({ release }: { release: ReleaseEmbed 
       </div>
 
       {playable.length === 0 ? (
-        <p style={{ color: '#9ca3af', margin: 0, fontSize: '0.85rem' }}>No playable tracks yet.</p>
+        <Text as="p" className="embed-empty">
+          No playable tracks yet.
+        </Text>
       ) : (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        <ul className="embed-track-list">
           {playable.map((t) => (
-            <li
-              key={t.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.35rem 0',
-                borderTop: '1px solid #262626',
-              }}
-            >
+            <li key={t.id} className="embed-track-item">
               <button
                 type="button"
                 onClick={() => playTrack(t)}
                 disabled={loadingId === t.id}
                 aria-label={`Play ${t.title}`}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  border: 'none',
-                  background: playingId === t.id ? '#2563eb' : '#374151',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  fontSize: '0.7rem',
-                  flexShrink: 0,
-                }}
+                className={`embed-track-play${playingId === t.id ? ' embed-track-play--active' : ''}`}
               >
                 {loadingId === t.id ? '…' : playingId === t.id ? '■' : '▶'}
               </button>
-              <span
-                style={{
-                  flex: 1,
-                  fontSize: '0.85rem',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {t.title}
-              </span>
+              <span className="embed-track-title">{t.title}</span>
               {t.durationSec != null && (
-                <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>
-                  {formatDuration(t.durationSec)}
-                </span>
+                <span className="embed-track-duration">{formatDuration(t.durationSec)}</span>
               )}
             </li>
           ))}
@@ -144,17 +110,13 @@ export default function ReleaseEmbedPlayer({ release }: { release: ReleaseEmbed 
       )}
 
       {audioUrl && (
-        <audio
-          key={audioUrl}
-          src={audioUrl}
-          controls
-          autoPlay
-          style={{ width: '100%', marginTop: '0.75rem' }}
-        />
+        <audio key={audioUrl} src={audioUrl} controls autoPlay className="embed-audio" />
       )}
 
       {error && (
-        <p style={{ color: '#fca5a5', fontSize: '0.8rem', margin: '0.5rem 0 0' }}>{error}</p>
+        <Text as="p" className="embed-error">
+          {error}
+        </Text>
       )}
     </div>
   )

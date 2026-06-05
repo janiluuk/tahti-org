@@ -496,6 +496,24 @@
   color: #d4920a;
 }
 
+.auth-cta-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tahti-space-3);
+}
+
+.auth-cta-stack .ui-btn {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+}
+
+.auth-card--dark .ui-heading--1 {
+  color: #e8eaf6;
+  margin-bottom: var(--tahti-space-3);
+}
+
 /* ---- Listen / channel directory ---- */
 .listen-shell {
   min-height: 100vh;
@@ -510,6 +528,12 @@
 
 .listen-header .brand-logo {
   color: #e8eaf6;
+  margin-bottom: var(--tahti-space-2);
+}
+
+.listen-header .ui-heading--1 {
+  color: #e8eaf6;
+  margin-bottom: var(--tahti-space-1);
 }
 
 .listen-section {

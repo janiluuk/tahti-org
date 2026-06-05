@@ -25,6 +25,7 @@ alwaysApply: true
 | **Studio (dark dashboard)** | `/dashboard` | `tokens.css`, `components.css`, `styles/brand-studio.css` |
 | **Admin (forms in mixed pages)** | root `globals.css` | `styles/admin-tokens.css`, `styles/admin-ui.css` |
 | **Auth / gateway (light)** | `/login`, `/join`, `/` | `styles/brand-public.css` + admin tokens as needed |
+| **Embed (dark minimal)** | `/embed` | `styles/embed.css` |
 
 ## Component map
 
@@ -39,6 +40,7 @@ alwaysApply: true
 | Marketing site | `MarketingButton`, `Nav`, `Card`, `SectionHeader` |
 | Escaped user text | `SafePlainText` |
 | Auth wordmark | `BrandLogo` |
+| Iframe embeds | `EmbedShell` + `styles/embed.css` |
 
 ## Adding a new component
 

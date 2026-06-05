@@ -2,7 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ChannelCard } from '@tahti/shared'
-import { BgCanvas, Heading, Link, Text } from '@/components/ui'
+import { BrandLogo, Heading, Text } from '@tahti/ui'
+import { BgCanvas } from '@/components/ui/bg-canvas'
 
 async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCard[] }> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -17,7 +18,7 @@ async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCa
   }
 }
 
-function ChannelCard({ channel }: { channel: ChannelCard }) {
+function ChannelCardItem({ channel }: { channel: ChannelCard }) {
   const isLive = channel.state === 'LIVE'
 
   return (
@@ -64,13 +65,8 @@ export default async function ListenPage() {
       <BgCanvas />
       <div className="listen-shell">
         <header className="listen-header">
-          <Link href="/" className="brand-logo" style={{ marginBottom: '0.5rem' }}>
-            <span className="brand-logo-bar" aria-hidden />
-            TAHTI
-          </Link>
-          <Heading level={1} style={{ color: '#e8eaf6', marginBottom: '0.25rem' }}>
-            Listen
-          </Heading>
+          <BrandLogo />
+          <Heading level={1}>Listen</Heading>
           <Text tone="muted">Independent artists broadcasting live and on-demand.</Text>
         </header>
 
@@ -85,7 +81,7 @@ export default async function ListenPage() {
                 <div className="listen-section__label listen-section__label--live">● Live now</div>
                 <div className="listen-grid">
                   {live.map((ch) => (
-                    <ChannelCard key={ch.slug} channel={ch} />
+                    <ChannelCardItem key={ch.slug} channel={ch} />
                   ))}
                 </div>
               </section>
@@ -96,7 +92,7 @@ export default async function ListenPage() {
                 <div className="listen-section__label">Recently active</div>
                 <div className="listen-grid">
                   {recent.map((ch) => (
-                    <ChannelCard key={ch.slug} channel={ch} />
+                    <ChannelCardItem key={ch.slug} channel={ch} />
                   ))}
                 </div>
               </section>
