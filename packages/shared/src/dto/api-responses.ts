@@ -182,6 +182,8 @@ export const MembershipStatusResponseSchema = z.object({
   tier: z.string(),
   priceCents: z.number().int(),
   emailVerified: z.boolean(),
+  renewalDueAt: z.coerce.date().nullable().optional(),
+  hasStripeSubscription: z.boolean().optional(),
 })
 
 export const StripeCheckoutUrlResponseSchema = z.object({

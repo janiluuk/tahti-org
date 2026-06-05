@@ -12,11 +12,11 @@ import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import {
   stripeEnabled,
-  createCheckoutSession,
+  createMembershipCheckoutSession,
   createStripeCustomer,
   createBillingPortalSession,
 } from '../../lib/stripe.js'
-import { activateMembership } from '../../lib/membership.js'
+import { activateMembership, membershipRenewalDueAt } from '../../lib/membership.js'
 
 const membershipRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/membership — current membership status
@@ -35,6 +35,7 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
       const membership = await fastify.prisma.membership.findUnique({
         where: { userId: user.id },
       })
+      const renewalDueAt = membershipRenewalDueAt(user.memberSince)
       return reply.send({
         status: membership?.status ?? 'PENDING_EMAIL',
         isMember: user.isMember,
@@ -43,6 +44,8 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
         tier: user.tier,
         priceCents: config.membership.priceCents,
         emailVerified: !!user.emailVerifiedAt,
+        renewalDueAt,
+        hasStripeSubscription: !!user.stripeMembershipSubscriptionId,
       })
     },
   )
@@ -64,15 +67,21 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: 'Verify your email before paying for membership' })
       }
 
-      if (user.isMember) {
-        return reply.status(409).send({ error: 'You are already a member' })
-      }
-
       const membership = await fastify.prisma.membership.findUnique({
         where: { userId: user.id },
       })
       if (membership?.status === 'PENDING_EMAIL') {
         return reply.status(400).send({ error: 'Verify your email first' })
+      }
+
+      if (user.isMember && user.stripeMembershipSubscriptionId) {
+        return reply.status(409).send({
+          error: 'You already have an active membership subscription — use Manage billing',
+        })
+      }
+
+      if (user.isMember && !user.stripeMembershipSubscriptionId) {
+        return reply.status(409).send({ error: 'You are already a member' })
       }
 
       if (!stripeEnabled) {
@@ -87,8 +96,17 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const session = await createCheckoutSession({
-          customerEmail: user.email,
+        let customerId = user.stripeCustomerId
+        if (!customerId) {
+          customerId = await createStripeCustomer({ email: user.email, userId: user.id })
+          await fastify.prisma.user.update({
+            where: { id: user.id },
+            data: { stripeCustomerId: customerId },
+          })
+        }
+
+        const session = await createMembershipCheckoutSession({
+          customerId,
           successUrl: `${config.appUrl}/dashboard?membership=success`,
           cancelUrl: `${config.appUrl}/dashboard?membership=canceled`,
           unitAmountCents: config.membership.priceCents,

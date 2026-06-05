@@ -310,8 +310,9 @@ model User {
   memberNumber          Int?       @unique
   memberSince           DateTime?
   publicAttribution     Boolean    @default(true)
-  stripeCustomerId              String?
-  stripeConnectAccountId        String?  @unique
+  stripeCustomerId                  String?
+  stripeMembershipSubscriptionId    String?  @unique
+  stripeConnectAccountId            String?  @unique
   stripeConnectChargesEnabled   Boolean  @default(false)
   softTargetBytes               BigInt   @default(524288000)
   hiddenCeilingBytes    BigInt     @default(53687091200)

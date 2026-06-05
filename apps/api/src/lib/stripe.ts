@@ -70,7 +70,7 @@ function accountSnapshot(raw: Record<string, unknown>): StripeAccountSnapshot {
   }
 }
 
-/** Create a one-time Stripe Checkout session (membership). */
+/** Create a one-time Stripe Checkout session (legacy dev / fallback). */
 export async function createCheckoutSession(params: {
   customerEmail: string
   successUrl: string
@@ -91,6 +91,44 @@ export async function createCheckoutSession(params: {
   }
   for (const [k, v] of Object.entries(params.metadata)) {
     fields[`metadata[${k}]`] = v
+  }
+
+  const data = (await stripePost('/checkout/sessions', fields)) as {
+    id?: string
+    url?: string
+  }
+  if (!data.id || !data.url) throw new Error('Stripe Checkout returned an incomplete session')
+  return { id: data.id, url: data.url }
+}
+
+/** Annual membership Checkout — Stripe subscription (yearly renewal + invoice.paid ledger). */
+export async function createMembershipCheckoutSession(params: {
+  customerEmail?: string
+  customerId?: string
+  successUrl: string
+  cancelUrl: string
+  unitAmountCents: number
+  productName: string
+  metadata: Record<string, string>
+}): Promise<CheckoutSessionResult> {
+  const fields: Record<string, string> = {
+    mode: 'subscription',
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+    'line_items[0][price_data][currency]': 'eur',
+    'line_items[0][price_data][unit_amount]': String(params.unitAmountCents),
+    'line_items[0][price_data][recurring][interval]': 'year',
+    'line_items[0][price_data][product_data][name]': params.productName,
+    'line_items[0][quantity]': '1',
+  }
+  if (params.customerId) {
+    fields.customer = params.customerId
+  } else if (params.customerEmail) {
+    fields.customer_email = params.customerEmail
+  }
+  for (const [k, v] of Object.entries(params.metadata)) {
+    fields[`metadata[${k}]`] = v
+    fields[`subscription_data[metadata][${k}]`] = v
   }
 
   const data = (await stripePost('/checkout/sessions', fields)) as {
@@ -201,6 +239,21 @@ export async function createFanSubCheckoutSession(params: {
   }
   if (!data.id || !data.url) throw new Error('Stripe Checkout returned an incomplete session')
   return { id: data.id, url: data.url }
+}
+
+/** Fetch subscription metadata (membership invoice.paid fallback before checkout completes). */
+export async function fetchSubscriptionMetadata(
+  subscriptionId: string,
+): Promise<Record<string, string>> {
+  const data = (await stripeGet(`/subscriptions/${encodeURIComponent(subscriptionId)}`)) as Record<
+    string,
+    unknown
+  >
+  const meta = data.metadata
+  if (!meta || typeof meta !== 'object') return {}
+  return Object.fromEntries(
+    Object.entries(meta as Record<string, unknown>).map(([k, v]) => [k, String(v)]),
+  )
 }
 
 export interface StripeEvent {
