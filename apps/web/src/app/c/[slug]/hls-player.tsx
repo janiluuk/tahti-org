@@ -90,18 +90,14 @@ export default function HlsPlayer({ url }: { url: string }) {
   return (
     <div>
       {buffering && (
-        <p
-          role="status"
-          aria-live="polite"
-          style={{ fontSize: '0.85rem', color: '#888', margin: '0 0 0.35rem' }}
-        >
+        <p role="status" aria-live="polite" className="ch-player-buffering">
           Buffering live stream…
         </p>
       )}
       <audio
         ref={audioRef}
         controls
-        style={{ width: '100%' }}
+        className="ch-player-audio"
         aria-label="Live stream player"
         data-testid="channel-live-player"
       />

@@ -189,7 +189,7 @@ export default function ChatPanel({
       </div>
 
       {announcements.length > 0 && (
-        <div style={{ padding: '0 1rem', paddingTop: '0.75rem' }}>
+        <div className="ch-chat-announcements">
           {announcements.map((a) => (
             <div key={a.id} className="pinned-msg">
               <div className="pin-label">📌 PINNED</div>

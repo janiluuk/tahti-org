@@ -113,6 +113,221 @@
   margin-bottom: 1.5rem;
 }
 
+[data-tahti-ui='brand'] .ch-artist-header-row {
+  margin-bottom: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-artist-avatar {
+  border-radius: 50%;
+}
+
+[data-tahti-ui='brand'] .ch-artist-name {
+  margin-bottom: 0.15rem;
+}
+
+[data-tahti-ui='brand'] .ch-channel-backdrop {
+  width: 100%;
+  max-height: 220px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 120px;
+  background: center/cover no-repeat var(--ch-backdrop-image);
+}
+
+[data-tahti-ui='brand'] .ch-next-broadcast-time {
+  margin-top: 0.25rem;
+}
+
+[data-tahti-ui='brand'] .ch-player-buffering {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 0.35rem;
+}
+
+[data-tahti-ui='brand'] .ch-player-audio {
+  width: 100%;
+}
+
+[data-tahti-ui='brand'] .ch-video-backdrop {
+  position: relative;
+  width: 100%;
+  padding-bottom: 28%;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #111;
+}
+
+[data-tahti-ui='brand'] .ch-video-backdrop iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+[data-tahti-ui='brand'] .ch-archive-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item--bg {
+  background-image: linear-gradient(rgba(10, 15, 30, 0.88), rgba(10, 15, 30, 0.88)), var(--ch-item-bg);
+  background-size: cover;
+  background-position: center;
+}
+
+[data-tahti-ui='brand'] .ch-archive-banner {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-slideshow {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-slideshow img {
+  height: 72px;
+  width: 72px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-archive-audio {
+  width: 100%;
+}
+
+[data-tahti-ui='brand'] .ch-download {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .ch-download-btn {
+  font-size: inherit;
+  margin-right: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  background: var(--card2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-download-btn:last-child {
+  margin-right: 0;
+}
+
+[data-tahti-ui='brand'] .ch-download-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='brand'] .ch-download-actions {
+  margin-top: 0.35rem;
+}
+
+[data-tahti-ui='brand'] .ch-download-alt {
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-download-alt a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .ch-download-alt a:hover {
+  color: var(--amber);
+}
+
+[data-tahti-ui='brand'] .ch-download-error {
+  color: var(--coral);
+  margin: 0.35rem 0 0;
+}
+
+[data-tahti-ui='brand'] .ch-chat-panel--sub {
+  height: auto;
+  position: static;
+  margin-top: 0;
+}
+
+[data-tahti-ui='brand'] .ch-chat-messages--short {
+  max-height: 180px;
+}
+
+[data-tahti-ui='brand'] .ch-chat-announcements {
+  padding: 0.75rem 1rem 0;
+}
+
+[data-tahti-ui='brand'] .ch-reactions {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+[data-tahti-ui='brand'] .ch-reaction-fly {
+  position: absolute;
+  bottom: 0;
+  left: var(--ch-reaction-x, 50%);
+  font-size: 1.6rem;
+  line-height: 1;
+  animation: ch-reaction-fly-up 2.4s ease-out forwards;
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes ch-reaction-fly-up {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(-140px) scale(1.1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-220px) scale(0.7);
+    opacity: 0;
+  }
+}
+
+[data-tahti-ui='brand'] .ch-reaction-bar {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  gap: 0.35rem;
+  z-index: 10;
+}
+
+[data-tahti-ui='brand'] .ch-reaction-btn {
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: transform 0.1s;
+}
+
+[data-tahti-ui='brand'] .ch-reaction-btn:active {
+  transform: scale(0.85);
+}
+
 [data-tahti-ui='brand'] .ch-artist-bio {
   margin-top: 0.35rem;
   color: var(--muted);
