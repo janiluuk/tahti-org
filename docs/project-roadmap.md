@@ -88,7 +88,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`; claim links (Spotify, Apple, YouTube). Deferred: Discogs API |
 | **M29** Backup & DR | 🟡 Partial | **`scripts/backup.sh`** (postgres, minio DR mirror, restore-test, status + DR age); **`ops/RUNBOOK.md`** restore + drill table; `install-crons.sh`; `/metrics` backup gauge. Deferred: pgBackRest PITR |
-| **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API (`45m`/`55m`/`grace`/`blocked`) + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: further copy polish |
+| **M20** Tier gating | 🟢 Done | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API + **upgrade CTA**, HLS tier split, **`/help/tier-limits`**, vital-flows e2e |
 
 ### Improvements identified during the audit (added to the roadmap)
 
@@ -220,7 +220,7 @@ failover stack promoted. Document exact DNS/Caddy cutover in `ops/RUNBOOK.md`.
 | [ ] | pgBackRest (replace interim `pg_dump` when hardware stable) + WAL shipping | Dev | Postgres prod | `future-improvements.md` |
 | [x] | Pre-destructive-op snapshot: `scripts/pre-destructive-db-snapshot.sh` before migrations / volume resize | Dev | — | `technical/phase-7.md` |
 | [x] | `ops/RUNBOOK.md` — restore Postgres, restore MinIO prefix, DR read-only cutover | Dev | restore test passed once | Phase 9 |
-| [ ] | Operator drill: restore from yesterday's backup without director (timed exercise) | Operators | RUNBOOK | Phase 9 §8b |
+| [~] | Operator drill: restore from yesterday's backup without director (timed exercise) | Operators | `./scripts/backup-drill.sh` automates restore-test + status | Phase 9 §8b |
 | [ ] | DPA signed with UpCloud before storing artist/listener data offsite | Director | association | `infra-strategy.md` §GDPR |
 
 **Exit criteria:** latest PG backup restorable within RTO in a documented drill;
@@ -242,7 +242,7 @@ Minimum to put **20–50 scene artists** on air. Full acceptance criteria in
 | [x] | **M3** | Icecast + RTMP; Liquidsoap per channel; public channel page (browser live deferred) | Dev |
 | [x] | **M4** | Auto-archive live sets to archive | Dev |
 | [x] | **M5** | Live chat (Centrifugo), announcements, moderation, reactions, presence | Dev |
-| [~] | **M20** (partial) | Free tier: 1 hr/week live cap + MP3 HLS; paid: FLAC HLS + unlimited live | Dev |
+| [x] | **M20** (partial) | Free tier: 1 hr/week live cap + MP3 HLS; paid: FLAC HLS + unlimited live | Dev |
 
 **MVP test matrix (must pass before inviting beta artists):**
 
@@ -253,8 +253,8 @@ Minimum to put **20–50 scene artists** on air. Full acceptance criteria in
 | [ ] | Mixxx / Icecast path works | manual |
 | [ ] | Stop broadcast → archive within 10s, no silence | manual |
 | [ ] | Chat: anonymous join, 24h expiry, artist ban | manual |
-| [ ] | Free user hits weekly hour cap gracefully | M20 |
-| [ ] | Paid channel streams FLAC; free channel MP3 | M20 |
+| [x] | Free user hits weekly hour cap gracefully | M20 |
+| [x] | Paid channel streams FLAC; free channel MP3 | M20 |
 | [ ] | Load test: N concurrent listeners on one channel | script |
 
 **Exit criteria:** 5 internal dogfood channels running 48h without intervention.
@@ -294,7 +294,7 @@ Can ship incrementally during beta.
 |:---:|---|---|---|
 | [~] | **M12** | Profile + releases + smart links + MinIO cover art | High |
 | [~] | **M30** | Release ops toolkit (MusicBrainz, catalog metadata, release checklist) | Medium |
-| [~] | **M20** | Tier gating polish, upgrade UX | High |
+| [x] | **M20** | Tier gating polish, upgrade UX | High |
 | [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
 | [~] | **M14** | Embed pages done; social auto-post + analytics remain | Medium |
 | [~] | **M13** | Newsletter API + worker; SES + bounce webhook remain | Medium |

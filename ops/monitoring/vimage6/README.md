@@ -21,7 +21,7 @@ Installs:
 |----------|---------|
 | `GET /health` | Liveness; `200` if Postgres up, `degraded` if non-critical deps down |
 | `GET /api/v1/status` | Rich JSON for Upptime / external monitors |
-| `GET /metrics` | Prometheus gauges: `tahti_dependency_up`, `tahti_api_healthy`, latencies, **`tahti_postgres_backup_age_hours`** |
+| `GET /metrics` | Prometheus gauges: `tahti_dependency_up`, `tahti_api_healthy`, latencies, **`tahti_postgres_backup_age_hours`**, **`tahti_acrcloud_identify_*`** |
 
 ## Blackbox probes
 

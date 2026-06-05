@@ -40,6 +40,13 @@ All backup operations use **`scripts/backup.sh`**:
 | `restore-test` | Weekly restore to throwaway Postgres (Sunday cron) |
 | `status` | Print backup age; exit 1 if >26h, 2 if >48h (monitoring) |
 
+**Operator drill** (quarterly timed exercise):
+
+```bash
+chmod +x scripts/backup-drill.sh   # once after clone
+sudo ./scripts/backup-drill.sh     # restore-test + status; logs to /var/log/tahti-backup-drill.log
+```
+
 Install host cron: `sudo ./scripts/install-crons.sh` → `/etc/cron.d/tahti-backup`
 
 Legacy wrappers (`backup-postgres.sh`, `backup-minio.sh`, `restore-test.sh`, `ops/backup-*.sh`) forward to `backup.sh`.

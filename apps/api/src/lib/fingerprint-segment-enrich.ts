@@ -2,6 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { identifyAcrcloudAudioSample, type LiveFingerprintSegment } from '@tahti/shared'
+import {
+  recordAcrcloudIdentifyMatch,
+  recordAcrcloudIdentifyMiss,
+  recordAcrcloudIdentifyRequest,
+} from './acrcloud-metrics.js'
 import { config } from '../config.js'
 
 export async function enrichFingerprintSegmentFromAcrcloud(
@@ -20,13 +25,19 @@ export async function enrichFingerprintSegmentFromAcrcloud(
 
   if (sample.length === 0 || sample.length > 400_000) return segment
 
+  recordAcrcloudIdentifyRequest()
   const match = await identifyAcrcloudAudioSample(sample, {
     host: config.acrcloud.host,
     accessKey: config.acrcloud.accessKey,
     accessSecret: config.acrcloud.accessSecret,
   })
 
-  if (!match) return segment
+  if (!match) {
+    recordAcrcloudIdentifyMiss()
+    return segment
+  }
+
+  recordAcrcloudIdentifyMatch()
 
   return {
     ...segment,

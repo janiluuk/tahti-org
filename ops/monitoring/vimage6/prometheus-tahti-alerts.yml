@@ -41,3 +41,18 @@ groups:
           description: >-
             API could not list MinIO backups/pg/ (empty bucket, credentials, or network).
             Verify MinIO backups bucket and API S3 access.
+
+  - name: tahti-acrcloud
+    rules:
+      - alert: TahtiAcrcloudIdentifyBurst
+        expr: |
+          increase(tahti_acrcloud_identify_requests_total{job="tahti_api_metrics"}[1h]) > 500
+        for: 10m
+        labels:
+          severity: warning
+          service: tahti
+        annotations:
+          summary: High ACRCloud identify volume (>500/h)
+          description: >-
+            Ingest fingerprint enrichment is calling ACRCloud heavily ({{ $value | humanize }}
+            requests in the last hour). Check live channel count and ACRCloud billing dashboard.

@@ -16,6 +16,9 @@ export default function UpgradeCta({ show }: { show: boolean }) {
       <Link href="/dashboard#membership" className="studio-link-cta">
         View membership →
       </Link>
+      <p className="studio-text-sm studio-text-muted studio-m-0 studio-mt-sm">
+        <Link href="/help/tier-limits">Free vs paid tier limits →</Link>
+      </p>
     </div>
   )
 }
