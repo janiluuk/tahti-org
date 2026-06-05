@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { prisma } from '@tahti/db'
 import Fastify from 'fastify'
 import { broadcastSessionLogFields } from '@tahti/shared'
 import {
@@ -11,6 +12,7 @@ import {
   getActiveChannels,
 } from './liquidsoap.js'
 import { getActiveRecorders } from './recorder.js'
+import { getActiveEdgeEncoders } from './edge-encoder.js'
 
 const PORT = parseInt(process.env.PORT ?? '3003', 10)
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
@@ -28,6 +30,7 @@ fastify.addHook('preHandler', async (request, reply) => {
 fastify.get('/health', async () => ({
   ok: true,
   channels: getActiveChannels(),
+  edgeEncoders: getActiveEdgeEncoders(),
   recorders: getActiveRecorders(),
 }))
 
@@ -72,10 +75,15 @@ fastify.post('/restart', async (request, reply) => {
   }
 
   await stopLiquidsoapContainer(channelId)
-  await spawnLiquidsoapContainer(channelId, slug, broadcastId)
+
+  const broadcast = await prisma.broadcast.findUnique({
+    where: { id: broadcastId },
+    select: { source: true },
+  })
+  await spawnLiquidsoapContainer(channelId, slug, broadcastId, broadcast?.source ?? 'ICECAST')
   request.log.info(
     broadcastSessionLogFields({ broadcastId, channelId, slug }),
-    'liquidsoap restarted (recorder sidecar kept running)',
+    'liquidsoap restarted (edge encoder + recorder sidecars kept running)',
   )
   return reply.send({ ok: true, restarted: true })
 })

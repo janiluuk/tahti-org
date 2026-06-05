@@ -276,7 +276,7 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | ID | Issue | Severity |
 |----|-------|----------|
 | STREAM-001 | HLS segments on shared Docker volume, not MinIO | CRITICAL — blocks horizontal scaling |
-| STREAM-002 | No edge encoder tier — Liquidsoap receives raw RTMP directly | HIGH |
+| STREAM-002 | RTMP edge encoder → MP3 HTTP relay (phase 1); dual-bitrate + chromaprint deferred | HIGH (partial) |
 | STREAM-003 | Ingest DNS failover has 30s dead window | HIGH |
 | STREAM-004 | ~~Recording is a Liquidsoap sidecar~~ — ffmpeg recorder sidecar (STREAM-004) | ~~HIGH~~ done |
 | STREAM-005 | No per-channel health watchdog — silent channels go undetected | HIGH |

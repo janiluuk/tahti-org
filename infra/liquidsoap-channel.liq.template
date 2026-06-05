@@ -9,9 +9,8 @@
 
 settings.log.level := 3
 
-# --- Live input: pull from central Icecast mount (Mixxx / Traktor / butt) ---
-# Artist connects to ingest Icecast; Liquidsoap reads the same mount over HTTP.
-live_icecast = input.http("{{ICECAST_LIVE_URL}}")
+# --- Live input: HTTP pull (Icecast mount or RTMP edge-encoder relay — STREAM-002) ---
+live_icecast = input.http("{{LIVE_INPUT_URL}}")
 live_source = mksafe(live_icecast)
 
 # --- Archive playlist (the fallback) ---
