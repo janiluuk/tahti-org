@@ -6,7 +6,10 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { promisify } from 'node:util'
 import { createDecipheriv } from 'node:crypto'
 import { prisma } from '@tahti/db'
+import type { BroadcastSource } from '@tahti/db'
 import { spawnBroadcastRecorder, stopChannelRecorders, stopBroadcastRecorder } from './recorder.js'
+import { spawnEdgeEncoder, stopChannelEdgeEncoders } from './edge-encoder.js'
+import { liveInputUrl } from './live-input.js'
 
 const execAsync = promisify(exec)
 
@@ -15,7 +18,6 @@ const TEMPLATE_PATH = process.env.LIQUIDSOAP_TEMPLATE ?? '/srv/liquidsoap-channe
 const HLS_VOLUME = process.env.HLS_VOLUME ?? 'tahti_stack_hls'
 const RECORDINGS_VOLUME = process.env.RECORDINGS_VOLUME ?? 'tahti_recordings_shared'
 const API_URL = process.env.API_URL ?? 'http://api:3001'
-const ICECAST_BASE_URL = (process.env.ICECAST_BASE_URL ?? 'http://icecast:8000').replace(/\/$/, '')
 const DOCKER_NETWORK = process.env.CHANNEL_NETWORK ?? 'tahti-stack_default'
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
 
@@ -44,10 +46,13 @@ export async function spawnLiquidsoapContainer(
   channelId: string,
   slug: string,
   broadcastId: string,
+  source: BroadcastSource = 'ICECAST',
 ): Promise<void> {
   if (activeChannels.has(channelId)) {
     return
   }
+
+  const inputUrl = liveInputUrl(source, slug)
 
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
@@ -77,7 +82,8 @@ export async function spawnLiquidsoapContainer(
   const templateRaw = await readFile(TEMPLATE_PATH, 'utf8')
   let config = templateRaw
     .replace(/\{\{CHANNEL_ID\}\}/g, channelId)
-    .replace(/\{\{ICECAST_LIVE_URL\}\}/g, `${ICECAST_BASE_URL}/live/${slug}`)
+    .replace(/\{\{LIVE_INPUT_URL\}\}/g, inputUrl)
+    .replace(/\{\{ICECAST_LIVE_URL\}\}/g, inputUrl)
     .replace(/\{\{LIVE_SOURCE_PASSWORD\}\}/g, channel.liveSourcePass)
     .replace(/\{\{HARBOR_NOWPLAYING_PORT\}\}/g, '8002')
     .replace(/\{\{FALLBACK_MODE\}\}/g, channel.fallbackMode)
@@ -122,14 +128,12 @@ export async function spawnLiquidsoapContainer(
   activeChannels.set(channelId, containerName)
 }
 
-/** Ensure Liquidsoap + ffmpeg recorder sidecar for a live broadcast. */
+/** Ensure edge encoder (RTMP) + Liquidsoap + ffmpeg recorder for a live broadcast. */
 export async function spawnChannel(
   channelId: string,
   slug: string,
   broadcastId: string,
 ): Promise<void> {
-  await spawnLiquidsoapContainer(channelId, slug, broadcastId)
-
   const broadcast = await prisma.broadcast.findUnique({
     where: { id: broadcastId },
     select: {
@@ -138,6 +142,13 @@ export async function spawnChannel(
     },
   })
   const source = broadcast?.source ?? 'ICECAST'
+
+  if (source === 'RTMP') {
+    await spawnEdgeEncoder(channelId, slug, broadcast?.channel.rtmpStreamKey)
+  }
+
+  await spawnLiquidsoapContainer(channelId, slug, broadcastId, source)
+
   await spawnBroadcastRecorder(
     channelId,
     slug,
@@ -164,6 +175,7 @@ export async function stopLiquidsoapContainer(channelId: string): Promise<void> 
 export async function stopChannel(channelId: string): Promise<void> {
   await stopLiquidsoapContainer(channelId)
   await stopChannelRecorders(channelId)
+  await stopChannelEdgeEncoders(channelId)
 }
 
 export { stopBroadcastRecorder }

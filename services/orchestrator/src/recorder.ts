@@ -4,16 +4,22 @@
 import { exec } from 'node:child_process'
 import { promisify } from 'node:util'
 import type { BroadcastSource } from '@tahti/db'
+import { edgeEncoderRelayUrl } from './edge-encoder.js'
+import {
+  DOCKER_NETWORK,
+  FFMPEG_IMAGE,
+  ICECAST_BASE_URL,
+  RECORDINGS_VOLUME,
+} from './docker-streaming.js'
 
 const execAsync = promisify(exec)
 
-export const FFMPEG_IMAGE = process.env.FFMPEG_IMAGE ?? 'jrotting/ffmpeg:6-alpine'
-export const RECORDINGS_VOLUME = process.env.RECORDINGS_VOLUME ?? 'tahti_stack_recordings'
-export const ICECAST_BASE_URL = (process.env.ICECAST_BASE_URL ?? 'http://icecast:8000').replace(
-  /\/$/,
-  '',
-)
-export const DOCKER_NETWORK = process.env.CHANNEL_NETWORK ?? 'tahti-stack_default'
+export {
+  FFMPEG_IMAGE,
+  RECORDINGS_VOLUME,
+  ICECAST_BASE_URL,
+  DOCKER_NETWORK,
+} from './docker-streaming.js'
 
 /** Predictable WAV path written by the ffmpeg sidecar (STREAM-004). */
 export function broadcastRecordingPath(channelId: string, broadcastId: string): string {
@@ -39,6 +45,12 @@ export function buildRecorderDockerCommand(opts: {
     '-hide_banner',
     '-loglevel',
     'warning',
+    '-reconnect',
+    '1',
+    '-reconnect_streamed',
+    '1',
+    '-reconnect_delay_max',
+    '5',
     '-i',
     opts.inputUrl,
     '-acodec',
@@ -72,19 +84,14 @@ async function removeContainer(containerName: string): Promise<void> {
   }
 }
 
-export const RTMP_INGEST_URL = (process.env.RTMP_INGEST_URL ?? 'rtmp://rtmp-ingest:1935').replace(
-  /\/$/,
-  '',
-)
-
 export function recorderInputUrl(
   source: BroadcastSource,
   slug: string,
-  rtmpStreamKey?: string | null,
+  _rtmpStreamKey?: string | null,
 ): string {
   if (source === 'RTMP') {
-    const streamName = rtmpStreamKey ? `${slug}__${rtmpStreamKey}` : slug
-    return `${RTMP_INGEST_URL}/live/${streamName}`
+    // Normalized feed from edge encoder (spawned before recorder)
+    return edgeEncoderRelayUrl(slug)
   }
   // ICECAST and WEBRTC (relay TBD) — Liquidsoap harbor mount
   return `${ICECAST_BASE_URL}/live/${slug}`

@@ -14,9 +14,9 @@ describe('recorderInputUrl', () => {
     expect(recorderInputUrl('ICECAST', 'artist-one')).toBe('http://icecast:8000/live/artist-one')
   })
 
-  it('uses RTMP app path with slug__key for RTMP source', () => {
+  it('uses edge encoder relay for RTMP source', () => {
     expect(recorderInputUrl('RTMP', 'artist-one', 'secret-key')).toBe(
-      'rtmp://rtmp-ingest:1935/live/artist-one__secret-key',
+      'http://tahti-edge-artist-one:8090/stream',
     )
   })
 })
