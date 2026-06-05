@@ -112,61 +112,31 @@ export default function FanChatPanel({ slug }: { slug: string }) {
   if (!token && !error) return null
 
   return (
-    <section
-      style={{
-        marginTop: '1rem',
-        border: '1px solid #e0e7ff',
-        borderRadius: 8,
-        overflow: 'hidden',
-        background: '#f8fafc',
-      }}
-    >
-      <div style={{ padding: '0.6rem 1rem', fontWeight: 600, fontSize: '0.9rem' }}>
-        Fan chat
-        {status === 'connected' && (
-          <span style={{ marginLeft: '0.5rem', fontSize: '0.7rem', color: '#16a34a' }}>live</span>
-        )}
+    <section className="ch-chat-panel" style={{ height: 'auto', position: 'static', marginTop: 0 }}>
+      <div className="ch-chat-panel__head">
+        <h4>FAN CHAT</h4>
+        {status === 'connected' && <span className="ch-chat-live-badge">live</span>}
       </div>
-      {error && (
-        <p style={{ padding: '0.5rem 1rem', color: '#dc2626', fontSize: '0.85rem', margin: 0 }}>
-          {error}
-        </p>
-      )}
+      {error && <div className="ch-chat-error">{error}</div>}
       {token && (
         <>
-          <div
-            ref={scrollRef}
-            style={{ maxHeight: 180, overflowY: 'auto', padding: '0.5rem 1rem' }}
-          >
+          <div ref={scrollRef} className="ch-chat-messages" style={{ maxHeight: 180 }}>
             {messages.map((m) => (
-              <div key={m.id} style={{ fontSize: '0.85rem', marginBottom: '0.35rem' }}>
-                <span style={{ fontWeight: 600 }}>{m.handle}</span>
-                <span style={{ marginLeft: '0.35rem' }}>{m.text}</span>
+              <div key={m.id} className="chat-msg">
+                <span className="handle supporter">{m.handle}</span>
+                <span className="text">{m.text}</span>
               </div>
             ))}
           </div>
-          <div
-            style={{
-              display: 'flex',
-              gap: '0.5rem',
-              padding: '0.6rem 1rem',
-              borderTop: '1px solid #e5e7eb',
-            }}
-          >
+          <div className="ch-chat-input-row">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
               placeholder="Fans only…"
               maxLength={500}
-              style={{
-                flex: 1,
-                padding: '0.35rem 0.5rem',
-                borderRadius: 4,
-                border: '1px solid #ccc',
-              }}
             />
-            <button type="button" onClick={sendMessage} style={{ padding: '0.35rem 0.75rem' }}>
+            <button type="button" className="ch-chat-send" onClick={sendMessage}>
               Send
             </button>
           </div>

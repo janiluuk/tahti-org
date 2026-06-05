@@ -177,116 +177,46 @@ export default function ChatPanel({
   }
 
   return (
-    <aside
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        border: '1px solid #eee',
-        borderRadius: 8,
-        height: 'calc(100vh - 6rem)',
-        position: 'sticky',
-        top: '1rem',
-        overflow: 'hidden',
-      }}
-    >
-      <div
-        style={{
-          padding: '0.75rem 1rem',
-          borderBottom: '1px solid #eee',
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-        }}
-      >
-        Chat
-        {status === 'connected' && (
-          <span
-            style={{
-              fontSize: '0.7rem',
-              background: '#16a34a',
-              color: '#fff',
-              padding: '0.1rem 0.4rem',
-              borderRadius: 3,
-            }}
-          >
-            live
-          </span>
-        )}
+    <aside className="ch-chat-panel">
+      <div className="ch-chat-panel__head">
+        <h4>LIVE CHAT</h4>
+        {status === 'connected' && <span className="ch-chat-live-badge">live</span>}
         {listenerCount !== null && listenerCount > 0 && (
-          <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: '#888', fontWeight: 400 }}>
+          <span className="ch-chat-listeners">
             {listenerCount} {listenerCount === 1 ? 'listener' : 'listeners'}
           </span>
         )}
       </div>
 
-      {/* Pinned announcements */}
       {announcements.length > 0 && (
-        <div style={{ borderBottom: '1px solid #f0f0f0' }}>
+        <div style={{ padding: '0 1rem', paddingTop: '0.75rem' }}>
           {announcements.map((a) => (
-            <div
-              key={a.id}
-              style={{
-                padding: '0.6rem 1rem',
-                background: '#fffbeb',
-                borderLeft: '3px solid #f59e0b',
-                fontSize: '0.85rem',
-              }}
-            >
+            <div key={a.id} className="pinned-msg">
+              <div className="pin-label">📌 PINNED</div>
               {a.body}
             </div>
           ))}
         </div>
       )}
 
-      {/* Message list */}
-      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '0.75rem 1rem' }}>
+      <div ref={scrollRef} className="ch-chat-messages">
         {messages.length === 0 && status !== 'connected' && (
-          <p style={{ color: '#aaa', fontSize: '0.85rem', textAlign: 'center', marginTop: '2rem' }}>
-            channel is quiet right now — say hi
-          </p>
+          <p className="ch-chat-empty">channel is quiet right now — say hi</p>
         )}
         {messages.map((m) => (
-          <div key={m.id} style={{ marginBottom: '0.5rem', fontSize: '0.85rem' }}>
-            <span style={{ fontWeight: 600, color: '#555' }}>{m.handle}</span>
-            {m.supporter && (
-              <span
-                style={{
-                  marginLeft: '0.25rem',
-                  fontSize: '0.65rem',
-                  background: '#dbeafe',
-                  color: '#1d4ed8',
-                  padding: '0.05rem 0.3rem',
-                  borderRadius: 3,
-                  verticalAlign: 'middle',
-                }}
-              >
-                supporter
-              </span>
-            )}
-            <span style={{ color: '#333', marginLeft: '0.4rem' }}>{m.text}</span>
+          <div key={m.id} className="chat-msg">
+            <span className={`handle${m.supporter ? ' supporter' : ''}`}>{m.handle}</span>
+            {m.supporter && <span className="chat-supporter-badge">supporter</span>}
+            <span className="text">{m.text}</span>
           </div>
         ))}
       </div>
 
-      {/* Error banner */}
-      {error && (
-        <div
-          style={{
-            padding: '0.5rem 1rem',
-            background: '#fef2f2',
-            color: '#dc2626',
-            fontSize: '0.8rem',
-          }}
-        >
-          {error}
-        </div>
-      )}
+      {error && <div className="ch-chat-error">{error}</div>}
 
-      {/* Join / send area */}
-      <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid #eee' }}>
+      <div className="ch-chat-input-row">
         {!token ? (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <>
             <input
               placeholder="Your handle"
               value={pendingHandle}
@@ -295,31 +225,17 @@ export default function ChatPanel({
                 if (e.key === 'Enter') void joinChat(pendingHandle)
               }}
               maxLength={32}
-              style={{
-                flex: 1,
-                padding: '0.4rem 0.6rem',
-                border: '1px solid #ccc',
-                borderRadius: 4,
-                fontSize: '0.85rem',
-              }}
             />
             <button
+              type="button"
+              className="ch-chat-send"
               onClick={() => void joinChat(pendingHandle)}
-              style={{
-                padding: '0.4rem 0.8rem',
-                background: '#111',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 4,
-                cursor: 'pointer',
-                fontSize: '0.85rem',
-              }}
             >
               Join
             </button>
-          </div>
+          </>
         ) : (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <>
             <input
               placeholder="Say something…"
               value={input}
@@ -329,31 +245,16 @@ export default function ChatPanel({
               }}
               maxLength={500}
               disabled={status !== 'connected'}
-              style={{
-                flex: 1,
-                padding: '0.4rem 0.6rem',
-                border: '1px solid #ccc',
-                borderRadius: 4,
-                fontSize: '0.85rem',
-              }}
             />
             <button
+              type="button"
+              className="ch-chat-send"
               onClick={sendMessage}
               disabled={status !== 'connected'}
-              style={{
-                padding: '0.4rem 0.8rem',
-                background: '#111',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 4,
-                cursor: status === 'connected' ? 'pointer' : 'not-allowed',
-                opacity: status === 'connected' ? 1 : 0.5,
-                fontSize: '0.85rem',
-              }}
             >
               Send
             </button>
-          </div>
+          </>
         )}
       </div>
     </aside>

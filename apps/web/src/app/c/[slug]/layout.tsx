@@ -2,12 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import '@/components/brand-public.css'
 
-export default function ChannelLayout({ children }: { children: ReactNode }) {
-  return (
-    <div data-tahti-ui="brand" className="brand-public">
-      {children}
-    </div>
-  )
+/** Channel slug pages inherit brand-channel from app/c/layout.tsx */
+export default function ChannelSlugLayout({ children }: { children: ReactNode }) {
+  return children
 }

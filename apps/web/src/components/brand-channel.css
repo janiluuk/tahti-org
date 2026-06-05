@@ -39,3 +39,324 @@
 [data-tahti-ui='brand'].brand-channel .ui-link:hover {
   color: var(--amber);
 }
+
+/* Channel page layout (from index.html mockups) */
+[data-tahti-ui='brand'] .ch-header {
+  background: var(--card);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+[data-tahti-ui='brand'] .ch-logo {
+  font-family: var(--font-head);
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .ch-live {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+[data-tahti-ui='brand'] .signal-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: channel-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes channel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+[data-tahti-ui='brand'] .ch-body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  min-height: calc(100vh - 52px);
+}
+
+[data-tahti-ui='brand'] .ch-main {
+  padding: 28px;
+  border-right: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-sidebar {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+[data-tahti-ui='brand'] .ch-artist-header {
+  margin-bottom: 1.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-artist-bio {
+  margin-top: 0.35rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-next-broadcast {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card));
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--cyan) 25%, transparent);
+  font-size: 0.875rem;
+}
+
+[data-tahti-ui='brand'] .ch-next-broadcast-note {
+  margin-top: 0.25rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-player-wrap {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-height: 80px;
+  border: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-player-inner {
+  padding: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-section {
+  margin-top: 2rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-section h2 {
+  font-family: var(--font-head);
+  font-size: 1.125rem;
+  margin: 0 0 1rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-empty {
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-archive-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-desc {
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-commentary {
+  color: var(--text);
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border-left: 3px solid var(--border-hover);
+  padding-left: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-duration {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+/* Live chat panel */
+[data-tahti-ui='brand'] .ch-chat-panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  height: calc(100vh - 6rem);
+  position: sticky;
+  top: 68px;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .ch-chat-panel__head {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+[data-tahti-ui='brand'] .ch-chat-panel__head h4 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin: 0;
+  font-weight: 600;
+}
+
+[data-tahti-ui='brand'] .ch-chat-live-badge {
+  font-size: 0.7rem;
+  background: color-mix(in srgb, var(--green) 20%, var(--card));
+  color: var(--green);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+}
+
+[data-tahti-ui='brand'] .ch-chat-listeners {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+[data-tahti-ui='brand'] .pinned-msg {
+  background: color-mix(in srgb, var(--amber) 10%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 0;
+  font-size: 12px;
+}
+
+[data-tahti-ui='brand'] .pinned-msg .pin-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--amber);
+  margin-bottom: 4px;
+}
+
+[data-tahti-ui='brand'] .ch-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 1rem;
+}
+
+[data-tahti-ui='brand'] .ch-chat-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+[data-tahti-ui='brand'] .chat-msg {
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+[data-tahti-ui='brand'] .chat-msg .handle {
+  font-weight: 600;
+  margin-right: 0.35rem;
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .chat-msg .handle.supporter {
+  color: var(--lavender);
+}
+
+[data-tahti-ui='brand'] .chat-msg .text {
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .chat-supporter-badge {
+  margin-left: 0.25rem;
+  font-size: 0.65rem;
+  background: color-mix(in srgb, var(--purple) 20%, var(--card));
+  color: var(--lavender);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+[data-tahti-ui='brand'] .ch-chat-error {
+  padding: 0.5rem 1rem;
+  background: color-mix(in srgb, var(--coral) 12%, var(--card));
+  color: var(--coral);
+  font-size: 0.8rem;
+}
+
+[data-tahti-ui='brand'] .ch-chat-input-row {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-chat-input-row input {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  background: var(--card2);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+[data-tahti-ui='brand'] .ch-chat-input-row input:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .ch-chat-send {
+  padding: 0.4rem 0.8rem;
+  background: var(--cyan);
+  color: #0a0f1e;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+[data-tahti-ui='brand'] .ch-chat-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  [data-tahti-ui='brand'] .ch-body {
+    grid-template-columns: 1fr;
+  }
+
+  [data-tahti-ui='brand'] .ch-main {
+    border-right: none;
+    padding: 16px;
+  }
+
+  [data-tahti-ui='brand'] .ch-sidebar {
+    padding: 16px;
+  }
+
+  [data-tahti-ui='brand'] .ch-chat-panel {
+    height: 420px;
+    position: static;
+  }
+}

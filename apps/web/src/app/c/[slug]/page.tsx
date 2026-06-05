@@ -17,8 +17,9 @@ import type {
   ChannelTextLayerMode,
   TracklistEntry,
 } from '@tahti/shared'
-import { Heading, PageShell, Row, Text } from '@/components/ui'
+import { Heading, Row, Text } from '@/components/ui'
 import { LiveBadge } from '@/components/ui/from-tahti-ui'
+import { ChannelPageLayout } from '@/components/channel/channel-page-layout'
 import { SafePlainText } from '@/components/safe-plain-text'
 
 interface ChannelResponse {
@@ -93,9 +94,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
 
   return (
-    <PageShell size="lg" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem' }}>
-        <div>
+    <ChannelPageLayout
+      isLive={channel.state === 'LIVE'}
+      main={
+        <>
           {channelBackdrop.videoEmbedUrl && (
             <ArchiveVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
           )}
@@ -112,7 +114,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               }}
             />
           )}
-          <header style={{ marginBottom: '1.5rem' }}>
+          <header className="ch-artist-header">
             <Row className="ui-row--gap-3" style={{ marginBottom: '0.5rem' }}>
               {channel.user.avatarUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -135,24 +137,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               {channel.state === 'LIVE' && <LiveBadge />}
             </Row>
             {channel.user.bio && (
-              <SafePlainText
-                text={channel.user.bio}
-                style={{ marginTop: '0.35rem', color: '#555' }}
-              />
+              <SafePlainText text={channel.user.bio} className="ch-artist-bio" />
             )}
           </header>
 
           {channel.state !== 'LIVE' && (channel.nextBroadcastAt || channel.nextBroadcastNote) && (
-            <div
-              role="status"
-              style={{
-                marginBottom: '1rem',
-                padding: '0.75rem 1rem',
-                background: '#f0f4ff',
-                borderRadius: 8,
-                border: '1px solid #c7d2fe',
-              }}
-            >
+            <div className="ch-next-broadcast" role="status">
               <strong>Next broadcast</strong>
               {channel.nextBroadcastAt && (
                 <div style={{ marginTop: '0.25rem' }}>
@@ -165,7 +155,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               {channel.nextBroadcastNote && (
                 <SafePlainText
                   text={channel.nextBroadcastNote}
-                  style={{ marginTop: '0.25rem', color: '#444' }}
+                  className="ch-next-broadcast-note"
                 />
               )}
             </div>
@@ -179,29 +169,20 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
           <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
 
-          {/* HLS player + reactions overlay (only when live) */}
           {hlsUrl && (
-            <div
-              style={{
-                position: 'relative',
-                background: '#111',
-                borderRadius: 8,
-                overflow: 'hidden',
-                minHeight: 80,
-              }}
-            >
-              <div style={{ padding: '0.75rem' }}>
+            <div className="ch-player-wrap">
+              <div className="ch-player-inner">
                 <HlsPlayer url={hlsUrl} />
               </div>
               <ReactionsOverlay slug={slug} />
             </div>
           )}
 
-          <section style={{ marginTop: '2rem' }}>
-            <h2 style={{ margin: '0 0 1rem' }}>Archive</h2>
+          <section className="ch-archive-section">
+            <h2>Archive</h2>
 
             {items.length === 0 ? (
-              <p style={{ color: '#999' }}>No archive items yet.</p>
+              <p className="ch-archive-empty">No archive items yet.</p>
             ) : (
               <ul style={{ listStyle: 'none', padding: 0 }}>
                 {items.map((item) => {
@@ -210,17 +191,16 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     <li
                       key={item.id}
                       id={`archive-item-${item.id}`}
-                      style={{
-                        padding: '1rem 0',
-                        borderBottom: '1px solid #eee',
-                        ...(imageUrl
+                      className="ch-archive-item"
+                      style={
+                        imageUrl
                           ? {
-                              backgroundImage: `linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)), url(${imageUrl})`,
+                              backgroundImage: `linear-gradient(rgba(10,15,30,0.88), rgba(10,15,30,0.88)), url(${imageUrl})`,
                               backgroundSize: 'cover',
                               backgroundPosition: 'center',
                             }
-                          : {}),
-                      }}
+                          : undefined
+                      }
                     >
                       {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
                       {item.bannerUrl && (
@@ -263,28 +243,18 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                           ))}
                         </div>
                       )}
-                      <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{item.title}</div>
+                      <div className="ch-archive-item-title">{item.title}</div>
                       {item.description && (
-                        <SafePlainText
-                          text={item.description}
-                          style={{ color: '#555', margin: '0 0 0.5rem', fontSize: '0.9rem' }}
-                        />
+                        <SafePlainText text={item.description} className="ch-archive-item-desc" />
                       )}
                       {item.commentary && (
                         <SafePlainText
                           text={item.commentary}
-                          style={{
-                            color: '#444',
-                            margin: '0 0 0.75rem',
-                            fontSize: '0.9rem',
-                            lineHeight: 1.5,
-                            borderLeft: '3px solid #ddd',
-                            paddingLeft: '0.75rem',
-                          }}
+                          className="ch-archive-item-commentary"
                         />
                       )}
                       {item.durationSec != null && (
-                        <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+                        <div className="ch-archive-item-duration">
                           {Math.floor(item.durationSec / 60)}:
                           {String(item.durationSec % 60).padStart(2, '0')}
                         </div>
@@ -313,14 +283,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               </ul>
             )}
           </section>
-        </div>
-
-        {/* Chat panel — docked on the right */}
-        <div>
+        </>
+      }
+      sidebar={
+        <>
           <ChatPanel slug={slug} announcements={announcements} />
           <FanChatPanel slug={slug} />
-        </div>
-      </div>
-    </PageShell>
+        </>
+      }
+    />
   )
 }
