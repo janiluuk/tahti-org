@@ -91,3 +91,4 @@ Many members only listen and vote. They use the **listener** paths for audio and
 | Playwright (local) | `tests/e2e/user-journeys.mjs` |
 | Vitest | `apps/api/src/routes/journeys/persona-journeys.test.ts` |
 | Fixtures | `apps/api/scripts/seed-e2e-screenshots.ts` (demo motion + fan sub) |
+| Index | [user-flows.md](../user-flows.md) |

@@ -237,4 +237,72 @@ describe('Persona journeys', () => {
       expect(motions.json().some((m: { title: string }) => m.title.includes(PREFIX))).toBe(true)
     })
   })
+
+  describe('director', () => {
+    it('rejects admin routes for anonymous users', async () => {
+      const preview = await app.inject({
+        method: 'GET',
+        url: '/api/admin/grants/preview/2031',
+      })
+      expect(preview.statusCode).toBe(401)
+
+      const exportCsv = await app.inject({
+        method: 'GET',
+        url: '/api/admin/members/export.csv',
+      })
+      expect(exportCsv.statusCode).toBe(401)
+    })
+
+    it('previews grants and exports members when logged in as board', async () => {
+      const board = await createTestMember(`${PREFIX}board@example.com`, `${PREFIX}board`, {
+        memberNumber: 98103,
+      })
+      await prisma.user.update({ where: { id: board.id }, data: { isBoard: true } })
+      const boardCookie = await sessionCookieFor(prisma, board.id)
+
+      const me = await app.inject({
+        method: 'GET',
+        url: '/api/auth/me',
+        headers: { cookie: boardCookie },
+      })
+      expect(me.json().isBoard).toBe(true)
+
+      const preview = await app.inject({
+        method: 'GET',
+        url: '/api/admin/grants/preview/2031',
+        headers: { cookie: boardCookie },
+      })
+      expect(preview.statusCode).toBe(200)
+      expect(preview.json().forYear).toBe(2031)
+
+      const exportCsv = await app.inject({
+        method: 'GET',
+        url: '/api/admin/members/export.csv',
+        headers: { cookie: boardCookie },
+      })
+      expect(exportCsv.statusCode).toBe(200)
+      expect(exportCsv.headers['content-type']).toContain('text/csv')
+
+      const grants = await app.inject({ method: 'GET', url: '/api/v1/transparency/grants/2031' })
+      expect(grants.statusCode).toBe(200)
+    })
+  })
+
+  describe('ops', () => {
+    it('exposes health, status, and Prometheus metrics', async () => {
+      const health = await app.inject({ method: 'GET', url: '/health' })
+      expect(health.statusCode).toBe(200)
+      expect(health.json().checks.postgres).toBe('up')
+
+      const status = await app.inject({ method: 'GET', url: '/api/v1/status' })
+      expect([200, 503]).toContain(status.statusCode)
+      expect(status.json().checks).toBeDefined()
+      expect(status.json().checks.postgres?.state).toBe('up')
+
+      const metrics = await app.inject({ method: 'GET', url: '/metrics' })
+      expect(metrics.statusCode).toBe(200)
+      expect(metrics.body).toContain('tahti_api_healthy')
+      expect(metrics.body).toContain('tahti_api_uptime_seconds')
+    })
+  })
 })

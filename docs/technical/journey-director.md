@@ -259,3 +259,33 @@ graph TB
         G3[Board member resigns] --> G4[AGM elects replacement\nwithin 3 months — quorum\nnot affected by 1 vacancy]
     end
 ```
+
+---
+
+## Detailed steps (implemented today)
+
+Long-term journeys (AGM web UI, quarterly reports, engagement adjustments) are documented above for product planning. **Shipped API paths** covered by e2e:
+
+| Journey | Step | Web | API | E2e |
+|---------|------|-----|-----|-----|
+| 1 — Grant review | Public grants report | `/transparency` | `GET /api/v1/transparency/grants/:year` | `director.sh`, `vital-flows.sh` |
+| 1 | Dry-run grant split | — | `GET /api/admin/grants/preview/:year` | `director.sh`, Vitest |
+| 1 | Execute grant run | — | `POST /api/admin/grants/run/:year` | Vitest `grants.test.ts` |
+| 3 — Transparency | YTD surplus | `/transparency` | `GET /api/v1/transparency/ytd` | `vital-flows.sh` |
+| 4 — Board review | Members register export | — | `GET /api/admin/members/export.csv` | `director.sh`, Vitest |
+| 4 | Ledger export | — | `GET /api/admin/ledger/export.csv` | Vitest `ledger-export.test.ts` |
+| Venues | Verify venue | `/governance/venues` | `POST /api/admin/venues/:slug/verify` | Vitest `venues.test.ts`, web in `director.sh` |
+| Auth | Anonymous admin | — | admin routes → **401** | `director.sh`, Vitest |
+
+Demo board account after seed: `screenshot-board@e2e.tahti.live` / `screenshot-demo-pass`.
+
+---
+
+## Automated coverage
+
+| Layer | Script / test |
+|-------|----------------|
+| CI bash | `tests/e2e/user-journeys.sh` → `journeys/director.sh` |
+| Vitest | `persona-journeys.test.ts` (director), `admin/grants.test.ts`, `admin/members.test.ts` |
+| Fixtures | `seed-e2e-screenshots.ts` (`screenshot-board`, `isBoard: true`) |
+| Index | [user-flows.md](../user-flows.md) |

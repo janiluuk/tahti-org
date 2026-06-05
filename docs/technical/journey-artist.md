@@ -341,3 +341,32 @@ graph LR
     M1 --> Action4[Resend verification email button]
     M2 --> Action5[Processing status indicator with time estimate]
 ```
+
+---
+
+## Detailed steps (implemented today)
+
+| Journey | Step | Web | API | E2e |
+|---------|------|-----|-----|-----|
+| 1 — Register & verify | Sign up | `/join` | `POST /api/auth/register` | `vital-flows.sh` |
+| 1 | Email verify | `/verify` | `GET /api/auth/verify` | seed token (manual) |
+| 1 | Activate membership | `/dashboard` | `POST /api/me/membership/checkout` | `artist.sh` (`/api/me/membership`) |
+| 2 — First broadcast | Stream settings | `/dashboard` | `GET /api/me/stream-settings` | `artist.sh`, `dashboard-player.sh` |
+| 2 | Icecast auth | — | `POST /internal/icecast/on_connect` | `artist.sh` |
+| 2 | Multistream help | `/help/multistream` | `GET /api/me/rtmp-targets` | `artist.sh` |
+| 3 — Releases & fan tiers | Dashboard studio | `/dashboard` | `GET /api/me/releases`, `GET /api/me/fan-tiers` | `artist.sh`, `dashboard-player.sh` |
+| 4 — Archive upload | Upload flow | `/dashboard` | `POST /api/uploads/*` | not in bash e2e (worker/MinIO) |
+| 5 — DSP delivery | Release publish | `/dashboard` | Revelator worker queue | not in bash e2e |
+| 6 — Grant receipt | Transparency | `/transparency` | public ledger + grants report | `director.sh`, `vital-flows.sh` |
+
+---
+
+## Automated coverage
+
+| Layer | Script / test |
+|-------|----------------|
+| CI bash | `tests/e2e/user-journeys.sh` → `journeys/artist.sh`, `dashboard-player.sh` |
+| Playwright (local) | `tests/e2e/user-journeys.mjs`, `dashboard-player.mjs` |
+| Vitest | `apps/api/src/routes/journeys/persona-journeys.test.ts` (artist describe) |
+| Fixtures | `apps/api/scripts/seed-e2e-screenshots.ts` (demo EP, archive, fan tier) |
+| Index | [user-flows.md](../user-flows.md) |

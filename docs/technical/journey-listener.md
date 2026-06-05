@@ -247,3 +247,31 @@ sequenceDiagram
     API-->>Director: Subscription active, but cookie expired
     Director-->>L: Asks listener to clear cookies and log in again
 ```
+
+---
+
+## Detailed steps (implemented today)
+
+| Journey | Step | Web | API | E2e |
+|---------|------|-----|-----|-----|
+| 1 — First listen | Open shared channel link | `/c/:slug` | `GET /api/channels/:slug` | `listener.sh` |
+| 1 | View profile & releases | `/u/:username` | `GET /api/v1/u/:username/profile` | `listener.sh`, Vitest |
+| 1 | Check fan tiers | `/u/:username/subscribe` | `GET /api/v1/u/:username/tiers` | `listener.sh`, Vitest |
+| 2 — Offline fallback | Channel page loads archive player | `/c/:slug` | `GET /api/channels/:slug/items` | `dashboard-player.sh` |
+| 3 — Fan subscription | Subscribe page | `/u/:username/subscribe` | tiers + Stripe checkout (manual) | `member.sh` (fan supporter) |
+| 4 — Discovery | Smart link landing | `/r/:slug` | `GET /api/v1/r/:slug` | `listener.sh` |
+| All | Transparency | `/transparency` | `GET /api/v1/transparency/ytd` | `listener.sh`, `vital-flows.sh` |
+
+Live HLS playback and anonymous chat require a running media stack; API e2e validates metadata and access endpoints only.
+
+---
+
+## Automated coverage
+
+| Layer | Script / test |
+|-------|----------------|
+| CI bash | `tests/e2e/user-journeys.sh` → `journeys/listener.sh`, `dashboard-player.sh` |
+| Playwright (local) | `tests/e2e/user-journeys.mjs`, `dashboard-player.mjs` |
+| Vitest | `apps/api/src/routes/journeys/persona-journeys.test.ts` (listener describe) |
+| Fixtures | `apps/api/scripts/seed-e2e-screenshots.ts` (`screenshot-demo` artist) |
+| Index | [user-flows.md](../user-flows.md) |

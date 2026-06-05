@@ -21,6 +21,11 @@ const MEMBER = {
   username: 'screenshot-fan',
   displayName: 'Screenshot Member',
 }
+const BOARD = {
+  email: 'screenshot-board@e2e.tahti.live',
+  username: 'screenshot-board',
+  displayName: 'Screenshot Board',
+}
 
 const DEMO_MOTION_TITLE = 'E2E advisory motion'
 
@@ -29,7 +34,7 @@ async function main() {
 
   await prisma.motion.deleteMany({ where: { title: DEMO_MOTION_TITLE } })
 
-  for (const email of [ARTIST.email, MEMBER.email]) {
+  for (const email of [ARTIST.email, MEMBER.email, BOARD.email]) {
     const existing = await prisma.user.findUnique({
       where: { email },
       select: { id: true, channel: { select: { id: true } } },
@@ -131,6 +136,21 @@ async function main() {
     },
   })
 
+  await prisma.user.create({
+    data: {
+      email: BOARD.email,
+      passwordHash,
+      username: BOARD.username,
+      displayName: BOARD.displayName,
+      emailVerifiedAt: new Date(),
+      isMember: true,
+      isBoard: true,
+      memberNumber: 99003,
+      memberSince: new Date(),
+      membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
+    },
+  })
+
   const tier = await prisma.fanTier.findFirst({
     where: { artistUserId: artist.id },
     select: { name: true, amountCents: true },
@@ -177,6 +197,7 @@ async function main() {
         password: PASS,
         artist: ARTIST.username,
         member: MEMBER.username,
+        board: BOARD.username,
         fan: MEMBER.username,
         smartLinkSlug: release.smartLinkSlug,
         motionTitle: DEMO_MOTION_TITLE,

@@ -63,8 +63,8 @@ flowchart TD
 | OBS / Mixxx / Traktor setup (detailed) | [obs-and-broadcasting-guides.md](../obs-and-broadcasting-guides.md) |
 | Fan subscriptions & grants | [engagement-and-fansubs.md](../engagement-and-fansubs.md) |
 | Profile, smart links, embeds | [profile-and-promo-toolkit.md](../profile-and-promo-toolkit.md) |
-| Screen map & screenshots | [user-flows.md](../user-flows.md) |
-| Technical user journeys | [journey-listener.md](../technical/journey-listener.md), [journey-member.md](../technical/journey-member.md), [journey-artist.md](../technical/journey-artist.md) |
+| Screen map & user journeys | [user-flows.md](../user-flows.md) |
+| Technical user journeys | [journey-listener.md](../technical/journey-listener.md), [journey-member.md](../technical/journey-member.md), [journey-artist.md](../technical/journey-artist.md), [journey-director.md](../technical/journey-director.md), [journey-ops.md](../technical/journey-ops.md) |
 
 ---
 
