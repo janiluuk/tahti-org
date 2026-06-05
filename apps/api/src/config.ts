@@ -53,8 +53,10 @@ export const config = {
   rtmpIngestHealthPort: parseInt(process.env.RTMP_INGEST_HEALTH_PORT ?? '8080', 10),
   rtmpIngestHealthPath: process.env.RTMP_INGEST_HEALTH_PATH ?? '/health',
   rtmpIngestHealthScheme: process.env.RTMP_INGEST_HEALTH_SCHEME ?? 'http',
-  /** STREAM-003: comma-separated Icecast ingest hostnames (public URLs). */
+  /** STREAM-003 / STREAM-007: comma-separated Icecast ingest hostnames (public URLs). */
   icecastIngestHosts: process.env.ICECAST_INGEST_HOSTS ?? '',
+  /** Icecast health probe path (status JSON). */
+  icecastIngestHealthPath: process.env.ICECAST_INGEST_HEALTH_PATH ?? '/status-json.xsl',
   /** Internal hostname:port for Liquidsoap pull and ops (e.g. icecast:8000). */
   icecastHost: process.env.ICECAST_HOST ?? 'localhost:8100',
   /** Public ingest URL shown in dashboard (e.g. https://ingest-icecast.tahti.live or http://localhost:8100). */

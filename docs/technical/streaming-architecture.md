@@ -276,12 +276,12 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | ID | Issue | Severity |
 |----|-------|----------|
 | STREAM-001 | HLS segments on shared Docker volume, not MinIO | CRITICAL — blocks horizontal scaling |
-| STREAM-002 | RTMP edge encoder (#75) + dual-bitrate HLS (`stream-mp3-192` / `stream-flac`); chromaprint deferred | HIGH (partial) |
+| STREAM-002 | RTMP edge encoder (#75) + dual-bitrate HLS; chromaprint at ingest sidecar (STREAM-008) | HIGH (partial) |
 | STREAM-003 | Health-ranked ingest fallbacks on stream settings; multi-host env + low DNS TTL still ops | HIGH (partial) |
 | STREAM-004 | ~~Recording is a Liquidsoap sidecar~~ — ffmpeg recorder sidecar (STREAM-004) | ~~HIGH~~ done |
 | STREAM-005 | No per-channel health watchdog — silent channels go undetected | HIGH |
 | STREAM-006 | No per-channel bandwidth accounting — can't attribute costs | MEDIUM |
-| STREAM-007 | Single Icecast node — no redundancy for Mixxx users | MEDIUM |
-| STREAM-008 | chromaprint fingerprint runs post-broadcast only — no real-time tracklist | MEDIUM |
+| STREAM-007 | Icecast `/status-json.xsl` health probe + `ICECAST_INGEST_HOSTS` fallbacks on stream settings | MEDIUM (partial) |
+| STREAM-008 | Ingest fpcalc sidecar, live fingerprints API, archive tracklist hints; ACRCloud deferred | MEDIUM (partial) |
 | STREAM-009 | ~~Liquidsoap archive fallback reads from MinIO with no caching~~ — local cache volume + cron | ~~LOW~~ done |
 | STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop | LOW (done) |

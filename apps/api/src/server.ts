@@ -24,10 +24,12 @@ import completeUploadRoute from './routes/uploads/complete.js'
 import channelGetRoute from './routes/channels/get.js'
 import channelItemsRoute from './routes/channels/items.js'
 import channelListRoute from './routes/channels/list.js'
+import liveFingerprintsRoute from './routes/channels/live-fingerprints.js'
 import itemReadyRoute from './routes/internal/item-ready.js'
 import rtmpRoutes from './routes/internal/rtmp.js'
 import icecastRoutes from './routes/internal/icecast.js'
 import channelFallbackRoute from './routes/internal/channel-fallback.js'
+import broadcastFingerprintInternalRoutes from './routes/internal/broadcast-fingerprint.js'
 import streamSettingsRoutes from './routes/me/stream-settings.js'
 import chatTokenRoute from './routes/chat/token.js'
 import chatFanTokenRoute from './routes/chat/fan-token.js'
@@ -350,12 +352,14 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(channelGetRoute)
   await fastify.register(channelListRoute)
   await fastify.register(channelItemsRoute)
+  await fastify.register(liveFingerprintsRoute)
   await fastify.register(itemReadyRoute)
 
   // M3: live ingest webhooks + stream settings
   await fastify.register(rtmpRoutes)
   await fastify.register(icecastRoutes)
   await fastify.register(channelFallbackRoute)
+  await fastify.register(broadcastFingerprintInternalRoutes)
   await fastify.register(streamSettingsRoutes)
 
   // M5: chat

@@ -66,6 +66,7 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         resolveIcecastIngestHosts({
           hosts: icecastHosts,
           defaultScheme: icecastScheme,
+          healthPath: config.icecastIngestHealthPath,
         }),
       ])
 
