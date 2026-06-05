@@ -17,11 +17,15 @@ import {
   MeReleaseListSchema,
   PatchReleaseSchema,
   ReleaseCatalogViewSchema,
+  ReleaseImportBodySchema,
+  ReleaseImportResultSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { parseReleaseImportCsv } from '../../lib/release-import.js'
+import { queueReleaseSocialPost } from '../../lib/social-post.js'
 
 function slugify(title: string): string {
   return title
@@ -201,6 +205,13 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         data,
         include: { tracks: { orderBy: { position: 'asc' } } },
       })
+
+      if (body.state === 'PUBLISHED' && existing.state !== 'PUBLISHED') {
+        queueReleaseSocialPost(fastify.prisma, user.id, id).catch((err: unknown) =>
+          request.log.warn({ err, releaseId: id }, 'social post enqueue failed'),
+        )
+      }
+
       return reply.send(release)
     },
   )
@@ -291,6 +302,80 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
           `attachment; filename="release-${release.smartLinkSlug}.json"`,
         )
         .send(buildReleaseExportPack(release))
+    },
+  )
+
+  fastify.post(
+    '/api/me/releases/import',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description: 'M12: bulk import releases from CSV (one row per track)',
+        response: openApiResponse(ReleaseImportResultSchema, 'ReleaseImportResult'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = ReleaseImportBodySchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const { groups, errors } = parseReleaseImportCsv(parsed.data.csv)
+      if (groups.length === 0) {
+        return reply.status(400).send({
+          error: errors[0] ?? 'No valid rows in CSV',
+        })
+      }
+      if (groups.length > 100) {
+        return reply.status(400).send({ error: 'Maximum 100 releases per import' })
+      }
+
+      const releaseIds: string[] = []
+      let skipped = 0
+
+      for (const trackRows of groups) {
+        const head = trackRows[0]!
+        const baseSlug = `${user.username}-${slugify(head.releaseTitle)}`
+        let smartLinkSlug = baseSlug
+        for (let i = 0; i < 5; i++) {
+          const clash = await fastify.prisma.release.findUnique({ where: { smartLinkSlug } })
+          if (!clash) break
+          smartLinkSlug = `${baseSlug}-${nanoid(6)}`
+        }
+
+        try {
+          const release = await fastify.prisma.release.create({
+            data: {
+              userId: user.id,
+              title: head.releaseTitle,
+              type: head.type,
+              releaseDate: head.releaseDate,
+              description: head.description ?? null,
+              upc: head.upc ?? null,
+              smartLinkSlug,
+              state: 'DRAFT',
+              tracks: {
+                create: trackRows.slice(0, 50).map((t, i) => ({
+                  position: i + 1,
+                  title: t.trackTitle,
+                  isrc: t.isrc ?? null,
+                })),
+              },
+            },
+          })
+          releaseIds.push(release.id)
+        } catch {
+          skipped++
+          errors.push(`Failed to create release "${head.releaseTitle}"`)
+        }
+      }
+
+      return reply.send({
+        created: releaseIds.length,
+        skipped,
+        releaseIds,
+        errors,
+      })
     },
   )
 }

@@ -7,7 +7,12 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
-import { createRelease, publishRelease, updateReleaseSmartLinks } from './release-actions'
+import {
+  createRelease,
+  importReleasesFromCsv,
+  publishRelease,
+  updateReleaseSmartLinks,
+} from './release-actions'
 import ReleaseOpsPanel, { parseCredits } from './release-ops-panel'
 import { ReleaseArtworkUpload } from './release-artwork-upload'
 import { ReleaseTrackVersionPanel } from './release-track-version-panel'
@@ -59,6 +64,8 @@ export default function ReleasesPanel({
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [targets, setTargets] = useState<Record<string, string>>({})
+  const [importCsv, setImportCsv] = useState('')
+  const [importMsg, setImportMsg] = useState<string | null>(null)
 
   function addRelease() {
     setError(null)
@@ -110,6 +117,22 @@ export default function ReleasesPanel({
         return
       }
       setEditingId(null)
+      router.refresh()
+    })
+  }
+
+  function runBulkImport() {
+    setImportMsg(null)
+    setError(null)
+    if (!importCsv.trim()) return
+    startTransition(async () => {
+      const res = await importReleasesFromCsv(importCsv)
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      setImportMsg(`Imported ${res.created ?? 0} draft release(s).`)
+      setImportCsv('')
       router.refresh()
     })
   }
@@ -256,6 +279,31 @@ export default function ReleasesPanel({
           Add draft
         </button>
       </div>
+
+      <details className="studio-mt-md">
+        <summary className="studio-text-strong-sm">Bulk import from CSV</summary>
+        <p className="studio-help studio-mt-sm">
+          One row per track. Columns: releaseTitle, type, releaseDate (YYYY-MM-DD), trackTitle,
+          isrc, upc, description.
+        </p>
+        <textarea
+          value={importCsv}
+          onChange={(e) => setImportCsv(e.target.value)}
+          rows={5}
+          className="studio-input studio-mt-sm"
+          placeholder={`releaseTitle,type,releaseDate,trackTitle\nMy EP,EP,2026-06-01,Track 1`}
+        />
+        <button
+          type="button"
+          onClick={runBulkImport}
+          disabled={isPending}
+          className="studio-btn-ghost studio-mt-sm"
+        >
+          Import drafts
+        </button>
+        {importMsg ? <p className="studio-text-muted-sm studio-mt-sm">{importMsg}</p> : null}
+      </details>
+
       {error && <p className="studio-text-error">{error}</p>}
     </section>
   )

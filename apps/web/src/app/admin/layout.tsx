@@ -13,6 +13,7 @@ const NAV = [
   { href: '/admin/dashboard', label: 'Dashboard' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/streams', label: 'Streams' },
+  { href: '/admin/support', label: 'Support' },
   { href: '/admin/financial', label: 'Financial' },
   { href: '/admin/governance', label: 'Governance' },
   { href: '/admin/status', label: 'Status' },

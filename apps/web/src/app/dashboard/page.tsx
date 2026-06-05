@@ -20,6 +20,9 @@ import ChannelSchedulePanel from './channel-schedule-panel'
 import type { ProgrammeItemRow } from './programme-actions'
 import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
+import PrivacyPanel from './privacy-panel'
+import SocialPromoPanel from './social-promo-panel'
+import type { SocialSettings } from './social-actions'
 import BroadcastUsageBanner from './broadcast-usage'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelEgressPanel } from './channel-egress-panel'
@@ -144,6 +147,7 @@ export default async function DashboardPage() {
     emailVerified: boolean
     renewalDueAt?: string | null
     hasStripeSubscription?: boolean
+    subscriptionMigrationRequired?: boolean
   }
   let membershipInfo: MembershipInfo | null = null
   try {
@@ -152,6 +156,17 @@ export default async function DashboardPage() {
       cache: 'no-store',
     })
     if (res.ok) membershipInfo = (await res.json()) as MembershipInfo
+  } catch {
+    // ignore
+  }
+
+  let socialSettings: SocialSettings | null = null
+  try {
+    const res = await fetch(`${apiUrl}/api/me/social`, {
+      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+      cache: 'no-store',
+    })
+    if (res.ok) socialSettings = (await res.json()) as SocialSettings
   } catch {
     // ignore
   }
@@ -507,8 +522,13 @@ export default async function DashboardPage() {
           emailVerified={membershipInfo.emailVerified}
           hasStripeSubscription={membershipInfo.hasStripeSubscription}
           renewalDueAt={membershipInfo.renewalDueAt}
+          subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}
         />
       )}
+
+      {socialSettings && <SocialPromoPanel initial={socialSettings} />}
+
+      <PrivacyPanel username={user.username} apiUrl={apiUrl} />
 
       {user.channel && (
         <Panel title="Your channel">

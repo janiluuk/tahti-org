@@ -35,3 +35,14 @@ export async function presignedGetUrl(key: string, expiresInSec = 3600): Promise
   })
   return getSignedUrl(s3, command, { expiresIn: expiresInSec })
 }
+
+export async function putObjectText(key: string, body: string, contentType: string): Promise<void> {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: config.minio.bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  )
+}

@@ -35,6 +35,7 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
           username: true,
           tier: true,
           suspendedAt: true,
+          deletedAt: true,
         },
       })
 
@@ -52,6 +53,10 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
 
       if (user.suspendedAt) {
         return reply.status(403).send({ error: 'This account has been suspended' })
+      }
+
+      if (user.deletedAt) {
+        return reply.status(403).send({ error: 'This account has been deleted' })
       }
 
       const session = await createSession(fastify.prisma, user.id)

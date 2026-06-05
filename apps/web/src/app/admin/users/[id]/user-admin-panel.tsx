@@ -4,16 +4,18 @@
 'use client'
 
 import { useState } from 'react'
-import { suspendUser, unsuspendUser, toggleBoardRole } from '../actions'
+import { suspendUser, unsuspendUser, toggleBoardRole, deleteUserAccount } from '../actions'
 
 export function UserAdminActions({
   userId,
   isBoard,
   suspended,
+  deleted,
 }: {
   userId: string
   isBoard: boolean
   suspended: boolean
+  deleted?: boolean
 }) {
   const [msg, setMsg] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -35,6 +37,25 @@ export function UserAdminActions({
     if (!error) window.location.reload()
   }
 
+  async function onDeleteAccount() {
+    if (
+      !window.confirm(
+        'Permanently anonymize this account? Billing will be canceled and PII removed. This cannot be undone.',
+      )
+    ) {
+      return
+    }
+    setPending(true)
+    setMsg(null)
+    const { error } = await deleteUserAccount(userId)
+    setPending(false)
+    if (error) {
+      setMsg(error)
+      return
+    }
+    window.location.href = '/admin/users'
+  }
+
   return (
     <section className="admin-card" style={{ marginBottom: '1rem' }}>
       <h2>Actions</h2>
@@ -45,6 +66,11 @@ export function UserAdminActions({
         {suspended ? (
           <button type="button" disabled={pending} onClick={onUnsuspend}>
             Unsuspend account
+          </button>
+        ) : null}
+        {!deleted ? (
+          <button type="button" disabled={pending || isBoard} onClick={onDeleteAccount}>
+            Delete account (GDPR)
           </button>
         ) : null}
       </div>

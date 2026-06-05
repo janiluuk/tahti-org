@@ -3,6 +3,7 @@
 
 import Link from 'next/link'
 import { cookies } from 'next/headers'
+import { ForceOfflineButton } from './force-offline-button'
 
 function boardFetch(path: string) {
   const sessionCookie = cookies().get('tahti_session')
@@ -55,7 +56,7 @@ export default async function AdminStreamsPage() {
                 <th>Channel</th>
                 <th>Live since</th>
                 <th>Elapsed</th>
-                <th />
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -77,7 +78,7 @@ export default async function AdminStreamsPage() {
                   </td>
                   <td>{formatDuration(s.elapsedSec)}</td>
                   <td>
-                    <Link href={`/c/${s.slug}`}>Public page</Link>
+                    <ForceOfflineButton slug={s.slug} />
                   </td>
                 </tr>
               ))}

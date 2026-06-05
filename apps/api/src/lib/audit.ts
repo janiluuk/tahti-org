@@ -28,6 +28,7 @@ interface AuditParams {
     | 'BOARD_ROLE_CHANGE'
     | 'ENGAGEMENT_ADJUSTMENT'
     | 'STREAM_FORCE_OFFLINE'
+    | 'ACCOUNT_DELETE'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

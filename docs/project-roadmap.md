@@ -63,7 +63,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | Milestone | State | Evidence / notes |
 |---|---|---|
 | **M0** Skeleton | ✅ Done | pnpm + Turborepo monorepo, AGPL headers, CI, `/health`, `/source`, footer link |
-| **M1** Accounts + membership | 🟡 Partial | Email/password signup, email verify, sessions; verify → `PENDING_PAYMENT`; `POST /api/me/membership/checkout` (Stripe Checkout **annual subscription** when configured, dev-direct otherwise); webhook `checkout.session.completed` + `invoice.paid` → membership + ledger; **`POST /api/me/membership/portal`** + dashboard “Manage billing”; board CSV export; **renewal reminder** + **membership lapse** worker crons. Deferred: migrate legacy one-time members to subscriptions |
+| **M1** Accounts + membership | 🟢 Done | Email/password signup, email verify, sessions; verify → `PENDING_PAYMENT`; `POST /api/me/membership/checkout` (Stripe Checkout **annual subscription** when configured, dev-direct otherwise); webhook `checkout.session.completed` + `invoice.paid` → membership + ledger; **`POST /api/me/membership/portal`** + dashboard “Manage billing”; board CSV export; **renewal reminder** + **membership lapse** worker crons; **legacy one-time → Stripe subscription migration** (`subscriptionMigrationRequired` + checkout); **`GET /api/admin/members/legacy-subscriptions`** + admin queue UI. Deferred: none |
 | **M2** Channel + archive upload | ✅ Done | Presigned S3-multipart upload (resolves Topic 5 → option A), transcode worker, channel page |
 | **M3** Live ingress + orchestrator | ✅ Done | Icecast + RTMP webhooks, orchestrator + Liquidsoap template, HLS player. Path-based routing `/c/<slug>` (resolves Topic 9 → option B/C). WebRTC browser-live deferred (Topic 6) |
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
@@ -74,16 +74,16 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
 | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha, audit log, `/api/v1/status`, OpenAPI `/docs`, structured logging, Stripe webhook + backup age on `/metrics`, **ACRCloud identify counters** (inactive until `ACRCLOUD_ENABLED`), **status monitor GHA** + **Upptime config** + **`bootstrap.sh`**, **`/help/tier-limits`**. Deferred: live Upptime fork deploy (`status.tahti.live`) |
-| **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor, **profile playback** (`archiveItemId` + `streamKey` presign); **cover art upload to MinIO** (`artworkKey` + presigned URLs); **JSON-LD + ISR 60s** on `/u/:username`; **sitemap** (`/api/sitemap/*.xml`, Next `sitemap.ts`). Deferred: bulk import, press kit |
+| **M12** Profile + releases | 🟢 Done | Release CRUD, smart links, DSP editor, profile playback, cover art, JSON-LD/ISR, sitemap, press kit JSON, CSV bulk import |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in API, artist draft + send, `newsletter-dispatch` worker, per-tier limits; **listener opt-in UI** on `/c/:slug` and `/u/:username`; **bounce webhook** (`POST /api/webhooks/email/bounce` — Postmark + SNS), **`ops/EMAIL.md`**. Deferred: dedicated SES API transport if SMTP limits hit |
-| **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard; **DSP click tracking** (`POST /api/smartlink/click`, `GET /api/me/releases/:id/analytics`). Deferred: social auto-post |
+| **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard; **DSP click tracking** (`POST /api/smartlink/click`, `GET /api/me/releases/:id/analytics`); **Mastodon + Bluesky auto-post v0** (access token / app password, release/live triggers, manual post, worker retry). Deferred: Twitter OAuth |
 | **M24** Per-content visuals | 🟡 Partial | Channel gallery + **channel video backdrop** + per-item banner/background/slideshow on `/c/:slug`; **YouTube/Vimeo** via `parseVideoEmbedUrl` |
 | **M15** Artist @-mentions | 🟡 Partial | `lib/mentions.ts`, bio/announcement hooks, mute + settings API, **daily digest worker**, **`GET /api/v1/u/:handle/mentions`** (public opt-in), `@handle` links in plain text |
-| **M16** Tahti Radio meta-stream | 🟡 Partial | `services/tahti-radio`, `GET /api/v1/radio` proxy, **`lastFeaturedAt` + history**, internal radio API |
-| **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI; **public `/venues` + `/v/:slug`** |
+| **M16** Tahti Radio meta-stream | 🟡 Partial | `services/tahti-radio`, `GET /api/v1/radio` proxy, **`lastFeaturedAt` + history**, internal radio API, **public `/radio` page** |
+| **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI; **public `/venues` + `/v/:slug`**; **`/venues/register`** submission UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + release downloads, fraud-scan cron, Tor/datacenter CIDR; **daily Tor Redis sync** + **CI freshness check** + **weekly GHA sync PR** on bundled `tor-exit-cidrs.txt` (`pnpm tor-exit:check` / `pnpm tor-exit:sync`). Deferred: none (ops complete) |
-| **M19** Fan-subs | 🟡 Partial | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perk codes (`FAN_CHAT`, `FAN_NEWSLETTER`), fan chat/newsletter gates, **Stripe transfer retry** (`packages/ledger`), payout dashboard + `GET /api/me/fan-sub-payouts`, **subscriber CSV export** (`GET /api/me/fan-subscribers/export.csv`), **`GET /api/v1/fansubs/portal`**. Deferred: automated deletion workflow UI |
-| **M21** Admin panel | 🟡 Partial | **`/admin` shell** (board guard), **dashboard**, **stream manager**, **user directory** + suspend, stats APIs + **`CronRun`** logging. Deferred: force-offline, support tickets, resolutions |
+| **M19** Fan-subs | 🟢 Done | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perks, payout dashboard, subscriber export, fan portal, GDPR export/deletion, admin execute + purge cron |
+| **M21** Admin panel | 🟢 Done | **`/admin` shell** (board guard), **dashboard**, **stream manager** + **force-offline**, **user directory** + suspend, **fan-sub payout queue**, **ledger UI**, **support tickets**, **board resolutions**, **audit log viewer**, **annual report generator**, stats APIs + **`CronRun`** logging |
 | **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/channel-funnel-stats` + split endpoints; 14-day charts). Deferred: per-listener HLS metrics |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
@@ -519,6 +519,24 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [x] | **PLAT-025** | Remove `eslint.ignoreDuringBuilds` in web Dockerfile once lint clean in CI | `next.config.mjs` — lint enforced at `next build` | P3 |
 | [x] | **PLAT-026** | Reconcile tier enum in AGENT.md (`FREE/PAID` vs `FREE/ARTIST/STUDIO`) | P2 |
 
+### UI / Design alignment (reference mockup parity)
+
+Gaps identified 2026-06-05 by comparing `docs/reference-screenshots/` against the
+live app. All items target the dark brand palette already defined in
+`packages/ui/src/tokens.css` — no new design decisions needed.
+
+| Done | ID | Item | Effort | Priority |
+|:---:|---|---|---|---|
+| [ ] | **PLAT-030** | **Stats page** — create `/dashboard/stats` route with 4-up stat tile grid (plays / downloads / fan-subs / revenue), "PLAYS — LAST 30 DAYS" bar chart with 7d/30d/All toggle + date axis, engagement-unit progress bars, top-tracks list, top-countries list with progress bars. Needs API endpoints: `/api/me/stats/plays`, `/api/me/stats/top-tracks`, `/api/me/stats/top-countries`. Update sidebar `#studio-stats` anchor → `/dashboard/stats` route. | Large | P1 |
+| [ ] | **PLAT-031** | **Smart link DSP buttons** — add service icon (emoji per platform in a 28px rounded square), action-label map (`spotify → "Stream"`, `bandcamp → "Buy / Free DL"`, `tahti → "FLAC · best quality"`), `.sl-btn--primary` modifier for the tahti.fi button (teal border highlight). Increase cover art from 160→200px. Changes in `SmartLinkDspButtons` + `brand-channel.css`. | Small | P1 |
+| [ ] | **PLAT-032** | **Channel public page — tag chips, release thumbnails, sticky live bar** — add `.prof-tag-chip` + `.prof-tags` pill styles for genre/tag chips; `.prof-release-row` with a 40×40 gradient thumbnail slot and "Links →" / "Play ▶" action buttons; `.ch-sticky-live-bar` fixed-bottom banner (green dot, listener count, FLAC badge, "Open →" CTA) shown when channel is live. | Medium | P1 |
+| [ ] | **PLAT-033** | **Dashboard overview — stat tile grid + End Broadcast CTA** — add `db-stat-grid` 4-column CSS + `db-stat-tile` with coloured large value (amber/cyan/green/purple) and label below; restyle `db-status-bar` End Broadcast button to amber (`var(--amber)` bg, dark text); add `db-quick-actions` row (Upload Release, Send Newsletter, Push to Mixcloud). | Medium | P2 |
+| [ ] | **PLAT-034** | **Section label consistency** — audit all `<h2>` headings inside `[data-tahti-ui='studio']`; apply consistent `.db-section-label` style (`font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted)`). Same pass for `RECENT ARCHIVE`, `ICECAST STREAM KEY`, `TOP TRACKS` style headings on channel + smart link pages. | Small | P2 |
+| [ ] | **PLAT-035** | **Countdown timer** — client-side countdown component for offline channel with a scheduled next broadcast. Display four boxes (HH/MM/SS + "FRI 22:00" day/time) above "NOW PLAYING FROM ARCHIVE". Add `.db-countdown-grid` + `.db-countdown-box` CSS (dark card, centred large number, label below in muted text). | Small | P2 |
+| [ ] | **PLAT-036** | **Waveform visualisation** — Web Audio API `AnalyserNode` driving a canvas bar-graph waveform above the seek bar on the live channel player (`hls-player.tsx`). Mirrors the animated waveform visible in the live listener mockup. | Medium | P3 |
+| [ ] | **PLAT-037** | **Mobile player layout** — `@media (max-width: 480px)` breakpoint in `brand-channel.css` with `.ch-mobile-player`: full-bleed cover art top half with gradient fade, centred FLAC badge, play/skip controls, and a support CTA card below — matching the mobile listener mockup. | Small | P3 |
+| [ ] | **PLAT-038** | **Stash / file manager** (`/dashboard/stash`) — private WIP file storage view: "My Stash" header, storage bar, "WIP TRACKS" list (lock icon, filename, format/size/modified/comments, Share / Download / Play actions), "SHARED ACCESS" section with time-limited collaborator links and Revoke. Requires new DB table + presigned-URL share tokens + API. | Large | P3 |
+
 ---
 
 ## Streaming infrastructure backlog
@@ -585,6 +603,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | How to scale nodes? | `scaling-node-distribution.md`, `infra/docker-compose.stack.yml` |
 | E2E screenshots / flows? | `user-flows.md`, `e2e-screenshots/README.md` |
 | Platform hardening backlog? | [Platform engineering backlog](#platform-engineering-backlog), `future-improvements.md` |
+| UI / design alignment? | [UI / Design alignment](#ui--design-alignment-reference-mockup-parity), `docs/reference-screenshots/` |
 | Backup & restore flow? | `technical/phase-3.md`, [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta) |
 | Ops journeys (restore drill)? | `technical/journey-ops.md` |
 

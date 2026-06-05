@@ -60,9 +60,16 @@ import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
 import adminMembersRoutes from './routes/admin/members.js'
 import adminStatsRoutes from './routes/admin/stats.js'
 import adminStreamsRoutes from './routes/admin/streams.js'
+import adminChannelsRoutes from './routes/admin/channels.js'
+import adminFanSubsRoutes from './routes/admin/fansubs.js'
 import adminUsersRoutes from './routes/admin/users.js'
+import adminEngagementRoutes from './routes/admin/engagement.js'
+import adminSupportRoutes from './routes/admin/support.js'
+import adminResolutionsRoutes from './routes/admin/resolutions.js'
+import adminReportsRoutes from './routes/admin/reports.js'
 import adminAuditRoutes from './routes/admin/audit.js'
 import adminVenueRoutes from './routes/admin/venues.js'
+import supportContactRoutes from './routes/support/contact.js'
 import meReleaseRoutes from './routes/releases/me.js'
 import releaseTrackRoutes from './routes/releases/tracks.js'
 import releaseTrackVersionRoutes from './routes/releases/track-versions.js'
@@ -83,8 +90,10 @@ import venueRoutes from './routes/venues/venues.js'
 import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
+import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import meArchiveRoutes from './routes/me/archive.js'
 import meProgrammeRoutes from './routes/me/programme.js'
+import meSocialRoutes from './routes/me/social.js'
 import meChannelScheduleRoutes from './routes/me/channel-schedule.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
 import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
@@ -414,7 +423,13 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminMembersRoutes)
   await fastify.register(adminStatsRoutes)
   await fastify.register(adminStreamsRoutes)
+  await fastify.register(adminChannelsRoutes)
+  await fastify.register(adminFanSubsRoutes)
   await fastify.register(adminUsersRoutes)
+  await fastify.register(adminEngagementRoutes)
+  await fastify.register(adminSupportRoutes)
+  await fastify.register(adminResolutionsRoutes)
+  await fastify.register(adminReportsRoutes)
 
   // M20: tier gating
   await fastify.register(broadcastUsageRoutes)
@@ -422,6 +437,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M11: audit exports
   await fastify.register(adminAuditRoutes)
   await fastify.register(adminVenueRoutes)
+  await fastify.register(supportContactRoutes)
 
   // M12: artist profile + releases + audio upload pipeline
   await fastify.register(meReleaseRoutes)
@@ -437,6 +453,8 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M12 / M15: profile update (bio, social links) + mention detection
   await fastify.register(meProfileRoutes)
+  await fastify.register(mePrivacyRoutes)
+  await fastify.register(publicPressKitRoutes)
 
   // M14: embed widget + oEmbed
   await fastify.register(embedRoutes)
@@ -464,6 +482,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M22/M24/M25: archive item metadata edit + channel slideshow
   await fastify.register(meArchiveRoutes)
   await fastify.register(meProgrammeRoutes)
+  await fastify.register(meSocialRoutes)
   await fastify.register(meChannelScheduleRoutes)
   await fastify.register(meArchiveVersionRoutes)
   await fastify.register(meDownloadGateStatsRoutes)

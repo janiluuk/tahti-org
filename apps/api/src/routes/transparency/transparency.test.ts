@@ -4,8 +4,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
+import { cleanupUsersByEmailPrefix, createTestArtist } from '../../test/helpers.js'
 
 const YEAR = 2030
+const PREFIX = 'transparency-res-'
 
 describe('Transparency API (public)', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -18,8 +20,10 @@ describe('Transparency API (public)', () => {
   })
 
   afterAll(async () => {
+    await prisma.boardResolution.deleteMany({})
     await prisma.grantDisbursement.deleteMany({ where: { forYear: YEAR } })
     await prisma.monthlyRollup.deleteMany({ where: { yearMonth: { startsWith: `${YEAR}-` } } })
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
     await app.close()
   })
 
@@ -66,5 +70,34 @@ describe('Transparency API (public)', () => {
   it('rejects invalid grant year', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/transparency/grants/notayear' })
     expect(res.statusCode).toBe(400)
+  })
+
+  it('GET /resolutions returns published resolutions for year', async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    const board = await createTestArtist(prisma, {
+      email: `${PREFIX}board@example.com`,
+      username: 'transparency-res-board',
+    })
+    await prisma.boardResolution.create({
+      data: {
+        title: 'Test resolution',
+        body: 'Approved in test.',
+        votedAt: new Date(`${YEAR}-06-01T12:00:00.000Z`),
+        outcome: 'PASSED',
+        voteFor: 3,
+        voteAgainst: 0,
+        voteAbstain: 0,
+        createdById: board.id,
+        publishedAt: new Date(),
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/transparency/resolutions?year=${YEAR}`,
+    })
+    expect(res.statusCode).toBe(200)
+    const rows = res.json() as Array<{ title: string }>
+    expect(rows.some((r) => r.title === 'Test resolution')).toBe(true)
   })
 })

@@ -16,6 +16,7 @@ export default function MembershipPanel({
   emailVerified,
   hasStripeSubscription = false,
   renewalDueAt,
+  subscriptionMigrationRequired = false,
 }: {
   status: string
   isMember: boolean
@@ -24,6 +25,7 @@ export default function MembershipPanel({
   emailVerified: boolean
   hasStripeSubscription?: boolean
   renewalDueAt?: string | null
+  subscriptionMigrationRequired?: boolean
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -70,7 +72,13 @@ export default function MembershipPanel({
         <Text tone="success">
           Active member #{memberNumber ?? '—'} — thank you for supporting the cooperative.
         </Text>
-        {dueLabel && !hasStripeSubscription && (
+        {subscriptionMigrationRequired && (
+          <Text className="studio-mt-sm">
+            Your membership uses the legacy one-time path. Subscribe via Stripe for automatic annual
+            renewal and billing receipts.
+          </Text>
+        )}
+        {dueLabel && !hasStripeSubscription && !subscriptionMigrationRequired && (
           <Text className="studio-mt-sm">
             Renewal due around {dueLabel}. Pay again from this panel when reminded, or subscribe via
             Stripe on your next checkout.
@@ -81,15 +89,29 @@ export default function MembershipPanel({
             Next renewal around {dueLabel} (Stripe subscription).
           </Text>
         )}
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={openPortal}
-          disabled={isPending}
-          className="studio-mt-md"
-        >
-          {isPending ? 'Opening…' : 'Manage billing'}
-        </Button>
+        {hasStripeSubscription ? (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={openPortal}
+            disabled={isPending}
+            className="studio-mt-md"
+          >
+            {isPending ? 'Opening…' : 'Manage billing'}
+          </Button>
+        ) : subscriptionMigrationRequired ? (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={pay}
+            disabled={isPending}
+            className="studio-mt-md"
+          >
+            {isPending
+              ? 'Processing…'
+              : `Subscribe for auto-renewal (€${(priceCents / 100).toFixed(0)}/year)`}
+          </Button>
+        ) : null}
       </Panel>
     )
   }

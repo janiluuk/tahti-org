@@ -70,4 +70,16 @@ describe('GET /api/admin/audit/export.csv', () => {
     expect(res.body).toContain('GRANT_RUN')
     expect(res.body).toContain(boardId)
   })
+
+  it('GET /api/admin/audit returns paginated JSON', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/admin/audit?limit=10',
+      headers: { cookie: boardCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { total: number; items: Array<{ action: string }> }
+    expect(body.total).toBeGreaterThan(0)
+    expect(body.items.some((i) => i.action === 'GRANT_RUN')).toBe(true)
+  })
 })

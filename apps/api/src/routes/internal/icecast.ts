@@ -18,6 +18,7 @@ import {
   enqueueFinalizeBroadcastRecording,
   enqueueWarmArchiveFallbackCache,
 } from '../../lib/queue.js'
+import { queueChannelLiveSocialPost } from '../../lib/social-post.js'
 
 // Icecast URL auth callbacks.
 // Icecast sends: mount, user, pass (plus optional ip, agent) as form-encoded body.
@@ -81,10 +82,18 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
         data: { channelId: channel.id, source: 'ICECAST' },
       })
 
+      const wasOffline = channel.state === 'OFFLINE'
+
       await fastify.prisma.channel.update({
         where: { id: channel.id },
         data: { state: 'LIVE', goneLiveAt: new Date() },
       })
+
+      if (wasOffline) {
+        queueChannelLiveSocialPost(fastify.prisma, channel.userId, channel.id, slug).catch(
+          (err: unknown) => fastify.log.warn({ err, slug }, 'channel live social post failed'),
+        )
+      }
 
       spawnChannelLiquidsoap(channel.id, slug, broadcast.id).catch((err: unknown) =>
         fastify.log.error({ err }, 'orchestrator spawn failed (icecast)'),
