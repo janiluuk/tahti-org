@@ -3,6 +3,7 @@
 #
 # Usage (from repo root on the Swarm manager or CI deploy host):
 #   DATABASE_URL='postgresql://…' ./scripts/db-migrate-deploy.sh
+#   PRE_MIGRATE_SNAPSHOT=1 DATABASE_URL=… ./scripts/db-migrate-deploy.sh
 #   TAG=abc1234 REGISTRY=registry.tahti.live ./scripts/db-migrate-deploy.sh --image
 #
 # With --image, runs migrate inside the API image (production parity).
@@ -13,6 +14,11 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 USE_IMAGE=false
 REGISTRY="${REGISTRY:-registry.tahti.live}"
 TAG="${TAG:-}"
+
+if [[ "${PRE_MIGRATE_SNAPSHOT:-}" == "1" ]]; then
+  echo "==> Pre-migration Postgres snapshot"
+  "${ROOT}/scripts/pre-destructive-db-snapshot.sh"
+fi
 
 for arg in "$@"; do
   case "$arg" in
