@@ -2,7 +2,14 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { IdParamSchema, parseRouteParams } from '@tahti/shared'
+import {
+  IdParamSchema,
+  RevelatorReleaseStatusSchema,
+  RevelatorSubmitAcceptedSchema,
+  openApiResponse,
+  openApiResponses,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { releaseCatalogSelect } from '../../lib/release-catalog.js'
 import { mediaQueue } from '../../lib/queue.js'
@@ -13,7 +20,14 @@ const SUBMITTABLE_STATUSES = new Set(['failed', null])
 const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/releases/:id/revelator',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description: 'M7: Revelator submission status for a release',
+        response: openApiResponse(RevelatorReleaseStatusSchema, 'RevelatorReleaseStatus'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)
@@ -40,7 +54,16 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post(
     '/api/me/releases/:id/revelator/submit',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        description: 'M7: queue Revelator DSP delivery for a release',
+        response: openApiResponses([
+          { status: 202, schema: RevelatorSubmitAcceptedSchema, name: 'RevelatorSubmitAccepted' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)
@@ -84,7 +107,7 @@ const revelatorRoutes: FastifyPluginAsync = async (fastify) => {
 
       await mediaQueue.add('revelator-deliver', { releaseId: id })
 
-      return reply.status(202).send({ releaseId: id, revelatorStatus: 'pending' })
+      return reply.status(202).send({ releaseId: id, revelatorStatus: 'pending' as const })
     },
   )
 }

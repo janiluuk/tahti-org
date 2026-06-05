@@ -503,14 +503,14 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [x] | **PLAT-011** | Redis client singleton (status, rate-limit, sessions share one pool) | `apps/api/src/lib/redis.ts` | P2 |
 | [~] | **PLAT-012** | Vitest parallel workers + Testcontainers (replace `maxWorkers: 1` + memberNumber bands) | `allocateMemberNumber()` test helper (dynamic member #); Testcontainers deferred | P2 |
 | [x] | **PLAT-013** | Website Docker: mount large media (`bg-audio.mp3`, hero video) from host like `output_vhs.mp4` | `.dockerignore`, stack + local compose binds | P3 |
-| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | + auth login/register/logout/verify, health, chat, releases/me, embed/oEmbed, RTMP targets, admin ledger, governance POST, fan payouts, me/grants |
+| [~] | **PLAT-014** | OpenAPI response schemas generated from Zod (keep `/docs` in sync with routes) | + admin grants run, Revelator, Mixcloud, release artwork |
 
 ### Refactors (maintainability)
 
 | Done | ID | Item | Priority |
 |:---:|---|---|---|
 | [x] | **PLAT-020** | Adopt `@tahti/ui` in `apps/web` dashboard + public pages | Studio + public brand shells; channel/profile/governance/embed; dashboard `studio-*` CSS; gallery + tracklist on brand tokens |
-| [~] | **PLAT-021** | Zod on all route bodies (governance, ledger, fansubs, releases partially ad-hoc) | + path params on me/archive, releases, newsletter, embed, admin venues; query Zod on collections, venues, mixcloud |
+| [x] | **PLAT-021** | Zod on all route bodies | Path/query/body validation via `@tahti/shared` schemas on public and authenticated routes |
 | [x] | **PLAT-022** | Single e2e seed module exported from `@tahti/db` test helpers or `apps/api/scripts/` only | P2 |
 | [x] | **PLAT-023** | Centralise worker cron registration (`apps/worker/src/index.ts` → job manifest) | P2 |
 | [x] | **PLAT-024** | Shared `exportCsv(reply, rows)` for admin exports | `sendCsv()` — members, audit, fan-subscriber exports |

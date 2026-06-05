@@ -335,6 +335,9 @@ export const GrantPreviewResponseSchema = z.object({
   artists: z.array(GrantPreviewArtistSchema),
 })
 
+/** POST /api/admin/grants/run/:year — same summary fields as preview, without artist rows. */
+export const GrantRunResponseSchema = GrantPreviewResponseSchema.omit({ artists: true })
+
 export const ArtistFollowResponseSchema = z.object({
   following: z.boolean(),
 })
