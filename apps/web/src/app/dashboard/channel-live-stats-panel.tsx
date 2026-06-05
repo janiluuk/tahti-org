@@ -41,34 +41,23 @@ export function ChannelLiveStatsPanel({
         </Text>
       }
     >
-      <Text size="sm" style={{ marginBottom: '0.75rem' }}>
+      <Text size="sm" className="studio-mb-md">
         <strong>{formatDuration(stats.totalLiveSeconds)}</strong> on air ·{' '}
         <strong>{stats.totalBroadcasts}</strong> sessions
       </Text>
-      <div
-        role="img"
-        aria-label="Live broadcast duration chart"
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 3,
-          height: 56,
-          marginBottom: '0.5rem',
-        }}
-      >
+      <div role="img" aria-label="Live broadcast duration chart" className="studio-chart">
         {stats.daily.map((d) => {
           const h = Math.round((d.liveSeconds / max) * 100)
+          const minH = d.liveSeconds > 0 ? 4 : 2
+          const barPct = Math.max(h, d.liveSeconds > 0 ? 10 : 2)
           return (
             <div
               key={d.date}
               title={`${d.date}: ${formatDuration(d.liveSeconds)}, ${d.broadcastCount} broadcasts`}
+              className="studio-chart-bar studio-chart-bar--live"
               style={{
-                flex: 1,
-                minWidth: 0,
-                height: `${Math.max(h, d.liveSeconds > 0 ? 10 : 2)}%`,
-                minHeight: d.liveSeconds > 0 ? 4 : 2,
-                background: '#7c3aed',
-                borderRadius: 2,
+                ['--studio-bar-pct' as string]: `${barPct}%`,
+                ['--studio-bar-min' as string]: `${minH}px`,
               }}
             />
           )

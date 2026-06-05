@@ -115,38 +115,30 @@ export default function ReleasesPanel({
   }
 
   return (
-    <section
-      style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ margin: 0 }}>Releases</h2>
-        <a href={`/u/${username}`} style={{ fontSize: '0.85rem', color: '#2563eb' }}>
+    <section className="studio-panel-section">
+      <div className="studio-row--between">
+        <h2 className="studio-section-heading studio-m-0">Releases</h2>
+        <a href={`/u/${username}`} className="studio-link-cta">
           Public profile ↗
         </a>
       </div>
-      <p style={{ color: '#666', fontSize: '0.875rem' }}>
+      <p className="studio-help">
         Publish releases on your profile. Add DSP smart links for the public landing page at{' '}
         <code>/r/your-slug</code>.
       </p>
 
       {initial.length > 0 && (
-        <ul style={{ listStyle: 'none', padding: 0, margin: '1rem 0' }}>
+        <ul className="studio-list studio-mt-lg">
           {initial.map((r) => (
-            <li
-              key={r.id}
-              style={{
-                padding: '0.75rem 0',
-                borderBottom: '1px solid #f0f0f0',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+            <li key={r.id} className="studio-item-row--list">
+              <div className="studio-card-row">
                 <span>
                   {r.title} · {r.state} · {r._count.tracks} track(s)
                 </span>
-                <span style={{ display: 'flex', gap: '0.35rem' }}>
+                <span className="studio-actions studio-actions--sm">
                   {r.state === 'PUBLISHED' && (
                     <>
-                      <Link href={`/r/${r.smartLinkSlug}`} style={{ fontSize: '0.8rem' }}>
+                      <Link href={`/r/${r.smartLinkSlug}`} className="studio-text-sm">
                         Smart link
                         {typeof r.smartLinkViewCount === 'number' && r.smartLinkViewCount > 0
                           ? ` (${r.smartLinkViewCount} views)`
@@ -155,7 +147,7 @@ export default function ReleasesPanel({
                       <button
                         type="button"
                         onClick={() => openSmartLinks(r)}
-                        style={{ border: '1px solid #ccc', borderRadius: 4, fontSize: '0.8rem' }}
+                        className="studio-btn-ghost"
                       >
                         DSP URLs
                       </button>
@@ -166,11 +158,7 @@ export default function ReleasesPanel({
                       type="button"
                       onClick={() => publish(r.id)}
                       disabled={isPending}
-                      style={{
-                        border: '1px solid #ccc',
-                        borderRadius: 4,
-                        padding: '0.2rem 0.5rem',
-                      }}
+                      className="studio-btn-ghost"
                     >
                       Publish
                     </button>
@@ -222,74 +210,53 @@ export default function ReleasesPanel({
       )}
 
       {editingId && (
-        <div
-          style={{
-            marginBottom: '1rem',
-            padding: '1rem',
-            background: '#f9fafb',
-            borderRadius: 8,
-            border: '1px solid #e5e7eb',
-          }}
-        >
-          <p style={{ margin: '0 0 0.75rem', fontWeight: 600, fontSize: '0.9rem' }}>
-            Streaming links
-          </p>
+        <div className="studio-smart-links-panel">
+          <p className="studio-text-strong-sm studio-m-0 studio-mb-md">Streaming links</p>
           {DSP_FIELDS.map((f) => (
-            <label
-              key={f.key}
-              style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}
-            >
+            <label key={f.key} className="studio-field studio-text-muted-sm">
               {f.label}
               <input
                 type="url"
                 value={targets[f.key] ?? ''}
                 onChange={(e) => setTargets((t) => ({ ...t, [f.key]: e.target.value }))}
                 placeholder={f.placeholder}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  marginTop: '0.2rem',
-                  padding: '0.4rem',
-                  border: '1px solid #ccc',
-                  borderRadius: 4,
-                }}
+                className="studio-input studio-mt-sm"
               />
             </label>
           ))}
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-            <button type="button" onClick={saveSmartLinks} disabled={isPending}>
+          <div className="studio-actions studio-mt-md">
+            <button
+              type="button"
+              onClick={saveSmartLinks}
+              disabled={isPending}
+              className="studio-btn-primary"
+            >
               Save links
             </button>
-            <button type="button" onClick={() => setEditingId(null)}>
+            <button type="button" onClick={() => setEditingId(null)} className="studio-btn-ghost">
               Cancel
             </button>
           </div>
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+      <div className="studio-input-row studio-mt-md">
         <input
           placeholder="Release title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          style={{ flex: 1, padding: '0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
+          className="studio-input studio-flex-1"
         />
         <button
           type="button"
           onClick={addRelease}
           disabled={isPending}
-          style={{
-            background: '#2563eb',
-            color: 'white',
-            border: 'none',
-            borderRadius: 4,
-            padding: '0.5rem 1rem',
-          }}
+          className="studio-btn-primary"
         >
           Add draft
         </button>
       </div>
-      {error && <p style={{ color: '#dc2626', fontSize: '0.85rem' }}>{error}</p>}
+      {error && <p className="studio-text-error">{error}</p>}
     </section>
   )
 }

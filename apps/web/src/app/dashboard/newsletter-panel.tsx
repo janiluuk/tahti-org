@@ -103,81 +103,42 @@ export default function NewsletterPanel({
   }
 
   return (
-    <div
-      style={{ marginTop: '2rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: 8 }}
-    >
-      <h2 style={{ margin: '0 0 0.5rem' }}>Newsletter</h2>
-      <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: '#666' }}>
-        Email your subscribers from your artist profile. {weeklyHint}
-      </p>
+    <div className="studio-panel-section">
+      <h2 className="studio-section-heading studio-section-heading--tight">Newsletter</h2>
+      <p className="studio-help">Email your subscribers from your artist profile. {weeklyHint}</p>
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '1.5rem',
-          marginBottom: '1.25rem',
-          fontSize: '0.875rem',
-          flexWrap: 'wrap',
-        }}
-      >
+      <div className="studio-row studio-row--wrap studio-gap-lg studio-mb-lg studio-text-sm">
         <span>
           <strong>{stats.confirmed}</strong> confirmed
         </span>
-        <span style={{ color: '#888' }}>{stats.total} total signups</span>
-        <span style={{ color: '#888' }}>+{stats.newLast30Days} last 30 days</span>
+        <span className="studio-text-muted-sm">{stats.total} total signups</span>
+        <span className="studio-text-muted-sm">+{stats.newLast30Days} last 30 days</span>
       </div>
 
-      <div style={{ marginBottom: '1.25rem' }}>
-        <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.35rem' }}>
-          Subject
-        </label>
+      <div className="studio-field">
+        <label className="studio-label">Subject</label>
         <input
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
           maxLength={200}
           disabled={saving}
-          style={{
-            width: '100%',
-            padding: '0.45rem 0.6rem',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            fontSize: '0.875rem',
-            boxSizing: 'border-box',
-          }}
+          className="studio-input"
         />
       </div>
 
-      <div style={{ marginBottom: '0.75rem' }}>
-        <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.35rem' }}>
-          Body (Markdown)
-        </label>
+      <div className="studio-field studio-mb-md">
+        <label className="studio-label">Body (Markdown)</label>
         <textarea
           value={bodyMd}
           onChange={(e) => setBodyMd(e.target.value)}
           rows={6}
           disabled={saving}
-          style={{
-            width: '100%',
-            padding: '0.45rem 0.6rem',
-            border: '1px solid #ccc',
-            borderRadius: 4,
-            fontSize: '0.875rem',
-            fontFamily: 'inherit',
-            boxSizing: 'border-box',
-          }}
+          className="studio-textarea"
         />
       </div>
 
       <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          fontSize: '0.875rem',
-          marginBottom: '0.75rem',
-          cursor: hasFanNewsletterPerk ? 'pointer' : 'not-allowed',
-          opacity: hasFanNewsletterPerk ? 1 : 0.6,
-        }}
+        className={`studio-label-row studio-mb-md${hasFanNewsletterPerk ? '' : ' studio-label-row--disabled'}`}
       >
         <input
           type="checkbox"
@@ -192,51 +153,24 @@ export default function NewsletterPanel({
         type="button"
         onClick={() => void handleCreate()}
         disabled={saving || !subject.trim() || !bodyMd.trim()}
-        style={{
-          padding: '0.45rem 1rem',
-          background: '#111',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 4,
-          cursor: 'pointer',
-          fontSize: '0.875rem',
-          opacity: saving || !subject.trim() || !bodyMd.trim() ? 0.5 : 1,
-        }}
+        className="studio-btn-dark"
       >
         {saving ? 'Saving…' : 'Save draft'}
       </button>
 
       {drafts.length > 0 && (
-        <div style={{ marginTop: '1.5rem' }}>
-          <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>Drafts & sends</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        <div className="studio-mt-xl">
+          <h3 className="studio-text-strong-sm studio-mb-md">Drafts & sends</h3>
+          <ul className="studio-list">
             {drafts.map((d) => (
-              <li
-                key={d.id}
-                style={{
-                  padding: '0.75rem',
-                  marginBottom: '0.5rem',
-                  border: '1px solid #eee',
-                  borderRadius: 6,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+              <li key={d.id} className="studio-draft-card">
+                <div className="studio-card-row">
                   <div>
-                    <strong style={{ fontSize: '0.9rem' }}>{d.subject}</strong>
+                    <strong className="studio-text-strong-sm">{d.subject}</strong>
                     {d.subscribersOnly && (
-                      <span
-                        style={{
-                          marginLeft: '0.5rem',
-                          fontSize: '0.75rem',
-                          background: '#fef3c7',
-                          padding: '0.1rem 0.4rem',
-                          borderRadius: 3,
-                        }}
-                      >
-                        fans only
-                      </span>
+                      <span className="studio-badge studio-badge--fans">fans only</span>
                     )}
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#888' }}>
+                    <p className="studio-text-muted-sm studio-mt-sm studio-m-0">
                       {d.state === 'DRAFT' && 'Draft'}
                       {d.state === 'QUEUED' && 'Sending…'}
                       {d.state === 'SENT' &&
@@ -244,7 +178,7 @@ export default function NewsletterPanel({
                     </p>
                   </div>
                   {d.state === 'DRAFT' && (
-                    <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
+                    <div className="studio-actions studio-actions--sm">
                       {d.subscribersOnly ? (
                         <SendButton
                           label="Send to fans"
@@ -277,12 +211,8 @@ export default function NewsletterPanel({
         </div>
       )}
 
-      {error && (
-        <p style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.75rem' }}>{error}</p>
-      )}
-      {message && (
-        <p style={{ color: '#16a34a', fontSize: '0.8rem', marginTop: '0.75rem' }}>{message}</p>
-      )}
+      {error && <p className="studio-text-error studio-mt-md">{error}</p>}
+      {message && <p className="studio-text-success studio-mt-md">{message}</p>}
     </div>
   )
 }
@@ -303,17 +233,7 @@ function SendButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      style={{
-        padding: '0.35rem 0.65rem',
-        background: secondary ? '#fff' : '#2563eb',
-        color: secondary ? '#2563eb' : '#fff',
-        border: secondary ? '1px solid #2563eb' : 'none',
-        borderRadius: 4,
-        cursor: disabled ? 'default' : 'pointer',
-        fontSize: '0.8rem',
-        opacity: disabled ? 0.5 : 1,
-        whiteSpace: 'nowrap',
-      }}
+      className={secondary ? 'studio-btn-outline' : 'studio-btn-primary'}
     >
       {disabled ? 'Sending…' : label}
     </button>

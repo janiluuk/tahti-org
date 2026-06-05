@@ -63,7 +63,7 @@ export default function MembershipPanel({
           variant="ghost"
           onClick={openPortal}
           disabled={isPending}
-          style={{ marginTop: '0.75rem' }}
+          className="studio-mt-md"
         >
           {isPending ? 'Opening…' : 'Manage billing'}
         </Button>

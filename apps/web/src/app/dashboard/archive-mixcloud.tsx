@@ -47,15 +47,15 @@ export function ArchiveMixcloudUpload({
   }
 
   return (
-    <div style={{ marginTop: '0.75rem', fontSize: '0.9rem' }}>
-      <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Mixcloud upload</div>
+    <div className="studio-mt-md studio-text-sm">
+      <div className="studio-text-strong-sm studio-mb-sm">Mixcloud upload</div>
       {mixcloudConfigured && !mixcloudConnected && (
-        <p style={{ color: '#666', margin: '0 0 0.35rem' }}>
+        <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
           <a href={`${apiUrl}/api/me/mixcloud/oauth/start`}>Connect Mixcloud</a> to upload this mix.
         </p>
       )}
       {uploadStatus === 'DONE' && mixcloudUrl && (
-        <p style={{ margin: 0 }}>
+        <p className="studio-m-0">
           Uploaded —{' '}
           <a href={mixcloudUrl} target="_blank" rel="noreferrer">
             View on Mixcloud
@@ -63,19 +63,19 @@ export function ArchiveMixcloudUpload({
         </p>
       )}
       {uploadStatus && uploadStatus !== 'DONE' && (
-        <p style={{ color: '#666', margin: '0 0 0.35rem' }}>Status: {uploadStatus}</p>
+        <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">Status: {uploadStatus}</p>
       )}
       {!uploadStatus && (
         <button
           type="button"
           onClick={queue}
           disabled={isPending || (mixcloudConfigured && !mixcloudConnected)}
-          style={{ fontSize: '0.85rem' }}
+          className="studio-text-muted-sm"
         >
           {isPending ? 'Queueing…' : 'Upload to Mixcloud'}
         </button>
       )}
-      {error && <p style={{ color: '#b91c1c', margin: '0.35rem 0 0' }}>{error}</p>}
+      {error && <p className="studio-text-error studio-mt-sm studio-m-0">{error}</p>}
     </div>
   )
 }

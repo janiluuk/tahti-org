@@ -50,7 +50,7 @@ export default function StreamSettingsPanel({ initial }: { initial: StreamSettin
             size="sm"
             onClick={() => rotateKey('rtmp')}
             disabled={rotating === 'rtmp'}
-            style={{ marginTop: '0.5rem' }}
+            className="studio-mt-sm"
           >
             {rotating === 'rtmp' ? 'Rotating…' : 'Rotate RTMP key'}
           </Button>
@@ -66,7 +66,7 @@ export default function StreamSettingsPanel({ initial }: { initial: StreamSettin
             size="sm"
             onClick={() => rotateKey('icecast')}
             disabled={rotating === 'icecast'}
-            style={{ marginTop: '0.5rem' }}
+            className="studio-mt-sm"
           >
             {rotating === 'icecast' ? 'Rotating…' : 'Rotate Icecast password'}
           </Button>

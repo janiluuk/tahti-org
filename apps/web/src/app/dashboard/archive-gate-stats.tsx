@@ -33,17 +33,8 @@ export function ArchiveGateStats({
   if (!stats) return null
 
   return (
-    <div
-      style={{
-        marginTop: '0.75rem',
-        padding: '0.65rem 0.75rem',
-        background: '#f0f9ff',
-        borderRadius: 6,
-        fontSize: '0.8rem',
-        color: '#334155',
-      }}
-    >
-      <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Download gate stats</div>
+    <div className="studio-gate-stats">
+      <div className="studio-text-strong-sm studio-mb-sm">Download gate stats</div>
       {followToDownload && (
         <div>
           Artist followers: <strong>{stats.artistFollowerCount}</strong>

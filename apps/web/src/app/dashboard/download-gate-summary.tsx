@@ -42,7 +42,7 @@ export function DownloadGateSummaryPanel({
         </Text>
       }
     >
-      <Text size="sm" style={{ marginBottom: '0.75rem' }}>
+      <Text size="sm" className="studio-mb-md">
         <strong>{summary.artistFollowerCount}</strong> channel followers ·{' '}
         <strong>{summary.totals.repostAcks}</strong> repost acks ·{' '}
         <strong>{summary.totals.blockedAttempts}</strong> blocked attempts
@@ -54,10 +54,10 @@ export function DownloadGateSummaryPanel({
         )}
       </Text>
       {summary.daily && summary.daily.length > 0 && <GateDailyChart daily={summary.daily} />}
-      <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
+      <table className="studio-table">
         <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '1px solid #eee' }}>
-            <th style={{ padding: '0.35rem 0' }}>Mix</th>
+          <tr>
+            <th>Mix</th>
             <th>Gates</th>
             <th>Reposts</th>
             <th>Blocked</th>
@@ -66,9 +66,9 @@ export function DownloadGateSummaryPanel({
         </thead>
         <tbody>
           {summary.items.map((row) => (
-            <tr key={row.archiveItemId} style={{ borderBottom: '1px solid #f3f4f6' }}>
-              <td style={{ padding: '0.4rem 0' }}>{row.title}</td>
-              <td style={{ color: '#666' }}>
+            <tr key={row.archiveItemId}>
+              <td>{row.title}</td>
+              <td className="studio-text-muted-sm">
                 {[row.repostToDownload ? 'repost' : null, row.followToDownload ? 'follow' : null]
                   .filter(Boolean)
                   .join(', ') || '—'}
@@ -91,50 +91,31 @@ function GateDailyChart({ daily }: { daily: GateDailyPoint[] }) {
   )
 
   return (
-    <div style={{ marginBottom: '1rem' }}>
-      <Text size="sm" tone="muted" style={{ marginBottom: '0.35rem' }}>
+    <div className="studio-mb-lg">
+      <Text size="sm" tone="muted" className="studio-mb-sm">
         Last 14 days (UTC)
       </Text>
       <div
         role="img"
         aria-label="Download gate activity chart"
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 4,
-          height: 72,
-          padding: '0.25rem 0',
-        }}
+        className="studio-chart studio-chart--tall"
       >
         {daily.map((d) => {
           const total = d.repostAcks + d.blockedAttempts + d.countedDownloads
           const h = Math.round((total / max) * 100)
+          const minH = total > 0 ? 6 : 2
+          const barPct = Math.max(h, total > 0 ? 8 : 2)
           return (
-            <div
-              key={d.date}
-              title={`${d.date}: ${d.repostAcks} reposts, ${d.blockedAttempts} blocked, ${d.countedDownloads} counted`}
-              style={{
-                flex: 1,
-                minWidth: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                gap: 2,
-              }}
-            >
+            <div key={d.date} className="studio-chart-col">
               <div
+                title={`${d.date}: ${d.repostAcks} reposts, ${d.blockedAttempts} blocked, ${d.countedDownloads} counted`}
+                className="studio-chart-bar studio-chart-bar--gate studio-w-full"
                 style={{
-                  width: '100%',
-                  height: `${Math.max(h, total > 0 ? 8 : 2)}%`,
-                  minHeight: total > 0 ? 6 : 2,
-                  background: '#2563eb',
-                  borderRadius: 2,
+                  ['--studio-bar-pct' as string]: `${barPct}%`,
+                  ['--studio-bar-min' as string]: `${minH}px`,
                 }}
               />
-              <span style={{ fontSize: '0.6rem', color: '#999', transform: 'rotate(-45deg)' }}>
-                {d.date.slice(5)}
-              </span>
+              <span className="studio-chart-label">{d.date.slice(5)}</span>
             </div>
           )
         })}

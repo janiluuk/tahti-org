@@ -60,50 +60,31 @@ export default function ArchiveEditor({
   const detectedKey = item.keyDetected as string | null | undefined
 
   return (
-    <li style={{ padding: '0.75rem 0', borderBottom: '1px solid #f0f0f0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+    <li className="studio-item-row--list">
+      <div className="studio-card-row">
         <div>
-          <div style={{ fontWeight: 500 }}>{item.title}</div>
-          <div style={{ fontSize: '0.85rem', color: '#666' }}>
+          <div className="studio-stat-box-title">{item.title}</div>
+          <div className="studio-text-muted-sm">
             {item.status as string}
             {item.contentType != null && ` · ${String(item.contentType).replace(/_/g, ' ')}`}
             {item.genre != null && ` · ${String(item.genre)}`}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          style={{ border: '1px solid #ccc', borderRadius: 4, padding: '0.25rem 0.6rem' }}
-        >
+        <button type="button" onClick={() => setOpen(!open)} className="studio-btn-ghost">
           {open ? 'Close' : 'Edit metadata'}
         </button>
       </div>
 
       {open && (
-        <div
-          style={{
-            marginTop: '1rem',
-            padding: '1rem',
-            background: '#fafafa',
-            borderRadius: 8,
-            border: '1px solid #eee',
-          }}
-        >
-          <label style={{ display: 'block', marginBottom: '0.75rem' }}>
-            <span style={{ fontWeight: 500 }}>Title</span>
+        <div className="studio-editor-panel">
+          <label className="studio-field">
+            <span className="studio-label">Title</span>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               disabled={isPending}
-              style={{
-                display: 'block',
-                width: '100%',
-                marginTop: '0.25rem',
-                padding: '0.4rem 0.6rem',
-                border: '1px solid #ccc',
-                borderRadius: 4,
-              }}
+              className="studio-input"
             />
           </label>
 
@@ -133,26 +114,20 @@ export default function ArchiveEditor({
             apiUrl={apiUrl}
           />
 
-          <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+          <div className="studio-actions studio-mt-lg">
             <button
               type="button"
               onClick={save}
               disabled={isPending || !title.trim()}
-              style={{
-                padding: '0.5rem 1rem',
-                background: '#2563eb',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 4,
-              }}
+              className="studio-btn-primary"
             >
               {isPending ? 'Saving…' : 'Save'}
             </button>
-            <button type="button" onClick={() => setOpen(false)}>
+            <button type="button" onClick={() => setOpen(false)} className="studio-btn-ghost">
               Cancel
             </button>
           </div>
-          {error && <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>}
+          {error && <p className="studio-text-error">{error}</p>}
         </div>
       )}
     </li>

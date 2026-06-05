@@ -476,7 +476,7 @@ export default async function DashboardPage() {
     <PageShell size="md">
       <div id="studio-overview" className="studio-section-anchor studio-page-header">
         <Heading level={1}>Dashboard</Heading>
-        <Text tone="secondary" style={{ marginTop: '0.5rem' }}>
+        <Text tone="secondary" className="studio-mt-sm">
           Welcome back, {user.displayName}
         </Text>
       </div>
@@ -514,7 +514,7 @@ export default async function DashboardPage() {
             <ChannelLiveStatsPanel stats={channelLiveStats} />
             <ChannelEgressPanel stats={channelEgress} />
           </div>
-          <Text size="sm" style={{ margin: '0.25rem 0' }}>
+          <Text size="sm" className="studio-my-xs">
             <strong>URL:</strong>{' '}
             <Link href={`/c/${user.channel.slug}`}>
               <code>{user.channel.slug}.tahti.live</code>
@@ -607,7 +607,7 @@ export default async function DashboardPage() {
       {user.channel && (
         <section id="studio-archive" className="studio-section-anchor studio-archive-section">
           <h2>Archive</h2>
-          <p style={{ color: 'var(--muted)', fontSize: '0.875rem', margin: '0 0 0.5rem' }}>
+          <p className="studio-text-muted-sm studio-text-sm studio-m-0 studio-mb-sm">
             Upload with genre, type, BPM, license, and access options — like hearthis.at edit
             upload.
           </p>
@@ -615,9 +615,9 @@ export default async function DashboardPage() {
           <UploadForm />
 
           {archiveItemsForEdit.length === 0 ? (
-            <p style={{ color: 'var(--muted)', marginTop: '1.5rem' }}>No archive items yet.</p>
+            <p className="studio-empty studio-mt-xl studio-mb-0">No archive items yet.</p>
           ) : (
-            <ul style={{ listStyle: 'none', padding: 0, marginTop: '1.5rem' }}>
+            <ul className="studio-list studio-mt-xl">
               {archiveItemsForEdit.map((item) => {
                 const play = archiveItems.find((a) => a.id === item.id)
                 return (
@@ -632,7 +632,7 @@ export default async function DashboardPage() {
                       <audio
                         controls
                         src={play.audioUrl}
-                        style={{ margin: '0 0 0.75rem', width: '100%' }}
+                        className="studio-audio-full"
                         data-testid="dashboard-archive-player"
                       />
                     )}
@@ -664,46 +664,23 @@ function StorageBar({
   }
 
   return (
-    <div
-      style={{
-        marginTop: '2rem',
-        padding: '1rem 1.5rem',
-        border: '1px solid var(--tahti-border)',
-        borderRadius: 8,
-        background: 'var(--tahti-surface)',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-        <span style={{ fontWeight: 500, fontSize: '0.875rem' }}>Storage</span>
+    <div className="studio-storage">
+      <div className="studio-storage-header">
+        <span className="studio-stat-box-title">Storage</span>
         <span
-          style={{
-            fontSize: '0.875rem',
-            color: isNearLimit ? '#dc2626' : 'var(--tahti-text-muted)',
-          }}
+          className={`studio-text-sm${isNearLimit ? ' studio-text-error' : ' studio-text-muted-sm'}`}
         >
           {fmt(usedMB)} / {fmt(targetMB)}
         </span>
       </div>
-      <div
-        style={{
-          background: 'var(--tahti-surface-muted)',
-          borderRadius: 4,
-          height: 6,
-          overflow: 'hidden',
-        }}
-      >
+      <div className="studio-storage-track">
         <div
-          style={{
-            height: '100%',
-            width: `${pct}%`,
-            background: isNearLimit ? '#dc2626' : 'var(--tahti-primary)',
-            borderRadius: 4,
-            transition: 'width 0.3s',
-          }}
+          className={`studio-storage-fill${isNearLimit ? ' studio-storage-fill--warn' : ''}`}
+          style={{ ['--studio-storage-pct' as string]: `${pct}%` }}
         />
       </div>
       {isNearLimit && (
-        <p style={{ margin: '0.4rem 0 0', fontSize: '0.8rem', color: '#dc2626' }}>
+        <p className="studio-text-error studio-mt-sm studio-m-0">
           You&apos;re approaching your soft storage target. Contact us if you need more space.
         </p>
       )}

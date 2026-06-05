@@ -38,34 +38,23 @@ export function ChannelEgressPanel({
         </Text>
       }
     >
-      <Text size="sm" style={{ marginBottom: '0.75rem' }}>
+      <Text size="sm" className="studio-mb-md">
         <strong>{formatMb(stats.totalBytes)}</strong> served ·{' '}
         <strong>{stats.totalDownloads}</strong> downloads
       </Text>
-      <div
-        role="img"
-        aria-label="Download bandwidth chart"
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 3,
-          height: 56,
-          marginBottom: '0.5rem',
-        }}
-      >
+      <div role="img" aria-label="Download bandwidth chart" className="studio-chart">
         {stats.daily.map((d) => {
           const h = Math.round((d.bytes / max) * 100)
+          const minH = d.bytes > 0 ? 4 : 2
+          const barPct = Math.max(h, d.bytes > 0 ? 10 : 2)
           return (
             <div
               key={d.date}
               title={`${d.date}: ${formatMb(d.bytes)}, ${d.downloads} downloads`}
+              className="studio-chart-bar studio-chart-bar--egress"
               style={{
-                flex: 1,
-                minWidth: 0,
-                height: `${Math.max(h, d.bytes > 0 ? 10 : 2)}%`,
-                minHeight: d.bytes > 0 ? 4 : 2,
-                background: '#059669',
-                borderRadius: 2,
+                ['--studio-bar-pct' as string]: `${barPct}%`,
+                ['--studio-bar-min' as string]: `${minH}px`,
               }}
             />
           )

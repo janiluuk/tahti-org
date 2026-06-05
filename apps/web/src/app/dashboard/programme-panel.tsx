@@ -86,23 +86,14 @@ export default function ProgrammePanel({
       </Field>
 
       {ready.length === 0 ? (
-        <Text size="sm" tone="muted" style={{ marginTop: '1rem' }}>
+        <Text size="sm" tone="muted" className="studio-mt-lg">
           Upload archive items first — only ready sets can join rotation.
         </Text>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: '1rem 0 0' }}>
+        <ul className="studio-list studio-mt-lg">
           {ready.map((row, index) => (
-            <li
-              key={row.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 0',
-                borderBottom: '1px solid #eee',
-              }}
-            >
-              <label style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <li key={row.id} className="studio-programme-row">
+              <label className="studio-programme-label">
                 <input
                   type="checkbox"
                   checked={row.isFallback}
@@ -112,7 +103,7 @@ export default function ProgrammePanel({
                 <span>{row.title}</span>
               </label>
               {fallbackMode === 'ordered' && row.isFallback && (
-                <span style={{ display: 'flex', gap: '0.25rem' }}>
+                <span className="studio-actions studio-gap-xs">
                   <Button
                     type="button"
                     variant="ghost"
@@ -139,12 +130,12 @@ export default function ProgrammePanel({
       )}
 
       {error && (
-        <Alert variant="error" style={{ marginTop: '0.75rem' }}>
+        <Alert variant="error" className="studio-mt-md">
           {error}
         </Alert>
       )}
       {message && (
-        <Alert variant="success" style={{ marginTop: '0.75rem' }}>
+        <Alert variant="success" className="studio-mt-md">
           {message}
         </Alert>
       )}
