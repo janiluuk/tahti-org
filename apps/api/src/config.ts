@@ -24,6 +24,8 @@ export const config = {
     user: process.env.SMTP_USER ?? '',
     pass: process.env.SMTP_PASS ?? '',
     from: process.env.SMTP_FROM ?? 'Tahti <noreply@tahti.live>',
+    /** M13: shared secret for Postmark/SES bounce webhooks (`X-Tahti-Webhook-Secret`). */
+    bounceWebhookSecret: process.env.EMAIL_BOUNCE_WEBHOOK_SECRET?.trim() ?? '',
   },
   appUrl: process.env.APP_URL ?? 'http://localhost:3000',
   apiUrl: process.env.API_URL ?? 'http://localhost:3001',

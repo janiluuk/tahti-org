@@ -34,7 +34,7 @@ echo -n "$SECRET" | docker secret create acrcloud_access_secret -
 
 Public or low-sensitivity values live in **`stack.env`** on the manager (see
 [`infra/stack.env.example`](../infra/stack.env.example)): `MIXCLOUD_CLIENT_ID`,
-ingest host lists, etc. The deploy workflow sources `stack.env` before
+`EMAIL_BOUNCE_WEBHOOK_SECRET`, ingest host lists, etc. The deploy workflow sources `stack.env` before
 `docker stack deploy`.
 
 ## Rotation
@@ -50,5 +50,5 @@ Swagger and Mixcloud details: [`ops/RUNBOOK.md`](RUNBOOK.md).
 
 ## Related
 
-- Backup / DR: [`RUNBOOK.md`](RUNBOOK.md)
+- Backup / DR: [`RUNBOOK.md`](RUNBOOK.md), [`BACKUP.md`](BACKUP.md)
 - Ingest DNS: [`ingest-dns.md`](ingest-dns.md)

@@ -75,7 +75,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
 | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha, audit log, `/api/v1/status`, OpenAPI `/docs`, structured logging, Stripe webhook + backup age on `/metrics`, **ACRCloud identify counters** (inactive until `ACRCLOUD_ENABLED`), **status monitor GHA** + **Upptime config**, **`/help/tier-limits`**. Deferred: live Upptime fork deploy |
 | **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor, **profile playback** (`archiveItemId` + `streamKey` presign); **cover art upload to MinIO** (`artworkKey` + presigned URLs). Deferred: bulk import |
-| **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
+| **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week), **bounce webhook** (`POST /api/webhooks/email/bounce` — Postmark + SNS). Deferred: SES for broadcast sends (uses Postmark/SMTP for now) |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard. Deferred: social auto-post |
 | **M24** Per-content visuals | 🟡 Partial | Channel gallery + **channel video backdrop** + per-item banner/background/slideshow on `/c/:slug`; **YouTube/Vimeo** via `parseVideoEmbedUrl` |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
@@ -297,7 +297,7 @@ Can ship incrementally during beta.
 | [x] | **M20** | Tier gating polish, upgrade UX | High |
 | [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
 | [~] | **M14** | Embed pages done; social auto-post + analytics remain | Medium |
-| [~] | **M13** | Newsletter API + worker; SES + bounce webhook remain | Medium |
+| [~] | **M13** | Newsletter API + worker + bounce webhook; SES broadcast sends remain | Medium |
 | [x] | **M6** | Multistream RTMP targets | Medium |
 | [x] | **M16** | Tahti Radio meta-stream | Medium |
 | [x] | **M15** | Artist @-mentions | Low |
@@ -393,8 +393,8 @@ contractor**. Director may remain employed, but **members can operate it**.
 | Done | Deliverable | Owner |
 |:---:|---|---|
 | [x] | `ops/RUNBOOK.md` — deploy, rollback, **Postgres + MinIO restore**, DR cutover | Dev |
-| [ ] | `ops/BACKUP.md` — RPO/RTO table, cron schedule, offsite bucket names, escalation | Dev |
-| [ ] | `ops/INCIDENTS.md` — outage comms, escalation | Dev |
+| [x] | `ops/BACKUP.md` — RPO/RTO table, cron schedule, offsite bucket names, escalation | Dev |
+| [x] | `ops/INCIDENTS.md` — outage comms, escalation | Dev |
 | [ ] | `ops/ONBOARDING-OPERATOR.md` — training syllabus | Director |
 | [ ] | `ops/TREASURER.md` — ledger import, grant payout, PRH export | Treasurer |
 | [ ] | `ops/AGM-PLAYBOOK.md` — motions, voting, minutes template | Board |

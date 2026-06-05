@@ -246,6 +246,7 @@ services:
       DOCS_PASS_FILE: /run/secrets/docs_pass
       MIXCLOUD_CLIENT_ID: ${MIXCLOUD_CLIENT_ID:-}
       MIXCLOUD_OAUTH_REDIRECT_URI: ${MIXCLOUD_OAUTH_REDIRECT_URI:-}
+      EMAIL_BOUNCE_WEBHOOK_SECRET: ${EMAIL_BOUNCE_WEBHOOK_SECRET:-}
     secrets:
       - pg_password
       - session_secret
