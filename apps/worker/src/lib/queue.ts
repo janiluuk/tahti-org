@@ -22,3 +22,20 @@ export async function enqueueArchiveBroadcast(broadcastId: string): Promise<void
     await queue.close()
   }
 }
+
+export async function enqueueWarmArchiveFallbackCache(channelId: string): Promise<void> {
+  const queue = new Queue('media', { connection })
+  try {
+    await queue.add(
+      'warm-archive-fallback-cache',
+      { channelId },
+      {
+        jobId: `warm-archive-fallback-cache-${channelId}`,
+        removeOnComplete: true,
+        removeOnFail: 100,
+      },
+    )
+  } finally {
+    await queue.close()
+  }
+}

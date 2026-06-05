@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { orderFallbackPool, selectFallbackPool } from './fallback-playlist.js'
+import {
+  orderFallbackPool,
+  selectFallbackPool,
+  localCacheBasename,
+  renderLocalFallbackM3u,
+} from './fallback-playlist.js'
 
 const base = {
   mp3Key: 'mp3/a.mp3',
@@ -111,5 +116,20 @@ describe('fallback-playlist', () => {
       'shuffle',
     )
     expect(ordered.map((i) => i.id)).toEqual(['never', 'stale', 'recent'])
+  })
+})
+
+describe('renderLocalFallbackM3u', () => {
+  it('emits absolute paths under the channel cache dir', () => {
+    const body = renderLocalFallbackM3u(
+      [{ id: '1', title: 'Set A', playbackKey: 'mp3/artist/a.mp3', durationSec: 3600 }],
+      '/archive-cache/ch-1',
+    )
+    expect(body).toContain('#EXTINF:3600,Set A')
+    expect(body).toContain('/archive-cache/ch-1/mp3__artist__a.mp3')
+  })
+
+  it('sanitizes nested playback keys', () => {
+    expect(localCacheBasename('flac/slug/item.flac')).toBe('flac__slug__item.flac')
   })
 })

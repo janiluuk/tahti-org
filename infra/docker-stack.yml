@@ -48,6 +48,7 @@ volumes:
   caddy_config:
   hls_shared:
   recordings_shared:
+  archive_cache_shared:
   prometheus_data:
   grafana_data:
 
@@ -260,10 +261,12 @@ services:
       HLS_SEGMENT_ROOT: /hls
       HLS_MINIO_BUCKET: hls-live
       HLS_STALE_SECONDS: "20"
+      ARCHIVE_CACHE_ROOT: /archive-cache
     secrets: [pg_password]
     volumes:
       - recordings_shared:/recordings:ro
       - hls_shared:/hls:ro
+      - archive_cache_shared:/archive-cache
     deploy:
       replicas: 2
       placement:
@@ -295,7 +298,12 @@ services:
     environment:
       DATABASE_URL: postgres://tahti@postgres:5432/tahti
       REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
+      ARCHIVE_CACHE_ROOT: /archive-cache
     secrets: [pg_password]
+    volumes:
+      - archive_cache_shared:/archive-cache
     deploy:
       replicas: 1
       placement:
@@ -320,6 +328,7 @@ services:
       RTMP_INGEST_URL: rtmp://rtmp-ingest:1935
       HLS_VOLUME: hls_shared
       RECORDINGS_VOLUME: recordings_shared
+      ARCHIVE_CACHE_VOLUME: archive_cache_shared
     secrets: [pg_password]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

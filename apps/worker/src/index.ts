@@ -26,6 +26,10 @@ import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
 import { processRevelatorRoyaltySyncJob } from './jobs/revelator-royalty-sync.js'
 import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
 import { processHlsMinioSyncJob } from './jobs/hls-minio-sync.js'
+import {
+  processArchiveFallbackCacheSyncJob,
+  processWarmArchiveFallbackCacheJob,
+} from './jobs/archive-fallback-cache.js'
 import { WORKER_CRON_JOBS } from './cron-manifest.js'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
@@ -64,6 +68,13 @@ const worker = new Worker(
       if (summary.uploaded > 0) {
         console.log('[worker] hls-minio-sync:', JSON.stringify(summary))
       }
+    } else if (job.name === 'warm-archive-fallback-cache') {
+      const summary = await processWarmArchiveFallbackCacheJob(prisma, job)
+      if (summary.downloaded > 0) {
+        console.log('[worker] warm-archive-fallback-cache:', JSON.stringify(summary))
+      }
+    } else if (job.name === 'archive-fallback-cache-sync') {
+      await processArchiveFallbackCacheSyncJob(prisma, job)
     } else if (job.name === 'broadcast-cap-tick') {
       const summary = await processBroadcastCapTick(prisma)
       console.log('[worker] broadcast-cap-tick:', JSON.stringify(summary))
