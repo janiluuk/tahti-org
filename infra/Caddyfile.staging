@@ -36,6 +36,13 @@ chat.staging.tahti.live {
 
 # ── Staging: HLS streams (MinIO hls-live — STREAM-001) ───────────────────────
 stream.staging.tahti.live {
+    log {
+        output file /var/log/caddy/hls-access.log {
+            roll_size 100mb
+            roll_keep 3
+        }
+        format json
+    }
     encode gzip
     header Access-Control-Allow-Origin "*"
     header Cache-Control "public, max-age=2, s-maxage=10"

@@ -5,18 +5,21 @@ import { z } from 'zod'
 
 export const EgressDailyPointSchema = z.object({
   date: z.string(),
-  /** Combined download + estimated live HLS bytes for the UTC day. */
+  /** Combined download + live HLS bytes for the UTC day. */
   bytes: z.number().int().nonnegative(),
   downloadBytes: z.number().int().nonnegative(),
+  /** Measured from Caddy edge logs; 0 when unavailable. */
+  liveHlsBytes: z.number().int().nonnegative(),
   estimatedLiveBytes: z.number().int().nonnegative(),
   downloads: z.number().int().nonnegative(),
 })
 
 export const ChannelEgressResponseSchema = z.object({
   windowDays: z.number().int().min(1),
-  /** downloadBytes + estimatedLiveHlsBytes */
+  /** downloadBytes + effective live HLS (measured when present, else estimate). */
   totalBytes: z.number().int().nonnegative(),
   downloadBytes: z.number().int().nonnegative(),
+  liveHlsBytes: z.number().int().nonnegative(),
   estimatedLiveHlsBytes: z.number().int().nonnegative(),
   totalDownloads: z.number().int().nonnegative(),
   daily: z.array(EgressDailyPointSchema),

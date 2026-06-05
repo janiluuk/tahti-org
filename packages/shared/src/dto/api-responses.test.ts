@@ -38,6 +38,7 @@ describe('api response schemas', () => {
         windowDays: 30,
         totalBytes: 0,
         downloadBytes: 0,
+        liveHlsBytes: 0,
         estimatedLiveHlsBytes: 0,
         totalDownloads: 0,
         daily: [],

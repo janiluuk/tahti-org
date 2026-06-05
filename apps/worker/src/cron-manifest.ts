@@ -45,6 +45,12 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'STREAM-001: mirror live HLS segments from volume to MinIO hls-live bucket',
   },
   {
+    name: 'hls-caddy-egress-sync',
+    pattern: '* * * * *',
+    jobId: 'hls-caddy-egress-sync-cron',
+    description: 'STREAM-006: aggregate Caddy HLS access log bytes into Redis (edge worker only)',
+  },
+  {
     name: 'archive-fallback-cache-sync',
     pattern: '*/10 * * * *',
     jobId: 'archive-fallback-cache-sync-cron',

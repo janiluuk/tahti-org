@@ -4,18 +4,25 @@
 import type { PrismaClient } from '@tahti/db'
 import { buildEgressDailySeries, EGRESS_DAILY_SERIES_DAYS } from './channel-egress-daily.js'
 import { buildLiveDailySeries } from './channel-live-daily.js'
-import { estimateLiveHlsBytes, LIVE_HLS_ESTIMATE_NOTE } from './hls-egress-estimate.js'
+import {
+  estimateLiveHlsBytes,
+  LIVE_HLS_ESTIMATE_NOTE,
+  LIVE_HLS_MEASURED_NOTE,
+} from './hls-egress-estimate.js'
+import { fetchMeasuredHlsEgressByDate } from './hls-egress-measured.js'
 
 export type ChannelEgressPayload = {
   windowDays: number
   totalBytes: number
   downloadBytes: number
+  liveHlsBytes: number
   estimatedLiveHlsBytes: number
   totalDownloads: number
   daily: Array<{
     date: string
     bytes: number
     downloadBytes: number
+    liveHlsBytes: number
     estimatedLiveBytes: number
     downloads: number
   }>
@@ -26,10 +33,15 @@ const empty: ChannelEgressPayload = {
   windowDays: EGRESS_DAILY_SERIES_DAYS,
   totalBytes: 0,
   downloadBytes: 0,
+  liveHlsBytes: 0,
   estimatedLiveHlsBytes: 0,
   totalDownloads: 0,
   daily: [],
   liveEstimateNote: LIVE_HLS_ESTIMATE_NOTE,
+}
+
+function effectiveLiveBytes(measured: number, estimated: number): number {
+  return measured > 0 ? measured : estimated
 }
 
 export async function buildChannelEgressStats(
@@ -40,6 +52,7 @@ export async function buildChannelEgressStats(
     where: { userId },
     select: {
       id: true,
+      slug: true,
       user: { select: { tier: true } },
     },
   })
@@ -63,32 +76,47 @@ export async function buildChannelEgressStats(
     buildLiveDailySeries(prisma, channel.id, EGRESS_DAILY_SERIES_DAYS),
   ])
 
+  const dates = downloadDaily.map((d) => d.date)
+  const measuredByDate = await fetchMeasuredHlsEgressByDate(channel.slug, dates)
   const liveByDate = Object.fromEntries(liveDaily.map((d) => [d.date, d.liveSeconds]))
   const tier = channel.user.tier
 
+  let liveHlsBytes = 0
   let estimatedLiveHlsBytes = 0
+  let hasMeasured = false
+
   const daily = downloadDaily.map((d) => {
     const liveSeconds = liveByDate[d.date] ?? 0
     const estimatedLiveBytes = estimateLiveHlsBytes(liveSeconds, tier)
+    const dayMeasured = measuredByDate[d.date] ?? 0
+    if (dayMeasured > 0) hasMeasured = true
+    const liveBytes = effectiveLiveBytes(dayMeasured, estimatedLiveBytes)
+    liveHlsBytes += dayMeasured
     estimatedLiveHlsBytes += estimatedLiveBytes
     return {
       date: d.date,
       downloadBytes: d.bytes,
+      liveHlsBytes: dayMeasured,
       estimatedLiveBytes,
-      bytes: d.bytes + estimatedLiveBytes,
+      bytes: d.bytes + liveBytes,
       downloads: d.downloads,
     }
   })
 
   const downloadBytes = agg._sum.bytes ?? 0
+  const effectiveLiveTotal = daily.reduce(
+    (sum, d) => sum + effectiveLiveBytes(d.liveHlsBytes, d.estimatedLiveBytes),
+    0,
+  )
 
   return {
     windowDays: EGRESS_DAILY_SERIES_DAYS,
     downloadBytes,
+    liveHlsBytes,
     estimatedLiveHlsBytes,
-    totalBytes: downloadBytes + estimatedLiveHlsBytes,
+    totalBytes: downloadBytes + effectiveLiveTotal,
     totalDownloads: agg._count._all,
     daily,
-    liveEstimateNote: LIVE_HLS_ESTIMATE_NOTE,
+    liveEstimateNote: hasMeasured ? LIVE_HLS_MEASURED_NOTE : LIVE_HLS_ESTIMATE_NOTE,
   }
 }
