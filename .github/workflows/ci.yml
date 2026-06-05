@@ -255,7 +255,7 @@ jobs:
           fi
 
   user-journeys-e2e:
-    name: User journey e2e (listener, artist, member)
+    name: User journey e2e (all personas)
     needs: lint
     runs-on: ubuntu-24.04
     timeout-minutes: 20

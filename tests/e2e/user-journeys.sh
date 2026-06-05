@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# User journey e2e — listener, artist, member, and fan-supporter paths.
+# User journey e2e — listener, artist, member, director, ops, and fan-supporter paths.
 #
 # Usage:
 #   API_URL=http://localhost:3001 APP_URL=http://localhost:3010 bash tests/e2e/user-journeys.sh
@@ -8,7 +8,7 @@
 #   SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://... bash tests/e2e/user-journeys.sh
 #
 # Persona scripts (sourced below):
-#   tests/e2e/journeys/listener.sh | artist.sh | member.sh
+#   tests/e2e/journeys/listener.sh | artist.sh | member.sh | director.sh | ops.sh
 
 set -euo pipefail
 
@@ -25,6 +25,10 @@ source "$SCRIPT_DIR/journeys/artist.sh"
 source "$SCRIPT_DIR/journeys/member.sh"
 # shellcheck source=journeys/dashboard-player.sh
 source "$SCRIPT_DIR/journeys/dashboard-player.sh"
+# shellcheck source=journeys/director.sh
+source "$SCRIPT_DIR/journeys/director.sh"
+# shellcheck source=journeys/ops.sh
+source "$SCRIPT_DIR/journeys/ops.sh"
 
 echo "── Tahti user journey e2e ────────────────────────────────"
 echo "   API: $API_URL"
@@ -45,11 +49,13 @@ else
   e2e_yellow "Demo fixtures missing — set SEED_JOURNEY_FIXTURES=1 or run stack --seed"
 fi
 
+run_ops_journey
 run_listener_journey
 run_artist_journey
 run_streamer_journey
 run_member_journey
 run_fan_supporter_journey
+run_director_journey
 run_dashboard_player_journey
 
 e2e_summary "User journey e2e" || exit 1

@@ -12,7 +12,8 @@ pnpm --filter @tahti/db db:generate
 
 - `pnpm ci:check` — lint, format, typecheck
 - `pnpm test` — Vitest (single worker; shared Postgres)
-- `pnpm --filter @tahti/api test -- path/to/file.test.ts` — one package / file
+- `pnpm test:e2e:journeys` — bash persona journeys (listener, artist, member, director, ops)
+- `pnpm test:e2e:journeys:all` — vital-flows + user-journeys + Vitest `persona-journeys.test.ts`
 
 ## Test data isolation
 
