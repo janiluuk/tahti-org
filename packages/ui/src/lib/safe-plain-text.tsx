@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { CSSProperties } from 'react'
-import { plainTextToHtml } from '@/lib/escape-html'
+import { plainTextToHtml } from './escape-html'
 
 /** Renders user bio/description as escaped plain text (no raw HTML). */
 export function SafePlainText({
@@ -18,7 +18,6 @@ export function SafePlainText({
     <div
       className={className}
       style={style}
-      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: plainTextToHtml(text) }}
     />
   )

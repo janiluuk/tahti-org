@@ -1,0 +1,145 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Minimal dark chrome for /embed routes (M14) */
+
+@import '@tahti/ui/src/tokens.css';
+
+[data-tahti-ui='embed'].tahti-embed {
+  margin: 0;
+  padding: 0.75rem;
+  min-height: 100%;
+  box-sizing: border-box;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body, system-ui, sans-serif);
+}
+
+[data-tahti-ui='embed'] .embed-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+[data-tahti-ui='embed'] .embed-header__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='embed'] .embed-header__title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+[data-tahti-ui='embed'] .embed-header__link {
+  color: var(--cyan);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+[data-tahti-ui='embed'] .embed-header__link:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='embed'] .embed-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='embed'] .embed-artwork {
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='embed'] .embed-player-wrap {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+[data-tahti-ui='embed'] .embed-offline {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+[data-tahti-ui='embed'] .embed-offline a {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='embed'] .embed-track-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+[data-tahti-ui='embed'] .embed-track-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-top: 1px solid var(--border);
+}
+
+[data-tahti-ui='embed'] .embed-track-play {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--card2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='embed'] .embed-track-play:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--cyan) 25%, var(--card2));
+}
+
+[data-tahti-ui='embed'] .embed-track-play:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+[data-tahti-ui='embed'] .embed-track-play--active {
+  background: var(--cyan);
+  color: var(--bg);
+}
+
+[data-tahti-ui='embed'] .embed-track-title {
+  flex: 1;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='embed'] .embed-track-duration {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-tahti-ui='embed'] .embed-audio {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+[data-tahti-ui='embed'] .embed-error {
+  color: var(--coral);
+  font-size: 0.8rem;
+  margin: 0.5rem 0 0;
+}
+
+[data-tahti-ui='embed'] .embed-empty {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.85rem;
+}

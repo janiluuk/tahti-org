@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Alert, Button, Field, Heading, Input, Text } from '@tahti/ui'
 import { fetchGrantPreview } from './grant-preview-actions'
 
 interface GrantPreviewArtist {
@@ -41,87 +42,68 @@ export default function GrantPreviewPanel() {
   }
 
   return (
-    <section
-      style={{
-        marginBottom: '2rem',
-        padding: '1rem',
-        background: '#f8fafc',
-        borderRadius: 8,
-        border: '1px solid #e2e8f0',
-      }}
-    >
-      <h2 style={{ fontSize: '1rem', margin: '0 0 0.5rem' }}>Annual grant preview (board)</h2>
-      <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.75rem' }}>
+    <section className="brand-callout-panel">
+      <Heading level={2}>Annual grant preview (board)</Heading>
+      <Text size="sm" tone="muted">
         Dry-run allocation with anomaly flags before running the real calculation.
-      </p>
-      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        <label style={{ fontSize: '0.9rem' }}>
-          Fiscal year{' '}
-          <input
+      </Text>
+      <div className="brand-form-row">
+        <Field label="Fiscal year" htmlFor="grant-preview-year">
+          <Input
+            id="grant-preview-year"
             type="number"
             value={forYear}
             onChange={(e) => setForYear(e.target.value)}
             min={2020}
             max={2100}
-            style={{ width: 80, marginLeft: 4, padding: '0.25rem' }}
           />
-        </label>
-        <button
-          type="button"
-          onClick={load}
-          disabled={loading}
-          style={{
-            padding: '0.4rem 0.9rem',
-            background: '#2563eb',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 4,
-            cursor: loading ? 'wait' : 'pointer',
-          }}
-        >
+        </Field>
+        <Button type="button" variant="primary" size="sm" onClick={load} disabled={loading}>
           {loading ? 'Loading…' : 'Preview'}
-        </button>
+        </Button>
       </div>
-      {error && (
-        <p style={{ color: '#dc2626', marginTop: '0.5rem', fontSize: '0.9rem' }}>{error}</p>
-      )}
+      {error && <Alert variant="error">{error}</Alert>}
       {preview && (
-        <div style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
-          <p>
+        <div className="brand-section">
+          <Text size="sm">
             Pool €{(preview.poolCents / 100).toLocaleString('fi-FI')} · {preview.totalUnits} units ·{' '}
             {preview.grantCount} recipients
             {preview.alreadyRun && (
-              <strong style={{ color: '#b45309' }}>
+              <>
                 {' '}
-                — grants already disbursed for this year
-              </strong>
+                <span className="warn">— grants already disbursed for this year</span>
+              </>
             )}
-          </p>
+          </Text>
           {preview.artists.length === 0 ? (
-            <p style={{ color: '#888' }}>No qualifying artists.</p>
+            <Text tone="muted" size="sm">
+              No qualifying artists.
+            </Text>
           ) : (
-            <table style={{ width: '100%', marginTop: '0.5rem', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '1px solid #ddd' }}>
-                  <th style={{ padding: '0.35rem' }}>Artist</th>
-                  <th>Units</th>
-                  <th>Grant</th>
-                  <th>Flags</th>
-                </tr>
-              </thead>
-              <tbody>
-                {preview.artists.map((a) => (
-                  <tr key={a.username} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '0.35rem' }}>{a.displayName}</td>
-                    <td>{a.units}</td>
-                    <td>€{(a.amountCents / 100).toFixed(2)}</td>
-                    <td style={{ color: a.anomalies.length ? '#b45309' : '#888' }}>
-                      {a.anomalies.length ? a.anomalies.map((x) => x.code).join(', ') : '—'}
-                    </td>
+            <div className="brand-table-wrap">
+              <table className="brand-table">
+                <thead>
+                  <tr>
+                    <th>Artist</th>
+                    <th>Units</th>
+                    <th>Grant</th>
+                    <th>Flags</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {preview.artists.map((a) => (
+                    <tr key={a.username}>
+                      <td>{a.displayName}</td>
+                      <td>{a.units}</td>
+                      <td>€{(a.amountCents / 100).toFixed(2)}</td>
+                      <td className={a.anomalies.length ? 'warn' : 'brand-muted'}>
+                        {a.anomalies.length ? a.anomalies.map((x) => x.code).join(', ') : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

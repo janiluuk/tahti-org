@@ -4,6 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { Alert, Button, Text } from '@tahti/ui'
 import type { AdminVenueRow } from './actions'
 import { unverifyVenue, verifyVenue } from './actions'
 
@@ -29,52 +30,54 @@ export default function VenueAdminPanel({ initial }: { initial: AdminVenueRow[] 
   }
 
   if (venues.length === 0) {
-    return <p style={{ color: '#666' }}>No venue listings yet.</p>
+    return (
+      <Text tone="muted" size="sm">
+        No venue listings yet.
+      </Text>
+    )
   }
 
   return (
     <div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>
-            <th style={{ padding: '0.5rem 0' }}>Venue</th>
-            <th>Location</th>
-            <th>Status</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {venues.map((v) => {
-            const verified = Boolean(v.verifiedAt)
-            return (
-              <tr key={v.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: '0.6rem 0' }}>
-                  <strong>{v.name}</strong>
-                  <div style={{ fontSize: '0.8rem', color: '#666' }}>{v.slug}</div>
-                </td>
-                <td>{[v.city, v.countryCode].filter(Boolean).join(', ') || '—'}</td>
-                <td>{verified ? 'Verified' : 'Pending'}</td>
-                <td style={{ textAlign: 'right' }}>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => toggle(v.slug, verified)}
-                    style={{
-                      border: '1px solid #ccc',
-                      borderRadius: 4,
-                      padding: '0.25rem 0.6rem',
-                      fontSize: '0.8rem',
-                    }}
-                  >
-                    {verified ? 'Unverify' : 'Verify'}
-                  </button>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-      {error && <p style={{ color: '#dc2626', marginTop: '0.75rem' }}>{error}</p>}
+      <div className="brand-table-wrap">
+        <table className="brand-table">
+          <thead>
+            <tr>
+              <th>Venue</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th className="align-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {venues.map((v) => {
+              const verified = Boolean(v.verifiedAt)
+              return (
+                <tr key={v.id}>
+                  <td>
+                    <strong>{v.name}</strong>
+                    <div className="sub">{v.slug}</div>
+                  </td>
+                  <td>{[v.city, v.countryCode].filter(Boolean).join(', ') || '—'}</td>
+                  <td>{verified ? 'Verified' : 'Pending'}</td>
+                  <td className="align-right">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={isPending}
+                      onClick={() => toggle(v.slug, verified)}
+                    >
+                      {verified ? 'Unverify' : 'Verify'}
+                    </Button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      {error && <Alert variant="error">{error}</Alert>}
     </div>
   )
 }

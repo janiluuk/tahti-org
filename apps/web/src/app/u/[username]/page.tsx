@@ -4,8 +4,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { LiveBadge } from '@/components/ui/from-tahti-ui'
-import { SafePlainText } from '@/components/safe-plain-text'
+import { ProfileHero, ProfilePageLayout } from '@tahti/ui'
 
 async function fetchProfile(username: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -78,59 +77,46 @@ interface ProfileResponse {
   }>
 }
 
+function formatDuration(sec: number): string {
+  return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
+}
+
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
   const data = await fetchProfile(params.username)
   if (!data) notFound()
 
   const { artist, channel, releases, links, collections = [] } = data
+  const isLive = channel?.state === 'LIVE'
 
   return (
-    <div className="brand-public">
-      <header style={{ marginBottom: '2rem' }}>
-        <h1>{artist.displayName}</h1>
-        <p className="brand-muted" style={{ margin: 0 }}>
-          @{artist.username}
-        </p>
-        {channel?.state === 'LIVE' && (
-          <p style={{ marginTop: '0.5rem' }}>
-            <LiveBadge />
-          </p>
-        )}
-        {artist.bio && (
-          <SafePlainText text={artist.bio} style={{ marginTop: '1rem', lineHeight: 1.6 }} />
-        )}
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
-          {links.channel && <Link href={links.channel}>Channel →</Link>}
-          <Link href={links.subscribe}>Support →</Link>
-          {artist.tipJarUrl && (
-            <a href={artist.tipJarUrl} rel="noopener noreferrer">
-              Tip jar ↗
-            </a>
-          )}
-        </div>
-      </header>
-
+    <ProfilePageLayout
+      isLive={isLive}
+      hero={
+        <ProfileHero
+          displayName={artist.displayName}
+          username={artist.username}
+          bio={artist.bio}
+          avatarUrl={artist.avatarUrl}
+          isLive={isLive}
+          channelHref={links.channel}
+          subscribeHref={links.subscribe}
+          tipJarUrl={artist.tipJarUrl}
+        />
+      }
+    >
       {collections.length > 0 && (
-        <section style={{ marginBottom: '2.5rem' }}>
-          <h2 style={{ fontSize: '1.25rem' }}>Collections</h2>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
+        <section className="prof-section">
+          <div className="prof-sec-label">Collections</div>
+          <ul className="prof-list">
             {collections.map((c) => (
-              <li
-                key={c.slug}
-                style={{ padding: '0.75rem 0', borderBottom: '1px solid var(--card2)' }}
-              >
-                <Link href={c.url} style={{ fontWeight: 600 }}>
-                  {c.name}
-                </Link>
-                <span className="brand-muted" style={{ fontSize: '0.85rem' }}>
-                  {' '}
-                  · {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
+              <li key={c.slug} className="prof-list-item">
+                <Link href={c.url}>{c.name}</Link>
+                <div className="prof-list-meta">
+                  {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
                   {c.isFeatured && ' · Featured'}
-                </span>
+                </div>
                 {c.description && (
-                  <p className="brand-muted" style={{ margin: '0.35rem 0 0', fontSize: '0.9rem' }}>
-                    {c.description}
-                  </p>
+                  <p className="prof-list-meta prof-list-meta--tight">{c.description}</p>
                 )}
               </li>
             ))}
@@ -138,48 +124,37 @@ export default async function ArtistProfilePage({ params }: { params: { username
         </section>
       )}
 
-      <section>
-        <h2 style={{ fontSize: '1.25rem' }}>Releases</h2>
+      <section className="prof-section">
+        <div className="prof-sec-label">Releases</div>
         {releases.length === 0 ? (
-          <p className="brand-muted">No published releases yet.</p>
+          <p className="prof-list-meta">No published releases yet.</p>
         ) : (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
+          <ul className="prof-list">
             {releases.map((r) => (
-              <li
-                id={`release-${r.id}`}
-                key={r.id}
-                style={{ padding: '1rem 0', borderBottom: '1px solid var(--card2)' }}
-              >
-                <div style={{ fontWeight: 600 }}>
+              <li id={`release-${r.id}`} key={r.id} className="prof-list-item">
+                <div>
                   {r.title}{' '}
-                  <span className="brand-muted" style={{ fontWeight: 400, fontSize: '0.85rem' }}>
+                  <span className="prof-list-meta">
                     {r.type} · {new Date(r.releaseDate).toLocaleDateString()}
                   </span>
                 </div>
                 {r.description && (
-                  <p className="brand-muted" style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>
-                    {r.description}
-                  </p>
+                  <p className="prof-list-meta prof-list-meta--spaced">{r.description}</p>
                 )}
                 {r.tracks.length > 0 && (
-                  <ol style={{ margin: '0.5rem 0 0', paddingLeft: '1.25rem' }}>
+                  <ol className="prof-track-list">
                     {r.tracks.map((t) => (
                       <li
                         key={t.position}
                         id={t.archiveItemId ? `archive-item-${t.archiveItemId}` : undefined}
                       >
                         {t.title}
-                        {t.durationSec != null &&
-                          ` (${Math.floor(t.durationSec / 60)}:${String(t.durationSec % 60).padStart(2, '0')})`}
+                        {t.durationSec != null && ` (${formatDuration(t.durationSec)})`}
                         {t.playUrl && (
-                          <audio
-                            controls
-                            src={t.playUrl}
-                            style={{ display: 'block', width: '100%', marginTop: '0.35rem' }}
-                          />
+                          <audio controls src={t.playUrl} className="prof-track-audio" />
                         )}
                         {t.channelItemUrl && !t.playUrl && (
-                          <Link href={t.channelItemUrl} style={{ fontSize: '0.85rem' }}>
+                          <Link href={t.channelItemUrl} className="prof-channel-link">
                             Listen on channel
                           </Link>
                         )}
@@ -192,6 +167,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
           </ul>
         )}
       </section>
-    </div>
+    </ProfilePageLayout>
   )
 }

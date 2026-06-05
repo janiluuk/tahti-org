@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { BgCanvas, Link, Stack, Text } from '@/components/ui'
+import { BrandLogo, Heading, Link, Stack, Text } from '@tahti/ui'
+import { BgCanvas } from '@/components/ui/bg-canvas'
 
 export default function GatewayPage() {
   return (
@@ -9,53 +10,25 @@ export default function GatewayPage() {
       <BgCanvas />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
-          <Link href="https://tahti.live" className="brand-logo">
-            <span className="brand-logo-bar" aria-hidden />
-            TAHTI
-          </Link>
+          <BrandLogo href="https://tahti.live" />
 
-          <p
-            style={{
-              fontFamily: 'var(--tahti-font-display)',
-              fontSize: 'var(--tahti-text-3xl)',
-              fontWeight: 700,
-              lineHeight: 1.2,
-              color: '#e8eaf6',
-              margin: '0 0 0.75rem',
-            }}
-          >
-            Broadcasting for independent artists.
-          </p>
+          <Heading level={1}>Broadcasting for independent artists.</Heading>
 
-          <Text tone="muted" style={{ marginBottom: '2rem' }}>
-            A nonprofit platform built to support artists — not algorithms.
-          </Text>
+          <Text tone="muted">A nonprofit platform built to support artists — not algorithms.</Text>
 
-          <Stack gap={3}>
-            <a
-              href="/listen"
-              className="ui-btn ui-btn--primary ui-btn--lg"
-              style={{ width: '100%', justifyContent: 'center' }}
-            >
+          <Stack gap={3} className="auth-cta-stack">
+            <a href="/listen" className="ui-btn ui-btn--primary ui-btn--lg">
               Listen now
             </a>
-            <a
-              href="/login"
-              className="ui-btn ui-btn--secondary ui-btn--lg"
-              style={{ width: '100%', justifyContent: 'center' }}
-            >
+            <a href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
               Artist log in
             </a>
-            <a
-              href="/join"
-              className="ui-btn ui-btn--ghost ui-btn--lg"
-              style={{ width: '100%', justifyContent: 'center' }}
-            >
+            <a href="/join" className="ui-btn ui-btn--ghost ui-btn--lg">
               Apply for access
             </a>
           </Stack>
 
-          <Text size="sm" tone="muted" style={{ marginTop: '2rem' }}>
+          <Text size="sm" tone="muted">
             Learn more at <Link href="https://tahti.live">tahti.live</Link>
           </Text>
         </div>

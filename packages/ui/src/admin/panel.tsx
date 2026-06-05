@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { HTMLAttributes, ReactNode } from 'react'
-import { cn } from './cn'
+import { cn } from '../lib/cn'
 
 export type PanelVariant = 'default' | 'warning' | 'success' | 'error'
 

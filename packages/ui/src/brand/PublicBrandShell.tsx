@@ -2,8 +2,6 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import '@/components/brand-public.css'
-import '@tahti/ui/src/components.css'
 
 type PublicBrandShellProps = {
   children: ReactNode
@@ -13,7 +11,7 @@ type PublicBrandShellProps = {
   wide?: boolean
 }
 
-/** PLAT-020: light public pages using @tahti/ui tokens under [data-tahti-ui="brand"]. */
+/** Light public pages using brand-public.css — import that stylesheet on the route. */
 export function PublicBrandShell({ children, center, wide }: PublicBrandShellProps) {
   const layoutClass = [
     'brand-public',

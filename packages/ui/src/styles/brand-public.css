@@ -1,0 +1,354 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Public pages under [data-tahti-ui="brand"] — uses @tahti/ui tokens */
+
+@import '@tahti/ui/src/tokens.css';
+
+/* Light auth/marketing pages only — do not remap tokens on channel/profile shells. */
+[data-tahti-ui='brand'].brand-public,
+[data-tahti-ui='brand'] .brand-public {
+  --font-body: var(--tahti-font-body, system-ui, sans-serif);
+  --font-head: var(--tahti-font-display, system-ui, sans-serif);
+  --text: var(--tahti-text, #111);
+  --muted: var(--tahti-text-muted, #666);
+  --bg: var(--tahti-bg, #fafafa);
+  --card: var(--tahti-surface, #fff);
+  --card2: var(--tahti-surface-muted, #f3f4f6);
+  --cyan: var(--tahti-primary, #2563eb);
+  --amber: var(--tahti-brand-amber, #f0a500);
+}
+
+[data-tahti-ui='brand'] .brand-public--center {
+  max-width: 420px;
+  text-align: center;
+}
+
+[data-tahti-ui='brand'] .brand-public--wide {
+  max-width: 960px;
+  text-align: left;
+}
+
+[data-tahti-ui='brand'] .brand-public {
+  max-width: 720px;
+  margin: 3rem auto;
+  padding: 0 1.5rem 4rem;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+[data-tahti-ui='brand'] .brand-public h1 {
+  font-family: var(--font-head);
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-muted {
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .brand-public a:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-panel {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-cta {
+  display: inline-block;
+  padding: 0.75rem 1.25rem;
+  background: var(--amber);
+  color: var(--bg);
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-cta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-cta-dark {
+  display: block;
+  padding: 0.75rem 1rem;
+  background: var(--card2);
+  color: var(--text);
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ---- Wide public pages (governance, transparency) ---- */
+[data-tahti-ui='brand'] .brand-public .brand-section {
+  margin-bottom: 2.5rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-section__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  [data-tahti-ui='brand'] .brand-public .brand-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-stat-card {
+  padding: 1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-stat-card__label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-stat-card__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-stat-card__value--positive {
+  color: var(--tahti-success, #16a34a);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-stat-card__subtitle {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table-wrap {
+  overflow-x: auto;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table thead tr {
+  border-bottom: 2px solid color-mix(in srgb, var(--muted) 20%, transparent);
+  text-align: left;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table th {
+  padding: 0.5rem 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table td {
+  padding: 0.5rem 0.75rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table tbody tr {
+  border-bottom: 1px solid color-mix(in srgb, var(--muted) 12%, transparent);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table .num--revenue {
+  color: var(--tahti-success, #16a34a);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table .num--cost {
+  color: var(--tahti-error, #dc2626);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-category {
+  margin-bottom: 1rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-category__title {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-category__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--muted) 10%, transparent);
+  font-size: 0.875rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-category__row span:last-child {
+  font-variant-numeric: tabular-nums;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-footer {
+  margin-top: 3rem;
+  border-top: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+  padding-top: 1.5rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-badge {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-empty {
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .auth-card {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+/* ---- Prose (help, methodology) ---- */
+[data-tahti-ui='brand'] .brand-public .brand-prose h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 2rem 0 0.75rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose ol,
+[data-tahti-ui='brand'] .brand-public .brand-prose ul {
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose dl {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) 1fr;
+  gap: 0.5rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose dt {
+  font-weight: 600;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+/* ---- Governance cards ---- */
+[data-tahti-ui='brand'] .brand-public .brand-card {
+  padding: 1.25rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background: var(--card);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-card__meta {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-motion-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-motion-status--draft {
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-motion-status--open {
+  color: var(--tahti-success, #16a34a);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-motion-status--closed {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-vote-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-board-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-callout-panel {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--card2);
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table td.align-right {
+  text-align: right;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table .sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table .warn {
+  color: var(--tahti-warning, #d97706);
+}

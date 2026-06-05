@@ -4,8 +4,12 @@
 import type { ReactNode } from 'react'
 import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
-import '@/components/brand-public.css'
+import '@tahti/ui/src/styles/brand-channel.css'
 
-export default function SmartLinkLayout({ children }: { children: ReactNode }) {
-  return <div data-tahti-ui="brand">{children}</div>
+export default function SmartLinkRootLayout({ children }: { children: ReactNode }) {
+  return (
+    <div data-tahti-ui="brand" className="brand-channel">
+      {children}
+    </div>
+  )
 }

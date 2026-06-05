@@ -159,6 +159,7 @@ tahti/
 │   ├── revelator/               # Distribution client
 │   ├── mixcloud/                # Mixcloud client
 │   ├── ledger/                  # Accounting helpers, monthly rollup logic
+│   ├── ui/                      # **All UI components** — @tahti/ui (admin, brand shells, marketing)
 │   ├── smart-link/              # Smart link routing + click logging
 │   └── social-post/             # Twitter/Mastodon/Threads/Bluesky OAuth + post + retry
 ├── infra/
@@ -175,6 +176,20 @@ tahti/
 Use pnpm workspaces. Top-level `LICENSE` is AGPL-3.0. Every source file starts with the standard AGPL header.
 
 **CI quality gate (agents):** Before finishing any code change, run `pnpm ci:check` (or at minimum `pnpm lint` then `pnpm format:check`). The GitHub **Lint & format** job fails on ESLint *or* Prettier — fix with `pnpm format` when format:check fails. See `.cursor/rules/ci-lint-before-done.mdc`.
+
+## UI components (READ BEFORE ANY FRONTEND WORK)
+
+**All UI lives in `packages/ui` (`@tahti/ui`).** Do not implement Button, Panel, layout shells, or brand chrome under `apps/web`. The web app imports from `@tahti/ui` (or `@/components/ui`, which re-exports the package).
+
+| Surface | Routes | Key imports |
+|---------|--------|-------------|
+| Brand (dark) | `/c`, `/u`, `/r` | `ChannelPageLayout`, `ProfilePageLayout`, `SmartLinkPageLayout` |
+| Studio | `/dashboard` | `StudioShell`, `Button`, `Panel`, … |
+| Marketing / auth | `/`, `/login`, `/join` | `MarketingButton`, `Nav`, `LiveBadge`, `BgCanvas` (web-only) |
+
+**CSS:** Import token/stylesheets once per layout — see `docs/design-system.md` and `.cursor/rules/ui-library.mdc`.
+
+**Adding components:** Implement in `packages/ui/src/admin/`, `brand/`, or `marketing/`; export from `packages/ui/src/index.ts`; run `pnpm lint`.
 
 ## Milestones (build in order, do not skip)
 

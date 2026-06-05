@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { SelectHTMLAttributes } from 'react'
-import { cn } from './cn'
+import { cn } from '../lib/cn'
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>
 

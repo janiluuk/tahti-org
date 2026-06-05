@@ -2,7 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { notFound } from 'next/navigation'
-import { SafePlainText } from '@/components/safe-plain-text'
+import Link from 'next/link'
+import { ProfilePageLayout, SafePlainText } from '@tahti/ui'
 import TierCards from './tier-cards'
 
 interface TiersResponse {
@@ -38,25 +39,22 @@ export default async function SubscribePage({ params }: { params: { username: st
   }
 
   return (
-    <div className="brand-public" style={{ maxWidth: 760 }}>
-      <a
-        href={`/u/${data.artist.username}`}
-        className="brand-muted"
-        style={{ fontSize: '0.85rem' }}
-      >
-        ← {data.artist.displayName}
-      </a>
-      <h1 style={{ margin: '0.5rem 0 0.25rem' }}>Support {data.artist.displayName}</h1>
-      {data.artist.bio && (
-        <SafePlainText
-          text={data.artist.bio}
-          className="brand-muted"
-          style={{ marginBottom: '2rem', lineHeight: 1.6 }}
-        />
-      )}
-
+    <ProfilePageLayout
+      narrow
+      hero={
+        <>
+          <Link href={`/u/${data.artist.username}`} className="prof-back-link">
+            ← {data.artist.displayName}
+          </Link>
+          <h1 className="prof-page-title">Support {data.artist.displayName}</h1>
+          {data.artist.bio && (
+            <SafePlainText text={data.artist.bio} className="prof-list-meta prof-list-meta--bio" />
+          )}
+        </>
+      }
+    >
       {data.tiers.length === 0 ? (
-        <p className="brand-muted">This artist hasn&apos;t set up fan subscriptions yet.</p>
+        <p className="prof-list-meta">This artist hasn&apos;t set up fan subscriptions yet.</p>
       ) : (
         <TierCards
           username={data.artist.username}
@@ -64,6 +62,6 @@ export default async function SubscribePage({ params }: { params: { username: st
           paymentsReady={data.paymentsReady}
         />
       )}
-    </div>
+    </ProfilePageLayout>
   )
 }

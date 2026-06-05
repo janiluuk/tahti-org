@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { LabelHTMLAttributes, ReactNode } from 'react'
-import { cn } from './cn'
+import { cn } from '../lib/cn'
 
 export interface LabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
   hint?: ReactNode

@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { TextareaHTMLAttributes } from 'react'
-import { cn } from './cn'
+import { cn } from '../lib/cn'
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   mono?: boolean

@@ -2,12 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import '@/components/brand-public.css'
 
+/** Login uses full-viewport auth-shell + BgCanvas — no brand-public wrapper. */
 export default function LoginLayout({ children }: { children: ReactNode }) {
-  return (
-    <div data-tahti-ui="brand" className="brand-public brand-public--center">
-      {children}
-    </div>
-  )
+  return children
 }

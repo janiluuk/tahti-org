@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { Heading, Link, Text } from '@tahti/ui'
+
 interface MonthlyRollup {
   yearMonth: string
   byCategory: Record<string, string>
@@ -69,32 +71,14 @@ export default async function TransparencyPage() {
   const totalCosts = costKeys.reduce((s, k) => s + parseInt(ytd.byCategory[k] ?? '0', 10), 0)
 
   return (
-    <div
-      style={{
-        maxWidth: 860,
-        margin: '3rem auto',
-        padding: '0 1rem',
-        fontFamily: 'system-ui, sans-serif',
-      }}
-    >
-      <h1 style={{ marginBottom: '0.25rem' }}>Transparency</h1>
-      <p style={{ color: '#666', marginBottom: '2.5rem' }}>
+    <>
+      <Heading level={1}>Transparency</Heading>
+      <Text tone="muted">
         Tahti ry is a Finnish registered nonprofit. All income, costs, and artist grants are
-        published here.{' '}
-        <a href="/transparency/methodology" style={{ color: '#555' }}>
-          Methodology ↗
-        </a>
-      </p>
+        published here. <Link href="/transparency/methodology">Methodology ↗</Link>
+      </Text>
 
-      {/* YTD summary cards */}
-      <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '1rem',
-          marginBottom: '2.5rem',
-        }}
-      >
+      <section className="brand-stat-grid" aria-label="Year-to-date summary">
         <SummaryCard label={`${ytd.year} Revenue`} value={formatEur(totalRevenue)} positive />
         <SummaryCard label={`${ytd.year} Costs`} value={formatEur(totalCosts)} />
         <SummaryCard
@@ -105,11 +89,8 @@ export default async function TransparencyPage() {
         />
       </section>
 
-      {/* Category breakdown */}
-      <section style={{ marginBottom: '2.5rem' }}>
-        <h2 style={{ fontSize: '1rem', color: '#444', marginBottom: '0.75rem', fontWeight: 600 }}>
-          Year-to-date breakdown
-        </h2>
+      <section className="brand-section">
+        <h2 className="brand-section__title">Year-to-date breakdown</h2>
         <CategoryTable title="Revenue" keys={revenueKeys} data={ytd.byCategory} />
         <CategoryTable title="Costs" keys={costKeys} data={ytd.byCategory} />
         {disbKeys.length > 0 && (
@@ -117,27 +98,18 @@ export default async function TransparencyPage() {
         )}
       </section>
 
-      {/* Monthly rollup table */}
       {rollups.length > 0 && (
-        <section>
-          <h2 style={{ fontSize: '1rem', color: '#444', marginBottom: '0.75rem', fontWeight: 600 }}>
-            Monthly detail
-          </h2>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+        <section className="brand-section">
+          <h2 className="brand-section__title">Monthly detail</h2>
+          <div className="brand-table-wrap">
+            <table className="brand-table">
               <thead>
-                <tr style={{ borderBottom: '2px solid #eee', textAlign: 'left' }}>
-                  <th style={{ padding: '0.5rem 0.75rem', color: '#666' }}>Month</th>
-                  <th style={{ padding: '0.5rem 0.75rem', color: '#666', textAlign: 'right' }}>
-                    Revenue
-                  </th>
-                  <th style={{ padding: '0.5rem 0.75rem', color: '#666', textAlign: 'right' }}>
-                    Costs
-                  </th>
-                  <th style={{ padding: '0.5rem 0.75rem', color: '#666', textAlign: 'right' }}>
-                    Surplus
-                  </th>
-                  <th style={{ padding: '0.5rem 0.75rem', color: '#666' }}>Status</th>
+                <tr>
+                  <th>Month</th>
+                  <th className="num">Revenue</th>
+                  <th className="num">Costs</th>
+                  <th className="num">Surplus</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,24 +122,12 @@ export default async function TransparencyPage() {
                     .reduce((s, [, v]) => s + parseInt(v, 10), 0)
 
                   return (
-                    <tr key={r.yearMonth} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                      <td style={{ padding: '0.5rem 0.75rem', fontWeight: 500 }}>{r.yearMonth}</td>
-                      <td
-                        style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: '#16a34a' }}
-                      >
-                        {formatEur(rev)}
-                      </td>
-                      <td
-                        style={{ padding: '0.5rem 0.75rem', textAlign: 'right', color: '#dc2626' }}
-                      >
-                        {formatEur(costs)}
-                      </td>
-                      <td style={{ padding: '0.5rem 0.75rem', textAlign: 'right' }}>
-                        {formatEur(r.surplus)}
-                      </td>
-                      <td style={{ padding: '0.5rem 0.75rem', color: '#888', fontSize: '0.8rem' }}>
-                        {r.finalizedAt ? 'finalized' : 'draft'}
-                      </td>
+                    <tr key={r.yearMonth}>
+                      <td>{r.yearMonth}</td>
+                      <td className="num num--revenue">{formatEur(rev)}</td>
+                      <td className="num num--cost">{formatEur(costs)}</td>
+                      <td className="num">{formatEur(r.surplus)}</td>
+                      <td className="brand-muted">{r.finalizedAt ? 'finalized' : 'draft'}</td>
                     </tr>
                   )
                 })}
@@ -178,30 +138,18 @@ export default async function TransparencyPage() {
       )}
 
       {rollups.length === 0 && (
-        <p style={{ color: '#aaa', marginTop: '2rem', textAlign: 'center' }}>
-          No financial data published yet for {ytd.year}.
-        </p>
+        <p className="brand-empty">No financial data published yet for {ytd.year}.</p>
       )}
 
-      <footer
-        style={{
-          marginTop: '3rem',
-          borderTop: '1px solid #eee',
-          paddingTop: '1.5rem',
-          color: '#aaa',
-          fontSize: '0.8rem',
-        }}
-      >
+      <footer className="brand-footer">
         <p>
           Tahti ry — Y-tunnus 3368171-8 — Helsinki, Finland
           <br />
           All figures in EUR. Data updated monthly after board approval.{' '}
-          <a href="https://github.com/tahtiapp/tahti" style={{ color: '#999' }}>
-            Source code (AGPL-3.0)
-          </a>
+          <a href="https://github.com/tahtiapp/tahti">Source code (AGPL-3.0)</a>
         </p>
       </footer>
-    </div>
+    </>
   )
 }
 
@@ -217,14 +165,14 @@ function SummaryCard({
   subtitle?: string
 }) {
   return (
-    <div style={{ padding: '1rem 1.25rem', border: '1px solid #eee', borderRadius: 8 }}>
-      <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.25rem' }}>{label}</div>
-      <div style={{ fontSize: '1.4rem', fontWeight: 700, color: positive ? '#16a34a' : '#111' }}>
+    <div className="brand-stat-card">
+      <div className="brand-stat-card__label">{label}</div>
+      <div
+        className={`brand-stat-card__value${positive ? ' brand-stat-card__value--positive' : ''}`}
+      >
         {value}
       </div>
-      {subtitle && (
-        <div style={{ fontSize: '0.75rem', color: '#aaa', marginTop: '0.15rem' }}>{subtitle}</div>
-      )}
+      {subtitle && <div className="brand-stat-card__subtitle">{subtitle}</div>}
     </div>
   )
 }
@@ -240,33 +188,12 @@ function CategoryTable({
 }) {
   if (keys.length === 0) return null
   return (
-    <div style={{ marginBottom: '1rem' }}>
-      <div
-        style={{
-          fontSize: '0.8rem',
-          color: '#888',
-          fontWeight: 600,
-          marginBottom: '0.25rem',
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-        }}
-      >
-        {title}
-      </div>
+    <div className="brand-category">
+      <div className="brand-category__title">{title}</div>
       {keys.map((k) => (
-        <div
-          key={k}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '0.3rem 0',
-            borderBottom: '1px solid #f5f5f5',
-          }}
-        >
-          <span style={{ color: '#444', fontSize: '0.875rem' }}>{categoryLabel(k)}</span>
-          <span style={{ fontVariantNumeric: 'tabular-nums', fontSize: '0.875rem' }}>
-            {formatEur(data[k] ?? '0')}
-          </span>
+        <div key={k} className="brand-category__row">
+          <span>{categoryLabel(k)}</span>
+          <span>{formatEur(data[k] ?? '0')}</span>
         </div>
       ))}
     </div>
