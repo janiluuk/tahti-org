@@ -16,6 +16,7 @@ import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
 import { processFanSubPayoutsJob } from './jobs/fan-sub-payout.js'
 import { processFanSubExpire } from './jobs/fan-sub-expire.js'
+import { processFanSubscriberPurgeJob } from './jobs/fan-subscriber-purge.js'
 import { processDownloadFraudScanJob } from './jobs/download-fraud-scan.js'
 import { processTorExitListSyncJob } from './jobs/tor-exit-list-sync.js'
 import {
@@ -96,6 +97,11 @@ const worker = new Worker(
       } else if (job.name === 'fan-sub-expire') {
         const summary = await processFanSubExpire(prisma)
         console.log('[worker] fan-sub-expire:', JSON.stringify(summary))
+      } else if (job.name === 'fan-subscriber-purge') {
+        const summary = await processFanSubscriberPurgeJob(prisma)
+        if (summary.canceled > 0) {
+          console.log('[worker] fan-subscriber-purge:', JSON.stringify(summary))
+        }
       } else if (job.name === 'tor-exit-list-sync') {
         await processTorExitListSyncJob(job)
       } else if (job.name === 'download-fraud-scan') {

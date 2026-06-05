@@ -12,11 +12,13 @@ import {
   AdminUserSuspendSchema,
   CsvExportBodySchema,
   IdParamSchema,
+  AccountDeletionResultSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { executeAccountDeletion } from '../../lib/account-deletion.js'
 import { auditLog } from '../../lib/audit.js'
 import { sendCsv } from '../../lib/csv.js'
 
@@ -392,6 +394,43 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
 
       const detail = await fetchUserDetail(fastify.prisma, id)
       return reply.send(detail)
+    },
+  )
+
+  fastify.post(
+    '/api/admin/users/:id/delete-account',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'M19: execute GDPR account deletion (anonymize PII, cancel billing)',
+        response: openApiResponse(AccountDeletionResultSchema, 'AccountDeletionResult'),
+      },
+    },
+    async (request, reply) => {
+      const actor = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      try {
+        const result = await executeAccountDeletion(fastify.prisma, request.log, {
+          userId: id,
+          actorId: actor.id,
+        })
+        return reply.send({ ok: true as const, ...result })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Deletion failed'
+        const status =
+          message === 'User not found'
+            ? 404
+            : message.includes('already deleted') ||
+                message.includes('board role') ||
+                message.includes('own account')
+              ? 400
+              : 500
+        return reply.status(status).send({ error: message })
+      }
     },
   )
 }

@@ -35,3 +35,18 @@ export async function createConnectTransfer(params: {
   }
   return data.id
 }
+
+export async function cancelStripeSubscription(subscriptionId: string): Promise<void> {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) return
+
+  const res = await fetch(`${STRIPE_API}/subscriptions/${encodeURIComponent(subscriptionId)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${key}` },
+  })
+
+  if (!res.ok) {
+    const data = (await res.json()) as { error?: { message?: string } }
+    throw new Error(data.error?.message ?? `Stripe cancel failed (${res.status})`)
+  }
+}

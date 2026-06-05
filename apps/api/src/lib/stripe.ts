@@ -256,6 +256,26 @@ export async function fetchSubscriptionMetadata(
   )
 }
 
+async function stripeDelete(path: string): Promise<void> {
+  const key = config.stripe.secretKey
+  if (!key) throw new Error('Stripe is not configured')
+
+  const res = await fetch(`${STRIPE_API}${path}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${key}` },
+  })
+
+  const data = (await res.json()) as StripeErrorBody & Record<string, unknown>
+  if (!res.ok) {
+    throw new Error(data.error?.message ?? `Stripe API DELETE ${path} failed (${res.status})`)
+  }
+}
+
+/** Cancel a Stripe subscription immediately (best-effort for GDPR deletion). */
+export async function cancelStripeSubscription(subscriptionId: string): Promise<void> {
+  await stripeDelete(`/subscriptions/${encodeURIComponent(subscriptionId)}`)
+}
+
 export interface StripeEvent {
   id?: string
   type: string

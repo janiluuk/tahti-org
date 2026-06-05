@@ -81,7 +81,12 @@ export default async function AdminSupportTicketPage({ params }: { params: { id:
         </section>
       ) : null}
 
-      <TicketAdminPanel ticketId={ticket.id} artistId={ticket.artistId} status={ticket.status} />
+      <TicketAdminPanel
+        ticketId={ticket.id}
+        artistId={ticket.artistId}
+        status={ticket.status}
+        subject={ticket.subject}
+      />
 
       <section className="admin-card">
         <h2>Timeline</h2>

@@ -65,3 +65,18 @@ export async function toggleBoardRole(
   revalidatePath('/admin/users')
   return { error: null }
 }
+
+export async function deleteUserAccount(userId: string): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/users/${userId}/delete-account`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Deletion failed' }
+  }
+  revalidatePath('/admin/users')
+  revalidatePath('/admin/support')
+  return { error: null }
+}

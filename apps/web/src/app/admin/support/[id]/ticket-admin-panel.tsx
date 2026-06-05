@@ -10,15 +10,18 @@ import {
   createEngagementAdjustment,
   updateSupportTicket,
 } from '../../actions'
+import { deleteUserAccount } from '../../users/actions'
 
 export function TicketAdminPanel({
   ticketId,
   artistId,
   status,
+  subject,
 }: {
   ticketId: string
   artistId: string | null
   status: string
+  subject: string
 }) {
   const [note, setNote] = useState('')
   const [units, setUnits] = useState('')
@@ -62,6 +65,22 @@ export function TicketAdminPanel({
     }
   }
 
+  async function onExecuteDeletion() {
+    if (!artistId) return
+    if (
+      !window.confirm(
+        'Execute GDPR account deletion? This anonymizes the user and cancels billing.',
+      )
+    ) {
+      return
+    }
+    setPending(true)
+    const { error } = await deleteUserAccount(artistId)
+    setPending(false)
+    if (error) setMsg(error)
+    else window.location.href = `/admin/users/${artistId}`
+  }
+
   return (
     <section className="admin-card" style={{ marginBottom: '1rem' }}>
       <h2>Actions</h2>
@@ -92,6 +111,14 @@ export function TicketAdminPanel({
           Save note
         </button>
       </form>
+
+      {artistId && subject === 'Account deletion request' ? (
+        <p style={{ marginBottom: '1rem' }}>
+          <button type="button" disabled={pending} onClick={onExecuteDeletion}>
+            Execute account deletion
+          </button>
+        </p>
+      ) : null}
 
       {artistId ? (
         <form onSubmit={onAdjust}>

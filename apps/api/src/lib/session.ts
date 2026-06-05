@@ -27,6 +27,10 @@ export async function validateSession(
     await prisma.session.delete({ where: { id: sessionId } })
     return null
   }
+  if (session.user.deletedAt) {
+    await prisma.session.delete({ where: { id: sessionId } })
+    return null
+  }
   return session
 }
 

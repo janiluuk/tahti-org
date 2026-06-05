@@ -34,6 +34,23 @@ export async function createRelease(params: {
   return { error: null }
 }
 
+export async function importReleasesFromCsv(
+  csv: string,
+): Promise<{ error: string | null; created?: number }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ csv }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Import failed' }
+  }
+  const data = (await res.json()) as { created: number }
+  return { error: null, created: data.created }
+}
+
 export async function updateReleaseSmartLinks(
   id: string,
   smartLinkTargets: Record<string, string>,

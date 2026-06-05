@@ -177,6 +177,7 @@ enum AuditAction {
   BOARD_ROLE_CHANGE
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
+  ACCOUNT_DELETE
 
   @@schema("governance")
 }
@@ -328,6 +329,7 @@ model User {
   publicMentionsEnabled   Boolean    @default(false)
   suspendedAt             DateTime?
   suspendReason           String?
+  deletedAt               DateTime?
   mixcloudAccessTokenEnc String?   // M7: OAuth access token (AES-GCM, same key as RTMP)
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
