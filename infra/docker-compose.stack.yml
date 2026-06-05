@@ -11,7 +11,7 @@ name: tahti-stack
 x-app-env: &app-env
   NODE_ENV: production
   # PLAT-003: transaction pool via PgBouncer (migrations use direct postgres in db-push)
-  DATABASE_URL: postgresql://tahti:tahti_dev@pgbouncer:6432/tahti?pgbouncer=true
+  DATABASE_URL: postgresql://tahti:tahti_dev@pgbouncer:5432/tahti?pgbouncer=true
   REDIS_URL: redis://redis:6379
   SESSION_SECRET: dev-session-secret-do-not-use-in-prod
   INTERNAL_SECRET: dev-internal-secret-change-in-prod
@@ -79,16 +79,17 @@ services:
     image: edoburu/pgbouncer:1.22.1-p0
     environment:
       DATABASE_URL: postgres://tahti:tahti_dev@postgres:5432/tahti
+      AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       MAX_CLIENT_CONN: "200"
       DEFAULT_POOL_SIZE: "25"
     ports:
-      - "${PGBOUNCER_PORT:-16432}:6432"
+      - "${PGBOUNCER_PORT:-16432}:5432"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "6432"]
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "5432"]
       interval: 5s
       timeout: 3s
       retries: 8

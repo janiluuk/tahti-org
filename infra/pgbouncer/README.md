@@ -4,10 +4,10 @@ Connection pooler in front of Postgres before scaling `api` / worker replicas.
 
 ## Lab stack (`docker-compose.stack.yml`)
 
-PgBouncer runs on port **6432** inside the stack. App services use:
+The `edoburu/pgbouncer` image listens on **5432** inside the container (host map `${PGBOUNCER_PORT:-16432}:5432`). Set `AUTH_TYPE: scram-sha-256` to match Postgres 16. App services use:
 
 ```text
-postgresql://tahti:tahti_dev@pgbouncer:6432/tahti?pgbouncer=true
+postgresql://tahti:tahti_dev@pgbouncer:5432/tahti?pgbouncer=true
 ```
 
 The `db-push` one-shot job connects **directly** to `postgres:5432` (migrations must not use transaction pooling).
@@ -24,7 +24,7 @@ psql "postgresql://tahti:tahti_dev@localhost:16432/tahti"
 `infra/docker-stack.yml` includes a `pgbouncer` service on the `db` node. App services connect via:
 
 ```text
-postgres://tahti@pgbouncer:6432/tahti?pgbouncer=true
+postgres://tahti@pgbouncer:5432/tahti?pgbouncer=true
 ```
 
 Password is read from the `pg_password` Docker secret at container start.

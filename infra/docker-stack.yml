@@ -2,7 +2,7 @@ version: "3.9"
 
 # App DB connections use PgBouncer (PLAT-003). Migrations use direct postgres:5432 — see db-migrate-deploy.sh.
 x-db-pool-env: &db-pool-env
-  DATABASE_URL: postgres://tahti@pgbouncer:6432/tahti?pgbouncer=true
+  DATABASE_URL: postgres://tahti@pgbouncer:5432/tahti?pgbouncer=true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Tahti — production Swarm stack
@@ -166,7 +166,7 @@ services:
         export DB_PASSWORD="$$(cat /run/secrets/pg_password)"
         exec /entrypoint.sh
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "6432"]
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "5432"]
       interval: 10s
       retries: 5
     deploy:
