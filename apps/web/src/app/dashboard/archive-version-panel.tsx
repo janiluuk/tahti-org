@@ -3,8 +3,10 @@
 
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useState, useTransition } from 'react'
 import type { ArchiveVersionRow } from '@tahti/shared'
+import { ArchiveTrimEditor } from './archive-trim-editor'
 import {
   activateArchiveVersion,
   completeArchiveVersionUpload,
@@ -126,6 +128,14 @@ export function ArchiveVersionPanel({
           ))}
         </ul>
       )}
+
+      <ArchiveTrimEditor itemId={itemId} onBounced={load} />
+
+      <div className="studio-row studio-mb-md">
+        <Link href={`/dashboard/editor?archiveItemId=${itemId}`} className="studio-btn-ghost">
+          Open in multitrack editor
+        </Link>
+      </div>
 
       <div className="studio-row studio-row--wrap">
         <input

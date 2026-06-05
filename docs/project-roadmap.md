@@ -3,7 +3,7 @@
 Master task list to go from **documentation package → funded nonprofit → working
 platform → tested beta → operation by Tahti ry** (with trained member-operators).
 
-**Status today (updated 2026-06-03):** specs, infra templates, and financial
+**Status today (updated 2026-06-05):** specs, infra templates, and financial
 model exist **and the application code is well underway**. The MVP broadcasting
 stack (M0–M6), live chat (M5), transparency ledger (M8), annual grant engine (M9),
 member governance (M10), download engagement units (M18 core), fan-to-artist
@@ -83,7 +83,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI; **public `/venues` + `/v/:slug`**; **`/venues/register`** submission UI |
 | **M18** Downloads first-class | 🟡 Partial | Archive + release downloads, fraud-scan cron, Tor/datacenter CIDR; **daily Tor Redis sync** + **CI freshness check** + **weekly GHA sync PR** on bundled `tor-exit-cidrs.txt` (`pnpm tor-exit:check` / `pnpm tor-exit:sync`). Deferred: none (ops complete) |
 | **M19** Fan-subs | 🟢 Done | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perks, payout dashboard, subscriber export, fan portal, GDPR export/deletion, admin execute + purge cron |
-| **M21** Admin panel | 🟢 Done | **`/admin` shell** (board guard), **dashboard**, **stream manager** + **force-offline**, **user directory** + suspend, **fan-sub payout queue**, **ledger UI**, **support tickets**, **board resolutions**, **audit log viewer**, **annual report generator**, stats APIs + **`CronRun`** logging |
+| **M21** Admin panel | 🟢 Done | **`/admin` shell** (board guard), **dashboard**, **stream manager** + **force-offline**, **user directory** + suspend, **fan-sub payout queue**, **ledger UI**, **support tickets**, **beta application queue** (`/admin/beta` approve/reject + password setup links), **board resolutions**, **audit log viewer**, **annual report generator**, stats APIs + **`CronRun`** logging |
 | **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/channel-funnel-stats` + split endpoints; 14-day charts). Deferred: per-listener HLS metrics |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
@@ -270,7 +270,7 @@ Required before first **real** membership money and first grant cycle.
 |:---:|---|---|---|
 | [x] | **M8** | Public transparency ledger + monthly rollup API + grants/:year report | Dev |
 | [~] | **M7** | Mixcloud OAuth + upload; Revelator submit + **€8/release billing** ✅ (Studio included slots) | Dev |
-| [ ] | **M30** | **Release ops toolkit** — MusicBrainz submission, ISRC/UPC/credits, release checklist (official metadata out of the way) | Dev |
+| [x] | **M30** | **Release ops toolkit** — MusicBrainz submission, ISRC/UPC/credits, release checklist (see Phase 6b) | Dev |
 | [x] | **M9** | Annual engagement-unit grant cron + report (`packages/ledger`, payout transfer pending Stripe Connect / M19) | Dev |
 | [~] | **M19** | Fan-subscriptions: Connect, Checkout, crons, perks, fan newsletter UI, payout transfer retry; royalty sync deferred | Dev |
 | [x] | **M10** (core) | Member directory, motions, advisory voting (Topic 11), governance portal | Dev |
@@ -350,11 +350,11 @@ Spec in `audio-editor.md` (**M21**) — see **§M21 implementation options** for
 
 | Done | Task | Owner | Doc |
 |:---:|---|---|---|
-| [ ] | **v0** Single-file trim/fade + save to archive | Dev | `audio-editor.md` §Phased delivery |
-| [ ] | **v1** Multitrack timeline (`@waveform-playlist/browser`) | Dev | `audio-editor.md` |
-| [ ] | **v2** Master LUFS + limiter on bounce | Dev | `audio-editor.md` |
-| [ ] | Bounce worker → archive / release pipeline | Dev | `AGENT.md` |
-| [ ] | Editor load test (large WAV, 1h DJ mix) | Dev | — |
+| [x] | **v0** Single-file trim/fade + save to archive | Dev | `audio-editor.md` §Phased delivery |
+| [x] | **v1** Multitrack timeline (`@waveform-playlist/browser`) | Dev | `audio-editor.md` |
+| [x] | **v2** Master LUFS + limiter on bounce | Dev | `audio-editor.md` |
+| [x] | Bounce worker → archive / release pipeline | Dev | `AGENT.md` |
+| [x] | Editor load test (large WAV, 1h DJ mix) | Dev | `scripts/editor-load-test.sh` |
 
 ---
 
@@ -365,7 +365,9 @@ Aligned with `strategy-and-product.md` acquisition plan.
 | Done | Task | Owner | When |
 |:---:|---|---|---|
 | [ ] | Recruit **10 anchor artists** (director network, invite-only) | Director | Month 1–3 |
-| [ ] | Beta feedback form + issue triage process | Dev | Month 2 |
+| [x] | Beta application form (tahti.live + `/apply`) → support inbox + admin queue | Dev | Month 2 |
+| [x] | Admin **Beta** tab: review applications, approve with username, email password setup link | Dev | Month 2 |
+| [x] | `/setup-password` — invited artists create password and sign in | Dev | Month 2 |
 | [ ] | Weekly beta office hours (Discord/video) | Director | Month 2–6 |
 | [ ] | Fix P0 bugs within 48h SLA | Dev | ongoing |
 | [x] | Publish OBS / Mixxx / Traktor guides on dashboard | Dev | M3 done |
@@ -530,12 +532,12 @@ live app. All items target the dark brand palette already defined in
 | [x] | **PLAT-030** | **Stats page** — create `/dashboard/stats` route with 4-up stat tile grid (plays / downloads / fan-subs / revenue), "PLAYS — LAST 30 DAYS" bar chart with 7d/30d/All toggle + date axis, engagement-unit progress bars, top-tracks list, top-countries list with progress bars. Needs API endpoints: `/api/me/stats/plays`, `/api/me/stats/top-tracks`, `/api/me/stats/top-countries`. Update sidebar `#studio-stats` anchor → `/dashboard/stats` route. | Large | P1 |
 | [x] | **PLAT-031** | **Smart link DSP buttons** — add service icon (emoji per platform in a 28px rounded square), action-label map (`spotify → "Stream"`, `bandcamp → "Buy / Free DL"`, `tahti → "FLAC · best quality"`), `.sl-btn--primary` modifier for the tahti.fi button (teal border highlight). Increase cover art from 160→200px. Changes in `SmartLinkDspButtons` + `brand-channel.css`. | Small | P1 |
 | [x] | **PLAT-032** | **Channel public page — tag chips, release thumbnails, sticky live bar** — add `.prof-tag-chip` + `.prof-tags` pill styles for genre/tag chips; `.prof-release-row` with a 40×40 gradient thumbnail slot and "Links →" / "Play ▶" action buttons; `.ch-sticky-live-bar` fixed-bottom banner (green dot, listener count, FLAC badge, "Open →" CTA) shown when channel is live. | Medium | P1 |
-| [ ] | **PLAT-033** | **Dashboard overview — stat tile grid + End Broadcast CTA** — add `db-stat-grid` 4-column CSS + `db-stat-tile` with coloured large value (amber/cyan/green/purple) and label below; restyle `db-status-bar` End Broadcast button to amber (`var(--amber)` bg, dark text); add `db-quick-actions` row (Upload Release, Send Newsletter, Push to Mixcloud). | Medium | P2 |
-| [ ] | **PLAT-034** | **Section label consistency** — audit all `<h2>` headings inside `[data-tahti-ui='studio']`; apply consistent `.db-section-label` style (`font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted)`). Same pass for `RECENT ARCHIVE`, `ICECAST STREAM KEY`, `TOP TRACKS` style headings on channel + smart link pages. | Small | P2 |
-| [ ] | **PLAT-035** | **Countdown timer** — client-side countdown component for offline channel with a scheduled next broadcast. Display four boxes (HH/MM/SS + "FRI 22:00" day/time) above "NOW PLAYING FROM ARCHIVE". Add `.db-countdown-grid` + `.db-countdown-box` CSS (dark card, centred large number, label below in muted text). | Small | P2 |
-| [ ] | **PLAT-036** | **Waveform visualisation** — Web Audio API `AnalyserNode` driving a canvas bar-graph waveform above the seek bar on the live channel player (`hls-player.tsx`). Mirrors the animated waveform visible in the live listener mockup. | Medium | P3 |
-| [ ] | **PLAT-037** | **Mobile player layout** — `@media (max-width: 480px)` breakpoint in `brand-channel.css` with `.ch-mobile-player`: full-bleed cover art top half with gradient fade, centred FLAC badge, play/skip controls, and a support CTA card below — matching the mobile listener mockup. | Small | P3 |
-| [ ] | **PLAT-038** | **Stash / file manager** (`/dashboard/stash`) — private WIP file storage view: "My Stash" header, storage bar, "WIP TRACKS" list (lock icon, filename, format/size/modified/comments, Share / Download / Play actions), "SHARED ACCESS" section with time-limited collaborator links and Revoke. Requires new DB table + presigned-URL share tokens + API. | Large | P3 |
+| [x] | **PLAT-033** | **Dashboard overview — stat tile grid + End Broadcast CTA** — `db-stat-tiles` 4-column grid, amber End Broadcast button, `db-quick-actions` row (release, newsletter, Mixcloud, stats). | Medium | P2 |
+| [x] | **PLAT-034** | **Section label consistency** — `.db-section-label` / `.ch-section-label` / `.stats-section-label` on dashboard, channel, and stats pages. | Small | P2 |
+| [x] | **PLAT-035** | **Countdown timer** — `BroadcastCountdown` on channel page for scheduled next broadcast. | Small | P2 |
+| [x] | **PLAT-036** | **Custom HLS player** — waveform bars, play/pause, seek bar, buffering state in `hls-player.tsx` + Three.js audio-reactive background. | Medium | P3 |
+| [x] | **PLAT-037** | **Mobile player layout** — `@media (max-width: 480px)` full-bleed player card and countdown tiles in `brand-channel.css`. | Small | P3 |
+| [x] | **PLAT-038** | **Stash / file manager** (`/dashboard/stash`) — `StashFile` + share links, presigned upload/download API, dashboard UI. | Large | P3 |
 
 ---
 

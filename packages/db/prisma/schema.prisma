@@ -32,6 +32,14 @@ enum MembershipStatus {
   @@schema("core")
 }
 
+enum BetaApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("core")
+}
+
 enum ChannelState {
   OFFLINE
   LIVE
@@ -318,7 +326,7 @@ model User {
   id                    String     @id @default(cuid())
   email                 String     @unique
   emailVerifiedAt       DateTime?
-  passwordHash          String
+  passwordHash          String?
   username              String     @unique
   displayName           String
   bio                   String?
@@ -379,7 +387,61 @@ model User {
   socialConnections       SocialConnection[]
   socialPosts             SocialPost[]
   stashFiles              StashFile[]
+  betaApplication         BetaApplication?
+  betaApplicationsReviewed BetaApplication[] @relation("BetaReviewedBy")
+  passwordSetups          PasswordSetup[]
+  editorProjects          EditorProject[]
 
+  @@schema("core")
+}
+
+model EditorProject {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  archiveItemId String?
+  timeline      Json     @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@schema("core")
+}
+
+model BetaApplication {
+  id           String                @id @default(cuid())
+  name         String
+  email        String
+  artistType   String
+  links        String?
+  message      String?
+  source       String
+  status       BetaApplicationStatus @default(PENDING)
+  userId       String?               @unique
+  user         User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  reviewedById String?
+  reviewedBy   User?                 @relation("BetaReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@index([email])
+  @@index([status, createdAt])
+  @@schema("core")
+}
+
+model PasswordSetup {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([token])
+  @@index([userId])
   @@schema("core")
 }
 

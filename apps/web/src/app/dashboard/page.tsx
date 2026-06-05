@@ -544,6 +544,23 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {user.channel && (
+        <div className="db-quick-actions" aria-label="Quick actions">
+          <Link href="#studio-releases" className="db-quick-action">
+            Upload release
+          </Link>
+          <Link href="#studio-newsletter" className="db-quick-action">
+            Send newsletter
+          </Link>
+          <Link href="#studio-distribution" className="db-quick-action">
+            Push to Mixcloud
+          </Link>
+          <Link href="/dashboard/stats" className="db-quick-action">
+            View stats
+          </Link>
+        </div>
+      )}
+
       {membershipInfo && (
         <MembershipPanel
           status={membershipInfo.status}

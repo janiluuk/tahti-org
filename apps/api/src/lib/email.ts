@@ -79,6 +79,38 @@ export async function sendBetaApplicationEmail(opts: {
   })
 }
 
+export async function sendBetaApprovedEmail(opts: {
+  to: string
+  displayName: string
+  setupUrl: string
+}): Promise<void> {
+  const text = [
+    `Hi ${opts.displayName},`,
+    '',
+    'Your application for the Tahti private beta has been approved.',
+    '',
+    'Create your password and sign in here:',
+    opts.setupUrl,
+    '',
+    'This link expires in 7 days.',
+    '',
+    '— Tahti ry',
+  ].join('\n')
+
+  await sendMail({
+    to: opts.to,
+    subject: 'Your Tahti beta invite — create your password',
+    text,
+    html: `
+      <p>Hi ${opts.displayName.replace(/</g, '&lt;')},</p>
+      <p>Your application for the Tahti private beta has been approved.</p>
+      <p><a href="${opts.setupUrl}">Create your password and sign in</a></p>
+      <p>This link expires in 7 days.</p>
+      <p>— Tahti ry</p>
+    `,
+  })
+}
+
 export async function sendVerificationEmail(
   to: string,
   displayName: string,

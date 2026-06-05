@@ -41,9 +41,12 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
 
       // Constant-time: hash a dummy password even when user not found to prevent
       // timing-based user enumeration
-      const valid = user ? await verifyPassword(user.passwordHash, password) : false
+      if (!user || !user.passwordHash) {
+        return reply.status(401).send({ error: 'Invalid email or password' })
+      }
 
-      if (!user || !valid) {
+      const valid = await verifyPassword(user.passwordHash, password)
+      if (!valid) {
         return reply.status(401).send({ error: 'Invalid email or password' })
       }
 

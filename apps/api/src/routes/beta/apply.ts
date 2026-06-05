@@ -49,6 +49,46 @@ const betaApplyRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const ticketMessage = messageParts.join('\n\n') || '(No additional message)'
 
+      let applicationId: string | undefined
+      try {
+        const approved = await fastify.prisma.betaApplication.findFirst({
+          where: { email: data.email, status: 'APPROVED' },
+          select: { id: true },
+        })
+        if (!approved) {
+          const pending = await fastify.prisma.betaApplication.findFirst({
+            where: { email: data.email, status: 'PENDING' },
+          })
+          if (pending) {
+            const updated = await fastify.prisma.betaApplication.update({
+              where: { id: pending.id },
+              data: {
+                name: data.name,
+                artistType: data.artistType,
+                links: data.links?.trim() || null,
+                message: data.message?.trim() || null,
+                source,
+              },
+            })
+            applicationId = updated.id
+          } else {
+            const created = await fastify.prisma.betaApplication.create({
+              data: {
+                name: data.name,
+                email: data.email,
+                artistType: data.artistType,
+                links: data.links?.trim() || null,
+                message: data.message?.trim() || null,
+                source,
+              },
+            })
+            applicationId = created.id
+          }
+        }
+      } catch (err) {
+        fastify.log.error({ err }, 'beta apply record failed')
+      }
+
       let ticketId: string | undefined
       try {
         const ticket = await fastify.prisma.supportTicket.create({
@@ -78,7 +118,7 @@ const betaApplyRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(503).send({ error: 'Could not send application — try again later' })
       }
 
-      return reply.status(201).send({ ok: true as const, ticketId })
+      return reply.status(201).send({ ok: true as const, ticketId, applicationId })
     },
   )
 }

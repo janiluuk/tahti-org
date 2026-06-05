@@ -23,6 +23,9 @@ describe('POST /api/beta/apply', () => {
     await prisma.supportTicket.deleteMany({
       where: { subject: { startsWith: 'Beta application:' } },
     })
+    await prisma.betaApplication.deleteMany({
+      where: { email: 'beta-applicant@example.com' },
+    })
     await app.close()
   })
 
@@ -56,6 +59,12 @@ describe('POST /api/beta/apply', () => {
       where: { contactEmail: 'beta-applicant@example.com' },
     })
     expect(ticket?.subject).toBe('Beta application: DJ Test')
+
+    const application = await prisma.betaApplication.findFirst({
+      where: { email: 'beta-applicant@example.com' },
+    })
+    expect(application?.status).toBe('PENDING')
+    expect(application?.name).toBe('DJ Test')
   })
 
   it('rejects invalid email', async () => {

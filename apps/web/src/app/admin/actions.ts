@@ -187,3 +187,62 @@ export async function generateAnnualReport(year: string): Promise<{
   revalidatePath('/admin/governance/report')
   return { error: null, markdown: body.markdown, downloadUrl: body.downloadUrl }
 }
+
+export async function approveBetaApplication(
+  id: string,
+  input: { username: string; displayName?: string },
+): Promise<{ error: string | null; setupUrl?: string }> {
+  const res = await fetch(
+    `${apiUrl}/api/admin/beta/applications/${encodeURIComponent(id)}/approve`,
+    {
+      method: 'POST',
+      headers: { Cookie: sessionHeader(), 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+      cache: 'no-store',
+    },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Approve failed' }
+  }
+  const body = (await res.json()) as { setupUrl: string }
+  revalidatePath('/admin/beta')
+  return { error: null, setupUrl: body.setupUrl }
+}
+
+export async function rejectBetaApplication(id: string): Promise<{ error: string | null }> {
+  const res = await fetch(
+    `${apiUrl}/api/admin/beta/applications/${encodeURIComponent(id)}/reject`,
+    {
+      method: 'POST',
+      headers: { Cookie: sessionHeader() },
+      cache: 'no-store',
+    },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Reject failed' }
+  }
+  revalidatePath('/admin/beta')
+  return { error: null }
+}
+
+export async function resendBetaSetupLink(
+  id: string,
+): Promise<{ error: string | null; setupUrl?: string }> {
+  const res = await fetch(
+    `${apiUrl}/api/admin/beta/applications/${encodeURIComponent(id)}/resend-setup`,
+    {
+      method: 'POST',
+      headers: { Cookie: sessionHeader() },
+      cache: 'no-store',
+    },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Resend failed' }
+  }
+  const body = (await res.json()) as { setupUrl: string }
+  revalidatePath('/admin/beta')
+  return { error: null, setupUrl: body.setupUrl }
+}
