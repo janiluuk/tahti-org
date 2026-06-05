@@ -1,5 +1,7 @@
 # CI — lint, typecheck, tests, API vital-flows e2e, website Docker, AGPL headers.
 # On push to main (after all checks): creates GitHub release tag YYYY-MM-DD-buildnr (UTC).
+# Release job builds/pushes Docker images to registry.tahti.live with the same tag.
+# Staging deploy runs after CI via workflow_run — see .github/workflows/deploy.yml
 # Screenshots are local-only: ./scripts/e2e-screenshots.sh (not run here).
 
 name: CI
@@ -474,29 +476,141 @@ jobs:
           echo "All checks passed ✓"
 
   release:
-    name: Release (YYYY-MM-DD-buildnr)
+    name: Release images & changelog
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [all-checks]
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 45
     permissions:
       contents: write
     concurrency:
       group: release-main
       cancel-in-progress: false
+    env:
+      REGISTRY: registry.tahti.live
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Compute next release tag
-        id: tag
+      - name: Compute release version
+        id: version
         run: |
-          chmod +x scripts/next-release-tag.sh
-          TAG="$(scripts/next-release-tag.sh)"
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "Release tag: ${TAG}"
+          chmod +x scripts/next-release-tag.sh scripts/release-meta.sh scripts/release-changelog.sh
+          bash scripts/release-meta.sh github
+
+      - name: Find previous release tag
+        id: prev
+        run: |
+          PREV="$(git tag -l '????-??-??-*' --sort=-v:refname | head -1 || true)"
+          echo "tag=${PREV}" >> "$GITHUB_OUTPUT"
+          echo "Previous tag: ${PREV:-<none>}"
+
+      - name: Generate changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          scripts/release-changelog.sh \
+            "${{ steps.version.outputs.tag }}" \
+            "${{ github.sha }}" \
+            "${{ steps.prev.outputs.tag }}" > release-notes.md
+
+      - name: Check registry credentials
+        id: registry
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          if [[ -n "${REGISTRY_PASSWORD}" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::REGISTRY_PASSWORD not set — skipping Docker push (GitHub release still created)"
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Login to registry
+        if: steps.registry.outputs.enabled == 'true'
+        env:
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          REGISTRY_USER: ${{ secrets.REGISTRY_USER || 'tahti' }}
+        run: |
+          echo "$REGISTRY_PASSWORD" | \
+            docker login "${{ env.REGISTRY }}" -u "$REGISTRY_USER" --password-stdin
+
+      - name: Set up Docker Buildx
+        if: steps.registry.outputs.enabled == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push website
+        if: steps.registry.outputs.enabled == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: website/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/website:${{ steps.version.outputs.tag }}
+            ${{ env.REGISTRY }}/tahti/website:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/website:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/website:latest
+          cache-to: type=inline
+
+      - name: Build and push api
+        if: steps.registry.outputs.enabled == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/api:${{ steps.version.outputs.tag }}
+            ${{ env.REGISTRY }}/tahti/api:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/api:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/api:latest
+          cache-to: type=inline
+
+      - name: Build and push web
+        if: steps.registry.outputs.enabled == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/web:${{ steps.version.outputs.tag }}
+            ${{ env.REGISTRY }}/tahti/web:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/web:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/web:latest
+          cache-to: type=inline
+
+      - name: Build and push worker
+        if: steps.registry.outputs.enabled == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/worker/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/worker:${{ steps.version.outputs.tag }}
+            ${{ env.REGISTRY }}/tahti/worker:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/worker:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/worker:latest
+          cache-to: type=inline
+
+      - name: Build and push orchestrator
+        if: steps.registry.outputs.enabled == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: services/orchestrator/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/tahti/orchestrator:${{ steps.version.outputs.tag }}
+            ${{ env.REGISTRY }}/tahti/orchestrator:${{ github.sha }}
+            ${{ env.REGISTRY }}/tahti/orchestrator:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/tahti/orchestrator:latest
+          cache-to: type=inline
 
       - name: Download OpenAPI spec
         uses: actions/download-artifact@v4
@@ -505,13 +619,42 @@ jobs:
           name: openapi-${{ github.sha }}
           path: release-assets
 
+      - name: Compose release notes
+        id: release_body
+        env:
+          REGISTRY_ENABLED: ${{ steps.registry.outputs.enabled }}
+        run: |
+          {
+            echo 'body<<RELEASE_BODY'
+            echo "**Release ${{ steps.version.outputs.name }}** (\`${{ steps.version.outputs.tag }}\`)"
+            echo ""
+            echo "Commit: \`${{ github.sha }}\`"
+            if [[ "$REGISTRY_ENABLED" == "true" ]]; then
+              echo ""
+              echo "### Docker images"
+              echo ""
+              echo "Tagged \`${{ steps.version.outputs.tag }}\`, \`${{ github.sha }}\`, and \`latest\`:"
+              echo ""
+              echo '```'
+              for svc in website api web worker orchestrator; do
+                echo "${{ env.REGISTRY }}/tahti/${svc}:${{ steps.version.outputs.tag }}"
+              done
+              echo '```'
+            fi
+            echo ""
+            echo "### Changelog"
+            echo ""
+            cat release-notes.md
+            echo 'RELEASE_BODY'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          name: ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.name }}
           target_commitish: ${{ github.sha }}
-          generate_release_notes: true
+          body: ${{ steps.release_body.outputs.body }}
           files: |
             release-assets/openapi.json
           fail_on_unmatched_files: false
