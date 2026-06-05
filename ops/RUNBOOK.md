@@ -8,6 +8,8 @@ live in Git; this document covers **data** recovery (Postgres, MinIO).
 - SSH access to the manager node (`DEPLOY_SSH_PRIVATE_KEY` in CI)
 - `mc` alias configured for `registry.tahti.live` and backup bucket (see `scripts/backup.sh`)
 - Docker Swarm stack name: `tahti` (production) or `tahti-staging`
+- Production secrets: [`ops/secrets-management.md`](secrets-management.md)
+- Operator docs: [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKUP.md`](BACKUP.md), [`EMAIL.md`](EMAIL.md)
 
 ## Deploy and rollback
 
@@ -156,6 +158,7 @@ See also `docs/technical/journey-ops.md` (Journey 4 — backup drill).
 - **Upptime** (public status page): [`ops/upptime/README.md`](upptime/README.md) — monitors `/api/v1/status` and `/health`.
 - **Interim uptime GHA** (until Upptime fork): `.github/workflows/status-monitor.yml` — hourly when repo var `STATUS_MONITOR_ENABLED=true`; manual `./scripts/status-monitor.sh`.
 - **Tor exit bundled list**: weekly `.github/workflows/tor-exit-sync.yml` opens a PR; worker `tor-exit-list-sync` updates Redis daily; CI runs `pnpm tor-exit:check`.
+- **Newsletter bounces** (M13): `POST /api/webhooks/email/bounce` — Postmark bounce/spam or AWS SNS; header `X-Tahti-Webhook-Secret` must match `EMAIL_BOUNCE_WEBHOOK_SECRET` in `stack.env`. Hard bounces and complaints auto-unsubscribe.
 - Backup age: `./scripts/backup.sh status` (env: `BACKUP_WARN_AGE_HOURS=26`, `BACKUP_PAGE_AGE_HOURS=48`).
   Also prints `minio_dr_postgres_backup_age_hours` when `DST_ALIAS` (default `tahti-dr`) is configured.
 - Prometheus: `tahti_postgres_backup_age_hours` on `GET /metrics` (lists MinIO `backups/pg/` from API).
@@ -188,15 +191,15 @@ ICECAST_INGEST_HOSTS=https://icecast-a.tahti.live,https://icecast-b.tahti.live
 RTMP_INGEST_HOSTS=ingest-a.tahti.live,ingest-b.tahti.live
 ```
 
-Archive tracklist title lookup (STREAM-008): **ACRCloud** at ingest (MP3 sample from sidecar when `FINGERPRINT_SEND_AUDIO=1`) with **AcoustID** chromaprint fallback on archive/live polling.
+Archive tracklist title lookup (STREAM-008): **AcoustID** chromaprint fallback on archive/live polling. **ACRCloud** is disabled until post-production (`ACRCLOUD_ENABLED=false`; no ingest audio samples).
 
-**Secrets on manager** (empty string disables lookup):
+**Secrets on manager** (AcoustID only for launch):
 
 ```bash
-echo -n "$ACRCLOUD_KEY" | docker secret create acrcloud_access_key -
-echo -n "$ACRCLOUD_SECRET" | docker secret create acrcloud_access_secret -
 echo -n "$ACOUSTID_KEY" | docker secret create acoustid_api_key -
 ```
+
+**Post-production ACRCloud** (when ready): create `acrcloud_access_key` / `acrcloud_access_secret`, set `ACRCLOUD_ENABLED=true` on **api**, `FINGERPRINT_SEND_AUDIO=1` on **orchestrator**, redeploy.
 
 **Ingest replicas (prod Swarm):** label two nodes `ingest_id=a` and `ingest_id=b`; deploy `icecast`/`rtmp-ingest` on **a**, `icecast-b`/`rtmp-ingest-b` on **b**. DNS:
 
@@ -233,5 +236,7 @@ OpenAPI UI: `https://api.tahti.live/docs`
 2. Put **client ID** in `stack.env` as `MIXCLOUD_CLIENT_ID` (public; not a Docker secret).
 3. Store **client secret** as Swarm secret `mixcloud_client_secret` (mounted as `MIXCLOUD_CLIENT_SECRET_FILE` on **api** and **worker-media**).
 4. Redeploy stack; artists connect via Dashboard → Distribution → Mixcloud.
+
+**Verify on manager:** `./scripts/check-mixcloud-prod.sh` or `pnpm prod:check-m7` (see also `pnpm prod:readiness`).
 
 Without `MIXCLOUD_CLIENT_ID`, OAuth and uploads stay in stub mode (CI/dev).

@@ -109,7 +109,7 @@ Between raw RTMP/Icecast input and Liquidsoap, an FFmpeg edge encoder container:
 
 1. **Normalizes codec** — RTMP sources send AAC, MP3, or Opus at varying bitrates. The edge encoder outputs a consistent 320 kbps PCM or Opus stream regardless of input.
 2. **Produces two feeds** — a high-quality FLAC-compatible feed for paid channels and an MP3 feed for free channels, from a single source input.
-3. **Runs chromaprint fingerprint at ingest** — fpcalc sidecar posts segments every ~30s; **ACRCloud** identify on MP3 sample with **AcoustID** fallback.
+3. **Runs chromaprint fingerprint at ingest** — fpcalc sidecar posts segments every ~30s; **AcoustID** title lookup on archive/live (ACRCloud deferred until post-production).
 4. **Decouples ingest from Liquidsoap** — if Liquidsoap crashes and restarts mid-stream, the edge encoder continues receiving from the artist without dropping the connection. Liquidsoap reconnects to the edge encoder's output, not the artist's OBS.
 
 ```mermaid
@@ -126,11 +126,11 @@ flowchart LR
     FP --> API[POST /internal/broadcast/:id/fingerprint-segment]
 ```
 
-On broadcast end, `archive-broadcast` collapses fingerprint boundaries and writes `tracklist` entries. Titles come from **ACRCloud** (12s MP3 sample posted by the ingest sidecar when `FINGERPRINT_SEND_AUDIO=1`) with **AcoustID** chromaprint fallback when ACRCloud is unset or misses.
+On broadcast end, `archive-broadcast` collapses fingerprint boundaries and writes `tracklist` entries. Titles come from **AcoustID** chromaprint lookup. **ACRCloud** ingest identify is off until post-production (`ACRCLOUD_ENABLED=true`, `FINGERPRINT_SEND_AUDIO=1`).
 
 While **LIVE**, listeners see a **Now playing** panel on `/c/:slug` that polls `GET /api/channels/:slug/live-fingerprints` every 30s (same tracklist shape as archive metadata).
 
-**Env:** `ACRCLOUD_ACCESS_KEY` + `ACRCLOUD_ACCESS_SECRET` on **api** (Docker secrets in prod); `ACOUSTID_API_KEY` fallback on **api** + **worker**.
+**Env:** `ACOUSTID_API_KEY` on **api** + **worker**; ACRCloud secrets deferred (see `ops/RUNBOOK.md`).
 
 ---
 

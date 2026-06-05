@@ -69,13 +69,13 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
 | **M5** Live chat | ✅ Done | Centrifugo token/message/announcements/ban + reactions + presence |
 | **M6** Multistream RTMP | ✅ Done | Per-channel targets, encrypted stream keys, `alwaysMirror` gated to STUDIO |
-| **M7** Distribution (Mixcloud + Revelator) | 🟡 Partial | Mixcloud OAuth connect + archive upload queue; **`MIXCLOUD_CLIENT_SECRET_FILE`** wired on api/worker; prod setup in RUNBOOK; `packages/revelator` stub/live submit + **Revelator wizard**; **monthly royalty sync** + dashboard display; **€8/release Stripe billing** (Studio 12/yr included). Deferred: live Mixcloud app credentials on production stack |
+| **M7** Distribution (Mixcloud + Revelator) | 🟡 Partial | Mixcloud OAuth connect + archive upload queue; **`MIXCLOUD_CLIENT_SECRET_FILE`** wired on api/worker; prod setup in RUNBOOK; **`scripts/check-mixcloud-prod.sh`** + `pnpm prod:check-m7`; `packages/revelator` stub/live submit + **Revelator wizard**; **monthly royalty sync** + dashboard display; **€8/release Stripe billing** (Studio 12/yr included). Deferred: live Mixcloud app credentials on production stack (ops — run check script after configure) |
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
-| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + **chat token → first message** via Redis), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth), shared `lib/csv.ts`, **structured request logging**, **Stripe webhook failure counters** on `/metrics`, **`tahti_postgres_backup_age_hours` on `/metrics`**, **Upptime config** (`ops/upptime/`), **hourly status monitor GHA** (`scripts/status-monitor.sh`, enable via `STATUS_MONITOR_ENABLED`). Deferred: live Upptime fork deploy, **backup/DR drills** (see [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)) |
+| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha, audit log, `/api/v1/status`, OpenAPI `/docs`, structured logging, Stripe webhook + backup age on `/metrics`, **ACRCloud identify counters** (inactive until `ACRCLOUD_ENABLED`), **status monitor GHA** + **Upptime config** + **`bootstrap.sh`**, **`/help/tier-limits`**. Deferred: live Upptime fork deploy (`status.tahti.live`) |
 | **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor, **profile playback** (`archiveItemId` + `streamKey` presign); **cover art upload to MinIO** (`artworkKey` + presigned URLs). Deferred: bulk import |
-| **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
+| **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week), **bounce webhook** (`POST /api/webhooks/email/bounce` — Postmark + SNS), **`ops/EMAIL.md`** (Postmark + SES SMTP). Deferred: dedicated SES API transport if SMTP limits hit |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard. Deferred: social auto-post |
 | **M24** Per-content visuals | 🟡 Partial | Channel gallery + **channel video backdrop** + per-item banner/background/slideshow on `/c/:slug`; **YouTube/Vimeo** via `parseVideoEmbedUrl` |
 | **M15** Artist @-mentions | ✅ Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API |
@@ -87,7 +87,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`; claim links (Spotify, Apple, YouTube). Deferred: Discogs API |
-| **M29** Backup & DR | 🟡 Partial | **`scripts/backup.sh`** (postgres, minio DR mirror, restore-test, status + DR age); **`ops/RUNBOOK.md`** restore + drill table; `install-crons.sh`; `/metrics` backup gauge. Deferred: pgBackRest PITR |
+| **M29** Backup & DR | 🟡 Partial | **`scripts/backup.sh`** (postgres, minio DR mirror, restore-test, status + DR age); **`scripts/backup-drill.sh`** + quarterly cron; **`ops/RUNBOOK.md`** restore + drill table; `install-crons.sh`; `/metrics` backup gauge. Deferred: pgBackRest PITR |
 | **M20** Tier gating | 🟢 Done | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API + **upgrade CTA**, HLS tier split, **`/help/tier-limits`**, vital-flows e2e |
 
 ### Improvements identified during the audit (added to the roadmap)
@@ -178,7 +178,7 @@ Goal: secure **≥€20k** to bridge Year 1 deficit (`financial-model.md`).
 | [ ] | Backup colocation / DR target chosen (UpCloud Helsinki or aligned Finnish partner) | Dev | — | `infra-strategy.md` |
 | [ ] | Domain **tahti.live** + DNS → Caddy on owned edge | Dev | association exists | `infra/Caddyfile` |
 | [ ] | Docker Swarm (or Compose staging) from `infra/docker-stack.yml` | Dev | hardware | `infra/docker-stack.yml` |
-| [ ] | Secrets management (Docker secrets / sops) documented | Dev | stack up | — |
+| [x] | Secrets management (Docker secrets / sops) documented | Dev | stack up | `ops/secrets-management.md` |
 | [ ] | Staging environment mirrors production topology | Dev | M0 | — |
 | [ ] | Monitoring + alerting (uptime, disk, Liquidsoap health) | Dev | stack up | — |
 | [ ] | Negotiate 10 Gbps fiber quote for Y3 (risk item in financial model) | Director | Y1 running | `financial-model.md` |
@@ -297,7 +297,7 @@ Can ship incrementally during beta.
 | [x] | **M20** | Tier gating polish, upgrade UX | High |
 | [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
 | [~] | **M14** | Embed pages done; social auto-post + analytics remain | Medium |
-| [~] | **M13** | Newsletter API + worker; SES + bounce webhook remain | Medium |
+| [~] | **M13** | Newsletter API + worker + bounce webhook; SES broadcast sends remain | Medium |
 | [x] | **M6** | Multistream RTMP targets | Medium |
 | [x] | **M16** | Tahti Radio meta-stream | Medium |
 | [x] | **M15** | Artist @-mentions | Low |
@@ -393,14 +393,15 @@ contractor**. Director may remain employed, but **members can operate it**.
 | Done | Deliverable | Owner |
 |:---:|---|---|
 | [x] | `ops/RUNBOOK.md` — deploy, rollback, **Postgres + MinIO restore**, DR cutover | Dev |
-| [ ] | `ops/BACKUP.md` — RPO/RTO table, cron schedule, offsite bucket names, escalation | Dev |
-| [ ] | `ops/INCIDENTS.md` — outage comms, escalation | Dev |
-| [ ] | `ops/ONBOARDING-OPERATOR.md` — training syllabus | Director |
-| [ ] | `ops/TREASURER.md` — ledger import, grant payout, PRH export | Treasurer |
-| [ ] | `ops/AGM-PLAYBOOK.md` — motions, voting, minutes template | Board |
-| [ ] | Architecture diagram (hardware, Swarm, data flows) | Dev |
-| [ ] | Credential inventory (who has access to what) | Director |
-| [ ] | Vendor contact list (fiber, UpCloud, Stripe, Revelator) | Director |
+| [x] | `ops/BACKUP.md` — RPO/RTO table, cron schedule, offsite bucket names, escalation | Dev |
+| [x] | `ops/INCIDENTS.md` — outage comms, escalation | Dev |
+| [x] | `ops/ONBOARDING-OPERATOR.md` — training syllabus (infra/support/treasurer tracks) | Dev |
+| [x] | `ops/TREASURER.md` — ledger import, grant payout, PRH export checklist | Dev |
+| [x] | `ops/AGM-PLAYBOOK.md` — motions, voting, minutes template | Dev |
+| [x] | `ops/ARCHITECTURE.md` — Swarm topology + data-flow diagrams | Dev |
+| [x] | `ops/CREDENTIALS.md` — access matrix template (live data in board vault) | Dev |
+| [x] | `ops/VENDORS.md` — vendor contact template | Dev |
+| [x] | `ops/EMAIL.md` — Postmark + SES SMTP + bounce webhook setup | Dev |
 
 ### 8b — Operator training (target: 5 members by end Y1)
 
@@ -550,7 +551,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 |:---|---|---|---|
 | [x] | **STREAM-006** No per-channel bandwidth accounting — can't attribute egress costs per artist, can't inform resource limits or grant calculations | `GET /api/me/channel-egress` + dashboard 30d chart (downloads + live HLS from **Caddy access logs** via Redis; bitrate estimate fallback) | M8 |
 | [x] | **STREAM-007** Single Icecast node — Mixxx/Traktor users have no failover | Health-ranked fallbacks + **prod `icecast-b`** + Caddy `ingest-icecast-b.tahti.live` | Phase 5 / pre-launch |
-| [x] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Ingest sidecar + live tracklist + **ACRCloud** (audio sample) + AcoustID fallback | M4 |
+| [x] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Ingest sidecar + live tracklist + AcoustID; **ACRCloud deferred** until post-production (`ACRCLOUD_ENABLED`) | M4 |
 | [x] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Worker syncs fallback pool → shared `/archive-cache`; Liquidsoap prefers local M3U | M3 |
 | [x] | **OPS-001** No structured log correlation across edge encoder → Liquidsoap → recording containers for a single broadcast session | `broadcastSessionId` on ingest, orchestrator, watchdog, finalize, archive jobs | M11 |
 | [x] | **OPS-002** DB migration is a manual step after deploy — must be automated in CI before service update | `db-migrate-deploy.sh` in staging + prod GitHub deploy workflow | M0 |

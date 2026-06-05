@@ -24,6 +24,8 @@ export const config = {
     user: process.env.SMTP_USER ?? '',
     pass: process.env.SMTP_PASS ?? '',
     from: process.env.SMTP_FROM ?? 'Tahti <noreply@tahti.live>',
+    /** M13: shared secret for Postmark/SES bounce webhooks (`X-Tahti-Webhook-Secret`). */
+    bounceWebhookSecret: process.env.EMAIL_BOUNCE_WEBHOOK_SECRET?.trim() ?? '',
   },
   appUrl: process.env.APP_URL ?? 'http://localhost:3000',
   apiUrl: process.env.API_URL ?? 'http://localhost:3001',
@@ -119,6 +121,8 @@ export const config = {
   /** STREAM-008: optional AcoustID key for live + archive tracklist title lookup. */
   acoustidApiKey: process.env.ACOUSTID_API_KEY?.trim() ?? '',
   acrcloud: {
+    /** Post-production: set ACRCLOUD_ENABLED=true plus keys/secrets to enable identify at ingest. */
+    enabled: process.env.ACRCLOUD_ENABLED === 'true',
     host: process.env.ACRCLOUD_HOST ?? 'identify-eu-west-1.acrcloud.com',
     accessKey: readSecret('ACRCLOUD_ACCESS_KEY', 'ACRCLOUD_ACCESS_KEY_FILE', ''),
     accessSecret: readSecret('ACRCLOUD_ACCESS_SECRET', 'ACRCLOUD_ACCESS_SECRET_FILE', ''),

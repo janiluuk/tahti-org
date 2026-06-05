@@ -55,4 +55,5 @@ groups:
           summary: High ACRCloud identify volume (>500/h)
           description: >-
             Ingest fingerprint enrichment is calling ACRCloud heavily ({{ $value | humanize }}
-            requests in the last hour). Check live channel count and ACRCloud billing dashboard.
+            requests in the last hour). Only applies when ACRCLOUD_ENABLED=true in production.
+            Check live channel count and ACRCloud billing dashboard.

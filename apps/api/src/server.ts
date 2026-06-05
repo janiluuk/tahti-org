@@ -53,6 +53,7 @@ import fanSubscriptionRoutes from './routes/fansubs/subscriptions.js'
 import fanConnectRoutes from './routes/fansubs/connect.js'
 import fanSubPayoutRoutes from './routes/fansubs/payouts.js'
 import stripeWebhookRoutes from './routes/webhooks/stripe.js'
+import emailBounceWebhookRoutes from './routes/webhooks/email-bounce.js'
 import membershipRoutes from './routes/me/membership.js'
 import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
 import adminMembersRoutes from './routes/admin/members.js'
@@ -397,6 +398,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(fanConnectRoutes)
   await fastify.register(fanSubPayoutRoutes)
   await fastify.register(stripeWebhookRoutes)
+  await fastify.register(emailBounceWebhookRoutes)
 
   // M1: annual membership payment
   await fastify.register(membershipRoutes)
