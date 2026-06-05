@@ -24,9 +24,13 @@ interface VenueEntry {
 
 async function fetchVenues(): Promise<VenueEntry[]> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const res = await fetch(`${apiUrl}/api/v1/venues`, { next: { revalidate: 300 } })
-  if (!res.ok) return []
-  return (await res.json()) as VenueEntry[]
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/venues`, { next: { revalidate: 300 } })
+    if (!res.ok) return []
+    return (await res.json()) as VenueEntry[]
+  } catch {
+    return []
+  }
 }
 
 export default async function VenuesDirectoryPage() {
