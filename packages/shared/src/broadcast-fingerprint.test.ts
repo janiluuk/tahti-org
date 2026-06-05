@@ -32,4 +32,59 @@ describe('fingerprintsToTracklistEntries', () => {
     expect(entries[1]?.startSec).toBe(60)
     expect(entries[1]?.title).toBe('Track change (1:00)')
   })
+
+  it('applies AcoustID identifications when provided', () => {
+    const segments = [
+      {
+        offsetSec: 0,
+        durationSec: 12,
+        fingerprint: 'AQAA_one',
+        capturedAt: '2026-06-05T12:00:00.000Z',
+      },
+      {
+        offsetSec: 90,
+        durationSec: 12,
+        fingerprint: 'AQAA_two',
+        capturedAt: '2026-06-05T12:01:30.000Z',
+      },
+    ]
+
+    const entries = fingerprintsToTracklistEntries(segments, [
+      null,
+      { title: 'Good Life', artist: 'Inner City' },
+    ])
+
+    expect(entries[0]?.title).toBe('Broadcast start')
+    expect(entries[1]).toEqual({
+      startSec: 90,
+      title: 'Good Life',
+      artist: 'Inner City',
+    })
+  })
+
+  it('uses pre-identified segment titles from ACRCloud ingest', () => {
+    const entries = fingerprintsToTracklistEntries([
+      {
+        offsetSec: 0,
+        durationSec: 12,
+        fingerprint: 'AQAA_one',
+        capturedAt: '2026-06-05T12:00:00.000Z',
+      },
+      {
+        offsetSec: 120,
+        durationSec: 12,
+        fingerprint: 'AQAA_two',
+        capturedAt: '2026-06-05T12:02:00.000Z',
+        title: 'Identified Live',
+        artist: 'DJ',
+        identifySource: 'acrcloud',
+      },
+    ])
+
+    expect(entries[1]).toEqual({
+      startSec: 120,
+      title: 'Identified Live',
+      artist: 'DJ',
+    })
+  })
 })

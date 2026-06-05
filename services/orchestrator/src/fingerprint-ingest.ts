@@ -12,6 +12,8 @@ const execAsync = promisify(exec)
 export const FINGERPRINT_IMAGE = process.env.FINGERPRINT_IMAGE ?? 'alpine:3.20'
 export const FINGERPRINT_INTERVAL_SEC = parseInt(process.env.FINGERPRINT_INTERVAL_SEC ?? '30', 10)
 export const FINGERPRINT_WINDOW_SEC = parseInt(process.env.FINGERPRINT_WINDOW_SEC ?? '12', 10)
+/** When true, sidecar attaches compact MP3 samples for ACRCloud identify at API. */
+export const FINGERPRINT_SEND_AUDIO = process.env.FINGERPRINT_SEND_AUDIO === '1'
 
 export function fingerprintContainerName(slug: string, broadcastId: string): string {
   const short = broadcastId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 12)
@@ -30,9 +32,24 @@ export function buildFingerprintIngestShell(opts: {
   internalSecret: string
   intervalSec?: number
   windowSec?: number
+  sendAudioSample?: boolean
 }): string {
   const interval = opts.intervalSec ?? FINGERPRINT_INTERVAL_SEC
   const window = opts.windowSec ?? FINGERPRINT_WINDOW_SEC
+  const sendAudio = opts.sendAudioSample ?? FINGERPRINT_SEND_AUDIO
+
+  const audioBlock = sendAudio
+    ? [
+        '    ffmpeg -hide_banner -loglevel error -y -i /tmp/w.wav -ac 1 -ar 44100 -b:a 64k /tmp/s.mp3 2>/dev/null || true',
+        '    if [ -f /tmp/s.mp3 ]; then',
+        '      B64=$(base64 /tmp/s.mp3 | tr -d "\\n")',
+        '      AUDIO_JSON=",\\"audioSampleBase64\\":\\"$B64\\""',
+        '    else',
+        '      AUDIO_JSON=""',
+        '    fi',
+        '    rm -f /tmp/s.mp3',
+      ]
+    : ['    AUDIO_JSON=""']
 
   return [
     'set -eu',
@@ -48,8 +65,9 @@ export function buildFingerprintIngestShell(opts: {
     '  if ffmpeg -hide_banner -loglevel error -y -i "$INPUT_URL" -t "$WINDOW_SEC" -ac 1 -ar 44100 /tmp/w.wav 2>/dev/null; then',
     '    FP=$(fpcalc -json /tmp/w.wav 2>/dev/null | tr -d \'\\n\' | sed \'s/.*"fingerprint":"\\([^"]*\\)".*/\\1/\' | head -1)',
     '    if [ -n "$FP" ]; then',
+    ...audioBlock,
     '      curl -sf -X POST -H "Authorization: Bearer $INTERNAL_SECRET" -H "Content-Type: application/json" \\',
-    '        -d "{\\"offsetSec\\":$OFFSET,\\"durationSec\\":$WINDOW_SEC,\\"fingerprint\\":\\"$FP\\"}" \\',
+    '        -d "{\\"offsetSec\\":$OFFSET,\\"durationSec\\":$WINDOW_SEC,\\"fingerprint\\":\\"$FP\\"$AUDIO_JSON}" \\',
     '        "$API_URL/internal/broadcast/$BROADCAST_ID/fingerprint-segment" || true',
     '    fi',
     '    rm -f /tmp/w.wav',

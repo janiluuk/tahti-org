@@ -143,3 +143,45 @@
   margin: 0;
   font-size: 0.85rem;
 }
+
+[data-tahti-ui='embed'] .embed-live-tracklist {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+}
+
+[data-tahti-ui='embed'] .embed-live-tracklist .ch-live-tracklist-heading {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+[data-tahti-ui='embed'] .ch-tracklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+[data-tahti-ui='embed'] .ch-tracklist-item {
+  display: grid;
+  grid-template-columns: 2.75rem 1fr;
+  gap: 0.35rem;
+  padding: 0.25rem 0;
+}
+
+[data-tahti-ui='embed'] .ch-tracklist-time {
+  font-family: ui-monospace, monospace;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+[data-tahti-ui='embed'] .ch-tracklist-artist {
+  color: var(--muted);
+  font-size: 0.75rem;
+}

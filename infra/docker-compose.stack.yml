@@ -30,10 +30,17 @@ x-app-env: &app-env
   ICECAST_HOST: icecast:8000
   RTMP_INGEST_HOST: rtmp-ingest
   RTMP_INGEST_HEALTH_PORT: "8080"
+  # STREAM-003: comma-separated public RTMP ingest hosts for OBS failover (second replica in prod)
+  RTMP_INGEST_HOSTS: ""
   ICECAST_PUBLIC_URL: http://localhost:${ICECAST_PORT:-18100}
   # STREAM-007: comma-separated public Icecast hosts for Mixxx failover (second replica in prod)
   ICECAST_INGEST_HOSTS: ""
   ICECAST_INGEST_HEALTH_PATH: /status-json.xsl
+  # STREAM-008 phase 3: optional AcoustID key for archive tracklist title lookup (https://acoustid.org/new-application)
+  ACOUSTID_API_KEY: ""
+  ACRCLOUD_HOST: identify-eu-west-1.acrcloud.com
+  ACRCLOUD_ACCESS_KEY: ""
+  ACRCLOUD_ACCESS_SECRET: ""
   HLS_BASE_URL: http://localhost:19000/hls-live
   HLS_SEGMENT_ROOT: /hls
   HLS_MINIO_BUCKET: hls-live
@@ -135,12 +142,31 @@ services:
     ports:
       - "${ICECAST_PORT:-18100}:8000"
 
+  # STREAM-007: optional second Icecast for local failover testing (`docker compose --profile icecast-failover up`)
+  icecast-b:
+    profiles: ["icecast-failover"]
+    image: moul/icecast:latest
+    volumes:
+      - ./stack/icecast.xml:/etc/icecast.xml:ro
+    ports:
+      - "${ICECAST_B_PORT:-18101}:8000"
+
   rtmp-ingest:
     image: tiangolo/nginx-rtmp:latest
     volumes:
       - ./stack/nginx-rtmp.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "${RTMP_PORT:-1935}:1935"
+
+  # STREAM-003: optional second RTMP ingest for local failover testing
+  rtmp-ingest-b:
+    profiles: ["rtmp-failover"]
+    image: tiangolo/nginx-rtmp:latest
+    volumes:
+      - ./stack/nginx-rtmp.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "${RTMP_B_PORT:-1936}:1935"
+      - "${RTMP_B_HEALTH_PORT:-8086}:8080"
 
   db-push:
     build:
@@ -229,6 +255,7 @@ services:
       HLS_VOLUME: tahti_stack_hls
       RECORDINGS_VOLUME: tahti_stack_recordings
       ARCHIVE_CACHE_VOLUME: tahti_stack_archive_cache
+      FINGERPRINT_SEND_AUDIO: "1"
     ports:
       - "${ORCHESTRATOR_PORT:-15003}:3003"
     volumes:

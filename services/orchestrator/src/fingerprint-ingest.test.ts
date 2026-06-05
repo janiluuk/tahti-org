@@ -29,6 +29,18 @@ describe('buildFingerprintIngestShell', () => {
     expect(shell).toContain('fingerprint-segment')
     expect(shell).toContain('BROADCAST_ID="bc_test"')
   })
+
+  it('includes MP3 sample when sendAudioSample is enabled', () => {
+    const shell = buildFingerprintIngestShell({
+      inputUrl: 'http://tahti-edge-demo:8090/stream',
+      broadcastId: 'bc_test',
+      apiUrl: 'http://api:3001',
+      internalSecret: 'dev-secret',
+      sendAudioSample: true,
+    })
+    expect(shell).toContain('audioSampleBase64')
+    expect(shell).toContain('/tmp/s.mp3')
+  })
 })
 
 describe('buildFingerprintIngestDockerCommand', () => {

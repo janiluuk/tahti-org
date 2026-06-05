@@ -1,0 +1,58 @@
+<icecast>
+    <location>Helsinki, Finland</location>
+    <admin>ops@tahti.live</admin>
+
+    <limits>
+        <clients>1000</clients>
+        <sources>50</sources>
+        <queue-size>524288</queue-size>
+        <client-timeout>30</client-timeout>
+        <header-timeout>15</header-timeout>
+        <source-timeout>10</source-timeout>
+        <burst-on-connect>1</burst-on-connect>
+        <burst-size>65536</burst-size>
+    </limits>
+
+    <authentication>
+        <source-password>REPLACE_VIA_ENV_OR_API</source-password>
+        <relay-password>REPLACE_VIA_ENV</relay-password>
+        <admin-user>admin</admin-user>
+        <admin-password>REPLACE_VIA_ENV</admin-password>
+    </authentication>
+
+    <hostname>ingest-icecast-b.tahti.live</hostname>
+
+    <listen-socket>
+        <port>8000</port>
+    </listen-socket>
+
+    <mount type="default">
+        <authentication type="url">
+            <option name="mount_add"    value="http://api:3000/internal/icecast/on_connect"/>
+            <option name="mount_remove" value="http://api:3000/internal/icecast/on_disconnect"/>
+            <option name="listener_add" value="http://api:3000/internal/icecast/on_listen"/>
+            <option name="headers"      value="Authorization"/>
+        </authentication>
+        <max-listeners>-1</max-listeners>
+        <dump-file>/recordings/live-%stream%-%Y%m%d-%H%M%S.mp3</dump-file>
+    </mount>
+
+    <paths>
+        <basedir>/usr/share/icecast2</basedir>
+        <logdir>/var/log/icecast2</logdir>
+        <webroot>/usr/share/icecast2/web</webroot>
+        <adminroot>/usr/share/icecast2/admin</adminroot>
+        <pidfile>/var/run/icecast2/icecast.pid</pidfile>
+    </paths>
+
+    <logging>
+        <accesslog>-</accesslog>
+        <errorlog>-</errorlog>
+        <loglevel>3</loglevel>
+        <logsize>10000</logsize>
+    </logging>
+
+    <security>
+        <chroot>0</chroot>
+    </security>
+</icecast>

@@ -6,6 +6,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import UploadForm from './upload-form'
 import StreamSettingsPanel from './stream-settings'
+import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import RtmpTargetsPanel from './rtmp-targets'
 import AnnouncementsPanel from './announcements-panel'
 import FanSubscriptionsPanel from './fan-subscriptions'
@@ -539,6 +540,16 @@ export default async function DashboardPage() {
 
       <div id="studio-settings" className="studio-section-anchor">
         {user.channel && streamSettings && <StreamSettingsPanel initial={streamSettings} />}
+
+        {user.channel?.state === 'LIVE' && (
+          <Panel title="Live tracklist">
+            <LiveTracklistPanel
+              slug={user.channel.slug}
+              heading="Detected tracks"
+              showPlaceholder
+            />
+          </Panel>
+        )}
 
         {user.channel && channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
 

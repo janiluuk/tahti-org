@@ -30,5 +30,10 @@ export function loadStoredChatHandle(): string | null {
   if (typeof window === 'undefined') return null
   const fromStorage = localStorage.getItem(CHAT_HANDLE_STORAGE_KEY)?.trim()
   if (fromStorage) return fromStorage.slice(0, 32)
-  return readChatHandleCookie()
+  const fromCookie = readChatHandleCookie()
+  if (fromCookie) {
+    persistChatHandle(fromCookie)
+    return fromCookie
+  }
+  return null
 }

@@ -10,7 +10,8 @@ version: "3.9"
 #   docker node update --label-add role=worker   <node-worker-01>
 #   docker node update --label-add role=worker   <node-worker-02>
 #   docker node update --label-add role=edge     <node-edge-01>
-#   docker node update --label-add role=ingest   <node-ingest-01>
+#   docker node update --label-add ingest_id=a  <node-ingest-01>
+#   docker node update --label-add ingest_id=b  <node-ingest-02>
 #
 # Create secrets (run once, values never leave the manager):
 #   echo -n "..." | docker secret create pg_password -
@@ -65,12 +66,16 @@ secrets:
   smtp_password:             { external: true }
   docs_user:                 { external: true }
   docs_pass:                 { external: true }
+  acrcloud_access_key:       { external: true }
+  acrcloud_access_secret:    { external: true }
+  acoustid_api_key:          { external: true }
 
 configs:
   caddyfile:    { file: ./Caddyfile }
   centrifugo:   { file: ./centrifugo.json }
   nginx_rtmp:   { file: ./nginx-rtmp.conf }
   icecast:      { file: ./icecast.xml }
+  icecast_b:    { file: ./icecast-b.xml }
   prometheus:   { file: ./prometheus.yml }
 
 services:
@@ -214,6 +219,20 @@ services:
       CENTRIFUGO_HOST: chat
       PUBLIC_CDN_BASE: https://cdn.tahti.live
       PUBLIC_HLS_BASE: https://stream.tahti.live
+      APP_URL: https://app.tahti.live
+      API_URL: https://api.tahti.live
+      ICECAST_HOST: icecast:8000
+      ICECAST_PUBLIC_URL: https://ingest-icecast.tahti.live
+      ICECAST_INGEST_HOSTS: https://ingest-icecast.tahti.live,https://ingest-icecast-b.tahti.live
+      ICECAST_INGEST_HEALTH_PATH: /status-json.xsl
+      RTMP_INGEST_HOST: ingest.tahti.live
+      RTMP_INGEST_HOSTS: ingest.tahti.live,ingest-b.tahti.live
+      RTMP_INGEST_HEALTH_PORT: "8080"
+      RTMP_INGEST_HEALTH_PATH: /health
+      ACRCLOUD_HOST: identify-eu-west-1.acrcloud.com
+      ACRCLOUD_ACCESS_KEY_FILE: /run/secrets/acrcloud_access_key
+      ACRCLOUD_ACCESS_SECRET_FILE: /run/secrets/acrcloud_access_secret
+      ACOUSTID_API_KEY_FILE: /run/secrets/acoustid_api_key
       SESSION_SECRET_FILE: /run/secrets/session_secret
       RTMP_KEY_FILE: /run/secrets/rtmp_key_encryption_key
       CENTRIFUGO_SECRET_FILE: /run/secrets/centrifugo_secret
@@ -234,6 +253,9 @@ services:
       - smtp_password
       - docs_user
       - docs_pass
+      - acrcloud_access_key
+      - acrcloud_access_secret
+      - acoustid_api_key
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
       interval: 15s
@@ -263,7 +285,8 @@ services:
       HLS_MINIO_BUCKET: hls-live
       HLS_STALE_SECONDS: "20"
       ARCHIVE_CACHE_ROOT: /archive-cache
-    secrets: [pg_password]
+      ACOUSTID_API_KEY_FILE: /run/secrets/acoustid_api_key
+    secrets: [pg_password, acoustid_api_key]
     volumes:
       - recordings_shared:/recordings:ro
       - hls_shared:/hls:ro
@@ -345,6 +368,8 @@ services:
       CHANNEL_NETWORK: tahti_internal
       ICECAST_BASE_URL: http://icecast:8000
       RTMP_INGEST_URL: rtmp://rtmp-ingest:1935
+      API_URL: http://api:3000
+      FINGERPRINT_SEND_AUDIO: "1"
       HLS_VOLUME: hls_shared
       RECORDINGS_VOLUME: recordings_shared
       ARCHIVE_CACHE_VOLUME: archive_cache_shared
@@ -362,10 +387,6 @@ services:
   icecast:
     image: moul/icecast:latest
     networks: [ingest, internal]
-    ports:
-      - target: 8000
-        published: 8000
-        mode: host
     configs:
       - source: icecast
         target: /etc/icecast.xml
@@ -374,7 +395,23 @@ services:
     deploy:
       replicas: 1
       placement:
-        constraints: [node.labels.role == ingest]
+        constraints: [node.labels.ingest_id == a]
+      resources:
+        limits: { cpus: "2", memory: 1G }
+
+  # STREAM-007: second Icecast ingest replica (Mixxx/Traktor failover)
+  icecast-b:
+    image: moul/icecast:latest
+    networks: [ingest, internal]
+    configs:
+      - source: icecast_b
+        target: /etc/icecast.xml
+    volumes:
+      - recordings_shared:/recordings
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.ingest_id == b]
       resources:
         limits: { cpus: "2", memory: 1G }
 
@@ -396,7 +433,27 @@ services:
     deploy:
       replicas: 1
       placement:
-        constraints: [node.labels.role == ingest]
+        constraints: [node.labels.ingest_id == a]
+      resources:
+        limits: { cpus: "2", memory: 1G }
+
+  # STREAM-003: second RTMP ingest replica (OBS failover — DNS A record to ingest-b node)
+  rtmp-ingest-b:
+    image: tiangolo/nginx-rtmp:latest
+    networks: [ingest, internal]
+    ports:
+      - target: 1935
+        published: 1935
+        mode: host
+    configs:
+      - source: nginx_rtmp
+        target: /etc/nginx/nginx.conf
+    volumes:
+      - hls_shared:/srv/hls
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.labels.ingest_id == b]
       resources:
         limits: { cpus: "2", memory: 1G }
 

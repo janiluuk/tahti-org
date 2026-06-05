@@ -2,11 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { createClient } from 'redis'
-import {
-  broadcastFingerprintRedisKey,
-  fingerprintsToTracklistEntries,
-  type LiveFingerprintSegment,
-} from '@tahti/shared'
+import { broadcastFingerprintRedisKey, type LiveFingerprintSegment } from '@tahti/shared'
 
 function redisUrl(): string {
   return process.env.REDIS_URL ?? 'redis://localhost:6379'
@@ -42,5 +38,3 @@ export async function clearBroadcastFingerprintSegments(broadcastId: string): Pr
     await client.disconnect()
   }
 }
-
-export { fingerprintsToTracklistEntries }

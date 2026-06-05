@@ -84,3 +84,41 @@ Full bucket swap only during DR cutover — document DNS/Caddy target before swi
 - Cron runs status check daily at 03:30 UTC after backup (see `install-crons.sh`).
 - Weekly restore-test log: `/var/log/tahti-restore-test.log`
 - Worker BullMQ crons: `apps/worker/src/cron-manifest.ts`
+
+## Ingest failover env (STREAM-003 / STREAM-007)
+
+Health-ranked ingest URLs on `GET /api/me/stream-settings` require comma-separated public host lists:
+
+| Variable | Service | Health probe |
+|----------|---------|--------------|
+| `RTMP_INGEST_HOSTS` | api | `RTMP_INGEST_HEALTH_SCHEME` + port + `RTMP_INGEST_HEALTH_PATH` (default `/health`) |
+| `ICECAST_INGEST_HOSTS` | api | `{host}/status-json.xsl` |
+
+Set on **api** only. Example production:
+
+```bash
+ICECAST_INGEST_HOSTS=https://icecast-a.tahti.live,https://icecast-b.tahti.live
+RTMP_INGEST_HOSTS=ingest-a.tahti.live,ingest-b.tahti.live
+```
+
+Archive tracklist title lookup (STREAM-008): **ACRCloud** at ingest (MP3 sample from sidecar when `FINGERPRINT_SEND_AUDIO=1`) with **AcoustID** chromaprint fallback on archive/live polling.
+
+**Secrets on manager** (empty string disables lookup):
+
+```bash
+echo -n "$ACRCLOUD_KEY" | docker secret create acrcloud_access_key -
+echo -n "$ACRCLOUD_SECRET" | docker secret create acrcloud_access_secret -
+echo -n "$ACOUSTID_KEY" | docker secret create acoustid_api_key -
+```
+
+**Ingest replicas (prod Swarm):** label two nodes `ingest_id=a` and `ingest_id=b`; deploy `icecast`/`rtmp-ingest` on **a**, `icecast-b`/`rtmp-ingest-b` on **b**. DNS:
+
+- `ingest.tahti.live`, `ingest-b.tahti.live` → RTMP (port 1935 on each node)
+- `ingest-icecast.tahti.live`, `ingest-icecast-b.tahti.live` → Caddy → Icecast
+
+Optional local failover profiles:
+
+```bash
+docker compose -f infra/docker-compose.stack.yml --profile icecast-failover up -d icecast-b
+docker compose -f infra/docker-compose.stack.yml --profile rtmp-failover up -d rtmp-ingest-b
+```
