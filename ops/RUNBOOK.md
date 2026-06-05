@@ -157,6 +157,7 @@ See also `docs/technical/journey-ops.md` (Journey 4 — backup drill).
 - **Upptime** (public status page): [`ops/upptime/README.md`](upptime/README.md) — monitors `/api/v1/status` and `/health`.
 - **Interim uptime GHA** (until Upptime fork): `.github/workflows/status-monitor.yml` — hourly when repo var `STATUS_MONITOR_ENABLED=true`; manual `./scripts/status-monitor.sh`.
 - **Tor exit bundled list**: weekly `.github/workflows/tor-exit-sync.yml` opens a PR; worker `tor-exit-list-sync` updates Redis daily; CI runs `pnpm tor-exit:check`.
+- **Newsletter bounces** (M13): `POST /api/webhooks/email/bounce` — Postmark bounce/spam or AWS SNS; header `X-Tahti-Webhook-Secret` must match `EMAIL_BOUNCE_WEBHOOK_SECRET` in `stack.env`. Hard bounces and complaints auto-unsubscribe.
 - Backup age: `./scripts/backup.sh status` (env: `BACKUP_WARN_AGE_HOURS=26`, `BACKUP_PAGE_AGE_HOURS=48`).
   Also prints `minio_dr_postgres_backup_age_hours` when `DST_ALIAS` (default `tahti-dr`) is configured.
 - Prometheus: `tahti_postgres_backup_age_hours` on `GET /metrics` (lists MinIO `backups/pg/` from API).
