@@ -141,6 +141,7 @@ describe('M1 — membership payment', () => {
         object: {
           id: 'cs_test_membership',
           amount_total: 4000,
+          subscription: 'sub_mship_webhook',
           metadata: { type: 'membership', userId: pending.id },
         },
       },
@@ -165,9 +166,74 @@ describe('M1 — membership payment', () => {
     const count = await prisma.ledgerEntry.count({
       where: { externalRef: 'membership:cs_test_membership' },
     })
-    expect(count).toBe(1)
+    expect(count).toBe(0)
+
+    const activated = await prisma.user.findUnique({ where: { id: pending.id } })
+    expect(activated?.isMember).toBe(true)
+    expect(activated?.stripeMembershipSubscriptionId).toBe('sub_mship_webhook')
 
     await prisma.user.delete({ where: { id: pending.id } })
+  })
+
+  it('webhook invoice.paid renews membership subscription', async () => {
+    const passwordHash = await hashPassword('testpassword')
+    const memberSince = new Date(Date.now() - 400 * 24 * 60 * 60 * 1000)
+    const lapsed = await prisma.user.create({
+      data: {
+        email: `${PREFIX}invoice@example.com`,
+        passwordHash,
+        username: 'mship-invoice',
+        displayName: 'Invoice Renew',
+        emailVerifiedAt: new Date(),
+        isMember: false,
+        tier: 'FREE',
+        memberNumber: 9001,
+        memberSince,
+        stripeMembershipSubscriptionId: 'sub_mship_invoice',
+        membership: { create: { status: 'SUSPENDED', activatedAt: memberSince } },
+        channel: {
+          create: {
+            slug: 'mship-invoice',
+            liveSourceMount: '/live/x',
+            liveSourcePass: 'x',
+            liveSourcePassHash: 'x',
+            rtmpStreamKey: 'mship-invoice__x',
+            rtmpStreamKeyHash: 'x',
+          },
+        },
+      },
+    })
+
+    const periodStart = Math.floor(Date.now() / 1000) - 3600
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/webhooks/stripe',
+      headers: { 'content-type': 'application/json' },
+      payload: JSON.stringify({
+        type: 'invoice.paid',
+        data: {
+          object: {
+            id: 'in_mship_renew',
+            subscription: 'sub_mship_invoice',
+            amount_paid: 4000,
+            period_start: periodStart,
+            period_end: periodStart + 365 * 24 * 3600,
+          },
+        },
+      }),
+    })
+    expect(res.statusCode).toBe(200)
+
+    const updated = await prisma.user.findUnique({ where: { id: lapsed.id } })
+    expect(updated?.isMember).toBe(true)
+    expect(updated?.tier).toBe('ARTIST')
+
+    const ledger = await prisma.ledgerEntry.findFirst({
+      where: { externalRef: 'membership-invoice:in_mship_renew' },
+    })
+    expect(ledger?.category).toBe('REVENUE_SUBSCRIPTION')
+
+    await prisma.user.delete({ where: { id: lapsed.id } })
   })
 
   it('webhook returns received when membership user is missing', async () => {

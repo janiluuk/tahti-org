@@ -63,7 +63,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | Milestone | State | Evidence / notes |
 |---|---|---|
 | **M0** Skeleton | ✅ Done | pnpm + Turborepo monorepo, AGPL headers, CI, `/health`, `/source`, footer link |
-| **M1** Accounts + membership | 🟡 Partial | Email/password signup, email verify, sessions; verify → `PENDING_PAYMENT`; `POST /api/me/membership/checkout` (Stripe Checkout via REST when configured, dev-direct otherwise); webhook `checkout.session.completed` → `REVENUE_SUBSCRIPTION` ledger + `isMember` + member number; **`POST /api/me/membership/portal`** + dashboard “Manage billing” when Stripe configured; board CSV export; **renewal reminder** + **membership lapse** worker crons (~30d before expiry, 365d ARTIST tier). Deferred: Stripe subscription renewal (annual manual renew path) |
+| **M1** Accounts + membership | 🟡 Partial | Email/password signup, email verify, sessions; verify → `PENDING_PAYMENT`; `POST /api/me/membership/checkout` (Stripe Checkout **annual subscription** when configured, dev-direct otherwise); webhook `checkout.session.completed` + `invoice.paid` → membership + ledger; **`POST /api/me/membership/portal`** + dashboard “Manage billing”; board CSV export; **renewal reminder** + **membership lapse** worker crons. Deferred: migrate legacy one-time members to subscriptions |
 | **M2** Channel + archive upload | ✅ Done | Presigned S3-multipart upload (resolves Topic 5 → option A), transcode worker, channel page |
 | **M3** Live ingress + orchestrator | ✅ Done | Icecast + RTMP webhooks, orchestrator + Liquidsoap template, HLS player. Path-based routing `/c/<slug>` (resolves Topic 9 → option B/C). WebRTC browser-live deferred (Topic 6) |
 | **M4** Auto-archive | ✅ Done | `archive-broadcast` worker finalizes live recordings into archive items |
@@ -108,7 +108,7 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Fix GitHub Actions CI so it actually runs (was a 0s "workflow file issue" on every run — job-level `hashFiles()` + a pnpm version conflict; also only triggered on PRs to `main`) | Tests never executed in CI; suite now runs on every PR with Postgres + Redis services | CI |
 | [x] | Consolidate CI: lint job, vital-flows e2e, user-journey e2e, AGPL check, website Docker | Single `ci.yml` gate; Playwright screenshots stay local-only (`scripts/e2e-screenshots.sh`) | CI |
 | [x] | Full local Docker stack (`stack-up.sh`, ports 3010/3011) + scaling node doc | Dev/stakeholder demos without host port clashes; ops handover reference | M11 / Phase 2 |
-| [~] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | `/c`, `/u`, `/r` brand layouts; **`/dashboard` studio shell** (`brand-studio.css`) | M12 / DX |
+| [x] | Wire `@tahti/ui` into `apps/web` (tokens + components exist, web still uses inline CSS) | `/c`, `/u`, `/r` brand layouts; **`/dashboard` studio shell** (`brand-studio.css`) | M12 / DX |
 | [x] | `@tahti/ui`: add `lint` script to Turbo pipeline | `packages/ui` ESLint via `turbo lint` | CI |
 | [x] | Consolidate e2e seed scripts (`scripts/seed-e2e-screenshots.ts` vs `apps/api/scripts/`) | Root script re-exports `apps/api/scripts/seed-e2e-screenshots.ts` | CI / DX |
 | [x] | Stripe webhook: return **500** on handler failure (Stripe retries; audit log retained) | Silent membership/fan-sub activation failures | M19 hardening |

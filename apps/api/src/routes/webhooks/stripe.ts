@@ -2,13 +2,17 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { constructWebhookEvent } from '../../lib/stripe.js'
+import {
+  constructWebhookEvent,
+  fetchSubscriptionMetadata,
+  stripeEnabled,
+} from '../../lib/stripe.js'
 import {
   activateSubscription,
   markFanSubCanceledAtPeriodEnd,
   recordFanSubPayment,
 } from '../../lib/fansub.js'
-import { activateMembership } from '../../lib/membership.js'
+import { activateMembership, recordMembershipRenewal } from '../../lib/membership.js'
 import { auditLog } from '../../lib/audit.js'
 import {
   recordStripeWebhookHandlerFailure,
@@ -49,10 +53,13 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
           if (meta.type !== 'membership' || !meta.userId) break
           const amount = obj.amount_total != null ? Number(obj.amount_total) : undefined
           const customerId = obj.customer != null ? String(obj.customer) : undefined
+          const subscriptionId = obj.subscription != null ? String(obj.subscription) : undefined
           await activateMembership(fastify.prisma, meta.userId, {
             stripeSessionId: String(obj.id),
             amountCents: amount,
             stripeCustomerId: customerId,
+            stripeSubscriptionId: subscriptionId,
+            recordLedger: !subscriptionId,
           })
           break
         }
@@ -75,19 +82,59 @@ const stripeWebhookRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         case 'invoice.paid': {
-          const subId = String(obj.subscription ?? '')
-          const sub = await fastify.prisma.fanSubscription.findUnique({
+          const subId = obj.subscription != null ? String(obj.subscription) : ''
+          if (subId) {
+            let memberUserId: string | null = null
+            const linked = await fastify.prisma.user.findFirst({
+              where: { stripeMembershipSubscriptionId: subId },
+              select: { id: true },
+            })
+            if (linked) {
+              memberUserId = linked.id
+            } else if (stripeEnabled) {
+              try {
+                const subMeta = await fetchSubscriptionMetadata(subId)
+                if (subMeta.type === 'membership' && subMeta.userId) {
+                  memberUserId = subMeta.userId
+                }
+              } catch (err) {
+                request.log.warn(
+                  { err, subId },
+                  'membership invoice: subscription metadata fetch failed',
+                )
+              }
+            }
+
+            if (memberUserId) {
+              const periodStart = obj.period_start
+                ? new Date(Number(obj.period_start) * 1000)
+                : new Date()
+              const periodEnd = obj.period_end ? new Date(Number(obj.period_end) * 1000) : undefined
+              const customerId = obj.customer != null ? String(obj.customer) : undefined
+              await recordMembershipRenewal(fastify.prisma, memberUserId, {
+                stripeInvoiceId: String(obj.id),
+                amountCents: Number(obj.amount_paid ?? 0),
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subId,
+                periodStart,
+                periodEnd,
+              })
+              break
+            }
+          }
+
+          const fanSub = await fastify.prisma.fanSubscription.findUnique({
             where: { stripeSubscriptionId: subId },
           })
-          if (!sub) break
+          if (!fanSub) break
           const periodStart = obj.period_start
             ? new Date(Number(obj.period_start) * 1000)
             : new Date()
           const periodEnd = obj.period_end ? new Date(Number(obj.period_end) * 1000) : new Date()
           await recordFanSubPayment(fastify.prisma, {
-            subscriptionId: sub.id,
-            artistUserId: sub.artistUserId,
-            grossCents: Number(obj.amount_paid ?? sub.amountCents),
+            subscriptionId: fanSub.id,
+            artistUserId: fanSub.artistUserId,
+            grossCents: Number(obj.amount_paid ?? fanSub.amountCents),
             periodStart,
             periodEnd,
           })

@@ -141,6 +141,8 @@ export default async function DashboardPage() {
     memberNumber: number | null
     priceCents: number
     emailVerified: boolean
+    renewalDueAt?: string | null
+    hasStripeSubscription?: boolean
   }
   let membershipInfo: MembershipInfo | null = null
   try {
@@ -502,6 +504,8 @@ export default async function DashboardPage() {
           memberNumber={membershipInfo.memberNumber}
           priceCents={membershipInfo.priceCents}
           emailVerified={membershipInfo.emailVerified}
+          hasStripeSubscription={membershipInfo.hasStripeSubscription}
+          renewalDueAt={membershipInfo.renewalDueAt}
         />
       )}
 

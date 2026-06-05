@@ -21,7 +21,7 @@ Last reviewed: 2026-06-03 (audit pass)
 
 1. Streaming scale blockers (STREAM-001 sync cron partial, STREAM-004; STREAM-005 watchdog done)
 2. Fan-sub live payout retry + M19 newsletter fan-only send UI
-3. Wire `@tahti/ui` into dashboard/public pages
+3. ~~Wire `@tahti/ui` into dashboard/public pages~~ — PLAT-020 done
 4. Backup runbooks + Upptime (M11)
 5. Legal/infra Phase 0–2 (Tahti ry, hardware, staging)
 
@@ -46,6 +46,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | ~~P1~~ | ~~Stripe Customer Portal~~ — `POST /api/me/membership/portal` (done) |
 | ~~P1~~ | ~~Renewal reminder emails before lapse~~ — worker cron (done) |
 | ~~P2~~ | ~~Membership lapse → downgrade tier to `FREE` automatically~~ — worker cron (done) |
+| ~~P1~~ | ~~Stripe Checkout annual subscription + `invoice.paid` renewal ledger~~ — `createMembershipCheckoutSession`, `recordMembershipRenewal` |
 
 ### M19 — Fan subscriptions
 | P | Item |
@@ -149,8 +150,8 @@ Last reviewed: 2026-06-03 (audit pass)
 
 | P | Item | Benefit |
 |---|---|---|
-| P1 | Wire `@tahti/ui` into `apps/web` | One design system; delete duplicated CSS |
-| P1 | Zod on all route bodies | Consistent validation + types |
+| P1 | Wire `@tahti/ui` into `apps/web` | One design system; delete duplicated CSS | **Done** (PLAT-020) |
+| P1 | Zod on all route bodies | Consistent validation + types | PLAT-021 (partial) |
 | P2 | Single e2e seed module (`apps/api/scripts/seed-e2e-screenshots.ts` only) | Less Docker/host confusion |
 | P2 | Worker cron manifest (one registry file) | Easier ops audit of scheduled jobs |
 | P2 | Shared Vitest `TestContext` fixture | Less boilerplate across 56 test files |
@@ -190,7 +191,8 @@ Last reviewed: 2026-06-03 (audit pass)
 ### Frontend
 | P | Item | Benefit |
 |---|---|---|
-| ~~P1~~ | ~~Shared design tokens / component library~~ — `packages/ui` created; **adoption pending** | PLAT-020 |
+| ~~P1~~ | ~~Wire `@tahti/ui` into `apps/web`~~ — studio + public brand shells (PLAT-020) |
+| P1 | Zod on all route bodies | PLAT-021 (partial) |
 | ~~P2~~ | ~~Server-side profile markdown rendering (sanitised)~~ — plain-text escape on profile/channel/subscribe (`SafePlainText`) |
 | P2 | Image optimisation for `avatarUrl` / `artworkUrl` | Profile LCP < 1.5s |
 
