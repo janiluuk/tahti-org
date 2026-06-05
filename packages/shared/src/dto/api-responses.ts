@@ -892,3 +892,29 @@ export const ReleaseTrackDownloadUrlSchema = z.object({
   format: z.enum(['flac', 'opus']),
   expiresInSec: z.number().int(),
 })
+
+export const ChatAccessResponseSchema = z.object({
+  fanChatEnabled: z.boolean(),
+  isSupporter: z.boolean(),
+  canJoinFanChat: z.boolean(),
+})
+
+export const ChatFanTokenResponseSchema = z.object({
+  token: z.string(),
+  handle: z.string(),
+  channel: z.string(),
+  supporter: z.literal(true),
+})
+
+export const ChatPublishAckSchema = z.object({
+  result: z.object({}).passthrough(),
+})
+
+export const StripeWebhookAckSchema = z.object({
+  received: z.boolean(),
+})
+
+export const StripeWebhookErrorSchema = z.object({
+  error: z.string(),
+  received: z.boolean().optional(),
+})
