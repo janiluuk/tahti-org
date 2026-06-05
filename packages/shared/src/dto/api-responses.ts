@@ -166,12 +166,15 @@ export const StreamSettingsResponseSchema = z.object({
   rtmp: z.object({
     server: z.string(),
     streamKey: z.string(),
+    /** STREAM-003: alternate RTMP servers when primary ingest is unreachable. */
+    fallbackServers: z.array(z.string()).optional(),
   }),
   icecast: z.object({
     server: z.string(),
     mount: z.string(),
     password: z.string(),
     hint: z.string(),
+    fallbackServers: z.array(z.string()).optional(),
   }),
   hlsUrl: z.string(),
 })

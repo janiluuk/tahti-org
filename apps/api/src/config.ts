@@ -48,6 +48,13 @@ export const config = {
   orchestratorUrl: process.env.ORCHESTRATOR_URL ?? 'http://localhost:3003',
   hlsBaseUrl: process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live',
   rtmpIngestHost: process.env.RTMP_INGEST_HOST ?? 'localhost',
+  /** STREAM-003: comma-separated RTMP ingest hostnames for health-ranked failover. */
+  rtmpIngestHosts: process.env.RTMP_INGEST_HOSTS ?? '',
+  rtmpIngestHealthPort: parseInt(process.env.RTMP_INGEST_HEALTH_PORT ?? '8080', 10),
+  rtmpIngestHealthPath: process.env.RTMP_INGEST_HEALTH_PATH ?? '/health',
+  rtmpIngestHealthScheme: process.env.RTMP_INGEST_HEALTH_SCHEME ?? 'http',
+  /** STREAM-003: comma-separated Icecast ingest hostnames (public URLs). */
+  icecastIngestHosts: process.env.ICECAST_INGEST_HOSTS ?? '',
   /** Internal hostname:port for Liquidsoap pull and ops (e.g. icecast:8000). */
   icecastHost: process.env.ICECAST_HOST ?? 'localhost:8100',
   /** Public ingest URL shown in dashboard (e.g. https://ingest-icecast.tahti.live or http://localhost:8100). */
