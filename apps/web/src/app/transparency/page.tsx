@@ -43,9 +43,12 @@ function categoryLabel(code: string): string {
 export default async function TransparencyPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
-  const [ytdRes, rollupRes] = await Promise.all([
+  const [ytdRes, rollupRes, resolutionsRes] = await Promise.all([
     fetch(`${apiUrl}/api/v1/transparency/ytd`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/v1/transparency/monthly_rollup?year=${new Date().getFullYear()}`, {
+      cache: 'no-store',
+    }),
+    fetch(`${apiUrl}/api/v1/transparency/resolutions?year=${new Date().getFullYear()}`, {
       cache: 'no-store',
     }),
   ])
@@ -60,6 +63,17 @@ export default async function TransparencyPage() {
       }
 
   const rollups: MonthlyRollup[] = rollupRes.ok ? ((await rollupRes.json()) as MonthlyRollup[]) : []
+
+  const resolutions: Array<{
+    id: string
+    title: string
+    body: string
+    votedAt: string
+    outcome: string
+    voteFor: number
+    voteAgainst: number
+    voteAbstain: number
+  }> = resolutionsRes.ok ? await resolutionsRes.json() : []
 
   const revenueKeys = Object.keys(ytd.byCategory).filter((k) => k.startsWith('REVENUE_'))
   const costKeys = Object.keys(ytd.byCategory).filter((k) => k.startsWith('COST_'))
@@ -139,6 +153,24 @@ export default async function TransparencyPage() {
 
       {rollups.length === 0 && (
         <p className="brand-empty">No financial data published yet for {ytd.year}.</p>
+      )}
+
+      {resolutions.length > 0 && (
+        <section className="brand-section">
+          <h2 className="brand-section__title">Board resolutions ({ytd.year})</h2>
+          <ul className="brand-section">
+            {resolutions.map((r) => (
+              <li key={r.id} className="brand-card">
+                <h3>{r.title}</h3>
+                <p className="brand-muted">
+                  {r.outcome} · voted {new Date(r.votedAt).toLocaleDateString()} · {r.voteFor}/
+                  {r.voteAgainst}/{r.voteAbstain}
+                </p>
+                <p style={{ whiteSpace: 'pre-wrap' }}>{r.body}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       <footer className="brand-footer">

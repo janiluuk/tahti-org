@@ -39,3 +39,22 @@ export async function restartChannelLiquidsoap(
     throw new Error(`Orchestrator restart returned ${res.status}`)
   }
 }
+
+/** M20/M21: stop per-channel Liquidsoap (warn-only — channel may already be offline). */
+export async function stopOrchestratorChannel(channelId: string): Promise<void> {
+  try {
+    const res = await fetch(`${config.orchestratorUrl}/stop`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.internalSecret}`,
+      },
+      body: JSON.stringify({ channelId }),
+    })
+    if (!res.ok) {
+      console.warn(`[api] orchestrator /stop returned ${res.status} for ${channelId}`)
+    }
+  } catch (err) {
+    console.warn(`[api] orchestrator /stop failed for ${channelId}:`, err)
+  }
+}

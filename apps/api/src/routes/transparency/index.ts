@@ -6,6 +6,7 @@ import {
   TransparencyCategoriesResponseSchema,
   TransparencyGrantReportSchema,
   TransparencyMonthlyRollupListSchema,
+  TransparencyResolutionListSchema,
   TransparencyYearQuerySchema,
   TransparencyYtdResponseSchema,
   openApiResponse,
@@ -162,6 +163,59 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
         runningSurplus: totalSurplus.toString(),
         monthsFinalized: rollups.length,
       })
+    },
+  )
+
+  fastify.get(
+    '/api/v1/transparency/resolutions',
+    {
+      schema: {
+        tags: ['transparency'],
+        description: 'Published board resolutions for a calendar year',
+        response: openApiResponse(TransparencyResolutionListSchema, 'TransparencyResolutionList'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = TransparencyYearQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid query',
+        })
+      }
+      const year = parsed.data.year ? parseInt(parsed.data.year, 10) : new Date().getFullYear()
+      const yearStart = new Date(Date.UTC(year, 0, 1))
+      const yearEnd = new Date(Date.UTC(year + 1, 0, 1))
+
+      const rows = await fastify.prisma.boardResolution.findMany({
+        where: {
+          publishedAt: { not: null },
+          votedAt: { gte: yearStart, lt: yearEnd },
+        },
+        orderBy: { votedAt: 'asc' },
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          votedAt: true,
+          outcome: true,
+          voteFor: true,
+          voteAgainst: true,
+          voteAbstain: true,
+        },
+      })
+
+      return reply.send(
+        rows.map((r) => ({
+          id: r.id.toString(),
+          title: r.title,
+          body: r.body,
+          votedAt: r.votedAt,
+          outcome: r.outcome,
+          voteFor: r.voteFor,
+          voteAgainst: r.voteAgainst,
+          voteAbstain: r.voteAbstain,
+        })),
+      )
     },
   )
 }

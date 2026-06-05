@@ -20,6 +20,7 @@ import ChannelSchedulePanel from './channel-schedule-panel'
 import type { ProgrammeItemRow } from './programme-actions'
 import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
+import PrivacyPanel from './privacy-panel'
 import BroadcastUsageBanner from './broadcast-usage'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelEgressPanel } from './channel-egress-panel'
@@ -509,6 +510,8 @@ export default async function DashboardPage() {
           renewalDueAt={membershipInfo.renewalDueAt}
         />
       )}
+
+      <PrivacyPanel username={user.username} apiUrl={apiUrl} />
 
       {user.channel && (
         <Panel title="Your channel">

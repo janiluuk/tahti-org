@@ -43,6 +43,9 @@ export default async function VenuesDirectoryPage() {
           Cultural venues and spaces that host Tahti live broadcasts. Subscribe to a venue calendar
           from its profile page.
         </Text>
+        <Text size="sm">
+          <Link href="/venues/register">Register a venue →</Link>
+        </Text>
       </div>
 
       {venues.length === 0 ? (

@@ -354,6 +354,11 @@ model User {
   collections           Collection[]
   artistFollowers       ArtistFollow[]       @relation("ArtistFollowers")
   artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
+  supportTickets        SupportTicket[]      @relation("SupportTicketArtist")
+  supportTicketsAssigned SupportTicket[]     @relation("SupportAssignee")
+  supportTicketNotes    SupportTicketNote[]
+  boardResolutionsCreated BoardResolution[]
+  annualReportsGenerated  AnnualReport[]
 
   @@schema("core")
 }
@@ -1132,5 +1137,91 @@ model CronRun {
   errorMessage String?
 
   @@index([jobName, startedAt(sort: Desc)])
+  @@schema("admin")
+}
+
+enum SupportCategory {
+  ENGAGEMENT_DISPUTE
+  TECHNICAL
+  FINANCIAL
+  OTHER
+
+  @@schema("admin")
+}
+
+enum SupportStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+
+  @@schema("admin")
+}
+
+enum ResolutionOutcome {
+  PASSED
+  FAILED
+  DEFERRED
+
+  @@schema("admin")
+}
+
+model SupportTicket {
+  id           BigInt              @id @default(autoincrement())
+  artistId     String?
+  artist       User?               @relation("SupportTicketArtist", fields: [artistId], references: [id], onDelete: SetNull)
+  contactEmail String?
+  subject      String
+  message      String
+  category     SupportCategory
+  status       SupportStatus       @default(OPEN)
+  assignedToId String?
+  assignedTo   User?               @relation("SupportAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  notes        SupportTicketNote[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([status, createdAt(sort: Desc)])
+  @@schema("admin")
+}
+
+model SupportTicketNote {
+  id        BigInt        @id @default(autoincrement())
+  ticketId  BigInt
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  body      String
+  authorId  String?
+  author    User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId, createdAt(sort: Asc)])
+  @@schema("admin")
+}
+
+model BoardResolution {
+  id           BigInt            @id @default(autoincrement())
+  title        String
+  body         String
+  votedAt      DateTime
+  outcome      ResolutionOutcome
+  voteFor      Int
+  voteAgainst  Int
+  voteAbstain  Int
+  createdById  String
+  createdBy    User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  publishedAt  DateTime?
+  createdAt    DateTime          @default(now())
+
+  @@index([votedAt(sort: Desc)])
+  @@schema("admin")
+}
+
+model AnnualReport {
+  id            BigInt   @id @default(autoincrement())
+  year          Int      @unique
+  storageKey    String
+  generatedAt   DateTime @default(now())
+  generatedById String
+  generatedBy   User     @relation(fields: [generatedById], references: [id], onDelete: Cascade)
+
   @@schema("admin")
 }

@@ -31,18 +31,35 @@ interface StatusCheck {
 }
 
 export default async function AdminDashboardPage() {
-  const [statusRes, ytdRes, membersRes, streamsRes, queuesRes, cronRes, auditRes] =
-    await Promise.all([
-      boardFetch('/api/v1/status'),
-      boardFetch('/api/v1/transparency/ytd'),
-      boardFetch('/api/admin/stats/members'),
-      boardFetch('/api/admin/streams'),
-      boardFetch('/api/admin/stats/queues'),
-      boardFetch('/api/admin/stats/cron-runs'),
-      boardFetch('/api/admin/audit/recent'),
-    ])
+  const [
+    statusRes,
+    ytdRes,
+    membersRes,
+    streamsRes,
+    queuesRes,
+    cronRes,
+    auditRes,
+    fansubsRes,
+    supportRes,
+  ] = await Promise.all([
+    boardFetch('/api/v1/status'),
+    boardFetch('/api/v1/transparency/ytd'),
+    boardFetch('/api/admin/stats/members'),
+    boardFetch('/api/admin/streams'),
+    boardFetch('/api/admin/stats/queues'),
+    boardFetch('/api/admin/stats/cron-runs'),
+    boardFetch('/api/admin/audit/recent'),
+    boardFetch('/api/admin/fansubs/overview'),
+    boardFetch('/api/admin/support/tickets?status=OPEN&limit=1'),
+  ])
 
-  const failedPayoutCount = 0
+  const failedPayoutCount = fansubsRes.ok
+    ? ((await fansubsRes.json()) as { failedPayouts: { count: number } }).failedPayouts.count
+    : 0
+
+  const openSupportCount = supportRes.ok
+    ? ((await supportRes.json()) as { total: number }).total
+    : 0
 
   const status = statusRes.ok
     ? ((await statusRes.json()) as { checks: Record<string, StatusCheck> })
@@ -128,7 +145,10 @@ export default async function AdminDashboardPage() {
             Revenue {formatEur(revenue)} · Costs {formatEur(costs)}
           </p>
           {failedPayoutCount > 0 ? (
-            <p className="admin-warn">{failedPayoutCount} failed fan-sub payouts</p>
+            <p className="admin-warn">
+              {failedPayoutCount} failed fan-sub payout{failedPayoutCount === 1 ? '' : 's'} ·{' '}
+              <Link href="/admin/financial/fansubs">View queue →</Link>
+            </p>
           ) : null}
         </section>
 
@@ -137,6 +157,17 @@ export default async function AdminDashboardPage() {
           <p className="admin-stat">{members.total}</p>
           <p className="admin-stat-sub">
             +{members.newThisMonth} this month · {members.lapsedThisMonth} lapsed
+          </p>
+        </section>
+
+        <section className="admin-card">
+          <h2>Support</h2>
+          <p className={`admin-stat ${openSupportCount > 0 ? 'admin-warn' : ''}`}>
+            {openSupportCount}
+          </p>
+          <p className="admin-stat-sub">
+            open ticket{openSupportCount === 1 ? '' : 's'} ·{' '}
+            <Link href="/admin/support">View queue →</Link>
           </p>
         </section>
       </div>
@@ -231,7 +262,9 @@ export default async function AdminDashboardPage() {
           </table>
         </div>
         <p className="admin-stat-sub">
-          <a href="/api/admin/audit/export.csv">Export full audit log (CSV)</a>
+          <Link href="/admin/governance/audit">Full audit log →</Link>
+          {' · '}
+          <a href="/api/admin/audit/export.csv">Export CSV</a>
         </p>
       </section>
     </>

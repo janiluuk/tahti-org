@@ -63,6 +63,22 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
     }
 
     const ip = request.ip ?? '0.0.0.0'
+
+    if (request.url.startsWith('/api/support/contact') && request.method === 'POST') {
+      const limit = { max: 3, windowSec: 3600, keyPrefix: 'support' }
+      const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
+        rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec),
+      )
+      reply.header('X-RateLimit-Remaining', remaining)
+      reply.header('X-RateLimit-Reset', resetSec)
+      if (!ok) {
+        return reply
+          .status(429)
+          .send({ error: 'Too many support requests', retryAfterSec: resetSec })
+      }
+      return
+    }
+
     const isAuthRoute = AUTH_ROUTES.some((r) => request.url.startsWith(r))
     const limit = isAuthRoute ? authLimit() : defaultLimit()
 
