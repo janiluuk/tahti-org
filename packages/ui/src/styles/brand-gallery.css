@@ -1,0 +1,126 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Channel gallery + tracklist (PLAT-020) */
+
+[data-tahti-ui='brand'] .ch-tracklist {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-tracklist-item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+}
+
+[data-tahti-ui='brand'] .ch-tracklist-time {
+  font-family: ui-monospace, monospace;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-tracklist-title {
+  font-weight: 500;
+}
+
+[data-tahti-ui='brand'] .ch-tracklist-artist {
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-tracklist-artist a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .ch-tracklist-artist a:hover {
+  color: var(--amber);
+}
+
+[data-tahti-ui='brand'] .ch-gallery-shell {
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  background: #0a0f1e;
+  overflow: hidden;
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .ch-gallery-host {
+  width: 100%;
+  height: var(--ch-gallery-height, 360px);
+  min-height: 280px;
+}
+
+[data-tahti-ui='brand'] .ch-gallery-host--fill {
+  width: 100%;
+  height: 100%;
+}
+
+[data-tahti-ui='brand'] .ch-gallery-host--sticky {
+  position: sticky;
+  left: 0;
+  width: 100%;
+  height: 360px;
+}
+
+[data-tahti-ui='brand'] .ch-gallery-controls {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+[data-tahti-ui='brand'] .ch-gallery-nav-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #e8eaf6;
+  border-radius: 4px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-gallery-nav-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+[data-tahti-ui='brand'] .ch-gallery-scroll {
+  overflow-x: auto;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  background: #0a0f1e;
+}
+
+[data-tahti-ui='brand'] .ch-gallery-scroll--wave {
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+[data-tahti-ui='brand'] .ch-gallery-fixed {
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  background: #0a0f1e;
+  height: 360px;
+}
+
+[data-tahti-ui='brand'] .ch-slideshow {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.25rem;
+}
+
+[data-tahti-ui='brand'] .ch-slideshow img {
+  height: 240px;
+  width: auto;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
