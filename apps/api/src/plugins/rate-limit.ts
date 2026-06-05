@@ -64,7 +64,11 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
 
     const ip = request.ip ?? '0.0.0.0'
 
-    if (request.url.startsWith('/api/support/contact') && request.method === 'POST') {
+    if (
+      (request.url.startsWith('/api/support/contact') ||
+        request.url.startsWith('/api/beta/apply')) &&
+      request.method === 'POST'
+    ) {
       const limit = { max: 3, windowSec: 3600, keyPrefix: 'support' }
       const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
         rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec),

@@ -1202,8 +1202,8 @@
 }
 
 [data-tahti-ui='brand'] .sl-cover-art {
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 200px;
   margin: 0 auto 18px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -1324,6 +1324,16 @@
   border-color: var(--cyan);
 }
 
+[data-tahti-ui='brand'] .sl-btn--primary {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cyan) 35%, transparent);
+}
+
+[data-tahti-ui='brand'] .sl-btn--primary:hover {
+  border-color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 8%, var(--card));
+}
+
 [data-tahti-ui='brand'] .sl-btn-name {
   flex: 1;
   font-size: 0.8125rem;
@@ -1427,11 +1437,25 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #fff;
+  font-size: 0.875rem;
   flex-shrink: 0;
   letter-spacing: 0;
+  background: var(--card2);
+  border: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--spotify {
+  background: #1db95422;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--apple {
+  background: #fc3c4422;
+}
+
+[data-tahti-ui='brand'] .sl-btn-icon--tahti {
+  background: color-mix(in srgb, var(--cyan) 20%, var(--card2));
+  color: var(--cyan);
+  font-size: 1rem;
 }
 
 [data-tahti-ui='brand'] .sl-btn-action {
@@ -1476,6 +1500,154 @@
   font-size: 0.75rem;
   color: var(--muted);
   margin-top: 2px;
+}
+
+/* ── Profile tag chips + release rows (PLAT-032) ────────────────────────── */
+
+[data-tahti-ui='brand'] .prof-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+[data-tahti-ui='brand'] .prof-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .prof-release-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .prof-release-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .prof-release-row:last-child {
+  border-bottom: none;
+}
+
+[data-tahti-ui='brand'] .prof-release-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .prof-release-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+[data-tahti-ui='brand'] .prof-release-thumb-ph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--card2), var(--border));
+}
+
+[data-tahti-ui='brand'] .prof-release-body {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .prof-release-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+[data-tahti-ui='brand'] .prof-release-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .prof-release-action {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cyan);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .prof-release-action:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px #22c55e88;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-text {
+  flex: 1;
+  font-size: 0.8125rem;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-listeners {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-flac-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-open {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cyan);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-sticky-live-open:hover {
+  text-decoration: underline;
 }
 
 /* ── Section label consistency (PLAT-034) ───────────────────────────────── */

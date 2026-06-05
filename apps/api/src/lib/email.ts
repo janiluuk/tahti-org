@@ -24,6 +24,7 @@ export interface MailOptions {
   subject: string
   text: string
   html?: string
+  replyTo?: string
   headers?: Record<string, string>
 }
 
@@ -31,6 +32,7 @@ export async function sendMail(opts: MailOptions): Promise<void> {
   await getTransporter().sendMail({
     from: config.email.from,
     to: opts.to,
+    replyTo: opts.replyTo,
     subject: opts.subject,
     text: opts.text,
     html: opts.html,
@@ -38,6 +40,42 @@ export async function sendMail(opts: MailOptions): Promise<void> {
       'X-Source-Code': config.sourceRepoUrl,
       ...opts.headers,
     },
+  })
+}
+
+export async function sendBetaApplicationEmail(opts: {
+  name: string
+  email: string
+  artistType: string
+  links?: string
+  message?: string
+  source: 'website' | 'app'
+}): Promise<void> {
+  const lines = [
+    `New private beta application (${opts.source})`,
+    '',
+    `Name: ${opts.name}`,
+    `Email: ${opts.email}`,
+    `Artist type: ${opts.artistType}`,
+  ]
+  if (opts.links?.trim()) lines.push(`Links: ${opts.links.trim()}`)
+  if (opts.message?.trim()) {
+    lines.push('', 'Message:', opts.message.trim())
+  }
+  lines.push('', '— Tahti beta apply form')
+
+  const text = lines.join('\n')
+  const html = text
+    .split('\n')
+    .map((line) => `<p>${line.replace(/</g, '&lt;')}</p>`)
+    .join('')
+
+  await sendMail({
+    to: config.email.supportInbox,
+    replyTo: opts.email,
+    subject: `Beta application: ${opts.name}`,
+    text,
+    html,
   })
 }
 

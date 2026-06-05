@@ -3,34 +3,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-const SERVICE_META: Record<string, { label: string; action: string; iconBg: string }> = {
-  spotify: { label: 'Spotify', action: 'Stream', iconBg: '#1DB954' },
-  apple: { label: 'Apple Music', action: 'Stream', iconBg: '#FC3C44' },
-  tidal: { label: 'Tidal', action: 'Stream', iconBg: '#000000' },
-  bandcamp: { label: 'Bandcamp', action: 'Buy / Free DL', iconBg: '#1DA0C3' },
-  soundcloud: { label: 'SoundCloud', action: 'Stream', iconBg: '#FF5500' },
-  youtube: { label: 'YouTube Music', action: 'Stream', iconBg: '#FF0000' },
-  deezer: { label: 'Deezer', action: 'Stream', iconBg: '#A238FF' },
-  amazon: { label: 'Amazon Music', action: 'Stream', iconBg: '#25D1DA' },
-  tahti: { label: 'tahti.fi', action: 'FLAC · best quality', iconBg: '#F5A623' },
+const SERVICE_META: Record<string, { label: string; action: string; emoji: string }> = {
+  spotify: { label: 'Spotify', action: 'Stream', emoji: '🎵' },
+  apple: { label: 'Apple Music', action: 'Stream', emoji: '🍎' },
+  tidal: { label: 'Tidal', action: 'Stream', emoji: '🌊' },
+  bandcamp: { label: 'Bandcamp', action: 'Buy / Free DL', emoji: '💿' },
+  soundcloud: { label: 'SoundCloud', action: 'Stream', emoji: '☁️' },
+  youtube: { label: 'YouTube Music', action: 'Stream', emoji: '▶️' },
+  deezer: { label: 'Deezer', action: 'Stream', emoji: '🎧' },
+  amazon: { label: 'Amazon Music', action: 'Stream', emoji: '🛒' },
+  tahti: { label: 'tahti.fi', action: 'FLAC · best quality', emoji: '★' },
 }
 
-// Simple letter icons; keep SVG-free to avoid bundle bloat
-function ServiceIcon({ service, bg }: { service: string; bg: string }) {
-  const initials: Record<string, string> = {
-    spotify: 'S',
-    apple: 'A',
-    tidal: 'T',
-    bandcamp: 'B',
-    soundcloud: 'SC',
-    youtube: 'YT',
-    deezer: 'D',
-    amazon: 'AM',
-    tahti: '★',
-  }
+function ServiceIcon({ service, emoji }: { service: string; emoji: string }) {
   return (
-    <span className="sl-btn-icon" style={{ background: bg }} aria-hidden>
-      {initials[service] ?? service.slice(0, 1).toUpperCase()}
+    <span className={`sl-btn-icon sl-btn-icon--${service}`} aria-hidden>
+      {emoji}
     </span>
   )
 }
@@ -62,16 +50,17 @@ export function SmartLinkDspButtons({ smartLinkSlug, targets }: Props) {
   return (
     <div className="sl-btns">
       {services.map(([key, url]) => {
-        const meta = SERVICE_META[key] ?? { label: key, action: 'Listen', iconBg: '#444' }
+        const meta = SERVICE_META[key] ?? { label: key, action: 'Listen', emoji: '🔗' }
+        const isPrimary = key === 'tahti'
         return (
           <a
             key={key}
             href={url}
             rel="noopener noreferrer"
-            className="sl-btn"
+            className={`sl-btn${isPrimary ? ' sl-btn--primary' : ''}`}
             onClick={() => logClick(key)}
           >
-            <ServiceIcon service={key} bg={meta.iconBg} />
+            <ServiceIcon service={key} emoji={meta.emoji} />
             <span className="sl-btn-name">{meta.label}</span>
             <span className="sl-btn-action">{meta.action}</span>
             <span className="sl-btn-arrow">→</span>

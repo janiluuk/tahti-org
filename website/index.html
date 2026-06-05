@@ -1807,7 +1807,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
         <div class="ok-body">We'll be in touch at the email you provided.<br>The first round of invitations goes out in early 2025.</div>
       </div>
       <div id="apply-error">
-        Something went wrong — please email us directly at <a href="mailto:hello@tahti.fi">hello@tahti.fi</a>
+        Something went wrong — please email us directly at <a href="mailto:support@tahti.live">support@tahti.live</a>
       </div>
     </div>
 
@@ -2582,12 +2582,12 @@ function switchMockup(id, btn) {
 }
 
 // ===== APPLY FORM =====
-// Formspree setup (one-time, ~2 min):
-//   1. Go to https://formspree.io — sign in with janiluuk@gmail.com
-//   2. Create a new form, set notification email to janiluuk@gmail.com
-//   3. Copy the endpoint URL and replace the value below
 (function() {
-  const ENDPOINT = 'https://formspree.io/f/janiluuk@gmail.com';
+  const API_BASE =
+    location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'http://localhost:3001'
+      : 'https://api.tahti.live';
+  const ENDPOINT = API_BASE + '/api/beta/apply';
 
   const form = document.getElementById('apply-form');
   const btn  = document.getElementById('apply-submit');
@@ -2604,11 +2604,20 @@ function switchMockup(id, btn) {
     btn.disabled = true;
     err.style.display = 'none';
 
+    const fd = new FormData(form);
+    const payload = {
+      name: String(fd.get('name') ?? '').trim(),
+      email: String(fd.get('email') ?? '').trim(),
+      artistType: String(fd.get('artist_type') ?? '').trim(),
+      links: String(fd.get('links') ?? '').trim() || undefined,
+      message: String(fd.get('message') ?? '').trim() || undefined,
+    };
+
     try {
       const res = await fetch(ENDPOINT, {
         method: 'POST',
-        body: new FormData(form),
-        headers: { Accept: 'application/json' }
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         form.style.display = 'none';

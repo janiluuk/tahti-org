@@ -11,6 +11,7 @@ import { ChannelTextLayerView } from '@/components/text-layer'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
 import { ArchiveDownloadButton } from './archive-download'
 import { BroadcastCountdown } from './broadcast-countdown'
+import { StickyLiveBar } from './sticky-live-bar'
 import { ArchiveVideoBackdrop, resolveArchiveBackground } from './archive-item-backdrop'
 import type {
   ChannelGalleryMode,
@@ -38,6 +39,7 @@ interface ChannelResponse {
     displayName: string
     bio: string | null
     avatarUrl: string | null
+    tier: string
   }
 }
 
@@ -49,6 +51,8 @@ interface ArchiveItem {
   durationSec: number | null
   audioUrl: string | null
   createdAt: string
+  genre?: string | null
+  genreCustom?: string | null
   tracklist?: TracklistEntry[] | null
   repostToDownload?: boolean
   followToDownload?: boolean
@@ -91,12 +95,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const hlsUrl = channel.hlsUrl
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
+  const isFlac = channel.user.tier === 'STUDIO' || channel.user.tier === 'ARTIST'
+  const tagSet = new Set<string>()
+  for (const item of items) {
+    if (item.genre?.trim()) tagSet.add(item.genre.trim())
+    if (item.genreCustom?.trim()) tagSet.add(item.genreCustom.trim())
+  }
+  const tags = [...tagSet].slice(0, 8)
 
   return (
     <ChannelPageLayout
       isLive={channel.state === 'LIVE'}
       main={
         <>
+          {channel.state === 'LIVE' && (
+            <StickyLiveBar slug={slug} artistName={channel.user.displayName} isFlac={isFlac} />
+          )}
           {channelBackdrop.videoEmbedUrl && (
             <ArchiveVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
           )}
@@ -131,6 +145,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             {channel.user.bio && (
               <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
             )}
+            {tags.length > 0 && (
+              <div className="prof-tags">
+                {tags.map((tag) => (
+                  <span key={tag} className="prof-tag-chip">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </header>
 
           <NewsletterSubscribeForm
@@ -163,7 +186,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
 
           <section className="ch-archive-section">
-            <h2>Archive</h2>
+            <h2 className="ch-section-label">Archive</h2>
 
             {items.length === 0 ? (
               <p className="ch-archive-empty">No archive items yet.</p>

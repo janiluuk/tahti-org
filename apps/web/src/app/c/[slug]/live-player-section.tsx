@@ -19,7 +19,7 @@ export function LivePlayerSection({ url, slug }: LivePlayerSectionProps) {
   return (
     <>
       <BgCanvas audioEl={audioEl} />
-      <div className="ch-player-wrap">
+      <div id="live-player" className="ch-player-wrap">
         <div className="ch-player-inner">
           <HlsPlayer url={url} onAudioMount={setAudioEl} />
         </div>

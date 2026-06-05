@@ -702,6 +702,10 @@
   --studio-bar-color: var(--cyan);
 }
 
+[data-tahti-ui='studio'] .studio-chart-bar--plays {
+  --studio-bar-color: var(--amber);
+}
+
 [data-tahti-ui='studio'] .studio-chart-col {
   flex: 1;
   min-width: 0;
@@ -1085,6 +1089,10 @@
   color: var(--purple, #a855f7);
 }
 
+[data-tahti-ui='studio'] .db-stat-tile--green .db-stat-tile-value {
+  color: #22c55e;
+}
+
 [data-tahti-ui='studio'] .db-stat-tile-label {
   font-size: 0.75rem;
   color: var(--muted);
@@ -1264,6 +1272,50 @@
   font-variant-numeric: tabular-nums;
   min-width: 32px;
   text-align: right;
+}
+
+[data-tahti-ui='studio'] .stats-range-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+[data-tahti-ui='studio'] .stats-range-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .stats-range-btn--active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .stats-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.625rem;
+  color: var(--muted);
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
+[data-tahti-ui='studio'] .stats-panel--loading {
+  opacity: 0.65;
+}
+
+[data-tahti-ui='studio'] .stats-top-row--country {
+  gap: 8px;
+}
+
+[data-tahti-ui='studio'] .stats-eng-bar-wrap--inline {
+  width: 64px;
+  flex-shrink: 0;
 }
 
 /* ── Stash file manager (PLAT-038) ──────────────────────────────────────── */

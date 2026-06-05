@@ -1,24 +1,45 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-'use client'
-
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-const NAV_ITEMS = [
-  { href: '#studio-overview', label: 'Channel', icon: '▶' },
-  { href: '#studio-stats', label: 'Stats', icon: '📈' },
-  { href: '#studio-archive', label: 'Archive', icon: '📁' },
-  { href: '#studio-fans', label: 'Revenue', icon: '💰' },
-  { href: '#studio-newsletter', label: 'Newsletter', icon: '📧' },
-  { href: '#studio-releases', label: 'Smart Links', icon: '🔗' },
-  { href: '#studio-distribution', label: 'Distribution', icon: '📡' },
-  { href: '#studio-settings', label: 'Settings', icon: '⚙' },
+const ROUTE_ITEMS = [
+  { href: '/dashboard', label: 'Channel', icon: '▶', match: '/dashboard' },
+  { href: '/dashboard/stats', label: 'Stats', icon: '📈', match: '/dashboard/stats' },
+  { href: '/dashboard/stash', label: 'Stash', icon: '🔒', match: '/dashboard/stash' },
 ] as const
 
-/** PLAT-020: dashboard sidebar — hash anchors on the long dashboard page. */
+const HASH_ITEMS = [
+  { href: '/dashboard#studio-archive', label: 'Archive', icon: '📁', hash: '#studio-archive' },
+  { href: '/dashboard#studio-fans', label: 'Revenue', icon: '💰', hash: '#studio-fans' },
+  {
+    href: '/dashboard#studio-newsletter',
+    label: 'Newsletter',
+    icon: '📧',
+    hash: '#studio-newsletter',
+  },
+  {
+    href: '/dashboard#studio-releases',
+    label: 'Smart Links',
+    icon: '🔗',
+    hash: '#studio-releases',
+  },
+  {
+    href: '/dashboard#studio-distribution',
+    label: 'Distribution',
+    icon: '📡',
+    hash: '#studio-distribution',
+  },
+  { href: '/dashboard#studio-settings', label: 'Settings', icon: '⚙', hash: '#studio-settings' },
+] as const
+
+/** PLAT-020 / PLAT-030: dashboard sidebar — routes + hash anchors on the main page. */
 export function StudioSidebar() {
+  const pathname = usePathname()
   const [hash, setHash] = useState('')
 
   useEffect(() => {
@@ -28,11 +49,16 @@ export function StudioSidebar() {
     return () => window.removeEventListener('hashchange', sync)
   }, [])
 
+  const onDashboard = pathname === '/dashboard' || pathname === '/dashboard/'
+
   return (
     <aside className="db-sidebar">
       <nav aria-label="Dashboard sections">
-        {NAV_ITEMS.map(({ href, label, icon }) => {
-          const active = hash === href || (hash === '' && href === '#studio-overview')
+        {ROUTE_ITEMS.map(({ href, label, icon, match }) => {
+          const active =
+            match === '/dashboard'
+              ? onDashboard && (hash === '' || hash === '#studio-overview')
+              : pathname === match || pathname.startsWith(`${match}/`)
           return (
             <Link key={href} href={href} className={`db-nav-item${active ? ' active' : ''}`}>
               <span aria-hidden>{icon}</span>
@@ -40,6 +66,16 @@ export function StudioSidebar() {
             </Link>
           )
         })}
+        {onDashboard &&
+          HASH_ITEMS.map(({ href, label, icon, hash: itemHash }) => {
+            const active = hash === itemHash
+            return (
+              <Link key={href} href={href} className={`db-nav-item${active ? ' active' : ''}`}>
+                <span aria-hidden>{icon}</span>
+                {label}
+              </Link>
+            )
+          })}
       </nav>
     </aside>
   )
