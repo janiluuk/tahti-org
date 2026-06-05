@@ -14,6 +14,9 @@ export function StudioTopNav() {
         <Link href="/governance" className="studio-top-nav__link">
           Governance
         </Link>
+        <Link href="/admin" className="studio-top-nav__link">
+          Admin
+        </Link>
         <Link href="/transparency" className="studio-top-nav__link">
           Transparency
         </Link>

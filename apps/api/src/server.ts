@@ -30,6 +30,7 @@ import rtmpRoutes from './routes/internal/rtmp.js'
 import icecastRoutes from './routes/internal/icecast.js'
 import channelFallbackRoute from './routes/internal/channel-fallback.js'
 import broadcastFingerprintInternalRoutes from './routes/internal/broadcast-fingerprint.js'
+import internalRadioRoutes from './routes/internal/radio.js'
 import streamSettingsRoutes from './routes/me/stream-settings.js'
 import chatTokenRoute from './routes/chat/token.js'
 import chatFanTokenRoute from './routes/chat/fan-token.js'
@@ -57,6 +58,9 @@ import emailBounceWebhookRoutes from './routes/webhooks/email-bounce.js'
 import membershipRoutes from './routes/me/membership.js'
 import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
 import adminMembersRoutes from './routes/admin/members.js'
+import adminStatsRoutes from './routes/admin/stats.js'
+import adminStreamsRoutes from './routes/admin/streams.js'
+import adminUsersRoutes from './routes/admin/users.js'
 import adminAuditRoutes from './routes/admin/audit.js'
 import adminVenueRoutes from './routes/admin/venues.js'
 import meReleaseRoutes from './routes/releases/me.js'
@@ -66,6 +70,7 @@ import releaseArtworkRoutes from './routes/releases/artwork.js'
 import releaseDownloadRoutes from './routes/downloads/release.js'
 import embedRoutes from './routes/releases/embed.js'
 import publicProfileRoutes from './routes/profile/public.js'
+import publicMentionRoutes from './routes/profile/mentions.js'
 import smartlinkRoutes from './routes/releases/smartlink.js'
 import smartlinkClickRoutes from './routes/releases/smartlink-click.js'
 import releaseAnalyticsRoutes from './routes/releases/analytics.js'
@@ -364,6 +369,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(icecastRoutes)
   await fastify.register(channelFallbackRoute)
   await fastify.register(broadcastFingerprintInternalRoutes)
+  await fastify.register(internalRadioRoutes)
   await fastify.register(streamSettingsRoutes)
 
   // M5: chat
@@ -406,6 +412,9 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M1: annual membership payment
   await fastify.register(membershipRoutes)
   await fastify.register(adminMembersRoutes)
+  await fastify.register(adminStatsRoutes)
+  await fastify.register(adminStreamsRoutes)
+  await fastify.register(adminUsersRoutes)
 
   // M20: tier gating
   await fastify.register(broadcastUsageRoutes)
@@ -420,6 +429,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(releaseTrackVersionRoutes)
   await fastify.register(releaseArtworkRoutes)
   await fastify.register(publicProfileRoutes)
+  await fastify.register(publicMentionRoutes)
   await fastify.register(smartlinkRoutes)
   await fastify.register(smartlinkClickRoutes)
   await fastify.register(releaseAnalyticsRoutes)

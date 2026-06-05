@@ -8,6 +8,7 @@ import {
   FanSubCheckoutSchema,
   FanSubCheckoutUrlResponseSchema,
   FanSubSubscriptionListSchema,
+  BillingPortalUrlResponseSchema,
   IdParamSchema,
   UsernameParamSchema,
   openApiResponse,
@@ -19,6 +20,7 @@ import {
   stripeEnabled,
   createStripeCustomer,
   createFanSubCheckoutSession,
+  createBillingPortalSession,
 } from '../../lib/stripe.js'
 import { config } from '../../config.js'
 import {
@@ -223,6 +225,60 @@ const fanSubscriptionRoutes: FastifyPluginAsync = async (fastify) => {
         message:
           'Canceled — fan perks remain until the end of the billing period, then 7 days grace.',
       })
+    },
+  )
+
+  // GET /api/v1/fansubs/portal — Stripe Customer Portal for fan subscriptions
+  fastify.get(
+    '/api/v1/fansubs/portal',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        description: 'M19: Stripe billing portal for fan subscriptions',
+        response: openApiResponse(BillingPortalUrlResponseSchema, 'BillingPortalUrl'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+
+      const activeSub = await fastify.prisma.fanSubscription.findFirst({
+        where: { subscriberUserId: user.id, state: 'ACTIVE' },
+      })
+      if (!activeSub) {
+        return reply.status(400).send({ error: 'No active fan subscriptions' })
+      }
+
+      if (!stripeEnabled) {
+        return reply.status(400).send({
+          error: 'Billing portal is only available when Stripe is configured',
+        })
+      }
+
+      let customerId = user.stripeCustomerId
+      if (!customerId) {
+        try {
+          customerId = await createStripeCustomer({ email: user.email, userId: user.id })
+          await fastify.prisma.user.update({
+            where: { id: user.id },
+            data: { stripeCustomerId: customerId },
+          })
+        } catch (err) {
+          request.log.error({ err }, 'fan-sub portal customer creation failed')
+          return reply.status(502).send({ error: 'Could not open billing portal' })
+        }
+      }
+
+      try {
+        const session = await createBillingPortalSession({
+          customerId,
+          returnUrl: `${config.appUrl}/dashboard?fansubs=portal`,
+        })
+        return reply.send({ portalUrl: session.url })
+      } catch (err) {
+        request.log.error({ err }, 'fan-sub billing portal failed')
+        return reply.status(502).send({ error: 'Could not open billing portal' })
+      }
     },
   )
 }

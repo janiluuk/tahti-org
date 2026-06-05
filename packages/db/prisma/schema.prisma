@@ -9,7 +9,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs", "release", "newsletter", "venue", "media"]
+  schemas  = ["core", "channel", "chat", "ledger", "governance", "engagement", "fansubs", "release", "newsletter", "venue", "media", "admin"]
 }
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -172,6 +172,11 @@ enum AuditAction {
   DOWNLOAD_FRAUD_ALERT
   MEMBERSHIP_RENEWAL_REMINDER
   MEMBERSHIP_LAPSED
+  USER_SUSPEND
+  USER_UNSUSPEND
+  BOARD_ROLE_CHANGE
+  ENGAGEMENT_ADJUSTMENT
+  STREAM_FORCE_OFFLINE
 
   @@schema("governance")
 }
@@ -319,7 +324,10 @@ model User {
   storageUsedBytes      BigInt     @default(0)
   weeklyLiveSecondsUsed Int        @default(0)
   weeklyLiveResetAt     DateTime?
-  mentionsEnabled       Boolean    @default(true)
+  mentionsEnabled         Boolean    @default(true)
+  publicMentionsEnabled   Boolean    @default(false)
+  suspendedAt             DateTime?
+  suspendReason           String?
   mixcloudAccessTokenEnc String?   // M7: OAuth access token (AES-GCM, same key as RTMP)
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
@@ -419,15 +427,27 @@ model Channel {
   videoBackgroundUrl String?              // M26: YouTube/Vimeo or image URL for channel backdrop
   nextBroadcastAt    DateTime?            // LISTENER-002: optional next live time for offline listeners
   nextBroadcastNote  String?              // e.g. "Weekly show — Thursdays 22:00 EET"
+  lastFeaturedAt     DateTime?            // M16: Tahti Radio fair rotation
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
-  archiveItems   ArchiveItem[]
-  broadcasts     Broadcast[]
-  announcements  ChannelAnnouncement[]
-  chatBans       ChatBan[]
-  rtmpTargets    RtmpTarget[]
+  archiveItems      ArchiveItem[]
+  broadcasts        Broadcast[]
+  announcements     ChannelAnnouncement[]
+  chatBans          ChatBan[]
+  rtmpTargets       RtmpTarget[]
+  radioFeatureLogs  RadioFeatureLog[]
 
+  @@schema("channel")
+}
+
+model RadioFeatureLog {
+  id         String   @id @default(cuid())
+  channelId  String
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  featuredAt DateTime @default(now())
+
+  @@index([featuredAt(sort: Desc)])
   @@schema("channel")
 }
 
@@ -1092,4 +1112,25 @@ model CollectionItem {
   @@unique([collectionId, position])
   @@index([collectionId, position])
   @@schema("media")
+}
+
+// ── Admin schema (M21) ────────────────────────────────────────────────────────
+
+enum CronOutcome {
+  SUCCESS
+  ERROR
+
+  @@schema("admin")
+}
+
+model CronRun {
+  id           BigInt       @id @default(autoincrement())
+  jobName      String
+  startedAt    DateTime
+  finishedAt   DateTime?
+  outcome      CronOutcome?
+  errorMessage String?
+
+  @@index([jobName, startedAt(sort: Desc)])
+  @@schema("admin")
 }
