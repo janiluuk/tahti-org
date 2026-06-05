@@ -174,7 +174,8 @@
 }
 
 [data-tahti-ui='brand'] .ch-archive-item--bg {
-  background-image: linear-gradient(rgba(10, 15, 30, 0.88), rgba(10, 15, 30, 0.88)), var(--ch-item-bg);
+  background-image:
+    linear-gradient(rgba(10, 15, 30, 0.88), rgba(10, 15, 30, 0.88)), var(--ch-item-bg);
   background-size: cover;
   background-position: center;
 }
@@ -265,6 +266,218 @@
 
 [data-tahti-ui='brand'] .ch-chat-announcements {
   padding: 0.75rem 1rem 0;
+}
+
+/* ── Custom HLS player card ─────────────────────────────────────────────── */
+
+[data-tahti-ui='brand'] .ch-player-audio-hidden {
+  display: none;
+}
+
+[data-tahti-ui='brand'] .ch-player-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-player-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+[data-tahti-ui='brand'] .ch-player-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+[data-tahti-ui='brand'] .ch-player-status-dot--live {
+  background: var(--green);
+  animation: channel-pulse 1.5s ease-in-out infinite;
+}
+
+[data-tahti-ui='brand'] .ch-player-status-label {
+  flex: 1;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-player-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
+  border-radius: var(--radius-pill);
+  padding: 0.15rem 0.5rem;
+}
+
+/* Waveform */
+[data-tahti-ui='brand'] .ch-waveform {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 48px;
+  padding: 4px 0;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .ch-wf-bar {
+  flex: 1;
+  min-width: 3px;
+  max-width: 8px;
+  height: var(--h, 8px);
+  background: var(--cyan);
+  border-radius: 2px;
+  opacity: 0.35;
+  transition: opacity 0.3s;
+}
+
+[data-tahti-ui='brand'] .ch-wf-bar--active {
+  opacity: 0.85;
+  animation: wf-pulse var(--dur, 0.7s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+
+@keyframes wf-pulse {
+  0% {
+    transform: scaleY(0.35);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+/* Controls */
+[data-tahti-ui='brand'] .ch-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-play-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--cyan);
+  color: #0a0f1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background 0.2s,
+    transform 0.15s;
+}
+
+[data-tahti-ui='brand'] .ch-play-btn:hover {
+  background: color-mix(in srgb, var(--cyan) 80%, white);
+  transform: scale(1.05);
+}
+
+[data-tahti-ui='brand'] .ch-play-btn--buffering {
+  background: var(--card2);
+  cursor: wait;
+}
+
+[data-tahti-ui='brand'] .ch-play-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: ch-spin 0.7s linear infinite;
+}
+
+@keyframes ch-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+[data-tahti-ui='brand'] .ch-player-progress-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .ch-player-time {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .ch-progress-bar:hover {
+  height: 6px;
+}
+
+[data-tahti-ui='brand'] .ch-progress-fill {
+  height: 100%;
+  background: var(--cyan);
+  border-radius: 2px;
+  transition: width 0.25s linear;
+}
+
+[data-tahti-ui='brand'] .ch-progress-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--cyan);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+[data-tahti-ui='brand'] .ch-progress-bar:hover .ch-progress-thumb {
+  opacity: 1;
+}
+
+/* Responsive: collapse sidebar on mobile */
+@media (max-width: 768px) {
+  [data-tahti-ui='brand'] .ch-body {
+    grid-template-columns: 1fr;
+  }
+
+  [data-tahti-ui='brand'] .ch-sidebar {
+    border-top: 1px solid var(--border);
+    border-right: none;
+  }
+
+  [data-tahti-ui='brand'] .ch-main {
+    border-right: none;
+    padding: 16px;
+  }
 }
 
 [data-tahti-ui='brand'] .ch-reactions {
