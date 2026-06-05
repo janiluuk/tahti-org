@@ -31,6 +31,16 @@ export function openApiResponses(
   return out
 }
 
+/** HTTP redirect with no response body (AGPL /source, etc.). */
+export function openApiRedirectResponse(
+  status = 302,
+  description = 'Redirect',
+): Record<number, Record<string, unknown>> {
+  return {
+    [status]: { description },
+  }
+}
+
 /** Register Zod schemas under OpenAPI `components.schemas` (PLAT-014). */
 export function zodOpenApiComponents(
   schemas: Record<string, z.ZodTypeAny>,

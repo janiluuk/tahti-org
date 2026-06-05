@@ -918,3 +918,11 @@ export const StripeWebhookErrorSchema = z.object({
   error: z.string(),
   received: z.boolean().optional(),
 })
+
+export const CsvExportBodySchema = z.string()
+
+export const PrometheusMetricsBodySchema = z.string()
+
+export const FallbackM3uBodySchema = z.string()
+
+export const PlainTextErrorSchema = z.string()

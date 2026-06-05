@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { CsvExportBodySchema, openApiResponse } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { sendCsv } from '../../lib/csv.js'
 
@@ -9,7 +10,13 @@ import { sendCsv } from '../../lib/csv.js'
 const adminMembersRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/admin/members/export.csv',
-    { preHandler: requireBoard },
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(CsvExportBodySchema, 'CsvExportBody'),
+      },
+    },
     async (_request, reply) => {
       const members = await fastify.prisma.user.findMany({
         where: { isMember: true },
