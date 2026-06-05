@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>djname — Tahti</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f1e;--card:#111827;--card2:#1a2340;
+  --amber:#f0a500;--cyan:#00bcd4;--green:#00e676;
+  --purple:#7c4dff;--coral:#ff6b6b;--lavender:#9c88ff;
+  --text:#e8eaf6;--muted:#8892a4;
+  --font-head:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --border:rgba(255,255,255,0.07);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:rgba(10,15,30,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.nav-logo{font-family:var(--font-head);font-weight:700;font-size:16px;letter-spacing:4px;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--text)}
+.nav-logo-bar{width:3px;height:18px;background:var(--amber)}
+.nav-artist{font-family:var(--font-head);font-size:14px;font-weight:600;letter-spacing:1px}
+.live-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--green);letter-spacing:1px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.listener-count{font-size:12px;color:var(--muted)}
+.tune-btn{background:var(--cyan);color:#0a0f1e;padding:8px 18px;border-radius:6px;font-family:var(--font-head);font-weight:700;font-size:12px;letter-spacing:1px;border:none;cursor:pointer}
+
+/* LAYOUT */
+.channel-body{display:grid;grid-template-columns:1fr 320px;min-height:calc(100vh - 57px)}
+.channel-main{padding:28px;border-right:1px solid var(--border)}
+.channel-sidebar{padding:20px;display:flex;flex-direction:column}
+
+/* PLAYER */
+.player-card{background:var(--card2);border-radius:10px;padding:24px;display:flex;gap:20px;align-items:center;margin-bottom:20px;border:1px solid rgba(0,188,212,0.15)}
+.cover-art{width:90px;height:90px;border-radius:8px;background:linear-gradient(135deg,#7c4dff,#00bcd4);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:32px}
+.track-info{flex:1;min-width:0}
+.track-info h3{font-family:var(--font-head);font-size:17px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-info .artist-name{font-size:12px;color:var(--muted);margin-bottom:10px}
+.waveform{height:36px;display:flex;align-items:center;gap:2px;margin-bottom:10px}
+.wf-bar{background:var(--cyan);border-radius:2px;width:3px;opacity:.7;animation:wfpulse 1s ease-in-out infinite}
+@keyframes wfpulse{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.4)}}
+.controls{display:flex;align-items:center;gap:12px}
+.play-btn{background:var(--cyan);color:#0a0f1e;border:none;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.time-display{font-size:12px;color:var(--muted);font-family:monospace}
+.quality-badge{font-size:10px;letter-spacing:1px;background:rgba(0,188,212,.15);color:var(--cyan);padding:3px 8px;border-radius:4px;margin-left:auto;text-transform:uppercase}
+
+/* ARCHIVE */
+.archive-section{margin-top:4px}
+.section-label{font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px;text-transform:uppercase}
+.archive-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--card);border-radius:8px;margin-bottom:8px;cursor:pointer;border:1px solid transparent;transition:border-color .2s}
+.archive-item:hover{border-color:rgba(0,188,212,.2)}
+.archive-item.playing{border-color:rgba(0,188,212,.4);background:rgba(0,188,212,.04)}
+.archive-cover{width:40px;height:40px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.archive-info{flex:1;min-width:0}
+.archive-info h4{font-size:13px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.archive-info p{font-size:11px;color:var(--muted)}
+.archive-dur{font-family:var(--font-head);font-size:11px;color:var(--muted);flex-shrink:0}
+.dl-btn{background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:4px 10px;font-size:10px;color:var(--muted);cursor:pointer;margin-left:8px;flex-shrink:0;transition:border-color .2s}
+.dl-btn:hover{border-color:rgba(0,188,212,.4);color:var(--cyan)}
+
+/* SIDEBAR */
+.pinned{background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.25);border-radius:6px;padding:10px 12px;margin-bottom:16px}
+.pinned-label{font-size:10px;letter-spacing:2px;color:var(--amber);margin-bottom:4px;text-transform:uppercase;display:flex;align-items:center;gap:6px}
+.pinned p{font-size:12px;color:var(--text);font-style:italic;line-height:1.4}
+.sidebar-label{font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:12px;text-transform:uppercase}
+.chat-msgs{flex:1;overflow:hidden}
+.chat-msg{margin-bottom:10px;font-size:13px;line-height:1.4}
+.handle{font-weight:600;margin-right:6px}
+.handle.cyan{color:var(--cyan)}.handle.amber{color:var(--amber)}.handle.green{color:var(--green)}.handle.lavender{color:var(--lavender)}
+.chat-input-row{display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.chat-input-row input{flex:1;background:var(--card2);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--text);outline:none;font-family:var(--font-body)}
+.chat-send{background:var(--cyan);color:#0a0f1e;border:none;border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer}
+.reaction-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.reaction-btn{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:14px;cursor:pointer;transition:background .2s}
+.reaction-btn:hover{background:rgba(255,255,255,.1)}
+.fansub-card{background:linear-gradient(135deg,rgba(124,77,255,.15),rgba(0,188,212,.12));border:1px solid rgba(124,77,255,.3);border-radius:8px;padding:14px 16px;margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.fansub-card p{font-size:12px;font-weight:600}
+.fansub-card span{font-size:11px;color:var(--muted)}
+.fansub-btn{background:var(--purple);color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo"><div class="nav-logo-bar"></div>TAHTI</a>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span class="nav-artist">NOCTURNE.FM</span>
+    <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+    <span class="listener-count">142 listening</span>
+  </div>
+  <button class="tune-btn">TUNE IN</button>
+</nav>
+
+<div class="channel-body">
+
+  <!-- MAIN PLAYER + ARCHIVE -->
+  <div class="channel-main">
+    <div class="player-card">
+      <div class="cover-art">🎛</div>
+      <div class="track-info">
+        <h3>Modular Drift — Live Set #47</h3>
+        <div class="artist-name">Nocturne.fm · Broadcasting live</div>
+        <div class="waveform">
+          <!-- 28 bars at varying heights -->
+          <div class="wf-bar" style="height:24px;animation-delay:.0s"></div><div class="wf-bar" style="height:36px;animation-delay:.05s"></div><div class="wf-bar" style="height:18px;animation-delay:.1s"></div><div class="wf-bar" style="height:30px;animation-delay:.15s"></div><div class="wf-bar" style="height:36px;animation-delay:.2s"></div><div class="wf-bar" style="height:12px;animation-delay:.25s"></div><div class="wf-bar" style="height:28px;animation-delay:.3s"></div><div class="wf-bar" style="height:20px;animation-delay:.35s"></div><div class="wf-bar" style="height:34px;animation-delay:.4s"></div><div class="wf-bar" style="height:16px;animation-delay:.45s"></div><div class="wf-bar" style="height:36px;animation-delay:.5s"></div><div class="wf-bar" style="height:24px;animation-delay:.55s"></div><div class="wf-bar" style="height:30px;animation-delay:.6s"></div><div class="wf-bar" style="height:22px;animation-delay:.65s"></div><div class="wf-bar" style="height:36px;animation-delay:.7s"></div><div class="wf-bar" style="height:14px;animation-delay:.75s"></div><div class="wf-bar" style="height:28px;animation-delay:.8s"></div><div class="wf-bar" style="height:36px;animation-delay:.85s"></div><div class="wf-bar" style="height:20px;animation-delay:.9s"></div><div class="wf-bar" style="height:32px;animation-delay:.95s"></div>
+        </div>
+        <div class="controls">
+          <button class="play-btn">⏸</button>
+          <span class="time-display">1:14:32</span>
+          <span class="quality-badge">FLAC</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="archive-section">
+      <div class="section-label">Archive — playing when offline</div>
+      <div class="archive-item playing">
+        <div class="archive-cover" style="background:linear-gradient(135deg,#7c4dff,#00bcd4)">🌙</div>
+        <div class="archive-info">
+          <h4>Modular Drift — Live Set #46</h4>
+          <p>Recorded 3 days ago · Auto-archived</p>
+        </div>
+        <span class="archive-dur">1h 52m</span>
+        <button class="dl-btn">↓ DL</button>
+      </div>
+      <div class="archive-item">
+        <div class="archive-cover" style="background:linear-gradient(135deg,#f0a500,#ff6b6b)">🎹</div>
+        <div class="archive-info">
+          <h4>Late Night Acid — Session</h4>
+          <p>Recorded 1 week ago · Auto-archived</p>
+        </div>
+        <span class="archive-dur">2h 07m</span>
+        <button class="dl-btn">↓ DL</button>
+      </div>
+      <div class="archive-item">
+        <div class="archive-cover" style="background:linear-gradient(135deg,#00e676,#00bcd4)">🎸</div>
+        <div class="archive-info">
+          <h4>Resonant Structures EP — Album</h4>
+          <p>Released 14 Jan 2026 · FLAC download</p>
+        </div>
+        <span class="archive-dur">42m</span>
+        <button class="dl-btn">↓ DL</button>
+      </div>
+      <div class="archive-item">
+        <div class="archive-cover" style="background:linear-gradient(135deg,#9c88ff,#7c4dff)">🔊</div>
+        <div class="archive-info">
+          <h4>Oscillator Dreams — Live Set #45</h4>
+          <p>Recorded 2 weeks ago · Auto-archived</p>
+        </div>
+        <span class="archive-dur">1h 30m</span>
+        <button class="dl-btn">↓ DL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR CHAT -->
+  <div class="channel-sidebar">
+    <div class="pinned">
+      <div class="pinned-label">📌 PINNED · YOUR ARTIST</div>
+      <p>Tonight 22:00 UTC — ambient set, three new originals from the EP</p>
+    </div>
+
+    <div class="sidebar-label">Live chat</div>
+
+    <div class="chat-msgs">
+      <div class="chat-msg"><span class="handle cyan">moonglow_42</span> this track is killing me 🔥</div>
+      <div class="chat-msg"><span class="handle">midnight_dj</span> what synth is this?</div>
+      <div class="chat-msg"><span class="handle green">tallinn_owl</span> tuned in from Tallinn 🇪🇪</div>
+      <div class="chat-msg"><span class="handle">ghost</span> first time here — this is amazing</div>
+      <div class="chat-msg"><span class="handle lavender">you (artist)</span> @midnight_dj — Prophet 5, sent through tape delay</div>
+      <div class="chat-msg"><span class="handle cyan">harmonic.air</span> the transition at 14:00 🕊</div>
+      <div class="chat-msg"><span class="handle">voidwalker</span> instant favorite channel</div>
+      <div class="chat-msg"><span class="handle amber">fansub ★</span> FLAC is incredible tonight</div>
+    </div>
+
+    <div class="reaction-row">
+      <button class="reaction-btn">💜</button>
+      <button class="reaction-btn">🔥</button>
+      <button class="reaction-btn">🎶</button>
+      <button class="reaction-btn">👏</button>
+      <button class="reaction-btn">✨</button>
+    </div>
+
+    <div class="chat-input-row">
+      <input type="text" placeholder="say something..." />
+      <button class="chat-send">→</button>
+    </div>
+
+    <div class="fansub-card" style="margin-top:16px">
+      <div>
+        <p>Support Nocturne.fm</p>
+        <span>FLAC downloads + fan chat</span>
+      </div>
+      <button class="fansub-btn">€5/mo</button>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
