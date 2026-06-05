@@ -519,6 +519,24 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [x] | **PLAT-025** | Remove `eslint.ignoreDuringBuilds` in web Dockerfile once lint clean in CI | `next.config.mjs` — lint enforced at `next build` | P3 |
 | [x] | **PLAT-026** | Reconcile tier enum in AGENT.md (`FREE/PAID` vs `FREE/ARTIST/STUDIO`) | P2 |
 
+### UI / Design alignment (reference mockup parity)
+
+Gaps identified 2026-06-05 by comparing `docs/reference-screenshots/` against the
+live app. All items target the dark brand palette already defined in
+`packages/ui/src/tokens.css` — no new design decisions needed.
+
+| Done | ID | Item | Effort | Priority |
+|:---:|---|---|---|---|
+| [ ] | **PLAT-030** | **Stats page** — create `/dashboard/stats` route with 4-up stat tile grid (plays / downloads / fan-subs / revenue), "PLAYS — LAST 30 DAYS" bar chart with 7d/30d/All toggle + date axis, engagement-unit progress bars, top-tracks list, top-countries list with progress bars. Needs API endpoints: `/api/me/stats/plays`, `/api/me/stats/top-tracks`, `/api/me/stats/top-countries`. Update sidebar `#studio-stats` anchor → `/dashboard/stats` route. | Large | P1 |
+| [ ] | **PLAT-031** | **Smart link DSP buttons** — add service icon (emoji per platform in a 28px rounded square), action-label map (`spotify → "Stream"`, `bandcamp → "Buy / Free DL"`, `tahti → "FLAC · best quality"`), `.sl-btn--primary` modifier for the tahti.fi button (teal border highlight). Increase cover art from 160→200px. Changes in `SmartLinkDspButtons` + `brand-channel.css`. | Small | P1 |
+| [ ] | **PLAT-032** | **Channel public page — tag chips, release thumbnails, sticky live bar** — add `.prof-tag-chip` + `.prof-tags` pill styles for genre/tag chips; `.prof-release-row` with a 40×40 gradient thumbnail slot and "Links →" / "Play ▶" action buttons; `.ch-sticky-live-bar` fixed-bottom banner (green dot, listener count, FLAC badge, "Open →" CTA) shown when channel is live. | Medium | P1 |
+| [ ] | **PLAT-033** | **Dashboard overview — stat tile grid + End Broadcast CTA** — add `db-stat-grid` 4-column CSS + `db-stat-tile` with coloured large value (amber/cyan/green/purple) and label below; restyle `db-status-bar` End Broadcast button to amber (`var(--amber)` bg, dark text); add `db-quick-actions` row (Upload Release, Send Newsletter, Push to Mixcloud). | Medium | P2 |
+| [ ] | **PLAT-034** | **Section label consistency** — audit all `<h2>` headings inside `[data-tahti-ui='studio']`; apply consistent `.db-section-label` style (`font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted)`). Same pass for `RECENT ARCHIVE`, `ICECAST STREAM KEY`, `TOP TRACKS` style headings on channel + smart link pages. | Small | P2 |
+| [ ] | **PLAT-035** | **Countdown timer** — client-side countdown component for offline channel with a scheduled next broadcast. Display four boxes (HH/MM/SS + "FRI 22:00" day/time) above "NOW PLAYING FROM ARCHIVE". Add `.db-countdown-grid` + `.db-countdown-box` CSS (dark card, centred large number, label below in muted text). | Small | P2 |
+| [ ] | **PLAT-036** | **Waveform visualisation** — Web Audio API `AnalyserNode` driving a canvas bar-graph waveform above the seek bar on the live channel player (`hls-player.tsx`). Mirrors the animated waveform visible in the live listener mockup. | Medium | P3 |
+| [ ] | **PLAT-037** | **Mobile player layout** — `@media (max-width: 480px)` breakpoint in `brand-channel.css` with `.ch-mobile-player`: full-bleed cover art top half with gradient fade, centred FLAC badge, play/skip controls, and a support CTA card below — matching the mobile listener mockup. | Small | P3 |
+| [ ] | **PLAT-038** | **Stash / file manager** (`/dashboard/stash`) — private WIP file storage view: "My Stash" header, storage bar, "WIP TRACKS" list (lock icon, filename, format/size/modified/comments, Share / Download / Play actions), "SHARED ACCESS" section with time-limited collaborator links and Revoke. Requires new DB table + presigned-URL share tokens + API. | Large | P3 |
+
 ---
 
 ## Streaming infrastructure backlog
@@ -585,6 +603,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | How to scale nodes? | `scaling-node-distribution.md`, `infra/docker-compose.stack.yml` |
 | E2E screenshots / flows? | `user-flows.md`, `e2e-screenshots/README.md` |
 | Platform hardening backlog? | [Platform engineering backlog](#platform-engineering-backlog), `future-improvements.md` |
+| UI / design alignment? | [UI / Design alignment](#ui--design-alignment-reference-mockup-parity), `docs/reference-screenshots/` |
 | Backup & restore flow? | `technical/phase-3.md`, [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta) |
 | Ops journeys (restore drill)? | `technical/journey-ops.md` |
 
