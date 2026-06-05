@@ -1,0 +1,138 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "extracted": "2026-06-05",
+    "sources": [
+      "packages/ui/src/tokens.css",
+      "apps/web/src/components/ui/tokens.css"
+    ],
+    "surfaces": {
+      "brand": "Dark surfaces — marketing site, public channel/artist/smart-link pages",
+      "admin": "Light surfaces — authenticated dashboard, auth flows"
+    }
+  },
+
+  "brand": {
+    "_comment": "Dark brand surface. Token names match CSS custom properties in packages/ui/src/tokens.css.",
+    "color": {
+      "bg":       { "value": "#0a0f1e", "role": "Page background — deep navy" },
+      "card":     { "value": "#111827", "role": "Card / panel surface" },
+      "card2":    { "value": "#1a2340", "role": "Elevated card, callout background, stat cell" },
+      "amber":    { "value": "#f0a500", "role": "Primary CTA · wordmark accent · key metric values · grant figures" },
+      "cyan":     { "value": "#00bcd4", "role": "Streaming · player controls · tech infrastructure · sidebar active" },
+      "green":    { "value": "#00e676", "role": "Live/broadcasting state · positive status — never repurposed" },
+      "purple":   { "value": "#7c4dff", "role": "Fan subscriptions · community governance · membership actions" },
+      "coral":    { "value": "#ff6b6b", "role": "Errors · destructive actions · competitor critique" },
+      "lavender": { "value": "#9c88ff", "role": "Membership status · artist handle decorations · grant context" },
+      "text":     { "value": "#e8eaf6", "role": "Primary body text" },
+      "muted":    { "value": "#8892a4", "role": "Secondary text · labels · captions · metadata" },
+      "border":        { "value": "rgba(255,255,255,0.07)", "role": "Default border" },
+      "border-hover":  { "value": "rgba(255,255,255,0.15)", "role": "Hovered border" },
+      "sidebar-bg":    { "value": "#0d1626", "role": "Dashboard sidebar background (slightly darker than --bg)" }
+    },
+    "shadow": {
+      "card":  { "value": "0 4px 24px rgba(0,0,0,0.4)",       "role": "Card elevation" },
+      "amber": { "value": "0 8px 24px rgba(240,165,0,0.35)",  "role": "Amber CTA button glow on hover" },
+      "modal": { "value": "0 40px 120px rgba(0,0,0,0.8)",     "role": "Modal backdrop shadow" }
+    },
+    "radius": {
+      "sm":   { "value": "4px",  "role": "Badges, small controls" },
+      "md":   { "value": "8px",  "role": "Cards, buttons, inputs (default)" },
+      "lg":   { "value": "12px", "role": "Large cards, modals" },
+      "pill": { "value": "20px", "role": "Pill badges" },
+      "full": { "value": "50%",  "role": "Avatar circles, icon buttons" }
+    },
+    "typography": {
+      "font-head": { "value": "'Space Grotesk', sans-serif", "role": "Display / headings" },
+      "font-body": { "value": "'Inter', sans-serif",         "role": "Body / UI copy" },
+      "font-mono": { "value": "'SF Mono', 'Fira Code', 'Fira Mono', monospace", "role": "Stream keys, URLs, timestamps" }
+    },
+    "motion": {
+      "ease":        { "value": "0.2s ease",  "role": "Default transition (hover, color)" },
+      "ease-reveal": { "value": "0.7s ease",  "role": "Scroll-reveal entrance" },
+      "ease-card":   { "value": "0.3s ease",  "role": "Card lift on hover" }
+    }
+  },
+
+  "admin": {
+    "_comment": "Light admin surface. Token names match CSS custom properties in apps/web/src/components/ui/tokens.css, prefixed --tahti-.",
+    "color": {
+      "bg":              { "value": "#fafafa",  "role": "Page background" },
+      "surface":         { "value": "#ffffff",  "role": "Panel / card surface" },
+      "surface-muted":   { "value": "#f5f5f5",  "role": "Muted surface, disabled input background" },
+      "border":          { "value": "#e5e7eb",  "role": "Default border" },
+      "border-strong":   { "value": "#d1d5db",  "role": "Input border" },
+      "text":            { "value": "#111827",  "role": "Primary text" },
+      "text-secondary":  { "value": "#374151",  "role": "Secondary text, labels" },
+      "text-muted":      { "value": "#6b7280",  "role": "Muted copy, hints" },
+      "text-inverse":    { "value": "#ffffff",  "role": "Text on colored backgrounds" },
+      "primary":         { "value": "#2563eb",  "role": "Primary action buttons, links, active states" },
+      "primary-hover":   { "value": "#1d4ed8",  "role": "Primary button hover" },
+      "success":         { "value": "#16a34a",  "role": "Success text, membership confirmed" },
+      "success-bg":      { "value": "#f0fdf4",  "role": "Success panel background" },
+      "error":           { "value": "#dc2626",  "role": "Error text, LIVE badge, destructive" },
+      "error-bg":        { "value": "#fef2f2",  "role": "Error panel background" },
+      "warning":         { "value": "#d97706",  "role": "Warning text" },
+      "warning-bg":      { "value": "#fffbeb",  "role": "Warning panel background" },
+      "warning-border":  { "value": "#fbbf24",  "role": "Warning panel border" },
+      "info":            { "value": "#0284c7",  "role": "Info text" },
+      "info-bg":         { "value": "#f0f9ff",  "role": "Info panel background" }
+    },
+    "typography": {
+      "font-display": { "value": "'Space Grotesk', system-ui, sans-serif", "role": "Headings" },
+      "font-body":    { "value": "'Inter', system-ui, sans-serif",          "role": "Body, UI" },
+      "font-mono":    { "value": "ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace", "role": "Stream keys, credentials, code" },
+      "text-xs":   { "value": "0.75rem",   "pxEquiv": "12px",  "role": "Badges, hints, captions" },
+      "text-sm":   { "value": "0.875rem",  "pxEquiv": "14px",  "role": "Secondary body, table cells" },
+      "text-base": { "value": "1rem",      "pxEquiv": "16px",  "role": "Body text default" },
+      "text-lg":   { "value": "1.125rem",  "pxEquiv": "18px",  "role": "Heading level 3" },
+      "text-xl":   { "value": "1.25rem",   "pxEquiv": "20px",  "role": "Heading level 2 context" },
+      "text-2xl":  { "value": "1.5rem",    "pxEquiv": "24px",  "role": "Heading level 2" },
+      "text-3xl":  { "value": "1.875rem",  "pxEquiv": "30px",  "role": "Heading level 1" },
+      "leading-tight":   { "value": "1.25", "role": "Headings" },
+      "leading-normal":  { "value": "1.5",  "role": "Body" },
+      "leading-relaxed": { "value": "1.625","role": "Long-form copy" }
+    },
+    "spacing": {
+      "space-1":  { "value": "0.25rem", "pxEquiv": "4px" },
+      "space-2":  { "value": "0.5rem",  "pxEquiv": "8px" },
+      "space-3":  { "value": "0.75rem", "pxEquiv": "12px" },
+      "space-4":  { "value": "1rem",    "pxEquiv": "16px" },
+      "space-5":  { "value": "1.25rem", "pxEquiv": "20px" },
+      "space-6":  { "value": "1.5rem",  "pxEquiv": "24px" },
+      "space-8":  { "value": "2rem",    "pxEquiv": "32px" },
+      "space-10": { "value": "2.5rem",  "pxEquiv": "40px" },
+      "space-12": { "value": "3rem",    "pxEquiv": "48px" }
+    },
+    "radius": {
+      "sm":   { "value": "4px" },
+      "md":   { "value": "8px" },
+      "lg":   { "value": "12px" },
+      "full": { "value": "9999px" }
+    },
+    "layout": {
+      "page-sm": { "value": "640px",  "role": "Narrow shell: auth, verify, smart links" },
+      "page-md": { "value": "960px",  "role": "Dashboard, forms" },
+      "page-lg": { "value": "1100px", "role": "Channel page, wide grids" }
+    },
+    "motion": {
+      "duration-fast":   { "value": "120ms" },
+      "duration-normal": { "value": "200ms" },
+      "ease":            { "value": "cubic-bezier(0.4, 0, 0.2, 1)" }
+    }
+  },
+
+  "accessibility": {
+    "_comment": "WCAG 2.1 contrast ratios for brand (dark) surface accent colors against --bg (#0a0f1e). Calculated per WCAG relative-luminance formula.",
+    "contrastAgainstBg": {
+      "amber-on-bg":    { "ratio": "9.2:1",  "wcagAA": "pass", "wcagAAA": "pass", "note": "Primary CTA, stat values — excellent" },
+      "cyan-on-bg":     { "ratio": "8.2:1",  "wcagAA": "pass", "wcagAAA": "pass", "note": "Player controls, active states" },
+      "green-on-bg":    { "ratio": "11.1:1", "wcagAA": "pass", "wcagAAA": "pass", "note": "Live indicator — high contrast required; passes AAA" },
+      "coral-on-bg":    { "ratio": "7.0:1",  "wcagAA": "pass", "wcagAAA": "borderline", "note": "Errors/destructive — AA pass, just at AAA threshold" },
+      "lavender-on-bg": { "ratio": "6.9:1",  "wcagAA": "pass", "wcagAAA": "fail",  "note": "Membership/grants — AA pass, not AAA" },
+      "purple-on-bg":   { "ratio": "4.1:1",  "wcagAA": "fail-small-text", "wcagAAA": "fail", "note": "WARNING: fails AA for body text (< 18px / < 14px bold). Use only for large headings or decorative context." },
+      "text-on-bg":     { "ratio": "16.9:1", "wcagAA": "pass", "wcagAAA": "pass", "note": "Primary body text" },
+      "muted-on-bg":    { "ratio": "6.4:1",  "wcagAA": "pass", "wcagAAA": "fail",  "note": "Secondary text — AA pass" }
+    }
+  }
+}

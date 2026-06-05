@@ -1,66 +1,101 @@
-# Tahti — design system
+# Tahti design system
 
-Extracted from the presentation slides and marketing site. Every application surface — channel pages, dashboard, profile, smart links, transparency ledger — must follow these principles. The agent that builds the product must read this document before writing any UI code.
+Extracted from the live codebase for use as a portable design reference. An engineer applying this to a different project should be able to produce a coherent UI without consulting Tahti's source.
+
+**Extracted:** 2026-06-05  
+**Sources of truth:**
+- Brand (dark) tokens: `packages/ui/src/tokens.css`
+- Brand components: `packages/ui/src/components.css`
+- Admin (light) tokens: `apps/web/src/components/ui/tokens.css`
+- Admin components: `apps/web/src/components/ui/ui.css`
+- Machine-readable: `docs/design-tokens.json`
 
 ---
 
-## Principles
+## Design philosophy
 
-1. **Dark, deep, not black.** Background is `#0a0f1e` — a deep navy, not pure black. Cards lift from the background with `#111827` and `#1a2340`. Never use `#000`.
-2. **Amber is the heartbeat.** The primary accent is amber/gold `#f0a500`. It marks CTAs, the logo bar, key values, and live-state highlights. Every page should have amber somewhere above the fold.
-3. **Each feature has a color.** Cyan = tech/streaming. Green = live/positive. Purple = community/membership. Coral = problems/warnings. Lavender = governance/member features. Colors are not decorative — they carry meaning.
-4. **Headings are bold and left-aligned.** No centered h1s except on the smart-link landing page. Large, Space Grotesk, tight line-height.
-5. **Italic subtitles are colored.** Every major heading is followed by an italic line in a feature color. This is a visual signature of the brand.
-6. **Cards have a left accent stripe.** Never a top or right border as primary accent. The 3px left border tells you the card's category.
-7. **Labels are uppercase + letter-spaced.** Section labels, category tags, stat labels: 10–11px, letter-spacing 2–4px, muted color or feature color.
-8. **Space is generous.** Cards pad 24px. Sections pad 80–100px vertically. Don't compress.
-9. **Motion is subtle.** Hover: `translateY(-3px)` on cards, `scale(1.05)` on nav CTA. Reveals: `opacity 0→1, translateY(40px→0)`. No bounces, no spins.
-10. **No algorithmic aesthetics.** No engagement metrics displayed to listeners. No "trending" indicators. No likes. No algorithmic colors (TikTok red, YouTube red, Spotify green). Those are theirs.
+**Dark as the default working environment.** Tahti is used by DJs running long sets, sound engineers checking signal levels, artists monitoring live listener counts at 2am. A light background introduces eye strain and washes out the visual contrast you need to read numbers quickly. The deep navy background (`#0a0f1e`) is specifically chosen for its cinema-like quality — saturated enough to feel intentional, dark enough to make bright content pop cleanly.
+
+**Bright accent colors as instrument readouts, not decoration.** The four primary stat colors — amber for plays and money, cyan for technical metrics, green for live state, purple for community/subscriptions — are functionally distinct. A working DJ glancing at the dashboard knows at a glance what color means what, the same way studio monitors use different colors for signal-present versus clipping. Using purple decoratively on a non-community feature, or amber as a general highlight, erodes this readability. The colors carry meaning; treat them as reserved.
+
+**Broadcasting green is non-negotiable.** Green = live/safe-to-go is a cultural convention inherited from broadcasting hardware and stage production. Red = danger/recording. This convention predates software and lives in the muscle memory of anyone who has worked in a studio or on stage. Tahti's `--green: #00e676` is never used for anything except live/broadcasting state. Using it for "success" on a save action, or for a positive stat, would slowly corrupt its meaning.
+
+**The artist shines brightest (CONSTITUTION Rule 3).** Every page-layout choice reinforces this. The Tahti wordmark is small, uppercase, no logo mark — it is deliberately deferential. On the channel page, the artist's name is the largest text. Cover art gets prominent placement in archive lists. The sidebar nav groups things from the artist's perspective (their channel, their releases, their community) — not from Tahti's perspective (features, tiers, upgrades). When in doubt: who does the visual hierarchy serve? If it's Tahti, reconsider.
+
+**Restraint in motion.** The animation vocabulary is limited to three speeds: `0.2s ease` for hover state changes, `0.3s ease` for card lifts, `0.7s ease` for scroll-reveal entrances. The broadcasting pulse animation (live dot) runs at `1.5s ease-in-out` — slow enough to feel like a heartbeat, not a spinner. Glassmorphism, gradient backgrounds, parallax, animated illustrations, and autoplay sound are all absent by design. The product's content — the music, the numbers, the text — is the motion.
+
+---
+
+## Two surfaces
+
+Tahti has two distinct design surfaces that share the same brand identity but use different visual registers:
+
+| Surface | Where | Tone | Token prefix |
+|---------|-------|------|--------------|
+| **Brand** | Marketing site, public channel/profile/smart-link pages | Dark navy, saturated accents | `--` (e.g. `--amber`) |
+| **Admin** | Authenticated dashboard, auth flows | Light gray/white | `--tahti-` (e.g. `--tahti-primary`) |
+
+The brand surface uses `packages/ui` components. The admin surface uses `apps/web/src/components/ui` components. They do not share component implementations — only fonts and brand colors (stored in admin tokens as `--tahti-brand-*`).
+
+> **Implementation note:** The admin dashboard at `/dashboard` is currently implemented with the light token system. The mockups embedded in the marketing site (visible in `website/screenshots/`) show the intended dark-theme admin design — that migration has not yet been completed. This document describes both what is built and what is intended; the dark brand surface is canonical for visual identity.
 
 ---
 
 ## Color tokens
 
-```css
-:root {
-  /* Backgrounds */
-  --bg:     #0a0f1e;   /* page background — deep navy */
-  --card:   #111827;   /* card surface */
-  --card2:  #1a2340;   /* elevated card, callout bg, stat bg */
+### Brand layer (dark surface) — swappable per project
 
-  /* Accents — each carries semantic meaning */
-  --amber:    #f0a500;  /* primary CTA, logo, key values, live highlights */
-  --cyan:     #00bcd4;  /* streaming, tech, player controls */
-  --green:    #00e676;  /* live state, positive status, open formats */
-  --purple:   #7c4dff;  /* community, fan-subscriptions, governance */
-  --coral:    #ff6b6b;  /* problems, errors, competitor critique */
-  --lavender: #9c88ff;  /* membership, artist designation, grants */
+All declared in `packages/ui/src/tokens.css`.
 
-  /* Text */
-  --text:   #e8eaf6;   /* primary text */
-  --muted:  #8892a4;   /* secondary text, labels, captions */
+| Token | Hex | Role |
+|-------|-----|------|
+| `--bg` | `#0a0f1e` | Page background — deep navy |
+| `--card` | `#111827` | Card / panel surface |
+| `--card2` | `#1a2340` | Elevated card, callout, stat cell |
+| `--amber` | `#f0a500` | Primary CTA · wordmark accent · key metric values · grant figures |
+| `--cyan` | `#00bcd4` | Streaming · player controls · tech metrics · sidebar active state |
+| `--green` | `#00e676` | Live/broadcasting state · positive status indicator (reserved — see philosophy) |
+| `--purple` | `#7c4dff` | Fan subscriptions · community governance · cooperative features |
+| `--coral` | `#ff6b6b` | Errors · destructive actions |
+| `--lavender` | `#9c88ff` | Membership status · artist handle decoration · grant context |
+| `--text` | `#e8eaf6` | Primary text |
+| `--muted` | `#8892a4` | Secondary text · labels · captions · metadata |
+| `--border` | `rgba(255,255,255,0.07)` | Default border |
+| `--border-hover` | `rgba(255,255,255,0.15)` | Hovered border |
+| `--sidebar-bg` | `#0d1626` | Sidebar background (slightly darker than `--bg`; applied inline, not declared as token) |
 
-  /* Typography */
-  --font-head: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', sans-serif;
+**To apply to a different brand:** Replace `--amber` (primary brand color) and optionally adjust `--bg`/`--card`/`--card2`. If the new brand has a specific live/broadcasting semantic, evaluate whether to keep `--green` or substitute — but read the philosophy section first.
 
-  /* Borders */
-  --border:       rgba(255, 255, 255, 0.07);
-  --border-hover: rgba(255, 255, 255, 0.15);
-}
-```
+### System layer (stable across projects) — do not swap
 
-### Color semantics
+| Color | Hex | Why it's fixed |
+|-------|-----|----------------|
+| `--green` `#00e676` | Live/broadcasting | Broadcasting-hardware convention. Changing it would confuse artists who have worked with hardware |
+| `--coral` `#ff6b6b` | Destructive/error | Warm red for danger carries universal meaning. Must remain distinct from amber |
 
-| Color | Use for |
-|-------|---------|
-| `--amber` | Primary CTA buttons, logo bar, live-set highlights, key financial figures, feature accent when no other applies |
-| `--cyan` | Player controls, stream quality badges, tech features, dashboard active state, "tune in" CTA |
-| `--green` | LIVE badge and dot, positive status, archive open formats, grant-positive states |
-| `--purple` | Fan-subscriptions, membership features, community governance, Tahti Radio |
-| `--coral` | Error states, competitor problems, warnings, the "why you're leaving SoundCloud" moment |
-| `--lavender` | Artist designation in chat, artist handles, governance text, member portal |
-| `--muted` | Secondary body copy, labels, timestamps, captions, placeholder text |
+### Admin layer (light surface)
+
+All declared in `apps/web/src/components/ui/tokens.css` with `--tahti-` prefix.
+
+| Token | Hex | Role |
+|-------|-----|------|
+| `--tahti-bg` | `#fafafa` | Page background |
+| `--tahti-surface` | `#ffffff` | Panel / card surface |
+| `--tahti-surface-muted` | `#f5f5f5` | Muted surface, disabled input |
+| `--tahti-border` | `#e5e7eb` | Default border |
+| `--tahti-border-strong` | `#d1d5db` | Input border |
+| `--tahti-text` | `#111827` | Primary text |
+| `--tahti-text-secondary` | `#374151` | Form labels, secondary copy |
+| `--tahti-text-muted` | `#6b7280` | Hints, captions |
+| `--tahti-primary` | `#2563eb` | Primary action buttons, links |
+| `--tahti-primary-hover` | `#1d4ed8` | Button hover |
+| `--tahti-success` | `#16a34a` | Success state text |
+| `--tahti-error` | `#dc2626` | Error text, LIVE badge |
+| `--tahti-warning` | `#d97706` | Warning text |
+| `--tahti-warning-border` | `#fbbf24` | Warning panel border |
+| `--tahti-info` | `#0284c7` | Info text |
+
+Brand colors are mirrored as `--tahti-brand-amber: #f0a500`, `--tahti-brand-cyan: #00bcd4`, etc. — used when admin pages need brand-colored elements.
 
 ---
 
@@ -68,510 +103,547 @@ Extracted from the presentation slides and marketing site. Every application sur
 
 ### Fonts
 
-```html
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
-```
+Loaded via `next/font/google` in `apps/web/src/app/layout.tsx`. CSS variables injected as `--font-inter` and `--font-space-grotesk` on `<html>`.
 
-### Scale
+| Role | Family | CSS token (brand / admin) |
+|------|--------|---------------------------|
+| Display / headings | Space Grotesk | `--font-head` / `--tahti-font-display` |
+| Body / UI copy | Inter | `--font-body` / `--tahti-font-body` |
+| Monospace | SF Mono → Fira Code → Fira Mono → system | `--font-mono` / `--tahti-font-mono` |
 
-| Role | Font | Size | Weight | Notes |
-|------|------|------|--------|-------|
-| Page hero h1 | Space Grotesk | `clamp(48px, 7vw, 90px)` | 700 | Line-height 1.05 |
-| Section h2 | Space Grotesk | `clamp(32px, 5vw, 58px)` | 700 | Line-height 1.1 |
-| Italic subtitle | Inter italic | `clamp(18px, 2.5vw, 28px)` | 300 | Color = feature accent |
-| Card heading | Space Grotesk | 16px | 600 | |
-| Body lead | Inter | 16–17px | 400 | Color: `--muted`, line-height 1.7 |
-| Body | Inter | 14px | 400 | Color: `--muted`, line-height 1.6 |
-| Label/tag | Space Grotesk or Inter | 10–11px | 600 | Uppercase, letter-spacing 2–4px |
-| Stat value | Space Grotesk | 24–56px | 700 | Color: feature accent |
-| Monospace | system monospace | 13–22px | 400 | For URLs, stream keys, code |
+No custom `font-feature-settings` are declared. Tabular numerals are not set in the token files — the transparency page applies `fontVariantNumeric: 'tabular-nums'` as an inline style on individual number spans.
 
-### Text patterns
+### Type scale (admin surface)
 
-**Hero pattern:**
-```
-[LABEL — 11px uppercase letter-spaced muted]
-H1 in Space Grotesk, large, white
-Italic subtitle in Inter italic, amber/cyan/etc.
-Body copy in Inter, muted, 17px, line-height 1.7
-```
+| Token | rem | px | Used for |
+|-------|-----|----|---------|
+| `--tahti-text-xs` | 0.75 | 12 | Badges, hints, copy-row labels |
+| `--tahti-text-sm` | 0.875 | 14 | Secondary body, table metadata |
+| `--tahti-text-base` | 1.0 | 16 | Default body text |
+| `--tahti-text-lg` | 1.125 | 18 | `<Heading level={3}>` |
+| `--tahti-text-2xl` | 1.5 | 24 | `<Heading level={2}>` |
+| `--tahti-text-3xl` | 1.875 | 30 | `<Heading level={1}>` |
 
-**Section pattern:**
-```
-H2 in Space Grotesk
-Italic subtitle line in feature color
-Optional lead paragraph in muted
-Cards grid
-Optional callout box
-```
+### Type scale (brand/dark surface)
 
-**Label before heading:**
-```css
-.label::before {
-  content: '';
-  display: inline-block;
-  width: 30px; height: 1px;
-  background: var(--amber);
-  margin-right: 12px;
-}
-```
+Marketing headings use `clamp()` for fluid scaling; UI elements use fixed sizes.
 
----
+| Element | Size | Weight | Notes |
+|---------|------|--------|-------|
+| Section heading (`.s-h2`) | `clamp(32px, 5vw, 58px)` | 700 | Space Grotesk |
+| Section subtitle (`.s-sub`) | `clamp(18px, 2.5vw, 28px)` | 300 | Italic, accent color |
+| Section label (`.s-label`) | 11px | — | Uppercase, 4px letter-spacing, `--muted` |
+| Section lead (`.s-lead`) | 16px | — | Inter, 1.7 line-height |
+| Stat value (`.stat-value`) | 26px | 700 | Space Grotesk |
+| Stat label (`.stat-label`) | 11px | — | 0.5px letter-spacing |
+| Card title | 16px | 600 | Space Grotesk |
+| Card body | 14px | — | `--muted`, 1.6 line-height |
+| Callout label | 10px | 600 | Uppercase, 3px letter-spacing |
+| Price number (`.price-num`) | 56px | 700 | Space Grotesk |
+| Nav wordmark | 18px | 700 | 4px letter-spacing, uppercase |
+| Form label | 11px | 600 | Uppercase, 1.5px letter-spacing |
 
-## Spacing
+### Weight rules
 
-| Token | Value | Use |
-|-------|-------|-----|
-| Section vertical padding | 80–100px | Top/bottom of each section |
-| Card padding | 24px | Standard card inner padding |
-| Pricing card padding | 36px | Larger featured cards |
-| Card gap | 16px | Gap between cards in a grid |
-| Section inner max-width | 1100px | Content column |
+Weights used in the codebase: **300** (italic subtitle), **400** (body default), **600** (subheadings, labels, badges), **700** (display headings, stat values, price numbers). Weight 500 is not used.
+
+### Letter-spacing conventions
+
+- Section labels, form labels, badge text: uppercase with 1–4px letter-spacing
+- Nav wordmark: 4px — the widest in the system
+- Stat labels: 0.5px (non-uppercase)
+- Body text: none (default)
 
 ---
 
-## Border radius
+## Spacing and layout
 
-| Context | Radius |
-|---------|--------|
-| Standard cards | 8px |
-| Pricing cards, modals | 12px |
-| Buttons | 6–8px |
-| Badges, pills | 20px |
-| Avatars | 50% |
-| Inputs | 6–7px |
-| Player cover art | 8–10px |
+### Spacing scale
+
+4px base grid. Admin tokens: `--tahti-space-N`. Brand surface uses the same rhythm applied directly.
+
+| Steps | Value | px |
+|-------|-------|----|
+| 1 | 0.25rem | 4 |
+| 2 | 0.5rem | 8 |
+| 3 | 0.75rem | 12 |
+| 4 | 1rem | 16 |
+| 6 | 1.5rem | 24 |
+| 8 | 2rem | 32 |
+| 10 | 2.5rem | 40 |
+| 12 | 3rem | 48 |
+
+### Container widths
+
+| Context | Max-width | Component |
+|---------|-----------|-----------|
+| Auth, verify, narrow public | 640px | `<PageShell size="sm">` / `.brand-public--center` |
+| Dashboard, forms | 960px | `<PageShell size="md">` |
+| Channel page, wide grids | 1100px | `<PageShell size="lg">` / `.section-inner` |
+
+### Card padding
+
+- Brand card (`.card`): 24px all sides
+- Brand stat cell (`.stat`): 16px all sides
+- Brand callout (`.callout`): 20px vertical, 28px horizontal
+- Admin panel: 24px (`--tahti-space-6`)
+
+### Sidebar
+
+- Background: `#0d1626` (slightly darker than `--bg`)
+- Right border: `1px solid rgba(255,255,255,0.06)`
+- Item: `padding: 10px 20px`, font-size 13px, `--muted` at rest
+- Active item: `background: rgba(0,188,212,0.08)` + `border-right: 2px solid var(--cyan)` + `color: var(--cyan)`
+- Hover (non-active): `color: var(--text)`
+
+### Grid system (brand surface)
+
+```css
+.grid-2 { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-4 { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+```
+
+Stat cards always render inside `.grid-4` / `<StatGrid cols={4}>`. Never render a `<Stat>` in isolation.
 
 ---
 
-## Components
+## Component patterns
 
-### Card
+### Button (brand surface)
 
-The foundational element. Dark background, 3px left border in a feature color, hover lift.
+**Code:** `packages/ui/src/Button.tsx`, styles `packages/ui/src/components.css`
 
-```css
-.card {
-  background: var(--card);          /* #111827 */
-  border-radius: 8px;
-  padding: 24px;
-  border-left: 3px solid var(--amber); /* swap color per feature */
-  transition: transform 0.3s, border-color 0.3s;
-}
-.card:hover { transform: translateY(-3px); }
+| Class | Background | Text | Use |
+|-------|-----------|------|-----|
+| `.btn-primary` | `--amber` | `#0a0f1e` | Primary CTAs — Apply, Subscribe |
+| `.btn-secondary` | Transparent | `--text` | Secondary, `rgba(255,255,255,0.18)` border |
+| `.btn-sm` | `--card2` | `--text` | Compact — copy, row actions |
+| `.btn-icon` | `--cyan` | `#0a0f1e` | Circular icon button (36×36px) |
+
+Hover: primary lifts 2px + amber glow shadow. Secondary border → amber. All: `0.2s ease`.
+
+### Button (admin surface)
+
+**Code:** `apps/web/src/components/ui/button.tsx`
+
+```tsx
+<Button variant="primary">Save</Button>       // blue #2563eb
+<Button variant="ghost" size="sm">Copy</Button>  // neutral border
+<Button variant="danger">Delete</Button>      // red #dc2626
 ```
 
-**Color variants:** `.amber` `.cyan` `.green` `.purple` `.coral` `.lavender`
+| Variant | Use |
+|---------|-----|
+| `primary` | Main save/submit/pay |
+| `secondary` | Default neutral (rare; prefer ghost) |
+| `ghost` | Copy key, rotate key, secondary nav |
+| `danger` | Destructive |
 
-**With top accent line (slide style):**
-Used on slides for 4-column feature grids. The top line is 3px solid feature color, then card bg starts.
+Sizes: `sm`, `md` (default), `lg`.
 
-**Horizontal tool card:**
-Icon (32px) on the left, title + subtitle on the right, full border on left side. Used for broadcasting tools.
+### Panel (admin surface)
 
-### Callout box
+**Code:** `apps/web/src/components/ui/panel.tsx`
 
-Used at the bottom of sections to summarize or contrast. Darker background, 1px colored border, label + body.
+The canonical dashboard section container. Every feature area lives in its own `<Panel>`.
 
-```css
-.callout {
-  background: var(--card2);               /* #1a2340 */
-  border: 1px solid rgba(240, 165, 0, 0.3); /* amber at 30% */
-  border-radius: 8px;
-  padding: 20px 28px;
-}
-.callout-label {
-  font-size: 10px;
-  letter-spacing: 3px;
-  color: var(--amber);
-  margin-bottom: 8px;
-  text-transform: uppercase;
-}
+```tsx
+<Panel title="Go Live" description="Configure your broadcast software.">
+  <Stack gap={6}>
+    <CopyRow label="Server" value={settings.rtmp.server} />
+    <Button variant="ghost" size="sm">Rotate key</Button>
+  </Stack>
+</Panel>
+
+<Panel variant="warning" title="Complete your membership">…</Panel>
 ```
 
-### URL box
+Variants: `default` (white, gray border), `warning` (amber border, yellow-tinted bg), `success` (green border, green-tinted bg), `error` (red border, red-tinted bg).
 
-Monospace display of a canonical URL. Used to emphasize "one URL" messaging.
+`title` string auto-renders as `<h2>`. Optional `description` renders muted small text. Panels stack with 32px (`space-8`) top margin.
 
-```css
-.url-box {
-  background: var(--card2);
-  border: 1px solid rgba(0, 188, 212, 0.4); /* cyan */
-  border-radius: 8px;
-  padding: 22px;
-  text-align: center;
-  font-family: monospace;
-  font-size: 22px;
-  color: var(--muted);
-}
-.url-box span { color: var(--amber); font-weight: 700; }
+### Stat card (brand surface)
+
+**Code:** `packages/ui/src/Stat.tsx`
+
+```tsx
+import { Stat, StatGrid } from '@tahti/ui'
+
+<StatGrid cols={4}>
+  <Stat value="1,247" label="Plays this month" accent="amber" />
+  <Stat value="89"    label="Downloads"         accent="cyan" />
+  <Stat value="3"     label="Fan subscribers"   accent="lavender" />
+  <Stat value="€15"   label="Revenue / mo"      accent="cyan" />
+</StatGrid>
 ```
 
-### Buttons
+Color convention from the mockups: plays/primary engagement → `amber`, downloads/tech → `cyan`, fan subscribers → `lavender` or `purple`, revenue → `cyan` or `amber`.
 
-**Primary (amber):**
-```css
-.btn-primary {
-  background: var(--amber);
-  color: #0a0f1e;
-  padding: 14px 30px;
-  border-radius: 8px;
-  font-family: var(--font-head);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  transition: opacity 0.2s, transform 0.2s;
-}
-.btn-primary:hover {
-  opacity: 0.88;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(240, 165, 0, 0.35);
-}
+**Composition rule:** Always 2–4 cards in a `StatGrid`. Never a single isolated `<Stat>`.
+
+### Live badge (shared)
+
+**Code:** `packages/ui/src/Badge.tsx`
+
+```tsx
+import { LiveBadge } from '@tahti/ui'
+<LiveBadge />
+// → ● LIVE (pulsing green dot at 1.5s, uppercase text)
 ```
 
-**Secondary (ghost):**
-```css
-.btn-secondary {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 13px 28px;
-  border-radius: 8px;
-}
-.btn-secondary:hover {
-  border-color: var(--amber);
-  color: var(--amber);
-  transform: translateY(-2px);
-}
+On the brand surface: `--green` dot. On the admin surface: the `<Badge variant="live">` uses `--tahti-live` (red `#dc2626`) because on the admin surface the LIVE badge classifies administrative state, not a safe-to-go signal.
+
+### Broadcasting status
+
+On the channel page (`/c/[slug]`), when offline with a scheduled broadcast:
+
+```jsx
+<div role="status" style={{ background: '#f0f4ff', border: '1px solid #c7d2fe', borderRadius: 8 }}>
+  <strong>Next broadcast</strong>
+  <div>{formattedDate}</div>
+</div>
 ```
 
-**Small utility button:**
-```css
-.btn-sm {
-  background: var(--card2);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 6px;
-  padding: 8px 14px;
-  font-size: 12px;
-  color: var(--text);
-}
+HLS player uses `role="status" aria-live="polite"` on its loading state container.
+
+### CopyRow (admin surface)
+
+**Code:** `apps/web/src/components/ui/copy-row.tsx`
+
+```tsx
+<CopyRow label="Server"     value={settings.rtmp.server} />
+<CopyRow label="Stream Key" value={settings.rtmp.streamKey} />
 ```
 
-### Badges
+Anatomy: 100px label + `<Code>` monospace value (flex-grow) + `<Button variant="ghost" size="sm">`. Copy feedback: "Copy" → "Copied!" for 1500ms, then reverts. No toast.
 
-**LIVE badge (green):**
-```css
-.badge-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--green);
-  letter-spacing: 1px;
-}
-.badge-live::before {
-  content: '';
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--green);
-  animation: pulse 1.5s ease-in-out infinite;
-}
+### Card (brand surface)
+
+**Code:** `packages/ui/src/Card.tsx`
+
+Left-bordered content card. Hover lifts 3px via `transform: translateY(-3px)`.
+
+```tsx
+<Card accent="cyan" icon="🔊" title="HLS Player" titleAccent="cyan">
+  Stream to any device via standard HLS.
+</Card>
 ```
 
-**Quality badge (cyan for FLAC, muted for MP3):**
-```css
-.badge-quality {
-  font-size: 10px;
-  letter-spacing: 1px;
-  background: rgba(0, 188, 212, 0.15);
-  color: var(--cyan);
-  padding: 3px 8px;
-  border-radius: 4px;
-}
-.badge-quality.mp3 {
-  background: rgba(136, 146, 164, 0.15);
-  color: var(--muted);
-}
+Left border color maps to accent token. Background: `--card`.
+
+### Callout (brand surface)
+
+**Code:** `packages/ui/src/Callout.tsx`
+
+Highlighted info box. Background `--card2`, border at 30% opacity accent.
+
+```tsx
+<Callout label="Grant eligibility" variant="amber">
+  Your engagement units qualify for the Year 2 grant pool.
+</Callout>
 ```
 
-**Pill badge (recommended, member, etc.):**
-```css
-.badge-pill {
-  background: var(--cyan);
-  color: #0a0f1e;
-  font-size: 11px;
-  letter-spacing: 2px;
-  font-weight: 700;
-  padding: 4px 14px;
-  border-radius: 20px;
-}
+Variants: `amber` (default), `cyan`, `green`, `purple`.
+
+### Alert (admin surface)
+
+**Code:** `apps/web/src/components/ui/alert.tsx`
+
+Inline feedback. Default `role="alert"`.
+
+```tsx
+<Alert variant="error">Something went wrong.</Alert>
+<Alert variant="success">Changes saved.</Alert>
+<Alert variant="warning">Email not yet verified.</Alert>
+<Alert variant="info">This action is irreversible.</Alert>
 ```
 
-### Inputs
+No toast library exists. All feedback uses inline `<Alert>`.
 
-```css
-.input {
-  width: 100%;
-  background: var(--card2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 7px;
-  padding: 12px 14px;
-  font-size: 14px;
-  color: var(--text);
-  font-family: var(--font-body);
-  outline: none;
-  transition: border-color 0.2s;
-}
-.input:focus { border-color: rgba(240, 165, 0, 0.5); }
-.input::placeholder { color: rgba(255, 255, 255, 0.18); }
+### Field / Form pattern (admin surface)
+
+**Code:** `apps/web/src/components/ui/field.tsx`
+
+```tsx
+<Field label="Stream title" htmlFor="title" hint="Shown in the archive after broadcast.">
+  <Input id="title" placeholder="Helsinki Winter Session" />
+</Field>
+
+<Field label="Notes">
+  <Textarea rows={4} mono />
+</Field>
 ```
 
-**Form label:**
-```css
-.label {
-  display: block;
-  font-size: 11px;
-  letter-spacing: 1.5px;
-  color: var(--muted);
-  margin-bottom: 7px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
+Label: 14px, weight 600, `--tahti-text-secondary`. Hint: 12px `--tahti-text-muted` below input. Focus: `border-color: --tahti-primary` + `--tahti-focus-ring` box-shadow.
+
+### Quality badge (brand surface)
+
+**Code:** `packages/ui/src/Badge.tsx`
+
+```tsx
+import { QualityBadge } from '@tahti/ui'
+<QualityBadge quality="FLAC" />  // cyan tinted bg, cyan text — preferred quality
+<QualityBadge quality="MP3" />   // muted bg, muted text — de-emphasized
 ```
 
-### Navigation
+### Section header (brand surface)
 
-```css
-nav {
-  position: fixed; top: 0; left: 0; right: 0;
-  background: rgba(10, 15, 30, 0.85);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 18px 40px;
-  z-index: 100;
-}
-.nav-logo {
-  font-family: var(--font-head);
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 4px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.nav-logo-bar {
-  width: 3px; height: 20px;
-  background: var(--amber);
-}
+**Code:** `packages/ui/src/SectionHeader.tsx`
+
+```tsx
+<SectionHeader
+  label="FOR ARTISTS"
+  heading="Your channel, always on"
+  subtitle="Live when you broadcast. Archive when you don't."
+  subtitleAccent="cyan"
+  lead="One URL that always plays — no scheduling, no platform tax."
+/>
 ```
 
-### Stat block
-
-```css
-.stat {
-  background: var(--card2);
-  border-radius: 8px;
-  padding: 16px;
-  text-align: center;
-}
-.stat-value {
-  font-family: var(--font-head);
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--amber); /* swap to feature color */
-}
-.stat-label {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 4px;
-  letter-spacing: 0.5px;
-}
-```
-
-### Sidebar navigation (dashboard)
-
-```css
-.sidebar-item {
-  padding: 10px 20px;
-  font-size: 13px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.sidebar-item.active {
-  background: rgba(0, 188, 212, 0.08);
-  color: var(--cyan);
-  border-right: 2px solid var(--cyan);
-}
-```
-
-### Pinned announcement (chat)
-
-```css
-.pinned {
-  background: rgba(240, 165, 0, 0.1);
-  border: 1px solid rgba(240, 165, 0, 0.3);
-  border-radius: 6px;
-  padding: 10px 12px;
-}
-.pinned-label {
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: var(--amber);
-  margin-bottom: 4px;
-  text-transform: uppercase;
-}
-```
-
-### Waveform animation
-
-```css
-.waveform { display: flex; align-items: center; gap: 2px; }
-.wf-bar {
-  background: var(--cyan);
-  border-radius: 2px;
-  width: 3px;
-  animation: wfpulse 1s ease-in-out infinite;
-}
-@keyframes wfpulse {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(0.4); }
-}
-/* Stagger bars with animation-delay: 0s, 0.1s, 0.2s, etc. */
-```
-
-### Progress / fill bars
-
-```css
-.progress-track {
-  height: 3px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 2px;
-  background: var(--cyan); /* or feature color */
-}
-```
+Anatomy: ALL-CAPS label with amber decorative line → large fluid heading → italic colored subtitle → muted lead paragraph.
 
 ---
 
-## Layout patterns
+## Page-level layout patterns
 
-### 3-column feature grid
-Most common pattern: `grid-template-columns: repeat(3, 1fr); gap: 16px`. Used for tools, features, platform comparisons.
+### Marketing site shell (`website/index.html`)
 
-### 2-column split
-`grid-template-columns: 1fr 1fr; gap: 24px`. Used for hero (text + video), pricing, distribution types.
+Full-screen dark experience. Fixed top nav + full-viewport sections + optional Three.js WebGL background + EQ-visualization canvas.
 
-### 4-column stat row
-`grid-template-columns: repeat(4, 1fr); gap: 12px`. Dashboard stats only.
+- Nav: `rgba(10,15,30,0.85)` + `backdrop-filter: blur(12px)`, amber CTA button
+- Sections: `min-height: 100vh`, `max-width: 1100px` inner content
+- Background layers: Three.js canvas z-index 0, video overlay z-index 1, content z-index 10+
+- Scroll reveal: `.reveal` class — `opacity: 0; translateY(40px)` → `.visible` (0.7s ease)
 
-### Dashboard layout
-`grid-template-columns: 200px 1fr`. Sidebar (darker, `#0d1626`) + main content area.
+### Authenticated dashboard shell (`/dashboard`)
 
-### Channel page layout
-`grid-template-columns: 1fr 320px`. Player main + chat sidebar. On mobile, sidebar hides.
+Current: light surface, no sidebar, `max-width: 960px`.
 
----
-
-## Scroll reveal animation
-
-```css
-.reveal {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
-}
-.reveal.visible { opacity: 1; transform: translateY(0); }
-.reveal-delay-1 { transition-delay: 0.1s; }
-.reveal-delay-2 { transition-delay: 0.2s; }
-.reveal-delay-3 { transition-delay: 0.3s; }
+```tsx
+<PageShell size="md" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+  <Row between>
+    <Heading level={1}>Dashboard</Heading>
+    <Button variant="ghost">Log out</Button>
+  </Row>
+  <Text tone="secondary">Welcome back, {displayName}</Text>
+  <Panel title="Your channel">…</Panel>
+  <Panel title="Go Live">…</Panel>
+</PageShell>
 ```
 
-Triggered via IntersectionObserver when the element enters the viewport.
+**Intended (mockup) shell:** Dark brand surface, left sidebar (~160px), content area. Broadcasting status bar at top of content when live. Four stat cards in 4-column grid below status bar. Stream key panel below stats. Recent archive list below. Bottom CTA row (Upload Release / Send Newsletter / Push to Mixcloud).
+
+### Public channel shell (`/c/[slug]`)
+
+Current: `<PageShell size="lg">` (1100px), light background, `display: grid; grid-template-columns: 1fr 340px` for content + chat sidebar.
+
+**Intended (mockup) shell:** Dark brand surface. Artist name as large heading with live indicator + listener count. Player with waveform. Stat cells (listening now / plays / downloads). Subscribe / Download / Share buttons. Archive list below. Chat panel right.
+
+### Public artist profile shell (`/u/[username]`)
+
+Implemented with `class="brand-public"` — dark token set via `brand-public.css`, `max-width: 720px`. Artist name `<h1>`, handle muted, live badge if applicable, bio, releases list, collections list.
+
+### Auth flows (`/join`, `/login`, `/verify`)
+
+Join page uses `@/components/ui` components: `<Alert>`, `<Button>`, `<Field>`, `<Input>`, `<Stack>`. Pattern: `<PageShell size="sm">` with stacked form.
+
+Login page currently uses minimal inline styles — flagged for migration to `@/components/ui`.
 
 ---
 
-## Pages and their primary accent
+## Interaction patterns
 
-| Page | Primary accent | Reason |
-|------|---------------|--------|
-| Marketing / hero | amber | CTA, logo, value props |
-| Channel (live state) | green | Live indicator |
-| Channel (offline) | amber | Archive fallback |
-| Artist dashboard | cyan | Active nav, controls |
-| Analytics | cyan + green | Charts + grant box |
-| Artist profile | cyan | "Tune in" CTA |
-| Smart link | amber | Release spotlight |
-| Fan-subscription | purple | Community feature |
-| Transparency ledger | green | Positive financial state |
-| Membership / governance | lavender | Member features |
-| Error / warning | coral | Problem states |
+### Broadcasting state transitions
 
----
+| State | Visual | Color |
+|-------|--------|-------|
+| Idle/offline | No indicator | — |
+| Upcoming | Countdown block (HRS/MIN/SEC cells), upcoming title | `--amber` numbers on `--card` bg |
+| Live | `<LiveBadge />` in channel header, HLS player shows | `--green` |
+| Grace period | BroadcastUsageBanner with `warningLevel === 'grace'` | Amber warning |
+| Blocked | BroadcastUsageBanner with `warningLevel === 'blocked'` | Red warning |
 
-## Do's and don'ts
+The admin `<Badge variant="live">` uses red `--tahti-live` — different from the brand-surface green. Both are correct; they serve different audiences.
 
-**Do:**
-- Use Space Grotesk for all headings, stats, and the logo
-- Follow every heading with an italic subtitle in a feature color
-- Keep cards with left border stripes (3px, feature color)
-- Use uppercase letter-spacing for all category labels
-- Make amber the primary CTA on every page
-- Use `--card2` for callout boxes and elevated stats
-- Give live state green dot + pulse animation
-- Display FLAC badge in cyan, MP3 badge in muted
+### Form submission
 
-**Don't:**
-- Center hero text (smart link page is the only exception)
-- Use more than 2–3 accent colors on a single page
-- Show listener-hour counts as grant metrics anywhere
-- Add follower counts, likes, or engagement metrics to listener-facing surfaces
-- Use pure black (`#000`) anywhere — use `--bg` instead
-- Put advertising, sponsor logos, or algorithmic suggestions in the UI
-- Make the free tier look broken or limited — it's a complete product
-- Animate anything that's not a hover, reveal, live indicator, or waveform
+Pattern across dashboard panels: button `disabled` during submission, `<Alert>` rendered inline on error, `router.refresh()` on success. No toast. No optimistic UI (server values are authoritative).
+
+### Copy to clipboard
+
+`<CopyRow>` handles this. Feedback: "Copy" → "Copied!" for 1500ms. No toast, no animation on the value.
+
+### Destructive action confirmation
+
+No `<Dialog>` or confirmation modal component exists. Destructive actions are protected by button `disabled` during submission. Key rotation is single-click + loading state — no confirmation step, since the action is recoverable.
+
+### Loading states
+
+`<Button disabled>` + inline loading label text ("Rotating…", "Processing…") is the standard pattern. No spinner component. No skeleton component. Suspense fallbacks: `fallback={null}`.
 
 ---
 
-## Responsive breakpoints
+## Content and voice
+
+### Case conventions
+
+- Section labels (brand): ALL CAPS with letter-spacing ("FOR ARTISTS", "ICECAST STREAM KEY")
+- Page headings, panel titles: sentence case ("Your channel", "Go Live")
+- Button labels: sentence case ("Copy", "Rotate RTMP key", "Pay €30 / year")
+- Badge labels: ALL CAPS (LIVE, FLAC, MP3)
+
+### Brand vocabulary
+
+Do not rephrase these terms in UI copy:
+
+| Term | Usage |
+|------|-------|
+| **Engagement units** | Grant-pool currency (free DL = 1×, paid DL = 5×, fan-sub euro = 1×) |
+| **Fan subscriptions** | Direct artist-to-fan recurring payments — never "Tahti Premium" |
+| **Fan tiers** | Configurable subscription levels per artist |
+| **Grants** | Annual surplus redistribution to artists |
+| **Membership** | Tahti ry cooperative membership (annual fee) — distinct from fan subscriptions |
+| **Archive** | Collection of past broadcasts — not "recordings" or "sets" |
+| **Broadcasting** | The act of going live — capitalized in status indicators |
+| **Channel** | The artist's always-on URL — not "profile" or "station" |
+| **Smart link** | Release landing page at `/r/[slug]` |
+| **Download gate** | Repost/follow-to-download feature |
+
+### Number formatting
+
+- Currency: euro symbol before amount, no space (`€15`, `€30/year`) — Finnish convention
+- Accounting precision: `.toFixed(2)` for exact amounts, `.toFixed(0)` for round prices
+- Locale for accounting: `fi-FI` (`€1.247,00` — period as thousands separator, comma as decimal)
+- Duration: `2h 08m`, seconds-only when `< 60s`
+- Percentages: no decimal (`${pct}%`)
+
+### Date and time
+
+No hardcoded 24-hour clock. Schedule pages use `toLocaleString({ dateStyle: 'medium', timeStyle: 'short' })`. UTC is surfaced where it matters ("resets Monday 00:00 UTC").
+
+### Iconography
+
+No React icon library is installed (`packages/ui` has no icon dependency). The marketing site and mockups use emoji as icons. Admin dashboard panels use no icons. The brand nav logo mark is a CSS `div` — 3px × 20px, amber.
+
+---
+
+## Accessibility commitments
+
+Target level: WCAG 2.1 AA.
+
+### Contrast ratios (dark/brand surface accents vs `--bg: #0a0f1e`)
+
+| Color | Hex | Ratio | AA | AAA |
+|-------|-----|-------|----|-----|
+| Primary text (`--text`) | `#e8eaf6` | 16.9:1 | ✓ | ✓ |
+| Amber (`--amber`) | `#f0a500` | 9.2:1 | ✓ | ✓ |
+| Cyan (`--cyan`) | `#00bcd4` | 8.2:1 | ✓ | ✓ |
+| Green (`--green`) | `#00e676` | 11.1:1 | ✓ | ✓ |
+| Coral (`--coral`) | `#ff6b6b` | 7.0:1 | ✓ | borderline |
+| Lavender (`--lavender`) | `#9c88ff` | 6.9:1 | ✓ | ✗ |
+| Muted text (`--muted`) | `#8892a4` | 6.4:1 | ✓ | ✗ |
+| **Purple (`--purple`)** | `#7c4dff` | **4.1:1** | **✗ small text** | ✗ |
+
+**Purple warning:** `--purple` (#7c4dff) fails WCAG AA for text smaller than 18px (or 14px bold). It is used in the codebase for fan-subscription heading color, progress bar fills, and chart bars — all near or at the threshold. Do not use purple for body-sized text. Use `--lavender` (#9c88ff) as a purple-family substitute for small text.
+
+### Semantic patterns in code
+
+- `<Alert>` → `role="alert"` (immediate screen-reader announcement)
+- HLS player loading → `role="status" aria-live="polite"`
+- Next-broadcast countdown → `role="status"` on container
+- Bar charts → `role="img" aria-label="…"` on the chart container
+
+### Keyboard and focus
+
+Admin surface: all form controls receive `--tahti-focus-ring` on `:focus` (2px surface + 4px blue ring). Brand surface: **gap — no `:focus-visible` ring is declared** on `.btn-primary`, `.btn-secondary`, etc.
+
+### Reduced-motion
+
+Channel text-layer animations respect `prefers-reduced-motion: reduce`:
 
 ```css
-/* Single breakpoint — design collapses at 768px */
+@media (prefers-reduced-motion: reduce) {
+  .text-layer--gradient-shimmer .text-layer__heading,
+  .text-layer--shimmer-lines .text-layer__heading,
+  .text-layer--ghost-echo .text-layer__heading { animation: none; }
+}
+```
+
+**Gap:** The broadcasting pulse animation (`@keyframes pulse` on `.badge-live-dot`) has no `prefers-reduced-motion` guard. The dot should remain visible but static when the user has requested reduced motion.
+
+---
+
+## Mobile-specific patterns
+
+The admin dashboard has no responsive breakpoints — designed for desktop use.
+
+The brand/dark surface has one breakpoint at 768px:
+
+```css
 @media (max-width: 768px) {
-  nav { padding: 14px 20px; }
-  section { padding: 80px 20px 60px; }
-  .cards-3, .cards-4 { grid-template-columns: 1fr; }
-  .cards-2 { grid-template-columns: 1fr; }
-  .ch-sidebar { display: none; } /* chat sidebar hides on mobile */
-  .db-sidebar { display: none; } /* dashboard sidebar hides on mobile */
-  .db-stats { grid-template-columns: repeat(2, 1fr); }
+  .nav     { padding: 14px 20px; }
+  .section { padding: 80px 20px 60px; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
 }
 ```
 
-Mobile channel view uses a phone-shaped layout with cover art fullwidth, controls below, chat as a collapsible bottom sheet.
+At mobile: all column grids collapse to single-column. Stat cards stack vertically.
 
 ---
 
-## `packages/ui` adoption (PLAT-020)
+## Known gaps
 
-The shared React package lives in `packages/ui/` (dark-brand components: `Button`, `Card`, `Callout`, `Stat`, …). The Next.js app currently uses **`apps/web/src/components/ui/`** with a **light dashboard shell** (`--tahti-*` tokens) and brand tokens for public surfaces.
+| Gap | Status |
+|-----|--------|
+| Toast / notification system | Not built — only `<Alert>` (inline) exists |
+| Modal / dialog | Not built — destructive actions are one-click |
+| Skeleton loading | Not built — Suspense fallbacks use `null` |
+| Dark admin dashboard | Intended (see mockups) but not yet implemented |
+| Focus ring on brand surface buttons | Not declared — accessibility gap |
+| Reduced-motion on pulse animation | Not guarded — accessibility gap |
+| Purple at small text | `--purple` fails AA at < 18px |
+| Sidebar React component | CSS classes exist; no React wrapper |
 
-**Phase 1 (done):** worker cron manifest; unified `scripts/backup.sh`.
+---
 
-**Phase 2 (in progress):**
+## Application notes
 
-1. Add `@tahti/ui` as a workspace dependency in `apps/web` (`transpilePackages`).
-2. Use package components on **dark public routes** first (`/c/:slug`, `/u/:username`, `/r/:slug`) where tokens match `docs/design-system.md`.
-3. Keep dashboard on light `--tahti-*` tokens until a deliberate dashboard dark-theme pass.
+### What to swap when applying to a different brand
 
-**Phase 3:** Collapse duplicate primitives — re-export or replace `apps/web/src/components/ui/button.tsx` where APIs align.
+1. **`--amber` (#f0a500)** → your primary brand color. This is the most pervasive single swap — it touches CTA buttons, wordmark, stat highlights, section subtitle accents, callout labels.
+2. **`--bg` / `--card` / `--card2`** (#0a0f1e / #111827 / #1a2340) → adjust depth levels if the new brand reads differently at this darkness.
+3. **Logo / wordmark** — Tahti's wordmark is `TAHTI` in uppercase Space Grotesk + 3px amber vertical bar. Replace with the new brand name and bar color.
+4. **Font families** — if the new brand has licensed type, replace `'Space Grotesk'` for display. Inter can usually stay for body.
+5. **Favicon and OG image.**
 
-Do not import `packages/ui` CSS into the light dashboard without scoping — token names (`--bg`, `--text`) differ from `--tahti-bg` / `--tahti-text`.
+### What to keep regardless of brand
+
+- `--green` (#00e676) as the live/broadcasting state color. It is not a brand color — it is a safety-convention color.
+- `--coral` (#ff6b6b) for destructive/error states.
+- The three-level background hierarchy (`--bg` → `--card` → `--card2`).
+- The 4px spacing base and 16px grid gap for card grids.
+- Sentence case for headings and button labels; ALL CAPS only for badge labels and section metadata labels.
+
+### What to evaluate per project
+
+- **Stat cards with accent colors:** Appropriate when working professionals need at-a-glance readouts. Not appropriate for a contemplative consumer product.
+- **Grouped sidebar navigation:** Works because artists think in domain groups (channel / releases / community / money). Evaluate whether the new product's domain has equivalent groupings.
+- **Broadcasting-style status bar:** Applicable when a live/active state needs to be immediately visible across sessions. Skip for CRUD tools with no real-time state.
+- **Dark-by-default:** Justified by long broadcast sessions. Evaluate whether the new product has similar fatigue considerations.
+
+### Five-step adoption process
+
+1. **Copy the token file.** Paste `packages/ui/src/tokens.css` into your project. Change `--amber` to your brand color. Verify in the browser.
+2. **Install fonts.** Add Space Grotesk and Inter via `next/font/google` or equivalent. The display personality of Space Grotesk is load-bearing — the system looks wrong with a generic sans-serif substitute.
+3. **Set up CSS variables.** Import the token file at root scope. Verify that `body { background: var(--bg); color: var(--text); }` renders the expected dark surface.
+4. **Build the shell first.** Implement the page container, sidebar (if applicable), and stat-card grid before domain-specific content. Getting the shell right makes every panel feel consistent.
+5. **Verify contrast on your brand color.** Run your `--amber` replacement through a WCAG contrast checker against `--bg`. It must pass AA (4.5:1) for body text. Darken or lighten if needed — do not skip this.
+
+### Anti-patterns to avoid
+
+- **Making the brand color the broadcasting-status color.** If your brand color is green, you still need a distinct green for live state — use a different shade, or reconsider the live-state convention entirely.
+- **Using stat-card colors decoratively.** Cyan as a section accent on a non-technical page, purple as a decorative card background — these erode the semantic model. If you use the color palette, commit to the semantics.
+- **Softening the dark background.** Changing `--bg` to `#1a1a2e` or a generic dark gray reads as unfinished. The deep navy (#0a0f1e) is specifically chosen for its warmth and cinema-like quality.
+- **Purple at small text sizes.** `--purple` (#7c4dff) fails WCAG AA for text under 18px. Use `--lavender` (#9c88ff) for small purple-range text.
+- **Using amber for success states.** Amber is already used for primary CTA, pricing, and key metrics. Extending it to success creates semantic collision with "important thing requiring attention."
