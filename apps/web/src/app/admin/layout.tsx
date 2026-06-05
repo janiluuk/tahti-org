@@ -11,6 +11,7 @@ import '@/components/admin-shell.css'
 
 const NAV = [
   { href: '/admin/dashboard', label: 'Dashboard' },
+  { href: '/admin/beta', label: 'Beta' },
   { href: '/admin/users', label: 'Users' },
   { href: '/admin/streams', label: 'Streams' },
   { href: '/admin/support', label: 'Support' },

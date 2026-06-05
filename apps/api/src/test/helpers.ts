@@ -177,6 +177,9 @@ export async function cleanupUsersByEmailPrefix(prisma: PrismaClient, prefix: st
   await prisma.fanTier.deleteMany({ where: { artistUserId: { in: ids } } })
   await prisma.socialPost.deleteMany({ where: { userId: { in: ids } } })
   await prisma.socialConnection.deleteMany({ where: { userId: { in: ids } } })
+  await prisma.betaApplication.deleteMany({
+    where: { OR: [{ userId: { in: ids } }, { email: { startsWith: prefix } }] },
+  })
   await prisma.collection.deleteMany({ where: { userId: { in: ids } } })
   await prisma.release.deleteMany({ where: { userId: { in: ids } } })
   await prisma.grantDisbursement.deleteMany({ where: { userId: { in: ids } } })

@@ -14,6 +14,7 @@ export const BetaApplySchema = z.object({
 export const BetaApplyResponseSchema = z.object({
   ok: z.literal(true),
   ticketId: z.string().optional(),
+  applicationId: z.string().optional(),
 })
 
 export type BetaApplyInput = z.infer<typeof BetaApplySchema>

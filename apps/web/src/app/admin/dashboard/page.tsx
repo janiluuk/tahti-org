@@ -41,6 +41,7 @@ export default async function AdminDashboardPage() {
     auditRes,
     fansubsRes,
     supportRes,
+    betaRes,
   ] = await Promise.all([
     boardFetch('/api/v1/status'),
     boardFetch('/api/v1/transparency/ytd'),
@@ -51,6 +52,7 @@ export default async function AdminDashboardPage() {
     boardFetch('/api/admin/audit/recent'),
     boardFetch('/api/admin/fansubs/overview'),
     boardFetch('/api/admin/support/tickets?status=OPEN&limit=1'),
+    boardFetch('/api/admin/beta/applications?status=PENDING&limit=100'),
   ])
 
   const failedPayoutCount = fansubsRes.ok
@@ -59,6 +61,10 @@ export default async function AdminDashboardPage() {
 
   const openSupportCount = supportRes.ok
     ? ((await supportRes.json()) as { total: number }).total
+    : 0
+
+  const pendingBetaCount = betaRes.ok
+    ? ((await betaRes.json()) as { applications: unknown[] }).applications.length
     : 0
 
   const status = statusRes.ok
@@ -168,6 +174,16 @@ export default async function AdminDashboardPage() {
           <p className="admin-stat-sub">
             open ticket{openSupportCount === 1 ? '' : 's'} ·{' '}
             <Link href="/admin/support">View queue →</Link>
+          </p>
+        </section>
+
+        <section className="admin-card">
+          <h2>Beta applications</h2>
+          <p className={`admin-stat ${pendingBetaCount > 0 ? 'admin-warn' : ''}`}>
+            {pendingBetaCount}
+          </p>
+          <p className="admin-stat-sub">
+            pending review · <Link href="/admin/beta?status=PENDING">Review queue →</Link>
           </p>
         </section>
       </div>

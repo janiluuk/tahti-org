@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Queue } from 'bullmq'
+import type { LufsTarget } from '@tahti/shared'
 import { config } from '../config.js'
 
 const connection = {
@@ -17,6 +18,29 @@ export async function enqueueTranscode(itemId: string): Promise<void> {
 
 export async function enqueueVersionTranscode(versionId: string): Promise<void> {
   await mediaQueue.add('transcode-archive-version', { versionId })
+}
+
+export interface BounceArchiveEditJob {
+  versionId: string
+  archiveItemId: string
+  channelSlug: string
+  sourceKey: string
+  startSec: number
+  endSec: number
+  fadeInSec: number
+  fadeOutSec: number
+  peakNormalize: boolean
+  lufsTarget: LufsTarget
+  limiterEnabled: boolean
+  activate: boolean
+}
+
+export async function enqueueBounceArchiveEdit(payload: BounceArchiveEditJob): Promise<void> {
+  await mediaQueue.add('bounce-archive-edit', payload, {
+    jobId: `bounce-archive-edit-${payload.versionId}`,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 10_000 },
+  })
 }
 
 export async function enqueueReleaseTrackVersionTranscode(versionId: string): Promise<void> {

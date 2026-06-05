@@ -156,3 +156,68 @@
   background: var(--card2);
   color: inherit;
 }
+
+.admin-beta-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.admin-beta-filters a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.admin-beta-filters a:hover {
+  text-decoration: underline;
+}
+
+.admin-beta-table td {
+  vertical-align: top;
+}
+
+.admin-beta-message {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  max-width: 28rem;
+}
+
+.admin-beta-approve-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 12rem;
+}
+
+.admin-beta-approve-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.admin-beta-approve-form input {
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: inherit;
+}
+
+.admin-beta-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-beta-setup-link {
+  word-break: break-all;
+  color: var(--cyan);
+}
+
+.admin-form-error {
+  color: var(--red, #f87171);
+  font-size: 0.85rem;
+  margin: 0;
+}

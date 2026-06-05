@@ -1126,6 +1126,37 @@
   cursor: wait;
 }
 
+/* ── Dashboard quick actions (PLAT-033) ─────────────────────────────────── */
+
+[data-tahti-ui='studio'] .db-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 0 0 1.25rem;
+}
+
+[data-tahti-ui='studio'] .db-quick-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+[data-tahti-ui='studio'] .db-quick-action:hover {
+  border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
+  background: color-mix(in srgb, var(--cyan) 8%, var(--card2));
+}
+
 /* ── Stats page (PLAT-030) ──────────────────────────────────────────────── */
 
 /* Shared uppercase section label — use for "ICECAST STREAM KEY", "TOP TRACKS", etc. (PLAT-034) */
@@ -1565,4 +1596,93 @@
 [data-tahti-ui='studio'] .stash-share-meta {
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .studio-trim-editor {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .studio-trim-waveform {
+  width: 100%;
+  min-height: 72px;
+  margin-bottom: 0.75rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--card) 80%, black);
+}
+
+[data-tahti-ui='studio'] .studio-trim-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+[data-tahti-ui='studio'] .studio-field--inline {
+  margin: 0;
+  min-width: 8rem;
+}
+
+[data-tahti-ui='studio'] .studio-input--narrow {
+  max-width: 5.5rem;
+}
+
+[data-tahti-ui='studio'] .studio-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+
+[data-tahti-ui='studio'] .studio-multitrack-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+[data-tahti-ui='studio'] .studio-editor-transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+[data-tahti-ui='studio'] .studio-playlist-viz {
+  min-height: 220px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: auto;
+  background: color-mix(in srgb, var(--card) 85%, black);
+}
+
+[data-tahti-ui='studio'] .studio-editor-meters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 12rem;
+}
+
+[data-tahti-ui='studio'] .studio-editor-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='studio'] .studio-editor-meter-bar {
+  flex: 1;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .studio-editor-meter-fill {
+  height: 100%;
+  background: var(--cyan);
+  border-radius: inherit;
 }

@@ -3,7 +3,7 @@
 Living document for work **deferred** from the current roadmap pass, plus engineering
 efficiency items. Update this when closing milestones or discovering new gaps.
 
-Last reviewed: 2026-06-03 (audit pass)
+Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 
 ---
 
@@ -19,11 +19,13 @@ Last reviewed: 2026-06-03 (audit pass)
 
 **Top gaps to close before beta:**
 
-1. Streaming scale blockers (~~STREAM-004~~ recording sidecar done; ~~STREAM-001~~ ~~STREAM-006~~ done; STREAM-005 watchdog done)
-2. Fan-sub live payout retry + M19 newsletter fan-only send UI
+1. ~~Streaming scale blockers~~ — STREAM-001–010 done (see streaming backlog)
+2. ~~Fan-sub live payout retry + M19 newsletter fan-only send UI~~ — done
 3. ~~Wire `@tahti/ui` into dashboard/public pages~~ — PLAT-020 done
-4. ~~Backup runbooks + Upptime (M11)~~ — backup age on `/metrics`, Grafana panel + Prometheus alerts; Upptime deploy still ops
-5. Legal/infra Phase 0–2 (Tahti ry, hardware, staging)
+4. ~~Backup runbooks + Upptime (M11)~~ — backup age on `/metrics`; Upptime deploy still ops
+5. **Beta onboarding** — apply form + `/admin/beta` approve + `/setup-password` (done 2026-06-05)
+6. ~~**In-browser audio editor (M21 v0–v2)**~~ — trim/fade, multitrack sessions, LUFS/limiter bounce (`audio-editor.md`, done 2026-06-05)
+7. Legal/infra Phase 0–2 (Tahti ry, hardware, staging)
 
 ---
 

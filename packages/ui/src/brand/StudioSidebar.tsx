@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 const ROUTE_ITEMS = [
   { href: '/dashboard', label: 'Channel', icon: '▶', match: '/dashboard' },
   { href: '/dashboard/stats', label: 'Stats', icon: '📈', match: '/dashboard/stats' },
+  { href: '/dashboard/editor', label: 'Editor', icon: '🎚', match: '/dashboard/editor' },
   { href: '/dashboard/stash', label: 'Stash', icon: '🔒', match: '/dashboard/stash' },
 ] as const
 

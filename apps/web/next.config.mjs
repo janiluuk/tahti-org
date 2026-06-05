@@ -4,7 +4,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
-  transpilePackages: ['@tahti/shared', '@tahti/ui'],
+  transpilePackages: ['@tahti/shared', '@tahti/ui', '@waveform-playlist/browser'],
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: false },
   webpack: (config, { webpack, isServer }) => {

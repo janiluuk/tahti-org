@@ -70,7 +70,9 @@ import adminReportsRoutes from './routes/admin/reports.js'
 import adminAuditRoutes from './routes/admin/audit.js'
 import adminVenueRoutes from './routes/admin/venues.js'
 import supportContactRoutes from './routes/support/contact.js'
+import adminBetaRoutes from './routes/admin/beta.js'
 import betaApplyRoutes from './routes/beta/apply.js'
+import setupPasswordRoute from './routes/auth/setup-password.js'
 import meReleaseRoutes from './routes/releases/me.js'
 import releaseTrackRoutes from './routes/releases/tracks.js'
 import releaseTrackVersionRoutes from './routes/releases/track-versions.js'
@@ -97,6 +99,8 @@ import meProgrammeRoutes from './routes/me/programme.js'
 import meSocialRoutes from './routes/me/social.js'
 import meChannelScheduleRoutes from './routes/me/channel-schedule.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
+import meArchiveEditorRoutes from './routes/me/archive-editor.js'
+import meEditorProjectRoutes from './routes/me/editor-projects.js'
 import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
 import meChannelEgressRoutes from './routes/me/channel-egress.js'
 import meChannelLiveStatsRoutes from './routes/me/channel-live-stats.js'
@@ -366,6 +370,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(sourceRoute)
   await fastify.register(registerRoute)
   await fastify.register(verifyRoute)
+  await fastify.register(setupPasswordRoute)
   await fastify.register(loginRoute)
   await fastify.register(logoutRoute)
   await fastify.register(meRoute)
@@ -441,6 +446,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   // M11: audit exports
   await fastify.register(adminAuditRoutes)
   await fastify.register(adminVenueRoutes)
+  await fastify.register(adminBetaRoutes)
   await fastify.register(supportContactRoutes)
   await fastify.register(betaApplyRoutes)
 
@@ -490,6 +496,8 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meSocialRoutes)
   await fastify.register(meChannelScheduleRoutes)
   await fastify.register(meArchiveVersionRoutes)
+  await fastify.register(meArchiveEditorRoutes)
+  await fastify.register(meEditorProjectRoutes)
   await fastify.register(meDownloadGateStatsRoutes)
   await fastify.register(meChannelEgressRoutes)
   await fastify.register(meChannelLiveStatsRoutes)

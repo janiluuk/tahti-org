@@ -106,6 +106,51 @@ export async function activateArchiveVersion(
   return { versions: await res.json(), error: null }
 }
 
+export async function fetchArchiveEditorSource(itemId: string): Promise<{
+  url?: string
+  durationSec?: number | null
+  title?: string
+  error: string | null
+}> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/source`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to load editor source' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function bounceArchiveTrim(
+  itemId: string,
+  body: {
+    startSec: number
+    endSec: number
+    fadeInSec: number
+    fadeOutSec: number
+    peakNormalize: boolean
+    lufsTarget?: 'none' | 'stream' | 'club'
+    limiterEnabled?: boolean
+    versionLabel: string
+    activate: boolean
+  },
+): Promise<{ versionId?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/bounce`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Bounce failed' }
+  }
+  const data = (await res.json()) as { versionId: string }
+  return { versionId: data.versionId, error: null }
+}
+
 export async function fetchDownloadGateStats(itemId: string): Promise<{
   stats?: {
     artistFollowerCount: number

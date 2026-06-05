@@ -22,3 +22,9 @@ export function verificationExpiresAt(): Date {
   d.setHours(d.getHours() + 24)
   return d
 }
+
+export function passwordSetupExpiresAt(): Date {
+  const d = new Date()
+  d.setDate(d.getDate() + 7)
+  return d
+}
