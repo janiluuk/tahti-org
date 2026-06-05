@@ -31,7 +31,7 @@ backup_postgres() {
   DATE=$(date -u +%Y%m%d-%H%M%S)
   BACKUP_KEY="pg/${DATE}.sql.gz"
   MINIO_ALIAS="${MINIO_ALIAS:-tahti}"
-  BACKUP_BUCKET="${BACKUP_BUCKET:-tahti}"
+  BACKUP_BUCKET="${BACKUP_BUCKET:-backups}"
   CONTAINER_FILTER="${PG_CONTAINER:-tahti_postgres}"
 
   PG_CONTAINER=$(docker ps -qf "name=${CONTAINER_FILTER}" | head -1)
@@ -115,7 +115,7 @@ backup_restore_test() {
   TEMP_CONTAINER="tahti-restore-test-$$"
   ALERT_EMAIL="${ALERT_EMAIL:-ops@tahti.live}"
   MINIO_ALIAS="${MINIO_ALIAS:-tahti}"
-  BACKUP_BUCKET="${BACKUP_BUCKET:-tahti}"
+  BACKUP_BUCKET="${BACKUP_BUCKET:-backups}"
 
   cleanup() { docker rm -f "$TEMP_CONTAINER" &>/dev/null || true; }
   trap cleanup EXIT
@@ -180,7 +180,7 @@ print(latest.get('key','').lstrip('/'))
 backup_status() {
   local MINIO_ALIAS BACKUP_BUCKET WARN_HOURS PAGE_HOURS
   MINIO_ALIAS="${MINIO_ALIAS:-tahti}"
-  BACKUP_BUCKET="${BACKUP_BUCKET:-tahti}"
+  BACKUP_BUCKET="${BACKUP_BUCKET:-backups}"
   WARN_HOURS="${BACKUP_WARN_AGE_HOURS:-26}"
   PAGE_HOURS="${BACKUP_PAGE_AGE_HOURS:-48}"
 

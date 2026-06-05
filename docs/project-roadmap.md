@@ -73,7 +73,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M8** Transparency ledger | ✅ Done | Append-only ledger, monthly rollup worker, public `/transparency` API + `/transparency/grants/:year` report |
 | **M9** Annual grant calc | ✅ Done | `packages/ledger`: pure largest-remainder `allocateGrants` + `runAnnualGrantCalc` (reads rollups + counted downloads), `GrantDisbursement` model, `GRANT_DISBURSEMENT`/`RESERVE_TRANSFER` ledger entries, March-1 cron, board run + artist/public report endpoints. Fan-sub euro input lands with M19 |
 | **M10** Member governance | ✅ Done | `Motion`/`Vote` models, `requireMember`/`requireBoard` guards, advisory voting (Topic 11), members `/governance` portal, tally hidden until close |
-| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + **chat token → first message** via Redis), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth), shared `lib/csv.ts`, **structured request logging**, **Stripe webhook failure counters** on `/metrics`, **Upptime config** (`ops/upptime/`). Deferred: live Upptime deploy, **backup/DR drills** (see [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)) |
+| **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha (register + **chat token → first message** via Redis), audit log, `/api/v1/status`, admin CSV exports, **OpenAPI/Swagger** (`/docs`, basic-auth), shared `lib/csv.ts`, **structured request logging**, **Stripe webhook failure counters** on `/metrics`, **`tahti_postgres_backup_age_hours` on `/metrics`**, **Upptime config** (`ops/upptime/`). Deferred: live Upptime deploy, **backup/DR drills** (see [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta)) |
 | **M12** Profile + releases | 🟡 Partial | Release CRUD, smart links, DSP editor, **profile playback** (`archiveItemId` + `streamKey` presign); **cover art upload to MinIO** (`artworkKey` + presigned URLs). Deferred: bulk import |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in (`/api/newsletter/subscribe`, `/confirm/:token`, `/unsubscribe/:token`), artist draft + send endpoints, `newsletter-dispatch` worker (batched, List-Unsubscribe header), per-tier rate limit (1/4/∞ per week). Deferred: SES for broadcast sends (uses Postmark/SMTP for now), bounce webhook handler |
 | **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard. Deferred: social auto-post |
@@ -86,7 +86,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/channel-funnel-stats` + split endpoints; 14-day charts). Deferred: per-listener HLS metrics |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
-| **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`. Deferred: Discogs API |
+| **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`; claim links (Spotify, Apple, YouTube). Deferred: Discogs API |
 | **M29** Backup & DR | 🟡 Partial | Unified **`scripts/backup.sh`** (postgres, minio, restore-test, status); **`ops/RUNBOOK.md`**, `install-crons.sh`. Deferred: pgBackRest, offsite buckets, operator drills |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API (`45m`/`55m`/`grace`/`blocked`) + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: further copy polish |
 
@@ -216,7 +216,7 @@ failover stack promoted. Document exact DNS/Caddy cutover in `ops/RUNBOOK.md`.
 | [ ] | MinIO `backups` bucket on primary; `mc` alias configured on manager node | Dev | MinIO up | `technical/phase-3.md` |
 | [x] | `scripts/backup.sh` — unified postgres + minio + restore-test + status (wrappers deprecated) | Dev | Postgres + MinIO up | `ops/RUNBOOK.md` |
 | [x] | Cron: PG daily 03:00, MinIO daily 04:00, restore test Sunday 05:00 (`/etc/cron.d/tahti-backup`) | Dev | `scripts/backup.sh` + `install-crons.sh` | `technical/phase-3.md` |
-| [x] | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call | Dev | `backup.sh status` in cron | `technical/journey-ops.md` |
+| [~] | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call | Dev | `backup.sh status` + **`/metrics` `tahti_postgres_backup_age_hours`** | `technical/journey-ops.md` |
 | [ ] | pgBackRest (replace interim `pg_dump` when hardware stable) + WAL shipping | Dev | Postgres prod | `future-improvements.md` |
 | [ ] | Pre-destructive-op snapshot: `docker run … pg_dump` before migrations / volume resize | Dev | — | `technical/phase-7.md` |
 | [~] | `ops/RUNBOOK.md` — restore Postgres, restore MinIO prefix, DR read-only cutover | Dev | restore test passed once | Phase 9 |
@@ -330,14 +330,14 @@ Artists need more than a smart link and a Revelator upload: the **official** sid
 
 | Done | Capability | Notes |
 |:---:|---|---|
-| [~] | **MusicBrainz submission** | MBID fields + submit link + **in-panel guide** + MusicBrainz URL on smart link |
-| [~] | **ISRC + UPC/EAN** | Release ops capture; display on `/r/:slug` |
-| [~] | **Credits & roles** | Dashboard credits editor; JSON export |
-| [~] | **Copyright lines** | P/C-line + label imprint |
-| [~] | **Release checklist wizard** | Steps in release ops panel |
-| [~] | **Post-release claim links** | Spotify for Artists, Apple, YouTube OAC |
-| [~] | **Export pack** | Download JSON |
-| [~] | **Collecting-society pointers** | Teosto, PRS, GEMA, etc. |
+| [x] | **MusicBrainz submission** | MBID fields + submit link + **in-panel guide** + MusicBrainz URL on smart link |
+| [x] | **ISRC + UPC/EAN** | Release ops capture; display on `/r/:slug` |
+| [x] | **Credits & roles** | Dashboard credits editor; JSON export |
+| [x] | **Copyright lines** | P/C-line + label imprint |
+| [x] | **Release checklist wizard** | Steps in release ops panel (`computeReleaseChecklist`) |
+| [x] | **Post-release claim links** | Spotify for Artists, Apple, YouTube OAC |
+| [x] | **Export pack** | Download JSON |
+| [x] | **Collecting-society pointers** | Teosto, PRS, GEMA, etc. |
 
 **Deferred (later M30+):** Discogs submission API, direct PRO registration, AllMusic pitch workflow.
 
@@ -367,7 +367,7 @@ Aligned with `strategy-and-product.md` acquisition plan.
 | [ ] | Beta feedback form + issue triage process | Dev | Month 2 |
 | [ ] | Weekly beta office hours (Discord/video) | Director | Month 2–6 |
 | [ ] | Fix P0 bugs within 48h SLA | Dev | ongoing |
-| [ ] | Publish OBS / Mixxx / Traktor guides on dashboard | Dev | M3 done |
+| [x] | Publish OBS / Mixxx / Traktor guides on dashboard | Dev | M3 done |
 | [ ] | Expand to **50 artists**; stress-test storage + fiber | Dev | Month 4–6 |
 | [ ] | Press: RA tools / Wire / scene blogs (nonprofit + AGPL angle) | Director | Month 6 |
 | [ ] | Open free tier widely; target **200 paying** by month 12 | Director | Month 6–12 |

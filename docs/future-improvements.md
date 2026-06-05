@@ -113,8 +113,8 @@ Last reviewed: 2026-06-03 (audit pass)
 ### Still largely open
 | Milestone | Notes |
 |---|---|
-| **M7** | Revelator royalty sync, €8/release Stripe, production OAuth credentials |
-| **M30** | Release ops toolkit — MusicBrainz submission, ISRC/UPC/credits, release checklist, export pack |
+| **M7** | Production Mixcloud OAuth credentials (royalty sync + €8/release Stripe on PR #67) |
+| ~~P2~~ | ~~Release ops toolkit~~ — MusicBrainz, ISRC/UPC/credits, checklist, export pack (M30 core done) |
 | **M21** | Browser audio editor |
 | **M24–M28** | Visuals, commentary, custom radio page, 24/7 scheduler, track version history |
 

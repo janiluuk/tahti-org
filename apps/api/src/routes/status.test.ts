@@ -47,5 +47,6 @@ describe('GET /metrics', () => {
     expect(res.body).toContain('tahti_api_uptime_seconds')
     expect(res.body).toContain('tahti_users_registered_total')
     expect(res.body).toContain('tahti_http_requests_total')
+    expect(res.body).toContain('tahti_postgres_backup_age_hours')
   })
 })
