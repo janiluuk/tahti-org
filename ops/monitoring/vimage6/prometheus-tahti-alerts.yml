@@ -1,0 +1,43 @@
+# Tahti Prometheus alert rules (managed by tahti-org — deploy via deploy.sh)
+groups:
+  - name: tahti-backups
+    rules:
+      - alert: TahtiPostgresBackupStale
+        expr: |
+          tahti_postgres_backup_age_hours{job="tahti_api_metrics"} > 26
+          and tahti_postgres_backup_age_hours != -1
+        for: 15m
+        labels:
+          severity: warning
+          service: tahti
+        annotations:
+          summary: Postgres backup older than 26 hours
+          description: >-
+            Newest pg backup in MinIO is {{ $value | humanize }}h old (WARN threshold 26h).
+            Check cron on the manager node and `scripts/backup.sh status`.
+
+      - alert: TahtiPostgresBackupCritical
+        expr: |
+          tahti_postgres_backup_age_hours{job="tahti_api_metrics"} > 48
+          and tahti_postgres_backup_age_hours != -1
+        for: 5m
+        labels:
+          severity: critical
+          service: tahti
+        annotations:
+          summary: Postgres backup older than 48 hours
+          description: >-
+            Newest pg backup is {{ $value | humanize }}h old — page on-call and run
+            `./scripts/backup.sh postgres` manually if cron failed.
+
+      - alert: TahtiPostgresBackupUnknown
+        expr: tahti_postgres_backup_age_hours{job="tahti_api_metrics"} == -1
+        for: 30m
+        labels:
+          severity: warning
+          service: tahti
+        annotations:
+          summary: Postgres backup age unknown
+          description: >-
+            API could not list MinIO backups/pg/ (empty bucket, credentials, or network).
+            Verify MinIO backups bucket and API S3 access.

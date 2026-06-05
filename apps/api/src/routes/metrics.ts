@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { PrometheusMetricsBodySchema, openApiResponse } from '@tahti/shared'
+import { collectBackupMetrics, renderBackupMetricLines } from '../lib/backup-metrics.js'
 import { renderPrometheusMetrics, runDependencyChecks } from '../lib/health-checks.js'
 import { renderHttpMetricLines } from '../lib/http-metrics.js'
 import { collectPlatformMetrics, renderPlatformMetricLines } from '../lib/platform-metrics.js'
@@ -20,10 +21,12 @@ const metricsRoute: FastifyPluginAsync = async (fastify) => {
     async (_request, reply) => {
       const checks = await runDependencyChecks(fastify.prisma)
       const platform = await collectPlatformMetrics(fastify.prisma)
+      const backup = await collectBackupMetrics()
       const lines = [
         renderPrometheusMetrics(checks, Math.floor(process.uptime())).trimEnd(),
         ...renderHttpMetricLines(),
         ...renderPlatformMetricLines(platform),
+        ...renderBackupMetricLines(backup),
         ...renderStripeWebhookMetricLines(),
       ]
       return reply

@@ -34,6 +34,9 @@ export const config = {
     accessKey: process.env.MINIO_ACCESS_KEY ?? 'tahti',
     secretKey: process.env.MINIO_SECRET_KEY ?? 'tahti_dev_secret',
     bucket: process.env.MINIO_BUCKET ?? 'tahti',
+    /** Bucket for Postgres dumps (`pg/*.sql.gz`). See `scripts/backup.sh`. */
+    backupsBucket: process.env.MINIO_BACKUPS_BUCKET ?? 'backups',
+    backupsPgPrefix: process.env.MINIO_BACKUPS_PG_PREFIX ?? 'pg/',
     publicEndpoint: process.env.MINIO_PUBLIC_ENDPOINT ?? 'http://localhost:9000',
   },
   internalSecret: process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod',

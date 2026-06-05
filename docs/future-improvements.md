@@ -22,7 +22,7 @@ Last reviewed: 2026-06-03 (audit pass)
 1. Streaming scale blockers (STREAM-001 sync cron partial, STREAM-004; STREAM-005 watchdog done)
 2. Fan-sub live payout retry + M19 newsletter fan-only send UI
 3. ~~Wire `@tahti/ui` into dashboard/public pages~~ — PLAT-020 done
-4. Backup runbooks + Upptime (M11)
+4. ~~Backup runbooks + Upptime (M11)~~ — backup age on `/metrics`, Grafana panel + Prometheus alerts; Upptime deploy still ops
 5. Legal/infra Phase 0–2 (Tahti ry, hardware, staging)
 
 ---
@@ -81,6 +81,7 @@ Last reviewed: 2026-06-03 (audit pass)
 | ~~P1~~ | ~~Self-hosted **Upptime** pointing at `/api/v1/status`~~ — `ops/upptime/` example config + RUNBOOK (deploy is ops) |
 | ~~P1~~ | ~~Stripe webhook failure metrics~~ — Prometheus counters on `/metrics` (done) |
 | ~~P2~~ | ~~hCaptcha on first chat message~~ — token join marks Redis; publish proxy requires verification (done) |
+| ~~P2~~ | ~~Backup age Prometheus alert~~ — `tahti_postgres_backup_age_hours` + `prometheus-tahti-alerts.yml` + Grafana panel |
 | P2 | ACRCloud cost watchdog |
 | ~~P2~~ | ~~Rate-limit tuning per route from config~~ — `RATE_LIMIT_*` + `DOWNLOAD_RATE_*` env; see `docs/technical/rate-limit-policy.md` |
 | ~~P2~~ | ~~Structured logging (pino) + request IDs~~ — `x-request-id` + JSON response logs (done) |
@@ -113,8 +114,8 @@ Last reviewed: 2026-06-03 (audit pass)
 ### Still largely open
 | Milestone | Notes |
 |---|---|
-| **M7** | Revelator royalty sync, €8/release Stripe, production OAuth credentials |
-| **M30** | Release ops toolkit — MusicBrainz submission, ISRC/UPC/credits, release checklist, export pack |
+| **M7** | Production Mixcloud OAuth credentials (royalty sync + €8/release Stripe on PR #67) |
+| ~~P2~~ | ~~Release ops toolkit~~ — MusicBrainz, ISRC/UPC/credits, checklist, export pack (M30 core done) |
 | **M21** | Browser audio editor |
 | **M24–M28** | Visuals, commentary, custom radio page, 24/7 scheduler, track version history |
 

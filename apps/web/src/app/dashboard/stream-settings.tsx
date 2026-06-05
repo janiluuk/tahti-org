@@ -3,6 +3,7 @@
 
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { Button, CopyRow, Heading, Panel, Stack } from '@/components/ui'
 
@@ -76,6 +77,12 @@ export default function StreamSettingsPanel({ initial }: { initial: StreamSettin
           <Heading level={3}>HLS stream URL</Heading>
           <CopyRow label="URL" value={settings.hlsUrl} />
         </div>
+
+        <p className="studio-text-sm studio-m-0">
+          <Link href="/help/broadcast">OBS, Mixxx &amp; Traktor setup guides</Link>
+          {' · '}
+          <Link href="/help/multistream">Multistream to YouTube / Twitch</Link>
+        </p>
       </Stack>
     </Panel>
   )
