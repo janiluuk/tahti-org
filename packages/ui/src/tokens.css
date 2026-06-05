@@ -51,16 +51,9 @@
   --ease-card:      0.3s ease;
 }
 
-/* ─── Global base ──────────────────────────────────────────────────────── */
+/* ─── Global base (body styling lives in apps/web/src/app/globals.css) ─ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
 
 /* ─── Scroll reveal ────────────────────────────────────────────────────── */
 .reveal {

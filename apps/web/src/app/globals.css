@@ -2,3 +2,18 @@
 
 @import '@tahti/ui/src/styles/admin-tokens.css';
 @import '@tahti/ui/src/styles/admin-ui.css';
+
+/* ── Dark-first body baseline ──────────────────────────────────────────── */
+body {
+  background: #0a0f1e;
+  color: #e8eaf6;
+  font-family: var(--tahti-font-body);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Light body for brand-public pages (governance, help, transparency…) ─ */
+body:has(.brand-public) {
+  background: #fafafa;
+  color: #111827;
+}

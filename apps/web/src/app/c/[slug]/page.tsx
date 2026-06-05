@@ -4,9 +4,8 @@
 import { notFound } from 'next/navigation'
 import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
-import HlsPlayer from './hls-player'
+import { LivePlayerSection } from './live-player-section'
 import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
-import ReactionsOverlay from './reactions'
 import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
@@ -166,14 +165,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
           <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
 
-          {hlsUrl && (
-            <div className="ch-player-wrap">
-              <div className="ch-player-inner">
-                <HlsPlayer url={hlsUrl} />
-              </div>
-              <ReactionsOverlay slug={slug} />
-            </div>
-          )}
+          {hlsUrl && <LivePlayerSection url={hlsUrl} slug={slug} />}
 
           {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
 

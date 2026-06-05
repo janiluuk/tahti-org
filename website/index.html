@@ -1964,19 +1964,8 @@ window.audioReactive = (function() {
 
 // ===== THREE.JS BACKGROUND =====
 (function() {
-  if (typeof THREE === 'undefined') {
-    console.warn('[bg] Three.js unavailable — skipping WebGL background');
-    return;
-  }
   const canvas = document.getElementById('bg');
-  if (!canvas) return;
-  let renderer;
-  try {
-    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
-  } catch (e) {
-    console.warn('[bg] WebGL init failed', e);
-    return;
-  }
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -2489,7 +2478,6 @@ window.audioReactive = (function() {
 
 // ===== SCROLL REVEAL =====
 (function() {
-  document.querySelectorAll('#hero .reveal').forEach(el => el.classList.add('visible'));
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {

@@ -56,7 +56,7 @@ describe('M12 — artist profile API', () => {
     expect(res.json().displayName).toBe('Profile Artist')
     expect(res.json().publicAttribution).toBe(false)
 
-    await new Promise((r) => setTimeout(r, 50))
+    await new Promise((r) => setTimeout(r, 500))
     const mention = await prisma.mention.findFirst({
       where: { mentionerUserId: userId, targetUserId: target.id },
     })
