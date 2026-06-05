@@ -5,9 +5,15 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   IdParamSchema,
   MeReleaseTrackDownloadQuerySchema,
+  ReleaseTrackDownloadUrlSchema,
+  ReleaseTrackFinalizeSchema,
   ReleaseTrackInputSchema,
   ReleaseTrackParamsSchema,
   ReleaseTrackUploadSchema,
+  ReleaseTrackUploadUrlSchema,
+  ReleaseTrackViewSchema,
+  openApiResponse,
+  openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { nanoid } from 'nanoid'
@@ -22,7 +28,14 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/releases/:id/tracks — add a metadata-only track (no file)
   fastify.post(
     '/api/me/releases/:id/tracks',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponses([
+          { status: 201, schema: ReleaseTrackViewSchema, name: 'ReleaseTrackView' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)
@@ -64,7 +77,12 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/releases/:id/tracks/:trackId/upload — presigned URL for source audio
   fastify.post(
     '/api/me/releases/:id/tracks/:trackId/upload',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponse(ReleaseTrackUploadUrlSchema, 'ReleaseTrackUploadUrl'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)
@@ -113,7 +131,10 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/releases/:id/tracks/:trackId/finalize — trigger transcode after upload
   fastify.post(
     '/api/me/releases/:id/tracks/:trackId/finalize',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(ReleaseTrackFinalizeSchema, 'ReleaseTrackFinalize') },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)
@@ -145,7 +166,12 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/releases/:id/tracks/:trackId/download — signed download URL (Studio tier)
   fastify.get(
     '/api/me/releases/:id/tracks/:trackId/download',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponse(ReleaseTrackDownloadUrlSchema, 'ReleaseTrackDownloadUrl'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)

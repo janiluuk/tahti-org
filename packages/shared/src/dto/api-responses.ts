@@ -831,3 +831,64 @@ export const EmbedTrackPlaySchema = z.object({
   title: z.string(),
   expiresInSec: z.number().int(),
 })
+
+export const AdminVenueBoardSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  name: z.string(),
+  city: z.string(),
+  countryCode: z.string(),
+  verifiedAt: z.coerce.date().nullable(),
+  createdAt: z.coerce.date(),
+  createdBy: z.string(),
+})
+
+export const AdminVenueListSchema = z.array(AdminVenueBoardSchema)
+
+export const AdminVenueUpdatedSchema = AdminVenueBoardSchema.passthrough()
+
+export const MentionsEnabledResponseSchema = z.object({
+  mentionsEnabled: z.boolean(),
+})
+
+export const MentionMutedResponseSchema = z.object({
+  muted: z.string(),
+})
+
+export const MentionUnmutedResponseSchema = z.object({
+  unmuted: z.string(),
+})
+
+export const UserSearchHitSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+})
+
+export const UserSearchListSchema = z.array(UserSearchHitSchema)
+
+export const ReleaseTrackViewSchema = z
+  .object({
+    id: z.string(),
+    releaseId: z.string(),
+    position: z.number().int(),
+    title: z.string(),
+    status: z.string(),
+  })
+  .passthrough()
+
+export const ReleaseTrackUploadUrlSchema = z.object({
+  uploadUrl: z.string().url(),
+  sourceKey: z.string(),
+  expiresAt: z.string(),
+})
+
+export const ReleaseTrackFinalizeSchema = z.object({
+  trackId: z.string(),
+  status: z.literal('scanning'),
+})
+
+export const ReleaseTrackDownloadUrlSchema = z.object({
+  url: z.string().url(),
+  format: z.enum(['flac', 'opus']),
+  expiresInSec: z.number().int(),
+})

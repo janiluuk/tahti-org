@@ -2,7 +2,16 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { HandleParamSchema, MentionsEnabledSchema, parseRouteParams } from '@tahti/shared'
+import {
+  HandleParamSchema,
+  MentionMutedResponseSchema,
+  MentionUnmutedResponseSchema,
+  MentionsEnabledResponseSchema,
+  MentionsEnabledSchema,
+  openApiResponse,
+  openApiResponses,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 
 // M15 — artist mention preferences and mute management
@@ -10,7 +19,12 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
   // PATCH /api/me/mentions/settings — toggle mentions on/off
   fastify.patch(
     '/api/me/mentions/settings',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponse(MentionsEnabledResponseSchema, 'MentionsEnabledResponse'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const parsed = MentionsEnabledSchema.safeParse(request.body)
@@ -31,7 +45,14 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/mentions/mute/:handle — mute mentions from an artist
   fastify.post(
     '/api/me/mentions/mute/:handle',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponses([
+          { status: 201, schema: MentionMutedResponseSchema, name: 'MentionMutedResponse' },
+        ]),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(HandleParamSchema, request.params)
@@ -57,7 +78,12 @@ const mentionRoutes: FastifyPluginAsync = async (fastify) => {
   // DELETE /api/me/mentions/mute/:handle — unmute
   fastify.delete(
     '/api/me/mentions/mute/:handle',
-    { preHandler: requireAuth },
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponse(MentionUnmutedResponseSchema, 'MentionUnmutedResponse'),
+      },
+    },
     async (request, reply) => {
       const user = request.sessionUser!
       const routeParams = parseRouteParams(HandleParamSchema, request.params)
