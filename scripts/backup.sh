@@ -178,22 +178,27 @@ print(latest.get('key','').lstrip('/'))
 }
 
 backup_status() {
-  local MINIO_ALIAS BACKUP_BUCKET WARN_HOURS PAGE_HOURS
+  local MINIO_ALIAS BACKUP_BUCKET WARN_HOURS PAGE_HOURS DST_ALIAS
   MINIO_ALIAS="${MINIO_ALIAS:-tahti}"
   BACKUP_BUCKET="${BACKUP_BUCKET:-backups}"
   WARN_HOURS="${BACKUP_WARN_AGE_HOURS:-26}"
   PAGE_HOURS="${BACKUP_PAGE_AGE_HOURS:-48}"
+  DST_ALIAS="${DST_ALIAS:-tahti-dr}"
 
-  python3 - "$MINIO_ALIAS" "$BACKUP_BUCKET" "$WARN_HOURS" "$PAGE_HOURS" <<'PY'
-import json, subprocess, sys
+  MINIO_ALIAS="$MINIO_ALIAS" BACKUP_BUCKET="$BACKUP_BUCKET" \
+    WARN_HOURS="$WARN_HOURS" PAGE_HOURS="$PAGE_HOURS" DST_ALIAS="$DST_ALIAS" \
+    python3 - <<'PY'
+import json, os, subprocess, sys
 from datetime import datetime, timezone
 
-alias, bucket, warn_h, page_h = sys.argv[1:5]
-warn_h, page_h = float(warn_h), float(page_h)
+alias = os.environ["MINIO_ALIAS"]
+dst_alias = os.environ["DST_ALIAS"]
+bucket = os.environ["BACKUP_BUCKET"]
+warn_h, page_h = float(os.environ["WARN_HOURS"]), float(os.environ["PAGE_HOURS"])
 
-def latest_age_hours(prefix: str) -> float | None:
+def latest_age_hours(mc_alias: str, prefix: str) -> float | None:
     proc = subprocess.run(
-        ["mc", "ls", f"{alias}/{bucket}/{prefix}/", "--json"],
+        ["mc", "ls", f"{mc_alias}/{bucket}/{prefix}/", "--json"],
         capture_output=True,
         text=True,
     )
@@ -211,11 +216,15 @@ def latest_age_hours(prefix: str) -> float | None:
     dt = datetime.fromisoformat(ts)
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
-    age = (datetime.now(timezone.utc) - dt).total_seconds() / 3600
-    return age
+    return (datetime.now(timezone.utc) - dt).total_seconds() / 3600
 
-pg_age = latest_age_hours("pg")
+pg_age = latest_age_hours(alias, "pg")
+dr_pg_age = latest_age_hours(dst_alias, "pg")
 print(f"postgres_backup_age_hours={pg_age if pg_age is not None else 'missing'}")
+print(f"minio_dr_postgres_backup_age_hours={dr_pg_age if dr_pg_age is not None else 'missing'}")
+if pg_age is not None and dr_pg_age is not None and abs(pg_age - dr_pg_age) > 2:
+    print("dr_mirror=WARN reason=dr_pg_backup_diverged_from_primary")
+
 if pg_age is None:
     print("status=CRITICAL reason=no_postgres_backup")
     sys.exit(2)

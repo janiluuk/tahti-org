@@ -87,7 +87,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard |
 | **M28** Track version history | 🟡 Partial | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids) |
 | **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`; claim links (Spotify, Apple, YouTube). Deferred: Discogs API |
-| **M29** Backup & DR | 🟡 Partial | Unified **`scripts/backup.sh`** (postgres, minio, restore-test, status); **`ops/RUNBOOK.md`**, `install-crons.sh`. Deferred: pgBackRest, offsite buckets, operator drills |
+| **M29** Backup & DR | 🟡 Partial | **`scripts/backup.sh`** (postgres, minio DR mirror, restore-test, status + DR age); **`ops/RUNBOOK.md`** restore + drill table; `install-crons.sh`; `/metrics` backup gauge. Deferred: pgBackRest PITR |
 | **M20** Tier gating | 🟡 Partial | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API (`45m`/`55m`/`grace`/`blocked`) + **upgrade CTA**, HLS tier split, archive FLAC for paid artists (broadcast archive worker). Deferred: further copy polish |
 
 ### Improvements identified during the audit (added to the roadmap)
@@ -114,10 +114,10 @@ as their own checklist so they don't get lost between milestones.
 | [x] | Stripe webhook: return **500** on handler failure (Stripe retries; audit log retained) | Silent membership/fan-sub activation failures | M19 hardening |
 | [x] | Automate `db push` / migrate in deploy pipeline (OPS-002) | Swarm deploy runs `db-migrate-deploy.sh --image`; lab `stack-up.sh` db-push unchanged | M0 / Phase 2 |
 | [x] | Document local test prerequisites in README (`docker compose up postgres redis -d`, `pnpm ci:check`) | Onboarding friction; tests fail opaque without DB | M11 |
-| [~] | **Postgres backup pipeline** — pgBackRest (or `pg_dump` interim) → MinIO `backups/pg/` → UpCloud offsite; daily cron + age alert | Artist uploads, ledger, memberships are irreplaceable; RPO 1h per `infra-strategy.md` | M29 / Phase 2b |
-| [~] | **MinIO mirror** — `mc mirror` tahti → UpCloud bucket daily; verify object count | `scripts/backup.sh minio` compares primary vs DR counts (1% tolerance) | M29 / Phase 2b |
+| [x] | **Postgres backup pipeline** — pgBackRest (or `pg_dump` interim) → MinIO `backups/pg/` → UpCloud offsite; daily cron + age alert | `backup.sh postgres` + `status` + `/metrics`; pgBackRest PITR deferred | M29 / Phase 2b |
+| [x] | **MinIO mirror** — `mc mirror` tahti → UpCloud bucket daily; verify object count | `scripts/backup.sh minio` compares primary vs DR counts (1% tolerance) | M29 / Phase 2b |
 | [x] | **Restore-test automation** — weekly script restores latest PG dump to throwaway DB, row-count check, log to `/var/log/tahti-restore-test.log` | Backups that are never restored are fiction; required before public beta | M29 / Phase 2b |
-| [~] | **`ops/RUNBOOK.md` restore procedures** — Postgres point-in-time, MinIO bucket swap, DR read-only origin on UpCloud | Operators must recover without the director on call | M11 handover |
+| [x] | **`ops/RUNBOOK.md` restore procedures** — Postgres point-in-time, MinIO bucket swap, DR read-only origin on UpCloud | Operator drills table + step-by-step restore; PITR note (pg_dump RPO ~24h) | M11 handover |
 | [x] | Engagement-unit data pipeline (downloads + fan-sub euros) feeding grant calc | Both inputs now live: download weight (M18) + fan-sub gross euros (M19) feed `computeEngagementUnits` | M18 + M19 → M9 (done) |
 
 ---
@@ -219,7 +219,7 @@ failover stack promoted. Document exact DNS/Caddy cutover in `ops/RUNBOOK.md`.
 | [x] | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call | Dev | `backup.sh status` + **`/metrics` `tahti_postgres_backup_age_hours`** + `prometheus-tahti-alerts.yml` | `technical/journey-ops.md` |
 | [ ] | pgBackRest (replace interim `pg_dump` when hardware stable) + WAL shipping | Dev | Postgres prod | `future-improvements.md` |
 | [x] | Pre-destructive-op snapshot: `scripts/pre-destructive-db-snapshot.sh` before migrations / volume resize | Dev | — | `technical/phase-7.md` |
-| [~] | `ops/RUNBOOK.md` — restore Postgres, restore MinIO prefix, DR read-only cutover | Dev | restore test passed once | Phase 9 |
+| [x] | `ops/RUNBOOK.md` — restore Postgres, restore MinIO prefix, DR read-only cutover | Dev | restore test passed once | Phase 9 |
 | [ ] | Operator drill: restore from yesterday's backup without director (timed exercise) | Operators | RUNBOOK | Phase 9 §8b |
 | [ ] | DPA signed with UpCloud before storing artist/listener data offsite | Director | association | `infra-strategy.md` §GDPR |
 
@@ -392,7 +392,7 @@ contractor**. Director may remain employed, but **members can operate it**.
 
 | Done | Deliverable | Owner |
 |:---:|---|---|
-| [ ] | `ops/RUNBOOK.md` — deploy, rollback, **Postgres + MinIO restore**, DR cutover | Dev |
+| [x] | `ops/RUNBOOK.md` — deploy, rollback, **Postgres + MinIO restore**, DR cutover | Dev |
 | [ ] | `ops/BACKUP.md` — RPO/RTO table, cron schedule, offsite bucket names, escalation | Dev |
 | [ ] | `ops/INCIDENTS.md` — outage comms, escalation | Dev |
 | [ ] | `ops/ONBOARDING-OPERATOR.md` — training syllabus | Director |
@@ -535,7 +535,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 
 | ID | Issue | Raised by | Phase to fix |
 |:---|---|---|---|
-| [~] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | RTMP edge encoder (#75) + **dual-bitrate HLS** + **chromaprint at ingest** (STREAM-008); edge tier still single-node in dev stack | M3 |
+| [x] | **STREAM-002** No edge encoder tier — Liquidsoap receives raw RTMP/Icecast directly, preventing quality normalization and independent restart recovery | Per-channel **ffmpeg edge encoder** (orchestrator-spawned) + dual-bitrate HLS (`stream-mp3-192` / `stream-flac`); Icecast bypasses edge tier | M3 |
 | [x] | **STREAM-003** Ingest DNS failover has 30s dead window — OBS connections to failed ingest node must manually reconnect | Health-ranked fallbacks + prod replicas + `ops/ingest-dns.md` (TTL 5–30s) | M3 / Phase 4 |
 | [x] | **ARTIST-001** OBS disconnect during broadcast does not produce partial recording — total loss if disconnect before graceful end | `finalize-broadcast-recording` on RTMP/Icecast disconnect → MinIO → `archive-broadcast`; stack `tahti_stack_recordings` volume | M4 |
 | [x] | **ARTIST-002** Stream key rotation requires going offline — no hot-rotation while live | Hot rotation while `LIVE`: previous RTMP/Icecast credential valid 24h; offline rotation clears previous | M3 |
