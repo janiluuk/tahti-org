@@ -63,6 +63,17 @@ describe('GET /api/me/channel-egress', () => {
         weight: 1,
       },
     })
+
+    const liveStart = new Date()
+    liveStart.setUTCMinutes(liveStart.getUTCMinutes() - 30)
+    await prisma.broadcast.create({
+      data: {
+        channelId,
+        source: 'RTMP',
+        startedAt: liveStart,
+        endedAt: new Date(),
+      },
+    })
   })
 
   afterAll(async () => {
@@ -81,12 +92,24 @@ describe('GET /api/me/channel-egress', () => {
     const body = res.json() as {
       windowDays: number
       totalBytes: number
+      downloadBytes: number
+      estimatedLiveHlsBytes: number
       totalDownloads: number
-      daily: Array<{ date: string; bytes: number; downloads: number }>
+      daily: Array<{
+        date: string
+        bytes: number
+        downloadBytes: number
+        estimatedLiveBytes: number
+        downloads: number
+      }>
+      liveEstimateNote: string
     }
     expect(body.windowDays).toBe(30)
-    expect(body.totalBytes).toBeGreaterThanOrEqual(5_000_000)
+    expect(body.downloadBytes).toBeGreaterThanOrEqual(5_000_000)
+    expect(body.estimatedLiveHlsBytes).toBeGreaterThan(0)
+    expect(body.totalBytes).toBe(body.downloadBytes + body.estimatedLiveHlsBytes)
     expect(body.totalDownloads).toBeGreaterThanOrEqual(1)
-    expect(body.daily.some((d) => d.bytes >= 5_000_000)).toBe(true)
+    expect(body.daily.some((d) => d.downloadBytes >= 5_000_000)).toBe(true)
+    expect(body.liveEstimateNote.length).toBeGreaterThan(10)
   })
 })

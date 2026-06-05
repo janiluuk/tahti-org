@@ -547,7 +547,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 
 | ID | Issue | Raised by | Phase to fix |
 |:---|---|---|---|
-| [~] | **STREAM-006** No per-channel bandwidth accounting — can't attribute egress costs per artist, can't inform resource limits or grant calculations | `GET /api/me/channel-egress` + dashboard 30d chart (download bytes; HLS egress deferred) | M8 |
+| [x] | **STREAM-006** No per-channel bandwidth accounting — can't attribute egress costs per artist, can't inform resource limits or grant calculations | `GET /api/me/channel-egress` + dashboard 30d chart (downloads + **estimated live HLS** from broadcast duration; edge counters deferred) | M8 |
 | [ ] | **STREAM-007** Single Icecast node — Mixxx/Traktor users have no failover | Architecture review | Phase 5 / pre-launch |
 | [ ] | **STREAM-008** chromaprint fingerprint runs post-broadcast only — real-time tracklist UX requires at-ingest fingerprinting | Architecture review | M4 |
 | [ ] | **STREAM-009** Liquidsoap archive fallback reads MinIO cold on each segment — no local cache means repeated round-trips to MinIO for popular archive items | Architecture review | M3 |
