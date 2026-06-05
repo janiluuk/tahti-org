@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mkdir, rm, writeFile, stat } from 'node:fs/promises'
+import { mkdir, rm, writeFile, stat, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 
@@ -71,6 +71,65 @@ describe('syncChannelArchiveFallbackCache', () => {
 
     expect(summary.skipped).toBe(1)
     expect(summary.downloaded).toBe(0)
+    expect(downloadToFile).not.toHaveBeenCalled()
+  })
+
+  it('prunes cached files removed from the rotation pool', async () => {
+    const channelDir = join(root, channelId)
+    await mkdir(channelDir, { recursive: true })
+    await writeFile(join(channelDir, 'stale.mp3'), 'old')
+    await writeFile(join(channelDir, 'fallback.m3u'), '#EXTM3U\n')
+
+    const summary = await syncChannelArchiveFallbackCache(prismaMock as never, channelId, root, 24)
+
+    expect(summary.pruned).toBe(1)
+    await expect(stat(join(channelDir, 'stale.mp3'))).rejects.toThrow()
+  })
+
+  it('respects maxItems when building the cache pool', async () => {
+    prismaMock.archiveItem.findMany.mockResolvedValue([
+      {
+        id: 'item-1',
+        title: 'First',
+        mp3Key: 'mp3/a1.mp3',
+        flacKey: null,
+        durationSec: 60,
+        isFallback: true,
+        fallbackOrder: 0,
+        lastFallbackPlayedAt: null,
+      },
+      {
+        id: 'item-2',
+        title: 'Second',
+        mp3Key: 'mp3/a2.mp3',
+        flacKey: null,
+        durationSec: 60,
+        isFallback: true,
+        fallbackOrder: 1,
+        lastFallbackPlayedAt: null,
+      },
+    ])
+
+    await syncChannelArchiveFallbackCache(prismaMock as never, channelId, root, 1)
+
+    expect(downloadToFile).toHaveBeenCalledTimes(1)
+    expect(downloadToFile).toHaveBeenCalledWith('mp3/a1.mp3', join(root, channelId, 'mp3__a1.mp3'))
+  })
+
+  it('writes m3u entries pointing at local cache paths', async () => {
+    await syncChannelArchiveFallbackCache(prismaMock as never, channelId, root, 24)
+
+    const m3u = await readFile(join(root, channelId, 'fallback.m3u'), 'utf8')
+    expect(m3u).toContain('#EXTINF:120,Live set')
+    expect(m3u).toContain(`${join(root, channelId)}/mp3__artist__item-1.mp3`)
+  })
+
+  it('returns zero counts when channel is missing', async () => {
+    prismaMock.channel.findUnique.mockResolvedValue(null)
+
+    const summary = await syncChannelArchiveFallbackCache(prismaMock as never, 'missing', root, 24)
+
+    expect(summary).toEqual({ downloaded: 0, skipped: 0, pruned: 0 })
     expect(downloadToFile).not.toHaveBeenCalled()
   })
 })

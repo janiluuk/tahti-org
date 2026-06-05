@@ -19,6 +19,16 @@ describe('recorderInputUrl', () => {
       'http://tahti-edge-artist-one:8090/stream',
     )
   })
+
+  it('uses Icecast mount for WEBRTC until relay exists', () => {
+    expect(recorderInputUrl('WEBRTC', 'artist-one')).toBe('http://icecast:8000/live/artist-one')
+  })
+})
+
+describe('broadcastRecordingPath', () => {
+  it('is stable per channel and broadcast', () => {
+    expect(broadcastRecordingPath('ch-1', 'bc-abc')).toBe('/recordings/ch-1/broadcast-bc-abc.wav')
+  })
 })
 
 describe('buildRecorderDockerCommand', () => {
@@ -32,6 +42,18 @@ describe('buildRecorderDockerCommand', () => {
     expect(cmd).toContain('tahti-recorder-test-bc123')
     expect(cmd).toContain(broadcastRecordingPath('ch-1', 'bc-1'))
     expect(cmd).toContain('rtmp://rtmp-ingest:1935/live/artist-one__key')
+  })
+
+  it('reconnects HTTP inputs and writes 24-bit PCM wav', () => {
+    const cmd = buildRecorderDockerCommand({
+      containerName: 'tahti-recorder-x',
+      channelId: 'ch-1',
+      broadcastId: 'bc-1',
+      inputUrl: 'http://tahti-edge-artist-one:8090/stream',
+    })
+    expect(cmd).toContain('-reconnect 1')
+    expect(cmd).toContain('pcm_s24le')
+    expect(cmd).toContain('--restart=no')
   })
 })
 

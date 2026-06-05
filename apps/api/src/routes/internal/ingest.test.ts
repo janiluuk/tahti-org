@@ -10,8 +10,9 @@ import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
 import { utcWeekStart } from '@tahti/shared/broadcast-cap'
 
-const { enqueueFinalizeBroadcastRecording } = vi.hoisted(() => ({
+const { enqueueFinalizeBroadcastRecording, enqueueWarmArchiveFallbackCache } = vi.hoisted(() => ({
   enqueueFinalizeBroadcastRecording: vi.fn().mockResolvedValue(undefined),
+  enqueueWarmArchiveFallbackCache: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../../lib/queue.js', async (importOriginal) => {
@@ -19,6 +20,7 @@ vi.mock('../../lib/queue.js', async (importOriginal) => {
   return {
     ...actual,
     enqueueFinalizeBroadcastRecording,
+    enqueueWarmArchiveFallbackCache,
   }
 })
 
@@ -33,6 +35,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
 
   beforeAll(async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
+    enqueueWarmArchiveFallbackCache.mockClear()
     app = await buildApp({ logger: false })
     await app.ready()
     await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
@@ -103,6 +106,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
 
     const channel = await prisma.channel.findUnique({ where: { id: channelId } })
     expect(channel?.state).toBe('LIVE')
+    expect(enqueueWarmArchiveFallbackCache).toHaveBeenCalledWith(channelId)
 
     await prisma.broadcast.deleteMany({ where: { channelId } })
     await prisma.channel.update({
@@ -182,6 +186,8 @@ describe('internal ingest (RTMP + Icecast)', () => {
       payload: `mount=/live/${SLUG}&pass=${liveSourcePass}`,
     })
     expect(res.statusCode).toBe(200)
+
+    expect(enqueueWarmArchiveFallbackCache).toHaveBeenCalledWith(channelId)
 
     await prisma.broadcast.deleteMany({ where: { channelId } })
     await prisma.channel.update({
