@@ -215,11 +215,61 @@
       ]
     },
     {
+      "id": 15,
+      "title": "Postgres backup age (hours)",
+      "description": "From GET /metrics — newest object under backups/pg/ in MinIO. -1 = unknown.",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "unit": "h",
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            {
+              "type": "special",
+              "options": {
+                "match": "null",
+                "result": { "text": "N/A", "color": "red" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 26 },
+              { "color": "red", "value": 48 }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": "/^-1$/" },
+            "properties": [
+              { "id": "displayName", "value": "unknown" },
+              { "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }
+            ]
+          }
+        ]
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+      "targets": [
+        {
+          "expr": "tahti_postgres_backup_age_hours{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{environment}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
       "id": 9,
       "title": "HTTP response time (avg, ms)",
       "description": "In-process counter average since API start; resets on deploy.",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2 } }
@@ -242,7 +292,7 @@
       "title": "External probe duration (s)",
       "description": "Blackbox probes from monitor host to lab endpoints.",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2 } }
@@ -259,7 +309,7 @@
       "id": 11,
       "title": "Load average — vimage",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } }
@@ -286,7 +336,7 @@
       "id": 12,
       "title": "HTTP errors by class",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 6 },
+      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": {
@@ -306,7 +356,7 @@
       "id": 13,
       "title": "Users over time",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 22, "w": 24, "h": 6 },
+      "gridPos": { "x": 0, "y": 26, "w": 24, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } }
@@ -328,10 +378,10 @@
       "id": 14,
       "title": "Endpoints monitored",
       "type": "text",
-      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 4 },
+      "gridPos": { "x": 0, "y": 32, "w": 24, "h": 4 },
       "options": {
         "mode": "markdown",
-        "content": "Grafana on **monitor.dudeisland.eu** (vimage6) scrapes the **lab stack on vimage** (`192.168.2.100`).\n\n| Source | Metric |\n|--------|--------|\n| `GET /metrics` | Users, deps, HTTP counters, Stripe webhook failures |\n| `job=node` | Load average (`instance=vimage`) |\n| `job=tahti_blackbox` | External latency + probe up/down |\n\nDeploy: `./ops/monitoring/vimage6/deploy.sh`"
+        "content": "Grafana on **monitor.dudeisland.eu** (vimage6) scrapes the **lab stack on vimage** (`192.168.2.100`).\n\n| Source | Metric |\n|--------|--------|\n| `GET /metrics` | Users, deps, HTTP counters, backup age, Stripe webhook failures |\n| `job=node` | Load average (`instance=vimage`) |\n| `job=tahti_blackbox` | External latency + probe up/down |\n\nAlerts: `prometheus-tahti-alerts.yml` (backup >26h WARN, >48h critical). Deploy: `./ops/monitoring/vimage6/deploy.sh`"
       }
     }
   ]

@@ -216,7 +216,7 @@ failover stack promoted. Document exact DNS/Caddy cutover in `ops/RUNBOOK.md`.
 | [ ] | MinIO `backups` bucket on primary; `mc` alias configured on manager node | Dev | MinIO up | `technical/phase-3.md` |
 | [x] | `scripts/backup.sh` — unified postgres + minio + restore-test + status (wrappers deprecated) | Dev | Postgres + MinIO up | `ops/RUNBOOK.md` |
 | [x] | Cron: PG daily 03:00, MinIO daily 04:00, restore test Sunday 05:00 (`/etc/cron.d/tahti-backup`) | Dev | `scripts/backup.sh` + `install-crons.sh` | `technical/phase-3.md` |
-| [~] | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call | Dev | `backup.sh status` + **`/metrics` `tahti_postgres_backup_age_hours`** | `technical/journey-ops.md` |
+| [x] | Monitoring alert: **backup age > 26h** → WARN; **> 48h** → page on-call | Dev | `backup.sh status` + **`/metrics` `tahti_postgres_backup_age_hours`** + `prometheus-tahti-alerts.yml` | `technical/journey-ops.md` |
 | [ ] | pgBackRest (replace interim `pg_dump` when hardware stable) + WAL shipping | Dev | Postgres prod | `future-improvements.md` |
 | [ ] | Pre-destructive-op snapshot: `docker run … pg_dump` before migrations / volume resize | Dev | — | `technical/phase-7.md` |
 | [~] | `ops/RUNBOOK.md` — restore Postgres, restore MinIO prefix, DR read-only cutover | Dev | restore test passed once | Phase 9 |
@@ -249,7 +249,7 @@ Minimum to put **20–50 scene artists** on air. Full acceptance criteria in
 | Done | Test | Method |
 |:---:|---|---|
 | [ ] | Register → verify email → pay €40 → appear in member export | manual + automated |
-| [ ] | OBS guide: copy-paste RTMP → LIVE within 5s | `obs-and-broadcasting-guides.md` |
+| [x] | OBS guide: copy-paste RTMP → LIVE within 5s | `/help/broadcast` + `obs-and-broadcasting-guides.md` |
 | [ ] | Mixxx / Icecast path works | manual |
 | [ ] | Stop broadcast → archive within 10s, no silence | manual |
 | [ ] | Chat: anonymous join, 24h expiry, artist ban | manual |
