@@ -33,9 +33,12 @@ Tahti has two distinct design surfaces that share the same brand identity but us
 | Surface | Where | Tone | Token prefix |
 |---------|-------|------|--------------|
 | **Brand** | Marketing site, public channel/profile/smart-link pages | Dark navy, saturated accents | `--` (e.g. `--amber`) |
-| **Admin** | Authenticated dashboard, auth flows | Light gray/white | `--tahti-` (e.g. `--tahti-primary`) |
+| **Studio** | Authenticated dashboard (`/dashboard`) | Dark navy (migrating from light admin) | `--` + `brand-studio.css` |
+| **Admin forms** | Panels/fields inside dashboard and mixed pages | Light tokens for legacy form chrome | `--tahti-` (e.g. `--tahti-primary`) |
 
-The brand surface uses `packages/ui` components. The admin surface uses `apps/web/src/components/ui` components. They do not share component implementations — only fonts and brand colors (stored in admin tokens as `--tahti-brand-*`).
+**Single library:** All React components live in `packages/ui` (`@tahti/ui`). CSS lives under `packages/ui/src/styles/`. `apps/web/src/components/ui` re-exports the package — never duplicate implementations there.
+
+The brand surface uses `@tahti/ui` brand shells and marketing primitives. The admin surface uses `@tahti/ui` admin components (`Button`, `Panel`, …). They share fonts and brand color aliases but use different token prefixes until the dashboard migration completes.
 
 > **Implementation note:** The admin dashboard at `/dashboard` is currently implemented with the light token system. The mockups embedded in the marketing site (visible in `website/screenshots/`) show the intended dark-theme admin design — that migration has not yet been completed. This document describes both what is built and what is intended; the dark brand surface is canonical for visual identity.
 

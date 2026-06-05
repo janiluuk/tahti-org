@@ -1,0 +1,88 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Public pages under [data-tahti-ui="brand"] — uses @tahti/ui tokens */
+
+@import '@tahti/ui/src/tokens.css';
+
+/* Light auth/marketing pages only — do not remap tokens on channel/profile shells. */
+[data-tahti-ui='brand'].brand-public,
+[data-tahti-ui='brand'] .brand-public {
+  --font-body: var(--tahti-font-body, system-ui, sans-serif);
+  --font-head: var(--tahti-font-display, system-ui, sans-serif);
+  --text: var(--tahti-text, #111);
+  --muted: var(--tahti-text-muted, #666);
+  --bg: var(--tahti-bg, #fafafa);
+  --card: var(--tahti-surface, #fff);
+  --card2: var(--tahti-surface-muted, #f3f4f6);
+  --cyan: var(--tahti-primary, #2563eb);
+  --amber: var(--tahti-brand-amber, #f0a500);
+}
+
+[data-tahti-ui='brand'] .brand-public--center {
+  max-width: 420px;
+  text-align: center;
+}
+
+[data-tahti-ui='brand'] .brand-public {
+  max-width: 720px;
+  margin: 3rem auto;
+  padding: 0 1.5rem 4rem;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+[data-tahti-ui='brand'] .brand-public h1 {
+  font-family: var(--font-head);
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-muted {
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .brand-public a:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-panel {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-cta {
+  display: inline-block;
+  padding: 0.75rem 1.25rem;
+  background: var(--amber);
+  color: var(--bg);
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-cta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-cta-dark {
+  display: block;
+  padding: 0.75rem 1rem;
+  background: var(--card2);
+  color: var(--text);
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+}

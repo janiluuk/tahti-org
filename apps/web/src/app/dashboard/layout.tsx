@@ -2,15 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
+import { StudioShell } from '@tahti/ui'
 import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
 import '@/components/brand-studio.css'
 
-/** PLAT-020: studio shell uses @tahti/ui tokens (dashboard + authenticated studio). */
+/** Dashboard uses StudioShell from @tahti/ui (import brand-studio.css once here). */
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  return (
-    <div data-tahti-ui="studio" className="tahti-studio">
-      {children}
-    </div>
-  )
+  return <StudioShell>{children}</StudioShell>
 }

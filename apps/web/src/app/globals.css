@@ -1,28 +1,4 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-@import '../components/ui/tokens.css';
-@import '../components/ui/ui.css';
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: var(--tahti-font-body);
-  font-size: var(--tahti-text-base);
-  line-height: var(--tahti-leading-normal);
-  color: var(--tahti-text);
-  background: var(--tahti-bg);
-  -webkit-font-smoothing: antialiased;
-}
-
-a {
-  color: inherit;
-}
-
-code {
-  font-family: var(--tahti-font-mono);
-}
+@import '@tahti/ui/src/styles/admin-tokens.css';
+@import '@tahti/ui/src/styles/admin-ui.css';
