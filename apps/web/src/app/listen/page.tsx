@@ -82,9 +82,7 @@ export default async function ListenPage() {
           <>
             {live.length > 0 && (
               <section className="listen-section">
-                <div className="listen-section__label listen-section__label--live">
-                  ● Live now
-                </div>
+                <div className="listen-section__label listen-section__label--live">● Live now</div>
                 <div className="listen-grid">
                   {live.map((ch) => (
                     <ChannelCard key={ch.slug} channel={ch} />

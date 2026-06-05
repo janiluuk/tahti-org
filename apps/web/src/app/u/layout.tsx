@@ -4,8 +4,12 @@
 import type { ReactNode } from 'react'
 import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
-import '@/components/brand-public.css'
+import '@/components/brand-channel.css'
 
 export default function ArtistProfileLayout({ children }: { children: ReactNode }) {
-  return <div data-tahti-ui="brand">{children}</div>
+  return (
+    <div data-tahti-ui="brand" className="brand-channel">
+      {children}
+    </div>
+  )
 }
