@@ -24,7 +24,13 @@ declare global {
 
 // Loads Hls.js from CDN on first use, then initialises the audio element.
 // Falls back to native HLS for Safari which supports it natively.
-export default function HlsPlayer({ url, onAudioMount }: { url: string; onAudioMount?: (el: HTMLAudioElement) => void }) {
+export default function HlsPlayer({
+  url,
+  onAudioMount,
+}: {
+  url: string
+  onAudioMount?: (el: HTMLAudioElement) => void
+}) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [buffering, setBuffering] = useState(false)
 
