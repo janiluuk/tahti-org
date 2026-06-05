@@ -14,10 +14,15 @@ function formatTrackTime(sec: number): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
-/** Collapse consecutive identical fingerprints into track-boundary hints for archive tracklists. */
-export function fingerprintsToTracklistEntries(
+export type FingerprintTrackIdentification = {
+  title: string
+  artist?: string
+}
+
+/** Collapse consecutive identical fingerprints into boundary segments (one per track change). */
+export function fingerprintBoundaries(
   segments: LiveFingerprintSegment[],
-): TracklistEntry[] {
+): LiveFingerprintSegment[] {
   const boundaries: LiveFingerprintSegment[] = []
   let lastFingerprint = ''
 
@@ -27,10 +32,30 @@ export function fingerprintsToTracklistEntries(
     boundaries.push(seg)
   }
 
+  return boundaries
+}
+
+/** Collapse consecutive identical fingerprints into track-boundary hints for archive tracklists. */
+export function fingerprintsToTracklistEntries(
+  segments: LiveFingerprintSegment[],
+  identifications?: Array<FingerprintTrackIdentification | null | undefined>,
+): TracklistEntry[] {
+  const boundaries = fingerprintBoundaries(segments)
   if (boundaries.length === 0) return []
 
-  return boundaries.map((seg, idx) => ({
-    startSec: seg.offsetSec,
-    title: idx === 0 ? 'Broadcast start' : `Track change (${formatTrackTime(seg.offsetSec)})`,
-  }))
+  return boundaries.map((seg, idx) => {
+    const identified = identifications?.[idx]
+    if (identified?.title) {
+      return {
+        startSec: seg.offsetSec,
+        title: identified.title,
+        ...(identified.artist ? { artist: identified.artist } : {}),
+      }
+    }
+
+    return {
+      startSec: seg.offsetSec,
+      title: idx === 0 ? 'Broadcast start' : `Track change (${formatTrackTime(seg.offsetSec)})`,
+    }
+  })
 }

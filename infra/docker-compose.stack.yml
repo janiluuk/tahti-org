@@ -34,6 +34,8 @@ x-app-env: &app-env
   # STREAM-007: comma-separated public Icecast hosts for Mixxx failover (second replica in prod)
   ICECAST_INGEST_HOSTS: ""
   ICECAST_INGEST_HEALTH_PATH: /status-json.xsl
+  # STREAM-008 phase 3: optional AcoustID key for archive tracklist title lookup (https://acoustid.org/new-application)
+  ACOUSTID_API_KEY: ""
   HLS_BASE_URL: http://localhost:19000/hls-live
   HLS_SEGMENT_ROOT: /hls
   HLS_MINIO_BUCKET: hls-live
@@ -134,6 +136,15 @@ services:
       - ./stack/icecast.xml:/etc/icecast.xml:ro
     ports:
       - "${ICECAST_PORT:-18100}:8000"
+
+  # STREAM-007: optional second Icecast for local failover testing (`docker compose --profile icecast-failover up`)
+  icecast-b:
+    profiles: ["icecast-failover"]
+    image: moul/icecast:latest
+    volumes:
+      - ./stack/icecast.xml:/etc/icecast.xml:ro
+    ports:
+      - "${ICECAST_B_PORT:-18101}:8000"
 
   rtmp-ingest:
     image: tiangolo/nginx-rtmp:latest

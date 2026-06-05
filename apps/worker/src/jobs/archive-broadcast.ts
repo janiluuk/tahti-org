@@ -14,8 +14,8 @@ import { enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
 import {
   clearBroadcastFingerprintSegments,
   fetchBroadcastFingerprintSegments,
-  fingerprintsToTracklistEntries,
 } from '../lib/broadcast-fingerprint.js'
+import { buildTracklistFromFingerprints } from '../lib/fingerprint-tracklist.js'
 
 function ffmpegToMp3(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -113,10 +113,10 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
       where: { channelId: broadcast.channel.id, isFallback: true },
     })
 
-    let tracklist: ReturnType<typeof fingerprintsToTracklistEntries> | undefined
+    let tracklist: Awaited<ReturnType<typeof buildTracklistFromFingerprints>> | undefined
     try {
       const fpSegments = await fetchBroadcastFingerprintSegments(broadcastId)
-      const hints = fingerprintsToTracklistEntries(fpSegments)
+      const hints = await buildTracklistFromFingerprints(fpSegments)
       if (hints.length > 0) tracklist = hints
       await clearBroadcastFingerprintSegments(broadcastId)
     } catch (err) {

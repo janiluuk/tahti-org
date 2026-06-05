@@ -84,3 +84,21 @@ Full bucket swap only during DR cutover — document DNS/Caddy target before swi
 - Cron runs status check daily at 03:30 UTC after backup (see `install-crons.sh`).
 - Weekly restore-test log: `/var/log/tahti-restore-test.log`
 - Worker BullMQ crons: `apps/worker/src/cron-manifest.ts`
+
+## Ingest failover env (STREAM-003 / STREAM-007)
+
+Health-ranked ingest URLs on `GET /api/me/stream-settings` require comma-separated public host lists:
+
+| Variable | Service | Health probe |
+|----------|---------|--------------|
+| `RTMP_INGEST_HOSTS` | api | `RTMP_INGEST_HEALTH_SCHEME` + port + `RTMP_INGEST_HEALTH_PATH` (default `/health`) |
+| `ICECAST_INGEST_HOSTS` | api | `{host}/status-json.xsl` |
+
+Set on **api** only. Example production:
+
+```bash
+ICECAST_INGEST_HOSTS=https://icecast-a.tahti.live,https://icecast-b.tahti.live
+RTMP_INGEST_HOSTS=ingest-a.tahti.live,ingest-b.tahti.live
+```
+
+Archive tracklist title lookup (STREAM-008 phase 3): `ACOUSTID_API_KEY` on **worker** — https://acoustid.org/new-application
