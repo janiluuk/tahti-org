@@ -13,7 +13,8 @@ const sourceRoute: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['compliance'],
-        response: openApiRedirectResponse(302, 'Redirect to AGPL source repository'),
+        description: 'Redirect to AGPL source repository',
+        response: openApiRedirectResponse(302),
       },
     },
     async (_request, reply) => {

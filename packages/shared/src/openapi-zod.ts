@@ -32,12 +32,9 @@ export function openApiResponses(
 }
 
 /** HTTP redirect with no response body (AGPL /source, etc.). */
-export function openApiRedirectResponse(
-  status = 302,
-  description = 'Redirect',
-): Record<number, Record<string, unknown>> {
+export function openApiRedirectResponse(status = 302): Record<number, { type: 'null' }> {
   return {
-    [status]: { description },
+    [status]: { type: 'null' },
   }
 }
 

@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import {
   COLLECTING_SOCIETY_POINTERS,
   MUSICBRAINZ_GUIDE_STEPS,
@@ -15,6 +15,7 @@ import {
 } from '@tahti/shared'
 import {
   fetchReleaseExportJson,
+  fetchRevelatorRoyalties,
   submitReleaseToRevelator,
   updateReleaseCatalog,
 } from './release-actions'
@@ -68,10 +69,47 @@ export default function ReleaseOpsPanel({
   const [checklist, setChecklist] = useState(initialChecklist)
   const [revelatorStatus, setRevelatorStatus] = useState(initialRevelatorStatus ?? null)
   const revelatorId = initialRevelatorId ?? null
+  const [royalties, setRoyalties] = useState<
+    Array<{
+      id: string
+      periodStart: string
+      periodEnd: string
+      amountCents: number
+      currency: string
+      streams: number | null
+    }>
+  >([])
+  const [royaltiesLoaded, setRoyaltiesLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const canSubmitRevelator = !revelatorStatus || revelatorStatus === 'failed'
+  const showRoyalties = revelatorStatus === 'submitted' || revelatorStatus === 'delivered'
+
+  useEffect(() => {
+    if (!open || !showRoyalties || royaltiesLoaded) return
+    let cancelled = false
+    void fetchRevelatorRoyalties(releaseId).then((res) => {
+      if (cancelled) return
+      if (res.error) {
+        setError(res.error)
+      } else {
+        setRoyalties(res.reports)
+      }
+      setRoyaltiesLoaded(true)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [open, showRoyalties, royaltiesLoaded, releaseId])
+
+  function formatMoney(cents: number, currency: string) {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+    }).format(cents / 100)
+  }
 
   function save() {
     setError(null)
@@ -308,6 +346,29 @@ export default function ReleaseOpsPanel({
             >
               {isPending ? 'Submitting…' : 'Submit to Revelator'}
             </button>
+            {showRoyalties && (
+              <div className="studio-mt-md">
+                <div className="studio-text-strong-sm studio-mb-sm">Royalty reports</div>
+                {!royaltiesLoaded ? (
+                  <p className="studio-text-muted-sm studio-m-0">Loading…</p>
+                ) : royalties.length === 0 ? (
+                  <p className="studio-text-muted-sm studio-m-0">
+                    No reports yet — synced monthly after DSP delivery.
+                  </p>
+                ) : (
+                  <ul className="studio-list-indented studio-text-sm studio-m-0">
+                    {royalties.map((row) => (
+                      <li key={row.id}>
+                        {row.periodStart.slice(0, 7)}: {formatMoney(row.amountCents, row.currency)}
+                        {row.streams != null && (
+                          <span className="studio-text-muted-sm"> · {row.streams} streams</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="studio-mt-lg">

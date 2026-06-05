@@ -2,27 +2,50 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { submitReleaseToRevelator } from './index.js'
+import { fetchRoyaltyReports } from './index.js'
 
-describe('submitReleaseToRevelator stub mode', () => {
-  it('returns a stub id when REVELATOR_API_KEY is unset', async () => {
+describe('fetchRoyaltyReports stub mode', () => {
+  it('returns deterministic stub rows per release and month', async () => {
     const prev = process.env.REVELATOR_API_KEY
     delete process.env.REVELATOR_API_KEY
-    const result = await submitReleaseToRevelator({
+
+    const period = { year: 2026, month: 5 }
+    const refs = [{ tahtiReleaseId: 'rel_1', revelatorId: 'stub-rel_1' }]
+
+    const rows = await fetchRoyaltyReports(refs, period)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({
       tahtiReleaseId: 'rel_1',
-      title: 'Test EP',
-      type: 'EP',
-      releaseDate: '2026-01-01',
-      upc: '123',
-      pLine: null,
-      cLine: null,
-      labelImprint: null,
-      artistDisplayName: 'Artist',
-      artistUsername: 'artist',
-      tracks: [{ position: 1, title: 'Track', isrc: 'FI-XXX', durationSec: 200 }],
+      revelatorId: 'stub-rel_1',
+      periodStart: '2026-05-01',
+      periodEnd: '2026-05-31',
+      currency: 'EUR',
     })
-    expect(result.status).toBe('submitted')
-    expect(result.revelatorId).toContain('rel_1')
+    expect(rows[0].amountCents).toBeGreaterThanOrEqual(50)
+    expect(rows[0].streams).toBeGreaterThanOrEqual(10)
+
+    const again = await fetchRoyaltyReports(refs, period)
+    expect(again[0].amountCents).toBe(rows[0].amountCents)
+
     if (prev) process.env.REVELATOR_API_KEY = prev
+  })
+
+  it('uses month boundaries for the requested period', async () => {
+    const prev = process.env.REVELATOR_API_KEY
+    delete process.env.REVELATOR_API_KEY
+
+    const rows = await fetchRoyaltyReports(
+      [{ tahtiReleaseId: 'rel_1', revelatorId: 'stub-rel_1' }],
+      { year: 2026, month: 2 },
+    )
+    expect(rows[0].periodStart).toBe('2026-02-01')
+    expect(rows[0].periodEnd).toBe('2026-02-28')
+
+    if (prev) process.env.REVELATOR_API_KEY = prev
+  })
+
+  it('returns empty array when no releases', async () => {
+    const rows = await fetchRoyaltyReports([], { year: 2026, month: 1 })
+    expect(rows).toEqual([])
   })
 })

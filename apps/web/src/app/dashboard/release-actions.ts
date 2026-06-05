@@ -231,6 +231,38 @@ export async function fetchRevelatorStatus(
   }
 }
 
+export async function fetchRevelatorRoyalties(id: string): Promise<{
+  reports: Array<{
+    id: string
+    periodStart: string
+    periodEnd: string
+    amountCents: number
+    currency: string
+    streams: number | null
+  }>
+  error: string | null
+}> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${id}/revelator/royalties`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { reports: [], error: (data as { error?: string }).error ?? 'Failed to load royalties' }
+  }
+  const data = (await res.json()) as {
+    reports?: Array<{
+      id: string
+      periodStart: string
+      periodEnd: string
+      amountCents: number
+      currency: string
+      streams: number | null
+    }>
+  }
+  return { reports: data.reports ?? [], error: null }
+}
+
 export async function activateReleaseTrackVersion(
   releaseId: string,
   trackId: string,
