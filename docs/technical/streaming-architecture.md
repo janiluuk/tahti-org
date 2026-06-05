@@ -313,6 +313,6 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | STREAM-005 | No per-channel health watchdog — silent channels go undetected | HIGH |
 | STREAM-006 | No per-channel bandwidth accounting — can't attribute costs | MEDIUM |
 | STREAM-007 | Icecast `/status-json.xsl` health probe + `ICECAST_INGEST_HOSTS` fallbacks; optional `icecast-b` stack profile | MEDIUM (partial) |
-| STREAM-008 | Ingest fpcalc sidecar, live tracklist UI + API, archive/live AcoustID lookup; ACRCloud deferred | MEDIUM (partial) |
+| STREAM-008 | Ingest fpcalc sidecar, live tracklist (channel/embed/dashboard), archive/live AcoustID; ACRCloud deferred | ~~MEDIUM~~ done |
 | STREAM-009 | ~~Liquidsoap archive fallback reads from MinIO with no caching~~ — local cache volume + cron | ~~LOW~~ done |
 | STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop | LOW (done) |

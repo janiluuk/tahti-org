@@ -4,6 +4,7 @@
 import { notFound } from 'next/navigation'
 import { Link, LiveBadge, Text } from '@tahti/ui'
 import HlsPlayer from '../../../c/[slug]/hls-player'
+import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 
 interface EmbedChannel {
   slug: string
@@ -59,6 +60,10 @@ export default async function ChannelEmbedPage({ params }: { params: { slug: str
             visit the channel
           </Link>
         </Text>
+      )}
+
+      {channel.state === 'LIVE' && channel.hlsUrl && (
+        <LiveTracklistPanel slug={channel.slug} className="embed-live-tracklist" />
       )}
     </div>
   )
