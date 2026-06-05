@@ -8,6 +8,8 @@
 // Real uploads call the network. When MIXCLOUD_CLIENT_ID is not set the client
 // is in stub mode — useful for unit tests and CI without credentials.
 
+import { readSecret } from './read-secret.js'
+
 export interface MixcloudUploadParams {
   accessToken: string
   name: string
@@ -92,7 +94,7 @@ export interface MixcloudToken {
 /** Exchange OAuth code for an access token. */
 export async function exchangeMixcloudCode(params: MixcloudOAuthParams): Promise<MixcloudToken> {
   const clientId = process.env.MIXCLOUD_CLIENT_ID ?? ''
-  const clientSecret = process.env.MIXCLOUD_CLIENT_SECRET ?? ''
+  const clientSecret = readSecret('MIXCLOUD_CLIENT_SECRET', 'MIXCLOUD_CLIENT_SECRET_FILE')
 
   if (!clientId || !clientSecret) {
     throw new Error('MIXCLOUD_CLIENT_ID and MIXCLOUD_CLIENT_SECRET must be set')

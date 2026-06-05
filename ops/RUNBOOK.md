@@ -122,3 +122,29 @@ Optional local failover profiles:
 docker compose -f infra/docker-compose.stack.yml --profile icecast-failover up -d icecast-b
 docker compose -f infra/docker-compose.stack.yml --profile rtmp-failover up -d rtmp-ingest-b
 ```
+
+## Swagger `/docs` credentials (PLAT-005)
+
+Production API reads basic-auth credentials from Docker secrets (`DOCS_USER_FILE`, `DOCS_PASS_FILE` in `docker-stack.yml`). Local dev defaults to `tahti` / `changeme`; production logs a warning if the password is still `changeme`.
+
+**Create or rotate secrets on the Swarm manager:**
+
+```bash
+echo -n "tahti" | docker secret create docs_user -
+openssl rand -base64 24 | docker secret create docs_pass -
+# To rotate: docker secret rm docs_pass (after service update removes old ref)
+docker service update --secret-rm docs_pass tahti_api
+echo -n "$(openssl rand -base64 24)" | docker secret create docs_pass_v2 -
+docker service update --secret-add docs_pass_v2 tahti_api
+```
+
+OpenAPI UI: `https://api.tahti.live/docs`
+
+## Mixcloud OAuth (M7 production)
+
+1. Create a Mixcloud developer app; set redirect URI to `https://api.tahti.live/api/me/mixcloud/oauth/callback`.
+2. Put **client ID** in `stack.env` as `MIXCLOUD_CLIENT_ID` (public; not a Docker secret).
+3. Store **client secret** as Swarm secret `mixcloud_client_secret` (mounted as `MIXCLOUD_CLIENT_SECRET_FILE` on **api** and **worker-media**).
+4. Redeploy stack; artists connect via Dashboard → Distribution → Mixcloud.
+
+Without `MIXCLOUD_CLIENT_ID`, OAuth and uploads stay in stub mode (CI/dev).

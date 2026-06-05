@@ -110,7 +110,7 @@ export const config = {
   },
   mixcloud: {
     clientId: process.env.MIXCLOUD_CLIENT_ID ?? '',
-    clientSecret: process.env.MIXCLOUD_CLIENT_SECRET ?? '',
+    clientSecret: readSecret('MIXCLOUD_CLIENT_SECRET', 'MIXCLOUD_CLIENT_SECRET_FILE', ''),
     redirectUri:
       process.env.MIXCLOUD_OAUTH_REDIRECT_URI ??
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/mixcloud/oauth/callback`,
