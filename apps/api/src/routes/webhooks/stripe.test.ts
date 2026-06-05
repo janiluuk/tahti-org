@@ -108,6 +108,57 @@ describe('Stripe webhooks', () => {
     expect(ledger?.category).toBe('REVENUE_SUBSCRIPTION')
   })
 
+  it('checkout.session.completed records distribution payment and ledger', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}dist@example.com`,
+      username: 'stripe-wh-dist',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98450,
+    })
+    const release = await prisma.release.create({
+      data: {
+        userId: artist.id,
+        title: 'Webhook EP',
+        type: 'EP',
+        releaseDate: new Date('2026-06-01'),
+        smartLinkSlug: `${PREFIX}webhook-slug`,
+      },
+    })
+
+    const payload = JSON.stringify({
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_distribution_test',
+          amount_total: 800,
+          metadata: {
+            type: 'distribution',
+            releaseId: release.id,
+            userId: artist.id,
+          },
+        },
+      },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/webhooks/stripe',
+      headers: { 'content-type': 'application/json' },
+      payload,
+    })
+    expect(res.statusCode).toBe(200)
+
+    const row = await prisma.release.findUnique({ where: { id: release.id } })
+    expect(row?.distributionPaidAt).toBeTruthy()
+    expect(row?.distributionFeeCents).toBe(800)
+
+    const revenue = await prisma.ledgerEntry.findFirst({
+      where: { externalRef: 'distribution:cs_distribution_test' },
+    })
+    expect(revenue?.category).toBe('REVENUE_DISTRIBUTION')
+  })
+
   it('customer.subscription.deleted marks subscription canceled', async () => {
     const fan = await createTestArtist(prisma, {
       email: `${PREFIX}canceled@example.com`,
