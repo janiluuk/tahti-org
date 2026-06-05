@@ -59,9 +59,11 @@ describe('ingest-endpoints', () => {
     const result = await resolveIcecastIngestHosts({
       hosts: ['ice-a.example', 'ice-b.example'],
       defaultScheme: 'https',
+      healthPath: '/status-json.xsl',
     })
 
     expect(result.server).toBe('https://ice-b.example')
     expect(result.fallbackServers).toEqual(['https://ice-a.example'])
+    expect(vi.mocked(fetch).mock.calls[0]?.[0]).toContain('/status-json.xsl')
   })
 })

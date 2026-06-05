@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { LiveFingerprintSegment } from '@tahti/shared'
+import { broadcastFingerprintRedisKey } from '@tahti/shared'
 import { getRedisClient } from './redis.js'
 
 export type { LiveFingerprintSegment }
@@ -10,7 +11,7 @@ const TTL_SEC = 48 * 60 * 60
 const MAX_SEGMENTS = 500
 
 function redisKey(broadcastId: string): string {
-  return `broadcast:fp:${broadcastId}`
+  return broadcastFingerprintRedisKey(broadcastId)
 }
 
 export async function appendBroadcastFingerprintSegment(
@@ -46,4 +47,10 @@ export async function getBroadcastFingerprintSegments(
     }
   }
   return segments
+}
+
+export async function clearBroadcastFingerprintSegments(broadcastId: string): Promise<void> {
+  const client = await getRedisClient()
+  if (!client) return
+  await client.del(redisKey(broadcastId))
 }

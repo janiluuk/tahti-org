@@ -110,11 +110,14 @@ export async function resolveRtmpIngestHosts(opts: {
 export async function resolveIcecastIngestHosts(opts: {
   hosts: string[]
   defaultScheme?: string
+  /** STREAM-007: Icecast exposes /status-json.xsl when healthy. */
+  healthPath?: string
 }): Promise<{ server: string; fallbackServers: string[] }> {
   const scheme = opts.defaultScheme ?? 'https'
+  const healthPath = opts.healthPath ?? '/status-json.xsl'
   const ranked = await rankHosts(
     opts.hosts,
-    (host) => `${icecastPublicBaseUrl(host, scheme)}/`,
+    (host) => `${icecastPublicBaseUrl(host, scheme)}${healthPath}`,
     icecastCache,
   )
   icecastCache = ranked.cache

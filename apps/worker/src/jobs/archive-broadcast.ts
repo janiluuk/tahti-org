@@ -11,6 +11,11 @@ import { isUnlimitedLiveTier } from '@tahti/shared/broadcast-cap'
 import { broadcastSessionLogFields } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
+import {
+  clearBroadcastFingerprintSegments,
+  fetchBroadcastFingerprintSegments,
+  fingerprintsToTracklistEntries,
+} from '../lib/broadcast-fingerprint.js'
 
 function ffmpegToMp3(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -108,6 +113,23 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
       where: { channelId: broadcast.channel.id, isFallback: true },
     })
 
+    let tracklist: ReturnType<typeof fingerprintsToTracklistEntries> | undefined
+    try {
+      const fpSegments = await fetchBroadcastFingerprintSegments(broadcastId)
+      const hints = fingerprintsToTracklistEntries(fpSegments)
+      if (hints.length > 0) tracklist = hints
+      await clearBroadcastFingerprintSegments(broadcastId)
+    } catch (err) {
+      console.warn(
+        JSON.stringify({
+          ...base,
+          msg: 'fingerprint tracklist merge skipped',
+          err: String(err),
+          component: 'archive-broadcast',
+        }),
+      )
+    }
+
     const archiveItem = await prisma.archiveItem.create({
       data: {
         channelId: broadcast.channel.id,
@@ -127,6 +149,7 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         fallbackOrder: rotationCount,
         useDetectedBpmKey: true,
         description: `Auto-archived live broadcast from ${startedAt.toISOString()}`,
+        ...(tracklist ? { tracklist } : {}),
       },
     })
 

@@ -281,7 +281,7 @@ See `docs/project-roadmap.md` section **Streaming backlog** for tracked items.
 | STREAM-004 | ~~Recording is a Liquidsoap sidecar~~ — ffmpeg recorder sidecar (STREAM-004) | ~~HIGH~~ done |
 | STREAM-005 | No per-channel health watchdog — silent channels go undetected | HIGH |
 | STREAM-006 | No per-channel bandwidth accounting — can't attribute costs | MEDIUM |
-| STREAM-007 | Single Icecast node — no redundancy for Mixxx users | MEDIUM |
-| STREAM-008 | Ingest `fpcalc` sidecar + `GET /api/channels/:slug/live-fingerprints`; ACRCloud match deferred | MEDIUM (partial) |
+| STREAM-007 | Icecast `/status-json.xsl` health probe + `ICECAST_INGEST_HOSTS` fallbacks on stream settings | MEDIUM (partial) |
+| STREAM-008 | Ingest fpcalc sidecar, live fingerprints API, archive tracklist hints; ACRCloud deferred | MEDIUM (partial) |
 | STREAM-009 | ~~Liquidsoap archive fallback reads from MinIO with no caching~~ — local cache volume + cron | ~~LOW~~ done |
 | STREAM-010 | Telnet `graceful_shutdown` + `fade.out` on `radio_out`; `docker stop -t 20` backstop | LOW (done) |
