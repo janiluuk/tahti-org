@@ -500,8 +500,26 @@ export default async function DashboardPage() {
   return (
     <PageShell size="md">
       <div id="studio-overview" className="studio-section-anchor studio-page-header">
-        <Heading level={1}>Dashboard</Heading>
-        <Text tone="secondary" className="studio-mt-sm">
+        <div>
+          <Heading level={1}>Dashboard</Heading>
+          {user.channel && (
+            <div className="db-header-channel-row">
+              <span
+                className={`db-header-channel-state${user.channel.state === 'LIVE' ? ' db-header-channel-state--live' : ''}`}
+              >
+                <span
+                  className={user.channel.state === 'LIVE' ? 'signal-dot' : 'db-offline-dot'}
+                  aria-hidden
+                />
+                {user.channel.state === 'LIVE' ? 'Live' : 'Offline'}
+              </span>
+              <Link href={`/c/${user.channel.slug}`} className="db-header-channel-url">
+                {user.channel.slug}.tahti.live
+              </Link>
+            </div>
+          )}
+        </div>
+        <Text tone="secondary" className="studio-mt-sm db-header-welcome">
           Welcome back, {user.displayName}
         </Text>
       </div>

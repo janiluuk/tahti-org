@@ -444,6 +444,10 @@
   min-width: 0;
 }
 
+.auth-card--wide {
+  max-width: 480px;
+}
+
 /* ---- Dark auth card (used over Three.js background) ---- */
 .auth-card--dark {
   background: rgba(10, 15, 30, 0.72);
@@ -731,6 +735,7 @@
 .auth-tabs__tab--active {
   background: rgba(240, 165, 0, 0.16);
   color: #f0a500;
+  box-shadow: inset 0 -2px 0 rgba(240, 165, 0, 0.6);
 }
 
 .auth-tab-switch {
