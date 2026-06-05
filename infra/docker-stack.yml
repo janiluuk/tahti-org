@@ -23,6 +23,10 @@ version: "3.9"
 #   echo -n "..." | docker secret create revelator_api_key -
 #   echo -n "..." | docker secret create mixcloud_client_secret -
 #   echo -n "..." | docker secret create smtp_password -
+#   echo -n "..." | docker secret create acoustid_api_key -
+# Post-production ACRCloud (off until ACRCLOUD_ENABLED=true on api):
+#   echo -n "$KEY" | docker secret create acrcloud_access_key -
+#   echo -n "$SECRET" | docker secret create acrcloud_access_secret -
 #
 # Deploy:
 #   make deploy TAG=<git-sha>
@@ -66,8 +70,6 @@ secrets:
   smtp_password:             { external: true }
   docs_user:                 { external: true }
   docs_pass:                 { external: true }
-  acrcloud_access_key:       { external: true }
-  acrcloud_access_secret:    { external: true }
   acoustid_api_key:          { external: true }
 
 configs:
@@ -229,9 +231,7 @@ services:
       RTMP_INGEST_HOSTS: ingest.tahti.live,ingest-b.tahti.live
       RTMP_INGEST_HEALTH_PORT: "8080"
       RTMP_INGEST_HEALTH_PATH: /health
-      ACRCLOUD_HOST: identify-eu-west-1.acrcloud.com
-      ACRCLOUD_ACCESS_KEY_FILE: /run/secrets/acrcloud_access_key
-      ACRCLOUD_ACCESS_SECRET_FILE: /run/secrets/acrcloud_access_secret
+      ACRCLOUD_ENABLED: "false"
       ACOUSTID_API_KEY_FILE: /run/secrets/acoustid_api_key
       SESSION_SECRET_FILE: /run/secrets/session_secret
       RTMP_KEY_FILE: /run/secrets/rtmp_key_encryption_key
@@ -253,8 +253,6 @@ services:
       - smtp_password
       - docs_user
       - docs_pass
-      - acrcloud_access_key
-      - acrcloud_access_secret
       - acoustid_api_key
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
@@ -369,7 +367,7 @@ services:
       ICECAST_BASE_URL: http://icecast:8000
       RTMP_INGEST_URL: rtmp://rtmp-ingest:1935
       API_URL: http://api:3000
-      FINGERPRINT_SEND_AUDIO: "1"
+      FINGERPRINT_SEND_AUDIO: "0"
       HLS_VOLUME: hls_shared
       RECORDINGS_VOLUME: recordings_shared
       ARCHIVE_CACHE_VOLUME: archive_cache_shared

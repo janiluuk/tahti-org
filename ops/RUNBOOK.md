@@ -179,15 +179,15 @@ ICECAST_INGEST_HOSTS=https://icecast-a.tahti.live,https://icecast-b.tahti.live
 RTMP_INGEST_HOSTS=ingest-a.tahti.live,ingest-b.tahti.live
 ```
 
-Archive tracklist title lookup (STREAM-008): **ACRCloud** at ingest (MP3 sample from sidecar when `FINGERPRINT_SEND_AUDIO=1`) with **AcoustID** chromaprint fallback on archive/live polling.
+Archive tracklist title lookup (STREAM-008): **AcoustID** chromaprint fallback on archive/live polling. **ACRCloud** is disabled until post-production (`ACRCLOUD_ENABLED=false`; no ingest audio samples).
 
-**Secrets on manager** (empty string disables lookup):
+**Secrets on manager** (AcoustID only for launch):
 
 ```bash
-echo -n "$ACRCLOUD_KEY" | docker secret create acrcloud_access_key -
-echo -n "$ACRCLOUD_SECRET" | docker secret create acrcloud_access_secret -
 echo -n "$ACOUSTID_KEY" | docker secret create acoustid_api_key -
 ```
+
+**Post-production ACRCloud** (when ready): create `acrcloud_access_key` / `acrcloud_access_secret`, set `ACRCLOUD_ENABLED=true` on **api**, `FINGERPRINT_SEND_AUDIO=1` on **orchestrator**, redeploy.
 
 **Ingest replicas (prod Swarm):** label two nodes `ingest_id=a` and `ingest_id=b`; deploy `icecast`/`rtmp-ingest` on **a**, `icecast-b`/`rtmp-ingest-b` on **b**. DNS:
 

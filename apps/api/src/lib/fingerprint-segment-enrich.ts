@@ -8,7 +8,12 @@ export async function enrichFingerprintSegmentFromAcrcloud(
   segment: Omit<LiveFingerprintSegment, 'capturedAt'>,
   audioSampleBase64?: string,
 ): Promise<Omit<LiveFingerprintSegment, 'capturedAt'>> {
-  if (!config.acrcloud.accessKey || !config.acrcloud.accessSecret || !audioSampleBase64)
+  if (
+    !config.acrcloud.enabled ||
+    !config.acrcloud.accessKey ||
+    !config.acrcloud.accessSecret ||
+    !audioSampleBase64
+  )
     return segment
 
   let sample: Buffer
