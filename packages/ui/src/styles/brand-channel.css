@@ -694,11 +694,6 @@
   border-bottom: 1px solid var(--border);
 }
 
-[data-tahti-ui='brand'] .ch-archive-item-title {
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
 [data-tahti-ui='brand'] .ch-archive-item-desc {
   color: var(--muted);
   margin: 0 0 0.5rem;
@@ -1768,6 +1763,7 @@
 [data-tahti-ui='brand'] .ch-archive-item-title {
   font-weight: 600;
   font-size: 0.95rem;
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

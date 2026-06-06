@@ -878,10 +878,29 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  position: relative;
+  padding-left: 9px;
+}
+
+.listen-section__label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  background: #4fd1c5;
+  border-radius: 2px;
+  opacity: 0.55;
 }
 
 .listen-section__label--live {
   color: #00e676;
+}
+
+.listen-section__label--live::before {
+  background: #00e676;
+  opacity: 0.7;
 }
 
 /* ---- Live feature cards ---- */

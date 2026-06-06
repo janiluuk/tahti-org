@@ -70,7 +70,9 @@
   text-decoration: none;
   padding: 5px 10px;
   border-radius: 6px;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 [data-tahti-ui='studio'] .studio-top-nav__link:hover {
@@ -87,7 +89,9 @@
   color: var(--muted);
   cursor: pointer;
   font-family: var(--font-body);
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 
 [data-tahti-ui='studio'] .studio-top-nav__logout:hover {
@@ -175,7 +179,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
   text-decoration: none;
   border-radius: 0;
   position: relative;
@@ -423,7 +429,9 @@
   color: var(--text);
   cursor: pointer;
   font-family: var(--font-body);
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 [data-tahti-ui='studio'] button:not([class*='ui-btn']):not([class*='db-']):hover:not(:disabled) {
@@ -1118,8 +1126,9 @@
 }
 
 [data-tahti-ui='studio'] .studio-badge--success {
+  background: color-mix(in srgb, var(--green) 15%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
   color: var(--green);
-  font-size: 0.8rem;
 }
 
 [data-tahti-ui='studio'] .studio-actions {
@@ -1461,7 +1470,9 @@
   font-size: 0.7rem;
   opacity: 0;
   margin-left: 2px;
-  transition: opacity 0.15s, transform 0.15s;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
   transform: translateX(-4px);
 }
 
