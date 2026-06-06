@@ -1122,9 +1122,23 @@
 [data-tahti-ui='brand'] .prof-sec-label {
   font-size: 0.5625rem;
   letter-spacing: 2px;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--amber) 70%, var(--muted));
   margin-bottom: 8px;
   text-transform: uppercase;
+  padding-left: 9px;
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .prof-sec-label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  background: var(--amber);
+  border-radius: 2px;
+  opacity: 0.6;
 }
 
 [data-tahti-ui='brand'] .prof-section {

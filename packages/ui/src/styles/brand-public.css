@@ -435,8 +435,10 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-prose dt {
-  font-weight: 600;
-  color: var(--text);
+  font-weight: 700;
+  color: var(--cyan);
+  font-size: 0.8125rem;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-prose dd {
