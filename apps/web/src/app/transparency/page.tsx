@@ -95,18 +95,24 @@ export default async function TransparencyPage() {
       </Text>
 
       <section className="brand-stat-grid" aria-label="Year-to-date summary">
-        <SummaryCard label={`${ytd.year} Revenue`} value={formatEur(totalRevenue)} positive />
-        <SummaryCard label={`${ytd.year} Costs`} value={formatEur(totalCosts)} />
+        <SummaryCard
+          label={`${ytd.year} Revenue`}
+          value={formatEur(totalRevenue)}
+          positive
+          variant="revenue"
+        />
+        <SummaryCard label={`${ytd.year} Costs`} value={formatEur(totalCosts)} variant="cost" />
         <SummaryCard
           label="Running surplus"
           value={formatEur(ytd.runningSurplus)}
           positive={parseInt(ytd.runningSurplus, 10) >= 0}
           subtitle={`${ytd.monthsFinalized} month${ytd.monthsFinalized !== 1 ? 's' : ''} finalized`}
+          variant="surplus"
         />
       </section>
 
       <section className="brand-section">
-        <h2 className="brand-section__title">Year-to-date breakdown</h2>
+        <h2 className="brand-section__title brand-section-heading">Year-to-date breakdown</h2>
         <CategoryTable title="Revenue" keys={revenueKeys} data={ytd.byCategory} />
         <CategoryTable title="Costs" keys={costKeys} data={ytd.byCategory} />
         {disbKeys.length > 0 && (
@@ -116,7 +122,7 @@ export default async function TransparencyPage() {
 
       {rollups.length > 0 && (
         <section className="brand-section">
-          <h2 className="brand-section__title">Monthly detail</h2>
+          <h2 className="brand-section__title brand-section-heading">Monthly detail</h2>
           <div className="brand-table-wrap">
             <table className="brand-table">
               <thead>
@@ -159,7 +165,9 @@ export default async function TransparencyPage() {
 
       {resolutions.length > 0 && (
         <section className="brand-section">
-          <h2 className="brand-section__title">Board resolutions ({ytd.year})</h2>
+          <h2 className="brand-section__title brand-section-heading">
+            Board resolutions ({ytd.year})
+          </h2>
           <ul className="brand-section">
             {resolutions.map((r) => (
               <li key={r.id} className="brand-card">
@@ -194,14 +202,16 @@ function SummaryCard({
   value,
   positive,
   subtitle,
+  variant,
 }: {
   label: string
   value: string
   positive?: boolean
   subtitle?: string
+  variant?: 'revenue' | 'cost' | 'surplus'
 }) {
   return (
-    <div className="brand-stat-card">
+    <div className={`brand-stat-card${variant ? ` brand-stat-card--${variant}` : ''}`}>
       <div className="brand-stat-card__label">{label}</div>
       <div
         className={`brand-stat-card__value${positive ? ' brand-stat-card__value--positive' : ''}`}

@@ -55,14 +55,32 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
 
   return (
     <SmartLinkPageLayout>
+      <div className="sl-artist-card">
+        <div className="sl-artist-avatar">
+          {data.artist.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={data.artist.avatarUrl} alt="" width={32} height={32} />
+          ) : (
+            <span aria-hidden>{data.artist.displayName.charAt(0).toUpperCase()}</span>
+          )}
+        </div>
+        <div className="sl-artist-info">
+          <span className="sl-artist-name">{data.artist.displayName}</span>
+          <span className="sl-artist-handle">@{data.artist.username}</span>
+        </div>
+        <Link href={data.profileUrl} className="sl-artist-link">
+          Profile →
+        </Link>
+      </div>
+
       {data.release.artworkUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={data.release.artworkUrl}
           alt=""
           className="sl-cover-art"
-          width={160}
-          height={160}
+          width={200}
+          height={200}
         />
       )}
       <h1 className="sl-title-h2">{data.release.title}</h1>

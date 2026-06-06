@@ -88,7 +88,9 @@
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid var(--border);
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 
 [data-tahti-ui='brand'] .ch-header__back:hover {
@@ -965,7 +967,9 @@
   cursor: pointer;
   text-decoration: none;
   white-space: nowrap;
-  transition: opacity 0.15s, background 0.15s;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
 }
 
 [data-tahti-ui='brand'] .prof-cta-btn {
@@ -1226,11 +1230,20 @@
 
 [data-tahti-ui='brand'] .tier-card {
   border: 1px solid var(--border);
+  border-top: 2px solid var(--amber);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   background: var(--card);
+  transition:
+    box-shadow 0.15s,
+    transform 0.15s;
+}
+
+[data-tahti-ui='brand'] .tier-card:hover {
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--amber) 20%, transparent);
+  transform: translateY(-2px);
 }
 
 [data-tahti-ui='brand'] .tier-card h3 {
@@ -1259,10 +1272,24 @@
 }
 
 [data-tahti-ui='brand'] .tier-perks {
-  padding-left: 1.1rem;
+  list-style: none;
+  padding: 0;
   margin: 0.75rem 0;
   color: var(--text);
   font-size: 0.9rem;
+}
+
+[data-tahti-ui='brand'] .tier-perk-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 0.3rem;
+}
+
+[data-tahti-ui='brand'] .tier-perk-check {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--cyan);
 }
 
 [data-tahti-ui='brand'] .tier-subscribe-btn {
@@ -1288,6 +1315,72 @@
   margin-top: 1.5rem;
 }
 
+/* Smart link artist mini-card */
+[data-tahti-ui='brand'] .sl-artist-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px 12px;
+  background: var(--card2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+[data-tahti-ui='brand'] .sl-artist-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--cyan) 15%, var(--card2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .sl-artist-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+[data-tahti-ui='brand'] .sl-artist-info {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .sl-artist-name {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .sl-artist-handle {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .sl-artist-link {
+  font-size: 0.6875rem;
+  color: var(--cyan);
+  text-decoration: none;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .sl-artist-link:hover {
+  text-decoration: underline;
+}
+
 /* Smart link landing (/r/[slug]) */
 [data-tahti-ui='brand'] .sl-wrap {
   padding: 24px 20px 3rem;
@@ -1303,6 +1396,13 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
   object-fit: cover;
+}
+
+@media (min-width: 480px) {
+  [data-tahti-ui='brand'] .sl-cover-art {
+    width: 240px;
+    height: 240px;
+  }
 }
 
 [data-tahti-ui='brand'] .sl-title-h2 {

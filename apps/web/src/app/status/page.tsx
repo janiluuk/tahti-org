@@ -39,6 +39,7 @@ export default async function StatusPage() {
       <div className="status-page">
         <h1 className="status-page__title">Tahti platform status</h1>
         <p className={`status-page__banner status-page__banner--${overall}`}>
+          <span className={`status-dot status-dot--${overall}`} aria-hidden />
           {data ? STATUS_LABEL[data.status] : 'Status unavailable'}
         </p>
         {data ? (
@@ -64,6 +65,10 @@ export default async function StatusPage() {
                       <td
                         className={check.state === 'up' ? 'status-page__up' : 'status-page__down'}
                       >
+                        <span
+                          className={`status-dot status-dot--${check.state === 'up' ? 'up' : 'down'}`}
+                          aria-hidden
+                        />
                         {check.state}
                         {check.critical ? ' · critical' : ''}
                       </td>

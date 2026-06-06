@@ -67,7 +67,25 @@ export default function TierCards({
             {t.perks.length > 0 && (
               <ul className="tier-perks">
                 {t.perks.map((p, i) => (
-                  <li key={i}>{p}</li>
+                  <li key={i} className="tier-perk-item">
+                    <svg
+                      className="tier-perk-check"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path
+                        d="M3 8l4 4 6-6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {p}
+                  </li>
                 ))}
               </ul>
             )}
