@@ -198,12 +198,26 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-category__title {
-  font-size: 0.8rem;
-  color: var(--muted);
-  font-weight: 600;
+  font-size: 0.6875rem;
+  color: color-mix(in srgb, var(--amber) 70%, var(--muted));
+  font-weight: 700;
   margin-bottom: 0.25rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  padding-left: 9px;
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-category__title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  background: var(--amber);
+  border-radius: 2px;
+  opacity: 0.6;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-category__row {
@@ -227,9 +241,19 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-badge {
+  display: inline-flex;
+  align-items: center;
   margin-left: 0.4rem;
-  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--cyan) 12%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--cyan) 28%, transparent);
   color: var(--cyan);
+  vertical-align: middle;
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page {
@@ -459,6 +483,18 @@
 [data-tahti-ui='brand'] .brand-public .brand-prose dd {
   margin: 0;
   color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose blockquote {
+  margin: 1rem 0;
+  padding: 0.65rem 1rem;
+  border-left: 3px solid color-mix(in srgb, var(--amber) 55%, var(--border));
+  background: color-mix(in srgb, var(--amber) 5%, var(--card2));
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.9375rem;
+  color: var(--text);
+  font-style: italic;
+  line-height: 1.6;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-prose a {
