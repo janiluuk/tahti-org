@@ -532,6 +532,72 @@
   border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
 }
 
+/* ---- Brand form (venue register, support contact) ---- */
+[data-tahti-ui='brand'] .brand-public .brand-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form input,
+[data-tahti-ui='brand'] .brand-public .brand-form textarea,
+[data-tahti-ui='brand'] .brand-public .brand-form select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-family: var(--font-body);
+  background: var(--card);
+  color: var(--text);
+  width: 100%;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form input:focus,
+[data-tahti-ui='brand'] .brand-public .brand-form textarea:focus,
+[data-tahti-ui='brand'] .brand-public .brand-form select:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cyan) 20%, transparent);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form textarea {
+  resize: vertical;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form button[type='submit'] {
+  align-self: flex-start;
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--cyan);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form button[type='submit']:hover {
+  opacity: 0.9;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form button[type='submit']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 [data-tahti-ui='brand'] .brand-public .brand-form-row {
   display: flex;
   flex-wrap: wrap;
