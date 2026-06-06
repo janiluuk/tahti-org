@@ -319,8 +319,22 @@
   font-weight: 700;
   margin: 2.5rem 0 0.875rem;
   padding-bottom: 0.5rem;
+  padding-left: 11px;
   border-bottom: 1px solid color-mix(in srgb, var(--muted) 18%, transparent);
   color: var(--text);
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 0.625rem;
+  width: 3px;
+  background: var(--cyan);
+  border-radius: 2px;
+  opacity: 0.7;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-prose h3 {
