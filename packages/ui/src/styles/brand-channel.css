@@ -1350,6 +1350,14 @@
   cursor: pointer;
   font-weight: 600;
   font-size: 0.875rem;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s;
+}
+
+[data-tahti-ui='brand'] .tier-subscribe-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--purple) 85%, #fff);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--purple) 35%, transparent);
 }
 
 [data-tahti-ui='brand'] .tier-subscribe-btn:disabled {
@@ -1361,6 +1369,10 @@
   color: var(--muted);
   font-size: 0.8rem;
   margin-top: 1.5rem;
+  padding: 0.65rem 0.85rem;
+  background: color-mix(in srgb, var(--muted) 6%, var(--card));
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--muted) 15%, transparent);
 }
 
 /* Smart link artist mini-card */
@@ -1373,6 +1385,7 @@
   background: var(--card2);
   border-radius: var(--radius);
   border: 1px solid var(--border);
+  border-left: 2px solid color-mix(in srgb, var(--cyan) 45%, var(--border));
   text-align: left;
 }
 
@@ -1488,6 +1501,7 @@
   font-size: 0.85rem;
   color: var(--muted);
   border: 1px solid var(--border);
+  border-top: 2px solid color-mix(in srgb, var(--cyan) 35%, var(--border));
 }
 
 [data-tahti-ui='brand'] .sl-panel a {
@@ -1513,8 +1527,25 @@
 
 [data-tahti-ui='brand'] .sl-collection-label {
   margin: 0 0 0.5rem;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--amber) 70%, var(--muted));
+  padding-left: 9px;
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .sl-collection-label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  background: var(--amber);
+  border-radius: 2px;
+  opacity: 0.6;
 }
 
 [data-tahti-ui='brand'] .sl-collection-list {
