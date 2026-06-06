@@ -117,7 +117,9 @@ export default async function VenueProfilePage({ params }: { params: { slug: str
       </div>
 
       <section className="brand-section">
-        <Heading level={2}>Upcoming broadcasts</Heading>
+        <Heading level={2} className="brand-section__title brand-section-heading">
+          Upcoming broadcasts
+        </Heading>
         {upcoming.length === 0 ? (
           <Text tone="muted">No upcoming broadcasts scheduled.</Text>
         ) : (
@@ -139,7 +141,9 @@ export default async function VenueProfilePage({ params }: { params: { slug: str
 
       {past.length > 0 && (
         <section className="brand-section">
-          <Heading level={2}>Past broadcasts</Heading>
+          <Heading level={2} className="brand-section__title brand-section-heading">
+            Past broadcasts
+          </Heading>
           <ul className="venue-event-list venue-event-list--past">
             {past.map((b) => (
               <li key={b.id} className="venue-event-card venue-event-card--past">

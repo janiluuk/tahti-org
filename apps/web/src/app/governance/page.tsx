@@ -90,7 +90,7 @@ export default async function GovernancePage() {
       )}
 
       <section className="brand-section">
-        <h2 className="brand-section__title">Motions</h2>
+        <h2 className="brand-section__title brand-section-heading">Motions</h2>
         {motions.length === 0 ? (
           <p className="brand-empty">No motions yet.</p>
         ) : (
@@ -99,7 +99,9 @@ export default async function GovernancePage() {
       </section>
 
       <section className="brand-section">
-        <h2 className="brand-section__title">Member directory ({members.length})</h2>
+        <h2 className="brand-section__title brand-section-heading">
+          Member directory ({members.length})
+        </h2>
         <div className="brand-table-wrap">
           <table className="brand-table">
             <thead>

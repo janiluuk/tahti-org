@@ -173,6 +173,11 @@
 
 [data-tahti-ui='brand'] .brand-public .brand-table tbody tr {
   border-bottom: 1px solid color-mix(in srgb, var(--muted) 12%, transparent);
+  transition: background 0.12s;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table tbody tr:hover {
+  background: color-mix(in srgb, var(--muted) 5%, transparent);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-table .num {
@@ -319,8 +324,22 @@
   font-weight: 700;
   margin: 2.5rem 0 0.875rem;
   padding-bottom: 0.5rem;
+  padding-left: 11px;
   border-bottom: 1px solid color-mix(in srgb, var(--muted) 18%, transparent);
   color: var(--text);
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose h2::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 0.625rem;
+  width: 3px;
+  background: var(--cyan);
+  border-radius: 2px;
+  opacity: 0.7;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-prose h3 {
@@ -421,8 +440,10 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-prose dt {
-  font-weight: 600;
-  color: var(--text);
+  font-weight: 700;
+  color: var(--cyan);
+  font-size: 0.8125rem;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-prose dd {
@@ -460,6 +481,23 @@
   box-shadow: 0 2px 8px color-mix(in srgb, var(--muted) 10%, transparent);
 }
 
+[data-tahti-ui='brand'] .brand-public li.brand-card > a::after {
+  content: '→';
+  float: right;
+  opacity: 0;
+  color: var(--cyan);
+  font-size: 0.85rem;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+[data-tahti-ui='brand'] .brand-public li.brand-card:hover > a::after {
+  opacity: 0.7;
+  transform: translateX(0);
+}
+
 [data-tahti-ui='brand'] .brand-public .brand-card--accent {
   border-top: 2px solid var(--amber);
 }
@@ -478,7 +516,11 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-motion-status {
-  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -486,14 +528,20 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-motion-status--draft {
+  background: color-mix(in srgb, var(--muted) 12%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
   color: var(--muted);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-motion-status--open {
-  color: var(--tahti-success, #16a34a);
+  background: color-mix(in srgb, var(--green) 12%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--green) 28%, transparent);
+  color: var(--green);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-motion-status--closed {
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--cyan) 25%, transparent);
   color: var(--cyan);
 }
 
@@ -516,6 +564,72 @@
   background: var(--card2);
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+}
+
+/* ---- Brand form (venue register, support contact) ---- */
+[data-tahti-ui='brand'] .brand-public .brand-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form input,
+[data-tahti-ui='brand'] .brand-public .brand-form textarea,
+[data-tahti-ui='brand'] .brand-public .brand-form select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-family: var(--font-body);
+  background: var(--card);
+  color: var(--text);
+  width: 100%;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form input:focus,
+[data-tahti-ui='brand'] .brand-public .brand-form textarea:focus,
+[data-tahti-ui='brand'] .brand-public .brand-form select:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cyan) 20%, transparent);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form textarea {
+  resize: vertical;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form button[type='submit'] {
+  align-self: flex-start;
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--cyan);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form button[type='submit']:hover {
+  opacity: 0.9;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form button[type='submit']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-form-row {

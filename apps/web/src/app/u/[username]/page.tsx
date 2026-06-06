@@ -139,11 +139,13 @@ export default async function ArtistProfilePage({ params }: { params: { username
         {links.feeds?.archive && (
           <section className="prof-section">
             <div className="prof-sec-label">Podcasts &amp; feeds</div>
-            <p className="prof-list-meta prof-list-meta--spaced">
+            <p className="prof-rss-row">
               <a href={links.feeds.archive} rel="alternate">
                 Archive RSS ↗
               </a>
-              {' · subscribe in Apple Podcasts, Overcast, or any RSS reader'}
+            </p>
+            <p className="prof-list-meta prof-list-meta--tight">
+              Subscribe in Apple Podcasts, Overcast, or any RSS reader
             </p>
           </section>
         )}
@@ -167,15 +169,14 @@ export default async function ArtistProfilePage({ params }: { params: { username
                     <div className="prof-list-meta">
                       {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
                       {c.isFeatured && ' · Featured'}
-                      {c.rssUrl && (
-                        <>
-                          {' · '}
-                          <a href={c.rssUrl} rel="alternate">
-                            RSS ↗
-                          </a>
-                        </>
-                      )}
                     </div>
+                    {c.rssUrl && (
+                      <p className="prof-rss-row">
+                        <a href={c.rssUrl} rel="alternate">
+                          RSS ↗
+                        </a>
+                      </p>
+                    )}
                     {c.description && (
                       <p className="prof-list-meta prof-list-meta--tight">{c.description}</p>
                     )}

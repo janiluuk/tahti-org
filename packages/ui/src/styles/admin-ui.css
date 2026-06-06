@@ -426,6 +426,7 @@
   z-index: -1;
   background: #0a0f1e;
   display: block;
+  filter: blur(12px);
 }
 
 .auth-shell {
@@ -877,10 +878,29 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  position: relative;
+  padding-left: 9px;
+}
+
+.listen-section__label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  background: #4fd1c5;
+  border-radius: 2px;
+  opacity: 0.55;
 }
 
 .listen-section__label--live {
   color: #00e676;
+}
+
+.listen-section__label--live::before {
+  background: #00e676;
+  opacity: 0.7;
 }
 
 /* ---- Live feature cards ---- */
@@ -900,7 +920,10 @@
   border-radius: var(--tahti-radius-lg);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.15s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.15s ease;
   position: relative;
   overflow: hidden;
 }
@@ -1025,7 +1048,9 @@
   border-radius: var(--tahti-radius-lg);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .listen-card:hover {
@@ -1075,8 +1100,15 @@
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.82); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.82);
+  }
 }
 
 .listen-card__body {
