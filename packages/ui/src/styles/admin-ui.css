@@ -426,6 +426,7 @@
   z-index: -1;
   background: #0a0f1e;
   display: block;
+  filter: blur(12px);
 }
 
 .auth-shell {
@@ -900,7 +901,10 @@
   border-radius: var(--tahti-radius-lg);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.18s ease, background 0.18s ease, transform 0.15s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.15s ease;
   position: relative;
   overflow: hidden;
 }
@@ -1025,7 +1029,9 @@
   border-radius: var(--tahti-radius-lg);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.18s ease, background 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
 }
 
 .listen-card:hover {
@@ -1075,8 +1081,15 @@
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(0.82); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.82);
+  }
 }
 
 .listen-card__body {
