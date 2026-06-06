@@ -474,6 +474,23 @@
   box-shadow: 0 2px 8px color-mix(in srgb, var(--muted) 10%, transparent);
 }
 
+[data-tahti-ui='brand'] .brand-public li.brand-card > a::after {
+  content: '→';
+  float: right;
+  opacity: 0;
+  color: var(--cyan);
+  font-size: 0.85rem;
+  transform: translateX(-6px);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+
+[data-tahti-ui='brand'] .brand-public li.brand-card:hover > a::after {
+  opacity: 0.7;
+  transform: translateX(0);
+}
+
 [data-tahti-ui='brand'] .brand-public .brand-card--accent {
   border-top: 2px solid var(--amber);
 }
