@@ -39,7 +39,7 @@
 [data-tahti-ui='brand'] .brand-public h1 {
   font-family: var(--font-head);
   font-weight: 700;
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.5rem;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-muted {
@@ -319,6 +319,16 @@
 }
 
 /* ---- Prose (help, methodology) ---- */
+[data-tahti-ui='brand'] .brand-public .brand-prose h1 {
+  font-size: 1.625rem;
+  font-weight: 700;
+  font-family: var(--font-head);
+  margin: 0 0 1.75rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 2px solid color-mix(in srgb, var(--amber) 35%, var(--border));
+  line-height: 1.25;
+}
+
 [data-tahti-ui='brand'] .brand-public .brand-prose h2 {
   font-size: 1.125rem;
   font-weight: 700;
@@ -451,6 +461,17 @@
   color: var(--muted);
 }
 
+[data-tahti-ui='brand'] .brand-public .brand-prose a {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  text-underline-offset: 2px;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose a:hover {
+  text-decoration-color: var(--cyan);
+}
+
 /* ---- Governance / venue cards ---- */
 [data-tahti-ui='brand'] .brand-public .brand-card {
   padding: 1.25rem 1.5rem;
@@ -564,6 +585,7 @@
   background: var(--card2);
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--cyan) 45%, var(--border));
 }
 
 /* ---- Brand form (venue register, support contact) ---- */
