@@ -173,6 +173,11 @@
 
 [data-tahti-ui='brand'] .brand-public .brand-table tbody tr {
   border-bottom: 1px solid color-mix(in srgb, var(--muted) 12%, transparent);
+  transition: background 0.12s;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-table tbody tr:hover {
+  background: color-mix(in srgb, var(--muted) 5%, transparent);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-table .num {
