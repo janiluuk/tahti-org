@@ -10,7 +10,10 @@ import type {
   CollectionTextLayerAlignment,
   CollectionTextLayerMode,
 } from '@tahti/shared'
-import { ArchiveVideoBackdrop, resolveArchiveBackground } from '@/app/c/[slug]/archive-item-backdrop'
+import {
+  ArchiveVideoBackdrop,
+  resolveArchiveBackground,
+} from '@/app/c/[slug]/archive-item-backdrop'
 import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { collectionRssUrl } from '@/lib/rss-feeds'
@@ -141,10 +144,7 @@ export default async function CollectionPage({
         align={data.textLayerAlign ?? 'CENTER'}
       />
 
-      <ChannelGalleryView
-        mode={data.galleryMode ?? 'NONE'}
-        images={data.slideshowImages ?? []}
-      />
+      <ChannelGalleryView mode={data.galleryMode ?? 'NONE'} images={data.slideshowImages ?? []} />
 
       <section className="prof-section">
         {data.items.length === 0 ? (

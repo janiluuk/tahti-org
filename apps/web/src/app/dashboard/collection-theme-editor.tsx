@@ -50,9 +50,7 @@ export function CollectionThemeEditor({
   const [galleryMode, setGalleryMode] = useState<CollectionGalleryMode>(initial.galleryMode)
   const [imageLines, setImageLines] = useState(initial.slideshowImages.join('\n'))
   const [videoBackgroundUrl, setVideoBackgroundUrl] = useState(initial.videoBackgroundUrl ?? '')
-  const [textLayerMode, setTextLayerMode] = useState<CollectionTextLayerMode>(
-    initial.textLayerMode,
-  )
+  const [textLayerMode, setTextLayerMode] = useState<CollectionTextLayerMode>(initial.textLayerMode)
   const [textLayerText, setTextLayerText] = useState(initial.textLayerText)
   const [textLayerAlign, setTextLayerAlign] = useState<CollectionTextLayerAlignment>(
     initial.textLayerAlign,
