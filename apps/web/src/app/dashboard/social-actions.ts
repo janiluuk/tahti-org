@@ -36,6 +36,14 @@ export type SocialSettings = {
     postTemplate: string
     configured: boolean
   }
+  instagram: {
+    connected: boolean
+    accountLabel: string | null
+    onReleasePublished: boolean
+    onChannelLive: boolean
+    postTemplate: string
+    configured: boolean
+  }
 }
 
 export async function saveMastodonSocial(input: {
@@ -123,7 +131,7 @@ export async function disconnectBluesky(): Promise<{ error: string | null }> {
 }
 
 export async function postSocialManual(
-  platform: 'MASTODON' | 'BLUESKY' | 'TWITTER',
+  platform: 'MASTODON' | 'BLUESKY' | 'TWITTER' | 'INSTAGRAM',
   message: string,
 ): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/social/post`, {
@@ -161,6 +169,39 @@ export async function saveTwitterSocial(input: {
 
 export async function disconnectTwitter(): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/social/twitter`, {
+    method: 'DELETE',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Disconnect failed' }
+  }
+  revalidatePath('/dashboard')
+  return { error: null }
+}
+
+export async function saveInstagramSocial(input: {
+  onReleasePublished: boolean
+  onChannelLive: boolean
+  postTemplate: string
+}): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/social/instagram`, {
+    method: 'PATCH',
+    headers: { Cookie: sessionHeader(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Could not save Instagram settings' }
+  }
+  revalidatePath('/dashboard')
+  return { error: null }
+}
+
+export async function disconnectInstagram(): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/social/instagram`, {
     method: 'DELETE',
     headers: { Cookie: sessionHeader() },
     cache: 'no-store',

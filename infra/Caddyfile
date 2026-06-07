@@ -31,11 +31,9 @@ app.tahti.live {
 # ── Artist API ────────────────────────────────────────────────────────────────
 api.tahti.live {
     encode zstd gzip
-    @cors method OPTIONS
-    header @cors Access-Control-Allow-Origin "https://tahti.live https://app.tahti.live"
-    header @cors Access-Control-Allow-Credentials "true"
-    header @cors Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-    header @cors Access-Control-Allow-Headers "Content-Type, Authorization"
+    # CORS is handled by the API itself (apps/api/src/plugins/cors.ts) — it
+    # reflects the actual matched origin (incl. *.tahti.live channel pages),
+    # which a static header here can't do, and covers OPTIONS preflights too.
     reverse_proxy api:3000
 }
 

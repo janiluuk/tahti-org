@@ -8,10 +8,12 @@ import { useRouter } from 'next/navigation'
 import { DEFAULT_SOCIAL_TEMPLATE } from '@tahti/shared'
 import {
   disconnectBluesky,
+  disconnectInstagram,
   disconnectMastodon,
   disconnectTwitter,
   postSocialManual,
   saveBlueskySocial,
+  saveInstagramSocial,
   saveMastodonSocial,
   saveTwitterSocial,
   type SocialSettings,
@@ -121,6 +123,13 @@ export default function SocialPromoPanel({
     initial.twitter.postTemplate || DEFAULT_SOCIAL_TEMPLATE,
   )
   const [twitterManual, setTwitterManual] = useState('')
+
+  const [instagramRelease, setInstagramRelease] = useState(initial.instagram.onReleasePublished)
+  const [instagramLive, setInstagramLive] = useState(initial.instagram.onChannelLive)
+  const [instagramTemplate, setInstagramTemplate] = useState(
+    initial.instagram.postTemplate || DEFAULT_SOCIAL_TEMPLATE,
+  )
+  const [instagramManual, setInstagramManual] = useState('')
 
   function saveMastodon() {
     setError(null)
@@ -443,6 +452,100 @@ export default function SocialPromoPanel({
         ) : (
           <a href={`${apiUrl}/api/me/social/twitter/oauth/start`} className="studio-btn-primary">
             Connect X account
+          </a>
+        )}
+      </PlatformSection>
+
+      <PlatformSection
+        title="Instagram"
+        help={
+          <>
+            OAuth connect via your Instagram professional account on a Facebook Page. Every post
+            needs an image — we use your release cover art, channel banner, or profile picture.
+            Requires <code>INSTAGRAM_CLIENT_ID</code> on the server.
+          </>
+        }
+        connected={initial.instagram.connected}
+        accountLabel={initial.instagram.accountLabel}
+        pending={pending}
+        manualPost={instagramManual}
+        onManualPostChange={setInstagramManual}
+        onManualPost={() => {
+          if (!instagramManual.trim()) return
+          startTransition(async () => {
+            const res = await postSocialManual('INSTAGRAM', instagramManual.trim())
+            if (res.error) setError(res.error)
+            else {
+              setInstagramManual('')
+              setMsg('Instagram post queued.')
+            }
+          })
+        }}
+        manualPostLabel="Post to Instagram"
+        onDisconnect={() => {
+          startTransition(async () => {
+            const res = await disconnectInstagram()
+            if (res.error) setError(res.error)
+            else router.refresh()
+          })
+        }}
+      >
+        {!initial.instagram.configured ? (
+          <p className="studio-text-muted-sm">Instagram OAuth is not configured on this server.</p>
+        ) : initial.instagram.connected ? (
+          <>
+            <label className="studio-field studio-mt-sm">
+              Post template
+              <input
+                className="studio-input studio-mt-sm"
+                value={instagramTemplate}
+                onChange={(e) => setInstagramTemplate(e.target.value)}
+                maxLength={2200}
+              />
+            </label>
+            <label className="studio-checkbox-row studio-mt-sm">
+              <input
+                type="checkbox"
+                checked={instagramRelease}
+                onChange={(e) => setInstagramRelease(e.target.checked)}
+              />
+              Auto-post when a release is published
+            </label>
+            <label className="studio-checkbox-row studio-mt-sm">
+              <input
+                type="checkbox"
+                checked={instagramLive}
+                onChange={(e) => setInstagramLive(e.target.checked)}
+              />
+              Auto-post when channel goes live
+            </label>
+            <div className="studio-actions studio-mt-md">
+              <button
+                type="button"
+                className="studio-btn-primary"
+                disabled={pending}
+                onClick={() => {
+                  startTransition(async () => {
+                    const res = await saveInstagramSocial({
+                      onReleasePublished: instagramRelease,
+                      onChannelLive: instagramLive,
+                      postTemplate: instagramTemplate,
+                    })
+                    if (res.error) setError(res.error)
+                    else {
+                      setMsg('Instagram settings saved.')
+                      router.refresh()
+                    }
+                  })
+                }}
+              >
+                Update Instagram settings
+              </button>
+            </div>
+          </>
+        ) : (
+          <a href={`${apiUrl}/api/me/social/instagram/oauth/start`} className="studio-btn-primary">
+            Connect Instagram account
           </a>
         )}
       </PlatformSection>

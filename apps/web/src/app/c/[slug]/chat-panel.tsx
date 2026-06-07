@@ -21,6 +21,8 @@ interface ChatMessage {
 
 import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 export default function ChatPanel({
   slug,
   announcements,
@@ -55,7 +57,7 @@ export default function ChatPanel({
     let cancelled = false
     const poll = async () => {
       try {
-        const res = await fetch(`/api/channels/${slug}/presence`)
+        const res = await fetch(`${API_BASE}/api/channels/${slug}/presence`)
         if (!res.ok || cancelled) return
         const data = (await res.json()) as { numClients: number }
         setListenerCount(data.numClients)
@@ -91,38 +93,44 @@ export default function ChatPanel({
     }
 
     ws.onmessage = (ev) => {
-      try {
-        const data = JSON.parse(ev.data as string) as {
-          id?: number
-          connect?: { client: string }
-          push?: { channel?: string; pub?: { data: unknown } }
-        }
-
-        if (data.connect) {
-          // Connected — subscribe to channel
-          ws.send(
-            JSON.stringify({
-              id: msgIdRef.current++,
-              subscribe: { channel: `channel:${slug}` },
-            }),
-          )
-          setStatus('connected')
-        }
-
-        if (data.push?.pub) {
-          const msg = data.push.pub.data as { handle?: string; text?: string; ts?: number }
-          if (msg.text) {
-            const id = `${Date.now()}-${Math.random()}`
-            setMessages((prev) =>
-              [
-                ...prev,
-                { id, handle: msg.handle ?? 'anon', text: msg.text!, ts: msg.ts ?? Date.now() },
-              ].slice(-100),
-            )
+      // Centrifugo can coalesce multiple replies/pushes (e.g. a publish ack
+      // plus the echoed push for that same publication) into one frame as
+      // newline-delimited JSON — each line must be parsed independently.
+      for (const line of (ev.data as string).split('\n')) {
+        if (!line.trim()) continue
+        try {
+          const data = JSON.parse(line) as {
+            id?: number
+            connect?: { client: string }
+            push?: { channel?: string; pub?: { data: unknown } }
           }
+
+          if (data.connect) {
+            // Connected — subscribe to channel
+            ws.send(
+              JSON.stringify({
+                id: msgIdRef.current++,
+                subscribe: { channel: `channel:${slug}` },
+              }),
+            )
+            setStatus('connected')
+          }
+
+          if (data.push?.pub) {
+            const msg = data.push.pub.data as { handle?: string; text?: string; ts?: number }
+            if (msg.text) {
+              const id = `${Date.now()}-${Math.random()}`
+              setMessages((prev) =>
+                [
+                  ...prev,
+                  { id, handle: msg.handle ?? 'anon', text: msg.text!, ts: msg.ts ?? Date.now() },
+                ].slice(-100),
+              )
+            }
+          }
+        } catch {
+          // malformed message
         }
-      } catch {
-        // malformed message
       }
     }
 
@@ -141,9 +149,10 @@ export default function ChatPanel({
 
   async function joinChat(h: string) {
     try {
-      const res = await fetch(`/api/chat/${slug}/token`, {
+      const res = await fetch(`${API_BASE}/api/chat/${slug}/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ handle: h }),
       })
       if (res.status === 403) {

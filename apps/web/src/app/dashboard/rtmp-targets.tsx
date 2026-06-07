@@ -20,6 +20,7 @@ interface RtmpTarget {
 }
 
 const GUIDE_PATH = '/help/multistream'
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] }) {
   const [targets, setTargets] = useState(initial)
@@ -39,9 +40,10 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
     setSaving(true)
     setError(null)
     try {
-      const res = await fetch('/api/me/rtmp-targets', {
+      const res = await fetch(`${API_BASE}/api/me/rtmp-targets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(form),
       })
       if (!res.ok) {
@@ -60,9 +62,10 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
   }
 
   async function toggleTarget(id: string, enabled: boolean) {
-    const res = await fetch(`/api/me/rtmp-targets/${id}`, {
+    const res = await fetch(`${API_BASE}/api/me/rtmp-targets/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ enabled }),
     })
     if (res.ok) {
@@ -72,7 +75,10 @@ export default function RtmpTargetsPanel({ initial }: { initial: RtmpTarget[] })
 
   async function deleteTarget(id: string) {
     if (!confirm('Remove this multistream target?')) return
-    const res = await fetch(`/api/me/rtmp-targets/${id}`, { method: 'DELETE' })
+    const res = await fetch(`${API_BASE}/api/me/rtmp-targets/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    })
     if (res.ok || res.status === 204) {
       setTargets((prev) => prev.filter((t) => t.id !== id))
     }

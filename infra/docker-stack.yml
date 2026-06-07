@@ -74,6 +74,7 @@ secrets:
   revelator_api_key:         { external: true }
   mixcloud_client_secret:    { external: true }
   twitter_client_secret:     { external: true }
+  instagram_client_secret:   { external: true }
   smtp_password:             { external: true }
   docs_user:                 { external: true }
   docs_pass:                 { external: true }
@@ -280,6 +281,7 @@ services:
       REVELATOR_API_KEY_FILE: /run/secrets/revelator_api_key
       MIXCLOUD_CLIENT_SECRET_FILE: /run/secrets/mixcloud_client_secret
       TWITTER_CLIENT_SECRET_FILE: /run/secrets/twitter_client_secret
+      INSTAGRAM_CLIENT_SECRET_FILE: /run/secrets/instagram_client_secret
       SMTP_PASSWORD_FILE: /run/secrets/smtp_password
       DOCS_USER_FILE: /run/secrets/docs_user
       DOCS_PASS_FILE: /run/secrets/docs_pass
@@ -287,6 +289,8 @@ services:
       MIXCLOUD_OAUTH_REDIRECT_URI: ${MIXCLOUD_OAUTH_REDIRECT_URI:-}
       TWITTER_CLIENT_ID: ${TWITTER_CLIENT_ID:-}
       TWITTER_OAUTH_REDIRECT_URI: ${TWITTER_OAUTH_REDIRECT_URI:-}
+      INSTAGRAM_CLIENT_ID: ${INSTAGRAM_CLIENT_ID:-}
+      INSTAGRAM_OAUTH_REDIRECT_URI: ${INSTAGRAM_OAUTH_REDIRECT_URI:-}
       EMAIL_BOUNCE_WEBHOOK_SECRET: ${EMAIL_BOUNCE_WEBHOOK_SECRET:-}
     secrets:
       - pg_password
@@ -297,6 +301,7 @@ services:
       - revelator_api_key
       - mixcloud_client_secret
       - twitter_client_secret
+      - instagram_client_secret
       - smtp_password
       - docs_user
       - docs_pass
@@ -509,10 +514,10 @@ services:
   web:
     image: registry.tahti.live/tahti/web:${TAG:-latest}
     networks: [internal, edge]
+    # NOTE: NEXT_PUBLIC_* vars are inlined into the JS bundle at *build* time —
+    # setting them here has no effect at runtime. The real values are baked in
+    # by the `build-args` in .github/workflows/deploy.yml's web build step.
     environment:
-      NEXT_PUBLIC_API_BASE: https://api.tahti.live
-      NEXT_PUBLIC_CHAT_BASE: https://chat.tahti.live
-      NEXT_PUBLIC_HLS_BASE: https://stream.tahti.live
       INTERNAL_API_BASE: http://api:3000
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]

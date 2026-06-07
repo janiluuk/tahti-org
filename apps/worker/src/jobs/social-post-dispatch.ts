@@ -74,6 +74,81 @@ function decodeTwitterTokens(enc: string): { accessToken: string; refreshToken?:
   return JSON.parse(decryptStreamKey(enc)) as { accessToken: string; refreshToken?: string }
 }
 
+const GRAPH_API = 'https://graph.facebook.com/v21.0'
+
+function decodeInstagramTokens(enc: string): { accessToken: string; igUserId: string } {
+  return JSON.parse(decryptStreamKey(enc)) as { accessToken: string; igUserId: string }
+}
+
+// Instagram has no text-only post type — every post needs a publicly
+// reachable image. We use the release's cover art, falling back to the
+// channel's gallery image or the artist's avatar for live/manual posts.
+async function resolveInstagramImageUrl(
+  prisma: PrismaClient,
+  post: { userId: string; releaseId: string | null; channelId: string | null },
+): Promise<string> {
+  if (post.releaseId) {
+    const release = await prisma.release.findUnique({
+      where: { id: post.releaseId },
+      select: { artworkUrl: true },
+    })
+    if (release?.artworkUrl) return release.artworkUrl
+  }
+  if (post.channelId) {
+    const channel = await prisma.channel.findUnique({
+      where: { id: post.channelId },
+      select: { slideshowImages: true },
+    })
+    if (channel?.slideshowImages[0]) return channel.slideshowImages[0]
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: post.userId },
+    select: { avatarUrl: true },
+  })
+  if (user?.avatarUrl) return user.avatarUrl
+
+  throw new Error(
+    'Instagram posts require an image — add cover art to the release, a channel banner, or a profile picture',
+  )
+}
+
+async function postToInstagram(params: {
+  accessToken: string
+  igUserId: string
+  caption: string
+  imageUrl: string
+}): Promise<string> {
+  const createRes = await fetch(`${GRAPH_API}/${params.igUserId}/media`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      image_url: params.imageUrl,
+      caption: params.caption.slice(0, 2200),
+      access_token: params.accessToken,
+    }),
+  })
+  const created = (await createRes.json()) as { id?: string; error?: { message?: string } }
+  if (!createRes.ok || !created.id) {
+    throw new Error(created.error?.message ?? `Instagram media create failed (${createRes.status})`)
+  }
+
+  const publishRes = await fetch(`${GRAPH_API}/${params.igUserId}/media_publish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      creation_id: created.id,
+      access_token: params.accessToken,
+    }),
+  })
+  const published = (await publishRes.json()) as { id?: string; error?: { message?: string } }
+  if (!publishRes.ok || !published.id) {
+    throw new Error(
+      published.error?.message ?? `Instagram media publish failed (${publishRes.status})`,
+    )
+  }
+  return published.id
+}
+
 export async function processSocialPostDispatchJob(prisma: PrismaClient, postId: string) {
   const post = await prisma.socialPost.findUnique({ where: { id: postId } })
   if (!post || post.state === 'SENT') return
@@ -102,6 +177,15 @@ export async function processSocialPostDispatchJob(prisma: PrismaClient, postId:
     } else if (conn.platform === 'TWITTER') {
       const tokens = decodeTwitterTokens(tokenEnc)
       externalId = await postToTwitter(tokens.accessToken, post.message)
+    } else if (conn.platform === 'INSTAGRAM') {
+      const tokens = decodeInstagramTokens(tokenEnc)
+      const imageUrl = await resolveInstagramImageUrl(prisma, post)
+      externalId = await postToInstagram({
+        accessToken: tokens.accessToken,
+        igUserId: tokens.igUserId,
+        caption: post.message,
+        imageUrl,
+      })
     } else {
       const token = decryptStreamKey(tokenEnc)
       externalId = await postToMastodon({

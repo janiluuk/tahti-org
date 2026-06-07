@@ -30,7 +30,7 @@ export const BlueskyConnectSchema = z.object({
 
 export const SocialManualPostSchema = z.object({
   message: z.string().trim().min(1).max(500),
-  platform: z.enum(['MASTODON', 'BLUESKY', 'TWITTER']).default('MASTODON'),
+  platform: z.enum(['MASTODON', 'BLUESKY', 'TWITTER', 'INSTAGRAM']).default('MASTODON'),
 })
 
 export const TwitterSocialPatchSchema = z.object({
@@ -40,6 +40,14 @@ export const TwitterSocialPatchSchema = z.object({
 })
 
 export type TwitterSocialPatchInput = z.infer<typeof TwitterSocialPatchSchema>
+
+export const InstagramSocialPatchSchema = z.object({
+  onReleasePublished: z.boolean().optional(),
+  onChannelLive: z.boolean().optional(),
+  postTemplate: z.string().trim().min(1).max(2200).optional(),
+})
+
+export type InstagramSocialPatchInput = z.infer<typeof InstagramSocialPatchSchema>
 
 export const SocialPlatformStatusSchema = z.object({
   connected: z.boolean(),
@@ -55,11 +63,14 @@ export const SocialSettingsViewSchema = z.object({
   twitter: SocialPlatformStatusSchema.extend({
     configured: z.boolean(),
   }),
+  instagram: SocialPlatformStatusSchema.extend({
+    configured: z.boolean(),
+  }),
 })
 
 export const SocialPostLogSchema = z.object({
   id: z.string(),
-  platform: z.enum(['MASTODON', 'BLUESKY', 'TWITTER']),
+  platform: z.enum(['MASTODON', 'BLUESKY', 'TWITTER', 'INSTAGRAM']),
   trigger: z.string(),
   state: z.enum(['PENDING', 'SENT', 'FAILED']),
   message: z.string(),

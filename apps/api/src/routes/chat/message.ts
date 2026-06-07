@@ -2,31 +2,29 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import {
-  ChatPublishAckSchema,
-  ChatPublishProxySchema,
-  SlugParamSchema,
-  openApiResponse,
-  parseRouteParams,
-} from '@tahti/shared'
+import { ChatPublishAckSchema, ChatPublishProxySchema, openApiResponse } from '@tahti/shared'
 import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
 
 // Centrifugo proxy publish webhook.
 // Centrifugo calls this before allowing a client to publish.
 // We check if the sender is banned and validate message length.
+//
+// Centrifugo's HTTP proxy endpoint URLs are static (no per-channel
+// templating), so the route is generic and the channel slug is derived
+// from the proxy request body's `channel` field instead of a URL param —
+// it arrives as `channel:<slug>` or `channel:<slug>:fans`.
 const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
-    '/api/chat/:slug/message',
+    '/api/chat/message',
     { schema: { response: openApiResponse(ChatPublishAckSchema, 'ChatPublishAck') } },
     async (request, reply) => {
-      const routeParams = parseRouteParams(SlugParamSchema, request.params)
-      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-      const { slug } = routeParams
       const parsed = ChatPublishProxySchema.safeParse(request.body)
       if (!parsed.success) {
         return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
       }
       const body = parsed.data
+      const slug = body.channel.replace(/^channel:/, '').replace(/:fans$/, '')
+      if (!slug) return reply.status(400).send({ error: 'Invalid channel' })
 
       const sub = body.user ?? ''
       const fingerprint = sub.split('#')[1] ?? ''

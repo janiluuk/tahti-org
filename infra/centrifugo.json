@@ -7,6 +7,14 @@
   "history_ttl": "1h",
   "presence": true,
   "join_leave": true,
+  "granular_proxy_mode": true,
+  "proxies": [
+    {
+      "name": "chat_publish",
+      "endpoint": "http://api:3000/api/chat/message",
+      "timeout": "5s"
+    }
+  ],
   "namespaces": [
     {
       "name": "channel",
@@ -14,15 +22,15 @@
       "join_leave": true,
       "history_size": 200,
       "history_ttl": "1h",
-      "subscribe_proxy_enabled": false
+      "allow_subscribe_for_client": true,
+      "publish_proxy_name": "chat_publish"
     },
     {
       "name": "reactions",
       "presence": false,
       "join_leave": false,
       "history_size": 0,
-      "history_ttl": "0s",
-      "subscribe_proxy_enabled": false
+      "history_ttl": "0s"
     }
   ]
 }
