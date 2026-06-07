@@ -29,6 +29,8 @@
     "test:e2e:journeys:web": "node tests/e2e/user-journeys.mjs",
     "test:e2e:dashboard-player": "bash tests/e2e/journeys/dashboard-player.sh",
     "test:e2e:dashboard-player:web": "node tests/e2e/dashboard-player.mjs",
+    "test:e2e:release-upload": "node tests/e2e/release-track-upload.mjs",
+    "test:e2e:live-chat": "node tests/e2e/live-chat.mjs",
     "screenshots": "bash scripts/e2e-screenshots.sh",
     "test:e2e:phase4": "bash tests/e2e/phase-4.sh",
     "format": "prettier --write \"**/*.{ts,tsx,js,json}\" --ignore-path .gitignore",

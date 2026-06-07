@@ -10,13 +10,23 @@
   "history_ttl": "24h",
   "presence": true,
   "join_leave": true,
+  "granular_proxy_mode": true,
+  "proxies": [
+    {
+      "name": "chat_publish",
+      "endpoint": "http://api:3001/api/chat/message",
+      "timeout": "5s"
+    }
+  ],
   "namespaces": [
     {
       "name": "channel",
       "presence": true,
       "join_leave": true,
       "history_size": 200,
-      "history_ttl": "24h"
+      "history_ttl": "24h",
+      "allow_subscribe_for_client": true,
+      "publish_proxy_name": "chat_publish"
     },
     {
       "name": "reactions",

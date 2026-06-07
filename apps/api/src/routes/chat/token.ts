@@ -93,10 +93,9 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
       // sub encodes handle + fingerprint; info carries supporter badge for Centrifugo
       const sub = `${cleanHandle}#${fingerprint}`
-      const token = signCentrifugoToken(
-        { sub, channel: `channel:${slug}`, info: { supporter } },
-        3600,
-      )
+      // Connection JWTs can't carry a `channel` claim in Centrifugo v5 (only
+      // subscription JWTs can) — the client subscribes explicitly after connect.
+      const token = signCentrifugoToken({ sub, info: { supporter } }, 3600)
 
       await markChatCaptchaVerified(channel.id, fingerprint)
 

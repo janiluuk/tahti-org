@@ -7,6 +7,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 
 const EMOJIS = ['💜', '🔥', '🎶', '🎵', '🌟', '👏']
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 interface FlyingEmoji {
   id: string
   emoji: string
@@ -33,7 +35,7 @@ export default function ReactionsOverlay({ slug }: { slug: string }) {
 
     const connect = async () => {
       try {
-        const res = await fetch(`/api/chat/${slug}/reactions-token`)
+        const res = await fetch(`${API_BASE}/api/chat/${slug}/reactions-token`)
         if (!res.ok) return
         const data = (await res.json()) as { token: string }
         token = data.token
@@ -88,7 +90,7 @@ export default function ReactionsOverlay({ slug }: { slug: string }) {
     spawnEmoji(emoji)
 
     // Tell the server (which broadcasts to all others)
-    await fetch(`/api/chat/${slug}/react`, {
+    await fetch(`${API_BASE}/api/chat/${slug}/react`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ emoji }),

@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react'
 import type { TracklistEntry } from '@tahti/shared'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 /** STREAM-008 phase 4: poll live chromaprint tracklist while channel is LIVE. */
 export function LiveTracklistPanel({
   slug,
@@ -28,7 +30,7 @@ export function LiveTracklistPanel({
 
     const poll = async () => {
       try {
-        const res = await fetch(`/api/channels/${slug}/live-fingerprints`)
+        const res = await fetch(`${API_BASE}/api/channels/${slug}/live-fingerprints`)
         if (!res.ok || cancelled) return
         const data = (await res.json()) as { tracklist?: TracklistEntry[] }
         if (!cancelled) {

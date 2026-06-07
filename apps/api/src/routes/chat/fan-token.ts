@@ -41,7 +41,9 @@ const chatFanTokenRoute: FastifyPluginAsync = async (fastify) => {
 
       const handle = (user.displayName || user.username).slice(0, 32)
       const sub = `${handle}#fan-${user.id.slice(0, 8)}`
-      const token = signCentrifugoToken({ sub, channel: `channel:${slug}:fans` }, 3600)
+      // Connection JWTs can't carry a `channel` claim in Centrifugo v5 (only
+      // subscription JWTs can) — the client subscribes explicitly after connect.
+      const token = signCentrifugoToken({ sub }, 3600)
 
       return reply.send({
         token,

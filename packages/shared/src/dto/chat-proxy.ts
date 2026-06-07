@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 /** Centrifugo publish proxy body for channel chat. */
 export const ChatPublishProxySchema = z.object({
+  channel: z.string(),
   user: z.string().optional(),
   data: z
     .object({

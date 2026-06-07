@@ -509,10 +509,10 @@ services:
   web:
     image: registry.tahti.live/tahti/web:${TAG:-latest}
     networks: [internal, edge]
+    # NOTE: NEXT_PUBLIC_* vars are inlined into the JS bundle at *build* time —
+    # setting them here has no effect at runtime. The real values are baked in
+    # by the `build-args` in .github/workflows/deploy.yml's web build step.
     environment:
-      NEXT_PUBLIC_API_BASE: https://api.tahti.live
-      NEXT_PUBLIC_CHAT_BASE: https://chat.tahti.live
-      NEXT_PUBLIC_HLS_BASE: https://stream.tahti.live
       INTERNAL_API_BASE: http://api:3000
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]

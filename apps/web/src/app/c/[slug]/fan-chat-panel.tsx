@@ -12,6 +12,8 @@ interface ChatMessage {
   ts: number
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 export default function FanChatPanel({ slug }: { slug: string }) {
   const [token, setToken] = useState<string | null>(null)
   const [channel, setChannel] = useState<string | null>(null)
@@ -27,12 +29,12 @@ export default function FanChatPanel({ slug }: { slug: string }) {
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const access = await fetch(`/api/chat/${slug}/access`, { credentials: 'include' })
+      const access = await fetch(`${API_BASE}/api/chat/${slug}/access`, { credentials: 'include' })
       if (!access.ok || cancelled) return
       const data = (await access.json()) as { canJoinFanChat?: boolean }
       if (!data.canJoinFanChat) return
 
-      const res = await fetch(`/api/chat/${slug}/fan-token`, {
+      const res = await fetch(`${API_BASE}/api/chat/${slug}/fan-token`, {
         method: 'POST',
         credentials: 'include',
       })
@@ -69,20 +71,30 @@ export default function FanChatPanel({ slug }: { slug: string }) {
     }
 
     ws.onmessage = (ev) => {
-      const msg = JSON.parse(ev.data as string) as {
-        connect?: { client: string }
-        push?: { channel: string; pub: { data: { handle: string; text: string; ts: number } } }
-      }
-      if (msg.connect) {
-        setStatus('connected')
-        ws.send(JSON.stringify({ id: 2, subscribe: { channel } }))
-      }
-      if (msg.push?.pub?.data) {
-        const d = msg.push.pub.data
-        setMessages((prev) => [
-          ...prev,
-          { id: `${d.ts}-${prev.length}`, handle: d.handle, text: d.text, ts: d.ts },
-        ])
+      // Centrifugo can coalesce multiple replies/pushes (e.g. a publish ack
+      // plus the echoed push for that same publication) into one frame as
+      // newline-delimited JSON — each line must be parsed independently.
+      for (const line of (ev.data as string).split('\n')) {
+        if (!line.trim()) continue
+        try {
+          const msg = JSON.parse(line) as {
+            connect?: { client: string }
+            push?: { channel: string; pub: { data: { handle: string; text: string; ts: number } } }
+          }
+          if (msg.connect) {
+            setStatus('connected')
+            ws.send(JSON.stringify({ id: 2, subscribe: { channel } }))
+          }
+          if (msg.push?.pub?.data) {
+            const d = msg.push.pub.data
+            setMessages((prev) => [
+              ...prev,
+              { id: `${d.ts}-${prev.length}`, handle: d.handle, text: d.text, ts: d.ts },
+            ])
+          }
+        } catch {
+          // malformed message
+        }
       }
     }
 

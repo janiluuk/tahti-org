@@ -166,6 +166,14 @@ jobs:
           context: .
           file: apps/web/Dockerfile
           push: true
+          # NEXT_PUBLIC_* vars are inlined at build time — bake the production
+          # cross-origin URLs in here (docker-stack.yml's `environment:` for
+          # these is inert at runtime and only documents the intended values).
+          build-args: |
+            NEXT_PUBLIC_API_BASE=https://api.tahti.live
+            NEXT_PUBLIC_API_URL=https://api.tahti.live
+            NEXT_PUBLIC_CENTRIFUGO_WS=wss://chat.tahti.live/connection/websocket
+            NEXT_PUBLIC_APP_URL=https://app.tahti.live
           tags: |
             ${{ env.REGISTRY }}/tahti/web:${{ needs.resolve.outputs.image_tag }}
             ${{ env.REGISTRY }}/tahti/web:${{ needs.resolve.outputs.deploy_sha }}

@@ -13,6 +13,8 @@ interface StreamSettings {
   hlsUrl: string
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 export default function StreamSettingsPanel({
   initial,
   isLive = false,
@@ -26,7 +28,10 @@ export default function StreamSettingsPanel({
   async function rotateKey(type: 'rtmp' | 'icecast') {
     setRotating(type)
     try {
-      const res = await fetch(`/api/me/stream-settings/${type}/rotate`, { method: 'POST' })
+      const res = await fetch(`${API_BASE}/api/me/stream-settings/${type}/rotate`, {
+        method: 'POST',
+        credentials: 'include',
+      })
       if (!res.ok) throw new Error('Rotate failed')
       const data = (await res.json()) as { rtmpStreamKey?: string; liveSourcePass?: string }
       setSettings((prev) => ({

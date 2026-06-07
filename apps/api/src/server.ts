@@ -113,6 +113,7 @@ import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import requestLogPlugin from './plugins/request-log.js'
+import corsPlugin from './plugins/cors.js'
 import { apiLoggerConfig } from './lib/logger.js'
 import { config } from './config.js'
 import {
@@ -205,6 +206,10 @@ export async function buildApp(opts: BuildOptions = {}) {
     logger: apiLoggerConfig(opts.logger),
     trustProxy: true,
   })
+
+  // Browser CORS — must be registered before routes so it also covers
+  // OPTIONS preflights for paths with no explicit OPTIONS handler.
+  await fastify.register(corsPlugin)
 
   // OpenAPI / Swagger (versioned; built on every startup, served at /docs)
   await fastify.register(swagger, {
