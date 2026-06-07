@@ -896,6 +896,7 @@
   margin-top: 1rem;
   padding: 1rem 1.5rem;
   border: 1px solid var(--border);
+  border-top: 2px solid color-mix(in srgb, var(--cyan) 40%, var(--border));
   border-radius: var(--radius);
   background: var(--card);
 }

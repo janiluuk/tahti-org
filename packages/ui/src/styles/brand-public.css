@@ -39,7 +39,7 @@
 [data-tahti-ui='brand'] .brand-public h1 {
   font-family: var(--font-head);
   font-weight: 700;
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.5rem;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-muted {
@@ -198,12 +198,26 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-category__title {
-  font-size: 0.8rem;
-  color: var(--muted);
-  font-weight: 600;
+  font-size: 0.6875rem;
+  color: color-mix(in srgb, var(--amber) 70%, var(--muted));
+  font-weight: 700;
   margin-bottom: 0.25rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  padding-left: 9px;
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-category__title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  background: var(--amber);
+  border-radius: 2px;
+  opacity: 0.6;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-category__row {
@@ -227,9 +241,19 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-badge {
+  display: inline-flex;
+  align-items: center;
   margin-left: 0.4rem;
-  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--cyan) 12%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--cyan) 28%, transparent);
   color: var(--cyan);
+  vertical-align: middle;
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page {
@@ -319,6 +343,16 @@
 }
 
 /* ---- Prose (help, methodology) ---- */
+[data-tahti-ui='brand'] .brand-public .brand-prose h1 {
+  font-size: 1.625rem;
+  font-weight: 700;
+  font-family: var(--font-head);
+  margin: 0 0 1.75rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 2px solid color-mix(in srgb, var(--amber) 35%, var(--border));
+  line-height: 1.25;
+}
+
 [data-tahti-ui='brand'] .brand-public .brand-prose h2 {
   font-size: 1.125rem;
   font-weight: 700;
@@ -451,6 +485,29 @@
   color: var(--muted);
 }
 
+[data-tahti-ui='brand'] .brand-public .brand-prose blockquote {
+  margin: 1rem 0;
+  padding: 0.65rem 1rem;
+  border-left: 3px solid color-mix(in srgb, var(--amber) 55%, var(--border));
+  background: color-mix(in srgb, var(--amber) 5%, var(--card2));
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.9375rem;
+  color: var(--text);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose a {
+  color: var(--cyan);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  text-underline-offset: 2px;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-prose a:hover {
+  text-decoration-color: var(--cyan);
+}
+
 /* ---- Governance / venue cards ---- */
 [data-tahti-ui='brand'] .brand-public .brand-card {
   padding: 1.25rem 1.5rem;
@@ -564,6 +621,73 @@
   background: var(--card2);
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--cyan) 45%, var(--border));
+}
+
+/* ---- Brand form (venue register, support contact) ---- */
+[data-tahti-ui='brand'] .brand-public .brand-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form input,
+[data-tahti-ui='brand'] .brand-public .brand-form textarea,
+[data-tahti-ui='brand'] .brand-public .brand-form select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-family: var(--font-body);
+  background: var(--card);
+  color: var(--text);
+  width: 100%;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form input:focus,
+[data-tahti-ui='brand'] .brand-public .brand-form textarea:focus,
+[data-tahti-ui='brand'] .brand-public .brand-form select:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cyan) 20%, transparent);
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form textarea {
+  resize: vertical;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form button[type='submit'] {
+  align-self: flex-start;
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--cyan);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form button[type='submit']:hover {
+  opacity: 0.9;
+}
+
+[data-tahti-ui='brand'] .brand-public .brand-form button[type='submit']:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ---- Brand form (venue register, support contact) ---- */
