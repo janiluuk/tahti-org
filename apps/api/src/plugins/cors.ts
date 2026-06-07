@@ -24,7 +24,10 @@ function isAllowedOrigin(origin: string): boolean {
 
   if (origin === config.appUrl) return true
 
-  if (url.protocol === 'https:' && (url.hostname === 'tahti.live' || url.hostname.endsWith('.tahti.live'))) {
+  if (
+    url.protocol === 'https:' &&
+    (url.hostname === 'tahti.live' || url.hostname.endsWith('.tahti.live'))
+  ) {
     return true
   }
 
