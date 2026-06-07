@@ -60,6 +60,15 @@ export const FingerprintHashParamSchema = z.object({
   fingerprintHash: z.string().min(16).max(64),
 })
 
+export const UserIdParamSchema = z.object({
+  userId: IdParamSchema.shape.id,
+})
+
+export const ModerateChatBanParamsSchema = z.object({
+  slug: SlugParamSchema.shape.slug,
+  fingerprintHash: FingerprintHashParamSchema.shape.fingerprintHash,
+})
+
 export const TokenParamSchema = z.object({
   token: z.string().min(16).max(128),
 })

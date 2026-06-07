@@ -113,7 +113,7 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 | ~~P2~~ | ~~Per-artist archive RSS~~ — `/api/v1/u/:handle/rss.xml` + profile/dashboard links |
 | ~~P2~~ | ~~Drag reorder in dashboard~~ — `PUT /api/me/collections/:slug/reorder` |
 | ~~P2~~ | ~~Featured collections on smart-link landing~~ — `/r/:slug` + API |
-| P3 | Per-collection video/slideshow themes (M26 deferred) | Backlog |
+| ~~P3~~ | ~~Per-collection video/slideshow themes (M26 deferred)~~ — independent gallery + text-layer picker, dashboard editor + public rendering (done) |
 
 ### Still largely open
 | Milestone | Notes |
