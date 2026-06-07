@@ -8,7 +8,7 @@ import { cleanupUsersByEmailPrefix, createTestArtist } from '../../test/helpers.
 
 const PREFIX = 'chat-message-'
 
-describe('POST /api/chat/:slug/message — Centrifugo proxy', () => {
+describe('POST /api/chat/message — Centrifugo proxy', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let slug: string
 
@@ -35,8 +35,8 @@ describe('POST /api/chat/:slug/message — Centrifugo proxy', () => {
   it('accepts publish proxy without fingerprint', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: `/api/chat/${slug}/message`,
-      payload: { data: { text: 'hello chat' } },
+      url: '/api/chat/message',
+      payload: { channel: `channel:${slug}`, data: { text: 'hello chat' } },
     })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual({ result: {} })
@@ -45,8 +45,8 @@ describe('POST /api/chat/:slug/message — Centrifugo proxy', () => {
   it('returns 404 for unknown channel', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: '/api/chat/missing-slug/message',
-      payload: { data: { text: 'hello' } },
+      url: '/api/chat/message',
+      payload: { channel: 'channel:missing-slug', data: { text: 'hello' } },
     })
     expect(res.statusCode).toBe(404)
   })
@@ -54,8 +54,8 @@ describe('POST /api/chat/:slug/message — Centrifugo proxy', () => {
   it('rejects messages over 500 chars', async () => {
     const res = await app.inject({
       method: 'POST',
-      url: `/api/chat/${slug}/message`,
-      payload: { data: { text: 'x'.repeat(501) } },
+      url: '/api/chat/message',
+      payload: { channel: `channel:${slug}`, data: { text: 'x'.repeat(501) } },
     })
     expect(res.statusCode).toBe(400)
   })
