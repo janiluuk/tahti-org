@@ -94,7 +94,7 @@ export default async function StatsPage() {
           <span className="db-stat-tile-value">{fanSubs.toLocaleString()}</span>
           <span className="db-stat-tile-label">Fan subs</span>
         </div>
-        <div className="db-stat-tile db-stat-tile--green">
+        <div className="db-stat-tile db-stat-tile--cyan">
           <span className="db-stat-tile-value">€{(revenueCents / 100).toFixed(0)}</span>
           <span className="db-stat-tile-label">Revenue / mo</span>
         </div>

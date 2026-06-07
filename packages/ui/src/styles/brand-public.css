@@ -262,8 +262,8 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page__banner--outage {
-  background: color-mix(in srgb, #ef4444 15%, transparent);
-  color: #f87171;
+  background: color-mix(in srgb, var(--coral) 15%, transparent);
+  color: var(--coral);
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page__meta {
@@ -294,7 +294,7 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page__down {
-  color: #f87171;
+  color: var(--coral);
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page__footer {
@@ -693,7 +693,7 @@
   padding: 0.5rem 1rem;
   border-radius: 6px;
   border: none;
-  background: var(--accent, #7c3aed);
+  background: var(--purple);
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -714,7 +714,7 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .mention-link {
-  color: var(--accent, #7c3aed);
+  color: var(--lavender);
   text-decoration: underline;
 }
 

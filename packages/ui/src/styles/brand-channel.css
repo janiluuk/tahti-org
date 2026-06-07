@@ -1611,7 +1611,7 @@
 [data-tahti-ui='brand'] .sl-btn-name {
   flex: 1;
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 [data-tahti-ui='brand'] .sl-btn-arrow {
@@ -1997,9 +1997,9 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #22c55e;
+  background: var(--green);
   flex-shrink: 0;
-  box-shadow: 0 0 8px #22c55e88;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--green) 55%, transparent);
 }
 
 [data-tahti-ui='brand'] .ch-sticky-live-text {
