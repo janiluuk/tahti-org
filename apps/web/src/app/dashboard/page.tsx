@@ -36,6 +36,9 @@ import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
   ChannelTextLayerMode,
+  CollectionGalleryMode,
+  CollectionTextLayerAlignment,
+  CollectionTextLayerMode,
 } from '@tahti/shared'
 
 interface StreamSettings {
@@ -417,6 +420,12 @@ export default async function DashboardPage() {
     type: string
     isPublic: boolean
     coverUrl?: string | null
+    galleryMode?: CollectionGalleryMode
+    slideshowImages?: string[]
+    videoBackgroundUrl?: string | null
+    textLayerMode?: CollectionTextLayerMode
+    textLayerText?: string
+    textLayerAlign?: CollectionTextLayerAlignment
     _count?: { items: number }
     items?: Array<{
       id: string

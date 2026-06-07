@@ -5,6 +5,17 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProfilePageLayout, SafePlainText } from '@tahti/ui'
+import type {
+  CollectionGalleryMode,
+  CollectionTextLayerAlignment,
+  CollectionTextLayerMode,
+} from '@tahti/shared'
+import {
+  ArchiveVideoBackdrop,
+  resolveArchiveBackground,
+} from '@/app/c/[slug]/archive-item-backdrop'
+import { ChannelGalleryView } from '@/components/gallery'
+import { ChannelTextLayerView } from '@/components/text-layer'
 import { collectionRssUrl } from '@/lib/rss-feeds'
 
 async function fetchCollection(slug: string) {
@@ -21,6 +32,12 @@ interface CollectionResponse {
   description: string | null
   type: string
   coverUrl?: string | null
+  galleryMode?: CollectionGalleryMode
+  slideshowImages?: string[]
+  videoBackgroundUrl?: string | null
+  textLayerMode?: CollectionTextLayerMode
+  textLayerText?: string
+  textLayerAlign?: CollectionTextLayerAlignment
   user: { username: string; displayName: string }
   items: Array<{
     id: string
@@ -86,11 +103,19 @@ export default async function CollectionPage({
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const rssUrl = data.links?.rss ?? collectionRssUrl(apiUrl, params.slug)
+  const backdrop = resolveArchiveBackground(data.videoBackgroundUrl ?? null)
 
   return (
     <ProfilePageLayout
       hero={
         <>
+          {backdrop.videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
+          {backdrop.imageUrl && !backdrop.videoEmbedUrl && (
+            <div
+              className="ch-channel-backdrop"
+              style={{ ['--ch-backdrop-image' as string]: `url(${backdrop.imageUrl})` }}
+            />
+          )}
           <Link href={`/u/${data.user.username}`} className="prof-back-link">
             ← {data.user.displayName}
           </Link>
@@ -113,6 +138,14 @@ export default async function CollectionPage({
         </>
       }
     >
+      <ChannelTextLayerView
+        mode={data.textLayerMode ?? 'NONE'}
+        text={data.textLayerText ?? ''}
+        align={data.textLayerAlign ?? 'CENTER'}
+      />
+
+      <ChannelGalleryView mode={data.galleryMode ?? 'NONE'} images={data.slideshowImages ?? []} />
+
       <section className="prof-section">
         {data.items.length === 0 ? (
           <p className="prof-list-meta">This collection is empty.</p>

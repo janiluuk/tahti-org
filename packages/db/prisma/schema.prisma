@@ -322,6 +322,38 @@ enum CollectionType {
   @@schema("media")
 }
 
+// M26: per-collection backdrop themes — same effect catalogue as ChannelGalleryMode
+enum CollectionGalleryMode {
+  NONE
+  STATIC_SLIDESHOW
+  TWISTED_WAVE_GLSL
+  ZOOM_BLUR_GLSL
+  RGB_SHIFT_GLSL
+  POSTER_WALL_GLSL
+  SHATTER_CAROUSEL_GLSL
+
+  @@schema("media")
+}
+
+enum CollectionTextLayerMode {
+  NONE
+  GRADIENT_SHIMMER
+  COSMIC_NEON
+  LAYERED_WAVE_3D
+  SHIMMER_LINES
+  GHOST_ECHO
+
+  @@schema("media")
+}
+
+enum CollectionTextLayerAlign {
+  LEFT
+  CENTER
+  RIGHT
+
+  @@schema("media")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model User {
@@ -1253,6 +1285,14 @@ model Collection {
   coverUrl    String?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+
+  // M26: per-collection backdrop theme (independent of the channel-wide theme)
+  galleryMode        CollectionGalleryMode     @default(NONE)
+  slideshowImages    String[]
+  videoBackgroundUrl String?
+  textLayerMode      CollectionTextLayerMode   @default(NONE)
+  textLayerText      String                    @default("")
+  textLayerAlign     CollectionTextLayerAlign  @default(CENTER)
 
   items CollectionItem[]
 
