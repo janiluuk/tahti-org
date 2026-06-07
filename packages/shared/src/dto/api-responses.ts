@@ -706,6 +706,30 @@ export const ChatAnnouncementViewSchema = z.object({
 
 export const ChatAnnouncementListSchema = z.array(ChatAnnouncementViewSchema)
 
+export const ChannelModeratorViewSchema = z.object({
+  userId: z.string(),
+  username: z.string(),
+  displayName: z.string(),
+  grantedAt: z.coerce.date(),
+})
+
+export const ChannelModeratorListSchema = z.array(ChannelModeratorViewSchema)
+
+export const ModeratedChannelViewSchema = z.object({
+  slug: z.string(),
+  displayName: z.string(),
+  isOwner: z.boolean(),
+})
+
+export const ModeratedChannelListSchema = z.array(ModeratedChannelViewSchema)
+
+export const ChatBanViewSchema = z.object({
+  fingerprintHash: z.string(),
+  bannedAt: z.coerce.date(),
+})
+
+export const ChatBanListSchema = z.array(ChatBanViewSchema)
+
 export const MotionRefResponseSchema = z.object({
   id: z.string(),
   state: z.string(),

@@ -9,6 +9,8 @@ import StreamSettingsPanel from './stream-settings'
 import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import RtmpTargetsPanel from './rtmp-targets'
 import AnnouncementsPanel from './announcements-panel'
+import ModeratorsPanel from './moderators-panel'
+import type { ModeratorRow } from './moderator-actions'
 import FanSubscriptionsPanel from './fan-subscriptions'
 import NewsletterPanel from './newsletter-panel'
 import ReleasesPanel from './releases-panel'
@@ -57,6 +59,12 @@ interface MeResponse {
   membership: { status: string; activatedAt: string | null } | null
   channel: { slug: string; state: string } | null
   storage: { usedBytes: string; softTargetBytes: string } | null
+}
+
+interface ModeratedChannel {
+  slug: string
+  displayName: string
+  isOwner: boolean
 }
 
 interface RtmpTarget {
@@ -142,6 +150,31 @@ export default async function DashboardPage() {
       // ignore
     }
   }
+
+  let moderators: ModeratorRow[] = []
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/channel/moderators`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) moderators = (await res.json()) as ModeratorRow[]
+    } catch {
+      // ignore
+    }
+  }
+
+  let moderatedChannels: ModeratedChannel[] = []
+  try {
+    const res = await fetch(`${apiUrl}/api/me/moderate`, {
+      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+      cache: 'no-store',
+    })
+    if (res.ok) moderatedChannels = (await res.json()) as ModeratedChannel[]
+  } catch {
+    // ignore
+  }
+  const otherModeratedChannels = moderatedChannels.filter((c) => !c.isOwner)
 
   type MembershipInfo = {
     status: string
@@ -534,6 +567,26 @@ export default async function DashboardPage() {
         </Text>
       </div>
 
+      {otherModeratedChannels.length > 0 && (
+        <div className="studio-panel-section">
+          <h2 className="studio-section-heading">Channels you moderate</h2>
+          <p className="studio-help">
+            An artist has trusted you to moderate their chat. Manage bans without access to their
+            dashboard.
+          </p>
+          <ul className="studio-list studio-mt-sm">
+            {otherModeratedChannels.map((c) => (
+              <li key={c.slug} className="studio-item-row--list">
+                <span className="studio-flex-1">{c.displayName}</span>
+                <Link href={`/dashboard/moderate/${c.slug}`} className="studio-btn-ghost">
+                  Moderate chat
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {user.channel?.state === 'LIVE' && (
         <div className="db-status-bar" role="status">
           <div>
@@ -679,6 +732,8 @@ export default async function DashboardPage() {
         )}
 
         {user.channel && <AnnouncementsPanel initial={announcements} />}
+
+        {user.channel && <ModeratorsPanel initial={moderators} channelSlug={user.channel.slug} />}
       </div>
 
       <div id="studio-fans" className="studio-section-anchor">

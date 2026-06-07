@@ -40,6 +40,7 @@ import chatAnnouncementsRoute from './routes/chat/announcements.js'
 import chatReactRoute from './routes/chat/react.js'
 import chatPresenceRoute from './routes/chat/presence.js'
 import meChat from './routes/me/chat.js'
+import meModerators from './routes/me/moderators.js'
 import rtmpTargetRoutes from './routes/me/rtmp-targets.js'
 import transparencyRoutes from './routes/transparency/index.js'
 import adminLedgerRoutes from './routes/admin/ledger.js'
@@ -406,6 +407,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(chatReactRoute)
   await fastify.register(chatPresenceRoute)
   await fastify.register(meChat)
+  await fastify.register(meModerators)
 
   // M6: RTMP multistream targets
   await fastify.register(rtmpTargetRoutes)

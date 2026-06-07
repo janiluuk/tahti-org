@@ -28,6 +28,12 @@ export const ChatBanSchema = z.object({
 
 export type ChatBanInput = z.infer<typeof ChatBanSchema>
 
+export const AddModeratorSchema = z.object({
+  username: z.string().trim().min(1, 'username is required').max(32),
+})
+
+export type AddModeratorInput = z.infer<typeof AddModeratorSchema>
+
 export const ChatTokenSchema = z.object({
   handle: z.string().trim().min(1, 'handle is required').max(32),
   hcaptchaToken: z.string().optional(),

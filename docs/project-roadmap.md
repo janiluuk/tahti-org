@@ -76,7 +76,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | [~] | **M11** Hardening | 🟡 Partial | Rate limiting, hCaptcha, audit log, `/api/v1/status`, OpenAPI `/docs`, structured logging, Stripe webhook + backup age on `/metrics`, **ACRCloud identify counters** (inactive until `ACRCLOUD_ENABLED`), **status monitor GHA** + **Upptime config** + **`bootstrap.sh`**, **`/help/tier-limits`**, **status link in app footer** (`status.tahti.live`), **interim public `/status` page** (reads `/api/v1/status`). Deferred: live Upptime fork deploy |
 | **M12** Profile + releases | 🟢 Done | Release CRUD, smart links, DSP editor, profile playback, cover art, JSON-LD/ISR, sitemap, press kit JSON, CSV bulk import |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in API, artist draft + send, `newsletter-dispatch` worker, per-tier limits; **listener opt-in UI** on `/c/:slug` and `/u/:username`; **bounce webhook** (`POST /api/webhooks/email/bounce` — Postmark + SNS), **`ops/EMAIL.md`**. Deferred: dedicated SES API transport if SMTP limits hit |
-| **M14** Embed/promo | 🟡 Partial | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard; **DSP click tracking** (`POST /api/smartlink/click`, `GET /api/me/releases/:id/analytics`); **Mastodon + Bluesky auto-post v0**; **Twitter/X OAuth 2.0 PKCE** (connect, toggles, manual post, worker dispatch). Deferred: Instagram |
+| **M14** Embed/promo | 🟢 Done | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard; **DSP click tracking** (`POST /api/smartlink/click`, `GET /api/me/releases/:id/analytics`); **Mastodon + Bluesky auto-post v0**; **Twitter/X OAuth 2.0 PKCE** (connect, toggles, manual post, worker dispatch); **Instagram auto-post** (OAuth connect, scheduled posting, dashboard panel). Deferred: none |
 | **M24** Per-content visuals | 🟡 Partial | Channel gallery + **channel video backdrop** + per-item banner/background/slideshow on `/c/:slug`; **YouTube/Vimeo** via `parseVideoEmbedUrl` |
 | **M15** Artist @-mentions | 🟡 Partial | `lib/mentions.ts`, bio/announcement hooks, mute + settings API, **daily digest worker**, **`GET /api/v1/u/:handle/mentions`** (public opt-in), `@handle` links in plain text |
 | **M16** Tahti Radio meta-stream | 🟡 Partial | `services/tahti-radio`, `GET /api/v1/radio` proxy, **`lastFeaturedAt` + history**, internal radio API, **public `/radio` page** |
@@ -297,7 +297,7 @@ Can ship incrementally during beta.
 | [~] | **M30** | Release ops toolkit (MusicBrainz, catalog metadata, release checklist) | Medium |
 | [x] | **M20** | Tier gating polish, upgrade UX | High |
 | [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
-| [~] | **M14** | Embed pages done; social auto-post + analytics remain | Medium |
+| [x] | **M14** | Embed pages, smart-link analytics, and social auto-post (Mastodon, Bluesky, Twitter/X, Instagram) all done | Medium |
 | [~] | **M13** | Newsletter API + worker + bounce webhook; SES broadcast sends remain | Medium |
 | [x] | **M6** | Multistream RTMP targets | Medium |
 | [x] | **M16** | Tahti Radio meta-stream | Medium |
@@ -319,8 +319,8 @@ See `competitive-gaps-hearthis.md` for full gap list.
 | [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug`; **artist archive feed at `/api/v1/u/:handle/rss.xml`** |
 | [~] | **M24** | Channel gallery/text layers + **channel video backdrop**; per-item banner/slideshow; YouTube/Vimeo on archive items |
 | [x] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
-| [~] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; **collection cover + description edit** + **item thumbnails** on profile and `/u/:handle/c/:slug`; per-collection slideshow/video themes deferred |
-| [x] | **M27** | **Programme API** + dashboard rotation editor; `fallback.m3u` respects `isFallback`, ordered/fair shuffle; live auto-archive joins rotation. Deferred: moderator roles, ACRCloud annotation cron, per-set visualisations |
+| [x] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; **collection cover + description edit** + **item thumbnails** on profile and `/u/:handle/c/:slug`; **per-collection slideshow/video themes** (independent gallery + text-layer picker on collections, dashboard editor + public rendering) |
+| [x] | **M27** | **Programme API** + dashboard rotation editor; `fallback.m3u` respects `isFallback`, ordered/fair shuffle; live auto-archive joins rotation. **Moderator roles** — artists delegate chat moderation (ban/unban) to trusted listeners (`ChannelModerator`, dashboard delegation panel + `/dashboard/moderate/:slug` chat-ban UI). Deferred: ACRCloud annotation cron, per-set visualisations |
 | [x] | **M28** | **Track version history** — archive + release-track versions; activate; stable public ids via active version sync |
 
 ## Phase 6b — Release ops & catalog metadata (**M30**)

@@ -425,6 +425,7 @@ model User {
   betaApplicationsReviewed BetaApplication[] @relation("BetaReviewedBy")
   passwordSetups          PasswordSetup[]
   editorProjects          EditorProject[]
+  moderatorOf             ChannelModerator[]
 
   @@schema("core")
 }
@@ -629,6 +630,7 @@ model Channel {
   broadcasts        Broadcast[]
   announcements     ChannelAnnouncement[]
   chatBans          ChatBan[]
+  moderators        ChannelModerator[]
   rtmpTargets       RtmpTarget[]
   radioFeatureLogs  RadioFeatureLog[]
 
@@ -770,6 +772,20 @@ model ChatBan {
   bannedAt        DateTime @default(now())
 
   @@unique([channelId, fingerprintHash])
+  @@schema("chat")
+}
+
+// M27: trusted listeners delegated chat moderation (ban/unban) by the channel owner
+model ChannelModerator {
+  id        String   @id @default(cuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  grantedAt DateTime @default(now())
+
+  @@unique([channelId, userId])
+  @@index([userId])
   @@schema("chat")
 }
 
