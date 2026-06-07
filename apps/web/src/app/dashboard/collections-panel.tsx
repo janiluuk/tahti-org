@@ -5,6 +5,11 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import type {
+  CollectionGalleryMode,
+  CollectionTextLayerAlignment,
+  CollectionTextLayerMode,
+} from '@tahti/shared'
 import {
   addCollectionItem,
   createCollection,
@@ -12,6 +17,7 @@ import {
   reorderCollectionItems,
   updateCollection,
 } from './collection-actions'
+import { CollectionThemeEditor } from './collection-theme-editor'
 import { collectionRssUrl } from '@/lib/rss-feeds'
 
 interface CollectionRow {
@@ -23,6 +29,12 @@ interface CollectionRow {
   isFeatured?: boolean
   coverUrl?: string | null
   description?: string | null
+  galleryMode?: CollectionGalleryMode
+  slideshowImages?: string[]
+  videoBackgroundUrl?: string | null
+  textLayerMode?: CollectionTextLayerMode
+  textLayerText?: string
+  textLayerAlign?: CollectionTextLayerAlignment
   _count?: { items: number }
   items?: Array<{
     id: string
@@ -52,6 +64,7 @@ export default function CollectionsPanel({
   const [addSlug, setAddSlug] = useState<string | null>(null)
   const [editCoverSlug, setEditCoverSlug] = useState<string | null>(null)
   const [editDescSlug, setEditDescSlug] = useState<string | null>(null)
+  const [editThemeSlug, setEditThemeSlug] = useState<string | null>(null)
   const [coverDraft, setCoverDraft] = useState('')
   const [descDraft, setDescDraft] = useState('')
   const [pickArchive, setPickArchive] = useState('')
@@ -269,6 +282,14 @@ export default function CollectionsPanel({
                   </button>
                   <button
                     type="button"
+                    onClick={() => setEditThemeSlug(editThemeSlug === c.slug ? null : c.slug)}
+                    disabled={isPending}
+                    className="studio-btn-ghost"
+                  >
+                    Theme
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setAddSlug(c.slug)}
                     disabled={isPending}
                     className="studio-btn-ghost"
@@ -342,6 +363,23 @@ export default function CollectionsPanel({
                     Cancel
                   </button>
                 </div>
+              )}
+              {editThemeSlug === c.slug && (
+                <CollectionThemeEditor
+                  slug={c.slug}
+                  initial={{
+                    galleryMode: c.galleryMode ?? 'NONE',
+                    slideshowImages: c.slideshowImages ?? [],
+                    videoBackgroundUrl: c.videoBackgroundUrl ?? null,
+                    textLayerMode: c.textLayerMode ?? 'NONE',
+                    textLayerText: c.textLayerText ?? '',
+                    textLayerAlign: c.textLayerAlign ?? 'CENTER',
+                  }}
+                  onDone={() => {
+                    setEditThemeSlug(null)
+                    router.refresh()
+                  }}
+                />
               )}
               {c.items && c.items.length > 0 && (
                 <ol className="studio-list studio-mt-sm studio-text-muted-sm">

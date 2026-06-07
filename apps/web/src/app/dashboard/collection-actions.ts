@@ -4,6 +4,11 @@
 'use server'
 
 import { cookies } from 'next/headers'
+import type {
+  CollectionGalleryMode,
+  CollectionTextLayerAlignment,
+  CollectionTextLayerMode,
+} from '@tahti/shared'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -84,6 +89,48 @@ export async function updateCollection(
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to update collection' }
+  }
+  return { error: null }
+}
+
+export async function updateCollectionGallery(
+  slug: string,
+  payload: {
+    galleryMode?: CollectionGalleryMode
+    slideshowImages?: string[]
+    videoBackgroundUrl?: string | null
+  },
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}/gallery`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to save gallery' }
+  }
+  return { error: null }
+}
+
+export async function updateCollectionTextLayer(
+  slug: string,
+  payload: {
+    textLayerMode?: CollectionTextLayerMode
+    textLayerText?: string
+    textLayerAlign?: CollectionTextLayerAlignment
+  },
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}/text-layer`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to save text layer' }
   }
   return { error: null }
 }
