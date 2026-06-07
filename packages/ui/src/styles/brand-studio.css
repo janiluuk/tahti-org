@@ -129,7 +129,7 @@
 [data-tahti-ui='studio'] .studio-top-nav__user-name {
   font-size: 12.5px;
   color: var(--text);
-  font-weight: 500;
+  font-weight: 600;
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -707,7 +707,7 @@
 [data-tahti-ui='studio'] .studio-label {
   display: block;
   margin-bottom: 0.25rem;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.9rem;
 }
 
@@ -907,7 +907,7 @@
 }
 
 [data-tahti-ui='studio'] .studio-stat-box-title {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.875rem;
 }
 
@@ -964,7 +964,7 @@
 }
 
 [data-tahti-ui='studio'] .studio-chart-bar--live {
-  --studio-bar-color: color-mix(in srgb, var(--cyan) 70%, #7c3aed);
+  --studio-bar-color: color-mix(in srgb, var(--cyan) 70%, var(--purple));
 }
 
 [data-tahti-ui='studio'] .studio-chart-bar--egress {
@@ -1048,7 +1048,7 @@
   display: inline-block;
   font-size: 0.875rem;
   color: var(--cyan);
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -1392,25 +1392,17 @@
 }
 
 [data-tahti-ui='studio'] .db-stat-tile--purple {
-  border-top: 2px solid color-mix(in srgb, var(--purple, #a855f7) 45%, transparent);
+  border-top: 2px solid color-mix(in srgb, var(--purple) 45%, transparent);
 }
 
 [data-tahti-ui='studio'] .db-stat-tile--purple .db-stat-tile-value {
-  color: var(--purple, #a855f7);
-}
-
-[data-tahti-ui='studio'] .db-stat-tile--green {
-  border-top: 2px solid color-mix(in srgb, #22c55e 45%, transparent);
-}
-
-[data-tahti-ui='studio'] .db-stat-tile--green .db-stat-tile-value {
-  color: #22c55e;
+  color: var(--purple);
 }
 
 [data-tahti-ui='studio'] .db-stat-tile-label {
   font-size: 0.75rem;
   color: var(--muted);
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: 0.03em;
 }
 
@@ -1580,7 +1572,7 @@
 }
 
 [data-tahti-ui='studio'] .stats-top-value--purple {
-  color: var(--purple, #a855f7);
+  color: var(--purple);
 }
 
 [data-tahti-ui='studio'] .stats-engagement-rows {
@@ -1625,7 +1617,7 @@
 }
 
 [data-tahti-ui='studio'] .stats-eng-bar--purple {
-  background: var(--purple, #a855f7);
+  background: var(--purple);
 }
 
 [data-tahti-ui='studio'] .stats-eng-value {
@@ -1848,8 +1840,8 @@
 }
 
 [data-tahti-ui='studio'] .stash-btn--danger:hover {
-  border-color: var(--error, #ef4444);
-  color: var(--error, #ef4444);
+  border-color: var(--coral);
+  color: var(--coral);
 }
 
 [data-tahti-ui='studio'] .stash-btn--revoke {
