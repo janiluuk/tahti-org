@@ -219,6 +219,7 @@ enum SocialPlatform {
   MASTODON
   BLUESKY
   TWITTER
+  INSTAGRAM
 
   @@schema("core")
 }

@@ -138,6 +138,14 @@ export const config = {
       process.env.TWITTER_OAUTH_REDIRECT_URI ??
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/social/twitter/oauth/callback`,
   },
+  /** M14: Instagram (Meta Graph API via Facebook Login for Business — optional, set INSTAGRAM_CLIENT_ID). */
+  instagram: {
+    clientId: process.env.INSTAGRAM_CLIENT_ID ?? '',
+    clientSecret: readSecret('INSTAGRAM_CLIENT_SECRET', 'INSTAGRAM_CLIENT_SECRET_FILE', ''),
+    redirectUri:
+      process.env.INSTAGRAM_OAUTH_REDIRECT_URI ??
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/social/instagram/oauth/callback`,
+  },
   /** STREAM-008: optional AcoustID key for live + archive tracklist title lookup. */
   acoustidApiKey: process.env.ACOUSTID_API_KEY?.trim() ?? '',
   acrcloud: {
