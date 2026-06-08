@@ -4,12 +4,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockGet = vi.fn()
+const mockSCard = vi.fn()
 
 vi.mock('./redis.js', () => ({
-  getRedisClient: vi.fn(async () => ({ get: mockGet })),
+  getRedisClient: vi.fn(async () => ({ get: mockGet, sCard: mockSCard })),
 }))
 
-import { fetchMeasuredHlsEgressByDate } from './hls-egress-measured.js'
+import {
+  fetchMeasuredHlsEgressByDate,
+  fetchMeasuredHlsListenersByDate,
+} from './hls-egress-measured.js'
 
 describe('fetchMeasuredHlsEgressByDate', () => {
   beforeEach(() => {
@@ -29,5 +33,19 @@ describe('fetchMeasuredHlsEgressByDate', () => {
     })
     const out = await fetchMeasuredHlsEgressByDate('demo', ['2026-06-01', '2026-06-02'])
     expect(out['2026-06-02']).toBe(9000)
+  })
+})
+
+describe('fetchMeasuredHlsListenersByDate', () => {
+  beforeEach(() => {
+    mockSCard.mockReset()
+  })
+
+  it('returns the distinct-listener set cardinality per UTC day', async () => {
+    mockSCard.mockImplementation(async (key: string) => (key.endsWith('2026-06-02') ? 12 : 0))
+    const out = await fetchMeasuredHlsListenersByDate('demo', ['2026-06-01', '2026-06-02'])
+    expect(out).toEqual({ '2026-06-01': 0, '2026-06-02': 12 })
+    expect(mockSCard).toHaveBeenCalledWith('tahti:hls-listeners:demo:2026-06-01')
+    expect(mockSCard).toHaveBeenCalledWith('tahti:hls-listeners:demo:2026-06-02')
   })
 })

@@ -6,6 +6,11 @@ export function hlsEgressRedisKey(slug: string, utcDate: string): string {
   return `tahti:hls-egress:${slug}:${utcDate}`
 }
 
+/** Per-channel slug UTC-day set of anonymized listener-id hashes (SADD/SCARD from access log). */
+export function hlsListenersRedisKey(slug: string, utcDate: string): string {
+  return `tahti:hls-listeners:${slug}:${utcDate}`
+}
+
 export const HLS_CADDY_LOG_OFFSET_KEY = 'tahti:hls-caddy-log:offset'
 
 /** Keep counters slightly longer than the 30-day dashboard window. */

@@ -7,6 +7,8 @@ export interface HlsCaddyEgressEvent {
   slug: string
   bytes: number
   utcDate: string
+  /** Raw client IP from the access log, for anonymized per-day listener counting. */
+  clientIp: string | null
 }
 
 /** Parse one Caddy JSON access log line for stream.tahti.live HLS paths /{slug}/… */
@@ -15,7 +17,7 @@ export function parseHlsCaddyLogLine(line: string, now = new Date()): HlsCaddyEg
   if (!trimmed) return null
   try {
     const row = JSON.parse(trimmed) as {
-      request?: { uri?: string }
+      request?: { uri?: string; client_ip?: string; remote_ip?: string }
       status?: number
       size?: number
       ts?: number
@@ -27,7 +29,8 @@ export function parseHlsCaddyLogLine(line: string, now = new Date()): HlsCaddyEg
     const slug = match[1]
     if (slug === 'hls-live' || slug.startsWith('.')) return null
     const ts = typeof row.ts === 'number' ? new Date(row.ts * 1000) : now
-    return { slug, bytes: row.size, utcDate: ts.toISOString().slice(0, 10) }
+    const clientIp = row.request?.client_ip ?? row.request?.remote_ip ?? null
+    return { slug, bytes: row.size, utcDate: ts.toISOString().slice(0, 10), clientIp }
   } catch {
     return null
   }
