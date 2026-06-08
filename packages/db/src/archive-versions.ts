@@ -20,6 +20,7 @@ export async function syncActiveVersionToItem(
       mp3Key: active.mp3Key,
       flacKey: active.flacKey,
       durationSec: active.durationSec,
+      peaks: active.peaks ?? undefined,
       fileSizeBytes: active.fileSizeBytes,
       status: 'READY',
     },

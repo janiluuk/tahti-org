@@ -16,6 +16,7 @@ import {
   fetchBroadcastFingerprintSegments,
 } from '../lib/broadcast-fingerprint.js'
 import { buildTracklistFromFingerprints } from '../lib/fingerprint-tracklist.js'
+import { extractWaveformPeaks } from '../lib/waveform.js'
 
 function ffmpegToMp3(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -102,6 +103,7 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
     }
 
     const durationSec = await ffprobeGetDuration(mp3Path)
+    const peaks = (await extractWaveformPeaks(rawPath)) ?? undefined
     const mp3Key = `mp3/${broadcast.channel.slug}/broadcast-${broadcastId}.mp3`
 
     await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
@@ -138,6 +140,7 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         mp3Key,
         flacKey,
         durationSec,
+        peaks,
         fileSizeBytes: 0,
         status: 'READY',
         contentType: 'LIVE',

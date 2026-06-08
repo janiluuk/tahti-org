@@ -9,6 +9,7 @@ import ffmpeg from 'fluent-ffmpeg'
 import { prisma, syncActiveVersionToItem } from '@tahti/db'
 import { isLosslessSource } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { extractWaveformPeaks } from '../lib/waveform.js'
 
 function ffprobeFormat(filePath: string): Promise<{ duration: number; format: string }> {
   return new Promise((resolve, reject) => {
@@ -77,6 +78,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
 
     const sourceMeta = await ffprobeFormat(rawPath)
     const lossless = isLosslessSource(sourceMeta.format)
+    const peaks = (await extractWaveformPeaks(rawPath)) ?? undefined
 
     if (lossless) {
       const flacPath = join(tmpDir, 'output.flac')
@@ -91,6 +93,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
           flacKey,
           mp3Key: null,
           durationSec: sourceMeta.duration,
+          peaks,
         },
       })
     } else {
@@ -105,6 +108,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
           status: 'READY',
           mp3Key,
           durationSec: sourceMeta.duration,
+          peaks,
         },
       })
     }

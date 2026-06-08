@@ -723,6 +723,7 @@ model ArchiveItem {
   mp3Key        String?
   flacKey       String?
   durationSec   Int?
+  peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
   fileSizeBytes BigInt
   status        ArchiveItemStatus @default(PENDING)
   isPublic      Boolean           @default(true)
@@ -752,6 +753,7 @@ model ArchiveItemVersion {
   mp3Key        String?
   flacKey       String?
   durationSec   Int?
+  peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
   fileSizeBytes BigInt            @default(0)
   status        ArchiveItemStatus @default(PENDING)
   isActive      Boolean           @default(false)

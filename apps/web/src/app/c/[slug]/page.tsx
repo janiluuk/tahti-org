@@ -9,6 +9,7 @@ import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
+import { ArchiveWaveform } from '@/components/archive-waveform'
 import { ArchiveDownloadButton } from './archive-download'
 import { BroadcastCountdown } from './broadcast-countdown'
 import { StickyLiveBar } from './sticky-live-bar'
@@ -51,6 +52,7 @@ interface ArchiveItem {
   commentary: string | null
   durationSec: number | null
   audioUrl: string | null
+  peaks?: number[] | null
   createdAt: string
   genre?: string | null
   genreCustom?: string | null
@@ -253,12 +255,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         <TracklistView entries={item.tracklist} />
                       )}
                       {item.audioUrl && (
-                        <audio
-                          controls
-                          src={item.audioUrl}
-                          className="ch-archive-audio"
-                          data-testid="channel-archive-player"
-                        />
+                        <>
+                          <ArchiveWaveform peaks={item.peaks} />
+                          <audio
+                            controls
+                            src={item.audioUrl}
+                            className="ch-archive-audio"
+                            data-testid="channel-archive-player"
+                          />
+                        </>
                       )}
                       <ArchiveDownloadButton
                         channelSlug={slug}

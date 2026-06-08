@@ -413,6 +413,25 @@
   }
 }
 
+/* Per-set waveform visualisation (static, server-extracted peaks) */
+[data-tahti-ui='brand'] .ch-archive-waveform {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 56px;
+  margin: 0.5rem 0;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .ch-archive-wf-bar {
+  flex: 1;
+  min-width: 1px;
+  height: var(--h, 4%);
+  background: var(--cyan);
+  opacity: 0.45;
+  border-radius: 1px;
+}
+
 /* Controls */
 [data-tahti-ui='brand'] .ch-player-controls {
   display: flex;
@@ -2073,6 +2092,10 @@
 
   [data-tahti-ui='brand'] .ch-wf-bar {
     max-width: 6px;
+  }
+
+  [data-tahti-ui='brand'] .ch-archive-waveform {
+    height: 40px;
   }
 
   [data-tahti-ui='brand'] .ch-play-btn {

@@ -65,6 +65,7 @@ describe('GET /api/channels/:slug/items', () => {
         status: 'READY',
         isPublic: true,
         commentary: 'Thanks for listening — recorded live at Klubi.',
+        peaks: [10, 50, 200, 80],
       },
     })
 
@@ -104,6 +105,7 @@ describe('GET /api/channels/:slug/items', () => {
     expect(items[0].title).toBe('Ready Track')
     expect(items[0].audioUrl).toBe('https://minio.test/get')
     expect(items[0].commentary).toBe('Thanks for listening — recorded live at Klubi.')
+    expect(items[0].peaks).toEqual([10, 50, 200, 80])
   })
 
   it('serves flac when item has no mp3', async () => {
