@@ -371,9 +371,15 @@ Every export and submission reads from the same fields.
   Music for Artists, YouTube OAC (artist completes on each platform)
 - **Collecting-society pointers** — Teosto (FI) and other PROs: what to
   register and when (links only — no in-platform filing in v1)
+- **Discogs guided submission** — Discogs has no artist-facing submission API
+  (entries go through community review), so Tahti mirrors the MusicBrainz
+  pattern: `discogsReleaseId` field, clipboard prefill (`buildDiscogsPrefill`),
+  in-panel step-by-step guide (search first to avoid duplicates, submit via
+  artist/label page, write Submission Notes), and a Discogs URL on the smart
+  link once an ID is stored
 
-**Out of scope for M30 v1:** Discogs API submit, direct Teosto/GEMA filing,
-AllMusic editorial pitch automation.
+**Out of scope for M30 v1:** direct Teosto/GEMA filing, AllMusic editorial
+pitch automation.
 
 **Done when:** An artist fills release metadata once in Tahti, submits to
 MusicBrainz from the dashboard (or exports for Picard with zero field mismatch),

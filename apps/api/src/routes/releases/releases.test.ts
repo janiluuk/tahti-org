@@ -186,12 +186,14 @@ describe('M12 — releases and public profile', () => {
       payload: {
         upc: '1234567890123',
         musicbrainzReleaseId: 'a1b2c3d4-5678-90ab-cdef-1234567890ab',
+        discogsReleaseId: '249504',
         pLine: '℗ 2026 Tahti Demo',
         credits: [{ role: 'writer', name: 'Demo Artist' }],
       },
     })
     expect(patch.statusCode).toBe(200)
     expect(patch.json().upc).toBe('1234567890123')
+    expect(patch.json().discogsReleaseId).toBe('249504')
     expect(Array.isArray(patch.json().checklist)).toBe(true)
     expect(patch.json().checklist.find((s: { id: string }) => s.id === 'identifiers')?.done).toBe(
       true,
@@ -205,7 +207,10 @@ describe('M12 — releases and public profile', () => {
     })
     expect(exp.statusCode).toBe(200)
     expect(exp.json().release.upc).toBe('1234567890123')
+    expect(exp.json().release.discogsReleaseId).toBe('249504')
     expect(exp.json().musicbrainzPrefill).toContain('1234567890123')
     expect(exp.json().musicbrainzPrefill).toContain('MusicBrainz')
+    expect(exp.json().discogsPrefill).toContain('Discogs')
+    expect(exp.json().discogsPrefill).toContain('Submission notes')
   })
 })

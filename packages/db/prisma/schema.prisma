@@ -1045,6 +1045,7 @@ model Release {
   upc                    String?
   musicbrainzReleaseId   String?
   musicbrainzArtistId    String?
+  discogsReleaseId       String?
   pLine                  String?
   cLine                  String?
   labelImprint           String?

@@ -74,6 +74,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
           upc: true,
           musicbrainzReleaseId: true,
           musicbrainzArtistId: true,
+          discogsReleaseId: true,
           pLine: true,
           cLine: true,
           labelImprint: true,

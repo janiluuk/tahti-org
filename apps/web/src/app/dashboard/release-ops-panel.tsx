@@ -6,6 +6,8 @@
 import { useEffect, useState, useTransition } from 'react'
 import {
   COLLECTING_SOCIETY_POINTERS,
+  DISCOGS_GUIDE_STEPS,
+  DISCOGS_SUBMIT_URL,
   MUSICBRAINZ_GUIDE_STEPS,
   MUSICBRAINZ_SUBMIT_URL,
   POST_RELEASE_CLAIM_LINKS,
@@ -25,6 +27,7 @@ type CatalogState = {
   upc: string
   musicbrainzReleaseId: string
   musicbrainzArtistId: string
+  discogsReleaseId: string
   pLine: string
   cLine: string
   labelImprint: string
@@ -150,6 +153,7 @@ export default function ReleaseOpsPanel({
         upc: form.upc.trim() || null,
         musicbrainzReleaseId: form.musicbrainzReleaseId.trim() || null,
         musicbrainzArtistId: form.musicbrainzArtistId.trim() || null,
+        discogsReleaseId: form.discogsReleaseId.trim() || null,
         pLine: form.pLine.trim() || null,
         cLine: form.cLine.trim() || null,
         labelImprint: form.labelImprint.trim() || null,
@@ -193,6 +197,7 @@ export default function ReleaseOpsPanel({
                 ['UPC / EAN', 'upc'],
                 ['MusicBrainz release MBID', 'musicbrainzReleaseId'],
                 ['MusicBrainz artist MBID', 'musicbrainzArtistId'],
+                ['Discogs release ID', 'discogsReleaseId'],
                 ['P-line', 'pLine'],
                 ['C-line', 'cLine'],
                 ['Label imprint', 'labelImprint'],
@@ -338,6 +343,42 @@ export default function ReleaseOpsPanel({
             >
               Add on MusicBrainz →
             </a>
+            <button
+              type="button"
+              className="studio-btn-ghost"
+              disabled={isPending}
+              onClick={() => {
+                setError(null)
+                startTransition(async () => {
+                  const res = await fetchReleaseExportJson(releaseId)
+                  if (res.error || !res.json) {
+                    setError(res.error ?? 'Export failed')
+                    return
+                  }
+                  try {
+                    const pack = JSON.parse(res.json) as { discogsPrefill?: string }
+                    const text = pack.discogsPrefill
+                    if (!text) {
+                      setError('Export missing Discogs prefill')
+                      return
+                    }
+                    await navigator.clipboard.writeText(text)
+                  } catch {
+                    setError('Could not copy Discogs prefill')
+                  }
+                })
+              }}
+            >
+              Copy Discogs prefill
+            </button>
+            <a
+              href={DISCOGS_SUBMIT_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="studio-link-cta"
+            >
+              Search on Discogs →
+            </a>
           </div>
 
           <div className="studio-subsection studio-mt-lg">
@@ -420,6 +461,21 @@ export default function ReleaseOpsPanel({
             <div className="studio-text-strong-sm studio-mb-sm">MusicBrainz submission guide</div>
             <ol className="studio-list-indented studio-text-muted-sm">
               {MUSICBRAINZ_GUIDE_STEPS.map((step) => (
+                <li key={step} className="studio-mb-sm">
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="studio-mt-lg">
+            <div className="studio-text-strong-sm studio-mb-sm">Discogs submission guide</div>
+            <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
+              Discogs is a community-edited database — entries go through a review queue. Tahti does
+              not submit on your behalf; this guide and prefill just save you the typing.
+            </p>
+            <ol className="studio-list-indented studio-text-muted-sm">
+              {DISCOGS_GUIDE_STEPS.map((step) => (
                 <li key={step} className="studio-mb-sm">
                   {step}
                 </li>

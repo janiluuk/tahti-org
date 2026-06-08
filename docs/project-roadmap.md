@@ -87,7 +87,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M22** Archive metadata | 🟡 Partial | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/channel-funnel-stats` + split endpoints; 14-day charts); **per-listener HLS metrics** — distinct daily listener counts from anonymized (daily-salted, non-reversible) Caddy edge-log hashes, surfaced as `peakDailyListeners` + per-day counts in the live-stats panel. Deferred: none |
 | **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard; **per-artist archive RSS** (`/api/v1/u/:handle/rss.xml`); feed links on profile + dashboard |
 | **M28** Track version history | 🟢 Done | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids via active-version sync) |
-| **M30** Release ops toolkit | 🟡 Partial | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; UPC/ISRC on `/r/:slug`; claim links (Spotify, Apple, YouTube). Deferred: Discogs API |
+| **M30** Release ops toolkit | 🟢 Done | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; **guided Discogs submission** (`discogsReleaseId` + clipboard prefill + in-panel guide + Discogs URL on smart link — Discogs has no artist-submission API, so this mirrors the MusicBrainz guided pattern); UPC/ISRC on `/r/:slug`; claim links (Spotify, Apple, YouTube). Deferred: none |
 | **M29** Backup & DR | 🟡 Partial | **`scripts/backup.sh`** (postgres, minio DR mirror, restore-test, status + DR age); **`scripts/backup-drill.sh`** + quarterly cron; **`ops/RUNBOOK.md`** restore + drill table; `install-crons.sh`; `/metrics` backup gauge. Deferred: pgBackRest PITR |
 | **M20** Tier gating | 🟢 Done | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API + **upgrade CTA**, HLS tier split, **`/help/tier-limits`**, vital-flows e2e |
 
@@ -294,7 +294,7 @@ Can ship incrementally during beta.
 | Done | Milestone | Summary | Priority |
 |:---:|---|---|---|
 | [~] | **M12** | Profile + releases + smart links + MinIO cover art | High |
-| [~] | **M30** | Release ops toolkit (MusicBrainz, catalog metadata, release checklist) | Medium |
+| [x] | **M30** | Release ops toolkit (MusicBrainz + Discogs guided submission, catalog metadata, release checklist) | Medium |
 | [x] | **M20** | Tier gating polish, upgrade UX | High |
 | [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
 | [x] | **M14** | Embed pages, smart-link analytics, and social auto-post (Mastodon, Bluesky, Twitter/X, Instagram) all done | Medium |
@@ -332,6 +332,7 @@ Artists need more than a smart link and a Revelator upload: the **official** sid
 | Done | Capability | Notes |
 |:---:|---|---|
 | [x] | **MusicBrainz submission** | MBID fields + submit link + **in-panel guide** + MusicBrainz URL on smart link |
+| [x] | **Discogs submission** | Guided entry — `discogsReleaseId` field + prefill clipboard helper + **in-panel guide** (search-first, dedup-aware) + Discogs URL on smart link |
 | [x] | **ISRC + UPC/EAN** | Release ops capture; display on `/r/:slug` |
 | [x] | **Credits & roles** | Dashboard credits editor; JSON export |
 | [x] | **Copyright lines** | P/C-line + label imprint |
@@ -340,7 +341,7 @@ Artists need more than a smart link and a Revelator upload: the **official** sid
 | [x] | **Export pack** | Download JSON |
 | [x] | **Collecting-society pointers** | Teosto, PRS, GEMA, etc. |
 
-**Deferred (later M30+):** Discogs submission API, direct PRO registration, AllMusic pitch workflow.
+**Deferred (later M30+):** direct PRO registration, AllMusic pitch workflow. (Discogs has no artist-submission API — Tahti ships a guided clipboard-prefill + ID-storage flow instead, mirroring the MusicBrainz pattern.)
 
 **Depends:** M12 release schema (partial ✅), M7 Revelator wizard (partial). **Doc:** `AGENT.md` §M30.
 

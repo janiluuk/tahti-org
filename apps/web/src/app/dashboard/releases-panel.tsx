@@ -40,6 +40,7 @@ interface ReleaseSummary {
   upc?: string | null
   musicbrainzReleaseId?: string | null
   musicbrainzArtistId?: string | null
+  discogsReleaseId?: string | null
   pLine?: string | null
   cLine?: string | null
   labelImprint?: string | null
@@ -206,6 +207,7 @@ export default function ReleasesPanel({
                   upc: r.upc ?? '',
                   musicbrainzReleaseId: r.musicbrainzReleaseId ?? '',
                   musicbrainzArtistId: r.musicbrainzArtistId ?? '',
+                  discogsReleaseId: r.discogsReleaseId ?? '',
                   pLine: r.pLine ?? '',
                   cLine: r.cLine ?? '',
                   labelImprint: r.labelImprint ?? '',

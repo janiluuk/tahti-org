@@ -34,6 +34,7 @@ interface SmartLinkResponse {
     cLine: string | null
     tracks: SmartLinkTrack[]
     musicbrainzUrl: string | null
+    discogsUrl: string | null
   }
   artist: { username: string; displayName: string; avatarUrl: string | null }
   featuredCollections?: FeaturedCollection[]
@@ -97,7 +98,8 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
         data.release.pLine ||
         data.release.cLine ||
         tracksWithIsrc.length > 0 ||
-        data.release.musicbrainzUrl) && (
+        data.release.musicbrainzUrl ||
+        data.release.discogsUrl) && (
         <div className="sl-panel">
           {data.release.upc && (
             <div className="sl-panel-row">
@@ -118,6 +120,11 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
           {data.release.musicbrainzUrl && (
             <div className="sl-panel-action">
               <a href={data.release.musicbrainzUrl}>View on MusicBrainz</a>
+            </div>
+          )}
+          {data.release.discogsUrl && (
+            <div className="sl-panel-action">
+              <a href={data.release.discogsUrl}>View on Discogs</a>
             </div>
           )}
         </div>
