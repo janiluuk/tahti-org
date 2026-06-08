@@ -158,29 +158,47 @@ Each technical doc expands sequence diagrams and friction maps. This table maps 
 
 ## Flows → screens (screenshot fixtures)
 
-### Listener (no account)
+Full set by role: [e2e-screenshots/README.md](e2e-screenshots/README.md) · `manifest.json`
+
+### Listener (no account) — `public/`
 
 | Step | Route | Screenshot |
 |------|-------|------------|
-| Land | `/` | [01-home.png](e2e-screenshots/01-home.png) |
-| Channel | `/c/screenshot-demo` | [08-channel.png](e2e-screenshots/08-channel.png) |
-| Profile | `/u/screenshot-demo` | [09-profile.png](e2e-screenshots/09-profile.png) |
-| Fan tiers | `/u/screenshot-demo/subscribe` | [10-subscribe.png](e2e-screenshots/10-subscribe.png) |
-| Smart link | `/r/northern-lights-ep` | [11-smart-link.png](e2e-screenshots/11-smart-link.png) |
-| Transparency | `/transparency` | [06-transparency.png](e2e-screenshots/06-transparency.png) |
+| Land | `/` | [home.png](e2e-screenshots/public/home.png) |
+| Channel | `/c/screenshot-demo` | [channel.png](e2e-screenshots/public/channel.png) |
+| Profile | `/u/screenshot-demo` | [profile.png](e2e-screenshots/public/profile.png) |
+| Fan tiers | `/u/screenshot-demo/subscribe` | [subscribe.png](e2e-screenshots/public/subscribe.png) |
+| Smart link | `/r/northern-lights-ep` | [smart-link.png](e2e-screenshots/public/smart-link.png) |
+| Transparency | `/transparency` | [transparency.png](e2e-screenshots/public/transparency.png) |
 
-### Member (cooperative)
-
-| Step | Route | Screenshot |
-|------|-------|------------|
-| Register | `/join` | [02-join.png](e2e-screenshots/02-join.png) |
-| Verify | `/verify?token=…` | [05-verify-token.png](e2e-screenshots/05-verify-token.png) |
-| Governance | `/governance` | [13-governance.png](e2e-screenshots/13-governance.png) |
-
-### Artist (studio + optional live)
+### Free listener — `free/`
 
 | Step | Route | Screenshot |
 |------|-------|------------|
-| Login | `/login` | [03-login.png](e2e-screenshots/03-login.png) |
-| Dashboard | `/dashboard` | [12-dashboard.png](e2e-screenshots/12-dashboard.png) |
-| Live channel | `/c/screenshot-demo` | [08-channel.png](e2e-screenshots/08-channel.png) |
+| Dashboard | `/dashboard` | [dashboard.png](e2e-screenshots/free/dashboard.png) |
+
+### Member (cooperative) — `member/`
+
+| Step | Route | Screenshot |
+|------|-------|------------|
+| Register | `/join` | [join.png](e2e-screenshots/public/join.png) |
+| Verify | `/verify?token=…` | [verify-token.png](e2e-screenshots/public/verify-token.png) |
+| Dashboard | `/dashboard` | [dashboard.png](e2e-screenshots/member/dashboard.png) |
+| Governance | `/governance` | [governance.png](e2e-screenshots/member/governance.png) |
+
+### Artist (studio + optional live) — `artist/`
+
+| Step | Route | Screenshot |
+|------|-------|------------|
+| Login | `/login` | [login.png](e2e-screenshots/public/login.png) |
+| Dashboard | `/dashboard` | [dashboard.png](e2e-screenshots/artist/dashboard.png) |
+| Stats | `/dashboard/stats` | [stats.png](e2e-screenshots/artist/stats.png) |
+| Live channel | `/c/screenshot-demo` | [channel.png](e2e-screenshots/public/channel.png) |
+
+### Board admin — `admin/`
+
+| Step | Route | Screenshot |
+|------|-------|------------|
+| Dashboard | `/admin/dashboard` | [dashboard.png](e2e-screenshots/admin/dashboard.png) |
+| Users | `/admin/users` | [users.png](e2e-screenshots/admin/users.png) |
+| Financial | `/admin/financial` | [financial.png](e2e-screenshots/admin/financial.png) |

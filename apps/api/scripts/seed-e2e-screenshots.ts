@@ -26,6 +26,12 @@ const BOARD = {
   username: 'screenshot-board',
   displayName: 'Screenshot Board',
 }
+const FREE = {
+  email: 'screenshot-free@e2e.tahti.live',
+  username: 'screenshot-free',
+  displayName: 'Screenshot Free Listener',
+}
+const COLLECTION_SLUG = 'demo-mixes'
 
 const DEMO_MOTION_TITLE = 'E2E advisory motion'
 
@@ -34,7 +40,7 @@ async function main() {
 
   await prisma.motion.deleteMany({ where: { title: DEMO_MOTION_TITLE } })
 
-  for (const email of [ARTIST.email, MEMBER.email, BOARD.email]) {
+  for (const email of [ARTIST.email, MEMBER.email, BOARD.email, FREE.email]) {
     const existing = await prisma.user.findUnique({
       where: { email },
       select: { id: true, channel: { select: { id: true } } },
@@ -109,7 +115,7 @@ async function main() {
     },
   })
 
-  await prisma.archiveItem.create({
+  const archiveItem = await prisma.archiveItem.create({
     data: {
       channelId: artist.channel!.id,
       title: 'Live at Klubi — March 2026',
@@ -119,6 +125,22 @@ async function main() {
       durationSec: 3600,
       fileSizeBytes: BigInt(50_000_000),
       status: 'READY',
+      isPublic: true,
+    },
+  })
+
+  await prisma.collection.create({
+    data: {
+      userId: artist.id,
+      slug: COLLECTION_SLUG,
+      name: 'Demo Mixes',
+      type: 'MIX_SERIES',
+      isPublic: true,
+      isFeatured: true,
+      description: 'Seeded mix series for e2e screenshots.',
+      items: {
+        create: [{ archiveItemId: archiveItem.id, position: 0 }],
+      },
     },
   })
 
@@ -133,6 +155,18 @@ async function main() {
       memberNumber: 99002,
       memberSince: new Date(),
       membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
+    },
+  })
+
+  await prisma.user.create({
+    data: {
+      email: FREE.email,
+      passwordHash,
+      username: FREE.username,
+      displayName: FREE.displayName,
+      emailVerifiedAt: new Date(),
+      tier: 'FREE',
+      isMember: false,
     },
   })
 
@@ -196,10 +230,17 @@ async function main() {
       {
         password: PASS,
         artist: ARTIST.username,
+        artistEmail: ARTIST.email,
         member: MEMBER.username,
+        memberEmail: MEMBER.email,
+        free: FREE.username,
+        freeEmail: FREE.email,
         board: BOARD.username,
+        boardEmail: BOARD.email,
         fan: MEMBER.username,
         smartLinkSlug: release.smartLinkSlug,
+        releaseId: release.id,
+        collectionSlug: COLLECTION_SLUG,
         motionTitle: DEMO_MOTION_TITLE,
         verifyToken,
       },

@@ -4,12 +4,26 @@ Full-page captures of the Tahti **web app** (`apps/web`) against the **Docker st
 
 **Canonical location:** commit updated PNGs here only. Agents must **not** copy these into `website/` — the marketing site (`website/`) is off limits unless the user explicitly requests it (see `.cursor/rules/website-off-limits.mdc`).
 
+## Layout
+
+Screenshots are grouped by role:
+
+| Folder | Auth | Description |
+|--------|------|-------------|
+| `public/` | None | Marketing, channel, profile, help, transparency |
+| `free/` | Free listener | Verified account, no €40 membership |
+| `member/` | Paying member | Member dashboard + governance |
+| `artist/` | Artist channel owner | Full studio dashboard, stats, stash, editor |
+| `admin/` | Board (`isBoard`) | Admin console (all nav sections) |
+
+See `manifest.json` for the full route → file mapping.
+
 ## When to update (agents)
 
-After meaningful **public UI** changes (layouts, brand shells, auth, channel, profile, dashboard, governance, transparency):
+After meaningful **UI** changes on public, dashboard, governance, or admin surfaces:
 
 1. Run the capture flow below on a machine with Docker.
-2. Commit changed files under `docs/e2e-screenshots/` (PNG + `manifest.json` if routes changed).
+2. Commit changed PNGs under `docs/e2e-screenshots/` and `manifest.json` if routes changed.
 3. Do **not** touch `website/screenshots/` unless the user asks.
 
 ## Reproduce (local only — not CI)
@@ -23,7 +37,7 @@ Or step by step:
 
 ```bash
 ./scripts/stack-up.sh --seed
-./scripts/stack-screenshots.sh
+WEB_PORT=17777 API_PORT=15011 ./scripts/stack-screenshots.sh
 ```
 
 Via Make: `make e2e-screenshots`
@@ -45,10 +59,12 @@ CI runs lint, tests, and `tests/e2e/vital-flows.sh` — not Playwright screensho
 | Role | Email | Password |
 |------|-------|----------|
 | Artist | `screenshot-artist@e2e.tahti.live` | `screenshot-demo-pass` |
-| Fan | `screenshot-fan@e2e.tahti.live` | `screenshot-demo-pass` |
+| Member | `screenshot-fan@e2e.tahti.live` | `screenshot-demo-pass` |
+| Free listener | `screenshot-free@e2e.tahti.live` | `screenshot-demo-pass` |
+| Board admin | `screenshot-board@e2e.tahti.live` | `screenshot-demo-pass` |
 
-Username: `screenshot-demo` · Smart link slug: `northern-lights-ep`
+Username: `screenshot-demo` · Collection: `demo-mixes` · Smart link: `northern-lights-ep`
 
-See `manifest.json` for route → file mapping. Linked from `docs/user-flows.md`.
+Linked from `docs/user-flows.md`.
 
 Production node layout and scaling bottlenecks: [../scaling-node-distribution.md](../scaling-node-distribution.md).
