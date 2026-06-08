@@ -30,7 +30,12 @@ function IconArchive() {
     <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
       <rect x="2" y="5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
       <path d="M2 7h12" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M1.5 3.5h5l1.5 1.5H14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M1.5 3.5h5l1.5 1.5H14.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -64,9 +69,27 @@ function IconSettings() {
 const MOBILE_NAV = [
   { href: '/dashboard', label: 'Channel', Icon: IconChannel, exact: true },
   { href: '/dashboard/stats', label: 'Stats', Icon: IconStats, exact: false },
-  { href: '/dashboard#catalog', label: 'Archive', Icon: IconArchive, exact: false, hash: '#catalog' },
-  { href: '/dashboard#audience', label: 'Revenue', Icon: IconRevenue, exact: false, hash: '#audience' },
-  { href: '/dashboard#account', label: 'Settings', Icon: IconSettings, exact: false, hash: '#account' },
+  {
+    href: '/dashboard#catalog',
+    label: 'Archive',
+    Icon: IconArchive,
+    exact: false,
+    hash: '#catalog',
+  },
+  {
+    href: '/dashboard#audience',
+    label: 'Revenue',
+    Icon: IconRevenue,
+    exact: false,
+    hash: '#audience',
+  },
+  {
+    href: '/dashboard#account',
+    label: 'Settings',
+    Icon: IconSettings,
+    exact: false,
+    hash: '#account',
+  },
 ]
 
 /** Mobile bottom nav for the dashboard (hidden on desktop). */
