@@ -84,19 +84,19 @@ export default async function StatsPage() {
       <div className="db-stat-tiles">
         <div className="db-stat-tile db-stat-tile--amber">
           <span className="db-stat-tile-value">{totalPlays.toLocaleString()}</span>
-          <span className="db-stat-tile-label">Plays</span>
+          <span className="db-stat-tile-label">Plays this month</span>
         </div>
-        <div className="db-stat-tile db-stat-tile--cyan">
+        <div className="db-stat-tile db-stat-tile--green">
           <span className="db-stat-tile-value">{downloads.toLocaleString()}</span>
           <span className="db-stat-tile-label">Downloads</span>
         </div>
         <div className="db-stat-tile db-stat-tile--purple">
           <span className="db-stat-tile-value">{fanSubs.toLocaleString()}</span>
-          <span className="db-stat-tile-label">Fan subs</span>
+          <span className="db-stat-tile-label">Fan subscribers</span>
         </div>
         <div className="db-stat-tile db-stat-tile--cyan">
           <span className="db-stat-tile-value">€{(revenueCents / 100).toFixed(0)}</span>
-          <span className="db-stat-tile-label">Revenue / mo</span>
+          <span className="db-stat-tile-label">Fan-sub / mo</span>
         </div>
       </div>
 

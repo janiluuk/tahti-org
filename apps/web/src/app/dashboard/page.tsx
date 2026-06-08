@@ -629,22 +629,22 @@ export default async function DashboardPage() {
             {user.channel && (
               <div className="db-stat-tiles">
                 <div className="db-stat-tile db-stat-tile--amber">
-                  <span className="db-stat-tile-value">{statDlCount + statBroadcasts}</span>
-                  <span className="db-stat-tile-label">Archive plays</span>
+                  <span className="db-stat-tile-value">{(statDlCount + statBroadcasts).toLocaleString()}</span>
+                  <span className="db-stat-tile-label">Plays this month</span>
                 </div>
-                <div className="db-stat-tile db-stat-tile--cyan">
-                  <span className="db-stat-tile-value">{statDlCount}</span>
+                <div className="db-stat-tile db-stat-tile--green">
+                  <span className="db-stat-tile-value">{statDlCount.toLocaleString()}</span>
                   <span className="db-stat-tile-label">Downloads</span>
                 </div>
                 <div className="db-stat-tile db-stat-tile--purple">
-                  <span className="db-stat-tile-value">{newsletterStats.confirmed}</span>
-                  <span className="db-stat-tile-label">Subscribers</span>
+                  <span className="db-stat-tile-value">{newsletterStats.confirmed.toLocaleString()}</span>
+                  <span className="db-stat-tile-label">Fan subscribers</span>
                 </div>
                 <div className="db-stat-tile db-stat-tile--cyan">
                   <span className="db-stat-tile-value">
                     €{(fanPayoutStats.paidLast30Days / 100).toFixed(0)}
                   </span>
-                  <span className="db-stat-tile-label">Revenue / mo</span>
+                  <span className="db-stat-tile-label">Revenue this month</span>
                 </div>
               </div>
             )}

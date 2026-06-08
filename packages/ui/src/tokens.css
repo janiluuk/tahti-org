@@ -7,22 +7,24 @@
  */
 
 :root {
-  /* ─── Backgrounds ───────────────────────────────────────────────────── */
-  --bg:    #0a0f1e;   /* page background */
-  --card:  #111827;   /* card surface */
-  --card2: #1a2340;   /* elevated card, callout, stat bg */
+  /* ─── Backgrounds (v8 dark navy palette) ───────────────────────────── */
+  --bg:         #0A0E1C;   /* outermost page background */
+  --card:       #11172A;   /* card surface, sidebar background */
+  --card2:      #162038;   /* elevated card, callout, stat bg */
+  --card-hover: #1B2540;   /* hover state on cards / list items */
 
-  /* ─── Accent colors (each carries semantic meaning) ────────────────── */
-  --amber:    #f0a500;  /* primary CTA · logo · key values */
-  --cyan:     #00bcd4;  /* streaming · tech · player controls */
-  --green:    #00e676;  /* live state · positive status */
-  --purple:   #7c4dff;  /* fan-subs · community · governance */
-  --coral:    #ff6b6b;  /* errors · competitor critique · warnings */
-  --lavender: #9c88ff;  /* membership · artist handle · grants */
+  /* ─── Accent colors (each carries semantic meaning — do not reassign) ─ */
+  --amber:    #FFB840;  /* plays · activity · live countdown numbers */
+  --cyan:     #22D3EE;  /* primary brand · buttons · active items · revenue */
+  --green:    #3FE07A;  /* live state · downloads · positive status */
+  --purple:   #A78BFA;  /* fan-subs · community · governance */
+  --coral:    #F87171;  /* errors · destructive actions */
+  --lavender: #A78BFA;  /* alias for purple */
 
   /* ─── Text ──────────────────────────────────────────────────────────── */
-  --text:  #e8eaf6;   /* primary */
-  --muted: #8892a4;   /* secondary · labels · captions */
+  --text:   #E6E9F0;   /* primary — headings, body emphasis */
+  --muted:  #A1A8BD;   /* secondary — body copy, labels */
+  --muted2: #5E6680;   /* tertiary — captions, metadata, section labels */
 
   /* ─── Typography ────────────────────────────────────────────────────── */
   --font-head: 'Space Grotesk', sans-serif;
@@ -30,8 +32,9 @@
   --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
 
   /* ─── Borders ───────────────────────────────────────────────────────── */
-  --border:       rgba(255, 255, 255, 0.07);
-  --border-hover: rgba(255, 255, 255, 0.15);
+  --border:        #1F2940;
+  --border-strong: #2A3550;
+  --border-hover:  rgba(255, 255, 255, 0.15);
 
   /* ─── Radius ────────────────────────────────────────────────────────── */
   --radius-sm:   4px;
@@ -41,14 +44,14 @@
   --radius-full: 50%;
 
   /* ─── Shadows ───────────────────────────────────────────────────────── */
-  --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-amber:   0 8px 24px rgba(240, 165, 0, 0.35);
-  --shadow-modal:   0 40px 120px rgba(0, 0, 0, 0.8);
+  --shadow-card:  0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-cyan:  0 8px 24px rgba(34, 211, 238, 0.25);
+  --shadow-modal: 0 40px 120px rgba(0, 0, 0, 0.8);
 
   /* ─── Motion ────────────────────────────────────────────────────────── */
-  --ease:           0.2s ease;
-  --ease-reveal:    0.7s ease;
-  --ease-card:      0.3s ease;
+  --ease:        0.2s ease;
+  --ease-reveal: 0.7s ease;
+  --ease-card:   0.3s ease;
 }
 
 /* ─── Global base (body styling lives in apps/web/src/app/globals.css) ─ */

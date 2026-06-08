@@ -910,6 +910,8 @@
   max-width: 720px;
   margin: 0 auto;
   padding-bottom: 3rem;
+  /* leave space for the avatar (64px) that hangs 28px below prof-cover */
+  padding-top: 36px;
 }
 
 [data-tahti-ui='brand'] .prof-page--narrow {
@@ -918,9 +920,15 @@
 }
 
 [data-tahti-ui='brand'] .prof-cover {
-  height: 120px;
-  background: linear-gradient(135deg, #1a0a40 0%, #0a2040 40%, #0a3020 100%);
+  height: 160px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--purple) 55%, var(--bg)) 0%,
+    color-mix(in srgb, var(--cyan) 35%, var(--bg)) 55%,
+    color-mix(in srgb, var(--green) 25%, var(--bg)) 100%
+  );
   position: relative;
+  width: 100%;
 }
 
 [data-tahti-ui='brand'] .prof-cover-overlay {
@@ -932,7 +940,9 @@
 [data-tahti-ui='brand'] .prof-avatar {
   position: absolute;
   bottom: -28px;
-  left: 22px;
+  /* Align with the 22px left padding inside the 720px max-width prof-page container.
+     On wide viewports: (100% - 720px)/2 + 22px. On narrow viewports (≤720px): 22px. */
+  left: max(22px, calc((100% - 720px) / 2 + 22px));
   width: 64px;
   height: 64px;
   border-radius: 50%;
@@ -949,7 +959,7 @@
 }
 
 [data-tahti-ui='brand'] .prof-info-row {
-  padding: 40px 22px 14px;
+  padding: 14px 22px 14px;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -1867,8 +1877,8 @@
 }
 
 [data-tahti-ui='brand'] .prof-release-thumb {
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;

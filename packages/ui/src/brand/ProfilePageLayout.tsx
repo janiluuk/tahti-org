@@ -25,6 +25,28 @@ function IconHeart() {
   )
 }
 
+type ProfileCoverProps = {
+  displayName: string
+  avatarUrl: string | null
+}
+
+/** Full-viewport-width cover banner with avatar. Rendered OUTSIDE the max-width container. */
+export function ProfileCover({ displayName, avatarUrl }: ProfileCoverProps) {
+  const initial = displayName.trim().charAt(0).toUpperCase() || '?'
+  return (
+    <div className="prof-cover">
+      <div className="prof-cover-overlay" aria-hidden />
+      <div className="prof-avatar">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="" width={64} height={64} style={{ borderRadius: '50%' }} />
+        ) : (
+          <span aria-hidden>{initial}</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 type ProfileHeroProps = {
   displayName: string
   username: string
@@ -36,32 +58,19 @@ type ProfileHeroProps = {
   tipJarUrl?: string | null
 }
 
-/** PLAT-020: artist profile hero — cover, avatar, CTAs (index.html prof-* mockup). */
+/** PLAT-020: artist profile hero — info row, bio, CTAs. Cover is rendered separately via ProfileCover. */
 export function ProfileHero({
   displayName,
   username,
   bio,
-  avatarUrl,
+  avatarUrl: _avatarUrl,
   isLive,
   channelHref,
   subscribeHref,
   tipJarUrl,
 }: ProfileHeroProps) {
-  const initial = displayName.trim().charAt(0).toUpperCase() || '?'
-
   return (
     <>
-      <div className="prof-cover">
-        <div className="prof-cover-overlay" aria-hidden />
-        <div className="prof-avatar">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="" width={54} height={54} style={{ borderRadius: '50%' }} />
-          ) : (
-            <span aria-hidden>{initial}</span>
-          )}
-        </div>
-      </div>
-
       <div className="prof-info-row">
         <div>
           <div className="prof-name">{displayName}</div>
@@ -79,12 +88,12 @@ export function ProfileHero({
           {channelHref && (
             <Link href={channelHref} className="prof-cta-btn">
               <IconPlay />
-              Channel
+              Tune in live
             </Link>
           )}
           <Link href={subscribeHref} className="prof-sub-btn">
             <IconHeart />
-            Subscribe
+            Support
           </Link>
           {tipJarUrl && (
             <a href={tipJarUrl} rel="noopener noreferrer" className="prof-tip-btn">
@@ -122,16 +131,18 @@ export function ProfileHero({
 
 type ProfilePageLayoutProps = {
   isLive?: boolean
+  cover?: ReactNode
   hero: ReactNode
   children: ReactNode
   narrow?: boolean
 }
 
-/** PLAT-020: profile / subscribe page shell. */
-export function ProfilePageLayout({ isLive, hero, children, narrow }: ProfilePageLayoutProps) {
+/** PLAT-020: profile / subscribe page shell. `cover` renders full-width outside the max-width container. */
+export function ProfilePageLayout({ isLive, cover, hero, children, narrow }: ProfilePageLayoutProps) {
   return (
     <>
       <ChannelHeader isLive={isLive} />
+      {cover}
       <div className={`prof-page${narrow ? ' prof-page--narrow' : ''}`}>
         {hero}
         <div className="prof-content">{children}</div>
