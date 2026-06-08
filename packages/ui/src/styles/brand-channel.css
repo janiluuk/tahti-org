@@ -1694,7 +1694,9 @@
   text-align: left;
   text-decoration: none;
   color: var(--text);
-  transition: border-color var(--ease), background var(--ease);
+  transition:
+    border-color var(--ease),
+    background var(--ease);
 }
 
 [data-tahti-ui='brand'] .sl-btn:hover {

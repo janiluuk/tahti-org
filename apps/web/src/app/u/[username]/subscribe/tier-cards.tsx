@@ -53,7 +53,7 @@ export default function TierCards({
   }
 
   const featuredIdx = tiers.length >= 2 ? Math.floor(tiers.length / 2) : -1
-  const exampleTier = featuredIdx >= 0 ? tiers[featuredIdx] : tiers[0] ?? null
+  const exampleTier = featuredIdx >= 0 ? tiers[featuredIdx] : (tiers[0] ?? null)
   const exEurRaw = exampleTier ? exampleTier.amountCents / 100 : 5
   const stripeFee = (exEurRaw * 0.014 + 0.25).toFixed(2)
   const tahtiShare = (exEurRaw * 0.02).toFixed(2)
@@ -118,10 +118,10 @@ export default function TierCards({
       </div>
       {exampleTier && (
         <div className="tier-transparency">
-          <strong>Where {eur(exampleTier.amountCents)} actually goes:</strong>{' '}
-          Stripe takes ~€{stripeFee} (their fees, pass-through). Tahti takes €{tahtiShare} (2%,
-          covers GDPR + processing). The artist receives{' '}
-          <strong>€{artistGets}</strong>. We&apos;re not a platform — we&apos;re plumbing.
+          <strong>Where {eur(exampleTier.amountCents)} actually goes:</strong> Stripe takes ~€
+          {stripeFee} (their fees, pass-through). Tahti takes €{tahtiShare} (2%, covers GDPR +
+          processing). The artist receives <strong>€{artistGets}</strong>. We&apos;re not a platform
+          — we&apos;re plumbing.
         </div>
       )}
       <p className="tier-footnote">
