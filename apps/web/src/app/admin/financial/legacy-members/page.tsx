@@ -28,8 +28,8 @@ export default async function AdminLegacyMembersPage() {
 
   return (
     <>
-      <p className="admin-breadcrumb">
-        <Link href="/admin/financial">Financial</Link> → Legacy memberships
+      <p className="admin-stat-sub" style={{ marginBottom: '1rem' }}>
+        <Link href="/admin/financial">← Financial</Link>
       </p>
       <h1 className="admin-section-title">Legacy membership migration</h1>
       <p className="admin-help">

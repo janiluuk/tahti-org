@@ -80,6 +80,16 @@
   background: color-mix(in srgb, var(--muted) 10%, transparent);
 }
 
+[data-tahti-ui='studio'] .studio-top-nav__link--admin {
+  color: var(--coral);
+  border: 1px solid color-mix(in srgb, var(--coral) 35%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__link--admin:hover {
+  color: var(--coral);
+  background: color-mix(in srgb, var(--coral) 12%, transparent);
+}
+
 [data-tahti-ui='studio'] .studio-top-nav__logout {
   background: transparent;
   border: 1px solid color-mix(in srgb, var(--muted) 30%, transparent);
@@ -358,6 +368,56 @@
 
 [data-tahti-ui='studio'] .db-header-channel-url:hover {
   color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .db-role-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+[data-tahti-ui='studio'] .db-role-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: color-mix(in srgb, var(--muted) 14%, transparent);
+  color: var(--muted);
+  text-decoration: none;
+}
+
+[data-tahti-ui='studio'] a.db-role-badge:hover {
+  background: color-mix(in srgb, var(--muted) 22%, transparent);
+}
+
+[data-tahti-ui='studio'] .db-role-badge--artist {
+  background: color-mix(in srgb, var(--coral) 16%, transparent);
+  color: var(--coral);
+}
+
+[data-tahti-ui='studio'] .db-role-badge--member {
+  background: color-mix(in srgb, var(--cyan) 16%, transparent);
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .db-role-badge--moderator {
+  background: color-mix(in srgb, var(--amber) 16%, transparent);
+  color: var(--amber);
+}
+
+[data-tahti-ui='studio'] .db-role-badge--board {
+  background: color-mix(in srgb, var(--green) 16%, transparent);
+  color: var(--green);
+}
+
+[data-tahti-ui='studio'] a.db-role-badge--board:hover {
+  background: color-mix(in srgb, var(--green) 26%, transparent);
 }
 
 [data-tahti-ui='studio'] .studio-section-anchor {

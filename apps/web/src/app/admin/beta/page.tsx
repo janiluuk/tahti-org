@@ -27,6 +27,9 @@ export default async function AdminBetaPage({
     ? ((await res.json()) as { applications: BetaApplicationRow[] }).applications
     : []
 
+  const activeStatus = searchParams.status ?? ''
+  const filterClass = (status: string) => (activeStatus === status ? 'active' : undefined)
+
   return (
     <>
       <h1 className="admin-section-title">Beta applications</h1>
@@ -35,11 +38,19 @@ export default async function AdminBetaPage({
         setup link. Artists can sign in after they set a password.
       </p>
 
-      <div className="admin-beta-filters">
-        <Link href="/admin/beta">All</Link>
-        <Link href="/admin/beta?status=PENDING">Pending</Link>
-        <Link href="/admin/beta?status=APPROVED">Approved</Link>
-        <Link href="/admin/beta?status=REJECTED">Rejected</Link>
+      <div className="admin-filter-pills">
+        <Link href="/admin/beta" className={filterClass('')}>
+          All
+        </Link>
+        <Link href="/admin/beta?status=PENDING" className={filterClass('PENDING')}>
+          Pending
+        </Link>
+        <Link href="/admin/beta?status=APPROVED" className={filterClass('APPROVED')}>
+          Approved
+        </Link>
+        <Link href="/admin/beta?status=REJECTED" className={filterClass('REJECTED')}>
+          Rejected
+        </Link>
       </div>
 
       <BetaApplicationsPanel applications={applications} />

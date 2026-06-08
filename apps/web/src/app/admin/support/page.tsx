@@ -36,18 +36,26 @@ export default async function AdminSupportPage({
       })
     : { tickets: [] }
 
+  const activeStatus = searchParams.status ?? ''
+  const filterClass = (status: string) => (activeStatus === status ? 'active' : undefined)
+
   return (
     <>
       <h1 className="admin-section-title">Support queue</h1>
-      <p className="admin-stat-sub" style={{ marginBottom: '1rem' }}>
-        <Link href="/admin/dashboard">← Dashboard</Link>
-      </p>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-        <Link href="/admin/support">All</Link>
-        <Link href="/admin/support?status=OPEN">Open</Link>
-        <Link href="/admin/support?status=IN_PROGRESS">In progress</Link>
-        <Link href="/admin/support?status=RESOLVED">Resolved</Link>
+      <div className="admin-filter-pills">
+        <Link href="/admin/support" className={filterClass('')}>
+          All
+        </Link>
+        <Link href="/admin/support?status=OPEN" className={filterClass('OPEN')}>
+          Open
+        </Link>
+        <Link href="/admin/support?status=IN_PROGRESS" className={filterClass('IN_PROGRESS')}>
+          In progress
+        </Link>
+        <Link href="/admin/support?status=RESOLVED" className={filterClass('RESOLVED')}>
+          Resolved
+        </Link>
       </div>
 
       <div className="admin-table-wrap">

@@ -3,30 +3,51 @@
 
 import Link from 'next/link'
 
+const SECTIONS = [
+  {
+    href: '/admin/financial/ledger',
+    title: 'Ledger entries',
+    desc: 'Record manual revenue and cost entries; browse the period ledger.',
+  },
+  {
+    href: '/admin/financial/fansubs',
+    title: 'Fan subscriptions & payout queue',
+    desc: 'Active subs, MRR by artist, and pending or failed payouts.',
+  },
+  {
+    href: '/admin/financial/legacy-members',
+    title: 'Legacy membership migration queue',
+    desc: 'Active members still without a Stripe subscription id.',
+  },
+  {
+    href: '/transparency',
+    title: 'Public transparency page',
+    desc: 'The public-facing income, cost, and grant transparency report.',
+  },
+  {
+    href: '/api/admin/ledger/export.csv',
+    title: 'Export ledger (CSV)',
+    desc: 'Download the full ledger as a CSV file.',
+  },
+  {
+    href: '/governance',
+    title: 'Grant preview & run (governance portal)',
+    desc: 'Preview and trigger the annual grant disbursement calculation.',
+  },
+] as const
+
 export default function AdminFinancialPage() {
   return (
     <>
       <h1 className="admin-section-title">Financial</h1>
-      <ul className="admin-link-list">
-        <li>
-          <Link href="/admin/financial/ledger">Ledger entries</Link>
-        </li>
-        <li>
-          <Link href="/admin/financial/fansubs">Fan subscriptions &amp; payout queue</Link>
-        </li>
-        <li>
-          <Link href="/admin/financial/legacy-members">Legacy membership migration queue</Link>
-        </li>
-        <li>
-          <Link href="/transparency">Public transparency page</Link>
-        </li>
-        <li>
-          <a href="/api/admin/ledger/export.csv">Export ledger (CSV)</a>
-        </li>
-        <li>
-          <Link href="/governance">Grant preview &amp; run (governance portal)</Link>
-        </li>
-      </ul>
+      <div className="admin-panel-grid">
+        {SECTIONS.map((s) => (
+          <Link key={s.href} href={s.href} className="admin-card admin-nav-card">
+            <span className="admin-nav-card__title">{s.title}</span>
+            <span className="admin-nav-card__desc">{s.desc}</span>
+          </Link>
+        ))}
+      </div>
     </>
   )
 }

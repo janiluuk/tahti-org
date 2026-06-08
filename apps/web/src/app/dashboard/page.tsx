@@ -56,6 +56,8 @@ interface MeResponse {
   displayName: string
   tier: string
   emailVerifiedAt: string | null
+  isMember: boolean
+  isBoard: boolean
   membership: { status: string; activatedAt: string | null } | null
   channel: { slug: string; state: string } | null
   storage: { usedBytes: string; softTargetBytes: string } | null
@@ -566,6 +568,33 @@ export default async function DashboardPage() {
         <Text tone="secondary" className="studio-mt-sm db-header-welcome">
           Welcome back, {user.displayName}
         </Text>
+        <div className="db-role-row">
+          {user.isBoard && (
+            <Link href="/admin" className="db-role-badge db-role-badge--board">
+              Board · Admin
+            </Link>
+          )}
+          {user.channel ? (
+            <span className="db-role-badge db-role-badge--artist">
+              Artist
+              {membershipInfo?.memberNumber ? ` · Member #${membershipInfo.memberNumber}` : ''}
+            </span>
+          ) : user.isMember ? (
+            <span className="db-role-badge db-role-badge--member">
+              Member{membershipInfo?.memberNumber ? ` #${membershipInfo.memberNumber}` : ''}
+            </span>
+          ) : (
+            <span className="db-role-badge">Free listener</span>
+          )}
+          {otherModeratedChannels.length > 0 && (
+            <span className="db-role-badge db-role-badge--moderator">
+              Moderator
+              {otherModeratedChannels.length > 1
+                ? ` · ${otherModeratedChannels.length} channels`
+                : ` · @${otherModeratedChannels[0]!.slug}`}
+            </span>
+          )}
+        </div>
       </div>
 
       {otherModeratedChannels.length > 0 && (

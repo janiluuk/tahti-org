@@ -6,10 +6,11 @@ import Link from 'next/link'
 type StudioTopNavProps = {
   displayName?: string
   isLive?: boolean
+  isBoard?: boolean
 }
 
 /** PLAT-020: dashboard top bar — TAHTI logo + studio links. */
-export function StudioTopNav({ displayName, isLive }: StudioTopNavProps) {
+export function StudioTopNav({ displayName, isLive, isBoard }: StudioTopNavProps) {
   const initial = displayName ? displayName.trim().charAt(0).toUpperCase() : null
 
   return (
@@ -30,9 +31,11 @@ export function StudioTopNav({ displayName, isLive }: StudioTopNavProps) {
         <Link href="/governance" className="studio-top-nav__link">
           Governance
         </Link>
-        <Link href="/admin" className="studio-top-nav__link">
-          Admin
-        </Link>
+        {isBoard && (
+          <Link href="/admin" className="studio-top-nav__link studio-top-nav__link--admin">
+            Admin
+          </Link>
+        )}
         <Link href="/transparency" className="studio-top-nav__link">
           Transparency
         </Link>
