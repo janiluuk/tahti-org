@@ -54,41 +54,29 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
 
   const tracksWithIsrc = data.release.tracks.filter((t) => t.isrc?.trim())
 
+  const year = new Date(data.release.releaseDate).getFullYear()
+  const trackCount = data.release.tracks.length
+
   return (
     <SmartLinkPageLayout>
-      <div className="sl-artist-card">
-        <div className="sl-artist-avatar">
-          {data.artist.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={data.artist.avatarUrl} alt="" width={32} height={32} />
-          ) : (
-            <span aria-hidden>{data.artist.displayName.charAt(0).toUpperCase()}</span>
-          )}
-        </div>
-        <div className="sl-artist-info">
-          <span className="sl-artist-name">{data.artist.displayName}</span>
-          <span className="sl-artist-handle">@{data.artist.username}</span>
-        </div>
-        <Link href={data.profileUrl} className="sl-artist-link">
-          Profile →
-        </Link>
-      </div>
-
-      {data.release.artworkUrl && (
+      {data.release.artworkUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={data.release.artworkUrl}
           alt=""
           className="sl-cover-art"
-          width={200}
-          height={200}
+          width={280}
+          height={280}
         />
+      ) : (
+        <div className="sl-cover-ph sl-cover-ph--aurora" aria-hidden />
       )}
       <h1 className="sl-title-h2">{data.release.title}</h1>
       <p className="sl-title-meta">
         {data.artist.displayName} · {data.release.type}
+        {trackCount > 0 && ` · ${trackCount} track${trackCount !== 1 ? 's' : ''}`}
+        {' · '}{year}
       </p>
-      <p className="sl-title-meta">{new Date(data.release.releaseDate).toLocaleDateString()}</p>
 
       {data.release.description && (
         <SafePlainText text={data.release.description} className="sl-artist-quote" linkMentions />
@@ -155,9 +143,9 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
       )}
 
       <p className="sl-footer">
-        <Link href={data.profileUrl}>@{data.artist.username}</Link>
+        Powered by <a href="https://tahti.live">tahti.live</a>
         {' · '}
-        <a href={data.embedUrl}>Embed</a>
+        <Link href={data.profileUrl}>@{data.artist.username}</Link>
       </p>
     </SmartLinkPageLayout>
   )

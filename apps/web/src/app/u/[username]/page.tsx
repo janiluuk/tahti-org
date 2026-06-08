@@ -193,37 +193,22 @@ export default async function ArtistProfilePage({ params }: { params: { username
           {releases.length === 0 ? (
             <p className="prof-list-meta">No published releases yet.</p>
           ) : (
-            <ul className="prof-list prof-release-list">
+            <ul className="prof-release-grid">
               {releases.map((r) => {
-                const firstPlay = r.tracks.find((t) => t.playUrl)?.playUrl
+                const year = new Date(r.releaseDate).getFullYear()
                 return (
-                  <li id={`release-${r.id}`} key={r.id} className="prof-release-row">
-                    <div className="prof-release-thumb">
+                  <li id={`release-${r.id}`} key={r.id} className="prof-release-card">
+                    <Link href={`/r/${r.smartLinkSlug}`} className="prof-release-card-art">
                       {r.artworkUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.artworkUrl} alt="" width={40} height={40} />
-                      ) : (
-                        <span className="prof-release-thumb-ph" aria-hidden />
-                      )}
-                    </div>
-                    <div className="prof-release-body">
-                      <div className="prof-release-title">{r.title}</div>
-                      <div className="prof-list-meta">
-                        {r.type} · {new Date(r.releaseDate).toLocaleDateString()}
-                      </div>
-                      {r.description && (
-                        <p className="prof-list-meta prof-list-meta--spaced">{r.description}</p>
-                      )}
-                    </div>
-                    <div className="prof-release-actions">
-                      <Link href={`/r/${r.smartLinkSlug}`} className="prof-release-action">
-                        Links →
-                      </Link>
-                      {firstPlay && (
-                        <a href={firstPlay} className="prof-release-action">
-                          Play ▶
-                        </a>
-                      )}
+                        <img src={r.artworkUrl} alt={r.title} />
+                      ) : null}
+                    </Link>
+                    <Link href={`/r/${r.smartLinkSlug}`} className="prof-release-card-title">
+                      {r.title}
+                    </Link>
+                    <div className="prof-release-card-meta">
+                      {r.type} · {year}
                     </div>
                   </li>
                 )
