@@ -147,7 +147,12 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard#audience', label: 'Revenue', Icon: IconRevenue, hash: '#audience' },
   { href: '/dashboard#audience', label: 'Newsletter', Icon: IconNewsletter, hash: '#audience' },
   { href: '/dashboard#catalog', label: 'Smart Links', Icon: IconLinks, hash: '#catalog' },
-  { href: '/dashboard#broadcast', label: 'Distribution', Icon: IconDistribution, hash: '#broadcast' },
+  {
+    href: '/dashboard#broadcast',
+    label: 'Distribution',
+    Icon: IconDistribution,
+    hash: '#broadcast',
+  },
   { href: '/dashboard#account', label: 'Settings', Icon: IconSettings, hash: '#account' },
   { href: '/dashboard/stash', label: 'Stash', Icon: IconStash, isRoute: true },
   { href: '/admin', label: 'Admin', Icon: IconAdmin, isRoute: true, adminOnly: true },
@@ -193,24 +198,33 @@ export function StudioSidebar({ isBoard }: Props) {
   return (
     <aside className="db-sidebar">
       <nav aria-label="Dashboard sections">
-        {NAV_ITEMS.filter(item => !item.adminOnly || isBoard).map(({ href, label, Icon, isRoute, hash: itemHash }) => {
-          let active: boolean
-          if (isRoute) {
-            if (href === '/dashboard') {
-              active = onDashboard && (normHash === '' || normHash === undefined)
+        {NAV_ITEMS.filter((item) => !item.adminOnly || isBoard).map(
+          ({ href, label, Icon, isRoute, hash: itemHash }) => {
+            let active: boolean
+            if (isRoute) {
+              if (href === '/dashboard') {
+                active = onDashboard && (normHash === '' || normHash === undefined)
+              } else {
+                active = pathname === href || pathname.startsWith(`${href}/`)
+              }
             } else {
-              active = pathname === href || pathname.startsWith(`${href}/`)
+              active =
+                onDashboard &&
+                itemHash !== undefined &&
+                normaliseHash(hash) === normaliseHash(itemHash)
             }
-          } else {
-            active = onDashboard && itemHash !== undefined && normaliseHash(hash) === normaliseHash(itemHash)
-          }
-          return (
-            <Link key={`${href}-${label}`} href={href} className={`db-nav-item${active ? ' active' : ''}`}>
-              <Icon />
-              {label}
-            </Link>
-          )
-        })}
+            return (
+              <Link
+                key={`${href}-${label}`}
+                href={href}
+                className={`db-nav-item${active ? ' active' : ''}`}
+              >
+                <Icon />
+                {label}
+              </Link>
+            )
+          },
+        )}
       </nav>
     </aside>
   )

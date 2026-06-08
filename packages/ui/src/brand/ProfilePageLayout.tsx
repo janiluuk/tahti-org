@@ -138,7 +138,13 @@ type ProfilePageLayoutProps = {
 }
 
 /** PLAT-020: profile / subscribe page shell. `cover` renders full-width outside the max-width container. */
-export function ProfilePageLayout({ isLive, cover, hero, children, narrow }: ProfilePageLayoutProps) {
+export function ProfilePageLayout({
+  isLive,
+  cover,
+  hero,
+  children,
+  narrow,
+}: ProfilePageLayoutProps) {
   return (
     <>
       <ChannelHeader isLive={isLive} />

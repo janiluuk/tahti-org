@@ -26,7 +26,9 @@ export function StudioTopNav({ displayName, isLive, isBoard: _isBoard }: StudioT
               {initial}
             </span>
             <span className="studio-top-nav__user-name">{displayName}</span>
-            <span className="studio-top-nav__user-caret" aria-hidden>▾</span>
+            <span className="studio-top-nav__user-caret" aria-hidden>
+              ▾
+            </span>
           </div>
         )}
         <form action="/api/auth/logout" method="POST">
