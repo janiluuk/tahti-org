@@ -46,7 +46,11 @@ describe('M22 — channel funnel stats', () => {
     expect(res.statusCode).toBe(200)
     const body = res.json() as {
       downloadGates: { items: unknown[]; daily: unknown[] }
-      live: { windowDays: number; daily: unknown[] }
+      live: {
+        windowDays: number
+        peakDailyListeners: number
+        daily: Array<{ listeners: number }>
+      }
       egress: { windowDays: number; daily: unknown[] }
     }
     expect(body.downloadGates).toBeDefined()
@@ -54,5 +58,8 @@ describe('M22 — channel funnel stats', () => {
     expect(body.egress.windowDays).toBe(30)
     expect(body.live.daily).toHaveLength(14)
     expect(body.egress.daily).toHaveLength(30)
+    // Redis is unavailable in test env, so measured listener counts default to zero.
+    expect(body.live.peakDailyListeners).toBe(0)
+    expect(body.live.daily.every((d) => d.listeners === 0)).toBe(true)
   })
 })

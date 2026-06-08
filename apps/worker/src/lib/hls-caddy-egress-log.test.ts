@@ -8,18 +8,39 @@ import { tmpdir } from 'node:os'
 import { parseHlsCaddyLogLine, readHlsCaddyLogFromOffset } from './hls-caddy-egress-log.js'
 
 describe('parseHlsCaddyLogLine', () => {
-  it('extracts slug and bytes from a Caddy JSON line', () => {
+  it('extracts slug, bytes, and client IP from a Caddy JSON line', () => {
     const line = JSON.stringify({
       ts: 1_700_000_000,
       status: 200,
       size: 4096,
-      request: { uri: '/demo-artist/stream.m3u8', host: 'stream.tahti.live' },
+      request: {
+        uri: '/demo-artist/stream.m3u8',
+        host: 'stream.tahti.live',
+        client_ip: '203.0.113.7',
+      },
     })
     expect(parseHlsCaddyLogLine(line)).toEqual({
       slug: 'demo-artist',
       bytes: 4096,
       utcDate: '2023-11-14',
+      clientIp: '203.0.113.7',
     })
+  })
+
+  it('falls back to remote_ip when client_ip is absent, else null', () => {
+    const withRemote = JSON.stringify({
+      status: 200,
+      size: 100,
+      request: { uri: '/demo-artist/seg.ts', remote_ip: '198.51.100.2' },
+    })
+    expect(parseHlsCaddyLogLine(withRemote)?.clientIp).toBe('198.51.100.2')
+
+    const withNeither = JSON.stringify({
+      status: 200,
+      size: 100,
+      request: { uri: '/demo-artist/seg.ts' },
+    })
+    expect(parseHlsCaddyLogLine(withNeither)?.clientIp).toBeNull()
   })
 
   it('ignores non-200 and zero-byte responses', () => {

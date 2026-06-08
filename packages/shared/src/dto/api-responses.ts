@@ -47,12 +47,16 @@ export const LiveDailyPointSchema = z.object({
   date: z.string(),
   liveSeconds: z.number().int().nonnegative(),
   broadcastCount: z.number().int().nonnegative(),
+  /** Distinct anonymized HLS listeners measured from Caddy access logs; 0 when unavailable. */
+  listeners: z.number().int().nonnegative(),
 })
 
 export const ChannelLiveStatsResponseSchema = z.object({
   windowDays: z.number().int().min(1),
   totalLiveSeconds: z.number().int().nonnegative(),
   totalBroadcasts: z.number().int().nonnegative(),
+  /** Best single-day distinct-listener count across the window. */
+  peakDailyListeners: z.number().int().nonnegative(),
   daily: z.array(LiveDailyPointSchema),
 })
 

@@ -32,6 +32,7 @@ describe('api response schemas', () => {
         windowDays: 14,
         totalLiveSeconds: 0,
         totalBroadcasts: 0,
+        peakDailyListeners: 0,
         daily: [],
       },
       egress: {
@@ -53,7 +54,8 @@ describe('api response schemas', () => {
       windowDays: 14,
       totalLiveSeconds: 3600,
       totalBroadcasts: 2,
-      daily: [{ date: '2026-06-01', liveSeconds: 1800, broadcastCount: 1 }],
+      peakDailyListeners: 12,
+      daily: [{ date: '2026-06-01', liveSeconds: 1800, broadcastCount: 1, listeners: 12 }],
     })
     expect(parsed.success).toBe(true)
   })

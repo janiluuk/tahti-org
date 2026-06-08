@@ -250,7 +250,8 @@ export default async function DashboardPage() {
     windowDays: number
     totalLiveSeconds: number
     totalBroadcasts: number
-    daily: Array<{ date: string; liveSeconds: number; broadcastCount: number }>
+    peakDailyListeners: number
+    daily: Array<{ date: string; liveSeconds: number; broadcastCount: number; listeners: number }>
   } | null = null
   if (user.channel) {
     try {
