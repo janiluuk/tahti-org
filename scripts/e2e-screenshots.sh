@@ -36,5 +36,7 @@ if [[ "$CAPTURE_ONLY" == true ]]; then
 fi
 
 echo "── E2E screenshots (local) ─────────────────────────────────"
+export WEB_PORT="${WEB_PORT:-17777}"
+export API_PORT="${API_PORT:-15011}"
 "$ROOT/scripts/stack-up.sh" --seed
 "$ROOT/scripts/stack-screenshots.sh"

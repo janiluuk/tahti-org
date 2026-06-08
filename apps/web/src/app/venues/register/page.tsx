@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Heading, Link as UiLink, Stack, Text } from '@tahti/ui'
+import { PublicPageHeader, Stack } from '@tahti/ui'
 import { VenueRegisterForm } from './venue-register-form'
 
 export const metadata: Metadata = {
@@ -19,16 +19,13 @@ export default function VenueRegisterPage() {
 
   return (
     <Stack gap={6} className="brand-section">
-      <div>
-        <Text size="sm">
-          <UiLink href="/venues">← Venue directory</UiLink>
-        </Text>
-        <Heading level={1}>Register a venue</Heading>
-        <Text tone="muted">
-          List your space in the Tahti venue directory. After board verification your venue profile
-          and calendar will be public at <Link href="/venues">/venues</Link>.
-        </Text>
-      </div>
+      <PublicPageHeader
+        title="Register a venue"
+        back={{ href: '/venues', label: '← Venue directory' }}
+      >
+        List your space in the Tahti venue directory. After board verification your venue profile
+        and calendar will be public at <Link href="/venues">/venues</Link>.
+      </PublicPageHeader>
       <VenueRegisterForm />
     </Stack>
   )

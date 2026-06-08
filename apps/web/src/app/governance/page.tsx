@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Heading, Link, Text } from '@tahti/ui'
+import { Link, PublicPageHeader, Text } from '@tahti/ui'
 import MotionCard, { type MotionSummary } from './motion-card'
 import NewMotionForm from './new-motion-form'
 import GrantPreviewPanel from './grant-preview-panel'
@@ -45,11 +45,13 @@ export default async function GovernancePage() {
   if (!me.isMember) {
     return (
       <>
-        <Heading level={1}>Member governance</Heading>
-        <Text tone="muted">
+        <PublicPageHeader
+          title="Member governance"
+          back={{ href: '/dashboard', label: '← Dashboard' }}
+        >
           This area is for Tahti ry members. Activate your membership to take part in motions and
           voting.
-        </Text>
+        </PublicPageHeader>
       </>
     )
   }
@@ -72,11 +74,13 @@ export default async function GovernancePage() {
 
   return (
     <>
-      <Heading level={1}>Member governance</Heading>
-      <Text tone="muted">
+      <PublicPageHeader
+        title="Member governance"
+        back={{ href: '/dashboard', label: '← Dashboard' }}
+      >
         Motions and voting for Tahti ry members. Voting is currently <strong>advisory</strong> —
         binding decisions are confirmed at a live AGM until the bylaws authorize electronic voting.
-      </Text>
+      </PublicPageHeader>
 
       {me.isBoard && <NewMotionForm />}
 

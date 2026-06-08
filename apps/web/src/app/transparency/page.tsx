@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { Heading, Link, Text } from '@tahti/ui'
+import { Link, PublicPageHeader } from '@tahti/ui'
 import { statusPageUrl } from '@/lib/status-page'
 
 interface MonthlyRollup {
@@ -88,11 +88,10 @@ export default async function TransparencyPage() {
 
   return (
     <>
-      <Heading level={1}>Transparency</Heading>
-      <Text tone="muted">
+      <PublicPageHeader title="Transparency" back={{ href: '/', label: '← Home' }}>
         Tahti ry is a Finnish registered nonprofit. All income, costs, and artist grants are
         published here. <Link href="/transparency/methodology">Methodology ↗</Link>
-      </Text>
+      </PublicPageHeader>
 
       <section className="brand-stat-grid" aria-label="Year-to-date summary">
         <SummaryCard
@@ -176,7 +175,7 @@ export default async function TransparencyPage() {
                   {r.outcome} · voted {new Date(r.votedAt).toLocaleDateString()} · {r.voteFor}/
                   {r.voteAgainst}/{r.voteAbstain}
                 </p>
-                <p style={{ whiteSpace: 'pre-wrap' }}>{r.body}</p>
+                <p className="brand-pre-wrap">{r.body}</p>
               </li>
             ))}
           </ul>

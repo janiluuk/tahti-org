@@ -8,5 +8,16 @@ export { StudioShell } from './StudioShell'
 export { StudioTopNav } from './StudioTopNav'
 export { StudioSidebar } from './StudioSidebar'
 export { PublicBrandShell } from './PublicBrandShell'
+export { PublicPageHeader } from './PublicPageHeader'
+export type { PublicPageHeaderProps } from './PublicPageHeader'
+export { StudioTabs } from './StudioTabs'
+export type {
+  StudioTabsProps,
+  StudioTabsListProps,
+  StudioTabsTriggerProps,
+  StudioTabsPanelProps,
+} from './StudioTabs'
+export { StudioCollapse } from './StudioCollapse'
+export type { StudioCollapseProps } from './StudioCollapse'
 export { BrandLogo } from './BrandLogo'
 export { EmbedShell } from './EmbedShell'

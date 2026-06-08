@@ -3,7 +3,7 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Heading, Link as UiLink, Stack, Text } from '@tahti/ui'
+import { Heading, PublicPageHeader, Stack, Text } from '@tahti/ui'
 
 export const revalidate = 300
 
@@ -38,19 +38,10 @@ export default async function VenuesDirectoryPage() {
 
   return (
     <Stack gap={6} className="brand-section">
-      <div>
-        <Text size="sm">
-          <UiLink href="/">← Home</UiLink>
-        </Text>
-        <Heading level={1}>Venue directory</Heading>
-        <Text tone="muted">
-          Cultural venues and spaces that host Tahti live broadcasts. Subscribe to a venue calendar
-          from its profile page.
-        </Text>
-        <Text size="sm">
-          <Link href="/venues/register">Register a venue →</Link>
-        </Text>
-      </div>
+      <PublicPageHeader title="Venue directory" back={{ href: '/', label: '← Home' }}>
+        Cultural venues and spaces that host Tahti live broadcasts. Subscribe to a venue calendar
+        from its profile page. <Link href="/venues/register">Register a venue →</Link>
+      </PublicPageHeader>
 
       {venues.length === 0 ? (
         <Text tone="muted">No verified venues yet.</Text>
