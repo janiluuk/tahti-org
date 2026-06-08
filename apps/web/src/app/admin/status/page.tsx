@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import Link from 'next/link'
 import { cookies } from 'next/headers'
 
 export default async function AdminStatusPage() {
@@ -12,17 +11,24 @@ export default async function AdminStatusPage() {
     cache: 'no-store',
   })
 
-  const data = res.ok
-    ? ((await res.json()) as {
-        status: string
-        uptimeSec: number
-        checks: Record<
-          string,
-          { state: string; critical: boolean; latencyMs?: number; detail?: string }
-        >
-        ts: string
-      })
-    : null
+  type StatusData = {
+    status: string
+    uptimeSec: number
+    checks: Record<
+      string,
+      { state: string; critical: boolean; latencyMs?: number; detail?: string }
+    >
+    ts: string
+  }
+
+  // M11: /api/v1/status returns 200 when healthy and 503 when not — both carry
+  // the full per-service breakdown, so only treat network/parse failures as fatal.
+  let data: StatusData | null = null
+  try {
+    data = (await res.json()) as StatusData
+  } catch {
+    data = null
+  }
 
   return (
     <>
@@ -30,8 +36,12 @@ export default async function AdminStatusPage() {
       {data ? (
         <>
           <p className="admin-stat-sub" style={{ marginBottom: '1rem' }}>
-            Overall: <strong>{data.status}</strong> · uptime {Math.floor(data.uptimeSec / 3600)}h ·
-            checked {new Date(data.ts).toLocaleString()}
+            Overall:{' '}
+            <strong className={data.status === 'operational' ? 'admin-ok' : 'admin-err'}>
+              {data.status}
+            </strong>{' '}
+            · uptime {Math.floor(data.uptimeSec / 3600)}h · checked{' '}
+            {new Date(data.ts).toLocaleString()}
           </p>
           <div className="admin-table-wrap">
             <table className="admin-table">
@@ -63,9 +73,6 @@ export default async function AdminStatusPage() {
       ) : (
         <p className="admin-err">Could not load status.</p>
       )}
-      <p className="admin-stat-sub" style={{ marginTop: '1rem' }}>
-        <Link href="/admin/dashboard">← Dashboard</Link>
-      </p>
     </>
   )
 }

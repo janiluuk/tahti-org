@@ -12,6 +12,7 @@ import '@tahti/ui/src/styles/brand-studio.css'
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   let displayName: string | undefined
   let isLive = false
+  let isBoard = false
 
   try {
     const cookieStore = cookies()
@@ -25,10 +26,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       if (res.ok) {
         const user = (await res.json()) as {
           displayName: string
+          isBoard: boolean
           channel?: { state: string } | null
         }
         displayName = user.displayName
         isLive = user.channel?.state === 'LIVE'
+        isBoard = user.isBoard
       }
     }
   } catch {
@@ -36,7 +39,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
 
   return (
-    <StudioShell displayName={displayName} isLive={isLive}>
+    <StudioShell displayName={displayName} isLive={isLive} isBoard={isBoard}>
       {children}
     </StudioShell>
   )

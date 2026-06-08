@@ -5,7 +5,7 @@
  * End-to-end style journeys through the real Fastify app + Postgres.
  * Each `it` walks a full user-visible path (multi-step, shared DB).
  */
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { FREE_WEEKLY_LIVE_CAP_SEC, utcWeekStart } from '@tahti/shared/broadcast-cap'
@@ -16,6 +16,23 @@ import {
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
+
+// The Icecast on_connect/on_disconnect callbacks enqueue worker jobs (recording
+// finalize + fallback cache warm) that need Redis/MinIO; stub them so the live
+// broadcast journey below can drive the real ingest routes end to end.
+const { enqueueFinalizeBroadcastRecording, enqueueWarmArchiveFallbackCache } = vi.hoisted(() => ({
+  enqueueFinalizeBroadcastRecording: vi.fn().mockResolvedValue(undefined),
+  enqueueWarmArchiveFallbackCache: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('../../lib/queue.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../lib/queue.js')>()
+  return {
+    ...actual,
+    enqueueFinalizeBroadcastRecording,
+    enqueueWarmArchiveFallbackCache,
+  }
+})
 
 const PREFIX = 'journey-'
 
@@ -168,6 +185,209 @@ describe('Vital flows (E2E journeys)', () => {
       where: { archiveItemId: item.id, byUserId: fan.id },
     })
     expect(row?.weight).toBe(5)
+  })
+
+  it('catalog journey: upload 5 tracks → gate 1 as fan-only → fan downloads a free track, then purchases a fan tier to unlock it', async () => {
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}artist-catalog@example.com`,
+      username: 'journey-artist-catalog',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98113,
+    })
+    const fan = await createTestArtist(prisma, {
+      email: `${PREFIX}fan-catalog@example.com`,
+      username: 'journey-fan-catalog',
+      tier: 'FREE',
+    })
+
+    const artistCookie = await sessionCookieFor(prisma, artist.id)
+    const fanCookie = await sessionCookieFor(prisma, fan.id)
+    const ip = { 'x-forwarded-for': '203.0.113.91' }
+
+    // 1. Artist uploads 5 tracks to their archive
+    const tracks = []
+    for (let i = 1; i <= 5; i++) {
+      tracks.push(await createReadyArchiveItem(prisma, artist.channel!.id, `Catalog track ${i}`))
+    }
+    expect(tracks).toHaveLength(5)
+
+    // 2. Artist marks one of them fan-only — the only per-item exclusivity gate
+    // available is follow-to-download, which a non-follower can only satisfy by
+    // becoming an active fan subscriber (see resolveDownloadGateStatus)
+    const [fanOnlyTrack, freeTrack] = tracks
+    const gatePatch = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${fanOnlyTrack.id}`,
+      headers: { cookie: artistCookie },
+      payload: { followToDownload: true },
+    })
+    expect(gatePatch.statusCode).toBe(200)
+    expect(gatePatch.json().followToDownload).toBe(true)
+
+    // 3. Fan downloads one of the four remaining free tracks — no purchase needed
+    const freeDl = await app.inject({
+      method: 'GET',
+      url: `/api/v1/c/journey-artist-catalog/archive/${freeTrack.id}/download?fp=journey-fan-catalog-free`,
+      headers: { cookie: fanCookie, ...ip },
+    })
+    expect(freeDl.statusCode).toBe(200)
+    const freeRow = await prisma.download.findFirst({
+      where: { archiveItemId: freeTrack.id, byUserId: fan.id },
+    })
+    expect(freeRow?.weight).toBe(1)
+
+    // The fan-only track stays locked — the fan neither follows nor subscribes yet
+    const lockedDl = await app.inject({
+      method: 'GET',
+      url: `/api/v1/c/journey-artist-catalog/archive/${fanOnlyTrack.id}/download?fp=journey-fan-catalog-gated`,
+      headers: { cookie: fanCookie, ...ip },
+    })
+    expect(lockedDl.statusCode).toBe(403)
+    expect(lockedDl.json().gates).toContain('follow')
+
+    // 4. Fan "purchases" the artist's support tier — the platform's actual
+    // pay-the-artist mechanism — to unlock fan-only catalog content
+    const tierRes = await app.inject({
+      method: 'POST',
+      url: '/api/me/fan-tiers',
+      headers: { cookie: artistCookie },
+      payload: { name: 'Inner Circle', amountCents: 700, perks: ['Fan-only tracks'] },
+    })
+    expect(tierRes.statusCode).toBe(201)
+    const tierId = tierRes.json().id
+
+    const sub = await app.inject({
+      method: 'POST',
+      url: '/api/v1/u/journey-artist-catalog/subscribe',
+      headers: { cookie: fanCookie },
+      payload: { tierId },
+    })
+    expect(sub.statusCode).toBe(201)
+
+    // 5. The purchase satisfies the follow-to-download gate and pays the 5× weight
+    const unlockedDl = await app.inject({
+      method: 'GET',
+      url: `/api/v1/c/journey-artist-catalog/archive/${fanOnlyTrack.id}/download?fp=journey-fan-catalog-gated`,
+      headers: { cookie: fanCookie, ...ip },
+    })
+    expect(unlockedDl.statusCode).toBe(200)
+    const gatedRow = await prisma.download.findFirst({
+      where: { archiveItemId: fanOnlyTrack.id, byUserId: fan.id, format: { not: 'gate' } },
+      orderBy: { createdAt: 'desc' },
+    })
+    expect(gatedRow?.weight).toBe(5)
+  })
+
+  it('live broadcast journey: 30s stream → 3 fans tune in → recording is archived and watchable in the channel history', async () => {
+    enqueueFinalizeBroadcastRecording.mockClear()
+    enqueueWarmArchiveFallbackCache.mockClear()
+
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}artist-live@example.com`,
+      username: 'journey-artist-live',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98114,
+    })
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { id: artist.channel!.id } })
+
+    const fans = []
+    for (let i = 1; i <= 3; i++) {
+      fans.push(
+        await createTestArtist(prisma, {
+          email: `${PREFIX}fan-live-${i}@example.com`,
+          username: `journey-fan-live-${i}`,
+          tier: 'FREE',
+        }),
+      )
+    }
+
+    // 1. Artist's source connects — Icecast on_connect opens a Broadcast and
+    // flips the channel live (PLAT-004 ingest callback)
+    const connect = await app.inject({
+      method: 'POST',
+      url: '/internal/icecast/on_connect',
+      payload: { mount: `/live/${channel.slug}`, pass: channel.liveSourcePass },
+    })
+    expect(connect.statusCode).toBe(200)
+    expect((await prisma.channel.findUniqueOrThrow({ where: { id: channel.id } })).state).toBe(
+      'LIVE',
+    )
+
+    const broadcast = await prisma.broadcast.findFirstOrThrow({
+      where: { channelId: channel.id, endedAt: null },
+      orderBy: { startedAt: 'desc' },
+    })
+    // Backdate the start so the session reflects an actual 30-second set
+    await prisma.broadcast.update({
+      where: { id: broadcast.id },
+      data: { startedAt: new Date(Date.now() - 30_000) },
+    })
+
+    // 2. Three fans tune in while the channel is live
+    for (const fan of fans) {
+      const fanCookie = await sessionCookieFor(prisma, fan.id)
+      const tuneIn = await app.inject({
+        method: 'GET',
+        url: '/api/channels/journey-artist-live',
+        headers: { cookie: fanCookie },
+      })
+      expect(tuneIn.statusCode).toBe(200)
+      expect(tuneIn.json().state).toBe('LIVE')
+      expect(tuneIn.json().hlsUrl).toMatch(/^https?:\/\//)
+    }
+
+    // 3. Source disconnects 30s later — broadcast closes and the recording
+    // finalize job is enqueued (mocked: it needs the worker's local filesystem)
+    const disconnect = await app.inject({
+      method: 'POST',
+      url: '/internal/icecast/on_disconnect',
+      payload: { mount: `/live/${channel.slug}` },
+    })
+    expect(disconnect.statusCode).toBe(200)
+    expect(enqueueFinalizeBroadcastRecording).toHaveBeenCalledWith(broadcast.id)
+
+    const ended = await prisma.broadcast.findUniqueOrThrow({ where: { id: broadcast.id } })
+    expect(ended.endedAt).toBeTruthy()
+    expect(ended.endedAt!.getTime() - ended.startedAt.getTime()).toBeGreaterThanOrEqual(30_000)
+    expect((await prisma.channel.findUniqueOrThrow({ where: { id: channel.id } })).state).toBe(
+      'OFFLINE',
+    )
+
+    // 4. Stand in for the worker pipeline's end state: the recording lands as a
+    // READY archive item and gets linked back onto the broadcast session
+    const recording = await prisma.archiveItem.create({
+      data: {
+        channelId: channel.id,
+        title: 'Live set — 30s broadcast',
+        rawKey: `recordings/${channel.slug}/broadcast-${broadcast.id}.wav`,
+        mp3Key: `mp3/${channel.slug}/broadcast-${broadcast.id}.mp3`,
+        fileSizeBytes: BigInt(5_000_000),
+        status: 'READY',
+        isPublic: true,
+        contentType: 'LIVE',
+      },
+    })
+    await prisma.broadcast.update({
+      where: { id: broadcast.id },
+      data: { recordingKey: recording.rawKey, archiveItemId: recording.id },
+    })
+
+    // 5. The archived set now shows up in the channel's public history/back-catalog
+    const items = await app.inject({
+      method: 'GET',
+      url: '/api/channels/journey-artist-live/items',
+    })
+    expect(items.statusCode).toBe(200)
+    const entry = items.json().find((i: { id: string }) => i.id === recording.id)
+    expect(entry).toBeTruthy()
+    expect(entry.title).toBe('Live set — 30s broadcast')
+    expect(entry.audioUrl).toMatch(/^https?:\/\//)
+
+    expect(
+      (await prisma.broadcast.findUniqueOrThrow({ where: { id: broadcast.id } })).archiveItemId,
+    ).toBe(recording.id)
   })
 
   it('free-tier broadcast cap blocks Icecast after weekly limit', async () => {

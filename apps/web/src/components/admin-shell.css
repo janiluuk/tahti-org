@@ -44,6 +44,24 @@
   margin: 0 0 0.625rem;
 }
 
+/* Stack label text above its field — without this, inline label content
+   baseline-aligns to tall fields (e.g. textarea) and visually overlaps them. */
+.admin-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.admin-card label input,
+.admin-card label select,
+.admin-card label textarea {
+  font-size: 0.95rem;
+  color: var(--text);
+  padding: 0.45rem 0.65rem;
+}
+
 .admin-stat {
   font-size: 2rem;
   font-weight: 700;
@@ -170,30 +188,59 @@
   color: var(--text);
 }
 
-.admin-link-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.admin-help {
+  font-size: 0.85rem;
+  color: var(--muted);
+  max-width: 48rem;
+  margin: -0.75rem 0 1rem;
+  line-height: 1.5;
+}
+
+.admin-text-muted {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.admin-breadcrumb {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+.admin-breadcrumb a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.admin-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.admin-nav-card {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-}
-
-.admin-link-list li a,
-.admin-link-list a {
-  display: block;
-  padding: 0.5rem 0.75rem;
-  border-radius: 7px;
-  color: var(--text);
+  gap: 0.4rem;
   text-decoration: none;
-  font-size: 0.9rem;
-  transition: background 0.13s, color 0.13s;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
 }
 
-.admin-link-list li a:hover,
-.admin-link-list a:hover {
-  background: color-mix(in srgb, var(--cyan) 8%, transparent);
-  color: var(--cyan);
+.admin-nav-card:hover {
+  border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+  background: color-mix(in srgb, var(--cyan) 5%, var(--card));
+  transform: translateY(-1px);
+}
+
+.admin-nav-card__title {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.admin-nav-card__desc {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .admin-search-input {
@@ -214,14 +261,14 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--cyan) 15%, transparent);
 }
 
-.admin-beta-filters {
+.admin-filter-pills {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
-.admin-beta-filters a {
+.admin-filter-pills a {
   display: inline-block;
   padding: 0.3rem 0.65rem;
   border-radius: 6px;
@@ -230,12 +277,19 @@
   color: var(--muted);
   text-decoration: none;
   font-size: 0.8rem;
-  transition: color 0.13s, border-color 0.13s;
+  transition: color 0.13s, border-color 0.13s, background 0.13s;
 }
 
-.admin-beta-filters a:hover {
+.admin-filter-pills a:hover {
   color: var(--cyan);
   border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+
+.admin-filter-pills a.active {
+  background: color-mix(in srgb, var(--cyan) 16%, var(--card2));
+  border-color: color-mix(in srgb, var(--cyan) 50%, transparent);
+  color: var(--cyan);
+  font-weight: 600;
 }
 
 .admin-beta-table td {
