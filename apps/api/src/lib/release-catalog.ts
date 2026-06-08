@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { ReleaseCatalogPatchSchema, buildMusicBrainzPrefill } from '@tahti/shared'
+import {
+  ReleaseCatalogPatchSchema,
+  buildMusicBrainzPrefill,
+  buildDiscogsPrefill,
+  DISCOGS_SUBMIT_URL,
+  MUSICBRAINZ_SUBMIT_URL,
+} from '@tahti/shared'
 
 export const releaseCatalogSelect = {
   id: true,
@@ -16,6 +22,7 @@ export const releaseCatalogSelect = {
   upc: true,
   musicbrainzReleaseId: true,
   musicbrainzArtistId: true,
+  discogsReleaseId: true,
   pLine: true,
   cLine: true,
   labelImprint: true,
@@ -51,6 +58,7 @@ export function catalogPatchFromBody(
     data.musicbrainzReleaseId = f.musicbrainzReleaseId?.trim() || null
   if (f.musicbrainzArtistId !== undefined)
     data.musicbrainzArtistId = f.musicbrainzArtistId?.trim() || null
+  if (f.discogsReleaseId !== undefined) data.discogsReleaseId = f.discogsReleaseId?.trim() || null
   if (f.pLine !== undefined) data.pLine = f.pLine?.trim() || null
   if (f.cLine !== undefined) data.cLine = f.cLine?.trim() || null
   if (f.labelImprint !== undefined) data.labelImprint = f.labelImprint?.trim() || null
@@ -67,6 +75,7 @@ export function buildReleaseExportPack(release: {
   upc: string | null
   musicbrainzReleaseId: string | null
   musicbrainzArtistId: string | null
+  discogsReleaseId: string | null
   pLine: string | null
   cLine: string | null
   labelImprint: string | null
@@ -82,11 +91,14 @@ export function buildReleaseExportPack(release: {
   user: { username: string; displayName: string }
 }) {
   const musicbrainzPrefill = buildMusicBrainzPrefill(release)
+  const discogsPrefill = buildDiscogsPrefill(release)
 
   return {
     exportedAt: new Date().toISOString(),
     musicbrainzPrefill,
-    musicbrainzSubmitUrl: 'https://musicbrainz.org/release/add',
+    musicbrainzSubmitUrl: MUSICBRAINZ_SUBMIT_URL,
+    discogsPrefill,
+    discogsSubmitUrl: DISCOGS_SUBMIT_URL,
     artist: { username: release.user.username, displayName: release.user.displayName },
     release: {
       title: release.title,
@@ -96,6 +108,7 @@ export function buildReleaseExportPack(release: {
       upc: release.upc,
       musicbrainzReleaseId: release.musicbrainzReleaseId,
       musicbrainzArtistId: release.musicbrainzArtistId,
+      discogsReleaseId: release.discogsReleaseId,
       pLine: release.pLine,
       cLine: release.cLine,
       labelImprint: release.labelImprint,

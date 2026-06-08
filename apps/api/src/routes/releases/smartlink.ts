@@ -41,6 +41,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           description: true,
           upc: true,
           musicbrainzReleaseId: true,
+          discogsReleaseId: true,
           pLine: true,
           cLine: true,
           tracks: {
@@ -90,6 +91,10 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         ? `https://musicbrainz.org/release/${release.musicbrainzReleaseId}`
         : null
 
+      const discogsUrl = release.discogsReleaseId
+        ? `https://www.discogs.com/release/${release.discogsReleaseId}`
+        : null
+
       const featuredCollections = release.user.collections.map(({ _count, ...c }) => ({
         slug: c.slug,
         name: c.name,
@@ -115,6 +120,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           cLine: release.cLine,
           tracks: release.tracks,
           musicbrainzUrl,
+          discogsUrl,
         },
         artist: {
           username: release.user.username,

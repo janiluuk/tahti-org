@@ -29,6 +29,7 @@ export const ReleaseCatalogPatchSchema = z
     upc: z.string().max(20).nullable().optional(),
     musicbrainzReleaseId: z.string().max(64).nullable().optional(),
     musicbrainzArtistId: z.string().max(64).nullable().optional(),
+    discogsReleaseId: z.string().max(64).nullable().optional(),
     pLine: z.string().max(200).nullable().optional(),
     cLine: z.string().max(200).nullable().optional(),
     labelImprint: z.string().max(120).nullable().optional(),
@@ -178,6 +179,70 @@ export const MUSICBRAINZ_GUIDE_STEPS = [
   'Add label, catalog number, and barcode (UPC/EAN) if applicable.',
   'Save the release, then copy the release MBID back into Tahti.',
   'Optional: add an artist MBID for the primary artist credit.',
+] as const
+
+export const DISCOGS_SUBMIT_URL = 'https://www.discogs.com/search/'
+
+export interface DiscogsPrefillRelease {
+  title: string
+  releaseDate: Date
+  description: string | null
+  upc: string | null
+  labelImprint: string | null
+  pLine: string | null
+  cLine: string | null
+  credits: unknown
+  tracks: Array<{ position: number; title: string; durationSec: number | null }>
+  user: { username: string; displayName: string }
+}
+
+/** Plain-text clipboard helper for a guided Discogs database submission (M30). */
+export function buildDiscogsPrefill(release: DiscogsPrefillRelease): string {
+  const date = release.releaseDate.toISOString().slice(0, 10)
+  const credits = Array.isArray(release.credits)
+    ? (release.credits as ReleaseCredit[])
+        .filter((c) => c?.name?.trim())
+        .map((c) => `${c.role}: ${c.name}`)
+    : []
+
+  function formatDuration(seconds: number | null): string {
+    if (seconds == null) return ''
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return ` (${m}:${String(s).padStart(2, '0')})`
+  }
+
+  const lines = [
+    '=== Tahti → Discogs prefill ===',
+    `Title: ${release.title}`,
+    `Artist: ${release.user.displayName} (@${release.user.username})`,
+    `Released: ${date}`,
+    `Format: Digital, ${release.tracks.length} ${release.tracks.length === 1 ? 'track' : 'tracks'}`,
+    release.labelImprint ? `Label: ${release.labelImprint}` : null,
+    release.upc ? `Barcode: ${release.upc}` : null,
+    release.pLine ? `P-line: ${release.pLine}` : null,
+    release.cLine ? `C-line: ${release.cLine}` : null,
+    credits.length > 0 ? `Credits:\n${credits.map((c) => `  - ${c}`).join('\n')}` : null,
+    '',
+    'Tracklist:',
+    ...release.tracks.map((t) => `  ${t.position}. ${t.title}${formatDuration(t.durationSec)}`),
+    '',
+    `Submission notes: Released independently by ${release.user.displayName} via Tahti (${release.user.username}); entered from the artist's own metadata.`,
+    `Search Discogs first to avoid duplicates: ${DISCOGS_SUBMIT_URL}`,
+  ]
+
+  return lines.filter((line): line is string => line !== null).join('\n')
+}
+
+export const DISCOGS_GUIDE_STEPS = [
+  'Export JSON from the release ops panel (or copy title, label, barcode, and credits).',
+  'Search Discogs for this artist and release title first — only add it if it is missing.',
+  'Open the artist (or label) page and use “Submit a New Release” to reach the Add Release form.',
+  'Enter title, label, format (e.g. Digital, File), country, and release date — match Tahti.',
+  'Add the tracklist in order with track durations from your export.',
+  'Add the barcode (UPC/EAN) and catalog number if applicable.',
+  'Write Submission Notes explaining the source — Discogs requires this for every new release.',
+  'Submit for community review, then copy the release URL or numeric ID back into Tahti.',
 ] as const
 export const COLLECTING_SOCIETY_POINTERS = [
   {
