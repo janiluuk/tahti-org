@@ -3,6 +3,21 @@
 
 @import '@tahti/ui/src/styles/brand-studio.css';
 
+.admin-view-strip {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--amber) 18%, var(--bg));
+  border-bottom: 1px solid color-mix(in srgb, var(--amber) 40%, transparent);
+  color: var(--amber);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 5px 24px;
+  text-align: center;
+}
+
 .admin-top-logo {
   color: var(--text) !important;
 }
@@ -154,9 +169,15 @@
   background: color-mix(in srgb, var(--card2) 40%, transparent);
 }
 
-.admin-warn { color: var(--amber); }
-.admin-ok   { color: var(--green); }
-.admin-err  { color: var(--coral); }
+.admin-warn {
+  color: var(--amber);
+}
+.admin-ok {
+  color: var(--green);
+}
+.admin-err {
+  color: var(--coral);
+}
 
 .admin-btn-danger {
   font-size: 0.8rem;
@@ -167,7 +188,9 @@
   color: var(--coral);
   cursor: pointer;
   font-family: var(--font-body);
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .admin-btn-danger:hover:not(:disabled) {
@@ -221,7 +244,10 @@
   flex-direction: column;
   gap: 0.4rem;
   text-decoration: none;
-  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.15s;
 }
 
 .admin-nav-card:hover {
@@ -277,7 +303,10 @@
   color: var(--muted);
   text-decoration: none;
   font-size: 0.8rem;
-  transition: color 0.13s, border-color 0.13s, background 0.13s;
+  transition:
+    color 0.13s,
+    border-color 0.13s,
+    background 0.13s;
 }
 
 .admin-filter-pills a:hover {

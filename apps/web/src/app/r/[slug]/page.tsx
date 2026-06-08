@@ -75,7 +75,8 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
       <p className="sl-title-meta">
         {data.artist.displayName} · {data.release.type}
         {trackCount > 0 && ` · ${trackCount} track${trackCount !== 1 ? 's' : ''}`}
-        {' · '}{year}
+        {' · '}
+        {year}
       </p>
 
       {data.release.description && (

@@ -32,6 +32,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div data-tahti-ui="studio" className="tahti-studio admin-shell">
+      <div className="admin-view-strip" role="status" aria-live="polite">
+        ADMIN VIEW · {me.displayName}
+      </div>
       <header className="studio-top-nav">
         <Link href="/admin/dashboard" className="studio-top-nav__logo admin-top-logo">
           TAHTI ADMIN
