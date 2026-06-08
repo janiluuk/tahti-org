@@ -33,7 +33,8 @@ import UpgradeCta from './upgrade-cta'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
 import { EndBroadcastBtn } from './end-broadcast-btn'
-import { Heading, Link, PageShell, Panel, Text } from '@tahti/ui'
+import { Heading, Link, PageShell, Panel, StudioCollapse, Text } from '@tahti/ui'
+import { DashboardTabs } from './dashboard-tabs'
 import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
@@ -543,9 +544,20 @@ export default async function DashboardPage() {
   const statBroadcasts =
     (channelLiveStats as { totalBroadcasts: number } | null)?.totalBroadcasts ?? 0
 
+  const dashboardHashAliases: Record<string, string> = {
+    'studio-overview': 'overview',
+    'studio-stats': 'overview',
+    'studio-settings': 'broadcast',
+    'studio-distribution': 'broadcast',
+    'studio-releases': 'catalog',
+    'studio-archive': 'catalog',
+    'studio-fans': 'audience',
+    'studio-newsletter': 'audience',
+  }
+
   return (
     <PageShell size="md">
-      <div id="studio-overview" className="studio-section-anchor studio-page-header">
+      <div id="overview" className="studio-section-anchor studio-page-header">
         <div>
           <Heading level={1}>Dashboard</Heading>
           {user.channel && (
@@ -564,10 +576,10 @@ export default async function DashboardPage() {
               </Link>
             </div>
           )}
+          <Text tone="secondary" className="studio-mt-sm db-header-welcome">
+            {user.displayName}
+          </Text>
         </div>
-        <Text tone="secondary" className="studio-mt-sm db-header-welcome">
-          Welcome back, {user.displayName}
-        </Text>
         <div className="db-role-row">
           {user.isBoard && (
             <Link href="/admin" className="db-role-badge db-role-badge--board">
@@ -577,7 +589,7 @@ export default async function DashboardPage() {
           {user.channel ? (
             <span className="db-role-badge db-role-badge--artist">
               Artist
-              {membershipInfo?.memberNumber ? ` · Member #${membershipInfo.memberNumber}` : ''}
+              {membershipInfo?.memberNumber ? ` · #${membershipInfo.memberNumber}` : ''}
             </span>
           ) : user.isMember ? (
             <span className="db-role-badge db-role-badge--member">
@@ -588,260 +600,245 @@ export default async function DashboardPage() {
           )}
           {otherModeratedChannels.length > 0 && (
             <span className="db-role-badge db-role-badge--moderator">
-              Moderator
-              {otherModeratedChannels.length > 1
-                ? ` · ${otherModeratedChannels.length} channels`
-                : ` · @${otherModeratedChannels[0]!.slug}`}
+              Moderator · {otherModeratedChannels.length}
             </span>
           )}
         </div>
       </div>
 
-      {otherModeratedChannels.length > 0 && (
-        <div className="studio-panel-section">
-          <h2 className="studio-section-heading">Channels you moderate</h2>
-          <p className="studio-help">
-            An artist has trusted you to moderate their chat. Manage bans without access to their
-            dashboard.
-          </p>
-          <ul className="studio-list studio-mt-sm">
-            {otherModeratedChannels.map((c) => (
-              <li key={c.slug} className="studio-item-row--list">
-                <span className="studio-flex-1">{c.displayName}</span>
-                <Link href={`/dashboard/moderate/${c.slug}`} className="studio-btn-ghost">
-                  Moderate chat
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {user.channel?.state === 'LIVE' && (
-        <div className="db-status-bar" role="status">
-          <div>
-            <div className="db-live">
-              <span className="signal-dot" aria-hidden />
-              LIVE NOW
-            </div>
-            <div className="db-live-count">
-              <Link href={`/c/${user.channel.slug}`}>View channel →</Link>
-            </div>
-          </div>
-          <EndBroadcastBtn />
-        </div>
-      )}
-
-      {user.channel && (
-        <div className="db-stat-tiles">
-          <div className="db-stat-tile db-stat-tile--amber">
-            <span className="db-stat-tile-value">{statDlCount + statBroadcasts}</span>
-            <span className="db-stat-tile-label">Archive plays</span>
-          </div>
-          <div className="db-stat-tile db-stat-tile--cyan">
-            <span className="db-stat-tile-value">{statDlCount}</span>
-            <span className="db-stat-tile-label">Downloads</span>
-          </div>
-          <div className="db-stat-tile db-stat-tile--purple">
-            <span className="db-stat-tile-value">{newsletterStats.confirmed}</span>
-            <span className="db-stat-tile-label">Subscribers</span>
-          </div>
-          <div className="db-stat-tile db-stat-tile--cyan">
-            <span className="db-stat-tile-value">
-              €{(fanPayoutStats.paidLast30Days / 100).toFixed(0)}
-            </span>
-            <span className="db-stat-tile-label">Revenue / mo</span>
-          </div>
-        </div>
-      )}
-
-      {user.channel && (
-        <div className="db-quick-actions" aria-label="Quick actions">
-          <Link href="#studio-releases" className="db-quick-action">
-            Upload release
-          </Link>
-          <Link href="#studio-newsletter" className="db-quick-action">
-            Send newsletter
-          </Link>
-          <Link href="#studio-distribution" className="db-quick-action">
-            Push to Mixcloud
-          </Link>
-          <Link href="/dashboard/stats" className="db-quick-action">
-            View stats
-          </Link>
-        </div>
-      )}
-
-      {membershipInfo && (
-        <MembershipPanel
-          status={membershipInfo.status}
-          isMember={membershipInfo.isMember}
-          memberNumber={membershipInfo.memberNumber}
-          priceCents={membershipInfo.priceCents}
-          emailVerified={membershipInfo.emailVerified}
-          hasStripeSubscription={membershipInfo.hasStripeSubscription}
-          renewalDueAt={membershipInfo.renewalDueAt}
-          subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}
-        />
-      )}
-
-      {socialSettings && <SocialPromoPanel initial={socialSettings} apiUrl={apiUrl} />}
-
-      <PrivacyPanel username={user.username} apiUrl={apiUrl} />
-
-      {user.channel && (
-        <Panel title="Your channel">
-          <BroadcastUsageBanner usage={broadcastUsage} />
-          <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
-          <div id="studio-stats" className="studio-section-anchor">
-            <DownloadGateSummaryPanel summary={downloadGateSummary} />
-            <ChannelLiveStatsPanel stats={channelLiveStats} />
-            <ChannelEgressPanel stats={channelEgress} />
-          </div>
-          <Text size="sm" className="studio-my-xs">
-            <strong>URL:</strong>{' '}
-            <Link href={`/c/${user.channel.slug}`}>
-              <code>{user.channel.slug}.tahti.live</code>
-            </Link>
-          </Text>
-          <Text size="sm" tone={user.channel.state === 'LIVE' ? 'success' : 'muted'}>
-            <strong>Status:</strong> {user.channel.state === 'LIVE' ? 'Live' : 'Offline'}
-          </Text>
-        </Panel>
-      )}
-
-      {user.storage && (
-        <StorageBar
-          usedBytes={Number(user.storage.usedBytes)}
-          softTargetBytes={Number(user.storage.softTargetBytes)}
-        />
-      )}
-
-      <div id="studio-settings" className="studio-section-anchor">
-        {user.channel && streamSettings && (
-          <StreamSettingsPanel initial={streamSettings} isLive={user.channel.state === 'LIVE'} />
-        )}
-
-        {user.channel?.state === 'LIVE' && (
-          <Panel title="Live tracklist">
-            <LiveTracklistPanel
-              slug={user.channel.slug}
-              heading="Detected tracks"
-              showPlaceholder
-            />
-          </Panel>
-        )}
-
-        {user.channel && channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
-
-        {user.channel && channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
-
-        {user.channel && channelProgramme && <ProgrammePanel initial={channelProgramme} />}
-
-        {user.channel && (
-          <ChannelSchedulePanel
-            initialAt={channelSchedule.nextBroadcastAt}
-            initialNote={channelSchedule.nextBroadcastNote}
-          />
-        )}
-
-        {user.channel && <RtmpTargetsPanel initial={rtmpTargets} />}
-      </div>
-
-      <div id="studio-distribution" className="studio-section-anchor">
-        {user.channel && (
-          <Suspense fallback={null}>
-            <MixcloudConnect
-              initial={{
-                connected: mixcloudStatus.connected,
-                configured: mixcloudStatus.configured,
-              }}
-              apiUrl={apiUrl}
-            />
-          </Suspense>
-        )}
-
-        {user.channel && <AnnouncementsPanel initial={announcements} />}
-
-        {user.channel && <ModeratorsPanel initial={moderators} channelSlug={user.channel.slug} />}
-      </div>
-
-      <div id="studio-fans" className="studio-section-anchor">
-        {user.channel && (
-          <FanSubscriptionsPanel
-            initial={fanTiers}
-            username={user.username}
-            apiUrl={apiUrl}
-            connect={fanConnect}
-            payoutStats={fanPayoutStats}
-          />
-        )}
-      </div>
-
-      <div id="studio-newsletter" className="studio-section-anchor">
-        {user.channel && (
-          <NewsletterPanel
-            initialStats={newsletterStats}
-            initialDrafts={newsletterDrafts}
-            hasFanNewsletterPerk={hasFanNewsletterPerk}
-            tier={user.tier}
-          />
-        )}
-      </div>
-
-      <div id="studio-releases" className="studio-section-anchor">
-        {user.channel && <ReleasesPanel initial={releases} username={user.username} />}
-
-        {user.channel && (
-          <CollectionsPanel
-            initial={collections}
-            username={user.username}
-            apiUrl={apiUrl}
-            archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
-            publishedReleases={publishedReleases}
-          />
-        )}
-      </div>
-
-      {user.channel && (
-        <section id="studio-archive" className="studio-section-anchor studio-archive-section">
-          <h2>Archive</h2>
-          <p className="studio-text-muted-sm studio-text-sm studio-m-0 studio-mb-sm">
-            Upload with genre, type, BPM, license, and access options — like hearthis.at edit
-            upload.
-          </p>
-
-          <UploadForm />
-
-          {archiveItemsForEdit.length === 0 ? (
-            <p className="studio-empty studio-mt-xl studio-mb-0">No archive items yet.</p>
-          ) : (
-            <ul className="studio-list studio-mt-xl">
-              {archiveItemsForEdit.map((item) => {
-                const play = archiveItems.find((a) => a.id === item.id)
-                return (
-                  <div key={item.id}>
-                    <ArchiveEditor
-                      item={item}
-                      mixcloudConnected={mixcloudStatus.connected}
-                      mixcloudConfigured={mixcloudStatus.configured}
-                      apiUrl={apiUrl}
-                    />
-                    {play?.audioUrl && (
-                      <audio
-                        controls
-                        src={play.audioUrl}
-                        className="studio-audio-full"
-                        data-testid="dashboard-archive-player"
-                      />
-                    )}
+      <DashboardTabs
+        hasChannel={!!user.channel}
+        hashAliases={dashboardHashAliases}
+        overview={
+          <>
+            {user.channel?.state === 'LIVE' && (
+              <div className="db-status-bar" role="status">
+                <div>
+                  <div className="db-live">
+                    <span className="signal-dot" aria-hidden />
+                    LIVE NOW
                   </div>
-                )
-              })}
-            </ul>
-          )}
-        </section>
-      )}
+                  <div className="db-live-count">
+                    <Link href={`/c/${user.channel.slug}`}>View channel →</Link>
+                  </div>
+                </div>
+                <EndBroadcastBtn />
+              </div>
+            )}
+
+            {user.channel && (
+              <div className="db-stat-tiles">
+                <div className="db-stat-tile db-stat-tile--amber">
+                  <span className="db-stat-tile-value">{statDlCount + statBroadcasts}</span>
+                  <span className="db-stat-tile-label">Archive plays</span>
+                </div>
+                <div className="db-stat-tile db-stat-tile--cyan">
+                  <span className="db-stat-tile-value">{statDlCount}</span>
+                  <span className="db-stat-tile-label">Downloads</span>
+                </div>
+                <div className="db-stat-tile db-stat-tile--purple">
+                  <span className="db-stat-tile-value">{newsletterStats.confirmed}</span>
+                  <span className="db-stat-tile-label">Subscribers</span>
+                </div>
+                <div className="db-stat-tile db-stat-tile--cyan">
+                  <span className="db-stat-tile-value">
+                    €{(fanPayoutStats.paidLast30Days / 100).toFixed(0)}
+                  </span>
+                  <span className="db-stat-tile-label">Revenue / mo</span>
+                </div>
+              </div>
+            )}
+
+            {user.channel && (
+              <Panel title="Channel" headerTight>
+                <div className="db-overview-channel">
+                  <BroadcastUsageBanner usage={broadcastUsage} />
+                  <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
+                  <div className="db-overview-channel__links">
+                    <Link href={`/c/${user.channel.slug}`}>View channel</Link>
+                    <Link href="/dashboard/stats">Full stats</Link>
+                    <Link href="/dashboard#catalog">Upload track</Link>
+                  </div>
+                </div>
+              </Panel>
+            )}
+
+            {user.storage && (
+              <StorageBar
+                usedBytes={Number(user.storage.usedBytes)}
+                softTargetBytes={Number(user.storage.softTargetBytes)}
+              />
+            )}
+
+            {user.channel && (downloadGateSummary || channelLiveStats || channelEgress) && (
+              <StudioCollapse title="Analytics detail" hint="downloads, live time, egress">
+                <DownloadGateSummaryPanel summary={downloadGateSummary} />
+                <ChannelLiveStatsPanel stats={channelLiveStats} />
+                <ChannelEgressPanel stats={channelEgress} />
+              </StudioCollapse>
+            )}
+
+            {otherModeratedChannels.length > 0 && (
+              <StudioCollapse
+                title="Moderation access"
+                hint={`${otherModeratedChannels.length} channel${otherModeratedChannels.length === 1 ? '' : 's'}`}
+              >
+                <ul className="studio-list studio-mt-sm">
+                  {otherModeratedChannels.map((c) => (
+                    <li key={c.slug} className="studio-item-row--list">
+                      <span className="studio-flex-1">{c.displayName}</span>
+                      <Link href={`/dashboard/moderate/${c.slug}`} className="studio-btn-ghost">
+                        Moderate chat
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </StudioCollapse>
+            )}
+          </>
+        }
+        broadcast={
+          user.channel ? (
+            <>
+              {streamSettings && (
+                <StreamSettingsPanel
+                  initial={streamSettings}
+                  isLive={user.channel.state === 'LIVE'}
+                />
+              )}
+
+              {user.channel.state === 'LIVE' && (
+                <Panel title="Live tracklist" headerTight>
+                  <LiveTracklistPanel
+                    slug={user.channel.slug}
+                    heading="Detected tracks"
+                    showPlaceholder
+                  />
+                </Panel>
+              )}
+
+              <StudioCollapse title="Channel appearance" hint="gallery & text overlay">
+                {channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
+                {channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
+              </StudioCollapse>
+
+              <StudioCollapse title="Schedule & programme" hint="next show & running order">
+                {channelProgramme && <ProgrammePanel initial={channelProgramme} />}
+                <ChannelSchedulePanel
+                  initialAt={channelSchedule.nextBroadcastAt}
+                  initialNote={channelSchedule.nextBroadcastNote}
+                />
+              </StudioCollapse>
+
+              <StudioCollapse title="Multistream" hint="RTMP mirrors">
+                <RtmpTargetsPanel initial={rtmpTargets} />
+              </StudioCollapse>
+
+              <StudioCollapse title="Distribution & chat" hint="Mixcloud, announcements, mods">
+                <Suspense fallback={null}>
+                  <MixcloudConnect
+                    initial={{
+                      connected: mixcloudStatus.connected,
+                      configured: mixcloudStatus.configured,
+                    }}
+                    apiUrl={apiUrl}
+                  />
+                </Suspense>
+                <AnnouncementsPanel initial={announcements} />
+                <ModeratorsPanel initial={moderators} channelSlug={user.channel.slug} />
+              </StudioCollapse>
+            </>
+          ) : undefined
+        }
+        catalog={
+          user.channel ? (
+            <>
+              <ReleasesPanel initial={releases} username={user.username} />
+              <CollectionsPanel
+                initial={collections}
+                username={user.username}
+                apiUrl={apiUrl}
+                archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
+                publishedReleases={publishedReleases}
+              />
+              <section className="studio-archive-section">
+                <Panel
+                  title="Archive"
+                  headerTight
+                  description="Upload with genre, type, BPM, license, and access options."
+                  flushTop
+                >
+                  <UploadForm />
+                  {archiveItemsForEdit.length === 0 ? (
+                    <p className="studio-empty studio-mt-sm studio-mb-0">No archive items yet.</p>
+                  ) : (
+                    <ul className="studio-list studio-mt-sm">
+                      {archiveItemsForEdit.map((item) => {
+                        const play = archiveItems.find((a) => a.id === item.id)
+                        return (
+                          <li key={item.id}>
+                            <ArchiveEditor
+                              item={item}
+                              mixcloudConnected={mixcloudStatus.connected}
+                              mixcloudConfigured={mixcloudStatus.configured}
+                              apiUrl={apiUrl}
+                            />
+                            {play?.audioUrl && (
+                              <audio
+                                controls
+                                src={play.audioUrl}
+                                className="studio-audio-full"
+                                data-testid="dashboard-archive-player"
+                              />
+                            )}
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </Panel>
+              </section>
+            </>
+          ) : undefined
+        }
+        audience={
+          user.channel ? (
+            <>
+              <FanSubscriptionsPanel
+                initial={fanTiers}
+                username={user.username}
+                apiUrl={apiUrl}
+                connect={fanConnect}
+                payoutStats={fanPayoutStats}
+              />
+              <NewsletterPanel
+                initialStats={newsletterStats}
+                initialDrafts={newsletterDrafts}
+                hasFanNewsletterPerk={hasFanNewsletterPerk}
+                tier={user.tier}
+              />
+            </>
+          ) : undefined
+        }
+        account={
+          <>
+            {membershipInfo && (
+              <MembershipPanel
+                status={membershipInfo.status}
+                isMember={membershipInfo.isMember}
+                memberNumber={membershipInfo.memberNumber}
+                priceCents={membershipInfo.priceCents}
+                emailVerified={membershipInfo.emailVerified}
+                hasStripeSubscription={membershipInfo.hasStripeSubscription}
+                renewalDueAt={membershipInfo.renewalDueAt}
+                subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}
+              />
+            )}
+            {socialSettings && <SocialPromoPanel initial={socialSettings} apiUrl={apiUrl} />}
+            <PrivacyPanel username={user.username} apiUrl={apiUrl} />
+          </>
+        }
+      />
     </PageShell>
   )
 }

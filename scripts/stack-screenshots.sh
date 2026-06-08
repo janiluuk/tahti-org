@@ -11,8 +11,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/docs/e2e-screenshots"
-export WEB_PORT="${WEB_PORT:-3010}"
-export API_PORT="${API_PORT:-3011}"
+export WEB_PORT="${WEB_PORT:-17777}"
+export API_PORT="${API_PORT:-15011}"
 APP_URL="${APP_URL:-http://localhost:${WEB_PORT}}"
 API_URL="${API_URL:-http://localhost:${API_PORT}}"
 

@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Heading, Link, Text } from '@tahti/ui'
+import { PublicPageHeader, Text } from '@tahti/ui'
 import VenueAdminPanel from './venue-admin-panel'
 import { fetchAdminVenues } from './actions'
 
@@ -30,11 +30,12 @@ export default async function GovernanceVenuesPage() {
   if (!isBoard) {
     return (
       <>
-        <Heading level={1}>Venue verification</Heading>
-        <Text tone="muted">Board access required.</Text>
-        <Text>
-          <Link href="/governance">← Back to governance</Link>
-        </Text>
+        <PublicPageHeader
+          title="Venue verification"
+          back={{ href: '/governance', label: '← Member governance' }}
+        >
+          Board access required.
+        </PublicPageHeader>
       </>
     )
   }
@@ -43,14 +44,13 @@ export default async function GovernanceVenuesPage() {
 
   return (
     <>
-      <Text size="sm">
-        <Link href="/governance">← Member governance</Link>
-      </Text>
-      <Heading level={1}>Venue verification</Heading>
-      <Text tone="muted">
+      <PublicPageHeader
+        title="Venue verification"
+        back={{ href: '/governance', label: '← Member governance' }}
+      >
         Verified venues appear in the public directory. Unverified listings stay hidden until
         approved.
-      </Text>
+      </PublicPageHeader>
       {error ? <Text tone="error">{error}</Text> : <VenueAdminPanel initial={venues ?? []} />}
     </>
   )

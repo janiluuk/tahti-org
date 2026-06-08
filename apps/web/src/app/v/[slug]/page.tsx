@@ -71,9 +71,9 @@ export default async function VenueProfilePage({ params }: { params: { slug: str
 
   return (
     <div className="brand-section">
-      <Text size="sm">
+      <p className="brand-page-header__back">
         <Link href="/venues">← All venues</Link>
-      </Text>
+      </p>
 
       <div className="venue-hero">
         <Heading level={1}>{venue.name}</Heading>

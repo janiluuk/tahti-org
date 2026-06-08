@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { Heading, Link, Text } from '@tahti/ui'
+import { Heading, PublicPageHeader } from '@tahti/ui'
 
 import { statusPageUrl } from '@/lib/status-page'
 
@@ -9,11 +9,12 @@ export default function MethodologyPage() {
   const statusUrl = statusPageUrl()
   return (
     <div className="brand-prose">
-      <Heading level={1}>Transparency methodology</Heading>
-      <Text tone="muted">
-        How Tahti ry records and publishes its financial data.{' '}
-        <Link href="/transparency">← Back to transparency dashboard</Link>
-      </Text>
+      <PublicPageHeader
+        title="Transparency methodology"
+        back={{ href: '/transparency', label: '← Transparency dashboard' }}
+      >
+        How Tahti ry records and publishes its financial data.
+      </PublicPageHeader>
 
       <section className="brand-section">
         <Heading level={2}>Principles</Heading>

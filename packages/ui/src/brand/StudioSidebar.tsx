@@ -102,20 +102,6 @@ function IconRevenue() {
     </svg>
   )
 }
-function IconNewsletter() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M2 5.5l6 4 6-4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
 function IconLinks() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -131,26 +117,6 @@ function IconLinks() {
         strokeWidth="1.5"
         strokeLinecap="round"
       />
-    </svg>
-  )
-}
-function IconDistribution() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path d="M8 13V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path
-        d="M5 11.5 Q8 8 11 11.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M2.5 9.5 Q8 4 13.5 9.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="8" cy="7" r="1.25" fill="currentColor" />
     </svg>
   )
 }
@@ -176,38 +142,44 @@ const ROUTE_ITEMS = [
 ] as const
 
 const HASH_ITEMS = [
+  { href: '/dashboard#overview', label: 'Overview', Icon: IconChannel, hash: '#overview' },
   {
-    href: '/dashboard#studio-archive',
-    label: 'Archive',
-    Icon: IconArchive,
-    hash: '#studio-archive',
-  },
-  { href: '/dashboard#studio-fans', label: 'Revenue', Icon: IconRevenue, hash: '#studio-fans' },
-  {
-    href: '/dashboard#studio-newsletter',
-    label: 'Newsletter',
-    Icon: IconNewsletter,
-    hash: '#studio-newsletter',
-  },
-  {
-    href: '/dashboard#studio-releases',
-    label: 'Smart Links',
-    Icon: IconLinks,
-    hash: '#studio-releases',
-  },
-  {
-    href: '/dashboard#studio-distribution',
-    label: 'Distribution',
-    Icon: IconDistribution,
-    hash: '#studio-distribution',
-  },
-  {
-    href: '/dashboard#studio-settings',
-    label: 'Settings',
+    href: '/dashboard#broadcast',
+    label: 'Broadcast',
     Icon: IconSettings,
-    hash: '#studio-settings',
+    hash: '#broadcast',
+  },
+  {
+    href: '/dashboard#catalog',
+    label: 'Catalog',
+    Icon: IconArchive,
+    hash: '#catalog',
+  },
+  { href: '/dashboard#audience', label: 'Audience', Icon: IconRevenue, hash: '#audience' },
+  {
+    href: '/dashboard#account',
+    label: 'Account',
+    Icon: IconLinks,
+    hash: '#account',
   },
 ] as const
+
+const HASH_TAB_ALIASES: Record<string, string> = {
+  'studio-overview': 'overview',
+  'studio-stats': 'overview',
+  'studio-settings': 'broadcast',
+  'studio-distribution': 'broadcast',
+  'studio-releases': 'catalog',
+  'studio-archive': 'catalog',
+  'studio-fans': 'audience',
+  'studio-newsletter': 'audience',
+}
+
+function tabFromHash(raw: string): string {
+  const key = raw.replace(/^#/, '')
+  if (!key) return 'overview'
+  return HASH_TAB_ALIASES[key] ?? key
+}
 
 /** PLAT-020 / PLAT-030: dashboard sidebar — routes + hash anchors on the main page. */
 export function StudioSidebar() {
@@ -229,7 +201,11 @@ export function StudioSidebar() {
         {ROUTE_ITEMS.map(({ href, label, Icon, match }) => {
           const active =
             match === '/dashboard'
-              ? onDashboard && (hash === '' || hash === '#studio-overview')
+              ? onDashboard &&
+                (hash === '' ||
+                  hash === '#overview' ||
+                  hash === '#studio-overview' ||
+                  hash === '#studio-stats')
               : pathname === match || pathname.startsWith(`${match}/`)
           return (
             <Link key={href} href={href} className={`db-nav-item${active ? ' active' : ''}`}>
@@ -241,7 +217,7 @@ export function StudioSidebar() {
         {onDashboard && <div className="db-nav-group-label">Sections</div>}
         {onDashboard &&
           HASH_ITEMS.map(({ href, label, Icon, hash: itemHash }) => {
-            const active = hash === itemHash
+            const active = tabFromHash(hash) === tabFromHash(itemHash)
             return (
               <Link key={href} href={href} className={`db-nav-item${active ? ' active' : ''}`}>
                 <Icon />
