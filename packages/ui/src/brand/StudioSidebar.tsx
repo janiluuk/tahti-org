@@ -25,56 +25,6 @@ function IconStats() {
     </svg>
   )
 }
-function IconEditor() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <line
-        x1="3"
-        y1="4"
-        x2="13"
-        y2="4"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="7" cy="4" r="2" fill="currentColor" />
-      <line
-        x1="3"
-        y1="9"
-        x2="13"
-        y2="9"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="10" cy="9" r="2" fill="currentColor" />
-      <line
-        x1="3"
-        y1="14"
-        x2="13"
-        y2="14"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="5" cy="14" r="2" fill="currentColor" />
-    </svg>
-  )
-}
-function IconStash() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="2" y="6" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <path
-        d="M5 6V4.5a3 3 0 0 1 6 0V6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="8" cy="10.5" r="1.25" fill="currentColor" />
-    </svg>
-  )
-}
 function IconArchive() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -102,6 +52,14 @@ function IconRevenue() {
     </svg>
   )
 }
+function IconNewsletter() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M2 6l6 4 6-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  )
+}
 function IconLinks() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -120,6 +78,19 @@ function IconLinks() {
     </svg>
   )
 }
+function IconDistribution() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M8 2L9.5 6.5H14L10.25 9.25L11.5 14L8 11.5L4.5 14L5.75 9.25L2 6.5H6.5L8 2Z"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  )
+}
 function IconSettings() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -133,56 +104,79 @@ function IconSettings() {
     </svg>
   )
 }
-
-const ROUTE_ITEMS = [
-  { href: '/dashboard', label: 'Channel', Icon: IconChannel, match: '/dashboard' },
-  { href: '/dashboard/stats', label: 'Stats', Icon: IconStats, match: '/dashboard/stats' },
-  { href: '/dashboard/editor', label: 'Editor', Icon: IconEditor, match: '/dashboard/editor' },
-  { href: '/dashboard/stash', label: 'Stash', Icon: IconStash, match: '/dashboard/stash' },
-] as const
-
-const HASH_ITEMS = [
-  { href: '/dashboard#overview', label: 'Overview', Icon: IconChannel, hash: '#overview' },
-  {
-    href: '/dashboard#broadcast',
-    label: 'Broadcast',
-    Icon: IconSettings,
-    hash: '#broadcast',
-  },
-  {
-    href: '/dashboard#catalog',
-    label: 'Catalog',
-    Icon: IconArchive,
-    hash: '#catalog',
-  },
-  { href: '/dashboard#audience', label: 'Audience', Icon: IconRevenue, hash: '#audience' },
-  {
-    href: '/dashboard#account',
-    label: 'Account',
-    Icon: IconLinks,
-    hash: '#account',
-  },
-] as const
-
-const HASH_TAB_ALIASES: Record<string, string> = {
-  'studio-overview': 'overview',
-  'studio-stats': 'overview',
-  'studio-settings': 'broadcast',
-  'studio-distribution': 'broadcast',
-  'studio-releases': 'catalog',
-  'studio-archive': 'catalog',
-  'studio-fans': 'audience',
-  'studio-newsletter': 'audience',
+function IconStash() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="2" y="6" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M5 6V4.5a3 3 0 0 1 6 0V6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+      <circle cx="8" cy="10.5" r="1.25" fill="currentColor" />
+    </svg>
+  )
+}
+function IconAdmin() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M8 2L13.5 4.5V9c0 2.5-2.25 4.5-5.5 5-3.25-.5-5.5-2.5-5.5-5V4.5L8 2Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
 }
 
-function tabFromHash(raw: string): string {
+type NavItem = {
+  href: string
+  label: string
+  Icon: () => JSX.Element
+  isRoute?: boolean
+  hash?: string
+  adminOnly?: boolean
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { href: '/dashboard', label: 'Channel', Icon: IconChannel, isRoute: true },
+  { href: '/dashboard/stats', label: 'Stats', Icon: IconStats, isRoute: true },
+  { href: '/dashboard#catalog', label: 'Archive', Icon: IconArchive, hash: '#catalog' },
+  { href: '/dashboard#audience', label: 'Revenue', Icon: IconRevenue, hash: '#audience' },
+  { href: '/dashboard#audience', label: 'Newsletter', Icon: IconNewsletter, hash: '#audience' },
+  { href: '/dashboard#catalog', label: 'Smart Links', Icon: IconLinks, hash: '#catalog' },
+  { href: '/dashboard#broadcast', label: 'Distribution', Icon: IconDistribution, hash: '#broadcast' },
+  { href: '/dashboard#account', label: 'Settings', Icon: IconSettings, hash: '#account' },
+  { href: '/dashboard/stash', label: 'Stash', Icon: IconStash, isRoute: true },
+  { href: '/admin', label: 'Admin', Icon: IconAdmin, isRoute: true, adminOnly: true },
+]
+
+const HASH_ALIASES: Record<string, string> = {
+  'studio-overview': '',
+  'studio-stats': '',
+  'studio-settings': '#broadcast',
+  'studio-distribution': '#broadcast',
+  'studio-releases': '#catalog',
+  'studio-archive': '#catalog',
+  'studio-fans': '#audience',
+  'studio-newsletter': '#audience',
+}
+
+function normaliseHash(raw: string): string {
   const key = raw.replace(/^#/, '')
-  if (!key) return 'overview'
-  return HASH_TAB_ALIASES[key] ?? key
+  if (!key) return ''
+  const mapped = HASH_ALIASES[key]
+  return mapped !== undefined ? mapped : raw
 }
 
-/** PLAT-020 / PLAT-030: dashboard sidebar — routes + hash anchors on the main page. */
-export function StudioSidebar() {
+type Props = {
+  isBoard?: boolean
+}
+
+/** PLAT-020 / v8: dashboard sidebar — v8 navigation items. */
+export function StudioSidebar({ isBoard }: Props) {
   const pathname = usePathname()
   const [hash, setHash] = useState('')
 
@@ -194,37 +188,29 @@ export function StudioSidebar() {
   }, [])
 
   const onDashboard = pathname === '/dashboard' || pathname === '/dashboard/'
+  const normHash = normaliseHash(hash)
 
   return (
     <aside className="db-sidebar">
       <nav aria-label="Dashboard sections">
-        {ROUTE_ITEMS.map(({ href, label, Icon, match }) => {
-          const active =
-            match === '/dashboard'
-              ? onDashboard &&
-                (hash === '' ||
-                  hash === '#overview' ||
-                  hash === '#studio-overview' ||
-                  hash === '#studio-stats')
-              : pathname === match || pathname.startsWith(`${match}/`)
+        {NAV_ITEMS.filter(item => !item.adminOnly || isBoard).map(({ href, label, Icon, isRoute, hash: itemHash }) => {
+          let active: boolean
+          if (isRoute) {
+            if (href === '/dashboard') {
+              active = onDashboard && (normHash === '' || normHash === undefined)
+            } else {
+              active = pathname === href || pathname.startsWith(`${href}/`)
+            }
+          } else {
+            active = onDashboard && itemHash !== undefined && normaliseHash(hash) === normaliseHash(itemHash)
+          }
           return (
-            <Link key={href} href={href} className={`db-nav-item${active ? ' active' : ''}`}>
+            <Link key={`${href}-${label}`} href={href} className={`db-nav-item${active ? ' active' : ''}`}>
               <Icon />
               {label}
             </Link>
           )
         })}
-        {onDashboard && <div className="db-nav-group-label">Sections</div>}
-        {onDashboard &&
-          HASH_ITEMS.map(({ href, label, Icon, hash: itemHash }) => {
-            const active = tabFromHash(hash) === tabFromHash(itemHash)
-            return (
-              <Link key={href} href={href} className={`db-nav-item${active ? ' active' : ''}`}>
-                <Icon />
-                {label}
-              </Link>
-            )
-          })}
       </nav>
     </aside>
   )

@@ -9,8 +9,8 @@ type StudioTopNavProps = {
   isBoard?: boolean
 }
 
-/** PLAT-020: dashboard top bar — TAHTI logo + studio links. */
-export function StudioTopNav({ displayName, isLive, isBoard }: StudioTopNavProps) {
+/** PLAT-020: dashboard top bar — TAHTI logo + user handle. */
+export function StudioTopNav({ displayName, isLive, isBoard: _isBoard }: StudioTopNavProps) {
   const initial = displayName ? displayName.trim().charAt(0).toUpperCase() : null
 
   return (
@@ -26,19 +26,9 @@ export function StudioTopNav({ displayName, isLive, isBoard }: StudioTopNavProps
               {initial}
             </span>
             <span className="studio-top-nav__user-name">{displayName}</span>
+            <span className="studio-top-nav__user-caret" aria-hidden>▾</span>
           </div>
         )}
-        <Link href="/governance" className="studio-top-nav__link">
-          Governance
-        </Link>
-        {isBoard && (
-          <Link href="/admin" className="studio-top-nav__link studio-top-nav__link--admin">
-            Admin
-          </Link>
-        )}
-        <Link href="/transparency" className="studio-top-nav__link">
-          Transparency
-        </Link>
         <form action="/api/auth/logout" method="POST">
           <button type="submit" className="studio-top-nav__logout">
             Log out

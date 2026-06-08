@@ -4,7 +4,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ProfileHero, ProfilePageLayout } from '@tahti/ui'
+import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 
 export const revalidate = 60
@@ -118,6 +118,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
       />
       <ProfilePageLayout
         isLive={isLive}
+        cover={<ProfileCover displayName={artist.displayName} avatarUrl={artist.avatarUrl} />}
         hero={
           <ProfileHero
             displayName={artist.displayName}

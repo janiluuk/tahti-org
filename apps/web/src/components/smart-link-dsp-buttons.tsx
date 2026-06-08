@@ -160,7 +160,7 @@ const SERVICE_META: Record<string, { label: string; action: string; icon: ReactN
   youtube: { label: 'YouTube Music', action: 'Stream', icon: <IconYoutube /> },
   deezer: { label: 'Deezer', action: 'Stream', icon: <IconDeezer /> },
   amazon: { label: 'Amazon Music', action: 'Stream', icon: <IconAmazon /> },
-  tahti: { label: 'tahti.fi', action: 'FLAC · best quality', icon: <IconTahti /> },
+  tahti: { label: 'tahti.live', action: 'FLAC · best quality', icon: <IconTahti /> },
 }
 
 type Props = {

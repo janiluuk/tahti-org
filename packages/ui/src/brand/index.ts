@@ -2,11 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 export { ChannelHeader, ChannelPageLayout } from './ChannelPageLayout'
-export { ProfileHero, ProfilePageLayout } from './ProfilePageLayout'
+export { ProfileCover, ProfileHero, ProfilePageLayout } from './ProfilePageLayout'
 export { SmartLinkPageLayout } from './SmartLinkPageLayout'
 export { StudioShell } from './StudioShell'
 export { StudioTopNav } from './StudioTopNav'
 export { StudioSidebar } from './StudioSidebar'
+export { StudioMobileNav } from './StudioMobileNav'
 export { PublicBrandShell } from './PublicBrandShell'
 export { PublicPageHeader } from './PublicPageHeader'
 export type { PublicPageHeaderProps } from './PublicPageHeader'

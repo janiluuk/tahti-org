@@ -4,6 +4,7 @@
 import type { ReactNode } from 'react'
 import { StudioSidebar } from './StudioSidebar'
 import { StudioTopNav } from './StudioTopNav'
+import { StudioMobileNav } from './StudioMobileNav'
 
 type StudioShellProps = {
   children: ReactNode
@@ -18,9 +19,10 @@ export function StudioShell({ children, displayName, isLive, isBoard }: StudioSh
     <div data-tahti-ui="studio" className="tahti-studio">
       <StudioTopNav displayName={displayName} isLive={isLive} isBoard={isBoard} />
       <div className="db-layout">
-        <StudioSidebar />
+        <StudioSidebar isBoard={isBoard} />
         <main className="db-main">{children}</main>
       </div>
+      <StudioMobileNav />
     </div>
   )
 }

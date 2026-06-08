@@ -2,17 +2,17 @@
 /* Tahti design tokens — see docs/style-guide.md */
 
 :root {
-  /* Brand (shared with marketing site) */
-  --tahti-brand-bg: #0a0f1e;
-  --tahti-brand-surface: #111827;
-  --tahti-brand-amber: #f0a500;
-  --tahti-brand-cyan: #00bcd4;
-  --tahti-brand-green: #00e676;
-  --tahti-brand-purple: #7c4dff;
-  --tahti-brand-coral: #ff6b6b;
-  --tahti-brand-lavender: #9c88ff;
-  --tahti-brand-text: #e8eaf6;
-  --tahti-brand-muted: #8892a4;
+  /* Brand (shared with marketing site — v8 palette) */
+  --tahti-brand-bg: #0A0E1C;
+  --tahti-brand-surface: #11172A;
+  --tahti-brand-amber: #FFB840;
+  --tahti-brand-cyan: #22D3EE;
+  --tahti-brand-green: #3FE07A;
+  --tahti-brand-purple: #A78BFA;
+  --tahti-brand-coral: #F87171;
+  --tahti-brand-lavender: #A78BFA;
+  --tahti-brand-text: #E6E9F0;
+  --tahti-brand-muted: #A1A8BD;
 
   /* App shell (light dashboard — default for Next.js app) */
   --tahti-bg: #fafafa;
