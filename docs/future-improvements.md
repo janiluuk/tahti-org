@@ -98,7 +98,7 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 | ~~P2~~ | ~~Artwork upload to MinIO for releases~~ — presigned artwork routes |
 | P2 | Press kit (Studio tier) |
 
-### M22 — Archive metadata (remaining)
+### M22 — Archive metadata (complete)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Hearthis-style metadata defaults on upload~~ — done |
@@ -106,7 +106,7 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 | ~~P2~~ | ~~Repost/follow download gates~~ — done |
 | ~~P2~~ | ~~Channel gate funnel dashboard~~ — `GET /api/me/download-gate-stats` (done) |
 
-### M23 — Collections (remaining)
+### M23 — Collections (complete)
 | P | Item |
 |---|---|
 | ~~P1~~ | ~~Collections CRUD + RSS + profile page~~ — done |
@@ -224,7 +224,7 @@ These stay in `docs/project-roadmap.md` Phases 0–2:
 ## Completed recently (for context)
 
 - M8/M9/M10, M18 core, M19 core (Connect, crons, perks), M1 membership + portal
-- M12–M14 partial, M15–M17, M22–M23 partial, M20 cap + HLS + upgrade CTA
+- M12–M14 partial, M15–M17, M22–M23, M20 cap + HLS + upgrade CTA
 - OpenAPI/Swagger, fan-sub payout tests, collections/archive tests, user-journey e2e
 - CI: lint job, vital-flows + user-journeys e2e, AGPL, website Docker
 - Docker stack scripts, scaling doc, e2e screenshots (local), `packages/ui` scaffold
