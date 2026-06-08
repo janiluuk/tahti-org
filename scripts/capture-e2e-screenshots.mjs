@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 /**
- * Capture full-page screenshots of all web routes.
- * Prerequisites: API + web running, fixtures seeded.
+ * Capture full-page screenshots grouped by role (public, free, member, artist, admin).
  *
  *   ./scripts/e2e-screenshots.sh
- *   # or after stack-up --seed: node scripts/capture-e2e-screenshots.mjs
+ *   WEB_PORT=17777 API_PORT=15011 node scripts/capture-e2e-screenshots.mjs
  */
 
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
@@ -19,15 +18,12 @@ const OUT = join(__dirname, '../docs/e2e-screenshots')
 const APP = process.env.APP_URL ?? 'http://localhost:3000'
 const API = process.env.API_URL ?? 'http://localhost:3001'
 
-const FIXTURE = {
-  password: 'screenshot-demo-pass',
-  artist: 'screenshot-demo',
-  fanEmail: 'screenshot-fan@e2e.tahti.live',
-  artistEmail: 'screenshot-artist@e2e.tahti.live',
-  smartLinkSlug: 'northern-lights-ep',
-  verifyToken: process.env.SCREENSHOT_VERIFY_TOKEN ?? 'demo-verify-token',
-}
+/** @typedef {'public' | 'free' | 'member' | 'artist' | 'admin'} AuthRole */
 
+/**
+ * @param {string} email
+ * @param {string} password
+ */
 async function login(email, password) {
   const res = await fetch(`${API}/api/auth/login`, {
     method: 'POST',
@@ -48,87 +44,206 @@ async function login(email, password) {
   }
 }
 
-/** @type {{ id: string, path: string, label: string, auth?: 'artist' | 'fan', waitMs?: number }[]} */
-const PAGES = [
-  { id: '01-home', path: '/', label: 'Home' },
-  { id: '02-join', path: '/join', label: 'Join (register)' },
-  { id: '03-login', path: '/login', label: 'Login' },
-  { id: '04-verify', path: '/verify', label: 'Verify email (landing)' },
-  {
-    id: '05-verify-token',
-    path: `/verify?token=${FIXTURE.verifyToken}`,
-    label: 'Verify email (with token)',
-  },
-  { id: '06-transparency', path: '/transparency', label: 'Transparency dashboard' },
-  {
-    id: '07-transparency-methodology',
-    path: '/transparency/methodology',
-    label: 'Grant methodology',
-  },
-  { id: '08-channel', path: `/c/${FIXTURE.artist}`, label: 'Channel (artist)', waitMs: 2000 },
-  { id: '09-profile', path: `/u/${FIXTURE.artist}`, label: 'Public profile' },
-  {
-    id: '10-subscribe',
-    path: `/u/${FIXTURE.artist}/subscribe`,
-    label: 'Fan subscribe',
-  },
-  {
-    id: '11-smart-link',
-    path: `/r/${FIXTURE.smartLinkSlug}`,
-    label: 'Smart link redirect',
-    waitMs: 1500,
-  },
-  { id: '12-dashboard', path: '/dashboard', label: 'Artist dashboard', auth: 'artist' },
-  { id: '13-governance', path: '/governance', label: 'Member governance', auth: 'fan' },
-]
+/**
+ * @param {object} seed
+ * @returns {{ role: AuthRole, id: string, path: string, label: string, waitMs?: number }[]}
+ */
+function buildPages(seed) {
+  const artist = seed.artist ?? 'screenshot-demo'
+  const collectionSlug = seed.collectionSlug ?? 'demo-mixes'
+  const smartLink = seed.smartLinkSlug ?? 'northern-lights-ep'
+  const releaseId = seed.releaseId ?? ''
+  const verifyToken = seed.verifyToken ?? process.env.SCREENSHOT_VERIFY_TOKEN ?? 'demo-verify-token'
+
+  /** @type {{ role: AuthRole, id: string, path: string, label: string, waitMs?: number }[]} */
+  const pages = [
+    // ── Public (unauthenticated) ──────────────────────────────────────────
+    { role: 'public', id: 'home', path: '/', label: 'Home' },
+    { role: 'public', id: 'join', path: '/join', label: 'Join (register)' },
+    { role: 'public', id: 'login', path: '/login', label: 'Login' },
+    { role: 'public', id: 'verify', path: '/verify', label: 'Verify email (landing)' },
+    {
+      role: 'public',
+      id: 'verify-token',
+      path: `/verify?token=${verifyToken}`,
+      label: 'Verify email (with token)',
+    },
+    { role: 'public', id: 'status', path: '/status', label: 'Platform status' },
+    { role: 'public', id: 'listen', path: '/listen', label: 'Listen hub' },
+    { role: 'public', id: 'radio', path: '/radio', label: 'Tahti Radio' },
+    { role: 'public', id: 'venues', path: '/venues', label: 'Venues calendar' },
+    { role: 'public', id: 'apply', path: '/apply', label: 'Beta apply' },
+    { role: 'public', id: 'transparency', path: '/transparency', label: 'Transparency dashboard' },
+    {
+      role: 'public',
+      id: 'transparency-methodology',
+      path: '/transparency/methodology',
+      label: 'Grant methodology',
+    },
+    {
+      role: 'public',
+      id: 'channel',
+      path: `/c/${artist}`,
+      label: 'Channel page',
+      waitMs: 2000,
+    },
+    { role: 'public', id: 'profile', path: `/u/${artist}`, label: 'Artist profile' },
+    {
+      role: 'public',
+      id: 'subscribe',
+      path: `/u/${artist}/subscribe`,
+      label: 'Fan subscribe',
+    },
+    {
+      role: 'public',
+      id: 'collection',
+      path: `/u/${artist}/c/${collectionSlug}`,
+      label: 'Public collection',
+    },
+    {
+      role: 'public',
+      id: 'smart-link',
+      path: `/r/${smartLink}`,
+      label: 'Smart link',
+      waitMs: 1500,
+    },
+    { role: 'public', id: 'help-tier-limits', path: '/help/tier-limits', label: 'Tier limits help' },
+    { role: 'public', id: 'help-support', path: '/help/support', label: 'Support help' },
+    { role: 'public', id: 'help-broadcast', path: '/help/broadcast', label: 'Broadcast help' },
+    { role: 'public', id: 'help-multistream', path: '/help/multistream', label: 'Multistream help' },
+    {
+      role: 'public',
+      id: 'embed-channel',
+      path: `/embed/c/${artist}`,
+      label: 'Embed channel player',
+      waitMs: 1500,
+    },
+  ]
+
+  if (releaseId) {
+    pages.push({
+      role: 'public',
+      id: 'embed-release',
+      path: `/embed/r/${releaseId}`,
+      label: 'Embed release player',
+      waitMs: 1500,
+    })
+  }
+
+  // ── Free listener (verified, no membership) ───────────────────────────
+  pages.push({ role: 'free', id: 'dashboard', path: '/dashboard', label: 'Free listener dashboard' })
+
+  // ── Paying member (no channel) ────────────────────────────────────────
+  pages.push(
+    { role: 'member', id: 'dashboard', path: '/dashboard', label: 'Member dashboard' },
+    { role: 'member', id: 'governance', path: '/governance', label: 'Member governance' },
+  )
+
+  // ── Artist (channel owner) ───────────────────────────────────────────
+  pages.push(
+    { role: 'artist', id: 'dashboard', path: '/dashboard', label: 'Artist dashboard' },
+    { role: 'artist', id: 'stats', path: '/dashboard/stats', label: 'Artist stats' },
+    { role: 'artist', id: 'stash', path: '/dashboard/stash', label: 'Stash file manager' },
+    { role: 'artist', id: 'editor', path: '/dashboard/editor', label: 'Audio editor' },
+  )
+
+  // ── Board admin ───────────────────────────────────────────────────────
+  pages.push(
+    { role: 'admin', id: 'dashboard', path: '/admin/dashboard', label: 'Admin dashboard' },
+    { role: 'admin', id: 'beta', path: '/admin/beta', label: 'Beta applications' },
+    { role: 'admin', id: 'users', path: '/admin/users', label: 'User directory' },
+    { role: 'admin', id: 'streams', path: '/admin/streams', label: 'Stream manager' },
+    { role: 'admin', id: 'support', path: '/admin/support', label: 'Support tickets' },
+    { role: 'admin', id: 'financial', path: '/admin/financial', label: 'Financial hub' },
+    { role: 'admin', id: 'financial-ledger', path: '/admin/financial/ledger', label: 'Ledger' },
+    { role: 'admin', id: 'financial-fansubs', path: '/admin/financial/fansubs', label: 'Fan subs & payouts' },
+    {
+      role: 'admin',
+      id: 'financial-legacy',
+      path: '/admin/financial/legacy-members',
+      label: 'Legacy membership queue',
+    },
+    { role: 'admin', id: 'governance', path: '/admin/governance', label: 'Governance hub' },
+    { role: 'admin', id: 'governance-audit', path: '/admin/governance/audit', label: 'Audit log' },
+    {
+      role: 'admin',
+      id: 'governance-resolutions',
+      path: '/admin/governance/resolutions',
+      label: 'Board resolutions',
+    },
+    {
+      role: 'admin',
+      id: 'governance-report',
+      path: '/admin/governance/report',
+      label: 'Annual report generator',
+    },
+    { role: 'admin', id: 'status', path: '/admin/status', label: 'Admin status view' },
+    { role: 'admin', id: 'venues', path: '/governance/venues', label: 'Venue verification queue' },
+  )
+
+  return pages
+}
 
 async function main() {
-  await mkdir(OUT, { recursive: true })
+  const seedPath = join(OUT, '.seed-output.json')
+  const seedRaw = await readFile(seedPath, 'utf8')
+  const seed = JSON.parse(seedRaw)
+  const password = seed.password ?? 'screenshot-demo-pass'
+
+  const cookies = {
+    free: await login(seed.freeEmail ?? 'screenshot-free@e2e.tahti.live', password),
+    member: await login(seed.memberEmail ?? 'screenshot-fan@e2e.tahti.live', password),
+    artist: await login(seed.artistEmail ?? 'screenshot-artist@e2e.tahti.live', password),
+    admin: await login(seed.boardEmail ?? 'screenshot-board@e2e.tahti.live', password),
+  }
+
+  const pages = buildPages(seed)
+  const roles = ['public', 'free', 'member', 'artist', 'admin']
+  for (const role of roles) {
+    await mkdir(join(OUT, role), { recursive: true })
+  }
 
   const browser = await chromium.launch({ headless: true })
-  const context = await browser.newContext({
+  const publicContext = await browser.newContext({
     viewport: { width: 1280, height: 800 },
     deviceScaleFactor: 1,
   })
 
-  const artistCookie = await login(FIXTURE.artistEmail, FIXTURE.password)
-  const fanCookie = await login(FIXTURE.fanEmail, FIXTURE.password)
-
   const manifest = []
 
-  for (const page of PAGES) {
+  for (const page of pages) {
     const ctx =
-      page.auth === 'artist'
-        ? await browser.newContext({ viewport: { width: 1280, height: 800 } })
-        : page.auth === 'fan'
-          ? await browser.newContext({ viewport: { width: 1280, height: 800 } })
-          : context
+      page.role === 'public'
+        ? publicContext
+        : await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 })
 
-    if (page.auth === 'artist') await ctx.addCookies([artistCookie])
-    if (page.auth === 'fan') await ctx.addCookies([fanCookie])
+    if (page.role !== 'public') {
+      await ctx.addCookies([cookies[page.role]])
+    }
 
     const tab = await ctx.newPage()
     const url = `${APP}${page.path}`
-    // Chat/WS pages never reach networkidle; load + optional settle is enough for screenshots.
     await tab.goto(url, { waitUntil: 'load', timeout: 45_000 })
     if (page.waitMs) await tab.waitForTimeout(page.waitMs)
-    const file = `${page.id}.png`
+
+    const file = `${page.role}/${page.id}.png`
     await tab.screenshot({ path: join(OUT, file), fullPage: true })
     manifest.push({
+      role: page.role,
       id: page.id,
       file,
       url: page.path,
       label: page.label,
-      auth: page.auth ?? 'public',
     })
     await tab.close()
-    if (page.auth) await ctx.close()
+    if (page.role !== 'public') await ctx.close()
     console.log(`✓ ${file} — ${page.label}`)
   }
 
+  await publicContext.close()
   await writeFile(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2))
   await browser.close()
-  console.log(`\nScreenshots saved to ${OUT}`)
+  console.log(`\n${manifest.length} screenshots saved under ${OUT}`)
 }
 
 main().catch((e) => {

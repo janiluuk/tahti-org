@@ -1,93 +1,317 @@
 [
   {
-    "id": "01-home",
-    "file": "01-home.png",
+    "role": "public",
+    "id": "home",
+    "file": "public/home.png",
     "url": "/",
-    "label": "Home",
-    "auth": "public"
+    "label": "Home"
   },
   {
-    "id": "02-join",
-    "file": "02-join.png",
+    "role": "public",
+    "id": "join",
+    "file": "public/join.png",
     "url": "/join",
-    "label": "Join (register)",
-    "auth": "public"
+    "label": "Join (register)"
   },
   {
-    "id": "03-login",
-    "file": "03-login.png",
+    "role": "public",
+    "id": "login",
+    "file": "public/login.png",
     "url": "/login",
-    "label": "Login",
-    "auth": "public"
+    "label": "Login"
   },
   {
-    "id": "04-verify",
-    "file": "04-verify.png",
+    "role": "public",
+    "id": "verify",
+    "file": "public/verify.png",
     "url": "/verify",
-    "label": "Verify email (landing)",
-    "auth": "public"
+    "label": "Verify email (landing)"
   },
   {
-    "id": "05-verify-token",
-    "file": "05-verify-token.png",
-    "url": "/verify?token=3On-Z-Gayua0pW-OwrUnkInm_9HRrmMl",
-    "label": "Verify email (with token)",
-    "auth": "public"
+    "role": "public",
+    "id": "verify-token",
+    "file": "public/verify-token.png",
+    "url": "/verify?token=AjHBaCaA8NA_abNnn3V1KyyDEwdAZwAm",
+    "label": "Verify email (with token)"
   },
   {
-    "id": "06-transparency",
-    "file": "06-transparency.png",
+    "role": "public",
+    "id": "status",
+    "file": "public/status.png",
+    "url": "/status",
+    "label": "Platform status"
+  },
+  {
+    "role": "public",
+    "id": "listen",
+    "file": "public/listen.png",
+    "url": "/listen",
+    "label": "Listen hub"
+  },
+  {
+    "role": "public",
+    "id": "radio",
+    "file": "public/radio.png",
+    "url": "/radio",
+    "label": "Tahti Radio"
+  },
+  {
+    "role": "public",
+    "id": "venues",
+    "file": "public/venues.png",
+    "url": "/venues",
+    "label": "Venues calendar"
+  },
+  {
+    "role": "public",
+    "id": "apply",
+    "file": "public/apply.png",
+    "url": "/apply",
+    "label": "Beta apply"
+  },
+  {
+    "role": "public",
+    "id": "transparency",
+    "file": "public/transparency.png",
     "url": "/transparency",
-    "label": "Transparency dashboard",
-    "auth": "public"
+    "label": "Transparency dashboard"
   },
   {
-    "id": "07-transparency-methodology",
-    "file": "07-transparency-methodology.png",
+    "role": "public",
+    "id": "transparency-methodology",
+    "file": "public/transparency-methodology.png",
     "url": "/transparency/methodology",
-    "label": "Grant methodology",
-    "auth": "public"
+    "label": "Grant methodology"
   },
   {
-    "id": "08-channel",
-    "file": "08-channel.png",
+    "role": "public",
+    "id": "channel",
+    "file": "public/channel.png",
     "url": "/c/screenshot-demo",
-    "label": "Channel (artist)",
-    "auth": "public"
+    "label": "Channel page"
   },
   {
-    "id": "09-profile",
-    "file": "09-profile.png",
+    "role": "public",
+    "id": "profile",
+    "file": "public/profile.png",
     "url": "/u/screenshot-demo",
-    "label": "Public profile",
-    "auth": "public"
+    "label": "Artist profile"
   },
   {
-    "id": "10-subscribe",
-    "file": "10-subscribe.png",
+    "role": "public",
+    "id": "subscribe",
+    "file": "public/subscribe.png",
     "url": "/u/screenshot-demo/subscribe",
-    "label": "Fan subscribe",
-    "auth": "public"
+    "label": "Fan subscribe"
   },
   {
-    "id": "11-smart-link",
-    "file": "11-smart-link.png",
+    "role": "public",
+    "id": "collection",
+    "file": "public/collection.png",
+    "url": "/u/screenshot-demo/c/demo-mixes",
+    "label": "Public collection"
+  },
+  {
+    "role": "public",
+    "id": "smart-link",
+    "file": "public/smart-link.png",
     "url": "/r/northern-lights-ep",
-    "label": "Smart link redirect",
-    "auth": "public"
+    "label": "Smart link"
   },
   {
-    "id": "12-dashboard",
-    "file": "12-dashboard.png",
+    "role": "public",
+    "id": "help-tier-limits",
+    "file": "public/help-tier-limits.png",
+    "url": "/help/tier-limits",
+    "label": "Tier limits help"
+  },
+  {
+    "role": "public",
+    "id": "help-support",
+    "file": "public/help-support.png",
+    "url": "/help/support",
+    "label": "Support help"
+  },
+  {
+    "role": "public",
+    "id": "help-broadcast",
+    "file": "public/help-broadcast.png",
+    "url": "/help/broadcast",
+    "label": "Broadcast help"
+  },
+  {
+    "role": "public",
+    "id": "help-multistream",
+    "file": "public/help-multistream.png",
+    "url": "/help/multistream",
+    "label": "Multistream help"
+  },
+  {
+    "role": "public",
+    "id": "embed-channel",
+    "file": "public/embed-channel.png",
+    "url": "/embed/c/screenshot-demo",
+    "label": "Embed channel player"
+  },
+  {
+    "role": "public",
+    "id": "embed-release",
+    "file": "public/embed-release.png",
+    "url": "/embed/r/cmq58png90006b06q3llucocb",
+    "label": "Embed release player"
+  },
+  {
+    "role": "free",
+    "id": "dashboard",
+    "file": "free/dashboard.png",
     "url": "/dashboard",
-    "label": "Artist dashboard",
-    "auth": "artist"
+    "label": "Free listener dashboard"
   },
   {
-    "id": "13-governance",
-    "file": "13-governance.png",
+    "role": "member",
+    "id": "dashboard",
+    "file": "member/dashboard.png",
+    "url": "/dashboard",
+    "label": "Member dashboard"
+  },
+  {
+    "role": "member",
+    "id": "governance",
+    "file": "member/governance.png",
     "url": "/governance",
-    "label": "Member governance",
-    "auth": "fan"
+    "label": "Member governance"
+  },
+  {
+    "role": "artist",
+    "id": "dashboard",
+    "file": "artist/dashboard.png",
+    "url": "/dashboard",
+    "label": "Artist dashboard"
+  },
+  {
+    "role": "artist",
+    "id": "stats",
+    "file": "artist/stats.png",
+    "url": "/dashboard/stats",
+    "label": "Artist stats"
+  },
+  {
+    "role": "artist",
+    "id": "stash",
+    "file": "artist/stash.png",
+    "url": "/dashboard/stash",
+    "label": "Stash file manager"
+  },
+  {
+    "role": "artist",
+    "id": "editor",
+    "file": "artist/editor.png",
+    "url": "/dashboard/editor",
+    "label": "Audio editor"
+  },
+  {
+    "role": "admin",
+    "id": "dashboard",
+    "file": "admin/dashboard.png",
+    "url": "/admin/dashboard",
+    "label": "Admin dashboard"
+  },
+  {
+    "role": "admin",
+    "id": "beta",
+    "file": "admin/beta.png",
+    "url": "/admin/beta",
+    "label": "Beta applications"
+  },
+  {
+    "role": "admin",
+    "id": "users",
+    "file": "admin/users.png",
+    "url": "/admin/users",
+    "label": "User directory"
+  },
+  {
+    "role": "admin",
+    "id": "streams",
+    "file": "admin/streams.png",
+    "url": "/admin/streams",
+    "label": "Stream manager"
+  },
+  {
+    "role": "admin",
+    "id": "support",
+    "file": "admin/support.png",
+    "url": "/admin/support",
+    "label": "Support tickets"
+  },
+  {
+    "role": "admin",
+    "id": "financial",
+    "file": "admin/financial.png",
+    "url": "/admin/financial",
+    "label": "Financial hub"
+  },
+  {
+    "role": "admin",
+    "id": "financial-ledger",
+    "file": "admin/financial-ledger.png",
+    "url": "/admin/financial/ledger",
+    "label": "Ledger"
+  },
+  {
+    "role": "admin",
+    "id": "financial-fansubs",
+    "file": "admin/financial-fansubs.png",
+    "url": "/admin/financial/fansubs",
+    "label": "Fan subs & payouts"
+  },
+  {
+    "role": "admin",
+    "id": "financial-legacy",
+    "file": "admin/financial-legacy.png",
+    "url": "/admin/financial/legacy-members",
+    "label": "Legacy membership queue"
+  },
+  {
+    "role": "admin",
+    "id": "governance",
+    "file": "admin/governance.png",
+    "url": "/admin/governance",
+    "label": "Governance hub"
+  },
+  {
+    "role": "admin",
+    "id": "governance-audit",
+    "file": "admin/governance-audit.png",
+    "url": "/admin/governance/audit",
+    "label": "Audit log"
+  },
+  {
+    "role": "admin",
+    "id": "governance-resolutions",
+    "file": "admin/governance-resolutions.png",
+    "url": "/admin/governance/resolutions",
+    "label": "Board resolutions"
+  },
+  {
+    "role": "admin",
+    "id": "governance-report",
+    "file": "admin/governance-report.png",
+    "url": "/admin/governance/report",
+    "label": "Annual report generator"
+  },
+  {
+    "role": "admin",
+    "id": "status",
+    "file": "admin/status.png",
+    "url": "/admin/status",
+    "label": "Admin status view"
+  },
+  {
+    "role": "admin",
+    "id": "venues",
+    "file": "admin/venues.png",
+    "url": "/governance/venues",
+    "label": "Venue verification queue"
   }
 ]
