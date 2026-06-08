@@ -9,7 +9,7 @@ stack (M0–M6), live chat (M5), transparency ledger (M8), annual grant engine (
 member governance (M10), download engagement units (M18 core), fan-to-artist
 subscriptions (M19 core), hardening exports (M11 partial), artist profiles +
 releases (M12 partial), newsletter/embed/mentions/radio/venues (M13–M17 partial),
-archive metadata (M22), collections (M23 partial), and tier gating (M20 partial)
+archive metadata (M22), collections (M23), and tier gating (M20 partial)
 are implemented with **~230 Vitest tests** (56 files) and **three CI e2e layers**
 (vital-flows curl, user-journey curl, local Playwright screenshots). See the
 [Build audit](#build-audit--current-state-2026-06-03) and
@@ -85,7 +85,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M19** Fan-subs | 🟢 Done | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perks, payout dashboard, subscriber export, fan portal, GDPR export/deletion, admin execute + purge cron |
 | **M21** Admin panel | 🟢 Done | **`/admin` shell** (board guard), **dashboard**, **stream manager** + **force-offline**, **user directory** + suspend, **fan-sub payout queue**, **ledger UI**, **support tickets**, **beta application queue** (`/admin/beta` approve/reject + password setup links), **board resolutions**, **audit log viewer**, **annual report generator**, stats APIs + **`CronRun`** logging; **`/admin` link surfaced in main nav for board users**; **design-consistency pass** (status page renders health detail on 503, Financial/Governance landings restyled as cards, resolution-form layout fix, unified back-nav + filter pills, venue-queue dashboard tile). Deferred: platform-level content moderation/abuse-report queue |
 | **M22** Archive metadata | 🟢 Done | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/channel-funnel-stats` + split endpoints; 14-day charts); **per-listener HLS metrics** — distinct daily listener counts from anonymized (daily-salted, non-reversible) Caddy edge-log hashes, surfaced as `peakDailyListeners` + per-day counts in the live-stats panel. Deferred: none |
-| **M23** Collections + RSS | 🟡 Partial | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard; **per-artist archive RSS** (`/api/v1/u/:handle/rss.xml`); feed links on profile + dashboard |
+| **M23** Collections + RSS | 🟢 Done | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard; **per-artist archive RSS** (`/api/v1/u/:handle/rss.xml`); feed links on profile + dashboard; **per-collection video/slideshow themes**. Deferred: none |
 | **M28** Track version history | 🟢 Done | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids via active-version sync) |
 | **M30** Release ops toolkit | 🟢 Done | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; **guided Discogs submission** (`discogsReleaseId` + clipboard prefill + in-panel guide + Discogs URL on smart link — Discogs has no artist-submission API, so this mirrors the MusicBrainz guided pattern); UPC/ISRC on `/r/:slug`; claim links (Spotify, Apple, YouTube). Deferred: none |
 | **M29** Backup & DR | 🟡 Partial | **`scripts/backup.sh`** (postgres, minio DR mirror, restore-test, status + DR age); **`scripts/backup-drill.sh`** + quarterly cron; **`ops/RUNBOOK.md`** restore + drill table; `install-crons.sh`; `/metrics` backup gauge. Deferred: pgBackRest PITR |
@@ -323,7 +323,7 @@ See `competitive-gaps-hearthis.md` for full gap list.
 | Done | Milestone | Summary |
 |:---:|---|---|
 | [x] | **M22** | Per-item metadata + editable tracklists with **@artist tagging** (dashboard tracklist editor wired) |
-| [~] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug`; **artist archive feed at `/api/v1/u/:handle/rss.xml`** |
+| [x] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug`; **artist archive feed at `/api/v1/u/:handle/rss.xml`** |
 | [~] | **M24** | Channel gallery/text layers + **channel video backdrop**; per-item banner/slideshow; YouTube/Vimeo on archive items |
 | [x] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
 | [x] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; **collection cover + description edit** + **item thumbnails** on profile and `/u/:handle/c/:slug`; **per-collection slideshow/video themes** (independent gallery + text-layer picker on collections, dashboard editor + public rendering) |
