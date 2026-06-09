@@ -39,6 +39,12 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
           textLayerText: true,
           textLayerAlign: true,
           videoBackgroundUrl: true,
+          colorSchemeJson: true,
+          visualPreset: true,
+          slideshowPreset: true,
+          slideshowIntervalSeconds: true,
+          slideshowTransitionMs: true,
+          slideshowAutoplay: true,
           user: {
             select: {
               username: true,

@@ -19,6 +19,7 @@ import {
   ReleaseCatalogViewSchema,
   ReleaseImportBodySchema,
   ReleaseImportResultSchema,
+  ReleaseVisualPatchSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
@@ -81,6 +82,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
           credits: true,
           revelatorStatus: true,
           revelatorId: true,
+          visualPreset: true,
+          colorSchemeJson: true,
+          paletteJson: true,
           tracks: {
             orderBy: { position: 'asc' },
             select: { id: true, position: true, title: true, isrc: true, status: true },
@@ -377,6 +381,40 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         releaseIds,
         errors,
       })
+    },
+  )
+  // M31: PLAT-071/074 — release visual preset + color scheme
+  fastify.patch(
+    '/api/me/releases/:id/visual',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const parsed = ReleaseVisualPatchSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+
+      const existing = await fastify.prisma.release.findFirst({
+        where: { id, userId: user.id },
+        select: { id: true },
+      })
+      if (!existing) return reply.status(404).send({ error: 'Release not found' })
+
+      const updated = await fastify.prisma.release.update({
+        where: { id },
+        data: {
+          ...(parsed.data.visualPreset !== undefined ? { visualPreset: parsed.data.visualPreset } : {}),
+          ...(parsed.data.colorScheme !== undefined
+            ? { colorSchemeJson: parsed.data.colorScheme ? JSON.stringify(parsed.data.colorScheme) : null }
+            : {}),
+        },
+        select: { visualPreset: true, colorSchemeJson: true, paletteJson: true },
+      })
+      return reply.send(updated)
     },
   )
 }

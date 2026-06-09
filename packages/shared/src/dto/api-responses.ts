@@ -323,6 +323,13 @@ export const PublicChannelViewSchema = z.object({
   textLayerText: z.string(),
   textLayerAlign: z.string(),
   videoBackgroundUrl: z.string().nullable(),
+  // M31
+  colorSchemeJson: z.string().nullable(),
+  visualPreset: z.string(),
+  slideshowPreset: z.string(),
+  slideshowIntervalSeconds: z.number().int(),
+  slideshowTransitionMs: z.number().int(),
+  slideshowAutoplay: z.boolean(),
   user: PublicChannelUserSchema,
 })
 

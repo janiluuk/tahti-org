@@ -15,6 +15,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { extractPalette } from '../../lib/palette-extract.js'
 
 const PRESIGN_TTL_SEC = 900
 const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
@@ -90,6 +91,18 @@ const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       const artworkUrl = await resolveReleaseArtworkUrl(updated)
+
+      // Fire-and-forget palette extraction — don't block the response
+      if (artworkUrl) {
+        extractPalette(artworkUrl).then((palette) => {
+          if (!palette) return
+          return fastify.prisma.release.update({
+            where: { id },
+            data: { paletteJson: JSON.stringify(palette) },
+          })
+        }).catch(() => undefined)
+      }
+
       return reply.send({ artworkUrl, artworkKey: updated.artworkKey })
     },
   )

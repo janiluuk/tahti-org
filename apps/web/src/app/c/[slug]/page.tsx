@@ -8,6 +8,9 @@ import { LivePlayerSection } from './live-player-section'
 import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import { ChannelGalleryView } from './channel-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
+import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
+import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
+import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
 import { ArchiveWaveform } from '@/components/archive-waveform'
 import { ArchiveDownloadButton } from './archive-download'
@@ -38,6 +41,12 @@ interface ChannelResponse {
   textLayerText: string
   textLayerAlign: ChannelTextLayerAlignment
   videoBackgroundUrl?: string | null
+  colorSchemeJson?: string | null
+  visualPreset?: string
+  slideshowPreset?: string
+  slideshowIntervalSeconds?: number
+  slideshowTransitionMs?: number
+  slideshowAutoplay?: boolean
   user: {
     username: string
     displayName: string
@@ -212,13 +221,32 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             </div>
           )}
 
+          <ChannelColorScheme colorSchemeJson={channel.colorSchemeJson} />
+
+          {channel.visualPreset && channel.visualPreset !== 'MINIMAL' && (
+            <ChannelVisualizer
+              preset={channel.visualPreset as import('@tahti/shared').VisualPreset}
+              colorSchemeJson={channel.colorSchemeJson}
+            />
+          )}
+
           <ChannelTextLayerView
             mode={channel.textLayerMode}
             text={channel.textLayerText}
             align={channel.textLayerAlign}
           />
 
-          <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
+          {channel.galleryMode === 'STATIC_SLIDESHOW' && channel.slideshowImages.length > 0 ? (
+            <ChannelSlideshow
+              images={channel.slideshowImages}
+              preset={(channel.slideshowPreset ?? 'FADE') as import('@tahti/shared').SlideshowPreset}
+              intervalSeconds={channel.slideshowIntervalSeconds ?? 8}
+              transitionMs={channel.slideshowTransitionMs ?? 600}
+              autoplay={channel.slideshowAutoplay ?? true}
+            />
+          ) : (
+            <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
+          )}
 
           {hlsUrl && <LivePlayerSection url={hlsUrl} slug={slug} />}
 

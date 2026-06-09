@@ -69,6 +69,7 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
           followToDownload: true,
           backgroundUrl: true,
           slideshowUrls: true,
+          visualPreset: true,
         },
       })
 

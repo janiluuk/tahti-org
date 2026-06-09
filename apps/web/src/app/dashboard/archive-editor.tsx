@@ -17,6 +17,7 @@ import { TracklistEditor } from './tracklist-editor'
 import { ArchiveVersionPanel } from './archive-version-panel'
 import { ArchiveGateStats } from './archive-gate-stats'
 import { ArchiveMixcloudUpload } from './archive-mixcloud'
+import ArchiveVisualPanel from './archive-visual-panel'
 
 export default function ArchiveEditor({
   item,
@@ -105,6 +106,11 @@ export default function ArchiveEditor({
           />
 
           <ArchiveVersionPanel itemId={item.id} itemStatus={item.status} />
+
+          <ArchiveVisualPanel
+            itemId={item.id}
+            initial={{ visualPreset: ((item.visualPreset as string | undefined) ?? 'MINIMAL') as import('@tahti/shared').VisualPreset }}
+          />
 
           <ArchiveMixcloudUpload
             itemId={item.id}
