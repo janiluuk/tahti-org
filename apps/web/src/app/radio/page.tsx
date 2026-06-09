@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Metadata } from 'next'
-import { BrandLogo } from '@tahti/ui'
+import { ChannelHeader } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 
 export const revalidate = 30
@@ -66,16 +66,14 @@ export default async function RadioPage() {
   return (
     <>
       <BgCanvas />
+      <ChannelHeader activeNav="radio" />
       <div className="listen-shell">
-        <header className="listen-header">
-          <BrandLogo />
-          <div className="listen-header__text">
-            <h1 className="listen-header__title">Tahti Radio</h1>
-            <p className="listen-header__sub">
-              Fair-rotation meta-stream — when members are live, one channel at a time, no editorial
-              picks.
-            </p>
-          </div>
+        <div className="listen-page-header">
+          <h1 className="listen-page-title">Tahti Radio</h1>
+          <p className="listen-page-sub">
+            Fair-rotation meta-stream — when members are live, one channel at a time, no editorial
+            picks.
+          </p>
           <div className="listen-header__meta">
             <a href="/listen" className="listen-radio-link">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -90,7 +88,7 @@ export default async function RadioPage() {
               All channels
             </a>
           </div>
-        </header>
+        </div>
 
         <section className="listen-section">
           <div className={`listen-section__label${now.live ? ' listen-section__label--live' : ''}`}>

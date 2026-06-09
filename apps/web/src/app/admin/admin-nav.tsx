@@ -49,6 +49,22 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/radio',
+    label: 'Radio',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.4" />
+        <circle cx="8" cy="8" r="1.75" fill="currentColor" />
+        <path
+          d="M8 2.5V1M8 15v-1.5M2.5 8H1M15 8h-1.5"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/streams',
     label: 'Streams',
     icon: (

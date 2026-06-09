@@ -87,7 +87,9 @@
   text-decoration: none;
   padding: 5px 11px;
   border-radius: 6px;
-  transition: color 0.12s, background 0.12s;
+  transition:
+    color 0.12s,
+    background 0.12s;
 }
 
 [data-tahti-ui='brand'] .ch-header__nav-link:hover {
@@ -131,7 +133,9 @@
   padding: 5px 12px;
   border-radius: 6px;
   border: 1px solid var(--border-strong);
-  transition: border-color 0.12s, background 0.12s;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
 }
 
 [data-tahti-ui='brand'] .ch-header__signin:hover {
@@ -488,6 +492,16 @@
   background: var(--cyan);
   opacity: 0.45;
   border-radius: 1px;
+  transition: opacity 0.1s;
+  cursor: default;
+}
+
+[data-tahti-ui='brand'] .ch-archive-waveform:hover .ch-archive-wf-bar {
+  opacity: 0.25;
+}
+
+[data-tahti-ui='brand'] .ch-archive-waveform:hover .ch-archive-wf-bar:hover {
+  opacity: 0.9;
 }
 
 /* Controls */
@@ -947,6 +961,7 @@
   padding: 0.75rem 1rem;
   border-top: 1px solid var(--border);
   display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -1092,6 +1107,11 @@
   font-weight: 700;
   color: var(--green);
   letter-spacing: 1px;
+}
+
+[data-tahti-ui='brand'] .prof-live-badge .signal-dot {
+  width: 6px;
+  height: 6px;
 }
 
 [data-tahti-ui='brand'] .prof-cta-row {
@@ -2054,6 +2074,12 @@
   }
 }
 
+@media (max-width: 340px) {
+  [data-tahti-ui='brand'] .prof-release-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 [data-tahti-ui='brand'] .prof-release-card {
   display: flex;
   flex-direction: column;
@@ -2313,8 +2339,24 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 0.5rem;
+  padding-left: 9px;
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .ch-section-label::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  background: var(--cyan);
+  border-radius: 2px;
+  opacity: 0.5;
 }
 
 /* ── Mobile player full-bleed layout (PLAT-037) ─────────────────────────── */
@@ -2490,7 +2532,9 @@
   color: var(--text);
   font-size: 0.8125rem;
   text-decoration: none;
-  transition: border-color 0.12s, background 0.12s;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
 }
 
 [data-tahti-ui='brand'] .prof-social-link:hover {

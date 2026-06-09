@@ -2,13 +2,13 @@
 
 @import '@tahti/ui/src/styles/admin-tokens.css';
 @import '@tahti/ui/src/styles/admin-ui.css';
+@import '@tahti/ui/src/styles/brand-channel.css';
 
 /* ── Dark-first body baseline ──────────────────────────────────────────── */
 body {
-  background: #0A0E1C;
-  color: #E6E9F0;
+  background: #0a0e1c;
+  color: #e6e9f0;
   font-family: var(--tahti-font-body);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
-
