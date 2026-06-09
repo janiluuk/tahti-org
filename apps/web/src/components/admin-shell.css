@@ -425,3 +425,26 @@
 .admin-inline-link:hover {
   text-decoration: underline;
 }
+
+.admin-btn--icon {
+  padding: 0.3rem 0.5rem;
+  min-width: 1.75rem;
+  text-align: center;
+}
+
+.admin-input {
+  font-size: 0.875rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font-family: var(--font-body);
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.admin-input:focus {
+  border-color: var(--cyan);
+}

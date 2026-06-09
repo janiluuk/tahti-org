@@ -564,7 +564,7 @@ All are required before public beta (1 August 2026 target).
 | [x] | **PLAT-046** | **Homepage upgrade (`/`)** — replace the minimal gateway card with the full v8 homepage: "On air right now" live channel tile grid (same data as `/listen`), stats strip (active artists, broadcasts this month, total hours), tagline + CTA to `/apply` / `/listen`. Keep the gateway redirect for non-JS as a fallback. | Medium | P2 |
 | [ ] | **PLAT-047** | **Self-serve artist signup flow** — open-beta multi-step wizard replacing the single `/apply` form: `/signup` (email + handle + tier), `/signup/payment` (Stripe Checkout for paid tiers, skip for free), `/signup/profile` (avatar, bio, location, genre tags), `/signup/broadcast` (stream-key display + OBS/Mixxx quickstart). Currently only the closed-beta invite path exists (`/apply` → invite email → `/setup-password`). | Large | P1 |
 | [x] | **PLAT-048** | **`/admin/grants` + `/admin/grants/:year`** — dedicated grant cycle review and distribution-approval UI. The grant engine and ledger entries exist (M9) but there is no page to browse per-artist engagement-unit breakdowns, approve the annual distribution, or download the board-approval CSV. Route is currently 404. | Medium | P1 |
-| [ ] | **PLAT-049** | **`/admin/agm`** — AGM planning and proposal management page. Companion to `/admin/governance/resolutions`; needs: proposal submission form, agenda builder, member-notification send action, minutes upload. Route is currently 404. | Medium | P2 |
+| [x] | **PLAT-049** | **`/admin/agm`** — AGM planning and proposal management page. Companion to `/admin/governance/resolutions`; needs: proposal submission form, agenda builder, member-notification send action, minutes upload. Route is currently 404. | Medium | P2 |
 
 ---
 

@@ -25,6 +25,11 @@ const SECTIONS = [
     desc: 'Record and publish formal board decisions and vote outcomes.',
   },
   {
+    href: '/admin/agm',
+    title: 'Annual General Meeting',
+    desc: 'Agenda builder, open motions, member notice checklist, and minutes links.',
+  },
+  {
     href: '/admin/governance/audit',
     title: 'Audit log viewer',
     desc: 'Searchable log of privileged actions across the platform.',
