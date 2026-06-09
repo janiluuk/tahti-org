@@ -114,6 +114,52 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/grants',
+    label: 'Grants',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path
+          d="M8 2v12M5 5h4.5a2 2 0 0 1 0 4H5M5 9h5a2 2 0 0 1 0 4H5"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: '/admin/agm',
+    label: 'AGM',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+        <path
+          d="M5 2v2M11 2v2M2 7h12"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+        <path d="M5 10h3M5 12.5h5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    href: '/admin/settings/vendors',
+    label: 'Vendors',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path
+          d="M6 2h4l1 3H5L6 2z"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+        <rect x="2" y="5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M8 8v3M6.5 9.5h3" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/status',
     label: 'Status',
     icon: (
