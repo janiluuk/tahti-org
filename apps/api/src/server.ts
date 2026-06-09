@@ -24,6 +24,7 @@ import completeUploadRoute from './routes/uploads/complete.js'
 import channelGetRoute from './routes/channels/get.js'
 import channelItemsRoute from './routes/channels/items.js'
 import channelListRoute from './routes/channels/list.js'
+import channelStatsRoute from './routes/channels/stats.js'
 import liveFingerprintsRoute from './routes/channels/live-fingerprints.js'
 import itemReadyRoute from './routes/internal/item-ready.js'
 import rtmpRoutes from './routes/internal/rtmp.js'
@@ -386,6 +387,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(completeUploadRoute)
   await fastify.register(channelGetRoute)
   await fastify.register(channelListRoute)
+  await fastify.register(channelStatsRoute)
   await fastify.register(channelItemsRoute)
   await fastify.register(liveFingerprintsRoute)
   await fastify.register(itemReadyRoute)
