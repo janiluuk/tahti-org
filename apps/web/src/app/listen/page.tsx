@@ -94,9 +94,7 @@ export default async function ListenPage() {
       <div className="listen-shell">
         <header className="listen-page-header">
           <h1 className="listen-page-title">Discover</h1>
-          <p className="listen-page-sub">
-            Independent artists broadcasting live and on-demand.
-          </p>
+          <p className="listen-page-sub">Independent artists broadcasting live and on-demand.</p>
           <div className="listen-header__meta">
             <a href="/radio" className="listen-radio-link">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -126,7 +124,9 @@ export default async function ListenPage() {
             <p className="listen-empty__text">No channels live right now.</p>
             <p className="listen-empty__hint">
               Check back later, or tune in to{' '}
-              <a href="/radio" className="listen-radio-link">Tahti Radio</a>{' '}
+              <a href="/radio" className="listen-radio-link">
+                Tahti Radio
+              </a>{' '}
               — it plays archived sets from all artists on rotation.
             </p>
           </div>
