@@ -1,24 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
-/* Public pages under [data-tahti-ui="brand"] — light theme for governance, help, etc. */
+/* Public pages under [data-tahti-ui="brand"] — uses dark brand tokens from tokens.css. */
 /* Note: tokens.css is loaded globally via apps/web/src/app/globals.css — no import needed here. */
-
-/* Light auth/marketing pages only — do not remap tokens on channel/profile shells. */
-[data-tahti-ui='brand'].brand-public,
-[data-tahti-ui='brand'] .brand-public {
-  --font-body: var(--tahti-font-body, system-ui, sans-serif);
-  --font-head: var(--tahti-font-display, system-ui, sans-serif);
-  --text: var(--tahti-text, #111);
-  --muted: var(--tahti-text-muted, #666);
-  --bg: var(--tahti-bg, #fafafa);
-  --card: var(--tahti-surface, #fff);
-  --card2: var(--tahti-surface-muted, #f3f4f6);
-  --cyan: var(--tahti-primary, #2563eb);
-  --amber: var(--tahti-brand-amber, #f0a500);
-  --border: var(--tahti-border, #e5e7eb);
-  --radius-sm: var(--tahti-radius-sm, 4px);
-  --coral: var(--tahti-error, #dc2626);
-  --green: var(--tahti-success, #16a34a);
-}
 
 /* ---- Page header (transparency, venues, governance) ---- */
 [data-tahti-ui='brand'] .brand-public .brand-page-header {
@@ -270,7 +252,7 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-stat-card__value--positive {
-  color: var(--tahti-success, #16a34a);
+  color: var(--green);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-stat-card__subtitle {
@@ -319,11 +301,11 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-table .num--revenue {
-  color: var(--tahti-success, #16a34a);
+  color: var(--green);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-table .num--cost {
-  color: var(--tahti-error, #dc2626);
+  color: var(--coral);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-category {
@@ -414,8 +396,8 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page__banner--degraded {
-  background: color-mix(in srgb, #eab308 20%, transparent);
-  color: #ca8a04;
+  background: color-mix(in srgb, var(--amber) 20%, transparent);
+  color: var(--amber);
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page__banner--outage {
@@ -906,7 +888,7 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-table .warn {
-  color: var(--tahti-warning, #d97706);
+  color: var(--amber);
 }
 
 /* Phase 9 — listener newsletter opt-in on channel / profile */
@@ -967,7 +949,7 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .nl-subscribe-msg--err {
-  color: var(--tahti-warning, #d97706);
+  color: var(--amber);
 }
 
 [data-tahti-ui='brand'] .brand-public .mention-link {
@@ -1104,11 +1086,11 @@
 
 /* ---- Stat card color variants (transparency page) ---- */
 [data-tahti-ui='brand'] .brand-public .brand-stat-card--revenue {
-  border-top: 2px solid var(--tahti-success, #16a34a);
+  border-top: 2px solid var(--green);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-stat-card--cost {
-  border-top: 2px solid var(--tahti-error, #dc2626);
+  border-top: 2px solid var(--coral);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-stat-card--surplus {
@@ -1127,23 +1109,23 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .status-dot--up {
-  background: var(--tahti-success, #16a34a);
-  box-shadow: 0 0 5px color-mix(in srgb, #16a34a 55%, transparent);
+  background: var(--green);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--green) 55%, transparent);
 }
 
 [data-tahti-ui='brand'] .brand-public .status-dot--down {
-  background: var(--tahti-error, #dc2626);
+  background: var(--coral);
 }
 
 [data-tahti-ui='brand'] .brand-public .status-dot--degraded {
-  background: var(--tahti-warning, #d97706);
+  background: var(--amber);
 }
 
 [data-tahti-ui='brand'] .brand-public .status-dot--operational {
-  background: var(--tahti-success, #16a34a);
-  box-shadow: 0 0 5px color-mix(in srgb, #16a34a 55%, transparent);
+  background: var(--green);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--green) 55%, transparent);
 }
 
 [data-tahti-ui='brand'] .brand-public .status-dot--outage {
-  background: var(--tahti-error, #dc2626);
+  background: var(--coral);
 }
