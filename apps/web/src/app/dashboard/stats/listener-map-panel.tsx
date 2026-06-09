@@ -93,7 +93,12 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
           height={400}
           style={{ width: '100%', height: 'auto' }}
         >
-          <Sphere id="rsm-sphere" stroke="var(--map-border, #2a3040)" strokeWidth={0.5} fill="transparent" />
+          <Sphere
+            id="rsm-sphere"
+            stroke="var(--map-border, #2a3040)"
+            strokeWidth={0.5}
+            fill="transparent"
+          />
           <Graticule stroke="var(--map-grid, #1a2030)" strokeWidth={0.3} />
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>

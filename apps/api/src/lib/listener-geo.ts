@@ -23,10 +23,7 @@ function utcDaysBack(n: number): string[] {
   return days
 }
 
-async function fetchHlsGeoCounts(
-  slug: string,
-  dates: string[],
-): Promise<Record<string, number>> {
+async function fetchHlsGeoCounts(slug: string, dates: string[]): Promise<Record<string, number>> {
   const client = await getRedisClient()
   if (!client) return {}
 
@@ -54,9 +51,8 @@ export async function buildListenerGeo(
   if (!channel) return []
 
   // Download-table geo (archive + release)
-  const sinceDate = period === 'all' ? undefined : new Date(
-    Date.now() - (period === '7d' ? 7 : 30) * 86_400_000,
-  )
+  const sinceDate =
+    period === 'all' ? undefined : new Date(Date.now() - (period === '7d' ? 7 : 30) * 86_400_000)
 
   const rows = await prisma.download.groupBy({
     by: ['countryCode'],
