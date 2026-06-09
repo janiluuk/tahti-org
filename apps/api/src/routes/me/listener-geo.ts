@@ -10,16 +10,6 @@ const QuerySchema = z.object({
   period: z.enum(['7d', '30d', 'all']).default('30d'),
 })
 
-const ResponseSchema = z.object({
-  period: z.enum(['7d', '30d', 'all']),
-  geo: z.array(
-    z.object({
-      countryCode: z.string().length(2),
-      count: z.number().int(),
-    }),
-  ),
-})
-
 // PLAT-064: listener geography endpoint — aggregates Download.countryCode + HLS Redis geo hashes.
 const meListenerGeoRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
