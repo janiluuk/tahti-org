@@ -1315,3 +1315,99 @@
 .ui-footer a {
   color: var(--tahti-primary);
 }
+
+/* ---- Signup tier selection ---- */
+.signup-tier-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .signup-tier-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.signup-tier-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.signup-tier-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+  position: relative;
+}
+
+.signup-tier-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.signup-tier-card--active {
+  border-color: var(--tahti-primary);
+  background: color-mix(in srgb, var(--tahti-primary) 10%, rgba(10, 15, 30, 0.5));
+}
+
+.signup-tier-card__name {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: #e8eaf6;
+}
+
+.signup-tier-card__price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--tahti-primary);
+  font-family: var(--tahti-font-head);
+}
+
+.signup-tier-card__desc {
+  font-size: 0.78rem;
+  color: rgba(232, 234, 246, 0.55);
+  line-height: 1.5;
+  margin-top: 0.25rem;
+}
+
+/* ---- Signup credentials list ---- */
+.signup-creds-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.8375rem;
+  align-items: baseline;
+}
+
+.signup-creds-list dt {
+  color: rgba(232, 234, 246, 0.5);
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 0.75rem;
+}
+
+.signup-creds-list dd {
+  margin: 0;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+.signup-creds-list code {
+  font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--tahti-primary);
+  word-break: break-all;
+}
