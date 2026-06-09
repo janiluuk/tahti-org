@@ -23,6 +23,13 @@ function formatEur(cents: string | number): string {
   return `€${(n / 100).toLocaleString('fi-FI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`
+}
+
 function categoryLabel(code: string): string {
   const labels: Record<string, string> = {
     REVENUE_SUBSCRIPTION: 'Member subscriptions',
@@ -45,7 +52,7 @@ export default async function TransparencyPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const statusUrl = statusPageUrl()
 
-  const [ytdRes, rollupRes, resolutionsRes] = await Promise.all([
+  const [ytdRes, rollupRes, resolutionsRes, statsRes] = await Promise.all([
     fetch(`${apiUrl}/api/v1/transparency/ytd`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/v1/transparency/monthly_rollup?year=${new Date().getFullYear()}`, {
       cache: 'no-store',
@@ -53,6 +60,7 @@ export default async function TransparencyPage() {
     fetch(`${apiUrl}/api/v1/transparency/resolutions?year=${new Date().getFullYear()}`, {
       cache: 'no-store',
     }),
+    fetch(`${apiUrl}/api/v1/stats`, { next: { revalidate: 300 } }),
   ])
 
   const ytd: YtdSummary = ytdRes.ok
@@ -65,6 +73,13 @@ export default async function TransparencyPage() {
       }
 
   const rollups: MonthlyRollup[] = rollupRes.ok ? ((await rollupRes.json()) as MonthlyRollup[]) : []
+
+  const platformStats: {
+    activeArtists: number
+    totalStorageBytes: number
+  } | null = statsRes.ok
+    ? ((await statsRes.json()) as { activeArtists: number; totalStorageBytes: number })
+    : null
 
   const resolutions: Array<{
     id: string
@@ -179,6 +194,29 @@ export default async function TransparencyPage() {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {platformStats && (
+        <section className="brand-section">
+          <h2 className="brand-section__title brand-section-heading">Platform storage</h2>
+          <p className="brand-muted" style={{ marginBottom: '1rem', fontSize: '0.875rem' }}>
+            Total archive storage used across all artist accounts. We do not enforce hard quotas —
+            this figure is published in the spirit of full transparency. See the{' '}
+            <Link href="/about">about page</Link> for our storage policy.
+          </p>
+          <div className="brand-stat-grid">
+            <div className="brand-stat-card">
+              <div className="brand-stat-card__label">Active artists</div>
+              <div className="brand-stat-card__value">{platformStats.activeArtists}</div>
+            </div>
+            <div className="brand-stat-card">
+              <div className="brand-stat-card__label">Total archive storage</div>
+              <div className="brand-stat-card__value">
+                {formatBytes(platformStats.totalStorageBytes)}
+              </div>
+            </div>
+          </div>
         </section>
       )}
 

@@ -9,7 +9,8 @@ const channelStatsRoute: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['channel'],
-        description: 'Public platform stats — active artists, broadcasts this month, total hours',
+        description:
+          'Public platform stats — active artists, broadcasts this month, total hours, storage',
         response: {
           200: {
             type: 'object',
@@ -17,8 +18,9 @@ const channelStatsRoute: FastifyPluginAsync = async (fastify) => {
               activeArtists: { type: 'integer' },
               broadcastsThisMonth: { type: 'integer' },
               totalHours: { type: 'number' },
+              totalStorageBytes: { type: 'integer' },
             },
-            required: ['activeArtists', 'broadcastsThisMonth', 'totalHours'],
+            required: ['activeArtists', 'broadcastsThisMonth', 'totalHours', 'totalStorageBytes'],
           },
         },
       },
@@ -27,7 +29,7 @@ const channelStatsRoute: FastifyPluginAsync = async (fastify) => {
       const now = new Date()
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
 
-      const [activeArtists, broadcastsThisMonth, hoursAgg] = await Promise.all([
+      const [activeArtists, broadcastsThisMonth, hoursAgg, storageAgg] = await Promise.all([
         fastify.prisma.channel.count({
           where: { broadcasts: { some: {} } },
         }),
@@ -37,12 +39,16 @@ const channelStatsRoute: FastifyPluginAsync = async (fastify) => {
         fastify.prisma.channel.aggregate({
           _sum: { totalLiveHours: true },
         }),
+        fastify.prisma.user.aggregate({
+          _sum: { storageUsedBytes: true },
+        }),
       ])
 
       return reply.send({
         activeArtists,
         broadcastsThisMonth,
         totalHours: Math.round(hoursAgg._sum.totalLiveHours ?? 0),
+        totalStorageBytes: Number(storageAgg._sum.storageUsedBytes ?? 0),
       })
     },
   )

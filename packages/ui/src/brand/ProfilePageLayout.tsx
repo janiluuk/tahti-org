@@ -51,6 +51,7 @@ type ProfileHeroProps = {
   displayName: string
   username: string
   bio: string | null
+  bioHtml?: string | null
   avatarUrl: string | null
   isLive?: boolean
   channelHref?: string | null
@@ -63,6 +64,7 @@ export function ProfileHero({
   displayName,
   username,
   bio,
+  bioHtml,
   avatarUrl: _avatarUrl,
   isLive,
   channelHref,
@@ -103,7 +105,11 @@ export function ProfileHero({
         </div>
       </div>
 
-      {bio && <SafePlainText text={bio} className="prof-bio" linkMentions />}
+      {bioHtml ? (
+        <div className="prof-bio prof-bio--rich" dangerouslySetInnerHTML={{ __html: bioHtml }} />
+      ) : (
+        bio && <SafePlainText text={bio} className="prof-bio" linkMentions />
+      )}
 
       {isLive && channelHref && (
         <Link href={channelHref} className="prof-embed-row">
