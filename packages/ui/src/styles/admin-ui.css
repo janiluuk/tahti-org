@@ -789,26 +789,17 @@
 
 /* ---- Listen / channel directory ---- */
 .listen-shell {
-  min-height: 100vh;
+  min-height: calc(100vh - 52px);
   max-width: 960px;
   margin: 0 auto;
   padding: var(--tahti-space-8) var(--tahti-space-4) var(--tahti-space-12);
 }
 
-.listen-header {
+.listen-page-header {
   margin-bottom: var(--tahti-space-10);
 }
 
-.listen-header .brand-logo {
-  color: #e8eaf6;
-  margin-bottom: var(--tahti-space-6);
-}
-
-.listen-header__text {
-  margin-bottom: var(--tahti-space-3);
-}
-
-.listen-header__title {
+.listen-page-title {
   font-family: var(--tahti-font-display);
   font-size: 2.25rem;
   font-weight: 700;
@@ -817,10 +808,10 @@
   letter-spacing: -0.02em;
 }
 
-.listen-header__sub {
+.listen-page-sub {
   font-size: var(--tahti-text-base);
   color: #8892a4;
-  margin: 0;
+  margin: 0 0 var(--tahti-space-3);
 }
 
 .listen-header__meta {
@@ -1154,6 +1145,17 @@
 .listen-empty__text {
   color: #8892a4;
   font-size: var(--tahti-text-base);
+  margin: 0 0 0.5rem;
+}
+
+.listen-empty__hint {
+  color: #5e6680;
+  font-size: var(--tahti-text-sm);
+  margin: 0;
+}
+
+.listen-empty__hint .listen-radio-link {
+  color: #f0a500;
 }
 
 /* ── Tahti Radio page ─────────────────────────────────────────────────── */
