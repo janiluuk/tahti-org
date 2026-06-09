@@ -21,4 +21,5 @@ export type {
 export { StudioCollapse } from './StudioCollapse'
 export type { StudioCollapseProps } from './StudioCollapse'
 export { BrandLogo } from './BrandLogo'
+export { BrowserFrame } from './BrowserFrame'
 export { EmbedShell } from './EmbedShell'

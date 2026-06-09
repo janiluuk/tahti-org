@@ -1129,3 +1129,190 @@
 [data-tahti-ui='brand'] .brand-public .status-dot--outage {
   background: var(--coral);
 }
+
+/* ---- Info shell (about, agpl, privacy, terms, for-artists) ---- */
+[data-tahti-ui='brand'].info-shell {
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* ---- BrowserFrame (marketing / for-artists carousel) ---- */
+[data-tahti-ui='brand'] .browser-frame {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  background: var(--card);
+}
+
+[data-tahti-ui='brand'] .browser-frame__chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--card2);
+  border-bottom: 1px solid color-mix(in srgb, var(--muted) 18%, transparent);
+}
+
+[data-tahti-ui='brand'] .browser-frame__dot {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .browser-frame__dot--red { background: #FF5F57; }
+[data-tahti-ui='brand'] .browser-frame__dot--yellow { background: #FEBC2E; }
+[data-tahti-ui='brand'] .browser-frame__dot--green { background: #28C840; }
+
+[data-tahti-ui='brand'] .browser-frame__url {
+  flex: 1;
+  text-align: center;
+  font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--bg);
+  border-radius: 5px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .browser-frame__content {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ---- For-artists feature grid ---- */
+[data-tahti-ui='brand'] .for-artists-hero {
+  margin-bottom: 3rem;
+}
+
+[data-tahti-ui='brand'] .for-artists-hero__eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .for-artists-hero__title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  font-family: var(--font-head);
+  line-height: 1.15;
+  margin: 0 0 1rem;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .for-artists-hero__sub {
+  font-size: 1.0625rem;
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 52ch;
+  margin: 0 0 1.75rem;
+}
+
+[data-tahti-ui='brand'] .for-artists-hero__cta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+[data-tahti-ui='brand'] .for-artists-cta-primary {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: var(--amber);
+  color: var(--bg);
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+[data-tahti-ui='brand'] .for-artists-cta-primary:hover { opacity: 0.9; }
+
+[data-tahti-ui='brand'] .for-artists-cta-secondary {
+  font-size: 0.9rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .for-artists-cta-secondary:hover { color: var(--text); }
+
+[data-tahti-ui='brand'] .for-artists-carousel {
+  margin: 2.5rem 0 3rem;
+  overflow-x: auto;
+  display: flex;
+  gap: 1.25rem;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+}
+
+[data-tahti-ui='brand'] .for-artists-carousel .browser-frame {
+  flex: 0 0 min(88%, 480px);
+  scroll-snap-align: start;
+}
+
+[data-tahti-ui='brand'] .for-artists-carousel-caption {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .for-artists-screenshot {
+  width: 100%;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .for-artists-screenshot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+
+[data-tahti-ui='brand'] .for-artists-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0 3rem;
+}
+
+[data-tahti-ui='brand'] .for-artists-feature-card {
+  padding: 1.25rem 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+[data-tahti-ui='brand'] .for-artists-feature-card__icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.625rem;
+  line-height: 1;
+}
+
+[data-tahti-ui='brand'] .for-artists-feature-card__title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .for-artists-feature-card__desc {
+  font-size: 0.8375rem;
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+}
