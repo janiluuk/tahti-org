@@ -566,6 +566,21 @@ All are required before public beta (1 August 2026 target).
 | [x] | **PLAT-048** | **`/admin/grants` + `/admin/grants/:year`** — dedicated grant cycle review and distribution-approval UI. The grant engine and ledger entries exist (M9) but there is no page to browse per-artist engagement-unit breakdowns, approve the annual distribution, or download the board-approval CSV. Route is currently 404. | Medium | P1 |
 | [x] | **PLAT-049** | **`/admin/agm`** — AGM planning and proposal management page. Companion to `/admin/governance/resolutions`; needs: proposal submission form, agenda builder, member-notification send action, minutes upload. Route is currently 404. | Medium | P2 |
 
+### Website-promise gap audit (2026-06-09)
+
+Cross-referenced the pitch site (`website/`) against the live codebase. The following promises are not yet delivered. Caddy infrastructure and DB fields exist in several cases — the gaps are in app logic or ops config.
+
+| Status | ID | Description | Size | Priority |
+|:---:|:---|---|:---:|:---:|
+| [ ] | **PLAT-050** | **`slug.tahti.live` subdomain routing** — Caddy already passes `X-Tahti-Channel-Slug` for every `*.tahti.live` hit, but Next.js has no middleware to read it. Add `apps/web/src/middleware.ts` that rewrites requests carrying that header to `/c/[slug]`, so `dj-moonrise.tahti.live` renders the channel page without redirecting. | Small | P1 |
+| [ ] | **PLAT-051** | **Custom domain self-serve (paid tier)** — Website promises "custom domain" for paid members. `Channel.customDomain` field exists in the DB but there is no: artist dashboard input to set it, DNS TXT-record verification endpoint, or Caddy admin-API call to add the route. Implement end-to-end: settings UI → `PATCH /api/me/channel` → verify TXT record → Caddy `/config` inject → on-demand TLS (already configured). | Medium | P2 |
+| [ ] | **PLAT-052** | **Free-tier weekly live-hour enforcement at ingest** — Website says "1 hour of live broadcasting per week" for free members. `User.weeklyLiveSecondsUsed` and `weeklyLiveResetAt` fields exist but are never read or enforced. Add enforcement in the Liquidsoap/orchestrator `on_connect` hook: check remaining seconds, reject if exhausted, and add a weekly-reset cron job. | Small | P2 |
+| [ ] | **PLAT-053** | **Tahti Radio → Mixcloud Live multistream** — Website explicitly claims Tahti Radio is "multistreamed to Mixcloud Live so listeners can find you from outside the platform." No such Liquidsoap RTMP output target exists. Add Mixcloud Live RTMP push as an optional output in the radio Liquidsoap config, behind a `MIXCLOUD_LIVE_RTMP_KEY` env var. | Medium | P2 |
+| [ ] | **PLAT-054** | **Rich Markdown bio (headings, images, embedded video)** — Website promises "Markdown-rich text. Paragraphs, headings, images, embedded video. Looks like a label site." Bio is currently rendered via `SafePlainText` (plain text + @-mention links only). Switch to a sanitised Markdown renderer (remark + rehype-sanitize) with YouTube/Vimeo oEmbed expansion; add a Markdown editor in the profile settings panel. | Medium | P2 |
+| [ ] | **PLAT-055** | **Storage usage on public transparency page** — Website: "We track storage and display it openly on the public dashboard. Written into the bylaws." `storageUsedBytes` is tracked per artist and returned in `/api/auth/me` but is not shown anywhere publicly. Add a platform-wide storage aggregate (sum of all `User.storageUsedBytes`) to `/transparency` alongside the ledger totals. | Small | P2 |
+| [ ] | **PLAT-056** | **Go-live: Revelator DSP distribution (ops)** — The full distribution pipeline is implemented (`/api/me/releases/:id/distribute`, Revelator webhook, royalty pull-back, dashboard ops panel). Blocked on: live Revelator API credentials in production config + ISRC registrar account. No code changes required — pure ops task. | Small | P1 |
+| [ ] | **PLAT-057** | **Go-live: Mixcloud archive upload (ops)** — One-click archive → Mixcloud push is implemented (OAuth connect, `mixcloud-upload` queue worker, `archive-mixcloud.tsx` dashboard panel). Blocked on: Mixcloud app approved for production OAuth (currently dev-tier key). No code changes required — pure ops task. | Small | P1 |
+
 ---
 
 ## Streaming infrastructure backlog
