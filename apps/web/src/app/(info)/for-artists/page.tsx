@@ -69,20 +69,23 @@ export default function ForArtistsPage() {
           members.
         </p>
         <div className="for-artists-hero__cta-row">
-          <a href="/apply" className="for-artists-cta-primary">
-            Apply for access
+          <a href="/login" className="for-artists-cta-primary">
+            Sign in
           </a>
           <a href="/about" className="for-artists-cta-secondary">
             About the org →
           </a>
         </div>
+        <p className="for-artists-hero__open-beta">
+          Open beta launches <strong>1 August 2026</strong>
+        </p>
       </div>
 
       <div className="for-artists-carousel">
         <div>
           <BrowserFrame url="tahti.live/c/your-channel">
             <div className="for-artists-screenshot">
-              <span>Channel page — live broadcast view</span>
+              <img src="/screenshots/channel.png" alt="Channel page — live broadcast view" />
             </div>
           </BrowserFrame>
           <p className="for-artists-carousel-caption">Your live channel</p>
@@ -90,7 +93,7 @@ export default function ForArtistsPage() {
         <div>
           <BrowserFrame url="tahti.live/dashboard">
             <div className="for-artists-screenshot">
-              <span>Artist dashboard — overview</span>
+              <img src="/screenshots/dashboard.png" alt="Artist dashboard — overview" />
             </div>
           </BrowserFrame>
           <p className="for-artists-carousel-caption">Artist dashboard</p>
@@ -98,7 +101,7 @@ export default function ForArtistsPage() {
         <div>
           <BrowserFrame url="tahti.live/dashboard/stats">
             <div className="for-artists-screenshot">
-              <span>Stats — plays, grants, engagement</span>
+              <img src="/screenshots/stats.png" alt="Stats — plays, grants, engagement" />
             </div>
           </BrowserFrame>
           <p className="for-artists-carousel-caption">Analytics & grant estimate</p>
@@ -106,7 +109,7 @@ export default function ForArtistsPage() {
         <div>
           <BrowserFrame url="tahti.live/u/your-handle">
             <div className="for-artists-screenshot">
-              <span>Public artist profile</span>
+              <img src="/screenshots/profile.png" alt="Public artist profile" />
             </div>
           </BrowserFrame>
           <p className="for-artists-carousel-caption">Your public profile</p>
@@ -148,8 +151,8 @@ export default function ForArtistsPage() {
       </div>
 
       <div className="brand-cta-row" style={{ marginTop: '2rem' }}>
-        <a href="/apply" className="brand-cta">
-          Apply for beta access
+        <a href="/login" className="brand-cta">
+          Sign in
         </a>
         <a href="/transparency" className="brand-cta-dark">
           See the financial transparency report
