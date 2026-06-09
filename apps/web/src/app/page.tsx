@@ -1,104 +1,154 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import type { ChannelCard } from '@tahti/shared'
 import Link from 'next/link'
-import { BrandLogo } from '@tahti/ui'
+import { BrandLogo, ChannelHeader } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { statusPageUrl } from '@/lib/status-page'
 
-export default function GatewayPage() {
+interface PlatformStats {
+  activeArtists: number
+  broadcastsThisMonth: number
+  totalHours: number
+}
+
+async function fetchData(): Promise<{
+  live: ChannelCard[]
+  stats: PlatformStats | null
+}> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  try {
+    const [channelsRes, statsRes] = await Promise.all([
+      fetch(`${apiUrl}/api/v1/channels`, { next: { revalidate: 30 } }),
+      fetch(`${apiUrl}/api/v1/stats`, { next: { revalidate: 300 } }),
+    ])
+    const channels = channelsRes.ok
+      ? ((await channelsRes.json()) as { live: ChannelCard[]; recent: ChannelCard[] })
+      : { live: [], recent: [] }
+    const stats = statsRes.ok ? ((await statsRes.json()) as PlatformStats) : null
+    return { live: channels.live, stats }
+  } catch {
+    return { live: [], stats: null }
+  }
+}
+
+function LiveTile({ channel }: { channel: ChannelCard }) {
+  return (
+    <a href={`/c/${channel.slug}`} className="listen-live-card">
+      <div className="listen-live-card__avatar">
+        {channel.user.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={channel.user.avatarUrl} alt={channel.user.displayName} />
+        ) : (
+          <span className="listen-live-card__avatar-fallback">
+            {channel.user.displayName.charAt(0).toUpperCase()}
+          </span>
+        )}
+        <span className="listen-live-card__pulse" aria-hidden />
+      </div>
+      <div className="listen-live-card__body">
+        <div className="listen-live-card__live-badge">
+          <span className="listen-live-dot" />
+          Live now
+        </div>
+        <div className="listen-live-card__name">{channel.user.displayName}</div>
+        <div className="listen-live-card__handle">@{channel.user.username}</div>
+      </div>
+      <div className="listen-live-card__cta">Listen →</div>
+    </a>
+  )
+}
+
+function StatPill({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="home-stat">
+      <span className="home-stat__value">{value}</span>
+      <span className="home-stat__label">{label}</span>
+    </div>
+  )
+}
+
+function formatHours(h: number): string {
+  if (h >= 1000) return `${(h / 1000).toFixed(1)}k`
+  return String(h)
+}
+
+export default async function HomePage() {
+  const { live, stats } = await fetchData()
   const statusUrl = statusPageUrl()
+
   return (
     <>
       <BgCanvas />
-      <div className="auth-shell">
-        <div className="gateway-card">
-          <BrandLogo href="https://tahti.live" />
-
-          <div className="gateway-hero">
-            <h1 className="gateway-title">
-              Broadcasting for
-              <br />
-              independent artists.
-            </h1>
-            <p className="gateway-sub">
-              A nonprofit platform built to support artists — not algorithms.
-            </p>
-          </div>
-
-          <div className="gateway-ctas">
-            <Link href="/listen" className="ui-btn ui-btn--primary ui-btn--lg gateway-cta-primary">
+      <ChannelHeader />
+      <div className="home-shell">
+        <section className="home-hero">
+          <BrandLogo />
+          <h1 className="home-title">
+            Broadcasting for
+            <br />
+            independent artists.
+          </h1>
+          <p className="home-sub">
+            A nonprofit platform built to support artists — not algorithms.
+          </p>
+          <div className="home-ctas">
+            <Link href="/listen" className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary">
               Listen now
             </Link>
-            <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
-              Artist log in
+            <Link href="/signup" className="ui-btn ui-btn--secondary ui-btn--lg">
+              Create account
             </Link>
           </div>
+        </section>
 
-          <ul className="gateway-features" aria-label="Platform features">
-            <li>
-              <span className="gateway-feature-icon" aria-hidden>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M2 11 Q8 5 14 11"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M4.5 13 Q8 9 11.5 13"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                  <circle cx="8" cy="7" r="1.5" fill="currentColor" />
-                </svg>
-              </span>
-              Live HLS broadcasting with archive
-            </li>
-            <li>
-              <span className="gateway-feature-icon" aria-hidden>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-                  <path
-                    d="M8 5v6M6 6.5c0-.83.67-1.5 1.5-1.5h1c.83 0 1.5.67 1.5 1.5S9.33 8 8.5 8h-1C6.67 8 6 8.67 6 9.5S6.67 11 7.5 11h1c.83 0 1.5-.67 1.5-1.5"
-                    stroke="currentColor"
-                    strokeWidth="1.25"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>
-              Fan subscriptions with artist payouts
-            </li>
-            <li>
-              <span className="gateway-feature-icon" aria-hidden>
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M8 2L9.8 6.2L14.5 6.5L11 9.6L12 14L8 11.5L4 14L5 9.6L1.5 6.5L6.2 6.2Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              Annual grant pool from membership fees
-            </li>
-          </ul>
+        {live.length > 0 && (
+          <section className="home-live-section">
+            <div className="home-section-label">
+              <span className="listen-live-dot" aria-hidden />
+              On air right now
+            </div>
+            <div className="listen-live-grid">
+              {live.map((ch) => (
+                <LiveTile key={ch.slug} channel={ch} />
+              ))}
+            </div>
+            <div className="home-live-more">
+              <Link href="/listen" className="home-live-more__link">
+                See all channels →
+              </Link>
+            </div>
+          </section>
+        )}
 
-          <div className="gateway-footer">
-            <Link href="/apply" className="gateway-footer__link">
-              Apply for the beta
-            </Link>
-            <span className="gateway-footer__sep">·</span>
-            <a href={statusUrl} className="gateway-footer__link">
-              Status
-            </a>
-            <span className="gateway-footer__sep">·</span>
-            <a href="https://tahti.live" className="gateway-footer__link">
-              tahti.live
-            </a>
-          </div>
-        </div>
+        {stats && (
+          <section className="home-stats" aria-label="Platform stats">
+            <StatPill value={String(stats.activeArtists)} label="active artists" />
+            <div className="home-stats__sep" aria-hidden />
+            <StatPill value={String(stats.broadcastsThisMonth)} label="broadcasts this month" />
+            <div className="home-stats__sep" aria-hidden />
+            <StatPill value={`${formatHours(stats.totalHours)} h`} label="broadcast in total" />
+          </section>
+        )}
+
+        <footer className="home-footer">
+          <Link href="/for-artists" className="home-footer__link">
+            For artists
+          </Link>
+          <span className="home-footer__sep">·</span>
+          <Link href="/about" className="home-footer__link">
+            About
+          </Link>
+          <span className="home-footer__sep">·</span>
+          <Link href="/apply" className="home-footer__link">
+            Apply for beta
+          </Link>
+          <span className="home-footer__sep">·</span>
+          <a href={statusUrl} className="home-footer__link">
+            Status
+          </a>
+        </footer>
       </div>
     </>
   )
