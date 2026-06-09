@@ -16,6 +16,17 @@ export function ChannelHeader({ isLive }: ChannelHeaderProps) {
         <span className="ch-logo__bar" aria-hidden />
         TAHTI
       </Link>
+      <nav className="ch-header__nav" aria-label="Site">
+        <Link href="/listen" className="ch-header__nav-link">
+          Discover
+        </Link>
+        <Link href="/radio" className="ch-header__nav-link">
+          Radio
+        </Link>
+        <Link href="/venues" className="ch-header__nav-link">
+          Venues
+        </Link>
+      </nav>
       <div className="ch-header__right">
         {isLive && (
           <div className="ch-live">
@@ -23,8 +34,8 @@ export function ChannelHeader({ isLive }: ChannelHeaderProps) {
             LIVE
           </div>
         )}
-        <Link href="/listen" className="ch-header__back">
-          All channels
+        <Link href="/login" className="ch-header__signin">
+          Sign in
         </Link>
       </div>
     </header>
