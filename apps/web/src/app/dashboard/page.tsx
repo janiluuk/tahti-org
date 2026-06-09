@@ -33,7 +33,7 @@ import UpgradeCta from './upgrade-cta'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
 import { EndBroadcastBtn } from './end-broadcast-btn'
-import { Heading, Link, PageShell, Panel, StudioCollapse, Text } from '@tahti/ui'
+import { Link, PageShell, Panel, StudioCollapse } from '@tahti/ui'
 import { DashboardTabs } from './dashboard-tabs'
 import { OverviewStreamKey } from './overview-stream-key'
 import type {
