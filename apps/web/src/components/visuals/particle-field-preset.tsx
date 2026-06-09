@@ -53,7 +53,12 @@ export function ParticleFieldPreset({ colorScheme }: VisualPresetProps) {
     const geo = new THREE.BufferGeometry()
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-    const mat = new THREE.PointsMaterial({ size: 0.05, vertexColors: true, transparent: true, opacity: 0.7 })
+    const mat = new THREE.PointsMaterial({
+      size: 0.05,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.7,
+    })
     const points = new THREE.Points(geo, mat)
     scene.add(points)
 

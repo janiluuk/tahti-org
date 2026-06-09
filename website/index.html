@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tahti — Your Radio Station</title>
-<meta name="description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Applying for private beta now.">
+<meta name="description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Open beta launches 1 August 2026.">
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://tahti.fi/">
 <meta property="og:title" content="Tahti — Your Radio Station">
-<meta property="og:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Applying for private beta now.">
+<meta property="og:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Open beta launches 1 August 2026.">
 <meta property="og:image" content="https://tahti.fi/og-image.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
@@ -538,23 +538,23 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 <nav>
   <div class="nav-logo"><div class="nav-logo-bar"></div>TAHTI</div>
   <div class="nav-dots" id="navDots"></div>
-  <a href="https://app.tahti.live/apply" class="nav-cta">APPLY FOR BETA</a>
+  <a href="#cta" class="nav-cta">OPEN BETA 1.8.2026</a>
 </nav>
 
 <!-- HERO -->
 <section id="hero">
   <div class="hero-layout">
     <div class="section-inner">
-      <div class="hero-tag">FOR ARTISTS · HELSINKI · BETA INVITATIONS OPEN</div>
+      <div class="hero-tag">FOR ARTISTS · HELSINKI · OPEN BETA 1.8.2026</div>
       <h1 class="hero-h1 reveal">Your radio<br>station.</h1>
       <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
       <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
       <div class="hero-cta-row reveal reveal-delay-3">
-        <a href="https://app.tahti.live/apply" class="btn-primary">Apply for beta →</a>
+        <a href="#cta" class="btn-primary">Open beta — 1.8.2026 →</a>
         <a href="#broadcast" class="btn-secondary">See how it works</a>
       </div>
       <div class="hero-footer reveal reveal-delay-4">
-        <span>FOR ARTISTS</span><span>HELSINKI</span><span>BETA INVITATIONS OPEN</span>
+        <span>FOR ARTISTS</span><span>HELSINKI</span><span>OPEN BETA 1.8.2026</span>
       </div>
     </div>
     <div class="hero-video-player" id="heroPlayer">
@@ -569,7 +569,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
         <div class="hero-mini-stat"><div class="hms-val">0%</div><div class="hms-label">Revenue cut — ever</div></div>
         <div class="hero-mini-stat"><div class="hms-val c">1 URL</div><div class="hms-label">Live + archive, always on</div></div>
         <div class="hero-mini-stat"><div class="hms-val g">FLAC</div><div class="hms-label">Lossless for paid artists</div></div>
-        <div class="hero-mini-stat"><div class="hms-val p">Beta</div><div class="hms-label">30–50 artists, apply now</div></div>
+        <div class="hero-mini-stat"><div class="hms-val p">1.8.2026</div><div class="hms-label">Open beta launch date</div></div>
       </div>
     </div>
   </div>
@@ -800,6 +800,56 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   </div>
 </section>
 
+<!-- VISUAL CUSTOMIZATION -->
+<section id="visual">
+  <div class="section-inner">
+    <h2 class="s-h2 reveal">Your channel. Your aesthetic.</h2>
+    <div class="s-sub purple reveal reveal-delay-1">WebGL visualizers. Cover art palettes. Slideshow themes.</div>
+    <p class="s-lead reveal reveal-delay-2">Every channel has its own visual identity. Choose a WebGL ambient preset, set a slideshow transition style, or let cover art automatically extract a 5-color scheme that flows through your entire page — from one section in the dashboard.</p>
+    <div class="cards-3 reveal reveal-delay-2">
+      <div class="card purple">
+        <div class="card-icon">✦</div>
+        <h3 class="lavender">Five WebGL presets</h3>
+        <div class="card-tag">Three.js · GPU-rendered · lazy-loaded</div>
+        <p>Waveform bars, particle field, aurora borealis shader, reactive grid — or off. Each preset adapts its colors to your scheme. Gated on <code>prefers-reduced-motion</code> and WebGL2 support.</p>
+      </div>
+      <div class="card amber">
+        <div class="card-icon">🎨</div>
+        <h3 class="amber">Auto palette from cover art</h3>
+        <div class="card-tag">Extracted on upload · fire-and-forget</div>
+        <p>Upload a release cover. Tahti extracts a 5-color scheme — background, accent, text, muted, highlight — and applies it as CSS custom properties on your smart link page automatically. Override any color manually.</p>
+      </div>
+      <div class="card cyan">
+        <div class="card-icon">▷</div>
+        <h3 class="cyan">Four slideshow transitions</h3>
+        <div class="card-tag">FADE · ZOOM · PAN · BLUR_CROSS</div>
+        <p>Gallery images move between slides with your choice of transition. Interval, duration, and autoplay — all adjustable. Keyframes injected once, plays at native GPU speed.</p>
+      </div>
+    </div>
+    <div class="cards-3 reveal reveal-delay-3">
+      <div class="card green">
+        <div class="card-icon">🖌</div>
+        <h3 class="green">Per-release color override</h3>
+        <p>Each release can override the extracted palette with custom colors. The smart link page inherits the release color scheme — looks correct on every platform that embeds your link.</p>
+      </div>
+      <div class="card coral">
+        <div class="card-icon">⚙</div>
+        <h3>Per-archive-item presets</h3>
+        <p>Each archived set can carry its own visualization preset. A dark ambient mix gets a different mood than a peak-hour techno set — individual control, not just channel-wide.</p>
+      </div>
+      <div class="card" style="border-left-color:var(--muted)">
+        <div class="card-icon">🔒</div>
+        <h3>Scoped, not global</h3>
+        <p>Color tokens apply to the page wrapper — not <code>:root</code>. They don't bleed into nav or other pages during Next.js client-side navigation.</p>
+      </div>
+    </div>
+    <div class="callout reveal reveal-delay-4">
+      <div class="callout-label" style="color:var(--lavender)">WHAT THIS REPLACES</div>
+      <p>No CSS editor. No template marketplace. <strong>Presets that work out of the box, colors extracted from your actual art.</strong> Design without a designer.</p>
+    </div>
+  </div>
+</section>
+
 <!-- REVENUE -->
 <section id="revenue">
   <div class="section-inner">
@@ -943,6 +993,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     <div class="mockup-tabs reveal reveal-delay-2">
       <button class="mtab active" onclick="switchMockup('channel',this)">Channel Page</button>
       <button class="mtab" onclick="switchMockup('dashboard',this)">Artist Dashboard</button>
+      <button class="mtab" onclick="switchMockup('visual',this)">Channel Style</button>
       <button class="mtab" onclick="switchMockup('mobile',this)">Mobile</button>
       <button class="mtab" onclick="switchMockup('live',this)">Live + Chat</button>
       <button class="mtab" onclick="switchMockup('247',this)">24/7 Channel</button>
@@ -1395,6 +1446,106 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       </div>
     </div>
 
+    <!-- VISUAL PRESET MOCKUP -->
+    <div class="mockup-frame" id="mock-visual">
+      <div class="browser">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://tahti.fi/<b>dashboard</b> — Channel appearance</div>
+        </div>
+        <div class="browser-content">
+          <div class="ch-header">
+            <div class="ch-logo">TAHTI</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+          </div>
+          <div class="db-layout">
+            <div class="db-sidebar">
+              <div class="db-nav-item">▶ Channel</div>
+              <div class="db-nav-item">📈 Stats</div>
+              <div class="db-nav-item">📁 Archive</div>
+              <div class="db-nav-item">💰 Revenue</div>
+              <div class="db-nav-item">📧 Newsletter</div>
+              <div class="db-nav-item">🔗 Smart Links</div>
+              <div class="db-nav-item active">🎨 Appearance</div>
+              <div class="db-nav-item">⚙ Settings</div>
+            </div>
+            <div class="db-main" style="padding:22px">
+
+              <!-- Preset picker -->
+              <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">BACKGROUND VISUALIZER</div>
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px">
+                <div style="background:#1a2340;border:2px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--muted)"><div style="font-size:18px;margin-bottom:4px">⬜</div>None</div>
+                <div style="background:#1a2340;border:2px solid var(--lavender);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--lavender)"><div style="font-size:18px;margin-bottom:4px">▊</div>Waveform</div>
+                <div style="background:#1a2340;border:2px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--muted)"><div style="font-size:18px;margin-bottom:4px">✦</div>Particles</div>
+                <div style="background:#1a2340;border:2px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--muted)"><div style="font-size:18px;margin-bottom:4px">〰</div>Aurora</div>
+                <div style="background:#1a2340;border:2px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;text-align:center;cursor:pointer;font-size:11px;color:var(--muted)"><div style="font-size:18px;margin-bottom:4px">⊞</div>Grid</div>
+              </div>
+
+              <!-- Color scheme -->
+              <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">COLOR SCHEME</div>
+              <div style="background:#111827;border-radius:8px;padding:16px;margin-bottom:20px">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                  <input type="checkbox" checked style="accent-color:var(--lavender)">
+                  <span style="font-size:13px">Use custom color scheme</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">
+                  <div style="text-align:center">
+                    <div style="width:100%;aspect-ratio:1;border-radius:6px;background:#0a0f1e;border:1px solid rgba(255,255,255,0.12);margin-bottom:4px"></div>
+                    <div style="font-size:9px;color:var(--muted)">Background</div>
+                  </div>
+                  <div style="text-align:center">
+                    <div style="width:100%;aspect-ratio:1;border-radius:6px;background:#9c88ff;border:1px solid rgba(255,255,255,0.12);margin-bottom:4px"></div>
+                    <div style="font-size:9px;color:var(--muted)">Accent</div>
+                  </div>
+                  <div style="text-align:center">
+                    <div style="width:100%;aspect-ratio:1;border-radius:6px;background:#f1f5f9;border:1px solid rgba(255,255,255,0.12);margin-bottom:4px"></div>
+                    <div style="font-size:9px;color:var(--muted)">Text</div>
+                  </div>
+                  <div style="text-align:center">
+                    <div style="width:100%;aspect-ratio:1;border-radius:6px;background:#64748b;border:1px solid rgba(255,255,255,0.12);margin-bottom:4px"></div>
+                    <div style="font-size:9px;color:var(--muted)">Muted</div>
+                  </div>
+                  <div style="text-align:center">
+                    <div style="width:100%;aspect-ratio:1;border-radius:6px;background:#a78bfa;border:1px solid rgba(255,255,255,0.12);margin-bottom:4px"></div>
+                    <div style="font-size:9px;color:var(--muted)">Highlight</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slideshow preset -->
+              <div style="font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:10px">SLIDESHOW TRANSITION</div>
+              <div style="background:#111827;border-radius:8px;padding:16px;margin-bottom:20px">
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+                  <div style="background:#1a2340;border:2px solid var(--lavender);border-radius:6px;padding:8px;text-align:center;font-size:11px;color:var(--lavender);cursor:pointer">Fade</div>
+                  <div style="background:#1a2340;border:2px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center;font-size:11px;color:var(--muted);cursor:pointer">Zoom</div>
+                  <div style="background:#1a2340;border:2px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center;font-size:11px;color:var(--muted);cursor:pointer">Pan</div>
+                  <div style="background:#1a2340;border:2px solid rgba(255,255,255,0.08);border-radius:6px;padding:8px;text-align:center;font-size:11px;color:var(--muted);cursor:pointer">Blur cross</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div>
+                    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Interval</div>
+                    <input type="range" min="3" max="30" value="8" style="width:100%;accent-color:var(--lavender)">
+                    <div style="font-size:10px;color:var(--muted);text-align:right">8s</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Transition</div>
+                    <input type="range" min="200" max="1200" value="600" style="width:100%;accent-color:var(--lavender)">
+                    <div style="font-size:10px;color:var(--muted);text-align:right">600ms</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:10px">
+                <button class="db-btn-primary">Save appearance</button>
+                <button class="db-btn-secondary">Preview channel →</button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -1762,21 +1913,17 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 <!-- CTA -->
 <section id="cta">
   <div class="section-inner">
-    <h2 class="s-h2 reveal">Be a founding artist.</h2>
-    <div class="s-sub reveal reveal-delay-1">Help build the broadcasting tool you actually want.</div>
+    <h2 class="s-h2 reveal">Open beta — 1 August 2026.</h2>
+    <div class="s-sub reveal reveal-delay-1">Private beta is closed. The doors open August 1st.</div>
     <div class="cta-grid reveal reveal-delay-2">
-      <div class="step-card"><div class="step-num">01</div><h3>Apply for the private beta</h3><p>We're inviting 30–50 working artists from EU electronic scenes for the first round. You get a free channel for 12 months and direct input on what we ship.</p></div>
-      <div class="step-card purple"><div class="step-num purple">02</div><h3>Spread the word</h3><p>If you know other artists who deserve a better deal, send them this deck. We'd rather grow by word of mouth than by ads.</p></div>
-      <div class="step-card green"><div class="step-num green">03</div><h3>Contribute to the code</h3><p>The repo is open. The bylaws are open. If you're technical, propose a PR. If you're an artist, tell us what we're missing.</p></div>
-      <div class="step-card cyan"><div class="step-num cyan">04</div><h3>Join the AGM</h3><p>From the first AGM onward, every paying member has a voice. Pricing, grant formula, board composition — all up for discussion. Show up. Vote. Shape it.</p></div>
+      <div class="step-card"><div class="step-num">01</div><h3>Open beta launches 1.8.2026</h3><p>Free to join for any working artist. No application needed — just sign up on the day. The first paying tier unlocks lossless, unlimited live, and association membership.</p></div>
+      <div class="step-card purple"><div class="step-num purple">02</div><h3>Spread the word</h3><p>If you know other artists who deserve a better deal, send them this page. We'd rather grow by word of mouth than by ads.</p></div>
+      <div class="step-card green"><div class="step-num green">03</div><h3>Contribute to the code</h3><p>The repo is open now, under AGPL-3.0. If you're technical, propose a PR. If you're an artist, open an issue — tell us what we're missing.</p></div>
+      <div class="step-card cyan"><div class="step-num cyan">04</div><h3>Join the first AGM</h3><p>From the first AGM onward, every paying member has a voice. Pricing, grant formula, board composition — all up for discussion. Show up. Vote. Shape it.</p></div>
     </div>
-    <div class="apply-form-wrap reveal reveal-delay-3" id="apply-wrap">
-      <div class="apply-form-title">Apply for the private beta</div>
-      <div class="apply-form-sub">We're inviting 30–50 working artists from EU electronic scenes. All applications are reviewed personally.</div>
-      <div class="apply-submit-row">
-        <a href="https://app.tahti.live/apply" class="cta-btn" style="margin:0">APPLY FOR BETA →</a>
-        <div class="apply-submit-note">No spam. We reply personally to every<br>application.</div>
-      </div>
+    <div class="callout reveal reveal-delay-3" style="max-width:640px;margin-top:0">
+      <div class="callout-label">PRIVATE BETA IS CLOSED</div>
+      <p>We ran a private beta with a small group of artists to validate the core product. Applications are no longer accepted. <strong>The platform opens publicly on 1 August 2026</strong> — bookmark this page, or email <a href="mailto:hello@tahti.fi" style="color:var(--amber)">hello@tahti.fi</a> to be notified.</p>
     </div>
 
     <div class="cta-footer reveal reveal-delay-4">
@@ -2458,7 +2605,7 @@ window.audioReactive = (function() {
 
 // ===== NAV DOTS =====
 (function() {
-  const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','revenue','membership','discovery','pricing','open-source','mockups','mockup-profile','mockup-smartlink','mockup-analytics','cta'];
+  const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','visual','revenue','membership','discovery','pricing','open-source','mockups','mockup-profile','mockup-smartlink','mockup-analytics','cta'];
   const dotContainer = document.getElementById('navDots');
   sections.forEach(id => {
     const dot = document.createElement('button');
@@ -2483,7 +2630,7 @@ window.audioReactive = (function() {
 
 // ===== AUTO-SCROLL ON INACTIVITY =====
 (function() {
-  const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','revenue','membership','discovery','pricing','open-source','mockups','mockup-profile','mockup-smartlink','mockup-analytics','cta'];
+  const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','visual','revenue','membership','discovery','pricing','open-source','mockups','mockup-profile','mockup-smartlink','mockup-analytics','cta'];
   let currentIdx = 0;
   let lastActivity = Date.now();
   const INTERVAL = 20000;

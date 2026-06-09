@@ -41,7 +41,7 @@ export function WaveformBarsPreset({ colorScheme }: VisualPresetProps) {
       const geo = new THREE.PlaneGeometry(barWidth - gap, 1)
       const mat = new THREE.MeshBasicMaterial({ color: accent })
       const mesh = new THREE.Mesh(geo, mat)
-      const x = -0.95 + i * (barWidth) + barWidth / 2
+      const x = -0.95 + i * barWidth + barWidth / 2
       mesh.position.set(x, -1, 0)
       scene.add(mesh)
       bars.push(mesh)

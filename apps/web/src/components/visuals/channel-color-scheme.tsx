@@ -20,7 +20,9 @@ export function ChannelColorScheme({ colorSchemeJson, paletteJson }: Props) {
 
   useEffect(() => {
     const scheme = resolveColorScheme(colorSchemeJson, paletteJson)
-    const target = ref.current?.closest('[data-channel-root]') as HTMLElement | null ?? ref.current?.parentElement
+    const target =
+      (ref.current?.closest('[data-channel-root]') as HTMLElement | null) ??
+      ref.current?.parentElement
     if (!target) return
 
     target.style.setProperty('--channel-bg', scheme.bg)

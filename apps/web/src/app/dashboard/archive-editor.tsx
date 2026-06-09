@@ -109,7 +109,10 @@ export default function ArchiveEditor({
 
           <ArchiveVisualPanel
             itemId={item.id}
-            initial={{ visualPreset: ((item.visualPreset as string | undefined) ?? 'MINIMAL') as import('@tahti/shared').VisualPreset }}
+            initial={{
+              visualPreset: ((item.visualPreset as string | undefined) ??
+                'MINIMAL') as import('@tahti/shared').VisualPreset,
+            }}
           />
 
           <ArchiveMixcloudUpload

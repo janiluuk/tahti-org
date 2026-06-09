@@ -236,7 +236,8 @@ export default function ReleasesPanel({
               <ReleaseVisualPanel
                 releaseId={r.id}
                 initial={{
-                  visualPreset: (r.visualPreset ?? 'MINIMAL') as import('@tahti/shared').VisualPreset,
+                  visualPreset: (r.visualPreset ??
+                    'MINIMAL') as import('@tahti/shared').VisualPreset,
                   colorSchemeJson: r.colorSchemeJson ?? null,
                   paletteJson: r.paletteJson ?? null,
                 }}

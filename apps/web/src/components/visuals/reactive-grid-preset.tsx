@@ -42,13 +42,13 @@ export function ReactiveGridPreset({ colorScheme }: VisualPresetProps) {
     for (let row = 0; row < GRID_H; row++) {
       for (let col = 0; col < GRID_W; col++) {
         const geo = new THREE.PlaneGeometry(cellW - pad, cellH - pad)
-        const mat = new THREE.MeshBasicMaterial({ color: muted.clone(), transparent: true, opacity: 0.15 })
+        const mat = new THREE.MeshBasicMaterial({
+          color: muted.clone(),
+          transparent: true,
+          opacity: 0.15,
+        })
         const mesh = new THREE.Mesh(geo, mat)
-        mesh.position.set(
-          -1 + col * cellW + cellW / 2,
-          -1 + row * cellH + cellH / 2,
-          0,
-        )
+        mesh.position.set(-1 + col * cellW + cellW / 2, -1 + row * cellH + cellH / 2, 0)
         scene.add(mesh)
         cells.push({ mesh, mat, phase: Math.random() * Math.PI * 2 })
       }

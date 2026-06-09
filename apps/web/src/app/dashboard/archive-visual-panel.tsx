@@ -31,14 +31,21 @@ export default function ArchiveVisualPanel({ itemId, initial }: Props) {
     setMessage(null)
     startTransition(async () => {
       const res = await updateArchiveItemVisual(itemId, { visualPreset: preset })
-      if (res.error) { setError(res.error); return }
+      if (res.error) {
+        setError(res.error)
+        return
+      }
       setMessage('Saved.')
       router.refresh()
     })
   }
 
   return (
-    <Panel title="Visualizer" headerTight description="Background visualizer shown when this track plays on the channel page.">
+    <Panel
+      title="Visualizer"
+      headerTight
+      description="Background visualizer shown when this track plays on the channel page."
+    >
       <Field label="Preset" htmlFor="archive-visual-preset">
         <Select
           id="archive-visual-preset"
@@ -47,12 +54,16 @@ export default function ArchiveVisualPanel({ itemId, initial }: Props) {
           onChange={(e) => setPreset(e.target.value as VisualPreset)}
         >
           {VISUAL_PRESETS.map((p) => (
-            <option key={p} value={p}>{VISUAL_PRESET_LABELS[p]}</option>
+            <option key={p} value={p}>
+              {VISUAL_PRESET_LABELS[p]}
+            </option>
           ))}
         </Select>
       </Field>
       {preset !== 'MINIMAL' && (
-        <Text size="sm" tone="muted" className="studio-mb-lg">{VISUAL_PRESET_DESCRIPTIONS[preset]}</Text>
+        <Text size="sm" tone="muted" className="studio-mb-lg">
+          {VISUAL_PRESET_DESCRIPTIONS[preset]}
+        </Text>
       )}
       {error && <Alert variant="error">{error}</Alert>}
       {message && <Alert variant="success">{message}</Alert>}

@@ -35,10 +35,18 @@ function parseOrNull(json: string | null): ColorScheme | null {
   try {
     const p = ColorSchemeSchema.safeParse(JSON.parse(json))
     return p.success ? p.data : null
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 
-const BLANK_SCHEME: ColorScheme = { bg: '#0a0f1e', accent: '#7c3aed', text: '#f1f5f9', muted: '#64748b', highlight: '#a78bfa' }
+const BLANK_SCHEME: ColorScheme = {
+  bg: '#0a0f1e',
+  accent: '#7c3aed',
+  text: '#f1f5f9',
+  muted: '#64748b',
+  highlight: '#a78bfa',
+}
 
 export default function ChannelVisualPresetPanel({ initial }: Props) {
   const router = useRouter()
@@ -70,7 +78,10 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
         slideshowTransitionMs: transition,
         slideshowAutoplay: autoplay,
       })
-      if (res.error) { setError(res.error); return }
+      if (res.error) {
+        setError(res.error)
+        return
+      }
       setMessage('Visual settings saved.')
       router.refresh()
     })
@@ -90,7 +101,9 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
           onChange={(e) => setPreset(e.target.value as VisualPreset)}
         >
           {VISUAL_PRESETS.map((p) => (
-            <option key={p} value={p}>{VISUAL_PRESET_LABELS[p]}</option>
+            <option key={p} value={p}>
+              {VISUAL_PRESET_LABELS[p]}
+            </option>
           ))}
         </Select>
       </Field>
@@ -117,7 +130,11 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
       {useCustomScheme && (
         <div className="studio-color-scheme-grid">
           {(['bg', 'accent', 'text', 'muted', 'highlight'] as (keyof ColorScheme)[]).map((key) => (
-            <Field key={key} label={key.charAt(0).toUpperCase() + key.slice(1)} htmlFor={`color-${key}`}>
+            <Field
+              key={key}
+              label={key.charAt(0).toUpperCase() + key.slice(1)}
+              htmlFor={`color-${key}`}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <input
                   id={`color-${key}`}
@@ -125,7 +142,14 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
                   value={scheme[key]}
                   disabled={isPending}
                   onChange={(e) => updateColor(key, e.target.value)}
-                  style={{ width: 40, height: 32, padding: 2, border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                  style={{
+                    width: 40,
+                    height: 32,
+                    padding: 2,
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                  }}
                 />
                 <input
                   type="text"
@@ -134,7 +158,16 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
                   maxLength={7}
                   pattern="#[0-9a-fA-F]{6}"
                   onChange={(e) => updateColor(key, e.target.value)}
-                  style={{ fontFamily: 'monospace', width: '7ch', fontSize: '0.85rem', background: 'transparent', border: '1px solid var(--border)', borderRadius: 4, padding: '0 4px', color: 'var(--text)' }}
+                  style={{
+                    fontFamily: 'monospace',
+                    width: '7ch',
+                    fontSize: '0.85rem',
+                    background: 'transparent',
+                    border: '1px solid var(--border)',
+                    borderRadius: 4,
+                    padding: '0 4px',
+                    color: 'var(--text)',
+                  }}
                 />
               </div>
             </Field>
@@ -142,8 +175,14 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
         </div>
       )}
 
-      <div style={{ borderTop: '1px solid var(--border)', margin: '1.25rem 0', paddingTop: '1.25rem' }}>
-        <Text size="sm" tone="muted" style={{ marginBottom: '0.75rem', display: 'block', fontWeight: 500 }}>
+      <div
+        style={{ borderTop: '1px solid var(--border)', margin: '1.25rem 0', paddingTop: '1.25rem' }}
+      >
+        <Text
+          size="sm"
+          tone="muted"
+          style={{ marginBottom: '0.75rem', display: 'block', fontWeight: 500 }}
+        >
           Slideshow transition
         </Text>
       </div>
@@ -156,7 +195,9 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
           onChange={(e) => setSlideshowPreset(e.target.value as SlideshowPreset)}
         >
           {SLIDESHOW_PRESETS.map((p) => (
-            <option key={p} value={p}>{SLIDESHOW_PRESET_LABELS[p]}</option>
+            <option key={p} value={p}>
+              {SLIDESHOW_PRESET_LABELS[p]}
+            </option>
           ))}
         </Select>
       </Field>
@@ -165,7 +206,9 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
         <input
           id="slideshow-interval"
           type="range"
-          min={5} max={30} step={1}
+          min={5}
+          max={30}
+          step={1}
           value={interval}
           disabled={isPending}
           onChange={(e) => setInterval(Number(e.target.value))}
@@ -177,7 +220,9 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
         <input
           id="slideshow-transition"
           type="range"
-          min={300} max={1500} step={100}
+          min={300}
+          max={1500}
+          step={100}
           value={transition}
           disabled={isPending}
           onChange={(e) => setTransition(Number(e.target.value))}

@@ -30,10 +30,18 @@ function parseOrNull(json: string | null): ColorScheme | null {
   try {
     const p = ColorSchemeSchema.safeParse(JSON.parse(json))
     return p.success ? p.data : null
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 
-const BLANK: ColorScheme = { bg: '#0a0f1e', accent: '#7c3aed', text: '#f1f5f9', muted: '#64748b', highlight: '#a78bfa' }
+const BLANK: ColorScheme = {
+  bg: '#0a0f1e',
+  accent: '#7c3aed',
+  text: '#f1f5f9',
+  muted: '#64748b',
+  highlight: '#a78bfa',
+}
 
 export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
   const router = useRouter()
@@ -58,14 +66,21 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
         visualPreset: preset,
         colorScheme: useOverride ? scheme : null,
       })
-      if (res.error) { setError(res.error); return }
+      if (res.error) {
+        setError(res.error)
+        return
+      }
       setMessage('Visual settings saved.')
       router.refresh()
     })
   }
 
   return (
-    <Panel title="Visual style" headerTight description="Visualizer and color scheme for this release's smart link page.">
+    <Panel
+      title="Visual style"
+      headerTight
+      description="Visualizer and color scheme for this release's smart link page."
+    >
       <Field label="Background visualizer" htmlFor="rel-visual-preset">
         <Select
           id="rel-visual-preset"
@@ -74,12 +89,16 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
           onChange={(e) => setPreset(e.target.value as VisualPreset)}
         >
           {VISUAL_PRESETS.map((p) => (
-            <option key={p} value={p}>{VISUAL_PRESET_LABELS[p]}</option>
+            <option key={p} value={p}>
+              {VISUAL_PRESET_LABELS[p]}
+            </option>
           ))}
         </Select>
       </Field>
       {preset !== 'MINIMAL' && (
-        <Text size="sm" tone="muted" className="studio-mb-lg">{VISUAL_PRESET_DESCRIPTIONS[preset]}</Text>
+        <Text size="sm" tone="muted" className="studio-mb-lg">
+          {VISUAL_PRESET_DESCRIPTIONS[preset]}
+        </Text>
       )}
 
       {extracted && !useOverride && (
@@ -104,7 +123,11 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
       {useOverride && (
         <div className="studio-color-scheme-grid">
           {(['bg', 'accent', 'text', 'muted', 'highlight'] as (keyof ColorScheme)[]).map((key) => (
-            <Field key={key} label={key.charAt(0).toUpperCase() + key.slice(1)} htmlFor={`rel-color-${key}`}>
+            <Field
+              key={key}
+              label={key.charAt(0).toUpperCase() + key.slice(1)}
+              htmlFor={`rel-color-${key}`}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <input
                   id={`rel-color-${key}`}
@@ -112,7 +135,14 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
                   value={scheme[key]}
                   disabled={isPending}
                   onChange={(e) => updateColor(key, e.target.value)}
-                  style={{ width: 40, height: 32, padding: 2, border: 'none', borderRadius: 4, cursor: 'pointer' }}
+                  style={{
+                    width: 40,
+                    height: 32,
+                    padding: 2,
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                  }}
                 />
                 <input
                   type="text"
@@ -120,7 +150,16 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
                   disabled={isPending}
                   maxLength={7}
                   onChange={(e) => updateColor(key, e.target.value)}
-                  style={{ fontFamily: 'monospace', width: '7ch', fontSize: '0.85rem', background: 'transparent', border: '1px solid var(--border)', borderRadius: 4, padding: '0 4px', color: 'var(--text)' }}
+                  style={{
+                    fontFamily: 'monospace',
+                    width: '7ch',
+                    fontSize: '0.85rem',
+                    background: 'transparent',
+                    border: '1px solid var(--border)',
+                    borderRadius: 4,
+                    padding: '0 4px',
+                    color: 'var(--text)',
+                  }}
                 />
               </div>
             </Field>

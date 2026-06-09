@@ -330,7 +330,14 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     if (!parsed.success) {
       return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
     }
-    const { visualPreset, colorScheme, slideshowPreset, slideshowIntervalSeconds, slideshowTransitionMs, slideshowAutoplay } = parsed.data
+    const {
+      visualPreset,
+      colorScheme,
+      slideshowPreset,
+      slideshowIntervalSeconds,
+      slideshowTransitionMs,
+      slideshowAutoplay,
+    } = parsed.data
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { userId: user.id },
@@ -342,7 +349,9 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       where: { id: channel.id },
       data: {
         ...(visualPreset !== undefined ? { visualPreset } : {}),
-        ...(colorScheme !== undefined ? { colorSchemeJson: colorScheme ? JSON.stringify(colorScheme) : null } : {}),
+        ...(colorScheme !== undefined
+          ? { colorSchemeJson: colorScheme ? JSON.stringify(colorScheme) : null }
+          : {}),
         ...(slideshowPreset !== undefined ? { slideshowPreset } : {}),
         ...(slideshowIntervalSeconds !== undefined ? { slideshowIntervalSeconds } : {}),
         ...(slideshowTransitionMs !== undefined ? { slideshowTransitionMs } : {}),
@@ -361,29 +370,37 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   // M31: PLAT-074 — archive item visual preset
-  fastify.patch('/api/me/archive/:id/visual', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
-    const routeParams = parseRouteParams(IdParamSchema, request.params)
-    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+  fastify.patch(
+    '/api/me/archive/:id/visual',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
 
-    const parsed = ArchiveItemVisualPatchSchema.safeParse(request.body)
-    if (!parsed.success) {
-      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
-    }
+      const parsed = ArchiveItemVisualPatchSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
 
-    const item = await fastify.prisma.archiveItem.findFirst({
-      where: { id: routeParams.id, channel: { userId: user.id } },
-      select: { id: true },
-    })
-    if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+      const item = await fastify.prisma.archiveItem.findFirst({
+        where: { id: routeParams.id, channel: { userId: user.id } },
+        select: { id: true },
+      })
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
-    const updated = await fastify.prisma.archiveItem.update({
-      where: { id: item.id },
-      data: { ...(parsed.data.visualPreset !== undefined ? { visualPreset: parsed.data.visualPreset } : {}) },
-      select: { visualPreset: true },
-    })
-    return reply.send(updated)
-  })
+      const updated = await fastify.prisma.archiveItem.update({
+        where: { id: item.id },
+        data: {
+          ...(parsed.data.visualPreset !== undefined
+            ? { visualPreset: parsed.data.visualPreset }
+            : {}),
+        },
+        select: { visualPreset: true },
+      })
+      return reply.send(updated)
+    },
+  )
 }
 
 export default meArchiveRoutes

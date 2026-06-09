@@ -428,7 +428,9 @@ export default async function DashboardPage() {
         cache: 'no-store',
       })
       if (res.ok) channelVisual = (await res.json()) as typeof channelVisual
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
   if (user.channel && !channelVisual) {
     channelVisual = {
@@ -849,7 +851,10 @@ export default async function DashboardPage() {
                 </Panel>
               )}
 
-              <StudioCollapse title="Channel appearance" hint="gallery, text overlay & visual style">
+              <StudioCollapse
+                title="Channel appearance"
+                hint="gallery, text overlay & visual style"
+              >
                 {channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
                 {channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
                 {channelVisual && <ChannelVisualPresetPanel initial={channelVisual} />}

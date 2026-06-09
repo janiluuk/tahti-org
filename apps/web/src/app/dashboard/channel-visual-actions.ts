@@ -14,7 +14,9 @@ function sessionHeader() {
   return s ? `tahti_session=${s.value}` : ''
 }
 
-export async function updateChannelVisual(patch: ChannelVisualPatch): Promise<{ error: string | null }> {
+export async function updateChannelVisual(
+  patch: ChannelVisualPatch,
+): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/channel/visual`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
@@ -28,7 +30,10 @@ export async function updateChannelVisual(patch: ChannelVisualPatch): Promise<{ 
   return { error: null }
 }
 
-export async function updateReleaseVisual(releaseId: string, patch: ReleaseVisualPatch): Promise<{ error: string | null }> {
+export async function updateReleaseVisual(
+  releaseId: string,
+  patch: ReleaseVisualPatch,
+): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/releases/${releaseId}/visual`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
@@ -42,7 +47,10 @@ export async function updateReleaseVisual(releaseId: string, patch: ReleaseVisua
   return { error: null }
 }
 
-export async function updateArchiveItemVisual(itemId: string, patch: ArchiveItemVisualPatch): Promise<{ error: string | null }> {
+export async function updateArchiveItemVisual(
+  itemId: string,
+  patch: ArchiveItemVisualPatch,
+): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/visual`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },

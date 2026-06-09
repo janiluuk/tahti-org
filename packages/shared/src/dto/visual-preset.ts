@@ -75,9 +75,7 @@ export function resolveColorScheme(
   colorSchemeJson: string | null | undefined,
   paletteJson: string | null | undefined,
 ): ColorScheme {
-  return (
-    parseColorScheme(colorSchemeJson) ?? parseColorScheme(paletteJson) ?? DEFAULT_COLOR_SCHEME
-  )
+  return parseColorScheme(colorSchemeJson) ?? parseColorScheme(paletteJson) ?? DEFAULT_COLOR_SCHEME
 }
 
 export const ChannelVisualPatchSchema = z.object({

@@ -15,13 +15,12 @@ interface Props {
 }
 
 type State = { current: number; next: number | null; transitioning: boolean }
-type Action =
-  | { type: 'START'; next: number }
-  | { type: 'END' }
+type Action = { type: 'START'; next: number } | { type: 'END' }
 
 function reducer(state: State, action: Action): State {
   if (action.type === 'START') return { ...state, next: action.next, transitioning: true }
-  if (action.type === 'END') return { current: state.next ?? state.current, next: null, transitioning: false }
+  if (action.type === 'END')
+    return { current: state.next ?? state.current, next: null, transitioning: false }
   return state
 }
 
@@ -69,7 +68,13 @@ function useInjectKeyframes(preset: SlideshowPreset) {
   }, [preset])
 }
 
-export function ChannelSlideshow({ images, preset, intervalSeconds, transitionMs, autoplay }: Props) {
+export function ChannelSlideshow({
+  images,
+  preset,
+  intervalSeconds,
+  transitionMs,
+  autoplay,
+}: Props) {
   const [state, dispatch] = useReducer(reducer, { current: 0, next: null, transitioning: false })
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const transitionRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -94,7 +99,7 @@ export function ChannelSlideshow({ images, preset, intervalSeconds, transitionMs
       if (timerRef.current) clearTimeout(timerRef.current)
       if (transitionRef.current) clearTimeout(transitionRef.current)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.current, autoplay, images.length, intervalSeconds, transitionMs])
 
   const dur = `${transitionMs}ms`
@@ -103,7 +108,13 @@ export function ChannelSlideshow({ images, preset, intervalSeconds, transitionMs
   return (
     <div
       className="ch-channel-slideshow"
-      style={{ position: 'relative', width: '100%', overflow: 'hidden', borderRadius: 8, aspectRatio: '16/7' }}
+      style={{
+        position: 'relative',
+        width: '100%',
+        overflow: 'hidden',
+        borderRadius: 8,
+        aspectRatio: '16/7',
+      }}
     >
       {/* Current image — animates out during transition */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -113,7 +124,11 @@ export function ChannelSlideshow({ images, preset, intervalSeconds, transitionMs
         alt=""
         aria-hidden
         style={{
-          position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
           animation: state.transitioning
             ? `${ANIM_OUT[preset]} ${dur} ${ease} forwards`
             : undefined,
@@ -129,7 +144,11 @@ export function ChannelSlideshow({ images, preset, intervalSeconds, transitionMs
           alt=""
           aria-hidden
           style={{
-            position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
             animation: `${ANIM_IN[preset]} ${dur} ${ease} forwards`,
           }}
         />

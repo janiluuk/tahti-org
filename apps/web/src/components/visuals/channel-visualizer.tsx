@@ -17,10 +17,9 @@ const ParticleField = dynamic(
   () => import('./particle-field-preset').then((m) => ({ default: m.ParticleFieldPreset })),
   { ssr: false },
 )
-const Aurora = dynamic(
-  () => import('./aurora-preset').then((m) => ({ default: m.AuroraPreset })),
-  { ssr: false },
-)
+const Aurora = dynamic(() => import('./aurora-preset').then((m) => ({ default: m.AuroraPreset })), {
+  ssr: false,
+})
 const ReactiveGrid = dynamic(
   () => import('./reactive-grid-preset').then((m) => ({ default: m.ReactiveGridPreset })),
   { ssr: false },
@@ -46,10 +45,14 @@ function supportsWebGL(): boolean {
 export function ChannelVisualizer({ preset, colorSchemeJson, paletteJson, className }: Props) {
   if (preset === 'MINIMAL') return null
 
-  const colorScheme: ColorScheme = resolveColorScheme(colorSchemeJson, paletteJson) ?? DEFAULT_COLOR_SCHEME
+  const colorScheme: ColorScheme =
+    resolveColorScheme(colorSchemeJson, paletteJson) ?? DEFAULT_COLOR_SCHEME
 
   // Respect prefers-reduced-motion
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
     return null
   }
 
@@ -60,7 +63,13 @@ export function ChannelVisualizer({ preset, colorSchemeJson, paletteJson, classN
   return (
     <div
       className={className}
-      style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }}
       aria-hidden
     >
       {preset === 'WAVEFORM_BARS' && <WaveformBars {...props} />}

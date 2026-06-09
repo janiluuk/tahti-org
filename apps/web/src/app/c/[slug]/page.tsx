@@ -239,7 +239,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           {channel.galleryMode === 'STATIC_SLIDESHOW' && channel.slideshowImages.length > 0 ? (
             <ChannelSlideshow
               images={channel.slideshowImages}
-              preset={(channel.slideshowPreset ?? 'FADE') as import('@tahti/shared').SlideshowPreset}
+              preset={
+                (channel.slideshowPreset ?? 'FADE') as import('@tahti/shared').SlideshowPreset
+              }
               intervalSeconds={channel.slideshowIntervalSeconds ?? 8}
               transitionMs={channel.slideshowTransitionMs ?? 600}
               autoplay={channel.slideshowAutoplay ?? true}

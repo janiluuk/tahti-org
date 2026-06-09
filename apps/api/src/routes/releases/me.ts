@@ -407,9 +407,15 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       const updated = await fastify.prisma.release.update({
         where: { id },
         data: {
-          ...(parsed.data.visualPreset !== undefined ? { visualPreset: parsed.data.visualPreset } : {}),
+          ...(parsed.data.visualPreset !== undefined
+            ? { visualPreset: parsed.data.visualPreset }
+            : {}),
           ...(parsed.data.colorScheme !== undefined
-            ? { colorSchemeJson: parsed.data.colorScheme ? JSON.stringify(parsed.data.colorScheme) : null }
+            ? {
+                colorSchemeJson: parsed.data.colorScheme
+                  ? JSON.stringify(parsed.data.colorScheme)
+                  : null,
+              }
             : {}),
         },
         select: { visualPreset: true, colorSchemeJson: true, paletteJson: true },
