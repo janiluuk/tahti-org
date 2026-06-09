@@ -30,9 +30,9 @@ const SECTIONS = [
     desc: 'Download the full ledger as a CSV file.',
   },
   {
-    href: '/governance',
-    title: 'Grant preview & run (governance portal)',
-    desc: 'Preview and trigger the annual grant disbursement calculation.',
+    href: '/admin/grants',
+    title: 'Grant cycles',
+    desc: 'Preview and trigger the annual grant disbursement; view per-artist allocations and disbursement history.',
   },
 ] as const
 
