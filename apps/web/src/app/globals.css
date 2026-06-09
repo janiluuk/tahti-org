@@ -12,8 +12,3 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Light body for brand-public pages (governance, help, transparency…) ─ */
-body:has(.brand-public) {
-  background: #fafafa;
-  color: #111827;
-}
