@@ -95,9 +95,25 @@
   background: color-mix(in srgb, var(--muted) 8%, transparent);
 }
 
+[data-tahti-ui='brand'] .ch-header__nav-link--active {
+  color: var(--text);
+  font-weight: 600;
+}
+
+[data-tahti-ui='brand'] .ch-header__artist {
+  font-family: var(--font-head);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
 @media (max-width: 540px) {
   [data-tahti-ui='brand'] .ch-header__nav {
     display: none;
+  }
+  [data-tahti-ui='brand'] .ch-header__artist {
+    font-size: 12px;
   }
 }
 
@@ -658,6 +674,45 @@
 [data-tahti-ui='brand'] .ch-artist-bio {
   margin-top: 0.35rem;
   color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-artist-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+[data-tahti-ui='brand'] .ch-artist-sub-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: color-mix(in srgb, var(--purple) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--purple) 35%, transparent);
+  color: var(--lavender);
+  transition: background 0.15s;
+}
+
+[data-tahti-ui='brand'] .ch-artist-sub-btn:hover {
+  background: color-mix(in srgb, var(--purple) 22%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-artist-profile-link {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 7px 0;
+  transition: color 0.12s;
+}
+
+[data-tahti-ui='brand'] .ch-artist-profile-link:hover {
+  color: var(--cyan);
 }
 
 [data-tahti-ui='brand'] .ch-next-broadcast {

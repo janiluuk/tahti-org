@@ -106,9 +106,17 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   }
   const tags = [...tagSet].slice(0, 8)
 
+  function fmtDuration(secs: number): string {
+    const h = Math.floor(secs / 3600)
+    const m = Math.floor((secs % 3600) / 60)
+    if (h > 0) return `${h}h ${m}m`
+    return `${m}m`
+  }
+
   return (
     <ChannelPageLayout
       isLive={channel.state === 'LIVE'}
+      artistHandle={channel.user.username}
       main={
         <>
           {channel.state === 'LIVE' && (
@@ -157,6 +165,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 ))}
               </div>
             )}
+            <div className="ch-artist-cta-row">
+              <a href={`/u/${channel.user.username}/subscribe`} className="ch-artist-sub-btn">
+                Support directly
+              </a>
+              <a href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
+                View profile →
+              </a>
+            </div>
           </header>
 
           <NewsletterSubscribeForm
@@ -225,11 +241,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                               month: 'short',
                             })}
                             {item.durationSec != null && (
-                              <>
-                                {' · '}
-                                {Math.floor(item.durationSec / 60)}:
-                                {String(item.durationSec % 60).padStart(2, '0')}
-                              </>
+                              <> · {fmtDuration(item.durationSec)}</>
                             )}
                           </div>
                         </div>
