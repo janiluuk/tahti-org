@@ -8,7 +8,9 @@ import { SafePlainText } from '../lib/safe-plain-text'
 
 function countryCodeToFlag(cc: string): string {
   if (!cc || cc.length !== 2) return ''
-  return [...cc.toUpperCase()].map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65)).join('')
+  return [...cc.toUpperCase()]
+    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
+    .join('')
 }
 
 function IconPlay() {
