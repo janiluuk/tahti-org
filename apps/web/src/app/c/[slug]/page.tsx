@@ -23,6 +23,7 @@ import type {
 import { Heading, Row, Text, ChannelPageLayout, LiveBadge, SafePlainText } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
+import { renderBio } from '@/lib/render-bio'
 
 interface ChannelResponse {
   slug: string
@@ -97,6 +98,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     : []
 
   const hlsUrl = channel.hlsUrl
+  const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
   const isFlac = channel.user.tier === 'STUDIO' || channel.user.tier === 'ARTIST'
   const tagSet = new Set<string>()
@@ -153,8 +155,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               </div>
               {channel.state === 'LIVE' && <LiveBadge />}
             </Row>
-            {channel.user.bio && (
-              <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
+            {bioHtml ? (
+              <div
+                className="ch-artist-bio ch-artist-bio--rich"
+                dangerouslySetInnerHTML={{ __html: bioHtml }}
+              />
+            ) : (
+              channel.user.bio && (
+                <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
+              )
             )}
             {tags.length > 0 && (
               <div className="prof-tags">

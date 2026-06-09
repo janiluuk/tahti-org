@@ -30,6 +30,7 @@ import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelEgressPanel } from './channel-egress-panel'
 import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
 import UpgradeCta from './upgrade-cta'
+import { CustomDomainPanel } from './custom-domain-panel'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
 import { EndBroadcastBtn } from './end-broadcast-btn'
@@ -61,7 +62,12 @@ interface MeResponse {
   isMember: boolean
   isBoard: boolean
   membership: { status: string; activatedAt: string | null } | null
-  channel: { slug: string; state: string } | null
+  channel: {
+    slug: string
+    state: string
+    customDomain: string | null
+    customDomainVerified: boolean
+  } | null
   storage: { usedBytes: string; softTargetBytes: string } | null
 }
 
@@ -930,6 +936,11 @@ export default async function DashboardPage() {
               />
             )}
             {socialSettings && <SocialPromoPanel initial={socialSettings} apiUrl={apiUrl} />}
+            <CustomDomainPanel
+              initialDomain={user.channel?.customDomain ?? null}
+              initialVerified={user.channel?.customDomainVerified ?? false}
+              isPaid={user.tier !== 'FREE'}
+            />
             <PrivacyPanel username={user.username} apiUrl={apiUrl} />
           </>
         }

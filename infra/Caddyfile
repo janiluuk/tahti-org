@@ -89,3 +89,22 @@ grafana.tahti.live {
     reverse_proxy @allowed grafana:3000
     respond 403
 }
+
+# ── Custom domains (PLAT-051) — artist-owned domains pointing to the platform ─
+# Artists add a CNAME/A record to this server, then verify via DNS TXT record.
+# On-demand TLS provisions a Let's Encrypt cert automatically on first hit.
+# Next.js reads X-Tahti-Custom-Host and resolves the channel via /api/v1/custom-domain/resolve.
+:443 {
+    @custom_domain {
+        not host tahti.live www.tahti.live app.tahti.live api.tahti.live chat.tahti.live stream.tahti.live cdn.tahti.live ingest-icecast.tahti.live ingest-icecast-b.tahti.live minio.tahti.live grafana.tahti.live *.tahti.live
+    }
+    handle @custom_domain {
+        encode zstd gzip
+        reverse_proxy web:3000 {
+            header_up X-Tahti-Custom-Host {http.request.host}
+        }
+        tls {
+            on_demand
+        }
+    }
+}

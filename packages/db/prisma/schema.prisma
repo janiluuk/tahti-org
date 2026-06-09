@@ -596,7 +596,8 @@ model Channel {
   userId             String       @unique
   user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   slug               String       @unique
-  customDomain       String?
+  customDomain         String?
+  customDomainVerified Boolean  @default(false)
   state              ChannelState @default(OFFLINE)
   containerId        String?
   liveSourceMount    String

@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
+import { renderBio } from '@/lib/render-bio'
 
 export const revalidate = 60
 
@@ -94,6 +95,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
 
   const { artist, channel, releases, links, collections = [] } = data
   const isLive = channel?.state === 'LIVE'
+  const bioHtml = artist.bio ? await renderBio(artist.bio) : null
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'https://app.tahti.live'
   const profileUrl = `${appUrl.replace(/\/$/, '')}/u/${artist.username}`
 
@@ -125,6 +127,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             displayName={artist.displayName}
             username={artist.username}
             bio={artist.bio}
+            bioHtml={bioHtml}
             avatarUrl={artist.avatarUrl}
             isLive={isLive}
             channelHref={links.channel}
