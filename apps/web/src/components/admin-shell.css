@@ -378,3 +378,50 @@
   font-size: 0.85rem;
   margin: 0;
 }
+
+.admin-btn {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 45%, transparent);
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
+  color: var(--cyan);
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-decoration: none;
+  display: inline-block;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.admin-btn:hover:not(:disabled) {
+  border-color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 15%, transparent);
+}
+
+.admin-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-btn--danger {
+  border-color: color-mix(in srgb, var(--coral) 50%, transparent);
+  background: color-mix(in srgb, var(--coral) 8%, transparent);
+  color: var(--coral);
+}
+
+.admin-btn--danger:hover:not(:disabled) {
+  border-color: var(--coral);
+  background: color-mix(in srgb, var(--coral) 15%, transparent);
+}
+
+.admin-inline-link {
+  color: var(--cyan);
+  text-decoration: none;
+  font-size: inherit;
+}
+
+.admin-inline-link:hover {
+  text-decoration: underline;
+}
