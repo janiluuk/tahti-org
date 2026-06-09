@@ -240,9 +240,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                               year: 'numeric',
                               month: 'short',
                             })}
-                            {item.durationSec != null && (
-                              <> · {fmtDuration(item.durationSec)}</>
-                            )}
+                            {item.durationSec != null && <> · {fmtDuration(item.durationSec)}</>}
                           </div>
                         </div>
                       </div>
