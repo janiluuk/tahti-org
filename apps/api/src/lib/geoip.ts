@@ -2,8 +2,29 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 // PLAT-061: country-level IP geolocation via geoip-lite (MaxMind GeoLite2, no external API).
+//
+// geoip-lite v2 loads city databases (105 MB) synchronously at import time, which blocks
+// the event loop for 10–30 s on CI disk I/O. Lazy-load via createRequire so the blocking
+// work happens on first use instead of server startup.
 
-import geoip from 'geoip-lite'
+import { createRequire } from 'node:module'
+
+const _require = createRequire(import.meta.url)
+
+type GeoipModule = { lookup: (ip: string) => { country?: string } | null }
+
+let _geoip: GeoipModule | null | undefined
+
+function getGeoip(): GeoipModule | null {
+  if (_geoip === undefined) {
+    try {
+      _geoip = _require('geoip-lite') as GeoipModule
+    } catch {
+      _geoip = null
+    }
+  }
+  return _geoip
+}
 
 const PRIVATE_PREFIXES = [
   '10.',
@@ -30,7 +51,6 @@ const PRIVATE_PREFIXES = [
   'fd',
 ]
 
-/** Strip IPv4-mapped IPv6 prefix (::ffff:1.2.3.4 → 1.2.3.4). */
 function normalizeIp(raw: string): string {
   if (raw.startsWith('::ffff:')) return raw.slice(7)
   return raw
@@ -47,6 +67,8 @@ function isPrivate(ip: string): boolean {
  */
 export function countryFromIp(ip: string): string | null {
   if (!ip || isPrivate(ip)) return null
+  const geoip = getGeoip()
+  if (!geoip) return null
   const lookup = geoip.lookup(normalizeIp(ip))
   return lookup?.country ?? null
 }
