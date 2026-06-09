@@ -546,6 +546,25 @@ live app. All items target the dark brand palette already defined in
 | [x] | **PLAT-036** | **Custom HLS player** — waveform bars, play/pause, seek bar, buffering state in `hls-player.tsx` + Three.js audio-reactive background. | Medium | P3 |
 | [x] | **PLAT-037** | **Mobile player layout** — `@media (max-width: 480px)` full-bleed player card and countdown tiles in `brand-channel.css`. | Small | P3 |
 | [x] | **PLAT-038** | **Stash / file manager** (`/dashboard/stash`) — `StashFile` + share links, presigned upload/download API, dashboard UI. | Large | P3 |
+| [x] | **PLAT-039** | **Channel page v8 polish** — live-mode header shows `@handle` in centre (not nav); archive durations in `Xh Ym` format; CTA row ("Support directly" + "View profile →") below genre chips; `ChannelHeader` with `activeNav` used on `/listen` with its own brand-scoped layout. | Medium | P1 |
+
+### Public pages and signup (UI-brief gap audit, 2026-06-09)
+
+These routes are specified in `docs/UI-brief.md` but return 404 today.
+All are required before public beta (1 August 2026 target).
+
+| Done | ID | Item | Effort | Priority |
+|:---:|---|---|---|---|
+| [ ] | **PLAT-040** | **`/about`** — three-section page: org mission + nonprofit structure, the constitution + membership model (link to `/governance`), AGPL licence commitment. Static Next.js page with `ChannelHeader` + brand-channel shell. | Small | P1 |
+| [ ] | **PLAT-041** | **`/for-artists`** — marketing landing page. Header + hero text; `<BrowserFrame>` carousel showing channel page / live+chat / dashboard / mobile screenshots (v8 reference images in `website/screenshots/`); three-column feature grid (broadcast, archive, grants); CTA row → `/apply`. Requires `<BrowserFrame>` component in `@tahti/ui` (see PLAT-045). | Medium | P1 |
+| [ ] | **PLAT-042** | **`/agpl`** — source-code disclosure page: link to the public git repo, AGPL-3.0 licence text or summary, "you can fork this" paragraph, "SaaS provider? Contact us" note. Static page in brand-channel shell. | Small | P1 |
+| [ ] | **PLAT-043** | **`/privacy`** — GDPR-compliant privacy policy. Data controller (Tahti ry), categories of data collected, retention periods, user rights (access / erasure), cookie usage. Must be approved by the board before public beta. | Small | P1 |
+| [ ] | **PLAT-044** | **`/terms`** — terms of service for artists and listeners. Artist upload licence (non-exclusive, AGPL data), prohibited content, account suspension policy, limitation of liability. Must be approved by the board before public beta. | Small | P1 |
+| [ ] | **PLAT-045** | **`<BrowserFrame>` component** (`@tahti/ui`) — dark rounded browser chrome (traffic-light dots, URL bar placeholder) wrapping a screenshot or slot. Used in `/for-artists` carousel and documentation pages. Pure CSS + TSX, no JS. | Small | P2 |
+| [ ] | **PLAT-046** | **Homepage upgrade (`/`)** — replace the minimal gateway card with the full v8 homepage: "On air right now" live channel tile grid (same data as `/listen`), stats strip (active artists, broadcasts this month, total hours), tagline + CTA to `/apply` / `/listen`. Keep the gateway redirect for non-JS as a fallback. | Medium | P2 |
+| [ ] | **PLAT-047** | **Self-serve artist signup flow** — open-beta multi-step wizard replacing the single `/apply` form: `/signup` (email + handle + tier), `/signup/payment` (Stripe Checkout for paid tiers, skip for free), `/signup/profile` (avatar, bio, location, genre tags), `/signup/broadcast` (stream-key display + OBS/Mixxx quickstart). Currently only the closed-beta invite path exists (`/apply` → invite email → `/setup-password`). | Large | P1 |
+| [ ] | **PLAT-048** | **`/admin/grants` + `/admin/grants/:year`** — dedicated grant cycle review and distribution-approval UI. The grant engine and ledger entries exist (M9) but there is no page to browse per-artist engagement-unit breakdowns, approve the annual distribution, or download the board-approval CSV. Route is currently 404. | Medium | P1 |
+| [ ] | **PLAT-049** | **`/admin/agm`** — AGM planning and proposal management page. Companion to `/admin/governance/resolutions`; needs: proposal submission form, agenda builder, member-notification send action, minutes upload. Route is currently 404. | Medium | P2 |
 
 ---
 
