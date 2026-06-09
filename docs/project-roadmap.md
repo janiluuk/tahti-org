@@ -77,11 +77,11 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M12** Profile + releases | 🟢 Done | Release CRUD, smart links, DSP editor, profile playback, cover art, JSON-LD/ISR, sitemap, press kit JSON, CSV bulk import |
 | **M13** Newsletter | 🟡 Partial | `newsletter` schema (Subscriber/Draft/Send), double opt-in API, artist draft + send, `newsletter-dispatch` worker, per-tier limits; **listener opt-in UI** on `/c/:slug` and `/u/:username`; **bounce webhook** (`POST /api/webhooks/email/bounce` — Postmark + SNS), **`ops/EMAIL.md`**. Deferred: dedicated SES API transport if SMTP limits hit |
 | **M14** Embed/promo | 🟢 Done | `GET /oembed`, embed API + play URL, embed pages; **smart-link view counts** on `/r/:slug` + dashboard; **DSP click tracking** (`POST /api/smartlink/click`, `GET /api/me/releases/:id/analytics`); **Mastodon + Bluesky auto-post v0**; **Twitter/X OAuth 2.0 PKCE** (connect, toggles, manual post, worker dispatch); **Instagram auto-post** (OAuth connect, scheduled posting, dashboard panel). Deferred: none |
-| **M24** Per-content visuals | 🟡 Partial | Channel gallery + **channel video backdrop** + per-item banner/background/slideshow on `/c/:slug`; **YouTube/Vimeo** via `parseVideoEmbedUrl` |
-| **M15** Artist @-mentions | 🟡 Partial | `lib/mentions.ts`, bio/announcement hooks, mute + settings API, **daily digest worker**, **`GET /api/v1/u/:handle/mentions`** (public opt-in), `@handle` links in plain text |
-| **M16** Tahti Radio meta-stream | 🟡 Partial | `services/tahti-radio`, `GET /api/v1/radio` proxy, **`lastFeaturedAt` + history**, internal radio API, **public `/radio` page** |
-| **M17** Venue calendar | 🟡 Partial | Venue API + iCal; board verify API + **`/governance/venues`** admin UI; **public `/venues` + `/v/:slug`**; **`/venues/register`** submission UI |
-| **M18** Downloads first-class | 🟡 Partial | Archive + release downloads, fraud-scan cron, Tor/datacenter CIDR; **daily Tor Redis sync** + **CI freshness check** + **weekly GHA sync PR** on bundled `tor-exit-cidrs.txt` (`pnpm tor-exit:check` / `pnpm tor-exit:sync`). Deferred: none (ops complete) |
+| **M24** Per-content visuals | 🟢 Done | Channel gallery + **channel video backdrop** + per-item banner/background/slideshow on `/c/:slug`; **YouTube/Vimeo** via `parseVideoEmbedUrl`; per-item `bannerUrl`/`backgroundUrl`/`slideshowUrls` editable in dashboard archive metadata panel. Deferred: none |
+| **M15** Artist @-mentions | 🟢 Done | `lib/mentions.ts`, bio/announcement hooks, mute + settings API, **daily digest worker**, **`GET /api/v1/u/:handle/mentions`** (public opt-in), `@handle` links in plain text. Deferred: none |
+| **M16** Tahti Radio meta-stream | 🟢 Done | `services/tahti-radio`, `GET /api/v1/radio` proxy, **`lastFeaturedAt` + history**, internal radio API, **public `/radio` page**. Deferred: Mixcloud Live multistream (PLAT-053, blocked on radio Liquidsoap config) |
+| **M17** Venue calendar | 🟢 Done | Venue API + iCal; board verify API + **`/governance/venues`** admin UI; **public `/venues` + `/v/:slug`**; **`/venues/register`** submission UI. Deferred: none |
+| **M18** Downloads first-class | 🟢 Done | Archive + release downloads, fraud-scan cron, Tor/datacenter CIDR; **daily Tor Redis sync** + **CI freshness check** + **weekly GHA sync PR** on bundled `tor-exit-cidrs.txt` (`pnpm tor-exit:check` / `pnpm tor-exit:sync`). Deferred: none |
 | **M19** Fan-subs | 🟢 Done | Tiers, Connect + Checkout, webhook lifecycle, ledger split, perks, payout dashboard, subscriber export, fan portal, GDPR export/deletion, admin execute + purge cron |
 | **M21** Admin panel | 🟢 Done | **`/admin` shell** (board guard), **dashboard**, **stream manager** + **force-offline**, **user directory** + suspend, **fan-sub payout queue**, **ledger UI**, **support tickets**, **beta application queue** (`/admin/beta` approve/reject + password setup links), **board resolutions**, **audit log viewer**, **annual report generator**, stats APIs + **`CronRun`** logging; **`/admin` link surfaced in main nav for board users**; **design-consistency pass** (status page renders health detail on 503, Financial/Governance landings restyled as cards, resolution-form layout fix, unified back-nav + filter pills, venue-queue dashboard tile). Deferred: platform-level content moderation/abuse-report queue |
 | **M22** Archive metadata | 🟢 Done | Metadata editor + tracklist @tags; auto tags; lossless→FLAC; **follow/repost download gates** + per-item gate stats + **channel funnel** (`GET /api/me/channel-funnel-stats` + split endpoints; 14-day charts); **per-listener HLS metrics** — distinct daily listener counts from anonymized (daily-salted, non-reversible) Caddy edge-log hashes, surfaced as `peakDailyListeners` + per-day counts in the live-stats panel. Deferred: none |
@@ -300,17 +300,17 @@ Can ship incrementally during beta.
 
 | Done | Milestone | Summary | Priority |
 |:---:|---|---|---|
-| [~] | **M12** | Profile + releases + smart links + MinIO cover art | High |
+| [x] | **M12** | Profile + releases + smart links + MinIO cover art | High |
 | [x] | **M30** | Release ops toolkit (MusicBrainz + Discogs guided submission, catalog metadata, release checklist) | Medium |
 | [x] | **M20** | Tier gating polish, upgrade UX | High |
-| [~] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron remain) | High |
+| [x] | **M18** | Anonymous + fan downloads, anti-fraud (Tor/fraud cron, weekly GHA sync) | High |
 | [x] | **M14** | Embed pages, smart-link analytics, and social auto-post (Mastodon, Bluesky, Twitter/X, Instagram) all done | Medium |
-| [~] | **M13** | Newsletter API + worker + bounce webhook; SES broadcast sends remain | Medium |
+| [~] | **M13** | Newsletter API + worker + bounce webhook; SES broadcast sends remain (deferred) | Medium |
 | [x] | **M6** | Multistream RTMP targets | Medium |
 | [x] | **M16** | Tahti Radio meta-stream | Medium |
 | [x] | **M15** | Artist @-mentions | Low |
-| [~] | **M17** | Venue API + iCal + board verification UI | Low |
-| [~] | **M11** | Rate limits, hCaptcha, audit export, OpenAPI; Upptime + backup/DR drills remain | High before Y2 audit |
+| [x] | **M17** | Venue API + iCal + board verification UI + public pages | Low |
+| [~] | **M11** | Rate limits, hCaptcha, audit export, OpenAPI; Upptime deploy remains (ops) | High before Y2 audit |
 
 **Exit criteria:** profile URL shareable; downloads + fan-subs used by ≥10 beta artists.
 
@@ -324,7 +324,7 @@ See `competitive-gaps-hearthis.md` for full gap list.
 |:---:|---|---|
 | [x] | **M22** | Per-item metadata + editable tracklists with **@artist tagging** (dashboard tracklist editor wired) |
 | [x] | **M23** | Collections (albums, mix series) + RSS; featured collections on profile and `/r/:slug`; **artist archive feed at `/api/v1/u/:handle/rss.xml`** |
-| [~] | **M24** | Channel gallery/text layers + **channel video backdrop**; per-item banner/slideshow; YouTube/Vimeo on archive items |
+| [x] | **M24** | Channel gallery/text layers + **channel video backdrop**; per-item banner/slideshow; YouTube/Vimeo on archive items |
 | [x] | **M25** | Artist commentary on archive items (dashboard + public channel page); optional listener comments deferred |
 | [x] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; **collection cover + description edit** + **item thumbnails** on profile and `/u/:handle/c/:slug`; **per-collection slideshow/video themes** (independent gallery + text-layer picker on collections, dashboard editor + public rendering) |
 | [x] | **M27** | **Programme API** + dashboard rotation editor; `fallback.m3u` respects `isFallback`, ordered/fair shuffle; live auto-archive joins rotation. **Moderator roles** — artists delegate chat moderation (ban/unban) to trusted listeners (`ChannelModerator`, dashboard delegation panel + `/dashboard/moderate/:slug` chat-ban UI). **Per-set visualisations** — worker extracts static waveform peaks during transcode/archive jobs (`peaks` JSON on `ArchiveItem`/`ArchiveItemVersion`), rendered as bars on `/c/:slug` archive items. Deferred: ACRCloud annotation cron |
@@ -580,6 +580,9 @@ Cross-referenced the pitch site (`website/`) against the live codebase. The foll
 | [x] | **PLAT-055** | **Storage usage on public transparency page** — Website: "We track storage and display it openly on the public dashboard. Written into the bylaws." `storageUsedBytes` is tracked per artist and returned in `/api/auth/me` but is not shown anywhere publicly. Add a platform-wide storage aggregate (sum of all `User.storageUsedBytes`) to `/transparency` alongside the ledger totals. | Small | P2 |
 | [ ] | **PLAT-056** | **Go-live: Revelator DSP distribution (ops)** — The full distribution pipeline is implemented (`/api/me/releases/:id/distribute`, Revelator webhook, royalty pull-back, dashboard ops panel). Blocked on: live Revelator API credentials in production config + ISRC registrar account. No code changes required — pure ops task. | Small | P1 |
 | [ ] | **PLAT-057** | **Go-live: Mixcloud archive upload (ops)** — One-click archive → Mixcloud push is implemented (OAuth connect, `mixcloud-upload` queue worker, `archive-mixcloud.tsx` dashboard panel). Blocked on: Mixcloud app approved for production OAuth (currently dev-tier key). No code changes required — pure ops task. | Small | P1 |
+| [x] | **PLAT-058** | **Admin nav: add Grants + AGM + Vendors links** — `/admin/grants` and `/admin/agm` existed as routes but were not linked from the admin sidebar. Added all three alongside a new `/admin/settings/vendors` entry. | Small | P2 |
+| [x] | **PLAT-059** | **`/admin/settings/vendors` — vendor & DPA tracking page** — Directors need a single place to see all third-party vendors (Stripe, UpCloud, Mixcloud, Revelator, Postmark, hCaptcha, AcoustID, GitHub) with their env-var requirements, portal links, and GDPR/DPA obligations. Replaces manual reference to `ops/VENDORS.md` with an in-app checklist. | Small | P2 |
+| [x] | **PLAT-060** | **Roadmap hygiene: mark M15/M16/M17/M18/M24 as Done** — All five milestones were implemented but still showed 🟡 Partial in the milestone table and Phase 5/6 checklists. Corrected status after code audit confirmed full implementation. | Tiny | P3 |
 
 ---
 
