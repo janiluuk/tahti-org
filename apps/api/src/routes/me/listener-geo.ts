@@ -19,7 +19,6 @@ const meListenerGeoRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['stats'],
         description: 'PLAT-064: per-country listener counts (downloads + HLS plays)',
-        querystring: QuerySchema,
       },
     },
     async (request, reply) => {
