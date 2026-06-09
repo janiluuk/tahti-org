@@ -28,10 +28,16 @@ export function ChannelHeader({ isLive, artistHandle, activeNav }: ChannelHeader
           >
             Discover
           </Link>
-          <Link href="/radio" className="ch-header__nav-link">
+          <Link
+            href="/radio"
+            className={`ch-header__nav-link${activeNav === 'radio' ? ' ch-header__nav-link--active' : ''}`}
+          >
             Radio
           </Link>
-          <Link href="/venues" className="ch-header__nav-link">
+          <Link
+            href="/venues"
+            className={`ch-header__nav-link${activeNav === 'venues' ? ' ch-header__nav-link--active' : ''}`}
+          >
             Venues
           </Link>
         </nav>

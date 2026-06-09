@@ -63,6 +63,7 @@ import broadcastUsageRoutes from './routes/me/broadcast-usage.js'
 import adminMembersRoutes from './routes/admin/members.js'
 import adminStatsRoutes from './routes/admin/stats.js'
 import adminStreamsRoutes from './routes/admin/streams.js'
+import adminRadioRoutes from './routes/admin/radio.js'
 import adminChannelsRoutes from './routes/admin/channels.js'
 import adminFanSubsRoutes from './routes/admin/fansubs.js'
 import adminUsersRoutes from './routes/admin/users.js'
@@ -446,6 +447,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminMembersRoutes)
   await fastify.register(adminStatsRoutes)
   await fastify.register(adminStreamsRoutes)
+  await fastify.register(adminRadioRoutes)
   await fastify.register(adminChannelsRoutes)
   await fastify.register(adminFanSubsRoutes)
   await fastify.register(adminUsersRoutes)

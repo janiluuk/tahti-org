@@ -810,6 +810,39 @@
   color: var(--text);
   background: var(--card2);
   box-sizing: border-box;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  outline: none;
+}
+
+[data-tahti-ui='studio'] .studio-input:focus,
+[data-tahti-ui='studio'] .studio-textarea:focus,
+[data-tahti-ui='studio'] .studio-field select:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cyan) 18%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-input:invalid,
+[data-tahti-ui='studio'] .studio-textarea:invalid,
+[data-tahti-ui='studio'] .studio-input[aria-invalid='true'],
+[data-tahti-ui='studio'] .studio-textarea[aria-invalid='true'] {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--coral) 15%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-input:disabled,
+[data-tahti-ui='studio'] .studio-textarea:disabled,
+[data-tahti-ui='studio'] .studio-field select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .studio-field-error {
+  font-size: 0.78rem;
+  color: var(--coral);
+  margin-top: 0.25rem;
+  display: block;
 }
 
 [data-tahti-ui='studio'] .studio-textarea {
@@ -2376,7 +2409,9 @@
   font-size: 0.75rem;
   font-family: var(--font-body);
   cursor: pointer;
-  transition: color 0.12s, border-color 0.12s;
+  transition:
+    color 0.12s,
+    border-color 0.12s;
   white-space: nowrap;
 }
 
@@ -2405,7 +2440,9 @@
   font-size: 0.8125rem;
   font-weight: 500;
   text-decoration: none;
-  transition: border-color 0.12s, background 0.12s;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
 }
 
 [data-tahti-ui='studio'] .db-quick-action:hover {

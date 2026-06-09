@@ -79,7 +79,7 @@ export default async function HomePage() {
   const statusUrl = statusPageUrl()
 
   return (
-    <>
+    <div data-tahti-ui="brand" className="brand-channel">
       <BgCanvas />
       <ChannelHeader />
       <div className="home-shell">
@@ -97,8 +97,8 @@ export default async function HomePage() {
             <Link href="/listen" className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary">
               Listen now
             </Link>
-            <Link href="/signup" className="ui-btn ui-btn--secondary ui-btn--lg">
-              Create account
+            <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
+              Sign in
             </Link>
           </div>
         </section>
@@ -141,15 +141,11 @@ export default async function HomePage() {
             About
           </Link>
           <span className="home-footer__sep">·</span>
-          <Link href="/apply" className="home-footer__link">
-            Apply for beta
-          </Link>
-          <span className="home-footer__sep">·</span>
           <a href={statusUrl} className="home-footer__link">
             Status
           </a>
         </footer>
       </div>
-    </>
+    </div>
   )
 }
