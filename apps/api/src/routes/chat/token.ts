@@ -14,6 +14,7 @@ import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
 import { markChatCaptchaVerified } from '../../lib/chat-captcha.js'
+import { countryFromIp } from '../../lib/geoip.js'
 
 // Rate limit: 10 tokens per IP per minute
 const tokenBucket = new Map<string, { count: number; reset: number }>()
@@ -87,15 +88,24 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
       if (ban) return reply.status(403).send({ error: 'banned' })
 
-      const supporter = request.sessionUser?.id
-        ? await isActiveFanSubscriber(fastify.prisma, channel.userId, request.sessionUser.id)
-        : false
+      const [supporter, sessionUserCountry] = await Promise.all([
+        request.sessionUser?.id
+          ? isActiveFanSubscriber(fastify.prisma, channel.userId, request.sessionUser.id)
+          : Promise.resolve(false),
+        request.sessionUser?.id
+          ? fastify.prisma.user
+              .findUnique({ where: { id: request.sessionUser.id }, select: { countryCode: true } })
+              .then((u) => u?.countryCode ?? null)
+          : Promise.resolve(null),
+      ])
 
-      // sub encodes handle + fingerprint; info carries supporter badge for Centrifugo
+      const countryCode = sessionUserCountry ?? countryFromIp(ip)
+
+      // sub encodes handle + fingerprint; info carries supporter badge + country for Centrifugo
       const sub = `${cleanHandle}#${fingerprint}`
       // Connection JWTs can't carry a `channel` claim in Centrifugo v5 (only
       // subscription JWTs can) — the client subscribes explicitly after connect.
-      const token = signCentrifugoToken({ sub, info: { supporter } }, 3600)
+      const token = signCentrifugoToken({ sub, info: { supporter, countryCode } }, 3600)
 
       await markChatCaptchaVerified(channel.id, fingerprint)
 
@@ -107,7 +117,7 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
         httpOnly: false,
       })
 
-      return reply.send({ token, handle: cleanHandle, fingerprint, supporter })
+      return reply.send({ token, handle: cleanHandle, fingerprint, supporter, countryCode })
     },
   )
 }

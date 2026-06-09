@@ -367,6 +367,7 @@ model User {
   avatarUrl             String?
   socialLinks           Json?
   tipJarUrl             String?
+  countryCode           String?
   tier                  ArtistTier @default(FREE)
   isMember              Boolean    @default(false)
   isBoard               Boolean    @default(false)
@@ -913,6 +914,7 @@ model Download {
   byUserId       String?
   byFingerprint  String
   byIpHash       String
+  countryCode    String?
   bytes          Int       @default(0)
   countedAt      DateTime?
   reason         String?

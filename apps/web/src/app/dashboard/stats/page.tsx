@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Heading, PageShell } from '@tahti/ui'
 import { StatsPlaysPanel } from './stats-plays-panel'
+import { ListenerMapPanel } from './listener-map-panel'
 
 interface FanPayoutStats {
   paidLast30Days: number
@@ -29,6 +30,16 @@ interface PlaysPayload {
   daily: Array<{ date: string; plays: number }>
 }
 
+interface ListenerGeoPoint {
+  countryCode: string
+  count: number
+}
+
+interface ListenerGeoPayload {
+  period: '7d' | '30d' | 'all'
+  geo: ListenerGeoPoint[]
+}
+
 async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
   try {
     const res = await fetch(`${apiUrl}${path}`, {
@@ -50,11 +61,12 @@ export default async function StatsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [plays, topTracks, topCountries, fanPayouts] = await Promise.all([
+  const [plays, topTracks, topCountries, fanPayouts, listenerGeo] = await Promise.all([
     apiFetch<PlaysPayload>(apiUrl, cookie, '/api/me/stats/plays?range=30'),
     apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, '/api/me/stats/top-tracks'),
     apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, '/api/me/stats/top-countries'),
     apiFetch<FanPayoutStats>(apiUrl, cookie, '/api/me/fan-sub-payouts'),
+    apiFetch<ListenerGeoPayload>(apiUrl, cookie, '/api/me/listener-geo?period=30d'),
   ])
 
   const downloads = plays?.totalDownloads ?? 0
@@ -101,6 +113,11 @@ export default async function StatsPage() {
       </div>
 
       {plays && <StatsPlaysPanel initial={plays} />}
+
+      <ListenerMapPanel
+        initial={listenerGeo?.geo ?? []}
+        initialPeriod={listenerGeo?.period ?? '30d'}
+      />
 
       {(tracks.length > 0 || countries.length > 0) && (
         <div className="stats-two-col">

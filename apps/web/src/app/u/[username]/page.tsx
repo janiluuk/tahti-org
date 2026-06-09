@@ -54,6 +54,7 @@ interface ProfileResponse {
     bio: string | null
     avatarUrl: string | null
     tipJarUrl: string | null
+    countryCode?: string | null
     tier: string
     socialLinks: Record<string, string> | null
   }
@@ -129,6 +130,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             bio={artist.bio}
             bioHtml={bioHtml}
             avatarUrl={artist.avatarUrl}
+            countryCode={artist.countryCode}
             isLive={isLive}
             channelHref={links.channel}
             subscribeHref={links.subscribe}

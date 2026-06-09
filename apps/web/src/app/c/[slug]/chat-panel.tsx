@@ -17,9 +17,11 @@ interface ChatMessage {
   text: string
   ts: number
   supporter?: boolean
+  countryCode?: string | null
 }
 
 import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
+import { flagEmoji } from '@/lib/flag-emoji'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -34,6 +36,7 @@ export default function ChatPanel({
   const [pendingHandle, setPendingHandle] = useState('')
   const [token, setToken] = useState<string | null>(null)
   const [supporter, setSupporter] = useState(false)
+  const [myCountryCode, setMyCountryCode] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
@@ -117,13 +120,26 @@ export default function ChatPanel({
           }
 
           if (data.push?.pub) {
-            const msg = data.push.pub.data as { handle?: string; text?: string; ts?: number }
+            const msg = data.push.pub.data as {
+              handle?: string
+              text?: string
+              ts?: number
+              supporter?: boolean
+              countryCode?: string | null
+            }
             if (msg.text) {
               const id = `${Date.now()}-${Math.random()}`
               setMessages((prev) =>
                 [
                   ...prev,
-                  { id, handle: msg.handle ?? 'anon', text: msg.text!, ts: msg.ts ?? Date.now() },
+                  {
+                    id,
+                    handle: msg.handle ?? 'anon',
+                    text: msg.text!,
+                    ts: msg.ts ?? Date.now(),
+                    supporter: msg.supporter,
+                    countryCode: msg.countryCode ?? null,
+                  },
                 ].slice(-100),
               )
             }
@@ -160,11 +176,17 @@ export default function ChatPanel({
         return
       }
       if (!res.ok) throw new Error('Failed to get token')
-      const data = (await res.json()) as { token: string; handle: string; supporter?: boolean }
+      const data = (await res.json()) as {
+        token: string
+        handle: string
+        supporter?: boolean
+        countryCode?: string | null
+      }
       persistChatHandle(data.handle)
       setHandle(data.handle)
       setToken(data.token)
       setSupporter(!!data.supporter)
+      setMyCountryCode(data.countryCode ?? null)
     } catch {
       setError('Could not join chat. Try again.')
     }
@@ -178,7 +200,13 @@ export default function ChatPanel({
         id: msgIdRef.current++,
         publish: {
           channel: `channel:${slug}`,
-          data: { handle, text, ts: Date.now(), supporter: supporter || undefined },
+          data: {
+            handle,
+            text,
+            ts: Date.now(),
+            supporter: supporter || undefined,
+            countryCode: myCountryCode || undefined,
+          },
         },
       }),
     )
@@ -214,6 +242,11 @@ export default function ChatPanel({
         )}
         {messages.map((m) => (
           <div key={m.id} className="chat-msg">
+            {m.countryCode && (
+              <span className="chat-flag" aria-label={m.countryCode} title={m.countryCode}>
+                {flagEmoji(m.countryCode)}
+              </span>
+            )}
             <span className={`handle${m.supporter ? ' supporter' : ''}`}>{m.handle}</span>
             {m.supporter && <span className="chat-supporter-badge">supporter</span>}
             <span className="text">{m.text}</span>
