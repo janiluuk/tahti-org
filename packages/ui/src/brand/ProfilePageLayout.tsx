@@ -6,6 +6,11 @@ import type { ReactNode } from 'react'
 import { ChannelHeader } from './ChannelPageLayout'
 import { SafePlainText } from '../lib/safe-plain-text'
 
+function countryCodeToFlag(cc: string): string {
+  if (!cc || cc.length !== 2) return ''
+  return [...cc.toUpperCase()].map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65)).join('')
+}
+
 function IconPlay() {
   return (
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -53,6 +58,7 @@ type ProfileHeroProps = {
   bio: string | null
   bioHtml?: string | null
   avatarUrl: string | null
+  countryCode?: string | null
   isLive?: boolean
   channelHref?: string | null
   subscribeHref: string
@@ -66,6 +72,7 @@ export function ProfileHero({
   bio,
   bioHtml,
   avatarUrl: _avatarUrl,
+  countryCode,
   isLive,
   channelHref,
   subscribeHref,
@@ -78,6 +85,11 @@ export function ProfileHero({
           <div className="prof-name">{displayName}</div>
           <div className="prof-meta-line">
             <span>@{username}</span>
+            {countryCode && (
+              <span className="prof-country-flag" title={countryCode} aria-label={countryCode}>
+                {countryCodeToFlag(countryCode)}
+              </span>
+            )}
             {isLive && (
               <span className="prof-live-badge">
                 <span className="signal-dot" style={{ width: 6, height: 6 }} aria-hidden />

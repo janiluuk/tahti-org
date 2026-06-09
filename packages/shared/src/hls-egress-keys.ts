@@ -13,5 +13,10 @@ export function hlsListenersRedisKey(slug: string, utcDate: string): string {
 
 export const HLS_CADDY_LOG_OFFSET_KEY = 'tahti:hls-caddy-log:offset'
 
+/** Per-channel slug UTC-day hash of {countryCode → count} from Caddy access log (PLAT-063). */
+export function hlsListenerGeoRedisKey(slug: string, utcDate: string): string {
+  return `tahti:hls-listener-geo:${slug}:${utcDate}`
+}
+
 /** Keep counters slightly longer than the 30-day dashboard window. */
 export const HLS_EGRESS_REDIS_TTL_SEC = 45 * 86_400

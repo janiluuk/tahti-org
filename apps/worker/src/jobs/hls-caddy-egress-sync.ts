@@ -7,10 +7,12 @@ import {
   HLS_CADDY_LOG_OFFSET_KEY,
   HLS_EGRESS_REDIS_TTL_SEC,
   hlsEgressRedisKey,
+  hlsListenerGeoRedisKey,
   hlsListenersRedisKey,
 } from '@tahti/shared'
 import { readHlsCaddyLogFromOffset } from '../lib/hls-caddy-egress-log.js'
 import { hashHlsListenerId } from '../lib/hls-listener-hash.js'
+import { countryFromIp } from '../lib/geoip.js'
 
 function redisUrl(): string {
   return process.env.REDIS_URL ?? 'redis://localhost:6379'
@@ -41,6 +43,13 @@ export async function processHlsCaddyEgressSyncJob(_job: Job): Promise<{
         const listenersKey = hlsListenersRedisKey(ev.slug, ev.utcDate)
         await client.sAdd(listenersKey, hashHlsListenerId(ev.clientIp, ev.utcDate))
         await client.expire(listenersKey, HLS_EGRESS_REDIS_TTL_SEC)
+
+        const country = countryFromIp(ev.clientIp)
+        if (country) {
+          const geoKey = hlsListenerGeoRedisKey(ev.slug, ev.utcDate)
+          await client.hIncrBy(geoKey, country, 1)
+          await client.expire(geoKey, HLS_EGRESS_REDIS_TTL_SEC)
+        }
       }
     }
 

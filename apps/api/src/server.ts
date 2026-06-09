@@ -108,6 +108,7 @@ import meArchiveEditorRoutes from './routes/me/archive-editor.js'
 import meEditorProjectRoutes from './routes/me/editor-projects.js'
 import meDownloadGateStatsRoutes from './routes/me/download-gate-stats.js'
 import meChannelEgressRoutes from './routes/me/channel-egress.js'
+import meListenerGeoRoutes from './routes/me/listener-geo.js'
 import meChannelLiveStatsRoutes from './routes/me/channel-live-stats.js'
 import meChannelFunnelStatsRoutes from './routes/me/channel-funnel-stats.js'
 import meStatsRoutes from './routes/me/stats.js'
@@ -515,6 +516,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meEditorProjectRoutes)
   await fastify.register(meDownloadGateStatsRoutes)
   await fastify.register(meChannelEgressRoutes)
+  await fastify.register(meListenerGeoRoutes)
   await fastify.register(meChannelLiveStatsRoutes)
   await fastify.register(meChannelFunnelStatsRoutes)
   await fastify.register(meStatsRoutes)

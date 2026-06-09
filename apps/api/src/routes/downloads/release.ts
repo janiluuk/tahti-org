@@ -16,6 +16,7 @@ import {
 import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
+import { countryFromIp } from '../../lib/geoip.js'
 
 // M18 — public release-track downloads with the same anti-fraud stack as
 // archive-item downloads. Reuses the Download table (releaseTrackId column).
@@ -210,6 +211,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
           byUserId,
           byFingerprint,
           byIpHash,
+          countryCode: countryFromIp(request.ip ?? ''),
           bytes: 0,
           countedAt,
           reason,

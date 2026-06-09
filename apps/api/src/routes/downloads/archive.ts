@@ -18,6 +18,7 @@ import { resolveDownloadGateStatus } from '../../lib/download-gates.js'
 import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
+import { countryFromIp } from '../../lib/geoip.js'
 
 // M18 — downloads as a first-class action with engagement-unit accounting.
 //
@@ -119,6 +120,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
             byUserId,
             byFingerprint,
             byIpHash: sha256(`${request.ip}:${salt}`),
+            countryCode: countryFromIp(request.ip ?? ''),
             bytes: 0,
             countedAt: null,
             reason: gateReason,
@@ -236,6 +238,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
           byUserId,
           byFingerprint,
           byIpHash,
+          countryCode: countryFromIp(request.ip ?? ''),
           bytes: Number(item.fileSizeBytes),
           countedAt,
           reason,

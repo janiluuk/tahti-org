@@ -24,6 +24,7 @@ import { Heading, Row, Text, ChannelPageLayout, LiveBadge, SafePlainText } from 
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
 import { renderBio } from '@/lib/render-bio'
+import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
 
 interface ChannelResponse {
   slug: string
@@ -42,6 +43,7 @@ interface ChannelResponse {
     displayName: string
     bio: string | null
     avatarUrl: string | null
+    countryCode?: string | null
     tier: string
   }
 }
@@ -151,6 +153,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 </Heading>
                 <Text size="sm" tone="muted">
                   @{channel.user.username}
+                  {channel.user.countryCode && (
+                    <span
+                      className="ch-artist-flag"
+                      title={channel.user.countryCode}
+                      aria-label={channel.user.countryCode}
+                    >
+                      {countryCodeToFlag(channel.user.countryCode)}
+                    </span>
+                  )}
                 </Text>
               </div>
               {channel.state === 'LIVE' && <LiveBadge />}

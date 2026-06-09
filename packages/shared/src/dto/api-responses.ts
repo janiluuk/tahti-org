@@ -600,6 +600,7 @@ export const ProfileFieldsSchema = z.object({
   bio: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   tipJarUrl: z.string().nullable(),
+  countryCode: z.string().nullable(),
   socialLinks: z.unknown(),
   publicAttribution: z.boolean(),
 })
@@ -688,6 +689,7 @@ export const ChatTokenResponseSchema = z.object({
   handle: z.string(),
   fingerprint: z.string(),
   supporter: z.boolean(),
+  countryCode: z.string().nullable(),
 })
 
 export const ChatTokenOnlyResponseSchema = z.object({
