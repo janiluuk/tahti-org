@@ -44,6 +44,9 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           discogsReleaseId: true,
           pLine: true,
           cLine: true,
+          colorSchemeJson: true,
+          paletteJson: true,
+          visualPreset: true,
           tracks: {
             orderBy: { position: 'asc' },
             select: { title: true, isrc: true, position: true },
@@ -121,6 +124,9 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           tracks: release.tracks,
           musicbrainzUrl,
           discogsUrl,
+          colorSchemeJson: release.colorSchemeJson,
+          paletteJson: release.paletteJson,
+          visualPreset: release.visualPreset,
         },
         artist: {
           username: release.user.username,

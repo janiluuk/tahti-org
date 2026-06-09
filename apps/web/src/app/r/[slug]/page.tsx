@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { SmartLinkPageLayout, SafePlainText } from '@tahti/ui'
 import { SmartLinkDspButtons } from '@/components/smart-link-dsp-buttons'
+import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
+import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 
 interface SmartLinkTrack {
   title: string
@@ -35,6 +37,9 @@ interface SmartLinkResponse {
     tracks: SmartLinkTrack[]
     musicbrainzUrl: string | null
     discogsUrl: string | null
+    colorSchemeJson?: string | null
+    paletteJson?: string | null
+    visualPreset?: string
   }
   artist: { username: string; displayName: string; avatarUrl: string | null }
   featuredCollections?: FeaturedCollection[]
@@ -59,6 +64,17 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
 
   return (
     <SmartLinkPageLayout>
+      <ChannelColorScheme
+        colorSchemeJson={data.release.colorSchemeJson}
+        paletteJson={data.release.paletteJson}
+      />
+      {data.release.visualPreset && data.release.visualPreset !== 'MINIMAL' && (
+        <ChannelVisualizer
+          preset={data.release.visualPreset as import('@tahti/shared').VisualPreset}
+          colorSchemeJson={data.release.colorSchemeJson}
+          paletteJson={data.release.paletteJson}
+        />
+      )}
       {data.release.artworkUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img

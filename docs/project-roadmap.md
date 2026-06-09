@@ -88,6 +88,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **M23** Collections + RSS | 🟢 Done | Schema + API CRUD, public JSON/RSS, featured collections, reorder API + **drag-and-drop** in dashboard; **per-artist archive RSS** (`/api/v1/u/:handle/rss.xml`); feed links on profile + dashboard; **per-collection video/slideshow themes**. Deferred: none |
 | **M28** Track version history | 🟢 Done | Archive + **release-track** version history (upload/activate, worker transcode, dashboard panels; stable public ids via active-version sync) |
 | **M30** Release ops toolkit | 🟢 Done | Release ops panel: catalog, credits, checklist, society pointers, JSON export, **MusicBrainz step-by-step guide**; **guided Discogs submission** (`discogsReleaseId` + clipboard prefill + in-panel guide + Discogs URL on smart link — Discogs has no artist-submission API, so this mirrors the MusicBrainz guided pattern); UPC/ISRC on `/r/:slug`; claim links (Spotify, Apple, YouTube). Deferred: none |
+| **M31** Channel & release visual customization | ⬜ Planned | Three.js/WebGL visualization presets (per-channel + per-release/archive item); cover-art color palette extraction → CSS custom properties on `/c/:slug` and `/r/:slug`; backdrop slideshow preset themes + timing controls; channel and release color scheme overrides via dashboard |
 | **M29** Backup & DR | 🟡 Partial | **`scripts/backup.sh`** (postgres, minio DR mirror, restore-test, status + DR age); **`scripts/backup-drill.sh`** + quarterly cron; **`ops/RUNBOOK.md`** restore + drill table; `install-crons.sh`; `/metrics` backup gauge. Deferred: pgBackRest PITR |
 | **M20** Tier gating | 🟢 Done | Weekly cap + **60s grace**, reconnect during grace, orchestrator **/stop** on cap enforcement, dashboard warnings + **`warningLevel`** API + **upgrade CTA**, HLS tier split, **`/help/tier-limits`**, vital-flows e2e |
 
@@ -329,6 +330,7 @@ See `competitive-gaps-hearthis.md` for full gap list.
 | [x] | **M26** | Channel **video/image backdrop** + gallery/text-layer theme picker in dashboard; **collection cover + description edit** + **item thumbnails** on profile and `/u/:handle/c/:slug`; **per-collection slideshow/video themes** (independent gallery + text-layer picker on collections, dashboard editor + public rendering) |
 | [x] | **M27** | **Programme API** + dashboard rotation editor; `fallback.m3u` respects `isFallback`, ordered/fair shuffle; live auto-archive joins rotation. **Moderator roles** — artists delegate chat moderation (ban/unban) to trusted listeners (`ChannelModerator`, dashboard delegation panel + `/dashboard/moderate/:slug` chat-ban UI). **Per-set visualisations** — worker extracts static waveform peaks during transcode/archive jobs (`peaks` JSON on `ArchiveItem`/`ArchiveItemVersion`), rendered as bars on `/c/:slug` archive items. Deferred: ACRCloud annotation cron |
 | [x] | **M28** | **Track version history** — archive + release-track versions; activate; stable public ids via active version sync |
+| [ ] | **M31** | **Channel & release visual customization** — Three.js visualization presets (channel + per-release), cover-art color palette extraction → CSS tokens, backdrop slideshow preset themes, dashboard color-scheme picker |
 
 ## Phase 6b — Release ops & catalog metadata (**M30**)
 
@@ -363,6 +365,26 @@ Spec in `audio-editor.md` (**M21**) — see **§M21 implementation options** for
 | [x] | **v2** Master LUFS + limiter on bounce | Dev | `audio-editor.md` |
 | [x] | Bounce worker → archive / release pipeline | Dev | `AGENT.md` |
 | [x] | Editor load test (large WAV, 1h DJ mix) | Dev | `scripts/editor-load-test.sh` |
+
+---
+
+## Phase 7 — Channel & release visual customization (**M31**)
+
+Artists should be able to personalize how their channel and release pages look and feel beyond static images. **M31** adds Three.js visualization presets, automatic color palette extraction from cover art, and backdrop slideshow customization — giving each channel a distinct visual identity without requiring any design skill.
+
+**Principle:** sensible defaults from the content itself (cover art → palette), with optional overrides at both channel and release level. Three.js presets are pure client-side — no server rendering required.
+
+| Done | Capability | Notes |
+|:---:|---|---|
+| [ ] | **Cover art palette extraction** | `node-vibrant` extracts 5 swatches on transcode; stored as `Release.paletteJson`; applied as default color scheme |
+| [ ] | **Color scheme model + CSS variables** | `Channel.colorSchemeJson` + `Release.colorSchemeJson` (override); `--channel-bg`, `--channel-accent`, `--channel-text`, `--channel-muted`, `--channel-highlight` injected on `/c/:slug` and `/r/:slug`; resolution order: manual override → extracted palette → platform defaults |
+| [ ] | **Three.js visualization presets** | `VisualPreset` enum: `WAVEFORM_BARS`, `PARTICLE_FIELD`, `AURORA`, `MINIMAL`, `REACTIVE_GRID`; stored on `Channel` + `ArchiveItem`; React Three Fiber components under `apps/web/src/components/visuals/`; `MINIMAL` is the default (no canvas) |
+| [ ] | **Channel preset picker** | Dashboard `/dashboard/channel` "Visual style" section: preset thumbnail grid + live mini-canvas preview; saves `visualPreset` + `colorScheme` to `PATCH /api/me/channel` |
+| [ ] | **Per-release/archive visual override** | "Visual" tab in release dashboard + archive item editor; preset grid + optional palette override; updates `Release.visualPreset`/`colorSchemeJson` and `ArchiveItem.visualPreset` |
+| [ ] | **Backdrop slideshow preset themes** | Preset themes: `FADE`, `ZOOM`, `PAN`, `BLUR_CROSS`; interval 5–30 s; transition speed slider; `autoplayOnLoad` toggle; dashboard picker + CSS-animation rendering on `/c/:slug` |
+| [ ] | **Public rendering** | `/c/:slug` and `/r/:slug` inject `colorScheme` as CSS custom properties; lazy-import Three.js preset (dynamic `import()`, bundle-split); WebGL detection with `MINIMAL` fallback; respects `prefers-reduced-motion` |
+
+**Depends:** M24 per-content visuals (partial ✅), M26 backdrop + gallery themes ✅, M12 release schema ✅.
 
 ---
 
@@ -629,6 +651,43 @@ The editor v0 (trim/fade), v1 (multitrack), and v2 (LUFS + limiter) are all ship
 | [ ] | **PLAT-067** | **Compressor in bounce worker** — Add optional `compressor: {thresholdDb, ratio, attackMs, releaseMs, makeupGainDb}` to the bounce job payload; map to FFmpeg `acompressor` filter in `buildAudioFilters`. Extend the archive editor API route (`/api/me/archive/:id/bounce`) to accept and pass through the new compressor params. | Small | P2 |
 | [ ] | **PLAT-068** | **EQ + compressor UI in archive trim editor** — Add collapsible "EQ & dynamics" section to `archive-trim-editor.tsx`: 3-band shelving EQ (low shelf, mid peak, high shelf) with gain sliders (±12 dB), HP/LP frequency inputs, and a compressor toggle with threshold/ratio/attack/release inputs. Wire to the bounce call. Mark M21 audio spec "EQ + compressor" acceptance criterion as met. | Medium | P2 |
 | [ ] | **PLAT-069** | **Bounce → release track publish path** — The bounce worker currently saves back to archive only. Add a `destination: 'archive' \| 'release-track'` field to the bounce job; when `release-track`, create a new `ReleaseTrack` version with the bounced file (reusing the M28 version-history path). Expose a "Publish to release" button in the trim editor that prompts for a release selection. Completes the full M21 acceptance criterion ("publish as a release track"). | Medium | P2 |
+
+### Listener geography map (PLAT-061–065)
+
+Artists should see where in the world their music is being listened to — a choropleth world map on the dashboard stats tab showing listener counts by country. Data comes from two sources: archive download events (already have `byIpHash`) and HLS live-listener events (Caddy log worker). Neither currently stores country codes; full implementation requires geolocation infrastructure, schema changes, a new API endpoint, and the map UI.
+
+| Status | ID | Description | Size | Priority |
+|:---:|:---|---|:---:|:---:|
+| [ ] | **PLAT-061** | **IP geolocation infrastructure** — Add `geoip-lite` (bundles MaxMind GeoLite2 Country data, no external API, country-level only) to `apps/api`. Create `src/lib/geoip.ts` with `countryFromIp(ip: string): string \| null` that handles IPv4, IPv4-mapped IPv6, and returns `null` for private/loopback ranges. Register `MAXMIND_LICENSE_KEY` env var stub in docker-compose for future DB update automation. | Small | P2 |
+| [ ] | **PLAT-062** | **Geo-enrich archive download events** — Add `countryCode String?` field to the `Download` Prisma model (migration). In the download recording handler, extract the real client IP from `X-Forwarded-For` before hashing, call `countryFromIp`, store the result. Update `buildArtistPlaysStats` to return a country breakdown for the downloads series. | Small | P2 |
+| [ ] | **PLAT-063** | **HLS live listener geo aggregates** — In the Caddy log-parsing worker cron that writes `hlsListenersRedisKey`, also write per-country daily counts as a Redis hash `hls:listener-geo:{slug}:{date}` → `{countryCode: count}` with an 8-day TTL. Expose via a new `fetchMeasuredHlsListenersByCountry(slug, dates)` helper. | Small | P2 |
+| [ ] | **PLAT-064** | **Listener geography API endpoint** — `GET /api/me/listener-geo?period=7d\|30d\|all` aggregates `Download.countryCode` counts for the artist's channel plus Redis HLS geo hashes. Returns `[{countryCode, displayName, count}]` sorted by count descending. Backed by `geoip-lite`'s country name lookup for `displayName`. | Small | P2 |
+| [ ] | **PLAT-065** | **Listener map dashboard panel** — Add `react-simple-maps` to `apps/web`. Build `ListenerMapPanel` client component: fetches `/api/me/listener-geo`, renders a choropleth SVG world map with linear colour scale (low → `--accent`), hover tooltip showing country name + count, and a ranked list of top 10 countries beneath the map. Add as a new card in the dashboard stats tab. | Medium | P2 |
+
+### Audio editor: remaining DSP (PLAT-066–069)
+
+The editor v0 (trim/fade), v1 (multitrack), and v2 (LUFS + limiter) are all shipped. The full `docs/audio-editor.md` baseline additionally specifies per-track EQ, compressor, HP/LP filters, and publishing a bounced result directly to a release track. None of these are wired yet.
+
+| Status | ID | Description | Size | Priority |
+|:---:|:---|---|:---:|:---:|
+| [ ] | **PLAT-066** | **Parametric EQ + HP/LP in bounce worker** — Extend `buildAudioFilters` in `apps/worker/src/jobs/bounce-archive-edit.ts` to accept an `eq` config: `[{freq, gain, q}]` array for FFmpeg `equalizer` biquad filters, plus optional `highpassHz` and `lowpassHz` fields mapped to `highpass=f=…` / `lowpass=f=…`. Add corresponding fields to the `BounceArchiveEditJob` payload schema and `queue.ts` type. | Small | P2 |
+| [ ] | **PLAT-067** | **Compressor in bounce worker** — Add optional `compressor: {thresholdDb, ratio, attackMs, releaseMs, makeupGainDb}` to the bounce job payload; map to FFmpeg `acompressor` filter in `buildAudioFilters`. Extend the archive editor API route (`/api/me/archive/:id/bounce`) to accept and pass through the new compressor params. | Small | P2 |
+| [ ] | **PLAT-068** | **EQ + compressor UI in archive trim editor** — Add collapsible "EQ & dynamics" section to `archive-trim-editor.tsx`: 3-band shelving EQ (low shelf, mid peak, high shelf) with gain sliders (±12 dB), HP/LP frequency inputs, and a compressor toggle with threshold/ratio/attack/release inputs. Wire to the bounce call. Mark M21 audio spec "EQ + compressor" acceptance criterion as met. | Medium | P2 |
+| [ ] | **PLAT-069** | **Bounce → release track publish path** — The bounce worker currently saves back to archive only. Add a `destination: 'archive' \| 'release-track'` field to the bounce job; when `release-track`, create a new `ReleaseTrack` version with the bounced file (reusing the M28 version-history path). Expose a "Publish to release" button in the trim editor that prompts for a release selection. Completes the full M21 acceptance criterion ("publish as a release track"). | Medium | P2 |
+
+### Channel & release visual customization (PLAT-070–076)
+
+Artists want to personalize their channel and release pages with Three.js/WebGL visualizations, cover-art-derived color palettes, and backdrop slideshow preset themes. Color extraction runs automatically from cover art at transcode time; artists can override at channel or release level via the dashboard. Three.js presets are client-side only — no server rendering. Extends M24 per-content visuals and M26 backdrop/gallery themes.
+
+| Status | ID | Description | Size | Priority |
+|:---:|:---|---|:---:|:---:|
+| [ ] | **PLAT-070** | **Cover art palette extraction** — In the transcode/upload finalization worker, after cover art is stored in MinIO, run `node-vibrant` to extract up to 5 color swatches. Store as `Release.paletteJson` (`{bg, accent, text, muted, highlight}` hex strings) with a Prisma migration. If `node-vibrant` fails (no cover art, format unsupported), leave `paletteJson` null. Apply the extracted palette as the default `colorSchemeJson` unless a manual override already exists. | Small | P2 |
+| [ ] | **PLAT-071** | **Color scheme model + API** — Add `colorSchemeJson String?` to `Channel` and `Release` Prisma models (migration). Extend `PATCH /api/me/channel` and `PATCH /api/me/releases/:id` to accept `colorScheme: {bg, accent, text, muted, highlight}` (all fields optional; null clears the override). Color resolution order on read: manual `colorSchemeJson` override → `Release.paletteJson` extracted from cover art → platform defaults. Include resolved `colorScheme` in `/c/:slug` and `/r/:slug` API responses. | Small | P2 |
+| [ ] | **PLAT-072** | **Three.js visualization preset system** — Define `VisualPreset` enum in `packages/shared`: `WAVEFORM_BARS \| PARTICLE_FIELD \| AURORA \| MINIMAL \| REACTIVE_GRID`. Add `visualPreset VisualPreset @default(MINIMAL)` to `Channel` and `ArchiveItem` Prisma models with a migration. Create React Three Fiber preset components under `apps/web/src/components/visuals/` — one file per preset, each `({ analyser: AnalyserNode \| null, colorScheme: ResolvedColorScheme })`. `MINIMAL` renders nothing (safe no-op). | Medium | P2 |
+| [ ] | **PLAT-073** | **Channel visual preset picker in dashboard** — Add a "Visual style" section to `/dashboard/channel`: a grid of 5 preset thumbnail cards (static preview image or mini-canvas per preset) + a color-scheme palette editor (5 hex inputs with live swatch preview). Selecting a preset calls `PATCH /api/me/channel` with `visualPreset`. Saving a palette sends `colorScheme`. Render a live mini-canvas using `@react-three/fiber` with the selected preset and resolved palette. | Medium | P2 |
+| [ ] | **PLAT-074** | **Per-release/archive visual preset + color override** — Add a "Visual" tab to the release dashboard panel and archive item editor: same preset thumbnail grid as PLAT-073 + an optional `colorScheme` palette override (inherit from channel / cover art / custom). Saving updates `Release.visualPreset`, `Release.colorSchemeJson`, or `ArchiveItem.visualPreset` via the respective `PATCH` route. Per-release color overrides apply on the smart link page `/r/:slug`. | Small | P2 |
+| [ ] | **PLAT-075** | **Backdrop slideshow preset themes** — Extend the existing slideshow/backdrop config on `Channel` with: `slideshowPreset` enum (`FADE \| ZOOM \| PAN \| BLUR_CROSS`, default `FADE`), `slideshowIntervalSeconds` int (5–30, default 8), `slideshowTransitionMs` int (300–1500, default 600), `slideshowAutoplay` boolean (default true). Migration. Add slideshow preset picker + interval and transition sliders to the `/dashboard/channel` visual section. Implement CSS-animation-based transitions on `/c/:slug` keyed to the preset value — no Three.js required here. | Small | P2 |
+| [ ] | **PLAT-076** | **Public rendering on `/c/:slug` and `/r/:slug`** — Read `colorScheme` from the page's API response and inject as CSS custom properties (`--channel-bg`, `--channel-accent`, `--channel-text`, `--channel-muted`, `--channel-highlight`) on the channel wrapper element at mount (not `:root`, to avoid leaking across navigations). Lazy-import the Three.js preset component via dynamic `import()` (keep it out of the initial bundle). Detect WebGL with `canvas.getContext('webgl2')` before mounting; fall back to `MINIMAL` silently. Honour `prefers-reduced-motion`: skip visualizer animation loop, pause slideshow transitions. | Medium | P2 |
 
 ---
 

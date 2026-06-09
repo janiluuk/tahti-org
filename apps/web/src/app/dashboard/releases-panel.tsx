@@ -16,6 +16,7 @@ import {
 import ReleaseOpsPanel, { parseCredits } from './release-ops-panel'
 import { ReleaseArtworkUpload } from './release-artwork-upload'
 import { ReleaseTrackVersionPanel } from './release-track-version-panel'
+import ReleaseVisualPanel from './release-visual-panel'
 
 const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
   { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
@@ -47,6 +48,9 @@ interface ReleaseSummary {
   credits?: unknown
   revelatorStatus?: string | null
   revelatorId?: string | null
+  visualPreset?: string | null
+  colorSchemeJson?: string | null
+  paletteJson?: string | null
   tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
@@ -228,6 +232,15 @@ export default function ReleasesPanel({
                 }
                 revelatorStatus={r.revelatorStatus}
                 revelatorId={r.revelatorId}
+              />
+              <ReleaseVisualPanel
+                releaseId={r.id}
+                initial={{
+                  visualPreset: (r.visualPreset ??
+                    'MINIMAL') as import('@tahti/shared').VisualPreset,
+                  colorSchemeJson: r.colorSchemeJson ?? null,
+                  paletteJson: r.paletteJson ?? null,
+                }}
               />
             </li>
           ))}

@@ -17,6 +17,7 @@ import ReleasesPanel from './releases-panel'
 import CollectionsPanel from './collections-panel'
 import ChannelGalleryPanel from './channel-gallery-panel'
 import ChannelTextLayerPanel from './channel-text-layer-panel'
+import ChannelVisualPresetPanel from './channel-visual-preset-panel'
 import ProgrammePanel from './programme-panel'
 import ChannelSchedulePanel from './channel-schedule-panel'
 import type { ProgrammeItemRow } from './programme-actions'
@@ -44,6 +45,8 @@ import type {
   CollectionGalleryMode,
   CollectionTextLayerAlignment,
   CollectionTextLayerMode,
+  VisualPreset,
+  SlideshowPreset,
 } from '@tahti/shared'
 
 interface StreamSettings {
@@ -408,6 +411,36 @@ export default async function DashboardPage() {
   }
   if (user.channel && !channelTextLayer) {
     channelTextLayer = { textLayerMode: 'NONE', textLayerText: '', textLayerAlign: 'CENTER' }
+  }
+
+  let channelVisual: {
+    visualPreset: VisualPreset
+    colorSchemeJson: string | null
+    slideshowPreset: SlideshowPreset
+    slideshowIntervalSeconds: number
+    slideshowTransitionMs: number
+    slideshowAutoplay: boolean
+  } | null = null
+  if (user.channel) {
+    try {
+      const res = await fetch(`${apiUrl}/api/me/channel/visual`, {
+        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
+        cache: 'no-store',
+      })
+      if (res.ok) channelVisual = (await res.json()) as typeof channelVisual
+    } catch {
+      /* ignore */
+    }
+  }
+  if (user.channel && !channelVisual) {
+    channelVisual = {
+      visualPreset: 'MINIMAL',
+      colorSchemeJson: null,
+      slideshowPreset: 'FADE',
+      slideshowIntervalSeconds: 8,
+      slideshowTransitionMs: 600,
+      slideshowAutoplay: true,
+    }
   }
 
   let channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] } | null =
@@ -818,9 +851,13 @@ export default async function DashboardPage() {
                 </Panel>
               )}
 
-              <StudioCollapse title="Channel appearance" hint="gallery & text overlay">
+              <StudioCollapse
+                title="Channel appearance"
+                hint="gallery, text overlay & visual style"
+              >
                 {channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
                 {channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
+                {channelVisual && <ChannelVisualPresetPanel initial={channelVisual} />}
               </StudioCollapse>
 
               <StudioCollapse title="Schedule & programme" hint="next show & running order">
