@@ -630,6 +630,29 @@ The editor v0 (trim/fade), v1 (multitrack), and v2 (LUFS + limiter) are all ship
 | [ ] | **PLAT-068** | **EQ + compressor UI in archive trim editor** — Add collapsible "EQ & dynamics" section to `archive-trim-editor.tsx`: 3-band shelving EQ (low shelf, mid peak, high shelf) with gain sliders (±12 dB), HP/LP frequency inputs, and a compressor toggle with threshold/ratio/attack/release inputs. Wire to the bounce call. Mark M21 audio spec "EQ + compressor" acceptance criterion as met. | Medium | P2 |
 | [ ] | **PLAT-069** | **Bounce → release track publish path** — The bounce worker currently saves back to archive only. Add a `destination: 'archive' \| 'release-track'` field to the bounce job; when `release-track`, create a new `ReleaseTrack` version with the bounced file (reusing the M28 version-history path). Expose a "Publish to release" button in the trim editor that prompts for a release selection. Completes the full M21 acceptance criterion ("publish as a release track"). | Medium | P2 |
 
+### Listener geography map (PLAT-061–065)
+
+Artists should see where in the world their music is being listened to — a choropleth world map on the dashboard stats tab showing listener counts by country. Data comes from two sources: archive download events (already have `byIpHash`) and HLS live-listener events (Caddy log worker). Neither currently stores country codes; full implementation requires geolocation infrastructure, schema changes, a new API endpoint, and the map UI.
+
+| Status | ID | Description | Size | Priority |
+|:---:|:---|---|:---:|:---:|
+| [ ] | **PLAT-061** | **IP geolocation infrastructure** — Add `geoip-lite` (bundles MaxMind GeoLite2 Country data, no external API, country-level only) to `apps/api`. Create `src/lib/geoip.ts` with `countryFromIp(ip: string): string \| null` that handles IPv4, IPv4-mapped IPv6, and returns `null` for private/loopback ranges. Register `MAXMIND_LICENSE_KEY` env var stub in docker-compose for future DB update automation. | Small | P2 |
+| [ ] | **PLAT-062** | **Geo-enrich archive download events** — Add `countryCode String?` field to the `Download` Prisma model (migration). In the download recording handler, extract the real client IP from `X-Forwarded-For` before hashing, call `countryFromIp`, store the result. Update `buildArtistPlaysStats` to return a country breakdown for the downloads series. | Small | P2 |
+| [ ] | **PLAT-063** | **HLS live listener geo aggregates** — In the Caddy log-parsing worker cron that writes `hlsListenersRedisKey`, also write per-country daily counts as a Redis hash `hls:listener-geo:{slug}:{date}` → `{countryCode: count}` with an 8-day TTL. Expose via a new `fetchMeasuredHlsListenersByCountry(slug, dates)` helper. | Small | P2 |
+| [ ] | **PLAT-064** | **Listener geography API endpoint** — `GET /api/me/listener-geo?period=7d\|30d\|all` aggregates `Download.countryCode` counts for the artist's channel plus Redis HLS geo hashes. Returns `[{countryCode, displayName, count}]` sorted by count descending. Backed by `geoip-lite`'s country name lookup for `displayName`. | Small | P2 |
+| [ ] | **PLAT-065** | **Listener map dashboard panel** — Add `react-simple-maps` to `apps/web`. Build `ListenerMapPanel` client component: fetches `/api/me/listener-geo`, renders a choropleth SVG world map with linear colour scale (low → `--accent`), hover tooltip showing country name + count, and a ranked list of top 10 countries beneath the map. Add as a new card in the dashboard stats tab. | Medium | P2 |
+
+### Audio editor: remaining DSP (PLAT-066–069)
+
+The editor v0 (trim/fade), v1 (multitrack), and v2 (LUFS + limiter) are all shipped. The full `docs/audio-editor.md` baseline additionally specifies per-track EQ, compressor, HP/LP filters, and publishing a bounced result directly to a release track. None of these are wired yet.
+
+| Status | ID | Description | Size | Priority |
+|:---:|:---|---|:---:|:---:|
+| [ ] | **PLAT-066** | **Parametric EQ + HP/LP in bounce worker** — Extend `buildAudioFilters` in `apps/worker/src/jobs/bounce-archive-edit.ts` to accept an `eq` config: `[{freq, gain, q}]` array for FFmpeg `equalizer` biquad filters, plus optional `highpassHz` and `lowpassHz` fields mapped to `highpass=f=…` / `lowpass=f=…`. Add corresponding fields to the `BounceArchiveEditJob` payload schema and `queue.ts` type. | Small | P2 |
+| [ ] | **PLAT-067** | **Compressor in bounce worker** — Add optional `compressor: {thresholdDb, ratio, attackMs, releaseMs, makeupGainDb}` to the bounce job payload; map to FFmpeg `acompressor` filter in `buildAudioFilters`. Extend the archive editor API route (`/api/me/archive/:id/bounce`) to accept and pass through the new compressor params. | Small | P2 |
+| [ ] | **PLAT-068** | **EQ + compressor UI in archive trim editor** — Add collapsible "EQ & dynamics" section to `archive-trim-editor.tsx`: 3-band shelving EQ (low shelf, mid peak, high shelf) with gain sliders (±12 dB), HP/LP frequency inputs, and a compressor toggle with threshold/ratio/attack/release inputs. Wire to the bounce call. Mark M21 audio spec "EQ + compressor" acceptance criterion as met. | Medium | P2 |
+| [ ] | **PLAT-069** | **Bounce → release track publish path** — The bounce worker currently saves back to archive only. Add a `destination: 'archive' \| 'release-track'` field to the bounce job; when `release-track`, create a new `ReleaseTrack` version with the bounced file (reusing the M28 version-history path). Expose a "Publish to release" button in the trim editor that prompts for a release selection. Completes the full M21 acceptance criterion ("publish as a release track"). | Medium | P2 |
+
 ---
 
 ## Streaming infrastructure backlog
