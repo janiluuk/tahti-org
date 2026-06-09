@@ -35,6 +35,7 @@ import { fetchMixcloudStatus } from './mixcloud-actions'
 import { EndBroadcastBtn } from './end-broadcast-btn'
 import { Heading, Link, PageShell, Panel, StudioCollapse, Text } from '@tahti/ui'
 import { DashboardTabs } from './dashboard-tabs'
+import { OverviewStreamKey } from './overview-stream-key'
 import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
@@ -555,55 +556,88 @@ export default async function DashboardPage() {
     'studio-newsletter': 'audience',
   }
 
+  const now = new Date()
+  const helsinkiHour = (now.getUTCHours() + 3) % 24
+  const greeting =
+    helsinkiHour < 5
+      ? 'Good night'
+      : helsinkiHour < 12
+        ? 'Good morning'
+        : helsinkiHour < 17
+          ? 'Good afternoon'
+          : helsinkiHour < 21
+            ? 'Good evening'
+            : 'Good night'
+  const firstName = user.displayName.trim().split(/\s+/)[0] ?? user.displayName
+
   return (
     <PageShell size="md">
       <div id="overview" className="studio-section-anchor studio-page-header">
         <div>
-          <Heading level={1}>Dashboard</Heading>
-          {user.channel && (
-            <div className="db-header-channel-row">
-              <span
-                className={`db-header-channel-state${user.channel.state === 'LIVE' ? ' db-header-channel-state--live' : ''}`}
-              >
+          <div className="db-greeting">
+            {greeting}, {firstName}.
+          </div>
+          <div className="db-greeting-status">
+            {user.channel ? (
+              <>
                 <span
-                  className={user.channel.state === 'LIVE' ? 'signal-dot' : 'db-offline-dot'}
-                  aria-hidden
-                />
-                {user.channel.state === 'LIVE' ? 'Live' : 'Offline'}
-              </span>
-              <Link href={`/c/${user.channel.slug}`} className="db-header-channel-url">
-                {user.channel.slug}.tahti.live
+                  className={`db-header-channel-state${user.channel.state === 'LIVE' ? ' db-header-channel-state--live' : ''}`}
+                >
+                  <span
+                    className={user.channel.state === 'LIVE' ? 'signal-dot' : 'db-offline-dot'}
+                    aria-hidden
+                  />
+                  {user.channel.state === 'LIVE' ? 'broadcasting live' : 'offline'}
+                </span>
+                <span>·</span>
+                <Link href={`/c/${user.channel.slug}`} className="db-header-channel-url">
+                  {user.channel.slug}.tahti.live
+                </Link>
+              </>
+            ) : (
+              <span>{user.displayName}</span>
+            )}
+          </div>
+          <div className="db-role-row" style={{ marginTop: '0.5rem' }}>
+            {user.isBoard && (
+              <Link href="/admin" className="db-role-badge db-role-badge--board">
+                Board · Admin
               </Link>
-            </div>
-          )}
-          <Text tone="secondary" className="studio-mt-sm db-header-welcome">
-            {user.displayName}
-          </Text>
+            )}
+            {user.channel ? (
+              <span className="db-role-badge db-role-badge--artist">
+                Artist
+                {membershipInfo?.memberNumber ? ` · #${membershipInfo.memberNumber}` : ''}
+              </span>
+            ) : user.isMember ? (
+              <span className="db-role-badge db-role-badge--member">
+                Member{membershipInfo?.memberNumber ? ` #${membershipInfo.memberNumber}` : ''}
+              </span>
+            ) : (
+              <span className="db-role-badge">Free listener</span>
+            )}
+            {otherModeratedChannels.length > 0 && (
+              <span className="db-role-badge db-role-badge--moderator">
+                Moderator · {otherModeratedChannels.length}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="db-role-row">
-          {user.isBoard && (
-            <Link href="/admin" className="db-role-badge db-role-badge--board">
-              Board · Admin
+        {user.channel && (
+          <div className="studio-page-header__actions">
+            <Link
+              href={`/c/${user.channel.slug}`}
+              className={`db-go-live-btn${user.channel.state === 'LIVE' ? ' db-go-live-btn--live' : ''}`}
+            >
+              <span
+                className={user.channel.state === 'LIVE' ? 'signal-dot' : 'db-offline-dot'}
+                aria-hidden
+                style={{ width: 6, height: 6 }}
+              />
+              {user.channel.state === 'LIVE' ? 'On air' : 'Go live now'}
             </Link>
-          )}
-          {user.channel ? (
-            <span className="db-role-badge db-role-badge--artist">
-              Artist
-              {membershipInfo?.memberNumber ? ` · #${membershipInfo.memberNumber}` : ''}
-            </span>
-          ) : user.isMember ? (
-            <span className="db-role-badge db-role-badge--member">
-              Member{membershipInfo?.memberNumber ? ` #${membershipInfo.memberNumber}` : ''}
-            </span>
-          ) : (
-            <span className="db-role-badge">Free listener</span>
-          )}
-          {otherModeratedChannels.length > 0 && (
-            <span className="db-role-badge db-role-badge--moderator">
-              Moderator · {otherModeratedChannels.length}
-            </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <DashboardTabs
@@ -654,17 +688,74 @@ export default async function DashboardPage() {
             )}
 
             {user.channel && (
-              <Panel title="Channel" headerTight>
-                <div className="db-overview-channel">
-                  <BroadcastUsageBanner usage={broadcastUsage} />
-                  <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
-                  <div className="db-overview-channel__links">
-                    <Link href={`/c/${user.channel.slug}`}>View channel</Link>
-                    <Link href="/dashboard/stats">Full stats</Link>
-                    <Link href="/dashboard#catalog">Upload track</Link>
-                  </div>
+              <>
+                <BroadcastUsageBanner usage={broadcastUsage} />
+                <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
+
+                {streamSettings && (
+                  <OverviewStreamKey
+                    rtmpKey={streamSettings.rtmp.streamKey}
+                    icecastMount={streamSettings.icecast.mount}
+                    icecastPass={streamSettings.icecast.password}
+                  />
+                )}
+
+                <div className="db-quick-actions">
+                  <Link
+                    href="/dashboard#catalog"
+                    className="db-quick-action db-quick-action--primary"
+                  >
+                    ↑ Upload a set
+                  </Link>
+                  <Link href="/dashboard#broadcast" className="db-quick-action">
+                    ≡ Broadcast settings
+                  </Link>
+                  <Link href={`/c/${user.channel.slug}`} className="db-quick-action">
+                    → View my channel
+                  </Link>
                 </div>
-              </Panel>
+
+                {archiveItemsForEdit.length > 0 && (
+                  <div className="db-recent-archive">
+                    <h2 className="db-recent-archive__heading">Recent archive</h2>
+                    <ul className="db-recent-archive__list">
+                      {archiveItemsForEdit.slice(0, 4).map((item) => {
+                        const dur = typeof item.durationSec === 'number' ? item.durationSec : null
+                        const durationMin = dur ? `${Math.floor(dur / 60)}m` : null
+                        const createdAt = typeof item.createdAt === 'string' ? item.createdAt : null
+                        const ago = createdAt
+                          ? (() => {
+                              const ms = Date.now() - new Date(createdAt).getTime()
+                              const d = Math.floor(ms / 86400000)
+                              if (d === 0) return 'today'
+                              if (d === 1) return '1 day ago'
+                              if (d < 30) return `${d} days ago`
+                              return `${Math.floor(d / 30)} mo ago`
+                            })()
+                          : null
+                        return (
+                          <li key={item.id} className="db-recent-archive__item">
+                            <div className="db-recent-archive__icon" aria-hidden>
+                              ◉
+                            </div>
+                            <div className="db-recent-archive__body">
+                              <div className="db-recent-archive__title">{item.title}</div>
+                              <div className="db-recent-archive__meta">
+                                {[durationMin, ago].filter(Boolean).join(' · ')}
+                              </div>
+                            </div>
+                            <div className="db-recent-archive__actions">
+                              <Link href={`/dashboard#catalog`} className="db-recent-archive__link">
+                                Edit
+                              </Link>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </>
             )}
 
             {user.storage && (

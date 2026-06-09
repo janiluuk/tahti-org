@@ -54,6 +54,7 @@ interface ProfileResponse {
     avatarUrl: string | null
     tipJarUrl: string | null
     tier: string
+    socialLinks: Record<string, string> | null
   }
   channel: { slug: string; state: string } | null
   releases: Array<{
@@ -189,7 +190,10 @@ export default async function ArtistProfilePage({ params }: { params: { username
         )}
 
         <section className="prof-section">
-          <div className="prof-sec-label">Releases</div>
+          <div className="prof-sec-label-row">
+            <div className="prof-sec-label">Releases</div>
+            {releases.length > 0 && <div className="prof-sec-count">{releases.length} total</div>}
+          </div>
           {releases.length === 0 ? (
             <p className="prof-list-meta">No published releases yet.</p>
           ) : (
@@ -216,6 +220,30 @@ export default async function ArtistProfilePage({ params }: { params: { username
             </ul>
           )}
         </section>
+
+        {artist.socialLinks && Object.keys(artist.socialLinks).length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Find me elsewhere</div>
+            <div className="prof-social-links">
+              {Object.entries(artist.socialLinks).map(([key, url]) => {
+                if (!url) return null
+                const label = key.charAt(0).toUpperCase() + key.slice(1)
+                const isEmail = url.startsWith('mailto:')
+                return (
+                  <a
+                    key={key}
+                    href={url}
+                    rel="noopener noreferrer"
+                    target={isEmail ? undefined : '_blank'}
+                    className="prof-social-link"
+                  >
+                    {label} ↗
+                  </a>
+                )
+              })}
+            </div>
+          </section>
+        )}
       </ProfilePageLayout>
     </>
   )
