@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
 // ISO 3166-1: numeric code → alpha-2, for world-atlas TopoJSON choropleth.
 // Source: https://www.iso.org/obp/ui/#search (public domain data)
 export const ISO_NUM_TO_A2: Record<number, string> = {
