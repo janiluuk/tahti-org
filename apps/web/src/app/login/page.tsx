@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
+import { safeSignupRedirect } from '@/lib/signup'
 import { login, register } from '../auth/actions'
 
 type AuthMode = 'login' | 'register'
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [registerSuccess, setRegisterSuccess] = useState(false)
+  const [nextPath, setNextPath] = useState('/dashboard')
   const {
     captchaRef,
     required: captchaRequired,
@@ -31,6 +33,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMode(initialMode())
+    const params = new URLSearchParams(window.location.search)
+    setNextPath(safeSignupRedirect(params.get('next'), '/dashboard'))
   }, [])
 
   function switchMode(next: AuthMode) {
@@ -54,7 +58,7 @@ export default function LoginPage() {
       setError(result.error)
       setPending(false)
     } else {
-      window.location.href = '/dashboard'
+      window.location.href = nextPath
     }
   }
 

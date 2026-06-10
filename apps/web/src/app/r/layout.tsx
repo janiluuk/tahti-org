@@ -8,7 +8,7 @@ import '@tahti/ui/src/styles/brand-channel.css'
 
 export default function SmartLinkRootLayout({ children }: { children: ReactNode }) {
   return (
-    <div data-tahti-ui="brand" className="brand-channel">
+    <div data-tahti-ui="brand" data-channel-root className="brand-channel">
       {children}
     </div>
   )

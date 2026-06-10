@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useEffect, useReducer, useRef } from 'react'
+import { useEffect, useReducer, useRef, useState } from 'react'
 import type { SlideshowPreset } from '@tahti/shared'
 
 interface Props {
@@ -76,6 +76,7 @@ export function ChannelSlideshow({
   autoplay,
 }: Props) {
   const [state, dispatch] = useReducer(reducer, { current: 0, next: null, transitioning: false })
+  const [reduceMotion, setReduceMotion] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const transitionRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const currentRef = useRef(state.current)
@@ -84,14 +85,25 @@ export function ChannelSlideshow({
   useInjectKeyframes(preset)
 
   useEffect(() => {
-    if (!autoplay || images.length < 2) return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduceMotion(mq.matches)
+    const onChange = () => setReduceMotion(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  const effectiveAutoplay = autoplay && !reduceMotion
+  const effectiveTransitionMs = reduceMotion ? 0 : transitionMs
+
+  useEffect(() => {
+    if (!effectiveAutoplay || images.length < 2) return
 
     function advance() {
       const nextIdx = (currentRef.current + 1) % images.length
       dispatch({ type: 'START', next: nextIdx })
       transitionRef.current = setTimeout(() => {
         dispatch({ type: 'END' })
-      }, transitionMs)
+      }, effectiveTransitionMs)
     }
 
     timerRef.current = setTimeout(advance, intervalSeconds * 1000)
@@ -100,9 +112,9 @@ export function ChannelSlideshow({
       if (transitionRef.current) clearTimeout(transitionRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.current, autoplay, images.length, intervalSeconds, transitionMs])
+  }, [state.current, effectiveAutoplay, images.length, intervalSeconds, effectiveTransitionMs])
 
-  const dur = `${transitionMs}ms`
+  const dur = reduceMotion ? undefined : `${effectiveTransitionMs}ms`
   const ease = 'cubic-bezier(0.4,0,0.2,1)'
 
   return (
@@ -129,14 +141,15 @@ export function ChannelSlideshow({
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          animation: state.transitioning
-            ? `${ANIM_OUT[preset]} ${dur} ${ease} forwards`
-            : undefined,
+          animation:
+            state.transitioning && !reduceMotion
+              ? `${ANIM_OUT[preset]} ${dur} ${ease} forwards`
+              : undefined,
         }}
       />
 
       {/* Next image — animates in during transition */}
-      {state.transitioning && state.next !== null && (
+      {state.transitioning && state.next !== null && !reduceMotion && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           key={`next-${state.next}`}

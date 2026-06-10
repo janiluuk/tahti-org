@@ -6,9 +6,6 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  VISUAL_PRESETS,
-  VISUAL_PRESET_LABELS,
-  VISUAL_PRESET_DESCRIPTIONS,
   SLIDESHOW_PRESETS,
   SLIDESHOW_PRESET_LABELS,
   ColorSchemeSchema,
@@ -17,6 +14,7 @@ import {
   type ColorScheme,
 } from '@tahti/shared'
 import { Alert, Button, Field, Panel, Select, Text } from '@/components/ui'
+import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 import { updateChannelVisual } from './channel-visual-actions'
 
 interface Props {
@@ -93,26 +91,15 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
       headerTight
       description="Choose a Three.js background visualizer, customize your channel color palette, and control slideshow transition style."
     >
-      <Field label="Background visualizer" htmlFor="visual-preset">
-        <Select
-          id="visual-preset"
+      <Field label="Background visualizer">
+        <VisualPresetPicker
           value={preset}
+          onChange={setPreset}
           disabled={isPending}
-          onChange={(e) => setPreset(e.target.value as VisualPreset)}
-        >
-          {VISUAL_PRESETS.map((p) => (
-            <option key={p} value={p}>
-              {VISUAL_PRESET_LABELS[p]}
-            </option>
-          ))}
-        </Select>
+          colorScheme={useCustomScheme ? scheme : undefined}
+          showPreview
+        />
       </Field>
-
-      {preset !== 'MINIMAL' && (
-        <Text size="sm" tone="muted" className="studio-mb-lg">
-          {VISUAL_PRESET_DESCRIPTIONS[preset]}
-        </Text>
-      )}
 
       <Field label="Color palette" htmlFor="custom-scheme-toggle">
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>

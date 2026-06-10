@@ -1775,6 +1775,123 @@
   background: color-mix(in srgb, var(--cyan) 10%, transparent);
 }
 
+/* PLAT-065: listener geography map */
+[data-tahti-ui='studio'] .stats-panel--map {
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .stats-period-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+[data-tahti-ui='studio'] .stats-period-tab {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .stats-period-tab.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .stats-period-tab:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+[data-tahti-ui='studio'] .listener-map-wrap {
+  position: relative;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+[data-tahti-ui='studio'] .map-tooltip {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--card) 92%, black);
+  border: 1px solid var(--border);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+[data-tahti-ui='studio'] .map-tooltip-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .map-tooltip-count {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .map-top-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+[data-tahti-ui='studio'] .map-top-row {
+  display: grid;
+  grid-template-columns: 20px 1fr 80px auto;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-tahti-ui='studio'] .map-top-rank {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: right;
+}
+
+[data-tahti-ui='studio'] .map-top-name {
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='studio'] .map-top-bar-wrap {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .map-top-bar {
+  display: block;
+  height: 100%;
+  width: var(--w, 0%);
+  background: var(--cyan);
+  border-radius: 2px;
+}
+
+[data-tahti-ui='studio'] .map-top-count {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--cyan);
+}
+
 [data-tahti-ui='studio'] .stats-chart-axis {
   display: flex;
   justify-content: space-between;
@@ -2541,6 +2658,73 @@
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__card--active {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__preview {
+  position: relative;
+  height: 72px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__preview--minimal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__minimal-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__preview-canvas {
+  opacity: 0.9;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__desc {
+  font-size: 0.65rem;
+  color: var(--muted);
+  line-height: 1.35;
 }
 
 /* Newsletter compose — markdown editor + "how it lands in inbox" preview */

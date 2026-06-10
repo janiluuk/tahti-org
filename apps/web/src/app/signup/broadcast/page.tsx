@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { BrandLogo, Heading, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
+import { SignupWizard } from '../signup-wizard'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }
@@ -38,25 +39,21 @@ export default async function SignupBroadcastPage() {
       <div className="auth-shell">
         <div className="auth-card auth-card--dark auth-card--wide">
           <BrandLogo />
+          <SignupWizard current="broadcast" />
           <Heading level={1}>Set up broadcasting</Heading>
           <Text tone="muted">
             Use these credentials in OBS Studio, Mixxx, Traktor, or any RTMP/Icecast-compatible
             software to go live.
           </Text>
 
-          <section style={{ marginTop: '1.25rem' }}>
-            <h2
-              style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                color: 'var(--cyan)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                marginBottom: '0.5rem',
-              }}
-            >
-              OBS Studio (RTMP)
-            </h2>
+          <section className="signup-broadcast-section">
+            <h2 className="signup-section-heading">OBS Studio (RTMP)</h2>
+            <ol className="signup-quickstart">
+              <li>Open OBS → Settings → Stream</li>
+              <li>Service: Custom</li>
+              <li>Paste the server and stream key below</li>
+              <li>Click “Start Streaming” when you are ready to go live</li>
+            </ol>
             <dl className="signup-creds-list">
               <dt>Server</dt>
               <dd>
@@ -69,19 +66,13 @@ export default async function SignupBroadcastPage() {
             </dl>
           </section>
 
-          <section style={{ marginTop: '1.25rem' }}>
-            <h2
-              style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                color: 'var(--cyan)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.06em',
-                marginBottom: '0.5rem',
-              }}
-            >
-              Mixxx / Traktor (Icecast)
-            </h2>
+          <section className="signup-broadcast-section">
+            <h2 className="signup-section-heading">Mixxx / Traktor (Icecast)</h2>
+            <ol className="signup-quickstart">
+              <li>Open Live Broadcast preferences in your DJ software</li>
+              <li>Connection type: Icecast 2</li>
+              <li>Enter server, mount, and password below</li>
+            </ol>
             <dl className="signup-creds-list">
               <dt>Server</dt>
               <dd>
@@ -98,21 +89,17 @@ export default async function SignupBroadcastPage() {
             </dl>
           </section>
 
-          <Text tone="muted" size="sm" style={{ marginTop: '1rem' }}>
+          <Text tone="muted" size="sm">
             Your stream keys are also available any time from{' '}
             <Link href="/dashboard">Dashboard → Channel</Link>. You can rotate them there if needed.
           </Text>
 
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
-              marginTop: '1.25rem',
-            }}
-          >
+          <div className="signup-broadcast-actions">
             <Link href="/dashboard" className="ui-btn ui-btn--primary">
               Go to dashboard →
+            </Link>
+            <Link href="/signup/profile" className="ui-btn ui-btn--ghost">
+              ← Back to profile
             </Link>
           </div>
         </div>

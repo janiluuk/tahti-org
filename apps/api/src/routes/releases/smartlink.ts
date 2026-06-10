@@ -10,6 +10,7 @@ import {
 } from '@tahti/shared'
 import { config } from '../../config.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { resolveColorScheme } from '@tahti/shared'
 
 // M14 (partial): public smart link resolves to artist profile + release anchor.
 const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
@@ -127,6 +128,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           colorSchemeJson: release.colorSchemeJson,
           paletteJson: release.paletteJson,
           visualPreset: release.visualPreset,
+          colorScheme: resolveColorScheme(release.colorSchemeJson, release.paletteJson),
         },
         artist: {
           username: release.user.username,

@@ -5,4 +5,5 @@ import type { ColorScheme } from '@tahti/shared'
 
 export interface VisualPresetProps {
   colorScheme: ColorScheme
+  analyser?: AnalyserNode | null
 }

@@ -10,7 +10,7 @@ import type { VisualPresetProps } from './types'
 const GRID_W = 24
 const GRID_H = 14
 
-export function ReactiveGridPreset({ colorScheme }: VisualPresetProps) {
+export function ReactiveGridPreset({ colorScheme, analyser }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -63,8 +63,15 @@ export function ReactiveGridPreset({ colorScheme }: VisualPresetProps) {
       raf = requestAnimationFrame(animate)
       t += 0.02
 
-      for (const { mat, phase } of cells) {
-        const pulse = Math.sin(t + phase) * 0.5 + 0.5
+      for (let i = 0; i < cells.length; i++) {
+        const { mat, phase } = cells[i]!
+        let pulse = Math.sin(t + phase) * 0.5 + 0.5
+        if (analyser) {
+          const data = new Uint8Array(analyser.frequencyBinCount)
+          analyser.getByteFrequencyData(data)
+          const idx = Math.floor((i / cells.length) * data.length)
+          pulse = data[idx]! / 255
+        }
         const col = new THREE.Color().lerpColors(muted, pulse > 0.7 ? highlight : accent, pulse)
         mat.color = col
         mat.opacity = 0.1 + pulse * 0.3
@@ -93,7 +100,7 @@ export function ReactiveGridPreset({ colorScheme }: VisualPresetProps) {
       renderer.dispose()
       if (renderer.domElement.parentElement === mount) mount.removeChild(renderer.domElement)
     }
-  }, [colorScheme.accent, colorScheme.muted, colorScheme.highlight])
+  }, [colorScheme.accent, colorScheme.muted, colorScheme.highlight, analyser])
 
   return <div ref={mountRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
 }

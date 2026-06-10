@@ -15,6 +15,8 @@
     "tor-exit:check": "node scripts/check-tor-exit-list-fresh.mjs",
     "tor-exit:sync": "node scripts/sync-tor-exit-list.mjs",
     "prod:check-m7": "bash scripts/check-mixcloud-prod.sh",
+    "prod:check-revelator": "bash scripts/check-revelator-prod.sh",
+    "prod:check-distribution": "bash scripts/check-distribution-prod.sh",
     "prod:readiness": "bash scripts/check-prod-readiness.sh",
     "test": "vitest run",
     "test:watch": "vitest",

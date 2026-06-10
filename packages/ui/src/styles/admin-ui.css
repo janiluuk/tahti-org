@@ -1598,3 +1598,140 @@
   color: var(--tahti-primary);
   word-break: break-all;
 }
+
+.signup-wizard {
+  margin: 0 0 1.25rem;
+}
+
+.signup-wizard__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.signup-wizard__step {
+  opacity: 0.45;
+}
+
+.signup-wizard__step--done,
+.signup-wizard__step--active {
+  opacity: 1;
+}
+
+.signup-wizard__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.signup-wizard__step--active .signup-wizard__link {
+  color: var(--cyan);
+}
+
+.signup-wizard__step--done .signup-wizard__link {
+  color: var(--text);
+}
+
+.signup-wizard__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.65rem;
+}
+
+.signup-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.signup-fieldset__legend {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.signup-genre-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.signup-genre-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.signup-genre-chip:has(input:checked) {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.signup-genre-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.signup-profile-links {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .signup-profile-links {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.signup-section-heading {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.5rem;
+}
+
+.signup-broadcast-section {
+  margin-top: 1.25rem;
+}
+
+.signup-quickstart {
+  margin: 0 0 0.75rem;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.signup-quickstart li + li {
+  margin-top: 0.25rem;
+}
+
+.signup-broadcast-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}

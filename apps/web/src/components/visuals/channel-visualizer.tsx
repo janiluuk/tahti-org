@@ -29,6 +29,7 @@ interface Props {
   preset: VisualPreset
   colorSchemeJson?: string | null
   paletteJson?: string | null
+  analyser?: AnalyserNode | null
   className?: string
 }
 
@@ -42,7 +43,13 @@ function supportsWebGL(): boolean {
   }
 }
 
-export function ChannelVisualizer({ preset, colorSchemeJson, paletteJson, className }: Props) {
+export function ChannelVisualizer({
+  preset,
+  colorSchemeJson,
+  paletteJson,
+  analyser,
+  className,
+}: Props) {
   if (preset === 'MINIMAL') return null
 
   const colorScheme: ColorScheme =
@@ -58,7 +65,7 @@ export function ChannelVisualizer({ preset, colorSchemeJson, paletteJson, classN
 
   if (!supportsWebGL()) return null
 
-  const props = { colorScheme }
+  const props = { colorScheme, analyser }
 
   return (
     <div

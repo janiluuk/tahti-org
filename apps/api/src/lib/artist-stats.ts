@@ -3,6 +3,7 @@
 
 import type { PrismaClient } from '@tahti/db'
 import type { StatsRangeQuery } from '@tahti/shared'
+import { countryDisplayName } from './geoip.js'
 
 const CC_TLD: Record<string, string> = {
   FI: 'Finland',
@@ -95,7 +96,7 @@ export async function buildArtistPlaysStats(
 
   const keys = days != null ? utcDayKeys(days).keys : null
 
-  const [downloadRows, clickRows] = await Promise.all([
+  const [downloadRows, clickRows, downloadCountryRows] = await Promise.all([
     channel
       ? prisma.download.findMany({
           where: { channelId: channel.id, countedAt: { not: null }, createdAt: { gte: since } },
@@ -106,6 +107,18 @@ export async function buildArtistPlaysStats(
       ? prisma.smartLinkClick.findMany({
           where: { releaseId: { in: releaseIds }, createdAt: { gte: since } },
           select: { createdAt: true },
+        })
+      : [],
+    channel
+      ? prisma.download.groupBy({
+          by: ['countryCode'],
+          where: {
+            channelId: channel.id,
+            countedAt: { not: null },
+            createdAt: { gte: since },
+            countryCode: { not: null },
+          },
+          _count: { countryCode: true },
         })
       : [],
   ])
@@ -144,6 +157,15 @@ export async function buildArtistPlaysStats(
   const totalDownloads = downloadRows.length
   const totalSmartLinkClicks = clickRows.length
 
+  const downloadCountries = downloadCountryRows
+    .filter((row) => row.countryCode)
+    .map((row) => ({
+      countryCode: row.countryCode!,
+      displayName: countryDisplayName(row.countryCode!),
+      count: row._count.countryCode,
+    }))
+    .sort((a, b) => b.count - a.count)
+
   return {
     range,
     ...(days != null ? { windowDays: days } : {}),
@@ -151,6 +173,7 @@ export async function buildArtistPlaysStats(
     totalDownloads,
     totalSmartLinkClicks,
     daily,
+    downloadCountries,
   }
 }
 

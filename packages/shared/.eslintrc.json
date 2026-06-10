@@ -2,7 +2,7 @@
   "extends": ["../../.eslintrc.json"],
   "overrides": [
     {
-      "files": ["src/dto/visual-preset.ts"],
+      "files": ["src/dto/visual-preset.ts", "src/dto/visual-preset.test.ts"],
       "rules": { "no-restricted-syntax": "off" }
     }
   ]
