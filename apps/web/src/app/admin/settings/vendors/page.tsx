@@ -118,10 +118,35 @@ const DPA_CHECKLIST = [
   { item: 'Revelator terms reviewed for artist data subprocessor obligations', done: false },
 ] as const
 
+interface IntegrationStatusRow {
+  id: 'mixcloud' | 'revelator'
+  label: string
+  configured: boolean
+  mode: 'live' | 'stub'
+  detail?: string
+}
+
+function boardFetch(path: string) {
+  const sessionCookie = cookies().get('tahti_session')
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  return fetch(`${apiUrl}${path}`, {
+    headers: { Cookie: `tahti_session=${sessionCookie?.value ?? ''}` },
+    cache: 'no-store',
+  })
+}
+
+async function fetchIntegrationStatus(): Promise<Map<string, IntegrationStatusRow>> {
+  const res = await boardFetch('/api/admin/integrations')
+  if (!res.ok) return new Map()
+  const data = (await res.json()) as { integrations: IntegrationStatusRow[] }
+  return new Map(data.integrations.map((row) => [row.label, row]))
+}
+
 export default async function AdminVendorsPage() {
   const sessionCookie = cookies().get('tahti_session')
   if (!sessionCookie) redirect('/login')
 
+  const integrationStatus = await fetchIntegrationStatus()
   return (
     <>
       <h1 className="admin-section-title">Vendors &amp; DPA tracking</h1>
@@ -132,6 +157,51 @@ export default async function AdminVendorsPage() {
         </Link>{' '}
         for the full GDPR processing register and <code>ops/VENDORS.md</code> for contact details.
       </p>
+
+      {(integrationStatus.has('Mixcloud') || integrationStatus.has('Revelator')) && (
+        <section style={{ marginBottom: '2rem' }}>
+          <h2 className="admin-subsection-title">Distribution go-live (PLAT-056 / PLAT-057)</h2>
+          <div className="admin-card" style={{ padding: '1rem' }}>
+            {(['Mixcloud', 'Revelator'] as const).map((name) => {
+              const row = integrationStatus.get(name)
+              if (!row) return null
+              const live = row.mode === 'live'
+              return (
+                <div
+                  key={name}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '0.75rem',
+                    padding: '0.5rem 0',
+                    borderBottom: '1px solid var(--border)',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: live ? 'var(--green)' : 'var(--coral)',
+                      flexShrink: 0,
+                      marginTop: 2,
+                    }}
+                  >
+                    {live ? 'LIVE' : 'STUB'}
+                  </span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{name}</div>
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--muted)' }}>{row.detail}</div>
+                  </div>
+                </div>
+              )
+            })}
+            <p style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginTop: '0.75rem' }}>
+              On the Swarm manager: <code>pnpm prod:check-distribution</code> — see{' '}
+              <code>ops/RUNBOOK.md</code>.
+            </p>
+          </div>
+        </section>
+      )}
 
       <section style={{ marginBottom: '2rem' }}>
         <h2 className="admin-subsection-title">GDPR / DPA checklist</h2>
@@ -236,6 +306,26 @@ export default async function AdminVendorsPage() {
               <div
                 style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}
               >
+                {integrationStatus.get(v.name) && (
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      background:
+                        integrationStatus.get(v.name)?.mode === 'live'
+                          ? 'rgba(80,200,120,0.15)'
+                          : 'rgba(255,120,50,0.15)',
+                      color:
+                        integrationStatus.get(v.name)?.mode === 'live'
+                          ? 'var(--green)'
+                          : 'var(--coral)',
+                      padding: '2px 6px',
+                      borderRadius: 4,
+                    }}
+                  >
+                    {integrationStatus.get(v.name)?.mode === 'live' ? 'Live' : 'Stub mode'}
+                  </span>
+                )}
                 {v.dpaRequired && (
                   <span
                     style={{

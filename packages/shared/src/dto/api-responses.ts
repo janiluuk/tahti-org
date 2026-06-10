@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { ColorSchemeSchema } from './visual-preset.js'
 
 export const EgressDailyPointSchema = z.object({
   date: z.string(),
@@ -215,6 +216,11 @@ export const MembershipDevActivateResponseSchema = z.object({
   message: z.string(),
 })
 
+export const MembershipCheckoutBodySchema = z.object({
+  successPath: z.string().max(256).optional(),
+  cancelPath: z.string().max(256).optional(),
+})
+
 export const MembershipCheckoutResponseSchema = z.union([
   StripeCheckoutUrlResponseSchema,
   MembershipDevActivateResponseSchema,
@@ -325,6 +331,7 @@ export const PublicChannelViewSchema = z.object({
   videoBackgroundUrl: z.string().nullable(),
   // M31
   colorSchemeJson: z.string().nullable(),
+  colorScheme: ColorSchemeSchema,
   visualPreset: z.string(),
   slideshowPreset: z.string(),
   slideshowIntervalSeconds: z.number().int(),

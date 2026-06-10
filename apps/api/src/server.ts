@@ -76,6 +76,7 @@ import adminAuditRoutes from './routes/admin/audit.js'
 import adminVenueRoutes from './routes/admin/venues.js'
 import supportContactRoutes from './routes/support/contact.js'
 import adminBetaRoutes from './routes/admin/beta.js'
+import adminIntegrationsRoutes from './routes/admin/integrations.js'
 import betaApplyRoutes from './routes/beta/apply.js'
 import setupPasswordRoute from './routes/auth/setup-password.js'
 import meReleaseRoutes from './routes/releases/me.js'
@@ -465,6 +466,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminAuditRoutes)
   await fastify.register(adminVenueRoutes)
   await fastify.register(adminBetaRoutes)
+  await fastify.register(adminIntegrationsRoutes)
   await fastify.register(supportContactRoutes)
   await fastify.register(betaApplyRoutes)
 

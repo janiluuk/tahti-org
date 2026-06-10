@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   BillingPortalUrlResponseSchema,
+  MembershipCheckoutBodySchema,
   MembershipCheckoutResponseSchema,
   MembershipStatusResponseSchema,
   openApiResponse,
@@ -17,6 +18,12 @@ import {
   createBillingPortalSession,
 } from '../../lib/stripe.js'
 import { activateMembership, membershipRenewalDueAt } from '../../lib/membership.js'
+
+function safeAppReturnPath(path: string | undefined, fallback: string, appUrl: string): string {
+  if (!path || !path.startsWith('/') || path.startsWith('//')) return fallback
+  if (!path.startsWith('/signup') && !path.startsWith('/dashboard')) return fallback
+  return `${appUrl.replace(/\/$/, '')}${path}`
+}
 
 const membershipRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/membership — current membership status
@@ -64,6 +71,11 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async (request, reply) => {
       const user = request.sessionUser!
+      const bodyParsed = MembershipCheckoutBodySchema.safeParse(request.body ?? {})
+      if (!bodyParsed.success) {
+        return reply.status(400).send({ error: 'Invalid checkout options' })
+      }
+      const { successPath, cancelPath } = bodyParsed.data
 
       if (!user.emailVerifiedAt) {
         return reply.status(400).send({ error: 'Verify your email before paying for membership' })
@@ -109,8 +121,16 @@ const membershipRoutes: FastifyPluginAsync = async (fastify) => {
 
         const session = await createMembershipCheckoutSession({
           customerId,
-          successUrl: `${config.appUrl}/dashboard?membership=success`,
-          cancelUrl: `${config.appUrl}/dashboard?membership=canceled`,
+          successUrl: safeAppReturnPath(
+            successPath,
+            `${config.appUrl}/dashboard?membership=success`,
+            config.appUrl,
+          ),
+          cancelUrl: safeAppReturnPath(
+            cancelPath,
+            `${config.appUrl}/dashboard?membership=canceled`,
+            config.appUrl,
+          ),
           unitAmountCents: config.membership.priceCents,
           productName: 'Tahti ry annual membership',
           metadata: { type: 'membership', userId: user.id },

@@ -23,6 +23,21 @@
   --tahti-info-bg: color-mix(in srgb, var(--cyan) 12%, var(--card));
 }
 
+/* M31: artist color scheme overrides (--channel-* set by ChannelColorScheme) */
+[data-channel-root] {
+  --bg: var(--channel-bg, #0a0e1c);
+  --text: var(--channel-text, #e6e9f0);
+  --muted: var(--channel-muted, #a1a8bd);
+  --muted2: color-mix(in srgb, var(--channel-muted, #a1a8bd) 72%, transparent);
+  --cyan: var(--channel-accent, #22d3ee);
+  --lavender: var(--channel-highlight, #a78bfa);
+  --purple: var(--channel-highlight, #a78bfa);
+  --card: color-mix(in srgb, var(--channel-bg, #0a0e1c) 88%, white);
+  --card2: color-mix(in srgb, var(--channel-bg, #0a0e1c) 80%, white);
+  --border: color-mix(in srgb, var(--channel-muted, #a1a8bd) 22%, transparent);
+  --amber: var(--channel-accent, #22d3ee);
+}
+
 [data-tahti-ui='brand'].brand-channel .ui-heading,
 [data-tahti-ui='brand'].brand-channel .ui-text {
   font-family: var(--font-head);
@@ -748,14 +763,14 @@
   font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: none;
-  background: color-mix(in srgb, var(--purple) 15%, transparent);
-  border: 1px solid color-mix(in srgb, var(--purple) 35%, transparent);
-  color: var(--lavender);
+  background: color-mix(in srgb, var(--channel-highlight, var(--purple)) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--channel-highlight, var(--purple)) 35%, transparent);
+  color: var(--channel-highlight, var(--lavender));
   transition: background 0.15s;
 }
 
 [data-tahti-ui='brand'] .ch-artist-sub-btn:hover {
-  background: color-mix(in srgb, var(--purple) 22%, transparent);
+  background: color-mix(in srgb, var(--channel-highlight, var(--purple)) 22%, transparent);
 }
 
 [data-tahti-ui='brand'] .ch-artist-profile-link {
@@ -1881,12 +1896,53 @@
 [data-tahti-ui='brand'] .sl-primary-cta {
   display: inline-block;
   padding: 0.75rem 1.25rem;
-  background: var(--amber);
-  color: var(--bg);
+  background: var(--channel-accent, var(--amber));
+  color: var(--channel-bg, var(--bg));
   border-radius: var(--radius);
   font-weight: 600;
   text-decoration: none;
   margin-bottom: 1rem;
+}
+
+/* M31: channel page visual layer + archive playback */
+[data-tahti-ui='brand'] .ch-page-content {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-tahti-ui='brand'] .ch-page-visualizer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.55;
+}
+
+[data-tahti-ui='brand'] .ch-page-foreground {
+  position: relative;
+  z-index: 1;
+}
+
+[data-tahti-ui='brand'] .ch-archive-playback {
+  position: relative;
+  margin-top: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-viz {
+  position: absolute;
+  inset: -0.5rem -0.75rem auto;
+  height: 120px;
+  z-index: 0;
+  opacity: 0.65;
+  border-radius: 8px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-playback .ch-archive-audio {
+  position: relative;
+  z-index: 1;
 }
 
 [data-tahti-ui='brand'] .sl-footer {
@@ -2085,7 +2141,7 @@
   text-transform: uppercase;
   background: var(--card2);
   border: 1px solid var(--border);
-  color: var(--muted);
+  color: var(--channel-muted, var(--muted));
 }
 
 /* Release grid — 4-col on desktop, 2-col on mobile */
@@ -2385,7 +2441,7 @@
   top: 1px;
   bottom: 1px;
   width: 2px;
-  background: var(--cyan);
+  background: var(--channel-accent, var(--cyan));
   border-radius: 2px;
   opacity: 0.5;
 }

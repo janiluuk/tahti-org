@@ -15,8 +15,15 @@ fail=0
 
 section() { echo ""; echo "── $1 ──"; }
 
-section "Mixcloud (M7)"
+section "Mixcloud (M7 / PLAT-057)"
 if "${ROOT}/scripts/check-mixcloud-prod.sh"; then
+  :
+else
+  fail=1
+fi
+
+section "Revelator (PLAT-056)"
+if "${ROOT}/scripts/check-revelator-prod.sh"; then
   :
 else
   fail=1

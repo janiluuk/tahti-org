@@ -32,6 +32,7 @@ interface PlaysPayload {
 
 interface ListenerGeoPoint {
   countryCode: string
+  displayName: string
   count: number
 }
 

@@ -5,13 +5,9 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  VISUAL_PRESETS,
-  VISUAL_PRESET_LABELS,
-  VISUAL_PRESET_DESCRIPTIONS,
-  type VisualPreset,
-} from '@tahti/shared'
-import { Alert, Button, Field, Panel, Select, Text } from '@/components/ui'
+import { type VisualPreset } from '@tahti/shared'
+import { Alert, Button, Field, Panel } from '@/components/ui'
+import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 import { updateArchiveItemVisual } from './channel-visual-actions'
 
 interface Props {
@@ -46,25 +42,9 @@ export default function ArchiveVisualPanel({ itemId, initial }: Props) {
       headerTight
       description="Background visualizer shown when this track plays on the channel page."
     >
-      <Field label="Preset" htmlFor="archive-visual-preset">
-        <Select
-          id="archive-visual-preset"
-          value={preset}
-          disabled={isPending}
-          onChange={(e) => setPreset(e.target.value as VisualPreset)}
-        >
-          {VISUAL_PRESETS.map((p) => (
-            <option key={p} value={p}>
-              {VISUAL_PRESET_LABELS[p]}
-            </option>
-          ))}
-        </Select>
+      <Field label="Preset">
+        <VisualPresetPicker value={preset} onChange={setPreset} disabled={isPending} showPreview />
       </Field>
-      {preset !== 'MINIMAL' && (
-        <Text size="sm" tone="muted" className="studio-mb-lg">
-          {VISUAL_PRESET_DESCRIPTIONS[preset]}
-        </Text>
-      )}
       {error && <Alert variant="error">{error}</Alert>}
       {message && <Alert variant="success">{message}</Alert>}
       <Button type="button" variant="primary" onClick={save} disabled={isPending}>

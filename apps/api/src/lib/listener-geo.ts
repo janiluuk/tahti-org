@@ -5,13 +5,9 @@
 // Redis HLS geo hashes (hIncrBy country totals from Caddy logs).
 
 import type { PrismaClient } from '@tahti/db'
-import { hlsListenerGeoRedisKey } from '@tahti/shared'
-import { getRedisClient } from './redis.js'
-
-export type ListenerGeoPoint = {
-  countryCode: string
-  count: number
-}
+import type { ListenerGeoPoint } from '@tahti/shared'
+import { countryDisplayName } from './geoip.js'
+import { fetchMeasuredHlsListenersByCountry } from './hls-listener-geo.js'
 
 function utcDaysBack(n: number): string[] {
   const days: string[] = []
@@ -21,22 +17,6 @@ function utcDaysBack(n: number): string[] {
     days.push(d.toISOString().slice(0, 10))
   }
   return days
-}
-
-async function fetchHlsGeoCounts(slug: string, dates: string[]): Promise<Record<string, number>> {
-  const client = await getRedisClient()
-  if (!client) return {}
-
-  const totals: Record<string, number> = {}
-  await Promise.all(
-    dates.map(async (date) => {
-      const raw = await client.hGetAll(hlsListenerGeoRedisKey(slug, date))
-      for (const [cc, val] of Object.entries(raw)) {
-        totals[cc] = (totals[cc] ?? 0) + (parseInt(val, 10) || 0)
-      }
-    }),
-  )
-  return totals
 }
 
 export async function buildListenerGeo(
@@ -50,7 +30,6 @@ export async function buildListenerGeo(
   })
   if (!channel) return []
 
-  // Download-table geo (archive + release)
   const sinceDate =
     period === 'all' ? undefined : new Date(Date.now() - (period === '7d' ? 7 : 30) * 86_400_000)
 
@@ -71,14 +50,17 @@ export async function buildListenerGeo(
     }
   }
 
-  // HLS listener geo from Redis
   const dates = period === 'all' ? utcDaysBack(90) : utcDaysBack(period === '7d' ? 7 : 30)
-  const hlsCounts = await fetchHlsGeoCounts(channel.slug, dates)
+  const hlsCounts = await fetchMeasuredHlsListenersByCountry(channel.slug, dates)
   for (const [cc, n] of Object.entries(hlsCounts)) {
     totals[cc] = (totals[cc] ?? 0) + n
   }
 
   return Object.entries(totals)
-    .map(([countryCode, count]) => ({ countryCode, count }))
+    .map(([countryCode, count]) => ({
+      countryCode,
+      displayName: countryDisplayName(countryCode),
+      count,
+    }))
     .sort((a, b) => b.count - a.count)
 }

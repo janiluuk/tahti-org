@@ -237,6 +237,23 @@ OpenAPI UI: `https://api.tahti.live/docs`
 3. Store **client secret** as Swarm secret `mixcloud_client_secret` (mounted as `MIXCLOUD_CLIENT_SECRET_FILE` on **api** and **worker-media**).
 4. Redeploy stack; artists connect via Dashboard → Distribution → Mixcloud.
 
-**Verify on manager:** `./scripts/check-mixcloud-prod.sh` or `pnpm prod:check-m7` (see also `pnpm prod:readiness`).
+**Verify on manager:** `./scripts/check-mixcloud-prod.sh` or `pnpm prod:check-m7` (see also `pnpm prod:check-distribution` and `pnpm prod:readiness`).
 
 Without `MIXCLOUD_CLIENT_ID`, OAuth and uploads stay in stub mode (CI/dev).
+
+## Revelator DSP distribution (PLAT-056 production)
+
+1. Obtain a Revelator white-label API key; store in board vault.
+2. Create Swarm secret on the manager:
+   ```bash
+   echo -n "$REVELATOR_API_KEY" | docker secret create revelator_api_key -
+   ```
+3. Ensure **api** and **worker-dist** mount `revelator_api_key` (see `infra/docker-stack.yml` — redeploy after secret create).
+4. Link an **ISRC registrar** account in the Revelator dashboard (required before first live track submission).
+5. Review Revelator DPA/subprocessor terms (`/admin/settings/vendors`).
+
+**Verify on manager:** `./scripts/check-revelator-prod.sh` or `pnpm prod:check-revelator`.
+
+**Runtime status:** board users can check `/admin/settings/vendors` or `GET /api/admin/integrations` (live vs stub mode).
+
+Without `revelator_api_key`, DSP submit and royalty sync stay in stub mode (CI/dev).

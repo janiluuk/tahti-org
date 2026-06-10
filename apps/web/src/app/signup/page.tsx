@@ -5,13 +5,17 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BrandLogo, Heading, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
+import { isSignupOpen } from '@/lib/signup'
+import { SignupForm } from './signup-form'
 
 export const metadata: Metadata = {
-  title: 'Open beta — 1 August 2026 — Tahti',
-  description: 'Tahti opens publicly on 1 August 2026. Private beta is now closed.',
+  title: isSignupOpen() ? 'Create artist account — Tahti' : 'Open beta — 1 August 2026 — Tahti',
+  description: isSignupOpen()
+    ? 'Create your Tahti artist account — broadcast, archive, and connect with listeners.'
+    : 'Tahti opens publicly on 1 August 2026. Private beta is now closed.',
 }
 
-export default function SignupPage() {
+function SignupClosed() {
   return (
     <>
       <BgCanvas />
@@ -37,4 +41,9 @@ export default function SignupPage() {
       </div>
     </>
   )
+}
+
+export default function SignupPage() {
+  if (!isSignupOpen()) return <SignupClosed />
+  return <SignupForm />
 }

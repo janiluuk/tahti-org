@@ -61,7 +61,7 @@ export default async function VerifyPage({ searchParams }: Props) {
             <Alert variant={isError ? 'error' : 'success'}>{message}</Alert>
             {!isError && (
               <Text>
-                <Link href="/login">Log in to your account</Link>
+                <Link href="/login?next=/signup/payment">Log in to continue signup</Link>
               </Text>
             )}
           </Stack>

@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { z } from 'zod'
+import { ListenerGeoResponseSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { buildListenerGeo } from '../../lib/listener-geo.js'
 
@@ -19,6 +20,7 @@ const meListenerGeoRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['stats'],
         description: 'PLAT-064: per-country listener counts (downloads + HLS plays)',
+        response: openApiResponse(ListenerGeoResponseSchema, 'ListenerGeoResponse'),
       },
     },
     async (request, reply) => {

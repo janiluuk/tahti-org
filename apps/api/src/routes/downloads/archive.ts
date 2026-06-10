@@ -9,6 +9,7 @@ import {
   DownloadUrlResponseSchema,
   archivePlaybackKey,
   evaluateDownloadCountPolicy,
+  clientIpFromHeaders,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -89,6 +90,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
       const salt = dailySalt()
+      const clientIp = clientIpFromHeaders(request.headers, request.ip ?? '')
       const fingerprintInput = query.fp?.trim() || `${request.headers['user-agent'] ?? 'unknown'}`
       const byFingerprint = sha256(`${fingerprintInput}:${salt}`)
       const byUserId = request.sessionUser?.id ?? null
@@ -119,8 +121,8 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
             format: 'gate',
             byUserId,
             byFingerprint,
-            byIpHash: sha256(`${request.ip}:${salt}`),
-            countryCode: countryFromIp(request.ip ?? ''),
+            byIpHash: sha256(`${clientIp}:${salt}`),
+            countryCode: countryFromIp(clientIp),
             bytes: 0,
             countedAt: null,
             reason: gateReason,
@@ -145,7 +147,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
       }
       const servedFlac = wantFlac || (!item.mp3Key && Boolean(item.flacKey))
 
-      const byIpHash = sha256(`${request.ip}:${salt}`)
+      const byIpHash = sha256(`${clientIp}:${salt}`)
 
       // Rate limit by fingerprint OR IP (whichever trips first).
       const now = Date.now()
@@ -207,7 +209,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (countedAt) {
         const policy = evaluateDownloadCountPolicy({
-          clientIp: request.ip ?? '0.0.0.0',
+          clientIp,
           userAgent: String(request.headers['user-agent'] ?? ''),
           noCountCidrs: await getDownloadNoCountCidrs(),
           trustOverrideIps: config.download.trustOverrideIps,
@@ -238,7 +240,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
           byUserId,
           byFingerprint,
           byIpHash,
-          countryCode: countryFromIp(request.ip ?? ''),
+          countryCode: countryFromIp(clientIp),
           bytes: Number(item.fileSizeBytes),
           countedAt,
           reason,

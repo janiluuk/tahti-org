@@ -72,3 +72,14 @@ export function countryFromIp(ip: string): string | null {
   const lookup = geoip.lookup(normalizeIp(ip))
   return lookup?.country ?? null
 }
+
+const regionNames = new Intl.DisplayNames(['en'], { type: 'region' })
+
+/** ISO 3166-1 alpha-2 → English country name (PLAT-064). */
+export function countryDisplayName(countryCode: string): string {
+  try {
+    return regionNames.of(countryCode) ?? countryCode
+  } catch {
+    return countryCode
+  }
+}

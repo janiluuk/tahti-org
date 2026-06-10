@@ -95,11 +95,19 @@ const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
       // Fire-and-forget palette extraction — don't block the response
       if (artworkUrl) {
         extractPalette(artworkUrl)
-          .then((palette) => {
+          .then(async (palette) => {
             if (!palette) return
+            const current = await fastify.prisma.release.findUnique({
+              where: { id },
+              select: { colorSchemeJson: true },
+            })
+            const paletteStr = JSON.stringify(palette)
             return fastify.prisma.release.update({
               where: { id },
-              data: { paletteJson: JSON.stringify(palette) },
+              data: {
+                paletteJson: paletteStr,
+                ...(current?.colorSchemeJson ? {} : { colorSchemeJson: paletteStr }),
+              },
             })
           })
           .catch(() => undefined)

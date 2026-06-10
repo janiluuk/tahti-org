@@ -19,6 +19,13 @@ export const StatsPlaysResponseSchema = z.object({
   totalDownloads: z.number().int().nonnegative(),
   totalSmartLinkClicks: z.number().int().nonnegative(),
   daily: z.array(StatsPlaysDailyPointSchema),
+  downloadCountries: z.array(
+    z.object({
+      countryCode: z.string(),
+      displayName: z.string(),
+      count: z.number().int().nonnegative(),
+    }),
+  ),
 })
 
 export const StatsTopTrackSchema = z.object({

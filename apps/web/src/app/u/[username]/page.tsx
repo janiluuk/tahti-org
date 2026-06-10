@@ -231,7 +231,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             <div className="prof-sec-label">Find me elsewhere</div>
             <div className="prof-social-links">
               {Object.entries(artist.socialLinks).map(([key, url]) => {
-                if (!url) return null
+                if (!url || key === 'genres') return null
                 const label = key.charAt(0).toUpperCase() + key.slice(1)
                 const isEmail = url.startsWith('mailto:')
                 return (

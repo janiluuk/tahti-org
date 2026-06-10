@@ -10,6 +10,7 @@ import {
 } from '@tahti/shared'
 import { config } from '../../config.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
+import { resolveColorScheme } from '@tahti/shared'
 
 const channelGetRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -70,6 +71,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
         ...channel,
         nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
         hlsUrl,
+        colorScheme: resolveColorScheme(channel.colorSchemeJson, null),
       })
     },
   )

@@ -9,7 +9,7 @@ import type { VisualPresetProps } from './types'
 
 const BAR_COUNT = 64
 
-export function WaveformBarsPreset({ colorScheme }: VisualPresetProps) {
+export function WaveformBarsPreset({ colorScheme, analyser }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -57,16 +57,25 @@ export function WaveformBarsPreset({ colorScheme }: VisualPresetProps) {
       frame++
 
       for (let i = 0; i < BAR_COUNT; i++) {
-        const t = frame * 0.02 + i * 0.15
-        const noise = Math.sin(t) * 0.5 + Math.sin(t * 2.3 + 1) * 0.3 + Math.sin(t * 0.7) * 0.2
-        heights[i] = 0.08 + Math.abs(noise) * 0.35
+        let level = 0.08
+        if (analyser) {
+          const data = new Uint8Array(analyser.frequencyBinCount)
+          analyser.getByteFrequencyData(data)
+          const idx = Math.floor((i / BAR_COUNT) * data.length)
+          level = 0.06 + (data[idx]! / 255) * 0.55
+        } else {
+          const t = frame * 0.02 + i * 0.15
+          const noise = Math.sin(t) * 0.5 + Math.sin(t * 2.3 + 1) * 0.3 + Math.sin(t * 0.7) * 0.2
+          level = 0.08 + Math.abs(noise) * 0.35
+        }
+        heights[i] = level
 
         const bar = bars[i]
         bar.scale.set(1, heights[i], 1)
         bar.position.y = -1 + heights[i] / 2
 
-        const lerpT = Math.abs(noise)
-        const col = new THREE.Color().lerpColors(accent, highlight, lerpT)
+        const lerpT = analyser ? heights[i] / 0.65 : Math.abs(Math.sin(frame * 0.02 + i * 0.15))
+        const col = new THREE.Color().lerpColors(accent, highlight, Math.min(1, lerpT))
         ;(bar.material as THREE.MeshBasicMaterial).color = col
       }
 
@@ -93,7 +102,7 @@ export function WaveformBarsPreset({ colorScheme }: VisualPresetProps) {
       renderer.dispose()
       if (renderer.domElement.parentElement === mount) mount.removeChild(renderer.domElement)
     }
-  }, [colorScheme.accent, colorScheme.highlight])
+  }, [colorScheme.accent, colorScheme.highlight, analyser])
 
   return <div ref={mountRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
 }

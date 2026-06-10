@@ -15,6 +15,7 @@ type Period = '7d' | '30d' | 'all'
 
 type GeoPoint = {
   countryCode: string
+  displayName: string
   count: number
 }
 
@@ -33,7 +34,7 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
   const [period, setPeriod] = useState<Period>(initialPeriod)
   const [data, setData] = useState<GeoPoint[]>(initial)
   const [loading, setLoading] = useState(false)
-  const [tooltip, setTooltip] = useState<{ cc: string; count: number } | null>(null)
+  const [tooltip, setTooltip] = useState<{ name: string; count: number } | null>(null)
 
   async function changePeriod(p: Period) {
     if (p === period) return
@@ -52,18 +53,16 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
 
   const maxCount = Math.max(1, ...data.map((d) => d.count))
   const countByCode = Object.fromEntries(data.map((d) => [d.countryCode, d.count]))
+  const nameByCode = Object.fromEntries(data.map((d) => [d.countryCode, d.displayName]))
 
   function fillForCount(count: number): string {
     const t = count / maxCount
-    if (t === 0) return 'var(--map-fill-empty, #1e2533)'
-    if (t < 0.15) return 'var(--map-fill-1, #1a4a7a)'
-    if (t < 0.35) return 'var(--map-fill-2, #1d5fa0)'
-    if (t < 0.6) return 'var(--map-fill-3, #2178c8)'
-    if (t < 0.85) return 'var(--map-fill-4, #45a0ef)'
-    return 'var(--map-fill-5, #7ec8ff)'
+    if (t === 0) return 'var(--map-fill-empty, #1a2030)'
+    const pct = Math.round(t * 100)
+    return `color-mix(in srgb, var(--cyan) ${Math.max(12, pct)}%, var(--map-fill-empty, #1a2030))`
   }
 
-  const top5 = [...data].sort((a, b) => b.count - a.count).slice(0, 5)
+  const top10 = [...data].sort((a, b) => b.count - a.count).slice(0, 10)
 
   return (
     <div className="stats-panel stats-panel--map">
@@ -73,6 +72,7 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
           {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
             <button
               key={p}
+              type="button"
               role="tab"
               aria-selected={period === p}
               className={`stats-period-tab${period === p ? ' active' : ''}`}
@@ -105,6 +105,7 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
               geographies.map((geo) => {
                 const cc = ISO_NUM_TO_A2[Number(geo.id)]
                 const count = cc ? (countByCode[cc] ?? 0) : 0
+                const displayName = cc ? (nameByCode[cc] ?? cc) : ''
                 return (
                   <Geography
                     key={geo.rsmKey}
@@ -114,10 +115,16 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
                     strokeWidth={0.4}
                     style={{
                       default: { outline: 'none' },
-                      hover: { outline: 'none', fill: count > 0 ? '#90d8ff' : '#2a3552' },
+                      hover: {
+                        outline: 'none',
+                        fill:
+                          count > 0
+                            ? 'color-mix(in srgb, var(--cyan) 75%, white)'
+                            : 'var(--map-fill-hover, #2a3552)',
+                      },
                       pressed: { outline: 'none' },
                     }}
-                    onMouseEnter={() => cc && count > 0 && setTooltip({ cc, count })}
+                    onMouseEnter={() => cc && count > 0 && setTooltip({ name: displayName, count })}
                     onMouseLeave={() => setTooltip(null)}
                   />
                 )
@@ -128,18 +135,18 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
 
         {tooltip && (
           <div className="map-tooltip" role="tooltip">
-            <span className="map-tooltip-cc">{tooltip.cc}</span>
+            <span className="map-tooltip-name">{tooltip.name}</span>
             <span className="map-tooltip-count">{tooltip.count.toLocaleString()} listeners</span>
           </div>
         )}
       </div>
 
-      {top5.length > 0 && (
-        <ol className="map-top-list" aria-label="Top 5 listener countries">
-          {top5.map((d, i) => (
+      {top10.length > 0 && (
+        <ol className="map-top-list" aria-label="Top 10 listener countries">
+          {top10.map((d, i) => (
             <li key={d.countryCode} className="map-top-row">
               <span className="map-top-rank">{i + 1}</span>
-              <span className="map-top-cc">{d.countryCode}</span>
+              <span className="map-top-name">{d.displayName}</span>
               <span className="map-top-bar-wrap">
                 <span
                   className="map-top-bar"

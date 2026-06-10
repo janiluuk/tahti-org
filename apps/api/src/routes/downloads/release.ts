@@ -9,6 +9,7 @@ import {
   DownloadUrlResponseSchema,
   ReleaseDownloadQuerySchema,
   ReleaseTrackDownloadParamsSchema,
+  clientIpFromHeaders,
   evaluateDownloadCountPolicy,
   openApiResponse,
   parseRouteParams,
@@ -118,9 +119,10 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Anti-fraud — same logic as archive downloads
       const salt = dailySalt()
+      const clientIp = clientIpFromHeaders(request.headers, request.ip ?? '')
       const fpInput = query.fp?.trim() || (request.headers['user-agent'] ?? 'unknown')
       const byFingerprint = sha256(`${fpInput}:${salt}`)
-      const byIpHash = sha256(`${request.ip}:${salt}`)
+      const byIpHash = sha256(`${clientIp}:${salt}`)
 
       const now = Date.now()
       const [lastHour, lastDay] = await Promise.all([
@@ -174,7 +176,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
 
       if (countedAt) {
         const policy = evaluateDownloadCountPolicy({
-          clientIp: request.ip ?? '0.0.0.0',
+          clientIp,
           userAgent: request.headers['user-agent'],
           noCountCidrs: await getDownloadNoCountCidrs(),
           trustOverrideIps: config.download.trustOverrideIps,
@@ -211,7 +213,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
           byUserId,
           byFingerprint,
           byIpHash,
-          countryCode: countryFromIp(request.ip ?? ''),
+          countryCode: countryFromIp(clientIp),
           bytes: 0,
           countedAt,
           reason,

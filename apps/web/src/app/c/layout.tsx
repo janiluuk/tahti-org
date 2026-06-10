@@ -10,7 +10,7 @@ import '@tahti/ui/src/styles/brand-gallery.css'
 /** Channel routes use @tahti/ui dark-brand styles (PLAT-020 phase 2). */
 export default function ChannelLayout({ children }: { children: ReactNode }) {
   return (
-    <div data-tahti-ui="brand" className="brand-channel">
+    <div data-tahti-ui="brand" data-channel-root className="brand-channel">
       {children}
     </div>
   )

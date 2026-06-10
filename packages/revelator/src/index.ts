@@ -4,6 +4,17 @@
 // Revelator white-label distribution client (M7).
 // When REVELATOR_API_KEY is unset the client runs in stub mode for CI/dev.
 
+import { readSecret } from './read-secret.js'
+
+function revelatorApiKey(): string {
+  return readSecret('REVELATOR_API_KEY', 'REVELATOR_API_KEY_FILE')
+}
+
+/** True when a live API key is configured (env or Docker secret file). */
+export function isRevelatorConfigured(): boolean {
+  return revelatorApiKey() !== ''
+}
+
 export interface RevelatorTrackInput {
   position: number
   title: string
@@ -33,7 +44,7 @@ export interface RevelatorSubmitResult {
 export async function submitReleaseToRevelator(
   input: RevelatorReleaseInput,
 ): Promise<RevelatorSubmitResult> {
-  const apiKey = process.env.REVELATOR_API_KEY
+  const apiKey = revelatorApiKey()
 
   if (!apiKey) {
     return {
@@ -139,7 +150,7 @@ export async function fetchRoyaltyReports(
   if (releases.length === 0) return []
 
   const { start, end } = periodBounds(period)
-  const apiKey = process.env.REVELATOR_API_KEY
+  const apiKey = revelatorApiKey()
 
   if (!apiKey) {
     return releases.map((r) => ({

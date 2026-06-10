@@ -5,15 +5,9 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  VISUAL_PRESETS,
-  VISUAL_PRESET_LABELS,
-  VISUAL_PRESET_DESCRIPTIONS,
-  ColorSchemeSchema,
-  type VisualPreset,
-  type ColorScheme,
-} from '@tahti/shared'
-import { Alert, Button, Field, Panel, Select, Text } from '@/components/ui'
+import { ColorSchemeSchema, type VisualPreset, type ColorScheme } from '@tahti/shared'
+import { Alert, Button, Field, Panel, Text } from '@/components/ui'
+import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 import { updateReleaseVisual } from './channel-visual-actions'
 
 interface Props {
@@ -81,26 +75,17 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
       headerTight
       description="Visualizer and color scheme for this release's smart link page."
     >
-      <Field label="Background visualizer" htmlFor="rel-visual-preset">
-        <Select
-          id="rel-visual-preset"
+      <Field label="Background visualizer">
+        <VisualPresetPicker
           value={preset}
+          onChange={setPreset}
           disabled={isPending}
-          onChange={(e) => setPreset(e.target.value as VisualPreset)}
-        >
-          {VISUAL_PRESETS.map((p) => (
-            <option key={p} value={p}>
-              {VISUAL_PRESET_LABELS[p]}
-            </option>
-          ))}
-        </Select>
+          colorScheme={useOverride ? scheme : (extracted ?? undefined)}
+          colorSchemeJson={initial.colorSchemeJson}
+          paletteJson={initial.paletteJson}
+          showPreview
+        />
       </Field>
-      {preset !== 'MINIMAL' && (
-        <Text size="sm" tone="muted" className="studio-mb-lg">
-          {VISUAL_PRESET_DESCRIPTIONS[preset]}
-        </Text>
-      )}
-
       {extracted && !useOverride && (
         <Text size="sm" tone="muted" className="studio-mb-lg">
           Colors extracted from cover art. Enable override to customize.
