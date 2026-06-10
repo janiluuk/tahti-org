@@ -4,53 +4,66 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+export type SiteNavId = 'home' | 'discover' | 'radio' | 'venues'
+
 type ChannelHeaderProps = {
+  /** Live member channel — hides site nav, shows @handle in header centre */
   isLive?: boolean
   artistHandle?: string
-  activeNav?: 'discover' | 'radio' | 'venues'
+  /** Highlights the current top-nav item (Discover, Radio, Venues, Home) */
+  activeNav?: SiteNavId
+  /** LIVE pill on the right without hiding site nav (e.g. Tahti Radio) */
+  showLiveBadge?: boolean
   user?: { username: string; displayName: string } | null
 }
 
-/** PLAT-020: sticky channel top bar — TAHTI logo + live indicator. */
-export function ChannelHeader({ isLive, artistHandle, activeNav, user }: ChannelHeaderProps) {
+const SITE_NAV: { id: SiteNavId; href: string; label: string }[] = [
+  { id: 'home', href: '/', label: 'Home' },
+  { id: 'discover', href: '/listen', label: 'Discover' },
+  { id: 'radio', href: '/radio', label: 'Radio' },
+  { id: 'venues', href: '/venues', label: 'Venues' },
+]
+
+/** PLAT-020: sticky channel top bar — TAHTI logo + site nav or live channel context. */
+export function ChannelHeader({
+  isLive,
+  artistHandle,
+  activeNav,
+  showLiveBadge,
+  user,
+}: ChannelHeaderProps) {
+  const channelLiveMode = Boolean(isLive && artistHandle && !activeNav)
+
   return (
     <header className="ch-header">
       <Link href="/" className="ch-logo">
         <span className="ch-logo__bar" aria-hidden />
         TAHTI
       </Link>
-      {isLive && artistHandle ? (
+      {channelLiveMode ? (
         <div className="ch-header__artist">@{artistHandle}</div>
       ) : (
         <nav className="ch-header__nav" aria-label="Site">
-          <Link
-            href="/listen"
-            className={`ch-header__nav-link${activeNav === 'discover' ? ' ch-header__nav-link--active' : ''}`}
-          >
-            Discover
-          </Link>
-          <Link
-            href="/radio"
-            className={`ch-header__nav-link${activeNav === 'radio' ? ' ch-header__nav-link--active' : ''}`}
-          >
-            Radio
-          </Link>
-          <Link
-            href="/venues"
-            className={`ch-header__nav-link${activeNav === 'venues' ? ' ch-header__nav-link--active' : ''}`}
-          >
-            Venues
-          </Link>
+          {SITE_NAV.map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className={`ch-header__nav-link${activeNav === item.id ? ' ch-header__nav-link--active' : ''}`}
+              aria-current={activeNav === item.id ? 'page' : undefined}
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
       )}
       <div className="ch-header__right">
-        {isLive && (
+        {(showLiveBadge || channelLiveMode) && (
           <div className="ch-live">
             <span className="signal-dot" aria-hidden />
             LIVE
           </div>
         )}
-        {!isLive &&
+        {!channelLiveMode &&
           (user ? (
             <Link href="/dashboard" className="ch-header__user">
               <span className="ch-header__user-avatar" aria-hidden>
@@ -71,6 +84,8 @@ export function ChannelHeader({ isLive, artistHandle, activeNav, user }: Channel
 type ChannelPageLayoutProps = {
   isLive?: boolean
   artistHandle?: string
+  activeNav?: SiteNavId
+  showLiveBadge?: boolean
   user?: { username: string; displayName: string } | null
   main: ReactNode
   sidebar: ReactNode
@@ -80,13 +95,21 @@ type ChannelPageLayoutProps = {
 export function ChannelPageLayout({
   isLive,
   artistHandle,
+  activeNav,
+  showLiveBadge,
   user,
   main,
   sidebar,
 }: ChannelPageLayoutProps) {
   return (
     <>
-      <ChannelHeader isLive={isLive} artistHandle={artistHandle} user={user} />
+      <ChannelHeader
+        isLive={isLive}
+        artistHandle={artistHandle}
+        activeNav={activeNav}
+        showLiveBadge={showLiveBadge}
+        user={user}
+      />
       <div className="ch-body">
         <div className="ch-main">{main}</div>
         <aside className="ch-sidebar">{sidebar}</aside>

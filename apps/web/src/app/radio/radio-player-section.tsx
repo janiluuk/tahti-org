@@ -17,7 +17,7 @@ interface RadioPlayerSectionProps {
 function RadioVideoPlayer({ embedUrl, slug }: { embedUrl: string; slug: string }) {
   return (
     <>
-      <BgCanvas />
+      <BgCanvas variant="subtle" />
       <div id="live-player" className="ch-player-wrap">
         <div className="ch-player-inner ch-player-inner--video">
           <iframe
@@ -39,7 +39,7 @@ function RadioAudioPlayer({ audioUrl, slug }: { audioUrl: string; slug: string }
 
   return (
     <>
-      <BgCanvas audioEl={audioEl} />
+      <BgCanvas variant="subtle" audioEl={audioEl} />
       <div id="live-player" className="ch-player-wrap">
         <div className="ch-player-inner">
           <HlsPlayer url={audioUrl} onAudioMount={setAudioEl} />

@@ -3,7 +3,6 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Heading, PublicPageHeader, Stack, Text } from '@tahti/ui'
 
 export const revalidate = 300
 
@@ -37,31 +36,61 @@ export default async function VenuesDirectoryPage() {
   const venues = await fetchVenues()
 
   return (
-    <Stack gap={6} className="brand-section">
-      <PublicPageHeader title="Venue directory" back={{ href: '/', label: '← Home' }}>
-        Cultural venues and spaces that host Tahti live broadcasts. Subscribe to a venue calendar
-        from its profile page. <Link href="/venues/register">Register a venue →</Link>
-      </PublicPageHeader>
+    <div className="listen-shell">
+      <header className="listen-page-header">
+        <h1 className="listen-page-title">Venues</h1>
+        <p className="listen-page-sub">
+          Cultural venues and spaces that host Tahti live broadcasts.
+        </p>
+        <div className="listen-header__meta">
+          <Link href="/venues/register" className="listen-radio-link">
+            Register a venue →
+          </Link>
+        </div>
+      </header>
 
       {venues.length === 0 ? (
-        <Text tone="muted">No verified venues yet.</Text>
+        <div className="listen-empty">
+          <p className="listen-empty__text">No verified venues yet.</p>
+          <p className="listen-empty__hint">
+            <Link href="/venues/register" className="listen-radio-link">
+              Submit your venue
+            </Link>{' '}
+            for board verification.
+          </p>
+        </div>
       ) : (
-        <ul className="brand-section">
-          {venues.map((venue) => (
-            <li key={venue.id} className="brand-card">
-              <Link href={`/v/${venue.slug}`}>
-                <Heading level={3}>{venue.name}</Heading>
-                <Text tone="muted">
-                  {venue.city}
-                  {venue.countryCode ? `, ${venue.countryCode}` : ''}
-                  {venue.capacity ? ` · capacity ${venue.capacity}` : ''}
-                </Text>
-                {venue.description ? <Text>{venue.description.slice(0, 200)}</Text> : null}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <section className="listen-section">
+          <div className="listen-section__label">Verified venues</div>
+          <ul className="listen-grid">
+            {venues.map((venue) => (
+              <li key={venue.id}>
+                <a href={`/v/${venue.slug}`} className="listen-card">
+                  <div className="listen-card__avatar">
+                    <span className="listen-card__avatar-fallback" aria-hidden>
+                      {venue.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="listen-card__body">
+                    <div className="listen-card__name">{venue.name}</div>
+                    <div className="listen-card__handle">
+                      {venue.city}
+                      {venue.countryCode ? `, ${venue.countryCode}` : ''}
+                      {venue.capacity ? ` · ${venue.capacity} cap.` : ''}
+                    </div>
+                    {venue.description ? (
+                      <p className="listen-card__status listen-card__status--muted">
+                        {venue.description.slice(0, 120)}
+                        {venue.description.length > 120 ? '…' : ''}
+                      </p>
+                    ) : null}
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
-    </Stack>
+    </div>
   )
 }

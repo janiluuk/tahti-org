@@ -81,8 +81,8 @@ export default async function RadioPage() {
 
   return (
     <ChannelPageShell
-      isLive
-      artistHandle={TAHTI_RADIO_SLUG}
+      activeNav="radio"
+      showLiveBadge
       user={user}
       main={
         <div className="ch-page-content">

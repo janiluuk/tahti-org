@@ -63,6 +63,8 @@ x-app-env: &app-env
   MIXCLOUD_CLIENT_SECRET: ${MIXCLOUD_CLIENT_SECRET:-}
   # PLAT-061: MaxMind GeoLite2 license key — for future geoip DB update automation (optional in dev)
   MAXMIND_LICENSE_KEY: ${MAXMIND_LICENSE_KEY:-}
+  # Lab stack: higher auth rate limit so e2e journey suites can log in repeatedly
+  RATE_LIMIT_AUTH_MAX: ${RATE_LIMIT_AUTH_MAX:-60}
   # M16: 24/7 placeholder stream on /radio — video (YouTube/Vimeo) or audio (HLS)
   TAHTI_RADIO_STREAM_MODE: ${TAHTI_RADIO_STREAM_MODE:-video}
   TAHTI_RADIO_VIDEO_URL: ${TAHTI_RADIO_VIDEO_URL:-${TAHTI_RADIO_YOUTUBE_URL:-}}

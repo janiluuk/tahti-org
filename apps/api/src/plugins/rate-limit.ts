@@ -17,7 +17,13 @@ interface RateLimitConfig {
   keyPrefix?: string
 }
 
-const AUTH_ROUTES = ['/api/auth/register', '/api/auth/login', '/api/chat']
+const AUTH_ROUTES = ['/api/auth/register', '/api/auth/login']
+
+/** Chat POST (token issuance, publish proxy) — strict limit; GET discovery stays on API limit. */
+function usesAuthRateLimit(url: string, method: string): boolean {
+  if (AUTH_ROUTES.some((r) => url.startsWith(r))) return true
+  return method === 'POST' && url.startsWith('/api/chat/')
+}
 
 function defaultLimit(): RateLimitConfig {
   return { max: config.rateLimit.apiMaxPerMin, windowSec: 60 }
@@ -83,7 +89,7 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
       return
     }
 
-    const isAuthRoute = AUTH_ROUTES.some((r) => request.url.startsWith(r))
+    const isAuthRoute = usesAuthRateLimit(request.url, request.method)
     const limit = isAuthRoute ? authLimit() : defaultLimit()
 
     const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
