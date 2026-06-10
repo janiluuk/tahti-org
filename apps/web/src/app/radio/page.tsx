@@ -2,20 +2,32 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Metadata } from 'next'
-import { ChannelHeader } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
+import { AvatarTile, ChannelPageShell, Heading, Row, SafePlainText, Text } from '@tahti/ui'
+import {
+  resolveActiveRadioPlayback,
+  resolveTahtiRadioStream,
+  TAHTI_RADIO_SLUG,
+} from '@tahti/shared'
+import { getSessionUser } from '@/lib/session'
+import ChatPanel from '../c/[slug]/chat-panel'
+import { RadioPlayerSection } from './radio-player-section'
 
-export const revalidate = 30
+export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'Tahti Radio — live meta-stream',
-  description: 'Fair-rotation relay of member channels currently broadcasting live on Tahti.',
+  title: 'Tahti Radio — 24/7 live',
+  description: 'Community radio on Tahti — always on, with live chat.',
+}
+
+interface Announcement {
+  id: string
+  body: string
+  createdAt: string
 }
 
 interface RadioChannel {
   slug: string
   artistName: string
-  hlsUrl?: string
 }
 
 interface RadioNowPlaying {
@@ -23,13 +35,20 @@ interface RadioNowPlaying {
   channel: RadioChannel | null
 }
 
-interface RadioHistoryItem {
-  slug: string
-  artistName: string
-  featuredAt: string
+async function fetchAnnouncements(): Promise<Announcement[]> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  try {
+    const res = await fetch(`${apiUrl}/api/chat/${TAHTI_RADIO_SLUG}/announcements`, {
+      next: { revalidate: 30 },
+    })
+    if (!res.ok) return []
+    return (await res.json()) as Announcement[]
+  } catch {
+    return []
+  }
 }
 
-async function fetchRadio(): Promise<RadioNowPlaying> {
+async function fetchMemberRelay(): Promise<RadioNowPlaying> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   try {
     const res = await fetch(`${apiUrl}/api/v1/radio`, { next: { revalidate: 30 } })
@@ -40,106 +59,85 @@ async function fetchRadio(): Promise<RadioNowPlaying> {
   }
 }
 
-async function fetchHistory(): Promise<RadioHistoryItem[]> {
-  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  try {
-    const res = await fetch(`${apiUrl}/api/v1/radio/history`, { next: { revalidate: 60 } })
-    if (!res.ok) return []
-    return (await res.json()) as RadioHistoryItem[]
-  } catch {
-    return []
+function radioStreamEnv() {
+  return {
+    TAHTI_RADIO_STREAM_MODE: process.env.TAHTI_RADIO_STREAM_MODE,
+    TAHTI_RADIO_VIDEO_URL: process.env.TAHTI_RADIO_VIDEO_URL,
+    TAHTI_RADIO_YOUTUBE_URL: process.env.TAHTI_RADIO_YOUTUBE_URL,
+    TAHTI_RADIO_AUDIO_URL: process.env.TAHTI_RADIO_AUDIO_URL,
+    TAHTI_RADIO_HLS_URL: process.env.TAHTI_RADIO_HLS_URL,
   }
 }
 
-function formatFeaturedAt(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 export default async function RadioPage() {
-  const [now, history] = await Promise.all([fetchRadio(), fetchHistory()])
+  const streamConfig = resolveTahtiRadioStream(radioStreamEnv())
+  const playback = resolveActiveRadioPlayback(streamConfig)
+
+  const [announcements, memberRelay, user] = await Promise.all([
+    fetchAnnouncements(),
+    fetchMemberRelay(),
+    getSessionUser(),
+  ])
 
   return (
-    <>
-      <BgCanvas />
-      <ChannelHeader activeNav="radio" />
-      <div className="listen-shell">
-        <div className="listen-page-header">
-          <h1 className="listen-page-title">Tahti Radio</h1>
-          <p className="listen-page-sub">
-            Fair-rotation meta-stream — when members are live, one channel at a time, no editorial
-            picks.
-          </p>
-          <div className="listen-header__meta">
-            <a href="/listen" className="listen-radio-link">
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-                <path
-                  d="M10 3L5 8l5 5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+    <ChannelPageShell
+      isLive
+      artistHandle={TAHTI_RADIO_SLUG}
+      user={user}
+      main={
+        <div className="ch-page-content">
+          <div className="ch-page-foreground">
+            <header className="ch-artist-header">
+              <Row className="ui-row--gap-3 ch-artist-header-row">
+                <AvatarTile
+                  size="sm"
+                  name="Tahti Radio"
+                  className="ch-artist-avatar ch-artist-avatar--radio"
                 />
-              </svg>
-              All channels
-            </a>
+                <div>
+                  <Heading level={1} className="ch-artist-name">
+                    Tahti Radio
+                  </Heading>
+                  <Text size="sm" tone="muted">
+                    @{TAHTI_RADIO_SLUG}
+                  </Text>
+                </div>
+              </Row>
+              <SafePlainText
+                text="24/7 community radio — always on while we grow the member meta-stream. Tune in and chat with listeners worldwide."
+                className="ch-artist-bio"
+              />
+            </header>
+
+            {playback.kind === 'none' ? (
+              <div className="ch-player-wrap">
+                <div className="ch-player-inner">
+                  <p className="ch-archive-empty">
+                    Radio stream is not configured. Set <code>TAHTI_RADIO_VIDEO_URL</code>{' '}
+                    (YouTube/Vimeo) or <code>TAHTI_RADIO_AUDIO_URL</code> (HLS), and{' '}
+                    <code>TAHTI_RADIO_STREAM_MODE</code> to <code>video</code> or <code>audio</code>
+                    .
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <RadioPlayerSection playback={playback} slug={TAHTI_RADIO_SLUG} />
+            )}
+
+            {memberRelay.live && memberRelay.channel && (
+              <section className="ch-next-broadcast" role="status">
+                <Text size="sm" tone="muted">
+                  Member relay also live:{' '}
+                  <a href={`/c/${memberRelay.channel.slug}`} className="ch-artist-profile-link">
+                    {memberRelay.channel.artistName}
+                  </a>
+                </Text>
+              </section>
+            )}
           </div>
         </div>
-
-        <section className="listen-section">
-          <div className={`listen-section__label${now.live ? ' listen-section__label--live' : ''}`}>
-            {now.live && <span className="listen-live-dot" aria-hidden />}
-            Now playing
-          </div>
-
-          {now.live && now.channel ? (
-            <div className="radio-now-card">
-              <div className="radio-now-card__avatar">
-                <span className="radio-now-card__initial" aria-hidden>
-                  {now.channel.artistName.charAt(0).toUpperCase()}
-                </span>
-                <span className="signal-dot radio-now-card__pulse" aria-hidden />
-              </div>
-              <div className="radio-now-card__body">
-                <div className="radio-now-card__name">{now.channel.artistName}</div>
-                <div className="radio-now-card__badge">Live on Tahti Radio</div>
-              </div>
-              <a href={`/c/${now.channel.slug}`} className="radio-now-card__cta">
-                Open channel →
-              </a>
-            </div>
-          ) : (
-            <div className="radio-offline">
-              <span className="radio-offline__dot" aria-hidden />
-              No member channel is live right now — check back soon.
-            </div>
-          )}
-        </section>
-
-        {history.length > 0 && (
-          <section className="listen-section">
-            <div className="listen-section__label">Recently featured</div>
-            <div className="radio-history">
-              {history.map((item) => (
-                <a
-                  key={`${item.slug}-${item.featuredAt}`}
-                  href={`/c/${item.slug}`}
-                  className="radio-history-item"
-                >
-                  <span className="radio-history-item__name">{item.artistName}</span>
-                  <span className="radio-history-item__time">
-                    {formatFeaturedAt(item.featuredAt)}
-                  </span>
-                </a>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
-    </>
+      }
+      sidebar={<ChatPanel slug={TAHTI_RADIO_SLUG} announcements={announcements} />}
+    />
   )
 }

@@ -17,6 +17,7 @@ COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/db/package.json       ./packages/db/
 COPY packages/ledger/package.json   ./packages/ledger/
 COPY packages/mixcloud/package.json ./packages/mixcloud/
+COPY packages/revelator/package.json ./packages/revelator/
 COPY packages/shared/package.json   ./packages/shared/
 COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
@@ -30,6 +31,7 @@ COPY packages/db/src     ./packages/db/src
 COPY packages/db/prisma  ./packages/db/prisma
 COPY packages/ledger/src  ./packages/ledger/src
 COPY packages/mixcloud/src ./packages/mixcloud/src
+COPY packages/revelator/src ./packages/revelator/src
 COPY packages/shared/src  ./packages/shared/src
 COPY apps/api/src        ./apps/api/src
 COPY apps/api/scripts    ./apps/api/scripts

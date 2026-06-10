@@ -76,6 +76,12 @@ wait_for() {
 wait_for "http://localhost:${API_PORT:-15011}/health" "API"
 wait_for "http://localhost:${WEB_PORT:-17777}/" "Web"
 
+echo "── Seeding Tahti Radio channel (chat) ──"
+"${COMPOSE[@]}" run --rm --no-deps \
+  -e DATABASE_URL=postgresql://tahti:tahti_dev@postgres:5432/tahti \
+  -w /app \
+  api tsx apps/api/scripts/seed-tahti-radio.ts >/dev/null
+
 if [[ "$SEED" == true ]]; then
   echo "── Seeding screenshot fixtures ──"
   mkdir -p "$ROOT/docs/e2e-screenshots"
