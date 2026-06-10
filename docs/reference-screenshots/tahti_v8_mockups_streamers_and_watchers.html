@@ -1,0 +1,480 @@
+<h2 class="sr-only">Ten Tahti v8 mockups: five for streamers (artist dashboard, stats, newsletter compose, settings, audio editor) and five for watchers (homepage, live channel, 24/7 channel, release smart link, subscribe page).</h2>
+
+<style>
+.tm{--bg:#0A0E1C;--c:#11172A;--ce:#162038;--ch:#1B2540;--bd:#1F2940;--bds:#2A3550;--tp:#E6E9F0;--ts:#A1A8BD;--tt:#5E6680;--cyan:#22D3EE;--amber:#FFB840;--green:#3FE07A;--purple:#A78BFA;--coral:#F87171;--violet:#8B5CF6;background:var(--bg);padding:24px 8px;border-radius:12px;margin-bottom:8px}
+.tm *{box-sizing:border-box}
+.tm .sh{font-size:11px;letter-spacing:2px;color:var(--cyan);margin:4px 0 4px;text-transform:uppercase}
+.tm .st{font-size:22px;font-weight:500;color:var(--tp);margin:0 0 4px}
+.tm .ss{font-size:13px;color:var(--ts);margin:0 0 24px;font-style:italic}
+.tm .vlbl{font-size:10px;letter-spacing:1px;color:var(--tt);text-transform:uppercase;margin:24px 0 8px}
+.tm .vlbl:first-of-type{margin-top:0}
+.tm .bw{background:var(--c);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:8px}
+.tm .bar{background:#080C16;padding:8px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)}
+.tm .dot{width:11px;height:11px;border-radius:50%}
+.tm .d1{background:#FF5F57}.tm .d2{background:#FEBC2E}.tm .d3{background:#28C840}
+.tm .url{flex:1;background:var(--c);border:1px solid var(--bd);border-radius:8px;padding:5px 11px;font-size:11px;color:var(--ts);font-family:ui-monospace,monospace}
+.tm .page{padding:18px}
+.tm .nav{padding:10px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;background:var(--c)}
+.tm .brand{font-weight:500;font-size:13px;letter-spacing:2px;color:var(--tp)}
+.tm .nl{display:flex;gap:18px;font-size:12px;color:var(--ts)}
+.tm .nl .ac{color:var(--cyan);font-weight:500}
+.tm .r{display:flex;align-items:center}
+.tm .lbl{font-size:10px;letter-spacing:1px;color:var(--tt);text-transform:uppercase;margin-bottom:8px}
+.tm .tn{font-size:11px;color:var(--tt)}
+.tm .pill{font-size:10px;padding:3px 9px;border-radius:9999px;letter-spacing:0.5px;display:inline-flex;align-items:center;gap:4px}
+.tm .live-p{background:rgba(63,224,122,0.12);color:var(--green)}
+.tm .dot-l{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
+.tm .flac-p{background:rgba(34,211,238,0.12);color:var(--cyan);font-weight:500}
+.tm .bp{background:var(--cyan);color:#062028;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit}
+.tm .bs{background:transparent;color:var(--tp);border:1px solid var(--bds);padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit}
+.tm .bw-amber{background:var(--amber);color:#1A1408;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit}
+.tm .stat-card{background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.tm .stat-num{font-size:28px;font-weight:500;line-height:1;letter-spacing:-0.5px;font-variant-numeric:tabular-nums}
+.tm .stat-lbl{font-size:10px;letter-spacing:1px;color:var(--tt);text-transform:uppercase;margin-top:8px}
+.tm .cv{border-radius:8px;aspect-ratio:1;background:linear-gradient(135deg,#A78BFA,#22D3EE,#3FE07A)}
+.tm .cv-coral{background:linear-gradient(135deg,#F87171,#FFB840)}
+.tm .cv-deep{background:linear-gradient(135deg,#5B6BC4,#22D3EE)}
+.tm .cv-amber{background:linear-gradient(135deg,#FFB840,#F59E0B)}
+.tm .cv-violet{background:linear-gradient(135deg,#8B5CF6,#6366F1)}
+.tm .cv-mint{background:linear-gradient(135deg,#3FE07A,#22D3EE)}
+.tm .cv-rose{background:linear-gradient(135deg,#F472B6,#8B5CF6)}
+.tm .sd{background:#0E1424;border-right:1px solid var(--bd);padding:14px 10px;display:flex;flex-direction:column;gap:2px;min-width:130px}
+.tm .si{font-size:11px;padding:7px 10px;border-radius:7px;color:var(--ts);display:flex;align-items:center;gap:8px;cursor:pointer}
+.tm .si.ac{background:rgba(34,211,238,0.08);color:var(--cyan);border-left:2px solid var(--cyan);padding-left:8px}
+.tm .si-grp{font-size:9px;letter-spacing:1px;color:var(--tt);text-transform:uppercase;padding:8px 10px 4px}
+.tm input,.tm select,.tm textarea{background:var(--bg);color:var(--tp);border:1px solid var(--bd);border-radius:7px;padding:6px 10px;font-size:12px;font-family:inherit;outline:none}
+.tm .live-bar{background:rgba(63,224,122,0.07);border:1px solid rgba(63,224,122,0.3);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-left:3px solid var(--green)}
+.tm .pin{background:rgba(255,184,64,0.08);border-left:3px solid var(--amber);padding:10px 12px;border-radius:0 8px 8px 0;margin-bottom:14px}
+.tm .pin-lbl{font-size:9px;letter-spacing:1px;color:var(--amber);text-transform:uppercase;margin-bottom:4px}
+.tm h3{margin:0;font-weight:500;color:var(--tp)}
+.tm .ch-msg{margin-bottom:6px;font-size:11px;line-height:1.5}
+.tm .ch-h{font-weight:500}
+.tm .h-cyan{color:var(--cyan)}.tm .h-amber{color:var(--amber)}.tm .h-purple{color:var(--purple)}.tm .h-green{color:var(--green)}.tm .h-pink{color:#F472B6}.tm .h-coral{color:#FB923C}
+</style>
+
+<div class="tm">
+
+<p class="sh">For streamers</p>
+<h2 class="st">What the artist sees when they sign in</h2>
+<p class="ss">Five dashboard surfaces — channel control, stats, newsletter, settings, audio editing. Sidebar nav grouped by domain. Every number color-coded by meaning.</p>
+
+<p class="vlbl">view 1 — dashboard channel overview (lands here after sign-in)</p>
+<div class="bw">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">https://tahti.eu/dashboard</div></div>
+  <div class="nav">
+    <div class="r" style="gap:24px"><div class="brand">TAHTI</div></div>
+    <div class="r" style="gap:8px"><span class="tn">dj-moonrise</span><div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#A78BFA,#22D3EE);display:flex;align-items:center;justify-content:center;font-size:9px;color:#062028;font-weight:500">DM</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:140px 1fr">
+    <div class="sd">
+      <div class="si-grp">Channel</div>
+      <div class="si ac"><span>▶</span> Channel</div>
+      <div class="si"><span>📊</span> Stats</div>
+      <div class="si"><span>🎵</span> Archive</div>
+      <div class="si-grp">Money</div>
+      <div class="si"><span>💰</span> Revenue</div>
+      <div class="si"><span>📧</span> Newsletter</div>
+      <div class="si-grp">Reach</div>
+      <div class="si"><span>🔗</span> Smart Links</div>
+      <div class="si"><span>🚀</span> Distribution</div>
+      <div class="si-grp">Account</div>
+      <div class="si"><span>🔒</span> Stash</div>
+      <div class="si"><span>⚙</span> Settings</div>
+    </div>
+    <div class="page">
+      <div class="live-bar">
+        <div>
+          <div class="r" style="gap:8px;margin-bottom:3px"><span class="dot-l"></span><span style="font-size:13px;color:var(--green);font-weight:500;letter-spacing:1px">LIVE NOW</span></div>
+          <div style="font-size:11px;color:var(--ts)">47 listeners · 24:37 elapsed · Moonrise Sessions — Live</div>
+        </div>
+        <button class="bw-amber">⏹ End Broadcast</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+        <div class="stat-card"><div class="stat-num" style="color:var(--amber)">1,247</div><div class="stat-lbl">Plays this month</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--green)">89</div><div class="stat-lbl">Downloads</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--purple)">23</div><div class="stat-lbl">Fan subscribers</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--cyan)">€115</div><div class="stat-lbl">Revenue / mo</div></div>
+      </div>
+      <div class="lbl">Icecast stream key</div>
+      <div class="r" style="gap:6px;margin-bottom:14px">
+        <input value="••••••••••••••••••••" style="flex:1;font-family:ui-monospace,monospace"/>
+        <button class="bs" style="font-size:11px;padding:6px 10px">Copy</button>
+        <button class="bs" style="font-size:11px;padding:6px 10px;color:var(--cyan);border-color:rgba(34,211,238,0.4)">Test</button>
+      </div>
+      <div class="lbl">Recent archive</div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-bottom:12px">
+        <div style="padding:9px 12px;display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;font-size:12px;border-bottom:1px solid var(--bd)">
+          <div class="cv cv-deep" style="width:24px;height:24px"></div>
+          <div><div style="color:var(--tp)">Late Night Drift Vol. 3</div><div class="tn">2 days ago · 1h 42m · in rotation</div></div>
+          <span class="tn">412 plays</span>
+          <button class="bs" style="font-size:10px;padding:4px 8px">Edit</button>
+        </div>
+        <div style="padding:9px 12px;display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;font-size:12px">
+          <div class="cv cv-violet" style="width:24px;height:24px"></div>
+          <div><div style="color:var(--tp)">Helsinki Winter Session</div><div class="tn">1 week ago · 2h 08m</div></div>
+          <span class="tn">2,144 plays</span>
+          <button class="bs" style="font-size:10px;padding:4px 8px">Edit</button>
+        </div>
+      </div>
+      <div class="r" style="gap:6px"><button class="bs" style="font-size:11px">⬆ Upload</button><button class="bs" style="font-size:11px">📧 Send newsletter</button><button class="bs" style="font-size:11px;color:var(--cyan);border-color:rgba(34,211,238,0.4)">📡 Push to Mixcloud</button></div>
+    </div>
+  </div>
+</div>
+
+<p class="vlbl">view 2 — stats dashboard (engagement units, plays, top tracks, geo)</p>
+<div class="bw">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">https://tahti.eu/dashboard/stats</div></div>
+  <div class="page">
+    <div class="r" style="justify-content:space-between;margin-bottom:14px">
+      <div><h3 style="font-size:18px">Stats</h3><div class="tn" style="margin-top:2px">Last 30 days · engagement units determine your grant share</div></div>
+      <div class="r" style="gap:4px;font-size:11px"><span style="padding:4px 10px;color:var(--ts);border-radius:6px">7d</span><span style="padding:4px 10px;background:var(--cyan);color:#062028;border-radius:6px;font-weight:500">30d</span><span style="padding:4px 10px;color:var(--ts)">All</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+      <div class="stat-card"><div class="stat-num" style="color:var(--amber)">1,247</div><div class="stat-lbl">Plays</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--green)">89</div><div class="stat-lbl">Downloads</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--purple)">23</div><div class="stat-lbl">Fan subs</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--cyan)">344</div><div class="stat-lbl">Engagement units</div></div>
+    </div>
+    <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px">
+      <div class="lbl" style="margin-bottom:10px">Plays — daily</div>
+      <svg viewBox="0 0 580 80" style="width:100%;height:60px;display:block">
+        <g fill="#22D3EE">
+          <rect x="0" y="40" width="14" height="40"/><rect x="20" y="50" width="14" height="30"/><rect x="40" y="35" width="14" height="45"/><rect x="60" y="42" width="14" height="38"/><rect x="80" y="30" width="14" height="50"/><rect x="100" y="25" width="14" height="55"/><rect x="120" y="38" width="14" height="42"/><rect x="140" y="32" width="14" height="48"/><rect x="160" y="20" width="14" height="60"/><rect x="180" y="28" width="14" height="52"/><rect x="200" y="22" width="14" height="58"/><rect x="220" y="18" width="14" height="62"/><rect x="240" y="25" width="14" height="55"/><rect x="260" y="15" width="14" height="65"/><rect x="280" y="20" width="14" height="60"/><rect x="300" y="12" width="14" height="68"/><rect x="320" y="18" width="14" height="62"/><rect x="340" y="22" width="14" height="58"/><rect x="360" y="10" width="14" height="70"/><rect x="380" y="14" width="14" height="66"/><rect x="400" y="8" width="14" height="72"/><rect x="420" y="12" width="14" height="68"/><rect x="440" y="6" width="14" height="74"/><rect x="460" y="10" width="14" height="70"/><rect x="480" y="4" width="14" height="76"/><rect x="500" y="14" width="14" height="66"/><rect x="520" y="8" width="14" height="72"/><rect x="540" y="12" width="14" height="68"/></g>
+        <rect x="560" y="2" width="14" height="78" fill="#FFB840"/>
+      </svg>
+      <div class="r" style="justify-content:space-between;margin-top:6px"><span class="tn">May 14</span><span class="tn">May 28</span><span class="tn" style="color:var(--amber)">Today ↑</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px">
+        <div class="lbl">Engagement units — 2026</div>
+        <div style="margin:10px 0">
+          <div class="r" style="justify-content:space-between;font-size:11px;margin-bottom:4px"><span style="color:var(--tp)">89 free downloads × 1</span><span class="stat-rev" style="color:var(--green)">89</span></div>
+          <div style="height:3px;background:var(--bd);border-radius:9999px;overflow:hidden"><div style="height:100%;width:26%;background:var(--green)"></div></div>
+        </div>
+        <div style="margin:10px 0">
+          <div class="r" style="justify-content:space-between;font-size:11px;margin-bottom:4px"><span style="color:var(--tp)">15 paid downloads × 5</span><span style="color:var(--cyan)">75</span></div>
+          <div style="height:3px;background:var(--bd);border-radius:9999px;overflow:hidden"><div style="height:100%;width:22%;background:var(--cyan)"></div></div>
+        </div>
+        <div style="margin:10px 0">
+          <div class="r" style="justify-content:space-between;font-size:11px;margin-bottom:4px"><span style="color:var(--tp)">€180/yr fan-subs × 1</span><span style="color:var(--purple)">180</span></div>
+          <div style="height:3px;background:var(--bd);border-radius:9999px;overflow:hidden"><div style="height:100%;width:52%;background:var(--purple)"></div></div>
+        </div>
+        <div style="margin-top:14px;padding:10px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.2);border-radius:7px">
+          <div class="r" style="justify-content:space-between"><span style="font-size:11px;color:var(--ts)">Est. grant — year end<br/><span class="tn">344 units · at Y2 pool size</span></span><span style="font-size:18px;color:var(--green);font-weight:500">~€31</span></div>
+        </div>
+      </div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px">
+        <div class="lbl">Top tracks</div>
+        <div style="font-size:12px;margin-top:8px">
+          <div class="r" style="justify-content:space-between;padding:5px 0"><span><span class="tn" style="margin-right:8px">1</span>Drift Vol. 3</span><span class="tn">482</span></div>
+          <div class="r" style="justify-content:space-between;padding:5px 0"><span><span class="tn" style="margin-right:8px">2</span>Helsinki Winter</span><span class="tn">311</span></div>
+          <div class="r" style="justify-content:space-between;padding:5px 0"><span><span class="tn" style="margin-right:8px">3</span>Late Night Drift</span><span class="tn">178</span></div>
+          <div class="r" style="justify-content:space-between;padding:5px 0"><span><span class="tn" style="margin-right:8px">4</span>Analog Summer</span><span class="tn">89</span></div>
+        </div>
+        <div class="lbl" style="margin-top:14px">Top countries</div>
+        <div style="font-size:11px;margin-top:6px;line-height:1.9">
+          <div class="r" style="justify-content:space-between"><span>🇫🇮 Finland</span><span style="color:var(--cyan)">42%</span></div>
+          <div class="r" style="justify-content:space-between"><span>🇩🇪 Germany</span><span style="color:var(--cyan)">18%</span></div>
+          <div class="r" style="justify-content:space-between"><span>🇸🇪 Sweden</span><span style="color:var(--cyan)">12%</span></div>
+          <div class="r" style="justify-content:space-between"><span>🇪🇪 Estonia</span><span style="color:var(--cyan)">8%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="vlbl">view 3 — newsletter compose (markdown editor + email preview)</p>
+<div class="bw">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">https://tahti.eu/dashboard/newsletter/compose</div></div>
+  <div class="page">
+    <div class="r" style="justify-content:space-between;margin-bottom:12px">
+      <div><h3 style="font-size:16px">New newsletter</h3><div class="tn" style="margin-top:2px">187 subscribers · 3 of 4 weekly sends remaining · 76% open rate</div></div>
+      <div class="r" style="gap:6px"><button class="bs" style="font-size:11px">Save draft</button><button class="bp" style="font-size:11px">Send to 187 →</button></div>
+    </div>
+    <div style="margin-bottom:10px"><div class="lbl">Subject</div><input value="chapter 06 is out — and a thank-you" style="width:100%"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        <div class="lbl">Body · markdown</div>
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:12px;font-family:ui-monospace,monospace;font-size:11px;line-height:1.7;color:var(--tp);min-height:220px">
+          <span style="color:var(--purple)">## chapter 06 is here</span><br/><br/>five tracks, recorded between<br/>january and april in helsinki and<br/>sodankylä. listen on the channel,<br/>or buy the FLAC.<br/><br/><span style="color:var(--purple)">### a small thank-you</span><br/><br/>23 of you now subscribe at €3-10<br/>per month. that paid for the cable<br/>and a microphone repair this<br/>quarter. <span style="color:var(--green)">it actually matters.</span><br/><br/>next broadcast: <span style="color:var(--cyan)">thursday 28 may</span>,<br/>22:00 EET.<br/><br/>— long
+        </div>
+      </div>
+      <div>
+        <div class="lbl">Preview · how it lands in inbox</div>
+        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:14px;min-height:220px">
+          <div class="r" style="gap:10px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--bd)">
+            <div style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#A78BFA,#22D3EE);display:flex;align-items:center;justify-content:center;font-size:9px;color:#062028;font-weight:500">DM</div>
+            <div><div style="font-size:11px;color:var(--tp);font-weight:500">dj-moonrise via Tahti</div><div class="tn">noreply@tahti.eu</div></div>
+          </div>
+          <div style="font-size:14px;color:var(--tp);font-weight:500;margin-bottom:6px">chapter 06 is here</div>
+          <div style="font-size:11px;color:var(--ts);line-height:1.5;margin-bottom:10px">five tracks, recorded between january and april in helsinki and sodankylä. listen on the channel, or buy the FLAC.</div>
+          <button class="bp" style="font-size:11px;padding:6px 12px">Listen →</button>
+          <div style="font-size:11px;color:var(--ts);line-height:1.5;margin:10px 0">23 of you now subscribe at €3-10 per month. that paid for the cable and a microphone repair this quarter. <span style="color:var(--green)">it actually matters.</span></div>
+          <div class="tn" style="padding-top:10px;border-top:1px solid var(--bd)">— long · <span style="text-decoration:underline">unsubscribe</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="vlbl">view 4 — settings (broadcast keys + fan-subscription tiers)</p>
+<div class="bw">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">https://tahti.eu/dashboard/settings/broadcast</div></div>
+  <div class="page">
+    <div style="margin-bottom:16px">
+      <div class="r" style="gap:6px;margin-bottom:14px;font-size:11px;color:var(--ts);border-bottom:1px solid var(--bd);padding-bottom:0">
+        <span style="padding:6px 10px;border-bottom:2px solid var(--cyan);color:var(--cyan);margin-bottom:-1px">Broadcast</span><span style="padding:6px 10px">Fan subs</span><span style="padding:6px 10px">Profile</span><span style="padding:6px 10px">Payments</span><span style="padding:6px 10px">Account</span>
+      </div>
+      <h3 style="font-size:16px;margin-bottom:4px">Broadcast credentials</h3>
+      <div class="tn" style="margin-bottom:14px">Configure your broadcasting tool with these. RTMP for OBS/Mixxx/butt, Icecast for Liquidsoap or other source clients.</div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div class="lbl">RTMP — for OBS, Mixxx, butt</div>
+        <div style="font-size:11px;color:var(--ts);font-family:ui-monospace,monospace;margin-bottom:8px">rtmp://ingest.tahti.eu/live/<span style="color:var(--cyan)">dj-moonrise</span></div>
+        <div class="r" style="gap:6px"><input value="••••••••••••••••••••" style="flex:1;font-family:ui-monospace,monospace"/><button class="bs" style="font-size:11px;padding:6px 10px">Copy key</button><button class="bs" style="font-size:11px;padding:6px 10px">↻ Rotate</button></div>
+      </div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px">
+        <div class="lbl">Icecast — for Liquidsoap, butt, custom sources</div>
+        <div style="font-size:11px;color:var(--ts);font-family:ui-monospace,monospace;margin-bottom:8px">icecast.tahti.eu:8000 · mount: <span style="color:var(--cyan)">/dj-moonrise</span> · format: FLAC</div>
+        <div class="r" style="gap:6px"><input value="••••••••••••••••••••" style="flex:1;font-family:ui-monospace,monospace"/><button class="bs" style="font-size:11px;padding:6px 10px">Copy</button><button class="bs" style="font-size:11px;padding:6px 10px;color:var(--cyan);border-color:rgba(34,211,238,0.4)">⚡ Test</button></div>
+      </div>
+    </div>
+    <h3 style="font-size:16px;margin:18px 0 4px">Fan-subscription tiers</h3>
+    <div class="tn" style="margin-bottom:14px">What your subscribers pay for. Tahti takes 0% — Stripe fees pass through, 2% operational fee for processing.</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px">
+        <div class="lbl">Supporter</div>
+        <div style="font-size:22px;color:var(--purple);font-weight:500;margin:4px 0">€3<span style="font-size:11px;color:var(--ts)">/mo</span></div>
+        <div class="tn" style="line-height:1.6">✓ Supporter badge in chat<br/>✓ Fan-only chat access</div>
+      </div>
+      <div style="background:rgba(167,139,250,0.05);border:2px solid var(--purple);border-radius:10px;padding:14px;position:relative">
+        <div style="position:absolute;top:-8px;right:10px;background:var(--purple);color:#0E0420;font-size:9px;padding:2px 8px;border-radius:9999px;letter-spacing:0.5px">DEFAULT</div>
+        <div class="lbl" style="color:var(--purple)">Backer</div>
+        <div style="font-size:22px;color:var(--purple);font-weight:500;margin:4px 0">€5<span style="font-size:11px;color:var(--ts)">/mo</span></div>
+        <div class="tn" style="line-height:1.6">✓ Everything in Supporter<br/>✓ Unlimited FLAC downloads<br/>✓ Early release access</div>
+      </div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px">
+        <div class="lbl">Patron</div>
+        <div style="font-size:22px;color:var(--purple);font-weight:500;margin:4px 0">€10<span style="font-size:11px;color:var(--ts)">/mo</span></div>
+        <div class="tn" style="line-height:1.6">✓ Everything in Backer<br/>✓ Fan-only newsletter<br/>✓ Name in liner notes</div>
+      </div>
+    </div>
+    <div class="r" style="gap:8px;margin-top:12px"><button class="bs" style="font-size:11px">+ Add custom tier</button><span class="tn" style="margin-left:auto">Last updated 2 weeks ago</span></div>
+  </div>
+</div>
+
+<p class="vlbl">view 5 — audio editor (trim + tracklist + ACRCloud match)</p>
+<div class="bw">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">https://tahti.eu/dashboard/archive/late-night-drift-3/edit</div></div>
+  <div class="page">
+    <div class="r" style="justify-content:space-between;margin-bottom:10px">
+      <div><h3 style="font-size:15px">Late Night Drift Vol. 3</h3><div class="tn">FLAC 24/96 · live recording · 3 weeks ago · ACRCloud matched 5 of 7 tracks</div></div>
+      <div class="r" style="gap:4px;font-size:11px;color:var(--ts)"><span style="padding:5px 9px;border-bottom:2px solid var(--cyan);color:var(--cyan);margin-bottom:-1px">Tracklist</span><span style="padding:5px 9px">Trim</span><span style="padding:5px 9px">Fade</span><span style="padding:5px 9px">Metadata</span></div>
+    </div>
+    <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px">
+      <svg viewBox="0 0 600 40" preserveAspectRatio="none" style="width:100%;height:32px;display:block">
+        <g fill="#22D3EE"><rect x="0" y="16" width="2" height="8"/><rect x="4" y="12" width="2" height="16"/><rect x="8" y="8" width="2" height="24"/><rect x="12" y="14" width="2" height="12"/><rect x="16" y="10" width="2" height="20"/><rect x="20" y="6" width="2" height="28"/><rect x="24" y="12" width="2" height="16"/><rect x="28" y="16" width="2" height="8"/><rect x="32" y="8" width="2" height="24"/><rect x="36" y="4" width="2" height="32"/><rect x="40" y="10" width="2" height="20"/><rect x="44" y="14" width="2" height="12"/><rect x="48" y="6" width="2" height="28"/><rect x="52" y="12" width="2" height="16"/><rect x="56" y="8" width="2" height="24"/><rect x="60" y="4" width="2" height="32"/><rect x="64" y="10" width="2" height="20"/><rect x="68" y="14" width="2" height="12"/><rect x="72" y="6" width="2" height="28"/><rect x="76" y="12" width="2" height="16"/><rect x="80" y="16" width="2" height="8"/><rect x="84" y="8" width="2" height="24"/><rect x="88" y="4" width="2" height="32"/><rect x="92" y="10" width="2" height="20"/><rect x="96" y="14" width="2" height="12"/><rect x="100" y="6" width="2" height="28"/><rect x="104" y="12" width="2" height="16"/><rect x="108" y="8" width="2" height="24"/><rect x="112" y="14" width="2" height="12"/><rect x="116" y="10" width="2" height="20"/><rect x="120" y="6" width="2" height="28"/><rect x="124" y="12" width="2" height="16"/><rect x="128" y="16" width="2" height="8"/><rect x="132" y="8" width="2" height="24"/><rect x="136" y="4" width="2" height="32"/><rect x="140" y="10" width="2" height="20"/></g>
+        <g fill="#5E6680"><rect x="144" y="14" width="2" height="12"/><rect x="148" y="10" width="2" height="20"/><rect x="152" y="6" width="2" height="28"/><rect x="156" y="12" width="2" height="16"/><rect x="160" y="16" width="2" height="8"/><rect x="164" y="8" width="2" height="24"/><rect x="168" y="4" width="2" height="32"/><rect x="172" y="10" width="2" height="20"/><rect x="176" y="14" width="2" height="12"/><rect x="180" y="6" width="2" height="28"/><rect x="184" y="12" width="2" height="16"/><rect x="188" y="8" width="2" height="24"/><rect x="192" y="14" width="2" height="12"/><rect x="196" y="10" width="2" height="20"/><rect x="200" y="6" width="2" height="28"/><rect x="204" y="12" width="2" height="16"/><rect x="208" y="16" width="2" height="8"/><rect x="212" y="8" width="2" height="24"/><rect x="216" y="4" width="2" height="32"/><rect x="220" y="10" width="2" height="20"/><rect x="224" y="14" width="2" height="12"/><rect x="228" y="6" width="2" height="28"/><rect x="232" y="12" width="2" height="16"/><rect x="236" y="8" width="2" height="24"/><rect x="240" y="14" width="2" height="12"/><rect x="244" y="10" width="2" height="20"/><rect x="248" y="6" width="2" height="28"/><rect x="252" y="12" width="2" height="16"/><rect x="256" y="16" width="2" height="8"/><rect x="260" y="8" width="2" height="24"/><rect x="264" y="4" width="2" height="32"/><rect x="268" y="10" width="2" height="20"/><rect x="272" y="14" width="2" height="12"/><rect x="276" y="6" width="2" height="28"/><rect x="280" y="12" width="2" height="16"/><rect x="284" y="8" width="2" height="24"/><rect x="288" y="14" width="2" height="12"/><rect x="292" y="10" width="2" height="20"/><rect x="296" y="6" width="2" height="28"/><rect x="300" y="12" width="2" height="16"/><rect x="304" y="16" width="2" height="8"/><rect x="308" y="8" width="2" height="24"/><rect x="312" y="4" width="2" height="32"/><rect x="316" y="10" width="2" height="20"/><rect x="320" y="14" width="2" height="12"/><rect x="324" y="6" width="2" height="28"/><rect x="328" y="12" width="2" height="16"/><rect x="332" y="8" width="2" height="24"/><rect x="336" y="14" width="2" height="12"/><rect x="340" y="10" width="2" height="20"/><rect x="344" y="6" width="2" height="28"/><rect x="348" y="12" width="2" height="16"/><rect x="352" y="16" width="2" height="8"/><rect x="356" y="8" width="2" height="24"/><rect x="360" y="4" width="2" height="32"/><rect x="364" y="10" width="2" height="20"/><rect x="368" y="14" width="2" height="12"/><rect x="372" y="6" width="2" height="28"/><rect x="376" y="12" width="2" height="16"/><rect x="380" y="8" width="2" height="24"/><rect x="384" y="14" width="2" height="12"/><rect x="388" y="10" width="2" height="20"/><rect x="392" y="6" width="2" height="28"/><rect x="396" y="12" width="2" height="16"/><rect x="400" y="16" width="2" height="8"/><rect x="404" y="8" width="2" height="24"/><rect x="408" y="4" width="2" height="32"/><rect x="412" y="10" width="2" height="20"/><rect x="416" y="14" width="2" height="12"/><rect x="420" y="6" width="2" height="28"/><rect x="424" y="12" width="2" height="16"/><rect x="428" y="8" width="2" height="24"/><rect x="432" y="14" width="2" height="12"/><rect x="436" y="10" width="2" height="20"/><rect x="440" y="6" width="2" height="28"/><rect x="444" y="12" width="2" height="16"/><rect x="448" y="16" width="2" height="8"/><rect x="452" y="8" width="2" height="24"/><rect x="456" y="4" width="2" height="32"/><rect x="460" y="10" width="2" height="20"/><rect x="464" y="14" width="2" height="12"/><rect x="468" y="6" width="2" height="28"/><rect x="472" y="12" width="2" height="16"/><rect x="476" y="8" width="2" height="24"/><rect x="480" y="14" width="2" height="12"/><rect x="484" y="10" width="2" height="20"/><rect x="488" y="6" width="2" height="28"/><rect x="492" y="12" width="2" height="16"/><rect x="496" y="16" width="2" height="8"/><rect x="500" y="8" width="2" height="24"/><rect x="504" y="4" width="2" height="32"/><rect x="508" y="10" width="2" height="20"/><rect x="512" y="14" width="2" height="12"/><rect x="516" y="6" width="2" height="28"/><rect x="520" y="12" width="2" height="16"/><rect x="524" y="8" width="2" height="24"/><rect x="528" y="14" width="2" height="12"/><rect x="532" y="10" width="2" height="20"/><rect x="536" y="6" width="2" height="28"/><rect x="540" y="12" width="2" height="16"/><rect x="544" y="16" width="2" height="8"/><rect x="548" y="8" width="2" height="24"/><rect x="552" y="4" width="2" height="32"/><rect x="556" y="10" width="2" height="20"/><rect x="560" y="14" width="2" height="12"/><rect x="564" y="6" width="2" height="28"/><rect x="568" y="12" width="2" height="16"/><rect x="572" y="8" width="2" height="24"/><rect x="576" y="14" width="2" height="12"/><rect x="580" y="10" width="2" height="20"/><rect x="584" y="6" width="2" height="28"/><rect x="588" y="12" width="2" height="16"/><rect x="592" y="16" width="2" height="8"/><rect x="596" y="8" width="2" height="24"/></g>
+        <line x1="40" y1="0" x2="40" y2="40" stroke="#A78BFA" stroke-width="1"/><line x1="115" y1="0" x2="115" y2="40" stroke="#A78BFA" stroke-width="1"/><line x1="195" y1="0" x2="195" y2="40" stroke="#A78BFA" stroke-width="1"/><line x1="265" y1="0" x2="265" y2="40" stroke="#A78BFA" stroke-width="1"/><line x1="340" y1="0" x2="340" y2="40" stroke="#A78BFA" stroke-width="1"/><line x1="420" y1="0" x2="420" y2="40" stroke="#A78BFA" stroke-width="1"/><line x1="510" y1="0" x2="510" y2="40" stroke="#A78BFA" stroke-width="1"/>
+      </svg>
+      <div class="r" style="justify-content:space-between;margin-top:6px;font-size:10px;color:var(--tt);font-family:ui-monospace,monospace"><span>0:00:00</span><span>0:42:00</span><span>1:24:00</span><span>1:42:00</span></div>
+    </div>
+    <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;overflow:hidden">
+      <div style="padding:7px 12px;display:grid;grid-template-columns:24px 70px 1fr 1fr 80px;gap:8px;background:var(--c);font-size:9px;color:var(--tt);letter-spacing:1px">
+        <span>#</span><span>TIME</span><span>TRACK</span><span>ARTIST</span><span>SOURCE</span>
+      </div>
+      <div style="padding:8px 12px;display:grid;grid-template-columns:24px 70px 1fr 1fr 80px;gap:8px;border-top:1px solid var(--bd);font-size:11px;align-items:center"><span class="tn">1</span><span class="tn" style="font-family:ui-monospace,monospace">00:03:12</span><span style="color:var(--tp)">Selected Ambient Works II — Stone in Focus</span><span class="tn">Aphex Twin</span><span style="color:var(--green);font-size:10px">✓ ACRCloud</span></div>
+      <div style="padding:8px 12px;display:grid;grid-template-columns:24px 70px 1fr 1fr 80px;gap:8px;border-top:1px solid var(--bd);font-size:11px;align-items:center"><span class="tn">2</span><span class="tn" style="font-family:ui-monospace,monospace">00:19:34</span><span style="color:var(--tp)">Substrata — Tundra</span><span class="tn">Biosphere</span><span style="color:var(--green);font-size:10px">✓ ACRCloud</span></div>
+      <div style="padding:8px 12px;display:grid;grid-template-columns:24px 70px 1fr 1fr 80px;gap:8px;border-top:1px solid var(--bd);font-size:11px;align-items:center;background:rgba(255,184,64,0.04)"><span class="tn" style="color:var(--amber)">3</span><span class="tn" style="font-family:ui-monospace,monospace;color:var(--amber)">00:38:50</span><span><input value="untitled — dj-moonrise" style="font-size:11px;padding:3px 8px;width:100%;border-color:var(--amber)"/></span><span class="tn">dj-moonrise</span><span style="color:var(--amber);font-size:10px">unmatched</span></div>
+      <div style="padding:8px 12px;display:grid;grid-template-columns:24px 70px 1fr 1fr 80px;gap:8px;border-top:1px solid var(--bd);font-size:11px;align-items:center"><span class="tn">4</span><span class="tn" style="font-family:ui-monospace,monospace">01:02:14</span><span style="color:var(--tp)">An Empty Bliss Beyond This World</span><span class="tn">The Caretaker</span><span style="color:var(--green);font-size:10px">✓ ACRCloud</span></div>
+      <div style="padding:8px 12px;display:grid;grid-template-columns:24px 70px 1fr 1fr 80px;gap:8px;border-top:1px solid var(--bd);font-size:11px;align-items:center"><span class="tn">5</span><span class="tn" style="font-family:ui-monospace,monospace">01:34:50</span><span style="color:var(--tp)">Ágætis byrjun</span><span class="tn">Sigur Rós</span><span style="color:var(--green);font-size:10px">✓ ACRCloud</span></div>
+    </div>
+    <div class="r" style="margin-top:10px;justify-content:space-between"><button class="bs" style="font-size:11px">+ Add track at playhead</button><div class="r" style="gap:6px"><button class="bs" style="font-size:11px">Discard</button><button class="bp" style="font-size:11px">Save &amp; publish</button></div></div>
+  </div>
+</div>
+
+<p class="sh" style="margin-top:32px">For watchers</p>
+<h2 class="st">What listeners see — anonymous, no signup needed</h2>
+<p class="ss">Five public surfaces — discover, live channel, 24/7 archive, release smart link, subscribe. The artist's brand is the headline. Tahti is the plumbing.</p>
+
+<p class="vlbl">view 1 — discover homepage (the front door)</p>
+<div class="bw">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">https://tahti.eu</div></div>
+  <div class="nav">
+    <div class="r" style="gap:24px"><div class="brand">TAHTI</div><div class="nl"><span class="ac">Discover</span><span>Radio</span><span>Venues</span><span>For artists</span></div></div>
+    <div class="r" style="gap:6px"><button class="bs" style="font-size:11px;padding:6px 10px">Sign in</button><button class="bp" style="font-size:11px;padding:6px 12px">Start a channel</button></div>
+  </div>
+  <div class="page" style="padding:32px 24px 22px">
+    <div style="text-align:center;max-width:480px;margin:0 auto 22px">
+      <div class="tn" style="color:var(--cyan);letter-spacing:1.5px;margin-bottom:10px">A FINNISH NONPROFIT FOR INDEPENDENT MUSICIANS</div>
+      <div style="font-size:32px;font-weight:500;color:var(--tp);line-height:1.1;letter-spacing:-1px;margin-bottom:12px">Your radio station.<br/>Always on. Always yours.</div>
+      <div style="font-size:13px;color:var(--ts);line-height:1.55;margin-bottom:14px">One URL that always plays. Live when you're broadcasting, archive when you're not. Lossless audio. Direct fan support. 0% org take. AGPL.</div>
+      <div class="r" style="gap:8px;justify-content:center"><button class="bp">Start a channel — €40/year</button><button class="bs">Or try free</button></div>
+    </div>
+    <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div class="r" style="justify-content:space-between;margin-bottom:10px"><div class="r" style="gap:8px"><span class="dot-l"></span><span style="font-size:12px;font-weight:500;color:var(--tp)">On air right now</span></div><span class="tn">12 channels live · listen anywhere</span></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        <div><div class="cv" style="margin-bottom:6px"></div><div style="font-size:11px;color:var(--tp)">dj-moonrise</div><div class="tn">ambient · helsinki</div></div>
+        <div><div class="cv cv-coral" style="margin-bottom:6px"></div><div style="font-size:11px;color:var(--tp)">tundra-forms</div><div class="tn">drone · tampere</div></div>
+        <div><div class="cv cv-violet" style="margin-bottom:6px"></div><div style="font-size:11px;color:var(--tp)">aino-k</div><div class="tn">techno · espoo</div></div>
+        <div><div class="cv cv-amber" style="margin-bottom:6px"></div><div style="font-size:11px;color:var(--tp)">moss-radio</div><div class="tn">leftfield · turku</div></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center">
+      <div><div style="font-size:22px;font-weight:500;color:var(--amber)">312</div><div class="tn">artists broadcasting</div></div>
+      <div><div style="font-size:22px;font-weight:500;color:var(--purple)">€163k</div><div class="tn">forecasted direct-to-artist over 3 years</div></div>
+      <div><div style="font-size:22px;font-weight:500;color:var(--green)">0%</div><div class="tn">org cut on fan support</div></div>
+    </div>
+  </div>
+</div>
+
+<p class="vlbl">view 2 — channel page · live (with chat panel)</p>
+<div class="bw">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">https://dj-moonrise.tahti.eu</div></div>
+  <div class="nav">
+    <div class="r" style="gap:20px"><div class="brand">TAHTI</div><span style="font-size:12px;color:var(--ts)">dj-moonrise</span></div>
+    <div class="r" style="gap:8px"><span class="pill live-p"><span class="dot-l"></span>LIVE</span><span class="tn">247 listening</span></div>
+  </div>
+  <div class="page" style="display:grid;grid-template-columns:1fr 220px;gap:14px">
+    <div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div class="r" style="gap:14px;margin-bottom:10px"><div class="cv" style="width:80px;height:80px"></div><div><h3 style="font-size:16px;margin-bottom:3px">Moonrise Sessions — Live</h3><div class="tn">Ambient Electronic · <span style="color:var(--cyan)">FLAC</span> · Helsinki</div><div class="r" style="gap:6px;margin-top:6px;font-size:10px;color:var(--green);font-weight:500;letter-spacing:0.5px"><span class="dot-l"></span>BROADCASTING NOW — 47 MIN IN</div></div></div>
+        <svg viewBox="0 0 480 32" preserveAspectRatio="none" style="width:100%;height:26px;display:block;margin-bottom:8px">
+          <g fill="#22D3EE"><rect x="0" y="14" width="2" height="4"/><rect x="4" y="10" width="2" height="12"/><rect x="8" y="6" width="2" height="20"/><rect x="12" y="12" width="2" height="8"/><rect x="16" y="8" width="2" height="16"/><rect x="20" y="4" width="2" height="24"/><rect x="24" y="10" width="2" height="12"/><rect x="28" y="14" width="2" height="4"/><rect x="32" y="6" width="2" height="20"/><rect x="36" y="2" width="2" height="28"/><rect x="40" y="8" width="2" height="16"/><rect x="44" y="12" width="2" height="8"/><rect x="48" y="4" width="2" height="24"/><rect x="52" y="10" width="2" height="12"/><rect x="56" y="6" width="2" height="20"/><rect x="60" y="2" width="2" height="28"/><rect x="64" y="8" width="2" height="16"/><rect x="68" y="12" width="2" height="8"/><rect x="72" y="4" width="2" height="24"/><rect x="76" y="10" width="2" height="12"/><rect x="80" y="14" width="2" height="4"/><rect x="84" y="6" width="2" height="20"/><rect x="88" y="2" width="2" height="28"/><rect x="92" y="8" width="2" height="16"/><rect x="96" y="12" width="2" height="8"/><rect x="100" y="4" width="2" height="24"/><rect x="104" y="10" width="2" height="12"/><rect x="108" y="6" width="2" height="20"/><rect x="112" y="2" width="2" height="28"/><rect x="116" y="8" width="2" height="16"/><rect x="120" y="14" width="2" height="4"/><rect x="124" y="10" width="2" height="12"/><rect x="128" y="6" width="2" height="20"/><rect x="132" y="2" width="2" height="28"/><rect x="136" y="8" width="2" height="16"/><rect x="140" y="12" width="2" height="8"/><rect x="144" y="4" width="2" height="24"/><rect x="148" y="10" width="2" height="12"/><rect x="152" y="6" width="2" height="20"/><rect x="156" y="2" width="2" height="28"/><rect x="160" y="8" width="2" height="16"/></g>
+          <g fill="#5E6680"><rect x="164" y="12" width="2" height="8"/><rect x="168" y="10" width="2" height="12"/><rect x="172" y="6" width="2" height="20"/><rect x="176" y="14" width="2" height="4"/><rect x="180" y="8" width="2" height="16"/><rect x="184" y="2" width="2" height="28"/><rect x="188" y="10" width="2" height="12"/><rect x="192" y="6" width="2" height="20"/><rect x="196" y="12" width="2" height="8"/><rect x="200" y="4" width="2" height="24"/><rect x="204" y="10" width="2" height="12"/><rect x="208" y="14" width="2" height="4"/><rect x="212" y="6" width="2" height="20"/><rect x="216" y="2" width="2" height="28"/><rect x="220" y="8" width="2" height="16"/><rect x="224" y="12" width="2" height="8"/><rect x="228" y="4" width="2" height="24"/><rect x="232" y="10" width="2" height="12"/><rect x="236" y="14" width="2" height="4"/><rect x="240" y="6" width="2" height="20"/><rect x="244" y="2" width="2" height="28"/><rect x="248" y="8" width="2" height="16"/><rect x="252" y="12" width="2" height="8"/><rect x="256" y="4" width="2" height="24"/><rect x="260" y="10" width="2" height="12"/><rect x="264" y="14" width="2" height="4"/><rect x="268" y="6" width="2" height="20"/><rect x="272" y="2" width="2" height="28"/><rect x="276" y="8" width="2" height="16"/><rect x="280" y="12" width="2" height="8"/><rect x="284" y="4" width="2" height="24"/><rect x="288" y="10" width="2" height="12"/><rect x="292" y="14" width="2" height="4"/><rect x="296" y="6" width="2" height="20"/><rect x="300" y="2" width="2" height="28"/><rect x="304" y="8" width="2" height="16"/><rect x="308" y="12" width="2" height="8"/><rect x="312" y="4" width="2" height="24"/><rect x="316" y="10" width="2" height="12"/><rect x="320" y="14" width="2" height="4"/><rect x="324" y="6" width="2" height="20"/><rect x="328" y="2" width="2" height="28"/><rect x="332" y="8" width="2" height="16"/><rect x="336" y="12" width="2" height="8"/><rect x="340" y="4" width="2" height="24"/><rect x="344" y="10" width="2" height="12"/><rect x="348" y="14" width="2" height="4"/><rect x="352" y="6" width="2" height="20"/><rect x="356" y="2" width="2" height="28"/><rect x="360" y="8" width="2" height="16"/><rect x="364" y="12" width="2" height="8"/><rect x="368" y="4" width="2" height="24"/><rect x="372" y="10" width="2" height="12"/><rect x="376" y="14" width="2" height="4"/><rect x="380" y="6" width="2" height="20"/><rect x="384" y="2" width="2" height="28"/><rect x="388" y="8" width="2" height="16"/><rect x="392" y="12" width="2" height="8"/><rect x="396" y="4" width="2" height="24"/><rect x="400" y="10" width="2" height="12"/><rect x="404" y="14" width="2" height="4"/><rect x="408" y="6" width="2" height="20"/><rect x="412" y="2" width="2" height="28"/><rect x="416" y="8" width="2" height="16"/><rect x="420" y="12" width="2" height="8"/><rect x="424" y="4" width="2" height="24"/><rect x="428" y="10" width="2" height="12"/><rect x="432" y="14" width="2" height="4"/><rect x="436" y="6" width="2" height="20"/><rect x="440" y="2" width="2" height="28"/><rect x="444" y="8" width="2" height="16"/><rect x="448" y="12" width="2" height="8"/><rect x="452" y="4" width="2" height="24"/><rect x="456" y="10" width="2" height="12"/><rect x="460" y="14" width="2" height="4"/><rect x="464" y="6" width="2" height="20"/><rect x="468" y="2" width="2" height="28"/><rect x="472" y="8" width="2" height="16"/><rect x="476" y="12" width="2" height="8"/></g>
+        </svg>
+        <div class="r" style="justify-content:space-between"><div class="r" style="gap:8px"><button aria-label="play" style="width:34px;height:34px;border-radius:50%;background:var(--cyan);border:none;color:#062028;font-size:13px;cursor:pointer">▶</button><span class="tn" style="font-family:ui-monospace,monospace">47:23 / LIVE</span></div><span class="pill flac-p">LOSSLESS · 24-bit</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+        <div class="stat-card"><div class="stat-num" style="color:var(--amber);font-size:22px">247</div><div class="stat-lbl">Listening now</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--cyan);font-size:22px">1,247</div><div class="stat-lbl">Plays this month</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--green);font-size:22px">89</div><div class="stat-lbl">Downloads</div></div>
+      </div>
+      <div class="r" style="gap:6px"><button class="bp" style="background:var(--purple);color:#0E0420">♥ Subscribe €5/mo</button><button class="bs">⬇ Download</button><button class="bs">🔗 Share</button></div>
+    </div>
+    <div>
+      <div class="pin"><div class="pin-lbl">📌 Pinned</div><div style="font-size:11px;color:var(--tp);line-height:1.45">Tonight 22:00 UTC — ambient set, three new originals</div></div>
+      <div class="r" style="margin-bottom:8px"><div class="lbl" style="margin:0;flex:1">Live chat</div><span class="tn">247 here</span></div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:8px">
+        <div class="ch-msg"><span class="ch-h h-amber">@aurora_fi</span> <span style="color:var(--ts)">this bassline 🔥</span></div>
+        <div class="ch-msg"><span class="ch-h h-cyan">@kai_studio</span> <span style="color:var(--ts)">been waiting for this set</span></div>
+        <div class="ch-msg"><span class="ch-h h-purple">dj-moonrise</span> <span style="color:var(--ts)">thank you! ❤️</span></div>
+        <div class="ch-msg"><span class="ch-h h-coral">@mia.waves</span> <span style="color:var(--ts)">sound quality is incredible</span></div>
+        <div class="ch-msg"><span class="ch-h h-green">@tallinn_owl</span> <span style="color:var(--ts)">tuned in from EE 🇪🇪</span></div>
+        <div class="ch-msg"><span class="ch-h h-amber">@aurora_fi</span> <span style="color:var(--ts)">vhs mix or new material?</span></div>
+        <div class="ch-msg"><span class="ch-h h-purple">dj-moonrise</span> <span style="color:var(--ts)">mix of both — surprise at 50 min 🎁</span></div>
+      </div>
+      <div class="r" style="gap:4px"><input placeholder="Say something…" style="flex:1;font-size:11px;padding:5px 9px"/><button style="background:var(--cyan);border:none;color:#062028;padding:5px 9px;border-radius:6px;font-size:12px;cursor:pointer">→</button></div>
+    </div>
+  </div>
+</div>
+
+<p class="vlbl">view 3 — channel page · 24/7 mode (offline, archive plays, countdown to next live)</p>
+<div class="bw">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">https://neon-ghost.tahti.eu</div></div>
+  <div class="nav">
+    <div class="r" style="gap:20px"><div class="brand">TAHTI</div><span style="font-size:12px;color:var(--ts)">neon-ghost · always on</span></div>
+    <div class="r" style="gap:8px"><span class="pill" style="background:rgba(255,184,64,0.12);color:var(--amber)">📼 ARCHIVE</span><span class="tn">12 listening</span></div>
+  </div>
+  <div class="page" style="display:grid;grid-template-columns:1fr 220px;gap:14px">
+    <div>
+      <div class="lbl" style="color:var(--amber)">Next live broadcast</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px">
+        <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center"><div style="font-size:24px;color:var(--amber);font-weight:500;font-variant-numeric:tabular-nums">06</div><div class="tn" style="letter-spacing:1px">HRS</div></div>
+        <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center"><div style="font-size:24px;color:var(--amber);font-weight:500;font-variant-numeric:tabular-nums">24</div><div class="tn" style="letter-spacing:1px">MIN</div></div>
+        <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center"><div style="font-size:24px;color:var(--amber);font-weight:500;font-variant-numeric:tabular-nums">38</div><div class="tn" style="letter-spacing:1px">SEC</div></div>
+        <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:10px;text-align:center"><div style="font-size:14px;color:var(--amber);font-weight:500;margin-top:4px">FRI</div><div class="tn">22:00</div></div>
+      </div>
+      <div style="background:rgba(255,184,64,0.05);border:1px solid rgba(255,184,64,0.2);border-radius:8px;padding:10px 12px;margin-bottom:14px">
+        <div style="font-size:13px;color:var(--amber);font-weight:500;margin-bottom:2px">Twilight Protocol — Live Set</div>
+        <div class="tn">90 min · ambient/electronic · <span style="color:var(--cyan);cursor:pointer">🔔 Set a reminder</span></div>
+      </div>
+      <div class="lbl">Now playing from archive</div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-bottom:14px">
+        <div class="r" style="gap:10px"><div class="cv cv-rose" style="width:46px;height:46px"></div><div style="flex:1"><div style="font-size:13px;color:var(--tp);font-weight:500">Neon Shore EP — Full Broadcast</div><div class="tn">Recorded live · Mar 2026 · 1h 14m</div></div></div>
+        <div class="r" style="gap:8px;margin-top:10px"><button aria-label="play" style="width:30px;height:30px;border-radius:50%;background:var(--cyan);border:none;color:#062028;font-size:12px;cursor:pointer">▶</button><span class="tn" style="font-family:ui-monospace,monospace">23:41</span><div style="flex:1;height:3px;background:var(--bd);border-radius:9999px;overflow:hidden;margin:0 8px"><div style="height:100%;width:32%;background:var(--amber)"></div></div><span class="tn" style="font-family:ui-monospace,monospace">1:14:00</span><span class="pill" style="background:rgba(255,184,64,0.12);color:var(--amber)">MP3 HQ</span></div>
+      </div>
+      <div class="lbl">Archive — all broadcasts</div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;overflow:hidden">
+        <div style="padding:9px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:12px;border-bottom:1px solid var(--bd)"><div class="cv cv-rose" style="width:24px;height:24px"></div><div><div style="color:var(--tp)">Neon Shore EP</div><div class="tn">Mar 2026 · 1h 14m</div></div><span class="tn">1:14:00</span></div>
+        <div style="padding:9px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:12px;border-bottom:1px solid var(--bd)"><div class="cv cv-deep" style="width:24px;height:24px"></div><div><div style="color:var(--tp)">Winter Session Archive</div><div class="tn">Dec 2025 · 2h 08m</div></div><span class="tn">2:08:00</span></div>
+        <div style="padding:9px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:12px"><div class="cv cv-violet" style="width:24px;height:24px"></div><div><div style="color:var(--tp)">Late Night Drift Vol. 3</div><div class="tn">Nov 2025 · 1h 40m</div></div><span class="tn">1:40:00</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="pin"><div class="pin-lbl">📌 Pinned</div><div style="font-size:11px;color:var(--tp);line-height:1.45">Next live set Friday 22:00 UTC — Twilight Protocol</div></div>
+      <div class="lbl">Chat</div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:10px;margin-bottom:8px">
+        <div class="ch-msg"><span class="ch-h h-amber">@aurora_fi</span> <span style="color:var(--ts)">love that the archive keeps playing 🙌</span></div>
+        <div class="ch-msg"><span class="ch-h h-cyan">@kai_studio</span> <span style="color:var(--ts)">reminder set for friday</span></div>
+        <div class="ch-msg"><span class="ch-h h-coral">@mia.waves</span> <span style="color:var(--ts)">this neon shore ep is so good</span></div>
+      </div>
+      <div class="r" style="gap:4px"><input placeholder="Say something…" style="flex:1;font-size:11px;padding:5px 9px"/><button style="background:var(--cyan);border:none;color:#062028;padding:5px 9px;border-radius:6px;font-size:12px;cursor:pointer">→</button></div>
+    </div>
+  </div>
+</div>
+
+<p class="vlbl">view 4 — release smart link (published + pre-release variants side-by-side)</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+  <div class="bw">
+    <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">tahti.eu/r/drift-ep</div></div>
+    <div class="page" style="text-align:center;padding:18px">
+      <div class="tn" style="color:var(--green);letter-spacing:1.5px;margin-bottom:10px">PUBLISHED</div>
+      <div class="cv" style="width:140px;height:140px;margin:0 auto 12px"></div>
+      <h3 style="font-size:18px;margin-bottom:4px">Drift EP</h3>
+      <div class="tn" style="margin-bottom:12px">dj-moonrise · EP · 4 tracks · 2024</div>
+      <div style="background:rgba(34,211,238,0.05);border-left:3px solid var(--cyan);border-radius:0 7px 7px 0;padding:8px 10px;margin-bottom:14px;text-align:left"><div style="font-size:11px;color:var(--ts);font-style:italic;line-height:1.5">"Recorded live to tape, mixed in one take. Sides A and B are meant to be played together."</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;font-size:11px"><span><span style="display:inline-block;width:18px;height:18px;background:var(--green);border-radius:4px;margin-right:8px;vertical-align:middle"></span>Spotify</span><span class="tn">Stream →</span></div>
+        <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;font-size:11px"><span><span style="display:inline-block;width:18px;height:18px;background:#F472B6;border-radius:4px;margin-right:8px;vertical-align:middle"></span>Apple Music</span><span class="tn">Stream →</span></div>
+        <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;font-size:11px"><span><span style="display:inline-block;width:18px;height:18px;background:var(--cyan);border-radius:4px;margin-right:8px;vertical-align:middle"></span>Bandcamp</span><span class="tn">Buy · Free DL →</span></div>
+        <div style="background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.3);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;font-size:11px"><span><span style="display:inline-block;width:18px;height:18px;background:var(--amber);border-radius:4px;margin-right:8px;vertical-align:middle"></span><span style="color:var(--cyan)">tahti.eu</span></span><span style="color:var(--cyan);font-size:10px">FLAC · best quality →</span></div>
+      </div>
+      <div class="tn" style="margin-top:14px">Powered by tahti.eu · @dj-moonrise</div>
+    </div>
+  </div>
+  <div class="bw">
+    <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">tahti.eu/r/winter-26</div></div>
+    <div class="page" style="text-align:center;padding:18px">
+      <div class="tn" style="color:var(--amber);letter-spacing:1.5px;margin-bottom:10px">PRE-RELEASE MODE</div>
+      <div class="cv cv-deep" style="width:140px;height:140px;margin:0 auto 12px"></div>
+      <h3 style="font-size:18px;margin-bottom:4px">Winter Session 2026</h3>
+      <div class="tn" style="margin-bottom:14px">dj-moonrise · Live Mix · Releasing Dec 1, 2026</div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div class="tn" style="margin-bottom:6px;letter-spacing:1px">DROPS IN</div>
+        <div class="r" style="justify-content:center;gap:14px"><div><div style="font-size:24px;color:var(--amber);font-weight:500;font-variant-numeric:tabular-nums">03</div><div class="tn">DAYS</div></div><div><div style="font-size:24px;color:var(--amber);font-weight:500;font-variant-numeric:tabular-nums">14</div><div class="tn">HRS</div></div><div><div style="font-size:24px;color:var(--amber);font-weight:500;font-variant-numeric:tabular-nums">22</div><div class="tn">MIN</div></div></div>
+      </div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:8px;padding:12px">
+        <div class="tn" style="margin-bottom:6px;letter-spacing:1px">GET NOTIFIED WHEN THIS DROPS</div>
+        <div class="r" style="gap:6px"><input placeholder="your@email.com" style="flex:1;font-size:11px"/><button class="bw-amber" style="font-size:11px;padding:7px 12px">Notify me</button></div>
+        <div class="tn" style="margin-top:8px;font-size:10px;line-height:1.4">Goes to the artist's newsletter list. Unsubscribe anytime.</div>
+      </div>
+      <div class="tn" style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--bd)">Platforms available on release day</div>
+      <div class="tn" style="margin-top:10px">Powered by tahti.eu · @dj-moonrise</div>
+    </div>
+  </div>
+</div>
+
+<p class="vlbl">view 5 — subscribe page (fan-to-artist, 0% org take)</p>
+<div class="bw">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">https://tahti.eu/u/dj-moonrise/subscribe</div></div>
+  <div class="nav">
+    <div class="r" style="gap:20px"><div class="brand">TAHTI</div><span style="font-size:11px;color:var(--ts)">← dj-moonrise</span></div>
+    <button class="bs" style="font-size:11px;padding:6px 10px">Sign in</button>
+  </div>
+  <div class="page">
+    <div style="text-align:center;max-width:460px;margin:0 auto 20px">
+      <div class="r" style="gap:10px;justify-content:center;margin-bottom:10px"><div style="width:44px;height:44px;border-radius:9px;background:linear-gradient(135deg,#A78BFA,#22D3EE);display:flex;align-items:center;justify-content:center;font-size:14px;color:#062028;font-weight:500">DM</div><div style="text-align:left"><div style="font-size:13px;color:var(--tp);font-weight:500">Support dj-moonrise</div><div class="tn">Direct from your wallet to hers</div></div></div>
+      <div style="font-size:12px;color:var(--ts);line-height:1.55;font-style:italic">"If you've found something in this music that helped you, this is how you say thank you. Tahti takes nothing — every euro minus Stripe goes to me, processed by their nonprofit. No middleman."</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px;text-align:center"><div class="lbl">Supporter</div><div style="font-size:24px;color:var(--purple);font-weight:500;margin:4px 0">€3<span style="font-size:11px;color:var(--ts)">/mo</span></div><div class="tn" style="margin-bottom:8px">A small thank-you</div><div style="font-size:10px;color:var(--ts);line-height:1.6;text-align:left">✓ Supporter badge in chat<br/>✓ Fan-only chat access</div></div>
+      <div style="background:rgba(167,139,250,0.05);border:2px solid var(--purple);border-radius:10px;padding:14px;text-align:center;position:relative"><div style="background:var(--purple);color:#0E0420;font-size:9px;padding:2px 8px;border-radius:9999px;display:inline-block;margin-bottom:6px;letter-spacing:0.5px">MOST CHOSEN</div><div class="lbl" style="color:var(--purple)">Backer</div><div style="font-size:24px;color:var(--purple);font-weight:500;margin:4px 0">€5<span style="font-size:11px;color:var(--ts)">/mo</span></div><div class="tn" style="margin-bottom:8px">The standard tier</div><div style="font-size:10px;color:var(--ts);line-height:1.6;text-align:left">✓ Everything in Supporter<br/>✓ Unlimited FLAC downloads<br/>✓ Early access to releases</div></div>
+      <div style="background:var(--ce);border:1px solid var(--bd);border-radius:10px;padding:14px;text-align:center"><div class="lbl">Patron</div><div style="font-size:24px;color:var(--purple);font-weight:500;margin:4px 0">€10<span style="font-size:11px;color:var(--ts)">/mo</span></div><div class="tn" style="margin-bottom:8px">Significant support</div><div style="font-size:10px;color:var(--ts);line-height:1.6;text-align:left">✓ Everything in Backer<br/>✓ Fan-only newsletter<br/>✓ Name in liner notes</div></div>
+    </div>
+    <div style="background:rgba(34,211,238,0.05);border-left:3px solid var(--cyan);padding:10px 12px;border-radius:0 8px 8px 0">
+      <div style="font-size:11px;color:var(--tp);line-height:1.55"><span style="color:var(--cyan);font-weight:500">Where €5 actually goes:</span> Stripe takes <span style="color:var(--amber)">~€0.45</span> (their fees, pass-through). Tahti takes <span style="color:var(--cyan)">€0.10</span> (2%, covers GDPR + processing). <span style="color:var(--purple);font-weight:500">dj-moonrise receives €4.45.</span> Patreon would have left her with €4.20. We're not a platform — we're plumbing.</div>
+    </div>
+  </div>
+</div>
+
+</div>

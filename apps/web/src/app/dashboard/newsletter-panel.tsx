@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { createNewsletterDraft, sendNewsletterDraft } from './actions'
+import { renderNewsletterPreview } from '@/lib/render-newsletter-preview'
 
 interface SubscriberStats {
   total: number
@@ -27,11 +28,13 @@ export default function NewsletterPanel({
   initialDrafts,
   hasFanNewsletterPerk,
   tier,
+  displayName,
 }: {
   initialStats: SubscriberStats
   initialDrafts: DraftRow[]
   hasFanNewsletterPerk: boolean
   tier: string
+  displayName: string
 }) {
   const [stats] = useState(initialStats)
   const [drafts, setDrafts] = useState(initialDrafts)
@@ -126,15 +129,47 @@ export default function NewsletterPanel({
         />
       </div>
 
-      <div className="studio-field studio-mb-md">
-        <label className="studio-label">Body (Markdown)</label>
-        <textarea
-          value={bodyMd}
-          onChange={(e) => setBodyMd(e.target.value)}
-          rows={6}
-          disabled={saving}
-          className="studio-textarea"
-        />
+      <div className="nl-compose-grid studio-mb-md">
+        <div className="studio-field">
+          <label className="nl-compose-label" htmlFor="newsletter-body">
+            Body · Markdown
+          </label>
+          <textarea
+            id="newsletter-body"
+            value={bodyMd}
+            onChange={(e) => setBodyMd(e.target.value)}
+            rows={10}
+            disabled={saving}
+            className="studio-textarea"
+          />
+        </div>
+
+        <div className="studio-field">
+          <span className="nl-compose-label">Preview · how it lands in inbox</span>
+          <div className="nl-preview-card">
+            <div className="nl-preview-from">
+              <span className="nl-preview-avatar" aria-hidden>
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+              <div>
+                <div className="nl-preview-from-name">{displayName} via Tahti</div>
+                <div className="nl-preview-from-email">noreply@tahti.live</div>
+              </div>
+            </div>
+            {subject.trim() && <h2 className="nl-preview-subject">{subject}</h2>}
+            {bodyMd.trim() ? (
+              <div
+                className="nl-preview-body"
+                dangerouslySetInnerHTML={{ __html: renderNewsletterPreview(bodyMd) }}
+              />
+            ) : (
+              <p className="nl-preview-empty">Your newsletter body will appear here as you type.</p>
+            )}
+            <div className="nl-preview-footer">
+              — {displayName} · <span>unsubscribe</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <label
