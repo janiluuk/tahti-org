@@ -3,7 +3,12 @@
 
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
-import { ChatTokenOnlyResponseSchema, SlugParamSchema, openApiResponse, parseRouteParams } from '@tahti/shared'
+import {
+  ChatTokenOnlyResponseSchema,
+  SlugParamSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 
 // Rate limit: 30 viewer tokens per IP per minute — generous since this is
