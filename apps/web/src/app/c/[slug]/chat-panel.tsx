@@ -55,6 +55,22 @@ export default function ChatPanel({
     }
   }, [])
 
+  // Connect read-only on load so visitors see live chat without joining first.
+  useEffect(() => {
+    let cancelled = false
+    fetch(`${API_BASE}/api/chat/${slug}/viewer-token`, { method: 'POST' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { token: string } | null) => {
+        if (!cancelled && data?.token) setToken((prev) => prev ?? data.token)
+      })
+      .catch(() => {
+        // ignore — chat just stays disconnected
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [slug])
+
   // Poll listener count every 30s
   useEffect(() => {
     let cancelled = false
@@ -237,7 +253,7 @@ export default function ChatPanel({
       )}
 
       <div ref={scrollRef} className="ch-chat-messages">
-        {messages.length === 0 && status !== 'connected' && (
+        {messages.length === 0 && (
           <p className="ch-chat-empty">channel is quiet right now — say hi</p>
         )}
         {messages.map((m) => (

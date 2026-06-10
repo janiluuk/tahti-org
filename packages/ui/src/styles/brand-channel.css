@@ -143,6 +143,40 @@
   border-color: color-mix(in srgb, var(--muted) 50%, transparent);
 }
 
+[data-tahti-ui='brand'] .ch-header__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  transition:
+    border-color 0.12s,
+    background 0.12s;
+}
+
+[data-tahti-ui='brand'] .ch-header__user:hover {
+  background: var(--card2);
+  border-color: color-mix(in srgb, var(--muted) 50%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-header__user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--cyan);
+  color: #0a0f1e;
+  font-weight: 700;
+  font-size: 11px;
+}
+
 [data-tahti-ui='brand'] .ch-header__back {
   font-size: 12px;
   color: var(--muted);
@@ -212,6 +246,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
   background: color-mix(in srgb, var(--bg) 80%, var(--card));
 }
 
@@ -967,6 +1002,7 @@
 
 [data-tahti-ui='brand'] .ch-chat-input-row input {
   flex: 1;
+  min-width: 0;
   padding: 0.4rem 0.6rem;
   border: 1px solid var(--border-hover);
   border-radius: var(--radius-sm);

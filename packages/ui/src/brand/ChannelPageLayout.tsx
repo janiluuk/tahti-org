@@ -8,10 +8,11 @@ type ChannelHeaderProps = {
   isLive?: boolean
   artistHandle?: string
   activeNav?: 'discover' | 'radio' | 'venues'
+  user?: { username: string; displayName: string } | null
 }
 
 /** PLAT-020: sticky channel top bar — TAHTI logo + live indicator. */
-export function ChannelHeader({ isLive, artistHandle, activeNav }: ChannelHeaderProps) {
+export function ChannelHeader({ isLive, artistHandle, activeNav, user }: ChannelHeaderProps) {
   return (
     <header className="ch-header">
       <Link href="/" className="ch-logo">
@@ -49,11 +50,19 @@ export function ChannelHeader({ isLive, artistHandle, activeNav }: ChannelHeader
             LIVE
           </div>
         )}
-        {!isLive && (
-          <Link href="/login" className="ch-header__signin">
-            Sign in
-          </Link>
-        )}
+        {!isLive &&
+          (user ? (
+            <Link href="/dashboard" className="ch-header__user">
+              <span className="ch-header__user-avatar" aria-hidden>
+                {user.displayName.charAt(0).toUpperCase()}
+              </span>
+              {user.displayName}
+            </Link>
+          ) : (
+            <Link href="/login" className="ch-header__signin">
+              Sign in
+            </Link>
+          ))}
       </div>
     </header>
   )
@@ -62,15 +71,22 @@ export function ChannelHeader({ isLive, artistHandle, activeNav }: ChannelHeader
 type ChannelPageLayoutProps = {
   isLive?: boolean
   artistHandle?: string
+  user?: { username: string; displayName: string } | null
   main: ReactNode
   sidebar: ReactNode
 }
 
 /** PLAT-020: two-column channel layout (main + chat sidebar). */
-export function ChannelPageLayout({ isLive, artistHandle, main, sidebar }: ChannelPageLayoutProps) {
+export function ChannelPageLayout({
+  isLive,
+  artistHandle,
+  user,
+  main,
+  sidebar,
+}: ChannelPageLayoutProps) {
   return (
     <>
-      <ChannelHeader isLive={isLive} artistHandle={artistHandle} />
+      <ChannelHeader isLive={isLive} artistHandle={artistHandle} user={user} />
       <div className="ch-body">
         <div className="ch-main">{main}</div>
         <aside className="ch-sidebar">{sidebar}</aside>

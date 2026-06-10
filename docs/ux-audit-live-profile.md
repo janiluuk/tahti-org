@@ -1,3 +1,14 @@
+> **Status update**: items #1 (partial — heading badge removed), #3, #4,
+> and #10 below have been fixed in code (see commit history). Item #6 was
+> re-investigated and turned out to be a **false positive**: `isLive`
+> rendering on the profile page (`ProfilePageLayout`/`ProfileHero`,
+> `prof-live-badge` "ON AIR NOW" + "LIVE NOW" embed CTA) is already
+> correctly implemented. The screenshot showed no live badge because the
+> demo channel's `state` had already reverted to `OFFLINE` by the time
+> that (5th/last) screenshot was captured — see the still-unresolved
+> "channel state reverts to OFFLINE" issue noted separately. Re-verify
+> with a fresh capture once that root cause is fixed.
+
 # UX audit — live channel, profile, discover, dashboard
 
 Based on fresh screenshots captured against a locally seeded demo channel

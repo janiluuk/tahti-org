@@ -4,6 +4,7 @@
 import type { ChannelCard } from '@tahti/shared'
 import { ChannelHeader } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
+import { getSessionUser } from '@/lib/session'
 
 async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCard[] }> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -84,13 +85,13 @@ function ChannelCardItem({ channel }: { channel: ChannelCard }) {
 }
 
 export default async function ListenPage() {
-  const { live, recent } = await fetchChannels()
+  const [{ live, recent }, user] = await Promise.all([fetchChannels(), getSessionUser()])
   const empty = live.length === 0 && recent.length === 0
 
   return (
     <>
       <BgCanvas />
-      <ChannelHeader activeNav="discover" />
+      <ChannelHeader activeNav="discover" user={user} />
       <div className="listen-shell">
         <header className="listen-page-header">
           <h1 className="listen-page-title">Discover</h1>
