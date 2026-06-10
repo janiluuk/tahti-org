@@ -6,7 +6,6 @@
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
-  /* Bridge local @/components/ui tokens to dark brand palette */
   --tahti-bg: var(--bg);
   --tahti-surface: var(--card);
   --tahti-surface-muted: var(--card2);
@@ -21,6 +20,20 @@
   --tahti-warning-bg: color-mix(in srgb, var(--amber) 12%, var(--card));
   --tahti-error-bg: color-mix(in srgb, var(--coral) 12%, var(--card));
   --tahti-info-bg: color-mix(in srgb, var(--cyan) 12%, var(--card));
+}
+
+/* Three.js gateway background (BgCanvas) — same as login; shell must not paint over fixed canvas */
+[data-tahti-ui='brand'].brand-channel:has(.bg-canvas),
+[data-tahti-ui='brand'].brand-channel.brand-channel--canvas {
+  background: transparent;
+}
+
+[data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .listen-shell,
+[data-tahti-ui='brand'].brand-channel.brand-channel--canvas .listen-shell,
+[data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .home-shell,
+[data-tahti-ui='brand'].brand-channel.brand-channel--canvas .home-shell {
+  position: relative;
+  z-index: 1;
 }
 
 /* M31: artist color scheme overrides (--channel-* set by ChannelColorScheme) */
@@ -810,6 +823,24 @@
 
 [data-tahti-ui='brand'] .ch-player-inner {
   padding: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-player-inner--video {
+  padding: 0;
+}
+
+[data-tahti-ui='brand'] .ch-youtube-player {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  background: #000;
+}
+
+[data-tahti-ui='brand'] .ch-artist-avatar--radio {
+  background: linear-gradient(135deg, var(--cyan), var(--tahti-primary));
+  color: #fff;
+  font-weight: 700;
 }
 
 [data-tahti-ui='brand'] .ch-archive-section {

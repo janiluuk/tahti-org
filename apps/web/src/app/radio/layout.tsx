@@ -3,12 +3,13 @@
 
 import type { ReactNode } from 'react'
 import '@tahti/ui/src/tokens.css'
+import '@tahti/ui/src/components.css'
 import '@tahti/ui/src/styles/brand-channel.css'
 
-/** Radio page uses the dark brand shell, same as listen pages. */
+/** Radio page — channel shell with optional Three.js BgCanvas. */
 export default function RadioLayout({ children }: { children: ReactNode }) {
   return (
-    <div data-tahti-ui="brand" className="brand-channel">
+    <div data-tahti-ui="brand" data-channel-root className="brand-channel brand-channel--canvas">
       {children}
     </div>
   )
