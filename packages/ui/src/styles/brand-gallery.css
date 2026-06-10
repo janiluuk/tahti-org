@@ -65,7 +65,7 @@
 [data-tahti-ui='brand'] .ch-gallery-shell {
   border-radius: 8px;
   margin-bottom: 1.5rem;
-  background: #0a0f1e;
+  background: var(--bg);
   overflow: hidden;
   position: relative;
 }
@@ -101,7 +101,7 @@
 [data-tahti-ui='brand'] .ch-gallery-nav-btn {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #e8eaf6;
+  color: var(--text);
   border-radius: 4px;
   padding: 0.35rem 0.75rem;
   font-size: 0.8rem;
@@ -117,7 +117,7 @@
   overflow-x: auto;
   border-radius: 8px;
   margin-bottom: 1.5rem;
-  background: #0a0f1e;
+  background: var(--bg);
 }
 
 [data-tahti-ui='brand'] .ch-gallery-scroll--wave {
@@ -128,7 +128,7 @@
 [data-tahti-ui='brand'] .ch-gallery-fixed {
   border-radius: 8px;
   margin-bottom: 1.5rem;
-  background: #0a0f1e;
+  background: var(--bg);
   height: 360px;
 }
 

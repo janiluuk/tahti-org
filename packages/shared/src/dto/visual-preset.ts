@@ -52,13 +52,13 @@ export const ColorSchemeSchema = z.object({
 
 export type ColorScheme = z.infer<typeof ColorSchemeSchema>
 
-/** Platform defaults used when no scheme is stored. */
+/** Platform defaults used when no scheme is stored (v8 brand baseline). */
 export const DEFAULT_COLOR_SCHEME: ColorScheme = {
-  bg: '#0a0f1e',
-  accent: '#7c3aed',
-  text: '#f1f5f9',
-  muted: '#64748b',
-  highlight: '#a78bfa',
+  bg: '#0A0E1C',
+  accent: '#22D3EE',
+  text: '#E6E9F0',
+  muted: '#A1A8BD',
+  highlight: '#A78BFA',
 }
 
 export function parseColorScheme(json: string | null | undefined): ColorScheme | null {

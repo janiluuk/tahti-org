@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react'
 
-type PublicBrandShellProps = {
+export type PublicBrandShellProps = {
   children: ReactNode
   /** Narrow centered layout for auth, verify, smart links */
   center?: boolean

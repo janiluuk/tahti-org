@@ -6,7 +6,14 @@
   "env": { "node": true, "es2022": true },
   "rules": {
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "@typescript-eslint/no-explicit-any": "warn"
+    "@typescript-eslint/no-explicit-any": "warn",
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "Literal[value=/^#[0-9a-fA-F]{3,8}$/]",
+        "message": "Use brandTokens from @tahti/ui/tokens or CSS var(--…) — no raw hex in components."
+      }
+    ]
   },
   "ignorePatterns": ["dist/", ".next/", "node_modules/", "*.js", "*.cjs", "*.mjs"]
 }

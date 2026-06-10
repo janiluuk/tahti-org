@@ -13,7 +13,7 @@ type StudioShellProps = {
   isBoard?: boolean
 }
 
-/** Dashboard shell — sidebar + top nav on @tahti/ui dark tokens. Import brand-studio.css on the route. */
+/** Production v8 dashboard layout (studio surface). Playground preview: DashboardShell. */
 export function StudioShell({ children, displayName, isLive, isBoard }: StudioShellProps) {
   return (
     <div data-tahti-ui="studio" className="tahti-studio">

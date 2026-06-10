@@ -3,15 +3,10 @@
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { AvatarTile } from './AvatarTile'
 import { ChannelHeader } from './ChannelPageLayout'
 import { SafePlainText } from '../lib/safe-plain-text'
-
-function countryCodeToFlag(cc: string): string {
-  if (!cc || cc.length !== 2) return ''
-  return [...cc.toUpperCase()]
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
-    .join('')
-}
+import { flagEmoji as countryCodeToFlag } from '../lib/flag-emoji'
 
 function IconPlay() {
   return (
@@ -39,17 +34,10 @@ type ProfileCoverProps = {
 
 /** Full-viewport-width cover banner with avatar. Rendered OUTSIDE the max-width container. */
 export function ProfileCover({ displayName, avatarUrl }: ProfileCoverProps) {
-  const initial = displayName.trim().charAt(0).toUpperCase() || '?'
   return (
     <div className="prof-cover">
       <div className="prof-cover-overlay" aria-hidden />
-      <div className="prof-avatar">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt="" width={64} height={64} style={{ borderRadius: '50%' }} />
-        ) : (
-          <span aria-hidden>{initial}</span>
-        )}
-      </div>
+      <AvatarTile size="md" name={displayName} src={avatarUrl} bordered className="prof-avatar" />
     </div>
   )
 }

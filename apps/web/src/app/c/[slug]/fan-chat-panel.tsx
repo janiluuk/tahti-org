@@ -1,9 +1,10 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
+import { LiveChatPanel, type LiveChatMessage } from '@tahti/ui'
 
 interface ChatMessage {
   id: string
@@ -62,18 +63,10 @@ export default function FanChatPanel({ slug }: { slug: string }) {
     setStatus('connecting')
 
     ws.onopen = () => {
-      ws.send(
-        JSON.stringify({
-          id: 1,
-          connect: { token, name: 'js' },
-        }),
-      )
+      ws.send(JSON.stringify({ id: 1, connect: { token, name: 'js' } }))
     }
 
     ws.onmessage = (ev) => {
-      // Centrifugo can coalesce multiple replies/pushes (e.g. a publish ack
-      // plus the echoed push for that same publication) into one frame as
-      // newline-delimited JSON — each line must be parsed independently.
       for (const line of (ev.data as string).split('\n')) {
         if (!line.trim()) continue
         try {
@@ -123,37 +116,29 @@ export default function FanChatPanel({ slug }: { slug: string }) {
 
   if (!token && !error) return null
 
+  const liveMessages: LiveChatMessage[] = messages.map((m) => ({
+    id: m.id,
+    handle: m.handle,
+    text: m.text,
+    tone: 'supporter',
+  }))
+
   return (
-    <section className="ch-chat-panel ch-chat-panel--sub">
-      <div className="ch-chat-panel__head">
-        <h4>FAN CHAT</h4>
-        {status === 'connected' && <span className="ch-chat-live-badge">live</span>}
-      </div>
-      {error && <div className="ch-chat-error">{error}</div>}
-      {token && (
-        <>
-          <div ref={scrollRef} className="ch-chat-messages ch-chat-messages--short">
-            {messages.map((m) => (
-              <div key={m.id} className="chat-msg">
-                <span className="handle supporter">{m.handle}</span>
-                <span className="text">{m.text}</span>
-              </div>
-            ))}
-          </div>
-          <div className="ch-chat-input-row">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="Fans only…"
-              maxLength={500}
-            />
-            <button type="button" className="ch-chat-send" onClick={sendMessage}>
-              Send
-            </button>
-          </div>
-        </>
-      )}
-    </section>
+    <LiveChatPanel
+      surface="channel"
+      compact
+      title="FAN CHAT"
+      connected={status === 'connected'}
+      messages={liveMessages}
+      messagesRef={scrollRef}
+      inputValue={input}
+      onInputChange={setInput}
+      onSend={sendMessage}
+      inputPlaceholder="Fans only…"
+      inputDisabled={status !== 'connected'}
+      sendDisabled={status !== 'connected'}
+      error={error}
+      readOnly={!token}
+    />
   )
 }

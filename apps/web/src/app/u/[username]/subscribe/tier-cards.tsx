@@ -1,10 +1,11 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-'use client'
-
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { TierCard, TierCardGrid } from '@tahti/ui'
 import { subscribe } from './actions'
 
 interface Tier {
@@ -61,69 +62,36 @@ export default function TierCards({
 
   return (
     <div>
-      {message && <p className="tier-message">{message}</p>}
-      <div className="tier-grid">
-        {tiers.map((t, i) => {
-          const isFeatured = i === featuredIdx
+      {message ? <p className="tier-message">{message}</p> : null}
+      <TierCardGrid>
+        {tiers.map((tier, index) => {
+          const isFeatured = index === featuredIdx
+          const isLoading = isPending && pendingId === tier.id
           return (
-            <div key={t.id} className={`tier-card${isFeatured ? ' tier-card--featured' : ''}`}>
-              {isFeatured && <span className="tier-badge">Most chosen</span>}
-              <h3>{t.name}</h3>
-              <div className="tier-price">
-                {eur(t.amountCents)}
-                <span className="tier-price-period">/mo</span>
-              </div>
-              {t.description && <p className="tier-desc">{t.description}</p>}
-              {t.perks.length > 0 && (
-                <ul className="tier-perks">
-                  {t.perks.map((p, j) => (
-                    <li key={j} className="tier-perk-item">
-                      <svg
-                        className="tier-perk-check"
-                        width="12"
-                        height="12"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        aria-hidden
-                      >
-                        <path
-                          d="M3 8l4 4 6-6"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <button
-                type="button"
-                className="tier-subscribe-btn"
-                onClick={() => onSubscribe(t.id)}
-                disabled={isPending || !paymentsReady}
-                title={!paymentsReady ? 'Subscriptions open soon' : undefined}
-              >
-                {isPending && pendingId === t.id
-                  ? 'Subscribing…'
-                  : paymentsReady
-                    ? 'Subscribe'
-                    : 'Subscriptions open soon'}
-              </button>
-            </div>
+            <TierCard
+              key={tier.id}
+              name={tier.name}
+              priceLabel={eur(tier.amountCents)}
+              description={tier.description ?? undefined}
+              perks={tier.perks}
+              featured={isFeatured}
+              onSubscribe={() => onSubscribe(tier.id)}
+              subscribeLabel={
+                isLoading ? 'Subscribing…' : paymentsReady ? 'Subscribe' : 'Subscriptions open soon'
+              }
+              disabled={isPending || !paymentsReady}
+            />
           )
         })}
-      </div>
-      {exampleTier && (
+      </TierCardGrid>
+      {exampleTier ? (
         <div className="tier-transparency">
           <strong>Where {eur(exampleTier.amountCents)} actually goes:</strong> Stripe takes ~€
           {stripeFee} (their fees, pass-through). Tahti takes €{tahtiShare} (2%, covers GDPR +
           processing). The artist receives <strong>€{artistGets}</strong>. We&apos;re not a platform
           — we&apos;re plumbing.
         </div>
-      )}
+      ) : null}
       <p className="tier-footnote">
         Direct to artist. 0% org take. A 2% fee covers payment processing and compliance.
       </p>

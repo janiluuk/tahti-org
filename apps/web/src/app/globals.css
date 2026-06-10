@@ -1,13 +1,14 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+@import '@tahti/ui/src/tokens.css';
 @import '@tahti/ui/src/styles/admin-tokens.css';
 @import '@tahti/ui/src/styles/admin-ui.css';
 @import '@tahti/ui/src/styles/brand-channel.css';
 
 /* ── Dark-first body baseline ──────────────────────────────────────────── */
 body {
-  background: #0a0e1c;
-  color: #e6e9f0;
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--tahti-font-body);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;

@@ -184,7 +184,7 @@
   display: inline-block;
   padding: 0.75rem 1.25rem;
   background: var(--amber);
-  color: #0a0e1c;
+  color: var(--bg);
   border-radius: 8px;
   font-weight: 600;
   text-decoration: none;
@@ -789,7 +789,7 @@
   border-radius: 6px;
   border: none;
   background: var(--cyan);
-  color: #fff;
+  color: var(--white);
   font-weight: 600;
   font-size: 0.9375rem;
   cursor: pointer;
@@ -855,7 +855,7 @@
   border-radius: 6px;
   border: none;
   background: var(--cyan);
-  color: #fff;
+  color: var(--white);
   font-weight: 600;
   font-size: 0.9375rem;
   cursor: pointer;
@@ -933,7 +933,7 @@
   border-radius: 6px;
   border: none;
   background: var(--purple);
-  color: #fff;
+  color: var(--white);
   font-weight: 600;
   cursor: pointer;
 }
@@ -1161,9 +1161,9 @@
   flex-shrink: 0;
 }
 
-[data-tahti-ui='brand'] .browser-frame__dot--red { background: #FF5F57; }
-[data-tahti-ui='brand'] .browser-frame__dot--yellow { background: #FEBC2E; }
-[data-tahti-ui='brand'] .browser-frame__dot--green { background: #28C840; }
+[data-tahti-ui='brand'] .browser-frame__dot--red { background: var(--browser-dot-red); }
+[data-tahti-ui='brand'] .browser-frame__dot--yellow { background: var(--browser-dot-yellow); }
+[data-tahti-ui='brand'] .browser-frame__dot--green { background: var(--browser-dot-green); }
 
 [data-tahti-ui='brand'] .browser-frame__url {
   flex: 1;
@@ -1226,7 +1226,7 @@
   display: inline-block;
   padding: 0.75rem 1.5rem;
   background: var(--amber);
-  color: #0a0e1c;
+  color: var(--bg);
   border-radius: 8px;
   font-weight: 700;
   font-size: 0.9375rem;

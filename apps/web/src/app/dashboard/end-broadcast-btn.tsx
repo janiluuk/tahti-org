@@ -1,10 +1,11 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-'use client'
-
-import { useState } from 'react'
+import { BrandButton } from '@tahti/ui'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { endBroadcast } from './actions'
 
 export function EndBroadcastBtn() {
@@ -27,23 +28,13 @@ export function EndBroadcastBtn() {
   }
 
   return (
-    <button
-      type="button"
-      className="db-end-broadcast-btn"
+    <BrandButton
+      variant="warn"
       onClick={handleClick}
       disabled={loading}
       aria-label="End live broadcast"
     >
-      {loading ? (
-        '…'
-      ) : (
-        <>
-          <span className="db-end-broadcast-icon" aria-hidden>
-            ■
-          </span>{' '}
-          End Broadcast
-        </>
-      )}
-    </button>
+      {loading ? '…' : '■ End Broadcast'}
+    </BrandButton>
   )
 }

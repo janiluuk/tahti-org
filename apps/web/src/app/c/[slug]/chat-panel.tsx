@@ -1,9 +1,11 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-'use client'
-
 import { useEffect, useRef, useState } from 'react'
+import { LiveChatPanel, PinnedAnnouncement, type LiveChatMessage } from '@tahti/ui'
+import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
 
 interface Announcement {
   id: string
@@ -19,9 +21,6 @@ interface ChatMessage {
   supporter?: boolean
   countryCode?: string | null
 }
-
-import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
-import { flagEmoji } from '@/lib/flag-emoji'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -46,7 +45,6 @@ export default function ChatPanel({
   const msgIdRef = useRef(1)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Load saved handle from localStorage or API cookie (LISTENER-003)
   useEffect(() => {
     const saved = loadStoredChatHandle()
     if (saved) {
@@ -55,7 +53,6 @@ export default function ChatPanel({
     }
   }, [])
 
-  // Connect read-only on load so visitors see live chat without joining first.
   useEffect(() => {
     let cancelled = false
     fetch(`${API_BASE}/api/chat/${slug}/viewer-token`, { method: 'POST' })
@@ -63,15 +60,12 @@ export default function ChatPanel({
       .then((data: { token: string } | null) => {
         if (!cancelled && data?.token) setToken((prev) => prev ?? data.token)
       })
-      .catch(() => {
-        // ignore — chat just stays disconnected
-      })
+      .catch(() => undefined)
     return () => {
       cancelled = true
     }
   }, [slug])
 
-  // Poll listener count every 30s
   useEffect(() => {
     let cancelled = false
     const poll = async () => {
@@ -81,7 +75,7 @@ export default function ChatPanel({
         const data = (await res.json()) as { numClients: number }
         setListenerCount(data.numClients)
       } catch {
-        // ignore — presence is best-effort
+        // ignore
       }
     }
     void poll()
@@ -92,7 +86,6 @@ export default function ChatPanel({
     }
   }, [slug])
 
-  // Connect to Centrifugo when we have a token
   useEffect(() => {
     if (!token) return
     const wsUrl =
@@ -102,30 +95,18 @@ export default function ChatPanel({
     setStatus('connecting')
 
     ws.onopen = () => {
-      // Send connect command with token
-      ws.send(
-        JSON.stringify({
-          id: msgIdRef.current++,
-          connect: { token },
-        }),
-      )
+      ws.send(JSON.stringify({ id: msgIdRef.current++, connect: { token } }))
     }
 
     ws.onmessage = (ev) => {
-      // Centrifugo can coalesce multiple replies/pushes (e.g. a publish ack
-      // plus the echoed push for that same publication) into one frame as
-      // newline-delimited JSON — each line must be parsed independently.
       for (const line of (ev.data as string).split('\n')) {
         if (!line.trim()) continue
         try {
           const data = JSON.parse(line) as {
-            id?: number
             connect?: { client: string }
-            push?: { channel?: string; pub?: { data: unknown } }
+            push?: { pub?: { data: unknown } }
           }
-
           if (data.connect) {
-            // Connected — subscribe to channel
             ws.send(
               JSON.stringify({
                 id: msgIdRef.current++,
@@ -134,7 +115,6 @@ export default function ChatPanel({
             )
             setStatus('connected')
           }
-
           if (data.push?.pub) {
             const msg = data.push.pub.data as {
               handle?: string
@@ -144,12 +124,11 @@ export default function ChatPanel({
               countryCode?: string | null
             }
             if (msg.text) {
-              const id = `${Date.now()}-${Math.random()}`
               setMessages((prev) =>
                 [
                   ...prev,
                   {
-                    id,
+                    id: `${Date.now()}-${Math.random()}`,
                     handle: msg.handle ?? 'anon',
                     text: msg.text!,
                     ts: msg.ts ?? Date.now(),
@@ -168,11 +147,9 @@ export default function ChatPanel({
 
     ws.onerror = () => setError('Connection error')
     ws.onclose = () => setStatus('disconnected')
-
     return () => ws.close()
   }, [token, slug])
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -229,92 +206,37 @@ export default function ChatPanel({
     setInput('')
   }
 
+  const liveMessages: LiveChatMessage[] = messages.map((m) => ({
+    id: m.id,
+    handle: m.handle,
+    text: m.text,
+    tone: m.supporter ? 'supporter' : 'default',
+    countryCode: m.countryCode,
+  }))
+
   return (
-    <aside className="ch-chat-panel">
-      <div className="ch-chat-panel__head">
-        <h4>LIVE CHAT</h4>
-        {status === 'connected' && <span className="ch-chat-live-badge">live</span>}
-        {listenerCount !== null && listenerCount > 0 && (
-          <span className="ch-chat-listeners">
-            {listenerCount} {listenerCount === 1 ? 'listener' : 'listeners'}
-          </span>
-        )}
-      </div>
-
-      {announcements.length > 0 && (
-        <div className="ch-chat-announcements">
-          {announcements.map((a) => (
-            <div key={a.id} className="pinned-msg">
-              <div className="pin-label">📌 PINNED</div>
-              {a.body}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div ref={scrollRef} className="ch-chat-messages">
-        {messages.length === 0 && (
-          <p className="ch-chat-empty">channel is quiet right now — say hi</p>
-        )}
-        {messages.map((m) => (
-          <div key={m.id} className="chat-msg">
-            {m.countryCode && (
-              <span className="chat-flag" aria-label={m.countryCode} title={m.countryCode}>
-                {flagEmoji(m.countryCode)}
-              </span>
-            )}
-            <span className={`handle${m.supporter ? ' supporter' : ''}`}>{m.handle}</span>
-            {m.supporter && <span className="chat-supporter-badge">supporter</span>}
-            <span className="text">{m.text}</span>
-          </div>
-        ))}
-      </div>
-
-      {error && <div className="ch-chat-error">{error}</div>}
-
-      <div className="ch-chat-input-row">
-        {!token ? (
-          <>
-            <input
-              placeholder="Your handle"
-              value={pendingHandle}
-              onChange={(e) => setPendingHandle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void joinChat(pendingHandle)
-              }}
-              maxLength={32}
-            />
-            <button
-              type="button"
-              className="ch-chat-send"
-              onClick={() => void joinChat(pendingHandle)}
-            >
-              Join
-            </button>
-          </>
-        ) : (
-          <>
-            <input
-              placeholder="Say something…"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') sendMessage()
-              }}
-              maxLength={500}
-              disabled={status !== 'connected'}
-            />
-            <button
-              type="button"
-              className="ch-chat-send"
-              onClick={sendMessage}
-              disabled={status !== 'connected'}
-            >
-              Send
-            </button>
-          </>
-        )}
-      </div>
-    </aside>
+    <LiveChatPanel
+      surface="channel"
+      connected={status === 'connected'}
+      listenerCount={listenerCount}
+      messages={liveMessages}
+      messagesRef={scrollRef}
+      emptyMessage="channel is quiet right now — say hi"
+      pinned={
+        announcements.length > 0
+          ? announcements.map((a) => <PinnedAnnouncement key={a.id}>{a.body}</PinnedAnnouncement>)
+          : undefined
+      }
+      authPhase={token ? 'chat' : 'join'}
+      joinHandle={pendingHandle}
+      onJoinHandleChange={setPendingHandle}
+      onJoin={() => void joinChat(pendingHandle)}
+      inputValue={input}
+      onInputChange={setInput}
+      onSend={sendMessage}
+      inputDisabled={status !== 'connected'}
+      sendDisabled={status !== 'connected'}
+      error={error}
+    />
   )
 }
