@@ -15,9 +15,11 @@ interface AudioState {
 
 interface BgCanvasProps {
   audioEl?: HTMLAudioElement | null
+  /** Softer motion + lower opacity — for /radio behind channel content. */
+  variant?: 'default' | 'subtle'
 }
 
-export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
+export function BgCanvas({ audioEl, variant = 'default' }: BgCanvasProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const audioStateRef = useRef<AudioState>({
     analyser: null,
@@ -60,6 +62,11 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
+    const subtle = variant === 'subtle'
+    const op = (v: number) => v * (subtle ? 0.42 : 1)
+    const motion = subtle ? 0.32 : 1
+    const react = subtle ? 0.4 : 1
 
     let renderer: THREE.WebGLRenderer
     try {
@@ -120,7 +127,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       const mat = new THREE.MeshBasicMaterial({
         color: cfg.color,
         transparent: true,
-        opacity: 0.2,
+        opacity: op(0.2),
         depthWrite: false,
       })
       const mesh = new THREE.Mesh(geo, mat)
@@ -131,8 +138,8 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
         mesh,
         basePos: cfg.pos,
         baseScale: cfg.scale,
-        speed: 0.3 + Math.random() * 0.4,
-        radius: 40 + Math.random() * 60,
+        speed: (0.3 + Math.random() * 0.4) * motion,
+        radius: (40 + Math.random() * 60) * motion,
         phase: Math.random() * Math.PI * 2,
       }
     })
@@ -150,13 +157,13 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       drift: number
       phase: number
     }[] = []
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < (subtle ? 5 : 8); i++) {
       const geo = new THREE.TorusGeometry(30 + Math.random() * 50, 1.5, 8, 64)
       const c = ringPalette[i % ringPalette.length]
       const mat = new THREE.MeshBasicMaterial({
         color: new THREE.Color(c[0], c[1], c[2]),
         transparent: true,
-        opacity: 0.25 + Math.random() * 0.15,
+        opacity: op(0.25 + Math.random() * 0.15),
         wireframe: true,
       })
       const mesh = new THREE.Mesh(geo, mat)
@@ -170,17 +177,17 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       ringObjs.push({
         mesh,
         rotSpeed: [
-          (Math.random() - 0.5) * 0.3,
-          (Math.random() - 0.5) * 0.2,
-          (Math.random() - 0.5) * 0.1,
+          (Math.random() - 0.5) * 0.3 * motion,
+          (Math.random() - 0.5) * 0.2 * motion,
+          (Math.random() - 0.5) * 0.1 * motion,
         ],
-        drift: (Math.random() - 0.5) * 0.15,
+        drift: (Math.random() - 0.5) * 0.15 * motion,
         phase: Math.random() * Math.PI * 2,
       })
     }
 
     // ── Shooting stars ───────────────────────────────────────────────────────
-    const STAR_COUNT = 40
+    const STAR_COUNT = subtle ? 18 : 40
     const starPos = new Float32Array(STAR_COUNT * 3)
     const starCol = new Float32Array(STAR_COUNT * 3)
     const starGeo = new THREE.BufferGeometry()
@@ -193,7 +200,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
           size: 3,
           vertexColors: true,
           transparent: true,
-          opacity: 0.9,
+          opacity: op(0.9),
           sizeAttenuation: true,
         }),
       ),
@@ -220,7 +227,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
         new THREE.LineBasicMaterial({
           color: new THREE.Color(0.0, 0.74, 0.83),
           transparent: true,
-          opacity: 0.07,
+          opacity: op(0.07),
         }),
       )
       scene.add(line)
@@ -236,7 +243,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
         new THREE.LineBasicMaterial({
           color: new THREE.Color(0.49, 0.3, 1.0),
           transparent: true,
-          opacity: 0.07,
+          opacity: op(0.07),
         }),
       )
       scene.add(line)
@@ -245,13 +252,13 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
 
     // ── Floating diamonds ────────────────────────────────────────────────────
     const diamondObjs: { mesh: THREE.Mesh; rotSpeed: number; drift: number; phase: number }[] = []
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < (subtle ? 8 : 15); i++) {
       const geo = new THREE.OctahedronGeometry(4 + Math.random() * 8, 0)
       const c = palette[Math.floor(Math.random() * palette.length)]
       const mat = new THREE.MeshBasicMaterial({
         color: new THREE.Color(c[0], c[1], c[2]),
         transparent: true,
-        opacity: 0.22 + Math.random() * 0.2,
+        opacity: op(0.22 + Math.random() * 0.2),
         wireframe: true,
       })
       const mesh = new THREE.Mesh(geo, mat)
@@ -263,14 +270,14 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       scene.add(mesh)
       diamondObjs.push({
         mesh,
-        rotSpeed: 0.5 + Math.random() * 1.5,
-        drift: (Math.random() - 0.5) * 0.2,
+        rotSpeed: (0.5 + Math.random() * 1.5) * motion,
+        drift: (Math.random() - 0.5) * 0.2 * motion,
         phase: Math.random() * Math.PI * 2,
       })
     }
 
     // ── Background particles ─────────────────────────────────────────────────
-    const N = 1800
+    const N = subtle ? 900 : 1800
     const pos = new Float32Array(N * 3),
       col = new Float32Array(N * 3)
     const vels = new Float32Array(N * 2),
@@ -283,7 +290,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       vels[i * 2 + 1] = (Math.random() - 0.5) * 0.04
       phases[i] = Math.random() * Math.PI * 2
       const c = palette[Math.floor(Math.random() * palette.length)]
-      const bright = 0.15 + Math.random() * 0.35
+      const bright = (0.15 + Math.random() * 0.35) * (subtle ? 0.55 : 1)
       col[i * 3] = c[0] * bright
       col[i * 3 + 1] = c[1] * bright
       col[i * 3 + 2] = c[2] * bright
@@ -295,10 +302,8 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       new THREE.Points(
         pGeo,
         new THREE.PointsMaterial({
-          size: 2,
-          vertexColors: true,
-          transparent: true,
-          opacity: 0.85,
+          opacity: op(0.85),
+          size: subtle ? 1.5 : 2,
           sizeAttenuation: true,
         }),
       ),
@@ -313,8 +318,8 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       [0.49, 0.3, 1.0, 0.4],
     ]
     const waveFreqs = [0.018, 0.012, 0.025],
-      waveSpeeds = [2.0, 1.3, 2.8],
-      waveAmps = [28, 18, 14],
+      waveSpeeds = [2.0, 1.3, 2.8].map((s) => s * motion),
+      waveAmps = [28, 18, 14].map((a) => a * (subtle ? 0.45 : 1)),
       waveZ = [-40, -60, -80]
     const waveObjs: { geo: THREE.BufferGeometry; freq: number; speed: number; amp: number }[] = []
     for (let w = 0; w < WAVES; w++) {
@@ -358,7 +363,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
     const baseRingMat = new THREE.MeshBasicMaterial({
       color: new THREE.Color(0.0, 0.74, 0.83),
       transparent: true,
-      opacity: 0.2,
+      opacity: op(0.2),
       side: THREE.DoubleSide,
     })
     const baseRing = new THREE.Mesh(
@@ -408,7 +413,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       const m = new THREE.LineBasicMaterial({
         color: new THREE.Color(r, gc, bc),
         transparent: true,
-        opacity: 0.7,
+        opacity: op(0.7),
       })
       specGroup.add(new THREE.Line(g, m))
       specBars.push({ geo: g, cosA, sinA, mat: m })
@@ -470,41 +475,45 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       const t = Date.now() * 0.001
 
       sampleAudio()
-      const aBass = avg(1, 5)
-      const aMid = avg(6, 35)
-      const aHigh = avg(36, 100)
-      const aEnergy = avg(1, 80)
+      const aBass = avg(1, 5) * react
+      const aMid = avg(6, 35) * react
+      const aHigh = avg(36, 100) * react
+      const aEnergy = avg(1, 80) * react
 
       // Gradient orbs — bass swells first two, mids middle, highs last
       gradientMeshes.forEach((g, i) => {
         const { mesh, basePos, speed, radius, phase } = g
-        mesh.position.x = basePos[0] + Math.sin(t * speed + phase) * radius
-        mesh.position.y = basePos[1] + Math.cos(t * speed * 0.7 + phase) * radius * 0.6
-        mesh.position.z = basePos[2] + Math.sin(t * speed * 0.5 + phase * 1.3) * radius * 0.4
+        mesh.position.x = basePos[0] + Math.sin(t * speed + phase) * radius * motion
+        mesh.position.y = basePos[1] + Math.cos(t * speed * 0.7 + phase) * radius * 0.6 * motion
+        mesh.position.z =
+          basePos[2] + Math.sin(t * speed * 0.5 + phase * 1.3) * radius * 0.4 * motion
         const aBand = i < 2 ? aBass : i < 4 ? aMid : aHigh
-        const s = g.baseScale + Math.sin(t * speed * 0.8 + phase) * 30 + aBand * 70
+        const s = g.baseScale + Math.sin(t * speed * 0.8 + phase) * 30 * motion + aBand * 70 * react
         mesh.scale.setScalar(s)
         ;(mesh.material as THREE.MeshBasicMaterial).opacity =
-          0.14 + Math.sin(t * speed * 0.6 + phase * 0.5) * 0.06 + aEnergy * 0.12
+          op(0.14) + Math.sin(t * speed * 0.6 + phase * 0.5) * op(0.06) + aEnergy * op(0.12)
       })
 
       // Rings — mids spin, bass pulses scale
       ringObjs.forEach((r) => {
         const { mesh, rotSpeed, drift, phase } = r
-        const spinBoost = 1 + aMid * 2.5
+        const spinBoost = 1 + aMid * 2.5 * react
         mesh.rotation.x += rotSpeed[0] * 0.01 * spinBoost
         mesh.rotation.y += rotSpeed[1] * 0.01 * spinBoost
         mesh.rotation.z += rotSpeed[2] * 0.01 * spinBoost
         mesh.position.y += Math.sin(t * 0.5 + phase) * drift * 0.1
         mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.05
-        const rs = 1 + aBass * 0.4
+        const rs = 1 + aBass * 0.4 * react
         mesh.scale.set(rs, rs, rs)
         const rMat = mesh.material as THREE.MeshBasicMaterial
-        rMat.opacity = Math.min(0.55, (rMat.opacity || 0.28) * 0.9 + (0.28 + aBass * 0.22) * 0.1)
+        rMat.opacity = Math.min(
+          op(0.55),
+          (rMat.opacity || op(0.28)) * 0.9 + (op(0.28) + aBass * op(0.22)) * 0.1,
+        )
       })
 
       // Shooting stars
-      if (t - lastStarTime > 2.5 + Math.random() * 3) {
+      if (t - lastStarTime > (2.5 + Math.random() * 3) * (subtle ? 2.8 : 1)) {
         lastStarTime = t
         for (let i = 0; i < STAR_COUNT; i++) {
           if (!starData[i].active) {
@@ -514,8 +523,8 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
             starPos[i * 3] = (Math.random() - 0.5) * 800
             starPos[i * 3 + 1] = 250 + Math.random() * 100
             starPos[i * 3 + 2] = -50 - Math.random() * 150
-            starData[i].vx = (Math.random() - 0.5) * 8
-            starData[i].vy = -(6 + Math.random() * 8)
+            starData[i].vx = (Math.random() - 0.5) * 8 * motion
+            starData[i].vy = -(6 + Math.random() * 8) * motion
             const c = palette[Math.floor(Math.random() * palette.length)]
             starCol[i * 3] = c[0]
             starCol[i * 3 + 1] = c[1]
@@ -543,29 +552,33 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
 
       // Grid — energy brightens, bass creates travelling pulse
       gridLines.forEach((g, i) => {
-        const travel = Math.sin(t * 1.2 + i * 0.2) * aBass * 0.06
-        const pulse = 0.05 + Math.sin(t * 0.8 + i * 0.15) * 0.04 + aEnergy * 0.14 + travel
-        ;(g.line.material as THREE.LineBasicMaterial).opacity = Math.max(0.005, pulse)
+        const travel = Math.sin(t * 1.2 + i * 0.2) * aBass * 0.06 * react
+        const pulse =
+          op(0.05) + Math.sin(t * 0.8 + i * 0.15) * op(0.04) + aEnergy * op(0.14) + travel
+        ;(g.line.material as THREE.LineBasicMaterial).opacity = Math.max(0.002, pulse)
       })
 
       // Diamonds — highs spin, bass flashes scale
       diamondObjs.forEach((d) => {
         const { mesh, rotSpeed, drift, phase } = d
-        const spinBoost = 1 + aHigh * 3
+        const spinBoost = 1 + aHigh * 3 * react
         mesh.rotation.x += rotSpeed * 0.005 * spinBoost
         mesh.rotation.y += rotSpeed * 0.008 * spinBoost
         mesh.position.y += Math.sin(t * 0.4 + phase) * drift * 0.05
         mesh.position.x += Math.cos(t * 0.3 + phase) * drift * 0.03
-        const s = 1 + Math.sin(t * rotSpeed + phase) * 0.3 + aBass * 0.6
+        const s = 1 + Math.sin(t * rotSpeed + phase) * 0.3 * motion + aBass * 0.6 * react
         mesh.scale.setScalar(s)
         const dMat = mesh.material as THREE.MeshBasicMaterial
-        dMat.opacity = Math.min(0.55, dMat.opacity * 0.92 + (0.22 + aEnergy * 0.18) * 0.08)
+        dMat.opacity = Math.min(
+          op(0.55),
+          dMat.opacity * 0.92 + (op(0.22) + aEnergy * op(0.18)) * 0.08,
+        )
       })
 
       // Background particles
       for (let i = 0; i < N; i++) {
-        pos[i * 3] += vels[i * 2]
-        pos[i * 3 + 1] += vels[i * 2 + 1] + Math.sin(t * 0.3 + phases[i]) * 0.03
+        pos[i * 3] += vels[i * 2] * motion
+        pos[i * 3 + 1] += vels[i * 2 + 1] * motion + Math.sin(t * 0.3 + phases[i]) * 0.03 * motion
         if (pos[i * 3] > 450) pos[i * 3] = -450
         if (pos[i * 3] < -450) pos[i * 3] = 450
         if (pos[i * 3 + 1] > 250) pos[i * 3 + 1] = -250
@@ -576,7 +589,7 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       // Waveform — each layer reacts to its freq band + per-bin displacement
       waveObjs.forEach(({ geo: wg, freq, speed, amp }, wi) => {
         const wBand = wi === 0 ? aBass : wi === 1 ? aMid : aHigh
-        const effectiveAmp = amp * (1 + wBand * 2.2)
+        const effectiveAmp = amp * (1 + wBand * 2.2 * react)
         const wPos = wg.attributes.position.array as Float32Array
         for (let i = 0; i < WN; i++) {
           const x = wPos[i * 3]
@@ -585,39 +598,45 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
             Math.sin(x * freq + t * speed) * effectiveAmp * 0.6 +
             Math.sin(x * freq * 2.3 + t * speed * 1.4) * effectiveAmp * 0.25 +
             Math.sin(x * freq * 0.4 + t * speed * 0.7) * effectiveAmp * 0.4 +
-            binVal * 55 * wBand
+            binVal * 55 * wBand * react
         }
         wg.attributes.position.needsUpdate = true
       })
 
       // Radial spectrum analyzer
-      specGroup.rotation.z += 0.004 + aBass * 0.012
-      baseRingMat.opacity = 0.15 + aEnergy * 0.4
-      baseRing.scale.setScalar(1 + aBass * 0.08)
+      specGroup.rotation.z += (0.004 + aBass * 0.012) * motion
+      baseRingMat.opacity = op(0.15) + aEnergy * op(0.4)
+      baseRing.scale.setScalar(1 + aBass * 0.08 * react)
       specBars.forEach(({ geo, cosA, sinA, mat }, i) => {
         const binVal = bin(Math.floor((i / SPEC_N) * 100))
-        const barLen = 8 + binVal * 90 * (1 + aBass * 0.6)
+        const barLen = 8 + binVal * 90 * (1 + aBass * 0.6 * react) * react
         const pa = geo.attributes.position.array as Float32Array
         pa[3] = cosA * (SPEC_R + barLen)
         pa[4] = sinA * (SPEC_R + barLen)
         geo.attributes.position.needsUpdate = true
-        mat.opacity = 0.3 + binVal * 0.7
+        mat.opacity = op(0.3) + binVal * op(0.7)
       })
 
       // Bass-pulse spheres
-      const ps = 1 + aBass * 2.8
+      const ps = 1 + aBass * 2.8 * react
       pulseSphere.scale.setScalar(ps)
-      ;(pulseSphere.material as THREE.MeshBasicMaterial).opacity = Math.max(0, aBass * 0.3 - 0.02)
-      pulseSphere.rotation.x += 0.006
-      pulseSphere.rotation.y += 0.004
-      const ps2 = 1 + aMid * 1.8
+      ;(pulseSphere.material as THREE.MeshBasicMaterial).opacity = Math.max(
+        0,
+        aBass * op(0.3) - op(0.02),
+      )
+      pulseSphere.rotation.x += 0.006 * motion
+      pulseSphere.rotation.y += 0.004 * motion
+      const ps2 = 1 + aMid * 1.8 * react
       pulseSphere2.scale.setScalar(ps2)
-      ;(pulseSphere2.material as THREE.MeshBasicMaterial).opacity = Math.max(0, aMid * 0.2 - 0.01)
-      pulseSphere2.rotation.x -= 0.004
-      pulseSphere2.rotation.y += 0.007
+      ;(pulseSphere2.material as THREE.MeshBasicMaterial).opacity = Math.max(
+        0,
+        aMid * op(0.2) - op(0.01),
+      )
+      pulseSphere2.rotation.x -= 0.004 * motion
+      pulseSphere2.rotation.y += 0.007 * motion
 
-      camera.position.x = Math.sin(t * 0.15) * 15
-      camera.rotation.z = Math.sin(t * 0.1) * 0.005
+      camera.position.x = Math.sin(t * 0.15) * 15 * motion
+      camera.rotation.z = Math.sin(t * 0.1) * 0.005 * motion
       renderer.render(scene, camera)
     }
     animate()
@@ -629,7 +648,12 @@ export function BgCanvas({ audioEl }: BgCanvasProps = {}) {
       // eslint-disable-next-line react-hooks/exhaustive-deps
       void audioStateRef.current.audioCtx?.close()
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [variant]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <canvas ref={canvasRef} className="bg-canvas" />
+  return (
+    <canvas
+      ref={canvasRef}
+      className={variant === 'subtle' ? 'bg-canvas bg-canvas--subtle' : 'bg-canvas'}
+    />
+  )
 }

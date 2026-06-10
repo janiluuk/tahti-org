@@ -4,8 +4,8 @@
 
 set -euo pipefail
 
-API_URL="${API_URL:-http://localhost:3001}"
-APP_URL="${APP_URL:-http://localhost:3000}"
+API_URL="${API_URL:-http://localhost:15011}"
+APP_URL="${APP_URL:-http://localhost:17777}"
 COOKIE_JAR="${COOKIE_JAR:-/tmp/tahti_e2e_cookies.txt}"
 
 E2E_PASS=0
@@ -78,11 +78,20 @@ e2e_api_login() {
   local email="$1"
   local pass="$2"
   rm -f "$COOKIE_JAR"
-  local code
-  code=$(e2e_http_code -c "$COOKIE_JAR" -X POST "$API_URL/api/auth/login" \
-    -H 'Content-Type: application/json' \
-    -d "{\"email\":\"$email\",\"password\":\"$pass\"}")
-  [[ "$code" == "200" ]]
+  local code tries=0
+  while [[ $tries -lt 5 ]]; do
+    code=$(e2e_http_code -c "$COOKIE_JAR" -X POST "$API_URL/api/auth/login" \
+      -H 'Content-Type: application/json' \
+      -d "{\"email\":\"$email\",\"password\":\"$pass\"}")
+    [[ "$code" == "200" ]] && return 0
+    if [[ "$code" == "429" ]]; then
+      tries=$((tries + 1))
+      sleep 2
+      continue
+    fi
+    return 1
+  done
+  return 1
 }
 
 e2e_seed_journey_fixtures() {

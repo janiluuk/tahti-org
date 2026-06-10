@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-export { ChannelHeader, ChannelPageLayout } from './ChannelPageLayout'
+export { ChannelHeader, ChannelPageLayout, type SiteNavId } from './ChannelPageLayout'
 export { ProfileCover, ProfileHero, ProfilePageLayout } from './ProfilePageLayout'
 export { SmartLinkPageLayout } from './SmartLinkPageLayout'
 export { StudioShell } from './StudioShell'

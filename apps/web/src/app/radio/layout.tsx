@@ -9,7 +9,11 @@ import '@tahti/ui/src/styles/brand-channel.css'
 /** Radio page — channel shell with optional Three.js BgCanvas. */
 export default function RadioLayout({ children }: { children: ReactNode }) {
   return (
-    <div data-tahti-ui="brand" data-channel-root className="brand-channel brand-channel--canvas">
+    <div
+      data-tahti-ui="brand"
+      data-channel-root
+      className="brand-channel brand-channel--canvas brand-channel--radio"
+    >
       {children}
     </div>
   )

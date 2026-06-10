@@ -17,6 +17,7 @@ pnpm --filter @tahti/db db:generate
 - `pnpm test` — Vitest (single worker; shared Postgres)
 - `pnpm test:e2e:journeys` — bash persona journeys (listener, artist, member, director, ops)
 - `pnpm test:e2e:journeys:all` — vital-flows + user-journeys + Vitest `persona-journeys.test.ts`
+- `./scripts/unified-smoke.sh` — phased smoke from [`unified-test-plan.md`](unified-test-plan.md) (CI + local stack; `--prod`, `--e2e`, `--all`)
 
 ## Test data isolation
 

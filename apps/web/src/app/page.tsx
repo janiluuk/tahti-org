@@ -5,6 +5,7 @@ import type { ChannelCard } from '@tahti/shared'
 import Link from 'next/link'
 import { BrandLogo, ChannelHeader } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
+import { getSessionUser } from '@/lib/session'
 import { statusPageUrl } from '@/lib/status-page'
 
 interface PlatformStats {
@@ -75,13 +76,13 @@ function formatHours(h: number): string {
 }
 
 export default async function HomePage() {
-  const { live, stats } = await fetchData()
+  const [{ live, stats }, user] = await Promise.all([fetchData(), getSessionUser()])
   const statusUrl = statusPageUrl()
 
   return (
     <div data-tahti-ui="brand" className="brand-channel">
       <BgCanvas />
-      <ChannelHeader />
+      <ChannelHeader activeNav="home" user={user} />
       <div className="home-shell">
         <section className="home-hero">
           <BrandLogo />
