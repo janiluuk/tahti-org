@@ -23,9 +23,10 @@ import type {
   ChannelTextLayerMode,
   TracklistEntry,
 } from '@tahti/shared'
-import { Heading, Row, Text, ChannelPageLayout, LiveBadge, SafePlainText } from '@tahti/ui'
+import { Heading, Row, Text, ChannelPageLayout, SafePlainText } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
+import { getSessionUser } from '@/lib/session'
 import { renderBio } from '@/lib/render-bio'
 import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
 
@@ -98,9 +99,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const channel = (await channelRes.json()) as ChannelResponse
 
-  const [itemsRes, announcementsRes] = await Promise.all([
+  const [itemsRes, announcementsRes, user] = await Promise.all([
     fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
+    getSessionUser(),
   ])
 
   const items: ArchiveItem[] = itemsRes.ok ? ((await itemsRes.json()) as ArchiveItem[]) : []
@@ -130,6 +132,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     <ChannelPageLayout
       isLive={channel.state === 'LIVE'}
       artistHandle={channel.user.username}
+      user={user}
       main={
         <>
           {channel.state === 'LIVE' && (
@@ -173,7 +176,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   )}
                 </Text>
               </div>
-              {channel.state === 'LIVE' && <LiveBadge />}
             </Row>
             {bioHtml ? (
               <div

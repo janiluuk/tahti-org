@@ -35,6 +35,7 @@ import broadcastFingerprintInternalRoutes from './routes/internal/broadcast-fing
 import internalRadioRoutes from './routes/internal/radio.js'
 import streamSettingsRoutes from './routes/me/stream-settings.js'
 import chatTokenRoute from './routes/chat/token.js'
+import chatViewerTokenRoute from './routes/chat/viewer-token.js'
 import chatFanTokenRoute from './routes/chat/fan-token.js'
 import chatAccessRoute from './routes/chat/access.js'
 import chatMessageRoute from './routes/chat/message.js'
@@ -406,6 +407,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M5: chat
   await fastify.register(chatTokenRoute)
+  await fastify.register(chatViewerTokenRoute)
   await fastify.register(chatFanTokenRoute)
   await fastify.register(chatAccessRoute)
   await fastify.register(chatMessageRoute)
