@@ -34,6 +34,8 @@
   position: sticky;
   top: 0;
   z-index: 30;
+  max-width: var(--shell-max);
+  margin: 0 auto;
 }
 
 [data-tahti-ui='studio'] .studio-top-nav__logo {
@@ -162,6 +164,8 @@
   display: grid;
   grid-template-columns: 220px 1fr;
   min-height: calc(100vh - 56px);
+  max-width: var(--shell-max);
+  margin: 0 auto;
 }
 
 [data-tahti-ui='studio'] .db-sidebar {
@@ -242,7 +246,9 @@
   padding: 24px 32px 64px;
   background: var(--bg);
   min-width: 0;
-  max-width: 1000px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 [data-tahti-ui='studio'] .db-status-bar {
@@ -2559,4 +2565,129 @@
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 0.75rem;
   margin-bottom: 1rem;
+}
+
+/* Newsletter compose — markdown editor + "how it lands in inbox" preview */
+[data-tahti-ui='studio'] .nl-compose-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  [data-tahti-ui='studio'] .nl-compose-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-tahti-ui='studio'] .nl-compose-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+[data-tahti-ui='studio'] .nl-preview-card {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  min-height: 232px;
+}
+
+[data-tahti-ui='studio'] .nl-preview-from {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .nl-preview-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--cyan) 22%, var(--card2));
+  color: var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .nl-preview-from-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .nl-preview-from-email {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .nl-preview-subject {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .nl-preview-body {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .nl-preview-body h3,
+[data-tahti-ui='studio'] .nl-preview-body h4,
+[data-tahti-ui='studio'] .nl-preview-body h5 {
+  color: var(--text);
+  margin: 0.75rem 0 0.35rem;
+}
+
+[data-tahti-ui='studio'] .nl-preview-body p {
+  margin: 0 0 0.6rem;
+}
+
+[data-tahti-ui='studio'] .nl-preview-body p:last-child {
+  margin-bottom: 0;
+}
+
+[data-tahti-ui='studio'] .nl-preview-body strong {
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .nl-preview-body ul {
+  margin: 0 0 0.6rem 1.1rem;
+}
+
+[data-tahti-ui='studio'] .nl-preview-body a {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .nl-preview-empty {
+  color: var(--muted2);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin: 0;
+}
+
+[data-tahti-ui='studio'] .nl-preview-footer {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--muted2);
+}
+
+[data-tahti-ui='studio'] .nl-preview-footer span {
+  text-decoration: underline;
 }

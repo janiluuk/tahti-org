@@ -954,6 +954,7 @@ export default async function DashboardPage() {
                 initialDrafts={newsletterDrafts}
                 hasFanNewsletterPerk={hasFanNewsletterPerk}
                 tier={user.tier}
+                displayName={user.displayName}
               />
             </>
           ) : undefined

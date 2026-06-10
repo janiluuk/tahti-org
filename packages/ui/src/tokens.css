@@ -52,6 +52,11 @@
   --ease:        0.2s ease;
   --ease-reveal: 0.7s ease;
   --ease-card:   0.3s ease;
+
+  /* ─── Layout ────────────────────────────────────────────────────────── */
+  /* Max width of the app shell (header + body) on large viewports — leaves
+     breathing room on both sides instead of stretching edge-to-edge. */
+  --shell-max: 1680px;
 }
 
 /* ─── Global base (body styling lives in apps/web/src/app/globals.css) ─ */
