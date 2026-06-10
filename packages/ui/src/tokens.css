@@ -1,9 +1,7 @@
 /**
  * Tahti design tokens — import this once at the app root.
- * All component styles reference these custom properties.
- * Never hardcode color hex values in component CSS — always use a token.
- *
- * See docs/design-system.md for the full spec.
+ * TypeScript source: packages/ui/src/tokens.ts (keep in sync).
+ * See docs/design-closing-gap.md
  */
 
 :root {
@@ -21,27 +19,82 @@
   --coral:    #F87171;  /* errors · destructive actions */
   --lavender: #A78BFA;  /* alias for purple */
 
+  /* ─── Brand scale (cyan ramp — use for hover/active/disabled states) ── */
+  --cyan-50:  #E6FBFC;
+  --cyan-200: #7EE7EE;
+  --cyan-600: #0891B2;
+  --cyan-800: #0E5C70;
+
+  /* ─── Semantic state tints ──────────────────────────────────────────── */
+  --live-bg: rgba(63, 224, 122, 0.12);  /* LIVE badge / status background */
+  --warn-bg: rgba(255, 184, 64, 0.08);  /* pinned-announcement background */
+  --warn-border: #FFB840;
+
+  /* ─── Live chat handle colors (deterministic per handle) ─────────────── */
+  --chat-pink:         #F472B6;
+  --chat-blue:         #60A5FA;
+  --chat-light-purple: #C084FC;
+  --chat-orange:       #FB923C;
+
+  /* ─── Base ──────────────────────────────────────────────────────────── */
+  --white: #FFFFFF;  /* literal white — text on saturated accent fills, color-mix */
+  --black: #000000;  /* literal black — color-mix darkening for gradients */
+
+  /* ─── BrowserFrame (mockup-only mac chrome — not used in real pages) ─ */
+  --browser-dot-red:    #FF5F57;
+  --browser-dot-yellow: #FEBC2E;
+  --browser-dot-green:  #28C840;
+
   /* ─── Text ──────────────────────────────────────────────────────────── */
-  --text:   #E6E9F0;   /* primary — headings, body emphasis */
-  --muted:  #A1A8BD;   /* secondary — body copy, labels */
-  --muted2: #5E6680;   /* tertiary — captions, metadata, section labels */
+  --text:        #E6E9F0;   /* primary — headings, body emphasis */
+  --muted:       #A1A8BD;   /* secondary — body copy, labels */
+  --muted2:      #5E6680;   /* tertiary — captions, metadata, section labels */
+  --text-on-brand: #062028; /* text on cyan/amber/green fills (dark for contrast) */
 
   /* ─── Typography ────────────────────────────────────────────────────── */
   --font-head: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
 
+  /* Type scale — v8 mockups */
+  --text-display:  32px;  /* page hero numbers */
+  --text-stat-big: 28px;  /* StatCard value */
+  --text-h2:       22px;
+  --text-h3:       18px;
+  --text-body:     14px;
+  --text-sm:       13px;
+  --text-xs:       12px;
+  --text-label:    11px;  /* uppercase section labels */
+  --text-micro:    10px;
+
+  --weight-regular: 400;
+  --weight-medium:  500;
+
+  /* ─── Spacing scale (4px base unit) ────────────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
   /* ─── Borders ───────────────────────────────────────────────────────── */
   --border:        #1F2940;
   --border-strong: #2A3550;
   --border-hover:  rgba(255, 255, 255, 0.15);
 
-  /* ─── Radius ────────────────────────────────────────────────────────── */
-  --radius-sm:   4px;
-  --radius:      8px;
+  /* ─── Radius (v8 — sync with tokens.ts) ─────────────────────────────── */
+  --radius-sm:   6px;
+  --radius:      8px;   /* md */
+  --radius-md:   8px;
   --radius-lg:   12px;
+  --radius-xl:   16px;
   --radius-pill: 20px;
-  --radius-full: 50%;
+  --radius-full: 9999px;
 
   /* ─── Shadows ───────────────────────────────────────────────────────── */
   --shadow-card:  0 4px 24px rgba(0, 0, 0, 0.4);

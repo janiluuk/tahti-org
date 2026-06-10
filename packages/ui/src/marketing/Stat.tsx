@@ -11,6 +11,9 @@ interface StatProps {
   accent?: Accent
 }
 
+/**
+ * @deprecated Prefer {@link StatCard} with `variant` for semantic stat colors (v8).
+ */
 export function Stat({ value, label, accent = 'amber' }: StatProps) {
   return (
     <div className="stat">

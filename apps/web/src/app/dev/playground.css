@@ -1,0 +1,129 @@
+/* Dev-only playground chrome — not part of production design system */
+
+.playground-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+.playground-root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-8);
+}
+
+.playground-header h1,
+.playground-header .type--h2 {
+  margin-bottom: var(--space-2);
+}
+
+.playground-header .type--body {
+  margin-bottom: var(--space-8);
+}
+
+.playground-header code {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.playground-section {
+  margin-bottom: var(--space-12);
+}
+
+.playground-section-title {
+  display: block;
+  margin-bottom: var(--space-4);
+}
+
+.playground-section-body {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.playground-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.playground-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.playground-row--align-end {
+  align-items: flex-end;
+}
+
+.playground-browser-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.playground-chat-wrap {
+  max-width: 360px;
+}
+
+.playground-phase-header {
+  margin: var(--space-12) 0 var(--space-6);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border);
+}
+
+.playground-phase-header .type--h2 {
+  margin-bottom: var(--space-2);
+}
+
+.playground-channel-shell {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.playground-channel-shell .ch-body {
+  min-height: 420px;
+}
+
+.playground-channel-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.playground-public-shell {
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-height: 160px;
+}
+
+.playground-todo {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.8;
+  padding-left: var(--space-5);
+}
+
+.playground-sticky-live-wrap {
+  position: relative;
+  min-height: 72px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.playground-sticky-live-wrap .ch-sticky-live-bar {
+  position: absolute;
+}

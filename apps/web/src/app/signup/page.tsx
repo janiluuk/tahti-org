@@ -3,6 +3,7 @@
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { BrandLogo, Heading, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 
 export const metadata: Metadata = {
@@ -12,42 +13,28 @@ export const metadata: Metadata = {
 
 export default function SignupPage() {
   return (
-    <div data-tahti-ui="brand" className="brand-channel">
+    <>
       <BgCanvas />
-      <div className="gateway-shell">
-        <div className="gateway-card">
-          <Link href="/" className="gateway-logo-link">
-            <span
-              style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.18em', color: '#e8eaf6' }}
-            >
-              TAHTI
-            </span>
-          </Link>
-          <h1
-            style={{ fontSize: '1.5rem', fontWeight: 700, color: '#e8eaf6', margin: '24px 0 8px' }}
-          >
-            Private beta is closed
-          </h1>
-          <p style={{ color: '#8892a4', lineHeight: 1.6, margin: '0 0 24px' }}>
+      <div className="auth-shell">
+        <div className="auth-card auth-card--dark">
+          <BrandLogo />
+          <Heading level={1}>Private beta is closed</Heading>
+          <Text tone="muted">
             We ran a private beta with a small group of artists. The platform opens publicly on{' '}
-            <strong style={{ color: '#e8eaf6' }}>1 August 2026</strong>.
-          </p>
-          <p style={{ color: '#8892a4', lineHeight: 1.6, margin: '0 0 28px' }}>
+            <strong>1 August 2026</strong>.
+          </Text>
+          <Text tone="muted">
             To be notified when registration opens, email{' '}
-            <a href="mailto:hello@tahti.fi" style={{ color: '#00d4ff' }}>
+            <a href="mailto:hello@tahti.fi" className="ui-link">
               hello@tahti.fi
             </a>
             .
-          </p>
-          <Link
-            href="/login"
-            className="ui-btn ui-btn--secondary"
-            style={{ display: 'inline-block' }}
-          >
+          </Text>
+          <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg auth-tab-switch">
             Sign in
           </Link>
         </div>
       </div>
-    </div>
+    </>
   )
 }

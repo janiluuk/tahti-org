@@ -174,7 +174,7 @@
   height: 22px;
   border-radius: 50%;
   background: var(--cyan);
-  color: #0a0f1e;
+  color: var(--bg);
   font-weight: 700;
   font-size: 11px;
 }
@@ -273,6 +273,8 @@
 
 [data-tahti-ui='brand'] .ch-artist-avatar {
   border-radius: 50%;
+  width: 64px;
+  height: 64px;
 }
 
 [data-tahti-ui='brand'] .ch-artist-name {
@@ -310,7 +312,7 @@
   margin-bottom: 0.75rem;
   border-radius: 8px;
   overflow: hidden;
-  background: #111;
+  background: var(--bg);
 }
 
 [data-tahti-ui='brand'] .ch-video-backdrop iframe {
@@ -556,7 +558,7 @@
   border-radius: 50%;
   border: none;
   background: var(--cyan);
-  color: #0a0f1e;
+  color: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1024,7 +1026,7 @@
 [data-tahti-ui='brand'] .ch-chat-send {
   padding: 0.4rem 0.8rem;
   background: var(--cyan);
-  color: #0a0f1e;
+  color: var(--bg);
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -1092,22 +1094,11 @@
 [data-tahti-ui='brand'] .prof-avatar {
   position: absolute;
   bottom: -28px;
-  /* Align with the 22px left padding inside the 720px max-width prof-page container.
-     On wide viewports: (100% - 720px)/2 + 22px. On narrow viewports (≤720px): 22px. */
   left: max(22px, calc((100% - 720px) / 2 + 22px));
   width: 64px;
   height: 64px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--purple), var(--cyan));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-family: var(--font-head);
-  font-weight: 700;
-  border: 3px solid var(--bg);
   z-index: 2;
-  overflow: hidden;
+  font-size: 1.5rem;
 }
 
 [data-tahti-ui='brand'] .prof-info-row {
@@ -1181,7 +1172,7 @@
 
 [data-tahti-ui='brand'] .prof-cta-btn {
   background: var(--cyan);
-  color: #0a0f1e;
+  color: var(--bg);
   border: none;
 }
 
@@ -1244,7 +1235,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: #fff;
+  color: var(--white);
 }
 
 [data-tahti-ui='brand'] .prof-embed-info {
@@ -1557,7 +1548,7 @@
 [data-tahti-ui='brand'] .tier-subscribe-btn {
   margin-top: auto;
   background: var(--purple);
-  color: #fff;
+  color: var(--white);
   border: none;
   border-radius: var(--radius-sm);
   padding: 0.6rem 1rem;
@@ -1570,7 +1561,7 @@
 }
 
 [data-tahti-ui='brand'] .tier-subscribe-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--purple) 85%, #fff);
+  background: color-mix(in srgb, var(--purple) 85%, var(--white));
   box-shadow: 0 2px 10px color-mix(in srgb, var(--purple) 35%, transparent);
 }
 
@@ -1696,25 +1687,25 @@
 [data-tahti-ui='brand'] .sl-cover-ph {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--purple) 60%, #000) 0%,
-    color-mix(in srgb, var(--cyan) 50%, #000) 100%
+    color-mix(in srgb, var(--purple) 60%, var(--black)) 0%,
+    color-mix(in srgb, var(--cyan) 50%, var(--black)) 100%
   );
 }
 
 [data-tahti-ui='brand'] .sl-cover-ph--aurora {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--purple) 55%, #000) 0%,
-    color-mix(in srgb, var(--cyan) 40%, #000) 50%,
-    color-mix(in srgb, var(--green) 35%, #000) 100%
+    color-mix(in srgb, var(--purple) 55%, var(--black)) 0%,
+    color-mix(in srgb, var(--cyan) 40%, var(--black)) 50%,
+    color-mix(in srgb, var(--green) 35%, var(--black)) 100%
   );
 }
 
 [data-tahti-ui='brand'] .sl-cover-ph--coral {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--coral) 50%, #000) 0%,
-    color-mix(in srgb, var(--amber) 45%, #000) 100%
+    color-mix(in srgb, var(--coral) 50%, var(--black)) 0%,
+    color-mix(in srgb, var(--amber) 45%, var(--black)) 100%
   );
 }
 
@@ -1891,7 +1882,7 @@
   display: inline-block;
   padding: 0.75rem 1.25rem;
   background: var(--amber);
-  color: #0a0f1e;
+  color: var(--bg);
   border-radius: var(--radius);
   font-weight: 600;
   text-decoration: none;
@@ -1987,43 +1978,43 @@
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--spotify {
-  background: #1db95422;
-  color: #1db954;
+  background: #1db95422; /* design-token-allow: platform brand color */
+  color: #1db954; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--apple {
-  background: #fc3c4422;
-  color: #fc3c44;
+  background: #fc3c4422; /* design-token-allow: platform brand color */
+  color: #fc3c44; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--tidal {
   background: rgba(0, 190, 255, 0.12);
-  color: #00beff;
+  color: #00beff; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--bandcamp {
   background: rgba(29, 160, 195, 0.14);
-  color: #1da0c3;
+  color: #1da0c3; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--soundcloud {
   background: rgba(255, 85, 0, 0.12);
-  color: #ff5500;
+  color: #ff5500; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--youtube {
   background: rgba(255, 0, 0, 0.1);
-  color: #ff4040;
+  color: #ff4040; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--deezer {
   background: rgba(239, 84, 102, 0.12);
-  color: #ef5466;
+  color: #ef5466; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--amazon {
   background: rgba(255, 153, 0, 0.12);
-  color: #ff9900;
+  color: #ff9900; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .sl-btn-icon--tahti {

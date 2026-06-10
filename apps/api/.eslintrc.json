@@ -1,0 +1,9 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "overrides": [
+    {
+      "files": ["src/lib/palette-extract.ts"],
+      "rules": { "no-restricted-syntax": "off" }
+    }
+  ]
+}

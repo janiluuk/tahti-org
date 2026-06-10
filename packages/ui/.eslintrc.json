@@ -5,5 +5,11 @@
     "sourceType": "module",
     "ecmaFeatures": { "jsx": true }
   },
-  "env": { "browser": true }
+  "env": { "browser": true },
+  "overrides": [
+    {
+      "files": ["src/tokens.ts", "src/admin/index.ts"],
+      "rules": { "no-restricted-syntax": "off" }
+    }
+  ]
 }

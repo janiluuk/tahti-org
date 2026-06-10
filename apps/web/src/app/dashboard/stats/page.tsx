@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Heading, PageShell } from '@tahti/ui'
+import { Heading, PageShell, StatCard, StatCardGrid } from '@tahti/ui'
 import { StatsPlaysPanel } from './stats-plays-panel'
 import { ListenerMapPanel } from './listener-map-panel'
 
@@ -93,24 +93,16 @@ export default async function StatsPage() {
         <Heading level={1}>Stats</Heading>
       </div>
 
-      <div className="db-stat-tiles">
-        <div className="db-stat-tile db-stat-tile--amber">
-          <span className="db-stat-tile-value">{totalPlays.toLocaleString()}</span>
-          <span className="db-stat-tile-label">Plays this month</span>
-        </div>
-        <div className="db-stat-tile db-stat-tile--green">
-          <span className="db-stat-tile-value">{downloads.toLocaleString()}</span>
-          <span className="db-stat-tile-label">Downloads</span>
-        </div>
-        <div className="db-stat-tile db-stat-tile--purple">
-          <span className="db-stat-tile-value">{fanSubs.toLocaleString()}</span>
-          <span className="db-stat-tile-label">Fan subscribers</span>
-        </div>
-        <div className="db-stat-tile db-stat-tile--cyan">
-          <span className="db-stat-tile-value">€{(revenueCents / 100).toFixed(0)}</span>
-          <span className="db-stat-tile-label">Fan-sub / mo</span>
-        </div>
-      </div>
+      <StatCardGrid>
+        <StatCard variant="plays" value={totalPlays.toLocaleString()} label="Plays this month" />
+        <StatCard variant="downloads" value={downloads.toLocaleString()} label="Downloads" />
+        <StatCard variant="fans" value={fanSubs.toLocaleString()} label="Fan subscribers" />
+        <StatCard
+          variant="revenue"
+          value={`€${(revenueCents / 100).toFixed(0)}`}
+          label="Fan-sub / mo"
+        />
+      </StatCardGrid>
 
       {plays && <StatsPlaysPanel initial={plays} />}
 

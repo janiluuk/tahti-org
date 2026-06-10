@@ -44,5 +44,13 @@ export { cn } from './lib/cn'
 export { SafePlainText } from './lib/safe-plain-text'
 export { escapeHtml, plainTextToHtml } from './lib/escape-html'
 
-// Back-compat alias used by apps/web
+/** v8 brand design tokens — see docs/design-closing-gap.md */
+export {
+  tokens as brandTokens,
+  statVariantToCssClass,
+  type StatVariant,
+  type Tokens,
+} from './tokens'
+
+// Back-compat alias used by apps/web (admin light surface)
 export { adminTokens as tokens } from './admin'

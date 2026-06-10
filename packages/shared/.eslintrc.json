@@ -1,0 +1,9 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "overrides": [
+    {
+      "files": ["src/dto/visual-preset.ts"],
+      "rules": { "no-restricted-syntax": "off" }
+    }
+  ]
+}

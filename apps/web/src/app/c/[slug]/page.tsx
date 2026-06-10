@@ -23,7 +23,7 @@ import type {
   ChannelTextLayerMode,
   TracklistEntry,
 } from '@tahti/shared'
-import { Heading, Row, Text, ChannelPageLayout, SafePlainText } from '@tahti/ui'
+import { AvatarTile, Heading, Row, Text, ChannelPageShell, SafePlainText } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
 import { getSessionUser } from '@/lib/session'
@@ -129,7 +129,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   }
 
   return (
-    <ChannelPageLayout
+    <ChannelPageShell
       isLive={channel.state === 'LIVE'}
       artistHandle={channel.user.username}
       user={user}
@@ -149,16 +149,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           )}
           <header className="ch-artist-header">
             <Row className="ui-row--gap-3 ch-artist-header-row">
-              {channel.user.avatarUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={channel.user.avatarUrl}
-                  alt={channel.user.displayName}
-                  width={64}
-                  height={64}
-                  className="ch-artist-avatar"
-                />
-              )}
+              <AvatarTile
+                size="sm"
+                name={channel.user.displayName}
+                src={channel.user.avatarUrl}
+                className="ch-artist-avatar"
+              />
               <div>
                 <Heading level={1} className="ch-artist-name">
                   {channel.user.displayName}

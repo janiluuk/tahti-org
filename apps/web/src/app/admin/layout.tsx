@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import Link from 'next/link'
+import { AdminShell, AdminShellHeader } from '@tahti/ui'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import '@tahti/ui/src/tokens.css'
@@ -31,35 +31,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const initial = me.displayName.trim().charAt(0).toUpperCase()
 
   return (
-    <div data-tahti-ui="studio" className="tahti-studio admin-shell">
-      <div className="admin-view-strip" role="status" aria-live="polite">
-        ADMIN VIEW · {me.displayName}
-      </div>
-      <header className="studio-top-nav">
-        <Link href="/admin/dashboard" className="studio-top-nav__logo admin-top-logo">
-          TAHTI ADMIN
-        </Link>
-        <div className="studio-top-nav__actions">
-          <div className="studio-top-nav__user" aria-label={`Signed in as ${me.displayName}`}>
-            <span className="studio-top-nav__user-avatar admin-user-avatar" aria-hidden>
-              {initial}
-            </span>
-            <span className="studio-top-nav__user-name">{me.displayName}</span>
-          </div>
-          <Link href="/dashboard" className="studio-top-nav__link">
-            Artist dashboard
-          </Link>
-          <Link href="/governance" className="studio-top-nav__link">
-            Governance
-          </Link>
-        </div>
-      </header>
-      <div className="db-layout">
-        <aside className="db-sidebar">
-          <AdminNav />
-        </aside>
-        <main className="db-main admin-main">{children}</main>
-      </div>
-    </div>
+    <AdminShell
+      variant="studio"
+      displayName={me.displayName}
+      sidebar={<AdminNav />}
+      header={<AdminShellHeader displayName={me.displayName} userInitial={initial} />}
+    >
+      {children}
+    </AdminShell>
   )
 }

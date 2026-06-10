@@ -35,7 +35,15 @@ import { CustomDomainPanel } from './custom-domain-panel'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
 import { EndBroadcastBtn } from './end-broadcast-btn'
-import { Link, PageShell, Panel, StudioCollapse } from '@tahti/ui'
+import {
+  Link,
+  PageShell,
+  Panel,
+  StatCard,
+  StatCardGrid,
+  StudioCollapse,
+  BroadcastStatusBar,
+} from '@tahti/ui'
 import { DashboardTabs } from './dashboard-tabs'
 import { OverviewStreamKey } from './overview-stream-key'
 import type {
@@ -685,45 +693,36 @@ export default async function DashboardPage() {
         overview={
           <>
             {user.channel?.state === 'LIVE' && (
-              <div className="db-status-bar" role="status">
-                <div>
-                  <div className="db-live">
-                    <span className="signal-dot" aria-hidden />
-                    LIVE NOW
-                  </div>
-                  <div className="db-live-count">
-                    <Link href={`/c/${user.channel.slug}`}>View channel →</Link>
-                  </div>
-                </div>
-                <EndBroadcastBtn />
-              </div>
+              <BroadcastStatusBar
+                state="live"
+                meta={<Link href={`/c/${user.channel.slug}`}>View channel →</Link>}
+                action={<EndBroadcastBtn />}
+              />
             )}
 
             {user.channel && (
-              <div className="db-stat-tiles">
-                <div className="db-stat-tile db-stat-tile--amber">
-                  <span className="db-stat-tile-value">
-                    {(statDlCount + statBroadcasts).toLocaleString()}
-                  </span>
-                  <span className="db-stat-tile-label">Plays this month</span>
-                </div>
-                <div className="db-stat-tile db-stat-tile--green">
-                  <span className="db-stat-tile-value">{statDlCount.toLocaleString()}</span>
-                  <span className="db-stat-tile-label">Downloads</span>
-                </div>
-                <div className="db-stat-tile db-stat-tile--purple">
-                  <span className="db-stat-tile-value">
-                    {newsletterStats.confirmed.toLocaleString()}
-                  </span>
-                  <span className="db-stat-tile-label">Fan subscribers</span>
-                </div>
-                <div className="db-stat-tile db-stat-tile--cyan">
-                  <span className="db-stat-tile-value">
-                    €{(fanPayoutStats.paidLast30Days / 100).toFixed(0)}
-                  </span>
-                  <span className="db-stat-tile-label">Revenue this month</span>
-                </div>
-              </div>
+              <StatCardGrid>
+                <StatCard
+                  variant="plays"
+                  value={(statDlCount + statBroadcasts).toLocaleString()}
+                  label="Plays this month"
+                />
+                <StatCard
+                  variant="downloads"
+                  value={statDlCount.toLocaleString()}
+                  label="Downloads"
+                />
+                <StatCard
+                  variant="fans"
+                  value={newsletterStats.confirmed.toLocaleString()}
+                  label="Fan subscribers"
+                />
+                <StatCard
+                  variant="revenue"
+                  value={`€${(fanPayoutStats.paidLast30Days / 100).toFixed(0)}`}
+                  label="Revenue this month"
+                />
+              </StatCardGrid>
             )}
 
             {user.channel && (
