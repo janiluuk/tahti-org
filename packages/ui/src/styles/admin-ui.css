@@ -821,47 +821,6 @@
   color: var(--amber);
 }
 
-.home-stats {
-  display: flex;
-  align-items: center;
-  gap: var(--tahti-space-6);
-  padding: var(--tahti-space-5) var(--tahti-space-6);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: var(--tahti-radius-md);
-  flex-wrap: wrap;
-}
-
-.home-stats__sep {
-  width: 1px;
-  height: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
-}
-
-.home-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 100px;
-}
-
-.home-stat__value {
-  font-family: var(--tahti-font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1;
-}
-
-.home-stat__label {
-  font-size: var(--tahti-text-xs);
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
 .home-footer {
   display: flex;
   align-items: center;

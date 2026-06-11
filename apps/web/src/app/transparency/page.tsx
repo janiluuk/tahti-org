@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { Link, PublicPageHeader } from '@tahti/ui'
+import { Link, PublicPageHeader, StatCard, StatCardGrid } from '@tahti/ui'
 import { statusPageUrl } from '@/lib/status-page'
 
 interface MonthlyRollup {
@@ -108,22 +108,22 @@ export default async function TransparencyPage() {
         published here. <Link href="/transparency/methodology">Methodology ↗</Link>
       </PublicPageHeader>
 
-      <section className="brand-stat-grid" aria-label="Year-to-date summary">
-        <SummaryCard
+      <StatCardGrid cols={3} aria-label="Year-to-date summary">
+        <StatCard
+          variant="revenue"
           label={`${ytd.year} Revenue`}
           value={formatEur(totalRevenue)}
           positive
-          variant="revenue"
         />
-        <SummaryCard label={`${ytd.year} Costs`} value={formatEur(totalCosts)} variant="cost" />
-        <SummaryCard
+        <StatCard variant="cost" label={`${ytd.year} Costs`} value={formatEur(totalCosts)} />
+        <StatCard
+          variant="surplus"
           label="Running surplus"
           value={formatEur(ytd.runningSurplus)}
           positive={parseInt(ytd.runningSurplus, 10) >= 0}
           subtitle={`${ytd.monthsFinalized} month${ytd.monthsFinalized !== 1 ? 's' : ''} finalized`}
-          variant="surplus"
         />
-      </section>
+      </StatCardGrid>
 
       <section className="brand-section">
         <h2 className="brand-section__title brand-section-heading">Year-to-date breakdown</h2>
@@ -205,18 +205,18 @@ export default async function TransparencyPage() {
             this figure is published in the spirit of full transparency. See the{' '}
             <Link href="/about">about page</Link> for our storage policy.
           </p>
-          <div className="brand-stat-grid">
-            <div className="brand-stat-card">
-              <div className="brand-stat-card__label">Active artists</div>
-              <div className="brand-stat-card__value">{platformStats.activeArtists}</div>
-            </div>
-            <div className="brand-stat-card">
-              <div className="brand-stat-card__label">Total archive storage</div>
-              <div className="brand-stat-card__value">
-                {formatBytes(platformStats.totalStorageBytes)}
-              </div>
-            </div>
-          </div>
+          <StatCardGrid cols={2}>
+            <StatCard
+              variant="neutral"
+              label="Active artists"
+              value={String(platformStats.activeArtists)}
+            />
+            <StatCard
+              variant="neutral"
+              label="Total archive storage"
+              value={formatBytes(platformStats.totalStorageBytes)}
+            />
+          </StatCardGrid>
         </section>
       )}
 
@@ -231,32 +231,6 @@ export default async function TransparencyPage() {
         </p>
       </footer>
     </>
-  )
-}
-
-function SummaryCard({
-  label,
-  value,
-  positive,
-  subtitle,
-  variant,
-}: {
-  label: string
-  value: string
-  positive?: boolean
-  subtitle?: string
-  variant?: 'revenue' | 'cost' | 'surplus'
-}) {
-  return (
-    <div className={`brand-stat-card${variant ? ` brand-stat-card--${variant}` : ''}`}>
-      <div className="brand-stat-card__label">{label}</div>
-      <div
-        className={`brand-stat-card__value${positive ? ' brand-stat-card__value--positive' : ''}`}
-      >
-        {value}
-      </div>
-      {subtitle && <div className="brand-stat-card__subtitle">{subtitle}</div>}
-    </div>
   )
 }
 

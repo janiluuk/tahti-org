@@ -42,6 +42,12 @@ export const tokens = {
       downloads: '#3FE07A',
       fans: '#A78BFA',
       revenue: '#22D3EE',
+      /** Neutral metric (platform totals, storage) — default text color */
+      neutral: '#E6E9F0',
+      /** Transparency / finance — cost line */
+      cost: '#F87171',
+      /** Transparency / finance — surplus line */
+      surplus: '#22D3EE',
     },
     semantic: {
       live: '#3FE07A',
@@ -135,4 +141,7 @@ export const statVariantToCssClass: Record<StatVariant, string> = {
   downloads: 'stat-card--downloads',
   fans: 'stat-card--fans',
   revenue: 'stat-card--revenue',
+  neutral: 'stat-card--neutral',
+  cost: 'stat-card--cost',
+  surplus: 'stat-card--surplus',
 }
