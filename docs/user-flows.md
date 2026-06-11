@@ -62,6 +62,11 @@ flowchart TB
 | `tests/e2e/user-journeys.mjs` | Same personas in Playwright (needs `APP_URL` + seeded fixtures) |
 | `tests/e2e/dashboard-player.mjs` | Playwright: dashboard navigation + archive/live players |
 | `apps/api/src/routes/journeys/persona-journeys.test.ts` | Listener / artist / member / director / ops API paths (Vitest) |
+| `apps/api/src/routes/journeys/vital-flows.test.ts` | Onboarding, fan subs, catalog gates, live broadcast (Vitest) |
+| `apps/api/src/routes/journeys/public-surfaces-journey.test.ts` | Home, discover, radio, venues, status (Vitest) |
+| `apps/api/src/routes/journeys/tahti-radio-journey.test.ts` | Tahti Radio chat + announcements (Vitest) |
+| `tests/e2e/live-chat.mjs` | Playwright: two clients join chat and exchange messages |
+| `pnpm smoke` / `scripts/unified-smoke.sh` | CI gate + stack health; `--prod`, `--e2e`, `--all` |
 
 ```bash
 # Full suite (API must be running; Postgres + Redis required)

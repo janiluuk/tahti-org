@@ -54,7 +54,9 @@ function pickTwoMessages() {
 }
 
 async function joinChat(page, handle, label) {
-  const handleInput = page.locator('input[placeholder="Your handle"]')
+  const handleInput = page.locator(
+    'input[placeholder="Your handle"], input[aria-label="Chat handle"]',
+  )
   if ((await handleInput.count()) === 0) {
     fail(`${label} — chat handle field not found`)
     return false
@@ -62,8 +64,11 @@ async function joinChat(page, handle, label) {
   await handleInput.fill(handle)
   await page.locator('button.ch-chat-send').click()
 
+  const chatInput = page.locator(
+    'input[placeholder="Say something…"], input[aria-label="Chat message"]',
+  )
   try {
-    await page.locator('input[placeholder="Say something…"]').waitFor({ timeout: 20_000 })
+    await chatInput.waitFor({ timeout: 20_000 })
   } catch {
     fail(`${label} — did not transition to joined chat state`)
     return false
@@ -73,7 +78,9 @@ async function joinChat(page, handle, label) {
 }
 
 async function sendChatMessage(page, text, label) {
-  const input = page.locator('input[placeholder="Say something…"]')
+  const input = page.locator(
+    'input[placeholder="Say something…"], input[aria-label="Chat message"]',
+  )
   await input.fill(text)
   await page.locator('button.ch-chat-send').click()
   await input.waitFor({ state: 'visible' })

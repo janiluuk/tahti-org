@@ -210,6 +210,7 @@ jobs:
       NODE_ENV: test
       HCAPTCHA_SECRET: dev
       PORT: "3001"
+      API_URL: http://localhost:3001
       STRIPE_SECRET_KEY: ""
       STRIPE_WEBHOOK_SECRET: ""
 
@@ -297,6 +298,7 @@ jobs:
       NODE_ENV: test
       HCAPTCHA_SECRET: dev
       PORT: "3001"
+      API_URL: http://localhost:3001
       STRIPE_SECRET_KEY: ""
       STRIPE_WEBHOOK_SECRET: ""
       SEED_JOURNEY_FIXTURES: "1"
