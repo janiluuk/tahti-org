@@ -3,8 +3,7 @@
 
 import type { ReactNode } from 'react'
 import { PublicBrandShell } from '@tahti/ui'
-import '@tahti/ui/src/styles/brand-public.css'
-import '@tahti/ui/src/styles/shells.css'
+import '@/lib/import-public-brand-css'
 
 /** Signup wizard — shell-narrow. */
 export default function SignupLayout({ children }: { children: ReactNode }) {

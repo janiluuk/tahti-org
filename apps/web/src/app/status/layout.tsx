@@ -3,9 +3,7 @@
 
 import type { ReactNode } from 'react'
 import { PublicBrandShell } from '@tahti/ui'
-import '@tahti/ui/src/tokens.css'
-import '@tahti/ui/src/styles/brand-channel.css'
-import '@tahti/ui/src/styles/brand-public.css'
+import '@/lib/import-public-brand-css'
 import { getSessionUser } from '@/lib/session'
 import { statusPageUrl } from '@/lib/status-page'
 
