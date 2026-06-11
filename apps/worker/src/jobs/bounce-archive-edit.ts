@@ -11,7 +11,7 @@ import { prisma, syncActiveVersionToItem } from '@tahti/db'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { processTranscodeVersionJob } from './transcode-version.js'
 
-import type { LufsTarget } from '@tahti/shared'
+import type { EqBands, LufsTarget } from '@tahti/shared'
 
 export interface BounceArchiveEditPayload {
   versionId: string
@@ -25,12 +25,25 @@ export interface BounceArchiveEditPayload {
   peakNormalize: boolean
   lufsTarget: LufsTarget
   limiterEnabled: boolean
+  highPassHz: number
+  lowPassHz: number
+  eq: EqBands
+  compressorEnabled: boolean
   activate: boolean
 }
 
 function loudnormFilter(target: Exclude<LufsTarget, 'none'>): string {
   if (target === 'stream') return 'loudnorm=I=-14:TP=-1.5:LRA=11:print_format=none'
   return 'loudnorm=I=-9:TP=-0.5:LRA=7:print_format=none'
+}
+
+/** PLAT-066/068: 3-band shelving/peaking EQ — low/high shelves + mid peaking band. */
+function eqFilters(eq: EqBands): string[] {
+  const filters: string[] = []
+  if (eq.lowGainDb !== 0) filters.push(`bass=g=${eq.lowGainDb}:f=200`)
+  if (eq.midGainDb !== 0) filters.push(`equalizer=f=1000:width_type=o:width=2:g=${eq.midGainDb}`)
+  if (eq.highGainDb !== 0) filters.push(`treble=g=${eq.highGainDb}:f=4000`)
+  return filters
 }
 
 function buildAudioFilters(
@@ -40,8 +53,20 @@ function buildAudioFilters(
   peakNormalize: boolean,
   lufsTarget: LufsTarget,
   limiterEnabled: boolean,
+  highPassHz: number,
+  lowPassHz: number,
+  eq: EqBands,
+  compressorEnabled: boolean,
 ): string {
   const filters: string[] = []
+  // PLAT-066/067: HP/LP filters and EQ/compressor are applied first, before
+  // fades/loudness so the dynamics processing sees the shaped signal.
+  if (highPassHz > 0) filters.push(`highpass=f=${highPassHz}`)
+  if (lowPassHz > 0) filters.push(`lowpass=f=${lowPassHz}`)
+  filters.push(...eqFilters(eq))
+  if (compressorEnabled) {
+    filters.push('acompressor=threshold=-18dB:ratio=3:attack=20:release=250:makeup=2')
+  }
   if (fadeInSec > 0) filters.push(`afade=t=in:st=0:d=${fadeInSec}`)
   if (fadeOutSec > 0) {
     const fadeOutStart = Math.max(0, clipDuration - fadeOutSec)
@@ -66,6 +91,10 @@ function ffmpegTrimFade(
   peakNormalize: boolean,
   lufsTarget: LufsTarget,
   limiterEnabled: boolean,
+  highPassHz: number,
+  lowPassHz: number,
+  eq: EqBands,
+  compressorEnabled: boolean,
 ): Promise<void> {
   const clipDuration = endSec - startSec
   const filters = buildAudioFilters(
@@ -75,6 +104,10 @@ function ffmpegTrimFade(
     peakNormalize,
     lufsTarget,
     limiterEnabled,
+    highPassHz,
+    lowPassHz,
+    eq,
+    compressorEnabled,
   )
 
   return new Promise((resolve, reject) => {
@@ -106,6 +139,10 @@ export async function processBounceArchiveEditJob(job: Job): Promise<void> {
     peakNormalize,
     lufsTarget,
     limiterEnabled,
+    highPassHz,
+    lowPassHz,
+    eq,
+    compressorEnabled,
     activate,
   } = data
 
@@ -134,6 +171,10 @@ export async function processBounceArchiveEditJob(job: Job): Promise<void> {
       peakNormalize,
       lufsTarget,
       limiterEnabled,
+      highPassHz,
+      lowPassHz,
+      eq,
+      compressorEnabled,
     )
 
     const fileStat = await stat(outputPath)

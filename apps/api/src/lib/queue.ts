@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Queue } from 'bullmq'
-import type { LufsTarget } from '@tahti/shared'
+import type { EqBands, LufsTarget } from '@tahti/shared'
 import { config } from '../config.js'
 
 const connection = {
@@ -32,6 +32,10 @@ export interface BounceArchiveEditJob {
   peakNormalize: boolean
   lufsTarget: LufsTarget
   limiterEnabled: boolean
+  highPassHz: number
+  lowPassHz: number
+  eq: EqBands
+  compressorEnabled: boolean
   activate: boolean
 }
 

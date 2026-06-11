@@ -5,6 +5,8 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   ArchiveEditorBounceResponseSchema,
   ArchiveEditorBounceSchema,
+  ArchiveEditorPublishResponseSchema,
+  ArchiveEditorPublishSchema,
   ArchiveEditorSourceSchema,
   IdParamSchema,
   openApiResponse,
@@ -14,14 +16,14 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveArchiveEditorSource } from '../../lib/archive-editor-source.js'
 import { presignedGetUrl } from '../../lib/minio.js'
-import { enqueueBounceArchiveEdit } from '../../lib/queue.js'
+import { enqueueBounceArchiveEdit, mediaQueue } from '../../lib/queue.js'
 import { ensureInitialVersion } from '@tahti/db'
 
 const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
   async function ownedItem(userId: string, itemId: string) {
     return fastify.prisma.archiveItem.findFirst({
       where: { id: itemId, channel: { userId } },
-      select: { id: true, channel: { select: { slug: true } } },
+      select: { id: true, title: true, channel: { select: { slug: true } } },
     })
   }
 
@@ -100,6 +102,10 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         peakNormalize,
         lufsTarget,
         limiterEnabled,
+        highPassHz,
+        lowPassHz,
+        eq,
+        compressorEnabled,
         versionLabel,
         activate,
       } = parsed.data
@@ -151,6 +157,10 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         peakNormalize,
         lufsTarget,
         limiterEnabled,
+        highPassHz,
+        lowPassHz,
+        eq,
+        compressorEnabled,
         activate,
       })
 
@@ -159,6 +169,88 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         versionId: version.id,
         versionNumber: version.versionNumber,
         status: version.status,
+      })
+    },
+  )
+
+  // PLAT-069: bounce a READY archive (or specific version) into a release track
+  fastify.post(
+    '/api/me/archive/:id/editor/publish-to-release',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Publish an archive recording (or one of its versions) as a release track',
+        response: openApiResponses([
+          {
+            status: 201,
+            schema: ArchiveEditorPublishResponseSchema,
+            name: 'ArchiveEditorPublish',
+          },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const parsed = ArchiveEditorPublishSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid request body',
+        })
+      }
+
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const item = await ownedItem(user.id, id)
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const { releaseId, versionId, title } = parsed.data
+
+      let sourceKey: string | null = null
+      if (versionId) {
+        const version = await fastify.prisma.archiveItemVersion.findFirst({
+          where: { id: versionId, archiveItemId: id },
+          select: { rawKey: true, status: true },
+        })
+        if (!version) return reply.status(404).send({ error: 'Version not found' })
+        if (version.status !== 'READY') {
+          return reply.status(400).send({ error: 'Version is not ready yet' })
+        }
+        sourceKey = version.rawKey
+      } else {
+        const source = await resolveArchiveEditorSource(fastify.prisma, id)
+        if (!source) {
+          return reply.status(409).send({ error: 'Archive item is not ready for editing' })
+        }
+        sourceKey = source.sourceKey
+      }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id: releaseId, userId: user.id },
+        include: { _count: { select: { tracks: true } } },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const track = await fastify.prisma.releaseTrack.create({
+        data: {
+          releaseId,
+          position: release._count.tracks + 1,
+          title: title?.trim() || item.title,
+          archiveItemId: id,
+          sourceKey,
+          status: 'SCANNING',
+        },
+        select: { id: true, status: true },
+      })
+
+      await mediaQueue.add('transcode-release-track', { trackId: track.id })
+
+      return reply.status(201).send({
+        ok: true as const,
+        trackId: track.id,
+        status: track.status,
       })
     },
   )
