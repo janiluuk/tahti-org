@@ -1,4 +1,6 @@
-FROM nginx:1.27-alpine
+# Override NGINX_IMAGE in CI (mirror.gcr.io/library/nginx:1.27-alpine) to avoid Docker Hub timeouts.
+ARG NGINX_IMAGE=nginx:1.27-alpine
+FROM ${NGINX_IMAGE}
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY index.html /usr/share/nginx/html/
