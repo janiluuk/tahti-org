@@ -21,6 +21,7 @@ const VENUE_PREFIX = 'public-surfaces-venue'
 
 describe('Public surfaces journey (Home · Discover · Radio · Venues)', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
+  let artistChannelId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -35,8 +36,9 @@ describe('Public surfaces journey (Home · Discover · Radio · Venues)', () => 
       isMember: true,
       memberNumber: 98420,
     })
+    artistChannelId = artist.channel!.id
     await prisma.channel.update({
-      where: { id: artist.channel!.id },
+      where: { id: artistChannelId },
       data: { state: 'LIVE', goneLiveAt: new Date() },
     })
 
@@ -75,9 +77,33 @@ describe('Public surfaces journey (Home · Discover · Radio · Venues)', () => 
   })
 
   it('home and discover: platform stats + channel directory', async () => {
+    // activeArtists = channels with ≥1 broadcast — seed in-test so CI empty DB stays valid
+    await prisma.broadcast.create({
+      data: {
+        channelId: artistChannelId,
+        startedAt: new Date(),
+        source: 'ICECAST',
+      },
+    })
+
     const stats = await app.inject({ method: 'GET', url: '/api/v1/stats' })
     expect(stats.statusCode).toBe(200)
-    expect(stats.json().activeArtists).toBeGreaterThanOrEqual(1)
+    const body = stats.json() as {
+      activeArtists: number
+      broadcastsThisMonth: number
+      totalHours: number
+      totalStorageBytes: number
+    }
+    expect(typeof body.activeArtists).toBe('number')
+    expect(typeof body.totalHours).toBe('number')
+    expect(typeof body.totalStorageBytes).toBe('number')
+    expect(body.broadcastsThisMonth).toBeGreaterThanOrEqual(1)
+
+    const fixtureCounted = await prisma.channel.count({
+      where: { id: artistChannelId, broadcasts: { some: {} } },
+    })
+    expect(fixtureCounted).toBe(1)
+    expect(body.activeArtists).toBeGreaterThanOrEqual(fixtureCounted)
 
     const channels = await app.inject({ method: 'GET', url: '/api/v1/channels' })
     expect(channels.statusCode).toBe(200)
