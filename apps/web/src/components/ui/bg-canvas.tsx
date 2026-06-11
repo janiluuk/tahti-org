@@ -64,9 +64,9 @@ export function BgCanvas({ audioEl, variant = 'default' }: BgCanvasProps = {}) {
     if (!canvas) return
 
     const subtle = variant === 'subtle'
-    const op = (v: number) => v * (subtle ? 0.42 : 1)
-    const motion = subtle ? 0.32 : 1
-    const react = subtle ? 0.4 : 1
+    const op = (v: number) => v * (subtle ? 0.28 : 1)
+    const motion = subtle ? 0.18 : 1
+    const react = subtle ? 0.25 : 1
 
     let renderer: THREE.WebGLRenderer
     try {

@@ -442,6 +442,7 @@
   background: #0a0f1e;
   display: block;
   filter: blur(12px);
+  pointer-events: none;
 }
 
 .auth-shell {

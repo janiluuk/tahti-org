@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useState } from 'react'
 import type { ActiveRadioPlayback } from '@tahti/shared'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import HlsPlayer from '../c/[slug]/hls-player'
 import ReactionsOverlay from '../c/[slug]/reactions'
 
@@ -17,7 +15,6 @@ interface RadioPlayerSectionProps {
 function RadioVideoPlayer({ embedUrl, slug }: { embedUrl: string; slug: string }) {
   return (
     <>
-      <BgCanvas variant="subtle" />
       <div id="live-player" className="ch-player-wrap">
         <div className="ch-player-inner ch-player-inner--video">
           <iframe
@@ -35,14 +32,11 @@ function RadioVideoPlayer({ embedUrl, slug }: { embedUrl: string; slug: string }
 }
 
 function RadioAudioPlayer({ audioUrl, slug }: { audioUrl: string; slug: string }) {
-  const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null)
-
   return (
     <>
-      <BgCanvas variant="subtle" audioEl={audioEl} />
       <div id="live-player" className="ch-player-wrap">
         <div className="ch-player-inner">
-          <HlsPlayer url={audioUrl} onAudioMount={setAudioEl} />
+          <HlsPlayer url={audioUrl} />
         </div>
         <ReactionsOverlay slug={slug} />
       </div>
