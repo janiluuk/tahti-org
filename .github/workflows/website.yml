@@ -28,6 +28,7 @@ on:
 env:
   REGISTRY: registry.tahti.live
   IMAGE: tahti/website
+  NGINX_BASE_IMAGE: mirror.gcr.io/library/nginx:1.27-alpine
 
 jobs:
   preflight:
@@ -71,12 +72,21 @@ jobs:
 
       - name: Build image
         run: |
-          docker build \
-            --label "org.opencontainers.image.revision=${{ github.sha }}" \
-            --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            -t ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.tag.outputs.tag }} \
-            -t ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest \
-            website/
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            echo "Build attempt ${attempt}/3"
+            if docker build \
+              --build-arg "NGINX_IMAGE=${NGINX_BASE_IMAGE}" \
+              --label "org.opencontainers.image.revision=${{ github.sha }}" \
+              --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              -t ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ steps.tag.outputs.tag }} \
+              -t ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest \
+              website/; then
+              exit 0
+            fi
+            sleep 20
+          done
+          exit 1
 
       - name: Push image
         run: |

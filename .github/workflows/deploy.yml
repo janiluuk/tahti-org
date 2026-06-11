@@ -137,9 +137,11 @@ jobs:
       - name: Build and push website
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: website/Dockerfile
+          context: ./website
+          file: ./website/Dockerfile
           push: true
+          build-args: |
+            NGINX_IMAGE=mirror.gcr.io/library/nginx:1.27-alpine
           tags: |
             ${{ env.REGISTRY }}/tahti/website:${{ needs.resolve.outputs.image_tag }}
             ${{ env.REGISTRY }}/tahti/website:${{ needs.resolve.outputs.deploy_sha }}
