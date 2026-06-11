@@ -139,15 +139,19 @@ export function ProfileHero({
 
 type ProfilePageLayoutProps = {
   isLive?: boolean
+  /** Smart link / subscribe — back link in header centre */
+  contextLink?: { href: string; label: string }
   cover?: ReactNode
   hero: ReactNode
   children: ReactNode
+  /** Subscribe flow — max-width var(--narrow-max) */
   narrow?: boolean
 }
 
 /** PLAT-020: profile / subscribe page shell. `cover` renders full-width outside the max-width container. */
 export function ProfilePageLayout({
   isLive,
+  contextLink,
   cover,
   hero,
   children,
@@ -155,9 +159,9 @@ export function ProfilePageLayout({
 }: ProfilePageLayoutProps) {
   return (
     <>
-      <ChannelHeader isLive={isLive} />
+      <ChannelHeader isLive={isLive} contextLink={contextLink} />
       {cover}
-      <div className={`prof-page${narrow ? ' prof-page--narrow' : ''}`}>
+      <div className={`prof-page${narrow ? ' prof-page--narrow shell-narrow' : ''}`}>
         {hero}
         <div className="prof-content">{children}</div>
       </div>

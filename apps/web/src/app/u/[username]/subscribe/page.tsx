@@ -41,11 +41,12 @@ export default async function SubscribePage({ params }: { params: { username: st
   return (
     <ProfilePageLayout
       narrow
+      contextLink={{
+        href: `/u/${data.artist.username}`,
+        label: `← ${data.artist.displayName}`,
+      }}
       hero={
         <>
-          <Link href={`/u/${data.artist.username}`} className="prof-back-link">
-            ← {data.artist.displayName}
-          </Link>
           <h1 className="prof-page-title">Support {data.artist.displayName}</h1>
           {data.artist.bio && (
             <SafePlainText text={data.artist.bio} className="prof-list-meta prof-list-meta--bio" />
@@ -54,7 +55,12 @@ export default async function SubscribePage({ params }: { params: { username: st
       }
     >
       {data.tiers.length === 0 ? (
-        <p className="prof-list-meta">This artist hasn&apos;t set up fan subscriptions yet.</p>
+        <div className="public-empty-card">
+          <p className="public-empty-card__text">Fan subscriptions aren&apos;t available yet.</p>
+          <p className="public-empty-card__hint">
+            <Link href={`/u/${data.artist.username}`}>Back to profile</Link>
+          </p>
+        </div>
       ) : (
         <TierCards
           username={data.artist.username}

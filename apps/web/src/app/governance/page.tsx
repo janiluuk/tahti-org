@@ -96,7 +96,12 @@ export default async function GovernancePage() {
       <section className="brand-section">
         <h2 className="brand-section__title brand-section-heading">Motions</h2>
         {motions.length === 0 ? (
-          <p className="brand-empty">No motions yet.</p>
+          <div className="public-empty-card">
+            <p className="public-empty-card__text">No motions yet.</p>
+            <p className="public-empty-card__hint">
+              Open motions appear here for member discussion and voting.
+            </p>
+          </div>
         ) : (
           motions.map((m) => <MotionCard key={m.id} motion={m} isBoard={me.isBoard} />)
         )}

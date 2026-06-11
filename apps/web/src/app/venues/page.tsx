@@ -50,13 +50,10 @@ export default async function VenuesDirectoryPage() {
       </header>
 
       {venues.length === 0 ? (
-        <div className="listen-empty">
-          <p className="listen-empty__text">No verified venues yet.</p>
-          <p className="listen-empty__hint">
-            <Link href="/venues/register" className="listen-radio-link">
-              Submit your venue
-            </Link>{' '}
-            for board verification.
+        <div className="public-empty-card">
+          <p className="public-empty-card__text">No verified venues yet.</p>
+          <p className="public-empty-card__hint">
+            <Link href="/venues/register">Submit your venue</Link> for board verification.
           </p>
         </div>
       ) : (
