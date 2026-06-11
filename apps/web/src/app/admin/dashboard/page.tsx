@@ -3,6 +3,14 @@
 
 import Link from 'next/link'
 import { cookies } from 'next/headers'
+import {
+  DataRowList,
+  DataRowListEmpty,
+  DataRowListRow,
+  KpiCard,
+  KpiCardRow,
+  StatusPill,
+} from '@tahti/ui'
 
 function boardFetch(path: string) {
   const sessionCookie = cookies().get('tahti_session')
@@ -25,14 +33,20 @@ function formatDuration(sec: number): string {
   return `${m}m`
 }
 
-interface StatusCheck {
-  state: string
-  critical: boolean
+const NEEDS_ACTION_COLUMNS = '1fr auto'
+const HEALTH_COLUMNS = '1fr auto'
+
+interface ActionRow {
+  key: string
+  title: string
+  meta: string
+  actionLabel: string
+  actionTone: 'primary' | 'amber'
+  href: string
 }
 
 export default async function AdminDashboardPage() {
   const [
-    statusRes,
     ytdRes,
     membersRes,
     streamsRes,
@@ -40,11 +54,12 @@ export default async function AdminDashboardPage() {
     cronRes,
     auditRes,
     fansubsRes,
+    failedPayoutsRes,
     supportRes,
     betaRes,
     venuesRes,
+    healthRes,
   ] = await Promise.all([
-    boardFetch('/api/v1/status'),
     boardFetch('/api/v1/transparency/ytd'),
     boardFetch('/api/admin/stats/members'),
     boardFetch('/api/admin/streams'),
@@ -52,32 +67,74 @@ export default async function AdminDashboardPage() {
     boardFetch('/api/admin/stats/cron-runs'),
     boardFetch('/api/admin/audit/recent'),
     boardFetch('/api/admin/fansubs/overview'),
+    boardFetch('/api/admin/fansubs/payouts?state=FAILED&limit=10'),
     boardFetch('/api/admin/support/tickets?status=OPEN&limit=1'),
     boardFetch('/api/admin/beta/applications?status=PENDING&limit=100'),
     boardFetch('/api/admin/venues'),
+    boardFetch('/api/admin/stats/system-health'),
   ])
 
   const failedPayoutCount = fansubsRes.ok
     ? ((await fansubsRes.json()) as { failedPayouts: { count: number } }).failedPayouts.count
     : 0
 
+  const failedPayouts = failedPayoutsRes.ok
+    ? (
+        (await failedPayoutsRes.json()) as {
+          payouts: Array<{
+            id: string
+            artistDisplayName: string
+            artistUsername: string
+            netToArtistCents: number
+          }>
+        }
+      ).payouts
+    : []
+
   const openSupportCount = supportRes.ok
     ? ((await supportRes.json()) as { total: number }).total
     : 0
 
-  const pendingBetaCount = betaRes.ok
-    ? ((await betaRes.json()) as { applications: unknown[] }).applications.length
-    : 0
+  const betaApplications = betaRes.ok
+    ? (
+        (await betaRes.json()) as {
+          applications: Array<{
+            id: string
+            name: string
+            artistType: string
+            createdAt: string
+          }>
+        }
+      ).applications
+    : []
 
-  const pendingVenueCount = venuesRes.ok
-    ? ((await venuesRes.json()) as Array<{ verifiedAt: string | null }>).filter(
-        (v) => v.verifiedAt === null,
-      ).length
-    : 0
+  const pendingVenues = venuesRes.ok
+    ? (
+        (await venuesRes.json()) as Array<{
+          id: string
+          name: string
+          city: string
+          countryCode: string
+          verifiedAt: string | null
+          createdAt: string
+        }>
+      ).filter((v) => v.verifiedAt === null)
+    : []
 
-  const status = statusRes.ok
-    ? ((await statusRes.json()) as { checks: Record<string, StatusCheck> })
-    : { checks: {} }
+  const health = healthRes.ok
+    ? ((await healthRes.json()) as {
+        icecast: 'up' | 'down'
+        minio: 'up' | 'down'
+        postgresBackupAgeHours: number | null
+        failedFanSubPayouts: number
+      })
+    : {
+        icecast: 'down' as const,
+        minio: 'down' as const,
+        postgresBackupAgeHours: null,
+        failedFanSubPayouts: 0,
+      }
+
   const ytd = ytdRes.ok
     ? ((await ytdRes.json()) as { runningSurplus: string; byCategory: Record<string, string> })
     : { runningSurplus: '0', byCategory: {} }
@@ -121,90 +178,165 @@ export default async function AdminDashboardPage() {
     .filter(([k]) => k.startsWith('COST_'))
     .reduce((s, [, v]) => s + parseInt(v, 10), 0)
 
+  const actionRows: ActionRow[] = [
+    ...betaApplications.map(
+      (a): ActionRow => ({
+        key: `beta-${a.id}`,
+        title: `${a.name} · ${a.artistType}`,
+        meta: `Beta application · applied ${new Date(a.createdAt).toLocaleDateString('fi-FI')}`,
+        actionLabel: 'Approve',
+        actionTone: 'primary',
+        href: '/admin/beta?status=PENDING',
+      }),
+    ),
+    ...pendingVenues.map(
+      (v): ActionRow => ({
+        key: `venue-${v.id}`,
+        title: `${v.name}, ${v.city}`,
+        meta: `Venue verification · submitted ${new Date(v.createdAt).toLocaleDateString('fi-FI')}`,
+        actionLabel: 'Verify',
+        actionTone: 'primary',
+        href: '/governance/venues',
+      }),
+    ),
+    ...failedPayouts.map(
+      (p): ActionRow => ({
+        key: `payout-${p.id}`,
+        title: `@${p.artistUsername} — ${formatEur(p.netToArtistCents)}`,
+        meta: 'Fan-sub payout failed',
+        actionLabel: 'Retry',
+        actionTone: 'amber',
+        href: '/admin/financial/fansubs',
+      }),
+    ),
+  ]
+
+  const visibleActionRows = actionRows.slice(0, 6)
+  const overflowCount = actionRows.length - visibleActionRows.length
+
+  const backupAge = health.postgresBackupAgeHours
+  const backupTone =
+    backupAge === null ? 'coral' : backupAge > 48 ? 'coral' : backupAge > 26 ? 'amber' : 'green'
+
   return (
     <>
       <h1 className="admin-section-title">Operations dashboard</h1>
 
-      <div className="admin-health-strip">
-        {Object.entries(status.checks).map(([id, check]) => (
-          <Link key={id} href="/admin/status" className="admin-health-dot">
-            <span
-              className={`admin-health-dot__indicator admin-health-dot__indicator--${
-                check.state === 'up' ? 'ok' : 'down'
-              }`}
-            />
-            {id}
-          </Link>
-        ))}
+      <KpiCardRow aria-label="Operations summary">
+        <KpiCard color="cyan" value={members.total} label="Paid members" />
+        <KpiCard color="green" value={streams.count} label="Live now" />
+        <KpiCard color="amber" value={betaApplications.length} label="Beta queue" />
+        <KpiCard color="coral" value={openSupportCount} label="Open tickets" />
+      </KpiCardRow>
+
+      <div className="admin-dashboard-grid">
+        <div>
+          <p className="transparency-grid__label">Needs action</p>
+          {visibleActionRows.length === 0 ? (
+            <DataRowList>
+              <DataRowListEmpty>Nothing needs action right now.</DataRowListEmpty>
+            </DataRowList>
+          ) : (
+            <DataRowList>
+              {visibleActionRows.map((row) => (
+                <DataRowListRow key={row.key} columns={NEEDS_ACTION_COLUMNS}>
+                  <span>
+                    <span style={{ color: 'var(--text)' }}>{row.title}</span>
+                    <br />
+                    <span style={{ fontSize: '11px', color: 'var(--muted2)' }}>{row.meta}</span>
+                  </span>
+                  <span className="admin-dashboard-actions">
+                    <Link
+                      href={row.href}
+                      className={`ui-btn ui-btn--sm ${
+                        row.actionTone === 'amber'
+                          ? 'ui-btn--secondary admin-action--amber'
+                          : 'ui-btn--primary'
+                      }`}
+                    >
+                      {row.actionLabel}
+                    </Link>
+                    <Link href={row.href} className="ui-btn ui-btn--secondary ui-btn--sm">
+                      View
+                    </Link>
+                  </span>
+                </DataRowListRow>
+              ))}
+              {overflowCount > 0 && (
+                <DataRowListRow columns="1fr">
+                  <Link href="/admin/beta?status=PENDING" className="admin-dashboard-more">
+                    View all queues →
+                  </Link>
+                </DataRowListRow>
+              )}
+            </DataRowList>
+          )}
+        </div>
+
+        <div>
+          <p className="transparency-grid__label">System health</p>
+          <DataRowList>
+            <DataRowListRow columns={HEALTH_COLUMNS}>
+              <span>Icecast / Liquidsoap</span>
+              <StatusPill tone={health.icecast === 'up' ? 'green' : 'coral'}>
+                {health.icecast === 'up' ? 'OK' : 'DOWN'}
+              </StatusPill>
+            </DataRowListRow>
+            <DataRowListRow columns={HEALTH_COLUMNS}>
+              <span>Postgres backup age</span>
+              <StatusPill tone={backupTone}>
+                {backupAge === null ? 'UNKNOWN' : `${Math.round(backupAge)} H`}
+              </StatusPill>
+            </DataRowListRow>
+            <DataRowListRow columns={HEALTH_COLUMNS}>
+              <span>MinIO storage</span>
+              <StatusPill tone={health.minio === 'up' ? 'green' : 'coral'}>
+                {health.minio === 'up' ? 'OK' : 'DOWN'}
+              </StatusPill>
+            </DataRowListRow>
+            <DataRowListRow columns={HEALTH_COLUMNS}>
+              <span>Fan-sub payouts</span>
+              <StatusPill tone={health.failedFanSubPayouts > 0 ? 'amber' : 'green'}>
+                {health.failedFanSubPayouts > 0 ? `${health.failedFanSubPayouts} RETRY` : 'OK'}
+              </StatusPill>
+            </DataRowListRow>
+          </DataRowList>
+          <p className="admin-dashboard-health-footer">
+            Cron runs logged · audit trail at{' '}
+            <Link href="/admin/governance/audit">/admin/governance/audit</Link> · force-offline in{' '}
+            <Link href="/admin/streams">Streams</Link>
+          </p>
+        </div>
       </div>
 
-      <div className="admin-panel-grid">
-        <section className="admin-card">
+      {failedPayoutCount > 0 && (
+        <p className="admin-warn" style={{ marginBottom: '1rem' }}>
+          {failedPayoutCount} failed fan-sub payout{failedPayoutCount === 1 ? '' : 's'} ·{' '}
+          <Link href="/admin/financial/fansubs">View queue →</Link>
+        </p>
+      )}
+
+      <section className="admin-card" style={{ marginBottom: '1.5rem' }}>
+        <h2>Finance YTD</h2>
+        <p className="admin-stat">{formatEur(ytd.runningSurplus)}</p>
+        <p className="admin-stat-sub">
+          Revenue {formatEur(revenue)} · Costs {formatEur(costs)}
+        </p>
+      </section>
+
+      {streams.streams.length > 0 && (
+        <section className="admin-card" style={{ marginBottom: '1.5rem' }}>
           <h2>Live now</h2>
-          <p className="admin-stat">{streams.count}</p>
-          <p className="admin-stat-sub">
-            <Link href="/admin/streams">View stream manager →</Link>
-          </p>
           {streams.streams.slice(0, 3).map((s) => (
             <p key={s.slug} className="admin-stat-sub">
               <Link href={`/c/${s.slug}`}>{s.artistName}</Link> · {formatDuration(s.elapsedSec)}
             </p>
           ))}
-        </section>
-
-        <section className="admin-card">
-          <h2>Finance YTD</h2>
-          <p className="admin-stat">{formatEur(ytd.runningSurplus)}</p>
           <p className="admin-stat-sub">
-            Revenue {formatEur(revenue)} · Costs {formatEur(costs)}
-          </p>
-          {failedPayoutCount > 0 ? (
-            <p className="admin-warn">
-              {failedPayoutCount} failed fan-sub payout{failedPayoutCount === 1 ? '' : 's'} ·{' '}
-              <Link href="/admin/financial/fansubs">View queue →</Link>
-            </p>
-          ) : null}
-        </section>
-
-        <section className="admin-card">
-          <h2>Members</h2>
-          <p className="admin-stat">{members.total}</p>
-          <p className="admin-stat-sub">
-            +{members.newThisMonth} this month · {members.lapsedThisMonth} lapsed
+            <Link href="/admin/streams">View stream manager →</Link>
           </p>
         </section>
-
-        <section className="admin-card">
-          <h2>Support</h2>
-          <p className={`admin-stat ${openSupportCount > 0 ? 'admin-warn' : ''}`}>
-            {openSupportCount}
-          </p>
-          <p className="admin-stat-sub">
-            open ticket{openSupportCount === 1 ? '' : 's'} ·{' '}
-            <Link href="/admin/support">View queue →</Link>
-          </p>
-        </section>
-
-        <section className="admin-card">
-          <h2>Beta applications</h2>
-          <p className={`admin-stat ${pendingBetaCount > 0 ? 'admin-warn' : ''}`}>
-            {pendingBetaCount}
-          </p>
-          <p className="admin-stat-sub">
-            pending review · <Link href="/admin/beta?status=PENDING">Review queue →</Link>
-          </p>
-        </section>
-
-        <section className="admin-card">
-          <h2>Venue verification</h2>
-          <p className={`admin-stat ${pendingVenueCount > 0 ? 'admin-warn' : ''}`}>
-            {pendingVenueCount}
-          </p>
-          <p className="admin-stat-sub">
-            awaiting review · <Link href="/governance/venues">Review queue →</Link>
-          </p>
-        </section>
-      </div>
+      )}
 
       <section className="admin-card" style={{ marginBottom: '1.5rem' }}>
         <h2>Queue health</h2>

@@ -7,15 +7,16 @@ import Link from 'next/link'
 
 export interface AdminShellHeaderProps {
   displayName: string
+  username: string
   userInitial: string
 }
 
 /** Production admin top bar — pairs with AdminShell `variant="studio"`. */
-export function AdminShellHeader({ displayName, userInitial }: AdminShellHeaderProps) {
+export function AdminShellHeader({ displayName, username, userInitial }: AdminShellHeaderProps) {
   return (
     <>
       <div className="admin-view-strip" role="status" aria-live="polite">
-        ADMIN VIEW · {displayName}
+        ⚠ ADMIN VIEW · acting as board member @{username} · all actions audit-logged
       </div>
       <header className="studio-top-nav">
         <Link href="/admin/dashboard" className="studio-top-nav__logo admin-top-logo">

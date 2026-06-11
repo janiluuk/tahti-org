@@ -949,6 +949,13 @@ export const AdminQueueStatsSchema = z.object({
 
 export const AdminQueueStatsListSchema = z.array(AdminQueueStatsSchema)
 
+export const AdminSystemHealthSchema = z.object({
+  icecast: z.enum(['up', 'down']),
+  minio: z.enum(['up', 'down']),
+  postgresBackupAgeHours: z.number().nullable(),
+  failedFanSubPayouts: z.number().int().nonnegative(),
+})
+
 export const AdminCronRunEntrySchema = z.object({
   id: z.string(),
   startedAt: z.coerce.date(),

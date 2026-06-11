@@ -21,7 +21,7 @@ async function requireBoardSession() {
   })
   if (!res.ok) redirect('/login?next=/admin')
 
-  const me = (await res.json()) as { isBoard: boolean; displayName: string }
+  const me = (await res.json()) as { isBoard: boolean; displayName: string; username: string }
   if (!me.isBoard) redirect('/dashboard')
   return me
 }
@@ -35,7 +35,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       variant="studio"
       displayName={me.displayName}
       sidebar={<AdminNav />}
-      header={<AdminShellHeader displayName={me.displayName} userInitial={initial} />}
+      header={
+        <AdminShellHeader
+          displayName={me.displayName}
+          username={me.username}
+          userInitial={initial}
+        />
+      }
     >
       {children}
     </AdminShell>
