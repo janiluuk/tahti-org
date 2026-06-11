@@ -362,6 +362,9 @@ export const GrantPreviewArtistSchema = z.object({
   publicAttribution: z.boolean(),
   units: z.number(),
   amountCents: z.number().int(),
+  freeDownloads: z.number().int(),
+  paidDownloads: z.number().int(),
+  fanSubEuros: z.number().int(),
   anomalies: z.array(GrantAnomalySchema),
 })
 

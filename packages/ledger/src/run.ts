@@ -15,6 +15,15 @@ export interface AnnualGrantSummary {
   unallocatedCents: number
 }
 
+export interface ArtistEngagement extends ArtistUnits {
+  /** Counted downloads with weight 1 (free downloads ×1). */
+  freeDownloads: number
+  /** Counted downloads with weight 5 (paid/fan-sub downloads ×5). */
+  paidDownloads: number
+  /** Whole euros of gross fan-sub revenue received for the year. */
+  fanSubEuros: number
+}
+
 // Sum eligible engagement units per artist for the fiscal year, per the v6
 // formula (docs/engagement-and-fansubs.md):
 //   units = counted-download weight (free ×1, paid fan-sub ×5)
@@ -22,28 +31,36 @@ export interface AnnualGrantSummary {
 export async function computeEngagementUnits(
   prisma: PrismaClient,
   year: number,
-): Promise<ArtistUnits[]> {
+): Promise<ArtistEngagement[]> {
   const start = new Date(Date.UTC(year, 0, 1))
   const end = new Date(Date.UTC(year + 1, 0, 1))
 
-  const byUser = new Map<string, number>()
+  const units = new Map<string, number>()
+  const free = new Map<string, number>()
+  const paid = new Map<string, number>()
+  const fanSub = new Map<string, number>()
 
-  // Downloads → weighted units, keyed by channel → artist.
+  // Downloads → weighted units, keyed by channel → artist, split free (×1) vs paid (×5).
   const grouped = await prisma.download.groupBy({
-    by: ['channelId'],
+    by: ['channelId', 'weight'],
     where: { countedAt: { gte: start, lt: end } },
-    _sum: { weight: true },
+    _count: true,
   })
   if (grouped.length > 0) {
     const channels = await prisma.channel.findMany({
-      where: { id: { in: grouped.map((g) => g.channelId) } },
+      where: { id: { in: [...new Set(grouped.map((g) => g.channelId))] } },
       select: { id: true, userId: true },
     })
     const channelToUser = new Map(channels.map((c) => [c.id, c.userId]))
     for (const g of grouped) {
       const userId = channelToUser.get(g.channelId)
       if (!userId) continue
-      byUser.set(userId, (byUser.get(userId) ?? 0) + (g._sum.weight ?? 0))
+      units.set(userId, (units.get(userId) ?? 0) + g.weight * g._count)
+      if (g.weight === 1) {
+        free.set(userId, (free.get(userId) ?? 0) + g._count)
+      } else {
+        paid.set(userId, (paid.get(userId) ?? 0) + g._count)
+      }
     }
   }
 
@@ -56,10 +73,17 @@ export async function computeEngagementUnits(
   for (const g of fanSubGross) {
     const euros = Math.floor((g._sum.grossCents ?? 0) / 100)
     if (euros <= 0) continue
-    byUser.set(g.artistUserId, (byUser.get(g.artistUserId) ?? 0) + euros)
+    units.set(g.artistUserId, (units.get(g.artistUserId) ?? 0) + euros)
+    fanSub.set(g.artistUserId, euros)
   }
 
-  return [...byUser.entries()].map(([userId, units]) => ({ userId, units }))
+  return [...units.entries()].map(([userId, totalUnits]) => ({
+    userId,
+    units: totalUnits,
+    freeDownloads: free.get(userId) ?? 0,
+    paidDownloads: paid.get(userId) ?? 0,
+    fanSubEuros: fanSub.get(userId) ?? 0,
+  }))
 }
 
 export interface RunOptions {
