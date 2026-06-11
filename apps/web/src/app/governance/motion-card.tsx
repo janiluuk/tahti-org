@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Alert, Button, Heading, Text } from '@tahti/ui'
+import { Alert, Button, Heading, StatusPill, Text } from '@tahti/ui'
 import { castVote, transitionMotion } from './actions'
 
 export interface MotionSummary {
@@ -21,13 +21,22 @@ export interface MotionSummary {
   tally?: { YES: number; NO: number; ABSTAIN: number }
 }
 
-const CHOICES: Array<'YES' | 'NO' | 'ABSTAIN'> = ['YES', 'NO', 'ABSTAIN']
+const CHOICES: Array<{ value: 'YES' | 'NO' | 'ABSTAIN'; label: string }> = [
+  { value: 'YES', label: 'For' },
+  { value: 'NO', label: 'Against' },
+  { value: 'ABSTAIN', label: 'Abstain' },
+]
 
 export default function MotionCard({
   motion,
+  motionRef,
+  totalMembers,
   isBoard,
 }: {
   motion: MotionSummary
+  /** Display id, e.g. "M-2026-03". */
+  motionRef: string
+  totalMembers: number
   isBoard: boolean
 }) {
   const [pending, startTransition] = useTransition()
@@ -49,59 +58,75 @@ export default function MotionCard({
     })
   }
 
-  const statusClass = `brand-motion-status brand-motion-status--${motion.state.toLowerCase()}`
-
-  return (
-    <article className="brand-card">
-      <div className="brand-card__header">
-        <Heading level={3}>{motion.title}</Heading>
-        <span className={statusClass}>{motion.state}</span>
-      </div>
-      <p className="brand-card__meta">
-        Proposed by {motion.proposer} · closes{' '}
-        {new Date(motion.closeAt).toLocaleDateString('fi-FI')}
-        {motion.advisory && ' · advisory'}
-      </p>
-
-      {motion.state === 'OPEN' &&
-        (motion.youVoted ? (
-          <Text tone="success" size="sm">
-            You voted <strong>{motion.yourChoice}</strong>.
-          </Text>
-        ) : (
-          <div className="brand-vote-row">
-            {CHOICES.map((c) => (
-              <Button key={c} variant="ghost" size="sm" disabled={pending} onClick={() => vote(c)}>
-                {c}
-              </Button>
-            ))}
-          </div>
-        ))}
-
-      {motion.state === 'CLOSED' && motion.tally && (
-        <Text size="sm">
-          Result: <strong>{motion.tally.YES}</strong> yes · <strong>{motion.tally.NO}</strong> no ·{' '}
-          <strong>{motion.tally.ABSTAIN}</strong> abstain
-          {motion.advisory && (
-            <span className="brand-muted"> (advisory — not legally binding)</span>
-          )}
-        </Text>
-      )}
-
-      {motion.state === 'DRAFT' && (
+  if (motion.state === 'DRAFT') {
+    return (
+      <article className="gov-motion-card">
+        <div className="gov-motion-card__header">
+          <Heading level={3} className="gov-motion-card__title">
+            {motionRef} · {motion.title}
+          </Heading>
+          <StatusPill tone="amber">Discussion · 7-day circulation</StatusPill>
+        </div>
         <Text size="sm" tone="muted">
-          Not yet open for voting.
+          Voting opens {new Date(motion.openAt).toLocaleDateString('fi-FI')} after circulation
+          period (bylaws §9).
         </Text>
-      )}
-
-      {isBoard && motion.state !== 'CLOSED' && (
-        <div className="brand-board-actions">
-          {motion.state === 'DRAFT' && (
+        {isBoard && (
+          <div className="gov-motion-card__actions">
             <Button variant="ghost" size="sm" disabled={pending} onClick={() => transition('OPEN')}>
               Open voting
             </Button>
-          )}
-          {motion.state === 'OPEN' && (
+          </div>
+        )}
+        {error && (
+          <Alert variant="error" className="brand-card__error">
+            {error}
+          </Alert>
+        )}
+      </article>
+    )
+  }
+
+  if (motion.state === 'OPEN') {
+    return (
+      <article className="gov-motion-card gov-motion-card--open">
+        <div className="gov-motion-card__header">
+          <Heading level={3} className="gov-motion-card__title">
+            {motionRef} · {motion.title}
+          </Heading>
+          <StatusPill tone="green">Voting open</StatusPill>
+        </div>
+        <Text size="sm" tone="muted">
+          Proposed by {motion.proposer} · closes{' '}
+          {new Date(motion.closeAt).toLocaleDateString('fi-FI')}
+          {motion.advisory && ' · advisory'}
+        </Text>
+
+        {motion.youVoted ? (
+          <Text tone="success" size="sm">
+            ✓ You voted · change before close
+          </Text>
+        ) : (
+          <div className="gov-motion-card__vote-row">
+            {CHOICES.map((c) => (
+              <Button
+                key={c.value}
+                variant={c.value === 'YES' ? 'primary' : 'secondary'}
+                size="sm"
+                disabled={pending}
+                onClick={() => vote(c.value)}
+              >
+                {c.label}
+              </Button>
+            ))}
+            <span className="gov-motion-card__tally-note">
+              {motion.totalVotes} of {totalMembers} members voted · tally revealed at close
+            </span>
+          </div>
+        )}
+
+        {isBoard && (
+          <div className="gov-motion-card__actions">
             <Button
               variant="primary"
               size="sm"
@@ -110,14 +135,40 @@ export default function MotionCard({
             >
               Close & publish result
             </Button>
-          )}
-        </div>
-      )}
+          </div>
+        )}
 
-      {error && (
-        <Alert variant="error" className="brand-card__error">
-          {error}
-        </Alert>
+        {error && (
+          <Alert variant="error" className="brand-card__error">
+            {error}
+          </Alert>
+        )}
+      </article>
+    )
+  }
+
+  // CLOSED
+  const tally = motion.tally
+  const totalCast = tally ? tally.YES + tally.NO + tally.ABSTAIN : 0
+  const pctFor = totalCast > 0 ? Math.round(((tally?.YES ?? 0) / totalCast) * 100) : 0
+  const passed = (tally?.YES ?? 0) > (tally?.NO ?? 0)
+
+  return (
+    <article className="gov-motion-card gov-motion-card--closed">
+      <div className="gov-motion-card__header">
+        <Heading level={3} className="gov-motion-card__title gov-motion-card__title--closed">
+          {motionRef} · {motion.title}
+        </Heading>
+        <StatusPill tone={passed ? 'cyan' : 'coral'}>
+          {passed ? `Passed · ${pctFor}% for` : 'Failed'}
+        </StatusPill>
+      </div>
+      {tally && (
+        <Text size="sm" tone="muted">
+          {totalCast} of {totalMembers} members voted · {tally.YES} for · {tally.NO} against ·{' '}
+          {tally.ABSTAIN} abstained
+          {motion.advisory && ' (advisory — not legally binding)'}
+        </Text>
       )}
     </article>
   )

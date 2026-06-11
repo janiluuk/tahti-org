@@ -43,7 +43,7 @@ export default function NewMotionForm() {
     return (
       <div className="brand-section">
         <Button variant="ghost" onClick={() => setOpen(true)}>
-          + New motion
+          + Submit motion
         </Button>
       </div>
     )

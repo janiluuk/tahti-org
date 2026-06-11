@@ -2646,3 +2646,117 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GOVERNANCE — motion list, filter pills, motion cards
+   See apps/web/src/app/governance/{page,motions-list,motion-card}.tsx
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.gov-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.gov-header-row__subline {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.filter-pills {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.filter-pills__item {
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.filter-pills__item:hover {
+  color: var(--text);
+}
+
+.filter-pills__item--active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(34, 211, 238, 0.08);
+}
+
+.gov-motion-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gov-motion-card {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gov-motion-card--open {
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.gov-motion-card--closed {
+  opacity: 0.85;
+}
+
+.gov-motion-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.gov-motion-card__title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+}
+
+.gov-motion-card__title--closed {
+  color: var(--muted);
+}
+
+.gov-motion-card__vote-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.gov-motion-card__tally-note {
+  font-size: var(--text-label);
+  color: var(--muted2);
+  margin-left: var(--space-2);
+}
+
+.gov-motion-card__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .gov-header-row {
+    flex-direction: column;
+  }
+}
