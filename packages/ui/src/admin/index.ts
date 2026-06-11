@@ -20,7 +20,6 @@ export { Alert, type AlertProps, type AlertVariant } from './alert'
 export { Stack, Row, Divider, PageShell, Code, type PageSize, type StackGap } from './layout'
 export { CopyRow, type CopyRowProps } from './copy-row'
 export { Link, type LinkProps } from './link'
-export { SiteFooter } from './site-footer'
 
 /** Design token names for programmatic use (prefer CSS variables in stylesheets). */
 export const adminTokens = {
