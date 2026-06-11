@@ -689,6 +689,12 @@ Artists want to personalize their channel and release pages with Three.js/WebGL 
 | [x] | **PLAT-075** | **Backdrop slideshow preset themes** — CSS-animation presets + dashboard interval/transition/autoplay controls; reduced-motion pauses transitions. | Small | P2 |
 | [x] | **PLAT-076** | **Public rendering on `/c/:slug` and `/r/:slug`** — `[data-channel-root]` CSS tokens, lazy-loaded presets, WebGL fallback, reduced-motion support. | Medium | P2 |
 
+### UX audit — nav consistency & feature linking (2026-06-11) (PLAT-077)
+
+| Done | ID | Item | Effort | Priority |
+|:---:|---|---|---|---|
+| [x] | **PLAT-077** | **Site-wide footer + consistent public-page nav** — New `PublicFooter` (`packages/ui/src/brand/PublicFooter.tsx`) with links to For artists / About / Venues / Governance / Transparency / Privacy / Terms / AGPL source / Status, added to all `(info)` pages, `/governance`, `/transparency`, `/status`, `/help/*`, `/v/:slug`, `/venues`, and the homepage. `PublicBrandShell` gained `showHeader`/`showFooter`/`user`/`statusUrl` props so previously chrome-less pages (`/governance`, `/transparency`, `/status`, `/help/*`, `/v/:slug`) now get the same `ChannelHeader` site nav as `/about`/`/venues`/`/for-artists`. Removed dead `SiteFooter` (`packages/ui/src/admin/site-footer.tsx`, zero usages). Fixed broken `/dashboard/upgrade` link → `/help/tier-limits` (`custom-domain-panel.tsx`). Added `/help` index page and linked the previously-orphaned `/help/support` from the dashboard stream-settings panel. | Medium | P1 |
+
 ---
 
 ## Streaming infrastructure backlog

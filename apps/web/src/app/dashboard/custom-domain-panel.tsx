@@ -37,7 +37,7 @@ export function CustomDomainPanel({
         <h3 className="db-panel__title">Custom domain</h3>
         <p className="db-panel__hint">
           Custom domains are available on the paid membership (€40/year).{' '}
-          <a href="/dashboard/upgrade" className="db-link">
+          <a href="/help/tier-limits" className="db-link">
             Upgrade →
           </a>
         </p>
