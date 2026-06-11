@@ -8,17 +8,40 @@ pnpm install --frozen-lockfile
 pnpm --filter @tahti/db db:generate
 ```
 
+For full stack + journey fixtures: `./scripts/stack-up.sh --seed` (API `:15011`, web `:17777`).
+
 ## Commands
 
-- `pnpm ci:check` — lint, format, typecheck, bundled Tor exit list freshness
-- `pnpm tor-exit:check` — M18 bundled list not empty/stale (max 30 days)
-- `pnpm tor-exit:sync` — refresh bundled Tor exits from Tor Project bulk list
-- `./scripts/status-monitor.sh` — M11 probe `/api/v1/status`, `/health`, web home (Upptime substitute)
-- `pnpm test` — Vitest (single worker; shared Postgres)
-- Journey suites under `apps/api/src/routes/journeys/` — `persona-journeys`, `vital-flows`, `public-surfaces-journey`, `tahti-radio-journey`
-- `pnpm test:e2e:journeys` — bash persona journeys (listener, artist, member, director, ops)
-- `pnpm test:e2e:journeys:all` — vital-flows + user-journeys + Vitest `persona-journeys.test.ts`
-- `./scripts/unified-smoke.sh` — phased smoke from [`unified-test-plan.md`](unified-test-plan.md) (CI + local stack; `--prod`, `--e2e`, `--all`)
+| Command | What it runs |
+|---------|----------------|
+| `pnpm ci:check` | Lint, format, typecheck, Tor exit list freshness |
+| `pnpm test` | Vitest (single worker; needs Postgres) |
+| `pnpm smoke` | Local CI gate + stack health (`scripts/unified-smoke.sh`) |
+| `pnpm smoke:prod` | Above + production HTTP checks on `app.tahti.live` |
+| `pnpm smoke:all` | Prod + e2e bash journeys (stack must be up; `--seed` fixtures) |
+| `pnpm test:e2e:journeys:all` | Vital-flows + user-journeys + Vitest `persona-journeys.test.ts` |
+
+Other scripts: `pnpm tor-exit:check`, `./scripts/status-monitor.sh`, persona-specific `pnpm test:e2e:journeys:*`.
+
+**Journey map** (routes, APIs, scripts): [`user-flows.md`](user-flows.md).
+
+### Vitest journey suites
+
+Under `apps/api/src/routes/journeys/`:
+
+- `persona-journeys.test.ts` — listener, artist studio, member governance, director admin, ops health
+- `vital-flows.test.ts` — onboarding, fan subs, catalog gates, live broadcast, governance vote
+- `public-surfaces-journey.test.ts` — home/discover stats + channels, radio, venues, status
+- `tahti-radio-journey.test.ts` — Tahti Radio channel, chat tokens, announcements, member relay
+
+### Smoke script flags
+
+```bash
+./scripts/unified-smoke.sh              # Phase 0–1 (ci:check + local stack)
+./scripts/unified-smoke.sh --prod       # + production HTTP checks
+./scripts/unified-smoke.sh --e2e        # + vital-flows.sh + user-journeys.sh
+./scripts/unified-smoke.sh --all --seed # prod + e2e with fixture seed
+```
 
 ## Test data isolation
 
@@ -26,3 +49,14 @@ pnpm --filter @tahti/db db:generate
 - Use `allocateMemberNumber(prisma)` instead of hard-coded `memberNumber` bands (PLAT-012).
 - Vitest: `maxWorkers: 1` in root `vitest.config.ts` until Testcontainers lands.
 - CI applies schema with `db push`, then baselines `_prisma_migrations` via `migrate resolve --applied` when `prisma/migrations/` exists; deploy uses `migrate deploy`.
+
+## Failure triage
+
+| Symptom | Likely fix |
+|---------|------------|
+| API exits on start | Check API Dockerfile includes all workspace packages (e.g. `@tahti/revelator`) |
+| Chat 404 on `/radio` | Run `apps/api/scripts/seed-tahti-radio.ts` or `./scripts/stack-up.sh --seed` |
+| Vitest DB errors | Start Postgres or full stack; run `DATABASE_URL=... pnpm --filter @tahti/db db:migrate:test` |
+| `/radio` old UI on prod | Rebuild `web` service; app is at `app.tahti.live`, not `tahti.live` |
+| Chat join E2E fails | Viewer token must not skip join UI; rebuild web after `chat-panel.tsx` changes |
+| Signup form vs beta closed | Set `SIGNUP_OPEN=true` in stack env |

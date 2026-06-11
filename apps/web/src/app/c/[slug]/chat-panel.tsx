@@ -33,7 +33,11 @@ export default function ChatPanel({
 }) {
   const [handle, setHandle] = useState<string>('')
   const [pendingHandle, setPendingHandle] = useState('')
-  const [token, setToken] = useState<string | null>(null)
+  /** Read-only Centrifugo token — receive messages before join. */
+  const [viewerToken, setViewerToken] = useState<string | null>(null)
+  /** Publish-capable token after handle join. */
+  const [publishToken, setPublishToken] = useState<string | null>(null)
+  const connectionToken = publishToken ?? viewerToken
   const [supporter, setSupporter] = useState(false)
   const [myCountryCode, setMyCountryCode] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -58,7 +62,7 @@ export default function ChatPanel({
     fetch(`${API_BASE}/api/chat/${slug}/viewer-token`, { method: 'POST' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { token: string } | null) => {
-        if (!cancelled && data?.token) setToken((prev) => prev ?? data.token)
+        if (!cancelled && data?.token) setViewerToken((prev) => prev ?? data.token)
       })
       .catch(() => undefined)
     return () => {
@@ -87,7 +91,7 @@ export default function ChatPanel({
   }, [slug])
 
   useEffect(() => {
-    if (!token) return
+    if (!connectionToken) return
     const wsUrl =
       process.env.NEXT_PUBLIC_CENTRIFUGO_WS ?? 'ws://localhost:8000/connection/websocket'
     const ws = new WebSocket(wsUrl)
@@ -95,7 +99,7 @@ export default function ChatPanel({
     setStatus('connecting')
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ id: msgIdRef.current++, connect: { token } }))
+      ws.send(JSON.stringify({ id: msgIdRef.current++, connect: { token: connectionToken } }))
     }
 
     ws.onmessage = (ev) => {
@@ -148,7 +152,7 @@ export default function ChatPanel({
     ws.onerror = () => setError('Connection error')
     ws.onclose = () => setStatus('disconnected')
     return () => ws.close()
-  }, [token, slug])
+  }, [connectionToken, slug])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -177,7 +181,7 @@ export default function ChatPanel({
       }
       persistChatHandle(data.handle)
       setHandle(data.handle)
-      setToken(data.token)
+      setPublishToken(data.token)
       setSupporter(!!data.supporter)
       setMyCountryCode(data.countryCode ?? null)
     } catch {
@@ -186,7 +190,9 @@ export default function ChatPanel({
   }
 
   function sendMessage() {
-    if (!input.trim() || !wsRef.current || status !== 'connected') return
+    if (!handle || !publishToken || !input.trim() || !wsRef.current || status !== 'connected') {
+      return
+    }
     const text = input.trim().slice(0, 500)
     wsRef.current.send(
       JSON.stringify({
@@ -227,15 +233,15 @@ export default function ChatPanel({
           ? announcements.map((a) => <PinnedAnnouncement key={a.id}>{a.body}</PinnedAnnouncement>)
           : undefined
       }
-      authPhase={token ? 'chat' : 'join'}
+      authPhase={handle ? 'chat' : 'join'}
       joinHandle={pendingHandle}
       onJoinHandleChange={setPendingHandle}
       onJoin={() => void joinChat(pendingHandle)}
       inputValue={input}
       onInputChange={setInput}
       onSend={sendMessage}
-      inputDisabled={status !== 'connected'}
-      sendDisabled={status !== 'connected'}
+      inputDisabled={!publishToken || status !== 'connected'}
+      sendDisabled={!publishToken || status !== 'connected'}
       error={error}
     />
   )

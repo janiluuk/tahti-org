@@ -4,8 +4,8 @@
 
 set -euo pipefail
 
-API_URL="${API_URL:-http://localhost:15011}"
-APP_URL="${APP_URL:-http://localhost:17777}"
+API_URL="${API_URL:-http://localhost:${PORT:-15011}}"
+APP_URL="${APP_URL:-http://localhost:${WEB_PORT:-17777}}"
 COOKIE_JAR="${COOKIE_JAR:-/tmp/tahti_e2e_cookies.txt}"
 
 E2E_PASS=0

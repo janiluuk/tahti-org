@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unified smoke runner — phases from docs/unified-test-plan.md
+# Unified smoke runner — see docs/testing.md
 #
 # Usage:
 #   ./scripts/unified-smoke.sh              # Phase 0–1 (local)
