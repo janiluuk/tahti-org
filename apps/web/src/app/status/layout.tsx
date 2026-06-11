@@ -3,8 +3,18 @@
 
 import type { ReactNode } from 'react'
 import { PublicBrandShell } from '@tahti/ui'
+import '@tahti/ui/src/tokens.css'
+import '@tahti/ui/src/styles/brand-channel.css'
 import '@tahti/ui/src/styles/brand-public.css'
+import { getSessionUser } from '@/lib/session'
+import { statusPageUrl } from '@/lib/status-page'
 
-export default function StatusLayout({ children }: { children: ReactNode }) {
-  return <PublicBrandShell wide>{children}</PublicBrandShell>
+export default async function StatusLayout({ children }: { children: ReactNode }) {
+  const user = await getSessionUser()
+
+  return (
+    <PublicBrandShell wide showHeader showFooter user={user} statusUrl={statusPageUrl()}>
+      {children}
+    </PublicBrandShell>
+  )
 }

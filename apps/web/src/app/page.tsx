@@ -3,7 +3,7 @@
 
 import type { ChannelCard } from '@tahti/shared'
 import Link from 'next/link'
-import { BrandLogo, ChannelHeader } from '@tahti/ui'
+import { BrandLogo, ChannelHeader, PublicFooter } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { getSessionUser } from '@/lib/session'
 import { statusPageUrl } from '@/lib/status-page'
@@ -133,19 +133,7 @@ export default async function HomePage() {
           </section>
         )}
 
-        <footer className="home-footer">
-          <Link href="/for-artists" className="home-footer__link">
-            For artists
-          </Link>
-          <span className="home-footer__sep">·</span>
-          <Link href="/about" className="home-footer__link">
-            About
-          </Link>
-          <span className="home-footer__sep">·</span>
-          <a href={statusUrl} className="home-footer__link">
-            Status
-          </a>
-        </footer>
+        <PublicFooter statusUrl={statusUrl} />
       </div>
     </div>
   )
