@@ -9,6 +9,7 @@ import {
   SLIDESHOW_PRESETS,
   SLIDESHOW_PRESET_LABELS,
   ColorSchemeSchema,
+  DEFAULT_COLOR_SCHEME,
   type VisualPreset,
   type SlideshowPreset,
   type ColorScheme,
@@ -38,19 +39,11 @@ function parseOrNull(json: string | null): ColorScheme | null {
   }
 }
 
-const BLANK_SCHEME: ColorScheme = {
-  bg: '#0a0f1e',
-  accent: '#7c3aed',
-  text: '#f1f5f9',
-  muted: '#64748b',
-  highlight: '#a78bfa',
-}
-
 export default function ChannelVisualPresetPanel({ initial }: Props) {
   const router = useRouter()
   const [preset, setPreset] = useState<VisualPreset>(initial.visualPreset)
   const parsed = parseOrNull(initial.colorSchemeJson)
-  const [scheme, setScheme] = useState<ColorScheme>(parsed ?? BLANK_SCHEME)
+  const [scheme, setScheme] = useState<ColorScheme>(parsed ?? DEFAULT_COLOR_SCHEME)
   const [useCustomScheme, setUseCustomScheme] = useState(!!parsed)
   const [slideshowPreset, setSlideshowPreset] = useState<SlideshowPreset>(initial.slideshowPreset)
   const [interval, setInterval] = useState(initial.slideshowIntervalSeconds)

@@ -3,10 +3,7 @@
 
 import type { ChannelCard } from '@tahti/shared'
 import Link from 'next/link'
-import { BrandLogo, ChannelHeader, PublicFooter } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
-import { getSessionUser } from '@/lib/session'
-import { statusPageUrl } from '@/lib/status-page'
+import { BrandLogo } from '@tahti/ui'
 
 interface PlatformStats {
   activeArtists: number
@@ -76,65 +73,56 @@ function formatHours(h: number): string {
 }
 
 export default async function HomePage() {
-  const [{ live, stats }, user] = await Promise.all([fetchData(), getSessionUser()])
-  const statusUrl = statusPageUrl()
+  const { live, stats } = await fetchData()
 
   return (
-    <div data-tahti-ui="brand" className="brand-channel">
-      <BgCanvas />
-      <ChannelHeader activeNav="home" user={user} />
-      <div className="home-shell">
-        <section className="home-hero">
-          <BrandLogo />
-          <h1 className="home-title">
-            Broadcasting for
-            <br />
-            independent artists.
-          </h1>
-          <p className="home-sub">
-            A nonprofit platform built to support artists — not algorithms.
-          </p>
-          <div className="home-ctas">
-            <Link href="/listen" className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary">
-              Listen now
-            </Link>
-            <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
-              Sign in
+    <div className="home-shell">
+      <section className="home-hero">
+        <BrandLogo />
+        <h1 className="home-title">
+          Broadcasting for
+          <br />
+          independent artists.
+        </h1>
+        <p className="home-sub">A nonprofit platform built to support artists — not algorithms.</p>
+        <div className="home-ctas">
+          <Link href="/listen" className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary">
+            Listen now
+          </Link>
+          <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
+            Sign in
+          </Link>
+        </div>
+      </section>
+
+      {live.length > 0 && (
+        <section className="home-live-section">
+          <div className="home-section-label">
+            <span className="listen-live-dot" aria-hidden />
+            On air right now
+          </div>
+          <div className="listen-live-grid">
+            {live.map((ch) => (
+              <LiveTile key={ch.slug} channel={ch} />
+            ))}
+          </div>
+          <div className="home-live-more">
+            <Link href="/listen" className="home-live-more__link">
+              See all channels →
             </Link>
           </div>
         </section>
+      )}
 
-        {live.length > 0 && (
-          <section className="home-live-section">
-            <div className="home-section-label">
-              <span className="listen-live-dot" aria-hidden />
-              On air right now
-            </div>
-            <div className="listen-live-grid">
-              {live.map((ch) => (
-                <LiveTile key={ch.slug} channel={ch} />
-              ))}
-            </div>
-            <div className="home-live-more">
-              <Link href="/listen" className="home-live-more__link">
-                See all channels →
-              </Link>
-            </div>
-          </section>
-        )}
-
-        {stats && (
-          <section className="home-stats" aria-label="Platform stats">
-            <StatPill value={String(stats.activeArtists)} label="active artists" />
-            <div className="home-stats__sep" aria-hidden />
-            <StatPill value={String(stats.broadcastsThisMonth)} label="broadcasts this month" />
-            <div className="home-stats__sep" aria-hidden />
-            <StatPill value={`${formatHours(stats.totalHours)} h`} label="broadcast in total" />
-          </section>
-        )}
-
-        <PublicFooter statusUrl={statusUrl} />
-      </div>
+      {stats && (
+        <section className="home-stats" aria-label="Platform stats">
+          <StatPill value={String(stats.activeArtists)} label="active artists" />
+          <div className="home-stats__sep" aria-hidden />
+          <StatPill value={String(stats.broadcastsThisMonth)} label="broadcasts this month" />
+          <div className="home-stats__sep" aria-hidden />
+          <StatPill value={`${formatHours(stats.totalHours)} h`} label="broadcast in total" />
+        </section>
+      )}
     </div>
   )
 }

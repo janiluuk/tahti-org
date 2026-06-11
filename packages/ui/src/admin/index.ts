@@ -21,16 +21,18 @@ export { Stack, Row, Divider, PageShell, Code, type PageSize, type StackGap } fr
 export { CopyRow, type CopyRowProps } from './copy-row'
 export { Link, type LinkProps } from './link'
 
+import { tokens } from '../tokens'
+
 /** Design token names for programmatic use (prefer CSS variables in stylesheets). */
 export const adminTokens = {
   color: {
-    primary: '#2563eb',
-    success: '#16a34a',
-    error: '#dc2626',
-    warning: '#d97706',
-    brandAmber: '#f0a500',
-    brandCyan: '#00bcd4',
-    brandBg: '#0a0f1e',
+    primary: tokens.color.brand[600],
+    success: tokens.color.accent.green,
+    error: tokens.color.accent.coral,
+    warning: tokens.color.accent.amber,
+    brandAmber: tokens.color.accent.amber,
+    brandCyan: tokens.color.brand[400],
+    brandBg: tokens.color.bg.page,
   },
-  page: { sm: 640, md: 960, lg: 1100 },
+  page: { sm: 640, md: 1140, lg: 1080 },
 } as const

@@ -110,7 +110,7 @@ export function ChannelPageLayout({
         showLiveBadge={showLiveBadge}
         user={user}
       />
-      <div className="ch-body">
+      <div className="ch-body shell-channel">
         <div className="ch-main">{main}</div>
         <aside className="ch-sidebar">{sidebar}</aside>
       </div>

@@ -7,6 +7,7 @@ import { StudioShell } from '@tahti/ui'
 import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
 import '@tahti/ui/src/styles/brand-studio.css'
+import '@tahti/ui/src/styles/shells.css'
 
 /** Dashboard uses StudioShell from @tahti/ui (import brand-studio.css once here). */
 export default async function DashboardLayout({ children }: { children: ReactNode }) {

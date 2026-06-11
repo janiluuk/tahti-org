@@ -1,0 +1,16 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Named page shell helpers — fixed max-widths (AGENT-INSTRUCTIONS Pass 1). */
+
+[data-tahti-ui='brand'].shell-public {
+  min-height: 100vh;
+}
+
+[data-tahti-ui='brand'] .shell-public__inner {
+  max-width: var(--public-max);
+  margin: 0 auto;
+}
+
+[data-tahti-ui='brand'] .shell-narrow {
+  max-width: var(--narrow-max);
+  margin: 0 auto;
+}

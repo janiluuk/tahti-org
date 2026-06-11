@@ -2,20 +2,20 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import { ChannelHeader, PublicFooter } from '@tahti/ui'
+import { PublicBrandShell } from '@tahti/ui'
 import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/styles/brand-channel.css'
 import '@tahti/ui/src/styles/brand-public.css'
+import '@tahti/ui/src/styles/shells.css'
 import { getSessionUser } from '@/lib/session'
+import { statusPageUrl } from '@/lib/status-page'
 
 export default async function InfoLayout({ children }: { children: ReactNode }) {
   const user = await getSessionUser()
 
   return (
-    <div data-tahti-ui="brand" className="info-shell">
-      <ChannelHeader user={user} />
+    <PublicBrandShell wide showHeader showFooter user={user} statusUrl={statusPageUrl()}>
       {children}
-      <PublicFooter />
-    </div>
+    </PublicBrandShell>
   )
 }

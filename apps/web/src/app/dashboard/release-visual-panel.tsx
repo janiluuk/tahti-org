@@ -5,7 +5,12 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ColorSchemeSchema, type VisualPreset, type ColorScheme } from '@tahti/shared'
+import {
+  ColorSchemeSchema,
+  DEFAULT_COLOR_SCHEME,
+  type VisualPreset,
+  type ColorScheme,
+} from '@tahti/shared'
 import { Alert, Button, Field, Panel, Text } from '@/components/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 import { updateReleaseVisual } from './channel-visual-actions'
@@ -29,20 +34,12 @@ function parseOrNull(json: string | null): ColorScheme | null {
   }
 }
 
-const BLANK: ColorScheme = {
-  bg: '#0a0f1e',
-  accent: '#7c3aed',
-  text: '#f1f5f9',
-  muted: '#64748b',
-  highlight: '#a78bfa',
-}
-
 export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
   const router = useRouter()
   const [preset, setPreset] = useState<VisualPreset>(initial.visualPreset)
   const extracted = parseOrNull(initial.paletteJson)
   const override = parseOrNull(initial.colorSchemeJson)
-  const [scheme, setScheme] = useState<ColorScheme>(override ?? extracted ?? BLANK)
+  const [scheme, setScheme] = useState<ColorScheme>(override ?? extracted ?? DEFAULT_COLOR_SCHEME)
   const [useOverride, setUseOverride] = useState(!!override)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)

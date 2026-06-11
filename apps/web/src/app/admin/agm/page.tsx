@@ -39,8 +39,8 @@ function motionStateBadge(state: string) {
   const styles: Record<string, string> = {
     DRAFT: 'var(--muted)',
     OPEN: 'var(--cyan)',
-    CLOSED: '#8892a4',
-    CANCELLED: '#8892a4',
+    CLOSED: 'var(--muted)',
+    CANCELLED: 'var(--muted)',
   }
   return (
     <span
