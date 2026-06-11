@@ -62,7 +62,14 @@ See also [`testing.md`](testing.md) for Vitest / journey prerequisites.
 | Wildcard `*.tahti.live` | Channel slug routing | #123 |
 | Custom domain | TXT verify flow, verified badge | #123 |
 
-**Automated:** `pnpm test:e2e:journeys:listener`, `pnpm test:e2e:live-chat`
+**Automated:** `pnpm test` (journey suites below), `pnpm test:e2e:journeys:listener`, `pnpm test:e2e:live-chat`
+
+| Vitest journey file | Covers |
+|---------------------|--------|
+| `persona-journeys.test.ts` | Listener, artist studio, member governance, director admin, ops health |
+| `vital-flows.test.ts` | Onboarding, fan subs, catalog gates, live broadcast, governance vote |
+| `public-surfaces-journey.test.ts` | Home/Discover stats + channels, radio, venues directory, status |
+| `tahti-radio-journey.test.ts` | Tahti Radio channel, chat tokens, announcements, member relay |
 
 ---
 
