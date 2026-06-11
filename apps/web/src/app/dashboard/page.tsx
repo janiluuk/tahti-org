@@ -907,7 +907,12 @@ export default async function DashboardPage() {
                 >
                   <UploadForm />
                   {archiveItemsForEdit.length === 0 ? (
-                    <p className="studio-empty studio-mt-sm studio-mb-0">No archive items yet.</p>
+                    <div className="studio-empty-card studio-mt-sm studio-mb-0">
+                      <p className="studio-empty-card__text">No archive items yet.</p>
+                      <p className="studio-empty-card__hint">
+                        Upload a set above — it will appear on your channel once published.
+                      </p>
+                    </div>
                   ) : (
                     <ul className="studio-list studio-mt-sm">
                       {archiveItemsForEdit.map((item) => {

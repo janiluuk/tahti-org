@@ -179,9 +179,12 @@ export default async function StatsPage() {
       </div>
 
       {!hasData && (
-        <p className="studio-text-muted-sm studio-mt-xl">
-          Stats will appear here once listeners download tracks or click your smart links.
-        </p>
+        <div className="studio-empty-card studio-mt-xl">
+          <p className="studio-empty-card__text">No listener activity yet.</p>
+          <p className="studio-empty-card__hint">
+            Stats appear once listeners play tracks, download sets, or use your smart links.
+          </p>
+        </div>
       )}
     </PageShell>
   )

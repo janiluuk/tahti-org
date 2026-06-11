@@ -618,6 +618,26 @@
   margin-bottom: 1rem;
 }
 
+[data-tahti-ui='studio'] .studio-empty-card {
+  padding: var(--space-6) var(--space-5);
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+[data-tahti-ui='studio'] .studio-empty-card__text {
+  margin: 0 0 var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-body);
+}
+
+[data-tahti-ui='studio'] .studio-empty-card__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 [data-tahti-ui='studio'] .studio-text-error {
   color: var(--coral);
   font-size: 0.8rem;
