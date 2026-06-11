@@ -29,17 +29,20 @@
 }
 
 [data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .listen-shell,
-[data-tahti-ui='brand'].brand-channel.brand-channel--canvas .listen-shell,
 [data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .home-shell,
-[data-tahti-ui='brand'].brand-channel.brand-channel--canvas .home-shell {
+[data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .radio-shell {
   position: relative;
   z-index: 1;
 }
 
-/* /radio — dimmed BgCanvas + dark scrim so content stays readable */
+/* /radio — calm gateway bg + thin dark veil (same public shell as Home / Discover) */
+[data-tahti-ui='brand'].brand-channel--radio {
+  background: transparent;
+}
+
 [data-tahti-ui='brand'].brand-channel--radio .bg-canvas--subtle {
-  background: #030508;
-  filter: blur(22px) brightness(0.38) saturate(0.55);
+  background: #060a14;
+  filter: blur(32px) brightness(0.42) saturate(0.35);
 }
 
 [data-tahti-ui='brand'].brand-channel--radio::before {
@@ -48,18 +51,17 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgba(3, 5, 10, 0.72) 0%,
-    rgba(3, 5, 10, 0.82) 45%,
-    rgba(2, 4, 8, 0.88) 100%
-  );
+  background: rgba(5, 8, 16, 0.48);
 }
 
-[data-tahti-ui='brand'].brand-channel--radio .ch-header,
+[data-tahti-ui='brand'].brand-channel--radio .radio-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 [data-tahti-ui='brand'].brand-channel--radio .ch-body {
-  position: relative;
-  z-index: 1;
+  flex: 1;
 }
 
 /* M31: artist color scheme overrides (--channel-* set by ChannelColorScheme) */
