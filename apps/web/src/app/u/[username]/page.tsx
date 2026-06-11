@@ -200,7 +200,16 @@ export default async function ArtistProfilePage({ params }: { params: { username
             {releases.length > 0 && <div className="prof-sec-count">{releases.length} total</div>}
           </div>
           {releases.length === 0 ? (
-            <p className="prof-list-meta">No published releases yet.</p>
+            <div className="public-empty-card">
+              <p className="public-empty-card__text">No published releases yet.</p>
+              <p className="public-empty-card__hint">
+                {isLive && links.channel ? (
+                  <Link href={links.channel}>Tune in live</Link>
+                ) : (
+                  'New releases appear here when the artist publishes.'
+                )}
+              </p>
+            </div>
           ) : (
             <ul className="prof-release-grid">
               {releases.map((r) => {

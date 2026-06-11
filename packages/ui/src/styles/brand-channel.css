@@ -1172,8 +1172,7 @@
 }
 
 [data-tahti-ui='brand'] .prof-page--narrow {
-  max-width: 760px;
-  padding: 1.5rem 1.5rem 3rem;
+  padding: var(--space-6) var(--space-5) var(--space-12);
 }
 
 [data-tahti-ui='brand'] .prof-cover {
