@@ -24,7 +24,15 @@ export type { StudioCollapseProps } from './StudioCollapse'
 export { BrandLogo } from './BrandLogo'
 export { BrowserFrame } from './BrowserFrame'
 export { EmbedShell } from './EmbedShell'
-export { StatCard, StatCardGrid, type StatCardProps, type StatCardGridProps } from './StatCard'
+export {
+  StatCard,
+  StatCardGrid,
+  StatCardStrip,
+  type StatCardProps,
+  type StatCardGridProps,
+  type StatCardStripProps,
+  type StatCardLayout,
+} from './StatCard'
 export {
   BrandText,
   BrandHeading,

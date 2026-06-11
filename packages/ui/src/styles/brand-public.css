@@ -220,47 +220,21 @@
   margin: 0 0 1rem;
 }
 
-[data-tahti-ui='brand'] .brand-public .brand-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+[data-tahti-ui='brand'] .brand-public .stat-card-grid {
   gap: 1rem;
   margin-bottom: 2.5rem;
 }
 
-@media (max-width: 768px) {
-  [data-tahti-ui='brand'] .brand-public .brand-stat-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-[data-tahti-ui='brand'] .brand-public .brand-stat-card {
+[data-tahti-ui='brand'] .brand-public .stat-card {
   padding: 1rem 1.25rem;
   border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--card);
 }
 
-[data-tahti-ui='brand'] .brand-public .brand-stat-card__label {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-bottom: 0.25rem;
-}
-
-[data-tahti-ui='brand'] .brand-public .brand-stat-card__value {
+[data-tahti-ui='brand'] .brand-public .stat-card__value {
   font-size: 1.4rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--text);
-}
-
-[data-tahti-ui='brand'] .brand-public .brand-stat-card__value--positive {
-  color: var(--green);
-}
-
-[data-tahti-ui='brand'] .brand-public .brand-stat-card__subtitle {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin-top: 0.15rem;
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-table-wrap {
@@ -1087,15 +1061,19 @@
 }
 
 /* ---- Stat card color variants (transparency page) ---- */
-[data-tahti-ui='brand'] .brand-public .brand-stat-card--revenue {
+[data-tahti-ui='brand'] .brand-public .stat-card--revenue {
   border-top: 2px solid var(--green);
 }
 
-[data-tahti-ui='brand'] .brand-public .brand-stat-card--cost {
+[data-tahti-ui='brand'] .brand-public .stat-card--revenue .stat-card__value {
+  color: var(--green);
+}
+
+[data-tahti-ui='brand'] .brand-public .stat-card--cost {
   border-top: 2px solid var(--coral);
 }
 
-[data-tahti-ui='brand'] .brand-public .brand-stat-card--surplus {
+[data-tahti-ui='brand'] .brand-public .stat-card--surplus {
   border-top: 2px solid var(--cyan);
 }
 
