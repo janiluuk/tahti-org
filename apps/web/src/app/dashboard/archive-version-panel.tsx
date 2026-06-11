@@ -204,7 +204,9 @@ export function ArchiveVersionPanel({
           {publishMessage && (
             <p className="studio-text-muted-sm studio-mt-sm studio-m-0">{publishMessage}</p>
           )}
-          {publishError && <p className="studio-text-error studio-mt-sm studio-m-0">{publishError}</p>}
+          {publishError && (
+            <p className="studio-text-error studio-mt-sm studio-m-0">{publishError}</p>
+          )}
         </div>
       )}
 
