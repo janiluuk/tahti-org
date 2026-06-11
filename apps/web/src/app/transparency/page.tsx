@@ -174,7 +174,13 @@ export default async function TransparencyPage() {
       )}
 
       {rollups.length === 0 && (
-        <p className="brand-empty">No financial data published yet for {ytd.year}.</p>
+        <div className="public-empty-card">
+          <p className="public-empty-card__text">No financial data published yet for {ytd.year}.</p>
+          <p className="public-empty-card__hint">
+            Monthly figures appear here after board approval.{' '}
+            <Link href="/transparency/methodology">How we report →</Link>
+          </p>
+        </div>
       )}
 
       {resolutions.length > 0 && (
