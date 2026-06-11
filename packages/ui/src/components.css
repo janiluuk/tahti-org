@@ -2043,3 +2043,277 @@
   .section      { padding: 80px 20px 60px; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ADMIN/TRANSPARENCY PRIMITIVES (KpiCard, StatusPill, DataRowList, …)
+   See packages/ui/src/brand/AdminPrimitives.tsx
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── KpiCard ───────────────────────────────────────────────────────── */
+
+.kpi-card-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.kpi-card {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.kpi-card__value {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.kpi-card__label {
+  margin-top: var(--space-2);
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted2);
+}
+
+.kpi-card--cyan .kpi-card__value { color: var(--cyan); }
+.kpi-card--amber .kpi-card__value { color: var(--amber); }
+.kpi-card--green .kpi-card__value { color: var(--green); }
+.kpi-card--purple .kpi-card__value { color: var(--purple); }
+.kpi-card--coral .kpi-card__value { color: var(--coral); }
+.kpi-card--neutral .kpi-card__value { color: var(--text); }
+
+@media (max-width: 640px) {
+  .kpi-card-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── StatusPill ────────────────────────────────────────────────────── */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-pill--green {
+  background: rgba(63, 224, 122, 0.12);
+  color: var(--green);
+}
+
+.status-pill--amber {
+  background: rgba(255, 184, 64, 0.12);
+  color: var(--amber);
+}
+
+.status-pill--purple {
+  background: rgba(167, 139, 250, 0.12);
+  color: var(--purple);
+}
+
+.status-pill--coral {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--coral);
+}
+
+.status-pill--cyan {
+  background: rgba(34, 211, 238, 0.12);
+  color: var(--cyan);
+}
+
+/* ── DataRowList ───────────────────────────────────────────────────── */
+
+.data-row-list {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.data-row-list__header {
+  display: grid;
+  padding: 7px 12px;
+  background: var(--card);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted2);
+}
+
+.data-row-list__row {
+  display: grid;
+  align-items: center;
+  padding: 9px 12px;
+  font-size: 11px;
+  border-top: 1px solid var(--border);
+  gap: var(--space-2);
+}
+
+.data-row-list__row:first-of-type {
+  border-top: none;
+}
+
+.data-row-list__empty {
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Money figures inside DataRowList rows. */
+.money-cell {
+  font-family: var(--font-mono);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.money-cell--positive { color: var(--green); }
+.money-cell--negative { color: var(--coral); }
+
+/* ── AdminMiniSidebar ──────────────────────────────────────────────── */
+
+.admin-mini-sidebar {
+  width: 118px;
+  flex: none;
+  background: #0e1424;
+  padding: var(--space-3) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-mini-sidebar__group-label {
+  padding: 0 var(--space-2);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted2);
+  margin-bottom: var(--space-1);
+}
+
+.admin-mini-sidebar__item {
+  display: block;
+  padding: 6px 8px;
+  margin: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  color: var(--muted);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+}
+
+.admin-mini-sidebar__item:hover {
+  color: var(--text);
+}
+
+.admin-mini-sidebar__item--active {
+  background: rgba(34, 211, 238, 0.08);
+  border-left: 2px solid var(--cyan);
+  color: var(--text);
+  margin-left: calc(var(--space-2) - 2px);
+}
+
+/* ── AdminContextStrip ─────────────────────────────────────────────── */
+
+.admin-context-strip {
+  width: 100%;
+  background: rgba(255, 184, 64, 0.1);
+  border-bottom: 1px solid rgba(255, 184, 64, 0.3);
+  padding: 6px 16px;
+  font-size: 10px;
+  color: var(--amber);
+}
+
+/* ── MoneyBreakdown ────────────────────────────────────────────────── */
+
+.money-breakdown {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}
+
+.money-breakdown__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  line-height: 1.8;
+  font-size: 11px;
+}
+
+.money-breakdown__amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.money-breakdown__row--green .money-breakdown__amount { color: var(--green); }
+.money-breakdown__row--amber .money-breakdown__amount { color: var(--amber); }
+.money-breakdown__row--cyan .money-breakdown__amount { color: var(--cyan); }
+
+.money-breakdown__row--total {
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+  font-weight: var(--weight-medium);
+}
+
+.money-breakdown__row--total .money-breakdown__amount {
+  color: var(--green);
+}
+
+/* ── Progress bar ──────────────────────────────────────────────────── */
+
+.progress-bar + .progress-bar {
+  margin-top: var(--space-3);
+}
+
+.progress-bar__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-bottom: var(--space-1);
+}
+
+.progress-bar__amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.progress-bar__track {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+}
+
+.progress-bar__fill--green { background: var(--green); }
+.progress-bar__fill--cyan { background: var(--cyan); }
+
+@media (max-width: 768px) {
+  .admin-mini-sidebar {
+    display: none;
+  }
+}
