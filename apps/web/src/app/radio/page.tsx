@@ -110,15 +110,11 @@ export default async function RadioPage() {
             </header>
 
             {playback.kind === 'none' ? (
-              <div className="ch-player-wrap">
-                <div className="ch-player-inner">
-                  <p className="ch-archive-empty">
-                    Radio stream is not configured. Set <code>TAHTI_RADIO_VIDEO_URL</code>{' '}
-                    (YouTube/Vimeo) or <code>TAHTI_RADIO_AUDIO_URL</code> (HLS), and{' '}
-                    <code>TAHTI_RADIO_STREAM_MODE</code> to <code>video</code> or <code>audio</code>
-                    .
-                  </p>
-                </div>
+              <div className="public-empty-card">
+                <p className="public-empty-card__text">Tahti Radio is temporarily offline.</p>
+                <p className="public-empty-card__hint">
+                  <a href="/listen">Browse live channels</a> or check back soon.
+                </p>
               </div>
             ) : (
               <RadioPlayerSection playback={playback} slug={TAHTI_RADIO_SLUG} />

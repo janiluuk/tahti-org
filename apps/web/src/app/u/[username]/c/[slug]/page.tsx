@@ -148,7 +148,10 @@ export default async function CollectionPage({
 
       <section className="prof-section">
         {data.items.length === 0 ? (
-          <p className="prof-list-meta">This collection is empty.</p>
+          <div className="public-empty-card">
+            <p className="public-empty-card__text">This collection is empty.</p>
+            <p className="public-empty-card__hint">Items appear here when the artist adds them.</p>
+          </div>
         ) : (
           <ol className="prof-list prof-collection-items">
             {data.items.map((item) => {

@@ -121,7 +121,12 @@ export default async function VenueProfilePage({ params }: { params: { slug: str
           Upcoming broadcasts
         </Heading>
         {upcoming.length === 0 ? (
-          <Text tone="muted">No upcoming broadcasts scheduled.</Text>
+          <div className="public-empty-card">
+            <p className="public-empty-card__text">No upcoming broadcasts scheduled.</p>
+            <p className="public-empty-card__hint">
+              Check back later for new events at this venue.
+            </p>
+          </div>
         ) : (
           <ul className="venue-event-list">
             {upcoming.map((b) => (
