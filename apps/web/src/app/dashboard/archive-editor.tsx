@@ -71,7 +71,9 @@ export default function ArchiveEditor({
             {item.genre != null && ` · ${String(item.genre)}`}
             {item.sourceFormat != null &&
               ` · Source: ${String(item.sourceFormat)}${
-                item.sourceBitrateKbps != null ? ` ${String(item.sourceBitrateKbps)} kbps` : ' (lossless)'
+                item.sourceBitrateKbps != null
+                  ? ` ${String(item.sourceBitrateKbps)} kbps`
+                  : ' (lossless)'
               }`}
           </div>
         </div>
