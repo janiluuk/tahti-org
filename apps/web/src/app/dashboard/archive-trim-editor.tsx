@@ -35,6 +35,12 @@ export function ArchiveTrimEditor({
   const [peakNormalize, setPeakNormalize] = useState(false)
   const [lufsTarget, setLufsTarget] = useState<'none' | 'stream' | 'club'>('none')
   const [limiterEnabled, setLimiterEnabled] = useState(false)
+  const [highPassHz, setHighPassHz] = useState(0)
+  const [lowPassHz, setLowPassHz] = useState(0)
+  const [lowGainDb, setLowGainDb] = useState(0)
+  const [midGainDb, setMidGainDb] = useState(0)
+  const [highGainDb, setHighGainDb] = useState(0)
+  const [compressorEnabled, setCompressorEnabled] = useState(false)
   const [versionLabel, setVersionLabel] = useState('')
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -151,6 +157,10 @@ export function ArchiveTrimEditor({
         peakNormalize,
         lufsTarget,
         limiterEnabled,
+        highPassHz,
+        lowPassHz,
+        eq: { lowGainDb, midGainDb, highGainDb },
+        compressorEnabled,
         versionLabel: label,
         activate: true,
       })
@@ -252,6 +262,84 @@ export function ArchiveTrimEditor({
                     disabled={isPending}
                   />
                   Master limiter
+                </label>
+              </div>
+
+              <h5 className="studio-text-strong-sm studio-mt-md studio-mb-sm">EQ &amp; dynamics</h5>
+              <div className="studio-trim-controls">
+                <label className="studio-field studio-field--inline">
+                  <span className="studio-label">High-pass (Hz)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={2000}
+                    step={1}
+                    value={highPassHz}
+                    onChange={(e) => setHighPassHz(Number(e.target.value))}
+                    className="studio-input studio-input--narrow"
+                    disabled={isPending}
+                  />
+                </label>
+                <label className="studio-field studio-field--inline">
+                  <span className="studio-label">Low-pass (Hz)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={20000}
+                    step={1}
+                    value={lowPassHz}
+                    onChange={(e) => setLowPassHz(Number(e.target.value))}
+                    className="studio-input studio-input--narrow"
+                    disabled={isPending}
+                  />
+                </label>
+                <label className="studio-field studio-field--inline">
+                  <span className="studio-label">Low shelf (dB)</span>
+                  <input
+                    type="number"
+                    min={-12}
+                    max={12}
+                    step={0.5}
+                    value={lowGainDb}
+                    onChange={(e) => setLowGainDb(Number(e.target.value))}
+                    className="studio-input studio-input--narrow"
+                    disabled={isPending}
+                  />
+                </label>
+                <label className="studio-field studio-field--inline">
+                  <span className="studio-label">Mid (dB)</span>
+                  <input
+                    type="number"
+                    min={-12}
+                    max={12}
+                    step={0.5}
+                    value={midGainDb}
+                    onChange={(e) => setMidGainDb(Number(e.target.value))}
+                    className="studio-input studio-input--narrow"
+                    disabled={isPending}
+                  />
+                </label>
+                <label className="studio-field studio-field--inline">
+                  <span className="studio-label">High shelf (dB)</span>
+                  <input
+                    type="number"
+                    min={-12}
+                    max={12}
+                    step={0.5}
+                    value={highGainDb}
+                    onChange={(e) => setHighGainDb(Number(e.target.value))}
+                    className="studio-input studio-input--narrow"
+                    disabled={isPending}
+                  />
+                </label>
+                <label className="studio-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={compressorEnabled}
+                    onChange={(e) => setCompressorEnabled(e.target.checked)}
+                    disabled={isPending}
+                  />
+                  Compressor
                 </label>
               </div>
 

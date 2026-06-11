@@ -11,7 +11,9 @@ import {
   activateArchiveVersion,
   completeArchiveVersionUpload,
   fetchArchiveVersions,
+  fetchReleasesForPublish,
   prepareArchiveVersionUpload,
+  publishArchiveToRelease,
 } from './archive-actions'
 
 export function ArchiveVersionPanel({
@@ -28,6 +30,12 @@ export function ArchiveVersionPanel({
   const [uploading, setUploading] = useState(false)
   const [isPending, startTransition] = useTransition()
 
+  const [releases, setReleases] = useState<Array<{ id: string; title: string }>>([])
+  const [selectedReleaseId, setSelectedReleaseId] = useState('')
+  const [publishMessage, setPublishMessage] = useState<string | null>(null)
+  const [publishError, setPublishError] = useState<string | null>(null)
+  const [isPublishing, startPublishTransition] = useTransition()
+
   const load = useCallback(async () => {
     const res = await fetchArchiveVersions(itemId)
     if (res.error) setError(res.error)
@@ -39,6 +47,34 @@ export function ArchiveVersionPanel({
     if (itemStatus === 'READY') void load()
     else setLoading(false)
   }, [itemStatus, load])
+
+  useEffect(() => {
+    if (itemStatus !== 'READY') return
+    void (async () => {
+      const res = await fetchReleasesForPublish()
+      if (res.releases) {
+        setReleases(res.releases)
+        if (res.releases.length > 0) setSelectedReleaseId(res.releases[0].id)
+      }
+    })()
+  }, [itemStatus])
+
+  function publishToRelease() {
+    if (!selectedReleaseId) {
+      setPublishError('Choose a release first')
+      return
+    }
+    setPublishError(null)
+    setPublishMessage(null)
+    startPublishTransition(async () => {
+      const res = await publishArchiveToRelease(itemId, { releaseId: selectedReleaseId })
+      if (res.error) {
+        setPublishError(res.error)
+        return
+      }
+      setPublishMessage('Sent to release for transcoding — check the release tracklist shortly.')
+    })
+  }
 
   async function handleUpload(file: File) {
     const label = versionLabel.trim()
@@ -136,6 +172,41 @@ export function ArchiveVersionPanel({
           Open in multitrack editor
         </Link>
       </div>
+
+      {releases.length > 0 && (
+        <div className="studio-divider">
+          <h4 className="studio-text-strong-sm studio-m-0 studio-mb-sm">Publish to release</h4>
+          <p className="studio-text-muted-sm studio-m-0 studio-mb-md">
+            Send the active version to one of your releases as a track.
+          </p>
+          <div className="studio-row studio-row--wrap">
+            <select
+              value={selectedReleaseId}
+              onChange={(e) => setSelectedReleaseId(e.target.value)}
+              disabled={isPublishing}
+              className="studio-input studio-input--grow"
+            >
+              {releases.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.title}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={publishToRelease}
+              disabled={isPublishing}
+              className="studio-btn-ghost"
+            >
+              {isPublishing ? 'Publishing…' : 'Publish'}
+            </button>
+          </div>
+          {publishMessage && (
+            <p className="studio-text-muted-sm studio-mt-sm studio-m-0">{publishMessage}</p>
+          )}
+          {publishError && <p className="studio-text-error studio-mt-sm studio-m-0">{publishError}</p>}
+        </div>
+      )}
 
       <div className="studio-row studio-row--wrap">
         <input

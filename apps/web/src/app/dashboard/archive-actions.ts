@@ -133,6 +133,10 @@ export async function bounceArchiveTrim(
     peakNormalize: boolean
     lufsTarget?: 'none' | 'stream' | 'club'
     limiterEnabled?: boolean
+    highPassHz?: number
+    lowPassHz?: number
+    eq?: { lowGainDb: number; midGainDb: number; highGainDb: number }
+    compressorEnabled?: boolean
     versionLabel: string
     activate: boolean
   },
@@ -149,6 +153,40 @@ export async function bounceArchiveTrim(
   }
   const data = (await res.json()) as { versionId: string }
   return { versionId: data.versionId, error: null }
+}
+
+export async function fetchReleasesForPublish(): Promise<{
+  releases?: Array<{ id: string; title: string }>
+  error: string | null
+}> {
+  const res = await fetch(`${apiUrl}/api/me/releases`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to load releases' }
+  }
+  const releases = (await res.json()) as Array<{ id: string; title: string }>
+  return { releases: releases.map((r) => ({ id: r.id, title: r.title })), error: null }
+}
+
+export async function publishArchiveToRelease(
+  itemId: string,
+  body: { releaseId: string; versionId?: string; title?: string },
+): Promise<{ trackId?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/publish-to-release`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Publish failed' }
+  }
+  const data = (await res.json()) as { trackId: string }
+  return { trackId: data.trackId, error: null }
 }
 
 export async function fetchDownloadGateStats(itemId: string): Promise<{
