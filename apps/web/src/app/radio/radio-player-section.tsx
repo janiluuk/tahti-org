@@ -36,7 +36,7 @@ function RadioAudioPlayer({ audioUrl, slug }: { audioUrl: string; slug: string }
     <>
       <div id="live-player" className="ch-player-wrap">
         <div className="ch-player-inner">
-          <HlsPlayer url={audioUrl} />
+          <HlsPlayer url={audioUrl} title="Tahti Radio" subtitle="24/7 live" href="/radio" />
         </div>
         <ReactionsOverlay slug={slug} />
       </div>

@@ -4,6 +4,8 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import { Inter, Space_Grotesk } from 'next/font/google'
+import { PlayerProvider } from '@/contexts/player-context'
+import { MiniPlayer } from '@/components/mini-player'
 import './globals.css'
 
 const inter = Inter({
@@ -27,7 +29,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body>
-        <main>{children}</main>
+        <PlayerProvider>
+          <main>{children}</main>
+          <MiniPlayer />
+        </PlayerProvider>
       </body>
     </html>
   )

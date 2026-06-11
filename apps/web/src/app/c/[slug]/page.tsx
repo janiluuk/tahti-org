@@ -269,7 +269,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
             )}
 
-            {hlsUrl && <LivePlayerSection url={hlsUrl} slug={slug} />}
+            {hlsUrl && (
+              <LivePlayerSection url={hlsUrl} slug={slug} title={channel.user.displayName} />
+            )}
 
             {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
 

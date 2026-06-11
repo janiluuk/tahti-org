@@ -3,11 +3,10 @@
 
 'use client'
 
-import { useState } from 'react'
 import type { VisualPreset } from '@tahti/shared'
 import { ArchiveWaveform } from '@/components/archive-waveform'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
-import { useAudioAnalyser } from '@/lib/use-audio-analyser'
+import { usePlayer } from '@/contexts/player-context'
 import { ArchiveDownloadButton } from './archive-download'
 
 interface Props {
@@ -15,6 +14,7 @@ interface Props {
   artistUsername: string
   item: {
     id: string
+    title: string
     audioUrl: string
     peaks?: number[] | null
     visualPreset?: VisualPreset | string | null
@@ -25,11 +25,28 @@ interface Props {
 }
 
 export function ArchiveItemPlayback({ channelSlug, artistUsername, item, colorSchemeJson }: Props) {
-  const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null)
-  const [playing, setPlaying] = useState(false)
-  const analyser = useAudioAnalyser(audioEl, playing)
+  const { track, playing, analyser, load, togglePlay } = usePlayer()
+  const isCurrent = track?.id === item.id
   const preset = (item.visualPreset ?? 'MINIMAL') as VisualPreset
-  const showViz = playing && preset !== 'MINIMAL'
+  const showViz = isCurrent && playing && preset !== 'MINIMAL'
+
+  async function handleTogglePlay() {
+    if (!isCurrent) {
+      load(
+        {
+          id: item.id,
+          kind: 'archive',
+          url: item.audioUrl,
+          title: item.title,
+          subtitle: `@${artistUsername}`,
+          href: `/c/${channelSlug}#archive-item-${item.id}`,
+        },
+        { autoplay: true },
+      )
+      return
+    }
+    await togglePlay()
+  }
 
   return (
     <div className="ch-archive-playback">
@@ -42,16 +59,18 @@ export function ArchiveItemPlayback({ channelSlug, artistUsername, item, colorSc
         />
       )}
       <ArchiveWaveform peaks={item.peaks} />
-      <audio
-        ref={setAudioEl}
-        controls
-        src={item.audioUrl}
-        className="ch-archive-audio"
-        data-testid="channel-archive-player"
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
-      />
+      <div className="ch-archive-controls">
+        <button
+          type="button"
+          className="ch-archive-controls__play"
+          onClick={() => void handleTogglePlay()}
+          aria-label={isCurrent && playing ? 'Pause' : 'Play'}
+          data-testid="channel-archive-play-toggle"
+        >
+          {isCurrent && playing ? '❚❚' : '▶'}
+        </button>
+        <span className="ch-archive-controls__title">{item.title}</span>
+      </div>
       <ArchiveDownloadButton
         channelSlug={channelSlug}
         artistUsername={artistUsername}

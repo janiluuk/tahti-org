@@ -444,6 +444,37 @@
   width: 100%;
 }
 
+[data-tahti-ui='brand'] .ch-archive-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.4rem 0;
+}
+
+[data-tahti-ui='brand'] .ch-archive-controls__play {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-controls__title {
+  font-size: 0.85rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 [data-tahti-ui='brand'] .ch-download {
   margin-top: 0.5rem;
   font-size: 0.85rem;
