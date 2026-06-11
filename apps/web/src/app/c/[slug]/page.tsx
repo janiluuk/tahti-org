@@ -121,6 +121,21 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   }
   const tags = [...tagSet].slice(0, 8)
 
+  let listenerCount: number | null = null
+  if (channel.state === 'LIVE') {
+    try {
+      const presenceRes = await fetch(`${apiUrl}/api/channels/${slug}/presence`, {
+        cache: 'no-store',
+      })
+      if (presenceRes.ok) {
+        const data = (await presenceRes.json()) as { numClients: number }
+        listenerCount = data.numClients
+      }
+    } catch {
+      listenerCount = null
+    }
+  }
+
   function fmtDuration(secs: number): string {
     const h = Math.floor(secs / 3600)
     const m = Math.floor((secs % 3600) / 60)
@@ -132,6 +147,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     <ChannelPageShell
       isLive={channel.state === 'LIVE'}
       artistHandle={channel.user.username}
+      listenerCount={listenerCount}
       user={user}
       main={
         <div className="ch-page-content">
@@ -270,7 +286,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               </div>
 
               {items.length === 0 ? (
-                <p className="ch-archive-empty">No archive items yet.</p>
+                <div className="public-empty-card">
+                  <p className="public-empty-card__text">No archive items yet.</p>
+                  <p className="public-empty-card__hint">
+                    Past broadcasts appear here once published from the studio.
+                  </p>
+                </div>
               ) : (
                 <ul className="ch-archive-list">
                   {items.map((item) => {
