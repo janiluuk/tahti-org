@@ -691,6 +691,14 @@ Artists want to personalize their channel and release pages with Three.js/WebGL 
 
 ---
 
+### Archive uploads — preserve source quality, no upscaling (2026-06-11) (PLAT-078)
+
+| Status | ID | Description | Size | Priority |
+|:---:|:---|---|:---:|:---:|
+| [x] | **PLAT-078** | **Detect and preserve source audio quality on archive upload** — `/api/uploads/*` and version re-uploads already accepted MP3/AAC/M4A/FLAC/WAV/AIFF (`audio/*`), but lossy sources were always re-encoded to a fixed 192kbps MP3, which both upscaled lower-bitrate uploads and degraded higher-bitrate ones. The transcode worker (`transcode.ts`, `transcode-version.ts`) now ffprobes the source codec + bitrate, stores `ArchiveItem.sourceFormat`/`sourceBitrateKbps` (and the same on `ArchiveItemVersion`, synced via `ensureInitialVersion`/`syncActiveVersionToItem`), and picks an MP3 output bitrate via `chooseLossyOutputBitrateKbps()` (`packages/shared/src/archive-playback.ts`) that never exceeds the source bitrate (no upscaling) and never re-encodes a higher-bitrate source down to 192k (no quality loss). Lossless detection now also checks the audio codec (`isLosslessCodec`: FLAC/ALAC/PCM), so ALAC-in-M4A is kept lossless. Detected source format/bitrate is shown to artists in the archive item editor and per-version list (e.g. "Source: MP3 192 kbps" / "FLAC (lossless)"). | Medium | P1 |
+
+---
+
 ## Streaming infrastructure backlog
 
 Issues identified from streaming architecture review and user journey analysis. See `docs/technical/streaming-architecture.md` for full context.

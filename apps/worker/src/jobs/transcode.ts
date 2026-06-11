@@ -8,34 +8,44 @@ import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
 import { prisma, ensureInitialVersion } from '@tahti/db'
 import {
+  chooseLossyOutputBitrateKbps,
+  isLosslessCodec,
   isLosslessSource,
   mergeDetectedArchiveMetadata,
   mergeParsedArchiveTags,
   parseArchiveFileTags,
+  sourceFormatLabel,
 } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
 
-function ffprobeFormat(filePath: string): Promise<{ duration: number; format: string }> {
+function ffprobeFormat(
+  filePath: string,
+): Promise<{ duration: number; format: string; codec: string | null; bitrateKbps: number | null }> {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, metadata) => {
       if (err) return reject(err)
       const fmt = (metadata.format.format_name ?? '').split(',')[0]
+      const stream = metadata.streams.find((s) => s.codec_type === 'audio')
+      const rawBitrate = stream?.bit_rate ?? metadata.format.bit_rate
+      const bitrateKbps = rawBitrate ? Math.round(Number(rawBitrate) / 1000) : null
       resolve({
         duration: Math.round(metadata.format.duration ?? 0),
         format: fmt,
+        codec: stream?.codec_name ?? null,
+        bitrateKbps,
       })
     })
   })
 }
 
-function ffmpegToMp3(inputPath: string, outputPath: string): Promise<void> {
+function ffmpegToMp3(inputPath: string, outputPath: string, bitrateKbps: number): Promise<void> {
   return new Promise((resolve, reject) => {
     ffmpeg(inputPath)
       .audioFilters('loudnorm=I=-14:TP=-1.5:LRA=11:print_format=none')
-      .audioBitrate('192k')
+      .audioBitrate(`${bitrateKbps}k`)
       .format('mp3')
       .on('error', reject)
       .on('end', () => resolve())
@@ -131,8 +141,9 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     const sourceMeta = await ffprobeFormat(rawPath)
     const embeddedTags = await ffprobeEmbeddedTags(rawPath).catch(() => ({}))
     const tagPatch = await buildTagPatch(item, embeddedTags, rawPath, tmpDir, sourceMeta.duration)
-    const lossless = isLosslessSource(sourceMeta.format)
+    const lossless = isLosslessSource(sourceMeta.format) || isLosslessCodec(sourceMeta.codec)
     const peaks = (await extractWaveformPeaks(rawPath)) ?? undefined
+    const sourceFormat = sourceFormatLabel(sourceMeta.codec)
 
     if (lossless) {
       const flacPath = join(tmpDir, 'output.flac')
@@ -148,6 +159,8 @@ export async function processTranscodeJob(job: Job): Promise<void> {
           mp3Key: null,
           durationSec: sourceMeta.duration,
           peaks,
+          sourceFormat,
+          sourceBitrateKbps: null,
           ...tagPatch,
         },
       })
@@ -156,8 +169,11 @@ export async function processTranscodeJob(job: Job): Promise<void> {
       return
     }
 
+    // Lossy source: never re-encode at a higher bitrate than the source (no
+    // upscaling) and never drop below it either (no needless quality loss).
+    const outputBitrateKbps = chooseLossyOutputBitrateKbps(sourceMeta.bitrateKbps)
     const mp3Path = join(tmpDir, 'output.mp3')
-    await ffmpegToMp3(rawPath, mp3Path)
+    await ffmpegToMp3(rawPath, mp3Path, outputBitrateKbps)
     const mp3Key = `mp3/${item.channel.slug}/${itemId}.mp3`
     await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
 
@@ -168,6 +184,8 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         mp3Key,
         durationSec: sourceMeta.duration,
         peaks,
+        sourceFormat,
+        sourceBitrateKbps: sourceMeta.bitrateKbps,
         ...tagPatch,
       },
     })

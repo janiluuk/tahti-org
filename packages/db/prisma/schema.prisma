@@ -753,6 +753,8 @@ model ArchiveItem {
   mp3Key        String?
   flacKey       String?
   durationSec   Int?
+  sourceFormat       String?      // detected source codec, e.g. "MP3", "FLAC", "AAC", "WAV"
+  sourceBitrateKbps  Int?         // detected source bitrate (lossy only); null for lossless
   peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
   visualPreset  VisualPreset      @default(MINIMAL) // M31
   fileSizeBytes BigInt
@@ -784,6 +786,8 @@ model ArchiveItemVersion {
   mp3Key        String?
   flacKey       String?
   durationSec   Int?
+  sourceFormat       String?      // detected source codec, e.g. "MP3", "FLAC", "AAC", "WAV"
+  sourceBitrateKbps  Int?         // detected source bitrate (lossy only); null for lossless
   peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
   fileSizeBytes BigInt            @default(0)
   status        ArchiveItemStatus @default(PENDING)
