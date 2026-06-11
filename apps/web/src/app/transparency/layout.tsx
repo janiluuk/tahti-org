@@ -7,6 +7,7 @@ import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
 import '@tahti/ui/src/styles/brand-channel.css'
 import '@tahti/ui/src/styles/brand-public.css'
+import '@tahti/ui/src/styles/shells.css'
 import { getSessionUser } from '@/lib/session'
 import { statusPageUrl } from '@/lib/status-page'
 
