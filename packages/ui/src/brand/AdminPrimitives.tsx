@@ -18,7 +18,11 @@ export interface KpiCardProps {
 /** Small KPI tile — value in a bound color, uppercase label below. Always used inside <KpiCardRow>. */
 export function KpiCard({ color, value, label, className }: KpiCardProps) {
   return (
-    <div className={cn('kpi-card', `kpi-card--${color}`, className)} role="group" aria-label={label}>
+    <div
+      className={cn('kpi-card', `kpi-card--${color}`, className)}
+      role="group"
+      aria-label={label}
+    >
       <div className="kpi-card__value">{value}</div>
       <div className="kpi-card__label">{label}</div>
     </div>
