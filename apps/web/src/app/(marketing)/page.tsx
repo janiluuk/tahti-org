@@ -3,7 +3,7 @@
 
 import type { ChannelCard } from '@tahti/shared'
 import Link from 'next/link'
-import { BrandLogo } from '@tahti/ui'
+import { BrandLogo, StatCard, StatCardStrip } from '@tahti/ui'
 
 interface PlatformStats {
   activeArtists: number
@@ -58,15 +58,6 @@ function LiveTile({ channel }: { channel: ChannelCard }) {
   )
 }
 
-function StatPill({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="home-stat">
-      <span className="home-stat__value">{value}</span>
-      <span className="home-stat__label">{label}</span>
-    </div>
-  )
-}
-
 function formatHours(h: number): string {
   if (h >= 1000) return `${(h / 1000).toFixed(1)}k`
   return String(h)
@@ -115,13 +106,26 @@ export default async function HomePage() {
       )}
 
       {stats && (
-        <section className="home-stats" aria-label="Platform stats">
-          <StatPill value={String(stats.activeArtists)} label="active artists" />
-          <div className="home-stats__sep" aria-hidden />
-          <StatPill value={String(stats.broadcastsThisMonth)} label="broadcasts this month" />
-          <div className="home-stats__sep" aria-hidden />
-          <StatPill value={`${formatHours(stats.totalHours)} h`} label="broadcast in total" />
-        </section>
+        <StatCardStrip aria-label="Platform stats">
+          <StatCard
+            layout="inline"
+            variant="neutral"
+            value={String(stats.activeArtists)}
+            label="active artists"
+          />
+          <StatCard
+            layout="inline"
+            variant="neutral"
+            value={String(stats.broadcastsThisMonth)}
+            label="broadcasts this month"
+          />
+          <StatCard
+            layout="inline"
+            variant="neutral"
+            value={`${formatHours(stats.totalHours)} h`}
+            label="broadcast in total"
+          />
+        </StatCardStrip>
       )}
     </div>
   )
