@@ -23,7 +23,7 @@
 
 [data-tahti-ui='brand'] .brand-public .brand-page-header__title {
   font-size: 1.625rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   font-family: var(--font-head);
   margin: 0 0 0.75rem;
   padding-bottom: 0.875rem;
@@ -51,7 +51,7 @@
 /* Heading/Text from @tahti/ui on wide public pages */
 [data-tahti-ui='brand'] .brand-public .ui-heading--1:not(.brand-page-header__title) {
   font-size: 1.625rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   font-family: var(--font-head);
   margin: 0 0 1.75rem;
   padding-bottom: 0.875rem;
@@ -63,7 +63,7 @@
 [data-tahti-ui='brand'] .brand-public .brand-section > .ui-heading--2,
 [data-tahti-ui='brand'] .brand-public .brand-prose .brand-section > .ui-heading--2 {
   font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   margin: 0 0 0.875rem;
   padding-bottom: 0.5rem;
   padding-left: 11px;
@@ -104,7 +104,7 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-section dt {
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--cyan);
   font-size: 0.8125rem;
   font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
@@ -155,7 +155,7 @@
 
 [data-tahti-ui='brand'] .brand-public h1 {
   font-family: var(--font-head);
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   margin: 0 0 0.5rem;
 }
 
@@ -188,7 +188,7 @@
   background: var(--amber);
   color: var(--bg);
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   text-decoration: none;
 }
 
@@ -204,7 +204,7 @@
   background: var(--card2);
   color: var(--text);
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   text-align: center;
 }
 
@@ -215,7 +215,7 @@
 
 [data-tahti-ui='brand'] .brand-public .brand-section__title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--muted);
   margin: 0 0 1rem;
 }
@@ -234,7 +234,7 @@
 
 [data-tahti-ui='brand'] .brand-public .stat-card__value {
   font-size: 1.4rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-table-wrap {
@@ -255,7 +255,7 @@
 [data-tahti-ui='brand'] .brand-public .brand-table th {
   padding: 0.5rem 0.75rem;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-table td {
@@ -291,7 +291,7 @@
 [data-tahti-ui='brand'] .brand-public .brand-category__title {
   font-size: 0.6875rem;
   color: color-mix(in srgb, var(--amber) 70%, var(--muted));
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   margin-bottom: 0.25rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -338,7 +338,7 @@
   padding: 2px 7px;
   border-radius: 999px;
   font-size: 0.625rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   background: color-mix(in srgb, var(--cyan) 12%, var(--card));
@@ -355,14 +355,14 @@
 
 [data-tahti-ui='brand'] .brand-public .status-page__title {
   font-size: 1.75rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   margin: 0 0 1rem;
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page__banner {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-sm);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   margin: 0 0 1rem;
 }
 
@@ -436,7 +436,7 @@
 /* ---- Prose (help, methodology) ---- */
 [data-tahti-ui='brand'] .brand-public .brand-prose h1 {
   font-size: 1.625rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   font-family: var(--font-head);
   margin: 0 0 1.75rem;
   padding-bottom: 0.875rem;
@@ -446,7 +446,7 @@
 
 [data-tahti-ui='brand'] .brand-public .brand-prose h2 {
   font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   margin: 2.5rem 0 0.875rem;
   padding-bottom: 0.5rem;
   padding-left: 11px;
@@ -469,7 +469,7 @@
 
 [data-tahti-ui='brand'] .brand-public .brand-prose h3 {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   margin: 1.75rem 0 0.5rem;
   color: var(--text);
 }
@@ -520,7 +520,7 @@
   background: color-mix(in srgb, var(--cyan) 15%, transparent);
   color: var(--cyan);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   margin-top: 0.1rem;
 }
 
@@ -565,7 +565,7 @@
 }
 
 [data-tahti-ui='brand'] .brand-public .brand-prose dt {
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--cyan);
   font-size: 0.8125rem;
   font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
@@ -669,7 +669,7 @@
   padding: 3px 8px;
   border-radius: 999px;
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   flex-shrink: 0;
@@ -727,7 +727,7 @@
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--text);
 }
 
@@ -766,7 +766,7 @@
   border: none;
   background: var(--cyan);
   color: var(--white);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   font-size: 0.9375rem;
   cursor: pointer;
   transition: opacity 0.15s;
@@ -793,7 +793,7 @@
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--text);
 }
 
@@ -832,7 +832,7 @@
   border: none;
   background: var(--cyan);
   color: var(--white);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   font-size: 0.9375rem;
   cursor: pointer;
   transition: opacity 0.15s;
@@ -878,7 +878,7 @@
 
 [data-tahti-ui='brand'] .brand-public .nl-subscribe-title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   margin: 0 0 0.35rem;
 }
 
@@ -910,7 +910,7 @@
   border: none;
   background: var(--purple);
   color: var(--white);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   cursor: pointer;
 }
 
@@ -952,7 +952,7 @@
 
 [data-tahti-ui='brand'] .brand-public .venue-hero .ui-heading--1 {
   font-size: 1.625rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   font-family: var(--font-head);
   margin: 0 0 0.5rem;
   padding-bottom: 0.75rem;
@@ -976,7 +976,7 @@
 
 [data-tahti-ui='brand'] .brand-public .venue-hero__cap {
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   background: color-mix(in srgb, var(--muted) 12%, transparent);
@@ -1024,7 +1024,7 @@
 
 [data-tahti-ui='brand'] .brand-public .venue-event-card__time {
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
@@ -1171,7 +1171,7 @@
 
 [data-tahti-ui='brand'] .for-artists-hero__eyebrow {
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--cyan);
@@ -1208,7 +1208,7 @@
   background: var(--amber);
   color: var(--bg);
   border-radius: 8px;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   font-size: 0.9375rem;
   text-decoration: none;
   transition: opacity 0.15s;
@@ -1291,7 +1291,7 @@
 
 [data-tahti-ui='brand'] .for-artists-feature-card__title {
   font-size: 0.9375rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   margin: 0 0 0.4rem;
   color: var(--text);
 }

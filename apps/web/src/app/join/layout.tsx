@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react'
 import { PublicBrandShell } from '@tahti/ui'
-import '@tahti/ui/src/styles/brand-public.css'
+import '@/lib/import-public-brand-css'
 
 export default function JoinLayout({ children }: { children: ReactNode }) {
   return <PublicBrandShell center>{children}</PublicBrandShell>

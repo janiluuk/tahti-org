@@ -26,7 +26,7 @@
 }
 
 [data-tahti-ui='embed'] .embed-header__title {
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   font-size: 0.95rem;
   margin: 0;
 }
@@ -155,7 +155,7 @@
 [data-tahti-ui='embed'] .embed-live-tracklist .ch-live-tracklist-heading {
   margin: 0 0 0.35rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);

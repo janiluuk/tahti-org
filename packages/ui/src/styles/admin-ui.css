@@ -67,7 +67,7 @@
 /* ---- Typography ---- */
 .ui-heading {
   font-family: var(--tahti-font-display);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   line-height: var(--tahti-leading-tight);
   color: var(--tahti-text);
   margin: 0;
@@ -169,7 +169,7 @@
   display: block;
   font-family: var(--tahti-font-body);
   font-size: var(--tahti-text-sm);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--tahti-text-secondary);
   margin-bottom: var(--tahti-space-1);
 }
@@ -321,7 +321,7 @@
   align-items: center;
   font-family: var(--tahti-font-body);
   font-size: var(--tahti-text-xs);
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   padding: var(--tahti-space-1) var(--tahti-space-3);
@@ -343,7 +343,7 @@
 .ui-badge--success {
   background: var(--tahti-success-bg);
   color: var(--tahti-success);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   text-transform: none;
   letter-spacing: normal;
 }
@@ -415,7 +415,7 @@
   align-items: center;
   gap: var(--tahti-space-2);
   font-family: var(--tahti-font-display);
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   font-size: 1.125rem;
   letter-spacing: 0.25em;
   color: var(--tahti-text);
@@ -435,7 +435,7 @@
 /* ---- Auth / narrow page shell ---- */
 .admin-live-pill {
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--green);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -608,7 +608,7 @@
 .gateway-title {
   font-family: var(--tahti-font-display);
   font-size: 1.75rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--text);
   margin: 0 0 0.625rem;
   line-height: 1.2;
@@ -634,14 +634,14 @@
   width: 100%;
   justify-content: center;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
 }
 
 .gateway-cta-primary.ui-btn--primary {
   background: var(--amber);
   border-color: var(--amber);
   color: var(--bg);
-  font-weight: 700;
+  font-weight: var(--weight-medium);
 }
 
 .gateway-cta-primary.ui-btn--primary:hover:not(:disabled) {
@@ -740,7 +740,7 @@
 .home-title {
   font-family: var(--tahti-font-display);
   font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--text);
   margin: 0;
   line-height: 1.15;
@@ -764,14 +764,14 @@
 
 .home-ctas .ui-btn {
   text-decoration: none;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
 }
 
 .home-cta-primary.ui-btn--primary {
   background: var(--amber);
   border-color: var(--amber);
   color: var(--bg);
-  font-weight: 700;
+  font-weight: var(--weight-medium);
 }
 
 .home-cta-primary.ui-btn--primary:hover:not(:disabled) {
@@ -800,7 +800,7 @@
   align-items: center;
   gap: 7px;
   font-size: var(--tahti-text-xs);
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--amber);
@@ -872,7 +872,7 @@
   color: var(--muted);
   font: inherit;
   font-size: 0.9375rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   padding: var(--tahti-space-2) var(--tahti-space-3);
   cursor: pointer;
   min-width: 0;
@@ -957,7 +957,7 @@
 .listen-page-title {
   font-family: var(--tahti-font-display);
   font-size: 2.25rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--text);
   margin: 0 0 0.375rem;
   letter-spacing: -0.02em;
@@ -1016,7 +1016,7 @@
 .listen-section__label {
   font-family: var(--tahti-font-body);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1116,7 +1116,7 @@
   border: 2px solid rgba(0, 230, 118, 0.3);
   font-family: var(--tahti-font-display);
   font-size: 1.375rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
 }
 
 .listen-live-card__pulse {
@@ -1141,7 +1141,7 @@
   align-items: center;
   gap: 5px;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--legacy-live-bright);
@@ -1151,7 +1151,7 @@
 .listen-live-card__name {
   font-family: var(--tahti-font-display);
   font-size: var(--tahti-text-base);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -1166,7 +1166,7 @@
 
 .listen-live-card__cta {
   font-size: var(--tahti-text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--legacy-live-bright);
   flex-shrink: 0;
   opacity: 0;
@@ -1230,7 +1230,7 @@
   color: var(--amber);
   font-family: var(--tahti-font-display);
   font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
 }
 
 .listen-card__live-dot {
@@ -1264,7 +1264,7 @@
 .listen-card__name {
   font-family: var(--tahti-font-display);
   font-size: var(--tahti-text-sm);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -1285,7 +1285,7 @@
 
 .listen-card__status--live {
   color: var(--legacy-live-bright);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
 }
 
 .listen-card__status--muted {
@@ -1342,7 +1342,7 @@
   background: color-mix(in srgb, var(--tahti-primary) 18%, var(--tahti-bg));
   color: var(--tahti-primary);
   font-size: 1.4rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   font-family: var(--tahti-font-display, system-ui, sans-serif);
 }
 
@@ -1359,7 +1359,7 @@
 
 .radio-now-card__name {
   font-size: 1.2rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--tahti-text);
   margin-bottom: 0.2rem;
   overflow: hidden;
@@ -1369,7 +1369,7 @@
 
 .radio-now-card__badge {
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--tahti-primary);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1380,7 +1380,7 @@
   background: var(--tahti-primary);
   color: var(--tahti-bg);
   border-radius: 6px;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   font-size: 0.875rem;
   text-decoration: none;
   white-space: nowrap;
@@ -1516,14 +1516,14 @@
 }
 
 .signup-tier-card__name {
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   font-size: 0.9375rem;
   color: var(--text);
 }
 
 .signup-tier-card__price {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--tahti-primary);
   font-family: var(--tahti-font-head);
 }
@@ -1546,7 +1546,7 @@
 
 .signup-creds-list dt {
   color: rgba(232, 234, 246, 0.5);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   white-space: nowrap;
   font-size: 0.75rem;
 }
@@ -1594,7 +1594,7 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
@@ -1628,7 +1628,7 @@
 
 .signup-fieldset__legend {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   margin-bottom: 0.5rem;
   color: var(--text);
 }
@@ -1675,7 +1675,7 @@
 
 .signup-section-heading {
   font-size: 0.8125rem;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   color: var(--cyan);
   text-transform: uppercase;
   letter-spacing: 0.06em;

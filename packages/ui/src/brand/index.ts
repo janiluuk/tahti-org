@@ -32,6 +32,7 @@ export {
   type StatCardGridProps,
   type StatCardStripProps,
   type StatCardLayout,
+  type StatCardSize,
 } from './StatCard'
 export {
   BrandText,

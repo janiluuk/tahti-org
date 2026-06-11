@@ -6,6 +6,7 @@ import { cn } from '../lib/cn'
 import type { StatVariant } from '../tokens'
 
 export type StatCardLayout = 'card' | 'inline'
+export type StatCardSize = 'default' | 'compact'
 
 export interface StatCardProps {
   /** Semantic metric type — maps to stat color tokens. */
@@ -18,6 +19,8 @@ export interface StatCardProps {
   positive?: boolean
   /** `card` = bordered tile; `inline` = compact row strip (homepage platform stats). */
   layout?: StatCardLayout
+  /** `compact` = 22px value (channel page reference). */
+  size?: StatCardSize
   className?: string
 }
 
@@ -29,6 +32,7 @@ export function StatCard({
   subtitle,
   positive,
   layout = 'card',
+  size = 'default',
   className,
 }: StatCardProps) {
   return (
@@ -37,6 +41,7 @@ export function StatCard({
         'stat-card',
         `stat-card--${variant}`,
         layout === 'inline' && 'stat-card--inline',
+        size === 'compact' && 'stat-card--compact',
         positive && 'stat-card--positive',
         className,
       )}

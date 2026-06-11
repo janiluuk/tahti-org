@@ -50,7 +50,7 @@
 [data-tahti-ui='brand'] .ch-live-tracklist-heading {
   margin: 0 0 0.35rem;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: var(--muted);

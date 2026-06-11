@@ -40,7 +40,9 @@
     "test:e2e:phase4": "bash tests/e2e/phase-4.sh",
     "format": "prettier --write \"**/*.{ts,tsx,js,json}\" --ignore-path .gitignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json}\" --ignore-path .gitignore",
-    "check:tokens": "bash scripts/check-design-tokens.sh"
+    "check:tokens": "bash scripts/check-design-tokens.sh",
+    "check:reference-tokens": "bash scripts/check-reference-token-values.sh",
+    "check:font-weight": "bash scripts/check-font-weight-cap.sh"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.14.1",

@@ -28,8 +28,6 @@ export {
   Callout,
   UrlBox,
   SectionHeader,
-  Stat,
-  StatGrid,
   Input as MarketingInput,
   FormField,
   Nav,
