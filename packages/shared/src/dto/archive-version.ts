@@ -24,6 +24,8 @@ export const ArchiveVersionViewSchema = z.object({
   status: z.string(),
   isActive: z.boolean(),
   durationSec: z.number().int().nullable(),
+  sourceFormat: z.string().nullable(),
+  sourceBitrateKbps: z.number().int().nullable(),
   createdAt: z.string(),
 })
 
@@ -49,5 +51,7 @@ export interface ArchiveVersionRow {
   status: string
   isActive: boolean
   durationSec: number | null
+  sourceFormat: string | null
+  sourceBitrateKbps: number | null
   createdAt: string
 }

@@ -69,6 +69,12 @@ export default function ArchiveEditor({
             {item.status as string}
             {item.contentType != null && ` · ${String(item.contentType).replace(/_/g, ' ')}`}
             {item.genre != null && ` · ${String(item.genre)}`}
+            {item.sourceFormat != null &&
+              ` · Source: ${String(item.sourceFormat)}${
+                item.sourceBitrateKbps != null
+                  ? ` ${String(item.sourceBitrateKbps)} kbps`
+                  : ' (lossless)'
+              }`}
           </div>
         </div>
         <button type="button" onClick={() => setOpen(!open)} className="studio-btn-ghost">

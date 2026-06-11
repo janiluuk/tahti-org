@@ -10,6 +10,8 @@ export function serializeArchiveVersion(v: {
   status: string
   isActive: boolean
   durationSec: number | null
+  sourceFormat?: string | null
+  sourceBitrateKbps?: number | null
   createdAt: Date
 }): ArchiveVersionRow {
   return {
@@ -19,6 +21,8 @@ export function serializeArchiveVersion(v: {
     status: v.status,
     isActive: v.isActive,
     durationSec: v.durationSec,
+    sourceFormat: v.sourceFormat ?? null,
+    sourceBitrateKbps: v.sourceBitrateKbps ?? null,
     createdAt: v.createdAt.toISOString(),
   }
 }

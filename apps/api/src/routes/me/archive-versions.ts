@@ -58,6 +58,8 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
           status: true,
           isActive: true,
           durationSec: true,
+          sourceFormat: true,
+          sourceBitrateKbps: true,
           createdAt: true,
         },
       })
@@ -203,6 +205,8 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
           status: true,
           isActive: true,
           durationSec: true,
+          sourceFormat: true,
+          sourceBitrateKbps: true,
           createdAt: true,
         },
       })

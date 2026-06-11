@@ -41,6 +41,8 @@ export const archiveItemMetadataSelect = {
   visualPreset: true,
   status: true,
   durationSec: true,
+  sourceFormat: true,
+  sourceBitrateKbps: true,
   createdAt: true,
   updatedAt: true,
 } as const

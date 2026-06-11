@@ -109,6 +109,10 @@ export function ArchiveVersionPanel({
             <li key={v.id} className="studio-row--between studio-text-muted-sm">
               <span>
                 v{v.versionNumber} · {v.versionLabel}
+                {v.sourceFormat != null &&
+                  ` · ${v.sourceFormat}${
+                    v.sourceBitrateKbps != null ? ` ${v.sourceBitrateKbps} kbps` : ' (lossless)'
+                  }`}
                 {v.isActive && <strong className="studio-badge--success"> active</strong>}
                 {v.status !== 'READY' && (
                   <span className="studio-text-muted-sm"> ({v.status})</span>

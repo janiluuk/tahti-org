@@ -413,6 +413,8 @@ export const ArchiveItemViewSchema = z
     status: z.string(),
     effectiveBpm: z.number().nullable().optional(),
     effectiveKey: z.string().nullable().optional(),
+    sourceFormat: z.string().nullable().optional(),
+    sourceBitrateKbps: z.number().int().nullable().optional(),
   })
   .passthrough()
 
