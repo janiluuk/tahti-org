@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
 import '@tahti/ui/src/styles/brand-channel.css'
+import '@tahti/ui/src/styles/shells.css'
 
 export default function SmartLinkRootLayout({ children }: { children: ReactNode }) {
   return (

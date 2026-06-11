@@ -4,12 +4,18 @@
 import type { ReactNode } from 'react'
 import { ChannelHeader } from './ChannelPageLayout'
 
-/** PLAT-020: centered smart link landing (/r/[slug]). */
-export function SmartLinkPageLayout({ children }: { children: ReactNode }) {
+type SmartLinkPageLayoutProps = {
+  children: ReactNode
+  /** Artist back link in header centre — reference: "← dj-moonrise" */
+  contextLink?: { href: string; label: string }
+}
+
+/** PLAT-020: centered smart link landing (/r/[slug]) — shell-narrow, max 460px. */
+export function SmartLinkPageLayout({ children, contextLink }: SmartLinkPageLayoutProps) {
   return (
     <>
-      <ChannelHeader />
-      <div className="sl-wrap">{children}</div>
+      <ChannelHeader contextLink={contextLink} />
+      <div className="sl-wrap shell-narrow">{children}</div>
     </>
   )
 }

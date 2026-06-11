@@ -1766,10 +1766,19 @@
 }
 
 /* Smart link landing (/r/[slug]) — v8 */
+[data-tahti-ui='brand'] .ch-header__context {
+  font-size: var(--text-label);
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.12s;
+}
+
+[data-tahti-ui='brand'] .ch-header__context:hover {
+  color: var(--text);
+}
+
 [data-tahti-ui='brand'] .sl-wrap {
-  padding: 24px 20px 3rem;
-  max-width: 420px;
-  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) var(--space-12);
   text-align: center;
 }
 
@@ -1987,7 +1996,7 @@
   background: var(--channel-accent, var(--amber));
   color: var(--channel-bg, var(--bg));
   border-radius: var(--radius);
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: none;
   margin-bottom: 1rem;
 }

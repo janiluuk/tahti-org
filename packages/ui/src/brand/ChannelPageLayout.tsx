@@ -6,12 +6,16 @@ import type { ReactNode } from 'react'
 
 export type SiteNavId = 'home' | 'discover' | 'radio' | 'venues'
 
+type HeaderContextLink = { href: string; label: string }
+
 type ChannelHeaderProps = {
   /** Live member channel — hides site nav, shows @handle in header centre */
   isLive?: boolean
   artistHandle?: string
   /** Chat/presence listeners — shown beside LIVE pill on member channels */
   listenerCount?: number | null
+  /** Smart link / subscribe — back link in header centre (replaces site nav) */
+  contextLink?: HeaderContextLink
   /** Highlights the current top-nav item (Discover, Radio, Venues, Home) */
   activeNav?: SiteNavId
   /** LIVE pill on the right without hiding site nav (e.g. Tahti Radio) */
@@ -31,11 +35,12 @@ export function ChannelHeader({
   isLive,
   artistHandle,
   listenerCount,
+  contextLink,
   activeNav,
   showLiveBadge,
   user,
 }: ChannelHeaderProps) {
-  const channelLiveMode = Boolean(isLive && artistHandle && !activeNav)
+  const channelLiveMode = Boolean(isLive && artistHandle && !activeNav && !contextLink)
 
   return (
     <header className="ch-header">
@@ -45,6 +50,10 @@ export function ChannelHeader({
       </Link>
       {channelLiveMode ? (
         <div className="ch-header__artist">@{artistHandle}</div>
+      ) : contextLink ? (
+        <Link href={contextLink.href} className="ch-header__context">
+          {contextLink.label}
+        </Link>
       ) : (
         <nav className="ch-header__nav" aria-label="Site">
           {SITE_NAV.map((item) => (
