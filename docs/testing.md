@@ -15,6 +15,7 @@ pnpm --filter @tahti/db db:generate
 - `pnpm tor-exit:sync` — refresh bundled Tor exits from Tor Project bulk list
 - `./scripts/status-monitor.sh` — M11 probe `/api/v1/status`, `/health`, web home (Upptime substitute)
 - `pnpm test` — Vitest (single worker; shared Postgres)
+- Journey suites under `apps/api/src/routes/journeys/` — `persona-journeys`, `vital-flows`, `public-surfaces-journey`, `tahti-radio-journey`
 - `pnpm test:e2e:journeys` — bash persona journeys (listener, artist, member, director, ops)
 - `pnpm test:e2e:journeys:all` — vital-flows + user-journeys + Vitest `persona-journeys.test.ts`
 - `./scripts/unified-smoke.sh` — phased smoke from [`unified-test-plan.md`](unified-test-plan.md) (CI + local stack; `--prod`, `--e2e`, `--all`)

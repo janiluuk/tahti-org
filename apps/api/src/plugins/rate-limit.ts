@@ -10,19 +10,12 @@ import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
 import { config } from '../config.js'
 import { getRedisClient } from '../lib/redis.js'
 import { rateLimitWhenRedisUnavailable } from '../lib/rate-limit-fallback.js'
+import { usesAuthRateLimit } from '../lib/rate-limit-routes.js'
 
 interface RateLimitConfig {
   max: number
   windowSec: number
   keyPrefix?: string
-}
-
-const AUTH_ROUTES = ['/api/auth/register', '/api/auth/login']
-
-/** Chat POST (token issuance, publish proxy) — strict limit; GET discovery stays on API limit. */
-function usesAuthRateLimit(url: string, method: string): boolean {
-  if (AUTH_ROUTES.some((r) => url.startsWith(r))) return true
-  return method === 'POST' && url.startsWith('/api/chat/')
 }
 
 function defaultLimit(): RateLimitConfig {

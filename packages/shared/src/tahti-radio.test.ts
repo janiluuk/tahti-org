@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import {
   parseTahtiRadioStreamMode,
   resolveActiveRadioPlayback,
+  resolveRadioVideoEmbedUrl,
   resolveTahtiRadioStream,
 } from './tahti-radio.js'
 
@@ -69,5 +70,27 @@ describe('resolveActiveRadioPlayback', () => {
       audioUrl: 'https://stream.example/live.m3u8',
     })
     expect(playback).toEqual({ kind: 'audio', audioUrl: 'https://stream.example/live.m3u8' })
+  })
+
+  it('returns none when no sources configured', () => {
+    const playback = resolveActiveRadioPlayback({
+      mode: 'audio',
+      videoWatchUrl: null,
+      videoEmbedUrl: null,
+      audioUrl: null,
+    })
+    expect(playback).toEqual({ kind: 'none' })
+  })
+})
+
+describe('resolveRadioVideoEmbedUrl', () => {
+  it('builds YouTube embed with autoplay params', () => {
+    const url = resolveRadioVideoEmbedUrl('https://www.youtube.com/watch?v=abc123')
+    expect(url).toContain('youtube-nocookie.com/embed/abc123')
+    expect(url).toContain('autoplay=1')
+  })
+
+  it('returns null for invalid watch URLs', () => {
+    expect(resolveRadioVideoEmbedUrl('https://example.com/not-video')).toBeNull()
   })
 })

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { PrismaClient, User, Channel, MembershipStatus, ArtistTier } from '@tahti/db'
+import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { hashPassword } from '../lib/password.js'
 import { createSession } from '../lib/session.js'
 import { generateVerificationToken, verificationExpiresAt } from '../lib/token.js'
@@ -219,3 +220,35 @@ export async function cleanupUsersByMemberNumbers(prisma: PrismaClient, numbers:
 }
 
 export type UserWithChannel = User & { channel: Channel | null }
+
+const TAHTI_RADIO_TEST_PREFIX = 'journey-tahti-radio-'
+
+/** Replace any existing tahti-radio system user with a LIVE test fixture. */
+export async function createTahtiRadioChannel(prisma: PrismaClient) {
+  const stale = await prisma.user.findUnique({ where: { username: TAHTI_RADIO_SLUG } })
+  if (stale) {
+    const emailPrefix = stale.email.slice(0, stale.email.indexOf('@') + 1)
+    await cleanupUsersByEmailPrefix(prisma, emailPrefix)
+  }
+  await cleanupUsersByEmailPrefix(prisma, TAHTI_RADIO_TEST_PREFIX)
+
+  const artist = await createTestArtist(prisma, {
+    email: `${TAHTI_RADIO_TEST_PREFIX}system@example.com`,
+    username: TAHTI_RADIO_SLUG,
+    displayName: 'Tahti Radio',
+    isMember: true,
+    memberNumber: 98401,
+    tier: 'ARTIST',
+  })
+
+  await prisma.channel.update({
+    where: { id: artist.channel!.id },
+    data: {
+      state: 'LIVE',
+      metaStreamOptOut: false,
+      nextBroadcastNote: '24/7 community radio',
+    },
+  })
+
+  return artist
+}

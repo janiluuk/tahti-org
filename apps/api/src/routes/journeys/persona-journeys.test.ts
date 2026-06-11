@@ -126,6 +126,14 @@ describe('Persona journeys', () => {
       })
       expect(channel.statusCode).toBe(200)
 
+      const directory = await app.inject({ method: 'GET', url: '/api/v1/channels' })
+      expect(directory.statusCode).toBe(200)
+      expect(Array.isArray(directory.json().live)).toBe(true)
+
+      const stats = await app.inject({ method: 'GET', url: '/api/v1/stats' })
+      expect(stats.statusCode).toBe(200)
+      expect(typeof stats.json().activeArtists).toBe('number')
+
       const tiers = await app.inject({
         method: 'GET',
         url: `/api/v1/u/${artistSlug}/tiers`,
