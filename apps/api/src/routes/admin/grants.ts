@@ -3,8 +3,10 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  CsvExportBodySchema,
   GrantPreviewResponseSchema,
   GrantRunResponseSchema,
+  LedgerExportQuerySchema,
   openApiResponse,
   openApiResponses,
   yearFromPathParams,
@@ -12,6 +14,7 @@ import {
 import { buildGrantPreview, runAnnualGrantCalc } from '@tahti/ledger'
 import { requireBoard } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
+import { sendCsv } from '../../lib/csv.js'
 
 // M9 — board-triggered annual grant calculation. The same routine runs on the
 // March 1 cron in the worker; this endpoint lets the board run/preview it.
@@ -78,6 +81,54 @@ const adminGrantsRoutes: FastifyPluginAsync = async (fastify) => {
         ...summary,
         surplusCents: summary.surplusCents,
       })
+    },
+  )
+
+  // GET /api/admin/grants/export.csv?year=YYYY — board CSV export of the
+  // per-artist allocation preview (PLAT-048).
+  fastify.get(
+    '/api/admin/grants/export.csv',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'PLAT-048: per-artist grant allocation preview as CSV',
+        response: openApiResponse(CsvExportBodySchema, 'CsvExportBody'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = LedgerExportQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid year',
+        })
+      }
+      const forYear = parsed.data.year ? parseInt(parsed.data.year, 10) : new Date().getFullYear()
+
+      const preview = await buildGrantPreview(fastify.prisma, forYear)
+
+      return sendCsv(
+        reply,
+        `tahti-grants-${forYear}.csv`,
+        [
+          'username',
+          'displayName',
+          'units',
+          'freeDownloads',
+          'paidDownloads',
+          'fanSubEuros',
+          'amountCents',
+        ],
+        preview.artists.map((a) => [
+          a.username,
+          a.displayName,
+          a.units,
+          a.freeDownloads,
+          a.paidDownloads,
+          a.fanSubEuros,
+          a.amountCents,
+        ]),
+      )
     },
   )
 }

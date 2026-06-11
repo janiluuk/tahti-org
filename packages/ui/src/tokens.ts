@@ -82,6 +82,17 @@ export const tokens = {
       dotYellow: '#FEBC2E',
       dotGreen: '#28C840',
     },
+    /** Third-party platform brand colors — multistream target tiles only, never text/pills */
+    platformBrand: {
+      twitch: '#9146FF',
+      youtube: '#FF0000',
+      kick: '#53FC18',
+      kickFg: '#0A1F00',
+      mixcloud: '#5000B9',
+      facebook: '#1877F2',
+      tiktok: '#000000',
+      instagram: '#C13584',
+    },
   },
   space: {
     1: '4px',

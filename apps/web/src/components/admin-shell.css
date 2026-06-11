@@ -473,3 +473,45 @@
 .admin-input:focus {
   border-color: var(--cyan);
 }
+
+/* ── Operations dashboard (View 3 conformance) ──────────────────────── */
+
+.admin-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 var(--space-5);
+}
+
+.admin-dashboard-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.admin-action--amber {
+  color: var(--amber);
+  border-color: rgba(255, 184, 64, 0.4);
+}
+
+.admin-dashboard-more {
+  display: block;
+  text-align: center;
+  padding: var(--space-2);
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--cyan);
+}
+
+.admin-dashboard-health-footer {
+  margin-top: var(--space-2);
+  font-size: var(--text-label);
+  color: var(--muted2);
+}
+
+@media (max-width: 768px) {
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

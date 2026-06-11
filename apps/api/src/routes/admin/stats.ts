@@ -7,11 +7,14 @@ import {
   AdminCronRunListSchema,
   AdminMemberStatsSchema,
   AdminQueueStatsListSchema,
+  AdminSystemHealthSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
 import { getQueueStatsByJobName } from '../../lib/queue-stats.js'
 import { WORKER_CRON_JOBS } from '@tahti/shared'
+import { runDependencyChecks } from '../../lib/health-checks.js'
+import { collectBackupMetrics } from '../../lib/backup-metrics.js'
 
 const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -93,6 +96,33 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
         }),
       )
       return reply.send(latest)
+    },
+  )
+
+  fastify.get(
+    '/api/admin/stats/system-health',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'M21-A: dependency + backup health summary for the admin dashboard',
+        response: openApiResponse(AdminSystemHealthSchema, 'AdminSystemHealth'),
+      },
+    },
+    async (_request, reply) => {
+      const [checks, backup, failedPayouts] = await Promise.all([
+        runDependencyChecks(fastify.prisma),
+        collectBackupMetrics(),
+        fastify.prisma.fanSubPayout.count({ where: { state: 'FAILED' } }),
+      ])
+      const byId = new Map(checks.map((c) => [c.id, c.state]))
+
+      return reply.send({
+        icecast: byId.get('icecast') === 'up' ? 'up' : 'down',
+        minio: byId.get('minio') === 'up' ? 'up' : 'down',
+        postgresBackupAgeHours: backup.postgresBackupAgeHours,
+        failedFanSubPayouts: failedPayouts,
+      })
     },
   )
 

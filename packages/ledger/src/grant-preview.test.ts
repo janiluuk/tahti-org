@@ -15,8 +15,8 @@ describe('buildGrantPreview', () => {
       },
       download: {
         groupBy: async () => [
-          { channelId, _sum: { weight: 90 } },
-          { channelId: 'ch-2', _sum: { weight: 10 } },
+          { channelId, weight: 1, _count: 90 },
+          { channelId: 'ch-2', weight: 1, _count: 10 },
         ],
         findMany: async ({ where }: { where: { channelId: string } }) => {
           if (where.channelId === 'ch-2') {

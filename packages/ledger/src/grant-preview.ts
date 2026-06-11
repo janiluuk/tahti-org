@@ -19,6 +19,9 @@ export interface GrantPreviewArtist {
   publicAttribution: boolean
   units: number
   amountCents: number
+  freeDownloads: number
+  paidDownloads: number
+  fanSubEuros: number
   anomalies: GrantAnomaly[]
 }
 
@@ -120,6 +123,9 @@ export async function buildGrantPreview(
       publicAttribution: user?.publicAttribution ?? true,
       units: row.units,
       amountCents: amountByUser.get(row.userId) ?? 0,
+      freeDownloads: row.freeDownloads,
+      paidDownloads: row.paidDownloads,
+      fanSubEuros: row.fanSubEuros,
       anomalies,
     })
   }

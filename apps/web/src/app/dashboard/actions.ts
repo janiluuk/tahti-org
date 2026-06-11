@@ -196,6 +196,21 @@ export async function startFanSubConnectOnboarding(): Promise<{
   return { error: null, onboardingUrl: (data as { onboardingUrl?: string }).onboardingUrl }
 }
 
+export async function openFanSubConnectPortal(): Promise<{
+  error: string | null
+  url?: string
+}> {
+  const response = await fetch(`${apiUrl}/api/me/fan-subs/connect/portal`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    return { error: (data as { error?: string }).error ?? 'Could not open Stripe account' }
+  }
+  return { error: null, url: (data as { url?: string }).url }
+}
+
 export async function createNewsletterDraft(params: {
   subject: string
   bodyMd: string

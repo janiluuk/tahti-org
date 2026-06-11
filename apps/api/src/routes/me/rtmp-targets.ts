@@ -59,10 +59,16 @@ const rtmpTargetRoutes: FastifyPluginAsync = async (fastify) => {
           alwaysMirror: true,
           enabled: true,
           createdAt: true,
+          streamKeyEnc: true,
         },
       })
 
-      return reply.send(targets)
+      return reply.send(
+        targets.map(({ streamKeyEnc, ...t }) => ({
+          ...t,
+          keyLast4: decryptStreamKey(streamKeyEnc).slice(-4),
+        })),
+      )
     },
   )
 

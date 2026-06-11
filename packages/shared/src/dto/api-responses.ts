@@ -106,10 +106,21 @@ export const TransparencyYtdResponseSchema = z.object({
   monthsFinalized: z.number().int().nonnegative(),
 })
 
+export const TransparencyLedgerEntrySchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  category: z.string(),
+  amountCents: z.string(),
+  createdAt: z.string(),
+})
+
+export const TransparencyLedgerLatestSchema = z.array(TransparencyLedgerEntrySchema)
+
 export const TransparencyGrantReportSchema = z.object({
   year: z.number().int(),
   totalCents: z.string(),
   grantCount: z.number().int().nonnegative(),
+  disbursedAt: z.string().datetime().nullable(),
   grants: z.array(
     z.object({
       publishedAs: z.string(),
@@ -352,6 +363,9 @@ export const GrantPreviewArtistSchema = z.object({
   publicAttribution: z.boolean(),
   units: z.number(),
   amountCents: z.number().int(),
+  freeDownloads: z.number().int(),
+  paidDownloads: z.number().int(),
+  fanSubEuros: z.number().int(),
   anomalies: z.array(GrantAnomalySchema),
 })
 
@@ -811,6 +825,8 @@ export const RtmpTargetViewSchema = z.object({
   alwaysMirror: z.boolean(),
   enabled: z.boolean(),
   createdAt: z.coerce.date().optional(),
+  /** Last 4 characters of the stream key — for "key ••••••{last4}" display. Full key is never listed. */
+  keyLast4: z.string().optional(),
 })
 
 export const RtmpTargetListSchema = z.array(RtmpTargetViewSchema)
@@ -824,6 +840,8 @@ export const FanSubPayoutsDashboardSchema = z.object({
   failed: z.number().int(),
   paidLast30Days: z.number().int(),
   activeSubscribers: z.number().int(),
+  thisMonthNetCents: z.number().int(),
+  paidYtdNetCents: z.number().int(),
   recent: z.array(
     z.object({
       id: z.string(),
@@ -850,6 +868,19 @@ export const MeGrantDisbursementSchema = z.object({
 })
 
 export const MeGrantListSchema = z.array(MeGrantDisbursementSchema)
+
+/** Forecast of this artist's share of the current year's grant pool, based
+ *  on engagement units accrued so far and the year-to-date surplus. */
+export const MeGrantEstimateSchema = z.object({
+  year: z.number().int(),
+  estimateCents: z.number().int().nonnegative(),
+  units: z.number().nonnegative(),
+  eligible: z.boolean(),
+})
+
+export const FanConnectPortalResponseSchema = z.object({
+  url: z.string().url(),
+})
 
 export const OEmbedResponseSchema = z
   .object({
@@ -938,6 +969,13 @@ export const AdminQueueStatsSchema = z.object({
 })
 
 export const AdminQueueStatsListSchema = z.array(AdminQueueStatsSchema)
+
+export const AdminSystemHealthSchema = z.object({
+  icecast: z.enum(['up', 'down']),
+  minio: z.enum(['up', 'down']),
+  postgresBackupAgeHours: z.number().nullable(),
+  failedFanSubPayouts: z.number().int().nonnegative(),
+})
 
 export const AdminCronRunEntrySchema = z.object({
   id: z.string(),

@@ -4,12 +4,14 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Link, PublicPageHeader, Text } from '@tahti/ui'
-import MotionCard, { type MotionSummary } from './motion-card'
+import { type MotionSummary } from './motion-card'
+import MotionsList from './motions-list'
 import NewMotionForm from './new-motion-form'
 import GrantPreviewPanel from './grant-preview-panel'
 
 interface MeResponse {
   displayName: string
+  username: string
   isMember: boolean
   isBoard: boolean
 }
@@ -94,7 +96,6 @@ export default async function GovernancePage() {
       )}
 
       <section className="brand-section">
-        <h2 className="brand-section__title brand-section-heading">Motions</h2>
         {motions.length === 0 ? (
           <div className="public-empty-card">
             <p className="public-empty-card__text">No motions yet.</p>
@@ -103,7 +104,7 @@ export default async function GovernancePage() {
             </p>
           </div>
         ) : (
-          motions.map((m) => <MotionCard key={m.id} motion={m} isBoard={me.isBoard} />)
+          <MotionsList motions={motions} totalMembers={members.length} isBoard={me.isBoard} />
         )}
       </section>
 
@@ -127,6 +128,7 @@ export default async function GovernancePage() {
                   <td className="brand-muted">{m.memberNumber ?? '—'}</td>
                   <td>
                     {m.displayName}
+                    {m.username === me.username && <span className="brand-badge">you</span>}
                     {m.isBoard && <span className="brand-badge">board</span>}
                   </td>
                   <td>

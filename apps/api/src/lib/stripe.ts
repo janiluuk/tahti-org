@@ -192,6 +192,15 @@ export async function createConnectAccountLink(params: {
   return data.url
 }
 
+/** Express dashboard login link for an artist's Connect account ("Manage Stripe account"). */
+export async function createConnectLoginLink(accountId: string): Promise<string> {
+  const data = (await stripePost(`/accounts/${encodeURIComponent(accountId)}/login_links`, {})) as {
+    url?: string
+  }
+  if (!data.url) throw new Error('Stripe Connect login link returned no url')
+  return data.url
+}
+
 /** Stripe Customer Portal for membership billing history and payment method. */
 export async function createBillingPortalSession(params: {
   customerId: string

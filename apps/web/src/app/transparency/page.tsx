@@ -1,7 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { Link, PublicPageHeader, StatCard, StatCardGrid } from '@tahti/ui'
+import {
+  DataRowList,
+  DataRowListEmpty,
+  DataRowListHeader,
+  DataRowListRow,
+  KpiCard,
+  KpiCardRow,
+  Link,
+  MoneyCell,
+  ProgressBar,
+  PublicPageHeader,
+  StatCard,
+  StatCardGrid,
+} from '@tahti/ui'
 import { statusPageUrl } from '@/lib/status-page'
 
 interface MonthlyRollup {
@@ -18,9 +31,24 @@ interface YtdSummary {
   monthsFinalized: number
 }
 
+interface LedgerEntry {
+  id: string
+  description: string
+  category: string
+  amountCents: string
+  createdAt: string
+}
+
+const LEDGER_ROW_COLUMNS = '70px 1fr 90px 70px'
+
 function formatEur(cents: string | number): string {
   const n = typeof cents === 'string' ? parseInt(cents, 10) : cents
   return `€${(n / 100).toLocaleString('fi-FI', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function formatEurSigned(cents: number): string {
+  const sign = cents >= 0 ? '+' : '−'
+  return `${sign}${formatEur(Math.abs(cents))}`
 }
 
 function formatBytes(bytes: number): string {
@@ -44,29 +72,49 @@ function categoryLabel(code: string): string {
     COST_PROFESSIONAL_SERVICES: 'Professional services',
     GRANT_DISBURSEMENT: 'Artist grants paid out',
     RESERVE_TRANSFER: 'Reserve transfers',
+    FAN_SUB_GROSS_RECEIVED: 'Fan subscriptions received',
+    FAN_SUB_NET_TO_ARTIST: 'Fan-sub payouts to artists',
+    FAN_SUB_OPERATIONAL_FEE: 'Fan-sub operations fee',
   }
   return labels[code] ?? code
+}
+
+/** Categories that represent money flowing in (rendered green in the ledger). */
+const INFLOW_CATEGORIES = new Set([
+  'REVENUE_SUBSCRIPTION',
+  'REVENUE_DISTRIBUTION',
+  'REVENUE_GRANT_INBOUND',
+  'REVENUE_DONATION',
+  'FAN_SUB_GROSS_RECEIVED',
+  'FAN_SUB_OPERATIONAL_FEE',
+])
+
+function ledgerEntrySignedCents(entry: LedgerEntry): number {
+  const amount = parseInt(entry.amountCents, 10)
+  return INFLOW_CATEGORIES.has(entry.category) ? amount : -amount
 }
 
 export default async function TransparencyPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const statusUrl = statusPageUrl()
+  const currentYear = new Date().getFullYear()
 
-  const [ytdRes, rollupRes, resolutionsRes, statsRes] = await Promise.all([
+  const [ytdRes, rollupRes, resolutionsRes, statsRes, ledgerRes] = await Promise.all([
     fetch(`${apiUrl}/api/v1/transparency/ytd`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/api/v1/transparency/monthly_rollup?year=${new Date().getFullYear()}`, {
+    fetch(`${apiUrl}/api/v1/transparency/monthly_rollup?year=${currentYear}`, {
       cache: 'no-store',
     }),
-    fetch(`${apiUrl}/api/v1/transparency/resolutions?year=${new Date().getFullYear()}`, {
+    fetch(`${apiUrl}/api/v1/transparency/resolutions?year=${currentYear}`, {
       cache: 'no-store',
     }),
     fetch(`${apiUrl}/api/v1/stats`, { next: { revalidate: 300 } }),
+    fetch(`${apiUrl}/api/v1/transparency/ledger/latest`, { cache: 'no-store' }),
   ])
 
   const ytd: YtdSummary = ytdRes.ok
     ? ((await ytdRes.json()) as YtdSummary)
     : {
-        year: String(new Date().getFullYear()),
+        year: String(currentYear),
         byCategory: {},
         runningSurplus: '0',
         monthsFinalized: 0,
@@ -92,6 +140,10 @@ export default async function TransparencyPage() {
     voteAbstain: number
   }> = resolutionsRes.ok ? await resolutionsRes.json() : []
 
+  const ledgerEntries: LedgerEntry[] = ledgerRes.ok
+    ? ((await ledgerRes.json()) as LedgerEntry[])
+    : []
+
   const revenueKeys = Object.keys(ytd.byCategory).filter((k) => k.startsWith('REVENUE_'))
   const costKeys = Object.keys(ytd.byCategory).filter((k) => k.startsWith('COST_'))
   const disbKeys = Object.keys(ytd.byCategory).filter(
@@ -100,30 +152,106 @@ export default async function TransparencyPage() {
 
   const totalRevenue = revenueKeys.reduce((s, k) => s + parseInt(ytd.byCategory[k] ?? '0', 10), 0)
   const totalCosts = costKeys.reduce((s, k) => s + parseInt(ytd.byCategory[k] ?? '0', 10), 0)
+  const runningSurplusCents = parseInt(ytd.runningSurplus, 10)
+
+  const grantPoolCents = Math.max(0, Math.round(runningSurplusCents * 0.9))
+  const reserveCents = Math.max(0, runningSurplusCents - grantPoolCents)
 
   return (
     <>
       <PublicPageHeader title="Transparency" back={{ href: '/', label: '← Home' }}>
         Tahti ry is a Finnish registered nonprofit. All income, costs, and artist grants are
         published here. <Link href="/transparency/methodology">Methodology ↗</Link>
+        {' · Updated monthly · bylaws §8 · audited annually'}
       </PublicPageHeader>
 
-      <StatCardGrid cols={3} aria-label="Year-to-date summary">
-        <StatCard
-          variant="revenue"
-          label={`${ytd.year} Revenue`}
-          value={formatEur(totalRevenue)}
-          positive
-        />
-        <StatCard variant="cost" label={`${ytd.year} Costs`} value={formatEur(totalCosts)} />
-        <StatCard
-          variant="surplus"
+      <div className="transparency-intro">
+        <h3 className="transparency-intro__title">Every euro, visible.</h3>
+        <p className="transparency-intro__body">
+          Every transaction that moves through Tahti — member subscriptions, hosting costs,
+          distribution fees, and artist grants — is recorded in an append-only ledger and published
+          here. Nothing is aggregated away before publication.
+        </p>
+      </div>
+
+      <KpiCardRow aria-label="Year-to-date summary">
+        <KpiCard color="cyan" value={formatEur(totalRevenue)} label={`Revenue YTD`} />
+        <KpiCard color="coral" value={formatEur(totalCosts)} label={`Costs YTD`} />
+        <KpiCard
+          color="green"
+          value={formatEurSigned(runningSurplusCents)}
           label="Running surplus"
-          value={formatEur(ytd.runningSurplus)}
-          positive={parseInt(ytd.runningSurplus, 10) >= 0}
-          subtitle={`${ytd.monthsFinalized} month${ytd.monthsFinalized !== 1 ? 's' : ''} finalized`}
         />
-      </StatCardGrid>
+        <KpiCard
+          color="purple"
+          value={platformStats ? formatBytes(platformStats.totalStorageBytes) : '—'}
+          label="Storage used (all artists)"
+        />
+      </KpiCardRow>
+
+      <div className="transparency-grid">
+        <div>
+          <p className="transparency-grid__label">Ledger — latest entries (append-only)</p>
+          {ledgerEntries.length === 0 ? (
+            <DataRowList>
+              <DataRowListEmpty>
+                Ledger entries appear here from the first transaction.
+              </DataRowListEmpty>
+            </DataRowList>
+          ) : (
+            <DataRowList>
+              <DataRowListHeader columns={LEDGER_ROW_COLUMNS}>
+                <span>Date</span>
+                <span>Entry</span>
+                <span>Category</span>
+                <span style={{ textAlign: 'right' }}>Amount</span>
+              </DataRowListHeader>
+              {ledgerEntries.map((entry) => {
+                const signedCents = ledgerEntrySignedCents(entry)
+                return (
+                  <DataRowListRow key={entry.id} columns={LEDGER_ROW_COLUMNS}>
+                    <span style={{ fontFamily: 'var(--font-mono)' }}>
+                      {new Date(entry.createdAt).toLocaleDateString('en-GB', {
+                        month: '2-digit',
+                        day: '2-digit',
+                      })}
+                    </span>
+                    <span>{entry.description}</span>
+                    <span style={{ textTransform: 'uppercase', color: 'var(--muted2)' }}>
+                      {categoryLabel(entry.category)}
+                    </span>
+                    <MoneyCell value={signedCents}>{formatEurSigned(signedCents)}</MoneyCell>
+                  </DataRowListRow>
+                )
+              })}
+            </DataRowList>
+          )}
+        </div>
+
+        <div>
+          <p className="transparency-grid__label">Where surplus goes</p>
+          <div className="money-breakdown">
+            <ProgressBar
+              label="Artist grant pool"
+              amount={formatEur(grantPoolCents)}
+              percent={90}
+              color="green"
+            />
+            <ProgressBar
+              label="Operating reserve"
+              amount={formatEur(reserveCents)}
+              percent={10}
+              color="cyan"
+            />
+          </div>
+          <div className="transparency-callout">
+            See exactly how the {currentYear} grant pool was split between artists at{' '}
+            <Link href={`/transparency/grants/${currentYear}`}>
+              /transparency/grants/{currentYear} →
+            </Link>
+          </div>
+        </div>
+      </div>
 
       <section className="brand-section">
         <h2 className="brand-section__title brand-section-heading">Year-to-date breakdown</h2>

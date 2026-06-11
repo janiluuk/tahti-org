@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   TransparencyCategoriesResponseSchema,
   TransparencyGrantReportSchema,
+  TransparencyLedgerLatestSchema,
   TransparencyMonthlyRollupListSchema,
   TransparencyResolutionListSchema,
   TransparencyYearQuerySchema,
@@ -110,15 +111,19 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
       const grants = await fastify.prisma.grantDisbursement.findMany({
         where: { forYear },
         orderBy: { amountCents: 'desc' },
-        select: { publishedAs: true, units: true, amountCents: true, state: true },
+        select: { publishedAs: true, units: true, amountCents: true, state: true, createdAt: true },
       })
 
       const totalCents = grants.reduce((s, g) => s + g.amountCents, 0n)
+      const disbursedAt = grants.length
+        ? new Date(Math.min(...grants.map((g) => g.createdAt.getTime()))).toISOString()
+        : null
 
       return reply.send({
         year: forYear,
         totalCents: totalCents.toString(),
         grantCount: grants.length,
+        disbursedAt,
         grants: grants.map((g) => ({
           publishedAs: g.publishedAs,
           units: g.units,
@@ -163,6 +168,34 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
         runningSurplus: totalSurplus.toString(),
         monthsFinalized: rollups.length,
       })
+    },
+  )
+
+  fastify.get(
+    '/api/v1/transparency/ledger/latest',
+    {
+      schema: {
+        tags: ['transparency'],
+        description: 'Most recent append-only ledger entries (public, redacted to category level)',
+        response: openApiResponse(TransparencyLedgerLatestSchema, 'TransparencyLedgerLatest'),
+      },
+    },
+    async (_request, reply) => {
+      const entries = await fastify.prisma.ledgerEntry.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: { id: true, description: true, category: true, amountCents: true, createdAt: true },
+      })
+
+      return reply.send(
+        entries.map((e) => ({
+          id: e.id.toString(),
+          description: e.description,
+          category: e.category,
+          amountCents: e.amountCents.toString(),
+          createdAt: e.createdAt.toISOString(),
+        })),
+      )
     },
   )
 
