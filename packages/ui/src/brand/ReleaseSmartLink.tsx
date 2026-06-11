@@ -16,6 +16,8 @@ export interface ReleaseSmartLinkProps {
   year: number | string
   artworkUrl?: string | null
   gradient?: CoverGradient
+  /** e.g. "Published" — shown above cover art on release smart links. */
+  statusLabel?: string
   /** Quote or artist note — pass SafePlainText for linked mentions. */
   quote?: React.ReactNode
   /** UPC, credits, collections — rendered between quote and actions. */
@@ -36,6 +38,7 @@ export function ReleaseSmartLink({
   year,
   artworkUrl,
   gradient,
+  statusLabel,
   quote,
   details,
   children,
@@ -52,13 +55,15 @@ export function ReleaseSmartLink({
 
   return (
     <article className={cn('release-smart-link', className)}>
+      {statusLabel ? <p className="release-smart-link__status">{statusLabel}</p> : null}
       <CoverArt
-        size="full"
+        size="lg"
         src={artworkUrl}
         gradient={placeholderGradient}
         alt={`${title} cover art`}
+        className="release-smart-link__cover"
       />
-      <BrandHeading level={2} className="release-smart-link__title">
+      <BrandHeading level={3} className="release-smart-link__title">
         {title}
       </BrandHeading>
       <BrandText tone="secondary" size="sm" className="release-smart-link__meta">

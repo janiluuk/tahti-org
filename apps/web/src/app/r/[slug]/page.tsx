@@ -64,7 +64,9 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
   const hasTargets = Object.values(data.targets).some((url) => url?.trim())
 
   return (
-    <SmartLinkPageLayout>
+    <SmartLinkPageLayout
+      contextLink={{ href: data.profileUrl, label: `← ${data.artist.username}` }}
+    >
       <ChannelColorScheme
         colorSchemeJson={data.release.colorSchemeJson}
         paletteJson={data.release.paletteJson}
@@ -79,6 +81,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
 
       <ReleaseSmartLink
         releaseId={data.release.id}
+        statusLabel="Published"
         title={data.release.title}
         artistName={data.artist.displayName}
         releaseType={data.release.type}
@@ -111,9 +114,12 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
       >
         <SmartLinkDspButtons smartLinkSlug={params.slug} targets={data.targets} />
         {!hasTargets ? (
-          <Link href={data.releaseUrl} className="sl-primary-cta">
-            Listen on Tahti
-          </Link>
+          <div className="public-empty-card">
+            <p className="public-empty-card__text">Streaming links coming soon.</p>
+            <p className="public-empty-card__hint">
+              <Link href={data.releaseUrl}>Listen on Tahti</Link>
+            </p>
+          </div>
         ) : null}
       </ReleaseSmartLink>
     </SmartLinkPageLayout>
