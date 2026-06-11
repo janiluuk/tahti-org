@@ -7,7 +7,6 @@ import { redirect } from 'next/navigation'
 import UploadForm from './upload-form'
 import StreamSettingsPanel from './stream-settings'
 import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
-import RtmpTargetsPanel from './rtmp-targets'
 import AnnouncementsPanel from './announcements-panel'
 import ModeratorsPanel from './moderators-panel'
 import type { ModeratorRow } from './moderator-actions'
@@ -88,15 +87,6 @@ interface ModeratedChannel {
   isOwner: boolean
 }
 
-interface RtmpTarget {
-  id: string
-  provider: string
-  label: string
-  rtmpUrl: string
-  alwaysMirror: boolean
-  enabled: boolean
-}
-
 interface ArchiveItem {
   id: string
   title: string
@@ -142,19 +132,6 @@ export default async function DashboardPage() {
       }
     } catch {
       // ignore
-    }
-  }
-
-  let rtmpTargets: RtmpTarget[] = []
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/rtmp-targets`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) rtmpTargets = (await res.json()) as RtmpTarget[]
-    } catch {
-      /* ignore */
     }
   }
 
@@ -867,9 +844,21 @@ export default async function DashboardPage() {
                 />
               </StudioCollapse>
 
-              <StudioCollapse title="Multistream" hint="RTMP mirrors">
-                <RtmpTargetsPanel initial={rtmpTargets} />
-              </StudioCollapse>
+              <Panel
+                title="Multistream"
+                headerTight
+                description="Mirror your live broadcast to other platforms"
+              >
+                <p className="studio-text-muted-sm studio-mb-sm">
+                  Manage RTMP targets, status, and stream keys on a dedicated page.
+                </p>
+                <Link
+                  href="/dashboard/settings/multistream"
+                  className="ui-btn ui-btn--sm ui-btn--secondary"
+                >
+                  Manage multistream targets →
+                </Link>
+              </Panel>
 
               <StudioCollapse title="Distribution & chat" hint="Mixcloud, announcements, mods">
                 <Suspense fallback={null}>

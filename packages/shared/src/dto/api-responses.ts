@@ -825,6 +825,8 @@ export const RtmpTargetViewSchema = z.object({
   alwaysMirror: z.boolean(),
   enabled: z.boolean(),
   createdAt: z.coerce.date().optional(),
+  /** Last 4 characters of the stream key — for "key ••••••{last4}" display. Full key is never listed. */
+  keyLast4: z.string().optional(),
 })
 
 export const RtmpTargetListSchema = z.array(RtmpTargetViewSchema)
