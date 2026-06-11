@@ -963,6 +963,36 @@
   flex-shrink: 0;
 }
 
+/* Public list empty states (homepage, discover-adjacent surfaces) */
+.public-empty-card {
+  padding: var(--space-6) var(--space-5);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.public-empty-card__text {
+  margin: 0 0 var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-body);
+}
+
+.public-empty-card__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.public-empty-card__hint a {
+  color: var(--amber);
+  text-decoration: none;
+}
+
+.public-empty-card__hint a:hover {
+  text-decoration: underline;
+}
+
 .stat-card-grid {
   display: grid;
   gap: var(--space-3);

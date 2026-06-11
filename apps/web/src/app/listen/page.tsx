@@ -115,14 +115,11 @@ export default async function ListenPage() {
       </header>
 
       {empty ? (
-        <div className="listen-empty">
-          <p className="listen-empty__text">No channels live right now.</p>
-          <p className="listen-empty__hint">
-            Check back later, or tune in to{' '}
-            <a href="/radio" className="listen-radio-link">
-              Tahti Radio
-            </a>{' '}
-            — it plays archived sets from all artists on rotation.
+        <div className="public-empty-card">
+          <p className="public-empty-card__text">No channels live right now.</p>
+          <p className="public-empty-card__hint">
+            Check back later, or tune in to <a href="/radio">Tahti Radio</a> — archived sets on fair
+            rotation.
           </p>
         </div>
       ) : (

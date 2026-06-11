@@ -63,6 +63,10 @@ function formatHours(h: number): string {
   return String(h)
 }
 
+function hasMeaningfulPlatformStats(stats: PlatformStats): boolean {
+  return stats.activeArtists > 0 || stats.broadcastsThisMonth > 0 || stats.totalHours > 0
+}
+
 export default async function HomePage() {
   const { live, stats } = await fetchData()
 
@@ -86,26 +90,37 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {live.length > 0 && (
-        <section className="home-live-section">
-          <div className="home-section-label">
-            <span className="listen-live-dot" aria-hidden />
-            On air right now
+      <section className="home-live-section">
+        <div className="home-section-label">
+          <span className="listen-live-dot" aria-hidden />
+          On air right now
+        </div>
+        {live.length > 0 ? (
+          <>
+            <div className="listen-live-grid">
+              {live.map((ch) => (
+                <LiveTile key={ch.slug} channel={ch} />
+              ))}
+            </div>
+            <div className="home-live-more">
+              <Link href="/listen" className="home-live-more__link">
+                See all channels →
+              </Link>
+            </div>
+          </>
+        ) : (
+          <div className="public-empty-card">
+            <p className="public-empty-card__text">No one is live right now.</p>
+            <p className="public-empty-card__hint">
+              <Link href="/listen">Browse channels</Link>
+              {' · '}
+              <Link href="/radio">Tahti Radio</Link>
+            </p>
           </div>
-          <div className="listen-live-grid">
-            {live.map((ch) => (
-              <LiveTile key={ch.slug} channel={ch} />
-            ))}
-          </div>
-          <div className="home-live-more">
-            <Link href="/listen" className="home-live-more__link">
-              See all channels →
-            </Link>
-          </div>
-        </section>
-      )}
+        )}
+      </section>
 
-      {stats && (
+      {stats && hasMeaningfulPlatformStats(stats) && (
         <StatCardStrip aria-label="Platform stats">
           <StatCard
             layout="inline"

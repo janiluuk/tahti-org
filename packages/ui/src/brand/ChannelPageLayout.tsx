@@ -10,6 +10,8 @@ type ChannelHeaderProps = {
   /** Live member channel — hides site nav, shows @handle in header centre */
   isLive?: boolean
   artistHandle?: string
+  /** Chat/presence listeners — shown beside LIVE pill on member channels */
+  listenerCount?: number | null
   /** Highlights the current top-nav item (Discover, Radio, Venues, Home) */
   activeNav?: SiteNavId
   /** LIVE pill on the right without hiding site nav (e.g. Tahti Radio) */
@@ -28,6 +30,7 @@ const SITE_NAV: { id: SiteNavId; href: string; label: string }[] = [
 export function ChannelHeader({
   isLive,
   artistHandle,
+  listenerCount,
   activeNav,
   showLiveBadge,
   user,
@@ -58,10 +61,17 @@ export function ChannelHeader({
       )}
       <div className="ch-header__right">
         {(showLiveBadge || channelLiveMode) && (
-          <div className="ch-live">
-            <span className="signal-dot" aria-hidden />
-            LIVE
-          </div>
+          <>
+            <div className="ch-live">
+              <span className="signal-dot" aria-hidden />
+              LIVE
+            </div>
+            {channelLiveMode && listenerCount != null && listenerCount > 0 && (
+              <span className="ch-header__listeners">
+                {listenerCount.toLocaleString()} listening
+              </span>
+            )}
+          </>
         )}
         {!channelLiveMode &&
           (user ? (
@@ -84,6 +94,7 @@ export function ChannelHeader({
 type ChannelPageLayoutProps = {
   isLive?: boolean
   artistHandle?: string
+  listenerCount?: number | null
   activeNav?: SiteNavId
   showLiveBadge?: boolean
   user?: { username: string; displayName: string } | null
@@ -95,6 +106,7 @@ type ChannelPageLayoutProps = {
 export function ChannelPageLayout({
   isLive,
   artistHandle,
+  listenerCount,
   activeNav,
   showLiveBadge,
   user,
@@ -106,6 +118,7 @@ export function ChannelPageLayout({
       <ChannelHeader
         isLive={isLive}
         artistHandle={artistHandle}
+        listenerCount={listenerCount}
         activeNav={activeNav}
         showLiveBadge={showLiveBadge}
         user={user}
