@@ -106,6 +106,16 @@ export const TransparencyYtdResponseSchema = z.object({
   monthsFinalized: z.number().int().nonnegative(),
 })
 
+export const TransparencyLedgerEntrySchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  category: z.string(),
+  amountCents: z.string(),
+  createdAt: z.string(),
+})
+
+export const TransparencyLedgerLatestSchema = z.array(TransparencyLedgerEntrySchema)
+
 export const TransparencyGrantReportSchema = z.object({
   year: z.number().int(),
   totalCents: z.string(),
