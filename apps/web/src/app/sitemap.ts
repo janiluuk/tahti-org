@@ -2,9 +2,9 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { MetadataRoute } from 'next'
+import { resolveAppUrl } from '@/lib/app-url'
 
 const API_URL = process.env.API_URL ?? process.env.INTERNAL_API_BASE ?? 'http://localhost:3001'
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'http://localhost:3000'
 
 async function fetchSitemapUrls(path: string): Promise<string[]> {
   try {
@@ -19,7 +19,7 @@ async function fetchSitemapUrls(path: string): Promise<string[]> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = APP_URL.replace(/\/$/, '')
+  const base = resolveAppUrl()
   const [profiles, releases] = await Promise.all([
     fetchSitemapUrls('/api/sitemap/profiles.xml'),
     fetchSitemapUrls('/api/sitemap/releases.xml'),

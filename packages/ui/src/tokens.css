@@ -5,6 +5,13 @@
  */
 
 :root {
+  /* ─── Platform defaults (channel color override fallbacks) ─────────── */
+  --platform-bg:       #0A0E1C;
+  --platform-text:     #E6E9F0;
+  --platform-muted:    #A1A8BD;
+  --platform-accent:   #22D3EE;
+  --platform-highlight:#A78BFA;
+
   /* ─── Backgrounds (v8 dark navy palette) ───────────────────────────── */
   --bg:         #0A0E1C;   /* outermost page background */
   --card:       #11172A;   /* card surface, sidebar background */
@@ -106,10 +113,40 @@
   --ease-reveal: 0.7s ease;
   --ease-card:   0.3s ease;
 
-  /* ─── Layout ────────────────────────────────────────────────────────── */
-  /* Max width of the app shell (header + body) on large viewports — leaves
-     breathing room on both sides instead of stretching edge-to-edge. */
+  /* ─── Layout (anti-stretch — sync with reference/tokens.css) ───────── */
+  --sidebar-w:     220px;
+  --chat-w:        300px;
+  --topnav-h:      56px;
+  --content-max:   1080px;
+  --public-max:    1140px;
+  --narrow-max:    460px;
+  --sidebar-item-h: 34px;
+  /* Max width of the app shell (header + body) on large viewports */
   --shell-max: 1680px;
+
+  /* ─── Listener map (stats) ─────────────────────────────────────────── */
+  --map-fill-empty:  #1a2030;
+  --map-border:      #2a3040;
+  --map-grid:        #1a2030;
+  --map-fill-hover:  #2a3552;
+
+  /* ─── Text layer (broadcast overlay) ───────────────────────────────── */
+  --tl-accent-1: #00bcd4;
+  --tl-accent-2: #f0a500;
+  --tl-accent-3: #e040fb;
+  --tl-accent-4: #2563eb;
+  --tl-glow:     #ffffff;
+  --tl-shimmer:  #c5cae9;
+
+  /* ─── Legacy auth/gateway aliases (admin-ui.css) ───────────────────── */
+  --amber-hover: #d4920a;
+  --legacy-success-border: #86efac;
+  --legacy-error-border:   #fca5a5;
+  --legacy-success-bg:     #bbf7d0;
+  --legacy-error-bg:       #fecaca;
+  --legacy-info-bg:        #bae6fd;
+  --legacy-live-bright:    #00e676;
+  --legacy-teal:           #4fd1c5;
 }
 
 /* ─── Global base (body styling lives in apps/web/src/app/globals.css) ─ */

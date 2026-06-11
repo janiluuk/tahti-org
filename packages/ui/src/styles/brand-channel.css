@@ -41,7 +41,7 @@
 }
 
 [data-tahti-ui='brand'].brand-channel--radio .bg-canvas--subtle {
-  background: #060a14;
+  background: var(--bg);
   filter: blur(32px) brightness(0.42) saturate(0.35);
 }
 
@@ -66,17 +66,17 @@
 
 /* M31: artist color scheme overrides (--channel-* set by ChannelColorScheme) */
 [data-channel-root] {
-  --bg: var(--channel-bg, #0a0e1c);
-  --text: var(--channel-text, #e6e9f0);
-  --muted: var(--channel-muted, #a1a8bd);
-  --muted2: color-mix(in srgb, var(--channel-muted, #a1a8bd) 72%, transparent);
-  --cyan: var(--channel-accent, #22d3ee);
-  --lavender: var(--channel-highlight, #a78bfa);
-  --purple: var(--channel-highlight, #a78bfa);
-  --card: color-mix(in srgb, var(--channel-bg, #0a0e1c) 88%, white);
-  --card2: color-mix(in srgb, var(--channel-bg, #0a0e1c) 80%, white);
-  --border: color-mix(in srgb, var(--channel-muted, #a1a8bd) 22%, transparent);
-  --amber: var(--channel-accent, #22d3ee);
+  --bg: var(--channel-bg, var(--platform-bg));
+  --text: var(--channel-text, var(--platform-text));
+  --muted: var(--channel-muted, var(--platform-muted));
+  --muted2: color-mix(in srgb, var(--channel-muted, var(--platform-muted)) 72%, transparent);
+  --cyan: var(--channel-accent, var(--platform-accent));
+  --lavender: var(--channel-highlight, var(--platform-highlight));
+  --purple: var(--channel-highlight, var(--platform-highlight));
+  --card: color-mix(in srgb, var(--channel-bg, var(--platform-bg)) 88%, white);
+  --card2: color-mix(in srgb, var(--channel-bg, var(--platform-bg)) 80%, white);
+  --border: color-mix(in srgb, var(--channel-muted, var(--platform-muted)) 22%, transparent);
+  --amber: var(--channel-accent, var(--platform-accent));
 }
 
 [data-tahti-ui='brand'].brand-channel .ui-heading,
@@ -304,11 +304,13 @@
   }
 }
 
-[data-tahti-ui='brand'] .ch-body {
+[data-tahti-ui='brand'] .ch-body,
+[data-tahti-ui='brand'] .shell-channel {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr var(--chat-w);
+  gap: var(--space-4);
   min-height: calc(100vh - 52px);
-  max-width: var(--shell-max);
+  max-width: var(--public-max);
   margin: 0 auto;
 }
 
@@ -879,12 +881,12 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 0;
-  background: #000;
+  background: var(--black);
 }
 
 [data-tahti-ui='brand'] .ch-artist-avatar--radio {
   background: linear-gradient(135deg, var(--cyan), var(--tahti-primary));
-  color: #fff;
+  color: var(--white);
   font-weight: 700;
 }
 

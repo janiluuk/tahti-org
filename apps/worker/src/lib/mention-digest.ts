@@ -10,7 +10,7 @@ const SMTP_PORT = parseInt(process.env.SMTP_PORT ?? '1025', 10)
 const SMTP_USER = process.env.SMTP_USER ?? ''
 const SMTP_PASS = process.env.SMTP_PASS ?? ''
 const SMTP_FROM = process.env.SMTP_FROM ?? 'Tahti <noreply@tahti.live>'
-const APP_URL = process.env.APP_URL ?? 'http://localhost:3000'
+const APP_URL = process.env.APP_URL ?? 'https://app.tahti.live'
 
 const SURFACE_LABEL: Record<MentionSurface, string> = {
   BIO: 'their profile bio',

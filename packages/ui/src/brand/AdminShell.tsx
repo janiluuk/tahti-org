@@ -30,9 +30,9 @@ export function AdminShell({
     return (
       <div data-tahti-ui="studio" className={cn('tahti-studio admin-shell', className)}>
         {header}
-        <div className="db-layout">
+        <div className="db-layout shell-app">
           <aside className="db-sidebar">{sidebar}</aside>
-          <main className="db-main admin-main">{children}</main>
+          <main className="db-main shell-app__content admin-main">{children}</main>
         </div>
       </div>
     )

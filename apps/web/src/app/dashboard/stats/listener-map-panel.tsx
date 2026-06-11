@@ -57,9 +57,9 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
 
   function fillForCount(count: number): string {
     const t = count / maxCount
-    if (t === 0) return 'var(--map-fill-empty, #1a2030)'
+    if (t === 0) return 'var(--map-fill-empty)'
     const pct = Math.round(t * 100)
-    return `color-mix(in srgb, var(--cyan) ${Math.max(12, pct)}%, var(--map-fill-empty, #1a2030))`
+    return `color-mix(in srgb, var(--cyan) ${Math.max(12, pct)}%, var(--map-fill-empty))`
   }
 
   const top10 = [...data].sort((a, b) => b.count - a.count).slice(0, 10)
@@ -93,13 +93,8 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
           height={400}
           style={{ width: '100%', height: 'auto' }}
         >
-          <Sphere
-            id="rsm-sphere"
-            stroke="var(--map-border, #2a3040)"
-            strokeWidth={0.5}
-            fill="transparent"
-          />
-          <Graticule stroke="var(--map-grid, #1a2030)" strokeWidth={0.3} />
+          <Sphere id="rsm-sphere" stroke="var(--map-border)" strokeWidth={0.5} fill="transparent" />
+          <Graticule stroke="var(--map-grid)" strokeWidth={0.3} />
           <Geographies geography={GEO_URL}>
             {({ geographies }) =>
               geographies.map((geo) => {
@@ -111,7 +106,7 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
                     key={geo.rsmKey}
                     geography={geo}
                     fill={fillForCount(count)}
-                    stroke="var(--map-border, #2a3040)"
+                    stroke="var(--map-border)"
                     strokeWidth={0.4}
                     style={{
                       default: { outline: 'none' },
@@ -120,7 +115,7 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
                         fill:
                           count > 0
                             ? 'color-mix(in srgb, var(--cyan) 75%, white)'
-                            : 'var(--map-fill-hover, #2a3552)',
+                            : 'var(--map-fill-hover)',
                       },
                       pressed: { outline: 'none' },
                     }}

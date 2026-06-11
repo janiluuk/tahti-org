@@ -6,16 +6,18 @@ import { PublicFooter } from '@tahti/ui'
 import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
 import '@tahti/ui/src/styles/brand-channel.css'
+import '@tahti/ui/src/styles/shells.css'
 import { BgCanvas } from '@/components/ui/bg-canvas'
+import { statusPageUrl } from '@/lib/status-page'
 
-/** Radio — same public brand shell as Home / Discover, with dimmed gateway background. */
+/** Radio — shell-channel page content with dimmed gateway background. */
 export default function RadioLayout({ children }: { children: ReactNode }) {
   return (
-    <div data-tahti-ui="brand" className="brand-channel brand-channel--radio">
+    <div data-tahti-ui="brand" className="brand-channel brand-channel--radio shell-public">
       <BgCanvas variant="subtle" />
       <div className="radio-shell">
         {children}
-        <PublicFooter />
+        <PublicFooter statusUrl={statusPageUrl()} />
       </div>
     </div>
   )

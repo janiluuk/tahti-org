@@ -18,9 +18,9 @@ export function StudioShell({ children, displayName, isLive, isBoard }: StudioSh
   return (
     <div data-tahti-ui="studio" className="tahti-studio">
       <StudioTopNav displayName={displayName} isLive={isLive} isBoard={isBoard} />
-      <div className="db-layout">
+      <div className="db-layout shell-app">
         <StudioSidebar isBoard={isBoard} />
-        <main className="db-main">{children}</main>
+        <main className="db-main shell-app__content">{children}</main>
       </div>
       <StudioMobileNav />
     </div>

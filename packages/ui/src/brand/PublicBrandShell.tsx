@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import { ChannelHeader } from './ChannelPageLayout'
+import { ChannelHeader, type SiteNavId } from './ChannelPageLayout'
 import { PublicFooter } from './PublicFooter'
 
 export type PublicBrandShellProps = {
@@ -15,6 +15,8 @@ export type PublicBrandShellProps = {
   showHeader?: boolean
   /** Render the shared footer (governance/legal/source links) below the page content. */
   showFooter?: boolean
+  /** Highlights active top-nav item when showHeader is set. */
+  activeNav?: SiteNavId
   /** Signed-in user, forwarded to ChannelHeader when showHeader is set. */
   user?: { username: string; displayName: string } | null
   /** Status page URL, forwarded to PublicFooter when showFooter is set. */
@@ -28,19 +30,20 @@ export function PublicBrandShell({
   wide,
   showHeader,
   showFooter,
+  activeNav,
   user,
   statusUrl,
 }: PublicBrandShellProps) {
   const layoutClass = [
     'brand-public',
-    center && 'brand-public--center',
-    wide && 'brand-public--wide',
+    center && 'brand-public--center shell-narrow',
+    wide && 'brand-public--wide shell-public__inner',
   ]
     .filter(Boolean)
     .join(' ')
   return (
-    <div data-tahti-ui="brand">
-      {showHeader && <ChannelHeader user={user} />}
+    <div data-tahti-ui="brand" className={wide ? 'shell-public' : undefined}>
+      {showHeader && <ChannelHeader activeNav={activeNav} user={user} />}
       <div className={layoutClass}>{children}</div>
       {showFooter && <PublicFooter statusUrl={statusUrl} />}
     </div>

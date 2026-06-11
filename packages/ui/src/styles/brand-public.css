@@ -131,13 +131,15 @@
   white-space: pre-wrap;
 }
 
-[data-tahti-ui='brand'] .brand-public--center {
-  max-width: 420px;
+[data-tahti-ui='brand'] .brand-public--center,
+[data-tahti-ui='brand'] .shell-narrow {
+  max-width: var(--narrow-max);
   text-align: center;
 }
 
-[data-tahti-ui='brand'] .brand-public--wide {
-  max-width: 960px;
+[data-tahti-ui='brand'] .brand-public--wide,
+[data-tahti-ui='brand'] .shell-public__inner {
+  max-width: var(--public-max);
   text-align: left;
 }
 

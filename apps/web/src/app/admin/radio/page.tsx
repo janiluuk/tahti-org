@@ -202,17 +202,7 @@ export default async function AdminRadioPage() {
                     </td>
                     <td>
                       {ch.isLive ? (
-                        <span
-                          style={{
-                            fontSize: '0.7rem',
-                            fontWeight: 700,
-                            color: '#22c55e',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.06em',
-                          }}
-                        >
-                          Live
-                        </span>
+                        <span className="admin-live-pill">Live</span>
                       ) : (
                         <span style={{ opacity: 0.5, fontSize: '0.85rem' }}>Offline</span>
                       )}

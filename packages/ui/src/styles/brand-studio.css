@@ -160,10 +160,11 @@
   flex-shrink: 0;
 }
 
-[data-tahti-ui='studio'] .db-layout {
+[data-tahti-ui='studio'] .db-layout,
+[data-tahti-ui='studio'] .shell-app {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  min-height: calc(100vh - 56px);
+  grid-template-columns: var(--sidebar-w) 1fr;
+  min-height: calc(100vh - var(--topnav-h));
   max-width: var(--shell-max);
   margin: 0 auto;
 }
@@ -242,11 +243,12 @@
   opacity: 1;
 }
 
-[data-tahti-ui='studio'] .db-main {
-  padding: 24px 32px 64px;
+[data-tahti-ui='studio'] .db-main,
+[data-tahti-ui='studio'] .shell-app__content {
+  padding: var(--space-6) var(--space-8) var(--space-16);
   background: var(--bg);
   min-width: 0;
-  max-width: 1100px;
+  max-width: var(--content-max);
   margin: 0 auto;
   width: 100%;
 }
