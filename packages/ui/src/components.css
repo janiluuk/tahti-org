@@ -48,7 +48,7 @@
 .s-h2 {
   font-family: var(--font-head);
   font-size: clamp(32px, 5vw, 58px);
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   line-height: 1.1;
   margin-bottom: 10px;
 }
@@ -95,7 +95,7 @@
 .card h3 {
   font-family: var(--font-head);
   font-size: 16px;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   margin-bottom: 6px;
 }
 .card h3.amber   { color: var(--amber); }
@@ -121,7 +121,7 @@
 }
 .tool-card:hover { transform: translateY(-3px); }
 .tool-icon { font-size: 32px; flex-shrink: 0; }
-.tool-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.tool-card h3 { font-size: 15px; font-weight: var(--weight-medium); margin-bottom: 2px; }
 .tool-card p  { font-size: 12px; color: var(--muted); }
 
 /* Pricing card */
@@ -141,7 +141,7 @@
   color: var(--bg);
   font-size: 11px;
   letter-spacing: 2px;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   padding: 4px 14px;
   border-radius: var(--radius-pill);
   text-transform: uppercase;
@@ -156,7 +156,7 @@
 .price-num {
   font-family: var(--font-head);
   font-size: 56px;
-  font-weight: 700;
+  font-weight: var(--weight-medium);
   line-height: 1;
   margin-bottom: 4px;
 }
@@ -196,7 +196,7 @@
   color: var(--amber);
   margin-bottom: 8px;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: var(--weight-medium);
 }
 .callout.cyan   .callout-label { color: var(--cyan); }
 .callout.green  .callout-label { color: var(--green); }
@@ -221,7 +221,7 @@
   color: var(--muted);
   margin-bottom: 24px;
 }
-.url-box .highlight { color: var(--amber); font-weight: 700; }
+.url-box .highlight { color: var(--amber); font-weight: var(--weight-medium); }
 
 
 /* ═══════════════════════════════════════════════════════════════════════

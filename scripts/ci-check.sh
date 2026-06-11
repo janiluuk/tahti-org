@@ -30,6 +30,10 @@ echo "── CI check: reference token values ───────────�
 bash scripts/check-reference-token-values.sh
 
 echo ""
+echo "── CI check: brand font-weight cap (≤500) ─────────────────"
+bash scripts/check-font-weight-cap.sh
+
+echo ""
 echo "── CI check: Tor exit list freshness (M18) ───────────────"
 node scripts/check-tor-exit-list-fresh.mjs
 
