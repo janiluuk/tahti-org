@@ -3,25 +3,26 @@
 
 'use client'
 
-import { useState } from 'react'
 import { BgCanvas } from '@/components/ui/bg-canvas'
+import { usePlayer } from '@/contexts/player-context'
 import HlsPlayer from './hls-player'
 import ReactionsOverlay from './reactions'
 
 interface LivePlayerSectionProps {
   url: string
   slug: string
+  title?: string
 }
 
-export function LivePlayerSection({ url, slug }: LivePlayerSectionProps) {
-  const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null)
+export function LivePlayerSection({ url, slug, title }: LivePlayerSectionProps) {
+  const { analyser } = usePlayer()
 
   return (
     <>
-      <BgCanvas audioEl={audioEl} />
+      <BgCanvas analyser={analyser} />
       <div id="live-player" className="ch-player-wrap">
         <div className="ch-player-inner">
-          <HlsPlayer url={url} onAudioMount={setAudioEl} />
+          <HlsPlayer url={url} title={title} subtitle={`@${slug}`} href={`/c/${slug}`} />
         </div>
         <ReactionsOverlay slug={slug} />
       </div>

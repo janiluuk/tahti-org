@@ -8,55 +8,28 @@ import * as THREE from 'three'
 
 interface AudioState {
   analyser: AnalyserNode | null
-  audioCtx: AudioContext | null
   smooth: Float32Array<ArrayBuffer>
   raw: Uint8Array<ArrayBuffer>
 }
 
 interface BgCanvasProps {
-  audioEl?: HTMLAudioElement | null
+  /** Shared analyser node from PlayerProvider — connected once playback starts. */
+  analyser?: AnalyserNode | null
   /** Softer motion + lower opacity — for /radio behind channel content. */
   variant?: 'default' | 'subtle'
 }
 
-export function BgCanvas({ audioEl, variant = 'default' }: BgCanvasProps = {}) {
+export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const audioStateRef = useRef<AudioState>({
     analyser: null,
-    audioCtx: null,
     smooth: new Float32Array(256) as Float32Array<ArrayBuffer>,
     raw: new Uint8Array(256) as Uint8Array<ArrayBuffer>,
   })
 
-  // ── Audio setup — re-runs when audioEl changes ────────────────────────────
   useEffect(() => {
-    if (!audioEl) return
-    const state = audioStateRef.current
-
-    const init = async () => {
-      if (state.audioCtx) return
-      try {
-        const ctx = new AudioContext()
-        const analyser = ctx.createAnalyser()
-        analyser.fftSize = 512
-        analyser.smoothingTimeConstant = 0.82
-        const src = ctx.createMediaElementSource(audioEl)
-        src.connect(analyser)
-        analyser.connect(ctx.destination)
-        state.audioCtx = ctx
-        state.analyser = analyser
-        if (ctx.state !== 'running') await ctx.resume()
-      } catch (e) {
-        console.warn('[BgCanvas audio]', e)
-      }
-    }
-
-    if (!audioEl.paused) void init()
-    audioEl.addEventListener('play', init, { once: true })
-    return () => {
-      audioEl.removeEventListener('play', init)
-    }
-  }, [audioEl])
+    audioStateRef.current.analyser = analyser
+  }, [analyser])
 
   // ── Three.js scene — runs once, reads audioStateRef each frame ───────────
   useEffect(() => {
@@ -452,8 +425,8 @@ export function BgCanvas({ audioEl, variant = 'default' }: BgCanvasProps = {}) {
 
     // ── Audio helpers — read from shared ref each frame ──────────────────────
     function sampleAudio() {
-      const { analyser, audioCtx, smooth, raw } = audioStateRef.current
-      if (!analyser || !audioCtx || audioCtx.state !== 'running') return
+      const { analyser, smooth, raw } = audioStateRef.current
+      if (!analyser || analyser.context.state !== 'running') return
       analyser.getByteFrequencyData(raw)
       for (let i = 0; i < 256; i++) smooth[i] = smooth[i] * 0.75 + (raw[i] / 255) * 0.25
     }
@@ -645,8 +618,6 @@ export function BgCanvas({ audioEl, variant = 'default' }: BgCanvasProps = {}) {
       cancelAnimationFrame(frameId)
       window.removeEventListener('resize', onResize)
       renderer.dispose()
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      void audioStateRef.current.audioCtx?.close()
     }
   }, [variant]) // eslint-disable-line react-hooks/exhaustive-deps
 
