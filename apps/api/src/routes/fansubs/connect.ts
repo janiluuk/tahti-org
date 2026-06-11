@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import {
   FanConnectOnboardResponseSchema,
+  FanConnectPortalResponseSchema,
   FanConnectStatusResponseSchema,
   openApiResponse,
 } from '@tahti/shared'
@@ -13,6 +14,7 @@ import {
   stripeEnabled,
   createConnectExpressAccount,
   createConnectAccountLink,
+  createConnectLoginLink,
   fetchConnectAccount,
 } from '../../lib/stripe.js'
 
@@ -125,6 +127,33 @@ const fanConnectRoutes: FastifyPluginAsync = async (fastify) => {
       } catch (err) {
         request.log.error({ err }, 'fan-subs connect onboarding failed')
         return reply.status(502).send({ error: 'Could not start Stripe onboarding' })
+      }
+    },
+  )
+
+  // GET /api/me/fan-subs/connect/portal — Express dashboard login link
+  fastify.get(
+    '/api/me/fan-subs/connect/portal',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        response: openApiResponse(FanConnectPortalResponseSchema, 'FanConnectPortal'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+
+      if (!stripeEnabled || !user.stripeConnectAccountId) {
+        return reply.status(400).send({ error: 'Stripe Connect is not set up for this account' })
+      }
+
+      try {
+        const url = await createConnectLoginLink(user.stripeConnectAccountId)
+        return reply.send({ url })
+      } catch (err) {
+        request.log.error({ err }, 'fan-subs connect portal link failed')
+        return reply.status(502).send({ error: 'Could not open Stripe account' })
       }
     },
   )

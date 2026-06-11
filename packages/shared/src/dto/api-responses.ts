@@ -838,6 +838,8 @@ export const FanSubPayoutsDashboardSchema = z.object({
   failed: z.number().int(),
   paidLast30Days: z.number().int(),
   activeSubscribers: z.number().int(),
+  thisMonthNetCents: z.number().int(),
+  paidYtdNetCents: z.number().int(),
   recent: z.array(
     z.object({
       id: z.string(),
@@ -864,6 +866,19 @@ export const MeGrantDisbursementSchema = z.object({
 })
 
 export const MeGrantListSchema = z.array(MeGrantDisbursementSchema)
+
+/** Forecast of this artist's share of the current year's grant pool, based
+ *  on engagement units accrued so far and the year-to-date surplus. */
+export const MeGrantEstimateSchema = z.object({
+  year: z.number().int(),
+  estimateCents: z.number().int().nonnegative(),
+  units: z.number().nonnegative(),
+  eligible: z.boolean(),
+})
+
+export const FanConnectPortalResponseSchema = z.object({
+  url: z.string().url(),
+})
 
 export const OEmbedResponseSchema = z
   .object({

@@ -1687,6 +1687,13 @@
   color: var(--amber);
 }
 
+[data-tahti-ui='brand'] .tier-transparency .money-breakdown {
+  margin-top: 0.5rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
 [data-tahti-ui='brand'] .tier-footnote {
   color: var(--muted);
   font-size: 0.8rem;

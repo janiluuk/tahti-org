@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { TierCard, TierCardGrid } from '@tahti/ui'
+import { fanSubBreakdownLines, MoneyBreakdown, TierCard, TierCardGrid } from '@tahti/ui'
 import { subscribe } from './actions'
 
 interface Tier {
@@ -55,10 +55,6 @@ export default function TierCards({
 
   const featuredIdx = tiers.length >= 2 ? Math.floor(tiers.length / 2) : -1
   const exampleTier = featuredIdx >= 0 ? tiers[featuredIdx] : (tiers[0] ?? null)
-  const exEurRaw = exampleTier ? exampleTier.amountCents / 100 : 5
-  const stripeFee = (exEurRaw * 0.014 + 0.25).toFixed(2)
-  const tahtiShare = (exEurRaw * 0.02).toFixed(2)
-  const artistGets = (exEurRaw - parseFloat(stripeFee) - parseFloat(tahtiShare)).toFixed(2)
 
   return (
     <div>
@@ -86,10 +82,8 @@ export default function TierCards({
       </TierCardGrid>
       {exampleTier ? (
         <div className="tier-transparency">
-          <strong>Where {eur(exampleTier.amountCents)} actually goes:</strong> Stripe takes ~€
-          {stripeFee} (their fees, pass-through). Tahti takes €{tahtiShare} (2%, covers GDPR +
-          processing). The artist receives <strong>€{artistGets}</strong>. We&apos;re not a platform
-          — we&apos;re plumbing.
+          <strong>Where {eur(exampleTier.amountCents)} actually goes:</strong>
+          <MoneyBreakdown lines={fanSubBreakdownLines(exampleTier.amountCents)} />
         </div>
       ) : null}
       <p className="tier-footnote">

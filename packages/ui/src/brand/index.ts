@@ -124,3 +124,4 @@ export {
   type MoneyBreakdownProps,
   type ProgressBarProps,
 } from './AdminPrimitives'
+export { fanSubBreakdownLines } from './fan-sub-breakdown'

@@ -1673,6 +1673,25 @@
   }
 }
 
+[data-tahti-ui='studio'] .revenue-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+[data-tahti-ui='studio'] .revenue-pending {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='studio'] .revenue-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 [data-tahti-ui='studio'] .stats-top-list {
   list-style: none;
   padding: 0;

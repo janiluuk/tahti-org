@@ -19,46 +19,61 @@ const fanSubPayoutRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
 
-      const [pending, failed, paidRecent, recent, activeSubs] = await Promise.all([
-        fastify.prisma.fanSubPayout.count({
-          where: { artistUserId: user.id, state: 'PENDING' },
-        }),
-        fastify.prisma.fanSubPayout.count({
-          where: { artistUserId: user.id, state: 'FAILED' },
-        }),
-        fastify.prisma.fanSubPayout.count({
-          where: {
-            artistUserId: user.id,
-            state: 'PAID',
-            paidAt: { gte: new Date(Date.now() - 30 * 24 * 3600 * 1000) },
-          },
-        }),
-        fastify.prisma.fanSubPayout.findMany({
-          where: { artistUserId: user.id },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-          select: {
-            id: true,
-            state: true,
-            grossCents: true,
-            netToArtistCents: true,
-            forPeriodStart: true,
-            forPeriodEnd: true,
-            paidAt: true,
-            createdAt: true,
-            fanSubscription: { select: { tierName: true } },
-          },
-        }),
-        fastify.prisma.fanSubscription.count({
-          where: { artistUserId: user.id, state: 'ACTIVE' },
-        }),
-      ])
+      const now = new Date()
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const startOfYear = new Date(now.getFullYear(), 0, 1)
+
+      const [pending, failed, paidRecent, recent, activeSubs, thisMonthAgg, ytdAgg] =
+        await Promise.all([
+          fastify.prisma.fanSubPayout.count({
+            where: { artistUserId: user.id, state: 'PENDING' },
+          }),
+          fastify.prisma.fanSubPayout.count({
+            where: { artistUserId: user.id, state: 'FAILED' },
+          }),
+          fastify.prisma.fanSubPayout.count({
+            where: {
+              artistUserId: user.id,
+              state: 'PAID',
+              paidAt: { gte: new Date(Date.now() - 30 * 24 * 3600 * 1000) },
+            },
+          }),
+          fastify.prisma.fanSubPayout.findMany({
+            where: { artistUserId: user.id },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+            select: {
+              id: true,
+              state: true,
+              grossCents: true,
+              netToArtistCents: true,
+              forPeriodStart: true,
+              forPeriodEnd: true,
+              paidAt: true,
+              createdAt: true,
+              fanSubscription: { select: { tierName: true } },
+            },
+          }),
+          fastify.prisma.fanSubscription.count({
+            where: { artistUserId: user.id, state: 'ACTIVE' },
+          }),
+          fastify.prisma.fanSubPayout.aggregate({
+            _sum: { netToArtistCents: true },
+            where: { artistUserId: user.id, state: 'PAID', paidAt: { gte: startOfMonth } },
+          }),
+          fastify.prisma.fanSubPayout.aggregate({
+            _sum: { netToArtistCents: true },
+            where: { artistUserId: user.id, state: 'PAID', paidAt: { gte: startOfYear } },
+          }),
+        ])
 
       return reply.send({
         pending,
         failed,
         paidLast30Days: paidRecent,
         activeSubscribers: activeSubs,
+        thisMonthNetCents: thisMonthAgg._sum.netToArtistCents ?? 0,
+        paidYtdNetCents: ytdAgg._sum.netToArtistCents ?? 0,
         recent: recent.map((p) => ({
           id: p.id,
           state: p.state,
