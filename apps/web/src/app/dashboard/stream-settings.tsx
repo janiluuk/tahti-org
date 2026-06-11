@@ -109,6 +109,8 @@ export default function StreamSettingsPanel({
           <Link href="/help/broadcast">OBS, Mixxx &amp; Traktor setup guides</Link>
           {' · '}
           <Link href="/help/multistream">Multistream to YouTube / Twitch</Link>
+          {' · '}
+          <Link href="/help/support">Contact support</Link>
         </p>
       </Stack>
     </Panel>
