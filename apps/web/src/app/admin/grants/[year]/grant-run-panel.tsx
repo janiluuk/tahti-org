@@ -4,70 +4,46 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { runGrantCycle } from './actions'
 
-type Props = { year: number; alreadyRun: boolean }
+type Props = { year: number; poolCents: number; artistCount: number; sumCheckOk: boolean }
 
-export function GrantRunPanel({ year, alreadyRun }: Props) {
+export function GrantRunPanel({ year, poolCents, artistCount, sumCheckOk }: Props) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<{
-    error?: string
-    poolCents?: number
-    grantCount?: number
-    reserveCents?: number
-    alreadyRun?: boolean
-  } | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  async function handleRun() {
-    if (
-      !confirm(
-        `Run the ${year} grant disbursement? This writes real ledger entries and cannot be reversed.`,
-      )
+  async function handleApprove() {
+    const poolEur = (poolCents / 100).toLocaleString('fi-FI', { minimumFractionDigits: 2 })
+    const confirmed = confirm(
+      `Approve the ${year} grant distribution?\n\nPool: €${poolEur}\nArtists: ${artistCount}\n\n` +
+        'This writes real GRANT_DISBURSEMENT ledger entries and cannot be reversed.',
     )
-      return
+    if (!confirmed) return
+
     setLoading(true)
+    setError(null)
     const r = await runGrantCycle(year)
     setLoading(false)
-    setResult(r)
-  }
 
-  if (alreadyRun && !result) {
-    return (
-      <p className="admin-stat-sub" style={{ color: 'var(--amber)' }}>
-        Grants for {year} have already been disbursed.
-      </p>
-    )
-  }
-
-  if (result?.alreadyRun) {
-    return (
-      <p className="admin-stat-sub" style={{ color: 'var(--amber)' }}>
-        Grants for {year} have already been disbursed.
-      </p>
-    )
-  }
-
-  if (result?.error) {
-    return (
-      <p className="admin-stat-sub" style={{ color: 'var(--coral)' }}>
-        Error: {result.error}
-      </p>
-    )
-  }
-
-  if (result?.poolCents !== undefined) {
-    return (
-      <div style={{ color: 'var(--green)', fontSize: '0.9rem' }}>
-        ✓ Disbursed — pool €{(result.poolCents / 100).toLocaleString('fi-FI')} to{' '}
-        {result.grantCount} artists. Reserve: €
-        {((result.reserveCents ?? 0) / 100).toLocaleString('fi-FI')}.
-      </div>
-    )
+    if (r.error) {
+      setError(r.error)
+      return
+    }
+    router.refresh()
   }
 
   return (
-    <button className="admin-btn admin-btn--danger" onClick={handleRun} disabled={loading}>
-      {loading ? 'Running…' : `Run ${year} grant disbursement`}
-    </button>
+    <div className="grant-approve">
+      <button
+        className="ui-btn ui-btn--sm grant-approve__btn"
+        onClick={handleApprove}
+        disabled={loading || !sumCheckOk}
+      >
+        {loading ? 'Approving…' : 'Approve distribution'}
+      </button>
+      {error && <p className="admin-footnote admin-footnote--warn">{error}</p>}
+    </div>
   )
 }

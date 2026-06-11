@@ -13,35 +13,6 @@ function authHeader(): Record<string, string> {
   return { Cookie: `tahti_session=${sessionCookie.value}` }
 }
 
-export async function fetchGrantPreview(forYear: number): Promise<{
-  error: string | null
-  preview?: {
-    poolCents: number
-    totalUnits: number
-    grantCount: number
-    alreadyRun: boolean
-    artists: Array<{
-      username: string
-      displayName: string
-      units: number
-      amountCents: number
-      anomalies: Array<{ code: string; message: string }>
-    }>
-  }
-}> {
-  const res = await fetch(`${apiUrl}/api/admin/grants/preview/${forYear}`, {
-    headers: authHeader(),
-    cache: 'no-store',
-  })
-
-  if (res.status === 403) return { error: 'Board access required' }
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    return { error: (body as { error?: string }).error ?? 'Preview failed' }
-  }
-  return { error: null, preview: await res.json() }
-}
-
 export async function runGrantCycle(forYear: number): Promise<{
   error?: string
   poolCents?: number

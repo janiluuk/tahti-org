@@ -120,6 +120,7 @@ export const TransparencyGrantReportSchema = z.object({
   year: z.number().int(),
   totalCents: z.string(),
   grantCount: z.number().int().nonnegative(),
+  disbursedAt: z.string().datetime().nullable(),
   grants: z.array(
     z.object({
       publishedAs: z.string(),

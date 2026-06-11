@@ -2760,3 +2760,111 @@
     flex-direction: column;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ADMIN — shared page header row + small utilities
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.admin-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.admin-header-row__title-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.admin-header-row__title {
+  margin: 0;
+}
+
+.admin-header-row__subline {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.admin-header-row__actions {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.admin-section-label {
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted2);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.admin-footnote {
+  margin-top: var(--space-3);
+  font-size: 11px;
+  color: var(--muted2);
+}
+
+.admin-footnote--warn {
+  color: var(--coral);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+@media (max-width: 640px) {
+  .admin-header-row {
+    flex-direction: column;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   GRANT CYCLE — /admin/grants/[year]
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.grant-allocation__handle {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.grant-allocation__downloads {
+  font-size: 11px;
+  color: var(--muted2);
+}
+
+.grant-allocation__units {
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+.grant-allocation__amount {
+  font-family: var(--font-mono);
+  color: var(--green);
+}
+
+.grant-allocation__overflow {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.grant-approve__btn {
+  background: var(--green);
+  color: #06200f;
+  border-color: var(--green);
+  font-weight: 600;
+}
+
+.grant-approve__btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}

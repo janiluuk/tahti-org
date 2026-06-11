@@ -111,15 +111,19 @@ const transparencyRoutes: FastifyPluginAsync = async (fastify) => {
       const grants = await fastify.prisma.grantDisbursement.findMany({
         where: { forYear },
         orderBy: { amountCents: 'desc' },
-        select: { publishedAs: true, units: true, amountCents: true, state: true },
+        select: { publishedAs: true, units: true, amountCents: true, state: true, createdAt: true },
       })
 
       const totalCents = grants.reduce((s, g) => s + g.amountCents, 0n)
+      const disbursedAt = grants.length
+        ? new Date(Math.min(...grants.map((g) => g.createdAt.getTime()))).toISOString()
+        : null
 
       return reply.send({
         year: forYear,
         totalCents: totalCents.toString(),
         grantCount: grants.length,
+        disbursedAt,
         grants: grants.map((g) => ({
           publishedAs: g.publishedAs,
           units: g.units,
