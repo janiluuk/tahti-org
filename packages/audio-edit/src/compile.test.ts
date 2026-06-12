@@ -57,6 +57,22 @@ describe('compileFiltergraph', () => {
   })
 })
 
+describe('limiter', () => {
+  it('places alimiter before loudnorm and emits nothing when bypassed', () => {
+    const edit = createDefaultEditList(120)
+    edit.limiter = { enabled: true, ceilingDb: -1, releaseMs: 50 }
+    edit.loudnorm = { enabled: true, targetLufs: -14, targetTp: -1.5 }
+    const { filtergraph } = compileFiltergraph(edit)
+    const limIdx = filtergraph.indexOf('alimiter=')
+    const loudIdx = filtergraph.indexOf('loudnorm=')
+    expect(limIdx).toBeGreaterThan(-1)
+    expect(loudIdx).toBeGreaterThan(limIdx)
+
+    const bypassed = createDefaultEditList(120)
+    expect(compileFiltergraph(bypassed).filtergraph).not.toContain('alimiter=')
+  })
+})
+
 describe('validateEditListParsed', () => {
   it('rejects full cut', () => {
     const edit = createDefaultEditList(60)

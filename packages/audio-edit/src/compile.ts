@@ -90,6 +90,13 @@ function buildCompStage(inputLabel: string, edit: EditList): string {
   return `${inputLabel}acompressor=threshold=${c.thresholdDb}dB:ratio=${c.ratio}:attack=${c.attackMs}:release=${c.releaseMs}:makeup=${c.makeupDb}[cmp]`
 }
 
+function buildLimiterStage(inputLabel: string, edit: EditList): string {
+  if (!edit.limiter.enabled) return `${inputLabel}anull[lim]`
+  const { ceilingDb, releaseMs } = edit.limiter
+  const limit = 10 ** (ceilingDb / 20)
+  return `${inputLabel}alimiter=limit=${formatSec(limit)}:release=${releaseMs}[lim]`
+}
+
 function buildLoudnormStage(inputLabel: string, edit: EditList): string {
   if (!edit.loudnorm.enabled) return `${inputLabel}anull[out]`
   const { targetLufs, targetTp, measured } = edit.loudnorm
@@ -137,7 +144,8 @@ export function compileFiltergraph(edit: EditList, options: CompileOptions = {})
     buildGainStage('[fad]', edit.gainDb),
     buildEqStage('[g]', edit),
     buildCompStage('[eq]', edit),
-    buildLoudnormStage('[cmp]', edit),
+    buildLimiterStage('[cmp]', edit),
+    buildLoudnormStage('[lim]', edit),
   ]
 
   return {

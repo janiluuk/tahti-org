@@ -49,6 +49,12 @@ export const EditLoudnormSchema = z.object({
   measured: LoudnormMeasuredSchema.optional(),
 })
 
+export const EditLimiterSchema = z.object({
+  enabled: z.boolean(),
+  ceilingDb: z.number().min(-3).max(0),
+  releaseMs: z.number().min(1).max(1000),
+})
+
 export const EditListSchema = z.object({
   version: z.literal(1),
   sourceDuration: z.number().positive(),
@@ -57,6 +63,7 @@ export const EditListSchema = z.object({
   gainDb: z.number().min(-24).max(24),
   eq: EditEqSchema,
   comp: EditCompSchema,
+  limiter: EditLimiterSchema.default({ enabled: false, ceilingDb: -1, releaseMs: 50 }),
   loudnorm: EditLoudnormSchema,
 })
 
@@ -65,6 +72,7 @@ export type EditFade = z.infer<typeof EditFadeSchema>
 export type EditEqBand = z.infer<typeof EditEqBandSchema>
 export type EditEq = z.infer<typeof EditEqSchema>
 export type EditComp = z.infer<typeof EditCompSchema>
+export type EditLimiter = z.infer<typeof EditLimiterSchema>
 export type LoudnormMeasured = z.infer<typeof LoudnormMeasuredSchema>
 export type EditLoudnorm = z.infer<typeof EditLoudnormSchema>
 export type EditList = z.infer<typeof EditListSchema>
@@ -106,6 +114,12 @@ export const DEFAULT_COMP: EditComp = {
   makeupDb: 0,
 }
 
+export const DEFAULT_LIMITER: EditLimiter = {
+  enabled: false,
+  ceilingDb: -1,
+  releaseMs: 50,
+}
+
 export function createDefaultEditList(sourceDuration: number): EditList {
   return {
     version: 1,
@@ -115,6 +129,7 @@ export function createDefaultEditList(sourceDuration: number): EditList {
     gainDb: 0,
     eq: { enabled: false, bands: DEFAULT_EQ_BANDS.map((b) => ({ ...b })) },
     comp: { ...DEFAULT_COMP },
+    limiter: { ...DEFAULT_LIMITER },
     loudnorm: { enabled: false, targetLufs: -14, targetTp: -1.5 },
   }
 }

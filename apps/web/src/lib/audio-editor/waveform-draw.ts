@@ -45,11 +45,37 @@ export function drawWaveformLayer(
     ctx.fillRect(Math.max(0, c0 * width), 0, (Math.min(1, c1) - Math.max(0, c0)) * width, height)
   }
 
-  ctx.fillStyle = 'rgba(148, 163, 184, 0.55)'
+  const sel = view.selection
+  const selStart = sel ? (sel.start / pyramid.durationSec - startFrac) / span : null
+  const selEnd = sel ? (sel.end / pyramid.durationSec - startFrac) / span : null
+
   slice.forEach((peak, i) => {
     const x = (i / slice.length) * width
     const barH = (peak / 255) * (height * 0.85)
+    const frac = i / slice.length
+    const inSelection = selStart !== null && selEnd !== null && frac >= selStart && frac <= selEnd
+    ctx.fillStyle = inSelection ? 'rgba(126, 231, 238, 0.85)' : 'rgba(34, 211, 238, 0.55)'
     ctx.fillRect(x, mid - barH / 2, Math.max(1, width / slice.length), barH)
+  })
+
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(0, mid)
+  ctx.lineTo(width, mid)
+  ctx.stroke()
+}
+
+export function drawMinimapLayer(ctx: CanvasRenderingContext2D, pyramid: PeaksPyramid): void {
+  const { width, height } = ctx.canvas
+  ctx.clearRect(0, 0, width, height)
+  const peaks = pyramid.levels[pyramid.levels.length - 1] ?? []
+  const mid = height / 2
+  ctx.fillStyle = 'rgba(34, 211, 238, 0.4)'
+  peaks.forEach((peak, i) => {
+    const x = (i / peaks.length) * width
+    const barH = (peak / 255) * (height * 0.9)
+    ctx.fillRect(x, mid - barH / 2, Math.max(1, width / peaks.length), barH)
   })
 }
 

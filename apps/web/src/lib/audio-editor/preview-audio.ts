@@ -4,15 +4,46 @@
 import type { EditList } from '@tahti/audio-edit'
 import { mergeCuts } from '@tahti/audio-edit'
 
+export interface PreviewSource {
+  ctx: AudioContext
+  src: MediaElementAudioSourceNode
+}
+
+/**
+ * `createMediaElementSource` may only be called once per `<audio>` element for its
+ * entire lifetime (even across AudioContext instances), so the context and source
+ * node are created once, cached per element, and reused while the downstream
+ * processing chain is rebuilt on every edit-list change. The cache also absorbs
+ * React 18 StrictMode's mount→cleanup→mount cycle in development.
+ */
+const sourceCache = new WeakMap<HTMLAudioElement, PreviewSource>()
+
+export function createPreviewSource(audio: HTMLAudioElement): PreviewSource {
+  const cached = sourceCache.get(audio)
+  if (cached && cached.ctx.state !== 'closed') return cached
+  const ctx = new AudioContext()
+  const src = ctx.createMediaElementSource(audio)
+  const source: PreviewSource = { ctx, src }
+  sourceCache.set(audio, source)
+  return source
+}
+
 export interface PreviewGraph {
   ctx: AudioContext
   analyser: AnalyserNode
+  /** Tap before the compressor stage, for the gain-reduction meter (≈). */
+  preCompAnalyser: AnalyserNode
+  /** Tap after the compressor stage, for the gain-reduction meter (≈). */
+  postCompAnalyser: AnalyserNode
   disconnect: () => void
 }
 
-export function attachPreviewGraph(audio: HTMLAudioElement, edit: EditList): PreviewGraph {
-  const ctx = new AudioContext()
-  const src = ctx.createMediaElementSource(audio)
+export function attachPreviewGraph(
+  source: PreviewSource,
+  audio: HTMLAudioElement,
+  edit: EditList,
+): PreviewGraph {
+  const { ctx, src } = source
   const gain = ctx.createGain()
   gain.gain.value = 10 ** (edit.gainDb / 20)
 
@@ -44,8 +75,26 @@ export function attachPreviewGraph(audio: HTMLAudioElement, edit: EditList): Pre
     comp.release.value = edit.comp.releaseMs / 1000
   }
 
+  const limiter = ctx.createDynamicsCompressor()
+  if (edit.limiter.enabled) {
+    limiter.threshold.value = edit.limiter.ceilingDb
+    limiter.ratio.value = 20
+    limiter.attack.value = 0.001
+    limiter.release.value = edit.limiter.releaseMs / 1000
+  }
+
   const analyser = ctx.createAnalyser()
   analyser.fftSize = 2048
+
+  const preCompAnalyser = ctx.createAnalyser()
+  preCompAnalyser.fftSize = 2048
+  const postCompAnalyser = ctx.createAnalyser()
+  postCompAnalyser.fftSize = 2048
+  const silentSink = ctx.createGain()
+  silentSink.gain.value = 0
+  silentSink.connect(ctx.destination)
+  preCompAnalyser.connect(silentSink)
+  postCompAnalyser.connect(silentSink)
 
   let node: AudioNode = src
   node.connect(gain)
@@ -58,9 +107,18 @@ export function attachPreviewGraph(audio: HTMLAudioElement, edit: EditList): Pre
     }
   }
 
+  node.connect(preCompAnalyser)
+
   if (edit.comp.enabled) {
     node.connect(comp)
     node = comp
+  }
+
+  node.connect(postCompAnalyser)
+
+  if (edit.limiter.enabled) {
+    node.connect(limiter)
+    node = limiter
   }
 
   node.connect(analyser)
@@ -81,9 +139,11 @@ export function attachPreviewGraph(audio: HTMLAudioElement, edit: EditList): Pre
   return {
     ctx,
     analyser,
+    preCompAnalyser,
+    postCompAnalyser,
     disconnect: () => {
       audio.removeEventListener('timeupdate', onTimeUpdate)
-      void ctx.close()
+      src.disconnect()
     },
   }
 }
@@ -97,4 +157,14 @@ export function readPeakLevel(analyser: AnalyserNode): number {
     if (v > peak) peak = v
   }
   return peak
+}
+
+function peakDb(analyser: AnalyserNode): number {
+  const peak = readPeakLevel(analyser)
+  return peak <= 0 ? -100 : 20 * Math.log10(peak)
+}
+
+/** Approximate gain reduction by comparing pre/post compressor peak levels. */
+export function readGainReductionDb(pre: AnalyserNode, post: AnalyserNode): number {
+  return Math.max(0, peakDb(pre) - peakDb(post))
 }
