@@ -473,6 +473,61 @@
   max-width: 480px;
 }
 
+/* ---- Signup step 1 (account) ---- */
+.signup-card {
+  max-width: 440px;
+  padding-top: 28px;
+}
+
+.signup-card__title {
+  text-align: center;
+  margin-top: var(--tahti-space-3);
+}
+
+.signup-card__subtitle {
+  text-align: center;
+  margin-bottom: var(--tahti-space-4);
+}
+
+.signup-handle-status {
+  font-size: 11px;
+}
+
+.signup-handle-status--ok {
+  color: var(--green);
+}
+
+.signup-handle-status--error {
+  color: var(--coral);
+}
+
+.signup-handle-status__url {
+  font-family: var(--font-mono);
+  color: var(--cyan);
+}
+
+.signup-handle-suggestion {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.signup-continue-btn {
+  width: 100%;
+}
+
+.signup-footnote {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted2);
+}
+
 /* ---- Dark auth card (used over Three.js background) ---- */
 .auth-card--dark {
   background: rgba(10, 15, 30, 0.72);
@@ -849,6 +904,10 @@
 .auth-card--dark .ui-heading--1 {
   color: var(--text);
   margin-bottom: var(--tahti-space-3);
+}
+
+.auth-card--dark [role='tabpanel'] > .ui-text--muted {
+  margin-bottom: var(--tahti-space-4);
 }
 
 .auth-tabs {
@@ -1482,6 +1541,11 @@
   .signup-tier-grid {
     grid-template-columns: 1fr;
   }
+
+  .auth-tabs__tab {
+    font-size: 0.8125rem;
+    padding: var(--tahti-space-2) var(--tahti-space-1);
+  }
 }
 
 .signup-tier-radio {
@@ -1497,7 +1561,7 @@
   gap: 0.25rem;
   padding: 1rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
   transition:
@@ -1510,22 +1574,36 @@
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.signup-tier-card--member {
+  background: rgba(34, 211, 238, 0.04);
+}
+
 .signup-tier-card--active {
-  border-color: var(--tahti-primary);
-  background: color-mix(in srgb, var(--tahti-primary) 10%, rgba(10, 15, 30, 0.5));
+  border-color: var(--cyan);
+}
+
+.signup-tier-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .signup-tier-card__name {
   font-weight: var(--weight-medium);
-  font-size: 0.9375rem;
+  font-size: 13px;
   color: var(--text);
 }
 
 .signup-tier-card__price {
-  font-size: 1rem;
+  font-size: 20px;
   font-weight: var(--weight-medium);
-  color: var(--tahti-primary);
+  color: var(--muted);
   font-family: var(--tahti-font-head);
+}
+
+.signup-tier-card__price--cyan {
+  color: var(--cyan);
 }
 
 .signup-tier-card__desc {
@@ -1569,43 +1647,40 @@
 
 .signup-wizard {
   margin: 0 0 1.25rem;
+  text-align: center;
 }
 
 .signup-wizard__list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 .signup-wizard__step {
-  opacity: 0.45;
-}
-
-.signup-wizard__step--done,
-.signup-wizard__step--active {
-  opacity: 1;
-}
-
-.signup-wizard__link {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.75rem;
+}
+
+.signup-wizard__arrow {
+  font-size: 11px;
+  color: var(--muted2);
+}
+
+.signup-wizard__link {
+  font-size: 11px;
   font-weight: var(--weight-medium);
-  text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: var(--muted2);
   text-decoration: none;
 }
 
-.signup-wizard__step--active .signup-wizard__link {
-  color: var(--cyan);
-}
-
-.signup-wizard__step--done .signup-wizard__link {
+a.signup-wizard__link:hover {
   color: var(--text);
 }
 

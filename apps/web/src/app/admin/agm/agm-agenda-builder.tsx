@@ -89,7 +89,7 @@ export function AgmAgendaBuilder() {
         }}
       >
         {items.map((item, i) => (
-          <li key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <li key={i} className="agm-agenda-row">
             <span
               style={{
                 color: 'var(--muted)',
@@ -105,35 +105,36 @@ export function AgmAgendaBuilder() {
               type="text"
               value={item}
               onChange={(e) => update(i, e.target.value)}
-              className="admin-input"
-              style={{ flex: 1 }}
+              className="admin-input agm-agenda-row__input"
             />
-            <button
-              onClick={() => moveUp(i)}
-              disabled={i === 0}
-              className="admin-btn admin-btn--icon"
-              title="Move up"
-              aria-label="Move up"
-            >
-              ↑
-            </button>
-            <button
-              onClick={() => moveDown(i)}
-              disabled={i === items.length - 1}
-              className="admin-btn admin-btn--icon"
-              title="Move down"
-              aria-label="Move down"
-            >
-              ↓
-            </button>
-            <button
-              onClick={() => remove(i)}
-              className="admin-btn admin-btn--danger admin-btn--icon"
-              title="Remove"
-              aria-label="Remove item"
-            >
-              ×
-            </button>
+            <div className="agm-agenda-row__actions">
+              <button
+                onClick={() => moveUp(i)}
+                disabled={i === 0}
+                className="admin-btn admin-btn--icon"
+                title="Move up"
+                aria-label="Move up"
+              >
+                ↑
+              </button>
+              <button
+                onClick={() => moveDown(i)}
+                disabled={i === items.length - 1}
+                className="admin-btn admin-btn--icon"
+                title="Move down"
+                aria-label="Move down"
+              >
+                ↓
+              </button>
+              <button
+                onClick={() => remove(i)}
+                className="admin-btn admin-btn--danger admin-btn--icon"
+                title="Remove"
+                aria-label="Remove item"
+              >
+                ×
+              </button>
+            </div>
           </li>
         ))}
       </ol>

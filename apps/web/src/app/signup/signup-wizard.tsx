@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Link from 'next/link'
+import { StatusPill } from '@tahti/ui'
 import { SIGNUP_STEPS, type SignupStepId } from '@/lib/signup'
 
 export function SignupWizard({ current }: { current: SignupStepId }) {
@@ -13,26 +14,23 @@ export function SignupWizard({ current }: { current: SignupStepId }) {
         {SIGNUP_STEPS.map((step, index) => {
           const done = index < currentIndex
           const active = step.id === current
-          const className = [
-            'signup-wizard__step',
-            done ? 'signup-wizard__step--done' : '',
-            active ? 'signup-wizard__step--active' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')
+          const stepLabel = `${index + 1} · ${step.label.toUpperCase()}`
 
           return (
-            <li key={step.id} className={className} aria-current={active ? 'step' : undefined}>
-              {done ? (
+            <li
+              key={step.id}
+              className="signup-wizard__step"
+              aria-current={active ? 'step' : undefined}
+            >
+              {index > 0 && <span className="signup-wizard__arrow">→</span>}
+              {active ? (
+                <StatusPill tone="cyan">{stepLabel}</StatusPill>
+              ) : done ? (
                 <Link href={step.href} className="signup-wizard__link">
-                  <span className="signup-wizard__num">{index + 1}</span>
-                  <span className="signup-wizard__label">{step.label}</span>
+                  {stepLabel}
                 </Link>
               ) : (
-                <span className="signup-wizard__link">
-                  <span className="signup-wizard__num">{index + 1}</span>
-                  <span className="signup-wizard__label">{step.label}</span>
-                </span>
+                <span className="signup-wizard__link">{stepLabel}</span>
               )}
             </li>
           )

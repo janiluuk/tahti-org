@@ -87,6 +87,12 @@
 
 [data-tahti-ui='brand'] .brand-public .ui-text {
   line-height: 1.7;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .brand-public .ui-text--muted,
+[data-tahti-ui='brand'] .brand-public .ui-text--secondary {
+  color: var(--muted);
 }
 
 [data-tahti-ui='brand'] .brand-public .ui-text + .ui-text,
@@ -406,10 +412,12 @@
 
 [data-tahti-ui='brand'] .brand-public .status-page__up {
   color: var(--cyan);
+  white-space: nowrap;
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page__down {
   color: var(--coral);
+  white-space: nowrap;
 }
 
 [data-tahti-ui='brand'] .brand-public .status-page__footer {
