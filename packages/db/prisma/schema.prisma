@@ -728,6 +728,7 @@ model ArchiveItem {
   title         String
   description   String?
   tracklist     Json?             // M22: [{startSec, title, artist?, artistUsername?}]
+  editList      Json?             // Pro editor v3 draft (@tahti/audio-edit EditList v1)
   bannerUrl     String?           // M24: cover image URL
   backgroundUrl String?           // per-track background image
   slideshowUrls String[]          // ordered images for track page slideshow

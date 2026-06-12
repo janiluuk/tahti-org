@@ -106,10 +106,49 @@ export async function activateArchiveVersion(
   return { versions: await res.json(), error: null }
 }
 
+export async function fetchArchiveEditListDraft(itemId: string): Promise<{
+  editList?: import('@tahti/audio-edit').EditList
+  updatedAt?: string | null
+  error: string | null
+}> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/draft`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to load edit draft' }
+  }
+  const data = (await res.json()) as {
+    editList: import('@tahti/audio-edit').EditList
+    updatedAt: string | null
+  }
+  return { editList: data.editList, updatedAt: data.updatedAt, error: null }
+}
+
+export async function saveArchiveEditListDraft(
+  itemId: string,
+  editList: import('@tahti/audio-edit').EditList,
+): Promise<{ updatedAt?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/draft`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ editList }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to save edit draft' }
+  }
+  const data = (await res.json()) as { updatedAt: string }
+  return { updatedAt: data.updatedAt, error: null }
+}
+
 export async function fetchArchiveEditorSource(itemId: string): Promise<{
   url?: string
   durationSec?: number | null
   title?: string
+  sourceKey?: string
   error: string | null
 }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/source`, {

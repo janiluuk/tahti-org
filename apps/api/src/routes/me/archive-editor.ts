@@ -2,7 +2,11 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { createDefaultEditList, validateEditList } from '@tahti/audio-edit'
 import {
+  ArchiveEditListDraftPatchResponseSchema,
+  ArchiveEditListDraftPatchSchema,
+  ArchiveEditListDraftResponseSchema,
   ArchiveEditorBounceResponseSchema,
   ArchiveEditorBounceSchema,
   ArchiveEditorPublishResponseSchema,
@@ -23,9 +27,102 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
   async function ownedItem(userId: string, itemId: string) {
     return fastify.prisma.archiveItem.findFirst({
       where: { id: itemId, channel: { userId } },
-      select: { id: true, title: true, channel: { select: { slug: true } } },
+      select: {
+        id: true,
+        title: true,
+        durationSec: true,
+        editList: true,
+        updatedAt: true,
+        channel: { select: { slug: true } },
+      },
     })
   }
+
+  fastify.get(
+    '/api/me/archive/:id/editor/draft',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Pro editor v3: load persisted EditList draft',
+        response: openApiResponse(ArchiveEditListDraftResponseSchema, 'ArchiveEditListDraft'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const item = await ownedItem(user.id, id)
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const source = await resolveArchiveEditorSource(fastify.prisma, id)
+      if (!source) {
+        return reply.status(409).send({ error: 'Archive item is not ready for editing' })
+      }
+
+      const duration = source.durationSec ?? item.durationSec ?? 60
+      const stored = item.editList
+      const validation = stored ? validateEditList(stored) : { ok: false as const, issues: [] }
+      const editList =
+        validation.ok && validation.edit
+          ? validation.edit
+          : createDefaultEditList(Math.max(1, duration))
+
+      return reply.send({
+        editList: { ...editList, sourceDuration: Math.max(editList.sourceDuration, duration) },
+        updatedAt: item.updatedAt.toISOString(),
+      })
+    },
+  )
+
+  fastify.patch(
+    '/api/me/archive/:id/editor/draft',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Pro editor v3: autosave EditList draft',
+        response: openApiResponse(
+          ArchiveEditListDraftPatchResponseSchema,
+          'ArchiveEditListDraftPatch',
+        ),
+      },
+    },
+    async (request, reply) => {
+      const parsed = ArchiveEditListDraftPatchSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid request body',
+        })
+      }
+
+      const validation = validateEditList(parsed.data.editList)
+      if (!validation.ok) {
+        return reply.status(400).send({
+          error: validation.issues[0]?.message ?? 'Invalid edit list',
+          issues: validation.issues,
+        })
+      }
+
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const item = await ownedItem(user.id, id)
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const updated = await fastify.prisma.archiveItem.update({
+        where: { id },
+        data: { editList: validation.edit },
+        select: { updatedAt: true },
+      })
+
+      return reply.send({ ok: true as const, updatedAt: updated.updatedAt.toISOString() })
+    },
+  )
 
   fastify.get(
     '/api/me/archive/:id/editor/source',

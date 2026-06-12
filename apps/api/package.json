@@ -20,6 +20,7 @@
     "@fastify/sensible": "^5.6.0",
     "@fastify/swagger": "^8.15.0",
     "@fastify/swagger-ui": "^4.1.0",
+    "@tahti/audio-edit": "workspace:*",
     "@tahti/db": "workspace:*",
     "@tahti/ledger": "workspace:*",
     "@tahti/mixcloud": "workspace:*",
