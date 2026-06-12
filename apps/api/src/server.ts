@@ -16,6 +16,7 @@ import metricsRoute from './routes/metrics.js'
 import sourceRoute from './routes/source.js'
 import registerRoute from './routes/auth/register.js'
 import verifyRoute from './routes/auth/verify.js'
+import usernameAvailableRoute from './routes/auth/username-available.js'
 import loginRoute from './routes/auth/login.js'
 import logoutRoute from './routes/auth/logout.js'
 import meRoute from './routes/auth/me.js'
@@ -384,6 +385,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(sourceRoute)
   await fastify.register(registerRoute)
   await fastify.register(verifyRoute)
+  await fastify.register(usernameAvailableRoute)
   await fastify.register(setupPasswordRoute)
   await fastify.register(loginRoute)
   await fastify.register(logoutRoute)

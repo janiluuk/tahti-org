@@ -3,21 +3,52 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, Text } from '@tahti/ui'
+import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, StatusPill, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { SIGNUP_TIER_KEY, type SignupTier } from '@/lib/signup'
 import { register } from '@/app/auth/actions'
 import { SignupWizard } from './signup-wizard'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const HANDLE_PATTERN = /^[a-z0-9_-]{2,32}$/
+
+type HandleStatus = 'idle' | 'checking' | 'available' | 'taken'
+
 export function SignupForm() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [done, setDone] = useState(false)
   const [tier, setTier] = useState<SignupTier>('free')
+  const [handle, setHandle] = useState('')
+  const [handleStatus, setHandleStatus] = useState<HandleStatus>('idle')
+  const [handleSuggestions, setHandleSuggestions] = useState<string[]>([])
   const { captchaRef, required: captchaRequired, getToken, reset } = useHcaptcha(!done)
+
+  useEffect(() => {
+    if (!HANDLE_PATTERN.test(handle)) {
+      setHandleStatus('idle')
+      setHandleSuggestions([])
+      return
+    }
+    setHandleStatus('checking')
+    const timer = setTimeout(() => {
+      fetch(`${API_BASE}/api/auth/username-available?username=${encodeURIComponent(handle)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data: { available: boolean; suggestions?: string[] } | null) => {
+          if (!data) {
+            setHandleStatus('idle')
+            return
+          }
+          setHandleStatus(data.available ? 'available' : 'taken')
+          setHandleSuggestions(data.suggestions ?? [])
+        })
+        .catch(() => setHandleStatus('idle'))
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [handle])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -72,7 +103,9 @@ export function SignupForm() {
               account, then sign in.
             </Text>
             <Text tone="muted" size="sm">
-              <Link href="/login?next=/signup/payment">Sign in to continue setup →</Link>
+              <Link href={`/login?next=${tier === 'free' ? '/signup/profile' : '/signup/payment'}`}>
+                Sign in to continue setup →
+              </Link>
             </Text>
           </div>
         </div>
@@ -84,10 +117,15 @@ export function SignupForm() {
     <>
       <BgCanvas />
       <div className="auth-shell">
-        <div className="auth-card auth-card--dark auth-card--wide">
+        <div className="auth-card auth-card--dark signup-card">
           <BrandLogo />
           <SignupWizard current="account" />
-          <Heading level={1}>Create your artist account</Heading>
+          <Heading level={3} className="signup-card__title">
+            Start your channel
+          </Heading>
+          <Text tone="muted" size="sm" className="signup-card__subtitle">
+            One URL that always plays. Yours.
+          </Text>
           <Text tone="muted" size="sm">
             Already have an account? <Link href="/login">Sign in</Link>
           </Text>
@@ -110,7 +148,37 @@ export function SignupForm() {
               <Field
                 label="Handle"
                 htmlFor="signup-username"
-                hint="Lowercase letters, numbers, - and _ only. Your channel URL: tahti.live/c/your-handle"
+                hint={
+                  handleStatus === 'available' ? (
+                    <span className="signup-handle-status signup-handle-status--ok">
+                      ✓ available — your channel will live at{' '}
+                      <span className="signup-handle-status__url">{handle}.tahti.live</span>
+                    </span>
+                  ) : handleStatus === 'taken' ? (
+                    <span className="signup-handle-status signup-handle-status--error">
+                      Already taken
+                      {handleSuggestions.length > 0 && (
+                        <>
+                          {' — try '}
+                          {handleSuggestions.map((s, i) => (
+                            <span key={s}>
+                              {i > 0 && ' or '}
+                              <button
+                                type="button"
+                                className="signup-handle-suggestion"
+                                onClick={() => setHandle(s)}
+                              >
+                                {s}
+                              </button>
+                            </span>
+                          ))}
+                        </>
+                      )}
+                    </span>
+                  ) : (
+                    `Lowercase letters, numbers, - and _ only. Your channel URL: ${handle || 'your-handle'}.tahti.live`
+                  )
+                }
               >
                 <Input
                   id="signup-username"
@@ -121,6 +189,8 @@ export function SignupForm() {
                   pattern="[a-z0-9_-]+"
                   autoComplete="username"
                   placeholder="dj-moonrise"
+                  value={handle}
+                  onChange={(e) => setHandle(e.target.value.toLowerCase())}
                 />
               </Field>
 
@@ -173,13 +243,11 @@ export function SignupForm() {
                     />
                     <span className="signup-tier-card__name">Free</span>
                     <span className="signup-tier-card__price">€0</span>
-                    <span className="signup-tier-card__desc">
-                      MP3 192 kbps live &amp; archive, smart links, newsletter, analytics, fan-subs,
-                      grant eligibility. Everything.
-                    </span>
+                    <span className="signup-tier-card__desc">MP3 192 · 1 hr live/week</span>
+                    <span className="signup-tier-card__desc">Full product otherwise</span>
                   </label>
                   <label
-                    className={`signup-tier-card${tier === 'paid' ? ' signup-tier-card--active' : ''}`}
+                    className={`signup-tier-card signup-tier-card--member${tier === 'paid' ? ' signup-tier-card--active' : ''}`}
                   >
                     <input
                       type="radio"
@@ -189,25 +257,37 @@ export function SignupForm() {
                       onChange={() => setTier('paid')}
                       className="signup-tier-radio"
                     />
-                    <span className="signup-tier-card__name">Paid member</span>
-                    <span className="signup-tier-card__price">€40/year</span>
-                    <span className="signup-tier-card__desc">
-                      FLAC lossless for you and your listeners, priority support, Stash file
-                      storage, and a vote at the AGM.
+                    <span className="signup-tier-card__header">
+                      <span className="signup-tier-card__name">Tahti</span>
+                      <StatusPill tone="cyan">MEMBER</StatusPill>
                     </span>
+                    <span className="signup-tier-card__price signup-tier-card__price--cyan">
+                      €40/yr
+                    </span>
+                    <span className="signup-tier-card__desc">Lossless FLAC · unlimited live</span>
+                    <span className="signup-tier-card__desc">Vote at AGM · grant-eligible</span>
                   </label>
                 </div>
               </fieldset>
 
               {captchaRequired && <div ref={captchaRef} />}
 
-              <Button type="submit" variant="primary" disabled={pending}>
-                {pending ? 'Creating account…' : 'Create account'}
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={pending}
+                className="signup-continue-btn"
+              >
+                {pending ? 'Creating account…' : 'Continue →'}
               </Button>
 
               <Text tone="muted" size="sm">
                 By creating an account you agree to the <Link href="/terms">terms of service</Link>{' '}
                 and <Link href="/privacy">privacy policy</Link>.
+              </Text>
+
+              <Text tone="muted" size="sm" className="signup-footnote">
+                No upgrade pressure. Free is a complete product — the constitution says so.
               </Text>
             </Stack>
           </form>
