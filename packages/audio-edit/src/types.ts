@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 export const EditCutSchema = z.object({
   start: z.number().min(0),
-  end: z.number().positive(),
+  end: z.number().min(0.000001),
 })
 
 export const EditFadeSchema = z.object({
@@ -57,7 +57,7 @@ export const EditLimiterSchema = z.object({
 
 export const EditListSchema = z.object({
   version: z.literal(1),
-  sourceDuration: z.number().positive(),
+  sourceDuration: z.number().min(0.000001),
   cuts: z.array(EditCutSchema),
   fades: z.array(EditFadeSchema),
   gainDb: z.number().min(-24).max(24),
