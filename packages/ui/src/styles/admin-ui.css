@@ -906,6 +906,10 @@
   margin-bottom: var(--tahti-space-3);
 }
 
+.auth-card--dark [role='tabpanel'] > .ui-text--muted {
+  margin-bottom: var(--tahti-space-4);
+}
+
 .auth-tabs {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1536,6 +1540,11 @@
 @media (max-width: 480px) {
   .signup-tier-grid {
     grid-template-columns: 1fr;
+  }
+
+  .auth-tabs__tab {
+    font-size: 0.8125rem;
+    padding: var(--tahti-space-2) var(--tahti-space-1);
   }
 }
 

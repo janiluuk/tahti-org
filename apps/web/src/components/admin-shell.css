@@ -515,3 +515,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+.agm-agenda-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.agm-agenda-row__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.agm-agenda-row__input {
+  flex: 1 1 160px;
+}
+
+@media (max-width: 480px) {
+  .agm-agenda-row__input {
+    flex-basis: 100%;
+    order: 1;
+  }
+
+  .agm-agenda-row__actions {
+    order: 2;
+    margin-left: 1.5rem;
+  }
+}

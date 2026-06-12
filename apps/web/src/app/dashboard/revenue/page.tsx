@@ -72,7 +72,7 @@ async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promis
 }
 
 function eur(cents: number): string {
-  return `€${(cents / 100).toFixed(2)}`
+  return `€${(Number.isFinite(cents) ? cents / 100 : 0).toFixed(2)}`
 }
 
 interface PayoutRow {
