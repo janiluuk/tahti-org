@@ -2451,7 +2451,7 @@
 .admin-mini-sidebar {
   width: 118px;
   flex: none;
-  background: #0e1424;
+  background: var(--card);
   padding: var(--space-3) 0;
   display: flex;
   flex-direction: column;
@@ -2860,7 +2860,7 @@
 
 .grant-approve__btn {
   background: var(--green);
-  color: #06200f;
+  color: var(--text-on-brand);
   border-color: var(--green);
   font-weight: 600;
 }
