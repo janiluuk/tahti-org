@@ -21,3 +21,17 @@ export const ArchiveEditListDraftPatchResponseSchema = z.object({
   ok: z.literal(true),
   updatedAt: z.string().datetime(),
 })
+
+export const ArchiveEditListRenderSchema = z.object({
+  editList: EditListSchema,
+  versionLabel: z.string().trim().min(1).max(120),
+  activate: z.boolean().default(true),
+  format: z.enum(['flac', 'mp3']).default('flac'),
+})
+
+export const ArchiveEditListRenderResponseSchema = z.object({
+  ok: z.literal(true),
+  versionId: z.string(),
+  versionNumber: z.number().int(),
+  status: z.string(),
+})

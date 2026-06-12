@@ -235,6 +235,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.600.0
         version: 3.1058.0
+      '@tahti/audio-edit':
+        specifier: workspace:*
+        version: link:../../packages/audio-edit
       '@tahti/db':
         specifier: workspace:*
         version: link:../../packages/db

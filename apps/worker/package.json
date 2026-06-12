@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.600.0",
+    "@tahti/audio-edit": "workspace:*",
     "@tahti/db": "workspace:*",
     "@tahti/ledger": "workspace:*",
     "@tahti/mixcloud": "workspace:*",

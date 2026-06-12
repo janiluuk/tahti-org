@@ -7,6 +7,8 @@ import {
   ArchiveEditListDraftPatchResponseSchema,
   ArchiveEditListDraftPatchSchema,
   ArchiveEditListDraftResponseSchema,
+  ArchiveEditListRenderResponseSchema,
+  ArchiveEditListRenderSchema,
   ArchiveEditorBounceResponseSchema,
   ArchiveEditorBounceSchema,
   ArchiveEditorPublishResponseSchema,
@@ -20,7 +22,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveArchiveEditorSource } from '../../lib/archive-editor-source.js'
 import { presignedGetUrl } from '../../lib/minio.js'
-import { enqueueBounceArchiveEdit, mediaQueue } from '../../lib/queue.js'
+import { enqueueBounceArchiveEdit, enqueueRenderArchiveEdit, mediaQueue } from '../../lib/queue.js'
 import { ensureInitialVersion } from '@tahti/db'
 
 const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
@@ -258,6 +260,91 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         lowPassHz,
         eq,
         compressorEnabled,
+        activate,
+      })
+
+      return reply.status(202).send({
+        ok: true as const,
+        versionId: version.id,
+        versionNumber: version.versionNumber,
+        status: version.status,
+      })
+    },
+  )
+
+  fastify.post(
+    '/api/me/archive/:id/editor/render',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Pro editor v3: server-side render of EditList via native ffmpeg (Render B)',
+        response: openApiResponses([
+          {
+            status: 202,
+            schema: ArchiveEditListRenderResponseSchema,
+            name: 'ArchiveEditListRender',
+          },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const parsed = ArchiveEditListRenderSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid request body',
+        })
+      }
+
+      const validation = validateEditList(parsed.data.editList)
+      if (!validation.ok || !validation.edit) {
+        return reply.status(400).send({
+          error: validation.issues[0]?.message ?? 'Invalid edit list',
+          issues: validation.issues,
+        })
+      }
+
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const item = await ownedItem(user.id, id)
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const source = await resolveArchiveEditorSource(fastify.prisma, id)
+      if (!source) {
+        return reply.status(409).send({ error: 'Archive item is not ready for editing' })
+      }
+
+      const { versionLabel, activate, format } = parsed.data
+      const editList = validation.edit
+
+      await ensureInitialVersion(fastify.prisma, id)
+      const versionCount = await fastify.prisma.archiveItemVersion.count({
+        where: { archiveItemId: id },
+      })
+
+      const version = await fastify.prisma.archiveItemVersion.create({
+        data: {
+          archiveItemId: id,
+          versionNumber: versionCount + 1,
+          versionLabel,
+          rawKey: `pending/${item.channel.slug}/${id}`,
+          fileSizeBytes: 0,
+          status: 'PENDING',
+          isActive: false,
+        },
+        select: { id: true, versionNumber: true, status: true },
+      })
+
+      await enqueueRenderArchiveEdit({
+        versionId: version.id,
+        archiveItemId: id,
+        channelSlug: item.channel.slug,
+        sourceKey: source.sourceKey,
+        editList,
+        format,
         activate,
       })
 

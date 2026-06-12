@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Queue } from 'bullmq'
+import type { EditList } from '@tahti/audio-edit'
 import type { EqBands, LufsTarget } from '@tahti/shared'
 import { config } from '../config.js'
 
@@ -42,6 +43,24 @@ export interface BounceArchiveEditJob {
 export async function enqueueBounceArchiveEdit(payload: BounceArchiveEditJob): Promise<void> {
   await mediaQueue.add('bounce-archive-edit', payload, {
     jobId: `bounce-archive-edit-${payload.versionId}`,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 10_000 },
+  })
+}
+
+export interface RenderArchiveEditJob {
+  versionId: string
+  archiveItemId: string
+  channelSlug: string
+  sourceKey: string
+  editList: EditList
+  format: 'flac' | 'mp3' | 'wav'
+  activate: boolean
+}
+
+export async function enqueueRenderArchiveEdit(payload: RenderArchiveEditJob): Promise<void> {
+  await mediaQueue.add('render-archive-edit', payload, {
+    jobId: `render-archive-edit-${payload.versionId}`,
     attempts: 3,
     backoff: { type: 'exponential', delay: 10_000 },
   })

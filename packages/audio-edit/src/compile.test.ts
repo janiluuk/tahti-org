@@ -8,7 +8,7 @@ import {
   estimateOutputBytes,
   remapTracklistTimestamps,
 } from './compile.js'
-import { computeKeepSegments, mergeCuts, postCutDuration, sourceTimeToPostCut } from './segments.js'
+import { computeKeepSegments, mergeCuts, sourceTimeToPostCut } from './segments.js'
 import { createDefaultEditList } from './types.js'
 import { validateEditListParsed } from './validate.js'
 

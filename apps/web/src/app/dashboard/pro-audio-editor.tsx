@@ -17,7 +17,9 @@ import { Panel } from '@tahti/ui'
 import {
   completeArchiveVersionUpload,
   prepareArchiveVersionUpload,
+  renderArchiveEditList,
   saveArchiveEditListDraft,
+  waitForArchiveVersionReady,
 } from './archive-actions'
 import {
   fetchSourceFile,
@@ -270,14 +272,28 @@ export function ProAudioEditor({
   }
 
   async function handleExport() {
-    if (!ffmpeg || !inputPathRef.current) return
-    if (!browserRender) {
-      setExportError('File too large for browser render — server worker path coming soon')
-      return
-    }
     setExportError(null)
     setExportProgress(0)
+    const label = `Pro edit ${new Date().toISOString().slice(0, 10)}`
+
     try {
+      if (!browserRender) {
+        const res = await renderArchiveEditList(archiveId, {
+          editList,
+          versionLabel: label,
+          activate: true,
+          format: 'flac',
+        })
+        if (res.error || !res.versionId) throw new Error(res.error ?? 'Server render failed')
+
+        const poll = await waitForArchiveVersionReady(archiveId, res.versionId)
+        if (!poll.ready) throw new Error(poll.error ?? 'Server render failed')
+        setExportProgress(null)
+        return
+      }
+
+      if (!ffmpeg || !inputPathRef.current) return
+
       let list = editList
       if (list.loudnorm.enabled && !list.loudnorm.measured) {
         const measured = await measureLoudnorm(ffmpeg, list, inputPathRef.current)
@@ -289,7 +305,6 @@ export function ProAudioEditor({
 
       const out = await renderEditToFile(ffmpeg, list, inputPathRef.current, 'flac')
       const blob = new Blob([out], { type: 'audio/flac' })
-      const label = `Pro edit ${new Date().toISOString().slice(0, 10)}`
       const prep = await prepareArchiveVersionUpload(archiveId, {
         filename: 'edit.flac',
         contentType: 'audio/flac',
@@ -533,10 +548,10 @@ export function ProAudioEditor({
         <button
           type="button"
           className="studio-btn-primary"
-          disabled={!ffmpeg || ffmpegLoading || exportProgress !== null}
+          disabled={exportProgress !== null || (browserRender && (!ffmpeg || ffmpegLoading))}
           onClick={() => void handleExport()}
         >
-          Export FLAC
+          {browserRender ? 'Export FLAC' : 'Export FLAC (server)'}
         </button>
       </footer>
     </div>
