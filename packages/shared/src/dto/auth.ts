@@ -36,3 +36,21 @@ export const VerifyEmailSchema = z.object({
 })
 
 export type VerifyEmailInput = z.infer<typeof VerifyEmailSchema>
+
+export const UsernameAvailabilityQuerySchema = z.object({
+  username: z
+    .string()
+    .min(2, 'Username must be at least 2 characters')
+    .max(32, 'Username too long')
+    .regex(/^[a-z0-9_-]+$/, 'Username may only contain lowercase letters, numbers, - and _'),
+})
+
+export type UsernameAvailabilityQuery = z.infer<typeof UsernameAvailabilityQuerySchema>
+
+export const UsernameAvailabilityResponseSchema = z.object({
+  available: z.boolean(),
+  /** Two alternative handles, only present when `available` is false. */
+  suggestions: z.array(z.string()).optional(),
+})
+
+export type UsernameAvailabilityResponse = z.infer<typeof UsernameAvailabilityResponseSchema>
