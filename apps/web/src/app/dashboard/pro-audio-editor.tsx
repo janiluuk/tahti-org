@@ -503,7 +503,8 @@ export function ProAudioEditor({
       const contentType =
         format === 'mp3' ? 'audio/mpeg' : format === 'wav' ? 'audio/wav' : 'audio/flac'
       const filename = `edit.${format}`
-      const blob = new Blob([out], { type: contentType })
+      const bytes = new Uint8Array(out)
+      const blob = new Blob([bytes], { type: contentType })
       const prep = await prepareArchiveVersionUpload(archiveId, {
         filename,
         contentType,

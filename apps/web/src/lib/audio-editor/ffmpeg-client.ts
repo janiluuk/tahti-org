@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FFmpeg } from '@ffmpeg/ffmpeg'
+import { FFFSType } from '@ffmpeg/ffmpeg'
 import type { EditList, LoudnormMeasured, OutputFormat } from '@tahti/audio-edit'
 import {
   buildPeaksPyramid,
@@ -53,7 +54,7 @@ export async function fetchSourceFile(url: string, filename = 'source.flac'): Pr
 
 export async function mountSourceFile(ffmpeg: FFmpeg, file: File): Promise<string> {
   await ffmpeg.createDir('/in').catch(() => undefined)
-  await ffmpeg.mount('WORKERFS', { files: [file] }, '/in')
+  await ffmpeg.mount(FFFSType.WORKERFS, { files: [file] }, '/in')
   return `/in/${file.name}`
 }
 
