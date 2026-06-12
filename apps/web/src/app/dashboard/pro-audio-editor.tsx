@@ -420,7 +420,9 @@ export function ProAudioEditor({
   }
 
   const span = viewEnd - viewStart
-  const zoomSliderValue = Math.round(Math.min(1000, Math.max(0, -1000 * Math.log10(span) * (1 / 3))))
+  const zoomSliderValue = Math.round(
+    Math.min(1000, Math.max(0, -1000 * Math.log10(span) * (1 / 3))),
+  )
   const msPerPx = (span * editList.sourceDuration * 1000) / CANVAS_WIDTH
 
   function removeSelection() {
@@ -440,7 +442,12 @@ export function ProAudioEditor({
       fades: [
         ...editList.fades,
         { type: 'in', at: selection.start, duration: dur, curve: 'tri' },
-        { type: 'out', at: Math.max(selection.start, selection.end - dur), duration: dur, curve: 'tri' },
+        {
+          type: 'out',
+          at: Math.max(selection.start, selection.end - dur),
+          duration: dur,
+          curve: 'tri',
+        },
       ],
     })
     setSelection(null)
@@ -493,7 +500,8 @@ export function ProAudioEditor({
       }
 
       const out = await renderEditToFile(ffmpeg, list, inputPathRef.current, format)
-      const contentType = format === 'mp3' ? 'audio/mpeg' : format === 'wav' ? 'audio/wav' : 'audio/flac'
+      const contentType =
+        format === 'mp3' ? 'audio/mpeg' : format === 'wav' ? 'audio/wav' : 'audio/flac'
       const filename = `edit.${format}`
       const blob = new Blob([out], { type: contentType })
       const prep = await prepareArchiveVersionUpload(archiveId, {
@@ -622,7 +630,10 @@ export function ProAudioEditor({
             <button
               key={id}
               type="button"
-              className={cx('pro-editor-tool-btn', activeTool === id && 'pro-editor-tool-btn--active')}
+              className={cx(
+                'pro-editor-tool-btn',
+                activeTool === id && 'pro-editor-tool-btn--active',
+              )}
               aria-pressed={activeTool === id}
               title={name}
               onClick={() => setActiveTool(id)}
@@ -647,7 +658,11 @@ export function ProAudioEditor({
             onChange={(e) => setSpan(10 ** ((-3 * Number(e.target.value)) / 1000))}
             aria-label="Zoom"
           />
-          <button type="button" className="pro-editor-tool-btn" onClick={() => setSpan(span * 1.25)}>
+          <button
+            type="button"
+            className="pro-editor-tool-btn"
+            onClick={() => setSpan(span * 1.25)}
+          >
             +
           </button>
           <span className="pro-editor-zoom-ratio">1 px = {msPerPx.toFixed(0)} ms</span>
@@ -678,7 +693,12 @@ export function ProAudioEditor({
         <div className="pro-editor-toolbar-divider" />
 
         <div className="pro-editor-undo-group">
-          <button type="button" className="pro-editor-tool-btn" onClick={undo} disabled={!past.length}>
+          <button
+            type="button"
+            className="pro-editor-tool-btn"
+            onClick={undo}
+            disabled={!past.length}
+          >
             ↶
           </button>
           <button
@@ -821,7 +841,9 @@ export function ProAudioEditor({
         </button>
         <span className="pro-editor-time">{formatDuration(currentTime)}</span>
         <span className="pro-editor-time-total">/ {formatDuration(postDuration)}</span>
-        <span className="pro-editor-preview-note">preview is approximate · render for final result</span>
+        <span className="pro-editor-preview-note">
+          preview is approximate · render for final result
+        </span>
         <div className="pro-editor-transport-right">
           <div className="pro-editor-out-meter">
             <div className="pro-editor-out-meter__tp" style={{ left: '85%' }} />
@@ -965,7 +987,9 @@ export function ProAudioEditor({
                   </button>
                   <Switch
                     checked={editList.eq.enabled}
-                    onChange={(v) => pushHistory({ ...editList, eq: { ...editList.eq, enabled: v } })}
+                    onChange={(v) =>
+                      pushHistory({ ...editList, eq: { ...editList.eq, enabled: v } })
+                    }
                     label="EQ enabled"
                   />
                 </div>
@@ -1002,8 +1026,8 @@ export function ProAudioEditor({
                 ))}
               </div>
               <p className="pro-editor-panel__hint">
-                drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step ·
-                drag curve dots to set frequency &amp; gain
+                drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step · drag
+                curve dots to set frequency &amp; gain
               </p>
             </div>
           )}
@@ -1043,7 +1067,9 @@ export function ProAudioEditor({
                     unit=" dB"
                     color="var(--cyan)"
                     defaultValue={DEFAULT_COMP.thresholdDb}
-                    onChange={(v) => pushHistory({ ...editList, comp: { ...editList.comp, thresholdDb: v } })}
+                    onChange={(v) =>
+                      pushHistory({ ...editList, comp: { ...editList.comp, thresholdDb: v } })
+                    }
                   />
                   <Knob
                     label="Ratio"
@@ -1054,7 +1080,9 @@ export function ProAudioEditor({
                     unit=":1"
                     color="var(--cyan)"
                     defaultValue={DEFAULT_COMP.ratio}
-                    onChange={(v) => pushHistory({ ...editList, comp: { ...editList.comp, ratio: v } })}
+                    onChange={(v) =>
+                      pushHistory({ ...editList, comp: { ...editList.comp, ratio: v } })
+                    }
                   />
                   <Knob
                     label="Attack"
@@ -1065,7 +1093,9 @@ export function ProAudioEditor({
                     unit=" ms"
                     color="var(--cyan)"
                     defaultValue={DEFAULT_COMP.attackMs}
-                    onChange={(v) => pushHistory({ ...editList, comp: { ...editList.comp, attackMs: v } })}
+                    onChange={(v) =>
+                      pushHistory({ ...editList, comp: { ...editList.comp, attackMs: v } })
+                    }
                   />
                   <Knob
                     label="Release"
@@ -1076,7 +1106,9 @@ export function ProAudioEditor({
                     unit=" ms"
                     color="var(--cyan)"
                     defaultValue={DEFAULT_COMP.releaseMs}
-                    onChange={(v) => pushHistory({ ...editList, comp: { ...editList.comp, releaseMs: v } })}
+                    onChange={(v) =>
+                      pushHistory({ ...editList, comp: { ...editList.comp, releaseMs: v } })
+                    }
                   />
                   <Knob
                     label="Makeup"
@@ -1087,7 +1119,9 @@ export function ProAudioEditor({
                     unit=" dB"
                     color="var(--cyan)"
                     defaultValue={DEFAULT_COMP.makeupDb}
-                    onChange={(v) => pushHistory({ ...editList, comp: { ...editList.comp, makeupDb: v } })}
+                    onChange={(v) =>
+                      pushHistory({ ...editList, comp: { ...editList.comp, makeupDb: v } })
+                    }
                   />
                 </div>
                 <div className="pro-editor-gr-meter">
@@ -1140,7 +1174,9 @@ export function ProAudioEditor({
                   unit=" dBTP"
                   color="var(--coral)"
                   defaultValue={DEFAULT_LIMITER.ceilingDb}
-                  onChange={(v) => pushHistory({ ...editList, limiter: { ...editList.limiter, ceilingDb: v } })}
+                  onChange={(v) =>
+                    pushHistory({ ...editList, limiter: { ...editList.limiter, ceilingDb: v } })
+                  }
                 />
                 <Knob
                   label="Release"
@@ -1151,12 +1187,12 @@ export function ProAudioEditor({
                   unit=" ms"
                   color="var(--cyan)"
                   defaultValue={DEFAULT_LIMITER.releaseMs}
-                  onChange={(v) => pushHistory({ ...editList, limiter: { ...editList.limiter, releaseMs: v } })}
+                  onChange={(v) =>
+                    pushHistory({ ...editList, limiter: { ...editList.limiter, releaseMs: v } })
+                  }
                 />
               </div>
-              <p className="pro-editor-panel__hint">
-                applied before loudnorm · protects true peak
-              </p>
+              <p className="pro-editor-panel__hint">applied before loudnorm · protects true peak</p>
             </div>
           )}
         </div>
@@ -1323,7 +1359,9 @@ export function ProAudioEditor({
                 disabled={exportProgress !== null || (browserRender && (!ffmpeg || ffmpegLoading))}
                 onClick={() => void handleExport(exportFormat)}
               >
-                {browserRender ? `Export ${exportFormat.toUpperCase()}` : `Export ${exportFormat.toUpperCase()} (server)`}
+                {browserRender
+                  ? `Export ${exportFormat.toUpperCase()}`
+                  : `Export ${exportFormat.toUpperCase()} (server)`}
               </button>
             </div>
           </div>
