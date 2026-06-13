@@ -172,6 +172,9 @@ export function ArchiveVersionPanel({
       <ArchiveTrimEditor itemId={itemId} onBounced={load} />
 
       <div className="studio-row studio-mb-md">
+        <Link href={`/dashboard/archive/${itemId}/editor`} className="studio-btn-primary">
+          Pro editor
+        </Link>
         <Link href={`/dashboard/editor?archiveItemId=${itemId}`} className="studio-btn-ghost">
           Open in multitrack editor
         </Link>

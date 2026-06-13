@@ -4,7 +4,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
-  transpilePackages: ['@tahti/shared', '@tahti/ui', '@waveform-playlist/browser'],
+  transpilePackages: ['@tahti/audio-edit', '@tahti/shared', '@tahti/ui', '@waveform-playlist/browser'],
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: false },
   webpack: (config, { webpack, isServer }) => {
@@ -26,6 +26,13 @@ const nextConfig = {
   },
   async headers() {
     return [
+      {
+        source: '/dashboard/archive/:id/editor',
+        headers: [
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
+        ],
+      },
       {
         source: '/embed/:path*',
         headers: [
