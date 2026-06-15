@@ -17,12 +17,50 @@ if (process.env.NODE_ENV === 'production' && smtpHost === 'mailhog') {
   )
 }
 
+const sessionSecret = process.env.SESSION_SECRET ?? 'dev-session-secret-do-not-use-in-prod'
+if (
+  process.env.NODE_ENV === 'production' &&
+  sessionSecret === 'dev-session-secret-do-not-use-in-prod'
+) {
+  console.warn(
+    '[config] SESSION_SECRET is the default dev value — set SESSION_SECRET in production',
+  )
+}
+
+const internalSecret = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
+if (
+  process.env.NODE_ENV === 'production' &&
+  internalSecret === 'dev-internal-secret-change-in-prod'
+) {
+  console.warn(
+    '[config] INTERNAL_SECRET is the default dev value — set INTERNAL_SECRET in production',
+  )
+}
+
+const centrifugoJwtSecret = process.env.CENTRIFUGO_JWT_SECRET ?? 'dev_secret_do_not_use_in_prod'
+if (
+  process.env.NODE_ENV === 'production' &&
+  centrifugoJwtSecret === 'dev_secret_do_not_use_in_prod'
+) {
+  console.warn(
+    '[config] CENTRIFUGO_JWT_SECRET is the default dev value — set CENTRIFUGO_JWT_SECRET in production',
+  )
+}
+
+const rtmpKeyEncKey =
+  process.env.RTMP_KEY_ENC_KEY ?? 'dev0000000000000000000000000000000000000000000000000000000000000'
+if (process.env.NODE_ENV === 'production' && rtmpKeyEncKey.startsWith('dev0000')) {
+  console.warn(
+    '[config] RTMP_KEY_ENC_KEY is the default dev value — set RTMP_KEY_ENC_KEY in production',
+  )
+}
+
 export const config = {
   nodeEnv: (process.env.NODE_ENV ?? 'development') as 'development' | 'test' | 'production',
   port: parseInt(process.env.PORT ?? '3001', 10),
   databaseUrl: process.env.DATABASE_URL ?? 'postgres://tahti:tahti_dev@localhost:5432/tahti',
   redisUrl: process.env.REDIS_URL ?? 'redis://localhost:6379',
-  sessionSecret: process.env.SESSION_SECRET ?? 'dev-session-secret-do-not-use-in-prod',
+  sessionSecret,
   sessionCookieName: 'tahti_session',
   sessionMaxAgeSec: 30 * 24 * 60 * 60, // 30 days
   email: {
@@ -49,11 +87,11 @@ export const config = {
     backupsPgPrefix: process.env.MINIO_BACKUPS_PG_PREFIX ?? 'pg/',
     publicEndpoint: process.env.MINIO_PUBLIC_ENDPOINT ?? 'http://localhost:9000',
   },
-  internalSecret: process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod',
+  internalSecret,
   centrifugo: {
     apiUrl: process.env.CENTRIFUGO_API_URL ?? 'http://localhost:8000/api',
     apiKey: process.env.CENTRIFUGO_API_KEY ?? 'dev',
-    jwtSecret: process.env.CENTRIFUGO_JWT_SECRET ?? 'dev_secret_do_not_use_in_prod',
+    jwtSecret: centrifugoJwtSecret,
   },
   orchestratorUrl: process.env.ORCHESTRATOR_URL ?? 'http://localhost:3003',
   hlsBaseUrl: process.env.HLS_BASE_URL ?? 'http://localhost:9000/hls-live',
@@ -81,9 +119,7 @@ export const config = {
     (process.env.ICECAST_HOST?.startsWith('http')
       ? process.env.ICECAST_HOST
       : `http://${process.env.ICECAST_HOST ?? 'localhost:8100'}`),
-  rtmpKeyEncKey:
-    process.env.RTMP_KEY_ENC_KEY ??
-    'dev0000000000000000000000000000000000000000000000000000000000000',
+  rtmpKeyEncKey,
   hcaptchaSecret: process.env.HCAPTCHA_SECRET ?? 'dev',
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY ?? '',

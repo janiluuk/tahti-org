@@ -10,6 +10,12 @@ describe('usesAuthRateLimit', () => {
     expect(usesAuthRateLimit('/api/auth/login', 'POST')).toBe(true)
   })
 
+  it('treats email verification and password setup as auth routes', () => {
+    expect(usesAuthRateLimit('/api/auth/verify', 'GET')).toBe(true)
+    expect(usesAuthRateLimit('/api/auth/setup-password', 'GET')).toBe(true)
+    expect(usesAuthRateLimit('/api/auth/setup-password', 'POST')).toBe(true)
+  })
+
   it('treats chat POST as auth routes', () => {
     expect(usesAuthRateLimit('/api/chat/tahti-radio/token', 'POST')).toBe(true)
     expect(usesAuthRateLimit('/api/chat/message', 'POST')).toBe(true)

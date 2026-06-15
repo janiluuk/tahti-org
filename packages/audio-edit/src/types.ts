@@ -4,21 +4,21 @@
 import { z } from 'zod'
 
 export const EditCutSchema = z.object({
-  start: z.number().min(0),
-  end: z.number().min(0.000001),
+  start: z.number().finite().min(0),
+  end: z.number().finite().min(0.000001),
 })
 
 export const EditFadeSchema = z.object({
   type: z.enum(['in', 'out']),
-  at: z.number().min(0),
-  duration: z.number().min(0).max(120),
+  at: z.number().finite().min(0),
+  duration: z.number().finite().min(0).max(120),
   curve: z.enum(['tri', 'exp']).default('tri'),
 })
 
 export const EditEqBandSchema = z.object({
-  freq: z.number().min(20).max(20000),
-  gainDb: z.number().min(-24).max(24),
-  q: z.number().min(0.1).max(10),
+  freq: z.number().finite().min(20).max(20000),
+  gainDb: z.number().finite().min(-24).max(24),
+  q: z.number().finite().min(0.1).max(10),
 })
 
 export const EditEqSchema = z.object({
@@ -28,39 +28,39 @@ export const EditEqSchema = z.object({
 
 export const EditCompSchema = z.object({
   enabled: z.boolean(),
-  thresholdDb: z.number().min(-60).max(0),
-  ratio: z.number().min(1).max(20),
-  attackMs: z.number().min(0.1).max(500),
-  releaseMs: z.number().min(1).max(5000),
-  makeupDb: z.number().min(0).max(24),
+  thresholdDb: z.number().finite().min(-60).max(0),
+  ratio: z.number().finite().min(1).max(20),
+  attackMs: z.number().finite().min(0.1).max(500),
+  releaseMs: z.number().finite().min(1).max(5000),
+  makeupDb: z.number().finite().min(0).max(24),
 })
 
 export const LoudnormMeasuredSchema = z.object({
-  i: z.number(),
-  tp: z.number(),
-  lra: z.number(),
-  thresh: z.number(),
+  i: z.number().finite().min(-70).max(0),
+  tp: z.number().finite().min(-30).max(10),
+  lra: z.number().finite().min(0).max(50),
+  thresh: z.number().finite().min(-70).max(0),
 })
 
 export const EditLoudnormSchema = z.object({
   enabled: z.boolean(),
-  targetLufs: z.number().min(-30).max(-5).default(-14),
-  targetTp: z.number().min(-6).max(0).default(-1.5),
+  targetLufs: z.number().finite().min(-30).max(-5).default(-14),
+  targetTp: z.number().finite().min(-6).max(0).default(-1.5),
   measured: LoudnormMeasuredSchema.optional(),
 })
 
 export const EditLimiterSchema = z.object({
   enabled: z.boolean(),
-  ceilingDb: z.number().min(-3).max(0),
-  releaseMs: z.number().min(1).max(1000),
+  ceilingDb: z.number().finite().min(-3).max(0),
+  releaseMs: z.number().finite().min(1).max(1000),
 })
 
 export const EditListSchema = z.object({
   version: z.literal(1),
-  sourceDuration: z.number().min(0.000001),
-  cuts: z.array(EditCutSchema),
-  fades: z.array(EditFadeSchema),
-  gainDb: z.number().min(-24).max(24),
+  sourceDuration: z.number().finite().min(0.000001),
+  cuts: z.array(EditCutSchema).max(500),
+  fades: z.array(EditFadeSchema).max(100),
+  gainDb: z.number().finite().min(-24).max(24),
   eq: EditEqSchema,
   comp: EditCompSchema,
   limiter: EditLimiterSchema.default({ enabled: false, ceilingDb: -1, releaseMs: 50 }),

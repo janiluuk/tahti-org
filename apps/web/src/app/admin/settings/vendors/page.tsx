@@ -180,7 +180,7 @@ export default async function AdminVendorsPage() {
                   <span
                     style={{
                       fontSize: '0.75rem',
-                      fontWeight: 700,
+                      fontWeight: 500,
                       color: live ? 'var(--green)' : 'var(--coral)',
                       flexShrink: 0,
                       marginTop: 2,
@@ -189,7 +189,7 @@ export default async function AdminVendorsPage() {
                     {live ? 'LIVE' : 'STUB'}
                   </span>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{name}</div>
+                    <div style={{ fontWeight: 500, fontSize: '0.875rem' }}>{name}</div>
                     <div style={{ fontSize: '0.8125rem', color: 'var(--muted)' }}>{row.detail}</div>
                   </div>
                 </div>
@@ -220,7 +220,7 @@ export default async function AdminVendorsPage() {
               <span
                 style={{
                   fontSize: '0.8125rem',
-                  fontWeight: 700,
+                  fontWeight: 500,
                   color: c.done ? 'var(--green)' : 'var(--coral)',
                   flexShrink: 0,
                   marginTop: 1,
@@ -243,7 +243,7 @@ export default async function AdminVendorsPage() {
         <div className="admin-panel-grid">
           {CRITICAL_VENDORS.map((v) => (
             <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
-              <div style={{ fontWeight: 700, marginBottom: '0.25rem' }}>{v.name}</div>
+              <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
               <div style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginBottom: '0.5rem' }}>
                 {v.service}
               </div>
@@ -284,7 +284,7 @@ export default async function AdminVendorsPage() {
         <div className="admin-panel-grid">
           {INTEGRATION_VENDORS.map((v) => (
             <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
-              <div style={{ fontWeight: 700, marginBottom: '0.25rem' }}>{v.name}</div>
+              <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
               <div
                 style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginBottom: '0.375rem' }}
               >
@@ -310,7 +310,7 @@ export default async function AdminVendorsPage() {
                   <span
                     style={{
                       fontSize: '0.75rem',
-                      fontWeight: 700,
+                      fontWeight: 500,
                       background:
                         integrationStatus.get(v.name)?.mode === 'live'
                           ? 'rgba(80,200,120,0.15)'
@@ -364,7 +364,7 @@ export default async function AdminVendorsPage() {
         <div className="admin-panel-grid">
           {INFRA_VENDORS.map((v) => (
             <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
-              <div style={{ fontWeight: 700, marginBottom: '0.25rem' }}>{v.name}</div>
+              <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
               <div
                 style={{ fontSize: '0.8125rem', color: 'var(--muted)', marginBottom: '0.375rem' }}
               >

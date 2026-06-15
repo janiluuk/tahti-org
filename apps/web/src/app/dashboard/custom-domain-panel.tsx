@@ -166,7 +166,7 @@ export function CustomDomainPanel({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <code style={{ fontSize: '0.875rem' }}>{current.domain}</code>
             {current.verified ? (
-              <span style={{ fontSize: '0.75rem', color: 'var(--green)', fontWeight: 700 }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--green)', fontWeight: 500 }}>
                 ✓ verified
               </span>
             ) : (
@@ -192,7 +192,7 @@ export function CustomDomainPanel({
                 fontSize: '0.8125rem',
               }}
             >
-              <p style={{ marginBottom: '0.5rem', fontWeight: 600 }}>DNS verification required</p>
+              <p style={{ marginBottom: '0.5rem', fontWeight: 500 }}>DNS verification required</p>
               <p style={{ marginBottom: '0.25rem' }}>
                 Add this TXT record to your DNS, then click Verify:
               </p>

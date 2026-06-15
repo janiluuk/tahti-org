@@ -75,7 +75,7 @@ export default async function AdminRadioPage() {
           style={{
             margin: '0 0 0.75rem',
             fontSize: '0.8rem',
-            fontWeight: 700,
+            fontWeight: 500,
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
             opacity: 0.6,

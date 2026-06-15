@@ -24,6 +24,7 @@ describe('M21 v0 — archive trim editor', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let cookie: string
   let archiveItemId: string
+  let otherArchiveItemId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -40,6 +41,16 @@ describe('M21 v0 — archive trim editor', () => {
     cookie = await sessionCookieFor(prisma, artist.id)
     const item = await createReadyArchiveItem(prisma, artist.channel!.id, 'Trim target')
     archiveItemId = item.id
+
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}other2@example.com`,
+      username: 'archive-editor-other2',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98523,
+    })
+    const otherItem = await createReadyArchiveItem(prisma, other.channel!.id, 'Other trim target')
+    otherArchiveItemId = otherItem.id
   })
 
   afterAll(async () => {
@@ -133,6 +144,40 @@ describe('M21 v0 — archive trim editor', () => {
         compressorEnabled: true,
       }),
     )
+  })
+
+  it('GET /api/me/archive/:id/editor/source rejects an archive item owned by another user', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${otherArchiveItemId}/editor/source`,
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('POST /api/me/archive/:id/editor/bounce rejects an archive item owned by another user', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${otherArchiveItemId}/editor/bounce`,
+      headers: { cookie },
+      payload: {
+        startSec: 0,
+        endSec: 10,
+        versionLabel: 'Hijack attempt',
+        activate: true,
+      },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('POST /api/me/archive/:id/editor/bounce rejects an endSec that overflows to Infinity', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/bounce`,
+      headers: { cookie, 'content-type': 'application/json' },
+      payload: '{"startSec":0,"endSec":1e400,"versionLabel":"Overflow attempt","activate":true}',
+    })
+    expect(res.statusCode).toBe(400)
   })
 
   it('POST /api/me/archive/:id/editor/publish-to-release creates a release track', async () => {

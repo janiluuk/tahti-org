@@ -17,6 +17,14 @@ export const EditorProjectCreateSchema = z.object({
   archiveItemId: z.string().optional(),
 })
 
+/** Defense in depth against pathological timeline payloads stored as JSON. */
+const MAX_TIMELINE_JSON_BYTES = 500_000
+const TimelineSchema = z
+  .record(z.unknown())
+  .refine((timeline) => JSON.stringify(timeline).length <= MAX_TIMELINE_JSON_BYTES, {
+    message: `timeline payload exceeds ${MAX_TIMELINE_JSON_BYTES} bytes`,
+  })
+
 export const EditorProjectDetailSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -35,7 +43,7 @@ export const EditorProjectDetailSchema = z.object({
 
 export const EditorProjectUpdateSchema = z.object({
   title: z.string().trim().min(1).max(160).optional(),
-  timeline: z.record(z.unknown()).optional(),
+  timeline: TimelineSchema.optional(),
 })
 
 export const EditorProjectExportSchema = z.object({

@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { ChannelListResponseSchema, openApiResponse } from '@tahti/shared'
+import { getCachedJson } from '../../lib/json-cache.js'
 
 const channelListRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -15,45 +16,49 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const [liveChannels, recentChannels] = await Promise.all([
-        fastify.prisma.channel.findMany({
-          where: { state: 'LIVE' },
-          orderBy: { goneLiveAt: 'desc' },
-          take: 20,
-          select: {
-            slug: true,
-            state: true,
-            goneLiveAt: true,
-            nextBroadcastAt: true,
-            nextBroadcastNote: true,
-            user: { select: { username: true, displayName: true, bio: true, avatarUrl: true } },
-          },
-        }),
-        fastify.prisma.channel.findMany({
-          where: { state: { not: 'LIVE' }, goneLiveAt: { not: null } },
-          orderBy: { goneLiveAt: 'desc' },
-          take: 20,
-          select: {
-            slug: true,
-            state: true,
-            goneLiveAt: true,
-            nextBroadcastAt: true,
-            nextBroadcastNote: true,
-            user: { select: { username: true, displayName: true, bio: true, avatarUrl: true } },
-          },
-        }),
-      ])
+      const result = await getCachedJson('channels:list', 10, async () => {
+        const [liveChannels, recentChannels] = await Promise.all([
+          fastify.prisma.channel.findMany({
+            where: { state: 'LIVE' },
+            orderBy: { goneLiveAt: 'desc' },
+            take: 20,
+            select: {
+              slug: true,
+              state: true,
+              goneLiveAt: true,
+              nextBroadcastAt: true,
+              nextBroadcastNote: true,
+              user: { select: { username: true, displayName: true, bio: true, avatarUrl: true } },
+            },
+          }),
+          fastify.prisma.channel.findMany({
+            where: { state: { not: 'LIVE' }, goneLiveAt: { not: null } },
+            orderBy: { goneLiveAt: 'desc' },
+            take: 20,
+            select: {
+              slug: true,
+              state: true,
+              goneLiveAt: true,
+              nextBroadcastAt: true,
+              nextBroadcastNote: true,
+              user: { select: { username: true, displayName: true, bio: true, avatarUrl: true } },
+            },
+          }),
+        ])
 
-      const toCard = (ch: (typeof liveChannels)[0]) => ({
-        ...ch,
-        goneLiveAt: ch.goneLiveAt?.toISOString() ?? null,
-        nextBroadcastAt: ch.nextBroadcastAt?.toISOString() ?? null,
+        const toCard = (ch: (typeof liveChannels)[0]) => ({
+          ...ch,
+          goneLiveAt: ch.goneLiveAt?.toISOString() ?? null,
+          nextBroadcastAt: ch.nextBroadcastAt?.toISOString() ?? null,
+        })
+
+        return {
+          live: liveChannels.map(toCard),
+          recent: recentChannels.map(toCard),
+        }
       })
 
-      return reply.send({
-        live: liveChannels.map(toCard),
-        recent: recentChannels.map(toCard),
-      })
+      return reply.send(result)
     },
   )
 }

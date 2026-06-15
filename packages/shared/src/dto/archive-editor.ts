@@ -15,23 +15,23 @@ export type LufsTarget = z.infer<typeof LufsTargetSchema>
 
 /** PLAT-066/068: 3-band shelving/peaking EQ, ±12dB per band. */
 export const EqBandsSchema = z.object({
-  lowGainDb: z.number().min(-12).max(12).default(0),
-  midGainDb: z.number().min(-12).max(12).default(0),
-  highGainDb: z.number().min(-12).max(12).default(0),
+  lowGainDb: z.number().finite().min(-12).max(12).default(0),
+  midGainDb: z.number().finite().min(-12).max(12).default(0),
+  highGainDb: z.number().finite().min(-12).max(12).default(0),
 })
 export type EqBands = z.infer<typeof EqBandsSchema>
 
 export const ArchiveEditorBounceSchema = z.object({
-  startSec: z.number().min(0),
-  endSec: z.number().positive(),
-  fadeInSec: z.number().min(0).max(30).default(0),
-  fadeOutSec: z.number().min(0).max(30).default(0),
+  startSec: z.number().finite().min(0),
+  endSec: z.number().finite().positive(),
+  fadeInSec: z.number().finite().min(0).max(30).default(0),
+  fadeOutSec: z.number().finite().min(0).max(30).default(0),
   peakNormalize: z.boolean().default(false),
   lufsTarget: LufsTargetSchema.default('none'),
   limiterEnabled: z.boolean().default(false),
   // PLAT-066/067: HP/LP filters, 0 = disabled
-  highPassHz: z.number().min(0).max(2000).default(0),
-  lowPassHz: z.number().min(0).max(20000).default(0),
+  highPassHz: z.number().finite().min(0).max(2000).default(0),
+  lowPassHz: z.number().finite().min(0).max(20000).default(0),
   eq: EqBandsSchema.default({ lowGainDb: 0, midGainDb: 0, highGainDb: 0 }),
   compressorEnabled: z.boolean().default(false),
   versionLabel: z.string().trim().min(1).max(120),

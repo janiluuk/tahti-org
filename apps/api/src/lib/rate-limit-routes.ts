@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-const AUTH_ROUTES = ['/api/auth/register', '/api/auth/login']
+const AUTH_ROUTES = [
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/auth/verify',
+  '/api/auth/setup-password',
+]
 
 /** Chat POST (token issuance, publish proxy) — strict limit; GET discovery stays on API limit. */
 export function usesAuthRateLimit(url: string, method: string): boolean {
