@@ -26,9 +26,9 @@ describe('validateEditList - schema rejection', () => {
 
   it('rejects NaN/Infinity in fade fields', () => {
     const edit = createDefaultEditList(60)
-    expect(
-      validateEditList({ ...edit, fades: [{ type: 'in', at: NaN, duration: 1 }] }).ok,
-    ).toBe(false)
+    expect(validateEditList({ ...edit, fades: [{ type: 'in', at: NaN, duration: 1 }] }).ok).toBe(
+      false,
+    )
     expect(
       validateEditList({ ...edit, fades: [{ type: 'in', at: 0, duration: Infinity }] }).ok,
     ).toBe(false)

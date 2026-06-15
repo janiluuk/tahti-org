@@ -58,7 +58,10 @@ vi.mock('@tahti/db', () => ({ prisma: prismaMock, syncActiveVersionToItem }))
 vi.mock('../lib/minio.js', () => ({ downloadToFile, uploadFile }))
 vi.mock('./transcode-version.js', () => ({ processTranscodeVersionJob }))
 
-import { processRenderArchiveEditJob, type RenderArchiveEditPayload } from './render-archive-edit.js'
+import {
+  processRenderArchiveEditJob,
+  type RenderArchiveEditPayload,
+} from './render-archive-edit.js'
 
 function jobFor(payload: RenderArchiveEditPayload): Job {
   return { data: payload } as Job

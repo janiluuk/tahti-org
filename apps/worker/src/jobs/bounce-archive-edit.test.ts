@@ -63,7 +63,10 @@ vi.mock('@tahti/db', () => ({ prisma: prismaMock, syncActiveVersionToItem }))
 vi.mock('../lib/minio.js', () => ({ downloadToFile, uploadFile }))
 vi.mock('./transcode-version.js', () => ({ processTranscodeVersionJob }))
 
-import { processBounceArchiveEditJob, type BounceArchiveEditPayload } from './bounce-archive-edit.js'
+import {
+  processBounceArchiveEditJob,
+  type BounceArchiveEditPayload,
+} from './bounce-archive-edit.js'
 
 function jobFor(payload: BounceArchiveEditPayload): Job {
   return { data: payload } as Job
