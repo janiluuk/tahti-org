@@ -3072,6 +3072,21 @@
   color: var(--green);
 }
 
+.pro-editor-pill--amber {
+  border-color: color-mix(in srgb, var(--amber) 50%, transparent);
+  color: var(--amber);
+}
+
+.pro-editor-export-success {
+  font-size: 12px;
+  color: var(--green);
+}
+
+.pro-editor-export-success a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .pro-editor-autosave {
   color: var(--tt);
   font-size: 11px;

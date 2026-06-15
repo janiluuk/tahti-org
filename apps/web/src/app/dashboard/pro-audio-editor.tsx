@@ -145,6 +145,7 @@ export function ProAudioEditor({
   title,
   sourceUrl,
   sourceKey,
+  sourceFileSizeBytes,
   initialEditList,
   draftUpdatedAt,
 }: {
@@ -152,6 +153,7 @@ export function ProAudioEditor({
   title: string
   sourceUrl: string
   sourceKey: string
+  sourceFileSizeBytes: number | null
   initialEditList: EditList
   draftUpdatedAt: string | null
 }) {
@@ -169,6 +171,10 @@ export function ProAudioEditor({
   const [exportError, setExportError] = useState<string | null>(null)
   const [exportFormat, setExportFormat] = useState<OutputFormat>('flac')
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [exportSuccess, setExportSuccess] = useState<{
+    versionNumber: number
+    versionLabel: string
+  } | null>(null)
   const [meterPeak, setMeterPeak] = useState(0)
   const [grDb, setGrDb] = useState(0)
   const [viewStart, setViewStart] = useState(0)
@@ -395,7 +401,16 @@ export function ProAudioEditor({
     [editList],
   )
   const postDuration = useMemo(() => postCutDuration(segments), [segments])
-  const browserRender = useMemo(() => shouldRenderInBrowser(editList), [editList])
+  const browserRender = useMemo(
+    () => shouldRenderInBrowser(editList, sourceFileSizeBytes),
+    [editList, sourceFileSizeBytes],
+  )
+
+  const renderModePill = browserRender
+    ? ffmpegLoading
+      ? 'Loading ffmpeg…'
+      : `ffmpeg.wasm · LOCAL${!isolated ? ' · 1 thread' : ''}`
+    : 'Server worker render'
 
   const appliedDb =
     editList.loudnorm.enabled && editList.loudnorm.measured
@@ -425,14 +440,14 @@ export function ProAudioEditor({
   )
   const msPerPx = (span * editList.sourceDuration * 1000) / CANVAS_WIDTH
 
-  function removeSelection() {
+  const removeSelection = useCallback(() => {
     if (!selection) return
     pushHistory({
       ...editList,
       cuts: [...editList.cuts, { start: selection.start, end: selection.end }],
     })
     setSelection(null)
-  }
+  }, [editList, pushHistory, selection])
 
   function applyFadeAtSelection() {
     if (!selection) return
@@ -469,6 +484,7 @@ export function ProAudioEditor({
 
   async function handleExport(format: OutputFormat) {
     setExportError(null)
+    setExportSuccess(null)
     setExportProgress(0)
     const label = `Pro edit ${new Date().toISOString().slice(0, 10)}`
 
@@ -485,6 +501,11 @@ export function ProAudioEditor({
         const poll = await waitForArchiveVersionReady(archiveId, res.versionId)
         if (!poll.ready) throw new Error(poll.error ?? 'Server render failed')
         setExportProgress(null)
+        setExportSuccess({
+          versionNumber: poll.version?.versionNumber ?? res.versionNumber ?? 0,
+          versionLabel: poll.version?.versionLabel ?? label,
+        })
+        setExportDialogOpen(false)
         return
       }
 
@@ -524,12 +545,56 @@ export function ProAudioEditor({
       })
       if (done.error) throw new Error(done.error)
       setExportProgress(null)
+      setExportSuccess({
+        versionNumber: done.versionNumber ?? 0,
+        versionLabel: label,
+      })
       setExportDialogOpen(false)
     } catch (e) {
       setExportError(e instanceof Error ? e.message : 'Export failed')
       setExportProgress(null)
     }
   }
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+
+      if (e.code === 'Space') {
+        e.preventDefault()
+        const audio = audioRef.current
+        if (!audio) return
+        if (audio.paused) void audio.play()
+        else audio.pause()
+        return
+      }
+
+      if ((e.key === 'x' || e.key === 'X') && selection) {
+        e.preventDefault()
+        removeSelection()
+        return
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+        return
+      }
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'Z' || e.key === 'y')) {
+        e.preventDefault()
+        redo()
+        return
+      }
+
+      if (e.key === 'Escape') {
+        setSelection(null)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [selection, activeTool, undo, redo, removeSelection])
 
   useEffect(() => {
     return () => {
@@ -591,7 +656,20 @@ export function ProAudioEditor({
         </div>
         <div className="pro-editor-topbar__right">
           {saveError && <span className="studio-text-error">{saveError}</span>}
-          <span className="pro-editor-pill pro-editor-pill--green">⚙ ffmpeg.wasm · LOCAL</span>
+          {exportSuccess && (
+            <span className="pro-editor-export-success">
+              Version {exportSuccess.versionNumber} ready —{' '}
+              <Link href="/dashboard">view in archive</Link>
+            </span>
+          )}
+          <span
+            className={cx(
+              'pro-editor-pill',
+              browserRender ? 'pro-editor-pill--green' : 'pro-editor-pill--amber',
+            )}
+          >
+            ⚙ {renderModePill}
+          </span>
           <button
             type="button"
             className="studio-btn-ghost"

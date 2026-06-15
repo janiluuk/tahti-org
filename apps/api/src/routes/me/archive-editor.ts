@@ -151,11 +151,14 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const url = await presignedGetUrl(source.sourceKey, 3600)
+      const sourceFileSizeBytes =
+        source.fileSizeBytes != null ? Number(source.fileSizeBytes) : null
       return reply.send({
         url,
         durationSec: source.durationSec,
         title: source.title,
         sourceKey: source.sourceKey,
+        sourceFileSizeBytes,
       })
     },
   )

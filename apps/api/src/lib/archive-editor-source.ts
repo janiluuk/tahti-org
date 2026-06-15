@@ -7,7 +7,12 @@ import { ensureInitialVersion } from '@tahti/db'
 export async function resolveArchiveEditorSource(
   prisma: PrismaClient,
   archiveItemId: string,
-): Promise<{ sourceKey: string; durationSec: number | null; title: string } | null> {
+): Promise<{
+  sourceKey: string
+  durationSec: number | null
+  title: string
+  fileSizeBytes: bigint | null
+} | null> {
   const item = await prisma.archiveItem.findUnique({
     where: { id: archiveItemId },
     select: {
@@ -16,6 +21,7 @@ export async function resolveArchiveEditorSource(
       rawKey: true,
       mp3Key: true,
       flacKey: true,
+      fileSizeBytes: true,
       status: true,
     },
   })
@@ -25,7 +31,13 @@ export async function resolveArchiveEditorSource(
 
   const active = await prisma.archiveItemVersion.findFirst({
     where: { archiveItemId, isActive: true, status: 'READY' },
-    select: { rawKey: true, flacKey: true, mp3Key: true, durationSec: true },
+    select: {
+      rawKey: true,
+      flacKey: true,
+      mp3Key: true,
+      durationSec: true,
+      fileSizeBytes: true,
+    },
   })
 
   const sourceKey =
@@ -39,9 +51,12 @@ export async function resolveArchiveEditorSource(
 
   if (!sourceKey) return null
 
+  const fileSizeBytes = active?.fileSizeBytes ?? item.fileSizeBytes ?? null
+
   return {
     sourceKey,
     durationSec: active?.durationSec ?? item.durationSec,
     title: item.title,
+    fileSizeBytes,
   }
 }

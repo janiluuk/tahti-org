@@ -7,6 +7,7 @@ import {
   compileLoudnormPass1Filter,
   estimateOutputBytes,
   remapTracklistTimestamps,
+  shouldRenderInBrowser,
 } from './compile.js'
 import { computeKeepSegments, mergeCuts, sourceTimeToPostCut } from './segments.js'
 import { createDefaultEditList } from './types.js'
@@ -85,5 +86,11 @@ describe('estimateOutputBytes', () => {
   it('flags large files for server render', () => {
     const edit = createDefaultEditList(7200)
     expect(estimateOutputBytes(edit, 1411)).toBeGreaterThan(600 * 1024 * 1024)
+  })
+
+  it('uses source file size when larger than output estimate', () => {
+    const edit = createDefaultEditList(60)
+    expect(shouldRenderInBrowser(edit, 700 * 1024 * 1024)).toBe(false)
+    expect(shouldRenderInBrowser(edit, 1024)).toBe(true)
   })
 })

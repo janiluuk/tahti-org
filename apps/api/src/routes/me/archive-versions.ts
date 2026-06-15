@@ -10,6 +10,7 @@ import {
   ArchiveVersionParamsSchema,
   ArchiveVersionPrepareResponseSchema,
   ArchiveVersionPrepareSchema,
+  ArchiveVersionViewSchema,
   IdParamSchema,
   openApiResponse,
   openApiResponses,
@@ -65,6 +66,41 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.send(versions.map(serializeArchiveVersion))
+    },
+  )
+
+  fastify.get(
+    '/api/me/archive/:id/versions/:versionId',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(ArchiveVersionViewSchema, 'ArchiveVersionView') },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(ArchiveVersionParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id, versionId } = routeParams
+
+      const item = await ownedItem(user.id, id)
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const version = await fastify.prisma.archiveItemVersion.findFirst({
+        where: { id: versionId, archiveItemId: id },
+        select: {
+          id: true,
+          versionNumber: true,
+          versionLabel: true,
+          status: true,
+          isActive: true,
+          durationSec: true,
+          sourceFormat: true,
+          sourceBitrateKbps: true,
+          createdAt: true,
+        },
+      })
+      if (!version) return reply.status(404).send({ error: 'Version not found' })
+
+      return reply.send(serializeArchiveVersion(version))
     },
   )
 

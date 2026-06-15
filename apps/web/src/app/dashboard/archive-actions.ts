@@ -76,7 +76,7 @@ export async function prepareArchiveVersionUpload(
 export async function completeArchiveVersionUpload(
   itemId: string,
   body: { uploadId: string; versionLabel: string; fileSizeBytes?: number },
-): Promise<{ error: string | null }> {
+): Promise<{ versionId?: string; versionNumber?: number; error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/versions/complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
@@ -87,7 +87,8 @@ export async function completeArchiveVersionUpload(
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Complete failed' }
   }
-  return { error: null }
+  const data = (await res.json()) as { versionId: string; versionNumber: number }
+  return { versionId: data.versionId, versionNumber: data.versionNumber, error: null }
 }
 
 export async function activateArchiveVersion(
@@ -167,17 +168,31 @@ export async function renderArchiveEditList(
   return { versionId: data.versionId, versionNumber: data.versionNumber, error: null }
 }
 
+export async function fetchArchiveVersion(
+  itemId: string,
+  versionId: string,
+): Promise<{ version?: import('@tahti/shared').ArchiveVersionRow; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/versions/${versionId}`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to load version' }
+  }
+  return { version: await res.json(), error: null }
+}
+
 export async function waitForArchiveVersionReady(
   itemId: string,
   versionId: string,
   maxAttempts = 90,
-): Promise<{ ready: boolean; error: string | null }> {
+): Promise<{ ready: boolean; version?: import('@tahti/shared').ArchiveVersionRow; error: string | null }> {
   for (let i = 0; i < maxAttempts; i++) {
-    const res = await fetchArchiveVersions(itemId)
+    const res = await fetchArchiveVersion(itemId, versionId)
     if (res.error) return { ready: false, error: res.error }
-    const version = res.versions?.find((v) => v.id === versionId)
-    if (version?.status === 'READY') return { ready: true, error: null }
-    if (version?.status === 'ERROR') return { ready: false, error: 'Render failed on server' }
+    if (res.version?.status === 'READY') return { ready: true, version: res.version, error: null }
+    if (res.version?.status === 'ERROR') return { ready: false, error: 'Render failed on server' }
     await new Promise((r) => setTimeout(r, 2000))
   }
   return { ready: false, error: 'Render timed out' }
@@ -188,6 +203,7 @@ export async function fetchArchiveEditorSource(itemId: string): Promise<{
   durationSec?: number | null
   title?: string
   sourceKey?: string
+  sourceFileSizeBytes?: number | null
   error: string | null
 }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/source`, {

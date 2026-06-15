@@ -8,6 +8,8 @@ export const ArchiveEditorSourceSchema = z.object({
   durationSec: z.number().int().nullable(),
   title: z.string(),
   sourceKey: z.string(),
+  /** Source blob size for browser vs server render routing. */
+  sourceFileSizeBytes: z.number().int().nonnegative().nullable(),
 })
 
 export const LufsTargetSchema = z.enum(['none', 'stream', 'club'])

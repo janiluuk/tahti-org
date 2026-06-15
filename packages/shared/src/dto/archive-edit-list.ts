@@ -13,9 +13,16 @@ export const ArchiveEditListDraftResponseSchema = z.object({
   updatedAt: z.string().datetime().nullable(),
 })
 
-export const ArchiveEditListDraftPatchSchema = z.object({
-  editList: EditListSchema,
-})
+/** Defense in depth against pathological autosave payloads (500 cuts × metadata). */
+export const MAX_EDIT_LIST_JSON_BYTES = 128_000
+
+export const ArchiveEditListDraftPatchSchema = z
+  .object({
+    editList: EditListSchema,
+  })
+  .refine((body) => JSON.stringify(body).length <= MAX_EDIT_LIST_JSON_BYTES, {
+    message: `editList payload exceeds ${MAX_EDIT_LIST_JSON_BYTES} bytes`,
+  })
 
 export const ArchiveEditListDraftPatchResponseSchema = z.object({
   ok: z.literal(true),

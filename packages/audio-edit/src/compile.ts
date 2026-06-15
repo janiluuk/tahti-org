@@ -173,7 +173,18 @@ export function estimateOutputBytes(edit: EditList, bitrateKbps = 1411): number 
   return Math.ceil((postCutDuration(segments) * bitrateKbps * 1000) / 8)
 }
 
-export function shouldRenderInBrowser(edit: EditList, bitrateKbps?: number): boolean {
+export function shouldRenderInBrowser(
+  edit: EditList,
+  sourceFileSizeBytes?: number | null,
+  bitrateKbps?: number,
+): boolean {
+  if (
+    sourceFileSizeBytes != null &&
+    Number.isFinite(sourceFileSizeBytes) &&
+    sourceFileSizeBytes > BROWSER_RENDER_MAX_BYTES
+  ) {
+    return false
+  }
   return estimateOutputBytes(edit, bitrateKbps) <= BROWSER_RENDER_MAX_BYTES
 }
 
