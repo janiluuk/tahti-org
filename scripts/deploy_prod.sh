@@ -42,7 +42,7 @@ fi
 # ── Sync ──────────────────────────────────────────────────────────────────────
 echo "==> Syncing code → ${HOST}:${REMOTE_PATH}"
 ssh_remote "mkdir -p '${REMOTE_PATH}'"
-rsync -az \
+rsync -az --delete \
   --exclude .git \
   --exclude node_modules \
   --exclude .turbo \
