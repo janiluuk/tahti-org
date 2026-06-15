@@ -29,6 +29,8 @@ source "$SCRIPT_DIR/journeys/dashboard-player.sh"
 source "$SCRIPT_DIR/journeys/director.sh"
 # shellcheck source=journeys/ops.sh
 source "$SCRIPT_DIR/journeys/ops.sh"
+# shellcheck source=journeys/audio-editor.sh
+source "$SCRIPT_DIR/journeys/audio-editor.sh"
 
 echo "── Tahti user journey e2e ────────────────────────────────"
 echo "   API: $API_URL"
@@ -57,5 +59,6 @@ run_member_journey
 run_fan_supporter_journey
 run_director_journey
 run_dashboard_player_journey
+run_audio_editor_journey
 
 e2e_summary "User journey e2e" || exit 1

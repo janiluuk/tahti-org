@@ -210,6 +210,13 @@
     "label": "Audio editor"
   },
   {
+    "role": "artist",
+    "id": "editor-multitrack",
+    "file": "artist/editor-multitrack.png",
+    "url": "/dashboard/archive/:id/editor",
+    "label": "Pro audio editor (archive item)"
+  },
+  {
     "role": "admin",
     "id": "dashboard",
     "file": "admin/dashboard.png",
