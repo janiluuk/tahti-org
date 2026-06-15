@@ -104,10 +104,12 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
           },
           select: { id: true, mp3Key: true, flacKey: true },
         })
-        for (const item of items) {
-          const key = archivePlaybackKey(item)
-          playUrlByArchiveId.set(item.id, key ? await presignedGetUrl(key, 3600) : null)
-        }
+        await Promise.all(
+          items.map(async (item) => {
+            const key = archivePlaybackKey(item)
+            playUrlByArchiveId.set(item.id, key ? await presignedGetUrl(key, 3600) : null)
+          }),
+        )
       }
 
       const channelSlug = user.channel?.slug ?? null
