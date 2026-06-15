@@ -46,7 +46,7 @@ function motionStateBadge(state: string) {
     <span
       style={{
         fontSize: '0.6875rem',
-        fontWeight: 700,
+        fontWeight: 500,
         textTransform: 'uppercase',
         letterSpacing: '0.06em',
         color: styles[state] ?? 'var(--muted)',
@@ -152,7 +152,7 @@ export default async function AdminAgmPage() {
           className="admin-card"
           style={{ background: 'rgba(255,255,255,0.03)', marginBottom: '1rem' }}
         >
-          <p style={{ fontSize: '0.8125rem', marginBottom: '0.25rem', fontWeight: 600 }}>
+          <p style={{ fontSize: '0.8125rem', marginBottom: '0.25rem', fontWeight: 500 }}>
             AGM notice checklist
           </p>
           <ul
