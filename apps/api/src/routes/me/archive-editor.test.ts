@@ -23,7 +23,6 @@ vi.mock('../../lib/queue.js', () => ({
 describe('M21 v0 — archive trim editor', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let cookie: string
-  let otherCookie: string
   let archiveItemId: string
   let otherArchiveItemId: string
 
@@ -50,7 +49,6 @@ describe('M21 v0 — archive trim editor', () => {
       isMember: true,
       memberNumber: 98523,
     })
-    otherCookie = await sessionCookieFor(prisma, other.id)
     const otherItem = await createReadyArchiveItem(prisma, other.channel!.id, 'Other trim target')
     otherArchiveItemId = otherItem.id
   })
