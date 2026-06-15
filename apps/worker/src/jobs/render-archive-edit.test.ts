@@ -14,7 +14,6 @@ const {
   downloadToFile,
   uploadFile,
   processTranscodeVersionJob,
-  ffmpegChain,
   ffmpegFactory,
 } = vi.hoisted(() => {
   const chain: Record<string, unknown> & {
