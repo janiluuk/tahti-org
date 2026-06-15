@@ -56,3 +56,18 @@ Regenerate the infrastructure dashboard JSON after editing the generator:
 ```bash
 python3 ops/monitoring/vimage6/generate-tahti-infrastructure-dashboard.py
 ```
+
+## Host agent installers (vimage fleet)
+
+One-shot scripts to install or refresh monitoring sidecars on lab hosts:
+
+| Script | Purpose |
+|--------|---------|
+| `install-host-monitoring.sh` | node_exporter + cAdvisor bundle |
+| `install-node-exporter-docker.sh` | node_exporter in Docker |
+| `install-docker-catalog-exporter.sh` | docker-catalog metrics |
+| `install-nvidia-gpu-metrics.sh` | GPU metrics on forge hosts |
+| `ensure-docker-monitoring-agents.sh` | Idempotent agent check on a host |
+
+Fleet Prometheus snippets: `prometheus-fleet.snippet.yml` + `patch-prometheus-fleet.py`.  
+Grafana JSON: `vimage-infra.json`, `web-traffic.json`.

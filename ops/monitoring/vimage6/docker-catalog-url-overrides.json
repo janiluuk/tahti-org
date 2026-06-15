@@ -1,0 +1,16 @@
+{
+  "nginx-proxy-manager-sqlite": "http://192.168.2.6:81",
+  "portainer": "http://192.168.2.6:9000",
+  "homeassistant": "http://192.168.2.6:8123",
+  "Dashy": "http://192.168.2.6:4000",
+  "beszel": "http://192.168.2.6:8090",
+  "photoprism": "http://192.168.2.6:2342",
+  "gitea": "https://git.dudeisland.eu",
+  "monitoring-grafana": "http://192.168.2.105:3000",
+  "giggi-app-1": "https://giggi.fi",
+  "giggi-preprod-app-1": "https://preprod.giggi.fi",
+  "vimage6-roundcube": "https://webmail.sparkki.fi",
+  "jellyfin": "http://192.168.2.7:8096",
+  "sonarr": "http://192.168.2.7:8989",
+  "transmission-openvpn-latest": "http://192.168.2.7:9091"
+}

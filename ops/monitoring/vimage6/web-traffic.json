@@ -1,0 +1,485 @@
+{
+  "uid": "web-traffic-v1",
+  "title": "Web Traffic \u2014 sparkki.fi & giggi.fi & tahti.live",
+  "tags": ["web", "traffic", "npm"],
+  "timezone": "browser",
+  "refresh": "5m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Unique visitors today",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Unique IPs \u2014 sparkki.fi",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 8,
+        "h": 5
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-main"
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "text": {
+          "titleSize": 16,
+          "valueSize": 56
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "orange",
+                "value": 200
+              }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(sum by (client_ip) (count_over_time({job=\"npm-access\", site=\"sparkki.fi\"} | regexp `\\[Client (?P<client_ip>[^\\]]+)\\]` [1d])))",
+          "refId": "A",
+          "legendFormat": "unique IPs"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Unique IPs \u2014 giggi.fi",
+      "gridPos": {
+        "x": 8,
+        "y": 1,
+        "w": 8,
+        "h": 5
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-main"
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "text": {
+          "titleSize": 16,
+          "valueSize": 56
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              },
+              {
+                "color": "cyan",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 200
+              }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(sum by (client_ip) (count_over_time({job=\"npm-access\", site=\"giggi.fi\"} | regexp `\\[Client (?P<client_ip>[^\\]]+)\\]` [1d])))",
+          "refId": "A",
+          "legendFormat": "unique IPs"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Unique IPs \u2014 tahti.live",
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 8,
+        "h": 5
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-main"
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"]
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "text": {
+          "titleSize": 16,
+          "valueSize": 56
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              },
+              {
+                "color": "violet",
+                "value": 20
+              },
+              {
+                "color": "pink",
+                "value": 100
+              }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(sum by (client_ip) (count_over_time({job=\"npm-access\", site=\"tahti.live\"} | regexp `\\[Client (?P<client_ip>[^\\]]+)\\]` [1d])))",
+          "refId": "A",
+          "legendFormat": "unique IPs"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "row",
+      "title": "Weekly unique visitors",
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Unique IPs per day \u2014 all sites",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 24,
+        "h": 9
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-main"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "spanNulls": true
+          },
+          "min": 0
+        }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["max", "mean", "sum"]
+        }
+      },
+      "targets": [
+        {
+          "expr": "count(sum by (client_ip) (count_over_time({job=\"npm-access\", site=\"sparkki.fi\"} | regexp `\\[Client (?P<client_ip>[^\\]]+)\\]` [1d])))",
+          "refId": "A",
+          "legendFormat": "sparkki.fi",
+          "step": "1d"
+        },
+        {
+          "expr": "count(sum by (client_ip) (count_over_time({job=\"npm-access\", site=\"giggi.fi\"} | regexp `\\[Client (?P<client_ip>[^\\]]+)\\]` [1d])))",
+          "refId": "B",
+          "legendFormat": "giggi.fi",
+          "step": "1d"
+        },
+        {
+          "expr": "count(sum by (client_ip) (count_over_time({job=\"npm-access\", site=\"tahti.live\"} | regexp `\\[Client (?P<client_ip>[^\\]]+)\\]` [1d])))",
+          "refId": "C",
+          "legendFormat": "tahti.live",
+          "step": "1d"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "row",
+      "title": "Top requested URLs (last 24 h)",
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 11,
+      "type": "table",
+      "title": "Top URLs \u2014 sparkki.fi",
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 8,
+        "h": 9
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-main"
+      },
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "topk(15, sum by (path) (count_over_time({job=\"npm-access\", site=\"sparkki.fi\"} | regexp `- (?:GET|POST|HEAD) https [^ ]+ \"(?P<path>/[^?\"\\s]*)` [24h])))",
+          "refId": "A",
+          "legendFormat": "{{path}}",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "table",
+      "title": "Top URLs \u2014 giggi.fi",
+      "gridPos": {
+        "x": 8,
+        "y": 17,
+        "w": 8,
+        "h": 9
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-main"
+      },
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "topk(15, sum by (path) (count_over_time({job=\"npm-access\", site=\"giggi.fi\"} | regexp `- (?:GET|POST|HEAD) https [^ ]+ \"(?P<path>/[^?\"\\s]*)` [24h])))",
+          "refId": "A",
+          "legendFormat": "{{path}}",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Top URLs \u2014 tahti",
+      "gridPos": {
+        "x": 16,
+        "y": 17,
+        "w": 8,
+        "h": 9
+      },
+      "datasource": {
+        "type": "loki",
+        "uid": "loki-main"
+      },
+      "options": {
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "expr": "topk(15, sum by (path) (count_over_time({job=\"npm-access\", site=\"tahti.live\"} | regexp `- (?:GET|POST|HEAD) https [^ ]+ \"(?P<path>/[^?\"\\s]*)` [24h])))",
+          "refId": "A",
+          "legendFormat": "{{path}}",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "row",
+      "title": "Server \u2014 vimage (192.168.2.100) \u2014 today",
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "CPU usage % \u2014 vimage (today)",
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "timeFrom": "now-24h",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "min": 0,
+          "max": 100,
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\", instance=\"vimage\"}[5m])) * 100)",
+          "refId": "A",
+          "legendFormat": "CPU %"
+        },
+        {
+          "expr": "avg by (instance) (rate(node_cpu_seconds_total{mode=\"iowait\", instance=\"vimage\"}[5m])) * 100",
+          "refId": "B",
+          "legendFormat": "IO wait %"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Memory usage \u2014 vimage (today)",
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "timeFrom": "now-24h",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max"]
+        }
+      },
+      "targets": [
+        {
+          "expr": "node_memory_MemTotal_bytes{instance=\"vimage\"} - node_memory_MemAvailable_bytes{instance=\"vimage\"}",
+          "refId": "A",
+          "legendFormat": "used"
+        },
+        {
+          "expr": "node_memory_Buffers_bytes{instance=\"vimage\"} + node_memory_Cached_bytes{instance=\"vimage\"}",
+          "refId": "B",
+          "legendFormat": "cached/buffers"
+        },
+        {
+          "expr": "node_memory_MemAvailable_bytes{instance=\"vimage\"}",
+          "refId": "C",
+          "legendFormat": "available"
+        }
+      ]
+    }
+  ]
+}

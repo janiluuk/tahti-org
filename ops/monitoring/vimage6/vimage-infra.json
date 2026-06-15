@@ -1,0 +1,772 @@
+{
+  "title": "Vimage Infrastructure",
+  "uid": "vimage-infra",
+  "schemaVersion": 38,
+  "version": 3,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "annotations": { "list": [] },
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Host Status",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": { "text": "UP", "color": "green" },
+                "0": { "text": "DOWN", "color": "red" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "background"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+          "expr": "up{job=\"node\",instance=~\"vimage.*\"}",
+          "legendFormat": "{{instance}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "CPU Usage %",
+      "type": "bargauge",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "displayMode": "lcd",
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{job=\"node\",mode=\"idle\",instance=~\"vimage.*\"}[2m])) * 100)",
+          "legendFormat": "{{instance}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Memory Usage %",
+      "type": "bargauge",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 75 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "displayMode": "lcd",
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+          "expr": "100 * (1 - (node_memory_MemAvailable_bytes{job=\"node\",instance=~\"vimage.*\"} / node_memory_MemTotal_bytes{job=\"node\",instance=~\"vimage.*\"}))",
+          "legendFormat": "{{instance}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Disk Usage % ( / )",
+      "type": "bargauge",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "displayMode": "lcd",
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+          "expr": "100 - (node_filesystem_avail_bytes{job=\"node\",instance=~\"vimage.*\",mountpoint=\"/\",fstype!=\"tmpfs\"} / node_filesystem_size_bytes{job=\"node\",instance=~\"vimage.*\",mountpoint=\"/\",fstype!=\"tmpfs\"} * 100)",
+          "legendFormat": "{{instance}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Disk Free",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 10737418240 },
+              { "color": "green", "value": 53687091200 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+          "expr": "node_filesystem_avail_bytes{job=\"node\",instance=~\"vimage.*\",mountpoint=\"/\",fstype!=\"tmpfs\"}",
+          "legendFormat": "{{instance}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "row",
+      "title": "vimage — Tahti lab host (192.168.2.100)",
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 11,
+      "title": "vimage memory used %",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 21, "w": 8, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 75 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes{job=\"node\",instance=\"vimage\"} / node_memory_MemTotal_bytes{job=\"node\",instance=\"vimage\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "vimage CPU %",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 21, "w": 8, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{job=\"node\",instance=\"vimage\",mode=\"idle\"}[2m])) * 100)",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "vimage load (1m)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 21, "w": 8, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 4 },
+              { "color": "red", "value": 8 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "node_load1{job=\"node\",instance=\"vimage\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Tahti container memory",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 25, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "container_memory_usage_bytes{instance=\"vimage\",name=~\"tahti.*|/tahti.*\"}",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Tahti container CPU (cores)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 25, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{instance=\"vimage\",name=~\"tahti.*|/tahti.*\"}[5m]))",
+          "legendFormat": "{{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "vimage network traffic",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 33, "w": 24, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(node_network_receive_bytes_total{job=\"node\",instance=\"vimage\",device!~\"lo|veth.*|docker.*|br-.*\"}[5m]))",
+          "legendFormat": "receive",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(node_network_transmit_bytes_total{job=\"node\",instance=\"vimage\",device!~\"lo|veth.*|docker.*|br-.*\"}[5m]))",
+          "legendFormat": "transmit",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "row",
+      "title": "GPU — vimage3 & vimage4 (workstations)",
+      "gridPos": { "x": 0, "y": 41, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 21,
+      "title": "GPU utilisation % (now)",
+      "type": "bargauge",
+      "gridPos": { "x": 0, "y": 42, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.7 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "displayMode": "lcd",
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "expr": "nvidia_gpu_utilization_ratio{job=\"node\",instance=~\"vimage3|vimage4\"}",
+          "legendFormat": "{{instance}} gpu{{gpu}} {{name}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "GPU memory used % (now)",
+      "type": "bargauge",
+      "gridPos": { "x": 12, "y": 42, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 75 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "displayMode": "lcd",
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "expr": "100 * nvidia_gpu_memory_used_bytes{job=\"node\",instance=~\"vimage3|vimage4\"} / nvidia_gpu_memory_total_bytes{job=\"node\",instance=~\"vimage3|vimage4\"}",
+          "legendFormat": "{{instance}} gpu{{gpu}} {{name}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "GPU Utilisation % (fleet)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 49, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+          "expr": "nvidia_gpu_utilization_ratio{job=\"node\",instance=~\"vimage2|vimage3|vimage4|vimage5|vimage6\"}",
+          "legendFormat": "{{instance}} gpu{{gpu}} {{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "GPU Memory Used",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 49, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+          "expr": "nvidia_gpu_memory_used_bytes{job=\"node\",instance=~\"vimage2|vimage3|vimage4|vimage5|vimage6\"}",
+          "legendFormat": "{{instance}} gpu{{gpu}} {{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "GPU Temperature °C",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 57, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": { "lineWidth": 2 },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 75 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+          "expr": "nvidia_gpu_temperature_celsius{job=\"node\",instance=~\"vimage2|vimage3|vimage4|vimage5|vimage6\"}",
+          "legendFormat": "{{instance}} gpu{{gpu}} {{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "GPU Power Draw (W)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 57, "w": 12, "h": 7 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": { "unit": "watt", "custom": { "lineWidth": 2 } },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+          "expr": "nvidia_gpu_power_draw_watts{job=\"node\",instance=~\"vimage2|vimage3|vimage4|vimage5|vimage6\"}",
+          "legendFormat": "{{instance}} gpu{{gpu}} {{name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "type": "row",
+      "title": "vimage6 — monitoring host (192.168.2.105)",
+      "gridPos": { "x": 0, "y": 64, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "id": 31,
+      "title": "vimage6 memory used %",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 65, "w": 8, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 75 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes{job=\"node\",instance=\"vimage6\"} / node_memory_MemTotal_bytes{job=\"node\",instance=\"vimage6\"})",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "title": "vimage6 CPU %",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 65, "w": 8, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "100 - (avg(rate(node_cpu_seconds_total{job=\"node\",instance=\"vimage6\",mode=\"idle\"}[2m])) * 100)",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "title": "vimage6 load (1m)",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 65, "w": 8, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 4 },
+              { "color": "red", "value": 8 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "node_load1{job=\"node\",instance=\"vimage6\"}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "title": "vimage6 GPU utilisation % (now)",
+      "type": "bargauge",
+      "gridPos": { "x": 0, "y": 69, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.7 },
+              { "color": "red", "value": 0.9 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "displayMode": "lcd",
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "expr": "nvidia_gpu_utilization_ratio{job=\"node\",instance=\"vimage6\"}",
+          "legendFormat": "gpu{{gpu}} {{name}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "title": "vimage6 GPU memory used % (now)",
+      "type": "bargauge",
+      "gridPos": { "x": 12, "y": 69, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 75 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "displayMode": "lcd",
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "expr": "100 * nvidia_gpu_memory_used_bytes{job=\"node\",instance=\"vimage6\"} / nvidia_gpu_memory_total_bytes{job=\"node\",instance=\"vimage6\"}",
+          "legendFormat": "gpu{{gpu}} {{name}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

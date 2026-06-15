@@ -1,0 +1,179 @@
+  # --- fleet-hosts (managed by tahti-org) ---
+
+  - job_name: node
+    static_configs:
+      - targets:
+          - 192.168.2.100:9100
+          - 192.168.2.101:9100
+          - 192.168.2.102:9100
+          - 192.168.2.103:9100
+          - 192.168.2.104:9100
+          - 192.168.2.105:9100
+          - 192.168.2.6:9100
+          - 192.168.2.7:9100
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.100:.*"
+        target_label: instance
+        replacement: vimage
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.101:.*"
+        target_label: instance
+        replacement: vimage2
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.102:.*"
+        target_label: instance
+        replacement: vimage3
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.103:.*"
+        target_label: instance
+        replacement: vimage4
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.104:.*"
+        target_label: instance
+        replacement: vimage5
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.105:.*"
+        target_label: instance
+        replacement: vimage6
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.6:.*"
+        target_label: instance
+        replacement: pi4
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.7:.*"
+        target_label: instance
+        replacement: pi5
+      - source_labels: [instance]
+        target_label: host_ip
+        replacement: "192.168.2.100"
+        regex: vimage
+      - source_labels: [instance]
+        target_label: host_ip
+        replacement: "192.168.2.101"
+        regex: vimage2
+      - source_labels: [instance]
+        target_label: host_ip
+        replacement: "192.168.2.102"
+        regex: vimage3
+      - source_labels: [instance]
+        target_label: host_ip
+        replacement: "192.168.2.103"
+        regex: vimage4
+      - source_labels: [instance]
+        target_label: host_ip
+        replacement: "192.168.2.104"
+        regex: vimage5
+      - source_labels: [instance]
+        target_label: host_ip
+        replacement: "192.168.2.105"
+        regex: vimage6
+      - source_labels: [instance]
+        target_label: host_ip
+        replacement: "192.168.2.6"
+        regex: pi4
+      - source_labels: [instance]
+        target_label: host_ip
+        replacement: "192.168.2.7"
+        regex: pi5
+
+  - job_name: cadvisor
+    static_configs:
+      - targets:
+          - 192.168.2.100:8081
+          - 192.168.2.101:8080
+          - 192.168.2.102:8081
+          - 192.168.2.103:8081
+          - 192.168.2.104:8081
+          - 192.168.2.105:8080
+          - 192.168.2.6:8081
+          - 192.168.2.7:8081
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.100:.*"
+        target_label: instance
+        replacement: vimage
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.101:.*"
+        target_label: instance
+        replacement: vimage2
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.102:.*"
+        target_label: instance
+        replacement: vimage3
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.103:.*"
+        target_label: instance
+        replacement: vimage4
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.104:.*"
+        target_label: instance
+        replacement: vimage5
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.105:.*"
+        target_label: instance
+        replacement: vimage6
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.6:.*"
+        target_label: instance
+        replacement: pi4
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.7:.*"
+        target_label: instance
+        replacement: pi5
+
+  - job_name: docker-catalog
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+          - 192.168.2.100:9096
+          - 192.168.2.102:9096
+          - 192.168.2.103:9096
+          - 192.168.2.104:9096
+          - 192.168.2.105:9096
+          - 192.168.2.6:9096
+          - 192.168.2.7:9096
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.100:.*"
+        target_label: instance
+        replacement: vimage
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.102:.*"
+        target_label: instance
+        replacement: vimage3
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.103:.*"
+        target_label: instance
+        replacement: vimage4
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.104:.*"
+        target_label: instance
+        replacement: vimage5
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.105:.*"
+        target_label: instance
+        replacement: vimage6
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.6:.*"
+        target_label: instance
+        replacement: pi4
+      - source_labels: [__address__]
+        regex: "192\\.168\\.2\\.7:.*"
+        target_label: instance
+        replacement: pi5
+
+  - job_name: giggi
+    metrics_path: /api/metrics
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["192.168.2.100:3001"]
+        labels:
+          environment: production
+          site: giggi.fi
+      - targets: ["192.168.2.100:3100"]
+        labels:
+          environment: preprod
+          site: preprod.giggi.fi
+
+  # --- end fleet-hosts ---
