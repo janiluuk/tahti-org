@@ -6,6 +6,7 @@ import {
   compileFiltergraph,
   compileLoudnormPass1Filter,
   estimateOutputBytes,
+  isFiltergraphTooLarge,
   remapTracklistTimestamps,
   shouldRenderInBrowser,
   shouldUseSegmentRender,
@@ -108,5 +109,16 @@ describe('shouldUseSegmentRender', () => {
 
   it('returns false for a simple trim with no cuts', () => {
     expect(shouldUseSegmentRender(createDefaultEditList(120))).toBe(false)
+  })
+
+  it('returns true when filtergraph exceeds size budget', () => {
+    const edit = createDefaultEditList(10)
+    edit.cuts = Array.from({ length: 500 }, (_, i) => ({
+      start: i * 0.01,
+      end: i * 0.01 + 0.004,
+    }))
+    expect(isFiltergraphTooLarge(edit)).toBe(true)
+    expect(shouldUseSegmentRender(edit)).toBe(true)
+    expect(compileFiltergraph(edit).filtergraph.length).toBeGreaterThan(24_000)
   })
 })

@@ -46,7 +46,16 @@ export const ArchiveEditListRenderSchema = z.object({
   editList: EditListSchema,
   versionLabel: z.string().trim().min(1).max(120),
   activate: z.boolean().default(true),
-  format: z.enum(['flac', 'mp3']).default('flac'),
+  format: z.enum(['flac', 'mp3', 'wav']).default('flac'),
+  /** UX-12: render only the first N seconds (preview sample). */
+  maxDurationSec: z.number().finite().min(1).max(120).optional(),
+  /** Skip version transcode pipeline — preview downloads only. */
+  sampleOnly: z.boolean().optional(),
+})
+
+export const ArchiveVersionDownloadSchema = z.object({
+  url: z.string().url(),
+  contentType: z.string(),
 })
 
 export const ArchiveEditListRenderResponseSchema = z.object({

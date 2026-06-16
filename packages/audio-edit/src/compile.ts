@@ -48,6 +48,29 @@ function buildCutStage(
   return { filter: parts.join(';'), label: 'cut' }
 }
 
+function buildHpLpStage(inputLabel: string, edit: EditList): string {
+  const hp = edit.highPassHz ?? 0
+  const lp = edit.lowPassHz ?? 0
+  if (hp <= 0 && lp <= 0) return `${inputLabel}anull[fhp]`
+
+  const filters: string[] = []
+  let chain = inputLabel
+  if (hp > 0) {
+    filters.push(`${chain}highpass=f=${hp}[hp]`)
+    chain = '[hp]'
+  }
+  if (lp > 0) {
+    filters.push(`${chain}lowpass=f=${lp}[lp]`)
+    chain = '[lp]'
+  }
+  if (filters.length === 0) return `${inputLabel}anull[fhp]`
+  const last = filters[filters.length - 1]!
+  return filters
+    .slice(0, -1)
+    .concat(last.replace(/\[(hp|lp)\]$/, '[fhp]'))
+    .join(';')
+}
+
 function buildFadeStage(inputLabel: string, fades: EditFade[], segments: KeepSegment[]): string {
   if (fades.length === 0) return `${inputLabel}anull[fad]`
 
@@ -140,7 +163,8 @@ export function compileFiltergraph(edit: EditList, options: CompileOptions = {})
 
   const stages = [
     cutStage.filter,
-    buildFadeStage(chainLabel, edit.fades, segments),
+    buildHpLpStage(chainLabel, edit),
+    buildFadeStage('[fhp]', edit.fades, segments),
     buildGainStage('[fad]', edit.gainDb),
     buildEqStage('[g]', edit),
     buildCompStage('[eq]', edit),
@@ -176,12 +200,22 @@ export function estimateOutputBytes(edit: EditList, bitrateKbps = 1411): number 
 /** Worker renders one keep-segment at a time when cuts fragment the timeline heavily. */
 export const SEGMENT_RENDER_MIN_CUTS = 8
 export const SEGMENT_RENDER_MIN_SEGMENTS = 6
+/** PERF-07: ffmpeg filter_complex planning slows beyond ~24k chars. */
+export const FILTERGRAPH_MAX_CHARS = 24_000
+
+export function isFiltergraphTooLarge(edit: EditList): boolean {
+  return compileFiltergraph(edit).filtergraph.length > FILTERGRAPH_MAX_CHARS
+}
 
 export function shouldUseSegmentRender(edit: EditList): boolean {
   const segments = computeKeepSegments(edit.sourceDuration, mergeCuts(edit.cuts))
-  return (
-    edit.cuts.length >= SEGMENT_RENDER_MIN_CUTS || segments.length >= SEGMENT_RENDER_MIN_SEGMENTS
-  )
+  if (
+    edit.cuts.length >= SEGMENT_RENDER_MIN_CUTS ||
+    segments.length >= SEGMENT_RENDER_MIN_SEGMENTS
+  ) {
+    return true
+  }
+  return isFiltergraphTooLarge(edit)
 }
 
 export function compileLoudnormOutputFiltergraph(edit: EditList): string {

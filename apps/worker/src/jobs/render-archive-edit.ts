@@ -32,6 +32,8 @@ export interface RenderArchiveEditPayload {
   editList: EditList
   format: OutputFormat
   activate: boolean
+  maxDurationSec?: number
+  sampleOnly?: boolean
 }
 
 export interface RenderJobProgress {
@@ -63,10 +65,12 @@ function ffmpegComplex(
   outputPath: string,
   filtergraph: string,
   format: OutputFormat,
+  maxDurationSec?: number,
 ): Promise<string> {
   const { codecArgs, ar } = compileOutputArgs(format)
   const outOpts = ['-filter_complex', filtergraph, '-map', '[out]', ...codecArgs]
   if (ar) outOpts.push('-ar', String(ar))
+  if (maxDurationSec != null) outOpts.push('-t', String(maxDurationSec))
 
   return new Promise((resolve, reject) => {
     let stderr = ''
@@ -130,6 +134,7 @@ async function applyLoudnormToFile(
   outputPath: string,
   edit: EditList,
   format: OutputFormat,
+  maxDurationSec?: number,
 ): Promise<void> {
   let list = edit
   if (!list.loudnorm.measured) {
@@ -138,7 +143,13 @@ async function applyLoudnormToFile(
       list = { ...list, loudnorm: { ...list.loudnorm, measured } }
     }
   }
-  await ffmpegComplex(inputPath, outputPath, compileLoudnormOutputFiltergraph(list), format)
+  await ffmpegComplex(
+    inputPath,
+    outputPath,
+    compileLoudnormOutputFiltergraph(list),
+    format,
+    maxDurationSec,
+  )
 }
 
 async function renderSinglePass(
@@ -146,6 +157,7 @@ async function renderSinglePass(
   outputPath: string,
   edit: EditList,
   format: OutputFormat,
+  maxDurationSec?: number,
 ): Promise<void> {
   let list = edit
   if (list.loudnorm.enabled && !list.loudnorm.measured) {
@@ -155,7 +167,7 @@ async function renderSinglePass(
     }
   }
   const { filtergraph } = compileFiltergraph(list)
-  await ffmpegComplex(inputPath, outputPath, filtergraph, format)
+  await ffmpegComplex(inputPath, outputPath, filtergraph, format, maxDurationSec)
 }
 
 function editWithoutLoudnorm(edit: EditList): EditList {
@@ -169,6 +181,7 @@ async function renderSegmented(
   format: OutputFormat,
   tmpDir: string,
   onProgress?: (update: RenderJobProgress) => Promise<void>,
+  maxDurationSec?: number,
 ): Promise<void> {
   const segments = computeKeepSegments(edit.sourceDuration, mergeCuts(edit.cuts))
   const segmentEdit = editWithoutLoudnorm(edit)
@@ -198,7 +211,15 @@ async function renderSegmented(
 
   if (edit.loudnorm.enabled) {
     await onProgress?.({ pct: 0.88, phase: 'loudnorm' })
-    await applyLoudnormToFile(concatOut, outputPath, edit, format)
+    await applyLoudnormToFile(concatOut, outputPath, edit, format, maxDurationSec)
+  } else if (maxDurationSec != null) {
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(concatOut)
+        .outputOptions('-t', String(maxDurationSec), '-c', 'copy')
+        .on('error', reject)
+        .on('end', () => resolve())
+        .save(outputPath)
+    })
   } else {
     const { copyFile } = await import('node:fs/promises')
     await copyFile(concatOut, outputPath)
@@ -212,18 +233,28 @@ async function renderEditList(
   format: OutputFormat,
   tmpDir: string,
   onProgress?: (update: RenderJobProgress) => Promise<void>,
+  maxDurationSec?: number,
 ): Promise<void> {
   if (shouldUseSegmentRender(edit)) {
-    await renderSegmented(inputPath, outputPath, edit, format, tmpDir, onProgress)
+    await renderSegmented(inputPath, outputPath, edit, format, tmpDir, onProgress, maxDurationSec)
     return
   }
   await onProgress?.({ pct: 0.35, phase: 'render' })
-  await renderSinglePass(inputPath, outputPath, edit, format)
+  await renderSinglePass(inputPath, outputPath, edit, format, maxDurationSec)
 }
 
 export async function processRenderArchiveEditJob(job: Job): Promise<void> {
   const data = job.data as RenderArchiveEditPayload
-  const { versionId, archiveItemId, channelSlug, sourceKey, format, activate } = data
+  const {
+    versionId,
+    archiveItemId,
+    channelSlug,
+    sourceKey,
+    format,
+    activate,
+    maxDurationSec,
+    sampleOnly,
+  } = data
 
   const validation = validateEditList(data.editList)
   if (!validation.ok || !validation.edit) {
@@ -252,7 +283,15 @@ export async function processRenderArchiveEditJob(job: Job): Promise<void> {
     const inputPath = join(tmpDir, 'input')
     const outputPath = join(tmpDir, `rendered.${ext}`)
     await downloadToFile(sourceKey, inputPath)
-    await renderEditList(inputPath, outputPath, editList, format, tmpDir, reportProgress)
+    await renderEditList(
+      inputPath,
+      outputPath,
+      editList,
+      format,
+      tmpDir,
+      reportProgress,
+      maxDurationSec,
+    )
 
     await reportProgress({ pct: 0.92, phase: 'upload' })
     const fileStat = await stat(outputPath)
@@ -264,11 +303,17 @@ export async function processRenderArchiveEditJob(job: Job): Promise<void> {
       data: {
         rawKey,
         fileSizeBytes: BigInt(fileStat.size),
+        status: sampleOnly ? 'READY' : undefined,
       },
     })
 
+    if (sampleOnly) {
+      await reportProgress({ pct: 1, phase: 'done' })
+      return
+    }
+
     await reportProgress({ pct: 0.96, phase: 'transcode' })
-    await processTranscodeVersionJob({ data: { versionId } } as Job)
+    await processTranscodeVersionJob({ data: { versionId } } as unknown as Job)
 
     if (activate) {
       await prisma.$transaction([

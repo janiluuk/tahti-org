@@ -6,7 +6,8 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js'
-import { bounceArchiveTrim, fetchArchiveEditorSource } from './archive-actions'
+import { editListFromV0Trim } from '@tahti/audio-edit'
+import { fetchArchiveEditorSource, renderArchiveEditList } from './archive-actions'
 
 function formatSec(sec: number): string {
   const m = Math.floor(sec / 60)
@@ -149,20 +150,24 @@ export function ArchiveTrimEditor({
 
     setError(null)
     startTransition(async () => {
-      const res = await bounceArchiveTrim(itemId, {
-        startSec,
-        endSec,
-        fadeInSec,
-        fadeOutSec,
-        peakNormalize,
-        lufsTarget,
-        limiterEnabled,
-        highPassHz,
-        lowPassHz,
-        eq: { lowGainDb, midGainDb, highGainDb },
-        compressorEnabled,
+      const res = await renderArchiveEditList(itemId, {
+        editList: editListFromV0Trim({
+          sourceDuration: durationSec,
+          startSec,
+          endSec,
+          fadeInSec,
+          fadeOutSec,
+          peakNormalize,
+          lufsTarget,
+          limiterEnabled,
+          highPassHz,
+          lowPassHz,
+          eq: { lowGainDb, midGainDb, highGainDb },
+          compressorEnabled,
+        }),
         versionLabel: label,
         activate: true,
+        format: 'wav',
       })
       if (res.error) {
         setError(res.error)

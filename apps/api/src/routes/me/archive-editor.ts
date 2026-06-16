@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { createDefaultEditList, validateEditList } from '@tahti/audio-edit'
+import { createDefaultEditList, editListFromV0Trim, validateEditList } from '@tahti/audio-edit'
 import {
   ArchiveEditListDraftPatchResponseSchema,
   ArchiveEditListDraftPatchSchema,
@@ -23,7 +23,11 @@ import { requireAuth } from '../../plugins/auth.js'
 import { auditLog } from '../../lib/audit.js'
 import { resolveArchiveEditorSource } from '../../lib/archive-editor-source.js'
 import { getObjectStream, presignedGetUrl } from '../../lib/minio.js'
-import { enqueueBounceArchiveEdit, enqueueRenderArchiveEdit, mediaQueue } from '../../lib/queue.js'
+import {
+  enqueueBackfillEditorPeaks,
+  enqueueRenderArchiveEdit,
+  mediaQueue,
+} from '../../lib/queue.js'
 import { ensureInitialVersion } from '@tahti/db'
 
 const MAX_CONCURRENT_EDITOR_JOBS = 2
@@ -85,6 +89,10 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         validation.ok && validation.edit
           ? validation.edit
           : createDefaultEditList(Math.max(1, duration))
+
+      if (!item.editorPeaks) {
+        void enqueueBackfillEditorPeaks(id).catch(() => {})
+      }
 
       return reply.send({
         editList: { ...editList, sourceDuration: Math.max(editList.sourceDuration, duration) },
@@ -325,22 +333,26 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         select: { id: true, versionNumber: true, status: true },
       })
 
-      await enqueueBounceArchiveEdit({
+      await enqueueRenderArchiveEdit({
         versionId: version.id,
         archiveItemId: id,
         channelSlug: item.channel.slug,
         sourceKey: source.sourceKey,
-        startSec,
-        endSec,
-        fadeInSec,
-        fadeOutSec,
-        peakNormalize,
-        lufsTarget,
-        limiterEnabled,
-        highPassHz,
-        lowPassHz,
-        eq,
-        compressorEnabled,
+        editList: editListFromV0Trim({
+          sourceDuration: source.durationSec ?? endSec,
+          startSec,
+          endSec,
+          fadeInSec,
+          fadeOutSec,
+          peakNormalize,
+          lufsTarget,
+          limiterEnabled,
+          highPassHz,
+          lowPassHz,
+          eq,
+          compressorEnabled,
+        }),
+        format: 'wav',
         activate,
       })
 
@@ -405,7 +417,7 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(409).send({ error: 'Archive item is not ready for editing' })
       }
 
-      const { versionLabel, activate, format } = parsed.data
+      const { versionLabel, activate, format, maxDurationSec, sampleOnly } = parsed.data
       const editList = validation.edit
 
       if ((await countActiveEditorJobs(user.id)) >= MAX_CONCURRENT_EDITOR_JOBS) {
@@ -438,6 +450,8 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         editList,
         format,
         activate,
+        maxDurationSec,
+        sampleOnly,
       })
 
       await auditLog(fastify.prisma, {
@@ -450,6 +464,8 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
           format,
           activate,
           cutCount: editList.cuts.length,
+          maxDurationSec,
+          sampleOnly: sampleOnly ?? false,
         },
       })
 

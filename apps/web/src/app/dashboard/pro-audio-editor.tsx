@@ -24,6 +24,7 @@ import {
   completeArchiveVersionUpload,
   prepareArchiveVersionUpload,
   renderArchiveEditList,
+  fetchArchiveVersionDownloadUrl,
   saveArchiveEditListDraft,
   updateArchiveMetadata,
 } from './archive-actions'
@@ -473,6 +474,7 @@ export function ProAudioEditor({
   useEffect(() => {
     let raf = 0
     const tick = () => {
+      if (!playing && !measuring && !previewLoading) return
       if (previewRef.current) {
         setMeterPeak(readPeakLevel(previewRef.current.analyser))
         setGrDb(
@@ -484,9 +486,11 @@ export function ProAudioEditor({
       }
       raf = requestAnimationFrame(tick)
     }
-    raf = requestAnimationFrame(tick)
+    if (playing || measuring || previewLoading) {
+      raf = requestAnimationFrame(tick)
+    }
     return () => cancelAnimationFrame(raf)
-  }, [])
+  }, [playing, measuring, previewLoading])
 
   const redraw = useCallback(() => {
     const pyramid = peaks
@@ -688,20 +692,55 @@ export function ProAudioEditor({
   }
 
   async function handlePreviewSample() {
-    if (!ffmpeg || !inputPathRef.current || !browserRender) return
     setPreviewError(null)
     setPreviewLoading(true)
     try {
-      const out = await renderEditToFile(ffmpeg, editList, inputPathRef.current, 'mp3', undefined, {
+      if (browserRender && ffmpeg && inputPathRef.current) {
+        const out = await renderEditToFile(
+          ffmpeg,
+          editList,
+          inputPathRef.current,
+          'mp3',
+          undefined,
+          {
+            maxDurationSec: 30,
+          },
+        )
+        const blob = new Blob([new Uint8Array(out)], { type: 'audio/mpeg' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${title.replace(/\s+/g, '-').slice(0, 40)}-preview-30s.mp3`
+        a.click()
+        URL.revokeObjectURL(url)
+        return
+      }
+
+      const res = await renderArchiveEditList(archiveId, {
+        editList,
+        versionLabel: `Preview ${new Date().toISOString().slice(0, 16)}`,
+        activate: false,
+        format: 'mp3',
         maxDurationSec: 30,
+        sampleOnly: true,
       })
-      const blob = new Blob([new Uint8Array(out)], { type: 'audio/mpeg' })
-      const url = URL.createObjectURL(blob)
+      if (res.error || !res.versionId) throw new Error(res.error ?? 'Server preview failed')
+
+      await waitForRenderViaProgress(archiveId, res.versionId, (event) => {
+        if (typeof event.pct === 'number') setExportProgress(event.pct)
+        if (event.phase) setExportPhase(event.phase)
+      })
+      setExportProgress(null)
+      setExportPhase(null)
+
+      const dl = await fetchArchiveVersionDownloadUrl(archiveId, res.versionId)
+      if (dl.error || !dl.url) throw new Error(dl.error ?? 'Preview download unavailable')
+
       const a = document.createElement('a')
-      a.href = url
+      a.href = dl.url
       a.download = `${title.replace(/\s+/g, '-').slice(0, 40)}-preview-30s.mp3`
+      a.rel = 'noopener'
       a.click()
-      URL.revokeObjectURL(url)
     } catch (e) {
       setPreviewError(e instanceof Error ? e.message : 'Preview render failed')
     } finally {
@@ -1785,16 +1824,18 @@ export function ProAudioEditor({
             {exportError && <p className="studio-text-error">{exportError}</p>}
             {previewError && <p className="studio-text-error">{previewError}</p>}
             <div className="pro-editor-dialog__actions">
-              {browserRender && (
-                <button
-                  type="button"
-                  className="studio-btn-ghost"
-                  disabled={previewLoading || !ffmpeg || ffmpegLoading}
-                  onClick={() => void handlePreviewSample()}
-                >
-                  {previewLoading ? 'Rendering preview…' : 'Preview 30s MP3'}
-                </button>
-              )}
+              <button
+                type="button"
+                className="studio-btn-ghost"
+                disabled={
+                  previewLoading ||
+                  exportProgress !== null ||
+                  (browserRender && (!ffmpeg || ffmpegLoading))
+                }
+                onClick={() => void handlePreviewSample()}
+              >
+                {previewLoading ? 'Rendering preview…' : 'Preview 30s MP3'}
+              </button>
               <button
                 type="button"
                 className="studio-btn-ghost"

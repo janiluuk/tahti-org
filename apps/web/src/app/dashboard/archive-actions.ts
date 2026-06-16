@@ -173,7 +173,9 @@ export async function renderArchiveEditList(
     editList: import('@tahti/audio-edit').EditList
     versionLabel: string
     activate?: boolean
-    format?: 'flac' | 'mp3'
+    format?: 'flac' | 'mp3' | 'wav'
+    maxDurationSec?: number
+    sampleOnly?: boolean
   },
 ): Promise<{ versionId?: string; versionNumber?: number; error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/render`, {
@@ -188,6 +190,22 @@ export async function renderArchiveEditList(
   }
   const data = (await res.json()) as { versionId: string; versionNumber: number }
   return { versionId: data.versionId, versionNumber: data.versionNumber, error: null }
+}
+
+export async function fetchArchiveVersionDownloadUrl(
+  itemId: string,
+  versionId: string,
+): Promise<{ url?: string; contentType?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/versions/${versionId}/download`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Download not available' }
+  }
+  const data = (await res.json()) as { url: string; contentType: string }
+  return { url: data.url, contentType: data.contentType, error: null }
 }
 
 export async function fetchArchiveVersion(

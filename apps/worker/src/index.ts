@@ -8,6 +8,7 @@ import { processTranscodeJob } from './jobs/transcode.js'
 import { processTranscodeVersionJob } from './jobs/transcode-version.js'
 import { processBounceArchiveEditJob } from './jobs/bounce-archive-edit.js'
 import { processRenderArchiveEditJob } from './jobs/render-archive-edit.js'
+import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
 import { processTranscodeReleaseTrackVersionJob } from './jobs/transcode-release-track-version.js'
 import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
@@ -58,6 +59,8 @@ const worker = new Worker(
         await processBounceArchiveEditJob(job)
       } else if (job.name === 'render-archive-edit') {
         await processRenderArchiveEditJob(job)
+      } else if (job.name === 'backfill-editor-peaks') {
+        await processBackfillEditorPeaksJob(job)
       } else if (job.name === 'transcode-release-track') {
         await processTranscodeReleaseTrackJob(job)
       } else if (job.name === 'transcode-release-track-version') {

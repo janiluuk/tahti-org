@@ -16,8 +16,8 @@ const PREFIX = 'archive-editor-test-'
 
 vi.mock('../../lib/queue.js', () => ({
   enqueueVersionTranscode: vi.fn(),
-  enqueueBounceArchiveEdit: vi.fn(),
   enqueueRenderArchiveEdit: vi.fn(),
+  enqueueBackfillEditorPeaks: vi.fn(),
   mediaQueue: { add: vi.fn() },
 }))
 
@@ -174,8 +174,8 @@ describe('M21 v0 — archive trim editor', () => {
     expect(res.statusCode).toBe(400)
   })
 
-  it('POST /api/me/archive/:id/editor/bounce enqueues worker job', async () => {
-    const { enqueueBounceArchiveEdit } = await import('../../lib/queue.js')
+  it('POST /api/me/archive/:id/editor/bounce enqueues render worker job', async () => {
+    const { enqueueRenderArchiveEdit } = await import('../../lib/queue.js')
     const res = await app.inject({
       method: 'POST',
       url: `/api/me/archive/${archiveItemId}/editor/bounce`,
@@ -196,12 +196,19 @@ describe('M21 v0 — archive trim editor', () => {
     const body = res.json() as { versionId: string; versionNumber: number; status: string }
     expect(body.versionNumber).toBeGreaterThanOrEqual(2)
     expect(body.status).toBe('PENDING')
-    expect(enqueueBounceArchiveEdit).toHaveBeenCalled()
+    expect(enqueueRenderArchiveEdit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        format: 'wav',
+        editList: expect.objectContaining({
+          cuts: expect.any(Array),
+        }),
+      }),
+    )
   })
 
   it('POST /api/me/archive/:id/editor/bounce accepts EQ/HP-LP/compressor fields', async () => {
-    const { enqueueBounceArchiveEdit } = await import('../../lib/queue.js')
-    vi.mocked(enqueueBounceArchiveEdit).mockClear()
+    const { enqueueRenderArchiveEdit } = await import('../../lib/queue.js')
+    vi.mocked(enqueueRenderArchiveEdit).mockClear()
     const res = await app.inject({
       method: 'POST',
       url: `/api/me/archive/${archiveItemId}/editor/bounce`,
@@ -221,12 +228,17 @@ describe('M21 v0 — archive trim editor', () => {
       },
     })
     expect(res.statusCode).toBe(202)
-    expect(enqueueBounceArchiveEdit).toHaveBeenCalledWith(
+    expect(enqueueRenderArchiveEdit).toHaveBeenCalledWith(
       expect.objectContaining({
-        highPassHz: 80,
-        lowPassHz: 16000,
-        eq: { lowGainDb: 2, midGainDb: -1.5, highGainDb: 3 },
-        compressorEnabled: true,
+        editList: expect.objectContaining({
+          highPassHz: 80,
+          lowPassHz: 16000,
+          eq: expect.objectContaining({
+            enabled: true,
+            bands: expect.arrayContaining([expect.objectContaining({ gainDb: 2 })]),
+          }),
+          comp: expect.objectContaining({ enabled: true }),
+        }),
       }),
     )
   })
@@ -312,6 +324,76 @@ describe('M21 v0 — archive trim editor', () => {
       payload: { releaseId: otherRelease.id },
     })
     expect(res.statusCode).toBe(404)
+  })
+
+  it('POST /api/me/archive/:id/editor/publish-to-release rejects versionId from another archive', async () => {
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}other3@example.com`,
+      username: 'archive-editor-other3',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98524,
+    })
+    const otherItem = await createReadyArchiveItem(
+      prisma,
+      other.channel!.id,
+      'Other version source',
+    )
+    await prisma.archiveItemVersion.create({
+      data: {
+        archiveItemId: otherItem.id,
+        versionNumber: 2,
+        versionLabel: `${PREFIX}foreign-version`,
+        rawKey: 'raw/other/foreign.wav',
+        fileSizeBytes: 1000,
+        status: 'READY',
+        isActive: false,
+      },
+    })
+    const foreignVersion = await prisma.archiveItemVersion.findFirst({
+      where: { archiveItemId: otherItem.id, versionNumber: 2 },
+    })
+
+    const artist = await prisma.user.findFirst({
+      where: { email: `${PREFIX}artist@example.com` },
+    })
+    const release = await createPublishedReleaseWithTrack(prisma, artist!.id, {
+      smartLinkSlug: `${PREFIX}publish-version-guard`,
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/publish-to-release`,
+      headers: { cookie },
+      payload: { releaseId: release.id, versionId: foreignVersion!.id },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('PATCH /api/me/archive/:id/editor/draft rejects oversized editList payload', async () => {
+    const draftRes = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    const { editList } = draftRes.json() as { editList: Record<string, unknown> }
+    const huge = {
+      editList: {
+        ...editList,
+        cuts: Array.from({ length: 500 }, (_, i) => ({
+          start: i * 0.01,
+          end: i * 0.01 + 0.005,
+        })),
+      },
+    }
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+      payload: huge,
+    })
+    expect(res.statusCode).toBe(400)
   })
 
   it('PATCH /api/me/archive/:id/editor/draft returns 409 on stale expectedUpdatedAt', async () => {

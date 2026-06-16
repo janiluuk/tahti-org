@@ -56,6 +56,8 @@ export interface RenderArchiveEditJob {
   editList: EditList
   format: 'flac' | 'mp3' | 'wav'
   activate: boolean
+  maxDurationSec?: number
+  sampleOnly?: boolean
 }
 
 export async function enqueueRenderArchiveEdit(payload: RenderArchiveEditJob): Promise<void> {
@@ -64,6 +66,18 @@ export async function enqueueRenderArchiveEdit(payload: RenderArchiveEditJob): P
     attempts: 3,
     backoff: { type: 'exponential', delay: 10_000 },
   })
+}
+
+export async function enqueueBackfillEditorPeaks(itemId: string): Promise<void> {
+  await mediaQueue.add(
+    'backfill-editor-peaks',
+    { itemId },
+    {
+      jobId: `backfill-editor-peaks-${itemId}`,
+      removeOnComplete: true,
+      removeOnFail: 50,
+    },
+  )
 }
 
 export async function getMediaJob(jobId: string) {

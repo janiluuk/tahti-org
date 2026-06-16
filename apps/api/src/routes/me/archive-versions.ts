@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid'
 import {
   ArchiveVersionCompleteSchema,
   ArchiveVersionCreatedSchema,
+  ArchiveVersionDownloadSchema,
   ArchiveVersionListSchema,
   ArchiveVersionParamsSchema,
   ArchiveVersionPrepareResponseSchema,
@@ -17,7 +18,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { presignedPutUrl } from '../../lib/minio.js'
+import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
 import { enqueueVersionTranscode, getMediaJob } from '../../lib/queue.js'
 import { ensureInitialVersion, syncActiveVersionToItem } from '@tahti/db'
 import { serializeArchiveVersion } from '../../lib/archive-versions.js'
@@ -101,6 +102,43 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!version) return reply.status(404).send({ error: 'Version not found' })
 
       return reply.send(serializeArchiveVersion(version))
+    },
+  )
+
+  /** UX-12: presigned download for rendered preview/export files. */
+  fastify.get(
+    '/api/me/archive/:id/versions/:versionId/download',
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponse(ArchiveVersionDownloadSchema, 'ArchiveVersionDownload'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(ArchiveVersionParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id, versionId } = routeParams
+
+      const item = await ownedItem(user.id, id)
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const version = await fastify.prisma.archiveItemVersion.findFirst({
+        where: { id: versionId, archiveItemId: id },
+        select: { rawKey: true, mp3Key: true, flacKey: true, status: true },
+      })
+      if (!version || version.status !== 'READY') {
+        return reply.status(404).send({ error: 'Version not ready for download' })
+      }
+
+      const key = version.mp3Key ?? version.flacKey ?? version.rawKey
+      const contentType = version.mp3Key
+        ? 'audio/mpeg'
+        : version.flacKey
+          ? 'audio/flac'
+          : 'application/octet-stream'
+      const url = await presignedGetUrl(key, PRESIGN_TTL_SEC)
+      return reply.send({ url, contentType })
     },
   )
 
