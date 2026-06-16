@@ -15,9 +15,9 @@ import {
 const PREFIX = 'archive-editor-test-'
 
 vi.mock('../../lib/queue.js', () => ({
-  enqueueVersionTranscode: vi.fn(),
-  enqueueRenderArchiveEdit: vi.fn(),
-  enqueueBackfillEditorPeaks: vi.fn(),
+  enqueueVersionTranscode: vi.fn().mockResolvedValue(undefined),
+  enqueueRenderArchiveEdit: vi.fn().mockResolvedValue(undefined),
+  enqueueBackfillEditorPeaks: vi.fn().mockResolvedValue(undefined),
   mediaQueue: { add: vi.fn() },
 }))
 
@@ -143,30 +143,32 @@ describe('M21 v0 — archive trim editor', () => {
       ],
     })
 
-    const draftRes = await app.inject({
-      method: 'GET',
-      url: `/api/me/archive/${archiveItemId}/editor/draft`,
-      headers: { cookie },
-    })
-    const { editList } = draftRes.json() as { editList: Record<string, unknown> }
+    try {
+      const draftRes = await app.inject({
+        method: 'GET',
+        url: `/api/me/archive/${archiveItemId}/editor/draft`,
+        headers: { cookie },
+      })
+      const { editList } = draftRes.json() as { editList: Record<string, unknown> }
 
-    const res = await app.inject({
-      method: 'POST',
-      url: `/api/me/archive/${archiveItemId}/editor/render`,
-      headers: { cookie },
-      payload: {
-        editList,
-        versionLabel: 'Blocked render',
-        activate: false,
-        format: 'flac',
-      },
-    })
-    expect(res.statusCode).toBe(429)
-    expect(res.json()).toMatchObject({ error: expect.stringContaining('max 2') })
-
-    await prisma.archiveItemVersion.deleteMany({
-      where: { versionLabel: { startsWith: `${PREFIX}pending` } },
-    })
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/me/archive/${archiveItemId}/editor/render`,
+        headers: { cookie },
+        payload: {
+          editList,
+          versionLabel: 'Blocked render',
+          activate: false,
+          format: 'flac',
+        },
+      })
+      expect(res.statusCode).toBe(429)
+      expect(res.json()).toMatchObject({ error: expect.stringContaining('max 2') })
+    } finally {
+      await prisma.archiveItemVersion.deleteMany({
+        where: { versionLabel: { startsWith: `${PREFIX}pending` } },
+      })
+    }
   })
 
   it('POST /api/me/archive/:id/editor/bounce returns 410 Gone', async () => {
@@ -410,7 +412,7 @@ describe('M21 v0 — archive trim editor', () => {
     const huge = {
       editList: {
         ...editList,
-        cuts: Array.from({ length: 500 }, (_, i) => ({
+        cuts: Array.from({ length: 4000 }, (_, i) => ({
           start: i * 0.01,
           end: i * 0.01 + 0.005,
         })),
