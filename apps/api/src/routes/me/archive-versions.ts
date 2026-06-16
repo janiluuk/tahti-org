@@ -18,7 +18,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl } from '../../lib/minio.js'
-import { enqueueVersionTranscode } from '../../lib/queue.js'
+import { enqueueVersionTranscode, getMediaJob } from '../../lib/queue.js'
 import { ensureInitialVersion, syncActiveVersionToItem } from '@tahti/db'
 import { serializeArchiveVersion } from '../../lib/archive-versions.js'
 
@@ -101,6 +101,93 @@ const meArchiveVersionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!version) return reply.status(404).send({ error: 'Version not found' })
 
       return reply.send(serializeArchiveVersion(version))
+    },
+  )
+
+  /** PERF-08: SSE progress for server-side edit render jobs. */
+  fastify.get(
+    '/api/me/archive/:id/versions/:versionId/progress',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(ArchiveVersionParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id, versionId } = routeParams
+
+      const item = await ownedItem(user.id, id)
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const version = await fastify.prisma.archiveItemVersion.findFirst({
+        where: { id: versionId, archiveItemId: id },
+        select: { id: true, status: true },
+      })
+      if (!version) return reply.status(404).send({ error: 'Version not found' })
+
+      reply.hijack()
+      reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
+        Connection: 'keep-alive',
+      })
+
+      let closed = false
+      request.raw.on('close', () => {
+        closed = true
+      })
+
+      const send = (payload: Record<string, unknown>) => {
+        if (closed) return
+        reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`)
+      }
+
+      const tick = async (): Promise<void> => {
+        if (closed) return
+
+        const current = await fastify.prisma.archiveItemVersion.findFirst({
+          where: { id: versionId, archiveItemId: id },
+          select: { status: true, versionNumber: true, versionLabel: true },
+        })
+        if (!current) {
+          send({ status: 'ERROR', pct: 0, phase: 'missing' })
+          reply.raw.end()
+          return
+        }
+
+        const job = await getMediaJob(`render-archive-edit-${versionId}`)
+        const rawProgress = job?.progress as
+          | { pct?: number; phase?: string; segment?: number; segmentCount?: number }
+          | number
+          | undefined
+        const pct =
+          typeof rawProgress === 'number'
+            ? rawProgress
+            : typeof rawProgress?.pct === 'number'
+              ? rawProgress.pct
+              : current.status === 'READY'
+                ? 1
+                : 0
+
+        send({
+          status: current.status,
+          pct,
+          phase: typeof rawProgress === 'object' ? rawProgress?.phase : undefined,
+          segment: typeof rawProgress === 'object' ? rawProgress?.segment : undefined,
+          segmentCount: typeof rawProgress === 'object' ? rawProgress?.segmentCount : undefined,
+          versionNumber: current.versionNumber,
+          versionLabel: current.versionLabel,
+        })
+
+        if (current.status === 'READY' || current.status === 'ERROR') {
+          reply.raw.end()
+          return
+        }
+
+        setTimeout(() => {
+          void tick()
+        }, 500)
+      }
+
+      void tick()
     },
   )
 

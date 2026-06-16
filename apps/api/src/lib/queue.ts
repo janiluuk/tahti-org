@@ -66,6 +66,10 @@ export async function enqueueRenderArchiveEdit(payload: RenderArchiveEditJob): P
   })
 }
 
+export async function getMediaJob(jobId: string) {
+  return mediaQueue.getJob(jobId)
+}
+
 export async function enqueueReleaseTrackVersionTranscode(versionId: string): Promise<void> {
   await mediaQueue.add('transcode-release-track-version', { versionId })
 }

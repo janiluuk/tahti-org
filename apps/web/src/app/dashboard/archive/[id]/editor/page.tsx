@@ -51,6 +51,7 @@ export default async function ProArchiveEditorPage({ params }: { params: { id: s
       sourceFileSizeBytes={source.sourceFileSizeBytes ?? null}
       initialEditList={draft.editList}
       draftUpdatedAt={draft.updatedAt ?? null}
+      initialTracklist={draft.tracklist ?? null}
     />
   )
 }

@@ -110,6 +110,7 @@ export async function activateArchiveVersion(
 export async function fetchArchiveEditListDraft(itemId: string): Promise<{
   editList?: import('@tahti/audio-edit').EditList
   updatedAt?: string | null
+  tracklist?: import('@tahti/shared').TracklistEntry[] | null
   error: string | null
 }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/draft`, {
@@ -123,8 +124,14 @@ export async function fetchArchiveEditListDraft(itemId: string): Promise<{
   const data = (await res.json()) as {
     editList: import('@tahti/audio-edit').EditList
     updatedAt: string | null
+    tracklist?: import('@tahti/shared').TracklistEntry[] | null
   }
-  return { editList: data.editList, updatedAt: data.updatedAt, error: null }
+  return {
+    editList: data.editList,
+    updatedAt: data.updatedAt,
+    tracklist: data.tracklist ?? null,
+    error: null,
+  }
 }
 
 export async function saveArchiveEditListDraft(

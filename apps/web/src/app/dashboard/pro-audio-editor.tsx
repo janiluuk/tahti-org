@@ -10,12 +10,14 @@ import {
   postCutDuration,
   computeKeepSegments,
   mergeCuts,
+  remapTracklistTimestamps,
   shouldRenderInBrowser,
   snapToNearestZeroCrossing,
   DEFAULT_EQ_BANDS,
   DEFAULT_COMP,
   DEFAULT_LIMITER,
 } from '@tahti/audio-edit'
+import type { TracklistEntry } from '@tahti/shared'
 import type { FFmpeg } from '@ffmpeg/ffmpeg'
 import { Knob } from '@tahti/ui'
 import {
@@ -23,8 +25,9 @@ import {
   prepareArchiveVersionUpload,
   renderArchiveEditList,
   saveArchiveEditListDraft,
-  waitForArchiveVersionReady,
+  updateArchiveMetadata,
 } from './archive-actions'
+import { TracklistEditor } from './tracklist-editor'
 import {
   generatePeaksFromFfmpeg,
   loadFfmpeg,
@@ -46,10 +49,16 @@ import {
   drawWaveformLayer,
 } from '@/lib/audio-editor/waveform-draw'
 import { EQ_BAND_COLORS, EqCurve } from '@/lib/audio-editor/eq-curve'
+import { waitForRenderViaProgress } from '@/lib/audio-editor/render-progress'
 
 const HISTORY_CAP = 100
 const AUTOSAVE_MS = 2000
-const CANVAS_WIDTH = 1280
+const CANVAS_MIN_WIDTH = 320
+const CANVAS_DEFAULT_WIDTH = 1280
+const WAVE_HEIGHT = 210
+const MINIMAP_HEIGHT = 38
+
+type EditorTab = 'waveform' | 'tracklist'
 
 type FocusedPlugin = 'gain' | 'eq' | 'comp' | 'limiter'
 type ToolId = 'select' | 'cut' | 'fade' | 'marker'
@@ -148,6 +157,7 @@ export function ProAudioEditor({
   sourceFileSizeBytes,
   initialEditList,
   draftUpdatedAt,
+  initialTracklist,
 }: {
   archiveId: string
   title: string
@@ -156,6 +166,7 @@ export function ProAudioEditor({
   sourceFileSizeBytes: number | null
   initialEditList: EditList
   draftUpdatedAt: string | null
+  initialTracklist?: TracklistEntry[] | null
 }) {
   const [editList, setEditList] = useState(initialEditList)
   const [past, setPast] = useState<EditList[]>([])
@@ -186,7 +197,14 @@ export function ProAudioEditor({
   const [currentTime, setCurrentTime] = useState(0)
   const [measuring, setMeasuring] = useState(false)
   const [focusedPlugin, setFocusedPlugin] = useState<FocusedPlugin>('gain')
+  const [activeTab, setActiveTab] = useState<EditorTab>('waveform')
+  const [tracklist, setTracklist] = useState<TracklistEntry[] | null>(initialTracklist ?? null)
+  const [tracklistError, setTracklistError] = useState<string | null>(null)
+  const [tracklistSaving, setTracklistSaving] = useState(false)
+  const [canvasWidth, setCanvasWidth] = useState(CANVAS_DEFAULT_WIDTH)
+  const [exportPhase, setExportPhase] = useState<string | null>(null)
 
+  const wavePanelRef = useRef<HTMLDivElement>(null)
   const waveRef = useRef<HTMLCanvasElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
   const minimapRef = useRef<HTMLCanvasElement>(null)
@@ -423,6 +441,10 @@ export function ProAudioEditor({
   }, [redraw])
 
   useEffect(() => {
+    redraw()
+  }, [canvasWidth, redraw])
+
+  useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
     const onTime = () => {
@@ -475,7 +497,7 @@ export function ProAudioEditor({
   const zoomSliderValue = Math.round(
     Math.min(1000, Math.max(0, -1000 * Math.log10(span) * (1 / 3))),
   )
-  const msPerPx = (span * editList.sourceDuration * 1000) / CANVAS_WIDTH
+  const msPerPx = (span * editList.sourceDuration * 1000) / canvasWidth
 
   const snappedSelection = useCallback((): { start: number; end: number } | null => {
     if (!selection) return null
@@ -487,6 +509,60 @@ export function ProAudioEditor({
     }
     return selection
   }, [selection, snapEnabled, peaks?.zeroCrossingsSec])
+
+  const remappedTracklist = useMemo(
+    () => (tracklist?.length ? remapTracklistTimestamps(tracklist, editList) : []),
+    [tracklist, editList],
+  )
+
+  useEffect(() => {
+    const el = wavePanelRef.current
+    if (!el) return
+    const measure = () => setCanvasWidth(Math.max(CANVAS_MIN_WIDTH, Math.floor(el.clientWidth)))
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const secFromCanvasEvent = useCallback(
+    (clientX: number, rect: DOMRect) => {
+      if (!peaks) return 0
+      const frac = (clientX - rect.left) / rect.width
+      return peaks.durationSec * (viewStart + frac * (viewEnd - viewStart))
+    },
+    [peaks, viewStart, viewEnd],
+  )
+
+  const seekToSec = useCallback(
+    (sec: number) => {
+      const clamped = Math.max(0, Math.min(editList.sourceDuration, sec))
+      if (audioRef.current) audioRef.current.currentTime = clamped
+      const center = clamped / editList.sourceDuration
+      const half = span / 2
+      let ns = center - half
+      let ne = ns + span
+      if (ns < 0) {
+        ne -= ns
+        ns = 0
+      }
+      if (ne > 1) {
+        ns -= ne - 1
+        ne = 1
+      }
+      setViewStart(Math.max(0, ns))
+      setViewEnd(Math.min(1, ne))
+    },
+    [editList.sourceDuration, span],
+  )
+
+  async function saveTracklist() {
+    setTracklistSaving(true)
+    setTracklistError(null)
+    const res = await updateArchiveMetadata(archiveId, { tracklist })
+    setTracklistSaving(false)
+    if (res.error) setTracklistError(res.error)
+  }
 
   const removeSelection = useCallback(() => {
     const final = snappedSelection()
@@ -548,12 +624,15 @@ export function ProAudioEditor({
         })
         if (res.error || !res.versionId) throw new Error(res.error ?? 'Server render failed')
 
-        const poll = await waitForArchiveVersionReady(archiveId, res.versionId)
-        if (!poll.ready) throw new Error(poll.error ?? 'Server render failed')
+        const done = await waitForRenderViaProgress(archiveId, res.versionId, (event) => {
+          if (typeof event.pct === 'number') setExportProgress(event.pct)
+          if (event.phase) setExportPhase(event.phase)
+        })
         setExportProgress(null)
+        setExportPhase(null)
         setExportSuccess({
-          versionNumber: poll.version?.versionNumber ?? res.versionNumber ?? 0,
-          versionLabel: poll.version?.versionLabel ?? label,
+          versionNumber: done.versionNumber ?? res.versionNumber ?? 0,
+          versionLabel: done.versionLabel ?? label,
         })
         setExportDialogOpen(false)
         return
@@ -603,6 +682,7 @@ export function ProAudioEditor({
     } catch (e) {
       setExportError(e instanceof Error ? e.message : 'Export failed')
       setExportProgress(null)
+      setExportPhase(null)
     }
   }
 
@@ -745,693 +825,777 @@ export function ProAudioEditor({
         </div>
       </header>
 
-      {/* ---- Toolbar ---- */}
-      <div className="pro-editor-toolbar">
-        <div className="pro-editor-tool-group" role="group" aria-label="Edit tools">
-          {(
-            [
-              ['select', '↖', 'Select'],
-              ['cut', '✂', 'Cut'],
-              ['fade', '◢', 'Fade'],
-              ['marker', '◆', 'Marker'],
-            ] as const
-          ).map(([id, glyph, name]) => (
-            <button
-              key={id}
-              type="button"
-              className={cx(
-                'pro-editor-tool-btn',
-                activeTool === id && 'pro-editor-tool-btn--active',
-              )}
-              aria-pressed={activeTool === id}
-              title={name}
-              onClick={() => setActiveTool(id)}
-            >
-              {glyph}
-            </button>
-          ))}
-        </div>
-
-        <div className="pro-editor-toolbar-divider" />
-
-        <div className="pro-editor-zoom-group">
-          <button type="button" className="pro-editor-tool-btn" onClick={() => setSpan(span * 0.8)}>
-            −
-          </button>
-          <input
-            type="range"
-            className="pro-editor-zoom-slider"
-            min={0}
-            max={1000}
-            value={zoomSliderValue}
-            onChange={(e) => setSpan(10 ** ((-3 * Number(e.target.value)) / 1000))}
-            aria-label="Zoom"
-          />
-          <button
-            type="button"
-            className="pro-editor-tool-btn"
-            onClick={() => setSpan(span * 1.25)}
-          >
-            +
-          </button>
-          <span className="pro-editor-zoom-ratio">1 px = {msPerPx.toFixed(0)} ms</span>
-          <button
-            type="button"
-            className="studio-btn-ghost"
-            onClick={() => {
-              setViewStart(0)
-              setViewEnd(1)
-            }}
-          >
-            Fit
-          </button>
-          <button
-            type="button"
-            className="studio-btn-ghost"
-            disabled={!selection}
-            onClick={() => {
-              if (!selection) return
-              setViewStart(Math.max(0, selection.start / editList.sourceDuration))
-              setViewEnd(Math.min(1, selection.end / editList.sourceDuration))
-            }}
-          >
-            Sel
-          </button>
-        </div>
-
-        <div className="pro-editor-toolbar-divider" />
-
-        <div className="pro-editor-undo-group">
-          <button
-            type="button"
-            className="pro-editor-tool-btn"
-            onClick={undo}
-            disabled={!past.length}
-          >
-            ↶
-          </button>
-          <button
-            type="button"
-            className="pro-editor-tool-btn"
-            onClick={redo}
-            disabled={!future.length}
-          >
-            ↷
-          </button>
-          <button
-            type="button"
-            className={cx('pro-editor-snap', snapEnabled && 'pro-editor-snap--on')}
-            onClick={() => setSnapEnabled((s) => !s)}
-          >
-            snap {snapEnabled ? 'on' : 'off'}
-          </button>
-        </div>
-
-        <div className="pro-editor-toolbar-spacer" />
-
-        <div className="pro-editor-shortcut-hints">
-          <span>space play/pause</span>
-          <span>x cut</span>
-          <span>⌘z undo</span>
-        </div>
-      </div>
-
-      {/* ---- Timeline ruler ---- */}
-      <div className="pro-editor-ruler">
-        {ruler.map((sec, i) => (
-          <span key={i}>{formatDuration(sec)}</span>
-        ))}
-      </div>
-
-      {/* ---- Waveform ---- */}
-      <section className="pro-editor-wave" aria-label="Waveform">
-        {peaksLoading && <p className="pro-editor-hint">Generating waveform peaks…</p>}
-        <div className="pro-editor-wave-panel">
-          <div className="pro-editor-canvas-stack">
-            <canvas ref={waveRef} className="pro-editor-canvas" width={CANVAS_WIDTH} height={210} />
-            <canvas
-              ref={overlayRef}
-              className="pro-editor-canvas pro-editor-canvas--overlay"
-              width={CANVAS_WIDTH}
-              height={210}
-              onMouseDown={(e) => {
-                if (!peaks) return
-                const rect = e.currentTarget.getBoundingClientRect()
-                const frac = (e.clientX - rect.left) / rect.width
-                let sec = peaks.durationSec * (viewStart + frac * (viewEnd - viewStart))
-                sec = snapSec(sec)
-                if (activeTool === 'marker') {
-                  if (audioRef.current) audioRef.current.currentTime = sec
-                  return
-                }
-                setSelection({ start: sec, end: sec })
-              }}
-              onMouseMove={(e) => {
-                if (!peaks || !selection || e.buttons !== 1) return
-                const rect = e.currentTarget.getBoundingClientRect()
-                const frac = (e.clientX - rect.left) / rect.width
-                let sec = peaks.durationSec * (viewStart + frac * (viewEnd - viewStart))
-                sec = snapSec(sec)
-                setSelection({
-                  start: Math.min(selection.start, sec),
-                  end: Math.max(selection.start, sec),
-                })
-              }}
-              onMouseUp={() => {
-                if (!selection || selection.end - selection.start <= 0) return
-                if (activeTool === 'cut') removeSelection()
-                else if (activeTool === 'fade') applyFadeAtSelection()
-                else {
-                  const final = snappedSelection()
-                  if (final && final !== selection) setSelection(final)
-                }
-              }}
-              onWheel={(e) => {
-                if (!peaks) return
-                e.preventDefault()
-                const rect = e.currentTarget.getBoundingClientRect()
-                const cursorFrac = (e.clientX - rect.left) / rect.width
-                const zoom = e.deltaY > 0 ? 1.15 : 0.87
-                const newSpan = Math.min(1, Math.max(0.001, span * zoom))
-                const center = viewStart + cursorFrac * span
-                let ns = center - cursorFrac * newSpan
-                let ne = ns + newSpan
-                if (ns < 0) {
-                  ne -= ns
-                  ns = 0
-                }
-                if (ne > 1) {
-                  ns -= ne - 1
-                  ne = 1
-                }
-                setViewStart(Math.max(0, ns))
-                setViewEnd(Math.min(1, ne))
-              }}
-            />
-          </div>
-          {selection && (
-            <div className="pro-editor-selection-pill">
-              SELECTION · {formatDurationDecimal(selection.end - selection.start)}
-            </div>
-          )}
-        </div>
-        <audio ref={audioRef} className="pro-editor-audio" crossOrigin="anonymous" preload="auto" />
-      </section>
-
-      {/* ---- Minimap ---- */}
-      <div className="pro-editor-wave" style={{ paddingTop: 0 }}>
-        <div className="pro-editor-minimap">
-          <canvas ref={minimapRef} className="pro-editor-canvas" width={CANVAS_WIDTH} height={38} />
-          <div
-            className="pro-editor-minimap__viewport"
-            style={{ left: `${viewStart * 100}%`, width: `${Math.max(0.5, span * 100)}%` }}
-          />
-        </div>
-        <div className="pro-editor-minimap__endpoints">
-          <span>0:00</span>
-          <span>{formatDuration(editList.sourceDuration)}</span>
-        </div>
-      </div>
-
-      {/* ---- Transport ---- */}
-      <div className="pro-editor-transport">
+      <nav className="pro-editor-tabs" aria-label="Editor sections" role="tablist">
         <button
           type="button"
-          className="pro-editor-play-btn"
-          aria-label={playing ? 'Pause' : 'Play'}
-          onClick={() => {
-            const audio = audioRef.current
-            if (!audio) return
-            if (audio.paused) void audio.play()
-            else audio.pause()
-          }}
+          role="tab"
+          className={cx('pro-editor-tab', activeTab === 'waveform' && 'pro-editor-tab--active')}
+          aria-selected={activeTab === 'waveform'}
+          onClick={() => setActiveTab('waveform')}
         >
-          {playing ? '⏸' : '▶'}
+          Waveform
         </button>
-        <span className="pro-editor-time">{formatDuration(currentTime)}</span>
-        <span className="pro-editor-time-total">/ {formatDuration(postDuration)}</span>
-        <span className="pro-editor-preview-note">
-          preview is approximate · render for final result
-        </span>
-        <div className="pro-editor-transport-right">
-          <div className="pro-editor-out-meter">
-            <div className="pro-editor-out-meter__tp" style={{ left: '85%' }} />
-            <div
-              className="pro-editor-out-meter__fill"
-              style={{ transform: `scaleX(${Math.max(0, 1 - meterPeak)})` }}
-            />
-          </div>
-          <span className="pro-editor-out-readout">
-            {meterPeak > 0 ? `${(20 * Math.log10(meterPeak)).toFixed(1)} dB` : '−∞'}
-          </span>
-        </div>
-      </div>
+        <button
+          type="button"
+          role="tab"
+          className={cx('pro-editor-tab', activeTab === 'tracklist' && 'pro-editor-tab--active')}
+          aria-selected={activeTab === 'tracklist'}
+          onClick={() => setActiveTab('tracklist')}
+        >
+          Tracklist
+          {tracklist?.length ? ` (${tracklist.length})` : ''}
+        </button>
+      </nav>
 
-      {/* ---- Bottom area ---- */}
-      <div className="pro-editor-bottom">
-        {/* Focused plugin panel */}
-        <div>
-          {focusedPlugin === 'gain' && (
-            <div className="pro-editor-panel">
-              <div className="pro-editor-panel__header">
-                <div className="pro-editor-panel__heading">
-                  <h2 className="pro-editor-panel__title">Gain &amp; Normalize</h2>
-                  <span className="pro-editor-panel__pill">IN CHAIN · POSITION 1</span>
-                </div>
-                <div className="pro-editor-panel__actions">
-                  <button
-                    type="button"
-                    className="studio-btn-ghost studio-btn-sm"
-                    onClick={() =>
-                      pushHistory({
-                        ...editList,
-                        gainDb: 0,
-                        loudnorm: { enabled: false, targetLufs: -14, targetTp: -1.5 },
-                      })
-                    }
-                  >
-                    Reset
-                  </button>
-                  <Switch
-                    checked={editList.loudnorm.enabled}
-                    onChange={(v) =>
-                      pushHistory({ ...editList, loudnorm: { ...editList.loudnorm, enabled: v } })
-                    }
-                    label="Loudness normalize enabled"
-                  />
-                </div>
-              </div>
-              <div className="pro-editor-panel__body">
-                <Knob
-                  label="Gain"
-                  value={editList.gainDb}
-                  min={-12}
-                  max={12}
-                  step={0.1}
-                  unit=" dB"
-                  color="var(--cyan)"
-                  defaultValue={0}
-                  onChange={(v) => pushHistory({ ...editList, gainDb: v })}
+      {activeTab === 'tracklist' ? (
+        <section className="pro-editor-tracklist-panel" aria-label="Tracklist">
+          <TracklistEditor value={tracklist} onChange={setTracklist} disabled={tracklistSaving} />
+          {remappedTracklist.length > 0 && (
+            <div className="pro-editor-tracklist-preview">
+              <h3 className="pro-editor-tracklist-preview__title">After cuts (preview)</h3>
+              <ol className="pro-editor-tracklist-preview__list">
+                {remappedTracklist.map((row, i) => (
+                  <li key={`${row.startSec}-${i}`}>
+                    <span>{formatDurationDecimal(row.startSec)}</span>
+                    <span>{row.title}</span>
+                    {row.artistUsername && <span>@{row.artistUsername}</span>}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          {tracklistError && <p className="studio-text-error">{tracklistError}</p>}
+          <button
+            type="button"
+            className="studio-btn-primary"
+            disabled={tracklistSaving}
+            onClick={() => void saveTracklist()}
+          >
+            {tracklistSaving ? 'Saving…' : 'Save tracklist'}
+          </button>
+        </section>
+      ) : (
+        <>
+          {/* ---- Toolbar ---- */}
+          <div className="pro-editor-toolbar">
+            <div className="pro-editor-tool-group" role="group" aria-label="Edit tools">
+              {(
+                [
+                  ['select', '↖', 'Select'],
+                  ['cut', '✂', 'Cut'],
+                  ['fade', '◢', 'Fade'],
+                  ['marker', '◆', 'Marker'],
+                ] as const
+              ).map(([id, glyph, name]) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={cx(
+                    'pro-editor-tool-btn',
+                    activeTool === id && 'pro-editor-tool-btn--active',
+                  )}
+                  aria-pressed={activeTool === id}
+                  title={name}
+                  onClick={() => setActiveTool(id)}
+                >
+                  {glyph}
+                </button>
+              ))}
+            </div>
+
+            <div className="pro-editor-toolbar-divider" />
+
+            <div className="pro-editor-zoom-group">
+              <button
+                type="button"
+                className="pro-editor-tool-btn"
+                onClick={() => setSpan(span * 0.8)}
+              >
+                −
+              </button>
+              <input
+                type="range"
+                className="pro-editor-zoom-slider"
+                min={0}
+                max={1000}
+                value={zoomSliderValue}
+                onChange={(e) => setSpan(10 ** ((-3 * Number(e.target.value)) / 1000))}
+                aria-label="Zoom"
+              />
+              <button
+                type="button"
+                className="pro-editor-tool-btn"
+                onClick={() => setSpan(span * 1.25)}
+              >
+                +
+              </button>
+              <span className="pro-editor-zoom-ratio">1 px = {msPerPx.toFixed(0)} ms</span>
+              <button
+                type="button"
+                className="studio-btn-ghost"
+                onClick={() => {
+                  setViewStart(0)
+                  setViewEnd(1)
+                }}
+              >
+                Fit
+              </button>
+              <button
+                type="button"
+                className="studio-btn-ghost"
+                disabled={!selection}
+                onClick={() => {
+                  if (!selection) return
+                  setViewStart(Math.max(0, selection.start / editList.sourceDuration))
+                  setViewEnd(Math.min(1, selection.end / editList.sourceDuration))
+                }}
+              >
+                Sel
+              </button>
+            </div>
+
+            <div className="pro-editor-toolbar-divider" />
+
+            <div className="pro-editor-undo-group">
+              <button
+                type="button"
+                className="pro-editor-tool-btn"
+                onClick={undo}
+                disabled={!past.length}
+              >
+                ↶
+              </button>
+              <button
+                type="button"
+                className="pro-editor-tool-btn"
+                onClick={redo}
+                disabled={!future.length}
+              >
+                ↷
+              </button>
+              <button
+                type="button"
+                className={cx('pro-editor-snap', snapEnabled && 'pro-editor-snap--on')}
+                onClick={() => setSnapEnabled((s) => !s)}
+              >
+                snap {snapEnabled ? 'on' : 'off'}
+              </button>
+            </div>
+
+            <div className="pro-editor-toolbar-spacer" />
+
+            <div className="pro-editor-shortcut-hints">
+              <span>space play/pause</span>
+              <span>x cut</span>
+              <span>⌘z undo</span>
+            </div>
+          </div>
+
+          {/* ---- Timeline ruler ---- */}
+          <div className="pro-editor-ruler">
+            {ruler.map((sec, i) => (
+              <span key={i}>{formatDuration(sec)}</span>
+            ))}
+          </div>
+
+          {/* ---- Waveform ---- */}
+          <section className="pro-editor-wave" aria-label="Waveform">
+            {peaksLoading && <p className="pro-editor-hint">Generating waveform peaks…</p>}
+            <div className="pro-editor-wave-panel" ref={wavePanelRef}>
+              <div className="pro-editor-canvas-stack">
+                <canvas
+                  ref={waveRef}
+                  className="pro-editor-canvas"
+                  width={canvasWidth}
+                  height={WAVE_HEIGHT}
                 />
-                <div className="pro-editor-norm-block">
-                  <label className="pro-editor-norm-row pro-editor-norm-row--target">
-                    <span>Target</span>
-                    <select
-                      value={editList.loudnorm.targetLufs}
-                      onChange={(e) =>
+                <canvas
+                  ref={overlayRef}
+                  className="pro-editor-canvas pro-editor-canvas--overlay"
+                  width={canvasWidth}
+                  height={WAVE_HEIGHT}
+                  onPointerDown={(e) => {
+                    if (!peaks) return
+                    e.currentTarget.setPointerCapture(e.pointerId)
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    const sec = snapSec(secFromCanvasEvent(e.clientX, rect))
+                    if (activeTool === 'marker') {
+                      seekToSec(sec)
+                      return
+                    }
+                    setSelection({ start: sec, end: sec })
+                  }}
+                  onPointerMove={(e) => {
+                    if (!peaks || !selection || !(e.buttons & 1)) return
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    const sec = snapSec(secFromCanvasEvent(e.clientX, rect))
+                    setSelection({
+                      start: Math.min(selection.start, sec),
+                      end: Math.max(selection.start, sec),
+                    })
+                  }}
+                  onPointerUp={(e) => {
+                    e.currentTarget.releasePointerCapture(e.pointerId)
+                    if (!selection || selection.end - selection.start <= 0) return
+                    if (activeTool === 'cut') removeSelection()
+                    else if (activeTool === 'fade') applyFadeAtSelection()
+                    else {
+                      const final = snappedSelection()
+                      if (final && final !== selection) setSelection(final)
+                    }
+                  }}
+                  onWheel={(e) => {
+                    if (!peaks) return
+                    e.preventDefault()
+                    const rect = e.currentTarget.getBoundingClientRect()
+                    const cursorFrac = (e.clientX - rect.left) / rect.width
+                    const zoom = e.deltaY > 0 ? 1.15 : 0.87
+                    const newSpan = Math.min(1, Math.max(0.001, span * zoom))
+                    const center = viewStart + cursorFrac * span
+                    let ns = center - cursorFrac * newSpan
+                    let ne = ns + newSpan
+                    if (ns < 0) {
+                      ne -= ns
+                      ns = 0
+                    }
+                    if (ne > 1) {
+                      ns -= ne - 1
+                      ne = 1
+                    }
+                    setViewStart(Math.max(0, ns))
+                    setViewEnd(Math.min(1, ne))
+                  }}
+                />
+              </div>
+              {selection && (
+                <div className="pro-editor-selection-pill">
+                  SELECTION · {formatDurationDecimal(selection.end - selection.start)}
+                </div>
+              )}
+            </div>
+            <audio
+              ref={audioRef}
+              className="pro-editor-audio"
+              crossOrigin="anonymous"
+              preload="auto"
+            />
+          </section>
+
+          {/* ---- Minimap ---- */}
+          <div className="pro-editor-wave" style={{ paddingTop: 0 }}>
+            <div
+              className="pro-editor-minimap"
+              aria-label="Overview — click to seek"
+              onPointerDown={(e) => {
+                if (!peaks) return
+                const rect = e.currentTarget.getBoundingClientRect()
+                const frac = (e.clientX - rect.left) / rect.width
+                seekToSec(peaks.durationSec * frac)
+              }}
+            >
+              <canvas
+                ref={minimapRef}
+                className="pro-editor-canvas"
+                width={canvasWidth}
+                height={MINIMAP_HEIGHT}
+              />
+              <div
+                className="pro-editor-minimap__viewport"
+                style={{ left: `${viewStart * 100}%`, width: `${Math.max(0.5, span * 100)}%` }}
+              />
+            </div>
+            <div className="pro-editor-minimap__endpoints">
+              <span>0:00</span>
+              <span>{formatDuration(editList.sourceDuration)}</span>
+            </div>
+          </div>
+
+          {/* ---- Transport ---- */}
+          <div className="pro-editor-transport">
+            <button
+              type="button"
+              className="pro-editor-play-btn"
+              aria-label={playing ? 'Pause' : 'Play'}
+              onClick={() => {
+                const audio = audioRef.current
+                if (!audio) return
+                if (audio.paused) void audio.play()
+                else audio.pause()
+              }}
+            >
+              {playing ? '⏸' : '▶'}
+            </button>
+            <span className="pro-editor-time">{formatDuration(currentTime)}</span>
+            <span className="pro-editor-time-total">/ {formatDuration(postDuration)}</span>
+            <span className="pro-editor-preview-note">
+              preview is approximate · render for final result
+            </span>
+            <div className="pro-editor-transport-right">
+              <div className="pro-editor-out-meter">
+                <div className="pro-editor-out-meter__tp" style={{ left: '85%' }} />
+                <div
+                  className="pro-editor-out-meter__fill"
+                  style={{ transform: `scaleX(${Math.max(0, 1 - meterPeak)})` }}
+                />
+              </div>
+              <span className="pro-editor-out-readout">
+                {meterPeak > 0 ? `${(20 * Math.log10(meterPeak)).toFixed(1)} dB` : '−∞'}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'waveform' && (
+        <div className="pro-editor-bottom">
+          {/* Focused plugin panel */}
+          <div>
+            {focusedPlugin === 'gain' && (
+              <div className="pro-editor-panel">
+                <div className="pro-editor-panel__header">
+                  <div className="pro-editor-panel__heading">
+                    <h2 className="pro-editor-panel__title">Gain &amp; Normalize</h2>
+                    <span className="pro-editor-panel__pill">IN CHAIN · POSITION 1</span>
+                  </div>
+                  <div className="pro-editor-panel__actions">
+                    <button
+                      type="button"
+                      className="studio-btn-ghost studio-btn-sm"
+                      onClick={() =>
                         pushHistory({
                           ...editList,
-                          loudnorm: {
-                            ...editList.loudnorm,
-                            targetLufs: Number(e.target.value),
-                            measured: undefined,
-                          },
+                          gainDb: 0,
+                          loudnorm: { enabled: false, targetLufs: -14, targetTp: -1.5 },
                         })
                       }
                     >
-                      <option value={-14}>−14 LUFS (streaming)</option>
-                      <option value={-16}>−16 LUFS</option>
-                      <option value={-23}>−23 LUFS (EBU)</option>
-                      {![-14, -16, -23].includes(editList.loudnorm.targetLufs) && (
-                        <option value={editList.loudnorm.targetLufs}>
-                          {editList.loudnorm.targetLufs} LUFS (custom)
-                        </option>
-                      )}
-                    </select>
-                  </label>
-                  <div className="pro-editor-norm-row">
-                    <span>Measured</span>
-                    {editList.loudnorm.measured ? (
-                      <span>{editList.loudnorm.measured.i.toFixed(1)} LUFS</span>
-                    ) : (
-                      <button
-                        type="button"
-                        className="studio-btn-ghost studio-btn-sm"
-                        disabled={!ffmpeg || ffmpegLoading || measuring}
-                        onClick={() => void handleMeasure()}
-                      >
-                        {measuring ? 'Measuring…' : 'Measure'}
-                      </button>
-                    )}
-                  </div>
-                  <div className="pro-editor-norm-row pro-editor-norm-row--applied">
-                    <span>Applied</span>
-                    <span>{appliedDb !== null ? dbReadout(appliedDb) : '—'}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="studio-btn-secondary"
-                    disabled={!ffmpeg || ffmpegLoading || measuring}
-                    onClick={() => void handleMeasure()}
-                  >
-                    ⚖ Normalize (loudnorm 2-pass)
-                  </button>
-                </div>
-              </div>
-              <p className="pro-editor-panel__hint">
-                drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step
-              </p>
-            </div>
-          )}
-
-          {focusedPlugin === 'eq' && (
-            <div className="pro-editor-panel">
-              <div className="pro-editor-panel__header">
-                <div className="pro-editor-panel__heading">
-                  <h2 className="pro-editor-panel__title">EQ — 3 band</h2>
-                  <span className="pro-editor-panel__pill">IN CHAIN · POSITION 2</span>
-                </div>
-                <div className="pro-editor-panel__actions">
-                  <button
-                    type="button"
-                    className="studio-btn-ghost studio-btn-sm"
-                    onClick={() =>
-                      pushHistory({
-                        ...editList,
-                        eq: { ...editList.eq, bands: DEFAULT_EQ_BANDS.map((b) => ({ ...b })) },
-                      })
-                    }
-                  >
-                    Reset
-                  </button>
-                  <Switch
-                    checked={editList.eq.enabled}
-                    onChange={(v) =>
-                      pushHistory({ ...editList, eq: { ...editList.eq, enabled: v } })
-                    }
-                    label="EQ enabled"
-                  />
-                </div>
-              </div>
-              <EqCurve
-                bands={editList.eq.bands}
-                onChange={(i, next) => {
-                  const bands = editList.eq.bands.map((b, j) => (j === i ? { ...b, ...next } : b))
-                  pushHistory({ ...editList, eq: { ...editList.eq, bands } })
-                }}
-              />
-              <div className="pro-editor-eq-bands">
-                {editList.eq.bands.map((band, i) => (
-                  <div key={i} className="pro-editor-eq-band">
-                    <Knob
-                      label={`Band ${i + 1}`}
-                      value={band.gainDb}
-                      min={-24}
-                      max={24}
-                      step={0.5}
-                      unit=" dB"
-                      color={EQ_BAND_COLORS[i % EQ_BAND_COLORS.length]}
-                      defaultValue={DEFAULT_EQ_BANDS[i]?.gainDb ?? 0}
-                      onChange={(v) => {
-                        const bands = editList.eq.bands.map((b, j) =>
-                          j === i ? { ...b, gainDb: v } : b,
-                        )
-                        pushHistory({ ...editList, eq: { ...editList.eq, bands } })
-                      }}
+                      Reset
+                    </button>
+                    <Switch
+                      checked={editList.loudnorm.enabled}
+                      onChange={(v) =>
+                        pushHistory({ ...editList, loudnorm: { ...editList.loudnorm, enabled: v } })
+                      }
+                      label="Loudness normalize enabled"
                     />
-                    <span className="pro-editor-eq-band__freq">{band.freq} Hz</span>
-                    <span className="pro-editor-eq-band__q">Q {band.q.toFixed(1)}</span>
                   </div>
-                ))}
-              </div>
-              <p className="pro-editor-panel__hint">
-                drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step · drag
-                curve dots to set frequency &amp; gain
-              </p>
-            </div>
-          )}
-
-          {focusedPlugin === 'comp' && (
-            <div className="pro-editor-panel">
-              <div className="pro-editor-panel__header">
-                <div className="pro-editor-panel__heading">
-                  <h2 className="pro-editor-panel__title">Compressor</h2>
-                  <span className="pro-editor-panel__pill">IN CHAIN · POSITION 3</span>
                 </div>
-                <div className="pro-editor-panel__actions">
-                  <button
-                    type="button"
-                    className="studio-btn-ghost studio-btn-sm"
-                    onClick={() => pushHistory({ ...editList, comp: { ...DEFAULT_COMP } })}
-                  >
-                    Reset
-                  </button>
-                  <Switch
-                    checked={editList.comp.enabled}
-                    onChange={(v) =>
-                      pushHistory({ ...editList, comp: { ...editList.comp, enabled: v } })
-                    }
-                    label="Compressor enabled"
-                  />
-                </div>
-              </div>
-              <div className="pro-editor-panel__body">
-                <div className="pro-editor-knob-row">
+                <div className="pro-editor-panel__body">
                   <Knob
-                    label="Threshold"
-                    value={editList.comp.thresholdDb}
-                    min={-60}
-                    max={0}
-                    step={1}
+                    label="Gain"
+                    value={editList.gainDb}
+                    min={-12}
+                    max={12}
+                    step={0.1}
                     unit=" dB"
                     color="var(--cyan)"
-                    defaultValue={DEFAULT_COMP.thresholdDb}
-                    onChange={(v) =>
-                      pushHistory({ ...editList, comp: { ...editList.comp, thresholdDb: v } })
-                    }
+                    defaultValue={0}
+                    onChange={(v) => pushHistory({ ...editList, gainDb: v })}
                   />
+                  <div className="pro-editor-norm-block">
+                    <label className="pro-editor-norm-row pro-editor-norm-row--target">
+                      <span>Target</span>
+                      <select
+                        value={editList.loudnorm.targetLufs}
+                        onChange={(e) =>
+                          pushHistory({
+                            ...editList,
+                            loudnorm: {
+                              ...editList.loudnorm,
+                              targetLufs: Number(e.target.value),
+                              measured: undefined,
+                            },
+                          })
+                        }
+                      >
+                        <option value={-14}>−14 LUFS (streaming)</option>
+                        <option value={-16}>−16 LUFS</option>
+                        <option value={-23}>−23 LUFS (EBU)</option>
+                        {![-14, -16, -23].includes(editList.loudnorm.targetLufs) && (
+                          <option value={editList.loudnorm.targetLufs}>
+                            {editList.loudnorm.targetLufs} LUFS (custom)
+                          </option>
+                        )}
+                      </select>
+                    </label>
+                    <div className="pro-editor-norm-row">
+                      <span>Measured</span>
+                      {editList.loudnorm.measured ? (
+                        <span>{editList.loudnorm.measured.i.toFixed(1)} LUFS</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="studio-btn-ghost studio-btn-sm"
+                          disabled={!ffmpeg || ffmpegLoading || measuring}
+                          onClick={() => void handleMeasure()}
+                        >
+                          {measuring ? 'Measuring…' : 'Measure'}
+                        </button>
+                      )}
+                    </div>
+                    <div className="pro-editor-norm-row pro-editor-norm-row--applied">
+                      <span>Applied</span>
+                      <span>{appliedDb !== null ? dbReadout(appliedDb) : '—'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="studio-btn-secondary"
+                      disabled={!ffmpeg || ffmpegLoading || measuring}
+                      onClick={() => void handleMeasure()}
+                    >
+                      ⚖ Normalize (loudnorm 2-pass)
+                    </button>
+                  </div>
+                </div>
+                <p className="pro-editor-panel__hint">
+                  drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step
+                </p>
+              </div>
+            )}
+
+            {focusedPlugin === 'eq' && (
+              <div className="pro-editor-panel">
+                <div className="pro-editor-panel__header">
+                  <div className="pro-editor-panel__heading">
+                    <h2 className="pro-editor-panel__title">EQ — 3 band</h2>
+                    <span className="pro-editor-panel__pill">IN CHAIN · POSITION 2</span>
+                  </div>
+                  <div className="pro-editor-panel__actions">
+                    <button
+                      type="button"
+                      className="studio-btn-ghost studio-btn-sm"
+                      onClick={() =>
+                        pushHistory({
+                          ...editList,
+                          eq: { ...editList.eq, bands: DEFAULT_EQ_BANDS.map((b) => ({ ...b })) },
+                        })
+                      }
+                    >
+                      Reset
+                    </button>
+                    <Switch
+                      checked={editList.eq.enabled}
+                      onChange={(v) =>
+                        pushHistory({ ...editList, eq: { ...editList.eq, enabled: v } })
+                      }
+                      label="EQ enabled"
+                    />
+                  </div>
+                </div>
+                <EqCurve
+                  bands={editList.eq.bands}
+                  onChange={(i, next) => {
+                    const bands = editList.eq.bands.map((b, j) => (j === i ? { ...b, ...next } : b))
+                    pushHistory({ ...editList, eq: { ...editList.eq, bands } })
+                  }}
+                />
+                <div className="pro-editor-eq-bands">
+                  {editList.eq.bands.map((band, i) => (
+                    <div key={i} className="pro-editor-eq-band">
+                      <Knob
+                        label={`Band ${i + 1}`}
+                        value={band.gainDb}
+                        min={-24}
+                        max={24}
+                        step={0.5}
+                        unit=" dB"
+                        color={EQ_BAND_COLORS[i % EQ_BAND_COLORS.length]}
+                        defaultValue={DEFAULT_EQ_BANDS[i]?.gainDb ?? 0}
+                        onChange={(v) => {
+                          const bands = editList.eq.bands.map((b, j) =>
+                            j === i ? { ...b, gainDb: v } : b,
+                          )
+                          pushHistory({ ...editList, eq: { ...editList.eq, bands } })
+                        }}
+                      />
+                      <span className="pro-editor-eq-band__freq">{band.freq} Hz</span>
+                      <span className="pro-editor-eq-band__q">Q {band.q.toFixed(1)}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="pro-editor-panel__hint">
+                  drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step ·
+                  drag curve dots to set frequency &amp; gain
+                </p>
+              </div>
+            )}
+
+            {focusedPlugin === 'comp' && (
+              <div className="pro-editor-panel">
+                <div className="pro-editor-panel__header">
+                  <div className="pro-editor-panel__heading">
+                    <h2 className="pro-editor-panel__title">Compressor</h2>
+                    <span className="pro-editor-panel__pill">IN CHAIN · POSITION 3</span>
+                  </div>
+                  <div className="pro-editor-panel__actions">
+                    <button
+                      type="button"
+                      className="studio-btn-ghost studio-btn-sm"
+                      onClick={() => pushHistory({ ...editList, comp: { ...DEFAULT_COMP } })}
+                    >
+                      Reset
+                    </button>
+                    <Switch
+                      checked={editList.comp.enabled}
+                      onChange={(v) =>
+                        pushHistory({ ...editList, comp: { ...editList.comp, enabled: v } })
+                      }
+                      label="Compressor enabled"
+                    />
+                  </div>
+                </div>
+                <div className="pro-editor-panel__body">
+                  <div className="pro-editor-knob-row">
+                    <Knob
+                      label="Threshold"
+                      value={editList.comp.thresholdDb}
+                      min={-60}
+                      max={0}
+                      step={1}
+                      unit=" dB"
+                      color="var(--cyan)"
+                      defaultValue={DEFAULT_COMP.thresholdDb}
+                      onChange={(v) =>
+                        pushHistory({ ...editList, comp: { ...editList.comp, thresholdDb: v } })
+                      }
+                    />
+                    <Knob
+                      label="Ratio"
+                      value={editList.comp.ratio}
+                      min={1}
+                      max={20}
+                      step={0.5}
+                      unit=":1"
+                      color="var(--cyan)"
+                      defaultValue={DEFAULT_COMP.ratio}
+                      onChange={(v) =>
+                        pushHistory({ ...editList, comp: { ...editList.comp, ratio: v } })
+                      }
+                    />
+                    <Knob
+                      label="Attack"
+                      value={editList.comp.attackMs}
+                      min={0.1}
+                      max={200}
+                      step={0.5}
+                      unit=" ms"
+                      color="var(--cyan)"
+                      defaultValue={DEFAULT_COMP.attackMs}
+                      onChange={(v) =>
+                        pushHistory({ ...editList, comp: { ...editList.comp, attackMs: v } })
+                      }
+                    />
+                    <Knob
+                      label="Release"
+                      value={editList.comp.releaseMs}
+                      min={10}
+                      max={1000}
+                      step={5}
+                      unit=" ms"
+                      color="var(--cyan)"
+                      defaultValue={DEFAULT_COMP.releaseMs}
+                      onChange={(v) =>
+                        pushHistory({ ...editList, comp: { ...editList.comp, releaseMs: v } })
+                      }
+                    />
+                    <Knob
+                      label="Makeup"
+                      value={editList.comp.makeupDb}
+                      min={0}
+                      max={12}
+                      step={0.5}
+                      unit=" dB"
+                      color="var(--cyan)"
+                      defaultValue={DEFAULT_COMP.makeupDb}
+                      onChange={(v) =>
+                        pushHistory({ ...editList, comp: { ...editList.comp, makeupDb: v } })
+                      }
+                    />
+                  </div>
+                  <div className="pro-editor-gr-meter">
+                    <div className="pro-editor-gr-meter__track">
+                      <div
+                        className="pro-editor-gr-meter__fill"
+                        style={{ height: `${Math.min(100, (grDb / 24) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="pro-editor-gr-meter__label">GR ≈ {grDb.toFixed(1)}</span>
+                  </div>
+                </div>
+                <p className="pro-editor-panel__hint">
+                  drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step
+                </p>
+              </div>
+            )}
+
+            {focusedPlugin === 'limiter' && (
+              <div className="pro-editor-panel">
+                <div className="pro-editor-panel__header">
+                  <div className="pro-editor-panel__heading">
+                    <h2 className="pro-editor-panel__title">Limiter</h2>
+                    <span className="pro-editor-panel__pill">IN CHAIN · POSITION 4</span>
+                  </div>
+                  <div className="pro-editor-panel__actions">
+                    <button
+                      type="button"
+                      className="studio-btn-ghost studio-btn-sm"
+                      onClick={() => pushHistory({ ...editList, limiter: { ...DEFAULT_LIMITER } })}
+                    >
+                      Reset
+                    </button>
+                    <Switch
+                      checked={editList.limiter.enabled}
+                      onChange={(v) =>
+                        pushHistory({ ...editList, limiter: { ...editList.limiter, enabled: v } })
+                      }
+                      label="Limiter enabled"
+                    />
+                  </div>
+                </div>
+                <div className="pro-editor-knob-row">
                   <Knob
-                    label="Ratio"
-                    value={editList.comp.ratio}
-                    min={1}
-                    max={20}
-                    step={0.5}
-                    unit=":1"
-                    color="var(--cyan)"
-                    defaultValue={DEFAULT_COMP.ratio}
+                    label="Ceiling"
+                    value={editList.limiter.ceilingDb}
+                    min={-3}
+                    max={0}
+                    step={0.1}
+                    unit=" dBTP"
+                    color="var(--coral)"
+                    defaultValue={DEFAULT_LIMITER.ceilingDb}
                     onChange={(v) =>
-                      pushHistory({ ...editList, comp: { ...editList.comp, ratio: v } })
-                    }
-                  />
-                  <Knob
-                    label="Attack"
-                    value={editList.comp.attackMs}
-                    min={0.1}
-                    max={200}
-                    step={0.5}
-                    unit=" ms"
-                    color="var(--cyan)"
-                    defaultValue={DEFAULT_COMP.attackMs}
-                    onChange={(v) =>
-                      pushHistory({ ...editList, comp: { ...editList.comp, attackMs: v } })
+                      pushHistory({ ...editList, limiter: { ...editList.limiter, ceilingDb: v } })
                     }
                   />
                   <Knob
                     label="Release"
-                    value={editList.comp.releaseMs}
-                    min={10}
+                    value={editList.limiter.releaseMs}
+                    min={1}
                     max={1000}
-                    step={5}
+                    step={1}
                     unit=" ms"
                     color="var(--cyan)"
-                    defaultValue={DEFAULT_COMP.releaseMs}
+                    defaultValue={DEFAULT_LIMITER.releaseMs}
                     onChange={(v) =>
-                      pushHistory({ ...editList, comp: { ...editList.comp, releaseMs: v } })
-                    }
-                  />
-                  <Knob
-                    label="Makeup"
-                    value={editList.comp.makeupDb}
-                    min={0}
-                    max={12}
-                    step={0.5}
-                    unit=" dB"
-                    color="var(--cyan)"
-                    defaultValue={DEFAULT_COMP.makeupDb}
-                    onChange={(v) =>
-                      pushHistory({ ...editList, comp: { ...editList.comp, makeupDb: v } })
+                      pushHistory({ ...editList, limiter: { ...editList.limiter, releaseMs: v } })
                     }
                   />
                 </div>
-                <div className="pro-editor-gr-meter">
-                  <div className="pro-editor-gr-meter__track">
-                    <div
-                      className="pro-editor-gr-meter__fill"
-                      style={{ height: `${Math.min(100, (grDb / 24) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="pro-editor-gr-meter__label">GR ≈ {grDb.toFixed(1)}</span>
-                </div>
+                <p className="pro-editor-panel__hint">
+                  applied before loudnorm · protects true peak
+                </p>
               </div>
-              <p className="pro-editor-panel__hint">
-                drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step
-              </p>
-            </div>
-          )}
+            )}
+          </div>
 
-          {focusedPlugin === 'limiter' && (
-            <div className="pro-editor-panel">
-              <div className="pro-editor-panel__header">
-                <div className="pro-editor-panel__heading">
-                  <h2 className="pro-editor-panel__title">Limiter</h2>
-                  <span className="pro-editor-panel__pill">IN CHAIN · POSITION 4</span>
-                </div>
-                <div className="pro-editor-panel__actions">
-                  <button
-                    type="button"
-                    className="studio-btn-ghost studio-btn-sm"
-                    onClick={() => pushHistory({ ...editList, limiter: { ...DEFAULT_LIMITER } })}
-                  >
-                    Reset
-                  </button>
-                  <Switch
-                    checked={editList.limiter.enabled}
-                    onChange={(v) =>
-                      pushHistory({ ...editList, limiter: { ...editList.limiter, enabled: v } })
-                    }
-                    label="Limiter enabled"
-                  />
-                </div>
-              </div>
-              <div className="pro-editor-knob-row">
-                <Knob
-                  label="Ceiling"
-                  value={editList.limiter.ceilingDb}
-                  min={-3}
-                  max={0}
-                  step={0.1}
-                  unit=" dBTP"
-                  color="var(--coral)"
-                  defaultValue={DEFAULT_LIMITER.ceilingDb}
-                  onChange={(v) =>
-                    pushHistory({ ...editList, limiter: { ...editList.limiter, ceilingDb: v } })
-                  }
-                />
-                <Knob
-                  label="Release"
-                  value={editList.limiter.releaseMs}
-                  min={1}
-                  max={1000}
-                  step={1}
-                  unit=" ms"
-                  color="var(--cyan)"
-                  defaultValue={DEFAULT_LIMITER.releaseMs}
-                  onChange={(v) =>
-                    pushHistory({ ...editList, limiter: { ...editList.limiter, releaseMs: v } })
-                  }
-                />
-              </div>
-              <p className="pro-editor-panel__hint">applied before loudnorm · protects true peak</p>
+          {/* Plugin chain rail + export */}
+          <aside className="pro-editor-rail" aria-label="Plugin chain">
+            <div className="pro-editor-rail__header">
+              <span>PLUGIN CHAIN</span>
+              <span>signal ↓</span>
             </div>
-          )}
+            <div className="pro-editor-rail__list">
+              <PlugItem
+                position={1}
+                name="Gain & Normalize"
+                summary={gainSummary}
+                enabled={editList.loudnorm.enabled}
+                focused={focusedPlugin === 'gain'}
+                onFocus={() => focusPlugin('gain')}
+                onToggle={(v) =>
+                  pushHistory({ ...editList, loudnorm: { ...editList.loudnorm, enabled: v } })
+                }
+              />
+              <PlugItem
+                position={2}
+                name="EQ"
+                summary={eqSummary}
+                enabled={editList.eq.enabled}
+                focused={focusedPlugin === 'eq'}
+                onFocus={() => focusPlugin('eq')}
+                onToggle={(v) => pushHistory({ ...editList, eq: { ...editList.eq, enabled: v } })}
+              />
+              <PlugItem
+                position={3}
+                name="Compressor"
+                summary={compSummary}
+                enabled={editList.comp.enabled}
+                focused={focusedPlugin === 'comp'}
+                onFocus={() => focusPlugin('comp')}
+                onToggle={(v) =>
+                  pushHistory({ ...editList, comp: { ...editList.comp, enabled: v } })
+                }
+              />
+              <PlugItem
+                position={4}
+                name="Limiter"
+                summary={limiterSummary}
+                enabled={editList.limiter.enabled}
+                focused={focusedPlugin === 'limiter'}
+                onFocus={() => focusPlugin('limiter')}
+                onToggle={(v) =>
+                  pushHistory({ ...editList, limiter: { ...editList.limiter, enabled: v } })
+                }
+              />
+            </div>
+
+            <button
+              type="button"
+              className="pro-editor-export-card"
+              onClick={() => setExportDialogOpen(true)}
+            >
+              <div className="pro-editor-export-card__head">
+                <span>EXPORT</span>
+                <span className="pro-editor-pill pro-editor-pill--green">LOCAL</span>
+              </div>
+              <div
+                className={cx(
+                  'pro-editor-export-card__row',
+                  editList.loudnorm.enabled && 'pro-editor-export-card__row--ok',
+                )}
+              >
+                <span>Integrated</span>
+                <span>{integratedDisplay}</span>
+              </div>
+              <div
+                className={cx(
+                  'pro-editor-export-card__row',
+                  editList.limiter.enabled && 'pro-editor-export-card__row--ok',
+                )}
+              >
+                <span>True peak</span>
+                <span>{truePeakDisplay}</span>
+              </div>
+              <div className="pro-editor-export-card__row">
+                <span>Duration</span>
+                <span>{formatDuration(postDuration)}</span>
+              </div>
+              <div className="pro-editor-export-card__pills">
+                <span
+                  className={cx(
+                    'pro-editor-format-pill',
+                    exportFormat === 'flac' && 'pro-editor-format-pill--active',
+                  )}
+                >
+                  FLAC 24/96
+                </span>
+                <span
+                  className={cx(
+                    'pro-editor-format-pill',
+                    exportFormat === 'mp3' && 'pro-editor-format-pill--active',
+                  )}
+                >
+                  MP3 320
+                </span>
+              </div>
+              <div className="pro-editor-export-card__footer">
+                renders on your CPU · original kept
+                {ffmpegLoading ? ' · loading ffmpeg…' : ''}
+                {!isolated && ' · single-thread'}
+              </div>
+            </button>
+          </aside>
         </div>
-
-        {/* Plugin chain rail + export */}
-        <aside className="pro-editor-rail" aria-label="Plugin chain">
-          <div className="pro-editor-rail__header">
-            <span>PLUGIN CHAIN</span>
-            <span>signal ↓</span>
-          </div>
-          <div className="pro-editor-rail__list">
-            <PlugItem
-              position={1}
-              name="Gain & Normalize"
-              summary={gainSummary}
-              enabled={editList.loudnorm.enabled}
-              focused={focusedPlugin === 'gain'}
-              onFocus={() => focusPlugin('gain')}
-              onToggle={(v) =>
-                pushHistory({ ...editList, loudnorm: { ...editList.loudnorm, enabled: v } })
-              }
-            />
-            <PlugItem
-              position={2}
-              name="EQ"
-              summary={eqSummary}
-              enabled={editList.eq.enabled}
-              focused={focusedPlugin === 'eq'}
-              onFocus={() => focusPlugin('eq')}
-              onToggle={(v) => pushHistory({ ...editList, eq: { ...editList.eq, enabled: v } })}
-            />
-            <PlugItem
-              position={3}
-              name="Compressor"
-              summary={compSummary}
-              enabled={editList.comp.enabled}
-              focused={focusedPlugin === 'comp'}
-              onFocus={() => focusPlugin('comp')}
-              onToggle={(v) => pushHistory({ ...editList, comp: { ...editList.comp, enabled: v } })}
-            />
-            <PlugItem
-              position={4}
-              name="Limiter"
-              summary={limiterSummary}
-              enabled={editList.limiter.enabled}
-              focused={focusedPlugin === 'limiter'}
-              onFocus={() => focusPlugin('limiter')}
-              onToggle={(v) =>
-                pushHistory({ ...editList, limiter: { ...editList.limiter, enabled: v } })
-              }
-            />
-          </div>
-
-          <button
-            type="button"
-            className="pro-editor-export-card"
-            onClick={() => setExportDialogOpen(true)}
-          >
-            <div className="pro-editor-export-card__head">
-              <span>EXPORT</span>
-              <span className="pro-editor-pill pro-editor-pill--green">LOCAL</span>
-            </div>
-            <div
-              className={cx(
-                'pro-editor-export-card__row',
-                editList.loudnorm.enabled && 'pro-editor-export-card__row--ok',
-              )}
-            >
-              <span>Integrated</span>
-              <span>{integratedDisplay}</span>
-            </div>
-            <div
-              className={cx(
-                'pro-editor-export-card__row',
-                editList.limiter.enabled && 'pro-editor-export-card__row--ok',
-              )}
-            >
-              <span>True peak</span>
-              <span>{truePeakDisplay}</span>
-            </div>
-            <div className="pro-editor-export-card__row">
-              <span>Duration</span>
-              <span>{formatDuration(postDuration)}</span>
-            </div>
-            <div className="pro-editor-export-card__pills">
-              <span
-                className={cx(
-                  'pro-editor-format-pill',
-                  exportFormat === 'flac' && 'pro-editor-format-pill--active',
-                )}
-              >
-                FLAC 24/96
-              </span>
-              <span
-                className={cx(
-                  'pro-editor-format-pill',
-                  exportFormat === 'mp3' && 'pro-editor-format-pill--active',
-                )}
-              >
-                MP3 320
-              </span>
-            </div>
-            <div className="pro-editor-export-card__footer">
-              renders on your CPU · original kept
-              {ffmpegLoading ? ' · loading ffmpeg…' : ''}
-              {!isolated && ' · single-thread'}
-            </div>
-          </button>
-        </aside>
-      </div>
+      )}
 
       {/* ---- Export dialog ---- */}
       {exportDialogOpen && (
@@ -1472,6 +1636,12 @@ export function ProAudioEditor({
                   style={{ width: `${exportProgress * 100}%` }}
                 />
               </div>
+            )}
+            {exportPhase && exportProgress !== null && (
+              <p className="pro-editor-panel__hint" style={{ margin: 0 }}>
+                {exportPhase}
+                {exportPhase === 'segment' ? '…' : ''}
+              </p>
             )}
             {exportError && <p className="studio-text-error">{exportError}</p>}
             <div className="pro-editor-dialog__actions">

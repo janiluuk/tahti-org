@@ -36,6 +36,7 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         title: true,
         durationSec: true,
         editList: true,
+        tracklist: true,
         updatedAt: true,
         channel: { select: { slug: true } },
       },
@@ -86,6 +87,7 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({
         editList: { ...editList, sourceDuration: Math.max(editList.sourceDuration, duration) },
         updatedAt: item.updatedAt.toISOString(),
+        tracklist: Array.isArray(item.tracklist) ? item.tracklist : null,
       })
     },
   )
@@ -211,13 +213,16 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'M21 v0: trim/fade bounce → new archive version',
+        description: 'DEPRECATED — M21 v0 trim bounce. Prefer POST …/editor/render with EditList.',
         response: openApiResponses([
           { status: 202, schema: ArchiveEditorBounceResponseSchema, name: 'ArchiveEditorBounce' },
         ]),
       },
     },
     async (request, reply) => {
+      reply.header('Deprecation', 'true')
+      reply.header('Link', '</api/me/archive/{id}/editor/render>; rel="successor-version"')
+      request.log.warn('Deprecated editor/bounce — migrate to editor/render with EditList')
       const parsed = ArchiveEditorBounceSchema.safeParse(request.body)
       if (!parsed.success) {
         return reply.status(400).send({

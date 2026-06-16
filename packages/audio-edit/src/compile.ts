@@ -173,6 +173,30 @@ export function estimateOutputBytes(edit: EditList, bitrateKbps = 1411): number 
   return Math.ceil((postCutDuration(segments) * bitrateKbps * 1000) / 8)
 }
 
+/** Worker renders one keep-segment at a time when cuts fragment the timeline heavily. */
+export const SEGMENT_RENDER_MIN_CUTS = 8
+export const SEGMENT_RENDER_MIN_SEGMENTS = 6
+
+export function shouldUseSegmentRender(edit: EditList): boolean {
+  const segments = computeKeepSegments(edit.sourceDuration, mergeCuts(edit.cuts))
+  return (
+    edit.cuts.length >= SEGMENT_RENDER_MIN_CUTS || segments.length >= SEGMENT_RENDER_MIN_SEGMENTS
+  )
+}
+
+export function compileLoudnormOutputFiltergraph(edit: EditList): string {
+  const { targetLufs, targetTp, measured } = edit.loudnorm
+  if (measured) {
+    const m = measured
+    return (
+      `[0:a]loudnorm=I=${targetLufs}:TP=${targetTp}:LRA=11:` +
+      `measured_I=${m.i}:measured_TP=${m.tp}:measured_LRA=${m.lra}:measured_thresh=${m.thresh}:` +
+      `linear=true[out]`
+    )
+  }
+  return `[0:a]loudnorm=I=${targetLufs}:TP=${targetTp}:LRA=11[out]`
+}
+
 export function shouldRenderInBrowser(
   edit: EditList,
   sourceFileSizeBytes?: number | null,

@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { EditListSchema } from '@tahti/audio-edit'
+import { TracklistEntrySchema } from './archive-metadata.js'
 
 export { EditListSchema }
 export type { EditList } from '@tahti/audio-edit'
@@ -11,6 +12,7 @@ export { createDefaultEditList } from '@tahti/audio-edit'
 export const ArchiveEditListDraftResponseSchema = z.object({
   editList: EditListSchema,
   updatedAt: z.string().datetime().nullable(),
+  tracklist: z.array(TracklistEntrySchema).max(200).nullable().optional(),
 })
 
 /** Defense in depth against pathological autosave payloads (500 cuts × metadata). */
