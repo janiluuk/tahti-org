@@ -21,6 +21,8 @@ export const MAX_EDIT_LIST_JSON_BYTES = 128_000
 export const ArchiveEditListDraftPatchSchema = z
   .object({
     editList: EditListSchema,
+    /** UX-09: reject save when another tab/device saved a newer draft. */
+    expectedUpdatedAt: z.string().datetime().optional(),
   })
   .refine((body) => JSON.stringify(body).length <= MAX_EDIT_LIST_JSON_BYTES, {
     message: `editList payload exceeds ${MAX_EDIT_LIST_JSON_BYTES} bytes`,

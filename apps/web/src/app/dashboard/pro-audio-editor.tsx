@@ -53,6 +53,7 @@ import { waitForRenderViaProgress } from '@/lib/audio-editor/render-progress'
 
 const HISTORY_CAP = 100
 const AUTOSAVE_MS = 2000
+const AUTOSAVE_KNOB_MS = 6000
 const CANVAS_MIN_WIDTH = 320
 const CANVAS_DEFAULT_WIDTH = 1280
 const WAVE_HEIGHT = 210
@@ -173,6 +174,8 @@ export function ProAudioEditor({
   const [future, setFuture] = useState<EditList[]>([])
   const [autosaveLabel, setAutosaveLabel] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [draftConflict, setDraftConflict] = useState(false)
+  const [knobDragging, setKnobDragging] = useState(false)
   const [isolated, setIsolated] = useState(false)
   const [peaks, setPeaks] = useState<PeaksPyramid | null>(null)
   const [peaksLoading, setPeaksLoading] = useState(true)
@@ -213,6 +216,9 @@ export function ProAudioEditor({
   const sourceFileRef = useRef<File | null>(null)
   const sourceBlobUrlRef = useRef<string | null>(null)
   const autosavePendingRef = useRef(false)
+  const draftUpdatedAtRef = useRef<string | null>(draftUpdatedAt)
+  const editListRef = useRef(editList)
+  editListRef.current = editList
   const previewRef = useRef<ReturnType<typeof attachPreviewGraph> | null>(null)
   const previewSourceRef = useRef<ReturnType<typeof createPreviewSource> | null>(null)
 
@@ -266,20 +272,57 @@ export function ProAudioEditor({
     window.history.replaceState(null, '', `#${plugin}`)
   }, [])
 
-  useEffect(() => {
+  const flushDraftSave = useCallback(async () => {
     autosavePendingRef.current = true
+    const res = await saveArchiveEditListDraft(
+      archiveId,
+      editListRef.current,
+      draftUpdatedAtRef.current,
+    )
+    autosavePendingRef.current = false
+    if (res.conflict) {
+      setDraftConflict(true)
+      setSaveError(res.error ?? 'Draft conflict')
+      if (res.updatedAt) draftUpdatedAtRef.current = res.updatedAt
+      return
+    }
+    if (res.error) {
+      setSaveError(res.error)
+      return
+    }
+    setDraftConflict(false)
+    setSaveError(null)
+    if (res.updatedAt) {
+      draftUpdatedAtRef.current = res.updatedAt
+      setAutosaveLabel(new Date(res.updatedAt).toLocaleTimeString())
+    } else {
+      setAutosaveLabel('just now')
+    }
+  }, [archiveId])
+
+  useEffect(() => {
+    draftUpdatedAtRef.current = draftUpdatedAt
+  }, [draftUpdatedAt])
+
+  useEffect(() => {
+    if (knobDragging) return
+    autosavePendingRef.current = true
+    const delay = knobDragging ? AUTOSAVE_KNOB_MS : AUTOSAVE_MS
     const t = setTimeout(() => {
-      void saveArchiveEditListDraft(archiveId, editList).then((res) => {
-        autosavePendingRef.current = false
-        if (res.error) setSaveError(res.error)
-        else {
-          setSaveError(null)
-          setAutosaveLabel('just now')
-        }
-      })
-    }, AUTOSAVE_MS)
+      void flushDraftSave()
+    }, delay)
     return () => clearTimeout(t)
-  }, [archiveId, editList])
+  }, [archiveId, editList, knobDragging, flushDraftSave])
+
+  useEffect(() => {
+    if (!knobDragging) return
+    function onPointerUp() {
+      setKnobDragging(false)
+      void flushDraftSave()
+    }
+    window.addEventListener('pointerup', onPointerUp)
+    return () => window.removeEventListener('pointerup', onPointerUp)
+  }, [knobDragging, flushDraftSave])
 
   useEffect(() => {
     function onBeforeUnload(e: BeforeUnloadEvent) {
@@ -556,6 +599,8 @@ export function ProAudioEditor({
     [editList.sourceDuration, span],
   )
 
+  const beginKnobDrag = useCallback(() => setKnobDragging(true), [])
+
   async function saveTracklist() {
     setTracklistSaving(true)
     setTracklistError(null)
@@ -786,6 +831,15 @@ export function ProAudioEditor({
         </div>
         <div className="pro-editor-topbar__right">
           {saveError && <span className="studio-text-error">{saveError}</span>}
+          {draftConflict && (
+            <button
+              type="button"
+              className="studio-btn-ghost studio-btn-sm"
+              onClick={() => window.location.reload()}
+            >
+              Reload draft
+            </button>
+          )}
           {exportSuccess && (
             <span className="pro-editor-export-success">
               Version {exportSuccess.versionNumber} ready —{' '}
@@ -800,19 +854,7 @@ export function ProAudioEditor({
           >
             ⚙ {renderModePill}
           </span>
-          <button
-            type="button"
-            className="studio-btn-ghost"
-            onClick={() => {
-              void saveArchiveEditListDraft(archiveId, editList).then((res) => {
-                if (res.error) setSaveError(res.error)
-                else {
-                  setSaveError(null)
-                  setAutosaveLabel('just now')
-                }
-              })
-            }}
-          >
+          <button type="button" className="studio-btn-ghost" onClick={() => void flushDraftSave()}>
             Save draft
           </button>
           <button
@@ -1180,7 +1222,7 @@ export function ProAudioEditor({
                     />
                   </div>
                 </div>
-                <div className="pro-editor-panel__body">
+                <div className="pro-editor-panel__body" onPointerDown={beginKnobDrag}>
                   <Knob
                     label="Gain"
                     value={editList.gainDb}
@@ -1289,7 +1331,7 @@ export function ProAudioEditor({
                     pushHistory({ ...editList, eq: { ...editList.eq, bands } })
                   }}
                 />
-                <div className="pro-editor-eq-bands">
+                <div className="pro-editor-eq-bands" onPointerDown={beginKnobDrag}>
                   {editList.eq.bands.map((band, i) => (
                     <div key={i} className="pro-editor-eq-band">
                       <Knob
@@ -1345,7 +1387,7 @@ export function ProAudioEditor({
                   </div>
                 </div>
                 <div className="pro-editor-panel__body">
-                  <div className="pro-editor-knob-row">
+                  <div className="pro-editor-knob-row" onPointerDown={beginKnobDrag}>
                     <Knob
                       label="Threshold"
                       value={editList.comp.thresholdDb}
@@ -1452,7 +1494,7 @@ export function ProAudioEditor({
                     />
                   </div>
                 </div>
-                <div className="pro-editor-knob-row">
+                <div className="pro-editor-knob-row" onPointerDown={beginKnobDrag}>
                   <Knob
                     label="Ceiling"
                     value={editList.limiter.ceilingDb}

@@ -20,6 +20,7 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { auditLog } from '../../lib/audit.js'
 import { resolveArchiveEditorSource } from '../../lib/archive-editor-source.js'
 import { getObjectStream, presignedGetUrl } from '../../lib/minio.js'
 import { enqueueBounceArchiveEdit, enqueueRenderArchiveEdit, mediaQueue } from '../../lib/queue.js'
@@ -128,6 +129,30 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
 
       const item = await ownedItem(user.id, id)
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const { expectedUpdatedAt } = parsed.data
+
+      if (expectedUpdatedAt) {
+        const result = await fastify.prisma.archiveItem.updateMany({
+          where: { id, updatedAt: new Date(expectedUpdatedAt) },
+          data: { editList: validation.edit },
+        })
+        if (result.count === 0) {
+          const current = await fastify.prisma.archiveItem.findUnique({
+            where: { id },
+            select: { updatedAt: true },
+          })
+          return reply.status(409).send({
+            error: 'Draft was updated elsewhere — reload to avoid overwriting',
+            updatedAt: current?.updatedAt.toISOString() ?? null,
+          })
+        }
+        const updated = await fastify.prisma.archiveItem.findUniqueOrThrow({
+          where: { id },
+          select: { updatedAt: true },
+        })
+        return reply.send({ ok: true as const, updatedAt: updated.updatedAt.toISOString() })
+      }
 
       const updated = await fastify.prisma.archiveItem.update({
         where: { id },
@@ -317,6 +342,13 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         activate,
       })
 
+      await auditLog(fastify.prisma, {
+        action: 'ARCHIVE_EDIT_BOUNCE',
+        actorId: user.id,
+        targetId: id,
+        meta: { versionId: version.id, versionNumber: version.versionNumber, activate },
+      })
+
       return reply.status(202).send({
         ok: true as const,
         versionId: version.id,
@@ -404,6 +436,19 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         editList,
         format,
         activate,
+      })
+
+      await auditLog(fastify.prisma, {
+        action: 'ARCHIVE_EDIT_RENDER',
+        actorId: user.id,
+        targetId: id,
+        meta: {
+          versionId: version.id,
+          versionNumber: version.versionNumber,
+          format,
+          activate,
+          cutCount: editList.cuts.length,
+        },
       })
 
       return reply.status(202).send({

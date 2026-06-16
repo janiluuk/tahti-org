@@ -137,13 +137,25 @@ export async function fetchArchiveEditListDraft(itemId: string): Promise<{
 export async function saveArchiveEditListDraft(
   itemId: string,
   editList: import('@tahti/audio-edit').EditList,
-): Promise<{ updatedAt?: string; error: string | null }> {
+  expectedUpdatedAt?: string | null,
+): Promise<{ updatedAt?: string; error: string | null; conflict?: boolean }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/draft`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
-    body: JSON.stringify({ editList }),
+    body: JSON.stringify({
+      editList,
+      ...(expectedUpdatedAt ? { expectedUpdatedAt } : {}),
+    }),
     cache: 'no-store',
   })
+  if (res.status === 409) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string; updatedAt?: string }
+    return {
+      error: data.error ?? 'Draft conflict',
+      updatedAt: data.updatedAt,
+      conflict: true,
+    }
+  }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to save edit draft' }

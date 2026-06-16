@@ -313,4 +313,32 @@ describe('M21 v0 — archive trim editor', () => {
     })
     expect(res.statusCode).toBe(404)
   })
+
+  it('PATCH /api/me/archive/:id/editor/draft returns 409 on stale expectedUpdatedAt', async () => {
+    const draftRes = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    const { editList, updatedAt } = draftRes.json() as {
+      editList: Record<string, unknown>
+      updatedAt: string
+    }
+
+    await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+      payload: { editList, expectedUpdatedAt: updatedAt },
+    })
+
+    const stale = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+      payload: { editList, expectedUpdatedAt: updatedAt },
+    })
+    expect(stale.statusCode).toBe(409)
+    expect(stale.json()).toMatchObject({ error: expect.stringContaining('elsewhere') })
+  })
 })
