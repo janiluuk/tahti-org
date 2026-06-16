@@ -5,6 +5,14 @@ import { z } from 'zod'
 import { EditListSchema } from '@tahti/audio-edit'
 import { TracklistEntrySchema } from './archive-metadata.js'
 
+const PeaksPyramidSchema = z.object({
+  sampleRate: z.number(),
+  durationSec: z.number(),
+  levels: z.array(z.array(z.number())),
+  zeroCrossingsSec: z.array(z.number()).optional(),
+  silenceRegionsSec: z.array(z.object({ start: z.number(), end: z.number() })).optional(),
+})
+
 export { EditListSchema }
 export type { EditList } from '@tahti/audio-edit'
 export { createDefaultEditList } from '@tahti/audio-edit'
@@ -13,6 +21,7 @@ export const ArchiveEditListDraftResponseSchema = z.object({
   editList: EditListSchema,
   updatedAt: z.string().datetime().nullable(),
   tracklist: z.array(TracklistEntrySchema).max(200).nullable().optional(),
+  editorPeaks: PeaksPyramidSchema.nullable().optional(),
 })
 
 /** Defense in depth against pathological autosave payloads (500 cuts × metadata). */

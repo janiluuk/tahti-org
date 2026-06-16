@@ -89,6 +89,8 @@ export interface CompileOptions {
   sampleRate?: number
   outputFormat?: OutputFormat
   segmentIndex?: number
+  /** UX-12: limit rendered output length (preview sample). */
+  maxDurationSec?: number
 }
 
 export interface CompiledGraph {
@@ -145,4 +147,6 @@ export interface PeaksPyramid {
   levels: number[][]
   /** Subsampled zero-crossing times (seconds) for cut snapping */
   zeroCrossingsSec?: number[]
+  /** Quiet regions for quick navigation chips */
+  silenceRegionsSec?: Array<{ start: number; end: number }>
 }

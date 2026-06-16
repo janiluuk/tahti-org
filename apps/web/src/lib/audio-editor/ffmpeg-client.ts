@@ -127,6 +127,7 @@ export async function renderEditToFile(
   inputPath: string,
   format: OutputFormat,
   sampleRate?: number,
+  opts?: { maxDurationSec?: number },
 ): Promise<Uint8Array> {
   const { filtergraph } = compileFiltergraph(edit)
   const { codecArgs, ar } = compileOutputArgs(format, sampleRate)
@@ -134,6 +135,7 @@ export async function renderEditToFile(
 
   const args = ['-i', inputPath, '-filter_complex', filtergraph, '-map', '[out]', ...codecArgs]
   if (ar) args.push('-ar', String(ar))
+  if (opts?.maxDurationSec != null) args.push('-t', String(opts.maxDurationSec))
   args.push(outName)
 
   await ffmpeg.exec(args)

@@ -38,6 +38,7 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         durationSec: true,
         editList: true,
         tracklist: true,
+        editorPeaks: true,
         updatedAt: true,
         channel: { select: { slug: true } },
       },
@@ -89,6 +90,7 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         editList: { ...editList, sourceDuration: Math.max(editList.sourceDuration, duration) },
         updatedAt: item.updatedAt.toISOString(),
         tracklist: Array.isArray(item.tracklist) ? item.tracklist : null,
+        editorPeaks: item.editorPeaks ?? null,
       })
     },
   )
@@ -533,6 +535,13 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       await mediaQueue.add('transcode-release-track', { trackId: track.id })
+
+      await auditLog(fastify.prisma, {
+        action: 'ARCHIVE_EDIT_PUBLISH',
+        actorId: user.id,
+        targetId: id,
+        meta: { trackId: track.id, releaseId, versionId: versionId ?? null },
+      })
 
       return reply.status(201).send({
         ok: true as const,

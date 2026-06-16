@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, expect, it } from 'vitest'
-import { buildPeaksPyramid, extractZeroCrossings, snapToNearestZeroCrossing } from './peaks.js'
+import {
+  buildPeaksPyramid,
+  detectSilenceRegions,
+  extractZeroCrossings,
+  snapToNearestZeroCrossing,
+} from './peaks.js'
 
 function makeSinePcm(cycles: number, sampleRate = 8000): Uint8Array {
   const sampleCount = sampleRate * cycles
@@ -31,5 +36,20 @@ describe('zero crossing snap', () => {
     const pcm = makeSinePcm(1)
     const pyramid = buildPeaksPyramid(pcm, 1)
     expect(pyramid.zeroCrossingsSec?.length).toBeGreaterThan(0)
+  })
+})
+
+describe('detectSilenceRegions', () => {
+  it('finds silence in quiet PCM', () => {
+    const sampleRate = 8000
+    const sampleCount = sampleRate * 2
+    const buf = Buffer.alloc(sampleCount * 2)
+    for (let i = 0; i < sampleCount; i++) {
+      const amp = i >= sampleRate && i < sampleRate * 1.5 ? 0 : 8000
+      buf.writeInt16LE(amp, i * 2)
+    }
+    const regions = detectSilenceRegions(new Uint8Array(buf), sampleRate, 2)
+    expect(regions.length).toBeGreaterThan(0)
+    expect(regions[0]!.start).toBeLessThan(1.5)
   })
 })

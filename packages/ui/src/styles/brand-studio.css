@@ -3073,6 +3073,28 @@
   cursor: pointer;
 }
 
+.pro-editor-silence-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 20px 0;
+}
+
+.pro-editor-silence-chip {
+  border: 1px solid var(--bd);
+  border-radius: 999px;
+  background: var(--bg2);
+  color: var(--tt2);
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.pro-editor-silence-chip:hover {
+  border-color: var(--cyan);
+  color: var(--tt);
+}
+
 .pro-editor-topbar__left {
   display: flex;
   flex-direction: column;
@@ -3783,6 +3805,10 @@
   border-radius: 999px;
   border: 1px solid var(--bd);
   font-size: 11px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .pro-editor-format-pill--active {

@@ -20,6 +20,7 @@ import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
+import { extractEditorPeaksPyramid } from '../lib/editor-peaks.js'
 
 function ffprobeFormat(
   filePath: string,
@@ -143,6 +144,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
     const tagPatch = await buildTagPatch(item, embeddedTags, rawPath, tmpDir, sourceMeta.duration)
     const lossless = isLosslessSource(sourceMeta.format) || isLosslessCodec(sourceMeta.codec)
     const peaks = (await extractWaveformPeaks(rawPath)) ?? undefined
+    const editorPeaks = (await extractEditorPeaksPyramid(rawPath, sourceMeta.duration)) ?? undefined
     const sourceFormat = sourceFormatLabel(sourceMeta.codec)
 
     if (lossless) {
@@ -159,6 +161,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
           mp3Key: null,
           durationSec: sourceMeta.duration,
           peaks,
+          editorPeaks: editorPeaks ?? undefined,
           sourceFormat,
           sourceBitrateKbps: null,
           ...tagPatch,
@@ -184,6 +187,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         mp3Key,
         durationSec: sourceMeta.duration,
         peaks,
+        editorPeaks: editorPeaks ?? undefined,
         sourceFormat,
         sourceBitrateKbps: sourceMeta.bitrateKbps,
         ...tagPatch,

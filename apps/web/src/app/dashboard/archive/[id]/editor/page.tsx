@@ -52,6 +52,7 @@ export default async function ProArchiveEditorPage({ params }: { params: { id: s
       initialEditList={draft.editList}
       draftUpdatedAt={draft.updatedAt ?? null}
       initialTracklist={draft.tracklist ?? null}
+      initialEditorPeaks={draft.editorPeaks ?? null}
     />
   )
 }

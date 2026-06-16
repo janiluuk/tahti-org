@@ -36,6 +36,7 @@ export function buildPeaksPyramid(pcm: Uint8Array, durationSec: number): PeaksPy
     durationSec,
     levels,
     zeroCrossingsSec: extractZeroCrossings(pcm, PEAK_DECODE_SAMPLE_RATE),
+    silenceRegionsSec: detectSilenceRegions(pcm, PEAK_DECODE_SAMPLE_RATE, durationSec),
   }
 }
 
@@ -78,6 +79,54 @@ export function snapToNearestZeroCrossing(crossings: number[], sec: number): num
   const next = crossings[lo]!
   const prev = lo > 0 ? crossings[lo - 1]! : next
   return Math.abs(next - sec) <= Math.abs(prev - sec) ? next : prev
+}
+
+const SILENCE_WINDOW_SAMPLES = 400
+const SILENCE_MIN_DURATION_SEC = 0.35
+const SILENCE_THRESHOLD = 400
+
+/** Regions below ~−38 dBFS for at least minDurationSec. */
+export function detectSilenceRegions(
+  pcm: Uint8Array,
+  sampleRate: number,
+  durationSec: number,
+  maxRegions = 24,
+): Array<{ start: number; end: number }> {
+  const sampleCount = Math.floor(pcm.byteLength / 2)
+  if (sampleCount === 0) return []
+
+  const view = new DataView(pcm.buffer, pcm.byteOffset, pcm.byteLength)
+  const regions: Array<{ start: number; end: number }> = []
+  let runStart: number | null = null
+
+  for (let i = 0; i < sampleCount; i += SILENCE_WINDOW_SAMPLES) {
+    const end = Math.min(sampleCount, i + SILENCE_WINDOW_SAMPLES)
+    let peak = 0
+    for (let j = i; j < end; j++) {
+      peak = Math.max(peak, Math.abs(view.getInt16(j * 2, true)))
+    }
+    const quiet = peak < SILENCE_THRESHOLD
+    const t = i / sampleRate
+    if (quiet) {
+      if (runStart === null) runStart = t
+    } else if (runStart !== null) {
+      const start = runStart
+      const endSec = t
+      if (endSec - start >= SILENCE_MIN_DURATION_SEC) {
+        regions.push({ start, end: Math.min(endSec, durationSec) })
+      }
+      runStart = null
+    }
+  }
+
+  if (runStart !== null) {
+    const endSec = durationSec
+    if (endSec - runStart >= SILENCE_MIN_DURATION_SEC) {
+      regions.push({ start: runStart, end: endSec })
+    }
+  }
+
+  return regions.slice(0, maxRegions)
 }
 
 export function peaksCacheKey(archiveId: string, sourceKey: string): string {

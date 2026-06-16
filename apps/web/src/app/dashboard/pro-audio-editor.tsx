@@ -68,6 +68,15 @@ function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
 }
 
+function formatRelativeSave(ts: number): string {
+  const sec = Math.floor((Date.now() - ts) / 1000)
+  if (sec < 12) return 'just now'
+  if (sec < 60) return `${sec}s ago`
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `${min}m ago`
+  return new Date(ts).toLocaleTimeString()
+}
+
 function formatDuration(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) sec = 0
   const m = Math.floor(sec / 60)
@@ -159,6 +168,7 @@ export function ProAudioEditor({
   initialEditList,
   draftUpdatedAt,
   initialTracklist,
+  initialEditorPeaks,
 }: {
   archiveId: string
   title: string
@@ -168,6 +178,7 @@ export function ProAudioEditor({
   initialEditList: EditList
   draftUpdatedAt: string | null
   initialTracklist?: TracklistEntry[] | null
+  initialEditorPeaks?: PeaksPyramid | null
 }) {
   const [editList, setEditList] = useState(initialEditList)
   const [past, setPast] = useState<EditList[]>([])
@@ -206,6 +217,11 @@ export function ProAudioEditor({
   const [tracklistSaving, setTracklistSaving] = useState(false)
   const [canvasWidth, setCanvasWidth] = useState(CANVAS_DEFAULT_WIDTH)
   const [exportPhase, setExportPhase] = useState<string | null>(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(
+    draftUpdatedAt ? new Date(draftUpdatedAt).getTime() : null,
+  )
 
   const wavePanelRef = useRef<HTMLDivElement>(null)
   const waveRef = useRef<HTMLCanvasElement>(null)
@@ -294,11 +310,22 @@ export function ProAudioEditor({
     setSaveError(null)
     if (res.updatedAt) {
       draftUpdatedAtRef.current = res.updatedAt
-      setAutosaveLabel(new Date(res.updatedAt).toLocaleTimeString())
+      const ts = new Date(res.updatedAt).getTime()
+      setLastSavedAt(ts)
+      setAutosaveLabel(formatRelativeSave(ts))
     } else {
+      const ts = Date.now()
+      setLastSavedAt(ts)
       setAutosaveLabel('just now')
     }
   }, [archiveId])
+
+  useEffect(() => {
+    if (!lastSavedAt) return
+    setAutosaveLabel(formatRelativeSave(lastSavedAt))
+    const t = setInterval(() => setAutosaveLabel(formatRelativeSave(lastSavedAt)), 15000)
+    return () => clearInterval(t)
+  }, [lastSavedAt])
 
   useEffect(() => {
     draftUpdatedAtRef.current = draftUpdatedAt
@@ -371,6 +398,13 @@ export function ProAudioEditor({
         const cached = await loadPeaksCache(archiveId, sourceKey)
         if (cached) {
           setPeaks(cached)
+          setPeaksLoading(false)
+          return
+        }
+
+        if (initialEditorPeaks?.levels?.length) {
+          setPeaks(initialEditorPeaks)
+          await savePeaksCache(archiveId, sourceKey, initialEditorPeaks)
           setPeaksLoading(false)
           return
         }
@@ -653,6 +687,28 @@ export function ProAudioEditor({
     }
   }
 
+  async function handlePreviewSample() {
+    if (!ffmpeg || !inputPathRef.current || !browserRender) return
+    setPreviewError(null)
+    setPreviewLoading(true)
+    try {
+      const out = await renderEditToFile(ffmpeg, editList, inputPathRef.current, 'mp3', undefined, {
+        maxDurationSec: 30,
+      })
+      const blob = new Blob([new Uint8Array(out)], { type: 'audio/mpeg' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${title.replace(/\s+/g, '-').slice(0, 40)}-preview-30s.mp3`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      setPreviewError(e instanceof Error ? e.message : 'Preview render failed')
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
   async function handleExport(format: OutputFormat) {
     setExportError(null)
     setExportSuccess(null)
@@ -823,14 +879,28 @@ export function ProAudioEditor({
             edit list: {editList.cuts.length + editList.fades.length} operations · original
             preserved
             {autosaveLabel
-              ? ` · autosaved ${autosaveLabel}`
+              ? ` · saved ${autosaveLabel}`
               : draftUpdatedAt
                 ? ` · loaded ${new Date(draftUpdatedAt).toLocaleTimeString()}`
                 : ''}
           </span>
         </div>
         <div className="pro-editor-topbar__right">
-          {saveError && <span className="studio-text-error">{saveError}</span>}
+          {saveError && (
+            <span className="studio-text-error">
+              {saveError}
+              {!draftConflict && (
+                <button
+                  type="button"
+                  className="studio-btn-ghost studio-btn-sm"
+                  style={{ marginLeft: 8 }}
+                  onClick={() => void flushDraftSave()}
+                >
+                  Retry save
+                </button>
+              )}
+            </span>
+          )}
           {draftConflict && (
             <button
               type="button"
@@ -1032,6 +1102,23 @@ export function ProAudioEditor({
               <span>⌘z undo</span>
             </div>
           </div>
+
+          {activeTab === 'waveform' &&
+            peaks?.silenceRegionsSec &&
+            peaks.silenceRegionsSec.length > 0 && (
+              <div className="pro-editor-silence-row" aria-label="Silence regions">
+                {peaks.silenceRegionsSec.map((region, i) => (
+                  <button
+                    key={`${region.start}-${i}`}
+                    type="button"
+                    className="pro-editor-silence-chip"
+                    onClick={() => seekToSec(region.start)}
+                  >
+                    silence · {formatDurationDecimal(region.start)}
+                  </button>
+                ))}
+              </div>
+            )}
 
           {/* ---- Timeline ruler ---- */}
           <div className="pro-editor-ruler">
@@ -1612,22 +1699,32 @@ export function ProAudioEditor({
                 <span>{formatDuration(postDuration)}</span>
               </div>
               <div className="pro-editor-export-card__pills">
-                <span
+                <button
+                  type="button"
                   className={cx(
                     'pro-editor-format-pill',
                     exportFormat === 'flac' && 'pro-editor-format-pill--active',
                   )}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setExportFormat('flac')
+                  }}
                 >
                   FLAC 24/96
-                </span>
-                <span
+                </button>
+                <button
+                  type="button"
                   className={cx(
                     'pro-editor-format-pill',
                     exportFormat === 'mp3' && 'pro-editor-format-pill--active',
                   )}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setExportFormat('mp3')
+                  }}
                 >
                   MP3 320
-                </span>
+                </button>
               </div>
               <div className="pro-editor-export-card__footer">
                 renders on your CPU · original kept
@@ -1686,7 +1783,18 @@ export function ProAudioEditor({
               </p>
             )}
             {exportError && <p className="studio-text-error">{exportError}</p>}
+            {previewError && <p className="studio-text-error">{previewError}</p>}
             <div className="pro-editor-dialog__actions">
+              {browserRender && (
+                <button
+                  type="button"
+                  className="studio-btn-ghost"
+                  disabled={previewLoading || !ffmpeg || ffmpegLoading}
+                  onClick={() => void handlePreviewSample()}
+                >
+                  {previewLoading ? 'Rendering preview…' : 'Preview 30s MP3'}
+                </button>
+              )}
               <button
                 type="button"
                 className="studio-btn-ghost"
