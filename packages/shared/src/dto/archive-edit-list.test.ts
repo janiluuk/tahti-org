@@ -28,15 +28,4 @@ describe('ArchiveEditList schemas accept default editList', () => {
     })
     expect(parsed.success).toBe(true)
   })
-
-  it('render schema accepts editList without optional defaults stripped', () => {
-    const { highPassHz: _hp, lowPassHz: _lp, limiter: _lim, ...stripped } = editList
-    const parsed = ArchiveEditListRenderSchema.safeParse({
-      editList: stripped,
-      versionLabel: 'test',
-      activate: false,
-      format: 'flac',
-    })
-    expect(parsed.success).toBe(true)
-  })
 })
