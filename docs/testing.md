@@ -2,6 +2,8 @@
 
 ## Prerequisites
 
+**Node.js 24+** (see root `.nvmrc` / `.node-version`). With nvm: `nvm install && nvm use`.
+
 ```bash
 docker compose -f infra/docker-compose.dev.yml up postgres redis -d
 pnpm install --frozen-lockfile

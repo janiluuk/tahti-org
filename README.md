@@ -81,6 +81,8 @@ These rules are constitutional. They are not changeable by management decision. 
 
 ## Running tests
 
+**Node.js 24+** is required (`engines` in root `package.json`, `.nvmrc`, `.node-version`). With [nvm](https://github.com/nvm-sh/nvm): `nvm install && nvm use`.
+
 API and package tests need **Postgres** and **Redis** with the Prisma schema applied:
 
 ```bash

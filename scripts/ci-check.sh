@@ -10,6 +10,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+echo "── CI check: Node.js version (>=24) ───────────────────────"
+node scripts/check-node-version.mjs
+
+echo ""
 echo "── CI check: lint ────────────────────────────────────────"
 pnpm lint
 
