@@ -207,6 +207,9 @@ enum AuditAction {
   ENGAGEMENT_ADJUSTMENT
   STREAM_FORCE_OFFLINE
   ACCOUNT_DELETE
+  ARCHIVE_EDIT_RENDER
+  ARCHIVE_EDIT_BOUNCE
+  ARCHIVE_EDIT_PUBLISH
 
   @@schema("governance")
 }
@@ -729,6 +732,7 @@ model ArchiveItem {
   description   String?
   tracklist     Json?             // M22: [{startSec, title, artist?, artistUsername?}]
   editList      Json?             // Pro editor v3 draft (@tahti/audio-edit EditList v1)
+  editorPeaks   Json?             // Pro editor: PeaksPyramid from ingest (PERF-04)
   bannerUrl     String?           // M24: cover image URL
   backgroundUrl String?           // per-track background image
   slideshowUrls String[]          // ordered images for track page slideshow

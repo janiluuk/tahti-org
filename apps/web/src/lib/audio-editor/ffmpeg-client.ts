@@ -14,11 +14,15 @@ import {
 
 const CORE_VERSION = '0.12.10'
 
+function staticFfmpegBase(multiThread: boolean): string {
+  return multiThread
+    ? `/static/ffmpeg/core-mt-${CORE_VERSION}`
+    : `/static/ffmpeg/core-${CORE_VERSION}`
+}
+
 async function coreUrls(multiThread: boolean) {
   const { toBlobURL } = await import('@ffmpeg/util')
-  const base = multiThread
-    ? `https://cdn.jsdelivr.net/npm/@ffmpeg/core-mt@${CORE_VERSION}/dist/esm`
-    : `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${CORE_VERSION}/dist/esm`
+  const base = staticFfmpegBase(multiThread)
   return {
     coreURL: await toBlobURL(`${base}/ffmpeg-core.js`, 'text/javascript'),
     wasmURL: await toBlobURL(`${base}/ffmpeg-core.wasm`, 'application/wasm'),
@@ -123,6 +127,7 @@ export async function renderEditToFile(
   inputPath: string,
   format: OutputFormat,
   sampleRate?: number,
+  opts?: { maxDurationSec?: number },
 ): Promise<Uint8Array> {
   const { filtergraph } = compileFiltergraph(edit)
   const { codecArgs, ar } = compileOutputArgs(format, sampleRate)
@@ -130,6 +135,7 @@ export async function renderEditToFile(
 
   const args = ['-i', inputPath, '-filter_complex', filtergraph, '-map', '[out]', ...codecArgs]
   if (ar) args.push('-ar', String(ar))
+  if (opts?.maxDurationSec != null) args.push('-t', String(opts.maxDurationSec))
   args.push(outName)
 
   await ffmpeg.exec(args)

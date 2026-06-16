@@ -74,6 +74,23 @@ describe('M28 — archive item version history', () => {
     expect(list.json()).toHaveLength(2)
   })
 
+  it('GET /api/me/archive/:id/versions/:versionId returns one version', async () => {
+    const v2 = await prisma.archiveItemVersion.findFirst({
+      where: { archiveItemId, versionLabel: 'Re-edit 2026' },
+    })
+    expect(v2).toBeTruthy()
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/versions/${v2!.id}`,
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { versionLabel: string; versionNumber: number }
+    expect(body.versionLabel).toBe('Re-edit 2026')
+    expect(body.versionNumber).toBe(2)
+  })
+
   it('activates a ready version and syncs audio keys to the parent item', async () => {
     const v2 = await prisma.archiveItemVersion.findFirst({
       where: { archiveItemId, versionLabel: 'Re-edit 2026' },

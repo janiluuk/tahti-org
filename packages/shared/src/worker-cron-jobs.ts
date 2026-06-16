@@ -112,4 +112,11 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     jobId: 'revelator-royalty-sync-cron',
     description: 'M7: pull Revelator royalty reports for prior month (5th, 04:00 UTC)',
   },
+  {
+    name: 'sweep-editor-peaks-backfill',
+    pattern: '0 3 * * *',
+    jobId: 'sweep-editor-peaks-backfill-cron',
+    description:
+      'PERF-04: backfill editorPeaks for READY archives missing pyramid data (03:00 UTC)',
+  },
 ]

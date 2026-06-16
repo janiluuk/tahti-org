@@ -20,7 +20,7 @@ export default async function ProArchiveEditorPage({ params }: { params: { id: s
     fetchArchiveEditListDraft(params.id),
   ])
 
-  if (source.error || !source.url) {
+  if (source.error || !source.sourceKey) {
     return (
       <div className="pro-editor-shell">
         <p className="studio-text-error">{source.error ?? 'Archive not ready'}</p>
@@ -46,10 +46,13 @@ export default async function ProArchiveEditorPage({ params }: { params: { id: s
     <ProAudioEditor
       archiveId={params.id}
       title={source.title ?? 'Archive'}
-      sourceUrl={source.url}
+      sourceUrl={`/dashboard/archive/${params.id}/editor/stream`}
       sourceKey={source.sourceKey ?? params.id}
+      sourceFileSizeBytes={source.sourceFileSizeBytes ?? null}
       initialEditList={draft.editList}
       draftUpdatedAt={draft.updatedAt ?? null}
+      initialTracklist={draft.tracklist ?? null}
+      initialEditorPeaks={draft.editorPeaks ?? null}
     />
   )
 }

@@ -76,7 +76,7 @@ export async function prepareArchiveVersionUpload(
 export async function completeArchiveVersionUpload(
   itemId: string,
   body: { uploadId: string; versionLabel: string; fileSizeBytes?: number },
-): Promise<{ error: string | null }> {
+): Promise<{ versionId?: string; versionNumber?: number; error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/versions/complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
@@ -87,7 +87,8 @@ export async function completeArchiveVersionUpload(
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Complete failed' }
   }
-  return { error: null }
+  const data = (await res.json()) as { versionId: string; versionNumber: number }
+  return { versionId: data.versionId, versionNumber: data.versionNumber, error: null }
 }
 
 export async function activateArchiveVersion(
@@ -109,6 +110,8 @@ export async function activateArchiveVersion(
 export async function fetchArchiveEditListDraft(itemId: string): Promise<{
   editList?: import('@tahti/audio-edit').EditList
   updatedAt?: string | null
+  tracklist?: import('@tahti/shared').TracklistEntry[] | null
+  editorPeaks?: import('@tahti/audio-edit').PeaksPyramid | null
   error: string | null
 }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/draft`, {
@@ -122,20 +125,40 @@ export async function fetchArchiveEditListDraft(itemId: string): Promise<{
   const data = (await res.json()) as {
     editList: import('@tahti/audio-edit').EditList
     updatedAt: string | null
+    tracklist?: import('@tahti/shared').TracklistEntry[] | null
+    editorPeaks?: import('@tahti/audio-edit').PeaksPyramid | null
   }
-  return { editList: data.editList, updatedAt: data.updatedAt, error: null }
+  return {
+    editList: data.editList,
+    updatedAt: data.updatedAt,
+    tracklist: data.tracklist ?? null,
+    editorPeaks: data.editorPeaks ?? null,
+    error: null,
+  }
 }
 
 export async function saveArchiveEditListDraft(
   itemId: string,
   editList: import('@tahti/audio-edit').EditList,
-): Promise<{ updatedAt?: string; error: string | null }> {
+  expectedUpdatedAt?: string | null,
+): Promise<{ updatedAt?: string; error: string | null; conflict?: boolean }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/draft`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
-    body: JSON.stringify({ editList }),
+    body: JSON.stringify({
+      editList,
+      ...(expectedUpdatedAt ? { expectedUpdatedAt } : {}),
+    }),
     cache: 'no-store',
   })
+  if (res.status === 409) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string; updatedAt?: string }
+    return {
+      error: data.error ?? 'Draft conflict',
+      updatedAt: data.updatedAt,
+      conflict: true,
+    }
+  }
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to save edit draft' }
@@ -150,7 +173,9 @@ export async function renderArchiveEditList(
     editList: import('@tahti/audio-edit').EditList
     versionLabel: string
     activate?: boolean
-    format?: 'flac' | 'mp3'
+    format?: 'flac' | 'mp3' | 'wav'
+    maxDurationSec?: number
+    sampleOnly?: boolean
   },
 ): Promise<{ versionId?: string; versionNumber?: number; error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/render`, {
@@ -167,17 +192,51 @@ export async function renderArchiveEditList(
   return { versionId: data.versionId, versionNumber: data.versionNumber, error: null }
 }
 
+export async function fetchArchiveVersionDownloadUrl(
+  itemId: string,
+  versionId: string,
+): Promise<{ url?: string; contentType?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/versions/${versionId}/download`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Download not available' }
+  }
+  const data = (await res.json()) as { url: string; contentType: string }
+  return { url: data.url, contentType: data.contentType, error: null }
+}
+
+export async function fetchArchiveVersion(
+  itemId: string,
+  versionId: string,
+): Promise<{ version?: import('@tahti/shared').ArchiveVersionRow; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/versions/${versionId}`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to load version' }
+  }
+  return { version: await res.json(), error: null }
+}
+
 export async function waitForArchiveVersionReady(
   itemId: string,
   versionId: string,
   maxAttempts = 90,
-): Promise<{ ready: boolean; error: string | null }> {
+): Promise<{
+  ready: boolean
+  version?: import('@tahti/shared').ArchiveVersionRow
+  error: string | null
+}> {
   for (let i = 0; i < maxAttempts; i++) {
-    const res = await fetchArchiveVersions(itemId)
+    const res = await fetchArchiveVersion(itemId, versionId)
     if (res.error) return { ready: false, error: res.error }
-    const version = res.versions?.find((v) => v.id === versionId)
-    if (version?.status === 'READY') return { ready: true, error: null }
-    if (version?.status === 'ERROR') return { ready: false, error: 'Render failed on server' }
+    if (res.version?.status === 'READY') return { ready: true, version: res.version, error: null }
+    if (res.version?.status === 'ERROR') return { ready: false, error: 'Render failed on server' }
     await new Promise((r) => setTimeout(r, 2000))
   }
   return { ready: false, error: 'Render timed out' }
@@ -188,6 +247,7 @@ export async function fetchArchiveEditorSource(itemId: string): Promise<{
   durationSec?: number | null
   title?: string
   sourceKey?: string
+  sourceFileSizeBytes?: number | null
   error: string | null
 }> {
   const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/source`, {
@@ -199,38 +259,6 @@ export async function fetchArchiveEditorSource(itemId: string): Promise<{
     return { error: (data as { error?: string }).error ?? 'Failed to load editor source' }
   }
   return { ...(await res.json()), error: null }
-}
-
-export async function bounceArchiveTrim(
-  itemId: string,
-  body: {
-    startSec: number
-    endSec: number
-    fadeInSec: number
-    fadeOutSec: number
-    peakNormalize: boolean
-    lufsTarget?: 'none' | 'stream' | 'club'
-    limiterEnabled?: boolean
-    highPassHz?: number
-    lowPassHz?: number
-    eq?: { lowGainDb: number; midGainDb: number; highGainDb: number }
-    compressorEnabled?: boolean
-    versionLabel: string
-    activate: boolean
-  },
-): Promise<{ versionId?: string; error: string | null }> {
-  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/bounce`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
-    body: JSON.stringify(body),
-    cache: 'no-store',
-  })
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}))
-    return { error: (data as { error?: string }).error ?? 'Bounce failed' }
-  }
-  const data = (await res.json()) as { versionId: string }
-  return { versionId: data.versionId, error: null }
 }
 
 export async function fetchReleasesForPublish(): Promise<{

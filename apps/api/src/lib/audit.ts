@@ -29,6 +29,9 @@ interface AuditParams {
     | 'ENGAGEMENT_ADJUSTMENT'
     | 'STREAM_FORCE_OFFLINE'
     | 'ACCOUNT_DELETE'
+    | 'ARCHIVE_EDIT_RENDER'
+    | 'ARCHIVE_EDIT_BOUNCE'
+    | 'ARCHIVE_EDIT_PUBLISH'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

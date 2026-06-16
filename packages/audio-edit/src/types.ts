@@ -65,6 +65,9 @@ export const EditListSchema = z.object({
   comp: EditCompSchema,
   limiter: EditLimiterSchema.default({ enabled: false, ceilingDb: -1, releaseMs: 50 }),
   loudnorm: EditLoudnormSchema,
+  /** v0 trim HP/LP filters (Hz, 0 = off). */
+  highPassHz: z.number().finite().min(0).max(2000).default(0),
+  lowPassHz: z.number().finite().min(0).max(20000).default(0),
 })
 
 export type EditCut = z.infer<typeof EditCutSchema>
@@ -89,6 +92,8 @@ export interface CompileOptions {
   sampleRate?: number
   outputFormat?: OutputFormat
   segmentIndex?: number
+  /** UX-12: limit rendered output length (preview sample). */
+  maxDurationSec?: number
 }
 
 export interface CompiledGraph {
@@ -131,6 +136,8 @@ export function createDefaultEditList(sourceDuration: number): EditList {
     comp: { ...DEFAULT_COMP },
     limiter: { ...DEFAULT_LIMITER },
     loudnorm: { enabled: false, targetLufs: -14, targetTp: -1.5 },
+    highPassHz: 0,
+    lowPassHz: 0,
   }
 }
 
@@ -143,4 +150,8 @@ export interface PeaksPyramid {
   sampleRate: number
   durationSec: number
   levels: number[][]
+  /** Subsampled zero-crossing times (seconds) for cut snapping */
+  zeroCrossingsSec?: number[]
+  /** Quiet regions for quick navigation chips */
+  silenceRegionsSec?: Array<{ start: number; end: number }>
 }

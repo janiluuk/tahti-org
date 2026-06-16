@@ -6,7 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, ensureInitialVersion } from '@tahti/db'
+import { prisma, ensureInitialVersion, Prisma } from '@tahti/db'
 import {
   chooseLossyOutputBitrateKbps,
   isLosslessCodec,
@@ -16,10 +16,12 @@ import {
   parseArchiveFileTags,
   sourceFormatLabel,
 } from '@tahti/shared'
-import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { downloadSourceCached } from '../lib/source-cache.js'
+import { uploadFile } from '../lib/minio.js'
 import { enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
+import { extractEditorPeaksPyramid } from '../lib/editor-peaks.js'
 
 function ffprobeFormat(
   filePath: string,
@@ -136,13 +138,14 @@ export async function processTranscodeJob(job: Job): Promise<void> {
 
   try {
     const rawPath = join(tmpDir, 'raw_input')
-    await downloadToFile(item.rawKey, rawPath)
+    await downloadSourceCached(item.rawKey, rawPath)
 
     const sourceMeta = await ffprobeFormat(rawPath)
     const embeddedTags = await ffprobeEmbeddedTags(rawPath).catch(() => ({}))
     const tagPatch = await buildTagPatch(item, embeddedTags, rawPath, tmpDir, sourceMeta.duration)
     const lossless = isLosslessSource(sourceMeta.format) || isLosslessCodec(sourceMeta.codec)
     const peaks = (await extractWaveformPeaks(rawPath)) ?? undefined
+    const editorPeaks = (await extractEditorPeaksPyramid(rawPath, sourceMeta.duration)) ?? undefined
     const sourceFormat = sourceFormatLabel(sourceMeta.codec)
 
     if (lossless) {
@@ -159,6 +162,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
           mp3Key: null,
           durationSec: sourceMeta.duration,
           peaks,
+          editorPeaks: (editorPeaks ?? undefined) as Prisma.InputJsonValue | undefined,
           sourceFormat,
           sourceBitrateKbps: null,
           ...tagPatch,
@@ -184,6 +188,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         mp3Key,
         durationSec: sourceMeta.duration,
         peaks,
+        editorPeaks: (editorPeaks ?? undefined) as Prisma.InputJsonValue | undefined,
         sourceFormat,
         sourceBitrateKbps: sourceMeta.bitrateKbps,
         ...tagPatch,

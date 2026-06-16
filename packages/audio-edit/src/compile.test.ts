@@ -6,7 +6,10 @@ import {
   compileFiltergraph,
   compileLoudnormPass1Filter,
   estimateOutputBytes,
+  isFiltergraphTooLarge,
   remapTracklistTimestamps,
+  shouldRenderInBrowser,
+  shouldUseSegmentRender,
 } from './compile.js'
 import { computeKeepSegments, mergeCuts, sourceTimeToPostCut } from './segments.js'
 import { createDefaultEditList } from './types.js'
@@ -85,5 +88,37 @@ describe('estimateOutputBytes', () => {
   it('flags large files for server render', () => {
     const edit = createDefaultEditList(7200)
     expect(estimateOutputBytes(edit, 1411)).toBeGreaterThan(600 * 1024 * 1024)
+  })
+
+  it('uses source file size when larger than output estimate', () => {
+    const edit = createDefaultEditList(60)
+    expect(shouldRenderInBrowser(edit, 700 * 1024 * 1024)).toBe(false)
+    expect(shouldRenderInBrowser(edit, 1024)).toBe(true)
+  })
+})
+
+describe('shouldUseSegmentRender', () => {
+  it('returns true when many cuts fragment the timeline', () => {
+    const edit = createDefaultEditList(3600)
+    edit.cuts = Array.from({ length: 8 }, (_, i) => ({
+      start: i * 400 + 10,
+      end: i * 400 + 20,
+    }))
+    expect(shouldUseSegmentRender(edit)).toBe(true)
+  })
+
+  it('returns false for a simple trim with no cuts', () => {
+    expect(shouldUseSegmentRender(createDefaultEditList(120))).toBe(false)
+  })
+
+  it('returns true when filtergraph exceeds size budget', () => {
+    const edit = createDefaultEditList(10)
+    edit.cuts = Array.from({ length: 500 }, (_, i) => ({
+      start: i * 0.01,
+      end: i * 0.01 + 0.004,
+    }))
+    expect(isFiltergraphTooLarge(edit)).toBe(true)
+    expect(shouldUseSegmentRender(edit)).toBe(true)
+    expect(compileFiltergraph(edit).filtergraph.length).toBeGreaterThan(24_000)
   })
 })

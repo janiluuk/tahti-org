@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, expect, it } from 'vitest'
-import { usesAuthRateLimit } from './rate-limit-routes.js'
+import { usesAuthRateLimit, editorRateLimitTier } from './rate-limit-routes.js'
 
 describe('usesAuthRateLimit', () => {
   it('treats register and login POST as auth routes', () => {
@@ -32,5 +32,17 @@ describe('usesAuthRateLimit', () => {
     expect(usesAuthRateLimit('/api/v1/channels', 'GET')).toBe(false)
     expect(usesAuthRateLimit('/api/v1/venues', 'GET')).toBe(false)
     expect(usesAuthRateLimit('/api/me/releases', 'GET')).toBe(false)
+  })
+})
+
+describe('editorRateLimitTier', () => {
+  it('applies heavy tier to render', () => {
+    expect(editorRateLimitTier('/api/me/archive/x/editor/render', 'POST')).toBe('heavy')
+  })
+
+  it('applies draft tier to PATCH draft only', () => {
+    expect(editorRateLimitTier('/api/me/archive/x/editor/draft', 'PATCH')).toBe('draft')
+    expect(editorRateLimitTier('/api/me/archive/x/editor/draft', 'GET')).toBeNull()
+    expect(editorRateLimitTier('/api/me/archive/x/editor/source', 'GET')).toBeNull()
   })
 })

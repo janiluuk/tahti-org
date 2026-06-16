@@ -9,8 +9,6 @@ import {
   ArchiveEditListDraftResponseSchema,
   ArchiveEditListRenderResponseSchema,
   ArchiveEditListRenderSchema,
-  ArchiveEditorBounceResponseSchema,
-  ArchiveEditorBounceSchema,
   ArchiveEditorPublishResponseSchema,
   ArchiveEditorPublishSchema,
   ArchiveEditorSourceSchema,
@@ -20,10 +18,17 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { auditLog } from '../../lib/audit.js'
 import { resolveArchiveEditorSource } from '../../lib/archive-editor-source.js'
-import { presignedGetUrl } from '../../lib/minio.js'
-import { enqueueBounceArchiveEdit, enqueueRenderArchiveEdit, mediaQueue } from '../../lib/queue.js'
+import { getObjectStream, presignedGetUrl } from '../../lib/minio.js'
+import {
+  enqueueBackfillEditorPeaks,
+  enqueueRenderArchiveEdit,
+  mediaQueue,
+} from '../../lib/queue.js'
 import { ensureInitialVersion } from '@tahti/db'
+
+const MAX_CONCURRENT_EDITOR_JOBS = 2
 
 const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
   async function ownedItem(userId: string, itemId: string) {
@@ -34,8 +39,19 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         title: true,
         durationSec: true,
         editList: true,
+        tracklist: true,
+        editorPeaks: true,
         updatedAt: true,
         channel: { select: { slug: true } },
+      },
+    })
+  }
+
+  async function countActiveEditorJobs(userId: string): Promise<number> {
+    return fastify.prisma.archiveItemVersion.count({
+      where: {
+        status: { in: ['PENDING', 'PROCESSING'] },
+        archiveItem: { channel: { userId } },
       },
     })
   }
@@ -72,9 +88,15 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
           ? validation.edit
           : createDefaultEditList(Math.max(1, duration))
 
+      if (!item.editorPeaks) {
+        void enqueueBackfillEditorPeaks(id).catch(() => {})
+      }
+
       return reply.send({
         editList: { ...editList, sourceDuration: Math.max(editList.sourceDuration, duration) },
         updatedAt: item.updatedAt.toISOString(),
+        tracklist: Array.isArray(item.tracklist) ? item.tracklist : null,
+        editorPeaks: item.editorPeaks ?? null,
       })
     },
   )
@@ -116,6 +138,30 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
       const item = await ownedItem(user.id, id)
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
+      const { expectedUpdatedAt } = parsed.data
+
+      if (expectedUpdatedAt) {
+        const result = await fastify.prisma.archiveItem.updateMany({
+          where: { id, updatedAt: new Date(expectedUpdatedAt) },
+          data: { editList: validation.edit },
+        })
+        if (result.count === 0) {
+          const current = await fastify.prisma.archiveItem.findUnique({
+            where: { id },
+            select: { updatedAt: true },
+          })
+          return reply.status(409).send({
+            error: 'Draft was updated elsewhere — reload to avoid overwriting',
+            updatedAt: current?.updatedAt.toISOString() ?? null,
+          })
+        }
+        const updated = await fastify.prisma.archiveItem.findUniqueOrThrow({
+          where: { id },
+          select: { updatedAt: true },
+        })
+        return reply.send({ ok: true as const, updatedAt: updated.updatedAt.toISOString() })
+      }
+
       const updated = await fastify.prisma.archiveItem.update({
         where: { id },
         data: { editList: validation.edit },
@@ -151,35 +197,27 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const url = await presignedGetUrl(source.sourceKey, 3600)
+      const sourceFileSizeBytes = source.fileSizeBytes != null ? Number(source.fileSizeBytes) : null
       return reply.send({
         url,
         durationSec: source.durationSec,
         title: source.title,
         sourceKey: source.sourceKey,
+        sourceFileSizeBytes,
       })
     },
   )
 
-  fastify.post(
-    '/api/me/archive/:id/editor/bounce',
+  fastify.get(
+    '/api/me/archive/:id/editor/stream',
     {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'M21 v0: trim/fade bounce → new archive version',
-        response: openApiResponses([
-          { status: 202, schema: ArchiveEditorBounceResponseSchema, name: 'ArchiveEditorBounce' },
-        ]),
+        description: 'Pro editor: same-origin audio stream with CORP for COEP pages',
       },
     },
     async (request, reply) => {
-      const parsed = ArchiveEditorBounceSchema.safeParse(request.body)
-      if (!parsed.success) {
-        return reply.status(400).send({
-          error: parsed.error.issues[0]?.message ?? 'Invalid request body',
-        })
-      }
-
       const user = request.sessionUser!
       const routeParams = parseRouteParams(IdParamSchema, request.params)
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
@@ -193,81 +231,32 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(409).send({ error: 'Archive item is not ready for editing' })
       }
 
-      const {
-        startSec,
-        endSec,
-        fadeInSec,
-        fadeOutSec,
-        peakNormalize,
-        lufsTarget,
-        limiterEnabled,
-        highPassHz,
-        lowPassHz,
-        eq,
-        compressorEnabled,
-        versionLabel,
-        activate,
-      } = parsed.data
+      const { body, contentType, contentLength } = await getObjectStream(source.sourceKey)
+      reply.header('Cross-Origin-Resource-Policy', 'cross-origin')
+      reply.header('Content-Type', contentType)
+      reply.header('Cache-Control', 'private, no-store')
+      if (contentLength != null) reply.header('Content-Length', String(contentLength))
+      return reply.send(body)
+    },
+  )
 
-      if (endSec <= startSec) {
-        return reply.status(400).send({ error: 'End must be after start' })
-      }
-
-      const clipDuration = endSec - startSec
-      if (source.durationSec != null && endSec > source.durationSec + 0.5) {
-        return reply.status(400).send({ error: 'End time exceeds track duration' })
-      }
-      if (clipDuration < 1) {
-        return reply.status(400).send({ error: 'Selection must be at least 1 second' })
-      }
-      if (fadeInSec + fadeOutSec >= clipDuration) {
-        return reply
-          .status(400)
-          .send({ error: 'Fade in + fade out must be shorter than selection' })
-      }
-
-      await ensureInitialVersion(fastify.prisma, id)
-      const versionCount = await fastify.prisma.archiveItemVersion.count({
-        where: { archiveItemId: id },
-      })
-
-      const version = await fastify.prisma.archiveItemVersion.create({
-        data: {
-          archiveItemId: id,
-          versionNumber: versionCount + 1,
-          versionLabel,
-          rawKey: `pending/${item.channel.slug}/${id}`,
-          fileSizeBytes: 0,
-          status: 'PENDING',
-          isActive: false,
-        },
-        select: { id: true, versionNumber: true, status: true },
-      })
-
-      await enqueueBounceArchiveEdit({
-        versionId: version.id,
-        archiveItemId: id,
-        channelSlug: item.channel.slug,
-        sourceKey: source.sourceKey,
-        startSec,
-        endSec,
-        fadeInSec,
-        fadeOutSec,
-        peakNormalize,
-        lufsTarget,
-        limiterEnabled,
-        highPassHz,
-        lowPassHz,
-        eq,
-        compressorEnabled,
-        activate,
-      })
-
-      return reply.status(202).send({
-        ok: true as const,
-        versionId: version.id,
-        versionNumber: version.versionNumber,
-        status: version.status,
+  fastify.post(
+    '/api/me/archive/:id/editor/bounce',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'REMOVED — use POST …/editor/render with EditList.',
+      },
+    },
+    async (request, reply) => {
+      reply.header('Deprecation', 'true')
+      reply.header('Sunset', 'Sat, 01 Jan 2027 00:00:00 GMT')
+      reply.header('Link', '</api/me/archive/{id}/editor/render>; rel="successor-version"')
+      request.log.warn('Removed editor/bounce — clients must use editor/render with EditList')
+      return reply.status(410).send({
+        error:
+          'POST …/editor/bounce is removed. Use POST …/editor/render with EditList (v0 trim: editListFromV0Trim in @tahti/audio-edit).',
       })
     },
   )
@@ -317,8 +306,12 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(409).send({ error: 'Archive item is not ready for editing' })
       }
 
-      const { versionLabel, activate, format } = parsed.data
+      const { versionLabel, activate, format, maxDurationSec, sampleOnly } = parsed.data
       const editList = validation.edit
+
+      if ((await countActiveEditorJobs(user.id)) >= MAX_CONCURRENT_EDITOR_JOBS) {
+        return reply.status(429).send({ error: 'Too many editor renders in progress (max 2)' })
+      }
 
       await ensureInitialVersion(fastify.prisma, id)
       const versionCount = await fastify.prisma.archiveItemVersion.count({
@@ -346,6 +339,23 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         editList,
         format,
         activate,
+        maxDurationSec,
+        sampleOnly,
+      })
+
+      await auditLog(fastify.prisma, {
+        action: 'ARCHIVE_EDIT_RENDER',
+        actorId: user.id,
+        targetId: id,
+        meta: {
+          versionId: version.id,
+          versionNumber: version.versionNumber,
+          format,
+          activate,
+          cutCount: editList.cuts.length,
+          maxDurationSec,
+          sampleOnly: sampleOnly ?? false,
+        },
       })
 
       return reply.status(202).send({
@@ -430,6 +440,13 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       await mediaQueue.add('transcode-release-track', { trackId: track.id })
+
+      await auditLog(fastify.prisma, {
+        action: 'ARCHIVE_EDIT_PUBLISH',
+        actorId: user.id,
+        targetId: id,
+        meta: { trackId: track.id, releaseId, versionId: versionId ?? null },
+      })
 
       return reply.status(201).send({
         ok: true as const,

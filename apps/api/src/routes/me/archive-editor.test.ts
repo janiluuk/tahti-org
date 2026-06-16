@@ -15,10 +15,23 @@ import {
 const PREFIX = 'archive-editor-test-'
 
 vi.mock('../../lib/queue.js', () => ({
-  enqueueVersionTranscode: vi.fn(),
-  enqueueBounceArchiveEdit: vi.fn(),
+  enqueueVersionTranscode: vi.fn().mockResolvedValue(undefined),
+  enqueueRenderArchiveEdit: vi.fn().mockResolvedValue(undefined),
+  enqueueBackfillEditorPeaks: vi.fn().mockResolvedValue(undefined),
   mediaQueue: { add: vi.fn() },
 }))
+
+vi.mock('../../lib/minio.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../lib/minio.js')>()
+  return {
+    ...actual,
+    getObjectStream: vi.fn().mockResolvedValue({
+      body: Buffer.from('fake-audio'),
+      contentType: 'audio/flac',
+      contentLength: 10,
+    }),
+  }
+})
 
 describe('M21 v0 — archive trim editor', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -71,26 +84,94 @@ describe('M21 v0 — archive trim editor', () => {
     expect(body.sourceKey).toBeTruthy()
   })
 
-  it('POST /api/me/archive/:id/editor/bounce validates selection', async () => {
+  it('GET /api/me/archive/:id/editor/stream returns audio with CORP header', async () => {
     const res = await app.inject({
-      method: 'POST',
-      url: `/api/me/archive/${archiveItemId}/editor/bounce`,
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/stream`,
       headers: { cookie },
-      payload: {
-        startSec: 10,
-        endSec: 5,
-        fadeInSec: 0,
-        fadeOutSec: 0,
-        peakNormalize: false,
-        versionLabel: 'Bad trim',
-        activate: true,
-      },
     })
-    expect(res.statusCode).toBe(400)
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['cross-origin-resource-policy']).toBe('cross-origin')
+    expect(res.headers['content-type']).toMatch(/audio\/flac/)
+    expect(res.body).toBe('fake-audio')
   })
 
-  it('POST /api/me/archive/:id/editor/bounce enqueues worker job', async () => {
-    const { enqueueBounceArchiveEdit } = await import('../../lib/queue.js')
+  it('GET /api/me/archive/:id/editor/draft enqueues editorPeaks backfill when missing', async () => {
+    const { enqueueBackfillEditorPeaks } = await import('../../lib/queue.js')
+    vi.mocked(enqueueBackfillEditorPeaks).mockClear()
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(enqueueBackfillEditorPeaks).toHaveBeenCalledWith(archiveItemId)
+  })
+
+  it('POST /api/me/archive/:id/editor/render returns 429 when two jobs are already active', async () => {
+    const artist = await prisma.user.findFirst({
+      where: { email: `${PREFIX}artist@example.com` },
+      include: { channel: true },
+    })
+    const item2 = await createReadyArchiveItem(prisma, artist!.channel!.id, 'Concurrent render')
+
+    const v1Num = (await prisma.archiveItemVersion.count({ where: { archiveItemId } })) + 100
+    const v2Num =
+      (await prisma.archiveItemVersion.count({ where: { archiveItemId: item2.id } })) + 100
+
+    await prisma.archiveItemVersion.createMany({
+      data: [
+        {
+          archiveItemId,
+          versionNumber: v1Num,
+          versionLabel: `${PREFIX}pending-1`,
+          rawKey: 'pending/test/1',
+          fileSizeBytes: 0,
+          status: 'PENDING',
+          isActive: false,
+        },
+        {
+          archiveItemId: item2.id,
+          versionNumber: v2Num,
+          versionLabel: `${PREFIX}pending-2`,
+          rawKey: 'pending/test/2',
+          fileSizeBytes: 0,
+          status: 'PENDING',
+          isActive: false,
+        },
+      ],
+    })
+
+    try {
+      const draftRes = await app.inject({
+        method: 'GET',
+        url: `/api/me/archive/${archiveItemId}/editor/draft`,
+        headers: { cookie },
+      })
+      const { editList } = draftRes.json() as { editList: Record<string, unknown> }
+
+      const res = await app.inject({
+        method: 'POST',
+        url: `/api/me/archive/${archiveItemId}/editor/render`,
+        headers: { cookie },
+        payload: {
+          editList,
+          versionLabel: 'Blocked render',
+          activate: false,
+          format: 'flac',
+        },
+      })
+      expect(res.statusCode).toBe(429)
+      expect(res.json()).toMatchObject({ error: expect.stringContaining('max 2') })
+    } finally {
+      await prisma.archiveItemVersion.deleteMany({
+        where: { versionLabel: { startsWith: `${PREFIX}pending` } },
+      })
+    }
+  })
+
+  it('POST /api/me/archive/:id/editor/bounce returns 410 Gone', async () => {
     const res = await app.inject({
       method: 'POST',
       url: `/api/me/archive/${archiveItemId}/editor/bounce`,
@@ -98,52 +179,100 @@ describe('M21 v0 — archive trim editor', () => {
       payload: {
         startSec: 0,
         endSec: 30,
-        fadeInSec: 1,
-        fadeOutSec: 2,
+        fadeInSec: 0,
+        fadeOutSec: 0,
         peakNormalize: false,
-        lufsTarget: 'stream',
-        limiterEnabled: true,
         versionLabel: 'Trimmed intro',
         activate: true,
       },
     })
-    expect(res.statusCode).toBe(202)
-    const body = res.json() as { versionId: string; versionNumber: number; status: string }
-    expect(body.versionNumber).toBeGreaterThanOrEqual(2)
-    expect(body.status).toBe('PENDING')
-    expect(enqueueBounceArchiveEdit).toHaveBeenCalled()
+    expect(res.statusCode).toBe(410)
+    expect(res.headers.deprecation).toBe('true')
+    expect(res.json()).toMatchObject({ error: expect.stringContaining('editor/render') })
   })
 
-  it('POST /api/me/archive/:id/editor/bounce accepts EQ/HP-LP/compressor fields', async () => {
-    const { enqueueBounceArchiveEdit } = await import('../../lib/queue.js')
-    vi.mocked(enqueueBounceArchiveEdit).mockClear()
+  it('POST /api/me/archive/:id/editor/render enqueues worker job', async () => {
+    const { enqueueRenderArchiveEdit } = await import('../../lib/queue.js')
+    vi.mocked(enqueueRenderArchiveEdit).mockClear()
+
+    const draftRes = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    const { editList } = draftRes.json() as { editList: Record<string, unknown> }
+
     const res = await app.inject({
       method: 'POST',
-      url: `/api/me/archive/${archiveItemId}/editor/bounce`,
+      url: `/api/me/archive/${archiveItemId}/editor/render`,
       headers: { cookie },
       payload: {
-        startSec: 0,
-        endSec: 30,
-        fadeInSec: 0,
-        fadeOutSec: 0,
-        peakNormalize: false,
-        highPassHz: 80,
-        lowPassHz: 16000,
-        eq: { lowGainDb: 2, midGainDb: -1.5, highGainDb: 3 },
-        compressorEnabled: true,
-        versionLabel: 'EQ pass',
+        editList,
+        versionLabel: 'Pro render test',
         activate: false,
+        format: 'flac',
       },
     })
     expect(res.statusCode).toBe(202)
-    expect(enqueueBounceArchiveEdit).toHaveBeenCalledWith(
+    const body = res.json() as { versionId: string; versionNumber: number; status: string }
+    expect(body.versionId).toBeTruthy()
+    expect(body.status).toBe('PENDING')
+    expect(enqueueRenderArchiveEdit).toHaveBeenCalledWith(
       expect.objectContaining({
-        highPassHz: 80,
-        lowPassHz: 16000,
-        eq: { lowGainDb: 2, midGainDb: -1.5, highGainDb: 3 },
-        compressorEnabled: true,
+        archiveItemId,
+        format: 'flac',
+        activate: false,
       }),
     )
+  })
+
+  it('POST /api/me/archive/:id/editor/render passes preview sample options to worker', async () => {
+    const { enqueueRenderArchiveEdit } = await import('../../lib/queue.js')
+    vi.mocked(enqueueRenderArchiveEdit).mockClear()
+
+    const draftRes = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    const { editList } = draftRes.json() as { editList: Record<string, unknown> }
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/render`,
+      headers: { cookie },
+      payload: {
+        editList,
+        versionLabel: 'Preview sample',
+        activate: false,
+        format: 'mp3',
+        maxDurationSec: 30,
+        sampleOnly: true,
+      },
+    })
+    expect(res.statusCode).toBe(202)
+    expect(enqueueRenderArchiveEdit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        format: 'mp3',
+        sampleOnly: true,
+        maxDurationSec: 30,
+        activate: false,
+      }),
+    )
+  })
+
+  it('POST /api/me/archive/:id/editor/render rejects invalid editList', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/render`,
+      headers: { cookie },
+      payload: {
+        editList: { version: 1, sourceDuration: 120, cuts: [{ start: 0, end: 120 }] },
+        versionLabel: 'Bad edit',
+        format: 'flac',
+      },
+    })
+    expect(res.statusCode).toBe(400)
   })
 
   it('GET /api/me/archive/:id/editor/source rejects an archive item owned by another user', async () => {
@@ -167,7 +296,7 @@ describe('M21 v0 — archive trim editor', () => {
         activate: true,
       },
     })
-    expect(res.statusCode).toBe(404)
+    expect(res.statusCode).toBe(410)
   })
 
   it('POST /api/me/archive/:id/editor/bounce rejects an endSec that overflows to Infinity', async () => {
@@ -177,7 +306,7 @@ describe('M21 v0 — archive trim editor', () => {
       headers: { cookie, 'content-type': 'application/json' },
       payload: '{"startSec":0,"endSec":1e400,"versionLabel":"Overflow attempt","activate":true}',
     })
-    expect(res.statusCode).toBe(400)
+    expect(res.statusCode).toBe(410)
   })
 
   it('POST /api/me/archive/:id/editor/publish-to-release creates a release track', async () => {
@@ -227,5 +356,103 @@ describe('M21 v0 — archive trim editor', () => {
       payload: { releaseId: otherRelease.id },
     })
     expect(res.statusCode).toBe(404)
+  })
+
+  it('POST /api/me/archive/:id/editor/publish-to-release rejects versionId from another archive', async () => {
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}other3@example.com`,
+      username: 'archive-editor-other3',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98524,
+    })
+    const otherItem = await createReadyArchiveItem(
+      prisma,
+      other.channel!.id,
+      'Other version source',
+    )
+    await prisma.archiveItemVersion.create({
+      data: {
+        archiveItemId: otherItem.id,
+        versionNumber: 2,
+        versionLabel: `${PREFIX}foreign-version`,
+        rawKey: 'raw/other/foreign.wav',
+        fileSizeBytes: 1000,
+        status: 'READY',
+        isActive: false,
+      },
+    })
+    const foreignVersion = await prisma.archiveItemVersion.findFirst({
+      where: { archiveItemId: otherItem.id, versionNumber: 2 },
+    })
+
+    const artist = await prisma.user.findFirst({
+      where: { email: `${PREFIX}artist@example.com` },
+    })
+    const release = await createPublishedReleaseWithTrack(prisma, artist!.id, {
+      smartLinkSlug: `${PREFIX}publish-version-guard`,
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/publish-to-release`,
+      headers: { cookie },
+      payload: { releaseId: release.id, versionId: foreignVersion!.id },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('PATCH /api/me/archive/:id/editor/draft rejects oversized editList payload', async () => {
+    const draftRes = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    const { editList } = draftRes.json() as { editList: Record<string, unknown> }
+    const huge = {
+      editList: {
+        ...editList,
+        cuts: Array.from({ length: 4000 }, (_, i) => ({
+          start: i * 0.01,
+          end: i * 0.01 + 0.005,
+        })),
+      },
+    }
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+      payload: huge,
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('PATCH /api/me/archive/:id/editor/draft returns 409 on stale expectedUpdatedAt', async () => {
+    const draftRes = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    const { editList, updatedAt } = draftRes.json() as {
+      editList: Record<string, unknown>
+      updatedAt: string
+    }
+
+    await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+      payload: { editList, expectedUpdatedAt: updatedAt },
+    })
+
+    const stale = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+      payload: { editList, expectedUpdatedAt: updatedAt },
+    })
+    expect(stale.statusCode).toBe(409)
+    expect(stale.json()).toMatchObject({ error: expect.stringContaining('elsewhere') })
   })
 })

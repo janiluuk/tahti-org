@@ -6,8 +6,9 @@ import { prisma } from '@tahti/db'
 import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
 import { processTranscodeVersionJob } from './jobs/transcode-version.js'
-import { processBounceArchiveEditJob } from './jobs/bounce-archive-edit.js'
 import { processRenderArchiveEditJob } from './jobs/render-archive-edit.js'
+import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
+import { processSweepEditorPeaksBackfillJob } from './jobs/sweep-editor-peaks-backfill.js'
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
 import { processTranscodeReleaseTrackVersionJob } from './jobs/transcode-release-track-version.js'
 import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
@@ -54,10 +55,15 @@ const worker = new Worker(
         await processTranscodeJob(job)
       } else if (job.name === 'transcode-archive-version') {
         await processTranscodeVersionJob(job)
-      } else if (job.name === 'bounce-archive-edit') {
-        await processBounceArchiveEditJob(job)
       } else if (job.name === 'render-archive-edit') {
         await processRenderArchiveEditJob(job)
+      } else if (job.name === 'backfill-editor-peaks') {
+        await processBackfillEditorPeaksJob(job)
+      } else if (job.name === 'sweep-editor-peaks-backfill') {
+        const summary = await processSweepEditorPeaksBackfillJob(job)
+        if (summary.enqueued > 0) {
+          console.log('[worker] sweep-editor-peaks-backfill:', JSON.stringify(summary))
+        }
       } else if (job.name === 'transcode-release-track') {
         await processTranscodeReleaseTrackJob(job)
       } else if (job.name === 'transcode-release-track-version') {

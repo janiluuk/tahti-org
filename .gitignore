@@ -1,4 +1,5 @@
-# Environment / secrets
+# ffmpeg.wasm bundles (copied on postinstall — SEC-05)
+apps/web/public/static/ffmpeg/
 infra/stack.env
 .env
 .env.*

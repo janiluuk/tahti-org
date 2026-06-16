@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Job } from 'bullmq'
-import { createDefaultEditList } from '@tahti/audio-edit'
+import { createDefaultEditList, editListFromV0Trim } from '@tahti/audio-edit'
 
 const {
   mkdtemp,
@@ -11,7 +11,7 @@ const {
   stat,
   prismaMock,
   syncActiveVersionToItem,
-  downloadToFile,
+  downloadSourceCached,
   uploadFile,
   processTranscodeVersionJob,
   ffmpegFactory,
@@ -40,7 +40,7 @@ const {
       $transaction: vi.fn(),
     },
     syncActiveVersionToItem: vi.fn(),
-    downloadToFile: vi.fn(),
+    downloadSourceCached: vi.fn(),
     uploadFile: vi.fn(),
     processTranscodeVersionJob: vi.fn(),
     ffmpegChain: chain,
@@ -54,7 +54,8 @@ const {
 vi.mock('node:fs/promises', () => ({ mkdtemp, rm, stat }))
 vi.mock('fluent-ffmpeg', () => ({ default: ffmpegFactory }))
 vi.mock('@tahti/db', () => ({ prisma: prismaMock, syncActiveVersionToItem }))
-vi.mock('../lib/minio.js', () => ({ downloadToFile, uploadFile }))
+vi.mock('../lib/source-cache.js', () => ({ downloadSourceCached }))
+vi.mock('../lib/minio.js', () => ({ uploadFile }))
 vi.mock('./transcode-version.js', () => ({ processTranscodeVersionJob }))
 
 import {
@@ -63,7 +64,7 @@ import {
 } from './render-archive-edit.js'
 
 function jobFor(payload: RenderArchiveEditPayload): Job {
-  return { data: payload } as Job
+  return { data: payload, updateProgress: vi.fn().mockResolvedValue(undefined) } as unknown as Job
 }
 
 describe('processRenderArchiveEditJob', () => {
@@ -72,7 +73,7 @@ describe('processRenderArchiveEditJob', () => {
     mkdtemp.mockResolvedValue('/tmp/tahti-render-edit-xyz')
     rm.mockResolvedValue(undefined)
     stat.mockResolvedValue({ size: 12345 })
-    downloadToFile.mockResolvedValue(undefined)
+    downloadSourceCached.mockResolvedValue(undefined)
     uploadFile.mockResolvedValue(undefined)
     processTranscodeVersionJob.mockResolvedValue(undefined)
     prismaMock.archiveItemVersion.findUnique.mockResolvedValue({ id: 'ver-1' })
@@ -102,7 +103,7 @@ describe('processRenderArchiveEditJob', () => {
       where: { id: 'ver-1' },
       data: { status: 'PROCESSING' },
     })
-    expect(downloadToFile).toHaveBeenCalledWith(
+    expect(downloadSourceCached).toHaveBeenCalledWith(
       'raw/artist-one/source.flac',
       '/tmp/tahti-render-edit-xyz/input',
     )
@@ -145,11 +146,11 @@ describe('processRenderArchiveEditJob', () => {
     await expect(processRenderArchiveEditJob(jobFor(payload))).rejects.toThrow()
 
     expect(prismaMock.archiveItemVersion.findUnique).not.toHaveBeenCalled()
-    expect(downloadToFile).not.toHaveBeenCalled()
+    expect(downloadSourceCached).not.toHaveBeenCalled()
   })
 
   it('marks the version as ERROR and rethrows when rendering fails', async () => {
-    downloadToFile.mockRejectedValue(new Error('download failed'))
+    downloadSourceCached.mockRejectedValue(new Error('download failed'))
     const payload: RenderArchiveEditPayload = {
       versionId: 'ver-1',
       archiveItemId: 'item-1',
@@ -184,5 +185,60 @@ describe('processRenderArchiveEditJob', () => {
     await expect(processRenderArchiveEditJob(jobFor(payload))).rejects.toThrow(
       'ArchiveItemVersion missing not found',
     )
+  })
+
+  it('skips version transcode when sampleOnly is true', async () => {
+    const payload: RenderArchiveEditPayload = {
+      versionId: 'ver-1',
+      archiveItemId: 'item-1',
+      channelSlug: 'artist-one',
+      sourceKey: 'raw/artist-one/source.flac',
+      editList: createDefaultEditList(120),
+      format: 'mp3',
+      activate: false,
+      maxDurationSec: 30,
+      sampleOnly: true,
+    }
+
+    await processRenderArchiveEditJob(jobFor(payload))
+
+    expect(processTranscodeVersionJob).not.toHaveBeenCalled()
+    expect(prismaMock.archiveItemVersion.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'ver-1' },
+        data: expect.objectContaining({ status: 'READY' }),
+      }),
+    )
+  })
+
+  it('accepts edit lists converted from v0 trim params', async () => {
+    const editList = editListFromV0Trim({
+      sourceDuration: 120,
+      startSec: 10,
+      endSec: 40,
+      fadeInSec: 1,
+      fadeOutSec: 2,
+      peakNormalize: false,
+      lufsTarget: 'stream',
+      limiterEnabled: true,
+      highPassHz: 80,
+      lowPassHz: 16000,
+      eq: { lowGainDb: 2, midGainDb: 0, highGainDb: -1 },
+      compressorEnabled: true,
+    })
+    const payload: RenderArchiveEditPayload = {
+      versionId: 'ver-1',
+      archiveItemId: 'item-1',
+      channelSlug: 'artist-one',
+      sourceKey: 'raw/artist-one/source.flac',
+      editList,
+      format: 'wav',
+      activate: false,
+    }
+
+    await processRenderArchiveEditJob(jobFor(payload))
+
+    expect(downloadSourceCached).toHaveBeenCalled()
+    expect(uploadFile).toHaveBeenCalled()
   })
 })
