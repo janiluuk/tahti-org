@@ -187,7 +187,11 @@ export async function waitForArchiveVersionReady(
   itemId: string,
   versionId: string,
   maxAttempts = 90,
-): Promise<{ ready: boolean; version?: import('@tahti/shared').ArchiveVersionRow; error: string | null }> {
+): Promise<{
+  ready: boolean
+  version?: import('@tahti/shared').ArchiveVersionRow
+  error: string | null
+}> {
   for (let i = 0; i < maxAttempts; i++) {
     const res = await fetchArchiveVersion(itemId, versionId)
     if (res.error) return { ready: false, error: res.error }

@@ -143,4 +143,6 @@ export interface PeaksPyramid {
   sampleRate: number
   durationSec: number
   levels: number[][]
+  /** Subsampled zero-crossing times (seconds) for cut snapping */
+  zeroCrossingsSec?: number[]
 }

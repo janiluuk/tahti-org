@@ -36,6 +36,25 @@ export async function presignedGetUrl(key: string, expiresInSec = 3600): Promise
   return getSignedUrl(s3, command, { expiresIn: expiresInSec })
 }
 
+export async function getObjectStream(key: string): Promise<{
+  body: NodeJS.ReadableStream
+  contentType: string
+  contentLength: number | undefined
+}> {
+  const res = await s3.send(
+    new GetObjectCommand({
+      Bucket: config.minio.bucket,
+      Key: key,
+    }),
+  )
+  if (!res.Body) throw new Error(`Object not found: ${key}`)
+  return {
+    body: res.Body as NodeJS.ReadableStream,
+    contentType: res.ContentType ?? 'application/octet-stream',
+    contentLength: res.ContentLength,
+  }
+}
+
 export async function putObjectText(key: string, body: string, contentType: string): Promise<void> {
   await s3.send(
     new PutObjectCommand({

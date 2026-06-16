@@ -17,8 +17,21 @@ const PREFIX = 'archive-editor-test-'
 vi.mock('../../lib/queue.js', () => ({
   enqueueVersionTranscode: vi.fn(),
   enqueueBounceArchiveEdit: vi.fn(),
+  enqueueRenderArchiveEdit: vi.fn(),
   mediaQueue: { add: vi.fn() },
 }))
+
+vi.mock('../../lib/minio.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../lib/minio.js')>()
+  return {
+    ...actual,
+    getObjectStream: vi.fn().mockResolvedValue({
+      body: Buffer.from('fake-audio'),
+      contentType: 'audio/flac',
+      contentLength: 10,
+    }),
+  }
+})
 
 describe('M21 v0 — archive trim editor', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
@@ -69,6 +82,78 @@ describe('M21 v0 — archive trim editor', () => {
     expect(body.url).toMatch(/^https?:\/\//)
     expect(body.title).toBe('Trim target')
     expect(body.sourceKey).toBeTruthy()
+  })
+
+  it('GET /api/me/archive/:id/editor/stream returns audio with CORP header', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/stream`,
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['cross-origin-resource-policy']).toBe('cross-origin')
+    expect(res.headers['content-type']).toMatch(/audio\/flac/)
+    expect(res.body).toBe('fake-audio')
+  })
+
+  it('POST /api/me/archive/:id/editor/render returns 429 when two jobs are already active', async () => {
+    const artist = await prisma.user.findFirst({
+      where: { email: `${PREFIX}artist@example.com` },
+      include: { channel: true },
+    })
+    const item2 = await createReadyArchiveItem(prisma, artist!.channel!.id, 'Concurrent render')
+
+    const v1Num = (await prisma.archiveItemVersion.count({ where: { archiveItemId } })) + 100
+    const v2Num =
+      (await prisma.archiveItemVersion.count({ where: { archiveItemId: item2.id } })) + 100
+
+    await prisma.archiveItemVersion.createMany({
+      data: [
+        {
+          archiveItemId,
+          versionNumber: v1Num,
+          versionLabel: `${PREFIX}pending-1`,
+          rawKey: 'pending/test/1',
+          fileSizeBytes: 0,
+          status: 'PENDING',
+          isActive: false,
+        },
+        {
+          archiveItemId: item2.id,
+          versionNumber: v2Num,
+          versionLabel: `${PREFIX}pending-2`,
+          rawKey: 'pending/test/2',
+          fileSizeBytes: 0,
+          status: 'PENDING',
+          isActive: false,
+        },
+      ],
+    })
+
+    const draftRes = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    const { editList } = draftRes.json() as { editList: Record<string, unknown> }
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/render`,
+      headers: { cookie },
+      payload: {
+        editList,
+        versionLabel: 'Blocked render',
+        activate: false,
+        format: 'flac',
+      },
+    })
+    expect(res.statusCode).toBe(429)
+    expect(res.json()).toMatchObject({ error: expect.stringContaining('max 2') })
+
+    await prisma.archiveItemVersion.deleteMany({
+      where: { versionLabel: { startsWith: `${PREFIX}pending` } },
+    })
   })
 
   it('POST /api/me/archive/:id/editor/bounce validates selection', async () => {

@@ -64,6 +64,7 @@ stream.tahti.live {
 # ── CDN origin for archive items, covers, waveforms ──────────────────────────
 cdn.tahti.live {
     reverse_proxy minio:9000
+    header Cross-Origin-Resource-Policy "cross-origin"
     header Cache-Control "public, max-age=86400"
 }
 

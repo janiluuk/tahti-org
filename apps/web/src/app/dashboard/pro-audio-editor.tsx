@@ -11,6 +11,7 @@ import {
   computeKeepSegments,
   mergeCuts,
   shouldRenderInBrowser,
+  snapToNearestZeroCrossing,
   DEFAULT_EQ_BANDS,
   DEFAULT_COMP,
   DEFAULT_LIMITER,
@@ -25,7 +26,6 @@ import {
   waitForArchiveVersionReady,
 } from './archive-actions'
 import {
-  fetchSourceFile,
   generatePeaksFromFfmpeg,
   loadFfmpeg,
   measureLoudnorm,
@@ -193,6 +193,8 @@ export function ProAudioEditor({
   const audioRef = useRef<HTMLAudioElement>(null)
   const inputPathRef = useRef<string | null>(null)
   const sourceFileRef = useRef<File | null>(null)
+  const sourceBlobUrlRef = useRef<string | null>(null)
+  const autosavePendingRef = useRef(false)
   const previewRef = useRef<ReturnType<typeof attachPreviewGraph> | null>(null)
   const previewSourceRef = useRef<ReturnType<typeof createPreviewSource> | null>(null)
 
@@ -247,8 +249,10 @@ export function ProAudioEditor({
   }, [])
 
   useEffect(() => {
+    autosavePendingRef.current = true
     const t = setTimeout(() => {
       void saveArchiveEditListDraft(archiveId, editList).then((res) => {
+        autosavePendingRef.current = false
         if (res.error) setSaveError(res.error)
         else {
           setSaveError(null)
@@ -260,17 +264,46 @@ export function ProAudioEditor({
   }, [archiveId, editList])
 
   useEffect(() => {
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      if (exportProgress !== null || saveError || autosavePendingRef.current) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [exportProgress, saveError, editList])
+
+  const snapSec = useCallback(
+    (sec: number) => {
+      if (!snapEnabled || !peaks?.zeroCrossingsSec?.length) return sec
+      return snapToNearestZeroCrossing(peaks.zeroCrossingsSec, sec)
+    },
+    [snapEnabled, peaks?.zeroCrossingsSec],
+  )
+
+  useEffect(() => {
     let cancelled = false
     void (async () => {
       setFfmpegLoading(true)
       try {
+        const res = await fetch(sourceUrl, { credentials: 'include', cache: 'no-store' })
+        if (!res.ok) throw new Error(`Failed to fetch source audio (${res.status})`)
+        const blob = await res.blob()
+        if (cancelled) return
+
+        const blobUrl = URL.createObjectURL(blob)
+        sourceBlobUrlRef.current = blobUrl
+        if (audioRef.current) audioRef.current.src = blobUrl
+
+        const file = new File([blob], 'source.flac', { type: blob.type || 'audio/flac' })
+        sourceFileRef.current = file
+
         const ff = await loadFfmpeg((r) => {
           if (exportProgress !== null) setExportProgress(r)
         })
         if (cancelled) return
         setFfmpeg(ff)
-        const file = await fetchSourceFile(sourceUrl)
-        sourceFileRef.current = file
+
         const path = await mountSourceFile(ff, file)
         inputPathRef.current = path
 
@@ -295,6 +328,10 @@ export function ProAudioEditor({
     })()
     return () => {
       cancelled = true
+      if (sourceBlobUrlRef.current) {
+        URL.revokeObjectURL(sourceBlobUrlRef.current)
+        sourceBlobUrlRef.current = null
+      }
       void ffmpeg?.terminate()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- mount once per source
@@ -440,33 +477,46 @@ export function ProAudioEditor({
   )
   const msPerPx = (span * editList.sourceDuration * 1000) / CANVAS_WIDTH
 
+  const snappedSelection = useCallback((): { start: number; end: number } | null => {
+    if (!selection) return null
+    if (snapEnabled && peaks?.zeroCrossingsSec?.length) {
+      return {
+        start: snapToNearestZeroCrossing(peaks.zeroCrossingsSec, selection.start),
+        end: snapToNearestZeroCrossing(peaks.zeroCrossingsSec, selection.end),
+      }
+    }
+    return selection
+  }, [selection, snapEnabled, peaks?.zeroCrossingsSec])
+
   const removeSelection = useCallback(() => {
-    if (!selection) return
+    const final = snappedSelection()
+    if (!final) return
     pushHistory({
       ...editList,
-      cuts: [...editList.cuts, { start: selection.start, end: selection.end }],
+      cuts: [...editList.cuts, { start: final.start, end: final.end }],
     })
     setSelection(null)
-  }, [editList, pushHistory, selection])
+  }, [editList, pushHistory, snappedSelection])
 
-  function applyFadeAtSelection() {
-    if (!selection) return
-    const dur = Math.max(0.05, Math.min(5, selection.end - selection.start))
+  const applyFadeAtSelection = useCallback(() => {
+    const final = snappedSelection()
+    if (!final) return
+    const dur = Math.max(0.05, Math.min(5, final.end - final.start))
     pushHistory({
       ...editList,
       fades: [
         ...editList.fades,
-        { type: 'in', at: selection.start, duration: dur, curve: 'tri' },
+        { type: 'in', at: final.start, duration: dur, curve: 'tri' },
         {
           type: 'out',
-          at: Math.max(selection.start, selection.end - dur),
+          at: Math.max(final.start, final.end - dur),
           duration: dur,
           curve: 'tri',
         },
       ],
     })
     setSelection(null)
-  }
+  }, [editList, pushHistory, snappedSelection])
 
   async function handleMeasure() {
     if (!ffmpeg || !inputPathRef.current) return
@@ -594,7 +644,7 @@ export function ProAudioEditor({
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [selection, activeTool, undo, redo, removeSelection])
+  }, [selection, activeTool, undo, redo, removeSelection, applyFadeAtSelection])
 
   useEffect(() => {
     return () => {
@@ -828,7 +878,8 @@ export function ProAudioEditor({
                 if (!peaks) return
                 const rect = e.currentTarget.getBoundingClientRect()
                 const frac = (e.clientX - rect.left) / rect.width
-                const sec = peaks.durationSec * (viewStart + frac * (viewEnd - viewStart))
+                let sec = peaks.durationSec * (viewStart + frac * (viewEnd - viewStart))
+                sec = snapSec(sec)
                 if (activeTool === 'marker') {
                   if (audioRef.current) audioRef.current.currentTime = sec
                   return
@@ -839,7 +890,8 @@ export function ProAudioEditor({
                 if (!peaks || !selection || e.buttons !== 1) return
                 const rect = e.currentTarget.getBoundingClientRect()
                 const frac = (e.clientX - rect.left) / rect.width
-                const sec = peaks.durationSec * (viewStart + frac * (viewEnd - viewStart))
+                let sec = peaks.durationSec * (viewStart + frac * (viewEnd - viewStart))
+                sec = snapSec(sec)
                 setSelection({
                   start: Math.min(selection.start, sec),
                   end: Math.max(selection.start, sec),
@@ -849,6 +901,10 @@ export function ProAudioEditor({
                 if (!selection || selection.end - selection.start <= 0) return
                 if (activeTool === 'cut') removeSelection()
                 else if (activeTool === 'fade') applyFadeAtSelection()
+                else {
+                  const final = snappedSelection()
+                  if (final && final !== selection) setSelection(final)
+                }
               }}
               onWheel={(e) => {
                 if (!peaks) return
@@ -879,13 +935,7 @@ export function ProAudioEditor({
             </div>
           )}
         </div>
-        <audio
-          ref={audioRef}
-          src={sourceUrl}
-          className="pro-editor-audio"
-          crossOrigin="anonymous"
-          preload="metadata"
-        />
+        <audio ref={audioRef} className="pro-editor-audio" crossOrigin="anonymous" preload="auto" />
       </section>
 
       {/* ---- Minimap ---- */}

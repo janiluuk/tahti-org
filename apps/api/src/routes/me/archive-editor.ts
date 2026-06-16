@@ -21,9 +21,11 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveArchiveEditorSource } from '../../lib/archive-editor-source.js'
-import { presignedGetUrl } from '../../lib/minio.js'
+import { getObjectStream, presignedGetUrl } from '../../lib/minio.js'
 import { enqueueBounceArchiveEdit, enqueueRenderArchiveEdit, mediaQueue } from '../../lib/queue.js'
 import { ensureInitialVersion } from '@tahti/db'
+
+const MAX_CONCURRENT_EDITOR_JOBS = 2
 
 const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
   async function ownedItem(userId: string, itemId: string) {
@@ -36,6 +38,15 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         editList: true,
         updatedAt: true,
         channel: { select: { slug: true } },
+      },
+    })
+  }
+
+  async function countActiveEditorJobs(userId: string): Promise<number> {
+    return fastify.prisma.archiveItemVersion.count({
+      where: {
+        status: { in: ['PENDING', 'PROCESSING'] },
+        archiveItem: { channel: { userId } },
       },
     })
   }
@@ -151,8 +162,7 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const url = await presignedGetUrl(source.sourceKey, 3600)
-      const sourceFileSizeBytes =
-        source.fileSizeBytes != null ? Number(source.fileSizeBytes) : null
+      const sourceFileSizeBytes = source.fileSizeBytes != null ? Number(source.fileSizeBytes) : null
       return reply.send({
         url,
         durationSec: source.durationSec,
@@ -160,6 +170,38 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         sourceKey: source.sourceKey,
         sourceFileSizeBytes,
       })
+    },
+  )
+
+  fastify.get(
+    '/api/me/archive/:id/editor/stream',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Pro editor: same-origin audio stream with CORP for COEP pages',
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const item = await ownedItem(user.id, id)
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const source = await resolveArchiveEditorSource(fastify.prisma, id)
+      if (!source) {
+        return reply.status(409).send({ error: 'Archive item is not ready for editing' })
+      }
+
+      const { body, contentType, contentLength } = await getObjectStream(source.sourceKey)
+      reply.header('Cross-Origin-Resource-Policy', 'cross-origin')
+      reply.header('Content-Type', contentType)
+      reply.header('Cache-Control', 'private, no-store')
+      if (contentLength != null) reply.header('Content-Length', String(contentLength))
+      return reply.send(body)
     },
   )
 
@@ -227,6 +269,10 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         return reply
           .status(400)
           .send({ error: 'Fade in + fade out must be shorter than selection' })
+      }
+
+      if ((await countActiveEditorJobs(user.id)) >= MAX_CONCURRENT_EDITOR_JOBS) {
+        return reply.status(429).send({ error: 'Too many editor renders in progress (max 2)' })
       }
 
       await ensureInitialVersion(fastify.prisma, id)
@@ -322,6 +368,10 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
 
       const { versionLabel, activate, format } = parsed.data
       const editList = validation.edit
+
+      if ((await countActiveEditorJobs(user.id)) >= MAX_CONCURRENT_EDITOR_JOBS) {
+        return reply.status(429).send({ error: 'Too many editor renders in progress (max 2)' })
+      }
 
       await ensureInitialVersion(fastify.prisma, id)
       const versionCount = await fastify.prisma.archiveItemVersion.count({
