@@ -6,7 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma, ensureInitialVersion } from '@tahti/db'
+import { prisma, ensureInitialVersion, Prisma } from '@tahti/db'
 import {
   chooseLossyOutputBitrateKbps,
   isLosslessCodec,
@@ -161,7 +161,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
           mp3Key: null,
           durationSec: sourceMeta.duration,
           peaks,
-          editorPeaks: editorPeaks ?? undefined,
+          editorPeaks: (editorPeaks ?? undefined) as Prisma.InputJsonValue | undefined,
           sourceFormat,
           sourceBitrateKbps: null,
           ...tagPatch,
@@ -187,7 +187,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         mp3Key,
         durationSec: sourceMeta.duration,
         peaks,
-        editorPeaks: editorPeaks ?? undefined,
+        editorPeaks: (editorPeaks ?? undefined) as Prisma.InputJsonValue | undefined,
         sourceFormat,
         sourceBitrateKbps: sourceMeta.bitrateKbps,
         ...tagPatch,

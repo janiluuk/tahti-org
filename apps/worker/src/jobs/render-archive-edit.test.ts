@@ -63,7 +63,7 @@ import {
 } from './render-archive-edit.js'
 
 function jobFor(payload: RenderArchiveEditPayload): Job {
-  return { data: payload, updateProgress: vi.fn().mockResolvedValue(undefined) } as Job
+  return { data: payload, updateProgress: vi.fn().mockResolvedValue(undefined) } as unknown as Job
 }
 
 describe('processRenderArchiveEditJob', () => {
