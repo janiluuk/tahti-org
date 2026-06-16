@@ -6,7 +6,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { prisma, Prisma } from '@tahti/db'
-import { downloadToFile } from '../lib/minio.js'
+import { downloadSourceCached } from '../lib/source-cache.js'
 import { extractEditorPeaksPyramid } from '../lib/editor-peaks.js'
 
 /** PERF-04 backfill: compute editorPeaks for archives ingested before the column existed. */
@@ -34,7 +34,7 @@ export async function processBackfillEditorPeaksJob(job: Job): Promise<void> {
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-backfill-peaks-'))
   try {
     const rawPath = join(tmpDir, 'source')
-    await downloadToFile(sourceKey, rawPath)
+    await downloadSourceCached(sourceKey, rawPath)
     const editorPeaks = await extractEditorPeaksPyramid(rawPath, durationSec)
     if (!editorPeaks) return
 

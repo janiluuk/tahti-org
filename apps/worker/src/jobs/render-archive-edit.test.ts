@@ -11,7 +11,7 @@ const {
   stat,
   prismaMock,
   syncActiveVersionToItem,
-  downloadToFile,
+  downloadSourceCached,
   uploadFile,
   processTranscodeVersionJob,
   ffmpegFactory,
@@ -40,7 +40,7 @@ const {
       $transaction: vi.fn(),
     },
     syncActiveVersionToItem: vi.fn(),
-    downloadToFile: vi.fn(),
+    downloadSourceCached: vi.fn(),
     uploadFile: vi.fn(),
     processTranscodeVersionJob: vi.fn(),
     ffmpegChain: chain,
@@ -54,7 +54,8 @@ const {
 vi.mock('node:fs/promises', () => ({ mkdtemp, rm, stat }))
 vi.mock('fluent-ffmpeg', () => ({ default: ffmpegFactory }))
 vi.mock('@tahti/db', () => ({ prisma: prismaMock, syncActiveVersionToItem }))
-vi.mock('../lib/minio.js', () => ({ downloadToFile, uploadFile }))
+vi.mock('../lib/source-cache.js', () => ({ downloadSourceCached }))
+vi.mock('../lib/minio.js', () => ({ uploadFile }))
 vi.mock('./transcode-version.js', () => ({ processTranscodeVersionJob }))
 
 import {
@@ -72,7 +73,7 @@ describe('processRenderArchiveEditJob', () => {
     mkdtemp.mockResolvedValue('/tmp/tahti-render-edit-xyz')
     rm.mockResolvedValue(undefined)
     stat.mockResolvedValue({ size: 12345 })
-    downloadToFile.mockResolvedValue(undefined)
+    downloadSourceCached.mockResolvedValue(undefined)
     uploadFile.mockResolvedValue(undefined)
     processTranscodeVersionJob.mockResolvedValue(undefined)
     prismaMock.archiveItemVersion.findUnique.mockResolvedValue({ id: 'ver-1' })
@@ -102,7 +103,7 @@ describe('processRenderArchiveEditJob', () => {
       where: { id: 'ver-1' },
       data: { status: 'PROCESSING' },
     })
-    expect(downloadToFile).toHaveBeenCalledWith(
+    expect(downloadSourceCached).toHaveBeenCalledWith(
       'raw/artist-one/source.flac',
       '/tmp/tahti-render-edit-xyz/input',
     )
@@ -145,11 +146,11 @@ describe('processRenderArchiveEditJob', () => {
     await expect(processRenderArchiveEditJob(jobFor(payload))).rejects.toThrow()
 
     expect(prismaMock.archiveItemVersion.findUnique).not.toHaveBeenCalled()
-    expect(downloadToFile).not.toHaveBeenCalled()
+    expect(downloadSourceCached).not.toHaveBeenCalled()
   })
 
   it('marks the version as ERROR and rethrows when rendering fails', async () => {
-    downloadToFile.mockRejectedValue(new Error('download failed'))
+    downloadSourceCached.mockRejectedValue(new Error('download failed'))
     const payload: RenderArchiveEditPayload = {
       versionId: 'ver-1',
       archiveItemId: 'item-1',

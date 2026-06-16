@@ -261,38 +261,6 @@ export async function fetchArchiveEditorSource(itemId: string): Promise<{
   return { ...(await res.json()), error: null }
 }
 
-export async function bounceArchiveTrim(
-  itemId: string,
-  body: {
-    startSec: number
-    endSec: number
-    fadeInSec: number
-    fadeOutSec: number
-    peakNormalize: boolean
-    lufsTarget?: 'none' | 'stream' | 'club'
-    limiterEnabled?: boolean
-    highPassHz?: number
-    lowPassHz?: number
-    eq?: { lowGainDb: number; midGainDb: number; highGainDb: number }
-    compressorEnabled?: boolean
-    versionLabel: string
-    activate: boolean
-  },
-): Promise<{ versionId?: string; error: string | null }> {
-  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/bounce`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
-    body: JSON.stringify(body),
-    cache: 'no-store',
-  })
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}))
-    return { error: (data as { error?: string }).error ?? 'Bounce failed' }
-  }
-  const data = (await res.json()) as { versionId: string }
-  return { versionId: data.versionId, error: null }
-}
-
 export async function fetchReleasesForPublish(): Promise<{
   releases?: Array<{ id: string; title: string }>
   error: string | null

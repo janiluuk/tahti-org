@@ -21,7 +21,8 @@ import {
   type OutputFormat,
 } from '@tahti/audio-edit'
 import { prisma, syncActiveVersionToItem } from '@tahti/db'
-import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { downloadSourceCached } from '../lib/source-cache.js'
+import { uploadFile } from '../lib/minio.js'
 import { processTranscodeVersionJob } from './transcode-version.js'
 
 export interface RenderArchiveEditPayload {
@@ -282,7 +283,7 @@ export async function processRenderArchiveEditJob(job: Job): Promise<void> {
     await reportProgress({ pct: 0.05, phase: 'download' })
     const inputPath = join(tmpDir, 'input')
     const outputPath = join(tmpDir, `rendered.${ext}`)
-    await downloadToFile(sourceKey, inputPath)
+    await downloadSourceCached(sourceKey, inputPath)
     await renderEditList(
       inputPath,
       outputPath,

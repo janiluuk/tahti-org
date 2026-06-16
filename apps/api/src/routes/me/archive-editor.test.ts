@@ -156,26 +156,7 @@ describe('M21 v0 — archive trim editor', () => {
     })
   })
 
-  it('POST /api/me/archive/:id/editor/bounce validates selection', async () => {
-    const res = await app.inject({
-      method: 'POST',
-      url: `/api/me/archive/${archiveItemId}/editor/bounce`,
-      headers: { cookie },
-      payload: {
-        startSec: 10,
-        endSec: 5,
-        fadeInSec: 0,
-        fadeOutSec: 0,
-        peakNormalize: false,
-        versionLabel: 'Bad trim',
-        activate: true,
-      },
-    })
-    expect(res.statusCode).toBe(400)
-  })
-
-  it('POST /api/me/archive/:id/editor/bounce enqueues render worker job', async () => {
-    const { enqueueRenderArchiveEdit } = await import('../../lib/queue.js')
+  it('POST /api/me/archive/:id/editor/bounce returns 410 Gone', async () => {
     const res = await app.inject({
       method: 'POST',
       url: `/api/me/archive/${archiveItemId}/editor/bounce`,
@@ -183,62 +164,49 @@ describe('M21 v0 — archive trim editor', () => {
       payload: {
         startSec: 0,
         endSec: 30,
-        fadeInSec: 1,
-        fadeOutSec: 2,
+        fadeInSec: 0,
+        fadeOutSec: 0,
         peakNormalize: false,
-        lufsTarget: 'stream',
-        limiterEnabled: true,
         versionLabel: 'Trimmed intro',
         activate: true,
       },
     })
-    expect(res.statusCode).toBe(202)
-    const body = res.json() as { versionId: string; versionNumber: number; status: string }
-    expect(body.versionNumber).toBeGreaterThanOrEqual(2)
-    expect(body.status).toBe('PENDING')
-    expect(enqueueRenderArchiveEdit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        format: 'wav',
-        editList: expect.objectContaining({
-          cuts: expect.any(Array),
-        }),
-      }),
-    )
+    expect(res.statusCode).toBe(410)
+    expect(res.headers.deprecation).toBe('true')
+    expect(res.json()).toMatchObject({ error: expect.stringContaining('editor/render') })
   })
 
-  it('POST /api/me/archive/:id/editor/bounce accepts EQ/HP-LP/compressor fields', async () => {
+  it('POST /api/me/archive/:id/editor/render enqueues worker job', async () => {
     const { enqueueRenderArchiveEdit } = await import('../../lib/queue.js')
     vi.mocked(enqueueRenderArchiveEdit).mockClear()
+
+    const draftRes = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    const { editList } = draftRes.json() as { editList: Record<string, unknown> }
+
     const res = await app.inject({
       method: 'POST',
-      url: `/api/me/archive/${archiveItemId}/editor/bounce`,
+      url: `/api/me/archive/${archiveItemId}/editor/render`,
       headers: { cookie },
       payload: {
-        startSec: 0,
-        endSec: 30,
-        fadeInSec: 0,
-        fadeOutSec: 0,
-        peakNormalize: false,
-        highPassHz: 80,
-        lowPassHz: 16000,
-        eq: { lowGainDb: 2, midGainDb: -1.5, highGainDb: 3 },
-        compressorEnabled: true,
-        versionLabel: 'EQ pass',
+        editList,
+        versionLabel: 'Pro render test',
         activate: false,
+        format: 'flac',
       },
     })
     expect(res.statusCode).toBe(202)
+    const body = res.json() as { versionId: string; versionNumber: number; status: string }
+    expect(body.versionId).toBeTruthy()
+    expect(body.status).toBe('PENDING')
     expect(enqueueRenderArchiveEdit).toHaveBeenCalledWith(
       expect.objectContaining({
-        editList: expect.objectContaining({
-          highPassHz: 80,
-          lowPassHz: 16000,
-          eq: expect.objectContaining({
-            enabled: true,
-            bands: expect.arrayContaining([expect.objectContaining({ gainDb: 2 })]),
-          }),
-          comp: expect.objectContaining({ enabled: true }),
-        }),
+        archiveItemId,
+        format: 'flac',
+        activate: false,
       }),
     )
   })
@@ -264,7 +232,7 @@ describe('M21 v0 — archive trim editor', () => {
         activate: true,
       },
     })
-    expect(res.statusCode).toBe(404)
+    expect(res.statusCode).toBe(410)
   })
 
   it('POST /api/me/archive/:id/editor/bounce rejects an endSec that overflows to Infinity', async () => {
@@ -274,7 +242,7 @@ describe('M21 v0 — archive trim editor', () => {
       headers: { cookie, 'content-type': 'application/json' },
       payload: '{"startSec":0,"endSec":1e400,"versionLabel":"Overflow attempt","activate":true}',
     })
-    expect(res.statusCode).toBe(400)
+    expect(res.statusCode).toBe(410)
   })
 
   it('POST /api/me/archive/:id/editor/publish-to-release creates a release track', async () => {
