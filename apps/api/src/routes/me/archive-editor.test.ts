@@ -96,6 +96,19 @@ describe('M21 v0 — archive trim editor', () => {
     expect(res.body).toBe('fake-audio')
   })
 
+  it('GET /api/me/archive/:id/editor/draft enqueues editorPeaks backfill when missing', async () => {
+    const { enqueueBackfillEditorPeaks } = await import('../../lib/queue.js')
+    vi.mocked(enqueueBackfillEditorPeaks).mockClear()
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(enqueueBackfillEditorPeaks).toHaveBeenCalledWith(archiveItemId)
+  })
+
   it('POST /api/me/archive/:id/editor/render returns 429 when two jobs are already active', async () => {
     const artist = await prisma.user.findFirst({
       where: { email: `${PREFIX}artist@example.com` },
@@ -209,6 +222,55 @@ describe('M21 v0 — archive trim editor', () => {
         activate: false,
       }),
     )
+  })
+
+  it('POST /api/me/archive/:id/editor/render passes preview sample options to worker', async () => {
+    const { enqueueRenderArchiveEdit } = await import('../../lib/queue.js')
+    vi.mocked(enqueueRenderArchiveEdit).mockClear()
+
+    const draftRes = await app.inject({
+      method: 'GET',
+      url: `/api/me/archive/${archiveItemId}/editor/draft`,
+      headers: { cookie },
+    })
+    const { editList } = draftRes.json() as { editList: Record<string, unknown> }
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/render`,
+      headers: { cookie },
+      payload: {
+        editList,
+        versionLabel: 'Preview sample',
+        activate: false,
+        format: 'mp3',
+        maxDurationSec: 30,
+        sampleOnly: true,
+      },
+    })
+    expect(res.statusCode).toBe(202)
+    expect(enqueueRenderArchiveEdit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        format: 'mp3',
+        sampleOnly: true,
+        maxDurationSec: 30,
+        activate: false,
+      }),
+    )
+  })
+
+  it('POST /api/me/archive/:id/editor/render rejects invalid editList', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/render`,
+      headers: { cookie },
+      payload: {
+        editList: { version: 1, sourceDuration: 120, cuts: [{ start: 0, end: 120 }] },
+        versionLabel: 'Bad edit',
+        format: 'flac',
+      },
+    })
+    expect(res.statusCode).toBe(400)
   })
 
   it('GET /api/me/archive/:id/editor/source rejects an archive item owned by another user', async () => {

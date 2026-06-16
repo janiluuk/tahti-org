@@ -13,7 +13,8 @@ import {
   isLosslessSource,
   sourceFormatLabel,
 } from '@tahti/shared'
-import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { downloadSourceCached } from '../lib/source-cache.js'
+import { uploadFile } from '../lib/minio.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
 
 function ffprobeFormat(
@@ -86,7 +87,7 @@ export async function processTranscodeVersionJob(job: Job): Promise<void> {
 
   try {
     const rawPath = join(tmpDir, 'raw_input')
-    await downloadToFile(version.rawKey, rawPath)
+    await downloadSourceCached(version.rawKey, rawPath)
 
     const sourceMeta = await ffprobeFormat(rawPath)
     const lossless = isLosslessSource(sourceMeta.format) || isLosslessCodec(sourceMeta.codec)

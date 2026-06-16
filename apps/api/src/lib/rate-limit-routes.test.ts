@@ -36,9 +36,8 @@ describe('usesAuthRateLimit', () => {
 })
 
 describe('editorRateLimitTier', () => {
-  it('applies heavy tier to render and bounce', () => {
+  it('applies heavy tier to render', () => {
     expect(editorRateLimitTier('/api/me/archive/x/editor/render', 'POST')).toBe('heavy')
-    expect(editorRateLimitTier('/api/me/archive/x/editor/bounce', 'POST')).toBe('heavy')
   })
 
   it('applies draft tier to PATCH draft only', () => {

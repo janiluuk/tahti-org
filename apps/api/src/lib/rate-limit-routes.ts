@@ -20,7 +20,7 @@ export type EditorRateLimitTier = 'heavy' | 'draft'
 export function editorRateLimitTier(url: string, method: string): EditorRateLimitTier | null {
   const path = url.split('?')[0] ?? url
   if (!path.includes('/editor/')) return null
-  if (method === 'POST' && (path.endsWith('/editor/render') || path.endsWith('/editor/bounce'))) {
+  if (method === 'POST' && path.endsWith('/editor/render')) {
     return 'heavy'
   }
   if (method === 'PATCH' && path.endsWith('/editor/draft')) return 'draft'

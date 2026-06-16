@@ -16,7 +16,8 @@ import {
   parseArchiveFileTags,
   sourceFormatLabel,
 } from '@tahti/shared'
-import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { downloadSourceCached } from '../lib/source-cache.js'
+import { uploadFile } from '../lib/minio.js'
 import { enqueueWarmArchiveFallbackCache } from '../lib/queue.js'
 import { analyzeAudioAcoustics, prepareAnalysisWav } from '../lib/audio-analysis.js'
 import { extractWaveformPeaks } from '../lib/waveform.js'
@@ -137,7 +138,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
 
   try {
     const rawPath = join(tmpDir, 'raw_input')
-    await downloadToFile(item.rawKey, rawPath)
+    await downloadSourceCached(item.rawKey, rawPath)
 
     const sourceMeta = await ffprobeFormat(rawPath)
     const embeddedTags = await ffprobeEmbeddedTags(rawPath).catch(() => ({}))
