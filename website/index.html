@@ -501,22 +501,9 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 #mockup-progress-ring{display:flex;justify-content:center;margin-top:20px}
 #slide-ring-fill{transform-origin:50% 50%;transform:rotate(-90deg)}
 
-/* ===== AUDIO EDITOR MOCKUP ===== */
-.ae-toolbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
-.ae-title{font-family:var(--font-head);font-size:14px;font-weight:600}
-.ae-meta{font-size:11px;color:var(--muted);margin-top:2px}
-.ae-waveform-wrap{background:#0d1626;border-radius:8px;padding:16px;margin-bottom:14px}
-.ae-wf{height:72px;display:flex;align-items:center;gap:2px;background:#060c1a;border-radius:6px;padding:8px;overflow:hidden}
-.ae-wf-bar{background:var(--cyan);border-radius:1px;width:3px;opacity:0.45}
-.ae-wf-bar.sel{background:var(--amber);opacity:0.85}
-.ae-time-row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px}
-.ae-controls{display:flex;align-items:center;gap:8px;margin-top:10px}
-.ae-btn{background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 12px;font-size:11px;color:var(--text);cursor:pointer}
-.ae-btn.c{background:rgba(0,188,212,0.12);border-color:rgba(0,188,212,0.4);color:var(--cyan)}
-.ae-chapter-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px}
-.ae-chapter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.ae-chapter-time{font-family:monospace;font-size:11px;color:var(--muted);flex-shrink:0;width:42px}
-.ae-chapter-name{flex:1}
+/* ===== AUDIO EDITOR SCREENSHOT ===== */
+.ae-screenshot{display:flex;justify-content:center}
+.ae-screenshot-img{width:100%;max-width:631px;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.6)}
 
 /* ===== NEWSLETTER MOCKUP ===== */
 .nl-compose{padding:16px 20px}
@@ -548,6 +535,16 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   .hero-mini-stats{grid-template-columns:1fr 1fr}
   .apply-form-wrap{padding:24px 20px}
   .apply-row-2{grid-template-columns:1fr}
+  /* Mockup tabs — wrap instead of overflow */
+  .mockup-tabs{flex-wrap:wrap;width:100%}
+  .mtab{padding:8px 14px;font-size:12px;flex:1 1 auto;text-align:center}
+  /* Browser mockup — ensure it never escapes its container */
+  .browser{width:100%}
+  .browser-content{overflow-x:auto}
+  /* Stats two-col collapses */
+  .stats-two-col{grid-template-columns:1fr}
+  /* Unmute button — shrink on mobile */
+  #unmute-btn{padding:10px 14px;font-size:12px;bottom:16px;right:16px}
 }
 </style>
 </head>
@@ -1580,66 +1577,8 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 
     <!-- AUDIO EDITOR MOCKUP -->
     <div class="mockup-frame" id="mock-audio-editor">
-      <div class="browser reveal reveal-delay-3">
-        <div class="browser-bar">
-          <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">tahti.live/<b>app</b>/archive/edit</div>
-        </div>
-        <div class="browser-content">
-          <div class="ch-header">
-            <div class="ch-logo">TAHTI</div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
-          </div>
-          <div class="db-layout">
-            <div class="db-sidebar">
-              <div class="db-nav-item">▶ Channel</div>
-              <div class="db-nav-item">📈 Stats</div>
-              <div class="db-nav-item active">📁 Archive</div>
-              <div class="db-nav-item">💰 Revenue</div>
-              <div class="db-nav-item">📧 Newsletter</div>
-              <div class="db-nav-item">🔗 Smart Links</div>
-              <div class="db-nav-item">📡 Distribution</div>
-              <div class="db-nav-item">⚙ Settings</div>
-            </div>
-            <div class="db-main" style="padding:0">
-              <div class="ae-toolbar">
-                <div>
-                  <div class="ae-title">Late Night Drift Vol. 3</div>
-                  <div class="ae-meta">Recorded live · 1h 42m · FLAC 24-bit/48kHz · Nov 2024</div>
-                </div>
-                <div style="display:flex;gap:8px">
-                  <button class="ae-btn">↓ Export FLAC</button>
-                  <button class="ae-btn c">→ Push to Mixcloud</button>
-                  <button style="background:var(--amber);color:#0a0f1e;border:none;border-radius:6px;padding:6px 16px;font-size:11px;font-weight:700;cursor:pointer">Save</button>
-                </div>
-              </div>
-              <div style="padding:16px 20px">
-                <div class="ae-waveform-wrap">
-                  <div class="ae-wf" id="ae-wf-bars"></div>
-                  <div class="ae-time-row">
-                    <span>0:00</span><span>21:30</span><span>43:00</span><span>1:04:30</span><span>1:26:00</span><span>1:42:00</span>
-                  </div>
-                  <div class="ae-controls">
-                    <button class="ae-btn">⏮</button>
-                    <button class="ae-btn c">▶ Play</button>
-                    <button class="ae-btn">⏭</button>
-                    <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 4px"></div>
-                    <button class="ae-btn c">✂ Set In</button>
-                    <button class="ae-btn">✂ Set Out</button>
-                    <button class="ae-btn">🔇 Strip silence</button>
-                    <div style="margin-left:auto;font-size:11px;color:var(--muted);font-family:monospace">23:41 / 1:42:00</div>
-                  </div>
-                </div>
-                <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">CHAPTER MARKERS</div>
-                <div class="ae-chapter-row"><div class="ae-chapter-dot" style="background:var(--amber)"></div><span class="ae-chapter-time">0:00</span><span class="ae-chapter-name">Intro</span><span style="font-size:10px;color:var(--muted)">auto-detected</span></div>
-                <div class="ae-chapter-row"><div class="ae-chapter-dot" style="background:var(--cyan)"></div><span class="ae-chapter-time">18:42</span><span class="ae-chapter-name">Peak hour — opening</span><span style="font-size:10px;color:var(--muted)">manual</span></div>
-                <div class="ae-chapter-row"><div class="ae-chapter-dot" style="background:var(--purple)"></div><span class="ae-chapter-time">51:10</span><span class="ae-chapter-name">Breakdown</span><span style="font-size:10px;color:var(--muted)">manual</span></div>
-                <div class="ae-chapter-row" style="border-bottom:none"><div class="ae-chapter-dot" style="background:var(--green)"></div><span class="ae-chapter-time">1:24:30</span><span class="ae-chapter-name">Closing</span><span style="font-size:10px;color:var(--muted)">auto-detected</span></div>
-                <button style="background:transparent;border:1px dashed rgba(255,255,255,0.15);border-radius:6px;padding:6px 14px;font-size:11px;color:var(--muted);cursor:pointer;margin-top:10px;width:100%">+ Add chapter marker</button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="ae-screenshot reveal reveal-delay-3">
+        <img src="editor.png" alt="Audio editor — waveform editing with EQ, gain, compressor and limiter plugin chain" class="ae-screenshot-img">
       </div>
     </div>
 
@@ -2871,20 +2810,6 @@ function switchMockup(id, btn) {
   if (window._resetMockupTimer) window._resetMockupTimer(id);
 }
 
-// ===== AUDIO EDITOR WAVEFORM =====
-(function() {
-  const container = document.getElementById('ae-wf-bars');
-  if (!container) return;
-  const SEL_START = 40, SEL_END = 80;
-  const total = 120;
-  const raw = [6,9,14,18,24,30,22,28,35,20,16,26,32,18,24,38,28,20,14,22,36,42,30,24,18,32,40,34,28,22,16,26,38,44,36,30,24,18,28,40,48,42,36,30,24,36,44,52,46,40,34,28,42,50,58,52,46,40,34,48,56,64,58,52,46,52,60,68,62,56,50,44,58,66,72,66,60,54,48,56,62,56,50,44,38,46,52,46,40,34,28,36,42,36,30,24,18,26,32,26,20,14,10,18,22,16,12,8,14,18,12,10,8,6,10,14,10,8,6,4];
-  for (let i = 0; i < total; i++) {
-    const bar = document.createElement('div');
-    bar.className = 'ae-wf-bar' + (i >= SEL_START && i < SEL_END ? ' sel' : '');
-    bar.style.height = Math.max(4, raw[i] || 4) + 'px';
-    container.appendChild(bar);
-  }
-})();
 
 // ===== MOCKUP AUTO-ROTATE =====
 (function() {
