@@ -8,10 +8,10 @@
 
 <!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://tahti.fi/">
+<meta property="og:url" content="https://tahti.live/">
 <meta property="og:title" content="Tahti — Your Radio Station">
 <meta property="og:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio. Open beta launches 1 August 2026.">
-<meta property="og:image" content="https://tahti.fi/og-image.png">
+<meta property="og:image" content="https://tahti.live/og-image.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
 <meta property="og:site_name" content="Tahti">
@@ -21,7 +21,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Tahti — Your Radio Station">
 <meta name="twitter:description" content="Your own radio station. One URL that always plays — live when you're broadcasting, your archive when you're not. 0% revenue cut. Lossless audio.">
-<meta name="twitter:image" content="https://tahti.fi/og-image.png">
+<meta name="twitter:image" content="https://tahti.live/og-image.png">
 
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
@@ -501,22 +501,9 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 #mockup-progress-ring{display:flex;justify-content:center;margin-top:20px}
 #slide-ring-fill{transform-origin:50% 50%;transform:rotate(-90deg)}
 
-/* ===== AUDIO EDITOR MOCKUP ===== */
-.ae-toolbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
-.ae-title{font-family:var(--font-head);font-size:14px;font-weight:600}
-.ae-meta{font-size:11px;color:var(--muted);margin-top:2px}
-.ae-waveform-wrap{background:#0d1626;border-radius:8px;padding:16px;margin-bottom:14px}
-.ae-wf{height:72px;display:flex;align-items:center;gap:2px;background:#060c1a;border-radius:6px;padding:8px;overflow:hidden}
-.ae-wf-bar{background:var(--cyan);border-radius:1px;width:3px;opacity:0.45}
-.ae-wf-bar.sel{background:var(--amber);opacity:0.85}
-.ae-time-row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px}
-.ae-controls{display:flex;align-items:center;gap:8px;margin-top:10px}
-.ae-btn{background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 12px;font-size:11px;color:var(--text);cursor:pointer}
-.ae-btn.c{background:rgba(0,188,212,0.12);border-color:rgba(0,188,212,0.4);color:var(--cyan)}
-.ae-chapter-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px}
-.ae-chapter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.ae-chapter-time{font-family:monospace;font-size:11px;color:var(--muted);flex-shrink:0;width:42px}
-.ae-chapter-name{flex:1}
+/* ===== AUDIO EDITOR SCREENSHOT ===== */
+.ae-screenshot{display:flex;justify-content:center}
+.ae-screenshot-img{width:100%;max-width:631px;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.6)}
 
 /* ===== NEWSLETTER MOCKUP ===== */
 .nl-compose{padding:16px 20px}
@@ -548,6 +535,16 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   .hero-mini-stats{grid-template-columns:1fr 1fr}
   .apply-form-wrap{padding:24px 20px}
   .apply-row-2{grid-template-columns:1fr}
+  /* Mockup tabs — wrap instead of overflow */
+  .mockup-tabs{flex-wrap:wrap;width:100%}
+  .mtab{padding:8px 14px;font-size:12px;flex:1 1 auto;text-align:center}
+  /* Browser mockup — ensure it never escapes its container */
+  .browser{width:100%}
+  .browser-content{overflow-x:auto}
+  /* Stats two-col collapses */
+  .stats-two-col{grid-template-columns:1fr}
+  /* Unmute button — shrink on mobile */
+  #unmute-btn{padding:10px 14px;font-size:12px;bottom:16px;right:16px}
 }
 </style>
 </head>
@@ -661,7 +658,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   <div class="section-inner">
     <h2 class="s-h2 reveal">One URL.</h2>
     <div class="s-sub cyan reveal reveal-delay-1">Always playing.</div>
-    <div class="url-box reveal reveal-delay-2">https://<span>your-name</span>.tahti.fi</div>
+    <div class="url-box reveal reveal-delay-2">https://<span>your-name</span>.tahti.live</div>
     <div class="cards-2 reveal reveal-delay-3">
       <div class="card green">
         <div class="card-icon">🎙</div>
@@ -754,7 +751,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   <div class="section-inner">
     <h2 class="s-h2 reveal">Your home page on the internet.</h2>
     <div class="s-sub cyan reveal reveal-delay-1">Bio, releases, channel — one URL that shows up when someone googles you.</div>
-    <div class="url-box reveal reveal-delay-2" style="border-color:rgba(240,165,0,0.4)">https://tahti.fi/u/<span>your-handle</span></div>
+    <div class="url-box reveal reveal-delay-2" style="border-color:rgba(240,165,0,0.4)">https://tahti.live/u/<span>your-handle</span></div>
     <div class="cards-4 reveal reveal-delay-3">
       <div class="card cyan"><div class="card-icon">💙</div><h3>Bio + photos</h3><p>Markdown-rich text. Paragraphs, headings, images, embedded video. Looks like a label site, not a SoundCloud profile.</p></div>
       <div class="card purple"><div class="card-icon">🎵</div><h3>Release timeline</h3><p>Albums, EPs, singles in chronological order. Upload in WAV or FLAC — we preserve the original. Studio tier downloads in FLAC.</p></div>
@@ -945,7 +942,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="font-size:24px">🏛</div><div><h3 style="font-family:var(--font-head);font-size:18px">Venue calendars</h3><div style="font-size:12px;color:var(--amber);font-style:italic">Where you're playing, when, for whom</div></div></div>
         <p style="margin-bottom:16px">Venues can register on Tahti and publish calendars of broadcasts at their location. Your future gigs at a venue appear on the venue's page. <strong>Not a booking marketplace</strong> — venues find artists, artists find venues, we just publish the schedule.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-          <div style="color:var(--muted)">URL</div><div>tahti.fi/v/&lt;venue-slug&gt;</div>
+          <div style="color:var(--muted)">URL</div><div>tahti.live/v/&lt;venue-slug&gt;</div>
           <div style="color:var(--muted)">Calendar</div><div>iCalendar feed + JSON API</div>
           <div style="color:var(--muted)">Booking</div><div>Direct — we don't mediate</div>
           <div style="color:var(--muted)">Verification</div><div>Manual, ~3 business days</div>
@@ -1037,7 +1034,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="browser reveal reveal-delay-3">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">https://<b>dj-moonrise</b>.tahti.fi</div>
+          <div class="browser-url">https://<b>dj-moonrise</b>.tahti.live</div>
         </div>
         <div class="browser-content">
           <div class="ch-header">
@@ -1117,7 +1114,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="browser">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">https://tahti.fi/<b>dashboard</b></div>
+          <div class="browser-url">https://tahti.live/<b>dashboard</b></div>
         </div>
         <div class="browser-content">
           <div class="ch-header">
@@ -1151,7 +1148,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
                   <button class="db-copy">Copy</button>
                   <button class="db-test">Test Connection</button>
                 </div>
-                <div style="font-size:11px;color:var(--muted);margin-top:8px">Server: icecast.tahti.fi:8000 · Mount: /dj-moonrise · FLAC/Icecast</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:8px">Server: icecast.tahti.live:8000 · Mount: /dj-moonrise · FLAC/Icecast</div>
               </div>
 
               <div class="db-stats">
@@ -1277,7 +1274,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="browser reveal reveal-delay-3">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">tahti.fi/<b>neon-ghost</b></div>
+          <div class="browser-url">tahti.live/<b>neon-ghost</b></div>
         </div>
         <div class="browser-content">
           <div class="live-header">
@@ -1294,7 +1291,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
                   <div class="live-avatar" style="background:linear-gradient(135deg,#1a0060,#004060)">👾</div>
                   <div class="live-name-block">
                     <div class="name">Neon Ghost</div>
-                    <div class="handle">tahti.fi/neon-ghost · Helsinki, FI</div>
+                    <div class="handle">tahti.live/neon-ghost · Helsinki, FI</div>
                   </div>
                 </div>
                 <div class="broadcasting-badge"><div class="signal-dot"></div>BROADCASTING NOW — 47 MIN IN</div>
@@ -1337,13 +1334,13 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="browser reveal reveal-delay-3">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">tahti.fi/<b>neon-ghost</b></div>
+          <div class="browser-url">tahti.live/<b>neon-ghost</b></div>
         </div>
         <div class="browser-content">
           <div class="live-header">
             <div>
               <div class="live-artist-name">NEON GHOST</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:2px">tahti.fi/neon-ghost · always on</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">tahti.live/neon-ghost · always on</div>
             </div>
             <div class="live-meta">
               <div class="listener-count">12 listening</div>
@@ -1405,7 +1402,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="browser reveal reveal-delay-3">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">tahti.fi/<b>app</b>/stash</div>
+          <div class="browser-url">tahti.live/<b>app</b>/stash</div>
         </div>
         <div class="browser-content" style="background:#0d1626;padding:20px;min-height:420px">
           <div class="stash-toolbar">
@@ -1483,7 +1480,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="browser">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">https://tahti.fi/<b>dashboard</b> — Channel appearance</div>
+          <div class="browser-url">https://tahti.live/<b>dashboard</b> — Channel appearance</div>
         </div>
         <div class="browser-content">
           <div class="ch-header">
@@ -1580,66 +1577,8 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 
     <!-- AUDIO EDITOR MOCKUP -->
     <div class="mockup-frame" id="mock-audio-editor">
-      <div class="browser reveal reveal-delay-3">
-        <div class="browser-bar">
-          <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">tahti.fi/<b>app</b>/archive/edit</div>
-        </div>
-        <div class="browser-content">
-          <div class="ch-header">
-            <div class="ch-logo">TAHTI</div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
-          </div>
-          <div class="db-layout">
-            <div class="db-sidebar">
-              <div class="db-nav-item">▶ Channel</div>
-              <div class="db-nav-item">📈 Stats</div>
-              <div class="db-nav-item active">📁 Archive</div>
-              <div class="db-nav-item">💰 Revenue</div>
-              <div class="db-nav-item">📧 Newsletter</div>
-              <div class="db-nav-item">🔗 Smart Links</div>
-              <div class="db-nav-item">📡 Distribution</div>
-              <div class="db-nav-item">⚙ Settings</div>
-            </div>
-            <div class="db-main" style="padding:0">
-              <div class="ae-toolbar">
-                <div>
-                  <div class="ae-title">Late Night Drift Vol. 3</div>
-                  <div class="ae-meta">Recorded live · 1h 42m · FLAC 24-bit/48kHz · Nov 2024</div>
-                </div>
-                <div style="display:flex;gap:8px">
-                  <button class="ae-btn">↓ Export FLAC</button>
-                  <button class="ae-btn c">→ Push to Mixcloud</button>
-                  <button style="background:var(--amber);color:#0a0f1e;border:none;border-radius:6px;padding:6px 16px;font-size:11px;font-weight:700;cursor:pointer">Save</button>
-                </div>
-              </div>
-              <div style="padding:16px 20px">
-                <div class="ae-waveform-wrap">
-                  <div class="ae-wf" id="ae-wf-bars"></div>
-                  <div class="ae-time-row">
-                    <span>0:00</span><span>21:30</span><span>43:00</span><span>1:04:30</span><span>1:26:00</span><span>1:42:00</span>
-                  </div>
-                  <div class="ae-controls">
-                    <button class="ae-btn">⏮</button>
-                    <button class="ae-btn c">▶ Play</button>
-                    <button class="ae-btn">⏭</button>
-                    <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 4px"></div>
-                    <button class="ae-btn c">✂ Set In</button>
-                    <button class="ae-btn">✂ Set Out</button>
-                    <button class="ae-btn">🔇 Strip silence</button>
-                    <div style="margin-left:auto;font-size:11px;color:var(--muted);font-family:monospace">23:41 / 1:42:00</div>
-                  </div>
-                </div>
-                <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">CHAPTER MARKERS</div>
-                <div class="ae-chapter-row"><div class="ae-chapter-dot" style="background:var(--amber)"></div><span class="ae-chapter-time">0:00</span><span class="ae-chapter-name">Intro</span><span style="font-size:10px;color:var(--muted)">auto-detected</span></div>
-                <div class="ae-chapter-row"><div class="ae-chapter-dot" style="background:var(--cyan)"></div><span class="ae-chapter-time">18:42</span><span class="ae-chapter-name">Peak hour — opening</span><span style="font-size:10px;color:var(--muted)">manual</span></div>
-                <div class="ae-chapter-row"><div class="ae-chapter-dot" style="background:var(--purple)"></div><span class="ae-chapter-time">51:10</span><span class="ae-chapter-name">Breakdown</span><span style="font-size:10px;color:var(--muted)">manual</span></div>
-                <div class="ae-chapter-row" style="border-bottom:none"><div class="ae-chapter-dot" style="background:var(--green)"></div><span class="ae-chapter-time">1:24:30</span><span class="ae-chapter-name">Closing</span><span style="font-size:10px;color:var(--muted)">auto-detected</span></div>
-                <button style="background:transparent;border:1px dashed rgba(255,255,255,0.15);border-radius:6px;padding:6px 14px;font-size:11px;color:var(--muted);cursor:pointer;margin-top:10px;width:100%">+ Add chapter marker</button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="ae-screenshot reveal reveal-delay-3">
+        <img src="editor.png" alt="Audio editor — waveform editing with EQ, gain, compressor and limiter plugin chain" class="ae-screenshot-img">
       </div>
     </div>
 
@@ -1648,7 +1587,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="browser reveal reveal-delay-3">
         <div class="browser-bar">
           <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">tahti.fi/<b>app</b>/newsletter/compose</div>
+          <div class="browser-url">tahti.live/<b>app</b>/newsletter/compose</div>
         </div>
         <div class="browser-content">
           <div class="ch-header">
@@ -1690,7 +1629,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
                     <div style="color:var(--cyan);font-size:10px;letter-spacing:1px;margin-bottom:4px">TRACK PREVIEW</div>
                     Crystalline Shore (WIP) — 3:42
                   </div>
-                  <div style="margin-top:10px;color:var(--muted)">Tune in at tahti.fi/dj-moonrise · No app needed.</div>
+                  <div style="margin-top:10px;color:var(--muted)">Tune in at tahti.live/dj-moonrise · No app needed.</div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
                   <div style="background:var(--card2);border-radius:6px;padding:10px;text-align:center"><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--amber)">247</div><div style="font-size:10px;color:var(--muted)">Subscribers</div></div>
@@ -1733,7 +1672,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     <div class="browser reveal reveal-delay-3">
       <div class="browser-bar">
         <div class="browser-dots"><span></span><span></span><span></span></div>
-        <div class="browser-url">https://tahti.fi/u/<b>dj-moonrise</b></div>
+        <div class="browser-url">https://tahti.live/u/<b>dj-moonrise</b></div>
       </div>
       <div class="browser-content">
         <div class="ch-header">
@@ -1861,7 +1800,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
         <div class="browser" style="max-width:420px;margin:0 auto">
           <div class="browser-bar">
             <div class="browser-dots"><span></span><span></span><span></span></div>
-            <div class="browser-url">tahti.fi/<b>r/drift-ep</b></div>
+            <div class="browser-url">tahti.live/<b>r/drift-ep</b></div>
           </div>
           <div class="browser-content">
             <div class="sl-wrap">
@@ -1890,12 +1829,12 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
                 </div>
                 <div class="sl-btn" style="border-color:rgba(0,188,212,0.3)">
                   <div class="sl-btn-icon" style="background:rgba(0,188,212,0.15)">⭐</div>
-                  <span class="sl-btn-name" style="color:var(--cyan)">tahti.fi</span>
+                  <span class="sl-btn-name" style="color:var(--cyan)">tahti.live</span>
                   <span class="sl-btn-action" style="color:var(--cyan)">FLAC · best quality</span>
                   <span class="sl-btn-arrow" style="color:var(--cyan)">→</span>
                 </div>
               </div>
-              <div class="sl-powered-by">Powered by <span style="color:var(--amber)">tahti.fi</span> · @dj-moonrise</div>
+              <div class="sl-powered-by">Powered by <span style="color:var(--amber)">tahti.live</span> · @dj-moonrise</div>
             </div>
           </div>
         </div>
@@ -1907,7 +1846,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
         <div class="browser" style="max-width:420px;margin:0 auto">
           <div class="browser-bar">
             <div class="browser-dots"><span></span><span></span><span></span></div>
-            <div class="browser-url">tahti.fi/<b>r/winter-25</b></div>
+            <div class="browser-url">tahti.live/<b>r/winter-25</b></div>
           </div>
           <div class="browser-content">
             <div class="sl-wrap">
@@ -1931,7 +1870,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
                 <div class="sl-notify-small">Goes to the artist's newsletter list. Unsubscribe anytime.</div>
               </div>
               <div style="opacity:0.35;font-size:12px;color:var(--muted);text-align:center;padding:8px 0;border:1px dashed rgba(255,255,255,0.12);border-radius:6px">Platforms available on release day</div>
-              <div class="sl-powered-by" style="margin-top:16px">Powered by <span style="color:var(--amber)">tahti.fi</span> · @dj-moonrise</div>
+              <div class="sl-powered-by" style="margin-top:16px">Powered by <span style="color:var(--amber)">tahti.live</span> · @dj-moonrise</div>
             </div>
           </div>
         </div>
@@ -1969,7 +1908,7 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
     <div class="browser reveal reveal-delay-3">
       <div class="browser-bar">
         <div class="browser-dots"><span></span><span></span><span></span></div>
-        <div class="browser-url">https://tahti.fi/<b>dashboard/stats</b></div>
+        <div class="browser-url">https://tahti.live/<b>dashboard/stats</b></div>
       </div>
       <div class="browser-content">
         <div class="ch-header">
@@ -2095,13 +2034,13 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <div class="step-card green"><div class="step-num green">03</div><h3>Contribute to the code</h3><p>The repo is open now, under AGPL-3.0. If you're technical, propose a PR. If you're an artist, open an issue — tell us what we're missing.</p></div>
       <div class="step-card cyan"><div class="step-num cyan">04</div><h3>Join the first AGM</h3><p>From the first AGM onward, every paying member has a voice. Pricing, grant formula, board composition — all up for discussion. Show up. Vote. Shape it.</p></div>
     </div>
-    <div class="callout reveal reveal-delay-3" style="max-width:640px;margin-top:0">
+    <div class="callout reveal reveal-delay-3" style="max-width:640px;margin:0 auto">
       <div class="callout-label">PRIVATE BETA IS CLOSED</div>
-      <p>We ran a private beta with a small group of artists to validate the core product. Applications are no longer accepted. <strong>The platform opens publicly on 1 August 2026</strong> — bookmark this page, or email <a href="mailto:hello@tahti.fi" style="color:var(--amber)">hello@tahti.fi</a> to be notified.</p>
+      <p>We ran a private beta with a small group of artists to validate the core product. Applications are no longer accepted. <strong>The platform opens publicly on 1 August 2026</strong> — bookmark this page, or email <a href="mailto:hello@tahti.live" style="color:var(--amber)">hello@tahti.live</a> to be notified.</p>
     </div>
 
     <div class="cta-footer reveal reveal-delay-4">
-      <span>TAHTI ry</span><span>HELSINKI</span><span>AGPL-3.0</span><span>hello@tahti.fi</span>
+      <span>TAHTI ry</span><span>HELSINKI</span><span>AGPL-3.0</span><span>hello@tahti.live</span>
     </div>
   </div>
 </section>
@@ -2871,20 +2810,6 @@ function switchMockup(id, btn) {
   if (window._resetMockupTimer) window._resetMockupTimer(id);
 }
 
-// ===== AUDIO EDITOR WAVEFORM =====
-(function() {
-  const container = document.getElementById('ae-wf-bars');
-  if (!container) return;
-  const SEL_START = 40, SEL_END = 80;
-  const total = 120;
-  const raw = [6,9,14,18,24,30,22,28,35,20,16,26,32,18,24,38,28,20,14,22,36,42,30,24,18,32,40,34,28,22,16,26,38,44,36,30,24,18,28,40,48,42,36,30,24,36,44,52,46,40,34,28,42,50,58,52,46,40,34,48,56,64,58,52,46,52,60,68,62,56,50,44,58,66,72,66,60,54,48,56,62,56,50,44,38,46,52,46,40,34,28,36,42,36,30,24,18,26,32,26,20,14,10,18,22,16,12,8,14,18,12,10,8,6,10,14,10,8,6,4];
-  for (let i = 0; i < total; i++) {
-    const bar = document.createElement('div');
-    bar.className = 'ae-wf-bar' + (i >= SEL_START && i < SEL_END ? ' sel' : '');
-    bar.style.height = Math.max(4, raw[i] || 4) + 'px';
-    container.appendChild(bar);
-  }
-})();
 
 // ===== MOCKUP AUTO-ROTATE =====
 (function() {
