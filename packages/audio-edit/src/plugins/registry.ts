@@ -8,18 +8,11 @@ import {
   DEFAULT_GAIN_PARAMS,
   compileGain,
   gainChainSummary,
-  createGainPreviewNode,
   gainLoudnormPass1Filter,
 } from './gain/index.js'
 import type { GainParams } from './gain/index.js'
 
-import {
-  EqParamsSchema,
-  DEFAULT_EQ_PARAMS,
-  compileEq,
-  eqChainSummary,
-  createEqPreviewNode,
-} from './eq/index.js'
+import { EqParamsSchema, DEFAULT_EQ_PARAMS, compileEq, eqChainSummary } from './eq/index.js'
 import type { EqBand, EqParams } from './eq/index.js'
 
 import {
@@ -27,7 +20,6 @@ import {
   DEFAULT_COMP_PARAMS,
   compileComp,
   compChainSummary,
-  createCompPreviewNode,
 } from './comp/index.js'
 import type { CompParams } from './comp/index.js'
 
@@ -36,7 +28,6 @@ import {
   DEFAULT_LIMITER_PARAMS,
   compileLimiter,
   limiterChainSummary,
-  createLimiterPreviewNode,
 } from './limiter/index.js'
 import type { LimiterParams } from './limiter/index.js'
 
@@ -50,10 +41,6 @@ export interface Plugin<P> {
   compile(params: P, ctx: CompileCtx): FilterStep | null
   /** Returns the loudnorm pass-1 filter string when this plugin requests it, else undefined. */
   loudnormPass1Filter?(params: P): string | undefined
-  createPreviewNode(
-    audioCtx: AudioContext,
-    params: P,
-  ): { input: AudioNode; output: AudioNode; update(p: P): void; dispose(): void }
   /** Compact one-line summary shown in the chain strip. */
   chainSummary(params: P, enabled: boolean): string
 }
@@ -68,7 +55,6 @@ const gainPlugin: Plugin<GainParams> = {
   paramsSchema: GainParamsSchema,
   compile: compileGain,
   loudnormPass1Filter: gainLoudnormPass1Filter,
-  createPreviewNode: createGainPreviewNode,
   chainSummary: gainChainSummary,
 }
 
@@ -78,7 +64,6 @@ const eqPlugin: Plugin<EqParams> = {
   defaultParams: DEFAULT_EQ_PARAMS,
   paramsSchema: EqParamsSchema,
   compile: compileEq,
-  createPreviewNode: createEqPreviewNode,
   chainSummary: eqChainSummary,
 }
 
@@ -88,7 +73,6 @@ const compPlugin: Plugin<CompParams> = {
   defaultParams: DEFAULT_COMP_PARAMS,
   paramsSchema: CompParamsSchema,
   compile: compileComp,
-  createPreviewNode: createCompPreviewNode,
   chainSummary: compChainSummary,
 }
 
@@ -98,7 +82,6 @@ const limiterPlugin: Plugin<LimiterParams> = {
   defaultParams: DEFAULT_LIMITER_PARAMS,
   paramsSchema: LimiterParamsSchema,
   compile: compileLimiter,
-  createPreviewNode: createLimiterPreviewNode,
   chainSummary: limiterChainSummary,
 }
 
