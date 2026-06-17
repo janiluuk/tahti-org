@@ -141,6 +141,57 @@ export function createDefaultEditList(sourceDuration: number): EditList {
   }
 }
 
+// ── EditList v2 — plugin-instance model ──────────────────────────────────────
+
+export const EditCutV2Schema = z.object({
+  id: z.string(),
+  start: z.number().finite().min(0),
+  end: z.number().finite().min(0.000001),
+})
+
+export const EditFadeV2Schema = z.object({
+  id: z.string(),
+  type: z.enum(['in', 'out']),
+  at: z.number().finite().min(0),
+  duration: z.number().finite().min(0).max(120),
+  curve: z.enum(['tri', 'exp']).default('tri'),
+})
+
+export const PluginInstanceSchema = z.object({
+  instanceId: z.string(),
+  pluginId: z.string(),
+  enabled: z.boolean(),
+  params: z.unknown(),
+})
+
+export const EditListV2Schema = z.object({
+  version: z.literal(2),
+  sourceDuration: z.number().finite().min(0.000001),
+  cuts: z.array(EditCutV2Schema).max(500),
+  fades: z.array(EditFadeV2Schema).max(100),
+  plugins: z.array(PluginInstanceSchema),
+})
+
+export type EditCutV2 = z.infer<typeof EditCutV2Schema>
+export type EditFadeV2 = z.infer<typeof EditFadeV2Schema>
+export type PluginInstance = z.infer<typeof PluginInstanceSchema>
+export type EditListV2 = z.infer<typeof EditListV2Schema>
+
+// ── Plugin interface ──────────────────────────────────────────────────────────
+
+export interface FilterStep {
+  graph: string
+  inLabel: string
+  outLabel: string
+}
+
+export interface CompileCtx {
+  inputLabel: string
+  outputLabel: string
+}
+
+export type MeasuredLoudness = LoudnormMeasured
+
 export const BROWSER_RENDER_MAX_BYTES = 600 * 1024 * 1024
 
 /** Pyramid level sample rates (samples per pixel bucket at 1280px width). */
