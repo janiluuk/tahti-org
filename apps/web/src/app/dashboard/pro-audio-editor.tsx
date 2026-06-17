@@ -5,7 +5,13 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { EditList, OutputFormat, PeaksPyramid } from '@tahti/audio-edit'
+import type {
+  EditList,
+  EditListV2,
+  HistoryState,
+  OutputFormat,
+  PeaksPyramid,
+} from '@tahti/audio-edit'
 import {
   postCutDuration,
   computeKeepSegments,
@@ -13,13 +19,27 @@ import {
   remapTracklistTimestamps,
   shouldRenderInBrowser,
   snapToNearestZeroCrossing,
-  DEFAULT_EQ_BANDS,
-  DEFAULT_COMP,
-  DEFAULT_LIMITER,
+  History,
+  migrateV1toV2,
+  gainChainSummary,
+  eqChainSummary,
+  compChainSummary,
+  limiterChainSummary,
+  DEFAULT_GAIN_PARAMS,
+  DEFAULT_EQ_PARAMS,
+  DEFAULT_COMP_PARAMS,
+  DEFAULT_LIMITER_PARAMS,
 } from '@tahti/audio-edit'
+import type { GainParams } from '@tahti/audio-edit'
+import type { EqParams } from '@tahti/audio-edit'
+import type { CompParams } from '@tahti/audio-edit'
+import type { LimiterParams } from '@tahti/audio-edit'
+import { GainPanel } from '@/lib/audio-editor/panels/GainPanel'
+import { EqPanel } from '@/lib/audio-editor/panels/EqPanel'
+import { CompPanel } from '@/lib/audio-editor/panels/CompPanel'
+import { LimiterPanel } from '@/lib/audio-editor/panels/LimiterPanel'
 import type { TracklistEntry } from '@tahti/shared'
 import type { FFmpeg } from '@ffmpeg/ffmpeg'
-import { Knob } from '@tahti/ui'
 import {
   completeArchiveVersionUpload,
   prepareArchiveVersionUpload,
@@ -41,7 +61,6 @@ import { loadPeaksCache, savePeaksCache } from '@/lib/audio-editor/peaks-cache'
 import {
   attachPreviewGraph,
   createPreviewSource,
-  readGainReductionDb,
   readPeakLevel,
 } from '@/lib/audio-editor/preview-audio'
 import {
@@ -49,10 +68,8 @@ import {
   drawOverlayLayer,
   drawWaveformLayer,
 } from '@/lib/audio-editor/waveform-draw'
-import { EQ_BAND_COLORS, EqCurve } from '@/lib/audio-editor/eq-curve'
 import { waitForRenderViaProgress } from '@/lib/audio-editor/render-progress'
 
-const HISTORY_CAP = 100
 const AUTOSAVE_MS = 2000
 const AUTOSAVE_KNOB_MS = 6000
 const CANVAS_MIN_WIDTH = 320
@@ -61,9 +78,55 @@ const WAVE_HEIGHT = 210
 const MINIMAP_HEIGHT = 38
 
 type EditorTab = 'waveform' | 'tracklist'
-
-type FocusedPlugin = 'gain' | 'eq' | 'comp' | 'limiter'
 type ToolId = 'select' | 'cut' | 'fade' | 'marker'
+
+/** Convert EditListV2 → EditList v1 for audio pipeline boundaries. */
+function v2ToV1(v2: EditListV2): EditList {
+  const gainP = v2.plugins.find((p) => p.pluginId === 'gain')
+  const eqP = v2.plugins.find((p) => p.pluginId === 'eq')
+  const compP = v2.plugins.find((p) => p.pluginId === 'comp')
+  const limP = v2.plugins.find((p) => p.pluginId === 'limiter')
+  const gp = gainP?.params as GainParams | undefined
+  const ep = eqP?.params as EqParams | undefined
+  const cp = compP?.params as CompParams | undefined
+  const lp = limP?.params as LimiterParams | undefined
+  return {
+    version: 1 as const,
+    sourceDuration: v2.sourceDuration,
+    gainDb: gp?.db ?? 0,
+    highPassHz: 0,
+    lowPassHz: 0,
+    loudnorm: {
+      enabled: gainP?.enabled !== false && (gp?.normalize.enabled ?? false),
+      targetLufs: gp?.normalize.targetLufs ?? -14,
+      targetTp: gp?.normalize.targetTp ?? -1.5,
+      measured: gp?.measured,
+    },
+    eq: {
+      enabled: eqP?.enabled ?? false,
+      bands: (ep?.bands ?? DEFAULT_EQ_PARAMS.bands).map((b) => ({
+        freq: b.freq,
+        gainDb: b.gainDb,
+        q: b.q,
+      })),
+    },
+    comp: {
+      enabled: compP?.enabled ?? false,
+      thresholdDb: cp?.thresholdDb ?? DEFAULT_COMP_PARAMS.thresholdDb,
+      ratio: cp?.ratio ?? DEFAULT_COMP_PARAMS.ratio,
+      attackMs: cp?.attackMs ?? DEFAULT_COMP_PARAMS.attackMs,
+      releaseMs: cp?.releaseMs ?? DEFAULT_COMP_PARAMS.releaseMs,
+      makeupDb: cp?.makeupDb ?? DEFAULT_COMP_PARAMS.makeupDb,
+    },
+    limiter: {
+      enabled: limP?.enabled ?? false,
+      ceilingDb: lp?.ceilingDb ?? DEFAULT_LIMITER_PARAMS.ceilingDb,
+      releaseMs: lp?.releaseMs ?? DEFAULT_LIMITER_PARAMS.releaseMs,
+    },
+    cuts: v2.cuts.map((c) => ({ start: c.start, end: c.end })),
+    fades: v2.fades.map((f) => ({ type: f.type, at: f.at, duration: f.duration, curve: f.curve })),
+  }
+}
 
 function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
@@ -92,11 +155,6 @@ function formatDurationDecimal(sec: number): string {
   return `${m}:${s.toFixed(1).padStart(4, '0')}`
 }
 
-function dbReadout(db: number): string {
-  if (db <= -60) return '−∞'
-  return `${db >= 0 ? '+' : ''}${db.toFixed(1)} dB`
-}
-
 function Switch({
   checked,
   onChange,
@@ -123,7 +181,7 @@ function Switch({
   )
 }
 
-function PlugItem({
+function ChainTile({
   position,
   name,
   summary,
@@ -138,16 +196,13 @@ function PlugItem({
   enabled: boolean
   focused: boolean
   onFocus: () => void
-  onToggle: (value: boolean) => void
+  onToggle: (v: boolean) => void
 }) {
   return (
     <button
       type="button"
       className={cx('plug', focused && 'plug--focused', !enabled && 'plug--bypassed')}
       onClick={onFocus}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') onFocus()
-      }}
     >
       <div className="plug__head">
         <span className="plug__name">
@@ -155,7 +210,7 @@ function PlugItem({
         </span>
         <Switch checked={enabled} onChange={onToggle} label={`${name} enabled`} />
       </div>
-      <div className="plug__summary">{summary}</div>
+      <div className="plug__summary plug__mono-summary">{summary}</div>
     </button>
   )
 }
@@ -181,9 +236,20 @@ export function ProAudioEditor({
   initialTracklist?: TracklistEntry[] | null
   initialEditorPeaks?: PeaksPyramid | null
 }) {
-  const [editList, setEditList] = useState(initialEditList)
-  const [past, setPast] = useState<EditList[]>([])
-  const [future, setFuture] = useState<EditList[]>([])
+  // Migrate v1→v2 once at mount; keep instance IDs stable via ref
+  const initialV2Ref = useRef(migrateV1toV2(initialEditList))
+
+  const [historyState, setHistoryState] = useState<HistoryState>(() =>
+    History.empty(initialV2Ref.current),
+  )
+  const editList = History.current(historyState).editList
+  const editListRef = useRef(editList)
+  editListRef.current = editList
+
+  const [focusedInstanceId, setFocusedInstanceId] = useState<string>(
+    () => initialV2Ref.current.plugins[0]!.instanceId,
+  )
+
   const [autosaveLabel, setAutosaveLabel] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [draftConflict, setDraftConflict] = useState(false)
@@ -202,7 +268,6 @@ export function ProAudioEditor({
     versionLabel: string
   } | null>(null)
   const [meterPeak, setMeterPeak] = useState(0)
-  const [grDb, setGrDb] = useState(0)
   const [viewStart, setViewStart] = useState(0)
   const [viewEnd, setViewEnd] = useState(1)
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null)
@@ -211,7 +276,6 @@ export function ProAudioEditor({
   const [playing, setPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [measuring, setMeasuring] = useState(false)
-  const [focusedPlugin, setFocusedPlugin] = useState<FocusedPlugin>('gain')
   const [activeTab, setActiveTab] = useState<EditorTab>('waveform')
   const [tracklist, setTracklist] = useState<TracklistEntry[] | null>(initialTracklist ?? null)
   const [tracklistError, setTracklistError] = useState<string | null>(null)
@@ -234,68 +298,48 @@ export function ProAudioEditor({
   const sourceBlobUrlRef = useRef<string | null>(null)
   const autosavePendingRef = useRef(false)
   const draftUpdatedAtRef = useRef<string | null>(draftUpdatedAt)
-  const editListRef = useRef(editList)
-  editListRef.current = editList
   const previewRef = useRef<ReturnType<typeof attachPreviewGraph> | null>(null)
   const previewSourceRef = useRef<ReturnType<typeof createPreviewSource> | null>(null)
 
-  const pushHistory = useCallback((updater: EditList | ((prev: EditList) => EditList)) => {
-    setEditList((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater
-      setPast((p) => [...p.slice(-(HISTORY_CAP - 1)), prev])
-      setFuture([])
-      return next
-    })
+  // ---- Plugin helpers ----
+  const pushEdit = useCallback((next: EditListV2, label = 'Edit') => {
+    setHistoryState((s) => History.push(s, next, label))
   }, [])
 
   const undo = useCallback(() => {
-    setPast((p) => {
-      if (!p.length) return p
-      const prev = p[p.length - 1]!
-      setEditList((cur) => {
-        setFuture((f) => [cur, ...f])
-        return prev
-      })
-      return p.slice(0, -1)
-    })
+    setHistoryState((s) => (History.canUndo(s) ? History.undo(s) : s))
   }, [])
 
   const redo = useCallback(() => {
-    setFuture((f) => {
-      if (!f.length) return f
-      const next = f[0]!
-      setEditList((cur) => {
-        setPast((p) => [...p, cur])
-        return next
-      })
-      return f.slice(1)
+    setHistoryState((s) => (History.canRedo(s) ? History.redo(s) : s))
+  }, [])
+
+  const patchPlugin = useCallback((instanceId: string, params: unknown) => {
+    setHistoryState((s) => {
+      const cur = History.current(s).editList
+      const next: EditListV2 = {
+        ...cur,
+        plugins: cur.plugins.map((p) => (p.instanceId === instanceId ? { ...p, params } : p)),
+      }
+      return History.push(s, next, 'Plugin param')
     })
   }, [])
 
-  useEffect(() => {
-    setIsolated(typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated)
-  }, [])
-
-  // Restore the focused plugin panel from the URL hash so it persists across reloads.
-  useEffect(() => {
-    const hash = window.location.hash.replace('#', '')
-    if (hash === 'gain' || hash === 'eq' || hash === 'comp' || hash === 'limiter') {
-      setFocusedPlugin(hash)
-    }
-  }, [])
-
-  const focusPlugin = useCallback((plugin: FocusedPlugin) => {
-    setFocusedPlugin(plugin)
-    window.history.replaceState(null, '', `#${plugin}`)
+  const togglePlugin = useCallback((instanceId: string, enabled: boolean) => {
+    setHistoryState((s) => {
+      const cur = History.current(s).editList
+      const next: EditListV2 = {
+        ...cur,
+        plugins: cur.plugins.map((p) => (p.instanceId === instanceId ? { ...p, enabled } : p)),
+      }
+      return History.push(s, next, enabled ? 'Enable plugin' : 'Bypass plugin')
+    })
   }, [])
 
   const flushDraftSave = useCallback(async () => {
     autosavePendingRef.current = true
-    const res = await saveArchiveEditListDraft(
-      archiveId,
-      editListRef.current,
-      draftUpdatedAtRef.current,
-    )
+    const v1 = v2ToV1(editListRef.current)
+    const res = await saveArchiveEditListDraft(archiveId, v1, draftUpdatedAtRef.current)
     autosavePendingRef.current = false
     if (res.conflict) {
       setDraftConflict(true)
@@ -320,6 +364,10 @@ export function ProAudioEditor({
       setAutosaveLabel('just now')
     }
   }, [archiveId])
+
+  useEffect(() => {
+    setIsolated(typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated)
+  }, [])
 
   useEffect(() => {
     if (!lastSavedAt) return
@@ -438,15 +486,13 @@ export function ProAudioEditor({
     if (!audio) return
     previewSourceRef.current = createPreviewSource(audio)
     return () => {
-      // Note: the AudioContext is intentionally not closed here — `createMediaElementSource`
-      // can only ever be called once per <audio> element, so the source is cached per
-      // element (see createPreviewSource) and survives React StrictMode's
-      // mount→cleanup→mount cycle in development.
+      // Note: AudioContext intentionally not closed — createMediaElementSource can only be
+      // called once per element; the source is cached per element across StrictMode cycles.
       previewRef.current?.disconnect()
       previewRef.current = null
       previewSourceRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- create the source node once per mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- create once per mount
   }, [])
 
   useEffect(() => {
@@ -454,7 +500,7 @@ export function ProAudioEditor({
     const source = previewSourceRef.current
     if (!audio || !source) return
     previewRef.current?.disconnect()
-    previewRef.current = attachPreviewGraph(source, audio, editList)
+    previewRef.current = attachPreviewGraph(source, audio, v2ToV1(editList))
     return () => previewRef.current?.disconnect()
   }, [editList])
 
@@ -477,12 +523,6 @@ export function ProAudioEditor({
       if (!playing && !measuring && !previewLoading) return
       if (previewRef.current) {
         setMeterPeak(readPeakLevel(previewRef.current.analyser))
-        setGrDb(
-          readGainReductionDb(
-            previewRef.current.preCompAnalyser,
-            previewRef.current.postCompAnalyser,
-          ),
-        )
       }
       raf = requestAnimationFrame(tick)
     }
@@ -541,21 +581,18 @@ export function ProAudioEditor({
     [editList],
   )
   const postDuration = useMemo(() => postCutDuration(segments), [segments])
+
+  const editListV1 = useMemo(() => v2ToV1(editList), [editList])
   const browserRender = useMemo(
-    () => shouldRenderInBrowser(editList, sourceFileSizeBytes),
-    [editList, sourceFileSizeBytes],
+    () => shouldRenderInBrowser(editListV1, sourceFileSizeBytes),
+    [editListV1, sourceFileSizeBytes],
   )
 
   const renderModePill = browserRender
     ? ffmpegLoading
       ? 'Loading ffmpeg…'
-      : `ffmpeg.wasm · LOCAL${!isolated ? ' · 1 thread' : ''}`
+      : `LOCAL · ffmpeg.wasm${!isolated ? ' · 1 thread' : ''}`
     : 'Server worker render'
-
-  const appliedDb =
-    editList.loudnorm.enabled && editList.loudnorm.measured
-      ? editList.loudnorm.targetLufs - editList.loudnorm.measured.i
-      : null
 
   function setSpan(rawSpan: number) {
     const span = Math.min(1, Math.max(0.001, rawSpan))
@@ -592,8 +629,8 @@ export function ProAudioEditor({
   }, [selection, snapEnabled, peaks?.zeroCrossingsSec])
 
   const remappedTracklist = useMemo(
-    () => (tracklist?.length ? remapTracklistTimestamps(tracklist, editList) : []),
-    [tracklist, editList],
+    () => (tracklist?.length ? remapTracklistTimestamps(tracklist, editListV1) : []),
+    [tracklist, editListV1],
   )
 
   useEffect(() => {
@@ -650,42 +687,77 @@ export function ProAudioEditor({
   const removeSelection = useCallback(() => {
     const final = snappedSelection()
     if (!final) return
-    pushHistory({
-      ...editList,
-      cuts: [...editList.cuts, { start: final.start, end: final.end }],
-    })
+    pushEdit(
+      {
+        ...editList,
+        cuts: [...editList.cuts, { id: crypto.randomUUID(), start: final.start, end: final.end }],
+      },
+      'Cut',
+    )
     setSelection(null)
-  }, [editList, pushHistory, snappedSelection])
+  }, [editList, pushEdit, snappedSelection])
 
   const applyFadeAtSelection = useCallback(() => {
     const final = snappedSelection()
     if (!final) return
     const dur = Math.max(0.05, Math.min(5, final.end - final.start))
-    pushHistory({
-      ...editList,
-      fades: [
-        ...editList.fades,
-        { type: 'in', at: final.start, duration: dur, curve: 'tri' },
-        {
-          type: 'out',
-          at: Math.max(final.start, final.end - dur),
-          duration: dur,
-          curve: 'tri',
-        },
-      ],
-    })
+    pushEdit(
+      {
+        ...editList,
+        fades: [
+          ...editList.fades,
+          {
+            id: crypto.randomUUID(),
+            type: 'in' as const,
+            at: final.start,
+            duration: dur,
+            curve: 'tri' as const,
+          },
+          {
+            id: crypto.randomUUID(),
+            type: 'out' as const,
+            at: Math.max(final.start, final.end - dur),
+            duration: dur,
+            curve: 'tri' as const,
+          },
+        ],
+      },
+      'Fade',
+    )
     setSelection(null)
-  }, [editList, pushHistory, snappedSelection])
+  }, [editList, pushEdit, snappedSelection])
 
   async function handleMeasure() {
     if (!ffmpeg || !inputPathRef.current) return
     setMeasuring(true)
     try {
-      const base = editList.loudnorm.enabled
-        ? editList
-        : { ...editList, loudnorm: { ...editList.loudnorm, enabled: true } }
-      const measured = await measureLoudnorm(ffmpeg, base, inputPathRef.current)
-      pushHistory(measured ? { ...base, loudnorm: { ...base.loudnorm, measured } } : base)
+      const gainPlugin = editList.plugins.find((p) => p.pluginId === 'gain')
+      if (!gainPlugin) return
+      const gp = gainPlugin.params as GainParams
+      const enabledParams: GainParams = gp.normalize.enabled
+        ? gp
+        : { ...gp, normalize: { ...gp.normalize, enabled: true } }
+
+      const v1 = v2ToV1({
+        ...editList,
+        plugins: editList.plugins.map((p) =>
+          p.instanceId === gainPlugin.instanceId ? { ...p, params: enabledParams } : p,
+        ),
+      })
+      const measured = await measureLoudnorm(ffmpeg, v1, inputPathRef.current)
+      if (measured) {
+        pushEdit(
+          {
+            ...editList,
+            plugins: editList.plugins.map((p) =>
+              p.instanceId === gainPlugin.instanceId
+                ? { ...p, params: { ...enabledParams, measured } }
+                : p,
+            ),
+          },
+          'Measure loudness',
+        )
+      }
     } finally {
       setMeasuring(false)
     }
@@ -695,17 +767,11 @@ export function ProAudioEditor({
     setPreviewError(null)
     setPreviewLoading(true)
     try {
+      const v1 = v2ToV1(editList)
       if (browserRender && ffmpeg && inputPathRef.current) {
-        const out = await renderEditToFile(
-          ffmpeg,
-          editList,
-          inputPathRef.current,
-          'mp3',
-          undefined,
-          {
-            maxDurationSec: 30,
-          },
-        )
+        const out = await renderEditToFile(ffmpeg, v1, inputPathRef.current, 'mp3', undefined, {
+          maxDurationSec: 30,
+        })
         const blob = new Blob([new Uint8Array(out)], { type: 'audio/mpeg' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -717,7 +783,7 @@ export function ProAudioEditor({
       }
 
       const res = await renderArchiveEditList(archiveId, {
-        editList,
+        editList: v1,
         versionLabel: `Preview ${new Date().toISOString().slice(0, 16)}`,
         activate: false,
         format: 'mp3',
@@ -753,11 +819,12 @@ export function ProAudioEditor({
     setExportSuccess(null)
     setExportProgress(0)
     const label = `Pro edit ${new Date().toISOString().slice(0, 10)}`
+    const v1 = v2ToV1(editList)
 
     try {
       if (!browserRender) {
         const res = await renderArchiveEditList(archiveId, {
-          editList,
+          editList: v1,
           versionLabel: label,
           activate: true,
           format: format === 'wav' ? 'flac' : format,
@@ -780,12 +847,22 @@ export function ProAudioEditor({
 
       if (!ffmpeg || !inputPathRef.current) return
 
-      let list = editList
+      let list = v1
       if (list.loudnorm.enabled && !list.loudnorm.measured) {
         const measured = await measureLoudnorm(ffmpeg, list, inputPathRef.current)
         if (measured) {
-          list = { ...list, loudnorm: { ...list.loudnorm, measured } }
-          setEditList(list)
+          // reflect measured back into v2 and re-derive v1
+          const gainPlugin = editList.plugins.find((p) => p.pluginId === 'gain')!
+          const updated: EditListV2 = {
+            ...editList,
+            plugins: editList.plugins.map((p) =>
+              p.instanceId === gainPlugin.instanceId
+                ? { ...p, params: { ...(gainPlugin.params as GainParams), measured } }
+                : p,
+            ),
+          }
+          setHistoryState((s) => History.push(s, updated, 'Measure for export'))
+          list = v2ToV1(updated)
         }
       }
 
@@ -795,10 +872,7 @@ export function ProAudioEditor({
       const filename = `edit.${format}`
       const bytes = new Uint8Array(out)
       const blob = new Blob([bytes], { type: contentType })
-      const prep = await prepareArchiveVersionUpload(archiveId, {
-        filename,
-        contentType,
-      })
+      const prep = await prepareArchiveVersionUpload(archiveId, { filename, contentType })
       if (prep.error || !prep.uploadUrl || !prep.uploadId)
         throw new Error(prep.error ?? 'Prepare failed')
 
@@ -872,28 +946,6 @@ export function ProAudioEditor({
     }
   }, [ffmpeg])
 
-  // ---- Rail summaries (single source of truth: EditList) ----
-  const gainSummary = `${editList.gainDb >= 0 ? '+' : ''}${editList.gainDb.toFixed(1)} dB → ${editList.loudnorm.targetLufs} LUFS${
-    appliedDb !== null ? ` (${appliedDb >= 0 ? '+' : ''}${appliedDb.toFixed(1)})` : ''
-  }`
-  const eqSummary = editList.eq.bands
-    .map((b) => `${b.gainDb >= 0 ? '+' : ''}${b.gainDb.toFixed(1)}`)
-    .join(' · ')
-    .concat(' dB')
-  const compSummary = editList.comp.enabled
-    ? `${editList.comp.thresholdDb} dB · ${editList.comp.ratio}:1 · ${editList.comp.attackMs} ms`
-    : 'bypassed'
-  const limiterSummary = editList.limiter.enabled
-    ? `${editList.limiter.ceilingDb} dBTP ceiling`
-    : 'bypassed'
-
-  const integratedDisplay = editList.loudnorm.enabled ? `${editList.loudnorm.targetLufs} LUFS` : '—'
-  const truePeakDisplay = editList.limiter.enabled
-    ? `${editList.limiter.ceilingDb} dBTP`
-    : editList.loudnorm.enabled
-      ? `${editList.loudnorm.targetTp} dBTP`
-      : '—'
-
   const ruler = useMemo(() => {
     const ticks: number[] = []
     for (let i = 0; i <= 6; i++) {
@@ -901,6 +953,33 @@ export function ProAudioEditor({
     }
     return ticks
   }, [viewStart, span, editList.sourceDuration])
+
+  // ---- Derived plugin values ----
+  const gainPlugin = editList.plugins.find((p) => p.pluginId === 'gain')
+  const eqPlugin = editList.plugins.find((p) => p.pluginId === 'eq')
+  const compPlugin = editList.plugins.find((p) => p.pluginId === 'comp')
+  const limiterPlugin = editList.plugins.find((p) => p.pluginId === 'limiter')
+  const gainParams = gainPlugin?.params as GainParams | undefined
+  const eqParams = eqPlugin?.params as EqParams | undefined
+  const compParams = compPlugin?.params as CompParams | undefined
+  const limiterParams = limiterPlugin?.params as LimiterParams | undefined
+
+  const focusedPlugin =
+    editList.plugins.find((p) => p.instanceId === focusedInstanceId) ?? editList.plugins[0]!
+
+  const renderLufs =
+    gainPlugin?.enabled && gainParams?.normalize.enabled
+      ? `${gainParams.normalize.targetLufs} LUFS`
+      : '—'
+  const renderTp =
+    limiterPlugin?.enabled && limiterParams
+      ? `${limiterParams.ceilingDb} dBTP`
+      : gainPlugin?.enabled && gainParams?.normalize.enabled
+        ? `${gainParams.normalize.targetTp} dBTP`
+        : '—'
+
+  const pluginPosition = (instanceId: string) =>
+    editList.plugins.findIndex((p) => p.instanceId === instanceId) + 1
 
   return (
     <div className="pro-editor-shell">
@@ -913,16 +992,14 @@ export function ProAudioEditor({
             </Link>
             <h1 className="pro-editor-title">{title}</h1>
             <span className="pro-editor-meta">{formatDuration(editList.sourceDuration)}</span>
+            <span className="pro-editor-subline">
+              {autosaveLabel
+                ? `autosaved ${autosaveLabel}`
+                : draftUpdatedAt
+                  ? `loaded ${new Date(draftUpdatedAt).toLocaleTimeString()}`
+                  : ''}
+            </span>
           </div>
-          <span className="pro-editor-subline">
-            edit list: {editList.cuts.length + editList.fades.length} operations · original
-            preserved
-            {autosaveLabel
-              ? ` · saved ${autosaveLabel}`
-              : draftUpdatedAt
-                ? ` · loaded ${new Date(draftUpdatedAt).toLocaleTimeString()}`
-                : ''}
-          </span>
         </div>
         <div className="pro-editor-topbar__right">
           {saveError && (
@@ -961,17 +1038,14 @@ export function ProAudioEditor({
               browserRender ? 'pro-editor-pill--green' : 'pro-editor-pill--amber',
             )}
           >
-            ⚙ {renderModePill}
+            ⊙ {renderModePill}
           </span>
-          <button type="button" className="studio-btn-ghost" onClick={() => void flushDraftSave()}>
-            Save draft
-          </button>
           <button
             type="button"
             className="studio-btn-primary"
             onClick={() => setExportDialogOpen(true)}
           >
-            Export &amp; publish →
+            Export →
           </button>
         </div>
       </header>
@@ -993,8 +1067,7 @@ export function ProAudioEditor({
           aria-selected={activeTab === 'tracklist'}
           onClick={() => setActiveTab('tracklist')}
         >
-          Tracklist
-          {tracklist?.length ? ` (${tracklist.length})` : ''}
+          Tracklist{tracklist?.length ? ` (${tracklist.length})` : ''}
         </button>
       </nav>
 
@@ -1112,7 +1185,7 @@ export function ProAudioEditor({
                 type="button"
                 className="pro-editor-tool-btn"
                 onClick={undo}
-                disabled={!past.length}
+                disabled={!History.canUndo(historyState)}
               >
                 ↶
               </button>
@@ -1120,7 +1193,7 @@ export function ProAudioEditor({
                 type="button"
                 className="pro-editor-tool-btn"
                 onClick={redo}
-                disabled={!future.length}
+                disabled={!History.canRedo(historyState)}
               >
                 ↷
               </button>
@@ -1142,22 +1215,20 @@ export function ProAudioEditor({
             </div>
           </div>
 
-          {activeTab === 'waveform' &&
-            peaks?.silenceRegionsSec &&
-            peaks.silenceRegionsSec.length > 0 && (
-              <div className="pro-editor-silence-row" aria-label="Silence regions">
-                {peaks.silenceRegionsSec.map((region, i) => (
-                  <button
-                    key={`${region.start}-${i}`}
-                    type="button"
-                    className="pro-editor-silence-chip"
-                    onClick={() => seekToSec(region.start)}
-                  >
-                    silence · {formatDurationDecimal(region.start)}
-                  </button>
-                ))}
-              </div>
-            )}
+          {peaks?.silenceRegionsSec && peaks.silenceRegionsSec.length > 0 && (
+            <div className="pro-editor-silence-row" aria-label="Silence regions">
+              {peaks.silenceRegionsSec.map((region, i) => (
+                <button
+                  key={`${region.start}-${i}`}
+                  type="button"
+                  className="pro-editor-silence-chip"
+                  onClick={() => seekToSec(region.start)}
+                >
+                  silence · {formatDurationDecimal(region.start)}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* ---- Timeline ruler ---- */}
           <div className="pro-editor-ruler">
@@ -1237,7 +1308,7 @@ export function ProAudioEditor({
               </div>
               {selection && (
                 <div className="pro-editor-selection-pill">
-                  SELECTION · {formatDurationDecimal(selection.end - selection.start)}
+                  SEL · {formatDurationDecimal(selection.end - selection.start)}
                 </div>
               )}
             </div>
@@ -1307,472 +1378,171 @@ export function ProAudioEditor({
                 />
               </div>
               <span className="pro-editor-out-readout">
-                {meterPeak > 0 ? `${(20 * Math.log10(meterPeak)).toFixed(1)} dB` : '−∞'}
+                {meterPeak > 0 ? `${(20 * Math.log10(meterPeak)).toFixed(1)} dBFS` : '−∞'}
               </span>
             </div>
           </div>
-        </>
-      )}
 
-      {activeTab === 'waveform' && (
-        <div className="pro-editor-bottom">
-          {/* Focused plugin panel */}
-          <div>
-            {focusedPlugin === 'gain' && (
-              <div className="pro-editor-panel">
-                <div className="pro-editor-panel__header">
-                  <div className="pro-editor-panel__heading">
-                    <h2 className="pro-editor-panel__title">Gain &amp; Normalize</h2>
-                    <span className="pro-editor-panel__pill">IN CHAIN · POSITION 1</span>
-                  </div>
-                  <div className="pro-editor-panel__actions">
-                    <button
-                      type="button"
-                      className="studio-btn-ghost studio-btn-sm"
-                      onClick={() =>
-                        pushHistory({
-                          ...editList,
-                          gainDb: 0,
-                          loudnorm: { enabled: false, targetLufs: -14, targetTp: -1.5 },
-                        })
-                      }
-                    >
-                      Reset
-                    </button>
-                    <Switch
-                      checked={editList.loudnorm.enabled}
-                      onChange={(v) =>
-                        pushHistory({ ...editList, loudnorm: { ...editList.loudnorm, enabled: v } })
-                      }
-                      label="Loudness normalize enabled"
-                    />
-                  </div>
-                </div>
-                <div className="pro-editor-panel__body" onPointerDown={beginKnobDrag}>
-                  <Knob
-                    label="Gain"
-                    value={editList.gainDb}
-                    min={-12}
-                    max={12}
-                    step={0.1}
-                    unit=" dB"
-                    color="var(--cyan)"
-                    defaultValue={0}
-                    onChange={(v) => pushHistory({ ...editList, gainDb: v })}
-                  />
-                  <div className="pro-editor-norm-block">
-                    <label className="pro-editor-norm-row pro-editor-norm-row--target">
-                      <span>Target</span>
-                      <select
-                        value={editList.loudnorm.targetLufs}
-                        onChange={(e) =>
-                          pushHistory({
-                            ...editList,
-                            loudnorm: {
-                              ...editList.loudnorm,
-                              targetLufs: Number(e.target.value),
-                              measured: undefined,
-                            },
-                          })
-                        }
-                      >
-                        <option value={-14}>−14 LUFS (streaming)</option>
-                        <option value={-16}>−16 LUFS</option>
-                        <option value={-23}>−23 LUFS (EBU)</option>
-                        {![-14, -16, -23].includes(editList.loudnorm.targetLufs) && (
-                          <option value={editList.loudnorm.targetLufs}>
-                            {editList.loudnorm.targetLufs} LUFS (custom)
-                          </option>
-                        )}
-                      </select>
-                    </label>
-                    <div className="pro-editor-norm-row">
-                      <span>Measured</span>
-                      {editList.loudnorm.measured ? (
-                        <span>{editList.loudnorm.measured.i.toFixed(1)} LUFS</span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="studio-btn-ghost studio-btn-sm"
-                          disabled={!ffmpeg || ffmpegLoading || measuring}
-                          onClick={() => void handleMeasure()}
-                        >
-                          {measuring ? 'Measuring…' : 'Measure'}
-                        </button>
-                      )}
-                    </div>
-                    <div className="pro-editor-norm-row pro-editor-norm-row--applied">
-                      <span>Applied</span>
-                      <span>{appliedDb !== null ? dbReadout(appliedDb) : '—'}</span>
-                    </div>
-                    <button
-                      type="button"
-                      className="studio-btn-secondary"
-                      disabled={!ffmpeg || ffmpegLoading || measuring}
-                      onClick={() => void handleMeasure()}
-                    >
-                      ⚖ Normalize (loudnorm 2-pass)
-                    </button>
-                  </div>
-                </div>
-                <p className="pro-editor-panel__hint">
-                  drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step
-                </p>
-              </div>
-            )}
+          {/* ---- Plugin chain strip ---- */}
+          <div className="pro-editor-chain">
+            <div className="pro-editor-chain__header">
+              <span>PLUGIN CHAIN · SIGNAL FLOW →</span>
+              <span>click to focus · toggle to bypass</span>
+            </div>
+            <div className="pro-editor-chain__strip">
+              {editList.plugins.map((plugin, i) => {
+                let summary = ''
+                if (plugin.pluginId === 'gain')
+                  summary = gainChainSummary(plugin.params as GainParams, plugin.enabled)
+                else if (plugin.pluginId === 'eq')
+                  summary = eqChainSummary(plugin.params as EqParams, plugin.enabled)
+                else if (plugin.pluginId === 'comp')
+                  summary = compChainSummary(plugin.params as CompParams, plugin.enabled)
+                else if (plugin.pluginId === 'limiter')
+                  summary = limiterChainSummary(plugin.params as LimiterParams, plugin.enabled)
 
-            {focusedPlugin === 'eq' && (
-              <div className="pro-editor-panel">
-                <div className="pro-editor-panel__header">
-                  <div className="pro-editor-panel__heading">
-                    <h2 className="pro-editor-panel__title">EQ — 3 band</h2>
-                    <span className="pro-editor-panel__pill">IN CHAIN · POSITION 2</span>
-                  </div>
-                  <div className="pro-editor-panel__actions">
-                    <button
-                      type="button"
-                      className="studio-btn-ghost studio-btn-sm"
-                      onClick={() =>
-                        pushHistory({
-                          ...editList,
-                          eq: { ...editList.eq, bands: DEFAULT_EQ_BANDS.map((b) => ({ ...b })) },
-                        })
-                      }
-                    >
-                      Reset
-                    </button>
-                    <Switch
-                      checked={editList.eq.enabled}
-                      onChange={(v) =>
-                        pushHistory({ ...editList, eq: { ...editList.eq, enabled: v } })
-                      }
-                      label="EQ enabled"
-                    />
-                  </div>
-                </div>
-                <EqCurve
-                  bands={editList.eq.bands}
-                  onChange={(i, next) => {
-                    const bands = editList.eq.bands.map((b, j) => (j === i ? { ...b, ...next } : b))
-                    pushHistory({ ...editList, eq: { ...editList.eq, bands } })
-                  }}
-                />
-                <div className="pro-editor-eq-bands" onPointerDown={beginKnobDrag}>
-                  {editList.eq.bands.map((band, i) => (
-                    <div key={i} className="pro-editor-eq-band">
-                      <Knob
-                        label={`Band ${i + 1}`}
-                        value={band.gainDb}
-                        min={-24}
-                        max={24}
-                        step={0.5}
-                        unit=" dB"
-                        color={EQ_BAND_COLORS[i % EQ_BAND_COLORS.length]}
-                        defaultValue={DEFAULT_EQ_BANDS[i]?.gainDb ?? 0}
-                        onChange={(v) => {
-                          const bands = editList.eq.bands.map((b, j) =>
-                            j === i ? { ...b, gainDb: v } : b,
-                          )
-                          pushHistory({ ...editList, eq: { ...editList.eq, bands } })
-                        }}
-                      />
-                      <span className="pro-editor-eq-band__freq">{band.freq} Hz</span>
-                      <span className="pro-editor-eq-band__q">Q {band.q.toFixed(1)}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="pro-editor-panel__hint">
-                  drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step ·
-                  drag curve dots to set frequency &amp; gain
-                </p>
-              </div>
-            )}
+                const pluginName =
+                  plugin.pluginId === 'gain'
+                    ? 'Gain'
+                    : plugin.pluginId === 'eq'
+                      ? 'EQ'
+                      : plugin.pluginId === 'comp'
+                        ? 'Comp'
+                        : 'Limiter'
 
-            {focusedPlugin === 'comp' && (
-              <div className="pro-editor-panel">
-                <div className="pro-editor-panel__header">
-                  <div className="pro-editor-panel__heading">
-                    <h2 className="pro-editor-panel__title">Compressor</h2>
-                    <span className="pro-editor-panel__pill">IN CHAIN · POSITION 3</span>
-                  </div>
-                  <div className="pro-editor-panel__actions">
-                    <button
-                      type="button"
-                      className="studio-btn-ghost studio-btn-sm"
-                      onClick={() => pushHistory({ ...editList, comp: { ...DEFAULT_COMP } })}
-                    >
-                      Reset
-                    </button>
-                    <Switch
-                      checked={editList.comp.enabled}
-                      onChange={(v) =>
-                        pushHistory({ ...editList, comp: { ...editList.comp, enabled: v } })
-                      }
-                      label="Compressor enabled"
-                    />
-                  </div>
-                </div>
-                <div className="pro-editor-panel__body">
-                  <div className="pro-editor-knob-row" onPointerDown={beginKnobDrag}>
-                    <Knob
-                      label="Threshold"
-                      value={editList.comp.thresholdDb}
-                      min={-60}
-                      max={0}
-                      step={1}
-                      unit=" dB"
-                      color="var(--cyan)"
-                      defaultValue={DEFAULT_COMP.thresholdDb}
-                      onChange={(v) =>
-                        pushHistory({ ...editList, comp: { ...editList.comp, thresholdDb: v } })
-                      }
-                    />
-                    <Knob
-                      label="Ratio"
-                      value={editList.comp.ratio}
-                      min={1}
-                      max={20}
-                      step={0.5}
-                      unit=":1"
-                      color="var(--cyan)"
-                      defaultValue={DEFAULT_COMP.ratio}
-                      onChange={(v) =>
-                        pushHistory({ ...editList, comp: { ...editList.comp, ratio: v } })
-                      }
-                    />
-                    <Knob
-                      label="Attack"
-                      value={editList.comp.attackMs}
-                      min={0.1}
-                      max={200}
-                      step={0.5}
-                      unit=" ms"
-                      color="var(--cyan)"
-                      defaultValue={DEFAULT_COMP.attackMs}
-                      onChange={(v) =>
-                        pushHistory({ ...editList, comp: { ...editList.comp, attackMs: v } })
-                      }
-                    />
-                    <Knob
-                      label="Release"
-                      value={editList.comp.releaseMs}
-                      min={10}
-                      max={1000}
-                      step={5}
-                      unit=" ms"
-                      color="var(--cyan)"
-                      defaultValue={DEFAULT_COMP.releaseMs}
-                      onChange={(v) =>
-                        pushHistory({ ...editList, comp: { ...editList.comp, releaseMs: v } })
-                      }
-                    />
-                    <Knob
-                      label="Makeup"
-                      value={editList.comp.makeupDb}
-                      min={0}
-                      max={12}
-                      step={0.5}
-                      unit=" dB"
-                      color="var(--cyan)"
-                      defaultValue={DEFAULT_COMP.makeupDb}
-                      onChange={(v) =>
-                        pushHistory({ ...editList, comp: { ...editList.comp, makeupDb: v } })
-                      }
-                    />
-                  </div>
-                  <div className="pro-editor-gr-meter">
-                    <div className="pro-editor-gr-meter__track">
-                      <div
-                        className="pro-editor-gr-meter__fill"
-                        style={{ height: `${Math.min(100, (grDb / 24) * 100)}%` }}
+                return (
+                  <div key={plugin.instanceId} className="pro-editor-chain__cell">
+                    {i > 0 && (
+                      <span className="pro-editor-chain__arrow" aria-hidden>
+                        →
+                      </span>
+                    )}
+                    <div className="pro-editor-chain__tile">
+                      <ChainTile
+                        position={i + 1}
+                        name={pluginName}
+                        summary={summary}
+                        enabled={plugin.enabled}
+                        focused={plugin.instanceId === focusedInstanceId}
+                        onFocus={() => setFocusedInstanceId(plugin.instanceId)}
+                        onToggle={(v) => togglePlugin(plugin.instanceId, v)}
                       />
                     </div>
-                    <span className="pro-editor-gr-meter__label">GR ≈ {grDb.toFixed(1)}</span>
                   </div>
-                </div>
-                <p className="pro-editor-panel__hint">
-                  drag knob · double-click value to type · ⌥drag = fine · scroll on knob = step
-                </p>
-              </div>
-            )}
-
-            {focusedPlugin === 'limiter' && (
-              <div className="pro-editor-panel">
-                <div className="pro-editor-panel__header">
-                  <div className="pro-editor-panel__heading">
-                    <h2 className="pro-editor-panel__title">Limiter</h2>
-                    <span className="pro-editor-panel__pill">IN CHAIN · POSITION 4</span>
-                  </div>
-                  <div className="pro-editor-panel__actions">
-                    <button
-                      type="button"
-                      className="studio-btn-ghost studio-btn-sm"
-                      onClick={() => pushHistory({ ...editList, limiter: { ...DEFAULT_LIMITER } })}
-                    >
-                      Reset
-                    </button>
-                    <Switch
-                      checked={editList.limiter.enabled}
-                      onChange={(v) =>
-                        pushHistory({ ...editList, limiter: { ...editList.limiter, enabled: v } })
-                      }
-                      label="Limiter enabled"
-                    />
-                  </div>
-                </div>
-                <div className="pro-editor-knob-row" onPointerDown={beginKnobDrag}>
-                  <Knob
-                    label="Ceiling"
-                    value={editList.limiter.ceilingDb}
-                    min={-3}
-                    max={0}
-                    step={0.1}
-                    unit=" dBTP"
-                    color="var(--coral)"
-                    defaultValue={DEFAULT_LIMITER.ceilingDb}
-                    onChange={(v) =>
-                      pushHistory({ ...editList, limiter: { ...editList.limiter, ceilingDb: v } })
-                    }
-                  />
-                  <Knob
-                    label="Release"
-                    value={editList.limiter.releaseMs}
-                    min={1}
-                    max={1000}
-                    step={1}
-                    unit=" ms"
-                    color="var(--cyan)"
-                    defaultValue={DEFAULT_LIMITER.releaseMs}
-                    onChange={(v) =>
-                      pushHistory({ ...editList, limiter: { ...editList.limiter, releaseMs: v } })
-                    }
-                  />
-                </div>
-                <p className="pro-editor-panel__hint">
-                  applied before loudnorm · protects true peak
-                </p>
-              </div>
-            )}
+                )
+              })}
+            </div>
           </div>
 
-          {/* Plugin chain rail + export */}
-          <aside className="pro-editor-rail" aria-label="Plugin chain">
-            <div className="pro-editor-rail__header">
-              <span>PLUGIN CHAIN</span>
-              <span>signal ↓</span>
+          {/* ---- Focused plugin panel ---- */}
+          <div className="pro-editor-panel-area">
+            <div className="pro-editor-panel">
+              <div className="pro-editor-panel__header">
+                <div className="pro-editor-panel__heading">
+                  <h2 className="pro-editor-panel__title">
+                    {focusedPlugin.pluginId === 'gain'
+                      ? 'Gain & Normalize'
+                      : focusedPlugin.pluginId === 'eq'
+                        ? 'EQ — 3 band parametric'
+                        : focusedPlugin.pluginId === 'comp'
+                          ? 'Compressor'
+                          : 'Limiter'}
+                  </h2>
+                  <span className="pro-editor-panel__pill">
+                    POSITION {pluginPosition(focusedPlugin.instanceId)} ·{' '}
+                    {focusedPlugin.enabled ? 'ENABLED' : 'BYPASSED'}
+                  </span>
+                </div>
+                <div className="pro-editor-panel__actions">
+                  <button
+                    type="button"
+                    className="studio-btn-ghost studio-btn-sm"
+                    onClick={() => {
+                      const defaults =
+                        focusedPlugin.pluginId === 'gain'
+                          ? { ...DEFAULT_GAIN_PARAMS }
+                          : focusedPlugin.pluginId === 'eq'
+                            ? { ...DEFAULT_EQ_PARAMS }
+                            : focusedPlugin.pluginId === 'comp'
+                              ? { ...DEFAULT_COMP_PARAMS }
+                              : { ...DEFAULT_LIMITER_PARAMS }
+                      patchPlugin(focusedPlugin.instanceId, defaults)
+                    }}
+                  >
+                    Reset
+                  </button>
+                  <Switch
+                    checked={focusedPlugin.enabled}
+                    onChange={(v) => togglePlugin(focusedPlugin.instanceId, v)}
+                    label={`${focusedPlugin.pluginId} enabled`}
+                  />
+                </div>
+              </div>
+              <div onPointerDown={beginKnobDrag}>
+                {focusedPlugin.pluginId === 'gain' && gainPlugin && gainParams && (
+                  <GainPanel
+                    params={gainParams}
+                    onChange={(p) => patchPlugin(gainPlugin.instanceId, p)}
+                    measured={gainParams.measured}
+                    onMeasure={() => void handleMeasure()}
+                    measuring={measuring}
+                  />
+                )}
+                {focusedPlugin.pluginId === 'eq' && eqPlugin && eqParams && (
+                  <EqPanel
+                    params={eqParams}
+                    onChange={(p) => patchPlugin(eqPlugin.instanceId, p)}
+                  />
+                )}
+                {focusedPlugin.pluginId === 'comp' && compPlugin && compParams && (
+                  <CompPanel
+                    params={compParams}
+                    onChange={(p) => patchPlugin(compPlugin.instanceId, p)}
+                  />
+                )}
+                {focusedPlugin.pluginId === 'limiter' && limiterPlugin && limiterParams && (
+                  <LimiterPanel
+                    params={limiterParams}
+                    onChange={(p) => patchPlugin(limiterPlugin.instanceId, p)}
+                  />
+                )}
+              </div>
+              <p className="pro-editor-panel__hint">
+                drag knob · double-click to type · ⌥drag = fine · scroll = step
+              </p>
             </div>
-            <div className="pro-editor-rail__list">
-              <PlugItem
-                position={1}
-                name="Gain & Normalize"
-                summary={gainSummary}
-                enabled={editList.loudnorm.enabled}
-                focused={focusedPlugin === 'gain'}
-                onFocus={() => focusPlugin('gain')}
-                onToggle={(v) =>
-                  pushHistory({ ...editList, loudnorm: { ...editList.loudnorm, enabled: v } })
-                }
-              />
-              <PlugItem
-                position={2}
-                name="EQ"
-                summary={eqSummary}
-                enabled={editList.eq.enabled}
-                focused={focusedPlugin === 'eq'}
-                onFocus={() => focusPlugin('eq')}
-                onToggle={(v) => pushHistory({ ...editList, eq: { ...editList.eq, enabled: v } })}
-              />
-              <PlugItem
-                position={3}
-                name="Compressor"
-                summary={compSummary}
-                enabled={editList.comp.enabled}
-                focused={focusedPlugin === 'comp'}
-                onFocus={() => focusPlugin('comp')}
-                onToggle={(v) =>
-                  pushHistory({ ...editList, comp: { ...editList.comp, enabled: v } })
-                }
-              />
-              <PlugItem
-                position={4}
-                name="Limiter"
-                summary={limiterSummary}
-                enabled={editList.limiter.enabled}
-                focused={focusedPlugin === 'limiter'}
-                onFocus={() => focusPlugin('limiter')}
-                onToggle={(v) =>
-                  pushHistory({ ...editList, limiter: { ...editList.limiter, enabled: v } })
-                }
-              />
-            </div>
+          </div>
 
-            <button
-              type="button"
-              className="pro-editor-export-card"
-              onClick={() => setExportDialogOpen(true)}
-            >
-              <div className="pro-editor-export-card__head">
-                <span>EXPORT</span>
-                <span className="pro-editor-pill pro-editor-pill--green">LOCAL</span>
-              </div>
-              <div
+          {/* ---- Render summary bar ---- */}
+          <div className="pro-editor-render-bar">
+            <span className="pro-editor-render-bar__label">WILL RENDER</span>
+            <span className="pro-editor-render-bar__values">
+              {renderLufs} · {renderTp} · {formatDuration(postDuration)}
+            </span>
+            <div className="pro-editor-render-bar__pills">
+              <button
+                type="button"
                 className={cx(
-                  'pro-editor-export-card__row',
-                  editList.loudnorm.enabled && 'pro-editor-export-card__row--ok',
+                  'pro-editor-format-pill',
+                  exportFormat === 'flac' && 'pro-editor-format-pill--active',
                 )}
+                onClick={() => setExportFormat('flac')}
               >
-                <span>Integrated</span>
-                <span>{integratedDisplay}</span>
-              </div>
-              <div
+                FLAC 24/96
+              </button>
+              <button
+                type="button"
                 className={cx(
-                  'pro-editor-export-card__row',
-                  editList.limiter.enabled && 'pro-editor-export-card__row--ok',
+                  'pro-editor-format-pill',
+                  exportFormat === 'mp3' && 'pro-editor-format-pill--active',
                 )}
+                onClick={() => setExportFormat('mp3')}
               >
-                <span>True peak</span>
-                <span>{truePeakDisplay}</span>
-              </div>
-              <div className="pro-editor-export-card__row">
-                <span>Duration</span>
-                <span>{formatDuration(postDuration)}</span>
-              </div>
-              <div className="pro-editor-export-card__pills">
-                <button
-                  type="button"
-                  className={cx(
-                    'pro-editor-format-pill',
-                    exportFormat === 'flac' && 'pro-editor-format-pill--active',
-                  )}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setExportFormat('flac')
-                  }}
-                >
-                  FLAC 24/96
-                </button>
-                <button
-                  type="button"
-                  className={cx(
-                    'pro-editor-format-pill',
-                    exportFormat === 'mp3' && 'pro-editor-format-pill--active',
-                  )}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setExportFormat('mp3')
-                  }}
-                >
-                  MP3 320
-                </button>
-              </div>
-              <div className="pro-editor-export-card__footer">
-                renders on your CPU · original kept
-                {ffmpegLoading ? ' · loading ffmpeg…' : ''}
-                {!isolated && ' · single-thread'}
-              </div>
-            </button>
-          </aside>
-        </div>
+                MP3 320
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* ---- Export dialog ---- */}

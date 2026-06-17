@@ -7,10 +7,13 @@ import type {
   CompiledGraph,
   EditFade,
   EditList,
+  EditListV2,
   KeepSegment,
   OutputFormat,
 } from './types.js'
 import { BROWSER_RENDER_MAX_BYTES } from './types.js'
+import { PLUGINS } from './plugins/registry.js'
+import type { AnyPlugin } from './plugins/registry.js'
 
 function fadeCurveParam(curve: EditFade['curve']): string {
   return curve === 'exp' ? ':curve=exp' : ''
@@ -258,4 +261,131 @@ export function remapTracklistTimestamps(
     })
     .filter((e): e is NonNullable<typeof e> => e !== null)
     .sort((a, b) => a.startSec - b.startSec)
+}
+
+// ── v2 compile ────────────────────────────────────────────────────────────────
+
+export interface CompileV2Options {
+  inputLabel?: string
+  /** Clip to this time range before applying plugins (audition selection). */
+  rangeSec?: [number, number]
+}
+
+export interface CompiledGraphV2 {
+  filtergraph: string
+  outputLabel: string
+  postCutDurationSec: number
+  /** Set when the gain plugin has normalize.enabled and no measured values yet. */
+  loudnormPass1Filter?: string
+}
+
+/**
+ * Compile an EditList v2 into an FFmpeg filtergraph.
+ *
+ * Plugin order: cuts/fades happen first, then plugins iterate in array order.
+ * The gain plugin's loudnorm clause always moves to the tail of the chain
+ * regardless of plugin array position — compile.ts enforces this by collecting
+ * loudnorm steps and appending them after all other plugin steps.
+ */
+export function compileFiltergraphV2(
+  edit: EditListV2,
+  options: CompileV2Options = {},
+): CompiledGraphV2 {
+  const inputLabel = options.inputLabel ?? '[0:a]'
+
+  // If rangeSec is set, clip the cut list to that range (audition path).
+  const effectiveCuts = options.rangeSec
+    ? clampCutsToRange(edit.cuts, options.rangeSec)
+    : edit.cuts.map((c) => ({ start: c.start, end: c.end }))
+
+  const segments = computeKeepSegments(edit.sourceDuration, mergeCuts(effectiveCuts))
+  const postDur = postCutDuration(segments)
+
+  // ── Cut stage ───────────────────────────────────────────────────────────────
+  const cutStage = buildCutStage(inputLabel, segments)
+  let chainLabel = '[cut]'
+  if (!cutStage.filter.includes('[cut]')) chainLabel = `[${cutStage.label}]`
+
+  // ── Fade stage (uses v2 fades — same logic, fades now have ids) ─────────────
+  const fadesCompat: EditFade[] = edit.fades.map((f) => ({
+    type: f.type,
+    at: f.at,
+    duration: f.duration,
+    curve: f.curve,
+  }))
+  const fadeStage = buildFadeStage(chainLabel, fadesCompat, segments)
+
+  const pluginStages: string[] = []
+  const loudnormStages: string[] = []
+  let loudnormPass1Filter: string | undefined
+  let plugLabel = '[fad]'
+  let plugIdx = 0
+
+  for (const instance of edit.plugins) {
+    if (!instance.enabled) continue
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plugin = PLUGINS[instance.pluginId as keyof typeof PLUGINS] as AnyPlugin | undefined
+    if (!plugin) continue
+
+    const parsed = plugin.paramsSchema.safeParse(instance.params)
+    if (!parsed.success) continue
+
+    const outLabel = `[p${plugIdx}]`
+    const ctx = { inputLabel: plugLabel, outputLabel: outLabel }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const step = plugin.compile(parsed.data as any, ctx)
+
+    if (plugin.loudnormPass1Filter) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const lnFilter = plugin.loudnormPass1Filter(parsed.data as any)
+      if (lnFilter) loudnormPass1Filter = lnFilter
+    }
+
+    if (step) {
+      // Loudnorm steps go to the tail; other steps go in order.
+      if (step.graph.includes('loudnorm=')) {
+        loudnormStages.push(step.graph)
+      } else {
+        pluginStages.push(step.graph)
+      }
+      plugLabel = outLabel
+    }
+    plugIdx++
+  }
+
+  // Loudnorm steps are appended after all other plugin steps.
+  const allStages = [cutStage.filter, fadeStage, ...pluginStages, ...loudnormStages]
+
+  // Patch final output label to '[out]'
+  const lastStageIdx = allStages.length - 1
+  allStages[lastStageIdx] = allStages[lastStageIdx]!.replace(/\[p\d+\]$/, '[out]')
+  // If no plugin emitted anything, fade stage output is [fad] — rename to [out]
+  if (pluginStages.length === 0 && loudnormStages.length === 0) {
+    allStages[lastStageIdx] = allStages[lastStageIdx]!.replace(/\[fad\]$/, '[out]')
+  }
+
+  return {
+    filtergraph: allStages.join(';'),
+    outputLabel: '[out]',
+    postCutDurationSec: postDur,
+    loudnormPass1Filter,
+  }
+}
+
+/** Clip a v2 cut list so only cuts outside [rangeStart, rangeEnd] remain,
+ *  effectively auditioning just that region. */
+function clampCutsToRange(
+  cuts: EditListV2['cuts'],
+  [rangeStart, rangeEnd]: [number, number],
+): { start: number; end: number }[] {
+  const result: { start: number; end: number }[] = []
+  // Keep everything before rangeStart as a cut (except nothing before 0)
+  if (rangeStart > 0) result.push({ start: 0, end: rangeStart })
+  // Keep everything after rangeEnd as a cut
+  if (Number.isFinite(rangeEnd)) result.push({ start: rangeEnd, end: Infinity })
+  // Also include original cuts that fall inside the range
+  for (const c of cuts) {
+    if (c.end > rangeStart && c.start < rangeEnd) result.push({ start: c.start, end: c.end })
+  }
+  return result
 }
