@@ -80,7 +80,7 @@ export default async function StatsPage() {
   const maxCountry = Math.max(1, ...countries.map((c) => c.count))
 
   const engagementUnits = [
-    { label: `${downloads} downloads × 1`, value: downloads, color: 'cyan' as const },
+    { label: `${downloads} downloads × 1`, value: downloads, color: 'green' as const },
     { label: `${totalPlays} plays × 1`, value: totalPlays, color: 'amber' as const },
     { label: `${fanSubs} fan-subs × 1`, value: fanSubs, color: 'purple' as const },
   ]

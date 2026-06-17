@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REFERENCE — /dashboard (artist channel overview)</title>
+<link rel="stylesheet" href="tokens.css">
+</head>
+<body>
+<!-- ================================================================
+  REFERENCE IMPLEMENTATION: artist dashboard /dashboard
+  Open this file in a browser at 1280px wide. Your production page
+  must be visually indistinguishable from this at the same width.
+  Inspect any element with devtools to read exact values.
+================================================================ -->
+
+<nav class="topnav">
+  <div class="brand">TAHTI</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="faint" style="font-size:11px">dj-moonrise</span>
+    <div style="width:24px;height:24px;border-radius:50%;background:var(--cover-aurora);
+                display:flex;align-items:center;justify-content:center;
+                font-size:9px;color:var(--text-on-accent);font-weight:500">DM</div>
+  </div>
+</nav>
+
+<div class="shell-app">
+  <aside class="sidebar">
+    <div class="sidebar__group">Channel</div>
+    <a class="sidebar__item sidebar__item--active" href="#">▶ Channel</a>
+    <a class="sidebar__item" href="#">📊 Stats</a>
+    <a class="sidebar__item" href="#">🎵 Archive</a>
+    <div class="sidebar__group">Money</div>
+    <a class="sidebar__item" href="#">💰 Revenue</a>
+    <a class="sidebar__item" href="#">📧 Newsletter</a>
+    <div class="sidebar__group">Reach</div>
+    <a class="sidebar__item" href="#">🔗 Smart Links</a>
+    <a class="sidebar__item" href="#">🚀 Distribution</a>
+    <div class="sidebar__group">Account</div>
+    <a class="sidebar__item" href="#">🔒 Stash</a>
+    <a class="sidebar__item" href="#">⚙ Settings</a>
+  </aside>
+
+  <main class="shell-app__content">
+
+    <!-- Live status bar: full width of content column, 14px gap below -->
+    <div class="live-bar" style="margin-bottom:16px">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span class="dot-live"></span>
+          <span style="font-size:13px;color:var(--live);font-weight:500;letter-spacing:1px">LIVE NOW</span>
+        </div>
+        <div class="muted" style="font-size:11px">47 listeners · 24:37 elapsed · Moonrise Sessions — Live</div>
+      </div>
+      <button class="btn btn--warn">⏹ End Broadcast</button>
+    </div>
+
+    <!-- Stat grid: ALWAYS 4 equal columns, 12px gap. Colors are bound to meaning. -->
+    <div class="stat-grid" style="margin-bottom:16px">
+      <div class="stat-card">
+        <div class="stat-card__num stat-card__num--plays">1,247</div>
+        <div class="stat-card__label">Plays this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__num stat-card__num--downloads">89</div>
+        <div class="stat-card__label">Downloads</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__num stat-card__num--fans">23</div>
+        <div class="stat-card__label">Fan subscribers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__num stat-card__num--revenue">€115</div>
+        <div class="stat-card__label">Revenue / mo</div>
+      </div>
+    </div>
+
+    <!-- Stream key block -->
+    <div class="label">Icecast stream key</div>
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      <input class="input input--mono" style="flex:1" value="••••••••••••••••••••" readonly>
+      <button class="btn btn--secondary btn--sm">Copy</button>
+      <button class="btn btn--secondary btn--sm" style="color:var(--brand);border-color:var(--brand-border-tint)">⚡ Test</button>
+    </div>
+
+    <!-- Recent archive -->
+    <div class="label">Recent archive</div>
+    <div class="row-list" style="margin-bottom:12px">
+      <div class="row" style="grid-template-columns:auto 1fr auto auto">
+        <div class="cover cover--xs" style="background:var(--cover-deep)"></div>
+        <div>
+          <div style="color:var(--text-primary)">Late Night Drift Vol. 3</div>
+          <div class="faint" style="font-size:11px">2 days ago · 1h 42m · in rotation</div>
+        </div>
+        <span class="faint">412 plays</span>
+        <button class="btn btn--secondary btn--sm">Edit</button>
+      </div>
+      <div class="row" style="grid-template-columns:auto 1fr auto auto">
+        <div class="cover cover--xs" style="background:var(--cover-violet)"></div>
+        <div>
+          <div style="color:var(--text-primary)">Helsinki Winter Session</div>
+          <div class="faint" style="font-size:11px">1 week ago · 2h 08m</div>
+        </div>
+        <span class="faint">2,144 plays</span>
+        <button class="btn btn--secondary btn--sm">Edit</button>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div style="display:flex;gap:6px">
+      <button class="btn btn--secondary btn--sm">⬆ Upload</button>
+      <button class="btn btn--secondary btn--sm">📧 Send newsletter</button>
+      <button class="btn btn--secondary btn--sm" style="color:var(--brand);border-color:var(--brand-border-tint)">📡 Push to Mixcloud</button>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

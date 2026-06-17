@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REFERENCE — channel page, LIVE state</title>
+<link rel="stylesheet" href="tokens.css">
+</head>
+<body>
+<!-- ================================================================
+  REFERENCE: public channel page in LIVE state
+  URL: https://dj-moonrise.tahti.eu  (or /c/dj-moonrise)
+  Layout: 1fr content + FIXED 300px chat. Chat NEVER flexes.
+================================================================ -->
+
+<nav class="topnav">
+  <div style="display:flex;align-items:center;gap:20px">
+    <div class="brand">TAHTI</div>
+    <span class="muted" style="font-size:12px">dj-moonrise</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="pill pill--live"><span class="dot-live"></span>LIVE</span>
+    <span class="faint" style="font-size:11px">247 listening</span>
+  </div>
+</nav>
+
+<div class="shell-channel">
+  <main>
+    <!-- Player card -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;gap:14px;margin-bottom:12px">
+        <div class="cover cover--md"></div>
+        <div>
+          <h3 style="font-size:16px;font-weight:500;margin-bottom:3px">Moonrise Sessions — Live</h3>
+          <div class="faint" style="font-size:11px">Ambient Electronic · <span style="color:var(--brand)">FLAC</span> · Helsinki</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px;
+                      font-size:10px;color:var(--live);font-weight:500;letter-spacing:0.5px">
+            <span class="dot-live"></span>BROADCASTING NOW — 47 MIN IN
+          </div>
+        </div>
+      </div>
+      <!-- Waveform: played bars use --brand, unplayed use --text-tertiary -->
+      <div style="display:flex;align-items:flex-end;gap:2px;height:28px;margin-bottom:10px" aria-hidden="true">
+        <!-- generate ~80 bars; first ~35% colored var(--brand), rest var(--text-tertiary) -->
+        <div style="width:2px;height:40%;background:var(--brand)"></div><div style="width:2px;height:70%;background:var(--brand)"></div><div style="width:2px;height:55%;background:var(--brand)"></div><div style="width:2px;height:90%;background:var(--brand)"></div><div style="width:2px;height:60%;background:var(--brand)"></div><div style="width:2px;height:80%;background:var(--brand)"></div><div style="width:2px;height:45%;background:var(--brand)"></div><div style="width:2px;height:75%;background:var(--brand)"></div><div style="width:2px;height:95%;background:var(--brand)"></div><div style="width:2px;height:50%;background:var(--brand)"></div><div style="width:2px;height:85%;background:var(--brand)"></div><div style="width:2px;height:65%;background:var(--brand)"></div><div style="width:2px;height:78%;background:var(--brand)"></div><div style="width:2px;height:42%;background:var(--brand)"></div><div style="width:2px;height:88%;background:var(--brand)"></div><div style="width:2px;height:58%;background:var(--brand)"></div><div style="width:2px;height:72%;background:var(--brand)"></div><div style="width:2px;height:92%;background:var(--brand)"></div><div style="width:2px;height:48%;background:var(--brand)"></div><div style="width:2px;height:82%;background:var(--brand)"></div><div style="width:2px;height:62%;background:var(--brand)"></div><div style="width:2px;height:76%;background:var(--brand)"></div><div style="width:2px;height:54%;background:var(--brand)"></div><div style="width:2px;height:86%;background:var(--brand)"></div><div style="width:2px;height:68%;background:var(--brand)"></div><div style="width:2px;height:44%;background:var(--brand)"></div><div style="width:2px;height:90%;background:var(--brand)"></div><div style="width:2px;height:56%;background:var(--brand)"></div>
+        <div style="width:2px;height:74%;background:var(--text-tertiary)"></div><div style="width:2px;height:46%;background:var(--text-tertiary)"></div><div style="width:2px;height:84%;background:var(--text-tertiary)"></div><div style="width:2px;height:64%;background:var(--text-tertiary)"></div><div style="width:2px;height:52%;background:var(--text-tertiary)"></div><div style="width:2px;height:94%;background:var(--text-tertiary)"></div><div style="width:2px;height:60%;background:var(--text-tertiary)"></div><div style="width:2px;height:78%;background:var(--text-tertiary)"></div><div style="width:2px;height:48%;background:var(--text-tertiary)"></div><div style="width:2px;height:88%;background:var(--text-tertiary)"></div><div style="width:2px;height:66%;background:var(--text-tertiary)"></div><div style="width:2px;height:42%;background:var(--text-tertiary)"></div><div style="width:2px;height:80%;background:var(--text-tertiary)"></div><div style="width:2px;height:58%;background:var(--text-tertiary)"></div><div style="width:2px;height:72%;background:var(--text-tertiary)"></div><div style="width:2px;height:50%;background:var(--text-tertiary)"></div><div style="width:2px;height:90%;background:var(--text-tertiary)"></div><div style="width:2px;height:62%;background:var(--text-tertiary)"></div><div style="width:2px;height:76%;background:var(--text-tertiary)"></div><div style="width:2px;height:54%;background:var(--text-tertiary)"></div><div style="width:2px;height:86%;background:var(--text-tertiary)"></div><div style="width:2px;height:68%;background:var(--text-tertiary)"></div><div style="width:2px;height:44%;background:var(--text-tertiary)"></div><div style="width:2px;height:82%;background:var(--text-tertiary)"></div><div style="width:2px;height:56%;background:var(--text-tertiary)"></div><div style="width:2px;height:70%;background:var(--text-tertiary)"></div><div style="width:2px;height:92%;background:var(--text-tertiary)"></div><div style="width:2px;height:60%;background:var(--text-tertiary)"></div><div style="width:2px;height:74%;background:var(--text-tertiary)"></div><div style="width:2px;height:46%;background:var(--text-tertiary)"></div><div style="width:2px;height:84%;background:var(--text-tertiary)"></div><div style="width:2px;height:64%;background:var(--text-tertiary)"></div><div style="width:2px;height:52%;background:var(--text-tertiary)"></div><div style="width:2px;height:78%;background:var(--text-tertiary)"></div><div style="width:2px;height:48%;background:var(--text-tertiary)"></div><div style="width:2px;height:88%;background:var(--text-tertiary)"></div><div style="width:2px;height:66%;background:var(--text-tertiary)"></div><div style="width:2px;height:42%;background:var(--text-tertiary)"></div><div style="width:2px;height:80%;background:var(--text-tertiary)"></div><div style="width:2px;height:58%;background:var(--text-tertiary)"></div><div style="width:2px;height:72%;background:var(--text-tertiary)"></div><div style="width:2px;height:50%;background:var(--text-tertiary)"></div><div style="width:2px;height:90%;background:var(--text-tertiary)"></div><div style="width:2px;height:62%;background:var(--text-tertiary)"></div><div style="width:2px;height:76%;background:var(--text-tertiary)"></div><div style="width:2px;height:54%;background:var(--text-tertiary)"></div><div style="width:2px;height:86%;background:var(--text-tertiary)"></div><div style="width:2px;height:68%;background:var(--text-tertiary)"></div><div style="width:2px;height:44%;background:var(--text-tertiary)"></div><div style="width:2px;height:82%;background:var(--text-tertiary)"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <button aria-label="Play" style="width:34px;height:34px;border-radius:50%;
+            background:var(--brand);border:none;color:var(--text-on-accent);
+            font-size:13px;cursor:pointer">▶</button>
+          <span class="faint mono" style="font-size:11px">47:23 / LIVE</span>
+        </div>
+        <span class="pill pill--flac">LOSSLESS · 24-bit</span>
+      </div>
+    </div>
+
+    <!-- Compact stats: 3 columns on channel page -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+      <div class="stat-card">
+        <div class="stat-card__num stat-card__num--plays" style="font-size:22px">247</div>
+        <div class="stat-card__label">Listening now</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__num stat-card__num--revenue" style="font-size:22px">1,247</div>
+        <div class="stat-card__label">Plays this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__num stat-card__num--downloads" style="font-size:22px">89</div>
+        <div class="stat-card__label">Downloads</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:6px">
+      <button class="btn btn--purple">♥ Subscribe €5/mo</button>
+      <button class="btn btn--secondary">⬇ Download</button>
+      <button class="btn btn--secondary">🔗 Share</button>
+    </div>
+  </main>
+
+  <!-- Chat rail: FIXED 300px. -->
+  <aside>
+    <div class="pinned" style="margin-bottom:12px">
+      <div class="pinned__label">📌 Pinned</div>
+      <div style="font-size:11px;line-height:1.45">Tonight 22:00 UTC — ambient set, three new originals</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+      <span class="label" style="margin:0">Live chat</span>
+      <span class="faint" style="font-size:11px">247 here</span>
+    </div>
+    <div class="card" style="padding:10px;margin-bottom:8px">
+      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-2)">@aurora_fi</span> <span class="muted">this bassline 🔥</span></div>
+      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-1)">@kai_studio</span> <span class="muted">been waiting for this set</span></div>
+      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-3)">dj-moonrise</span> <span class="muted">thank you! ❤️</span></div>
+      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-6)">@mia.waves</span> <span class="muted">sound quality is incredible</span></div>
+      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-4)">@tallinn_owl</span> <span class="muted">tuned in from EE 🇪🇪</span></div>
+    </div>
+    <div style="display:flex;gap:4px">
+      <input class="input" style="height:30px;font-size:11px" placeholder="Say something…">
+      <button class="btn btn--primary" style="height:30px;padding:0 10px">→</button>
+    </div>
+  </aside>
+</div>
+</body>
+</html>

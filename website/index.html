@@ -497,6 +497,36 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 #apply-error a{color:var(--amber);text-decoration:underline}
 
 /* Responsive */
+/* ===== MOCKUP SLIDE PROGRESS RING ===== */
+#mockup-progress-ring{display:flex;justify-content:center;margin-top:20px}
+#slide-ring-fill{transform-origin:50% 50%;transform:rotate(-90deg)}
+
+/* ===== AUDIO EDITOR MOCKUP ===== */
+.ae-toolbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.ae-title{font-family:var(--font-head);font-size:14px;font-weight:600}
+.ae-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.ae-waveform-wrap{background:#0d1626;border-radius:8px;padding:16px;margin-bottom:14px}
+.ae-wf{height:72px;display:flex;align-items:center;gap:2px;background:#060c1a;border-radius:6px;padding:8px;overflow:hidden}
+.ae-wf-bar{background:var(--cyan);border-radius:1px;width:3px;opacity:0.45}
+.ae-wf-bar.sel{background:var(--amber);opacity:0.85}
+.ae-time-row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:6px}
+.ae-controls{display:flex;align-items:center;gap:8px;margin-top:10px}
+.ae-btn{background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 12px;font-size:11px;color:var(--text);cursor:pointer}
+.ae-btn.c{background:rgba(0,188,212,0.12);border-color:rgba(0,188,212,0.4);color:var(--cyan)}
+.ae-chapter-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px}
+.ae-chapter-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ae-chapter-time{font-family:monospace;font-size:11px;color:var(--muted);flex-shrink:0;width:42px}
+.ae-chapter-name{flex:1}
+
+/* ===== NEWSLETTER MOCKUP ===== */
+.nl-compose{padding:16px 20px}
+.nl-to-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;margin-bottom:12px}
+.nl-to-label{font-size:11px;letter-spacing:1px;color:var(--muted);width:36px;flex-shrink:0}
+.nl-subj{width:100%;background:var(--card2);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 12px;font-size:13px;color:var(--text);margin-bottom:12px;font-family:var(--font-body);outline:none}
+.nl-footer-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-top:1px solid rgba(255,255,255,0.06)}
+.nl-send-btn{background:var(--amber);color:#0a0f1e;border:none;border-radius:6px;padding:9px 20px;font-family:var(--font-head);font-weight:700;font-size:13px;cursor:pointer}
+.nl-sch-btn{background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:9px 16px;font-size:13px;color:var(--text);cursor:pointer}
+
 @media(max-width:768px){
   nav{padding:14px 20px}
   .nav-dots{display:none}
@@ -538,19 +568,19 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 <nav>
   <div class="nav-logo"><div class="nav-logo-bar"></div>TAHTI</div>
   <div class="nav-dots" id="navDots"></div>
-  <a href="#cta" class="nav-cta">OPEN BETA 1.8.2026</a>
+  <a href="#cta" class="nav-cta">Launches 1.8.2026</a>
 </nav>
 
 <!-- HERO -->
 <section id="hero">
   <div class="hero-layout">
     <div class="section-inner">
-      <div class="hero-tag">FOR ARTISTS · HELSINKI · OPEN BETA 1.8.2026</div>
+      <div class="hero-tag">FOR ARTISTS · HELSINKI · LAUNCHES 1.8.2026</div>
       <h1 class="hero-h1 reveal">Your radio<br>station.</h1>
       <div class="hero-italic reveal reveal-delay-1">Always on. Always yours.</div>
       <p class="hero-desc reveal reveal-delay-2">One URL that always plays. Live when you're broadcasting, your archive when you're not. Listeners chat, download your tracks, and can support you directly — we take 0%. Paid members broadcast in lossless. Free members get MP3 and one hour of live per week.</p>
       <div class="hero-cta-row reveal reveal-delay-3">
-        <a href="#cta" class="btn-primary">Open beta — 1.8.2026 →</a>
+        <a href="#cta" class="btn-primary">Launching 1.8.2026 →</a>
         <a href="#broadcast" class="btn-secondary">See how it works</a>
       </div>
       <div class="hero-footer reveal reveal-delay-4">
@@ -998,6 +1028,8 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
       <button class="mtab" onclick="switchMockup('live',this)">Live + Chat</button>
       <button class="mtab" onclick="switchMockup('247',this)">24/7 Channel</button>
       <button class="mtab" onclick="switchMockup('stash',this)">Private Stash</button>
+      <button class="mtab" onclick="switchMockup('audio-editor',this)">Audio Editor</button>
+      <button class="mtab" onclick="switchMockup('newsletter',this)">Newsletter</button>
     </div>
 
     <!-- CHANNEL PAGE MOCKUP -->
@@ -1544,6 +1576,148 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- AUDIO EDITOR MOCKUP -->
+    <div class="mockup-frame" id="mock-audio-editor">
+      <div class="browser reveal reveal-delay-3">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">tahti.fi/<b>app</b>/archive/edit</div>
+        </div>
+        <div class="browser-content">
+          <div class="ch-header">
+            <div class="ch-logo">TAHTI</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+          </div>
+          <div class="db-layout">
+            <div class="db-sidebar">
+              <div class="db-nav-item">▶ Channel</div>
+              <div class="db-nav-item">📈 Stats</div>
+              <div class="db-nav-item active">📁 Archive</div>
+              <div class="db-nav-item">💰 Revenue</div>
+              <div class="db-nav-item">📧 Newsletter</div>
+              <div class="db-nav-item">🔗 Smart Links</div>
+              <div class="db-nav-item">📡 Distribution</div>
+              <div class="db-nav-item">⚙ Settings</div>
+            </div>
+            <div class="db-main" style="padding:0">
+              <div class="ae-toolbar">
+                <div>
+                  <div class="ae-title">Late Night Drift Vol. 3</div>
+                  <div class="ae-meta">Recorded live · 1h 42m · FLAC 24-bit/48kHz · Nov 2024</div>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="ae-btn">↓ Export FLAC</button>
+                  <button class="ae-btn c">→ Push to Mixcloud</button>
+                  <button style="background:var(--amber);color:#0a0f1e;border:none;border-radius:6px;padding:6px 16px;font-size:11px;font-weight:700;cursor:pointer">Save</button>
+                </div>
+              </div>
+              <div style="padding:16px 20px">
+                <div class="ae-waveform-wrap">
+                  <div class="ae-wf" id="ae-wf-bars"></div>
+                  <div class="ae-time-row">
+                    <span>0:00</span><span>21:30</span><span>43:00</span><span>1:04:30</span><span>1:26:00</span><span>1:42:00</span>
+                  </div>
+                  <div class="ae-controls">
+                    <button class="ae-btn">⏮</button>
+                    <button class="ae-btn c">▶ Play</button>
+                    <button class="ae-btn">⏭</button>
+                    <div style="width:1px;height:20px;background:rgba(255,255,255,0.1);margin:0 4px"></div>
+                    <button class="ae-btn c">✂ Set In</button>
+                    <button class="ae-btn">✂ Set Out</button>
+                    <button class="ae-btn">🔇 Strip silence</button>
+                    <div style="margin-left:auto;font-size:11px;color:var(--muted);font-family:monospace">23:41 / 1:42:00</div>
+                  </div>
+                </div>
+                <div style="font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:8px">CHAPTER MARKERS</div>
+                <div class="ae-chapter-row"><div class="ae-chapter-dot" style="background:var(--amber)"></div><span class="ae-chapter-time">0:00</span><span class="ae-chapter-name">Intro</span><span style="font-size:10px;color:var(--muted)">auto-detected</span></div>
+                <div class="ae-chapter-row"><div class="ae-chapter-dot" style="background:var(--cyan)"></div><span class="ae-chapter-time">18:42</span><span class="ae-chapter-name">Peak hour — opening</span><span style="font-size:10px;color:var(--muted)">manual</span></div>
+                <div class="ae-chapter-row"><div class="ae-chapter-dot" style="background:var(--purple)"></div><span class="ae-chapter-time">51:10</span><span class="ae-chapter-name">Breakdown</span><span style="font-size:10px;color:var(--muted)">manual</span></div>
+                <div class="ae-chapter-row" style="border-bottom:none"><div class="ae-chapter-dot" style="background:var(--green)"></div><span class="ae-chapter-time">1:24:30</span><span class="ae-chapter-name">Closing</span><span style="font-size:10px;color:var(--muted)">auto-detected</span></div>
+                <button style="background:transparent;border:1px dashed rgba(255,255,255,0.15);border-radius:6px;padding:6px 14px;font-size:11px;color:var(--muted);cursor:pointer;margin-top:10px;width:100%">+ Add chapter marker</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEWSLETTER MOCKUP -->
+    <div class="mockup-frame" id="mock-newsletter">
+      <div class="browser reveal reveal-delay-3">
+        <div class="browser-bar">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">tahti.fi/<b>app</b>/newsletter/compose</div>
+        </div>
+        <div class="browser-content">
+          <div class="ch-header">
+            <div class="ch-logo">TAHTI</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">dj-moonrise <span style="font-size:10px">▼</span></div>
+          </div>
+          <div class="db-layout">
+            <div class="db-sidebar">
+              <div class="db-nav-item">▶ Channel</div>
+              <div class="db-nav-item">📈 Stats</div>
+              <div class="db-nav-item">📁 Archive</div>
+              <div class="db-nav-item">💰 Revenue</div>
+              <div class="db-nav-item active">📧 Newsletter</div>
+              <div class="db-nav-item">🔗 Smart Links</div>
+              <div class="db-nav-item">📡 Distribution</div>
+              <div class="db-nav-item">⚙ Settings</div>
+            </div>
+            <div class="db-main" style="padding:0">
+              <div style="padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-family:var(--font-head);font-size:15px;font-weight:700">New newsletter</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:2px">dj-moonrise · 247 subscribers</div>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="ae-btn">Drafts (2)</button>
+                  <button class="ae-btn">Past issues</button>
+                </div>
+              </div>
+              <div class="nl-compose">
+                <div class="nl-to-row">
+                  <span class="nl-to-label">TO</span>
+                  <span style="background:rgba(0,188,212,0.12);border:1px solid rgba(0,188,212,0.3);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--cyan)">All subscribers (247)</span>
+                  <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--muted);cursor:pointer">+ Fan subscribers only</span>
+                </div>
+                <input class="nl-subj" type="text" value="New set this Friday — Twilight Protocol" readonly>
+                <div style="background:var(--card2);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:12px;font-size:13px;color:var(--text);min-height:110px;line-height:1.7;margin-bottom:14px">
+                  <div>Hey — back this Friday at 22:00 UTC with a new live set. 90 minutes, mostly new material I've been working on since the last session.</div>
+                  <div style="margin-top:10px;background:rgba(0,188,212,0.07);border-left:2px solid var(--cyan);padding:8px 12px;border-radius:0 4px 4px 0;font-size:12px">
+                    <div style="color:var(--cyan);font-size:10px;letter-spacing:1px;margin-bottom:4px">TRACK PREVIEW</div>
+                    Crystalline Shore (WIP) — 3:42
+                  </div>
+                  <div style="margin-top:10px;color:var(--muted)">Tune in at tahti.fi/dj-moonrise · No app needed.</div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+                  <div style="background:var(--card2);border-radius:6px;padding:10px;text-align:center"><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--amber)">247</div><div style="font-size:10px;color:var(--muted)">Subscribers</div></div>
+                  <div style="background:var(--card2);border-radius:6px;padding:10px;text-align:center"><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--green)">68%</div><div style="font-size:10px;color:var(--muted)">Last open rate</div></div>
+                  <div style="background:var(--card2);border-radius:6px;padding:10px;text-align:center"><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--cyan)">12</div><div style="font-size:10px;color:var(--muted)">Past issues</div></div>
+                </div>
+              </div>
+              <div class="nl-footer-bar">
+                <span style="font-size:11px;color:var(--muted)">247 subscribers · GDPR-compliant unsubscribe</span>
+                <div style="display:flex;gap:8px">
+                  <button class="nl-sch-btn">⏱ Schedule</button>
+                  <button class="nl-send-btn">Send now →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE PROGRESS RING -->
+    <div id="mockup-progress-ring">
+      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+        <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2.5"/>
+        <circle id="slide-ring-fill" cx="16" cy="16" r="12" fill="none" stroke="var(--cyan)" stroke-width="2.5"
+                stroke-dasharray="75.4" stroke-dashoffset="75.4" stroke-linecap="round"/>
+      </svg>
     </div>
 
   </div>
@@ -2694,7 +2868,66 @@ function switchMockup(id, btn) {
   document.querySelectorAll('.mtab').forEach(t => t.classList.remove('active'));
   document.getElementById('mock-' + id).classList.add('active');
   btn.classList.add('active');
+  if (window._resetMockupTimer) window._resetMockupTimer(id);
 }
+
+// ===== AUDIO EDITOR WAVEFORM =====
+(function() {
+  const container = document.getElementById('ae-wf-bars');
+  if (!container) return;
+  const SEL_START = 40, SEL_END = 80;
+  const total = 120;
+  const raw = [6,9,14,18,24,30,22,28,35,20,16,26,32,18,24,38,28,20,14,22,36,42,30,24,18,32,40,34,28,22,16,26,38,44,36,30,24,18,28,40,48,42,36,30,24,36,44,52,46,40,34,28,42,50,58,52,46,40,34,48,56,64,58,52,46,52,60,68,62,56,50,44,58,66,72,66,60,54,48,56,62,56,50,44,38,46,52,46,40,34,28,36,42,36,30,24,18,26,32,26,20,14,10,18,22,16,12,8,14,18,12,10,8,6,10,14,10,8,6,4];
+  for (let i = 0; i < total; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'ae-wf-bar' + (i >= SEL_START && i < SEL_END ? ' sel' : '');
+    bar.style.height = Math.max(4, raw[i] || 4) + 'px';
+    container.appendChild(bar);
+  }
+})();
+
+// ===== MOCKUP AUTO-ROTATE =====
+(function() {
+  const order = ['channel','dashboard','visual','mobile','live','247','stash','audio-editor','newsletter'];
+  const INTERVAL = 6000;
+  const CIRC = 75.4;
+  let idx = 0, timer = null, rafId = null, t0 = null;
+  const ring = document.getElementById('slide-ring-fill');
+
+  function animateRing(ts) {
+    if (t0 === null) t0 = ts;
+    const frac = Math.min((ts - t0) / INTERVAL, 1);
+    if (ring) ring.setAttribute('stroke-dashoffset', (CIRC * (1 - frac)).toFixed(2));
+    if (frac < 1) rafId = requestAnimationFrame(animateRing);
+  }
+
+  function goToIdx(i) {
+    clearTimeout(timer);
+    if (rafId) cancelAnimationFrame(rafId);
+    t0 = null;
+    if (ring) ring.setAttribute('stroke-dashoffset', CIRC);
+    rafId = requestAnimationFrame(animateRing);
+    timer = setTimeout(function() {
+      idx = (idx + 1) % order.length;
+      const id = order[idx];
+      const tabs = document.querySelectorAll('.mtab');
+      document.querySelectorAll('.mockup-frame').forEach(f => f.classList.remove('active'));
+      tabs.forEach(t => t.classList.remove('active'));
+      const frame = document.getElementById('mock-' + id);
+      if (frame) frame.classList.add('active');
+      if (tabs[idx]) tabs[idx].classList.add('active');
+      goToIdx(idx);
+    }, INTERVAL);
+  }
+
+  window._resetMockupTimer = function(id) {
+    const i = order.indexOf(id);
+    idx = i >= 0 ? i : 0;
+    goToIdx(idx);
+  };
+
+  goToIdx(0);
+})();
 
 </script>
 </body>
