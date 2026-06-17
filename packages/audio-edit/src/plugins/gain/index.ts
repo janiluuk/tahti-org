@@ -42,11 +42,11 @@ export function compileGain(params: GainParams, ctx: CompileCtx): FilterStep | n
       filters.push(
         `${label}loudnorm=I=${targetLufs}:TP=${targetTp}:LRA=11:` +
           `measured_I=${m.i}:measured_TP=${m.tp}:measured_LRA=${m.lra}:measured_thresh=${m.thresh}:` +
-          `linear=true[${ctx.outputLabel.replace(/[\[\]]/g, '')}]`,
+          `linear=true[${ctx.outputLabel.replace(/[[\]]/g, '')}]`,
       )
     } else {
       filters.push(
-        `${label}loudnorm=I=${targetLufs}:TP=${targetTp}:LRA=11[${ctx.outputLabel.replace(/[\[\]]/g, '')}]`,
+        `${label}loudnorm=I=${targetLufs}:TP=${targetTp}:LRA=11[${ctx.outputLabel.replace(/[[\]]/g, '')}]`,
       )
     }
     return { graph: filters.join(';'), inLabel: ctx.inputLabel, outLabel: ctx.outputLabel }
@@ -55,7 +55,7 @@ export function compileGain(params: GainParams, ctx: CompileCtx): FilterStep | n
   if (filters.length === 0) return null
 
   const lastRaw = filters[filters.length - 1]!
-  const finalOut = ctx.outputLabel.replace(/[\[\]]/g, '')
+  const finalOut = ctx.outputLabel.replace(/[[\]]/g, '')
   filters[filters.length - 1] = lastRaw.replace(/\[gv\]$/, `[${finalOut}]`)
   return { graph: filters.join(';'), inLabel: ctx.inputLabel, outLabel: ctx.outputLabel }
 }

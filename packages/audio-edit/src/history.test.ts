@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest'
 import { History } from './history.js'
 import type { EditListV2 } from './types.js'
 
-function makeEl(id = 'a'): EditListV2 {
+function makeEl(_id = 'a'): EditListV2 {
   return { version: 2, sourceDuration: 100, cuts: [], fades: [], plugins: [] }
 }
 

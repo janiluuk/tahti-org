@@ -50,7 +50,7 @@ function bandToFilter(band: EqBand): string {
 export function compileEq(params: EqParams, ctx: CompileCtx): FilterStep | null {
   const active = params.bands.filter((b) => !bandIsNoop(b))
   if (active.length === 0) return null
-  const outLabel = ctx.outputLabel.replace(/[\[\]]/g, '')
+  const outLabel = ctx.outputLabel.replace(/[[\]]/g, '')
   const graph = `${ctx.inputLabel}${active.map(bandToFilter).join(',')}[${outLabel}]`
   return { graph, inLabel: ctx.inputLabel, outLabel: ctx.outputLabel }
 }

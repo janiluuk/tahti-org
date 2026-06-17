@@ -24,7 +24,7 @@ export const DEFAULT_COMP_PARAMS: CompParams = {
 
 export function compileComp(params: CompParams, ctx: CompileCtx): FilterStep | null {
   const { thresholdDb, ratio, attackMs, releaseMs, makeupDb } = params
-  const outLabel = ctx.outputLabel.replace(/[\[\]]/g, '')
+  const outLabel = ctx.outputLabel.replace(/[[\]]/g, '')
   const graph =
     `${ctx.inputLabel}acompressor=threshold=${thresholdDb}dB:ratio=${ratio}` +
     `:attack=${attackMs}:release=${releaseMs}:makeup=${makeupDb}[${outLabel}]`

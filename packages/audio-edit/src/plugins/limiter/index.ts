@@ -19,7 +19,7 @@ export const DEFAULT_LIMITER_PARAMS: LimiterParams = {
 export function compileLimiter(params: LimiterParams, ctx: CompileCtx): FilterStep | null {
   const { ceilingDb, releaseMs } = params
   const limit = Math.pow(10, ceilingDb / 20)
-  const outLabel = ctx.outputLabel.replace(/[\[\]]/g, '')
+  const outLabel = ctx.outputLabel.replace(/[[\]]/g, '')
   const graph = `${ctx.inputLabel}alimiter=limit=${limit.toFixed(6)}:release=${releaseMs}[${outLabel}]`
   return { graph, inLabel: ctx.inputLabel, outLabel: ctx.outputLabel }
 }
