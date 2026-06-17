@@ -296,6 +296,9 @@ importers:
 
   packages/audio-edit:
     dependencies:
+      '@tahti/ui':
+        specifier: workspace:*
+        version: link:../ui
       zod:
         specifier: ^3.23.8
         version: 3.25.76
