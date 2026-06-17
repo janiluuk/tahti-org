@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Panel } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -33,15 +34,12 @@ export function CustomDomainPanel({
 
   if (!isPaid) {
     return (
-      <div className="db-panel">
-        <h3 className="db-panel__title">Custom domain</h3>
-        <p className="db-panel__hint">
+      <Panel title="Custom domain">
+        <p className="studio-help">
           Custom domains are available on the paid membership (€40/year).{' '}
-          <a href="/help/tier-limits" className="db-link">
-            Upgrade →
-          </a>
+          <a href="/help/tier-limits">Upgrade →</a>
         </p>
-      </div>
+      </Panel>
     )
   }
 
@@ -117,18 +115,12 @@ export function CustomDomainPanel({
   }
 
   return (
-    <div className="db-panel">
-      <h3 className="db-panel__title">Custom domain</h3>
-
-      {error && (
-        <p className="db-panel__hint" style={{ color: 'var(--coral)' }}>
-          {error}
-        </p>
-      )}
+    <Panel title="Custom domain">
+      {error ? <p className="studio-text-error studio-mb-sm">{error}</p> : null}
 
       {!current && mode === 'view' && (
         <>
-          <p className="db-panel__hint">
+          <p className="studio-help">
             Point your own domain to your channel page. Add a CNAME or A record to{' '}
             <code>app.tahti.live</code>, then enter the domain below.
           </p>
@@ -139,14 +131,13 @@ export function CustomDomainPanel({
       )}
 
       {mode === 'edit' && (
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+        <div className="studio-input-row">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="music.example.com"
-            className="db-input"
-            style={{ flex: 1, minWidth: 200 }}
+            className="studio-input studio-input--grow"
           />
           <button
             className="ui-btn ui-btn--sm ui-btn--primary"
@@ -162,15 +153,13 @@ export function CustomDomainPanel({
       )}
 
       {current && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <code style={{ fontSize: '0.875rem' }}>{current.domain}</code>
+        <div className="studio-mt-sm">
+          <div className="studio-row">
+            <code className="studio-text-sm">{current.domain}</code>
             {current.verified ? (
-              <span style={{ fontSize: '0.75rem', color: 'var(--green)', fontWeight: 500 }}>
-                ✓ verified
-              </span>
+              <span className="studio-badge studio-badge--success">Verified</span>
             ) : (
-              <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>unverified</span>
+              <span className="studio-text-muted-sm">unverified</span>
             )}
             <button
               className="ui-btn ui-btn--sm ui-btn--ghost"
@@ -183,23 +172,15 @@ export function CustomDomainPanel({
           </div>
 
           {!current.verified && current.txtHost && (
-            <div
-              className="db-panel__hint"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                padding: '0.75rem',
-                borderRadius: '6px',
-                fontSize: '0.8125rem',
-              }}
-            >
-              <p style={{ marginBottom: '0.5rem', fontWeight: 500 }}>DNS verification required</p>
-              <p style={{ marginBottom: '0.25rem' }}>
+            <div className="studio-subsection studio-mt-sm">
+              <p className="studio-text-strong-sm studio-mb-sm">DNS verification required</p>
+              <p className="studio-text-muted-sm">
                 Add this TXT record to your DNS, then click Verify:
               </p>
-              <p>
+              <p className="studio-text-muted-sm studio-mt-sm">
                 Host: <code>{current.txtHost}</code>
               </p>
-              <p>
+              <p className="studio-text-muted-sm">
                 Value: <code>{current.txtRecord}</code>
               </p>
               <button
@@ -214,6 +195,6 @@ export function CustomDomainPanel({
           )}
         </div>
       )}
-    </div>
+    </Panel>
   )
 }
