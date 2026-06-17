@@ -6,6 +6,7 @@
 import { useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { DEFAULT_SOCIAL_TEMPLATE } from '@tahti/shared'
+import { Panel } from '@tahti/ui'
 import {
   disconnectBluesky,
   disconnectInstagram,
@@ -45,43 +46,50 @@ function PlatformSection({
   manualPostLabel: string
 }) {
   return (
-    <div className="studio-mt-md">
-      <h3 className="studio-section-heading">{title}</h3>
+    <div className="studio-subsection studio-mt-md">
+      <div className="studio-row--between studio-mb-sm">
+        <h3 className="studio-text-strong-sm" style={{ margin: 0 }}>
+          {title}
+        </h3>
+        {connected ? (
+          <span className="studio-badge studio-badge--success">Connected</span>
+        ) : null}
+      </div>
       <p className="studio-help">{help}</p>
       {connected && accountLabel ? (
-        <p className="studio-text-muted-sm">Connected as {accountLabel}</p>
+        <p className="studio-text-muted-sm studio-mb-sm">Account: {accountLabel}</p>
       ) : null}
       {children}
       {connected ? (
-        <>
-          <button
-            type="button"
-            className="studio-btn-ghost studio-mt-sm"
-            disabled={pending}
-            onClick={onDisconnect}
-          >
-            Disconnect
-          </button>
-          <div className="studio-mt-md">
-            <label className="studio-field">
-              Manual post
-              <textarea
-                className="studio-input studio-mt-sm"
-                rows={2}
-                value={manualPost}
-                onChange={(e) => onManualPostChange(e.target.value)}
-              />
-            </label>
+        <div className="studio-divider">
+          <label className="studio-field--block">
+            <span className="studio-label">Post manually</span>
+            <textarea
+              className="studio-input studio-mt-sm"
+              rows={2}
+              value={manualPost}
+              onChange={(e) => onManualPostChange(e.target.value)}
+            />
+          </label>
+          <div className="studio-row studio-mt-sm">
             <button
               type="button"
-              className="studio-btn-ghost studio-mt-sm"
-              disabled={pending}
+              className="studio-btn-ghost studio-btn-sm"
+              disabled={pending || !manualPost.trim()}
               onClick={onManualPost}
             >
               {manualPostLabel}
             </button>
+            <button
+              type="button"
+              className="studio-btn-danger"
+              disabled={pending}
+              onClick={onDisconnect}
+            >
+              Disconnect
+            </button>
           </div>
-        </>
+        </div>
       ) : null}
     </div>
   )
@@ -133,6 +141,7 @@ export default function SocialPromoPanel({
 
   function saveMastodon() {
     setError(null)
+    setMsg(null)
     if (!mastodonUrl.trim()) {
       setError('Mastodon instance URL is required')
       return
@@ -160,6 +169,7 @@ export default function SocialPromoPanel({
 
   function saveBluesky() {
     setError(null)
+    setMsg(null)
     if (!blueskyHandle.trim()) {
       setError('Bluesky handle is required')
       return
@@ -186,12 +196,13 @@ export default function SocialPromoPanel({
   }
 
   return (
-    <section className="studio-panel-section">
-      <h2 className="studio-section-heading">Social auto-post</h2>
+    <Panel title="Social auto-post">
       <p className="studio-help">
         Placeholders: <code>{'{artist}'}</code>, <code>{'{release}'}</code>,{' '}
         <code>{'{smart_link}'}</code>, <code>{'{channel_url}'}</code>.
       </p>
+      {msg ? <p className="studio-text-success studio-my-xs">{msg}</p> : null}
+      {error ? <p className="studio-text-error studio-my-xs">{error}</p> : null}
 
       <PlatformSection
         title="Mastodon"
@@ -250,7 +261,7 @@ export default function SocialPromoPanel({
             onChange={(e) => setMastodonTemplate(e.target.value)}
           />
         </label>
-        <label className="studio-checkbox-row studio-mt-sm">
+        <label className="studio-checkbox-label studio-mt-sm">
           <input
             type="checkbox"
             checked={mastodonRelease}
@@ -258,7 +269,7 @@ export default function SocialPromoPanel({
           />
           Auto-post when a release is published
         </label>
-        <label className="studio-checkbox-row studio-mt-sm">
+        <label className="studio-checkbox-label studio-mt-sm">
           <input
             type="checkbox"
             checked={mastodonLive}
@@ -335,7 +346,7 @@ export default function SocialPromoPanel({
             onChange={(e) => setBlueskyTemplate(e.target.value)}
           />
         </label>
-        <label className="studio-checkbox-row studio-mt-sm">
+        <label className="studio-checkbox-label studio-mt-sm">
           <input
             type="checkbox"
             checked={blueskyRelease}
@@ -343,7 +354,7 @@ export default function SocialPromoPanel({
           />
           Auto-post when a release is published
         </label>
-        <label className="studio-checkbox-row studio-mt-sm">
+        <label className="studio-checkbox-label studio-mt-sm">
           <input
             type="checkbox"
             checked={blueskyLive}
@@ -367,8 +378,8 @@ export default function SocialPromoPanel({
         title="X (Twitter)"
         help={
           <>
-            OAuth 2.0 connect — posts when configured below. Requires <code>TWITTER_CLIENT_ID</code>{' '}
-            on the server.
+            OAuth 2.0 connect — posts when configured below. Requires{' '}
+            <code>TWITTER_CLIENT_ID</code> on the server.
           </>
         }
         connected={initial.twitter.connected}
@@ -397,7 +408,9 @@ export default function SocialPromoPanel({
         }}
       >
         {!initial.twitter.configured ? (
-          <p className="studio-text-muted-sm">X OAuth is not configured on this server.</p>
+          <p className="studio-text-muted-sm studio-mt-sm">
+            X OAuth is not configured on this server.
+          </p>
         ) : initial.twitter.connected ? (
           <>
             <label className="studio-field studio-mt-sm">
@@ -409,7 +422,7 @@ export default function SocialPromoPanel({
                 maxLength={280}
               />
             </label>
-            <label className="studio-checkbox-row studio-mt-sm">
+            <label className="studio-checkbox-label studio-mt-sm">
               <input
                 type="checkbox"
                 checked={twitterRelease}
@@ -417,7 +430,7 @@ export default function SocialPromoPanel({
               />
               Auto-post when a release is published
             </label>
-            <label className="studio-checkbox-row studio-mt-sm">
+            <label className="studio-checkbox-label studio-mt-sm">
               <input
                 type="checkbox"
                 checked={twitterLive}
@@ -450,7 +463,11 @@ export default function SocialPromoPanel({
             </div>
           </>
         ) : (
-          <a href={`${apiUrl}/api/me/social/twitter/oauth/start`} className="studio-btn-primary">
+          <a
+            href={`${apiUrl}/api/me/social/twitter/oauth/start`}
+            className="studio-btn-primary"
+            style={{ display: 'inline-block', marginTop: '0.5rem' }}
+          >
             Connect X account
           </a>
         )}
@@ -491,7 +508,9 @@ export default function SocialPromoPanel({
         }}
       >
         {!initial.instagram.configured ? (
-          <p className="studio-text-muted-sm">Instagram OAuth is not configured on this server.</p>
+          <p className="studio-text-muted-sm studio-mt-sm">
+            Instagram OAuth is not configured on this server.
+          </p>
         ) : initial.instagram.connected ? (
           <>
             <label className="studio-field studio-mt-sm">
@@ -503,7 +522,7 @@ export default function SocialPromoPanel({
                 maxLength={2200}
               />
             </label>
-            <label className="studio-checkbox-row studio-mt-sm">
+            <label className="studio-checkbox-label studio-mt-sm">
               <input
                 type="checkbox"
                 checked={instagramRelease}
@@ -511,7 +530,7 @@ export default function SocialPromoPanel({
               />
               Auto-post when a release is published
             </label>
-            <label className="studio-checkbox-row studio-mt-sm">
+            <label className="studio-checkbox-label studio-mt-sm">
               <input
                 type="checkbox"
                 checked={instagramLive}
@@ -544,14 +563,15 @@ export default function SocialPromoPanel({
             </div>
           </>
         ) : (
-          <a href={`${apiUrl}/api/me/social/instagram/oauth/start`} className="studio-btn-primary">
+          <a
+            href={`${apiUrl}/api/me/social/instagram/oauth/start`}
+            className="studio-btn-primary"
+            style={{ display: 'inline-block', marginTop: '0.5rem' }}
+          >
             Connect Instagram account
           </a>
         )}
       </PlatformSection>
-
-      {msg ? <p className="studio-text-muted-sm studio-mt-sm">{msg}</p> : null}
-      {error ? <p className="studio-text-error studio-mt-sm">{error}</p> : null}
-    </section>
+    </Panel>
   )
 }

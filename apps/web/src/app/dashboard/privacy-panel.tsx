@@ -4,20 +4,24 @@
 'use client'
 
 import { useState } from 'react'
+import { Panel } from '@tahti/ui'
 import { requestAccountDeletion } from './privacy-actions'
 
 export default function PrivacyPanel({ username, apiUrl }: { username: string; apiUrl: string }) {
   const [reason, setReason] = useState('')
   const [msg, setMsg] = useState<string | null>(null)
+  const [isError, setIsError] = useState(false)
   const [pending, setPending] = useState(false)
 
   async function onDeletionRequest(e: React.FormEvent) {
     e.preventDefault()
     setPending(true)
     setMsg(null)
+    setIsError(false)
     const { error, ticketId } = await requestAccountDeletion(reason.trim())
     setPending(false)
     if (error) {
+      setIsError(true)
       setMsg(error)
       return
     }
@@ -26,20 +30,18 @@ export default function PrivacyPanel({ username, apiUrl }: { username: string; a
   }
 
   return (
-    <section className="db-panel">
-      <h2>Privacy &amp; data</h2>
-      <p className="db-panel-sub">
-        Export your data or request account deletion under GDPR. Deletion is reviewed manually
-        within 30 days.
-      </p>
-      <ul className="db-link-list">
-        <li>
+    <Panel
+      title="Privacy & data"
+      description="Export your data or request account deletion under GDPR. Deletion is reviewed manually within 30 days."
+    >
+      <ul className="studio-list studio-mt-sm studio-list-indented">
+        <li className="studio-text-sm" style={{ listStyle: 'disc', padding: '0.15rem 0' }}>
           <a href={`${apiUrl}/api/me/data-export.json`}>Download data export (JSON)</a>
         </li>
-        <li>
+        <li className="studio-text-sm" style={{ listStyle: 'disc', padding: '0.15rem 0' }}>
           <a href={`${apiUrl}/api/me/press-kit.json`}>Download press kit (JSON)</a>
         </li>
-        <li>
+        <li className="studio-text-sm" style={{ listStyle: 'disc', padding: '0.15rem 0' }}>
           <a
             href={`${apiUrl}/api/v1/u/${encodeURIComponent(username)}/press-kit.json`}
             target="_blank"
@@ -49,10 +51,11 @@ export default function PrivacyPanel({ username, apiUrl }: { username: string; a
           </a>
         </li>
       </ul>
-      <form onSubmit={onDeletionRequest} style={{ marginTop: '1rem' }}>
-        <label>
-          Request account deletion
+      <form onSubmit={onDeletionRequest} className="studio-mt-lg">
+        <label className="studio-field--block">
+          <span className="studio-label">Request account deletion</span>
           <textarea
+            className="studio-input studio-mt-sm"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={3}
@@ -61,11 +64,19 @@ export default function PrivacyPanel({ username, apiUrl }: { username: string; a
             placeholder="Brief reason (optional context for the board)"
           />
         </label>
-        <button type="submit" disabled={pending || !reason.trim()}>
+        <button
+          type="submit"
+          className="studio-btn-primary studio-mt-sm"
+          disabled={pending || !reason.trim()}
+        >
           {pending ? 'Submitting…' : 'Submit deletion request'}
         </button>
       </form>
-      {msg ? <p className="db-panel-sub">{msg}</p> : null}
-    </section>
+      {msg ? (
+        <p className={`${isError ? 'studio-text-error' : 'studio-text-success'} studio-mt-sm`}>
+          {msg}
+        </p>
+      ) : null}
+    </Panel>
   )
 }
