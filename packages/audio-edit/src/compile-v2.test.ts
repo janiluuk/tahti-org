@@ -29,14 +29,20 @@ describe('compileFiltergraphV2', () => {
 
   it('emits gain filter when db != 0', () => {
     const el = createDefaultEditListV2(60)
-    el.plugins[0] = { ...el.plugins[0]!, params: { db: 3, normalize: { enabled: false, targetLufs: -14, targetTp: -1.5 } } }
+    el.plugins[0] = {
+      ...el.plugins[0]!,
+      params: { db: 3, normalize: { enabled: false, targetLufs: -14, targetTp: -1.5 } },
+    }
     const result = compileFiltergraphV2(el)
     expect(result.filtergraph).toContain('volume=3dB')
   })
 
   it('emits loudnorm filter when normalize enabled', () => {
     const el = createDefaultEditListV2(60)
-    el.plugins[0] = { ...el.plugins[0]!, params: { db: 0, normalize: { enabled: true, targetLufs: -14, targetTp: -1.5 } } }
+    el.plugins[0] = {
+      ...el.plugins[0]!,
+      params: { db: 0, normalize: { enabled: true, targetLufs: -14, targetTp: -1.5 } },
+    }
     const result = compileFiltergraphV2(el)
     expect(result.filtergraph).toContain('loudnorm=')
     expect(result.loudnormPass1Filter).toContain('loudnorm=')
@@ -53,7 +59,10 @@ describe('compileFiltergraphV2', () => {
   it('two EQ instances compile independently without collision', () => {
     const eqParams = { bands: [{ freq: 80, q: 1, gainDb: 2, type: 'bell' as const }] }
     const el: EditListV2 = {
-      version: 2, sourceDuration: 60, cuts: [], fades: [],
+      version: 2,
+      sourceDuration: 60,
+      cuts: [],
+      fades: [],
       plugins: [
         { instanceId: 'eq-a', pluginId: 'eq', enabled: true, params: eqParams },
         { instanceId: 'eq-b', pluginId: 'eq', enabled: true, params: eqParams },

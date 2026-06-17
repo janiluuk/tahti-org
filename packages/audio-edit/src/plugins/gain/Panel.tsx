@@ -50,7 +50,10 @@ export function GainPanel({
             aria-checked={params.normalize.enabled}
             className="plug-panel__switch"
             onClick={() =>
-              onChange({ ...params, normalize: { ...params.normalize, enabled: !params.normalize.enabled } })
+              onChange({
+                ...params,
+                normalize: { ...params.normalize, enabled: !params.normalize.enabled },
+              })
             }
           >
             <span className="plug-panel__switch-thumb" />

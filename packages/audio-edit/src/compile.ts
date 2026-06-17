@@ -354,12 +354,7 @@ export function compileFiltergraphV2(
   }
 
   // Loudnorm steps are appended after all other plugin steps.
-  const allStages = [
-    cutStage.filter,
-    fadeStage,
-    ...pluginStages,
-    ...loudnormStages,
-  ]
+  const allStages = [cutStage.filter, fadeStage, ...pluginStages, ...loudnormStages]
 
   // Patch final output label to '[out]'
   const lastStageIdx = allStages.length - 1
@@ -394,4 +389,3 @@ function clampCutsToRange(
   }
   return result
 }
-

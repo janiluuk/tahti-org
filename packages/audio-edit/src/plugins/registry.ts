@@ -113,9 +113,4 @@ export const PLUGINS = {
 export type PluginId = keyof typeof PLUGINS
 
 export type { GainParams, EqParams, EqBand, CompParams, LimiterParams, MeasuredLoudness }
-export {
-  DEFAULT_GAIN_PARAMS,
-  DEFAULT_EQ_PARAMS,
-  DEFAULT_COMP_PARAMS,
-  DEFAULT_LIMITER_PARAMS,
-}
+export { DEFAULT_GAIN_PARAMS, DEFAULT_EQ_PARAMS, DEFAULT_COMP_PARAMS, DEFAULT_LIMITER_PARAMS }

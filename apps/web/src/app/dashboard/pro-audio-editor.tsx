@@ -5,7 +5,13 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { EditList, EditListV2, HistoryState, OutputFormat, PeaksPyramid } from '@tahti/audio-edit'
+import type {
+  EditList,
+  EditListV2,
+  HistoryState,
+  OutputFormat,
+  PeaksPyramid,
+} from '@tahti/audio-edit'
 import {
   postCutDuration,
   computeKeepSegments,
@@ -308,37 +314,27 @@ export function ProAudioEditor({
     setHistoryState((s) => (History.canRedo(s) ? History.redo(s) : s))
   }, [])
 
-  const patchPlugin = useCallback(
-    (instanceId: string, params: unknown) => {
-      setHistoryState((s) => {
-        const cur = History.current(s).editList
-        const next: EditListV2 = {
-          ...cur,
-          plugins: cur.plugins.map((p) =>
-            p.instanceId === instanceId ? { ...p, params } : p,
-          ),
-        }
-        return History.push(s, next, 'Plugin param')
-      })
-    },
-    [],
-  )
+  const patchPlugin = useCallback((instanceId: string, params: unknown) => {
+    setHistoryState((s) => {
+      const cur = History.current(s).editList
+      const next: EditListV2 = {
+        ...cur,
+        plugins: cur.plugins.map((p) => (p.instanceId === instanceId ? { ...p, params } : p)),
+      }
+      return History.push(s, next, 'Plugin param')
+    })
+  }, [])
 
-  const togglePlugin = useCallback(
-    (instanceId: string, enabled: boolean) => {
-      setHistoryState((s) => {
-        const cur = History.current(s).editList
-        const next: EditListV2 = {
-          ...cur,
-          plugins: cur.plugins.map((p) =>
-            p.instanceId === instanceId ? { ...p, enabled } : p,
-          ),
-        }
-        return History.push(s, next, enabled ? 'Enable plugin' : 'Bypass plugin')
-      })
-    },
-    [],
-  )
+  const togglePlugin = useCallback((instanceId: string, enabled: boolean) => {
+    setHistoryState((s) => {
+      const cur = History.current(s).editList
+      const next: EditListV2 = {
+        ...cur,
+        plugins: cur.plugins.map((p) => (p.instanceId === instanceId ? { ...p, enabled } : p)),
+      }
+      return History.push(s, next, enabled ? 'Enable plugin' : 'Bypass plugin')
+    })
+  }, [])
 
   const flushDraftSave = useCallback(async () => {
     autosavePendingRef.current = true
@@ -694,10 +690,7 @@ export function ProAudioEditor({
     pushEdit(
       {
         ...editList,
-        cuts: [
-          ...editList.cuts,
-          { id: crypto.randomUUID(), start: final.start, end: final.end },
-        ],
+        cuts: [...editList.cuts, { id: crypto.randomUUID(), start: final.start, end: final.end }],
       },
       'Cut',
     )
@@ -713,7 +706,13 @@ export function ProAudioEditor({
         ...editList,
         fades: [
           ...editList.fades,
-          { id: crypto.randomUUID(), type: 'in' as const, at: final.start, duration: dur, curve: 'tri' as const },
+          {
+            id: crypto.randomUUID(),
+            type: 'in' as const,
+            at: final.start,
+            duration: dur,
+            curve: 'tri' as const,
+          },
           {
             id: crypto.randomUUID(),
             type: 'out' as const,
@@ -965,8 +964,8 @@ export function ProAudioEditor({
   const compParams = compPlugin?.params as CompParams | undefined
   const limiterParams = limiterPlugin?.params as LimiterParams | undefined
 
-  const focusedPlugin = editList.plugins.find((p) => p.instanceId === focusedInstanceId)
-    ?? editList.plugins[0]!
+  const focusedPlugin =
+    editList.plugins.find((p) => p.instanceId === focusedInstanceId) ?? editList.plugins[0]!
 
   const renderLufs =
     gainPlugin?.enabled && gainParams?.normalize.enabled
@@ -1041,7 +1040,11 @@ export function ProAudioEditor({
           >
             ⊙ {renderModePill}
           </span>
-          <button type="button" className="studio-btn-primary" onClick={() => setExportDialogOpen(true)}>
+          <button
+            type="button"
+            className="studio-btn-primary"
+            onClick={() => setExportDialogOpen(true)}
+          >
             Export →
           </button>
         </div>
@@ -1409,7 +1412,11 @@ export function ProAudioEditor({
 
                 return (
                   <div key={plugin.instanceId} className="pro-editor-chain__cell">
-                    {i > 0 && <span className="pro-editor-chain__arrow" aria-hidden>→</span>}
+                    {i > 0 && (
+                      <span className="pro-editor-chain__arrow" aria-hidden>
+                        →
+                      </span>
+                    )}
                     <div className="pro-editor-chain__tile">
                       <ChainTile
                         position={i + 1}

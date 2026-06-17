@@ -8,7 +8,5 @@ import { gainChainSummary } from './index.js'
 import type { GainParams } from './index.js'
 
 export function GainChainRow({ params, enabled }: { params: GainParams; enabled: boolean }) {
-  return (
-    <span className="plug__mono-summary">{gainChainSummary(params, enabled)}</span>
-  )
+  return <span className="plug__mono-summary">{gainChainSummary(params, enabled)}</span>
 }

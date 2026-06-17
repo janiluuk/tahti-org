@@ -8,7 +8,5 @@ import { gainChainSummary } from '@tahti/audio-edit'
 import type { GainParams } from '@tahti/audio-edit'
 
 export function GainChainRow({ params, enabled }: { params: GainParams; enabled: boolean }) {
-  return (
-    <span className="plug__mono-summary">{gainChainSummary(params, enabled)}</span>
-  )
+  return <span className="plug__mono-summary">{gainChainSummary(params, enabled)}</span>
 }

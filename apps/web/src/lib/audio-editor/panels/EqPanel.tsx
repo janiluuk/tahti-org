@@ -50,8 +50,10 @@ function EqCurveV2({ bands }: { bands: EqBand[] }) {
       {[MAX_GAIN_DB, 6, 0, -6, -MAX_GAIN_DB].map((db) => (
         <line
           key={db}
-          x1={0} x2={WIDTH}
-          y1={gainToY(db)} y2={gainToY(db)}
+          x1={0}
+          x2={WIDTH}
+          y1={gainToY(db)}
+          y2={gainToY(db)}
           stroke="rgba(255,255,255,0.06)"
           strokeWidth={db === 0 ? 1.5 : 1}
         />
@@ -59,8 +61,10 @@ function EqCurveV2({ bands }: { bands: EqBand[] }) {
       {[80, 1200, 9000].map((f) => (
         <line
           key={f}
-          x1={freqToX(f)} x2={freqToX(f)}
-          y1={0} y2={HEIGHT}
+          x1={freqToX(f)}
+          x2={freqToX(f)}
+          y1={0}
+          y2={HEIGHT}
           stroke="rgba(255,255,255,0.06)"
           strokeWidth={1}
           strokeDasharray="2,3"
@@ -72,10 +76,7 @@ function EqCurveV2({ bands }: { bands: EqBand[] }) {
           <stop offset="100%" stopColor="var(--cyan)" stopOpacity={0.01} />
         </linearGradient>
       </defs>
-      <path
-        d={`${curve} L ${WIDTH} ${HEIGHT / 2} L 0 ${HEIGHT / 2} Z`}
-        fill="url(#eq-fill)"
-      />
+      <path d={`${curve} L ${WIDTH} ${HEIGHT / 2} L 0 ${HEIGHT / 2} Z`} fill="url(#eq-fill)" />
       <path d={curve} fill="none" stroke="var(--cyan)" strokeWidth={2} />
       {bands.map((b, i) => (
         <circle
@@ -109,10 +110,18 @@ export function EqPanel({
       <EqCurveV2 bands={params.bands} />
       <div className="plug-eq-bands">
         {params.bands.map((band, i) => (
-          <div key={i} className="plug-eq-band" style={{ '--band-color': BAND_COLORS[i % BAND_COLORS.length] } as React.CSSProperties}>
+          <div
+            key={i}
+            className="plug-eq-band"
+            style={{ '--band-color': BAND_COLORS[i % BAND_COLORS.length] } as React.CSSProperties}
+          >
             <div className="plug-eq-band__header">
-              <span className="plug-eq-band__name" style={{ color: BAND_COLORS[i % BAND_COLORS.length] }}>
-                {BAND_NAMES[i % BAND_NAMES.length]} · {band.type.toUpperCase().replace('HIGHSHELF','SHELF').replace('LOWSHELF','SHELF')}
+              <span
+                className="plug-eq-band__name"
+                style={{ color: BAND_COLORS[i % BAND_COLORS.length] }}
+              >
+                {BAND_NAMES[i % BAND_NAMES.length]} ·{' '}
+                {band.type.toUpperCase().replace('HIGHSHELF', 'SHELF').replace('LOWSHELF', 'SHELF')}
               </span>
             </div>
             <div className="plug-eq-band__knobs">
@@ -129,8 +138,12 @@ export function EqPanel({
                   onChange={(v) => updateBand(i, { gainDb: v })}
                   formatValue={(v) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}`}
                 />
-                <span className="plug-panel__label" style={{ color: BAND_COLORS[i % BAND_COLORS.length] }}>
-                  {band.gainDb >= 0 ? '+' : ''}{band.gainDb.toFixed(1)} dB
+                <span
+                  className="plug-panel__label"
+                  style={{ color: BAND_COLORS[i % BAND_COLORS.length] }}
+                >
+                  {band.gainDb >= 0 ? '+' : ''}
+                  {band.gainDb.toFixed(1)} dB
                 </span>
               </div>
               <div className="plug-panel__knob-group">
@@ -144,7 +157,9 @@ export function EqPanel({
                   defaultValue={band.freq}
                   color="var(--muted)"
                   onChange={(v) => updateBand(i, { freq: Math.round(v) })}
-                  formatValue={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${Math.round(v)}`}
+                  formatValue={(v) =>
+                    v >= 1000 ? `${(v / 1000).toFixed(1)}k` : `${Math.round(v)}`
+                  }
                 />
                 <span className="plug-panel__label">
                   {band.freq >= 1000 ? `${(band.freq / 1000).toFixed(1)} kHz` : `${band.freq} Hz`}

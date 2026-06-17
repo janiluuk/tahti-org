@@ -59,7 +59,11 @@ function push(state: HistoryState, editList: EditListV2, label: string): History
     branchId,
   }
 
-  const newEntries = [...state.entries.slice(0, state.cursor + 1), next, ...state.entries.slice(state.cursor + 1)]
+  const newEntries = [
+    ...state.entries.slice(0, state.cursor + 1),
+    next,
+    ...state.entries.slice(state.cursor + 1),
+  ]
   const pruned = pruneEntries(newEntries)
   const newCursor = pruned.indexOf(next)
 
@@ -98,9 +102,7 @@ function jumpTo(state: HistoryState, version: number): HistoryState {
 function setCheckpoint(state: HistoryState, version: number, on: boolean): HistoryState {
   return {
     ...state,
-    entries: state.entries.map((e) =>
-      e.version === version ? { ...e, checkpoint: on } : e,
-    ),
+    entries: state.entries.map((e) => (e.version === version ? { ...e, checkpoint: on } : e)),
   }
 }
 

@@ -23,7 +23,10 @@ describe('gain plugin', () => {
   })
 
   it('emits loudnorm filter when normalize.enabled', () => {
-    const params = { ...DEFAULT_GAIN_PARAMS, normalize: { enabled: true, targetLufs: -14, targetTp: -1.5 } }
+    const params = {
+      ...DEFAULT_GAIN_PARAMS,
+      normalize: { enabled: true, targetLufs: -14, targetTp: -1.5 },
+    }
     const step = compileGain(params, CTX)
     expect(step?.graph).toContain('loudnorm=')
     expect(step?.graph).toContain('I=-14')
@@ -43,7 +46,10 @@ describe('gain plugin', () => {
   it('chainSummary reflects db and normalize state', () => {
     expect(gainChainSummary(DEFAULT_GAIN_PARAMS, false)).toBe('bypassed')
     expect(gainChainSummary(DEFAULT_GAIN_PARAMS, true)).toBe('0.0 dB')
-    const withNorm = { ...DEFAULT_GAIN_PARAMS, normalize: { enabled: true, targetLufs: -14, targetTp: -1.5 } }
+    const withNorm = {
+      ...DEFAULT_GAIN_PARAMS,
+      normalize: { enabled: true, targetLufs: -14, targetTp: -1.5 },
+    }
     expect(gainChainSummary(withNorm, true)).toContain('LUFS')
   })
 })
