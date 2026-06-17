@@ -152,10 +152,8 @@ export default async function AdminVendorsPage() {
       <h1 className="admin-section-title">Vendors &amp; DPA tracking</h1>
       <p style={{ color: 'var(--muted)', fontSize: '0.875rem', marginBottom: '2rem' }}>
         Association-owned accounts. Credentials in the board vault — never in this file. See{' '}
-        <Link href="/admin/governance">
-          Governance
-        </Link>{' '}
-        for the full GDPR processing register and <code>ops/VENDORS.md</code> for contact details.
+        <Link href="/admin/governance">Governance</Link> for the full GDPR processing register and{' '}
+        <code>ops/VENDORS.md</code> for contact details.
       </p>
 
       {(integrationStatus.has('Mixcloud') || integrationStatus.has('Revelator')) && (

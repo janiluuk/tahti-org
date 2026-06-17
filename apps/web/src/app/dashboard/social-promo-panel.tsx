@@ -51,9 +51,7 @@ function PlatformSection({
         <h3 className="studio-text-strong-sm" style={{ margin: 0 }}>
           {title}
         </h3>
-        {connected ? (
-          <span className="studio-badge studio-badge--success">Connected</span>
-        ) : null}
+        {connected ? <span className="studio-badge studio-badge--success">Connected</span> : null}
       </div>
       <p className="studio-help">{help}</p>
       {connected && accountLabel ? (
@@ -378,8 +376,8 @@ export default function SocialPromoPanel({
         title="X (Twitter)"
         help={
           <>
-            OAuth 2.0 connect — posts when configured below. Requires{' '}
-            <code>TWITTER_CLIENT_ID</code> on the server.
+            OAuth 2.0 connect — posts when configured below. Requires <code>TWITTER_CLIENT_ID</code>{' '}
+            on the server.
           </>
         }
         connected={initial.twitter.connected}

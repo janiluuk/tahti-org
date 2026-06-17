@@ -124,10 +124,7 @@ export function CustomDomainPanel({
             Point your own domain to your channel page. Add a CNAME or A record to{' '}
             <code>app.tahti.live</code>, then enter the domain below.
           </p>
-          <button
-            className="ui-btn ui-btn--sm ui-btn--secondary"
-            onClick={() => setMode('edit')}
-          >
+          <button className="ui-btn ui-btn--sm ui-btn--secondary" onClick={() => setMode('edit')}>
             Set custom domain
           </button>
         </>
