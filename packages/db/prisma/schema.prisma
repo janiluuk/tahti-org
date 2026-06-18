@@ -346,6 +346,33 @@ enum CollectionType {
   @@schema("media")
 }
 
+enum CollectionStyle {
+  ALBUM
+  EP
+  SINGLE
+  DJ_SET_SERIES
+  LIVE_ARCHIVE
+  COMPILATION
+  PLAYLIST
+
+  @@schema("media")
+}
+
+enum CollectionVisibility {
+  PUBLIC
+  UNLISTED
+  DRAFT
+
+  @@schema("media")
+}
+
+enum CollectionCoverMode {
+  AUTO
+  CUSTOM
+
+  @@schema("media")
+}
+
 // M26: per-collection backdrop themes — same effect catalogue as ChannelGalleryMode
 enum CollectionGalleryMode {
   NONE
@@ -1350,6 +1377,14 @@ model Collection {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
+  // Sprint 9: upload + collections flow
+  style              CollectionStyle      @default(PLAYLIST)
+  visibility         CollectionVisibility @default(PUBLIC)
+  coverMode          CollectionCoverMode  @default(AUTO)
+  publicProfileOrder Int                  @default(0)
+  scheduledPublishAt DateTime?
+  smartLinksJson     Json?
+
   // M26: per-collection backdrop theme (independent of the channel-wide theme)
   galleryMode        CollectionGalleryMode     @default(NONE)
   slideshowImages    String[]
@@ -1361,6 +1396,7 @@ model Collection {
   items CollectionItem[]
 
   @@index([userId, isPublic])
+  @@index([userId, publicProfileOrder])
   @@schema("media")
 }
 
