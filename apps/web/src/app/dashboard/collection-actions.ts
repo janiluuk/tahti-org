@@ -23,6 +23,7 @@ export async function createCollection(params: {
   slug?: string
   type?: string
   description?: string
+  isPublic?: boolean
 }): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/collections`, {
     method: 'POST',
