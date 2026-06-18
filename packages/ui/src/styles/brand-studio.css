@@ -4493,7 +4493,9 @@
   border-radius: var(--radius-md);
   background: var(--surface-1);
   text-decoration: none;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 [data-tahti-ui='studio'] .upload-entry__other-card:hover {
@@ -4706,7 +4708,9 @@
   color: var(--muted);
   font-size: var(--text-sm);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 [data-tahti-ui='studio'] .upload-progress__seg-btn + .upload-progress__seg-btn {
@@ -4732,7 +4736,10 @@
   color: var(--muted);
   font-size: var(--text-sm);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
 }
 
 [data-tahti-ui='studio'] .upload-progress__collection-chip--active {
@@ -4873,7 +4880,9 @@
   min-height: 200px;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
   padding: var(--space-4);
 }
 
@@ -5119,7 +5128,9 @@
   cursor: pointer;
   border: 1px solid var(--c-border);
   background: transparent;
-  transition: background 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 }
 
 [data-tahti-ui='studio'] .collection-form__style-pill--active {
@@ -5700,6 +5711,133 @@
   color: var(--c-error, #f87171);
 }
 
+/* ── Tahti Radio panel ── */
+
+[data-tahti-ui='studio'] .tahti-radio-panel {
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--c-border);
+}
+
+[data-tahti-ui='studio'] .tahti-radio-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+[data-tahti-ui='studio'] .studio-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .studio-toggle-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--c-accent);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .studio-toggle-label {
+  font-size: var(--fs-sm);
+  color: var(--c-text);
+}
+
+/* ── Mentions panel ── */
+
+[data-tahti-ui='studio'] .mentions-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+[data-tahti-ui='studio'] .mentions-mute-section {
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-border);
+}
+
+[data-tahti-ui='studio'] .studio-inline-form {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+[data-tahti-ui='studio'] .studio-input-sm {
+  padding: var(--s-1) var(--s-2);
+  font-size: var(--fs-sm);
+  height: 2rem;
+}
+
+[data-tahti-ui='studio'] .studio-btn-sm {
+  font-size: var(--fs-sm);
+  padding: var(--s-1) var(--s-2);
+}
+
+[data-tahti-ui='studio'] .studio-ml-sm {
+  margin-left: var(--s-2);
+}
+
+[data-tahti-ui='studio'] .studio-mb-md {
+  margin-bottom: var(--s-4);
+}
+
+[data-tahti-ui='studio'] .studio-mt-xs {
+  margin-top: var(--s-1);
+}
+
+/* ── Venue management dashboard ── */
+
+[data-tahti-ui='studio'] .venue-manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+[data-tahti-ui='studio'] .venue-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+[data-tahti-ui='studio'] .venue-badge {
+  display: inline-block;
+  padding: 0 var(--s-1);
+  border-radius: 3px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-tahti-ui='studio'] .venue-badge--pending {
+  background: var(--c-warning-bg, #fef3c7);
+  color: var(--c-warning, #92400e);
+}
+
+[data-tahti-ui='studio'] .venue-broadcast-form {
+  padding: var(--s-3) 0 var(--s-2);
+  border-top: 1px solid var(--c-border);
+  margin-top: var(--s-3);
+}
+
+[data-tahti-ui='studio'] .venue-broadcast-form__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+}
+
+[data-tahti-ui='studio'] .studio-label-sm {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-text-muted);
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 900px) {
@@ -5715,5 +5853,9 @@
 
   [data-tahti-ui='studio'] .broadcast-row__status {
     display: none;
+  }
+
+  [data-tahti-ui='studio'] .venue-broadcast-form__fields {
+    grid-template-columns: 1fr;
   }
 }

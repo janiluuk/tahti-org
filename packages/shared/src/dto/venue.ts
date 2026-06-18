@@ -31,3 +31,31 @@ export const CreateVenueBroadcastSchema = z.object({
 })
 
 export type CreateVenueBroadcastInput = z.infer<typeof CreateVenueBroadcastSchema>
+
+export const PatchVenueSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120).optional(),
+    address: z.string().trim().min(1).max(200).optional(),
+    city: z.string().trim().min(1).max(80).optional(),
+    countryCode: z.string().length(2).optional(),
+    description: z.string().max(2000).nullable().optional(),
+    capacity: z.number().int().min(1).nullable().optional(),
+    latitude: z.number().min(-90).max(90).nullable().optional(),
+    longitude: z.number().min(-180).max(180).nullable().optional(),
+    externalLinks: z.record(z.string().url()).optional(),
+  })
+  .refine((b) => Object.keys(b).length > 0, { message: 'No fields to update' })
+
+export type PatchVenueInput = z.infer<typeof PatchVenueSchema>
+
+export const PatchVenueBroadcastSchema = z
+  .object({
+    startAt: z.string().datetime().optional(),
+    endAt: z.string().datetime().nullable().optional(),
+    description: z.string().max(500).nullable().optional(),
+    channelId: z.string().min(1).nullable().optional(),
+    state: z.enum(['SCHEDULED', 'CANCELED']).optional(),
+  })
+  .refine((b) => Object.keys(b).length > 0, { message: 'No fields to update' })
+
+export type PatchVenueBroadcastInput = z.infer<typeof PatchVenueBroadcastSchema>

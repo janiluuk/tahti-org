@@ -5,6 +5,8 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   CreateVenueBroadcastSchema,
   CreateVenueSchema,
+  PatchVenueSchema,
+  PatchVenueBroadcastSchema,
   SlugParamSchema,
   VenueBroadcastCalendarSchema,
   VenueCalendarQuerySchema,
@@ -161,6 +163,23 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // GET /api/me/venues — list venues owned by the authenticated user
+  fastify.get('/api/me/venues', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const venues = await fastify.prisma.venue.findMany({
+      where: { createdBy: user.id },
+      include: {
+        broadcasts: {
+          where: { startAt: { gte: new Date() }, state: { in: ['SCHEDULED', 'LIVE'] } },
+          orderBy: { startAt: 'asc' },
+          take: 10,
+        },
+      },
+      orderBy: { name: 'asc' },
+    })
+    return reply.send(venues)
+  })
+
   // POST /api/v1/venues — create venue (auth required, unverified until board approves)
   fastify.post('/api/v1/venues', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
@@ -222,6 +241,99 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.status(201).send(broadcast)
+    },
+  )
+
+  // PATCH /api/v1/venues/:slug — update venue profile (owner only)
+  fastify.patch('/api/v1/venues/:slug', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const parsed = PatchVenueSchema.safeParse(request.body)
+    if (!parsed.success) return zodError(reply, parsed.error)
+    const body = parsed.data
+
+    const venue = await fastify.prisma.venue.findUnique({
+      where: { slug: routeParams.slug },
+    })
+    if (!venue) return reply.status(404).send({ error: 'Venue not found' })
+    if (venue.createdBy !== user.id) return reply.status(403).send({ error: 'Forbidden' })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: Record<string, any> = {}
+    if (body.name !== undefined) data.name = body.name
+    if (body.address !== undefined) data.address = body.address
+    if (body.city !== undefined) data.city = body.city
+    if (body.countryCode !== undefined) data.countryCode = body.countryCode
+    if (body.description !== undefined) data.description = body.description
+    if (body.capacity !== undefined) data.capacity = body.capacity
+    if (body.latitude !== undefined) data.latitude = body.latitude
+    if (body.longitude !== undefined) data.longitude = body.longitude
+    if (body.externalLinks !== undefined) data.externalLinks = body.externalLinks
+
+    const updated = await fastify.prisma.venue.update({
+      where: { slug: routeParams.slug },
+      data,
+    })
+    return reply.send(updated)
+  })
+
+  // PATCH /api/v1/venues/:slug/broadcasts/:broadcastId — update broadcast
+  fastify.patch(
+    '/api/v1/venues/:slug/broadcasts/:broadcastId',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const params = request.params as { slug: string; broadcastId: string }
+      const parsed = PatchVenueBroadcastSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const body = parsed.data
+
+      const broadcast = await fastify.prisma.venueBroadcast.findFirst({
+        where: { id: params.broadcastId, venue: { slug: params.slug } },
+      })
+      if (!broadcast) return reply.status(404).send({ error: 'Broadcast not found' })
+      if (broadcast.artistUserId !== user.id) {
+        return reply.status(403).send({ error: 'Forbidden' })
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data: Record<string, any> = {}
+      if (body.startAt !== undefined) data.startAt = new Date(body.startAt)
+      if (body.endAt !== undefined) data.endAt = body.endAt ? new Date(body.endAt) : null
+      if (body.description !== undefined) data.description = body.description
+      if (body.channelId !== undefined) data.channelId = body.channelId
+      if (body.state !== undefined) data.state = body.state
+
+      const updated = await fastify.prisma.venueBroadcast.update({
+        where: { id: broadcast.id },
+        data,
+      })
+      return reply.send(updated)
+    },
+  )
+
+  // DELETE /api/v1/venues/:slug/broadcasts/:broadcastId — cancel / delete broadcast
+  fastify.delete(
+    '/api/v1/venues/:slug/broadcasts/:broadcastId',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const params = request.params as { slug: string; broadcastId: string }
+
+      const broadcast = await fastify.prisma.venueBroadcast.findFirst({
+        where: { id: params.broadcastId, venue: { slug: params.slug } },
+      })
+      if (!broadcast) return reply.status(404).send({ error: 'Broadcast not found' })
+      if (broadcast.artistUserId !== user.id) {
+        return reply.status(403).send({ error: 'Forbidden' })
+      }
+
+      await fastify.prisma.venueBroadcast.update({
+        where: { id: broadcast.id },
+        data: { state: 'CANCELED' },
+      })
+      return reply.status(204).send()
     },
   )
 }
