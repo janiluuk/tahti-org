@@ -73,6 +73,27 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
+  // GET /api/me/channel/meta-stream — current opt-out state
+  fastify.get(
+    '/api/me/channel/meta-stream',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(MetaStreamOptResponseSchema, 'MetaStreamOpt'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { metaStreamOptOut: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      return reply.send({ metaStreamOptOut: channel.metaStreamOptOut })
+    },
+  )
+
   // PATCH /api/me/channel/meta-stream — toggle Tahti Radio opt-out
   fastify.patch(
     '/api/me/channel/meta-stream',
