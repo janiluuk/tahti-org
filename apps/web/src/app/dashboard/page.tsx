@@ -33,6 +33,8 @@ import UpgradeCta from './upgrade-cta'
 import { CustomDomainPanel } from './custom-domain-panel'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
+import { TahtiRadioPanel } from './tahti-radio-panel'
+import { MentionsPanel } from './mentions-panel'
 import { EndBroadcastBtn } from './end-broadcast-btn'
 import {
   Link,
@@ -860,7 +862,10 @@ export default async function DashboardPage() {
                 </Link>
               </Panel>
 
-              <StudioCollapse title="Distribution & chat" hint="Mixcloud, announcements, mods">
+              <StudioCollapse
+                title="Distribution & chat"
+                hint="Mixcloud, Tahti Radio, announcements, mods"
+              >
                 <Suspense fallback={null}>
                   <MixcloudConnect
                     initial={{
@@ -870,6 +875,7 @@ export default async function DashboardPage() {
                     apiUrl={apiUrl}
                   />
                 </Suspense>
+                <TahtiRadioPanel />
                 <AnnouncementsPanel initial={announcements} />
                 <ModeratorsPanel initial={moderators} channelSlug={user.channel.slug} />
               </StudioCollapse>
@@ -967,6 +973,7 @@ export default async function DashboardPage() {
               />
             )}
             {socialSettings && <SocialPromoPanel initial={socialSettings} apiUrl={apiUrl} />}
+            <MentionsPanel />
             <CustomDomainPanel
               initialDomain={user.channel?.customDomain ?? null}
               initialVerified={user.channel?.customDomainVerified ?? false}

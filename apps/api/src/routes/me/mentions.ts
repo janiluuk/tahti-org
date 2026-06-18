@@ -16,6 +16,49 @@ import { requireAuth } from '../../plugins/auth.js'
 
 // M15 — artist mention preferences and mute management
 const mentionRoutes: FastifyPluginAsync = async (fastify) => {
+  // GET /api/me/mentions/settings — current preferences + muted list
+  fastify.get('/api/me/mentions/settings', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const row = await fastify.prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        mentionsEnabled: true,
+        publicMentionsEnabled: true,
+        mentionsMuted: {
+          select: { target: { select: { username: true, displayName: true } } },
+        },
+      },
+    })
+    return reply.send({
+      mentionsEnabled: row?.mentionsEnabled ?? true,
+      publicMentionsEnabled: row?.publicMentionsEnabled ?? false,
+      muted: (row?.mentionsMuted ?? []).map((m) => ({
+        username: m.target.username,
+        displayName: m.target.displayName,
+      })),
+    })
+  })
+
+  // GET /api/me/mentions — recent incoming mentions
+  fastify.get('/api/me/mentions', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const query = request.query as { limit?: string }
+    const limit = Math.min(parseInt(query.limit ?? '20', 10), 50)
+
+    const mentions = await fastify.prisma.mention.findMany({
+      where: { targetUserId: user.id },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        surface: true,
+        createdAt: true,
+        mentioner: { select: { username: true, displayName: true, avatarUrl: true } },
+      },
+    })
+    return reply.send({ mentions })
+  })
+
   // PATCH /api/me/mentions/settings — toggle mentions on/off
   fastify.patch(
     '/api/me/mentions/settings',
