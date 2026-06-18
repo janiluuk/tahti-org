@@ -166,6 +166,24 @@ export const config = {
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/mixcloud/oauth/callback`,
     oauthStateCookie: 'tahti_mixcloud_oauth',
   },
+  /** Sprint 9: Bandcamp import OAuth (optional — set BANDCAMP_CLIENT_ID). */
+  bandcamp: {
+    clientId: process.env.BANDCAMP_CLIENT_ID ?? '',
+    clientSecret: readSecret('BANDCAMP_CLIENT_SECRET', 'BANDCAMP_CLIENT_SECRET_FILE', ''),
+    redirectUri:
+      process.env.BANDCAMP_OAUTH_REDIRECT_URI ??
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/bandcamp/oauth/callback`,
+    oauthStateCookie: 'tahti_bandcamp_oauth',
+  },
+  /** Sprint 9: SoundCloud import OAuth (optional — set SOUNDCLOUD_CLIENT_ID). */
+  soundcloud: {
+    clientId: process.env.SOUNDCLOUD_CLIENT_ID ?? '',
+    clientSecret: readSecret('SOUNDCLOUD_CLIENT_SECRET', 'SOUNDCLOUD_CLIENT_SECRET_FILE', ''),
+    redirectUri:
+      process.env.SOUNDCLOUD_OAUTH_REDIRECT_URI ??
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/soundcloud/oauth/callback`,
+    oauthStateCookie: 'tahti_soundcloud_oauth',
+  },
   /** M14: Twitter / X OAuth 2.0 PKCE (optional — set TWITTER_CLIENT_ID). */
   twitter: {
     clientId: process.env.TWITTER_CLIENT_ID ?? '',

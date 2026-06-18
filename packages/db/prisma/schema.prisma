@@ -439,7 +439,9 @@ model User {
   suspendedAt             DateTime?
   suspendReason           String?
   deletedAt               DateTime?
-  mixcloudAccessTokenEnc String?   // M7: OAuth access token (AES-GCM, same key as RTMP)
+  mixcloudAccessTokenEnc   String?  // M7: OAuth access token (AES-GCM, same key as RTMP)
+  bandcampAccessTokenEnc   String?  // Sprint 9: Bandcamp import OAuth
+  soundcloudAccessTokenEnc String?  // Sprint 9: SoundCloud import OAuth
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
