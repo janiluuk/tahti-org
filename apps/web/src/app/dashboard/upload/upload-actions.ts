@@ -124,6 +124,6 @@ export async function fetchCollectionOptions(): Promise<CollectionOption[]> {
     cache: 'no-store',
   })
   if (!res.ok) return []
-  const data = (await res.json()) as { collections?: CollectionOption[] }
-  return data.collections ?? []
+  const data = (await res.json()) as CollectionOption[] | { collections?: CollectionOption[] }
+  return Array.isArray(data) ? data : (data.collections ?? [])
 }

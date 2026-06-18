@@ -45,3 +45,9 @@ export const ReorderCollectionSchema = z.object({
 })
 
 export type ReorderCollectionInput = z.infer<typeof ReorderCollectionSchema>
+
+export const ReorderCollectionProfileSchema = z.object({
+  slugs: z.array(z.string().min(1)).min(1, 'slugs array is required'),
+})
+
+export type ReorderCollectionProfileInput = z.infer<typeof ReorderCollectionProfileSchema>

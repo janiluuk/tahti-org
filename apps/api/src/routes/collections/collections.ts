@@ -11,6 +11,7 @@ import {
   CreateCollectionSchema,
   PatchCollectionSchema,
   ReorderCollectionSchema,
+  ReorderCollectionProfileSchema,
   CollectionPublicViewSchema,
   SlugParamSchema,
   UsernameParamSchema,
@@ -82,6 +83,60 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
           : { _count: { select: { items: true } } },
       })
       return reply.send(cols)
+    },
+  )
+
+  // GET /api/me/collections/:slug — single collection with items (management view)
+  fastify.get('/api/me/collections/:slug', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const routeParams = parseRouteParams(SlugParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+    const col = await fastify.prisma.collection.findFirst({
+      where: { slug: routeParams.slug, userId: user.id },
+      include: {
+        items: {
+          orderBy: { position: 'asc' },
+          include: collectionItemInclude,
+        },
+      },
+    })
+    if (!col) return reply.status(404).send({ error: 'Collection not found' })
+    return reply.send(col)
+  })
+
+  // PUT /api/me/collections/reorder — reorder profile grid by slug order
+  fastify.put(
+    '/api/me/collections/reorder',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = ReorderCollectionProfileSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const { slugs } = parsed.data
+
+      const cols = await fastify.prisma.collection.findMany({
+        where: { userId: user.id },
+        select: { id: true, slug: true },
+      })
+
+      const slugToId = new Map(cols.map((c) => [c.slug, c.id]))
+      const updates: Array<{ id: string; order: number }> = []
+      for (let i = 0; i < slugs.length; i++) {
+        const id = slugToId.get(slugs[i]!)
+        if (id) updates.push({ id, order: i })
+      }
+
+      await fastify.prisma.$transaction(
+        updates.map((u) =>
+          fastify.prisma.collection.update({
+            where: { id: u.id },
+            data: { publicProfileOrder: u.order },
+          }),
+        ),
+      )
+
+      return reply.status(204).send()
     },
   )
 
