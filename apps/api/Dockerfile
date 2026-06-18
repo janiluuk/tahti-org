@@ -24,7 +24,7 @@ COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
 COPY apps/web/package.json             ./apps/web/
 COPY services/orchestrator/package.json ./services/orchestrator/
-COPY scripts/copy-ffmpeg-core.mjs      ./scripts/copy-ffmpeg-core.mjs
+COPY scripts/copy-ffmpeg-core.mjs scripts/check-node-version.mjs ./scripts/
 
 RUN pnpm install --frozen-lockfile
 
