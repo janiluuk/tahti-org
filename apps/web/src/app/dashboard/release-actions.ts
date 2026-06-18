@@ -34,6 +34,25 @@ export async function createRelease(params: {
   return { error: null }
 }
 
+export async function createSmartLinkEntry(params: {
+  title: string
+  releaseDate: string
+  smartLinkTargets: Record<string, string>
+}): Promise<{ id: string | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ ...params, type: 'SINGLE' }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { id: null, error: (data as { error?: string }).error ?? 'Failed to create entry' }
+  }
+  const data = (await res.json()) as { id?: string }
+  return { id: data.id ?? null, error: null }
+}
+
 export async function importReleasesFromCsv(
   csv: string,
 ): Promise<{ error: string | null; created?: number }> {
