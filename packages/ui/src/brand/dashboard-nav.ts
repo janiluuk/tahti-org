@@ -16,6 +16,8 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   { href: '/dashboard', label: 'Channel', icon: 'channel', isRoute: true },
   { href: '/dashboard/stats', label: 'Stats', icon: 'stats', isRoute: true },
   { href: '/dashboard#catalog', label: 'Archive', icon: 'archive', hash: '#catalog' },
+  { href: '/dashboard/upload', label: 'Upload', icon: 'upload', isRoute: true },
+  { href: '/dashboard/collections', label: 'Collections', icon: 'collections', isRoute: true },
   { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
   { href: '/dashboard#audience', label: 'Newsletter', icon: 'newsletter', hash: '#audience' },
   { href: '/dashboard#catalog', label: 'Smart Links', icon: 'links', hash: '#catalog' },

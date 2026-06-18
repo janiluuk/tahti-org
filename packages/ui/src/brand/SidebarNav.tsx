@@ -8,6 +8,8 @@ export type SidebarNavIcon =
   | 'channel'
   | 'stats'
   | 'archive'
+  | 'upload'
+  | 'collections'
   | 'revenue'
   | 'newsletter'
   | 'links'
@@ -152,6 +154,66 @@ export function SidebarNavIconSvg({ name }: { name: SidebarNavIcon }) {
             strokeLinecap="round"
           />
           <circle cx="8" cy="10.5" r="1.25" fill="currentColor" />
+        </svg>
+      )
+    case 'upload':
+      return (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path d="M8 11V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <path
+            d="M5 6L8 3L11 6"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      )
+    case 'collections':
+      return (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <rect
+            x="1.5"
+            y="1.5"
+            width="6"
+            height="6"
+            rx="1"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <rect
+            x="8.5"
+            y="1.5"
+            width="6"
+            height="6"
+            rx="1"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <rect
+            x="1.5"
+            y="8.5"
+            width="6"
+            height="6"
+            rx="1"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <rect
+            x="8.5"
+            y="8.5"
+            width="6"
+            height="6"
+            rx="1"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
         </svg>
       )
     case 'admin':
