@@ -5,20 +5,16 @@
 
 import { usePathname } from 'next/navigation'
 import { useEffect, useState, type MouseEvent } from 'react'
-import {
-  DASHBOARD_NAV,
-  dashboardTabFromNavItem,
-  navigateDashboardHash,
-  normaliseDashboardHash,
-} from './dashboard-nav'
+import { DASHBOARD_NAV, isDashboardNavItemActive, navigateDashboardHash } from './dashboard-nav'
 import { SidebarNavLink } from './SidebarNavLink'
 
 type Props = {
   isBoard?: boolean
+  hasChannel?: boolean
 }
 
 /** Production dashboard sidebar — v8 nav items via SidebarNavLink. */
-export function StudioSidebar({ isBoard }: Props) {
+export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
   const pathname = usePathname()
   const [hash, setHash] = useState('')
 
@@ -40,31 +36,28 @@ export function StudioSidebar({ isBoard }: Props) {
   return (
     <aside className="db-sidebar">
       <nav aria-label="Dashboard sections">
-        {DASHBOARD_NAV.filter((item) => !item.adminOnly || isBoard).map(
-          ({ href, label, icon, isRoute, hash: itemHash }) => {
-            let active: boolean
-            if (isRoute) {
-              active = pathname === href || pathname.startsWith(`${href}/`)
-            } else {
-              active =
-                onDashboard &&
-                itemHash !== undefined &&
-                normaliseDashboardHash(hash) === dashboardTabFromNavItem({ hash: itemHash })
-            }
-            return (
-              <SidebarNavLink
-                key={`${href}-${label}`}
-                href={href}
-                icon={icon}
-                active={active}
-                surface="studio"
-                onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
-              >
-                {label}
-              </SidebarNavLink>
-            )
-          },
-        )}
+        {DASHBOARD_NAV.filter(
+          (item) => (!item.adminOnly || isBoard) && (!item.requiresChannel || hasChannel),
+        ).map(({ href, label, icon, isRoute, hash: itemHash, sectionKey }) => {
+          let active: boolean
+          if (isRoute) {
+            active = pathname === href || pathname.startsWith(`${href}/`)
+          } else {
+            active = isDashboardNavItemActive(hash, { sectionKey, hash: itemHash }, onDashboard)
+          }
+          return (
+            <SidebarNavLink
+              key={`${href}-${label}`}
+              href={href}
+              icon={icon}
+              active={active}
+              surface="studio"
+              onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
+            >
+              {label}
+            </SidebarNavLink>
+          )
+        })}
       </nav>
     </aside>
   )

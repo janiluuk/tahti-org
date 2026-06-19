@@ -84,12 +84,16 @@ export { AdminShellHeader, type AdminShellHeaderProps } from './AdminShellHeader
 export {
   DASHBOARD_NAV,
   DASHBOARD_HASH_ALIASES,
+  DASHBOARD_HASH_TO_SECTION,
+  DASHBOARD_SECTION_TO_TAB,
   normaliseDashboardHash,
   resolveDashboardTabFromHash,
+  resolveDashboardSectionKey,
+  isDashboardNavItemActive,
   navigateDashboardHash,
-  dashboardTabFromNavItem,
+  scrollToDashboardSection,
 } from './dashboard-nav'
-export type { DashboardNavDefinition, DashboardTabId } from './dashboard-nav'
+export type { DashboardNavDefinition, DashboardTabId, DashboardSectionKey } from './dashboard-nav'
 export { SidebarNavLink, type SidebarNavLinkProps, type SidebarNavSurface } from './SidebarNavLink'
 export { SidebarNavIconSvg } from './SidebarNav'
 export { ReleaseSmartLink, type ReleaseSmartLinkProps } from './ReleaseSmartLink'

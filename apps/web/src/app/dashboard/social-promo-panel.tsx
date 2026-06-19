@@ -8,6 +8,14 @@ import { useRouter } from 'next/navigation'
 import { DEFAULT_SOCIAL_TEMPLATE } from '@tahti/shared'
 import { Panel, StudioCollapse } from '@tahti/ui'
 import {
+  SocialActions,
+  SocialField,
+  SocialInput,
+  SocialOptions,
+  SocialTextarea,
+  SocialToggle,
+} from './_social-form-fields'
+import {
   disconnectBluesky,
   disconnectInstagram,
   disconnectMastodon,
@@ -47,46 +55,50 @@ function PlatformSection({
 }) {
   return (
     <StudioCollapse
+      className={`studio-social-platform${connected ? ' studio-social-platform--connected' : ''}`}
       title={title}
-      hint={connected ? 'Connected' : undefined}
+      hint={
+        connected ? <span className="studio-badge studio-badge--success">Connected</span> : 'Setup'
+      }
       defaultOpen={connected}
     >
-      <p className="studio-help">{help}</p>
-      {connected && accountLabel ? (
-        <p className="studio-text-muted-sm studio-mb-sm">Account: {accountLabel}</p>
-      ) : null}
-      {children}
-      {connected ? (
-        <div className="studio-divider">
-          <label className="studio-field--block">
-            <span className="studio-label">Post manually</span>
-            <textarea
-              className="studio-input studio-mt-sm"
-              rows={2}
-              value={manualPost}
-              onChange={(e) => onManualPostChange(e.target.value)}
-            />
-          </label>
-          <div className="studio-row studio-mt-sm">
-            <button
-              type="button"
-              className="ui-btn ui-btn--sm ui-btn--ghost"
-              disabled={pending || !manualPost.trim()}
-              onClick={onManualPost}
-            >
-              {manualPostLabel}
-            </button>
-            <button
-              type="button"
-              className="ui-btn ui-btn--sm ui-btn--danger"
-              disabled={pending}
-              onClick={onDisconnect}
-            >
-              Disconnect
-            </button>
+      <div className="studio-social-platform__body">
+        <p className="studio-social-platform__help">{help}</p>
+        {connected && accountLabel ? (
+          <p className="studio-social-platform__account">
+            Signed in as <span>{accountLabel}</span>
+          </p>
+        ) : null}
+        <div className="studio-social-form">{children}</div>
+        {connected ? (
+          <div className="studio-social-manual">
+            <SocialField label="Post manually">
+              <SocialTextarea
+                value={manualPost}
+                onChange={(e) => onManualPostChange(e.target.value)}
+              />
+            </SocialField>
+            <SocialActions>
+              <button
+                type="button"
+                className="ui-btn ui-btn--sm ui-btn--ghost"
+                disabled={pending || !manualPost.trim()}
+                onClick={onManualPost}
+              >
+                {manualPostLabel}
+              </button>
+              <button
+                type="button"
+                className="ui-btn ui-btn--sm ui-btn--danger"
+                disabled={pending}
+                onClick={onDisconnect}
+              >
+                Disconnect
+              </button>
+            </SocialActions>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </StudioCollapse>
   )
 }
@@ -233,52 +245,45 @@ export default function SocialPromoPanel({
             })
           }}
         >
-          <label className="studio-field studio-mt-sm">
-            Instance URL
-            <input
-              className="studio-input studio-mt-sm"
+          <SocialField label="Instance URL">
+            <SocialInput
               value={mastodonUrl}
               onChange={(e) => setMastodonUrl(e.target.value)}
               placeholder="https://mastodon.social"
             />
-          </label>
-          <label className="studio-field studio-mt-sm">
-            Access token
-            <input
-              className="studio-input studio-mt-sm"
+          </SocialField>
+          <SocialField
+            label="Access token"
+            hint={
+              initial.mastodon.connected ? 'Leave blank to keep your current token.' : undefined
+            }
+          >
+            <SocialInput
               type="password"
               value={mastodonToken}
               onChange={(e) => setMastodonToken(e.target.value)}
-              placeholder={
-                initial.mastodon.connected ? 'Leave blank to keep current token' : 'Paste token'
-              }
+              placeholder={initial.mastodon.connected ? 'Unchanged' : 'Paste token'}
             />
-          </label>
-          <label className="studio-field studio-mt-sm">
-            Post template
-            <input
-              className="studio-input studio-mt-sm"
+          </SocialField>
+          <SocialField label="Post template">
+            <SocialInput
               value={mastodonTemplate}
               onChange={(e) => setMastodonTemplate(e.target.value)}
             />
-          </label>
-          <label className="studio-checkbox-label studio-mt-sm">
-            <input
-              type="checkbox"
+          </SocialField>
+          <SocialOptions>
+            <SocialToggle
+              label="Auto-post when a release is published"
               checked={mastodonRelease}
-              onChange={(e) => setMastodonRelease(e.target.checked)}
+              onChange={setMastodonRelease}
             />
-            Auto-post when a release is published
-          </label>
-          <label className="studio-checkbox-label studio-mt-sm">
-            <input
-              type="checkbox"
+            <SocialToggle
+              label="Auto-post when channel goes live"
               checked={mastodonLive}
-              onChange={(e) => setMastodonLive(e.target.checked)}
+              onChange={setMastodonLive}
             />
-            Auto-post when channel goes live
-          </label>
-          <div className="studio-actions studio-mt-md">
+          </SocialOptions>
+          <SocialActions>
             <button
               type="button"
               className="ui-btn ui-btn--primary"
@@ -287,7 +292,7 @@ export default function SocialPromoPanel({
             >
               {initial.mastodon.connected ? 'Update Mastodon' : 'Connect Mastodon'}
             </button>
-          </div>
+          </SocialActions>
         </PlatformSection>
 
         <PlatformSection
@@ -318,54 +323,45 @@ export default function SocialPromoPanel({
             })
           }}
         >
-          <label className="studio-field studio-mt-sm">
-            Handle
-            <input
-              className="studio-input studio-mt-sm"
+          <SocialField label="Handle">
+            <SocialInput
               value={blueskyHandle}
               onChange={(e) => setBlueskyHandle(e.target.value)}
               placeholder="you.bsky.social"
             />
-          </label>
-          <label className="studio-field studio-mt-sm">
-            App password
-            <input
-              className="studio-input studio-mt-sm"
+          </SocialField>
+          <SocialField
+            label="App password"
+            hint={
+              initial.bluesky.connected ? 'Leave blank to keep your current password.' : undefined
+            }
+          >
+            <SocialInput
               type="password"
               value={blueskyPassword}
               onChange={(e) => setBlueskyPassword(e.target.value)}
-              placeholder={
-                initial.bluesky.connected
-                  ? 'Leave blank to keep current password'
-                  : 'Paste password'
-              }
+              placeholder={initial.bluesky.connected ? 'Unchanged' : 'Paste app password'}
             />
-          </label>
-          <label className="studio-field studio-mt-sm">
-            Post template
-            <input
-              className="studio-input studio-mt-sm"
+          </SocialField>
+          <SocialField label="Post template">
+            <SocialInput
               value={blueskyTemplate}
               onChange={(e) => setBlueskyTemplate(e.target.value)}
             />
-          </label>
-          <label className="studio-checkbox-label studio-mt-sm">
-            <input
-              type="checkbox"
+          </SocialField>
+          <SocialOptions>
+            <SocialToggle
+              label="Auto-post when a release is published"
               checked={blueskyRelease}
-              onChange={(e) => setBlueskyRelease(e.target.checked)}
+              onChange={setBlueskyRelease}
             />
-            Auto-post when a release is published
-          </label>
-          <label className="studio-checkbox-label studio-mt-sm">
-            <input
-              type="checkbox"
+            <SocialToggle
+              label="Auto-post when channel goes live"
               checked={blueskyLive}
-              onChange={(e) => setBlueskyLive(e.target.checked)}
+              onChange={setBlueskyLive}
             />
-            Auto-post when channel goes live
-          </label>
-          <div className="studio-actions studio-mt-md">
+          </SocialOptions>
+          <SocialActions>
             <button
               type="button"
               className="ui-btn ui-btn--primary"
@@ -374,7 +370,7 @@ export default function SocialPromoPanel({
             >
               {initial.bluesky.connected ? 'Update Bluesky' : 'Connect Bluesky'}
             </button>
-          </div>
+          </SocialActions>
         </PlatformSection>
 
         <PlatformSection
@@ -416,32 +412,26 @@ export default function SocialPromoPanel({
             </p>
           ) : initial.twitter.connected ? (
             <>
-              <label className="studio-field studio-mt-sm">
-                Post template
-                <input
-                  className="studio-input studio-mt-sm"
+              <SocialField label="Post template">
+                <SocialInput
                   value={twitterTemplate}
                   onChange={(e) => setTwitterTemplate(e.target.value)}
                   maxLength={280}
                 />
-              </label>
-              <label className="studio-checkbox-label studio-mt-sm">
-                <input
-                  type="checkbox"
+              </SocialField>
+              <SocialOptions>
+                <SocialToggle
+                  label="Auto-post when a release is published"
                   checked={twitterRelease}
-                  onChange={(e) => setTwitterRelease(e.target.checked)}
+                  onChange={setTwitterRelease}
                 />
-                Auto-post when a release is published
-              </label>
-              <label className="studio-checkbox-label studio-mt-sm">
-                <input
-                  type="checkbox"
+                <SocialToggle
+                  label="Auto-post when channel goes live"
                   checked={twitterLive}
-                  onChange={(e) => setTwitterLive(e.target.checked)}
+                  onChange={setTwitterLive}
                 />
-                Auto-post when channel goes live
-              </label>
-              <div className="studio-actions studio-mt-md">
+              </SocialOptions>
+              <SocialActions>
                 <button
                   type="button"
                   className="ui-btn ui-btn--primary"
@@ -463,15 +453,17 @@ export default function SocialPromoPanel({
                 >
                   Update X settings
                 </button>
-              </div>
+              </SocialActions>
             </>
           ) : (
-            <a
-              href={`${apiUrl}/api/me/social/twitter/oauth/start`}
-              className="ui-btn ui-btn--primary studio-mt-sm"
-            >
-              Connect X account
-            </a>
+            <SocialActions>
+              <a
+                href={`${apiUrl}/api/me/social/twitter/oauth/start`}
+                className="ui-btn ui-btn--primary"
+              >
+                Connect X account
+              </a>
+            </SocialActions>
           )}
         </PlatformSection>
 
@@ -515,32 +507,26 @@ export default function SocialPromoPanel({
             </p>
           ) : initial.instagram.connected ? (
             <>
-              <label className="studio-field studio-mt-sm">
-                Post template
-                <input
-                  className="studio-input studio-mt-sm"
+              <SocialField label="Post template">
+                <SocialInput
                   value={instagramTemplate}
                   onChange={(e) => setInstagramTemplate(e.target.value)}
                   maxLength={2200}
                 />
-              </label>
-              <label className="studio-checkbox-label studio-mt-sm">
-                <input
-                  type="checkbox"
+              </SocialField>
+              <SocialOptions>
+                <SocialToggle
+                  label="Auto-post when a release is published"
                   checked={instagramRelease}
-                  onChange={(e) => setInstagramRelease(e.target.checked)}
+                  onChange={setInstagramRelease}
                 />
-                Auto-post when a release is published
-              </label>
-              <label className="studio-checkbox-label studio-mt-sm">
-                <input
-                  type="checkbox"
+                <SocialToggle
+                  label="Auto-post when channel goes live"
                   checked={instagramLive}
-                  onChange={(e) => setInstagramLive(e.target.checked)}
+                  onChange={setInstagramLive}
                 />
-                Auto-post when channel goes live
-              </label>
-              <div className="studio-actions studio-mt-md">
+              </SocialOptions>
+              <SocialActions>
                 <button
                   type="button"
                   className="ui-btn ui-btn--primary"
@@ -562,15 +548,17 @@ export default function SocialPromoPanel({
                 >
                   Update Instagram settings
                 </button>
-              </div>
+              </SocialActions>
             </>
           ) : (
-            <a
-              href={`${apiUrl}/api/me/social/instagram/oauth/start`}
-              className="ui-btn ui-btn--primary studio-mt-sm"
-            >
-              Connect Instagram account
-            </a>
+            <SocialActions>
+              <a
+                href={`${apiUrl}/api/me/social/instagram/oauth/start`}
+                className="ui-btn ui-btn--primary"
+              >
+                Connect Instagram account
+              </a>
+            </SocialActions>
           )}
         </PlatformSection>
       </div>

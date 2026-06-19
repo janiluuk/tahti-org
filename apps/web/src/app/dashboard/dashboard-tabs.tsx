@@ -4,7 +4,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ReactNode } from 'react'
-import { StudioTabs } from '@tahti/ui'
+import Link from 'next/link'
+import { Panel, StudioTabs } from '@tahti/ui'
 
 export type DashboardTabsProps = {
   hasChannel: boolean
@@ -13,6 +14,20 @@ export type DashboardTabsProps = {
   catalog?: ReactNode
   audience?: ReactNode
   account: ReactNode
+}
+
+function ChannelRequiredPanel({ title, description }: { title: string; description: string }) {
+  return (
+    <Panel title={title} headerTight description={description}>
+      <p className="studio-text-muted-sm">
+        Set up your channel during signup to unlock archive, releases, broadcast, and audience
+        tools.
+      </p>
+      <Link href="/signup/broadcast" className="ui-btn ui-btn--primary studio-mt-md">
+        Set up channel
+      </Link>
+    </Panel>
+  )
 }
 
 /** Client boundary for tabbed dashboard — compound StudioTabs must not cross RSC from @tahti/ui. */
@@ -28,9 +43,9 @@ export function DashboardTabs({
     <StudioTabs defaultTab="overview" syncHash>
       <StudioTabs.List>
         <StudioTabs.Trigger value="overview">Overview</StudioTabs.Trigger>
-        {hasChannel && <StudioTabs.Trigger value="broadcast">Broadcast</StudioTabs.Trigger>}
-        {hasChannel && <StudioTabs.Trigger value="catalog">Catalog</StudioTabs.Trigger>}
-        {hasChannel && <StudioTabs.Trigger value="audience">Audience</StudioTabs.Trigger>}
+        <StudioTabs.Trigger value="broadcast">Broadcast</StudioTabs.Trigger>
+        <StudioTabs.Trigger value="catalog">Catalog</StudioTabs.Trigger>
+        <StudioTabs.Trigger value="audience">Audience</StudioTabs.Trigger>
         <StudioTabs.Trigger value="account">Account</StudioTabs.Trigger>
       </StudioTabs.List>
 
@@ -38,23 +53,35 @@ export function DashboardTabs({
         {overview}
       </StudioTabs.Panel>
 
-      {hasChannel && broadcast ? (
-        <StudioTabs.Panel value="broadcast" id="broadcast">
-          {broadcast}
-        </StudioTabs.Panel>
-      ) : null}
+      <StudioTabs.Panel value="broadcast" id="studio-tabpanel-broadcast">
+        {hasChannel && broadcast ? (
+          broadcast
+        ) : (
+          <ChannelRequiredPanel
+            title="Broadcast"
+            description="Stream keys, channel appearance, and distribution."
+          />
+        )}
+      </StudioTabs.Panel>
 
-      {hasChannel && catalog ? (
-        <StudioTabs.Panel value="catalog" id="catalog">
-          {catalog}
-        </StudioTabs.Panel>
-      ) : null}
+      <StudioTabs.Panel value="catalog" id="studio-tabpanel-catalog">
+        {hasChannel && catalog ? (
+          catalog
+        ) : (
+          <ChannelRequiredPanel
+            title="Archive & releases"
+            description="Upload sets, manage releases, and smart links."
+          />
+        )}
+      </StudioTabs.Panel>
 
-      {hasChannel && audience ? (
-        <StudioTabs.Panel value="audience" id="audience">
-          {audience}
-        </StudioTabs.Panel>
-      ) : null}
+      <StudioTabs.Panel value="audience" id="studio-tabpanel-audience">
+        {hasChannel && audience ? (
+          audience
+        ) : (
+          <ChannelRequiredPanel title="Audience" description="Fan subscriptions and newsletter." />
+        )}
+      </StudioTabs.Panel>
 
       <StudioTabs.Panel value="account" id="account">
         {account}
