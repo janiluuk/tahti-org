@@ -199,8 +199,8 @@
     "role": "artist",
     "id": "channel-appearance",
     "file": "artist/channel-appearance.png",
-    "url": "/dashboard#broadcast",
-    "label": "Channel appearance editor"
+    "url": "/dashboard/channel",
+    "label": "Channel design editor (full page)"
   },
   {
     "role": "artist",

@@ -124,14 +124,14 @@ function buildPages(seed) {
     {
       role: 'artist',
       id: 'channel-appearance',
-      path: '/dashboard#broadcast',
-      label: 'Channel appearance editor',
+      path: '/dashboard/channel',
+      label: 'Channel design editor',
       waitMs: 1200,
     },
     {
       role: 'artist',
       id: 'schedule-programme',
-      path: '/dashboard#broadcast',
+      path: '/dashboard/broadcast',
       label: 'Schedule & programme',
       waitMs: 800,
       async prepare(tab) {

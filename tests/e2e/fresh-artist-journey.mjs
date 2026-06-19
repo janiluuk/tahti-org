@@ -174,18 +174,18 @@ async function main() {
       await shot(page, '02-setup-channel.png', 'setup channel')
 
       await page.getByRole('button', { name: new RegExp(`Create ${FRESH_USER}\\.tahti\\.live`) }).click()
-      await page.waitForURL((url) => url.pathname.includes('/dashboard/broadcast'), {
+      await page.waitForURL((url) => url.pathname.includes('/dashboard/channel'), {
         timeout: 45_000,
       })
       ok('channel provisioned via UI')
     } else {
       ok('channel already exists — skipping provision UI')
-      await page.goto(`${APP}/dashboard/broadcast`, { waitUntil: 'load', timeout: 45_000 })
+      await page.goto(`${APP}/dashboard/channel`, { waitUntil: 'load', timeout: 45_000 })
     }
 
-    await assertAuthenticated(page, 'broadcast studio')
+    await assertAuthenticated(page, 'channel design')
     await page.waitForTimeout(800)
-    await shot(page, '03-broadcast-studio.png', 'broadcast studio')
+    await shot(page, '03-channel-editor.png', 'channel design editor')
 
     const api = artistCtx.request
     api._apiUrl = API
@@ -305,8 +305,8 @@ async function main() {
     const manifest = [
       { file: '00-login-filled.png', label: 'Login form (fresh artist credentials)' },
       { file: '01-artist-dashboard-empty.png', label: 'Artist dashboard (no channel yet)' },
-      { file: '02-setup-channel.png', label: 'Design your artist channel' },
-      { file: '03-broadcast-studio.png', label: 'Broadcast studio after provision' },
+      { file: '02-setup-channel.png', label: 'Create your artist channel' },
+      { file: '03-channel-editor.png', label: 'Channel design editor (full page)' },
       { file: '04-releases-catalog.png', label: 'Album + EP + single on dashboard' },
       { file: '05-public-channel.png', label: 'Public channel page' },
       { file: '06-admin-users.png', label: 'Admin user directory' },

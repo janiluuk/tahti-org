@@ -5,18 +5,11 @@ import { redirect } from 'next/navigation'
 import { PageShell, Text } from '@tahti/ui'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
-import type {
-  ChannelGalleryMode,
-  ChannelTextLayerAlignment,
-  ChannelTextLayerMode,
-  SlideshowPreset,
-  VisualPreset,
-} from '@tahti/shared'
 import { fetchMixcloudStatus } from '../mixcloud-actions'
 import type { ModeratorRow } from '../moderator-actions'
 import type { ProgrammeItemRow } from '../programme-actions'
 import { BroadcastStudio } from './_broadcast-studio'
-import { BroadcastSettingsSections } from './_broadcast-settings-sections'
+import { BroadcastSettingsSections, ChannelDesignLinkPanel } from './_broadcast-settings-sections'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -54,24 +47,6 @@ export default async function BroadcastStudioPage() {
   let broadcastUsage: BroadcastUsageInfo | null = null
   let announcements: Array<{ id: string; body: string; createdAt: string }> = []
   let moderators: ModeratorRow[] = []
-  let channelGallery: {
-    galleryMode: ChannelGalleryMode
-    slideshowImages: string[]
-    videoBackgroundUrl?: string | null
-  } | null = null
-  let channelTextLayer: {
-    textLayerMode: ChannelTextLayerMode
-    textLayerText: string
-    textLayerAlign: ChannelTextLayerAlignment
-  } | null = null
-  let channelVisual: {
-    visualPreset: VisualPreset
-    colorSchemeJson: string | null
-    slideshowPreset: SlideshowPreset
-    slideshowIntervalSeconds: number
-    slideshowTransitionMs: number
-    slideshowAutoplay: boolean
-  } | null = null
   let channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] } | null =
     null
   let channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null } = {
@@ -85,9 +60,6 @@ export default async function BroadcastStudioPage() {
       broadcastUsageRes,
       announcementsRes,
       moderatorsRes,
-      galleryRes,
-      textLayerRes,
-      visualRes,
       programmeRes,
       scheduleRes,
     ] = await Promise.all([
@@ -98,9 +70,6 @@ export default async function BroadcastStudioPage() {
         cache: 'no-store',
       }),
       get('/api/me/channel/moderators'),
-      get('/api/me/channel/gallery'),
-      get('/api/me/channel/text-layer'),
-      get('/api/me/channel/visual'),
       get('/api/me/channel/programme'),
       get('/api/me/channel/schedule'),
     ])
@@ -113,29 +82,12 @@ export default async function BroadcastStudioPage() {
       announcements = (await announcementsRes.json()) as typeof announcements
     }
     if (moderatorsRes.ok) moderators = (await moderatorsRes.json()) as ModeratorRow[]
-    if (galleryRes.ok) channelGallery = (await galleryRes.json()) as typeof channelGallery
-    if (textLayerRes.ok) channelTextLayer = (await textLayerRes.json()) as typeof channelTextLayer
-    if (visualRes.ok) channelVisual = (await visualRes.json()) as typeof channelVisual
     if (programmeRes.ok) channelProgramme = (await programmeRes.json()) as typeof channelProgramme
     if (scheduleRes.ok) channelSchedule = (await scheduleRes.json()) as typeof channelSchedule
   } catch {
     // render with partial data
   }
 
-  if (!channelGallery) channelGallery = { galleryMode: 'NONE', slideshowImages: [] }
-  if (!channelTextLayer) {
-    channelTextLayer = { textLayerMode: 'NONE', textLayerText: '', textLayerAlign: 'CENTER' }
-  }
-  if (!channelVisual) {
-    channelVisual = {
-      visualPreset: 'MINIMAL',
-      colorSchemeJson: null,
-      slideshowPreset: 'FADE',
-      slideshowIntervalSeconds: 8,
-      slideshowTransitionMs: 600,
-      slideshowAutoplay: true,
-    }
-  }
   if (!channelProgramme) channelProgramme = { fallbackMode: 'shuffle', items: [] }
 
   const mixcloudStatus = await fetchMixcloudStatus()
@@ -172,14 +124,13 @@ export default async function BroadcastStudioPage() {
           <Text tone="muted">Could not load stream credentials. Refresh or contact support.</Text>
         )}
 
+        <ChannelDesignLinkPanel />
+
         <BroadcastSettingsSections
           channelSlug={user.channel.slug}
           isLive={isLive}
           announcements={announcements}
           moderators={moderators}
-          channelGallery={channelGallery}
-          channelTextLayer={channelTextLayer}
-          channelVisual={channelVisual}
           channelProgramme={channelProgramme}
           channelSchedule={channelSchedule}
           mixcloudStatus={mixcloudStatus}

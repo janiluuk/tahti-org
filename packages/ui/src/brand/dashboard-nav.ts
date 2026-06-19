@@ -111,6 +111,13 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     hash: '#overview',
     sectionKey: 'overview',
   },
+  {
+    href: '/dashboard/channel',
+    label: 'Design',
+    icon: 'appearance',
+    isRoute: true,
+    requiresChannel: true,
+  },
   { href: '/dashboard/stats', label: 'Stats', icon: 'stats', isRoute: true },
   {
     href: '/dashboard#archive',

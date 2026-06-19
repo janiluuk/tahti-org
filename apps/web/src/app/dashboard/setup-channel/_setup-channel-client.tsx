@@ -21,7 +21,7 @@ export function SetupChannelClient({ slug }: { slug: string }) {
         setError(res.error)
         return
       }
-      router.push('/dashboard/broadcast')
+      router.push('/dashboard/channel')
       router.refresh()
     })
   }
