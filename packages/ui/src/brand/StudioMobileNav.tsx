@@ -5,8 +5,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { normaliseDashboardHash } from './dashboard-nav'
+import { useEffect, useState, type MouseEvent } from 'react'
+import {
+  dashboardTabFromNavItem,
+  navigateDashboardHash,
+  normaliseDashboardHash,
+} from './dashboard-nav'
 
 function IconChannel() {
   return (
@@ -72,30 +76,30 @@ const MOBILE_NAV = [
     href: '/dashboard#overview',
     label: 'Channel',
     Icon: IconChannel,
-    exact: false,
     hash: '#overview',
+    tabId: 'overview' as const,
   },
-  { href: '/dashboard/stats', label: 'Stats', Icon: IconStats, exact: false },
+  { href: '/dashboard/stats', label: 'Stats', Icon: IconStats },
   {
     href: '/dashboard#catalog',
     label: 'Archive',
     Icon: IconArchive,
-    exact: false,
     hash: '#catalog',
+    tabId: 'catalog' as const,
   },
   {
     href: '/dashboard#audience',
     label: 'Revenue',
     Icon: IconRevenue,
-    exact: false,
     hash: '#audience',
+    tabId: 'audience' as const,
   },
   {
     href: '/dashboard#account',
     label: 'Settings',
     Icon: IconSettings,
-    exact: false,
     hash: '#account',
+    tabId: 'account' as const,
   },
 ]
 
@@ -109,21 +113,34 @@ export function StudioMobileNav() {
     sync()
     window.addEventListener('hashchange', sync)
     return () => window.removeEventListener('hashchange', sync)
-  }, [])
+  }, [pathname])
 
   const onDashboard = pathname === '/dashboard' || pathname === '/dashboard/'
 
+  function onHashNavClick(e: MouseEvent<HTMLAnchorElement>, itemHash: string) {
+    if (!onDashboard) return
+    e.preventDefault()
+    navigateDashboardHash(itemHash)
+  }
+
   return (
     <nav className="db-mobile-nav" aria-label="Mobile navigation">
-      {MOBILE_NAV.map(({ href, label, Icon, hash: itemHash }) => {
+      {MOBILE_NAV.map(({ href, label, Icon, hash: itemHash, tabId }) => {
         let active: boolean
-        if (itemHash) {
-          active = onDashboard && normaliseDashboardHash(hash) === normaliseDashboardHash(itemHash)
+        if (itemHash && tabId) {
+          active =
+            onDashboard &&
+            normaliseDashboardHash(hash) === dashboardTabFromNavItem({ hash: itemHash, tabId })
         } else {
           active = pathname === href || pathname.startsWith(`${href}/`)
         }
         return (
-          <Link key={label} href={href} className={`db-mobile-nav-item${active ? ' active' : ''}`}>
+          <Link
+            key={label}
+            href={href}
+            className={`db-mobile-nav-item${active ? ' active' : ''}`}
+            onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
+          >
             <Icon />
             <span>{label}</span>
           </Link>

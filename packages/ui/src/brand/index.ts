@@ -81,8 +81,15 @@ export { ChannelPageShell } from './ChannelPageShell'
 export { PublicShell, type PublicShellProps } from './PublicShell'
 export { AdminShell, type AdminShellProps } from './AdminShell'
 export { AdminShellHeader, type AdminShellHeaderProps } from './AdminShellHeader'
-export { DASHBOARD_NAV, DASHBOARD_HASH_ALIASES, normaliseDashboardHash } from './dashboard-nav'
-export type { DashboardNavDefinition } from './dashboard-nav'
+export {
+  DASHBOARD_NAV,
+  DASHBOARD_HASH_ALIASES,
+  normaliseDashboardHash,
+  resolveDashboardTabFromHash,
+  navigateDashboardHash,
+  dashboardTabFromNavItem,
+} from './dashboard-nav'
+export type { DashboardNavDefinition, DashboardTabId } from './dashboard-nav'
 export { SidebarNavLink, type SidebarNavLinkProps, type SidebarNavSurface } from './SidebarNavLink'
 export { SidebarNavIconSvg } from './SidebarNav'
 export { ReleaseSmartLink, type ReleaseSmartLinkProps } from './ReleaseSmartLink'

@@ -34,7 +34,7 @@ export function CustomDomainPanel({
 
   if (!isPaid) {
     return (
-      <Panel title="Custom domain">
+      <Panel title="Custom domain" headerTight>
         <p className="studio-help">
           Custom domains are available on the paid membership (€40/year).{' '}
           <a href="/help/tier-limits">Upgrade →</a>
@@ -115,7 +115,7 @@ export function CustomDomainPanel({
   }
 
   return (
-    <Panel title="Custom domain">
+    <Panel title="Custom domain" headerTight>
       {error ? <p className="studio-text-error studio-mb-sm">{error}</p> : null}
 
       {!current && mode === 'view' && (
@@ -154,18 +154,19 @@ export function CustomDomainPanel({
 
       {current && (
         <div className="studio-mt-sm">
-          <div className="studio-row">
-            <code className="studio-text-sm">{current.domain}</code>
-            {current.verified ? (
-              <span className="studio-badge studio-badge--success">Verified</span>
-            ) : (
-              <span className="studio-text-muted-sm">unverified</span>
-            )}
+          <div className="studio-row--between">
+            <div className="studio-row studio-gap-xs">
+              <code className="studio-text-sm">{current.domain}</code>
+              {current.verified ? (
+                <span className="studio-badge studio-badge--success">Verified</span>
+              ) : (
+                <span className="studio-text-muted-sm">Unverified</span>
+              )}
+            </div>
             <button
               className="ui-btn ui-btn--sm ui-btn--ghost"
               onClick={removeDomain}
               disabled={pending}
-              style={{ marginLeft: 'auto' }}
             >
               Remove
             </button>
@@ -184,10 +185,9 @@ export function CustomDomainPanel({
                 Value: <code>{current.txtRecord}</code>
               </p>
               <button
-                className="ui-btn ui-btn--sm ui-btn--primary"
+                className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm"
                 onClick={verifyDomain}
                 disabled={pending}
-                style={{ marginTop: '0.5rem' }}
               >
                 {pending ? 'Checking DNS…' : 'Verify domain'}
               </button>

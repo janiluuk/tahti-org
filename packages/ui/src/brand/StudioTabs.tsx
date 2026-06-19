@@ -3,8 +3,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
+import {
+  DASHBOARD_HASH_ALIASES,
+  resolveDashboardTabFromHash,
+  type DashboardTabId,
+} from './dashboard-nav'
 
 type TabsContextValue = {
   active: string
@@ -23,7 +29,7 @@ export type StudioTabsProps = {
   defaultTab: string
   /** Sync active tab with `window.location.hash` (without #). */
   syncHash?: boolean
-  /** Map legacy or alias hash values to tab ids. */
+  /** Map legacy or alias hash values to tab ids. Defaults to DASHBOARD_HASH_ALIASES on /dashboard. */
   hashAliases?: Record<string, string>
   children: ReactNode
   className?: string
@@ -36,13 +42,18 @@ export function StudioTabs({
   children,
   className,
 }: StudioTabsProps) {
+  const pathname = usePathname()
   const [active, setActiveState] = useState(defaultTab)
 
   const resolveHash = useCallback(
     (raw: string) => {
-      const key = raw.replace(/^#/, '')
-      if (!key) return defaultTab
-      return hashAliases?.[key] ?? key
+      if (hashAliases) {
+        const key = raw.replace(/^#/, '').trim()
+        if (!key) return defaultTab
+        const mapped = hashAliases[key]
+        return mapped !== undefined && mapped !== '' ? mapped : key
+      }
+      return resolveDashboardTabFromHash(raw, defaultTab as DashboardTabId)
     },
     [defaultTab, hashAliases],
   )
@@ -66,7 +77,7 @@ export function StudioTabs({
     sync()
     window.addEventListener('hashchange', sync)
     return () => window.removeEventListener('hashchange', sync)
-  }, [syncHash, resolveHash])
+  }, [syncHash, resolveHash, pathname])
 
   return (
     <TabsContext.Provider value={{ active, setActive }}>
@@ -122,16 +133,17 @@ export type StudioTabsPanelProps = {
   value: string
   children: ReactNode
   className?: string
+  id?: string
 }
 
-function StudioTabsPanel({ value, children, className }: StudioTabsPanelProps) {
+function StudioTabsPanel({ value, children, className, id }: StudioTabsPanelProps) {
   const { active } = useTabs()
   if (active !== value) return null
   return (
     <div
       className={cn('studio-tabs__panel', className)}
       role="tabpanel"
-      id={`studio-tabpanel-${value}`}
+      id={id ?? `studio-tabpanel-${value}`}
       aria-labelledby={`studio-tab-${value}`}
     >
       {children}
@@ -142,3 +154,5 @@ function StudioTabsPanel({ value, children, className }: StudioTabsPanelProps) {
 StudioTabs.List = StudioTabsList
 StudioTabs.Trigger = StudioTabsTrigger
 StudioTabs.Panel = StudioTabsPanel
+
+export { DASHBOARD_HASH_ALIASES }

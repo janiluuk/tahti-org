@@ -558,18 +558,6 @@ export default async function DashboardPage() {
   const statBroadcasts =
     (channelLiveStats as { totalBroadcasts: number } | null)?.totalBroadcasts ?? 0
 
-  const dashboardHashAliases: Record<string, string> = {
-    overview: 'overview',
-    'studio-overview': 'overview',
-    'studio-stats': 'overview',
-    'studio-settings': 'broadcast',
-    'studio-distribution': 'broadcast',
-    'studio-releases': 'catalog',
-    'studio-archive': 'catalog',
-    'studio-fans': 'audience',
-    'studio-newsletter': 'audience',
-  }
-
   const now = new Date()
   const helsinkiHour = (now.getUTCHours() + 3) % 24
   const greeting =
@@ -586,7 +574,7 @@ export default async function DashboardPage() {
 
   return (
     <PageShell size="md">
-      <div id="overview" className="studio-section-anchor studio-page-header">
+      <div className="studio-section-anchor studio-page-header">
         <div>
           <div className="db-greeting">
             {greeting}, {firstName}.
@@ -656,7 +644,6 @@ export default async function DashboardPage() {
 
       <DashboardTabs
         hasChannel={!!user.channel}
-        hashAliases={dashboardHashAliases}
         overview={
           <DashboardOverview
             channel={user.channel}

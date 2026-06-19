@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { ReactNode } from 'react'
+import type { ReactNode, MouseEvent } from 'react'
 import Link from 'next/link'
 import { cn } from '../lib/cn'
 import { SidebarNavIconSvg, type SidebarNavIcon } from './SidebarNav'
@@ -17,6 +17,7 @@ export interface SidebarNavLinkProps {
   children: ReactNode
   surface?: SidebarNavSurface
   className?: string
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
 /** Next.js sidebar row — studio surface maps to production `db-nav-item` styles. */
@@ -27,10 +28,15 @@ export function SidebarNavLink({
   children,
   surface = 'default',
   className,
+  onClick,
 }: SidebarNavLinkProps) {
   if (surface === 'studio') {
     return (
-      <Link href={href} className={cn('db-nav-item', active && 'active', className)}>
+      <Link
+        href={href}
+        className={cn('db-nav-item', active && 'active', className)}
+        onClick={onClick}
+      >
         <SidebarNavIconSvg name={icon} />
         {children}
       </Link>

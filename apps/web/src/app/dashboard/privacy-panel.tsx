@@ -32,48 +32,53 @@ export default function PrivacyPanel({ username, apiUrl }: { username: string; a
   return (
     <Panel
       title="Privacy & data"
+      headerTight
       description="Export your data or request account deletion under GDPR. Deletion is reviewed manually within 30 days."
     >
-      <ul className="studio-link-list studio-mt-sm">
-        <li>
-          <a href={`${apiUrl}/api/me/data-export.json`}>Download data export (JSON)</a>
-        </li>
-        <li>
-          <a href={`${apiUrl}/api/me/press-kit.json`}>Download press kit (JSON)</a>
-        </li>
-        <li>
-          <a
-            href={`${apiUrl}/api/v1/u/${encodeURIComponent(username)}/press-kit.json`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Public press kit URL
-          </a>
-        </li>
-      </ul>
-      <form onSubmit={onDeletionRequest} className="studio-mt-lg">
-        <label className="studio-field--block">
-          <span className="studio-label">Request account deletion</span>
-          <textarea
-            className="studio-input studio-mt-sm"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            rows={3}
-            required
-            maxLength={2000}
-            placeholder="Brief reason (optional context for the board)"
-          />
-        </label>
+      <div className="studio-export-grid">
+        <a href={`${apiUrl}/api/me/data-export.json`} className="studio-export-card">
+          <span className="studio-export-card__label">Data export</span>
+          <span className="studio-export-card__hint">Full account JSON download</span>
+        </a>
+        <a href={`${apiUrl}/api/me/press-kit.json`} className="studio-export-card">
+          <span className="studio-export-card__label">Press kit</span>
+          <span className="studio-export-card__hint">Artist metadata JSON</span>
+        </a>
+        <a
+          href={`${apiUrl}/api/v1/u/${encodeURIComponent(username)}/press-kit.json`}
+          target="_blank"
+          rel="noreferrer"
+          className="studio-export-card"
+        >
+          <span className="studio-export-card__label">Public press kit</span>
+          <span className="studio-export-card__hint">Shareable URL (opens in new tab)</span>
+        </a>
+      </div>
+
+      <form onSubmit={onDeletionRequest} className="studio-danger-zone">
+        <span className="studio-danger-zone__label">Request account deletion</span>
+        <textarea
+          className="studio-input"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          required
+          maxLength={2000}
+          aria-label="Reason for deletion request"
+          placeholder="Brief reason (optional context for the board)"
+        />
         <button
           type="submit"
-          className="ui-btn ui-btn--primary studio-mt-sm"
+          className="ui-btn ui-btn--danger studio-mt-sm"
           disabled={pending || !reason.trim()}
         >
           {pending ? 'Submitting…' : 'Submit deletion request'}
         </button>
       </form>
       {msg ? (
-        <p className={`${isError ? 'studio-text-error' : 'studio-text-success'} studio-mt-sm`}>
+        <p
+          className={`${isError ? 'studio-notice studio-notice--error' : 'studio-notice studio-notice--success'} studio-mt-sm`}
+        >
           {msg}
         </p>
       ) : null}

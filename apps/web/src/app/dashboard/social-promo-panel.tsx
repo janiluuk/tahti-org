@@ -6,7 +6,7 @@
 import { useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { DEFAULT_SOCIAL_TEMPLATE } from '@tahti/shared'
-import { Panel } from '@tahti/ui'
+import { Panel, StudioCollapse } from '@tahti/ui'
 import {
   disconnectBluesky,
   disconnectInstagram,
@@ -46,13 +46,11 @@ function PlatformSection({
   manualPostLabel: string
 }) {
   return (
-    <div className="studio-platform-section">
-      <div className="studio-row--between studio-mb-sm">
-        <h3 className="studio-text-strong-sm" style={{ margin: 0 }}>
-          {title}
-        </h3>
-        {connected ? <span className="studio-badge studio-badge--success">Connected</span> : null}
-      </div>
+    <StudioCollapse
+      title={title}
+      hint={connected ? 'Connected' : undefined}
+      defaultOpen={connected}
+    >
       <p className="studio-help">{help}</p>
       {connected && accountLabel ? (
         <p className="studio-text-muted-sm studio-mb-sm">Account: {accountLabel}</p>
@@ -80,7 +78,7 @@ function PlatformSection({
             </button>
             <button
               type="button"
-              className="ui-btn ui-btn--sm studio-btn-danger"
+              className="ui-btn ui-btn--sm ui-btn--danger"
               disabled={pending}
               onClick={onDisconnect}
             >
@@ -89,7 +87,7 @@ function PlatformSection({
           </div>
         </div>
       ) : null}
-    </div>
+    </StudioCollapse>
   )
 }
 
@@ -194,382 +192,388 @@ export default function SocialPromoPanel({
   }
 
   return (
-    <Panel title="Social auto-post">
+    <Panel
+      title="Social auto-post"
+      headerTight
+      description="Connect platforms to announce releases and live sessions automatically."
+    >
       <p className="studio-help">
         Placeholders: <code>{'{artist}'}</code>, <code>{'{release}'}</code>,{' '}
         <code>{'{smart_link}'}</code>, <code>{'{channel_url}'}</code>.
       </p>
-      {msg ? <p className="studio-text-success studio-my-xs">{msg}</p> : null}
-      {error ? <p className="studio-text-error studio-my-xs">{error}</p> : null}
+      {msg ? <p className="studio-notice studio-notice--success studio-my-xs">{msg}</p> : null}
+      {error ? <p className="studio-notice studio-notice--error studio-my-xs">{error}</p> : null}
 
-      <PlatformSection
-        title="Mastodon"
-        help={<>Create an access token in Mastodon → Preferences → Development.</>}
-        connected={initial.mastodon.connected}
-        accountLabel={initial.mastodon.accountLabel}
-        pending={pending}
-        manualPost={mastodonManual}
-        onManualPostChange={setMastodonManual}
-        onManualPost={() => {
-          if (!mastodonManual.trim()) return
-          startTransition(async () => {
-            const res = await postSocialManual('MASTODON', mastodonManual.trim())
-            if (res.error) setError(res.error)
-            else {
-              setMastodonManual('')
-              setMsg('Mastodon post queued.')
-            }
-          })
-        }}
-        manualPostLabel="Post to Mastodon"
-        onDisconnect={() => {
-          startTransition(async () => {
-            const res = await disconnectMastodon()
-            if (res.error) setError(res.error)
-            else router.refresh()
-          })
-        }}
-      >
-        <label className="studio-field studio-mt-sm">
-          Instance URL
-          <input
-            className="studio-input studio-mt-sm"
-            value={mastodonUrl}
-            onChange={(e) => setMastodonUrl(e.target.value)}
-            placeholder="https://mastodon.social"
-          />
-        </label>
-        <label className="studio-field studio-mt-sm">
-          Access token
-          <input
-            className="studio-input studio-mt-sm"
-            type="password"
-            value={mastodonToken}
-            onChange={(e) => setMastodonToken(e.target.value)}
-            placeholder={
-              initial.mastodon.connected ? 'Leave blank to keep current token' : 'Paste token'
-            }
-          />
-        </label>
-        <label className="studio-field studio-mt-sm">
-          Post template
-          <input
-            className="studio-input studio-mt-sm"
-            value={mastodonTemplate}
-            onChange={(e) => setMastodonTemplate(e.target.value)}
-          />
-        </label>
-        <label className="studio-checkbox-label studio-mt-sm">
-          <input
-            type="checkbox"
-            checked={mastodonRelease}
-            onChange={(e) => setMastodonRelease(e.target.checked)}
-          />
-          Auto-post when a release is published
-        </label>
-        <label className="studio-checkbox-label studio-mt-sm">
-          <input
-            type="checkbox"
-            checked={mastodonLive}
-            onChange={(e) => setMastodonLive(e.target.checked)}
-          />
-          Auto-post when channel goes live
-        </label>
-        <div className="studio-actions studio-mt-md">
-          <button
-            type="button"
-            className="ui-btn ui-btn--primary"
-            disabled={pending}
-            onClick={saveMastodon}
-          >
-            {initial.mastodon.connected ? 'Update Mastodon' : 'Connect Mastodon'}
-          </button>
-        </div>
-      </PlatformSection>
+      <div className="studio-social-stack">
+        <PlatformSection
+          title="Mastodon"
+          help={<>Create an access token in Mastodon → Preferences → Development.</>}
+          connected={initial.mastodon.connected}
+          accountLabel={initial.mastodon.accountLabel}
+          pending={pending}
+          manualPost={mastodonManual}
+          onManualPostChange={setMastodonManual}
+          onManualPost={() => {
+            if (!mastodonManual.trim()) return
+            startTransition(async () => {
+              const res = await postSocialManual('MASTODON', mastodonManual.trim())
+              if (res.error) setError(res.error)
+              else {
+                setMastodonManual('')
+                setMsg('Mastodon post queued.')
+              }
+            })
+          }}
+          manualPostLabel="Post to Mastodon"
+          onDisconnect={() => {
+            startTransition(async () => {
+              const res = await disconnectMastodon()
+              if (res.error) setError(res.error)
+              else router.refresh()
+            })
+          }}
+        >
+          <label className="studio-field studio-mt-sm">
+            Instance URL
+            <input
+              className="studio-input studio-mt-sm"
+              value={mastodonUrl}
+              onChange={(e) => setMastodonUrl(e.target.value)}
+              placeholder="https://mastodon.social"
+            />
+          </label>
+          <label className="studio-field studio-mt-sm">
+            Access token
+            <input
+              className="studio-input studio-mt-sm"
+              type="password"
+              value={mastodonToken}
+              onChange={(e) => setMastodonToken(e.target.value)}
+              placeholder={
+                initial.mastodon.connected ? 'Leave blank to keep current token' : 'Paste token'
+              }
+            />
+          </label>
+          <label className="studio-field studio-mt-sm">
+            Post template
+            <input
+              className="studio-input studio-mt-sm"
+              value={mastodonTemplate}
+              onChange={(e) => setMastodonTemplate(e.target.value)}
+            />
+          </label>
+          <label className="studio-checkbox-label studio-mt-sm">
+            <input
+              type="checkbox"
+              checked={mastodonRelease}
+              onChange={(e) => setMastodonRelease(e.target.checked)}
+            />
+            Auto-post when a release is published
+          </label>
+          <label className="studio-checkbox-label studio-mt-sm">
+            <input
+              type="checkbox"
+              checked={mastodonLive}
+              onChange={(e) => setMastodonLive(e.target.checked)}
+            />
+            Auto-post when channel goes live
+          </label>
+          <div className="studio-actions studio-mt-md">
+            <button
+              type="button"
+              className="ui-btn ui-btn--primary"
+              disabled={pending}
+              onClick={saveMastodon}
+            >
+              {initial.mastodon.connected ? 'Update Mastodon' : 'Connect Mastodon'}
+            </button>
+          </div>
+        </PlatformSection>
 
-      <PlatformSection
-        title="Bluesky"
-        help={<>Create an app password at bsky.app → Settings → App passwords.</>}
-        connected={initial.bluesky.connected}
-        accountLabel={initial.bluesky.accountLabel}
-        pending={pending}
-        manualPost={blueskyManual}
-        onManualPostChange={setBlueskyManual}
-        onManualPost={() => {
-          if (!blueskyManual.trim()) return
-          startTransition(async () => {
-            const res = await postSocialManual('BLUESKY', blueskyManual.trim())
-            if (res.error) setError(res.error)
-            else {
-              setBlueskyManual('')
-              setMsg('Bluesky post queued.')
-            }
-          })
-        }}
-        manualPostLabel="Post to Bluesky"
-        onDisconnect={() => {
-          startTransition(async () => {
-            const res = await disconnectBluesky()
-            if (res.error) setError(res.error)
-            else router.refresh()
-          })
-        }}
-      >
-        <label className="studio-field studio-mt-sm">
-          Handle
-          <input
-            className="studio-input studio-mt-sm"
-            value={blueskyHandle}
-            onChange={(e) => setBlueskyHandle(e.target.value)}
-            placeholder="you.bsky.social"
-          />
-        </label>
-        <label className="studio-field studio-mt-sm">
-          App password
-          <input
-            className="studio-input studio-mt-sm"
-            type="password"
-            value={blueskyPassword}
-            onChange={(e) => setBlueskyPassword(e.target.value)}
-            placeholder={
-              initial.bluesky.connected ? 'Leave blank to keep current password' : 'Paste password'
-            }
-          />
-        </label>
-        <label className="studio-field studio-mt-sm">
-          Post template
-          <input
-            className="studio-input studio-mt-sm"
-            value={blueskyTemplate}
-            onChange={(e) => setBlueskyTemplate(e.target.value)}
-          />
-        </label>
-        <label className="studio-checkbox-label studio-mt-sm">
-          <input
-            type="checkbox"
-            checked={blueskyRelease}
-            onChange={(e) => setBlueskyRelease(e.target.checked)}
-          />
-          Auto-post when a release is published
-        </label>
-        <label className="studio-checkbox-label studio-mt-sm">
-          <input
-            type="checkbox"
-            checked={blueskyLive}
-            onChange={(e) => setBlueskyLive(e.target.checked)}
-          />
-          Auto-post when channel goes live
-        </label>
-        <div className="studio-actions studio-mt-md">
-          <button
-            type="button"
-            className="ui-btn ui-btn--primary"
-            disabled={pending}
-            onClick={saveBluesky}
-          >
-            {initial.bluesky.connected ? 'Update Bluesky' : 'Connect Bluesky'}
-          </button>
-        </div>
-      </PlatformSection>
+        <PlatformSection
+          title="Bluesky"
+          help={<>Create an app password at bsky.app → Settings → App passwords.</>}
+          connected={initial.bluesky.connected}
+          accountLabel={initial.bluesky.accountLabel}
+          pending={pending}
+          manualPost={blueskyManual}
+          onManualPostChange={setBlueskyManual}
+          onManualPost={() => {
+            if (!blueskyManual.trim()) return
+            startTransition(async () => {
+              const res = await postSocialManual('BLUESKY', blueskyManual.trim())
+              if (res.error) setError(res.error)
+              else {
+                setBlueskyManual('')
+                setMsg('Bluesky post queued.')
+              }
+            })
+          }}
+          manualPostLabel="Post to Bluesky"
+          onDisconnect={() => {
+            startTransition(async () => {
+              const res = await disconnectBluesky()
+              if (res.error) setError(res.error)
+              else router.refresh()
+            })
+          }}
+        >
+          <label className="studio-field studio-mt-sm">
+            Handle
+            <input
+              className="studio-input studio-mt-sm"
+              value={blueskyHandle}
+              onChange={(e) => setBlueskyHandle(e.target.value)}
+              placeholder="you.bsky.social"
+            />
+          </label>
+          <label className="studio-field studio-mt-sm">
+            App password
+            <input
+              className="studio-input studio-mt-sm"
+              type="password"
+              value={blueskyPassword}
+              onChange={(e) => setBlueskyPassword(e.target.value)}
+              placeholder={
+                initial.bluesky.connected
+                  ? 'Leave blank to keep current password'
+                  : 'Paste password'
+              }
+            />
+          </label>
+          <label className="studio-field studio-mt-sm">
+            Post template
+            <input
+              className="studio-input studio-mt-sm"
+              value={blueskyTemplate}
+              onChange={(e) => setBlueskyTemplate(e.target.value)}
+            />
+          </label>
+          <label className="studio-checkbox-label studio-mt-sm">
+            <input
+              type="checkbox"
+              checked={blueskyRelease}
+              onChange={(e) => setBlueskyRelease(e.target.checked)}
+            />
+            Auto-post when a release is published
+          </label>
+          <label className="studio-checkbox-label studio-mt-sm">
+            <input
+              type="checkbox"
+              checked={blueskyLive}
+              onChange={(e) => setBlueskyLive(e.target.checked)}
+            />
+            Auto-post when channel goes live
+          </label>
+          <div className="studio-actions studio-mt-md">
+            <button
+              type="button"
+              className="ui-btn ui-btn--primary"
+              disabled={pending}
+              onClick={saveBluesky}
+            >
+              {initial.bluesky.connected ? 'Update Bluesky' : 'Connect Bluesky'}
+            </button>
+          </div>
+        </PlatformSection>
 
-      <PlatformSection
-        title="X (Twitter)"
-        help={
-          <>
-            OAuth 2.0 connect — posts when configured below. Requires <code>TWITTER_CLIENT_ID</code>{' '}
-            on the server.
-          </>
-        }
-        connected={initial.twitter.connected}
-        accountLabel={initial.twitter.accountLabel}
-        pending={pending}
-        manualPost={twitterManual}
-        onManualPostChange={setTwitterManual}
-        onManualPost={() => {
-          if (!twitterManual.trim()) return
-          startTransition(async () => {
-            const res = await postSocialManual('TWITTER', twitterManual.trim())
-            if (res.error) setError(res.error)
-            else {
-              setTwitterManual('')
-              setMsg('X post queued.')
-            }
-          })
-        }}
-        manualPostLabel="Post to X"
-        onDisconnect={() => {
-          startTransition(async () => {
-            const res = await disconnectTwitter()
-            if (res.error) setError(res.error)
-            else router.refresh()
-          })
-        }}
-      >
-        {!initial.twitter.configured ? (
-          <p className="studio-text-muted-sm studio-mt-sm">
-            X OAuth is not configured on this server.
-          </p>
-        ) : initial.twitter.connected ? (
-          <>
-            <label className="studio-field studio-mt-sm">
-              Post template
-              <input
-                className="studio-input studio-mt-sm"
-                value={twitterTemplate}
-                onChange={(e) => setTwitterTemplate(e.target.value)}
-                maxLength={280}
-              />
-            </label>
-            <label className="studio-checkbox-label studio-mt-sm">
-              <input
-                type="checkbox"
-                checked={twitterRelease}
-                onChange={(e) => setTwitterRelease(e.target.checked)}
-              />
-              Auto-post when a release is published
-            </label>
-            <label className="studio-checkbox-label studio-mt-sm">
-              <input
-                type="checkbox"
-                checked={twitterLive}
-                onChange={(e) => setTwitterLive(e.target.checked)}
-              />
-              Auto-post when channel goes live
-            </label>
-            <div className="studio-actions studio-mt-md">
-              <button
-                type="button"
-                className="ui-btn ui-btn--primary"
-                disabled={pending}
-                onClick={() => {
-                  startTransition(async () => {
-                    const res = await saveTwitterSocial({
-                      onReleasePublished: twitterRelease,
-                      onChannelLive: twitterLive,
-                      postTemplate: twitterTemplate,
+        <PlatformSection
+          title="X (Twitter)"
+          help={
+            <>
+              OAuth 2.0 connect — posts when configured below. Requires{' '}
+              <code>TWITTER_CLIENT_ID</code> on the server.
+            </>
+          }
+          connected={initial.twitter.connected}
+          accountLabel={initial.twitter.accountLabel}
+          pending={pending}
+          manualPost={twitterManual}
+          onManualPostChange={setTwitterManual}
+          onManualPost={() => {
+            if (!twitterManual.trim()) return
+            startTransition(async () => {
+              const res = await postSocialManual('TWITTER', twitterManual.trim())
+              if (res.error) setError(res.error)
+              else {
+                setTwitterManual('')
+                setMsg('X post queued.')
+              }
+            })
+          }}
+          manualPostLabel="Post to X"
+          onDisconnect={() => {
+            startTransition(async () => {
+              const res = await disconnectTwitter()
+              if (res.error) setError(res.error)
+              else router.refresh()
+            })
+          }}
+        >
+          {!initial.twitter.configured ? (
+            <p className="studio-text-muted-sm studio-mt-sm">
+              X OAuth is not configured on this server.
+            </p>
+          ) : initial.twitter.connected ? (
+            <>
+              <label className="studio-field studio-mt-sm">
+                Post template
+                <input
+                  className="studio-input studio-mt-sm"
+                  value={twitterTemplate}
+                  onChange={(e) => setTwitterTemplate(e.target.value)}
+                  maxLength={280}
+                />
+              </label>
+              <label className="studio-checkbox-label studio-mt-sm">
+                <input
+                  type="checkbox"
+                  checked={twitterRelease}
+                  onChange={(e) => setTwitterRelease(e.target.checked)}
+                />
+                Auto-post when a release is published
+              </label>
+              <label className="studio-checkbox-label studio-mt-sm">
+                <input
+                  type="checkbox"
+                  checked={twitterLive}
+                  onChange={(e) => setTwitterLive(e.target.checked)}
+                />
+                Auto-post when channel goes live
+              </label>
+              <div className="studio-actions studio-mt-md">
+                <button
+                  type="button"
+                  className="ui-btn ui-btn--primary"
+                  disabled={pending}
+                  onClick={() => {
+                    startTransition(async () => {
+                      const res = await saveTwitterSocial({
+                        onReleasePublished: twitterRelease,
+                        onChannelLive: twitterLive,
+                        postTemplate: twitterTemplate,
+                      })
+                      if (res.error) setError(res.error)
+                      else {
+                        setMsg('X settings saved.')
+                        router.refresh()
+                      }
                     })
-                    if (res.error) setError(res.error)
-                    else {
-                      setMsg('X settings saved.')
-                      router.refresh()
-                    }
-                  })
-                }}
-              >
-                Update X settings
-              </button>
-            </div>
-          </>
-        ) : (
-          <a
-            href={`${apiUrl}/api/me/social/twitter/oauth/start`}
-            className="ui-btn ui-btn--primary"
-            style={{ display: 'inline-block', marginTop: '0.5rem' }}
-          >
-            Connect X account
-          </a>
-        )}
-      </PlatformSection>
+                  }}
+                >
+                  Update X settings
+                </button>
+              </div>
+            </>
+          ) : (
+            <a
+              href={`${apiUrl}/api/me/social/twitter/oauth/start`}
+              className="ui-btn ui-btn--primary studio-mt-sm"
+            >
+              Connect X account
+            </a>
+          )}
+        </PlatformSection>
 
-      <PlatformSection
-        title="Instagram"
-        help={
-          <>
-            OAuth connect via your Instagram professional account on a Facebook Page. Every post
-            needs an image — we use your release cover art, channel banner, or profile picture.
-            Requires <code>INSTAGRAM_CLIENT_ID</code> on the server.
-          </>
-        }
-        connected={initial.instagram.connected}
-        accountLabel={initial.instagram.accountLabel}
-        pending={pending}
-        manualPost={instagramManual}
-        onManualPostChange={setInstagramManual}
-        onManualPost={() => {
-          if (!instagramManual.trim()) return
-          startTransition(async () => {
-            const res = await postSocialManual('INSTAGRAM', instagramManual.trim())
-            if (res.error) setError(res.error)
-            else {
-              setInstagramManual('')
-              setMsg('Instagram post queued.')
-            }
-          })
-        }}
-        manualPostLabel="Post to Instagram"
-        onDisconnect={() => {
-          startTransition(async () => {
-            const res = await disconnectInstagram()
-            if (res.error) setError(res.error)
-            else router.refresh()
-          })
-        }}
-      >
-        {!initial.instagram.configured ? (
-          <p className="studio-text-muted-sm studio-mt-sm">
-            Instagram OAuth is not configured on this server.
-          </p>
-        ) : initial.instagram.connected ? (
-          <>
-            <label className="studio-field studio-mt-sm">
-              Post template
-              <input
-                className="studio-input studio-mt-sm"
-                value={instagramTemplate}
-                onChange={(e) => setInstagramTemplate(e.target.value)}
-                maxLength={2200}
-              />
-            </label>
-            <label className="studio-checkbox-label studio-mt-sm">
-              <input
-                type="checkbox"
-                checked={instagramRelease}
-                onChange={(e) => setInstagramRelease(e.target.checked)}
-              />
-              Auto-post when a release is published
-            </label>
-            <label className="studio-checkbox-label studio-mt-sm">
-              <input
-                type="checkbox"
-                checked={instagramLive}
-                onChange={(e) => setInstagramLive(e.target.checked)}
-              />
-              Auto-post when channel goes live
-            </label>
-            <div className="studio-actions studio-mt-md">
-              <button
-                type="button"
-                className="ui-btn ui-btn--primary"
-                disabled={pending}
-                onClick={() => {
-                  startTransition(async () => {
-                    const res = await saveInstagramSocial({
-                      onReleasePublished: instagramRelease,
-                      onChannelLive: instagramLive,
-                      postTemplate: instagramTemplate,
+        <PlatformSection
+          title="Instagram"
+          help={
+            <>
+              OAuth connect via your Instagram professional account on a Facebook Page. Every post
+              needs an image — we use your release cover art, channel banner, or profile picture.
+              Requires <code>INSTAGRAM_CLIENT_ID</code> on the server.
+            </>
+          }
+          connected={initial.instagram.connected}
+          accountLabel={initial.instagram.accountLabel}
+          pending={pending}
+          manualPost={instagramManual}
+          onManualPostChange={setInstagramManual}
+          onManualPost={() => {
+            if (!instagramManual.trim()) return
+            startTransition(async () => {
+              const res = await postSocialManual('INSTAGRAM', instagramManual.trim())
+              if (res.error) setError(res.error)
+              else {
+                setInstagramManual('')
+                setMsg('Instagram post queued.')
+              }
+            })
+          }}
+          manualPostLabel="Post to Instagram"
+          onDisconnect={() => {
+            startTransition(async () => {
+              const res = await disconnectInstagram()
+              if (res.error) setError(res.error)
+              else router.refresh()
+            })
+          }}
+        >
+          {!initial.instagram.configured ? (
+            <p className="studio-text-muted-sm studio-mt-sm">
+              Instagram OAuth is not configured on this server.
+            </p>
+          ) : initial.instagram.connected ? (
+            <>
+              <label className="studio-field studio-mt-sm">
+                Post template
+                <input
+                  className="studio-input studio-mt-sm"
+                  value={instagramTemplate}
+                  onChange={(e) => setInstagramTemplate(e.target.value)}
+                  maxLength={2200}
+                />
+              </label>
+              <label className="studio-checkbox-label studio-mt-sm">
+                <input
+                  type="checkbox"
+                  checked={instagramRelease}
+                  onChange={(e) => setInstagramRelease(e.target.checked)}
+                />
+                Auto-post when a release is published
+              </label>
+              <label className="studio-checkbox-label studio-mt-sm">
+                <input
+                  type="checkbox"
+                  checked={instagramLive}
+                  onChange={(e) => setInstagramLive(e.target.checked)}
+                />
+                Auto-post when channel goes live
+              </label>
+              <div className="studio-actions studio-mt-md">
+                <button
+                  type="button"
+                  className="ui-btn ui-btn--primary"
+                  disabled={pending}
+                  onClick={() => {
+                    startTransition(async () => {
+                      const res = await saveInstagramSocial({
+                        onReleasePublished: instagramRelease,
+                        onChannelLive: instagramLive,
+                        postTemplate: instagramTemplate,
+                      })
+                      if (res.error) setError(res.error)
+                      else {
+                        setMsg('Instagram settings saved.')
+                        router.refresh()
+                      }
                     })
-                    if (res.error) setError(res.error)
-                    else {
-                      setMsg('Instagram settings saved.')
-                      router.refresh()
-                    }
-                  })
-                }}
-              >
-                Update Instagram settings
-              </button>
-            </div>
-          </>
-        ) : (
-          <a
-            href={`${apiUrl}/api/me/social/instagram/oauth/start`}
-            className="ui-btn ui-btn--primary"
-            style={{ display: 'inline-block', marginTop: '0.5rem' }}
-          >
-            Connect Instagram account
-          </a>
-        )}
-      </PlatformSection>
+                  }}
+                >
+                  Update Instagram settings
+                </button>
+              </div>
+            </>
+          ) : (
+            <a
+              href={`${apiUrl}/api/me/social/instagram/oauth/start`}
+              className="ui-btn ui-btn--primary studio-mt-sm"
+            >
+              Connect Instagram account
+            </a>
+          )}
+        </PlatformSection>
+      </div>
     </Panel>
   )
 }
