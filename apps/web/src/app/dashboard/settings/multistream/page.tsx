@@ -52,17 +52,15 @@ export default async function MultistreamSettingsPage() {
 
   return (
     <PageShell size="md">
-      <div className="admin-header-row">
+      <div className="studio-page-header">
         <div>
-          <div className="admin-header-row__title-line">
-            <h3 className="admin-header-row__title">Multistream targets</h3>
-          </div>
-          <p className="admin-header-row__subline">
+          <h1 className="studio-page-title">Multistream targets</h1>
+          <p className="studio-text-muted-sm studio-mt-xs">
             Your live broadcast is mirrored to every enabled target. Stream keys are encrypted at
             rest. One source — OBS pushes once, Tahti fans out.
           </p>
         </div>
-        <div className="admin-header-row__actions">
+        <div className="studio-page-header__actions">
           {isPaid ? (
             <StatusPill tone="cyan">PAID · UNLIMITED TARGETS</StatusPill>
           ) : (

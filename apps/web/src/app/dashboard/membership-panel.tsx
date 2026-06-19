@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Alert, Button, Panel, Text } from '@/components/ui'
+import { Alert, Panel, Text } from '@tahti/ui'
 import { startMembershipCheckout, startMembershipPortal } from './actions'
 
 export default function MembershipPanel({
@@ -90,27 +90,25 @@ export default function MembershipPanel({
           </Text>
         )}
         {hasStripeSubscription ? (
-          <Button
+          <button
             type="button"
-            variant="ghost"
+            className="ui-btn ui-btn--ghost studio-mt-md"
             onClick={openPortal}
             disabled={isPending}
-            className="studio-mt-md"
           >
             {isPending ? 'Opening…' : 'Manage billing'}
-          </Button>
+          </button>
         ) : subscriptionMigrationRequired ? (
-          <Button
+          <button
             type="button"
-            variant="primary"
+            className="ui-btn ui-btn--primary studio-mt-md"
             onClick={pay}
             disabled={isPending}
-            className="studio-mt-md"
           >
             {isPending
               ? 'Processing…'
               : `Subscribe for auto-renewal (€${(priceCents / 100).toFixed(0)}/year)`}
-          </Button>
+          </button>
         ) : null}
       </Panel>
     )
@@ -134,13 +132,14 @@ export default function MembershipPanel({
       )}
       {error && <Alert variant="error">{error}</Alert>}
       {message && <Alert variant="success">{message}</Alert>}
-      <Button
-        variant="primary"
+      <button
+        type="button"
+        className="ui-btn ui-btn--primary"
         onClick={pay}
         disabled={isPending || !emailVerified || status === 'PENDING_EMAIL'}
       >
         {isPending ? 'Processing…' : `Pay €${(priceCents / 100).toFixed(0)} / year`}
-      </Button>
+      </button>
     </Panel>
   )
 }

@@ -46,7 +46,7 @@ function PlatformSection({
   manualPostLabel: string
 }) {
   return (
-    <div className="studio-subsection studio-mt-md">
+    <div className="studio-platform-section">
       <div className="studio-row--between studio-mb-sm">
         <h3 className="studio-text-strong-sm" style={{ margin: 0 }}>
           {title}
@@ -72,7 +72,7 @@ function PlatformSection({
           <div className="studio-row studio-mt-sm">
             <button
               type="button"
-              className="studio-btn-ghost studio-btn-sm"
+              className="ui-btn ui-btn--sm ui-btn--ghost"
               disabled={pending || !manualPost.trim()}
               onClick={onManualPost}
             >
@@ -80,7 +80,7 @@ function PlatformSection({
             </button>
             <button
               type="button"
-              className="studio-btn-danger"
+              className="ui-btn ui-btn--sm studio-btn-danger"
               disabled={pending}
               onClick={onDisconnect}
             >
@@ -278,7 +278,7 @@ export default function SocialPromoPanel({
         <div className="studio-actions studio-mt-md">
           <button
             type="button"
-            className="studio-btn-primary"
+            className="ui-btn ui-btn--primary"
             disabled={pending}
             onClick={saveMastodon}
           >
@@ -363,7 +363,7 @@ export default function SocialPromoPanel({
         <div className="studio-actions studio-mt-md">
           <button
             type="button"
-            className="studio-btn-primary"
+            className="ui-btn ui-btn--primary"
             disabled={pending}
             onClick={saveBluesky}
           >
@@ -439,7 +439,7 @@ export default function SocialPromoPanel({
             <div className="studio-actions studio-mt-md">
               <button
                 type="button"
-                className="studio-btn-primary"
+                className="ui-btn ui-btn--primary"
                 disabled={pending}
                 onClick={() => {
                   startTransition(async () => {
@@ -463,7 +463,7 @@ export default function SocialPromoPanel({
         ) : (
           <a
             href={`${apiUrl}/api/me/social/twitter/oauth/start`}
-            className="studio-btn-primary"
+            className="ui-btn ui-btn--primary"
             style={{ display: 'inline-block', marginTop: '0.5rem' }}
           >
             Connect X account
@@ -539,7 +539,7 @@ export default function SocialPromoPanel({
             <div className="studio-actions studio-mt-md">
               <button
                 type="button"
-                className="studio-btn-primary"
+                className="ui-btn ui-btn--primary"
                 disabled={pending}
                 onClick={() => {
                   startTransition(async () => {
@@ -563,7 +563,7 @@ export default function SocialPromoPanel({
         ) : (
           <a
             href={`${apiUrl}/api/me/social/instagram/oauth/start`}
-            className="studio-btn-primary"
+            className="ui-btn ui-btn--primary"
             style={{ display: 'inline-block', marginTop: '0.5rem' }}
           >
             Connect Instagram account

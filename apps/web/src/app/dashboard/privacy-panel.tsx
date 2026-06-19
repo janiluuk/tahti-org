@@ -34,14 +34,14 @@ export default function PrivacyPanel({ username, apiUrl }: { username: string; a
       title="Privacy & data"
       description="Export your data or request account deletion under GDPR. Deletion is reviewed manually within 30 days."
     >
-      <ul className="studio-list studio-mt-sm studio-list-indented">
-        <li className="studio-text-sm" style={{ listStyle: 'disc', padding: '0.15rem 0' }}>
+      <ul className="studio-link-list studio-mt-sm">
+        <li>
           <a href={`${apiUrl}/api/me/data-export.json`}>Download data export (JSON)</a>
         </li>
-        <li className="studio-text-sm" style={{ listStyle: 'disc', padding: '0.15rem 0' }}>
+        <li>
           <a href={`${apiUrl}/api/me/press-kit.json`}>Download press kit (JSON)</a>
         </li>
-        <li className="studio-text-sm" style={{ listStyle: 'disc', padding: '0.15rem 0' }}>
+        <li>
           <a
             href={`${apiUrl}/api/v1/u/${encodeURIComponent(username)}/press-kit.json`}
             target="_blank"
@@ -66,7 +66,7 @@ export default function PrivacyPanel({ username, apiUrl }: { username: string; a
         </label>
         <button
           type="submit"
-          className="studio-btn-primary studio-mt-sm"
+          className="ui-btn ui-btn--primary studio-mt-sm"
           disabled={pending || !reason.trim()}
         >
           {pending ? 'Submitting…' : 'Submit deletion request'}

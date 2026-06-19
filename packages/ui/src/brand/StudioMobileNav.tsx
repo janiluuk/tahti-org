@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { normaliseDashboardHash } from './dashboard-nav'
 
 function IconChannel() {
   return (
@@ -67,7 +65,13 @@ function IconSettings() {
 }
 
 const MOBILE_NAV = [
-  { href: '/dashboard', label: 'Channel', Icon: IconChannel, exact: true },
+  {
+    href: '/dashboard#overview',
+    label: 'Channel',
+    Icon: IconChannel,
+    exact: false,
+    hash: '#overview',
+  },
   { href: '/dashboard/stats', label: 'Stats', Icon: IconStats, exact: false },
   {
     href: '/dashboard#catalog',
@@ -108,12 +112,10 @@ export function StudioMobileNav() {
 
   return (
     <nav className="db-mobile-nav" aria-label="Mobile navigation">
-      {MOBILE_NAV.map(({ href, label, Icon, exact, hash: itemHash }) => {
+      {MOBILE_NAV.map(({ href, label, Icon, hash: itemHash }) => {
         let active: boolean
-        if (exact) {
-          active = onDashboard && !hash
-        } else if (itemHash) {
-          active = onDashboard && hash === itemHash
+        if (itemHash) {
+          active = onDashboard && normaliseDashboardHash(hash) === normaliseDashboardHash(itemHash)
         } else {
           active = pathname === href || pathname.startsWith(`${href}/`)
         }

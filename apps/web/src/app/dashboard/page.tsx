@@ -25,28 +25,15 @@ import MembershipPanel from './membership-panel'
 import PrivacyPanel from './privacy-panel'
 import SocialPromoPanel from './social-promo-panel'
 import type { SocialSettings } from './social-actions'
-import BroadcastUsageBanner from './broadcast-usage'
-import { DownloadGateSummaryPanel } from './download-gate-summary'
-import { ChannelEgressPanel } from './channel-egress-panel'
-import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
-import UpgradeCta from './upgrade-cta'
 import { CustomDomainPanel } from './custom-domain-panel'
 import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
 import { TahtiRadioPanel } from './tahti-radio-panel'
 import { MentionsPanel } from './mentions-panel'
-import { EndBroadcastBtn } from './end-broadcast-btn'
-import {
-  Link,
-  PageShell,
-  Panel,
-  StatCard,
-  StatCardGrid,
-  StudioCollapse,
-  BroadcastStatusBar,
-} from '@tahti/ui'
+import { Link, PageShell, Panel, StudioCollapse } from '@tahti/ui'
 import { DashboardTabs } from './dashboard-tabs'
-import { OverviewStreamKey } from './overview-stream-key'
+import { DashboardOverview } from './_dashboard-overview'
+import { AccountSettings } from './_account-settings'
 import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
@@ -572,6 +559,7 @@ export default async function DashboardPage() {
     (channelLiveStats as { totalBroadcasts: number } | null)?.totalBroadcasts ?? 0
 
   const dashboardHashAliases: Record<string, string> = {
+    overview: 'overview',
     'studio-overview': 'overview',
     'studio-stats': 'overview',
     'studio-settings': 'broadcast',
@@ -670,147 +658,31 @@ export default async function DashboardPage() {
         hasChannel={!!user.channel}
         hashAliases={dashboardHashAliases}
         overview={
-          <>
-            {user.channel?.state === 'LIVE' && (
-              <BroadcastStatusBar
-                state="live"
-                meta={<Link href={`/c/${user.channel.slug}`}>View channel →</Link>}
-                action={<EndBroadcastBtn />}
-              />
-            )}
-
-            {user.channel && (
-              <StatCardGrid>
-                <StatCard
-                  variant="plays"
-                  value={(statDlCount + statBroadcasts).toLocaleString()}
-                  label="Plays this month"
+          <DashboardOverview
+            channel={user.channel}
+            streamSettings={streamSettings}
+            broadcastUsage={broadcastUsage}
+            statDlCount={statDlCount}
+            statBroadcasts={statBroadcasts}
+            fanSubscribers={newsletterStats.confirmed}
+            revenueCents={fanPayoutStats.paidLast30Days}
+            archiveItems={archiveItemsForEdit}
+            downloadGateSummary={downloadGateSummary}
+            channelLiveStats={channelLiveStats}
+            channelEgress={channelEgress}
+            otherModeratedChannels={otherModeratedChannels}
+            storageBar={
+              user.storage ? (
+                <StorageBar
+                  usedBytes={Number(user.storage.usedBytes)}
+                  softTargetBytes={
+                    user.storage.softTargetBytes ? Number(user.storage.softTargetBytes) : undefined
+                  }
+                  showSoftTarget={user.storage.showSoftTarget}
                 />
-                <StatCard
-                  variant="downloads"
-                  value={statDlCount.toLocaleString()}
-                  label="Downloads"
-                />
-                <StatCard
-                  variant="fans"
-                  value={newsletterStats.confirmed.toLocaleString()}
-                  label="Fan subscribers"
-                />
-                <StatCard
-                  variant="revenue"
-                  value={`€${(fanPayoutStats.paidLast30Days / 100).toFixed(0)}`}
-                  label="Revenue this month"
-                />
-              </StatCardGrid>
-            )}
-
-            {user.channel && (
-              <>
-                <BroadcastUsageBanner usage={broadcastUsage} />
-                <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
-
-                {streamSettings && (
-                  <OverviewStreamKey
-                    rtmpKey={streamSettings.rtmp.streamKey}
-                    icecastMount={streamSettings.icecast.mount}
-                    icecastPass={streamSettings.icecast.password}
-                  />
-                )}
-
-                <div className="db-quick-actions">
-                  <Link
-                    href="/dashboard#catalog"
-                    className="db-quick-action db-quick-action--primary"
-                  >
-                    ↑ Upload a set
-                  </Link>
-                  <Link href="/dashboard#broadcast" className="db-quick-action">
-                    ≡ Broadcast settings
-                  </Link>
-                  <Link href={`/c/${user.channel.slug}`} className="db-quick-action">
-                    → View my channel
-                  </Link>
-                </div>
-
-                {archiveItemsForEdit.length > 0 && (
-                  <div className="db-recent-archive">
-                    <h2 className="db-recent-archive__heading">Recent archive</h2>
-                    <ul className="db-recent-archive__list">
-                      {archiveItemsForEdit.slice(0, 4).map((item) => {
-                        const dur = typeof item.durationSec === 'number' ? item.durationSec : null
-                        const durationMin = dur ? `${Math.floor(dur / 60)}m` : null
-                        const createdAt = typeof item.createdAt === 'string' ? item.createdAt : null
-                        const ago = createdAt
-                          ? (() => {
-                              const ms = Date.now() - new Date(createdAt).getTime()
-                              const d = Math.floor(ms / 86400000)
-                              if (d === 0) return 'today'
-                              if (d === 1) return '1 day ago'
-                              if (d < 30) return `${d} days ago`
-                              return `${Math.floor(d / 30)} mo ago`
-                            })()
-                          : null
-                        return (
-                          <li key={item.id} className="db-recent-archive__item">
-                            <div className="db-recent-archive__icon" aria-hidden>
-                              ◉
-                            </div>
-                            <div className="db-recent-archive__body">
-                              <div className="db-recent-archive__title">{item.title}</div>
-                              <div className="db-recent-archive__meta">
-                                {[durationMin, ago].filter(Boolean).join(' · ')}
-                              </div>
-                            </div>
-                            <div className="db-recent-archive__actions">
-                              <Link href={`/dashboard#catalog`} className="db-recent-archive__link">
-                                Edit
-                              </Link>
-                            </div>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
-                )}
-              </>
-            )}
-
-            {user.storage && (
-              <StorageBar
-                usedBytes={Number(user.storage.usedBytes)}
-                softTargetBytes={
-                  user.storage.softTargetBytes ? Number(user.storage.softTargetBytes) : undefined
-                }
-                showSoftTarget={user.storage.showSoftTarget}
-              />
-            )}
-
-            {user.channel && (downloadGateSummary || channelLiveStats || channelEgress) && (
-              <StudioCollapse title="Analytics detail" hint="downloads, live time, egress">
-                <DownloadGateSummaryPanel summary={downloadGateSummary} />
-                <ChannelLiveStatsPanel stats={channelLiveStats} />
-                <ChannelEgressPanel stats={channelEgress} />
-              </StudioCollapse>
-            )}
-
-            {otherModeratedChannels.length > 0 && (
-              <StudioCollapse
-                title="Moderation access"
-                hint={`${otherModeratedChannels.length} channel${otherModeratedChannels.length === 1 ? '' : 's'}`}
-              >
-                <ul className="studio-list studio-mt-sm">
-                  {otherModeratedChannels.map((c) => (
-                    <li key={c.slug} className="studio-item-row--list">
-                      <span className="studio-flex-1">{c.displayName}</span>
-                      <Link href={`/dashboard/moderate/${c.slug}`} className="studio-btn-ghost">
-                        Moderate chat
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </StudioCollapse>
-            )}
-          </>
+              ) : null
+            }
+          />
         }
         broadcast={
           user.channel ? (
@@ -962,28 +834,36 @@ export default async function DashboardPage() {
           ) : undefined
         }
         account={
-          <>
-            {membershipInfo && (
-              <MembershipPanel
-                status={membershipInfo.status}
-                isMember={membershipInfo.isMember}
-                memberNumber={membershipInfo.memberNumber}
-                priceCents={membershipInfo.priceCents}
-                emailVerified={membershipInfo.emailVerified}
-                hasStripeSubscription={membershipInfo.hasStripeSubscription}
-                renewalDueAt={membershipInfo.renewalDueAt}
-                subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}
+          <AccountSettings
+            email={user.email}
+            username={user.username}
+            membership={
+              membershipInfo ? (
+                <MembershipPanel
+                  status={membershipInfo.status}
+                  isMember={membershipInfo.isMember}
+                  memberNumber={membershipInfo.memberNumber}
+                  priceCents={membershipInfo.priceCents}
+                  emailVerified={membershipInfo.emailVerified}
+                  hasStripeSubscription={membershipInfo.hasStripeSubscription}
+                  renewalDueAt={membershipInfo.renewalDueAt}
+                  subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}
+                />
+              ) : null
+            }
+            social={
+              socialSettings ? <SocialPromoPanel initial={socialSettings} apiUrl={apiUrl} /> : null
+            }
+            mentions={<MentionsPanel />}
+            domain={
+              <CustomDomainPanel
+                initialDomain={user.channel?.customDomain ?? null}
+                initialVerified={user.channel?.customDomainVerified ?? false}
+                isPaid={user.tier !== 'FREE'}
               />
-            )}
-            {socialSettings && <SocialPromoPanel initial={socialSettings} apiUrl={apiUrl} />}
-            <MentionsPanel />
-            <CustomDomainPanel
-              initialDomain={user.channel?.customDomain ?? null}
-              initialVerified={user.channel?.customDomainVerified ?? false}
-              isPaid={user.tier !== 'FREE'}
-            />
-            <PrivacyPanel username={user.username} apiUrl={apiUrl} />
-          </>
+            }
+            privacy={<PrivacyPanel username={user.username} apiUrl={apiUrl} />}
+          />
         }
       />
     </PageShell>

@@ -25,7 +25,6 @@ export function StudioSidebar({ isBoard }: Props) {
   }, [])
 
   const onDashboard = pathname === '/dashboard' || pathname === '/dashboard/'
-  const normHash = normaliseDashboardHash(hash)
 
   return (
     <aside className="db-sidebar">
@@ -34,11 +33,7 @@ export function StudioSidebar({ isBoard }: Props) {
           ({ href, label, icon, isRoute, hash: itemHash }) => {
             let active: boolean
             if (isRoute) {
-              if (href === '/dashboard') {
-                active = onDashboard && (normHash === '' || normHash === undefined)
-              } else {
-                active = pathname === href || pathname.startsWith(`${href}/`)
-              }
+              active = pathname === href || pathname.startsWith(`${href}/`)
             } else {
               active =
                 onDashboard &&
