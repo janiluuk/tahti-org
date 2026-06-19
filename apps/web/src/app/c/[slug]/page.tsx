@@ -13,7 +13,7 @@ import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
 import { ArchiveItemPlayback } from './archive-item-playback'
-import { BroadcastCountdown } from './broadcast-countdown'
+import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import { StickyLiveBar } from './sticky-live-bar'
 import { ArchiveVideoBackdrop, resolveArchiveBackground } from './archive-item-backdrop'
 import type {
@@ -234,21 +234,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               artistDisplayName={channel.user.displayName}
             />
 
-            {channel.state !== 'LIVE' && channel.nextBroadcastAt && (
-              <BroadcastCountdown
-                targetIso={channel.nextBroadcastAt}
-                note={channel.nextBroadcastNote}
-              />
-            )}
-            {channel.state !== 'LIVE' && !channel.nextBroadcastAt && channel.nextBroadcastNote && (
-              <div className="ch-next-broadcast" role="status">
-                <SafePlainText
-                  text={channel.nextBroadcastNote}
-                  className="ch-next-broadcast-note"
-                />
-              </div>
-            )}
-
             <ChannelTextLayerView
               mode={channel.textLayerMode}
               text={channel.textLayerText}
@@ -286,6 +271,23 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   RSS ↗
                 </a>
               </div>
+
+              {channel.state !== 'LIVE' && channel.nextBroadcastAt && (
+                <BroadcastCountdown
+                  targetIso={channel.nextBroadcastAt}
+                  note={channel.nextBroadcastNote}
+                />
+              )}
+              {channel.state !== 'LIVE' &&
+                !channel.nextBroadcastAt &&
+                channel.nextBroadcastNote && (
+                  <div className="ch-next-broadcast" role="status">
+                    <SafePlainText
+                      text={channel.nextBroadcastNote}
+                      className="ch-next-broadcast-note"
+                    />
+                  </div>
+                )}
 
               {items.length === 0 ? (
                 <div className="public-empty-card">

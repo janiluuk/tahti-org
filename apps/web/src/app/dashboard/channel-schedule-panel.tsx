@@ -5,14 +5,17 @@
 
 import { useState, useTransition } from 'react'
 import { Panel } from '@/components/ui'
+import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import { updateChannelSchedule } from './channel-schedule-actions'
 
 export default function ChannelSchedulePanel({
   initialAt,
   initialNote,
+  isLive = false,
 }: {
   initialAt: string | null
   initialNote: string | null
+  isLive?: boolean
 }) {
   const [at, setAt] = useState(initialAt ? new Date(initialAt).toISOString().slice(0, 16) : '')
   const [note, setNote] = useState(initialNote ?? '')
@@ -41,6 +44,9 @@ export default function ChannelSchedulePanel({
       if (res.error) setError(res.error)
     })
   }
+
+  const previewAtIso = at ? new Date(at).toISOString() : null
+  const previewNote = note.trim() || null
 
   return (
     <Panel title="Next broadcast" className="studio-mt-xl">
@@ -77,6 +83,23 @@ export default function ChannelSchedulePanel({
           Clear
         </button>
       </div>
+
+      {!isLive && previewAtIso && (
+        <div className="studio-schedule-listener-preview" aria-live="polite">
+          <p className="studio-schedule-listener-preview__heading">Listener preview</p>
+          <BroadcastCountdown
+            variant="studio-compact"
+            targetIso={previewAtIso}
+            note={previewNote}
+          />
+        </div>
+      )}
+      {!isLive && !previewAtIso && previewNote && (
+        <div className="studio-schedule-listener-preview studio-schedule-listener-preview--note-only">
+          <p className="studio-schedule-listener-preview__heading">Listener preview</p>
+          <p className="studio-schedule-listener-preview__note">{previewNote}</p>
+        </div>
+      )}
     </Panel>
   )
 }
