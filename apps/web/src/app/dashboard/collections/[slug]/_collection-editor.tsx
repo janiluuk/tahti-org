@@ -11,7 +11,7 @@ import {
   reorderCollectionItems,
   deleteCollection,
 } from '../../collection-actions'
-import { STYLE_LABEL, STYLE_COLOR } from '../page'
+import { STYLE_LABEL, STYLE_COLOR } from '../collection-labels'
 
 interface CollectionItem {
   id: string

@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
-import { STYLE_LABEL, STYLE_COLOR } from './page'
+import { STYLE_LABEL, STYLE_COLOR } from './collection-labels'
 
 interface CollectionSummary {
   slug: string

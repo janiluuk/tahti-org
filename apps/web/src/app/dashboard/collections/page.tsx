@@ -33,32 +33,6 @@ async function fetchCollections(): Promise<CollectionSummary[]> {
   return (data.collections ?? []).sort((a, b) => a.publicProfileOrder - b.publicProfileOrder)
 }
 
-const STYLE_LABEL: Record<string, string> = {
-  ALBUM: 'Album',
-  EP: 'EP',
-  SINGLE: 'Single',
-  DJ_SET_SERIES: 'DJ-set series',
-  LIVE_ARCHIVE: 'Live archive',
-  COMPILATION: 'Compilation',
-  PLAYLIST: 'Playlist',
-  MIX_SERIES: 'Mix series',
-  CUSTOM: 'Custom',
-}
-
-const STYLE_COLOR: Record<string, string> = {
-  ALBUM: 'collections-pill--purple',
-  EP: 'collections-pill--purple',
-  SINGLE: 'collections-pill--neutral',
-  DJ_SET_SERIES: 'collections-pill--amber',
-  LIVE_ARCHIVE: 'collections-pill--cyan',
-  COMPILATION: 'collections-pill--neutral',
-  PLAYLIST: 'collections-pill--neutral',
-  MIX_SERIES: 'collections-pill--amber',
-  CUSTOM: 'collections-pill--neutral',
-}
-
-export { STYLE_LABEL, STYLE_COLOR }
-
 export default async function CollectionsPage() {
   const collections = await fetchCollections()
 
