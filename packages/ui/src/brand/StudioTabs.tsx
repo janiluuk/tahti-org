@@ -7,8 +7,8 @@ import { usePathname } from 'next/navigation'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import {
-  DASHBOARD_HASH_ALIASES,
   resolveDashboardTabFromHash,
+  scrollToDashboardSection,
   type DashboardTabId,
 } from './dashboard-nav'
 
@@ -73,7 +73,10 @@ export function StudioTabs({
 
   useEffect(() => {
     if (!syncHash) return
-    const sync = () => setActiveState(resolveHash(window.location.hash))
+    const sync = () => {
+      setActiveState(resolveHash(window.location.hash))
+      scrollToDashboardSection(window.location.hash)
+    }
     sync()
     window.addEventListener('hashchange', sync)
     return () => window.removeEventListener('hashchange', sync)
@@ -154,5 +157,3 @@ function StudioTabsPanel({ value, children, className, id }: StudioTabsPanelProp
 StudioTabs.List = StudioTabsList
 StudioTabs.Trigger = StudioTabsTrigger
 StudioTabs.Panel = StudioTabsPanel
-
-export { DASHBOARD_HASH_ALIASES }

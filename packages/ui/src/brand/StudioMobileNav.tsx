@@ -6,11 +6,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState, type MouseEvent } from 'react'
-import {
-  dashboardTabFromNavItem,
-  navigateDashboardHash,
-  normaliseDashboardHash,
-} from './dashboard-nav'
+import { isDashboardNavItemActive, navigateDashboardHash } from './dashboard-nav'
 
 function IconChannel() {
   return (
@@ -77,34 +73,36 @@ const MOBILE_NAV = [
     label: 'Channel',
     Icon: IconChannel,
     hash: '#overview',
-    tabId: 'overview' as const,
+    sectionKey: 'overview' as const,
   },
   { href: '/dashboard/stats', label: 'Stats', Icon: IconStats },
   {
-    href: '/dashboard#catalog',
+    href: '/dashboard#archive',
     label: 'Archive',
     Icon: IconArchive,
-    hash: '#catalog',
-    tabId: 'catalog' as const,
+    hash: '#archive',
+    sectionKey: 'archive' as const,
+    requiresChannel: true,
   },
   {
-    href: '/dashboard#audience',
+    href: '/dashboard#newsletter',
     label: 'Revenue',
     Icon: IconRevenue,
-    hash: '#audience',
-    tabId: 'audience' as const,
+    hash: '#newsletter',
+    sectionKey: 'newsletter' as const,
+    requiresChannel: true,
   },
   {
     href: '/dashboard#account',
     label: 'Settings',
     Icon: IconSettings,
     hash: '#account',
-    tabId: 'account' as const,
+    sectionKey: 'account' as const,
   },
 ]
 
 /** Mobile bottom nav for the dashboard (hidden on desktop). */
-export function StudioMobileNav() {
+export function StudioMobileNav({ hasChannel = true }: { hasChannel?: boolean }) {
   const pathname = usePathname()
   const [hash, setHash] = useState('')
 
@@ -125,27 +123,27 @@ export function StudioMobileNav() {
 
   return (
     <nav className="db-mobile-nav" aria-label="Mobile navigation">
-      {MOBILE_NAV.map(({ href, label, Icon, hash: itemHash, tabId }) => {
-        let active: boolean
-        if (itemHash && tabId) {
-          active =
-            onDashboard &&
-            normaliseDashboardHash(hash) === dashboardTabFromNavItem({ hash: itemHash, tabId })
-        } else {
-          active = pathname === href || pathname.startsWith(`${href}/`)
-        }
-        return (
-          <Link
-            key={label}
-            href={href}
-            className={`db-mobile-nav-item${active ? ' active' : ''}`}
-            onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
-          >
-            <Icon />
-            <span>{label}</span>
-          </Link>
-        )
-      })}
+      {MOBILE_NAV.filter((item) => !item.requiresChannel || hasChannel).map(
+        ({ href, label, Icon, hash: itemHash, sectionKey }) => {
+          let active: boolean
+          if (itemHash && sectionKey) {
+            active = isDashboardNavItemActive(hash, { sectionKey, hash: itemHash }, onDashboard)
+          } else {
+            active = pathname === href || pathname.startsWith(`${href}/`)
+          }
+          return (
+            <Link
+              key={label}
+              href={href}
+              className={`db-mobile-nav-item${active ? ' active' : ''}`}
+              onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
+            >
+              <Icon />
+              <span>{label}</span>
+            </Link>
+          )
+        },
+      )}
     </nav>
   )
 }

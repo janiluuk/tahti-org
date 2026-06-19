@@ -14,6 +14,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   let displayName: string | undefined
   let isLive = false
   let isBoard = false
+  let hasChannel = false
 
   try {
     const cookieStore = cookies()
@@ -33,6 +34,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         displayName = user.displayName
         isLive = user.channel?.state === 'LIVE'
         isBoard = user.isBoard
+        hasChannel = Boolean(user.channel)
       }
     }
   } catch {
@@ -40,7 +42,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
 
   return (
-    <StudioShell displayName={displayName} isLive={isLive} isBoard={isBoard}>
+    <StudioShell
+      displayName={displayName}
+      isLive={isLive}
+      isBoard={isBoard}
+      hasChannel={hasChannel}
+    >
       {children}
     </StudioShell>
   )

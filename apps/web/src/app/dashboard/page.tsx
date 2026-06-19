@@ -681,7 +681,7 @@ export default async function DashboardPage() {
         }
         broadcast={
           user.channel ? (
-            <>
+            <section id="broadcast" className="studio-section-anchor">
               {streamSettings && (
                 <StreamSettingsPanel
                   initial={streamSettings}
@@ -749,21 +749,25 @@ export default async function DashboardPage() {
                 <AnnouncementsPanel initial={announcements} />
                 <ModeratorsPanel initial={moderators} channelSlug={user.channel.slug} />
               </StudioCollapse>
-            </>
+            </section>
           ) : undefined
         }
         catalog={
           user.channel ? (
             <>
-              <ReleasesPanel initial={releases} username={user.username} />
-              <CollectionsPanel
-                initial={collections}
-                username={user.username}
-                apiUrl={apiUrl}
-                archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
-                publishedReleases={publishedReleases}
-              />
-              <section className="studio-archive-section">
+              <section id="releases" className="studio-catalog-section studio-section-anchor">
+                <ReleasesPanel initial={releases} username={user.username} />
+              </section>
+              <section id="collections" className="studio-catalog-section studio-section-anchor">
+                <CollectionsPanel
+                  initial={collections}
+                  username={user.username}
+                  apiUrl={apiUrl}
+                  archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
+                  publishedReleases={publishedReleases}
+                />
+              </section>
+              <section id="archive" className="studio-catalog-section studio-section-anchor">
                 <Panel
                   title="Archive"
                   headerTight
@@ -810,7 +814,7 @@ export default async function DashboardPage() {
         }
         audience={
           user.channel ? (
-            <>
+            <section id="newsletter" className="studio-section-anchor">
               <FanSubscriptionsPanel
                 initial={fanTiers}
                 username={user.username}
@@ -825,7 +829,7 @@ export default async function DashboardPage() {
                 tier={user.tier}
                 displayName={user.displayName}
               />
-            </>
+            </section>
           ) : undefined
         }
         account={

@@ -170,7 +170,7 @@ export function DashboardOverview({
         <div className="db-recent-archive__header">
           <h2 className="db-recent-archive__heading">Recent archive</h2>
           {archiveItems.length > 0 ? (
-            <Link href="/dashboard#catalog" className="db-recent-archive__view-all">
+            <Link href="/dashboard#archive" className="db-recent-archive__view-all">
               View all →
             </Link>
           ) : null}
@@ -207,7 +207,7 @@ export function DashboardOverview({
                     </div>
                   </div>
                   <div className="db-recent-archive__actions">
-                    <Link href="/dashboard#catalog" className="db-recent-archive__link">
+                    <Link href="/dashboard#archive" className="db-recent-archive__link">
                       Edit
                     </Link>
                   </div>
