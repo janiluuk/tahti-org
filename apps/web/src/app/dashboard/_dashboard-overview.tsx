@@ -2,7 +2,14 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ComponentProps, ReactNode } from 'react'
-import { Link, StatCard, StatCardGrid, StudioCollapse, BroadcastStatusBar } from '@tahti/ui'
+import {
+  Link,
+  StatCard,
+  StatCardGrid,
+  StudioCollapse,
+  BroadcastStatusBar,
+  SidebarNavIconSvg,
+} from '@tahti/ui'
 import BroadcastUsageBanner, { type BroadcastUsage } from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
 import { OverviewStreamKey } from './overview-stream-key'
@@ -44,6 +51,43 @@ export type DashboardOverviewProps = {
   storageBar: ReactNode
 }
 
+function IconGuide() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M2 3.5c1.5-.7 3.3-.7 6 0v9c-2.7-.7-4.5-.7-6 0v-9ZM14 3.5c-1.5-.7-3.3-.7-6 0v9c2.7-.7 4.5-.7 6 0v-9Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function IconChart() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="2" y="9" width="3" height="5" rx="0.75" fill="currentColor" opacity=".6" />
+      <rect x="6.5" y="5" width="3" height="9" rx="0.75" fill="currentColor" opacity=".8" />
+      <rect x="11" y="2" width="3" height="12" rx="0.75" fill="currentColor" />
+    </svg>
+  )
+}
+
+function IconView() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M1.5 8s2.3-4.5 6.5-4.5S14.5 8 14.5 8s-2.3 4.5-6.5 4.5S1.5 8 1.5 8Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <circle cx="8" cy="8" r="1.75" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+
 function agoLabel(createdAt: string): string {
   const ms = Date.now() - new Date(createdAt).getTime()
   const d = Math.floor(ms / 86400000)
@@ -80,10 +124,15 @@ export function DashboardOverview({
             subscriptions.
           </p>
           <div className="db-quick-actions db-quick-actions--centered">
-            <Link href="/dashboard#account" className="db-quick-action db-quick-action--primary">
-              Open settings
+            <Link
+              href="/dashboard/setup-channel"
+              className="db-quick-action db-quick-action--primary"
+            >
+              <SidebarNavIconSvg name="channel" />
+              Design your artist channel
             </Link>
             <Link href="/for-artists" className="db-quick-action">
+              <IconGuide />
               Artist guide
             </Link>
           </div>
@@ -153,16 +202,20 @@ export function DashboardOverview({
 
       <div className="db-quick-actions">
         <Link href="/dashboard/upload" className="db-quick-action db-quick-action--primary">
-          ↑ Upload a set
+          <SidebarNavIconSvg name="upload" />
+          Upload a set
         </Link>
         <Link href="/dashboard#broadcast" className="db-quick-action">
-          ≡ Broadcast settings
+          <SidebarNavIconSvg name="settings" />
+          Broadcast settings
         </Link>
         <Link href={`/c/${channel.slug}`} className="db-quick-action">
-          → View my channel
+          <IconView />
+          View my channel
         </Link>
         <Link href="/dashboard/stats" className="db-quick-action">
-          📊 Full stats
+          <IconChart />
+          Full stats
         </Link>
       </div>
 

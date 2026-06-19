@@ -83,6 +83,9 @@
 }
 
 [data-tahti-ui='studio'] .studio-top-nav__link--admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--coral);
   border: 1px solid color-mix(in srgb, var(--coral) 35%, transparent);
 }
@@ -92,23 +95,8 @@
   background: color-mix(in srgb, var(--coral) 12%, transparent);
 }
 
-[data-tahti-ui='studio'] .studio-top-nav__logout {
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--muted) 30%, transparent);
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: var(--text-xs);
-  color: var(--muted);
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition:
-    border-color 0.15s,
-    color 0.15s;
-}
-
-[data-tahti-ui='studio'] .studio-top-nav__logout:hover {
-  border-color: var(--coral);
-  color: var(--coral);
+[data-tahti-ui='studio'] .studio-top-nav__user-menu {
+  position: relative;
 }
 
 [data-tahti-ui='studio'] .studio-top-nav__user {
@@ -120,6 +108,71 @@
   border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
   margin-right: 4px;
   min-width: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__user:hover,
+[data-tahti-ui='studio'] .studio-top-nav__user[aria-expanded='true'] {
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 40;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__menu-item:hover {
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__menu-item--danger:hover {
+  color: var(--coral);
+  background: color-mix(in srgb, var(--coral) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__menu-divider {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border);
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__menu-form {
+  display: contents;
 }
 
 [data-tahti-ui='studio'] .studio-top-nav__user-avatar {
@@ -596,7 +649,10 @@
 }
 
 /* Studio button overrides */
-[data-tahti-ui='studio'] button:not([class*='ui-btn']):not([class*='db-']) {
+[data-tahti-ui='studio']
+  button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
+    [class*='studio-top-nav']
+  ) {
   background: var(--card2);
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -610,7 +666,10 @@
     background 0.15s;
 }
 
-[data-tahti-ui='studio'] button:not([class*='ui-btn']):not([class*='db-']):hover:not(:disabled) {
+[data-tahti-ui='studio']
+  button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
+    [class*='studio-top-nav']
+  ):hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--muted) 60%, transparent);
   background: color-mix(in srgb, var(--card2) 80%, var(--card));
 }
@@ -1420,6 +1479,11 @@
   background: var(--coral);
 }
 
+[data-tahti-ui='studio'] .studio-storage-bytes {
+  font-size: var(--text-micro);
+  opacity: 0.75;
+}
+
 /* Misc */
 [data-tahti-ui='studio'] .studio-upgrade-cta {
   margin-top: 1rem;
@@ -1834,54 +1898,6 @@
 }
 
 /* ── End Broadcast button (PLAT-033) — use BrandButton variant="warn" ─────── */
-
-/* ── Dashboard quick actions (PLAT-033) ─────────────────────────────────── */
-
-[data-tahti-ui='studio'] .db-quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-  margin: 0 0 1.25rem;
-}
-
-[data-tahti-ui='studio'] .db-quick-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.55rem 0.9rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--card2);
-  color: var(--text);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  text-decoration: none;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
-}
-
-[data-tahti-ui='studio'] .db-quick-action::after {
-  content: '→';
-  font-size: var(--text-label);
-  opacity: 0;
-  margin-left: 2px;
-  transition:
-    opacity 0.15s,
-    transform 0.15s;
-  transform: translateX(-4px);
-}
-
-[data-tahti-ui='studio'] .db-quick-action:hover {
-  border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
-  background: color-mix(in srgb, var(--cyan) 8%, var(--card2));
-  color: var(--cyan);
-}
-
-[data-tahti-ui='studio'] .db-quick-action:hover::after {
-  opacity: 0.7;
-  transform: translateX(0);
-}
 
 /* ── Stats page (PLAT-030) ──────────────────────────────────────────────── */
 

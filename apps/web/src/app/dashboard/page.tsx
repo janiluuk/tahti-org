@@ -481,6 +481,7 @@ export default async function DashboardPage() {
             storageBar={
               user.storage ? (
                 <StorageBar
+                  trackCount={archiveItemsForEdit.length}
                   usedBytes={Number(user.storage.usedBytes)}
                   softTargetBytes={
                     user.storage.softTargetBytes ? Number(user.storage.softTargetBytes) : undefined
@@ -691,10 +692,12 @@ export default async function DashboardPage() {
 }
 
 function StorageBar({
+  trackCount,
   usedBytes,
   softTargetBytes,
   showSoftTarget,
 }: {
+  trackCount: number
   usedBytes: number
   softTargetBytes?: number
   showSoftTarget: boolean
@@ -705,12 +708,23 @@ function StorageBar({
     return `${Math.max(1, Math.round(bytes / 1024))} KB`
   }
 
+  const trackLabel = `${trackCount} track${trackCount === 1 ? '' : 's'}`
+
   if (!showSoftTarget || softTargetBytes == null) {
     return (
       <div className="studio-storage">
         <div className="studio-storage-header">
           <span className="studio-stat-box-title">Storage</span>
-          <span className="studio-text-sm studio-text-muted-sm">{fmtBytes(usedBytes)} used</span>
+          <span className="studio-text-sm studio-text-muted-sm">
+            {trackCount > 0 ? (
+              <>
+                {trackLabel}{' '}
+                <small className="studio-storage-bytes">{fmtBytes(usedBytes)} used</small>
+              </>
+            ) : (
+              '0 tracks'
+            )}
+          </span>
         </div>
       </div>
     )
@@ -726,7 +740,16 @@ function StorageBar({
         <span
           className={`studio-text-sm${isNearLimit ? ' studio-text-error' : ' studio-text-muted-sm'}`}
         >
-          {fmtBytes(usedBytes)} · soft target {fmtBytes(softTargetBytes)}
+          {trackCount > 0 ? (
+            <>
+              {trackLabel}{' '}
+              <small className="studio-storage-bytes">
+                {fmtBytes(usedBytes)} used · soft target {fmtBytes(softTargetBytes)}
+              </small>
+            </>
+          ) : (
+            '0 tracks'
+          )}
         </span>
       </div>
       <div className="studio-storage-track">

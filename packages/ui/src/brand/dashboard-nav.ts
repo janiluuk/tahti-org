@@ -147,13 +147,6 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     sectionKey: 'broadcast',
     requiresChannel: true,
   },
-  {
-    href: '/dashboard#account',
-    label: 'Settings',
-    icon: 'settings',
-    hash: '#account',
-    sectionKey: 'account',
-  },
   { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true },
   { href: '/admin', label: 'Admin', icon: 'admin', isRoute: true, adminOnly: true },
 ]
