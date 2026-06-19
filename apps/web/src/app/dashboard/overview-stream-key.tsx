@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 
 interface Props {
   rtmpKey: string
@@ -33,18 +34,25 @@ function CopyBtn({ value, label }: { value: string; label: string }) {
 export function OverviewStreamKey({ rtmpKey, icecastMount, icecastPass }: Props) {
   return (
     <div className="db-stream-panel">
-      <div className="db-stream-panel__label">Stream credentials</div>
+      <div className="db-stream-panel__label">RTMP stream key</div>
       <div className="db-cred-row">
         <span className="db-cred-value" title="RTMP stream key">
           {masked(rtmpKey)}
         </span>
         <CopyBtn value={rtmpKey} label="RTMP stream key" />
+        <Link href="/dashboard#broadcast" className="db-cred-copy-btn">
+          Rotate
+        </Link>
       </div>
+      <div className="db-stream-panel__label db-stream-panel__label--spaced">Icecast source</div>
       <div className="db-cred-row">
         <span className="db-cred-value" title="Icecast source password">
           {icecastMount} · {masked(icecastPass)}
         </span>
         <CopyBtn value={icecastPass} label="Icecast password" />
+        <Link href="/help/broadcasting" className="db-cred-copy-btn">
+          Guide
+        </Link>
       </div>
     </div>
   )

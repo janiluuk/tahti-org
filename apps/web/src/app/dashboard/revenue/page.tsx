@@ -130,17 +130,15 @@ export default async function RevenuePage() {
 
   return (
     <PageShell size="md">
-      <div className="admin-header-row">
+      <div className="studio-page-header">
         <div>
-          <div className="admin-header-row__title-line">
-            <h3 className="admin-header-row__title">Revenue</h3>
-          </div>
-          <p className="admin-header-row__subline">
+          <h1 className="studio-page-title">Revenue</h1>
+          <p className="studio-text-muted-sm studio-mt-xs">
             Fan-subs flow direct via Stripe Connect — Tahti takes 0% + 2% ops fee
           </p>
         </div>
         {connect?.accountId ? (
-          <div className="admin-header-row__actions">
+          <div className="studio-page-header__actions">
             <ManageStripeAccountLink />
           </div>
         ) : null}

@@ -13,7 +13,7 @@ export type DashboardNavDefinition = {
 }
 
 export const DASHBOARD_NAV: DashboardNavDefinition[] = [
-  { href: '/dashboard', label: 'Channel', icon: 'channel', isRoute: true },
+  { href: '/dashboard#overview', label: 'Channel', icon: 'channel', hash: '#overview' },
   { href: '/dashboard/stats', label: 'Stats', icon: 'stats', isRoute: true },
   { href: '/dashboard#catalog', label: 'Archive', icon: 'archive', hash: '#catalog' },
   { href: '/dashboard/upload', label: 'Upload', icon: 'upload', isRoute: true },
@@ -33,6 +33,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
 ]
 
 export const DASHBOARD_HASH_ALIASES: Record<string, string> = {
+  overview: '',
   'studio-overview': '',
   'studio-stats': '',
   'studio-settings': '#broadcast',
