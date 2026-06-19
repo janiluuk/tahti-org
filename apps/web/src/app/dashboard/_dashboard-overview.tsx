@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import { Link, StatCard, StatCardGrid, StudioCollapse, BroadcastStatusBar } from '@tahti/ui'
 import BroadcastUsageBanner, { type BroadcastUsage } from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
@@ -19,8 +19,8 @@ interface StreamSettings {
 interface ArchiveItem {
   id: string
   title: string
-  durationSec: number | null
-  createdAt: string
+  durationSec?: number | null
+  createdAt?: string
 }
 
 interface ModeratedChannel {
@@ -37,9 +37,9 @@ export type DashboardOverviewProps = {
   fanSubscribers: number
   revenueCents: number
   archiveItems: ArchiveItem[]
-  downloadGateSummary: unknown
-  channelLiveStats: unknown
-  channelEgress: unknown
+  downloadGateSummary: ComponentProps<typeof DownloadGateSummaryPanel>['summary']
+  channelLiveStats: ComponentProps<typeof ChannelLiveStatsPanel>['stats']
+  channelEgress: ComponentProps<typeof ChannelEgressPanel>['stats']
   otherModeratedChannels: ModeratedChannel[]
   storageBar: ReactNode
 }
@@ -220,7 +220,7 @@ export function DashboardOverview({
 
       {storageBar}
 
-      {(downloadGateSummary || channelLiveStats || channelEgress) && (
+      {Boolean(downloadGateSummary || channelLiveStats || channelEgress) && (
         <StudioCollapse title="Analytics detail" hint="downloads, live time, egress">
           <DownloadGateSummaryPanel summary={downloadGateSummary} />
           <ChannelLiveStatsPanel stats={channelLiveStats} />

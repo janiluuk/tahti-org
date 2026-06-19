@@ -666,7 +666,15 @@ export default async function DashboardPage() {
             statBroadcasts={statBroadcasts}
             fanSubscribers={newsletterStats.confirmed}
             revenueCents={fanPayoutStats.paidLast30Days}
-            archiveItems={archiveItemsForEdit}
+            archiveItems={archiveItemsForEdit.map((item) => ({
+              id: item.id,
+              title: item.title,
+              durationSec:
+                typeof item.durationSec === 'number' || item.durationSec === null
+                  ? item.durationSec
+                  : undefined,
+              createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
+            }))}
             downloadGateSummary={downloadGateSummary}
             channelLiveStats={channelLiveStats}
             channelEgress={channelEgress}
