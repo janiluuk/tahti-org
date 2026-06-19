@@ -32,6 +32,11 @@ const FREE = {
   username: 'screenshot-free',
   displayName: 'Screenshot Free Listener',
 }
+const FRESH = {
+  email: 'screenshot-fresh@e2e.tahti.live',
+  username: 'screenshot-fresh',
+  displayName: 'Fresh Journey Artist',
+}
 const COLLECTION_SLUG = 'demo-mixes'
 
 /** Fixed future time so channel countdown screenshots stay stable between runs. */
@@ -45,7 +50,7 @@ async function main() {
 
   await prisma.motion.deleteMany({ where: { title: DEMO_MOTION_TITLE } })
 
-  for (const email of [ARTIST.email, MEMBER.email, BOARD.email, FREE.email]) {
+  for (const email of [ARTIST.email, MEMBER.email, BOARD.email, FREE.email, FRESH.email]) {
     const existing = await prisma.user.findUnique({
       where: { email },
       select: { id: true, channel: { select: { id: true } } },
@@ -318,6 +323,18 @@ async function main() {
 
   await prisma.user.create({
     data: {
+      email: FRESH.email,
+      passwordHash,
+      username: FRESH.username,
+      displayName: FRESH.displayName,
+      emailVerifiedAt: new Date(),
+      tier: 'FREE',
+      isMember: false,
+    },
+  })
+
+  await prisma.user.create({
+    data: {
       email: BOARD.email,
       passwordHash,
       username: BOARD.username,
@@ -381,6 +398,8 @@ async function main() {
         memberEmail: MEMBER.email,
         free: FREE.username,
         freeEmail: FREE.email,
+        fresh: FRESH.username,
+        freshEmail: FRESH.email,
         board: BOARD.username,
         boardEmail: BOARD.email,
         fan: MEMBER.username,

@@ -16,7 +16,7 @@ Costs are organized into five categories:
 
 Categories 1-4 are roughly fixed for a given year. Category 5 scales with revenue. The break-even question is: at what paid-member count does revenue cover categories 1-4 plus the pass-through fees they implicitly cover?
 
-## Base case: 200 / 1,200 / 4,000 paid members
+## Base case: 200 / 1,200 / 4,000 members
 
 ### Year 1 — 200 paid, 600 free
 
@@ -232,26 +232,26 @@ In Year 1, **professional services (director + legal + accountant + audit + boar
 
 Everything else (infra, platform, operations, variable) is **21% of cost** — €11,532/yr, €961/month. This is the lean part. You cannot save money here without breaking the product.
 
-This is why **Year 1 needs a founding grant.** No subscription growth path makes the Y1 math work without external funding, because the fixed professional-services cost (€43k) exceeds what 200 paid members at €40 (€8k) plus modest other revenue (€2k) can cover. The gap is €33k; the modeled €25k grant + reserves closes it.
+This is why **Year 1 needs a founding grant.** No subscription growth path makes the Y1 math work without external funding, because the fixed professional-services cost (€43k) exceeds what 200 members at €40 (€8k) plus modest other revenue (€2k) can cover. The gap is €33k; the modeled €25k grant + reserves closes it.
 
 ### Minimum break-even cohort
 
 If we strip out the founding grant assumption and ask "at what paid count does Tahti pay its own way?":
 
-| Year | Paid members needed | Why higher in Y2 vs Y1? |
+| Year | Members needed | Why higher in Y2 vs Y1? |
 |---|---|---|
 | Y1 | ~600 | Director salary + professional services are mostly Y1-paid; with 600 paid, subs €24k + distribution + donations covers fixed costs |
 | Y2 | ~775 | Director salary up to €40k, audit/legal up, infra up — but no founding grant credit |
 | Y3 | ~1,100 | Fiber upgrade adds €13k; this is the year of capex |
 
-**Reading:** the base-case forecast (200/1,200/4,000) assumes Tahti is grant-funded in Y1 — *deliberately* — and crosses self-funding around 600-800 paid members, which the base case clears comfortably by Y2.
+**Reading:** the base-case forecast (200/1,200/4,000) assumes Tahti is grant-funded in Y1 — *deliberately* — and crosses self-funding around 600-800 members, which the base case clears comfortably by Y2.
 
 The **bear case (100/600/1,800)** is roughly the floor where Tahti is still viable:
 - Y1: deficit €24k → needs full €25k founding grant
 - Y2: deficit €7.5k → needs continuing grant support
 - Y3: surplus €34k → starts producing artist grants
 
-If we miss the bear case (fewer than 100 paid members in Y1), the org should pause acquisition spending, reduce director hours, and reapply for grants while in survival mode. The bylaws permit board-approved temporary salary reduction.
+If we miss the bear case (fewer than 100 members in Y1), the org should pause acquisition spending, reduce director hours, and reapply for grants while in survival mode. The bylaws permit board-approved temporary salary reduction.
 
 The **bull case (350/1,800/6,000)** shows what success looks like:
 - Y1: deficit only €12k → small grant covers
@@ -290,7 +290,7 @@ Helpful for treasurer + director:
 
 | Variable | Change | Y3 surplus impact | Cohort top-decile grant |
 |---|---|---|---|
-| Paid members at half plan (2,000) | -€80k revenue | -€80k → €62k surplus | €115 instead of €260 |
+| Members at half plan (2,000) | -€80k revenue | -€80k → €62k surplus | €115 instead of €260 |
 | No Y3 foundation grant | -€80k revenue | -€80k → €62k | €115 |
 | Fiber upgrade costs 2× | +€18k cost | -€18k → €124k | €224 |
 | Fan-sub adoption double (16%) | +€78k to artists, +€1.5k org | +€1.5k → €143k | €290 |

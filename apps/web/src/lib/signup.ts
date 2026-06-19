@@ -3,7 +3,7 @@
 
 export const SIGNUP_TIER_KEY = 'tahti_signup_tier'
 
-export type SignupTier = 'free' | 'paid'
+export type SignupTier = 'free' | 'member'
 
 export const SIGNUP_STEPS = [
   { id: 'account', label: 'Account', href: '/signup' },
@@ -24,6 +24,8 @@ export function isSignupOpen(): boolean {
 
 export function safeSignupRedirect(path: string | null | undefined, fallback: string): string {
   if (!path || !path.startsWith('/') || path.startsWith('//')) return fallback
-  if (!path.startsWith('/signup') && !path.startsWith('/dashboard')) return fallback
-  return path
+  if (path.startsWith('/signup') || path.startsWith('/dashboard') || path.startsWith('/admin')) {
+    return path
+  }
+  return fallback
 }

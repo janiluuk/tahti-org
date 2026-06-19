@@ -61,7 +61,7 @@ Document in your working notes: what does the PR claim to deliver? What's actual
 `docs/CONSTITUTION.md` — three rules. Most importantly for design decisions:
 
 - Rule 3 ("the artist shines brightest, no rip-offs") means: **no algorithmic feeds, no listener-count gamification, no upsell during listening**. The "Recommended for you" rail and the "Most played this week" leaderboard are forbidden, no matter how design-tempting.
-- Rule 2 ("highest quality") means: **lossless FLAC streams for paid members are real and visible** — the LOSSLESS / FLAC badges in the mockups are functional, not decorative. The audio backend must actually deliver these bitrates.
+- Rule 2 ("highest quality") means: **lossless FLAC streams for members are real and visible** — the LOSSLESS / FLAC badges in the mockups are functional, not decorative. The audio backend must actually deliver these bitrates.
 - Rule 1 ("for artists, not corporate") means: **no Tahti-branded interruption** between the artist and the listener. The Tahti wordmark is small. The artist's brand is large.
 
 ---
@@ -323,7 +323,7 @@ Eight items, from screenshot 5:
 7. 🚀 Distribution (icon: rocket)
 8. ⚙ Settings (icon: gear)
 
-Plus, for paid artists only:
+Plus, for member artists only:
 9. 🔒 Stash (icon: lock) — links to `/app/stash`
 
 Plus, role-conditional:
@@ -401,9 +401,9 @@ This is the offline state of a channel. The artist isn't broadcasting live, but:
 
 This is the **default state** of any channel without an active broadcast. The "channel is silent" state should never appear unless the artist explicitly takes their channel offline.
 
-#### Private Stash (`/app/stash`) — paid tier only
+#### Private Stash (`/app/stash`) — membership only
 
-WIP file storage with sharing controls. Visible to paid artists only.
+WIP file storage with sharing controls. Visible to member artists only.
 
 Components:
 - Quota header: "Private storage · 4.2 GB used of 20 GB · Paid plan"
@@ -526,9 +526,9 @@ Sign up at tahti.eu  →  Onboarding (slug, payment, profile basics)
 | `/dashboard/settings/fan-subs` | artist | Configure fan-sub tiers (Supporter €3, Backer €5, Patron €10, custom) |
 | `/dashboard/settings/notifications` | artist | Email preferences |
 | `/dashboard/settings/billing` | artist | Tahti subscription status, invoices |
-| `/app/stash` | paid artist | Screenshot 9 |
-| `/app/stash/upload` | paid artist | Upload to stash |
-| `/app/stash/<file-id>` | paid artist | File detail + comments + share controls |
+| `/app/stash` | member artist | Screenshot 9 |
+| `/app/stash/upload` | member artist | Upload to stash |
+| `/app/stash/<file-id>` | member artist | File detail + comments + share controls |
 
 **Subjourneys to verify:**
 
@@ -730,7 +730,7 @@ Do not "future-proof" by using an env var here. Just use `tahti.eu`. If the doma
 The mockups show FLAC streaming with LOSSLESS / FLAC badges. Verify that:
 
 1. The audio ingest stack accepts and preserves FLAC source (Liquidsoap config in `infra/liquidsoap-channel.liq.template`)
-2. The streaming output for paid channels actually serves FLAC (HLS with FLAC segments, or Icecast2 with FLAC mount)
+2. The streaming output for member artists actually serves FLAC (HLS with FLAC segments, or Icecast2 with FLAC mount)
 3. Free channels serve MP3 192 only
 4. The frontend correctly displays the badge that matches the actual stream
 

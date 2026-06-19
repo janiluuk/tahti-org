@@ -16,7 +16,7 @@ are implemented with **~230 Vitest tests** (56 files) and **three CI e2e layers*
 [Platform engineering backlog](#platform-engineering-backlog) below, plus
 [future-improvements.md](./future-improvements.md) for deferred work.
 
-**Target Year 1 plan:** 200 paying members · founding grant for capex/growth ·
+**Target Year 1 plan:** 200 members · founding grant for capex/growth ·
 first AGM · handover-ready ops by month 12–18. Ops balance without a fixed
 salary line; maintenance team paid equally from surplus when positive.
 
@@ -251,7 +251,7 @@ Minimum to put **20–50 scene artists** on air. Full acceptance criteria in
 | [x] | **M3** | Icecast + RTMP; Liquidsoap per channel; public channel page (browser live deferred) | Dev |
 | [x] | **M4** | Auto-archive live sets to archive | Dev |
 | [x] | **M5** | Live chat (Centrifugo), announcements, moderation, reactions, presence | Dev |
-| [x] | **M20** (partial) | Free tier: 1 hr/week live cap + MP3 HLS; paid: FLAC HLS + unlimited live | Dev |
+| [x] | **M20** (partial) | Free tier: 1 hr/week live cap + MP3 HLS; membership: FLAC HLS + unlimited live | Dev |
 
 **MVP test matrix (must pass before inviting beta artists):**
 
@@ -584,7 +584,7 @@ All are required before public beta (1 August 2026 target).
 | [x] | **PLAT-044** | **`/terms`** — terms of service for artists and listeners. Artist upload licence (non-exclusive, AGPL data), prohibited content, account suspension policy, limitation of liability. Must be approved by the board before public beta. | Small | P1 |
 | [x] | **PLAT-045** | **`<BrowserFrame>` component** (`@tahti/ui`) — dark rounded browser chrome (traffic-light dots, URL bar placeholder) wrapping a screenshot or slot. Used in `/for-artists` carousel and documentation pages. Pure CSS + TSX, no JS. | Small | P2 |
 | [x] | **PLAT-046** | **Homepage upgrade (`/`)** — replace the minimal gateway card with the full v8 homepage: "On air right now" live channel tile grid (same data as `/listen`), stats strip (active artists, broadcasts this month, total hours), tagline + CTA to `/apply` / `/listen`. Keep the gateway redirect for non-JS as a fallback. | Medium | P2 |
-| [x] | **PLAT-047** | **Self-serve artist signup flow** — open-beta multi-step wizard replacing the single `/apply` form: `/signup` (email + handle + tier), `/signup/payment` (Stripe Checkout for paid tiers, skip for free), `/signup/profile` (avatar, bio, location, genre tags), `/signup/broadcast` (stream-key display + OBS/Mixxx quickstart). Gated by `SIGNUP_OPEN=1` in production until public beta; enabled in dev by default. | Large | P1 |
+| [x] | **PLAT-047** | **Self-serve artist signup flow** — open-beta multi-step wizard replacing the single `/apply` form: `/signup` (email + handle + tier), `/signup/payment` (Stripe Checkout for memberships, skip for free), `/signup/profile` (avatar, bio, location, genre tags), `/signup/broadcast` (stream-key display + OBS/Mixxx quickstart). Gated by `SIGNUP_OPEN=1` in production until public beta; enabled in dev by default. | Large | P1 |
 | [x] | **PLAT-048** | **`/admin/grants` + `/admin/grants/:year`** — dedicated grant cycle review and distribution-approval UI. The grant engine and ledger entries exist (M9) but there is no page to browse per-artist engagement-unit breakdowns, approve the annual distribution, or download the board-approval CSV. Route is currently 404. | Medium | P1 |
 | [x] | **PLAT-049** | **`/admin/agm`** — AGM planning and proposal management page. Companion to `/admin/governance/resolutions`; needs: proposal submission form, agenda builder, member-notification send action, minutes upload. Route is currently 404. | Medium | P2 |
 
@@ -595,7 +595,7 @@ Cross-referenced the pitch site (`website/`) against the live codebase. The foll
 | Status | ID | Description | Size | Priority |
 |:---:|:---|---|:---:|:---:|
 | [x] | **PLAT-050** | **`slug.tahti.live` subdomain routing** — Caddy already passes `X-Tahti-Channel-Slug` for every `*.tahti.live` hit, but Next.js has no middleware to read it. Add `apps/web/src/middleware.ts` that rewrites requests carrying that header to `/c/[slug]`, so `dj-moonrise.tahti.live` renders the channel page without redirecting. | Small | P1 |
-| [x] | **PLAT-051** | **Custom domain self-serve (paid tier)** — Website promises "custom domain" for paid members. `Channel.customDomain` field exists in the DB but there is no: artist dashboard input to set it, DNS TXT-record verification endpoint, or Caddy admin-API call to add the route. Implement end-to-end: settings UI → `PATCH /api/me/channel` → verify TXT record → Caddy `/config` inject → on-demand TLS (already configured). | Medium | P2 |
+| [x] | **PLAT-051** | **Custom domain self-serve (membership)** — Website promises "custom domain" for members. `Channel.customDomain` field exists in the DB but there is no: artist dashboard input to set it, DNS TXT-record verification endpoint, or Caddy admin-API call to add the route. Implement end-to-end: settings UI → `PATCH /api/me/channel` → verify TXT record → Caddy `/config` inject → on-demand TLS (already configured). | Medium | P2 |
 | [x] | **PLAT-052** | **Free-tier weekly live-hour enforcement at ingest** — `@tahti/shared/broadcast-cap`, `broadcast-cap-tick` BullMQ cron, and `canAcceptSourceConnect` enforcement in both Icecast and RTMP ingest routes were fully implemented prior to this sprint. Roadmap entry corrected to reflect done status. | Small | P2 |
 | [~] | **PLAT-053** | **Tahti Radio → Mixcloud Live multistream** — Blocked: no Liquidsoap `.liq` file for Tahti Radio exists in the repository. The radio service sends telnet commands to an external Liquidsoap process. Cannot add Mixcloud Live RTMP output without access to the radio config. Deferred until radio config is in-repo. | Medium | P2 |
 | [x] | **PLAT-054** | **Rich Markdown bio (headings, images, embedded video)** — Website promises "Markdown-rich text. Paragraphs, headings, images, embedded video. Looks like a label site." Bio is currently rendered via `SafePlainText` (plain text + @-mention links only). Switch to a sanitised Markdown renderer (remark + rehype-sanitize) with YouTube/Vimeo oEmbed expansion; add a Markdown editor in the profile settings panel. | Medium | P2 |

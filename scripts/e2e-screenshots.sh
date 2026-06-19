@@ -39,4 +39,9 @@ echo "── E2E screenshots (local) ──────────────�
 export WEB_PORT="${WEB_PORT:-17777}"
 export API_PORT="${API_PORT:-15011}"
 "$ROOT/scripts/stack-up.sh" --seed
+docker compose -f "$ROOT/infra/docker-compose.stack.yml" exec -T redis redis-cli FLUSHDB >/dev/null 2>&1 || true
 "$ROOT/scripts/stack-screenshots.sh"
+echo ""
+echo "── Fresh artist journey screenshots ──"
+APP_URL="http://localhost:${WEB_PORT}" API_URL="http://localhost:${API_PORT}" \
+  node "$ROOT/tests/e2e/fresh-artist-journey.mjs"

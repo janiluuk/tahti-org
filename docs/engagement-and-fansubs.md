@@ -129,7 +129,7 @@ bylaws §3 (member misconduct).
 
 ### Bandwidth and storage implications
 
-At Y3 scale (4,000 paying artists, ~400k downloads/year):
+At Y3 scale (4,000 member artists, ~400k downloads/year):
 - Average download ~6 MB (Opus 256 derivative)
 - Total ~2.4 TB/year of download bandwidth
 - Cost: ~€3,000/yr on Bunny CDN (modeled in financials)

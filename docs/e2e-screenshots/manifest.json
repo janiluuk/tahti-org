@@ -31,7 +31,7 @@
     "role": "public",
     "id": "verify-token",
     "file": "public/verify-token.png",
-    "url": "/verify?token=NBYrXYbOxMSYuNHZG2CsHATDwmI47eu_",
+    "url": "/verify?token=crC-KndP3eywL8LoyIMUchhDAOG_LiUh",
     "label": "Verify email (with token)"
   },
   {
@@ -164,7 +164,7 @@
     "role": "public",
     "id": "embed-release",
     "file": "public/embed-release.png",
-    "url": "/embed/r/cmqlhc38d00069elg7umvnaq7",
+    "url": "/embed/r/cmqli0dtg00063lavujibk1yi",
     "label": "Embed release player"
   },
   {

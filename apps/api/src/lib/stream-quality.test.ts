@@ -9,7 +9,7 @@ describe('stream-quality', () => {
     expect(liveHlsManifestPath('dj', 'FREE')).toBe('dj/stream-mp3-192/stream.m3u8')
   })
 
-  it('uses FLAC manifest for paid tiers', () => {
+  it('uses FLAC manifest for member tiers', () => {
     expect(liveHlsManifestPath('dj', 'ARTIST')).toBe('dj/stream-flac/stream.m3u8')
     expect(liveHlsManifestPath('dj', 'STUDIO')).toBe('dj/stream-flac/stream.m3u8')
   })

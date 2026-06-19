@@ -89,7 +89,7 @@ The transparency dashboard breaks out storage as a discrete cost line:
 - CDN spillover from storage delivery
 
 In Y3, total storage-related cost is approximately €15,000/year. With 4,000
-paying members, that's €3.75/year/member — about 9% of the €40 Artist
+members, that's €3.75/year/member — about 9% of the €40 Artist
 subscription.
 
 If average per-member storage doubles (from ~3 GB to 6 GB), this rises to ~€7

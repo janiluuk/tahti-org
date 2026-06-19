@@ -11,7 +11,9 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { spawnSync } from 'node:child_process'
 import { chromium } from 'playwright'
+import { assertAuthenticated, apiLogin } from '../tests/e2e/lib/playwright-auth.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const OUT = join(__dirname, '../docs/e2e-screenshots')
@@ -19,30 +21,6 @@ const APP = process.env.APP_URL ?? 'http://localhost:3000'
 const API = process.env.API_URL ?? 'http://localhost:3001'
 
 /** @typedef {'public' | 'free' | 'member' | 'artist' | 'admin'} AuthRole */
-
-/**
- * @param {string} email
- * @param {string} password
- */
-async function login(email, password) {
-  const res = await fetch(`${API}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  })
-  if (!res.ok) throw new Error(`login failed for ${email}: ${res.status}`)
-  const setCookie = res.headers.get('set-cookie') ?? ''
-  const match = setCookie.match(/tahti_session=([^;]+)/)
-  if (!match) throw new Error('no session cookie')
-  return {
-    name: 'tahti_session',
-    value: match[1],
-    domain: 'localhost',
-    path: '/',
-    httpOnly: true,
-    sameSite: 'Lax',
-  }
-}
 
 /**
  * @param {object} seed
@@ -134,7 +112,7 @@ function buildPages(seed) {
   // ── Free listener (verified, no membership) ───────────────────────────
   pages.push({ role: 'free', id: 'dashboard', path: '/dashboard', label: 'Free listener dashboard' })
 
-  // ── Paying member (no channel) ────────────────────────────────────────
+  // ── Member (financial supporter, no channel) ───────────────────────────
   pages.push(
     { role: 'member', id: 'dashboard', path: '/dashboard', label: 'Member dashboard' },
     { role: 'member', id: 'governance', path: '/governance', label: 'Member governance' },
@@ -216,11 +194,19 @@ async function main() {
   const seed = JSON.parse(seedRaw)
   const password = seed.password ?? 'screenshot-demo-pass'
 
-  const cookies = {
-    free: await login(seed.freeEmail ?? 'screenshot-free@e2e.tahti.live', password),
-    member: await login(seed.memberEmail ?? 'screenshot-fan@e2e.tahti.live', password),
-    artist: await login(seed.artistEmail ?? 'screenshot-artist@e2e.tahti.live', password),
-    admin: await login(seed.boardEmail ?? 'screenshot-board@e2e.tahti.live', password),
+  try {
+    spawnSync('docker', ['compose', '-f', join(__dirname, '../infra/docker-compose.stack.yml'), 'exec', '-T', 'redis', 'redis-cli', 'FLUSHDB'], {
+      encoding: 'utf8',
+    })
+  } catch {
+    /* optional — clears rate-limit buckets before a long capture run */
+  }
+
+  const roleAccounts = {
+    free: { email: seed.freeEmail ?? 'screenshot-free@e2e.tahti.live', password },
+    member: { email: seed.memberEmail ?? 'screenshot-fan@e2e.tahti.live', password },
+    artist: { email: seed.artistEmail ?? 'screenshot-artist@e2e.tahti.live', password },
+    admin: { email: seed.boardEmail ?? 'screenshot-board@e2e.tahti.live', password },
   }
 
   const pages = buildPages(seed)
@@ -235,25 +221,36 @@ async function main() {
     deviceScaleFactor: 1,
   })
 
+  /** @type {Map<AuthRole, import('playwright').BrowserContext>} */
+  const roleContexts = new Map()
+
+  async function contextForRole(role) {
+    if (role === 'public') return publicContext
+    if (roleContexts.has(role)) return roleContexts.get(role)
+    const account = roleAccounts[role]
+    const ctx = await browser.newContext({
+      viewport: { width: 1280, height: 800 },
+      deviceScaleFactor: 1,
+    })
+    const cookie = await apiLogin(API, APP, account.email, account.password)
+    await ctx.addCookies([cookie])
+    roleContexts.set(role, ctx)
+    return ctx
+  }
+
   const manifest = []
 
   for (const page of pages) {
-    const ctx =
-      page.role === 'public'
-        ? publicContext
-        : await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 })
-
-    if (page.role !== 'public') {
-      await ctx.addCookies([cookies[page.role]])
-    }
-
+    const ctx = await contextForRole(page.role)
     const tab = await ctx.newPage()
     const url = `${APP}${page.path}`
-    const waitUntil = page.role === 'admin' ? 'networkidle' : 'load'
-    await tab.goto(url, { waitUntil, timeout: 45_000 })
+    await tab.goto(url, { waitUntil: 'load', timeout: 45_000 })
     if (page.waitMs) await tab.waitForTimeout(page.waitMs)
-    if (page.role === 'admin') await tab.waitForTimeout(1500)
+    if (page.role === 'admin') await tab.waitForTimeout(2000)
     if (page.prepare) await page.prepare(tab)
+    if (page.role !== 'public') {
+      await assertAuthenticated(tab, `${page.role}/${page.id}`)
+    }
 
     const file = `${page.role}/${page.id}.png`
     await tab.screenshot({ path: join(OUT, file), fullPage: true })
@@ -265,11 +262,13 @@ async function main() {
       label: page.label,
     })
     await tab.close()
-    if (page.role !== 'public') await ctx.close()
     console.log(`✓ ${file} — ${page.label}`)
   }
 
   await publicContext.close()
+  for (const ctx of roleContexts.values()) {
+    await ctx.close()
+  }
   await writeFile(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2))
   await browser.close()
   console.log(`\n${manifest.length} screenshots saved under ${OUT}`)

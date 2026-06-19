@@ -158,7 +158,7 @@ describe('M18 — release track downloads', () => {
     expect(dl?.weight).toBe(5)
   })
 
-  it('allows FLAC for paid artists (parity with archive) and fan subs', async () => {
+  it('allows FLAC for member artists (parity with archive) and fan subs', async () => {
     const anon = await app.inject({
       method: 'GET',
       url: `/api/v1/releases/${smartLinkSlug}/tracks/${trackId}/download?format=flac&fp=x`,
@@ -176,7 +176,7 @@ describe('M18 — release track downloads', () => {
     expect(fan.json().format).toBe('flac')
   })
 
-  it('requires fan subscription or paid artist for FLAC on FREE tier', async () => {
+  it('requires fan subscription or membership for FLAC on FREE tier', async () => {
     await prisma.user.update({ where: { id: artistId }, data: { tier: 'FREE' } })
 
     const anon = await app.inject({

@@ -98,7 +98,7 @@ const releaseDownloadRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({
           error: isFanSub
             ? 'FLAC is not available for this track'
-            : 'FLAC download requires a paid artist channel or fan subscription',
+            : 'FLAC download requires membership or a fan subscription',
         })
       }
       if (wantSource && !track.sourceKey) {

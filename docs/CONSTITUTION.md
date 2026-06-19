@@ -32,9 +32,8 @@ Tahti's mission is to be the *best* broadcasting platform for independent artist
 
 **Audio quality:**
 
-- Paid members stream FLAC 16/44 (lossless) to all their listeners. Free listeners hear the same lossless audio when listening to a paid artist's channel. We do not cap audio quality at the listener tier. (SoundCloud caps free listeners at 128 kbps Opus; Mixcloud at 64 kbps AAC. Tahti does not.)
-- WAV and FLAC accepted as upload formats. Originals are preserved as-is. Studio-quality 24-bit / 96 kHz uploads are not downsampled silently.
-- Free artists broadcast at MP3 192 kbps — better than what most listeners get on a paid Mixcloud Pro stream — and can upgrade to lossless any time.
+- Members stream FLAC 16/44 (lossless) to all their listeners. Free listeners hear the same lossless audio when listening to a member artist's channel. We do not cap audio quality at the listener tier. (SoundCloud caps free listeners at 128 kbps Opus; Mixcloud at 64 kbps AAC. Tahti does not.)
+- WAV and FLAC accepted as upload formats. Originals are preserved as-is. Free-tier artists broadcast at MP3 192 kbps — better than what most listeners get on a paid Mixcloud Pro stream — and can become members any time.
 
 **Product usefulness:**
 

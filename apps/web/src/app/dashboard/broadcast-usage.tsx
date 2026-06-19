@@ -70,7 +70,7 @@ export default function BroadcastUsageBanner({ usage }: { usage: BroadcastUsage 
       ) : level === 'blocked' ? (
         <p className="studio-text-warn studio-mt-sm">
           Your weekly hour is up — archive plays until Monday 00:00 UTC.{' '}
-          <Link href="/help/tier-limits">Free vs paid limits</Link>
+          <Link href="/help/tier-limits">Free tier vs membership benefits</Link>
           {' · '}
           <Link href="/dashboard#membership">View membership →</Link>
         </p>

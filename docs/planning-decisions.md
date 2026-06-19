@@ -88,8 +88,8 @@ Liquidsoap starts on first request, returns to a pool or terminates after 30min 
 - Con: If channel is in archive fallback, that delay is visible as silence  
 - Con: Complicates the orchestrator significantly  
 
-**C — Hybrid: perpetual for paying members, on-demand for free tier**  
-Paying members (€40/year) get a perpetual Liquidsoap. Free accounts spin up on demand.  
+**C — Hybrid: perpetual for members, on-demand for free tier**  
+Members (€40/year) get a perpetual Liquidsoap. Free accounts spin up on demand.  
 - Pro: Aligns cost with revenue tier  
 - Pro: "Always on" is a paid feature differentiator  
 - Con: Creates two-tier "always on" experience, may feel unfair  

@@ -9,7 +9,7 @@ This is the honest assessment of Tahti as a business proposition. It is written 
 **The three things:**
 
 1. A founding grant of €20-25k lands in Year 1
-2. The org reaches 200+ paid members by end of Year 1
+2. The org reaches 200+ members by end of Year 1
 3. The director does not burn out or quit
 
 If any of these fails, Tahti does not survive its first year. If all three succeed, Tahti reaches operational self-funding by Y2 and distributes meaningful grants by Y3.
@@ -60,7 +60,7 @@ Negative signals — risks that aren't dismissable:
 
 1. **Year-1 funding gap is real and binding.** The base case shows a Y1 deficit of €19k. Without a foundation grant landing in Q1, the org cannot pay its director and cannot operate. Grant decisions are stochastic. The mitigation is parallel applications (Tempo + Koneen + SKR), but the worst-case is all three rejecting, in which case the org cannot incorporate.
 
-2. **200 paid members in Y1 is optimistic, not conservative.** Many Finnish indie SaaS startups struggle to hit 100 paid users in Year 1. Tahti's recruitment story (Helsinki scene + scene press + word of mouth) is reasonable but unproven. The bear case (100 paid) is the realistic floor; if even that fails, the model breaks.
+2. **200 members in Y1 is optimistic, not conservative.** Many Finnish indie SaaS startups struggle to hit 100 members in Year 1. Tahti's recruitment story (Helsinki scene + scene press + word of mouth) is reasonable but unproven. The bear case (100 paid) is the realistic floor; if even that fails, the model breaks.
 
 3. **The engagement-unit grant model could be controversial in practice.** When the first grants are distributed in March of Year 2, the top-decile getting ~€20-30 and the bottom-decile getting ~€2 may produce contested AGM debate. The constitution permits formula amendment by member vote, but the social cost of the first controversy is real and could fragment the membership.
 
@@ -77,7 +77,7 @@ Negative signals — risks that aren't dismissable:
 ## What "success" looks like (and what it doesn't)
 
 **Success at end of Year 3:**
-- ~4,000 paid members across Finland + Estonia + Sweden + Germany
+- ~4,000 members across Finland + Estonia + Sweden + Germany
 - ~€130k in artist grants distributed annually (~€260 average for engaged artists)
 - ~€138k in direct fan-subs flowing to artists annually
 - Director paid €45k/year, supported by one engineer + one part-time customer support
@@ -96,8 +96,8 @@ Negative signals — risks that aren't dismissable:
 - We are not solving the music industry. We are giving 4,000 specific artists a better deal.
 
 **What "failure" looks like and how to recognize it:**
-- Year 1: fewer than 100 paid members + no founding grant secured → org cannot operate. Founder seeks employment, project paused indefinitely.
-- Year 2: paid members <500, fan-sub adoption <2%, foundation grants drying up → director salary cut by board vote, contractor hours reduced, roadmap paused. Survival mode for 6-12 months while reapplying for grants.
+- Year 1: fewer than 100 members + no founding grant secured → org cannot operate. Founder seeks employment, project paused indefinitely.
+- Year 2: members <500, fan-sub adoption <2%, foundation grants drying up → director salary cut by board vote, contractor hours reduced, roadmap paused. Survival mode for 6-12 months while reapplying for grants.
 - Year 3: technology working but membership plateau at 1,500-2,000 → org operates but doesn't reach scaling thresholds. Director continues at €40k/year salary, grants modest (~€30-50k pool). Quiet, sustainable, smaller than planned.
 
 The middle scenario (Year 3 plateau) is the most likely actual outcome. It is not failure — it is a small business doing real work for real artists.

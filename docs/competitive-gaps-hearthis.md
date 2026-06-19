@@ -16,7 +16,7 @@ editor is **specified** in `audio-editor.md` but not built.
 |---|---|---|
 | Primary object | 24/7 channel (live → archive fallback) | Uploads + optional live; “Replay” radio is separate product |
 | Economics | Surplus → engagement grants; fan-subs direct | Commercial host; no grant pool |
-| Audio quality (paid) | FLAC to all listeners on paid channels | Lossless tier advertised; quality tied to account tier |
+| Audio quality (membership) | FLAC to all listeners on member channels | Lossless tier advertised; quality tied to account tier |
 | Governance | Member-owned yhdistys, public ledger | Standard commercial ToS |
 | Live social | Per-channel live chat | No equivalent real-time chat layer in core product |
 | Open source | AGPL, forkable | Closed platform |

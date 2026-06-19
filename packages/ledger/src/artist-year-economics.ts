@@ -151,7 +151,7 @@ export const SCENARIO_PROFIT_50_EUR: ArtistYearScenario = {
 /** Paid platform fee, no supporter income → −€50. */
 export const SCENARIO_LOSS_50_EUR: ArtistYearScenario = {
   id: 'loss-50',
-  title: 'Paid membership, no earnings',
+  title: 'Membership, no earnings',
   narrative:
     'Casey uploads music and pays for Tahti but never attracts paying fan-subscribers. Only cost is membership (€50 in this story — e.g. higher list price or first-year bundle).',
   membershipCents: 5000,

@@ -199,7 +199,9 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
 
       const wantFlac = parsedQuery.data.format === 'flac'
       if (wantFlac && user.tier === 'FREE') {
-        return reply.status(403).send({ error: 'FLAC download requires a paid tier' })
+        return reply
+          .status(403)
+          .send({ error: 'FLAC download requires membership or fan subscription' })
       }
 
       const key = wantFlac

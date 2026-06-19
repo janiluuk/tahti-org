@@ -2,7 +2,7 @@
 
 This guide is for **broadcasting live audio** to your Tahti channel. If you only upload archive files and never go live, you can skip most of this.
 
-**You need:** Tahti account, verified email, paid **€40/year membership**, and broadcasting software (OBS Studio is the usual choice).
+**You need:** Tahti account, verified email, active **Tahti ry membership** (€40/year support), and broadcasting software (OBS Studio is the usual choice).
 
 ---
 

@@ -1,6 +1,6 @@
 # Phase 11 — Engagement and monetization: downloads, fan-subs, tier gating (M18–M20)
 
-**Goal:** downloads become a first-class action with anti-fraud and grant-unit accounting; artists can accept direct fan subscriptions via Stripe Connect; free-tier artists are gently limited to 1 hour of live broadcasting per week while paid artists broadcast lossless FLAC.
+**Goal:** downloads become a first-class action with anti-fraud and grant-unit accounting; artists can accept direct fan subscriptions via Stripe Connect; free-tier artists are gently limited to 1 hour of live broadcasting per week while member artists broadcast lossless FLAC.
 
 **Timeline:** Months 22–24  
 **Entry state:** Phase 10 complete, Tahti Radio live.  
@@ -224,7 +224,7 @@ flowchart TD
         Check -- No → Block[Broadcast blocked\nupgrade CTA shown]
     end
 
-    subgraph "Paid artist"
+    subgraph "Member artist"
         PA[Artist starts broadcast] --> PCheck{isMember=true?}
         PCheck -- Yes → NoGate[No gate applied\nFLAC output rendered]
     end
@@ -260,7 +260,7 @@ flowchart LR
     D --> FLAC_URL
 ```
 
-The listener doesn't choose quality — the artist's tier determines which manifest URL the API returns. All listeners on a paid artist's channel hear FLAC.
+The listener doesn't choose quality — the artist's tier determines which manifest URL the API returns. All listeners on a member artist's channel hear FLAC.
 
 ## Grant engagement unit formula (authoritative)
 
@@ -350,7 +350,7 @@ The grant disbursement code in M9 must be updated before the first real grant ru
 | Payout cron | Run monthly cron | Artist payout + ledger entries created |
 | Free tier cap | Free artist broadcasts 61 min | Graceful stop at 60 min, archive resumes |
 | Weekly reset | Monday 00:00 UTC | weeklyLiveSecondsUsed reset to 0 |
-| Paid artist no cap | Paid artist broadcasts 3 hours | No interruption |
-| Audio quality | Paid artist live | Listeners receive FLAC manifest |
+| Member artist no cap | Member artist broadcasts 3 hours | No interruption |
+| Audio quality | Member artist live | Listeners receive FLAC manifest |
 | Audio quality | Free artist live | Listeners receive MP3 192 manifest |
 | Grant formula | Dry-run grant calc | Uses engagement_units, not listener_hours |

@@ -10,13 +10,17 @@ export default function TierLimitsHelpPage() {
         <Link href="/dashboard">← Dashboard</Link>
       </Text>
 
-      <Heading level={1}>Free vs paid broadcasting</Heading>
+      <Heading level={1}>Free-tier artists vs members</Heading>
       <Text>
-        Tahti has two artist tiers for live streaming and listener quality. Your tier is shown on
-        the dashboard and in <Link href="/dashboard#membership">membership</Link>.
+        Every account is an artist account. You can broadcast and publish on the{' '}
+        <strong>free tier</strong> at no cost, or become a <strong>Tahti ry member</strong> by
+        financially supporting the cooperative (€40/year). Membership is not a “customer plan” — it
+        is how you support the org and unlock lossless streaming plus unlimited live time. Your
+        status is shown on the dashboard and in <Link href="/dashboard#membership">membership</Link>
+        .
       </Text>
 
-      <Heading level={2}>Free tier</Heading>
+      <Heading level={2}>Free-tier artist</Heading>
       <ul>
         <li>
           <strong>1 hour of live broadcasting per week</strong> (resets Monday 00:00 UTC)
@@ -34,7 +38,7 @@ export default function TierLimitsHelpPage() {
         <li>Archive fallback plays when you are offline</li>
       </ul>
 
-      <Heading level={2}>Paid membership (Artist / Studio)</Heading>
+      <Heading level={2}>Tahti ry member (€40/year)</Heading>
       <ul>
         <li>
           <strong>Unlimited live</strong> — no weekly hour cap
@@ -42,16 +46,19 @@ export default function TierLimitsHelpPage() {
         <li>
           Listeners hear <strong>lossless FLAC</strong> HLS (<code>stream-flac</code>)
         </li>
-        <li>Broadcast archives can be stored in FLAC for paid artists</li>
+        <li>Broadcast archives can be stored in FLAC for members</li>
         <li>
-          €40/year association membership — tax-deductible for registered professionals in Finland
+          Financial support for the cooperative — tax-deductible for registered professionals in
+          Finland
         </li>
+        <li>One vote at the AGM and full governance participation</li>
       </ul>
 
       <Heading level={2}>What listeners see</Heading>
       <Text>
-        Stream quality follows <strong>your</strong> tier, not the listener&apos;s account. A free
-        artist&apos;s channel always serves MP3; a paid member&apos;s channel serves FLAC when live.
+        Stream quality follows <strong>your</strong> membership status, not the listener&apos;s
+        account. A free-tier artist&apos;s channel always serves MP3; a member&apos;s channel serves
+        FLAC when live.
       </Text>
 
       <Heading level={2}>When you hit the weekly cap</Heading>

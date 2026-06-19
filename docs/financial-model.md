@@ -1,13 +1,13 @@
 # Tahti ry — financial model (v7)
 
-Reference date: May 2026. Self-hosted in Helsinki on owned hardware + UpCloud spillover. No CDN. Single paid tier: €40/year. Free tier: MP3 192 kbps, 1 hr/week live broadcasting, otherwise full product.
+Reference date: May 2026. Self-hosted in Helsinki on owned hardware + UpCloud spillover. No CDN. Single membership: €40/year. Free tier: MP3 192 kbps, 1 hr/week live broadcasting, otherwise full product.
 
 ## What changed in v7
 
 - Renamed from Replay to **Tahti ry**
-- **One paid tier (€40/yr)**, Studio dropped
+- **One membership (€40/yr)**, Studio dropped
 - **Free tier:** MP3 audio + 1 hr/week live, everything else included
-- **Lossless audio for paid users:** FLAC streaming + FLAC download
+- **Lossless audio for members:** FLAC streaming + FLAC download
 - **No CDN.** Hosting on owned hardware in Helsinki + UpCloud Helsinki for spillover
 - Sharper competitive positioning (see `strategy-and-product.md`)
 
@@ -15,7 +15,7 @@ Reference date: May 2026. Self-hosted in Helsinki on owned hardware + UpCloud sp
 
 Six income streams:
 
-1. **Subscriptions** — €40/yr × N paid members
+1. **Subscriptions** — €40/yr × N members
 2. **Distribution** — Revelator pass-through, no included releases now, €8/release for everyone
 3. **DSP referral** — DistroKid affiliate
 4. **Foundation grants** — Tempo, Koneen, SKR, Creative Europe
@@ -146,7 +146,7 @@ The gains:
 
 ### Year 3 scale-up
 
-- **10 Gbps business fiber** (~€1,500/month in Helsinki): required because FLAC streaming at 4,000 paid users × engaged listeners exceeds gigabit-pipe theoretical max
+- **10 Gbps business fiber** (~€1,500/month in Helsinki): required because FLAC streaming at 4,000 members × engaged listeners exceeds gigabit-pipe theoretical max
 - **UpCloud spillover scales up** to ~€400/month for HLS segment serving when business fiber saturates
 - **Storage tier upgrade** to accommodate FLAC originals (vs Opus 256 derivatives) — extra NVMe + cold-tier archive
 
@@ -161,7 +161,7 @@ The gains:
 
 | Variable | Y3 impact |
 |---|---|
-| Paid artists at half plan (2,000) | Revenue ~€211k. Surplus ~€64k. Grants ~€58k. |
+| Member artists at half plan (2,000) | Revenue ~€211k. Surplus ~€64k. Grants ~€58k. |
 | No Y3 foundation grant secured | Revenue ~€211k. Surplus ~€64k. Grants ~€58k. |
 | Concurrent listeners exceed 1,500 by Y2 → pull fiber upgrade forward | +€13k cost in Y2. Surplus +€9k → +€0k. Grants ~€8k → €0. |
 | 10 Gbps fiber unavailable at modeled cost (typical Helsinki: €1500-3000/mo) | Y3 cost +€18k (top of band). Surplus -€18k → ~€126k. Grants ~€113k. |
@@ -195,6 +195,6 @@ Y1 needs a ~€20k bridge from foundation grants. Tempo (Business Finland) up to
 | **Artist grants distributed** | **€149,674** |
 | **Fan-sub revenue direct to artists** | **€162,721** |
 | **Total artist money** | **€312,395** |
-| Active paying members by Y3 | 4,000 |
+| Active members by Y3 | 4,000 |
 
 A small, sustainable Finnish nonprofit on Finnish infrastructure. ~€312k to artists across grants and direct fan-subs over 3 years, with a fair director wage, an honest story for foundations, no entanglement with global CDNs or US cloud, and no equity to anyone.

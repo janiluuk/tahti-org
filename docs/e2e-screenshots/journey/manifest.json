@@ -1,0 +1,34 @@
+[
+  {
+    "file": "00-login-filled.png",
+    "label": "Login form (fresh artist credentials)"
+  },
+  {
+    "file": "01-artist-dashboard-empty.png",
+    "label": "Artist dashboard (no channel yet)"
+  },
+  {
+    "file": "02-setup-channel.png",
+    "label": "Design your artist channel"
+  },
+  {
+    "file": "03-broadcast-studio.png",
+    "label": "Broadcast studio after provision"
+  },
+  {
+    "file": "04-releases-catalog.png",
+    "label": "Album + EP + single on dashboard"
+  },
+  {
+    "file": "05-public-channel.png",
+    "label": "Public channel page"
+  },
+  {
+    "file": "06-admin-users.png",
+    "label": "Admin user directory"
+  },
+  {
+    "file": "07-admin-dashboard.png",
+    "label": "Admin dashboard"
+  }
+]

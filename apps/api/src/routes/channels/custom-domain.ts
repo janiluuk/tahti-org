@@ -43,14 +43,14 @@ const customDomainRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // ── Set custom domain (paid tier only) ───────────────────────────────────
+  // ── Set custom domain (member benefit) ───────────────────────────────────
   fastify.post(
     '/api/me/channel/custom-domain',
     {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        description: 'PLAT-051: set a custom domain for the channel (paid tier)',
+        description: 'PLAT-051: set a custom domain for the channel (active Tahti ry membership)',
         body: {
           type: 'object',
           properties: { domain: { type: 'string', minLength: 3, maxLength: 253 } },
@@ -73,7 +73,9 @@ const customDomainRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
       if (!isUnlimitedLiveTier(user.tier)) {
-        return reply.status(402).send({ error: 'Custom domains require a paid membership.' })
+        return reply
+          .status(402)
+          .send({ error: 'Custom domains require active Tahti ry membership.' })
       }
 
       const { domain } = request.body as { domain: string }

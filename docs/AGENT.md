@@ -10,6 +10,19 @@ Before reading anything else in this brief, read `docs/CONSTITUTION.md`. It is s
 
 If an implementation choice in this AGENT.md ever conflicts with the constitution, the constitution wins. If you (the agent) find yourself building a feature whose existence would violate one of the three rules — stop and flag it. The constitution overrides this document.
 
+## Terminology (members vs tiers)
+
+Use this language in product copy, docs, and user-facing errors:
+
+| Concept | Say | Do not say |
+|--------|-----|------------|
+| Artist on MP3 / 1 hr live cap | **free-tier artist** | paid customer, free user (as a product tier insult) |
+| Person supporting Tahti ry (€40/yr) | **member**, **Tahti ry membership** | paid customer, paying customer, paid member |
+| FLAC + unlimited live | **membership benefits** | paid tier, premium plan |
+| Fan paying an artist directly | **fan subscription**, **supporter** | (not a Tahti “member”) |
+
+Every account is an **artist account**. Membership is **financial support for the cooperative**, not buying a SaaS subscription. The internal `User.tier` enum (`FREE` / `ARTIST`) is implementation detail — prefer “free-tier artist” vs “member with active membership” in UI.
+
 ## Mission (technical interpretation)
 
 Build a self-hostable, AGPL-3.0-licensed platform where each artist operates a
@@ -76,8 +89,7 @@ The streaming pipeline is the core product. Every component must be designed for
 6. **Transparency is a product surface.** Live revenue, costs, surplus, and
    grant disbursements visible on `/transparency`, queryable via public read-only
    API.
-7. **Members own the org.** Paying artists are members of the *yhdistys*. The
-   platform supports the governance, not the other way around.
+7. **Members own the org.** Artists who financially support Tahti ry are members of the *yhdistys*. The platform supports the governance, not the other way around.
 8. **AGPL all the way down.** Every file licensed, every page footer-linked to
    source, every API response with a `Source-Code` header.
 9. **One Liquidsoap container per channel.** Created on activation, runs
@@ -88,15 +100,15 @@ The streaming pipeline is the core product. Every component must be designed for
     biographical timeline, releases, channel, externals. Treat it as a label
     site, not a SoundCloud profile. No follower graph, no track-level
     comments, no algorithmic feed.
-12. **Lossless audio for paid users. MP3 for free.** WAV and FLAC supported as
-    upload formats (alongside MP3/AAC). Paid members stream FLAC 16/44 to their
-    listeners; free users stream MP3 192 kbps. Originals preserved as-is.
-13. **Free tier is a complete product, not a feature-limited trial.** Free
-    members get the channel, profile, releases, downloads, chat, fan-subs.
+12. **Lossless audio for members. MP3 for free-tier artists.** WAV and FLAC supported as
+    upload formats (alongside MP3/AAC). Members stream FLAC 16/44 to their
+    listeners; free-tier artists stream MP3 192 kbps. Originals preserved as-is.
+13. **Free tier is a complete product, not a feature-limited trial.** Free-tier
+    artists get the channel, profile, releases, downloads, chat, fan-subs.
     The only restrictions: MP3 audio (vs lossless) and 1 hour of live
     broadcasting per week. Everything else works. We do not break things to
-    force conversion. Members upgrade because they want more, not because
-    they are frustrated.
+    force conversion. Artists become members because they want to support the
+    org and unlock lossless — not because they are frustrated.
 14. **Grants flow from engagement units, not listener-hours.** Downloads
     (weighted by listener commitment) and fan-subscription euros determine
     grant share. Passive listening doesn't count. Listener-hours are a vanity
@@ -223,12 +235,12 @@ returns a tarball; license check passes.
 ### M1 — Artist accounts + membership
 
 - Email/password signup with confirmation
-- Single account type: `ARTIST` (becomes `MEMBER` upon first paid subscription)
+- Single account type: `ARTIST` (becomes `MEMBER` upon first membership activation)
 - Profile = channel landing page details (name, bio, cover, social links, tip jar)
 - Rate-limited signup
 - Member roster export for Finnish associations law compliance (PRH requirement)
 
-**Done when:** I register as an artist, verify email, upgrade to paying tier,
+**Done when:** I register as an artist, verify email, upgrade to membership,
 appear in the member register at the next nightly export.
 
 ### M2 — Channel + archive uploads
@@ -423,7 +435,7 @@ This is what makes  Tahti a nonprofit, not just an open-source project.
 - Step 1: read `ledger.monthly_rollup` for the year, compute surplus
 - Step 2: subtract 10% operating reserve → `grant_pool`
 - Step 3: read `analytics.listener_hours` aggregated per channel for the year
-  - Only paying-member channels count
+  - Only member channels count
   - Channels with <10 listener-hours total are excluded from the pool
     (anti-gaming threshold)
 - Step 4: for each eligible channel,
@@ -613,7 +625,7 @@ receive emails from artists they follow. Artist sends, we deliver, GDPR-clean.
 - Manual review required for first 3 newsletters from new artists (Studio tier
   exempt after first verification)
 
-**Cost projection at scale (Y3, 4,000 paying artists, avg 2,000 subscribers each):**
+**Cost projection at scale (Y3, 4,000 member artists, avg 2,000 subscribers each):**
 
 - 96M sends/year at SES rate: ~$960/yr = €890
 - Postmark for transactional: ~€500/yr
@@ -709,7 +721,7 @@ graph implied — tagging is just human-readable cross-references, like links.
   artists' tags render as `@deleted-user`
 
 **Notifications:**
-- Opt-in per artist in settings (default ON for paying members, OFF for free)
+- Opt-in per artist in settings (default ON for members, OFF for free)
 - "You were mentioned by @X in their bio / announcement / release / **tracklist** / chat"
 - Email digest, max one per day per mentioned-artist
 - Notification logs to ledger as auditable event
@@ -913,18 +925,18 @@ Stripe onboarding. A listener subscribes via Checkout. Money flows to my
 Stripe account minus 2% (~€0.45 to org) and Stripe fees (~€0.45). I see
 "Supporter: handle_42" in my fan chat. They can download my FLACs.
 
-### M20 — Tier gating: free tier limits + paid lossless (NEW for v7)
+### M20 — Tier gating: free tier limits + membership lossless (NEW for v7)
 
-Two gates implemented gracefully so free users never feel "broken":
+Two gates implemented gracefully so free-tier artists never feel "broken":
 
 **Free tier weekly broadcasting cap:**
 - 1 hour (3,600 seconds) of live broadcasting per calendar week (UTC week, Mon 00:00)
 - `weeklyLiveSecondsUsed` field on User; incremented every minute during live broadcast
-- Cron `weekly-broadcast-reset` runs every Monday 00:00 UTC: resets all free users' counter to 0
+- Cron `weekly-broadcast-reset` runs every Monday 00:00 UTC: resets all free-tier artists' counter to 0
 - When approaching the cap (45-min warning, 55-min warning), gentle banner: "you've broadcast 45 minutes this week — 15 minutes left until Monday"
 - At cap: broadcast continues for 60 seconds (grace), then orchestrator gracefully stops the broadcast with the message "your weekly hour is up — channel returns to archive. Reset Monday 00:00 UTC."
 - Listeners get a smooth transition to archive, not a hard cut. No error toasts.
-- Paid users: `weeklyLiveSecondsUsed` is still tracked (for stats) but the gate doesn't apply.
+- Members: `weeklyLiveSecondsUsed` is still tracked (for stats) but the gate doesn't apply.
 
 **Audio quality differentiation:**
 - Liquidsoap channel template renders two outputs per live broadcast:
@@ -932,9 +944,9 @@ Two gates implemented gracefully so free users never feel "broken":
   - **`stream-flac/`** — FLAC 16/44 over HLS-FLAC manifest
 - API routes player to the right manifest based on the artist's tier:
   - Free artist's channel → all listeners get MP3 192 manifest
-  - Paid artist's channel → all listeners get FLAC manifest
+  - Member artist's channel → all listeners get FLAC manifest
 - Listener doesn't choose. The artist's tier sets the quality.
-- Archive playback: same logic. Free artists' archives transcode to MP3 derivatives; paid artists' archives keep FLAC.
+- Archive playback: same logic. Free artists' archives transcode to MP3 derivatives; member artists' archives keep FLAC.
 
 **Upgrade path (graceful, no friction):**
 - "Upgrade to lossless" CTA appears at the *end* of a live broadcast (post-show, not during), shown to the artist (not listeners) in the dashboard:
@@ -942,12 +954,12 @@ Two gates implemented gracefully so free users never feel "broken":
 - Upgrade processed via Stripe Checkout in <60 seconds; next broadcast is lossless.
 
 **Anti-patterns to avoid here:**
-- Showing free users a degraded UI ("upgrade for chat moderation!" — no, free users get full chat moderation).
+- Showing free-tier artists a degraded UI ("upgrade for chat moderation!" — no, free-tier artists get full chat moderation).
 - Adding a watermark, advertising, or any audio degradation beyond bitrate.
 - Making the weekly cap user-visible as a "you've hit your limit" friction popup; it's a gentle banner approaching, a smooth transition at the cap.
-- Treating MP3 192 as "low quality" in marketing copy — it's good enough for streaming. We just deliver better when paid.
+- Treating MP3 192 as "low quality" in marketing copy — it's good enough for streaming. We just deliver better when a member.
 
-**Done when:** I'm a free user, broadcast 1 hour live in a week, see the gentle warnings, smoothly transition to archive at the cap, and my Monday reset works. As a paid user, my listeners hear FLAC, my upgrade button at end of broadcasts is non-aggressive, and there's no friction popup blocking my workflow.
+**Done when:** I'm a free-tier artist, broadcast 1 hour live in a week, see the gentle warnings, smoothly transition to archive at the cap, and my Monday reset works. As a member, my listeners hear FLAC, my upgrade button at end of broadcasts is non-aggressive, and there's no friction popup blocking my workflow.
 
 ### M22 — Content metadata + editable tracklists (hearthis parity)
 
@@ -1182,7 +1194,7 @@ model Vote {
 }
 
 enum ArtistTier { FREE ARTIST STUDIO }
-// Product copy may say "paid" — maps to ARTIST (€40/yr member) and STUDIO (higher tier).
+// Product copy: members support Tahti ry (maps to ARTIST €40/yr); STUDIO is a higher support tier.
 enum ChannelState { OFFLINE LIVE STARTING FAILED }
 enum ArchiveSource { UPLOAD LIVE_RECORDING }
 enum TrackState { UPLOADING SCANNING TRANSCODING READY FAILED TAKEDOWN }
