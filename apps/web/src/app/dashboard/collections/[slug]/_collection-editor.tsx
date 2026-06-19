@@ -170,10 +170,13 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
         <aside className="collection-editor__settings">
           <h2 className="collection-editor__section-title">Settings</h2>
 
-          <label className="collection-form__label">
-            Name
+          <div className="studio-field">
+            <label className="studio-label" htmlFor={`collection-name-${initial.id}`}>
+              Name
+            </label>
             <input
-              className="collection-form__input"
+              id={`collection-name-${initial.id}`}
+              className="studio-input"
               type="text"
               value={name}
               onChange={(e) => {
@@ -182,16 +185,16 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               }}
               maxLength={100}
             />
-          </label>
+          </div>
 
-          <div className="collection-form__label">
-            Style
+          <div className="studio-field">
+            <span className="studio-label">Style</span>
             <div className="collection-form__style-grid">
               {STYLE_OPTIONS.map((s) => (
                 <button
                   key={s}
                   type="button"
-                  className={`collections-pill collection-form__style-pill${
+                  className={`collection-form__style-pill${
                     style === s ? ' collection-form__style-pill--active' : ''
                   }`}
                   onClick={() => {
@@ -205,8 +208,8 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
             </div>
           </div>
 
-          <div className="collection-form__label">
-            Visibility
+          <fieldset className="collection-form__vis-fieldset">
+            <legend className="studio-label">Visibility</legend>
             <div className="collection-form__vis-row">
               <label className="collection-form__vis-option">
                 <input
@@ -218,8 +221,10 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                     markDirty()
                   }}
                 />
-                <span className="collection-form__vis-label">Public</span>
-                <span className="collection-form__vis-desc">Visible on your profile</span>
+                <span className="collection-form__vis-copy">
+                  <span className="collection-form__vis-label">Public</span>
+                  <span className="collection-form__vis-desc">Visible on your profile</span>
+                </span>
               </label>
               <label className="collection-form__vis-option">
                 <input
@@ -231,11 +236,13 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                     markDirty()
                   }}
                 />
-                <span className="collection-form__vis-label">Draft</span>
-                <span className="collection-form__vis-desc">Only you can see it</span>
+                <span className="collection-form__vis-copy">
+                  <span className="collection-form__vis-label">Draft</span>
+                  <span className="collection-form__vis-desc">Only you can see it</span>
+                </span>
               </label>
             </div>
-          </div>
+          </fieldset>
 
           <label className="collection-form__vis-option collection-form__featured-row">
             <input
@@ -249,10 +256,13 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
             <span className="collection-form__vis-label">Featured on profile</span>
           </label>
 
-          <label className="collection-form__label">
-            Description
+          <div className="studio-field">
+            <label className="studio-label" htmlFor={`collection-desc-${initial.id}`}>
+              Description
+            </label>
             <textarea
-              className="collection-form__textarea"
+              id={`collection-desc-${initial.id}`}
+              className="studio-input collection-form__textarea"
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value)
@@ -261,9 +271,9 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               maxLength={1000}
               rows={4}
             />
-          </label>
+          </div>
 
-          {settingsError && <p className="collection-form__error">{settingsError}</p>}
+          {settingsError && <p className="studio-text-error studio-text-sm">{settingsError}</p>}
 
           {settingsDirty && (
             <button

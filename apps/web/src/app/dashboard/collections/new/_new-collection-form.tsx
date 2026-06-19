@@ -77,11 +77,13 @@ export function NewCollectionForm() {
 
   return (
     <div className="collection-form">
-      {/* Name */}
-      <label className="collection-form__label">
-        Name
+      <div className="studio-field">
+        <label className="studio-label" htmlFor="collection-name">
+          Name
+        </label>
         <input
-          className="collection-form__input"
+          id="collection-name"
+          className="studio-input"
           type="text"
           value={name}
           onChange={(e) => handleNameChange(e.target.value)}
@@ -89,17 +91,16 @@ export function NewCollectionForm() {
           maxLength={100}
           autoFocus
         />
-      </label>
+      </div>
 
-      {/* Style */}
-      <div className="collection-form__label">
-        Style
+      <div className="studio-field">
+        <span className="studio-label">Style</span>
         <div className="collection-form__style-grid">
           {STYLE_OPTIONS.map((s) => (
             <button
               key={s.value}
               type="button"
-              className={`collections-pill collection-form__style-pill${
+              className={`collection-form__style-pill${
                 style === s.value ? ' collection-form__style-pill--active' : ''
               }`}
               onClick={() => setStyle(s.value)}
@@ -110,9 +111,8 @@ export function NewCollectionForm() {
         </div>
       </div>
 
-      {/* Visibility */}
-      <div className="collection-form__label">
-        Visibility
+      <fieldset className="collection-form__vis-fieldset">
+        <legend className="studio-label">Visibility</legend>
         <div className="collection-form__vis-row">
           {VISIBILITY_OPTIONS.map((v) => (
             <label key={v.value} className="collection-form__vis-option">
@@ -123,33 +123,39 @@ export function NewCollectionForm() {
                 checked={(v.value === 'true') === isPublic}
                 onChange={() => setIsPublic(v.value === 'true')}
               />
-              <span className="collection-form__vis-label">{v.label}</span>
-              <span className="collection-form__vis-desc">{v.desc}</span>
+              <span className="collection-form__vis-copy">
+                <span className="collection-form__vis-label">{v.label}</span>
+                <span className="collection-form__vis-desc">{v.desc}</span>
+              </span>
             </label>
           ))}
         </div>
-      </div>
+      </fieldset>
 
-      {/* Description */}
-      <label className="collection-form__label">
-        Description
+      <div className="studio-field">
+        <label className="studio-label" htmlFor="collection-description">
+          Description
+        </label>
         <textarea
-          className="collection-form__textarea"
+          id="collection-description"
+          className="studio-input collection-form__textarea"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Optional — shown on your collection page"
           maxLength={1000}
           rows={3}
         />
-      </label>
+      </div>
 
-      {/* Slug */}
-      <label className="collection-form__label collection-form__label--muted">
-        URL slug
+      <div className="studio-field">
+        <label className="studio-label" htmlFor="collection-slug">
+          URL slug
+        </label>
         <div className="collection-form__slug-row">
           <span className="collection-form__slug-prefix">tahti.live/u/…/c/</span>
           <input
-            className="collection-form__input collection-form__input--slug"
+            id="collection-slug"
+            className="studio-input collection-form__slug-input"
             type="text"
             value={derivedSlug}
             onChange={(e) => {
@@ -160,14 +166,14 @@ export function NewCollectionForm() {
             spellCheck={false}
           />
         </div>
-      </label>
+      </div>
 
-      {error && <p className="collection-form__error">{error}</p>}
+      {error && <p className="studio-text-error studio-text-sm">{error}</p>}
 
       <div className="collection-form__actions">
         <button
           type="button"
-          className="studio-btn-ghost"
+          className="ui-btn ui-btn--ghost"
           onClick={() => router.back()}
           disabled={saving}
         >
@@ -175,7 +181,7 @@ export function NewCollectionForm() {
         </button>
         <button
           type="button"
-          className="studio-btn-primary"
+          className="ui-btn ui-btn--primary"
           onClick={() => void handleSubmit()}
           disabled={saving || !name.trim()}
         >
