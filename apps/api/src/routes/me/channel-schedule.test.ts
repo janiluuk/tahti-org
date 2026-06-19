@@ -59,5 +59,24 @@ describe('LISTENER-002 — channel next broadcast schedule', () => {
     })
     expect(pub.statusCode).toBe(200)
     expect(pub.json().nextBroadcastNote).toBe('Thursday 22:00 EET')
+    expect(pub.json().nextBroadcastAt).toBe(at)
+
+    const clear = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/schedule',
+      headers: { cookie },
+      payload: { nextBroadcastAt: null, nextBroadcastNote: null },
+    })
+    expect(clear.statusCode).toBe(200)
+    expect(clear.json().nextBroadcastAt).toBeNull()
+    expect(clear.json().nextBroadcastNote).toBeNull()
+
+    const pubAfterClear = await app.inject({
+      method: 'GET',
+      url: '/api/channels/schedule-artist',
+    })
+    expect(pubAfterClear.statusCode).toBe(200)
+    expect(pubAfterClear.json().nextBroadcastAt).toBeNull()
+    expect(pubAfterClear.json().nextBroadcastNote).toBeNull()
   })
 })

@@ -94,6 +94,7 @@ export function BroadcastSettingsSections({
         <ChannelSchedulePanel
           initialAt={channelSchedule.nextBroadcastAt}
           initialNote={channelSchedule.nextBroadcastNote}
+          isLive={isLive}
         />
       </StudioCollapse>
 

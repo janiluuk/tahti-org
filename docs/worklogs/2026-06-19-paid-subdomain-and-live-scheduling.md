@@ -31,7 +31,7 @@ Date: 2026-06-19
   (`Channel.nextBroadcastAt` / `nextBroadcastNote`, LISTENER-002):
   `apps/api/src/routes/me/channel-schedule.ts` + `channel-schedule-panel.tsx`,
   tested in `channel-schedule.test.ts` (incl. "exposed on public channel").
-- The countdown component (`apps/web/src/app/c/[slug]/broadcast-countdown.tsx`)
+- The countdown component (`apps/web/src/components/broadcast-countdown.tsx`)
   already renders on the public page, but it sits up near the artist
   bio/header (`page.tsx:237-242`), **not** next to the "Archive" section
   (`page.tsx:278`) which is the actual ordinary-programming list listeners
@@ -83,8 +83,22 @@ involved, and no `not-found.tsx` exists anywhere under `apps/web/src/app`.
 This is a site-wide Next.js `notFound()` status-code issue, not specific to
 subdomain routing. Worth a dedicated follow-up.
 
+## Phase 2 results
+
+- Public channel page: `BroadcastCountdown` and note-only fallback now render
+  inside `ch-archive-section`, directly under the Archive heading (not near the
+  artist bio).
+- Studio dashboard: `ChannelSchedulePanel` shows a live **Listener preview**
+  (compact countdown) as the artist edits date/note; hidden while the channel
+  is LIVE.
+- Shared component at `apps/web/src/components/broadcast-countdown.tsx` with
+  `calcTimeLeft` unit tests; API schedule test extended to assert clear
+  propagates to the public channel GET.
+
 ## Status
 
 - [x] Investigation complete
 - [x] Phase 1 (tests passing; one unrelated pre-existing bug flagged above)
-- [ ] Phase 2
+- [x] Phase 2 — countdown moved above Archive on public channel; studio listener
+      preview in Schedule & programme; `calcTimeLeft` unit tests + schedule clear
+      API test extended
