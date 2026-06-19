@@ -5,6 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { Panel } from '@tahti/ui'
 import { createFanTier, setFanTierActive, startFanSubConnectOnboarding } from './actions'
 
 interface FanTier {
@@ -115,17 +116,19 @@ export default function FanSubscriptionsPanel({
   const needsStripe = connect.stripeConfigured && !connect.paymentsReady
 
   return (
-    <section className="studio-panel-section">
-      <div className="studio-row--between">
-        <h2 className="studio-section-heading studio-m-0">Fan subscriptions</h2>
-        <a href={`/u/${username}/subscribe`} className="studio-link-cta">
+    <Panel
+      title="Fan subscriptions"
+      headerTight
+      description="Fans subscribe directly to you. You keep the revenue minus Stripe fees and a 2% operational fee. Subscribers get the 5× download weighting that boosts your annual grant."
+      className="import-page__panel studio-mt-lg"
+      flushTop
+    >
+      <div className="studio-row--between studio-mb-sm">
+        <span className="studio-text-muted-sm">Tiers & payouts</span>
+        <a href={`/u/${username}/subscribe`} className="ui-btn ui-btn--sm ui-btn--ghost">
           View public page ↗
         </a>
       </div>
-      <p className="studio-help studio-mt-sm">
-        Fans subscribe directly to you. You keep the revenue minus Stripe fees and a 2% operational
-        fee. Subscribers get the 5× download weighting that boosts your annual grant.
-      </p>
 
       {payoutStats && (
         <div className="studio-text-muted-sm studio-mt-sm">
@@ -181,7 +184,7 @@ export default function FanSubscriptionsPanel({
             type="button"
             onClick={startConnect}
             disabled={isPending}
-            className="studio-btn-primary"
+            className="ui-btn ui-btn--primary"
           >
             {isPending ? 'Opening Stripe…' : 'Connect with Stripe'}
           </button>
@@ -202,7 +205,7 @@ export default function FanSubscriptionsPanel({
               <button
                 onClick={() => toggle(t.id, !t.active)}
                 disabled={isPending}
-                className="studio-btn-ghost"
+                className="ui-btn ui-btn--sm ui-btn--ghost"
               >
                 {t.active ? 'Disable' : 'Enable'}
               </button>
@@ -246,10 +249,10 @@ export default function FanSubscriptionsPanel({
           className="studio-textarea"
         />
         {error && <p className="studio-text-error studio-m-0">{error}</p>}
-        <button onClick={add} disabled={isPending} className="studio-btn-primary">
+        <button onClick={add} disabled={isPending} className="ui-btn ui-btn--primary">
           {isPending ? 'Saving…' : 'Add tier'}
         </button>
       </div>
-    </section>
+    </Panel>
   )
 }

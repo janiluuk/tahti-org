@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Panel } from '@tahti/ui'
 import { postAnnouncement, deleteAnnouncement } from './actions'
 
 interface Announcement {
@@ -46,12 +47,12 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
   }
 
   return (
-    <div className="studio-panel-section">
-      <h2 className="studio-section-heading">Pinned announcements</h2>
-      <p className="studio-help">
-        Up to 3 pinned messages shown above the chat on your channel page.
-      </p>
-
+    <Panel
+      title="Pinned announcements"
+      headerTight
+      description="Up to 3 pinned messages shown above the chat on your channel page."
+      className="studio-mt-lg"
+    >
       {announcements.length === 0 && <p className="studio-empty">No announcements yet.</p>}
 
       {announcements.map((a) => (
@@ -59,7 +60,7 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
           <span className="studio-announce-item__body">{a.body}</span>
           <button
             onClick={() => void handleDelete(a.id)}
-            className="studio-btn-icon"
+            className="ui-btn ui-btn--sm ui-btn--ghost"
             aria-label="Delete announcement"
           >
             ×
@@ -82,16 +83,16 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
         <button
           onClick={() => void handlePost()}
           disabled={posting || !draft.trim() || announcements.length >= 3}
-          className="studio-btn-dark"
+          className="ui-btn ui-btn--primary"
         >
           {posting ? 'Posting…' : 'Pin'}
         </button>
       </div>
 
-      {error && <p className="studio-text-error studio-mt-sm">{error}</p>}
+      {error && <p className="studio-notice studio-notice--error studio-mt-sm">{error}</p>}
       {announcements.length >= 3 && (
         <p className="studio-text-muted-sm studio-mt-sm">Remove one to add another (max 3).</p>
       )}
-    </div>
+    </Panel>
   )
 }

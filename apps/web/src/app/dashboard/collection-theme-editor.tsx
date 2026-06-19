@@ -210,10 +210,15 @@ export function CollectionThemeEditor({
       {message && <p className="studio-text-success studio-m-0">{message}</p>}
 
       <div className="studio-row">
-        <button type="button" onClick={save} disabled={isPending} className="studio-btn-primary">
+        <button
+          type="button"
+          onClick={save}
+          disabled={isPending}
+          className="ui-btn ui-btn--primary"
+        >
           {isPending ? 'Saving…' : 'Save theme'}
         </button>
-        <button type="button" onClick={onDone} className="studio-btn-ghost">
+        <button type="button" onClick={onDone} className="ui-btn ui-btn--ghost">
           Close
         </button>
       </div>

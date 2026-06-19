@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Panel } from '@tahti/ui'
 import { createNewsletterDraft, sendNewsletterDraft } from './actions'
 import { renderNewsletterPreview } from '@/lib/render-newsletter-preview'
 
@@ -106,10 +107,13 @@ export default function NewsletterPanel({
   }
 
   return (
-    <div className="studio-panel-section">
-      <h2 className="studio-section-heading studio-section-heading--tight">Newsletter</h2>
-      <p className="studio-help">Email your subscribers from your artist profile. {weeklyHint}</p>
-
+    <Panel
+      title="Newsletter"
+      headerTight
+      description={`Email your subscribers from your artist profile. ${weeklyHint}`}
+      className="import-page__panel studio-mt-lg"
+      flushTop
+    >
       <div className="studio-row studio-row--wrap studio-gap-lg studio-mb-lg studio-text-sm">
         <span>
           <strong>{stats.confirmed}</strong> confirmed
@@ -188,7 +192,7 @@ export default function NewsletterPanel({
         type="button"
         onClick={() => void handleCreate()}
         disabled={saving || !subject.trim() || !bodyMd.trim()}
-        className="studio-btn-dark"
+        className="ui-btn ui-btn--primary"
       >
         {saving ? 'Saving…' : 'Save draft'}
       </button>
@@ -247,8 +251,8 @@ export default function NewsletterPanel({
       )}
 
       {error && <p className="studio-text-error studio-mt-md">{error}</p>}
-      {message && <p className="studio-text-success studio-mt-md">{message}</p>}
-    </div>
+      {message && <p className="studio-notice studio-notice--success studio-mt-md">{message}</p>}
+    </Panel>
   )
 }
 
@@ -268,7 +272,9 @@ function SendButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={secondary ? 'studio-btn-outline' : 'studio-btn-primary'}
+      className={
+        secondary ? 'ui-btn ui-btn--sm ui-btn--secondary' : 'ui-btn ui-btn--sm ui-btn--primary'
+      }
     >
       {disabled ? 'Sending…' : label}
     </button>

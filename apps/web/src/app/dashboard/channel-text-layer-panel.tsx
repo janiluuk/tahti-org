@@ -15,7 +15,7 @@ import {
   type ChannelTextLayerAlignment,
   type ChannelTextLayerMode,
 } from '@tahti/shared'
-import { Alert, Button, Field, Input, Link, Panel, Select, Text } from '@/components/ui'
+import { Panel } from '@tahti/ui'
 import { updateChannelTextLayer } from './channel-text-layer-actions'
 
 const EFFECT_MODES = CHANNEL_TEXT_LAYER_MODES.filter((m) => m !== 'NONE')
@@ -73,19 +73,21 @@ export default function ChannelTextLayerPanel({
       description={
         <>
           Add a stylized headline on your public channel page. Five CSS text effects are inspired by{' '}
-          <Link href={CHANNEL_TEXT_LAYER_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+          <a href={CHANNEL_TEXT_LAYER_SOURCE_URL} target="_blank" rel="noopener noreferrer">
             freefrontend.com/css-text-effects
-          </Link>
+          </a>
           .
         </>
       }
     >
-      <Field label="Text effect" htmlFor="text-layer-mode">
-        <Select
+      <label className="studio-field" htmlFor="text-layer-mode">
+        <span className="studio-label">Text effect</span>
+        <select
           id="text-layer-mode"
           value={textLayerMode}
           disabled={isPending}
           onChange={(e) => setTextLayerMode(e.target.value as ChannelTextLayerMode)}
+          className="studio-input"
         >
           <option value="NONE">{CHANNEL_TEXT_LAYER_MODE_LABELS.NONE}</option>
           {EFFECT_MODES.map((mode) => (
@@ -93,55 +95,55 @@ export default function ChannelTextLayerPanel({
               {CHANNEL_TEXT_LAYER_MODE_LABELS[mode]}
             </option>
           ))}
-        </Select>
-      </Field>
+        </select>
+      </label>
 
-      {hint && (
-        <Text size="sm" tone="muted" className="studio-mb-lg">
-          {hint}
-        </Text>
-      )}
+      {hint && <p className="studio-text-muted-sm studio-mb-lg studio-m-0">{hint}</p>}
 
       {textLayerMode !== 'NONE' && (
         <>
-          <Field
-            label="Your text"
-            htmlFor="text-layer-text"
-            hint="Short headline or tagline (max 120 characters)."
-          >
-            <Input
+          <label className="studio-field" htmlFor="text-layer-text">
+            <span className="studio-label">Your text</span>
+            <span className="studio-text-muted-sm studio-mb-sm">
+              Short headline or tagline (max 120 characters).
+            </span>
+            <input
               id="text-layer-text"
+              type="text"
               value={textLayerText}
               maxLength={120}
               disabled={isPending}
               placeholder="New album out now — listen live"
               onChange={(e) => setTextLayerText(e.target.value)}
+              className="studio-input"
             />
-          </Field>
+          </label>
 
-          <Field label="Alignment" htmlFor="text-layer-align">
-            <Select
+          <label className="studio-field" htmlFor="text-layer-align">
+            <span className="studio-label">Alignment</span>
+            <select
               id="text-layer-align"
               value={textLayerAlign}
               disabled={isPending}
               onChange={(e) => setTextLayerAlign(e.target.value as ChannelTextLayerAlignment)}
+              className="studio-input"
             >
               {CHANNEL_TEXT_LAYER_ALIGNMENTS.map((align) => (
                 <option key={align} value={align}>
                   {CHANNEL_TEXT_LAYER_ALIGN_LABELS[align]}
                 </option>
               ))}
-            </Select>
-          </Field>
+            </select>
+          </label>
         </>
       )}
 
-      {error && <Alert variant="error">{error}</Alert>}
-      {message && <Alert variant="success">{message}</Alert>}
+      {error && <p className="studio-notice studio-notice--error">{error}</p>}
+      {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-      <Button type="button" variant="primary" onClick={save} disabled={isPending}>
+      <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
         {isPending ? 'Saving…' : 'Save text layer'}
-      </Button>
+      </button>
     </Panel>
   )
 }

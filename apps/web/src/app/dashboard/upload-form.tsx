@@ -135,7 +135,14 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
 
       <div className="studio-field">
         <label className="studio-label">Audio file</label>
-        <input ref={fileRef} type="file" accept="audio/*" required disabled={isLoading} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="audio/*"
+          required
+          disabled={isLoading}
+          className="studio-file-input"
+        />
       </div>
 
       <button type="button" onClick={() => setShowMeta(!showMeta)} className="studio-link-toggle">
@@ -144,7 +151,7 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
 
       {showMeta && <ArchiveMetadataFields state={meta} onChange={setMeta} disabled={isLoading} />}
 
-      <button type="submit" disabled={isLoading} className="studio-btn-primary studio-mt-lg">
+      <button type="submit" disabled={isLoading} className="ui-btn ui-btn--primary studio-mt-md">
         {state === 'preparing' && 'Preparing...'}
         {state === 'uploading' && `Uploading ${progress}%`}
         {state === 'completing' && 'Registering upload...'}
@@ -158,7 +165,9 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
         </p>
       )}
 
-      {state === 'error' && <p className="studio-text-error studio-mt-sm">{errorMsg}</p>}
+      {state === 'error' && (
+        <p className="studio-notice studio-notice--error studio-mt-sm">{errorMsg}</p>
+      )}
     </form>
   )
 }

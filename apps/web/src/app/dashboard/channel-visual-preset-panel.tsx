@@ -3,6 +3,7 @@
 
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -14,11 +15,12 @@ import {
   type SlideshowPreset,
   type ColorScheme,
 } from '@tahti/shared'
-import { Alert, Button, Field, Panel, Select, Text } from '@/components/ui'
+import { Panel } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 import { updateChannelVisual } from './channel-visual-actions'
 
 interface Props {
+  channelSlug: string
   initial: {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
@@ -39,7 +41,7 @@ function parseOrNull(json: string | null): ColorScheme | null {
   }
 }
 
-export default function ChannelVisualPresetPanel({ initial }: Props) {
+export default function ChannelVisualPresetPanel({ channelSlug, initial }: Props) {
   const router = useRouter()
   const [preset, setPreset] = useState<VisualPreset>(initial.visualPreset)
   const parsed = parseOrNull(initial.colorSchemeJson)
@@ -82,9 +84,10 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
     <Panel
       title="Visual style"
       headerTight
-      description="Choose a Three.js background visualizer, customize your channel color palette, and control slideshow transition style."
+      description="Background visualizer, color palette, and gallery slideshow transitions for your public channel page."
     >
-      <Field label="Background visualizer">
+      <div className="studio-field--block">
+        <span className="studio-label">Background visualizer</span>
         <VisualPresetPicker
           value={preset}
           onChange={setPreset}
@@ -92,126 +95,108 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
           colorScheme={useCustomScheme ? scheme : undefined}
           showPreview
         />
-      </Field>
+      </div>
 
-      <Field label="Color palette" htmlFor="custom-scheme-toggle">
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-          <input
-            id="custom-scheme-toggle"
-            type="checkbox"
-            checked={useCustomScheme}
-            disabled={isPending}
-            onChange={(e) => setUseCustomScheme(e.target.checked)}
-          />
-          Use custom color palette
-        </label>
-      </Field>
+      <label className="studio-social-toggle studio-mb-sm">
+        <input
+          id="custom-scheme-toggle"
+          type="checkbox"
+          checked={useCustomScheme}
+          disabled={isPending}
+          onChange={(e) => setUseCustomScheme(e.target.checked)}
+        />
+        <span>Use custom color scheme</span>
+      </label>
 
       {useCustomScheme && (
         <div className="studio-color-scheme-grid">
           {(['bg', 'accent', 'text', 'muted', 'highlight'] as (keyof ColorScheme)[]).map((key) => (
-            <Field
-              key={key}
-              label={key.charAt(0).toUpperCase() + key.slice(1)}
-              htmlFor={`color-${key}`}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div key={key} className="studio-field--block">
+              <label className="studio-label" htmlFor={`color-${key}`}>
+                {key.charAt(0).toUpperCase() + key.slice(1)}
+              </label>
+              <div className="studio-color-input-row">
                 <input
                   id={`color-${key}`}
                   type="color"
                   value={scheme[key]}
                   disabled={isPending}
                   onChange={(e) => updateColor(key, e.target.value)}
-                  style={{
-                    width: 40,
-                    height: 32,
-                    padding: 2,
-                    border: 'none',
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                  }}
                 />
                 <input
                   type="text"
                   value={scheme[key]}
                   disabled={isPending}
                   maxLength={7}
-                  pattern="#[0-9a-fA-F]{6}"
                   onChange={(e) => updateColor(key, e.target.value)}
-                  style={{
-                    fontFamily: 'monospace',
-                    width: '7ch',
-                    fontSize: '0.85rem',
-                    background: 'transparent',
-                    border: '1px solid var(--border)',
-                    borderRadius: 4,
-                    padding: '0 4px',
-                    color: 'var(--text)',
-                  }}
+                  className="studio-input"
                 />
               </div>
-            </Field>
+            </div>
           ))}
         </div>
       )}
 
-      <div
-        style={{ borderTop: '1px solid var(--border)', margin: '1.25rem 0', paddingTop: '1.25rem' }}
-      >
-        <Text
-          size="sm"
-          tone="muted"
-          style={{ marginBottom: '0.75rem', display: 'block', fontWeight: 500 }}
+      <div className="studio-divider studio-mt-lg">
+        <h3 className="studio-text-strong-sm studio-m-0 studio-mb-md">Slideshow transition</h3>
+        <p className="studio-text-muted-sm studio-m-0 studio-mb-md">
+          Applies when your channel gallery cycles through images.
+        </p>
+
+        <div
+          className="slideshow-preset-picker__grid"
+          role="radiogroup"
+          aria-label="Slideshow transition style"
         >
-          Slideshow transition
-        </Text>
-      </div>
+          {SLIDESHOW_PRESETS.map((p) => {
+            const active = slideshowPreset === p
+            return (
+              <button
+                key={p}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                disabled={isPending}
+                className={`slideshow-preset-picker__card${active ? ' slideshow-preset-picker__card--active' : ''}`}
+                onClick={() => setSlideshowPreset(p)}
+              >
+                {SLIDESHOW_PRESET_LABELS[p]}
+              </button>
+            )
+          })}
+        </div>
 
-      <Field label="Transition style" htmlFor="slideshow-preset">
-        <Select
-          id="slideshow-preset"
-          value={slideshowPreset}
-          disabled={isPending}
-          onChange={(e) => setSlideshowPreset(e.target.value as SlideshowPreset)}
-        >
-          {SLIDESHOW_PRESETS.map((p) => (
-            <option key={p} value={p}>
-              {SLIDESHOW_PRESET_LABELS[p]}
-            </option>
-          ))}
-        </Select>
-      </Field>
+        <label className="studio-field" htmlFor="slideshow-interval">
+          <span className="studio-label">Interval: {interval}s</span>
+          <input
+            id="slideshow-interval"
+            type="range"
+            min={5}
+            max={30}
+            step={1}
+            value={interval}
+            disabled={isPending}
+            onChange={(e) => setInterval(Number(e.target.value))}
+            className="studio-range"
+          />
+        </label>
 
-      <Field label={`Interval: ${interval}s`} htmlFor="slideshow-interval">
-        <input
-          id="slideshow-interval"
-          type="range"
-          min={5}
-          max={30}
-          step={1}
-          value={interval}
-          disabled={isPending}
-          onChange={(e) => setInterval(Number(e.target.value))}
-          style={{ width: '100%' }}
-        />
-      </Field>
+        <label className="studio-field" htmlFor="slideshow-transition">
+          <span className="studio-label">Transition speed: {transition}ms</span>
+          <input
+            id="slideshow-transition"
+            type="range"
+            min={300}
+            max={1500}
+            step={100}
+            value={transition}
+            disabled={isPending}
+            onChange={(e) => setTransition(Number(e.target.value))}
+            className="studio-range"
+          />
+        </label>
 
-      <Field label={`Transition speed: ${transition}ms`} htmlFor="slideshow-transition">
-        <input
-          id="slideshow-transition"
-          type="range"
-          min={300}
-          max={1500}
-          step={100}
-          value={transition}
-          disabled={isPending}
-          onChange={(e) => setTransition(Number(e.target.value))}
-          style={{ width: '100%' }}
-        />
-      </Field>
-
-      <Field label="Autoplay slideshow" htmlFor="slideshow-autoplay">
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+        <label className="studio-social-toggle">
           <input
             id="slideshow-autoplay"
             type="checkbox"
@@ -219,16 +204,26 @@ export default function ChannelVisualPresetPanel({ initial }: Props) {
             disabled={isPending}
             onChange={(e) => setAutoplay(e.target.checked)}
           />
-          Automatically advance slides
+          <span>Automatically advance slides</span>
         </label>
-      </Field>
+      </div>
 
-      {error && <Alert variant="error">{error}</Alert>}
-      {message && <Alert variant="success">{message}</Alert>}
+      {error && <p className="studio-notice studio-notice--error">{error}</p>}
+      {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-      <Button type="button" variant="primary" onClick={save} disabled={isPending}>
-        {isPending ? 'Saving…' : 'Save visual style'}
-      </Button>
+      <div className="studio-actions studio-row--wrap">
+        <button
+          type="button"
+          className="ui-btn ui-btn--primary"
+          onClick={save}
+          disabled={isPending}
+        >
+          {isPending ? 'Saving…' : 'Save appearance'}
+        </button>
+        <Link href={`/c/${channelSlug}`} className="ui-btn ui-btn--secondary" target="_blank">
+          Preview channel →
+        </Link>
+      </div>
     </Panel>
   )
 }
