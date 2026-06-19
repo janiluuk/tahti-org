@@ -249,8 +249,10 @@ async function main() {
 
     const tab = await ctx.newPage()
     const url = `${APP}${page.path}`
-    await tab.goto(url, { waitUntil: 'load', timeout: 45_000 })
+    const waitUntil = page.role === 'admin' ? 'networkidle' : 'load'
+    await tab.goto(url, { waitUntil, timeout: 45_000 })
     if (page.waitMs) await tab.waitForTimeout(page.waitMs)
+    if (page.role === 'admin') await tab.waitForTimeout(1500)
     if (page.prepare) await page.prepare(tab)
 
     const file = `${page.role}/${page.id}.png`
