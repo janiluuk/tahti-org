@@ -86,6 +86,11 @@ const meStashRoutes: FastifyPluginAsync = async (fastify) => {
         .send({ error: 'objectKey, filename, contentType, sizeBytes required' })
     }
 
+    const expectedPrefix = `stash/${user.id}/`
+    if (!body.objectKey.startsWith(expectedPrefix)) {
+      return reply.status(403).send({ error: 'Object does not belong to your stash' })
+    }
+
     const file = await fastify.prisma.stashFile.create({
       data: {
         userId: user.id,

@@ -696,6 +696,7 @@ model Channel {
   rtmpTargets       RtmpTarget[]
   radioFeatureLogs  RadioFeatureLog[]
 
+  @@index([state])
   @@schema("channel")
 }
 
@@ -989,6 +990,7 @@ model Download {
   createdAt      DateTime  @default(now())
 
   @@index([channelId, countedAt])
+  @@index([channelId, createdAt(sort: Desc)])
   @@index([byFingerprint, archiveItemId])
   @@index([archiveItemId, createdAt])
   @@schema("engagement")

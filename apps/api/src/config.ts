@@ -55,6 +55,23 @@ if (process.env.NODE_ENV === 'production' && rtmpKeyEncKey.startsWith('dev0000')
   )
 }
 
+const hcaptchaSecret = process.env.HCAPTCHA_SECRET ?? 'dev'
+const metricsToken = process.env.METRICS_TOKEN?.trim() ?? ''
+
+/** SEC-005: refuse boot in production when critical secrets retain dev defaults. */
+function assertProductionSecrets(): void {
+  if (process.env.NODE_ENV !== 'production') return
+  const missing: string[] = []
+  if (internalSecret === 'dev-internal-secret-change-in-prod') missing.push('INTERNAL_SECRET')
+  if (docsPass === 'changeme') missing.push('DOCS_PASS')
+  if (!hcaptchaSecret || hcaptchaSecret === 'dev') missing.push('HCAPTCHA_SECRET')
+  if (missing.length > 0) {
+    console.error(`[config] Refusing to start in production — set: ${missing.join(', ')}`)
+    process.exit(1)
+  }
+}
+assertProductionSecrets()
+
 export const config = {
   nodeEnv: (process.env.NODE_ENV ?? 'development') as 'development' | 'test' | 'production',
   port: parseInt(process.env.PORT ?? '3001', 10),
@@ -120,7 +137,9 @@ export const config = {
       ? process.env.ICECAST_HOST
       : `http://${process.env.ICECAST_HOST ?? 'localhost:8100'}`),
   rtmpKeyEncKey,
-  hcaptchaSecret: process.env.HCAPTCHA_SECRET ?? 'dev',
+  hcaptchaSecret,
+  /** SEC-009: optional bearer token for `/metrics` (production also allows private-network IPs). */
+  metricsToken,
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY ?? '',
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? '',

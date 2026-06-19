@@ -31,6 +31,9 @@ app.tahti.live {
 # ── Artist API ────────────────────────────────────────────────────────────────
 api.tahti.live {
     encode zstd gzip
+    # Internal ingest callbacks are Docker-network only (SEC-001).
+    @internal path /internal/*
+    respond @internal 403
     # CORS is handled by the API itself (apps/api/src/plugins/cors.ts) — it
     # reflects the actual matched origin (incl. *.tahti.live channel pages),
     # which a static header here can't do, and covers OPTIONS preflights too.

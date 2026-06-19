@@ -110,10 +110,10 @@ export default async function CollectionPage({
       hero={
         <>
           {backdrop.videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
-          {backdrop.imageUrl && !backdrop.videoEmbedUrl && (
+          {backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
             <div
               className="ch-channel-backdrop"
-              style={{ ['--ch-backdrop-image' as string]: `url(${backdrop.imageUrl})` }}
+              style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
             />
           )}
           <Link href={`/u/${data.user.username}`} className="prof-back-link">

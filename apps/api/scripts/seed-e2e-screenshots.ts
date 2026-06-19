@@ -7,6 +7,7 @@
  */
 
 import { prisma } from '@tahti/db'
+import { editListFromV0Trim } from '@tahti/audio-edit'
 import { hashPassword } from '../src/lib/password.js'
 import { generateVerificationToken, verificationExpiresAt } from '../src/lib/token.js'
 
@@ -49,6 +50,10 @@ async function main() {
     if (existing.channel) {
       await prisma.download.deleteMany({ where: { channelId: existing.channel.id } })
     }
+    await prisma.stashShare.deleteMany({ where: { file: { userId: existing.id } } })
+    await prisma.stashFile.deleteMany({ where: { userId: existing.id } })
+    await prisma.editorProject.deleteMany({ where: { userId: existing.id } })
+    await prisma.collection.deleteMany({ where: { userId: existing.id } })
     await prisma.release.deleteMany({ where: { userId: existing.id } })
     await prisma.fanTier.deleteMany({ where: { artistUserId: existing.id } })
     await prisma.fanSubscription.deleteMany({
@@ -106,11 +111,102 @@ async function main() {
       smartLinkSlug: 'northern-lights-ep',
       state: 'PUBLISHED',
       publishedAt: new Date(),
+      visualPreset: 'PARTICLE_FIELD',
+      colorSchemeJson: JSON.stringify({
+        bg: '#1a0a28',
+        accent: '#a855f7',
+        text: '#f3e8ff',
+        muted: '#6b5080',
+        highlight: '#c084fc',
+      }),
       tracks: {
         create: [
           { position: 1, title: 'Aurora', durationSec: 372 },
           { position: 2, title: 'Polar Drift', durationSec: 298 },
         ],
+      },
+    },
+  })
+
+  const catalogAlbum = await prisma.release.create({
+    data: {
+      userId: artist.id,
+      title: 'Deep Catalog Album',
+      type: 'ALBUM',
+      releaseDate: new Date('2026-05-01'),
+      description: 'Five-track draft album for e2e catalog journey.',
+      smartLinkSlug: 'deep-catalog-album',
+      state: 'DRAFT',
+      visualPreset: 'AURORA',
+      colorSchemeJson: JSON.stringify({
+        bg: '#0a1628',
+        accent: '#00d4aa',
+        text: '#e8f4f0',
+        muted: '#4a6670',
+        highlight: '#66e3c4',
+      }),
+      tracks: {
+        create: [
+          { position: 1, title: 'Deep One', durationSec: 240 },
+          { position: 2, title: 'Deep Two', durationSec: 260 },
+          { position: 3, title: 'Deep Three', durationSec: 220 },
+          { position: 4, title: 'Deep Four', durationSec: 300 },
+          { position: 5, title: 'Deep Five', durationSec: 280 },
+        ],
+      },
+    },
+  })
+
+  const catalogSingle = await prisma.release.create({
+    data: {
+      userId: artist.id,
+      title: 'Midnight Single',
+      type: 'SINGLE',
+      releaseDate: new Date('2026-04-20'),
+      smartLinkSlug: 'midnight-single',
+      state: 'PUBLISHED',
+      publishedAt: new Date(),
+      visualPreset: 'REACTIVE_GRID',
+      colorSchemeJson: JSON.stringify({
+        bg: '#1c1408',
+        accent: '#f59e0b',
+        text: '#fef3c7',
+        muted: '#78716c',
+        highlight: '#fbbf24',
+      }),
+      tracks: {
+        create: [{ position: 1, title: 'Midnight Run', durationSec: 210 }],
+      },
+    },
+  })
+
+  await prisma.collection.create({
+    data: {
+      userId: artist.id,
+      slug: `${ARTIST.username}-album-stash`,
+      name: 'Album stash vault',
+      type: 'ALBUM',
+      isPublic: false,
+      description: 'Private collection holding the draft album (e2e fans-only stash).',
+      items: {
+        create: [{ releaseId: catalogAlbum.id, position: 1 }],
+      },
+    },
+  })
+
+  await prisma.stashFile.create({
+    data: {
+      userId: artist.id,
+      filename: 'deep-catalog-masters.zip',
+      objectKey: `stash/${artist.id}/deep-catalog-masters.zip`,
+      contentType: 'application/zip',
+      sizeBytes: BigInt(15_000_000),
+      format: 'ZIP',
+      shares: {
+        create: {
+          granteeUsername: MEMBER.username,
+          permission: 'READ',
+        },
       },
     },
   })
@@ -126,6 +222,32 @@ async function main() {
       fileSizeBytes: BigInt(50_000_000),
       status: 'READY',
       isPublic: true,
+      editList: editListFromV0Trim({
+        sourceDuration: 3600,
+        startSec: 120,
+        endSec: 3480,
+        fadeInSec: 2,
+        fadeOutSec: 3,
+        peakNormalize: false,
+        lufsTarget: 'stream',
+        limiterEnabled: true,
+        highPassHz: 80,
+        lowPassHz: 0,
+        eq: { lowGainDb: 0, midGainDb: 0, highGainDb: 0 },
+        compressorEnabled: false,
+      }),
+    },
+  })
+
+  const editorProject = await prisma.editorProject.create({
+    data: {
+      userId: artist.id,
+      title: 'Live at Klubi — edit',
+      archiveItemId: archiveItem.id,
+      timeline: {
+        tracks: [],
+        seedArchiveItemId: archiveItem.id,
+      },
     },
   })
 
@@ -139,7 +261,7 @@ async function main() {
       isFeatured: true,
       description: 'Seeded mix series for e2e screenshots.',
       items: {
-        create: [{ archiveItemId: archiveItem.id, position: 0 }],
+        create: [{ archiveItemId: archiveItem.id, position: 1 }],
       },
     },
   })
@@ -240,7 +362,12 @@ async function main() {
         fan: MEMBER.username,
         smartLinkSlug: release.smartLinkSlug,
         releaseId: release.id,
+        catalogAlbumSlug: catalogAlbum.smartLinkSlug,
+        catalogSingleSlug: catalogSingle.smartLinkSlug,
+        albumStashCollection: `${ARTIST.username}-album-stash`,
         collectionSlug: COLLECTION_SLUG,
+        archiveItemId: archiveItem.id,
+        editorProjectId: editorProject.id,
         motionTitle: DEMO_MOTION_TITLE,
         verifyToken,
       },

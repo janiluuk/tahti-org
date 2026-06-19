@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { isAllowedBackdropUrl } from '../safe-background-url.js'
 
 // M26: per-collection backdrop themes — same effect catalogue as the channel
 // gallery/text-layer pickers (packages/shared/src/dto/channel-gallery.ts and
@@ -42,7 +43,14 @@ export const CollectionGalleryPatchSchema = z.object({
   galleryMode: z.enum(COLLECTION_GALLERY_MODES).optional(),
   slideshowImages: z.array(z.string().url().max(2048)).max(10).optional(),
   /** HTTPS image or YouTube/Vimeo watch URL for the full-width collection backdrop */
-  videoBackgroundUrl: z.string().max(2048).nullable().optional(),
+  videoBackgroundUrl: z
+    .string()
+    .max(2048)
+    .nullable()
+    .optional()
+    .refine((v) => v == null || v === '' || isAllowedBackdropUrl(v), {
+      message: 'Must be an HTTPS image URL or YouTube/Vimeo link',
+    }),
 })
 
 export type CollectionGalleryPatch = z.infer<typeof CollectionGalleryPatchSchema>

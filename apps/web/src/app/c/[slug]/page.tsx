@@ -168,10 +168,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             {channelBackdrop.videoEmbedUrl && (
               <ArchiveVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
             )}
-            {channelBackdrop.imageUrl && !channelBackdrop.videoEmbedUrl && (
+            {channelBackdrop.cssImageUrl && !channelBackdrop.videoEmbedUrl && (
               <div
                 className="ch-channel-backdrop"
-                style={{ ['--ch-backdrop-image' as string]: `url(${channelBackdrop.imageUrl})` }}
+                style={{ ['--ch-backdrop-image' as string]: channelBackdrop.cssImageUrl }}
               />
             )}
             <header className="ch-artist-header">
@@ -297,14 +297,16 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               ) : (
                 <ul className="ch-archive-list">
                   {items.map((item) => {
-                    const { imageUrl, videoEmbedUrl } = resolveArchiveBackground(item.backgroundUrl)
+                    const { cssImageUrl, videoEmbedUrl } = resolveArchiveBackground(
+                      item.backgroundUrl,
+                    )
                     return (
                       <li
                         key={item.id}
                         id={`archive-item-${item.id}`}
-                        className={`ch-archive-item${imageUrl ? ' ch-archive-item--bg' : ''}`}
+                        className={`ch-archive-item${cssImageUrl ? ' ch-archive-item--bg' : ''}`}
                         style={
-                          imageUrl ? { ['--ch-item-bg' as string]: `url(${imageUrl})` } : undefined
+                          cssImageUrl ? { ['--ch-item-bg' as string]: cssImageUrl } : undefined
                         }
                       >
                         {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
