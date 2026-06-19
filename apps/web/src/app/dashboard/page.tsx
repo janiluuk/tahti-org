@@ -80,7 +80,7 @@ interface MeResponse {
     customDomain: string | null
     customDomainVerified: boolean
   } | null
-  storage: { usedBytes: string; softTargetBytes: string } | null
+  storage: { usedBytes: string; softTargetBytes?: string; showSoftTarget: boolean } | null
 }
 
 interface ModeratedChannel {
@@ -778,7 +778,10 @@ export default async function DashboardPage() {
             {user.storage && (
               <StorageBar
                 usedBytes={Number(user.storage.usedBytes)}
-                softTargetBytes={Number(user.storage.softTargetBytes)}
+                softTargetBytes={
+                  user.storage.softTargetBytes ? Number(user.storage.softTargetBytes) : undefined
+                }
+                showSoftTarget={user.storage.showSoftTarget}
               />
             )}
 
@@ -990,18 +993,31 @@ export default async function DashboardPage() {
 function StorageBar({
   usedBytes,
   softTargetBytes,
+  showSoftTarget,
 }: {
   usedBytes: number
-  softTargetBytes: number
+  softTargetBytes?: number
+  showSoftTarget: boolean
 }) {
-  const usedMB = usedBytes / (1024 * 1024)
-  const targetMB = softTargetBytes / (1024 * 1024)
+  function fmtBytes(bytes: number): string {
+    if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`
+    if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  }
+
+  if (!showSoftTarget || softTargetBytes == null) {
+    return (
+      <div className="studio-storage">
+        <div className="studio-storage-header">
+          <span className="studio-stat-box-title">Storage</span>
+          <span className="studio-text-sm studio-text-muted-sm">{fmtBytes(usedBytes)} used</span>
+        </div>
+      </div>
+    )
+  }
+
   const pct = Math.min(100, Math.round((usedBytes / softTargetBytes) * 100))
   const isNearLimit = pct >= 80
-
-  function fmt(mb: number): string {
-    return mb >= 1024 ? `${(mb / 1024).toFixed(1)} GB` : `${Math.round(mb)} MB`
-  }
 
   return (
     <div className="studio-storage">
@@ -1010,7 +1026,7 @@ function StorageBar({
         <span
           className={`studio-text-sm${isNearLimit ? ' studio-text-error' : ' studio-text-muted-sm'}`}
         >
-          {fmt(usedMB)} / {fmt(targetMB)}
+          {fmtBytes(usedBytes)} · soft target {fmtBytes(softTargetBytes)}
         </span>
       </div>
       <div className="studio-storage-track">
@@ -1020,8 +1036,8 @@ function StorageBar({
         />
       </div>
       {isNearLimit && (
-        <p className="studio-text-error studio-mt-sm studio-m-0">
-          You&apos;re approaching your soft storage target. Contact us if you need more space.
+        <p className="studio-text-muted-sm studio-mt-sm studio-m-0">
+          You&apos;ve passed the soft target — that&apos;s fine. We track usage, not hard limits.
         </p>
       )}
     </div>

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import Link from 'next/link'
 import { cookies } from 'next/headers'
+import { Panel, Text } from '@tahti/ui'
+import { ImportPageLayout, ImportSteps } from '../_import-page-layout'
 import { BandcampConnectPanel } from './_bandcamp-connect'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -24,6 +25,13 @@ async function fetchStatus(): Promise<BandcampStatus> {
   return res.json()
 }
 
+const HOW_IT_WORKS = [
+  'Connect your Bandcamp account',
+  'Pick which albums or tracks to import',
+  'Tahti downloads the FLAC masters and queues transcoding',
+  'Your content appears in your archive — ready to publish',
+]
+
 export default async function BandcampImportPage({
   searchParams,
 }: {
@@ -33,52 +41,29 @@ export default async function BandcampImportPage({
   const flash = searchParams.bc
 
   return (
-    <div className="import-page">
-      <div className="import-page__header">
-        <Link href="/dashboard/upload" className="collection-editor__back">
-          ← Add content
-        </Link>
-        <h1 className="import-page__title">Import from Bandcamp</h1>
-      </div>
-
-      <div className="import-page__body">
-        <div className="import-page__hero">
-          <span className="import-page__service-icon" aria-hidden>
-            ◎
-          </span>
-          <p className="import-page__desc">
-            Connect your Bandcamp account to import your own albums, EPs, and singles directly —
-            including FLAC masters you uploaded. Only releases where you are the artist or label are
-            eligible.
-          </p>
-        </div>
-
+    <ImportPageLayout
+      service="bandcamp"
+      title="Import from Bandcamp"
+      description="Connect your Bandcamp account to import your own albums, EPs, and singles — including FLAC masters you uploaded. Only releases where you are the artist or label are eligible."
+      asideTitle="How it works"
+      aside={<ImportSteps steps={HOW_IT_WORKS} />}
+    >
+      <Panel title="Account connection" className="import-page__panel">
         <BandcampConnectPanel
           connected={status.connected}
           configured={status.configured}
           flash={flash}
         />
+      </Panel>
 
-        {status.connected && (
-          <div className="import-page__coming-soon">
-            <h2 className="import-page__coming-title">Track listing coming soon</h2>
-            <p className="import-page__coming-desc">
-              Your Bandcamp account is connected. Once Tahti&apos;s Bandcamp API integration is
-              approved, your albums will appear here for one-click import.
-            </p>
-          </div>
-        )}
-
-        <div className="import-page__steps">
-          <h2 className="import-page__steps-title">How it works</h2>
-          <ol className="import-page__step-list">
-            <li>Connect your Bandcamp account</li>
-            <li>Pick which albums or tracks to import</li>
-            <li>Tahti downloads the FLAC masters and queues transcoding</li>
-            <li>Your content appears in your archive — ready to publish</li>
-          </ol>
-        </div>
-      </div>
-    </div>
+      {status.connected && (
+        <Panel title="Your releases" className="import-page__panel">
+          <Text as="p" tone="muted" className="import-page__panel-copy">
+            Your Bandcamp account is connected. Once Tahti&apos;s Bandcamp API integration is
+            approved, your albums will appear here for one-click import.
+          </Text>
+        </Panel>
+      )}
+    </ImportPageLayout>
   )
 }

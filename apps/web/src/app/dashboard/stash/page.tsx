@@ -30,12 +30,14 @@ interface StashFile {
 
 interface StorageInfo {
   usedBytes: string
-  softTargetBytes: string
+  softTargetBytes?: string
+  showSoftTarget: boolean
 }
 
 function fmtBytes(bytes: number): string {
-  if (bytes < 1_073_741_824) return `${(bytes / 1_073_741_824).toFixed(1)} GB`
-  return `${(bytes / 1_073_741_824).toFixed(1)} GB`
+  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`
+  if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`
 }
 
 export default async function StashPage() {
@@ -64,8 +66,12 @@ export default async function StashPage() {
   }
 
   const usedBytes = storage ? Number(storage.usedBytes) : 0
-  const targetBytes = storage ? Number(storage.softTargetBytes) : 0
-  const pctUsed = targetBytes > 0 ? Math.min(100, Math.round((usedBytes / targetBytes) * 100)) : 0
+  const targetBytes = storage?.softTargetBytes ? Number(storage.softTargetBytes) : 0
+  const showSoftTarget = storage?.showSoftTarget ?? false
+  const pctUsed =
+    showSoftTarget && targetBytes > 0
+      ? Math.min(100, Math.round((usedBytes / targetBytes) * 100))
+      : 0
 
   return (
     <PageShell size="md">
@@ -74,13 +80,14 @@ export default async function StashPage() {
           <Heading level={1}>My Stash</Heading>
           {storage && (
             <p className="stash-storage-meta">
-              Private storage · {fmtBytes(usedBytes)} used of {fmtBytes(targetBytes)} · Paid plan
+              Private storage · {fmtBytes(usedBytes)} used
+              {showSoftTarget && targetBytes > 0 ? ` · soft target ${fmtBytes(targetBytes)}` : ''}
             </p>
           )}
         </div>
       </div>
 
-      {storage && (
+      {storage && showSoftTarget && targetBytes > 0 && (
         <div className="studio-storage">
           <div className="studio-storage-track">
             <div

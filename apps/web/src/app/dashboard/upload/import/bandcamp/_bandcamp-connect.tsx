@@ -4,6 +4,7 @@
 'use client'
 
 import { useState } from 'react'
+import { StatusPill } from '@tahti/ui'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -26,8 +27,8 @@ export function BandcampConnectPanel({
 
   if (!configured) {
     return (
-      <div className="import-connect-box import-connect-box--unconfigured">
-        <p className="import-connect-box__note">
+      <div className="import-connect">
+        <p className="import-connect__note import-connect__note--muted">
           Bandcamp import is not yet available in this environment.
         </p>
       </div>
@@ -36,11 +37,12 @@ export function BandcampConnectPanel({
 
   if (flash === 'error') {
     return (
-      <div className="import-connect-box import-connect-box--error">
-        <p className="import-connect-box__note">
-          Bandcamp authorisation failed — please try again.
+      <div className="import-connect import-connect--error">
+        <p className="import-connect__note">
+          Bandcamp authorisation failed. Try connecting again — Tahti only requests read access to
+          your releases.
         </p>
-        <a href={`${apiUrl}/api/me/bandcamp/oauth/start`} className="studio-btn-primary">
+        <a href={`${apiUrl}/api/me/bandcamp/oauth/start`} className="ui-btn ui-btn--primary">
           Retry connection
         </a>
       </div>
@@ -49,11 +51,11 @@ export function BandcampConnectPanel({
 
   if (connected) {
     return (
-      <div className="import-connect-box import-connect-box--connected">
-        <span className="import-connect-box__status">● Connected to Bandcamp</span>
+      <div className="import-connect import-connect--connected">
+        <StatusPill tone="green">Connected to Bandcamp</StatusPill>
         <button
           type="button"
-          className="studio-btn-ghost import-connect-box__disconnect"
+          className="ui-btn ui-btn--ghost ui-btn--sm"
           onClick={() => void handleDisconnect()}
           disabled={disconnecting}
         >
@@ -64,15 +66,12 @@ export function BandcampConnectPanel({
   }
 
   return (
-    <div className="import-connect-box">
-      <p className="import-connect-box__note">
+    <div className="import-connect">
+      <p className="import-connect__note">
         You&apos;ll be redirected to Bandcamp to authorise Tahti. We only request read access to
         your releases.
       </p>
-      <a
-        href={`${apiUrl}/api/me/bandcamp/oauth/start`}
-        className="studio-btn-primary import-connect-box__btn"
-      >
+      <a href={`${apiUrl}/api/me/bandcamp/oauth/start`} className="ui-btn ui-btn--primary">
         Connect Bandcamp account
       </a>
     </div>

@@ -90,7 +90,8 @@ export async function fetchRecentBroadcasts(limit = 5): Promise<RecentBroadcast[
 
 export interface StorageStatus {
   usedBytes: number
-  softTargetBytes: number
+  softTargetBytes?: number
+  showSoftTarget: boolean
   tier: string
 }
 
@@ -101,13 +102,16 @@ export async function fetchStorageStatus(): Promise<StorageStatus | null> {
   })
   if (!res.ok) return null
   const data = (await res.json()) as {
-    storage?: { usedBytes: number; softTargetBytes: number }
+    storage?: { usedBytes: string; softTargetBytes?: string; showSoftTarget?: boolean }
     tier?: string
   }
   if (!data.storage) return null
   return {
-    usedBytes: data.storage.usedBytes,
-    softTargetBytes: data.storage.softTargetBytes,
+    usedBytes: Number(data.storage.usedBytes),
+    softTargetBytes: data.storage.softTargetBytes
+      ? Number(data.storage.softTargetBytes)
+      : undefined,
+    showSoftTarget: data.storage.showSoftTarget ?? false,
     tier: data.tier ?? 'FREE',
   }
 }

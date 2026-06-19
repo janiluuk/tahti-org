@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import Link from 'next/link'
 import { cookies } from 'next/headers'
+import { Panel, Text } from '@tahti/ui'
+import { ImportPageLayout, ImportSteps } from '../_import-page-layout'
 import { SoundCloudConnectPanel } from './_soundcloud-connect'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -53,6 +54,13 @@ function formatDuration(ms: number): string {
   return `${m}:${String(rem).padStart(2, '0')}`
 }
 
+const HOW_IT_WORKS = [
+  'Connect your SoundCloud account',
+  'Pick tracks you want to move to Tahti',
+  'Tahti downloads and transcodes your audio',
+  'Your tracks appear in your archive — ready to publish',
+]
+
 export default async function SoundCloudImportPage({
   searchParams,
 }: {
@@ -63,75 +71,49 @@ export default async function SoundCloudImportPage({
   const flash = searchParams.sc
 
   return (
-    <div className="import-page">
-      <div className="import-page__header">
-        <Link href="/dashboard/upload" className="collection-editor__back">
-          ← Add content
-        </Link>
-        <h1 className="import-page__title">Import from SoundCloud</h1>
-      </div>
-
-      <div className="import-page__body">
-        <div className="import-page__hero">
-          <span className="import-page__service-icon" aria-hidden>
-            ◉
-          </span>
-          <p className="import-page__desc">
-            Connect your SoundCloud account to import tracks you own and have enabled for download.
-            Tahti will queue each selected track for transcoding and add it to your archive.
-          </p>
-        </div>
-
+    <ImportPageLayout
+      service="soundcloud"
+      title="Import from SoundCloud"
+      description="Connect your SoundCloud account to import tracks you own and have enabled for download. Tahti queues each selected track for transcoding and adds it to your archive."
+      asideTitle="How it works"
+      aside={<ImportSteps steps={HOW_IT_WORKS} />}
+    >
+      <Panel title="Account connection" className="import-page__panel">
         <SoundCloudConnectPanel
           connected={status.connected}
           configured={status.configured}
           flash={flash}
         />
+      </Panel>
 
-        {status.connected && tracks.length === 0 && (
-          <div className="import-page__coming-soon">
-            <p className="import-page__coming-desc">
-              No downloadable tracks found on your SoundCloud account. Make sure your tracks have
-              &ldquo;Enable downloads&rdquo; enabled in SoundCloud&apos;s track settings.
-            </p>
-          </div>
-        )}
+      {status.connected && tracks.length === 0 && (
+        <Panel title="No downloadable tracks" className="import-page__panel">
+          <Text as="p" tone="muted" className="import-page__panel-copy">
+            No downloadable tracks found on your SoundCloud account. Enable &ldquo;Allow downloads
+            to fans&rdquo; in each track&apos;s permissions on SoundCloud, then refresh this page.
+          </Text>
+        </Panel>
+      )}
 
-        {tracks.length > 0 && (
-          <div className="import-page__track-list">
-            <h2 className="import-page__steps-title">Downloadable tracks ({tracks.length})</h2>
-            <p className="import-page__coming-desc">
-              One-click import is coming soon. In the meantime, download your FLAC masters from
-              SoundCloud and upload them via the file drop.
-            </p>
-            <ol className="from-broadcast-page__list">
-              {tracks.map((t) => (
-                <li key={t.id} className="broadcast-row">
-                  <div className="broadcast-row__info">
-                    <span className="broadcast-row__name">{t.title}</span>
-                    <span className="broadcast-row__meta">{formatDuration(t.durationMs)}</span>
-                  </div>
-                  <span className="broadcast-row__status broadcast-row__status--pending">
-                    Import coming soon
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        )}
-
-        {!status.connected && (
-          <div className="import-page__steps">
-            <h2 className="import-page__steps-title">How it works</h2>
-            <ol className="import-page__step-list">
-              <li>Connect your SoundCloud account</li>
-              <li>Pick tracks you want to move to Tahti</li>
-              <li>Tahti downloads and transcodes your audio</li>
-              <li>Your tracks appear in your archive — ready to publish</li>
-            </ol>
-          </div>
-        )}
-      </div>
-    </div>
+      {tracks.length > 0 && (
+        <Panel
+          title={`Downloadable tracks (${tracks.length})`}
+          description="One-click import is coming soon. Download FLAC masters from SoundCloud and upload them via Add content in the meantime."
+          className="import-page__panel"
+        >
+          <ol className="import-page__track-list">
+            {tracks.map((t) => (
+              <li key={t.id} className="import-page__track-row">
+                <div className="import-page__track-info">
+                  <span className="import-page__track-name">{t.title}</span>
+                  <span className="import-page__track-meta">{formatDuration(t.durationMs)}</span>
+                </div>
+                <span className="import-page__track-status">Import coming soon</span>
+              </li>
+            ))}
+          </ol>
+        </Panel>
+      )}
+    </ImportPageLayout>
   )
 }
