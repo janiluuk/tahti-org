@@ -31,7 +31,7 @@
     "role": "public",
     "id": "verify-token",
     "file": "public/verify-token.png",
-    "url": "/verify?token=1JzOtc_j82dojMKnMauoLf9ewemEG2Ez",
+    "url": "/verify?token=NBYrXYbOxMSYuNHZG2CsHATDwmI47eu_",
     "label": "Verify email (with token)"
   },
   {
@@ -148,6 +148,13 @@
   },
   {
     "role": "public",
+    "id": "help-for-artists",
+    "file": "public/help-for-artists.png",
+    "url": "/help/for-artists",
+    "label": "Artist guide"
+  },
+  {
+    "role": "public",
     "id": "embed-channel",
     "file": "public/embed-channel.png",
     "url": "/embed/c/screenshot-demo",
@@ -157,7 +164,7 @@
     "role": "public",
     "id": "embed-release",
     "file": "public/embed-release.png",
-    "url": "/embed/r/cmq9j9ah70006431jh6czsz2p",
+    "url": "/embed/r/cmqlhc38d00069elg7umvnaq7",
     "label": "Embed release player"
   },
   {
@@ -194,6 +201,20 @@
     "file": "artist/channel-appearance.png",
     "url": "/dashboard#broadcast",
     "label": "Channel appearance editor"
+  },
+  {
+    "role": "artist",
+    "id": "schedule-programme",
+    "file": "artist/schedule-programme.png",
+    "url": "/dashboard#broadcast",
+    "label": "Schedule & programme"
+  },
+  {
+    "role": "artist",
+    "id": "broadcast-studio",
+    "file": "artist/broadcast-studio.png",
+    "url": "/dashboard/broadcast",
+    "label": "Broadcast studio"
   },
   {
     "role": "artist",

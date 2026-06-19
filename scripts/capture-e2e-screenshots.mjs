@@ -111,6 +111,7 @@ function buildPages(seed) {
     { role: 'public', id: 'help-support', path: '/help/support', label: 'Support help' },
     { role: 'public', id: 'help-broadcast', path: '/help/broadcast', label: 'Broadcast help' },
     { role: 'public', id: 'help-multistream', path: '/help/multistream', label: 'Multistream help' },
+    { role: 'public', id: 'help-for-artists', path: '/help/for-artists', label: 'Artist guide' },
     {
       role: 'public',
       id: 'embed-channel',
@@ -142,6 +143,31 @@ function buildPages(seed) {
   // ── Artist (channel owner) ───────────────────────────────────────────
   pages.push(
     { role: 'artist', id: 'dashboard', path: '/dashboard', label: 'Artist dashboard' },
+    {
+      role: 'artist',
+      id: 'channel-appearance',
+      path: '/dashboard#broadcast',
+      label: 'Channel appearance editor',
+      waitMs: 1200,
+    },
+    {
+      role: 'artist',
+      id: 'schedule-programme',
+      path: '/dashboard#broadcast',
+      label: 'Schedule & programme',
+      waitMs: 800,
+      async prepare(tab) {
+        await tab.locator('summary:has-text("Schedule & programme")').click()
+        await tab.waitForTimeout(600)
+      },
+    },
+    {
+      role: 'artist',
+      id: 'broadcast-studio',
+      path: '/dashboard/broadcast',
+      label: 'Broadcast studio',
+      waitMs: 1500,
+    },
     { role: 'artist', id: 'stats', path: '/dashboard/stats', label: 'Artist stats' },
     { role: 'artist', id: 'stash', path: '/dashboard/stash', label: 'Stash file manager' },
     { role: 'artist', id: 'editor', path: '/dashboard/editor', label: 'Audio editor' },
@@ -225,6 +251,7 @@ async function main() {
     const url = `${APP}${page.path}`
     await tab.goto(url, { waitUntil: 'load', timeout: 45_000 })
     if (page.waitMs) await tab.waitForTimeout(page.waitMs)
+    if (page.prepare) await page.prepare(tab)
 
     const file = `${page.role}/${page.id}.png`
     await tab.screenshot({ path: join(OUT, file), fullPage: true })

@@ -14,8 +14,9 @@ x-app-env: &app-env
   DATABASE_URL: postgresql://tahti:tahti_dev@pgbouncer:5432/tahti?pgbouncer=true
   REDIS_URL: redis://redis:6379
   SESSION_SECRET: dev-session-secret-do-not-use-in-prod
-  INTERNAL_SECRET: dev-internal-secret-change-in-prod
-  HCAPTCHA_SECRET: dev
+  INTERNAL_SECRET: local-stack-internal-secret
+  DOCS_PASS: local-stack-docs-pass
+  HCAPTCHA_SECRET: local-stack-hcaptcha-secret
   SMTP_HOST: ${SMTP_HOST:-mailhog}
   SMTP_PORT: ${SMTP_PORT:-1025}
   SMTP_USER: ${SMTP_USER:-}

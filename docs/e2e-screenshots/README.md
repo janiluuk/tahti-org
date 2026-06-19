@@ -65,6 +65,9 @@ CI runs lint, tests, and `tests/e2e/vital-flows.sh` — not Playwright screensho
 
 Username: `screenshot-demo` · Collection: `demo-mixes` · Smart link: `northern-lights-ep`
 
+Seeded channel includes a **next live broadcast** schedule (`2026-07-10T20:00:00Z`) so the
+Archive countdown and dashboard schedule preview appear in captures.
+
 Linked from `docs/user-flows.md`.
 
 Production node layout and scaling bottlenecks: [../scaling-node-distribution.md](../scaling-node-distribution.md).
