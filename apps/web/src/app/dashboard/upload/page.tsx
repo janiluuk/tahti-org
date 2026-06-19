@@ -33,9 +33,10 @@ export default async function UploadPage() {
       !b.archiveItemId || b.archiveItemStatus === 'PENDING' || b.archiveItemStatus === 'PROCESSING',
   )
 
-  const usedPct = storage
-    ? Math.min(100, Math.round((storage.usedBytes / storage.softTargetBytes) * 100))
-    : 0
+  const usedPct =
+    storage?.showSoftTarget && storage.softTargetBytes
+      ? Math.min(100, Math.round((storage.usedBytes / storage.softTargetBytes) * 100))
+      : 0
 
   return (
     <div className="upload-entry">
@@ -43,16 +44,24 @@ export default async function UploadPage() {
         <h1 className="upload-entry__title">Add content</h1>
         {storage && (
           <div className="upload-entry__storage">
-            <div className="upload-entry__storage-bar">
-              <div
-                className={`upload-entry__storage-fill${usedPct > 90 ? ' upload-entry__storage-fill--warn' : ''}`}
-                style={{ width: `${usedPct}%` }}
-              />
-            </div>
-            <span className="upload-entry__storage-label">
-              {storage.tier.toLowerCase()} · {formatBytes(storage.usedBytes)} of{' '}
-              {formatBytes(storage.softTargetBytes)} used
-            </span>
+            {storage.showSoftTarget && storage.softTargetBytes ? (
+              <>
+                <div className="upload-entry__storage-bar">
+                  <div
+                    className={`upload-entry__storage-fill${usedPct > 90 ? ' upload-entry__storage-fill--warn' : ''}`}
+                    style={{ width: `${usedPct}%` }}
+                  />
+                </div>
+                <span className="upload-entry__storage-label">
+                  {storage.tier.toLowerCase()} · {formatBytes(storage.usedBytes)} · soft target{' '}
+                  {formatBytes(storage.softTargetBytes)}
+                </span>
+              </>
+            ) : (
+              <span className="upload-entry__storage-label">
+                {formatBytes(storage.usedBytes)} used
+              </span>
+            )}
             {storage.tier === 'FREE' && (
               <Link href="/dashboard/revenue" className="upload-entry__upgrade-link">
                 Upgrade for more

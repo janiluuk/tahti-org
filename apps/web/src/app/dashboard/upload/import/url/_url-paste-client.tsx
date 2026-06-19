@@ -81,7 +81,6 @@ export function UrlPasteClient() {
       .map((l) => l.trim())
       .filter(Boolean)
     const parsed = lines.map(parseEntry).filter((e): e is UrlEntry => e !== null)
-    // Deduplicate by service — keep last URL per service
     const byService = new Map<string, UrlEntry>()
     for (const e of parsed) {
       const key = e.service ?? e.url
@@ -131,11 +130,13 @@ export function UrlPasteClient() {
 
   return (
     <div className="url-paste">
-      {/* URL input area */}
-      <label className="collection-form__label">
-        Paste URLs
+      <div className="studio-field">
+        <label className="studio-label" htmlFor="url-paste-input">
+          Paste URLs
+        </label>
         <textarea
-          className="collection-form__textarea url-paste__textarea"
+          id="url-paste-input"
+          className="studio-input url-paste__textarea"
           value={rawInput}
           onChange={(e) => setRawInput(e.target.value)}
           placeholder={
@@ -144,33 +145,34 @@ export function UrlPasteClient() {
           rows={4}
           spellCheck={false}
         />
-      </label>
+      </div>
 
-      <button
-        type="button"
-        className="studio-btn-ghost"
-        onClick={handleParse}
-        disabled={!rawInput.trim()}
-      >
-        Detect services
-      </button>
+      <div className="url-paste__actions">
+        <button
+          type="button"
+          className="ui-btn ui-btn--ghost ui-btn--sm"
+          onClick={handleParse}
+          disabled={!rawInput.trim()}
+        >
+          Detect services
+        </button>
+      </div>
 
-      {/* Parsed entries */}
       {entries.length > 0 && (
         <div className="url-paste__entries">
           {entries.map((e, idx) => (
             <div key={idx} className="url-paste__entry">
               <span className="url-paste__service">
-                {e.service ? SERVICE_LABELS[e.service] : '?'}
+                {e.service ? SERVICE_LABELS[e.service] : 'Unknown'}
               </span>
               <span className="url-paste__url" title={e.url}>
-                {e.url.length > 50 ? `${e.url.slice(0, 50)}…` : e.url}
+                {e.url.length > 56 ? `${e.url.slice(0, 56)}…` : e.url}
               </span>
               {!e.service && (
                 <input
-                  className="collection-form__input url-paste__label-input"
+                  className="studio-input url-paste__label-input"
                   type="text"
-                  placeholder="Service name (e.g. tidal)"
+                  placeholder="Service name"
                   value={e.label}
                   onChange={(ev) => updateLabel(idx, ev.target.value)}
                 />
@@ -188,12 +190,14 @@ export function UrlPasteClient() {
         </div>
       )}
 
-      {/* Title */}
       {entries.length > 0 && (
-        <label className="collection-form__label">
-          Title
+        <div className="studio-field">
+          <label className="studio-label" htmlFor="url-paste-title">
+            Smart link title
+          </label>
           <input
-            className="collection-form__input"
+            id="url-paste-title"
+            className="studio-input"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -201,20 +205,20 @@ export function UrlPasteClient() {
             maxLength={200}
             autoFocus
           />
-        </label>
+        </div>
       )}
 
-      {error && <p className="collection-form__error">{error}</p>}
+      {error && <p className="studio-text-error studio-text-sm">{error}</p>}
 
       {entries.length > 0 && (
-        <div className="collection-form__actions">
+        <div className="url-paste__submit">
           <button
             type="button"
-            className="studio-btn-primary"
+            className="ui-btn ui-btn--primary"
             onClick={() => void handleSubmit()}
             disabled={saving || !title.trim()}
           >
-            {saving ? 'Creating…' : 'Create smart link →'}
+            {saving ? 'Creating…' : 'Create smart link'}
           </button>
         </div>
       )}

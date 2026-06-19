@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { AuthMeResponseSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { computeUserStorageUsedBytes } from '../../lib/user-storage.js'
 
 const meRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -30,8 +31,11 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
 
       const storageInfo = await fastify.prisma.user.findUnique({
         where: { id: user.id },
-        select: { storageUsedBytes: true, softTargetBytes: true },
+        select: { softTargetBytes: true },
       })
+
+      const usedBytes = await computeUserStorageUsedBytes(fastify.prisma, user.id)
+      const showSoftTarget = !user.isMember && user.tier === 'FREE'
 
       return reply.send({
         id: user.id,
@@ -45,8 +49,13 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
         membership,
         channel,
         storage: {
-          usedBytes: storageInfo?.storageUsedBytes?.toString() ?? '0',
-          softTargetBytes: storageInfo?.softTargetBytes?.toString() ?? '524288000',
+          usedBytes: usedBytes.toString(),
+          ...(showSoftTarget
+            ? {
+                softTargetBytes: (storageInfo?.softTargetBytes ?? 524_288_000n).toString(),
+              }
+            : {}),
+          showSoftTarget,
         },
       })
     },
