@@ -63,7 +63,7 @@ export function ReleaseArtworkUpload({
         <img src={artworkUrl} alt="" width={80} height={80} className="studio-artwork-preview" />
       )}
       <label className="studio-field--block">
-        Cover art (MinIO)
+        <span className="studio-label">Cover art</span>
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
@@ -76,7 +76,9 @@ export function ReleaseArtworkUpload({
         />
       </label>
       {uploading && <span className="studio-text-muted-sm"> Uploading…</span>}
-      {error && <p className="studio-text-error studio-mt-sm studio-m-0">{error}</p>}
+      {error && (
+        <p className="studio-notice studio-notice--error studio-mt-sm studio-m-0">{error}</p>
+      )}
     </div>
   )
 }

@@ -160,7 +160,7 @@ export function TracklistEditor({
             disabled={disabled || rows.length <= 1}
             onClick={() => sync(rows.filter((_, j) => j !== i))}
             aria-label="Remove row"
-            className="studio-btn-icon"
+            className="ui-btn ui-btn--sm ui-btn--ghost"
           >
             ×
           </button>
@@ -170,7 +170,7 @@ export function TracklistEditor({
         type="button"
         disabled={disabled}
         onClick={() => sync([...rows, { startSec: '0', title: '', artist: '' }])}
-        className="studio-mt-sm studio-btn-ghost"
+        className="ui-btn ui-btn--sm ui-btn--ghost studio-mt-sm"
       >
         + Add track
       </button>

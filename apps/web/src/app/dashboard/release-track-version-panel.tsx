@@ -114,7 +114,7 @@ export function ReleaseTrackVersionPanel({
                 type="button"
                 disabled={isPending}
                 onClick={() => activate(v.id)}
-                className="studio-btn-ghost studio-ml-sm"
+                className="ui-btn ui-btn--sm ui-btn--ghost studio-ml-sm"
               >
                 Activate
               </button>

@@ -159,7 +159,7 @@ export function ArchiveVersionPanel({
                   type="button"
                   onClick={() => activate(v.id)}
                   disabled={isPending}
-                  className="studio-btn-ghost"
+                  className="ui-btn ui-btn--sm ui-btn--ghost"
                 >
                   Set active
                 </button>
@@ -172,10 +172,16 @@ export function ArchiveVersionPanel({
       <ArchiveTrimEditor itemId={itemId} onBounced={load} />
 
       <div className="studio-row studio-mb-md">
-        <Link href={`/dashboard/archive/${itemId}/editor`} className="studio-btn-primary">
+        <Link
+          href={`/dashboard/archive/${itemId}/editor`}
+          className="ui-btn ui-btn--sm ui-btn--primary"
+        >
           Pro editor
         </Link>
-        <Link href={`/dashboard/editor?archiveItemId=${itemId}`} className="studio-btn-ghost">
+        <Link
+          href={`/dashboard/editor?archiveItemId=${itemId}`}
+          className="ui-btn ui-btn--sm ui-btn--ghost"
+        >
           Open in multitrack editor
         </Link>
       </div>
@@ -203,7 +209,7 @@ export function ArchiveVersionPanel({
               type="button"
               onClick={publishToRelease}
               disabled={isPublishing}
-              className="studio-btn-ghost"
+              className="ui-btn ui-btn--sm ui-btn--primary"
             >
               {isPublishing ? 'Publishing…' : 'Publish'}
             </button>
@@ -212,7 +218,9 @@ export function ArchiveVersionPanel({
             <p className="studio-text-muted-sm studio-mt-sm studio-m-0">{publishMessage}</p>
           )}
           {publishError && (
-            <p className="studio-text-error studio-mt-sm studio-m-0">{publishError}</p>
+            <p className="studio-notice studio-notice--error studio-mt-sm studio-m-0">
+              {publishError}
+            </p>
           )}
         </div>
       )}
@@ -242,7 +250,9 @@ export function ArchiveVersionPanel({
         </label>
       </div>
 
-      {error && <p className="studio-text-error studio-mt-sm studio-m-0">{error}</p>}
+      {error && (
+        <p className="studio-notice studio-notice--error studio-mt-sm studio-m-0">{error}</p>
+      )}
     </div>
   )
 }

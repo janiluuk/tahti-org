@@ -171,7 +171,7 @@ export default function ReleaseOpsPanel({
 
   return (
     <div className="studio-divider">
-      <button type="button" onClick={() => setOpen(!open)} className="studio-btn-ghost">
+      <button type="button" onClick={() => setOpen(!open)} className="ui-btn ui-btn--ghost">
         {open ? 'Hide' : 'Release ops'} ({doneCount}/{checklist.length})
       </button>
 
@@ -256,7 +256,7 @@ export default function ReleaseOpsPanel({
                     type="button"
                     disabled={isPending}
                     onClick={() => setCredits(credits.filter((_, i) => i !== index))}
-                    className="studio-btn-ghost"
+                    className="ui-btn ui-btn--ghost"
                   >
                     Remove
                   </button>
@@ -267,7 +267,7 @@ export default function ReleaseOpsPanel({
               type="button"
               disabled={isPending}
               onClick={() => setCredits([...credits, { ...EMPTY_CREDIT }])}
-              className="studio-btn-ghost"
+              className="ui-btn ui-btn--ghost"
             >
               Add credit
             </button>
@@ -280,13 +280,13 @@ export default function ReleaseOpsPanel({
               type="button"
               onClick={save}
               disabled={isPending}
-              className="studio-btn-primary"
+              className="ui-btn ui-btn--primary"
             >
               {isPending ? 'Saving…' : 'Save catalog'}
             </button>
             <button
               type="button"
-              className="studio-btn-ghost"
+              className="ui-btn ui-btn--ghost"
               disabled={isPending}
               onClick={() => {
                 startTransition(async () => {
@@ -309,7 +309,7 @@ export default function ReleaseOpsPanel({
             </button>
             <button
               type="button"
-              className="studio-btn-ghost"
+              className="ui-btn ui-btn--ghost"
               disabled={isPending}
               onClick={() => {
                 setError(null)
@@ -345,7 +345,7 @@ export default function ReleaseOpsPanel({
             </a>
             <button
               type="button"
-              className="studio-btn-ghost"
+              className="ui-btn ui-btn--ghost"
               disabled={isPending}
               onClick={() => {
                 setError(null)
@@ -424,7 +424,7 @@ export default function ReleaseOpsPanel({
                   setBilling((prev) => (prev ? { ...prev, paid: true } : prev))
                 })
               }}
-              className="studio-btn-ghost"
+              className="ui-btn ui-btn--ghost"
             >
               {isPending
                 ? 'Submitting…'

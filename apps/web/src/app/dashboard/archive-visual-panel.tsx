@@ -6,7 +6,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { type VisualPreset } from '@tahti/shared'
-import { Alert, Button, Field, Panel } from '@/components/ui'
+import { Panel } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 import { updateArchiveItemVisual } from './channel-visual-actions'
 
@@ -40,16 +40,17 @@ export default function ArchiveVisualPanel({ itemId, initial }: Props) {
     <Panel
       title="Visualizer"
       headerTight
-      description="Background visualizer shown when this track plays on the channel page."
+      description="Background visualizer when this track plays on your channel."
     >
-      <Field label="Preset">
+      <div className="studio-field--block">
+        <span className="studio-label">Preset</span>
         <VisualPresetPicker value={preset} onChange={setPreset} disabled={isPending} showPreview />
-      </Field>
-      {error && <Alert variant="error">{error}</Alert>}
-      {message && <Alert variant="success">{message}</Alert>}
-      <Button type="button" variant="primary" onClick={save} disabled={isPending}>
+      </div>
+      {error && <p className="studio-notice studio-notice--error">{error}</p>}
+      {message && <p className="studio-notice studio-notice--success">{message}</p>}
+      <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
         {isPending ? 'Saving…' : 'Save'}
-      </Button>
+      </button>
     </Panel>
   )
 }

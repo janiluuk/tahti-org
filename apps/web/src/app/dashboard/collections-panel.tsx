@@ -10,6 +10,7 @@ import type {
   CollectionTextLayerAlignment,
   CollectionTextLayerMode,
 } from '@tahti/shared'
+import { Panel } from '@tahti/ui'
 import {
   addCollectionItem,
   createCollection,
@@ -201,22 +202,26 @@ export default function CollectionsPanel({
   }
 
   return (
-    <section className="studio-panel-section">
-      <div className="studio-row--between">
-        <h2 className="studio-section-heading studio-m-0">Collections</h2>
-        <a href={`/u/${username}`} className="studio-link-cta">
+    <Panel
+      title="Collections"
+      headerTight
+      description='Group mixes or releases into series (e.g. "Trance sets"). Public collections appear on your profile with RSS feeds.'
+      className="import-page__panel"
+      flushTop
+    >
+      <div className="studio-row--between studio-mb-sm">
+        <span className="studio-text-muted-sm">
+          {initial.length} collection{initial.length === 1 ? '' : 's'}
+        </span>
+        <a href={`/u/${username}`} className="ui-btn ui-btn--sm ui-btn--ghost">
           Profile ↗
         </a>
       </div>
-      <p className="studio-help">
-        Group mixes or releases into series (e.g. &quot;Trance sets&quot;). Public collections
-        appear on your profile with RSS feeds.
-      </p>
 
       {initial.length > 0 && (
-        <ul className="studio-list studio-mt-lg">
+        <ul className="studio-list">
           {initial.map((c) => (
-            <li key={c.id} className="studio-item-row--list">
+            <li key={c.id} className="studio-collection-card">
               <div className="studio-card-row">
                 <span className="studio-collection-row-title">
                   {c.coverUrl ? (
@@ -268,7 +273,7 @@ export default function CollectionsPanel({
                     type="button"
                     onClick={() => openCoverEdit(c)}
                     disabled={isPending}
-                    className="studio-btn-ghost"
+                    className="ui-btn ui-btn--sm ui-btn--ghost"
                   >
                     Cover
                   </button>
@@ -276,7 +281,7 @@ export default function CollectionsPanel({
                     type="button"
                     onClick={() => openDescEdit(c)}
                     disabled={isPending}
-                    className="studio-btn-ghost"
+                    className="ui-btn ui-btn--sm ui-btn--ghost"
                   >
                     Description
                   </button>
@@ -284,7 +289,7 @@ export default function CollectionsPanel({
                     type="button"
                     onClick={() => setEditThemeSlug(editThemeSlug === c.slug ? null : c.slug)}
                     disabled={isPending}
-                    className="studio-btn-ghost"
+                    className="ui-btn ui-btn--sm ui-btn--ghost"
                   >
                     Theme
                   </button>
@@ -292,7 +297,7 @@ export default function CollectionsPanel({
                     type="button"
                     onClick={() => setAddSlug(c.slug)}
                     disabled={isPending}
-                    className="studio-btn-ghost"
+                    className="ui-btn ui-btn--sm ui-btn--ghost"
                   >
                     Add item
                   </button>
@@ -300,7 +305,7 @@ export default function CollectionsPanel({
                     type="button"
                     onClick={() => remove(c.slug)}
                     disabled={isPending}
-                    className="studio-btn-danger"
+                    className="ui-btn ui-btn--sm ui-btn--danger"
                   >
                     Delete
                   </button>
@@ -318,7 +323,7 @@ export default function CollectionsPanel({
                     type="button"
                     onClick={() => saveCover(c.slug)}
                     disabled={isPending}
-                    className="studio-btn-primary"
+                    className="ui-btn ui-btn--sm ui-btn--primary"
                   >
                     Save cover
                   </button>
@@ -328,7 +333,7 @@ export default function CollectionsPanel({
                       setEditCoverSlug(null)
                       setCoverDraft('')
                     }}
-                    className="studio-btn-ghost"
+                    className="ui-btn ui-btn--sm ui-btn--ghost"
                   >
                     Cancel
                   </button>
@@ -348,7 +353,7 @@ export default function CollectionsPanel({
                     type="button"
                     onClick={() => saveDescription(c.slug)}
                     disabled={isPending}
-                    className="studio-btn-primary"
+                    className="ui-btn ui-btn--sm ui-btn--primary"
                   >
                     Save description
                   </button>
@@ -358,7 +363,7 @@ export default function CollectionsPanel({
                       setEditDescSlug(null)
                       setDescDraft('')
                     }}
-                    className="studio-btn-ghost"
+                    className="ui-btn ui-btn--sm ui-btn--ghost"
                   >
                     Cancel
                   </button>
@@ -412,7 +417,7 @@ export default function CollectionsPanel({
                           disabled={isPending || idx === 0}
                           onClick={() => moveItem(c.slug, sorted, idx, -1)}
                           aria-label="Move up"
-                          className="studio-btn-icon"
+                          className="ui-btn ui-btn--sm ui-btn--ghost"
                         >
                           ↑
                         </button>
@@ -421,7 +426,7 @@ export default function CollectionsPanel({
                           disabled={isPending || idx === sorted.length - 1}
                           onClick={() => moveItem(c.slug, sorted, idx, 1)}
                           aria-label="Move down"
-                          className="studio-btn-icon"
+                          className="ui-btn ui-btn--sm ui-btn--ghost"
                         >
                           ↓
                         </button>
@@ -465,14 +470,14 @@ export default function CollectionsPanel({
                     type="button"
                     onClick={() => addItem(c.slug)}
                     disabled={isPending || (!pickArchive && !pickRelease)}
-                    className="studio-btn-primary"
+                    className="ui-btn ui-btn--sm ui-btn--primary"
                   >
                     Add
                   </button>
                   <button
                     type="button"
                     onClick={() => setAddSlug(null)}
-                    className="studio-btn-ghost"
+                    className="ui-btn ui-btn--sm ui-btn--ghost"
                   >
                     Cancel
                   </button>
@@ -494,12 +499,12 @@ export default function CollectionsPanel({
           type="button"
           onClick={create}
           disabled={isPending || !name.trim()}
-          className="studio-btn-primary"
+          className="ui-btn ui-btn--primary"
         >
           Create
         </button>
       </div>
-      {error && <p className="studio-text-error">{error}</p>}
-    </section>
+      {error && <p className="studio-notice studio-notice--error studio-mt-sm">{error}</p>}
+    </Panel>
   )
 }

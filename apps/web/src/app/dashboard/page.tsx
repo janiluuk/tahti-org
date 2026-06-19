@@ -699,14 +699,22 @@ export default async function DashboardPage() {
                 </Panel>
               )}
 
-              <StudioCollapse
-                title="Channel appearance"
-                hint="gallery, text overlay & visual style"
-              >
-                {channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
-                {channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
-                {channelVisual && <ChannelVisualPresetPanel initial={channelVisual} />}
-              </StudioCollapse>
+              <div id="channel-appearance" className="studio-section-anchor">
+                <StudioCollapse
+                  title="Channel appearance"
+                  hint="gallery, text overlay & visual style"
+                  defaultOpen
+                >
+                  {channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
+                  {channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
+                  {channelVisual && (
+                    <ChannelVisualPresetPanel
+                      channelSlug={user.channel.slug}
+                      initial={channelVisual}
+                    />
+                  )}
+                </StudioCollapse>
+              </div>
 
               <StudioCollapse title="Schedule & programme" hint="next show & running order">
                 {channelProgramme && <ProgrammePanel initial={channelProgramme} />}
@@ -772,6 +780,7 @@ export default async function DashboardPage() {
                   title="Archive"
                   headerTight
                   description="Upload with genre, type, BPM, license, and access options."
+                  className="import-page__panel"
                   flushTop
                 >
                   <UploadForm />

@@ -7,6 +7,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
+import { Panel } from '@tahti/ui'
 import {
   createRelease,
   importReleasesFromCsv,
@@ -143,39 +144,54 @@ export default function ReleasesPanel({
   }
 
   return (
-    <section className="studio-panel-section">
-      <div className="studio-row--between">
-        <h2 className="studio-section-heading studio-m-0">Releases</h2>
-        <a href={`/u/${username}`} className="studio-link-cta">
+    <Panel
+      title="Releases & smart links"
+      headerTight
+      description={
+        <>
+          Publish releases on your profile. DSP links power the public landing page at{' '}
+          <code>/r/your-slug</code>.
+        </>
+      }
+      className="import-page__panel"
+      flushTop
+    >
+      <div className="studio-row--between studio-mb-sm">
+        <span className="studio-text-muted-sm">
+          {initial.length} release{initial.length === 1 ? '' : 's'}
+        </span>
+        <a href={`/u/${username}`} className="ui-btn ui-btn--sm ui-btn--ghost">
           Public profile ↗
         </a>
       </div>
-      <p className="studio-help">
-        Publish releases on your profile. Add DSP smart links for the public landing page at{' '}
-        <code>/r/your-slug</code>.
-      </p>
 
       {initial.length > 0 && (
-        <ul className="studio-list studio-mt-lg">
+        <ul className="studio-list">
           {initial.map((r) => (
-            <li key={r.id} className="studio-item-row--list">
-              <div className="studio-card-row">
-                <span>
-                  {r.title} · {r.state} · {r._count.tracks} track(s)
-                </span>
-                <span className="studio-actions studio-actions--sm">
+            <li key={r.id} className="studio-release-card">
+              <div className="studio-row--between studio-gap-xs">
+                <div>
+                  <div className="studio-release-card__title">{r.title}</div>
+                  <div className="studio-release-card__meta">
+                    {r.state} · {r._count.tracks} track{r._count.tracks === 1 ? '' : 's'}
+                  </div>
+                </div>
+                <div className="studio-actions studio-actions--sm">
                   {r.state === 'PUBLISHED' && (
                     <>
-                      <Link href={`/r/${r.smartLinkSlug}`} className="studio-text-sm">
+                      <Link
+                        href={`/r/${r.smartLinkSlug}`}
+                        className="ui-btn ui-btn--sm ui-btn--ghost"
+                      >
                         Smart link
                         {typeof r.smartLinkViewCount === 'number' && r.smartLinkViewCount > 0
-                          ? ` (${r.smartLinkViewCount} views)`
+                          ? ` (${r.smartLinkViewCount})`
                           : ''}
                       </Link>
                       <button
                         type="button"
                         onClick={() => openSmartLinks(r)}
-                        className="studio-btn-ghost"
+                        className="ui-btn ui-btn--sm ui-btn--secondary"
                       >
                         DSP URLs
                       </button>
@@ -186,13 +202,14 @@ export default function ReleasesPanel({
                       type="button"
                       onClick={() => publish(r.id)}
                       disabled={isPending}
-                      className="studio-btn-ghost"
+                      className="ui-btn ui-btn--sm ui-btn--primary"
                     >
                       Publish
                     </button>
                   )}
-                </span>
+                </div>
               </div>
+
               <ReleaseArtworkUpload releaseId={r.id} artworkUrl={r.artworkUrl} />
               {(r.tracks ?? []).map((t) => (
                 <ReleaseTrackVersionPanel
@@ -248,30 +265,37 @@ export default function ReleasesPanel({
       )}
 
       {editingId && (
-        <div className="studio-smart-links-panel">
-          <p className="studio-text-strong-sm studio-m-0 studio-mb-md">Streaming links</p>
+        <div className="studio-smart-links-panel studio-mt-md">
+          <p className="studio-label studio-mb-sm">Streaming links</p>
           {DSP_FIELDS.map((f) => (
-            <label key={f.key} className="studio-field studio-text-muted-sm">
-              {f.label}
+            <div key={f.key} className="studio-field--block">
+              <label className="studio-label" htmlFor={`dsp-${f.key}`}>
+                {f.label}
+              </label>
               <input
+                id={`dsp-${f.key}`}
                 type="url"
                 value={targets[f.key] ?? ''}
                 onChange={(e) => setTargets((t) => ({ ...t, [f.key]: e.target.value }))}
                 placeholder={f.placeholder}
-                className="studio-input studio-mt-sm"
+                className="studio-input"
               />
-            </label>
+            </div>
           ))}
           <div className="studio-actions studio-mt-md">
             <button
               type="button"
               onClick={saveSmartLinks}
               disabled={isPending}
-              className="studio-btn-primary"
+              className="ui-btn ui-btn--primary"
             >
               Save links
             </button>
-            <button type="button" onClick={() => setEditingId(null)} className="studio-btn-ghost">
+            <button
+              type="button"
+              onClick={() => setEditingId(null)}
+              className="ui-btn ui-btn--ghost"
+            >
               Cancel
             </button>
           </div>
@@ -283,20 +307,21 @@ export default function ReleasesPanel({
           placeholder="Release title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="studio-input studio-flex-1"
+          className="studio-input studio-input--grow"
+          aria-label="New release title"
         />
         <button
           type="button"
           onClick={addRelease}
           disabled={isPending}
-          className="studio-btn-primary"
+          className="ui-btn ui-btn--primary"
         >
           Add draft
         </button>
       </div>
 
-      <details className="studio-mt-md">
-        <summary className="studio-text-strong-sm">Bulk import from CSV</summary>
+      <details className="studio-details-block">
+        <summary>Bulk import from CSV</summary>
         <p className="studio-help studio-mt-sm">
           One row per track. Columns: releaseTitle, type, releaseDate (YYYY-MM-DD), trackTitle,
           isrc, upc, description.
@@ -312,14 +337,16 @@ export default function ReleasesPanel({
           type="button"
           onClick={runBulkImport}
           disabled={isPending}
-          className="studio-btn-ghost studio-mt-sm"
+          className="ui-btn ui-btn--secondary studio-mt-sm"
         >
           Import drafts
         </button>
-        {importMsg ? <p className="studio-text-muted-sm studio-mt-sm">{importMsg}</p> : null}
+        {importMsg ? (
+          <p className="studio-notice studio-notice--success studio-mt-sm">{importMsg}</p>
+        ) : null}
       </details>
 
-      {error && <p className="studio-text-error">{error}</p>}
-    </section>
+      {error ? <p className="studio-notice studio-notice--error studio-mt-sm">{error}</p> : null}
+    </Panel>
   )
 }

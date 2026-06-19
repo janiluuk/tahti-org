@@ -703,6 +703,14 @@ Artists want to personalize their channel and release pages with Three.js/WebGL 
 |:---:|:---|---|:---:|:---:|
 | [x] | **PLAT-078** | **Detect and preserve source audio quality on archive upload** — `/api/uploads/*` and version re-uploads already accepted MP3/AAC/M4A/FLAC/WAV/AIFF (`audio/*`), but lossy sources were always re-encoded to a fixed 192kbps MP3, which both upscaled lower-bitrate uploads and degraded higher-bitrate ones. The transcode worker (`transcode.ts`, `transcode-version.ts`) now ffprobes the source codec + bitrate, stores `ArchiveItem.sourceFormat`/`sourceBitrateKbps` (and the same on `ArchiveItemVersion`, synced via `ensureInitialVersion`/`syncActiveVersionToItem`), and picks an MP3 output bitrate via `chooseLossyOutputBitrateKbps()` (`packages/shared/src/archive-playback.ts`) that never exceeds the source bitrate (no upscaling) and never re-encodes a higher-bitrate source down to 192k (no quality loss). Lossless detection now also checks the audio codec (`isLosslessCodec`: FLAC/ALAC/PCM), so ALAC-in-M4A is kept lossless. Detected source format/bitrate is shown to artists in the archive item editor and per-version list (e.g. "Source: MP3 192 kbps" / "FLAC (lossless)"). | Medium | P1 |
 
+### Channel appearance editor — website mockup parity (2026-06-05) (PLAT-079)
+
+Cross-referenced the **Channel appearance** slide in `website/index.html` (`#mock-visual`) against the live dashboard. M31 (PLAT-070–076) already shipped the backend and public rendering; this sprint closes the remaining UX gaps so artists can style their channel from one place in the studio.
+
+| Status | ID | Description | Size | Priority |
+|:---:|:---|---|:---:|:---:|
+| [x] | **PLAT-079** | **Channel appearance editor (dashboard)** — Broadcast tab → **Channel appearance** (`#channel-appearance`, open by default): gallery mode + image URLs + video backdrop (`PATCH /api/me/channel/gallery`), CSS text-layer effects (`PATCH /api/me/channel/text-layer`), and visual style panel matching the website mockup — WebGL preset thumbnail grid with live mini-canvas, custom 5-color palette override, slideshow transition picker (Fade / Zoom / Pan / Blur cross) with interval + speed sliders, autoplay toggle (`PATCH /api/me/channel/visual`). **Preview channel →** opens `/c/:slug` in a new tab. Studio-dark UI on all three panels (no admin light-theme leakage). E2E manifest entry: `artist/channel-appearance.png` → `/dashboard#broadcast`. Website reference: `website/index.html` mockup tab **Visual preset**. | Medium | P2 |
+
 ---
 
 ## Streaming infrastructure backlog

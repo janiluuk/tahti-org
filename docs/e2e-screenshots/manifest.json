@@ -190,6 +190,13 @@
   },
   {
     "role": "artist",
+    "id": "channel-appearance",
+    "file": "artist/channel-appearance.png",
+    "url": "/dashboard#broadcast",
+    "label": "Channel appearance editor"
+  },
+  {
+    "role": "artist",
     "id": "stats",
     "file": "artist/stats.png",
     "url": "/dashboard/stats",

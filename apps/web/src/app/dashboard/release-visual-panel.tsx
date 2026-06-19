@@ -11,7 +11,7 @@ import {
   type VisualPreset,
   type ColorScheme,
 } from '@tahti/shared'
-import { Alert, Button, Field, Panel, Text } from '@/components/ui'
+import { Panel } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 import { updateReleaseVisual } from './channel-visual-actions'
 
@@ -70,9 +70,10 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
     <Panel
       title="Visual style"
       headerTight
-      description="Visualizer and color scheme for this release's smart link page."
+      description="Visualizer and colors for this release's smart link page."
     >
-      <Field label="Background visualizer">
+      <div className="studio-field--block">
+        <span className="studio-label">Background visualizer</span>
         <VisualPresetPicker
           value={preset}
           onChange={setPreset}
@@ -82,49 +83,37 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
           paletteJson={initial.paletteJson}
           showPreview
         />
-      </Field>
+      </div>
       {extracted && !useOverride && (
-        <Text size="sm" tone="muted" className="studio-mb-lg">
+        <p className="studio-text-muted-sm studio-mb-sm">
           Colors extracted from cover art. Enable override to customize.
-        </Text>
+        </p>
       )}
 
-      <Field label="Color palette" htmlFor="rel-custom-scheme">
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-          <input
-            id="rel-custom-scheme"
-            type="checkbox"
-            checked={useOverride}
-            disabled={isPending}
-            onChange={(e) => setUseOverride(e.target.checked)}
-          />
-          Override color palette
-        </label>
-      </Field>
+      <label className="studio-social-toggle studio-mb-sm">
+        <input
+          type="checkbox"
+          checked={useOverride}
+          disabled={isPending}
+          onChange={(e) => setUseOverride(e.target.checked)}
+        />
+        <span>Override color palette</span>
+      </label>
 
       {useOverride && (
         <div className="studio-color-scheme-grid">
           {(['bg', 'accent', 'text', 'muted', 'highlight'] as (keyof ColorScheme)[]).map((key) => (
-            <Field
-              key={key}
-              label={key.charAt(0).toUpperCase() + key.slice(1)}
-              htmlFor={`rel-color-${key}`}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div key={key} className="studio-field--block">
+              <label className="studio-label" htmlFor={`rel-color-${key}`}>
+                {key.charAt(0).toUpperCase() + key.slice(1)}
+              </label>
+              <div className="studio-color-input-row">
                 <input
                   id={`rel-color-${key}`}
                   type="color"
                   value={scheme[key]}
                   disabled={isPending}
                   onChange={(e) => updateColor(key, e.target.value)}
-                  style={{
-                    width: 40,
-                    height: 32,
-                    padding: 2,
-                    border: 'none',
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                  }}
                 />
                 <input
                   type="text"
@@ -132,29 +121,20 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
                   disabled={isPending}
                   maxLength={7}
                   onChange={(e) => updateColor(key, e.target.value)}
-                  style={{
-                    fontFamily: 'monospace',
-                    width: '7ch',
-                    fontSize: '0.85rem',
-                    background: 'transparent',
-                    border: '1px solid var(--border)',
-                    borderRadius: 4,
-                    padding: '0 4px',
-                    color: 'var(--text)',
-                  }}
+                  className="studio-input"
                 />
               </div>
-            </Field>
+            </div>
           ))}
         </div>
       )}
 
-      {error && <Alert variant="error">{error}</Alert>}
-      {message && <Alert variant="success">{message}</Alert>}
+      {error && <p className="studio-notice studio-notice--error">{error}</p>}
+      {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-      <Button type="button" variant="primary" onClick={save} disabled={isPending}>
+      <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
         {isPending ? 'Saving…' : 'Save visual style'}
-      </Button>
+      </button>
     </Panel>
   )
 }

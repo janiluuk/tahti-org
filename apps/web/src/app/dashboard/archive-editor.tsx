@@ -61,7 +61,7 @@ export default function ArchiveEditor({
   const detectedKey = item.keyDetected as string | null | undefined
 
   return (
-    <li className="studio-item-row--list">
+    <div className="studio-item-row--list">
       <div className="studio-card-row">
         <div>
           <div className="studio-stat-box-title">{item.title}</div>
@@ -77,7 +77,11 @@ export default function ArchiveEditor({
               }`}
           </div>
         </div>
-        <button type="button" onClick={() => setOpen(!open)} className="studio-btn-ghost">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="ui-btn ui-btn--sm ui-btn--ghost"
+        >
           {open ? 'Close' : 'Edit metadata'}
         </button>
       </div>
@@ -134,17 +138,17 @@ export default function ArchiveEditor({
               type="button"
               onClick={save}
               disabled={isPending || !title.trim()}
-              className="studio-btn-primary"
+              className="ui-btn ui-btn--primary"
             >
               {isPending ? 'Saving…' : 'Save'}
             </button>
-            <button type="button" onClick={() => setOpen(false)} className="studio-btn-ghost">
+            <button type="button" onClick={() => setOpen(false)} className="ui-btn ui-btn--ghost">
               Cancel
             </button>
           </div>
-          {error && <p className="studio-text-error">{error}</p>}
+          {error && <p className="studio-notice studio-notice--error">{error}</p>}
         </div>
       )}
-    </li>
+    </div>
   )
 }

@@ -14,7 +14,7 @@ import {
   parseGalleryImageLines,
   type ChannelGalleryMode,
 } from '@tahti/shared'
-import { Alert, Button, Field, Link, Panel, Select, Text, Textarea } from '@/components/ui'
+import { Panel } from '@tahti/ui'
 import { updateChannelGallery } from './channel-gallery-actions'
 
 const WEBGL_MODES = CHANNEL_GALLERY_MODES.filter((m) => m !== 'NONE' && m !== 'STATIC_SLIDESHOW')
@@ -73,19 +73,21 @@ export default function ChannelGalleryPanel({
         <>
           Show your photos on your public channel page. Pick a style below — five WebGL galleries
           are inspired by{' '}
-          <Link href={CHANNEL_GALLERY_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+          <a href={CHANNEL_GALLERY_SOURCE_URL} target="_blank" rel="noopener noreferrer">
             freefrontend.com/three-js
-          </Link>
+          </a>
           . Paste up to 10 HTTPS URLs to your own images (CDN or MinIO).
         </>
       }
     >
-      <Field label="Gallery style" htmlFor="gallery-mode">
-        <Select
+      <label className="studio-field" htmlFor="gallery-mode">
+        <span className="studio-label">Gallery style</span>
+        <select
           id="gallery-mode"
           value={galleryMode}
           disabled={isPending}
           onChange={(e) => setGalleryMode(e.target.value as ChannelGalleryMode)}
+          className="studio-input"
         >
           <optgroup label="Simple">
             {SIMPLE_MODES.map((mode) => (
@@ -101,27 +103,23 @@ export default function ChannelGalleryPanel({
               </option>
             ))}
           </optgroup>
-        </Select>
-      </Field>
+        </select>
+      </label>
 
-      {hint && (
-        <Text size="sm" tone="muted" className="studio-mb-lg">
-          {hint}
-        </Text>
-      )}
+      {hint && <p className="studio-text-muted-sm studio-mb-lg studio-m-0">{hint}</p>}
 
       {isWebGLGalleryMode(galleryMode) && (
-        <Alert variant="info" className="studio-mb-lg">
+        <p className="studio-notice studio-notice--info studio-mb-lg">
           WebGL galleries load your images as textures. URLs must be public HTTPS and allow
           cross-origin access (CORS) from your channel page.
-        </Alert>
+        </p>
       )}
 
-      <Field
-        label="Channel video backdrop (optional)"
-        htmlFor="video-background"
-        hint="HTTPS image URL or YouTube/Vimeo watch link — muted backdrop on your channel page."
-      >
+      <label className="studio-field" htmlFor="video-background">
+        <span className="studio-label">Channel video backdrop (optional)</span>
+        <span className="studio-text-muted-sm studio-mb-sm">
+          HTTPS image URL or YouTube/Vimeo watch link — muted backdrop on your channel page.
+        </span>
         <input
           id="video-background"
           type="url"
@@ -129,34 +127,34 @@ export default function ChannelGalleryPanel({
           disabled={isPending}
           placeholder="https://www.youtube.com/watch?v=…"
           onChange={(e) => setVideoBackgroundUrl(e.target.value)}
-          className="studio-url-input"
+          className="studio-input"
         />
-      </Field>
+      </label>
 
       {galleryMode !== 'NONE' && (
-        <Field
-          label="Your images (one HTTPS URL per line)"
-          htmlFor="gallery-images"
-          hint="Public URLs to JPG, PNG, or WebP files."
-        >
-          <Textarea
+        <label className="studio-field" htmlFor="gallery-images">
+          <span className="studio-label">Your images (one HTTPS URL per line)</span>
+          <span className="studio-text-muted-sm studio-mb-sm">
+            Public URLs to JPG, PNG, or WebP files.
+          </span>
+          <textarea
             id="gallery-images"
             rows={5}
-            mono
             value={imageLines}
             disabled={isPending}
             placeholder={'https://cdn.example/photo1.jpg\nhttps://cdn.example/photo2.jpg'}
             onChange={(e) => setImageLines(e.target.value)}
+            className="studio-textarea"
           />
-        </Field>
+        </label>
       )}
 
-      {error && <Alert variant="error">{error}</Alert>}
-      {message && <Alert variant="success">{message}</Alert>}
+      {error && <p className="studio-notice studio-notice--error">{error}</p>}
+      {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-      <Button type="button" variant="primary" onClick={save} disabled={isPending}>
+      <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
         {isPending ? 'Saving…' : 'Save gallery'}
-      </Button>
+      </button>
     </Panel>
   )
 }
