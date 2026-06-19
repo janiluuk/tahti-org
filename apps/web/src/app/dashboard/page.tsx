@@ -4,7 +4,10 @@
 import { redirect } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import UploadForm from './upload-form'
-import { BroadcastSettingsSections } from './broadcast/_broadcast-settings-sections'
+import {
+  BroadcastSettingsSections,
+  ChannelDesignLinkPanel,
+} from './broadcast/_broadcast-settings-sections'
 import type { ModeratorRow } from './moderator-actions'
 import FanSubscriptionsPanel from './fan-subscriptions'
 import NewsletterPanel from './newsletter-panel'
@@ -25,14 +28,9 @@ import { DashboardOverview } from './_dashboard-overview'
 import { AccountSettings } from './_account-settings'
 import { StorageBar } from './_storage-bar'
 import type {
-  ChannelGalleryMode,
-  ChannelTextLayerAlignment,
-  ChannelTextLayerMode,
   CollectionGalleryMode,
   CollectionTextLayerAlignment,
   CollectionTextLayerMode,
-  VisualPreset,
-  SlideshowPreset,
 } from '@tahti/shared'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 
@@ -168,24 +166,6 @@ export default async function DashboardPage() {
     detailsSubmitted: true,
   }
   let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0 }
-  let channelGallery: {
-    galleryMode: ChannelGalleryMode
-    slideshowImages: string[]
-    videoBackgroundUrl?: string | null
-  } | null = null
-  let channelTextLayer: {
-    textLayerMode: ChannelTextLayerMode
-    textLayerText: string
-    textLayerAlign: ChannelTextLayerAlignment
-  } | null = null
-  let channelVisual: {
-    visualPreset: VisualPreset
-    colorSchemeJson: string | null
-    slideshowPreset: SlideshowPreset
-    slideshowIntervalSeconds: number
-    slideshowTransitionMs: number
-    slideshowAutoplay: boolean
-  } | null = null
   let channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] } | null =
     null
   let archiveItems: ArchiveItem[] = []
@@ -244,9 +224,6 @@ export default async function DashboardPage() {
       fanTiersRes,
       fanConnectRes,
       fanPayoutsRes,
-      galleryRes,
-      textLayerRes,
-      visualRes,
       programmeRes,
       channelItemsRes,
       archiveRes,
@@ -266,9 +243,6 @@ export default async function DashboardPage() {
       slug ? get('/api/me/fan-tiers') : null,
       slug ? get('/api/me/fan-subs/connect') : null,
       slug ? get('/api/me/fan-sub-payouts') : null,
-      slug ? get('/api/me/channel/gallery') : null,
-      slug ? get('/api/me/channel/text-layer') : null,
-      slug ? get('/api/me/channel/visual') : null,
       slug ? get('/api/me/channel/programme') : null,
       slug ? fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }) : null,
       slug ? get('/api/me/archive') : null,
@@ -304,9 +278,6 @@ export default async function DashboardPage() {
     if (fanTiersRes?.ok) fanTiers = (await fanTiersRes.json()) as typeof fanTiers
     if (fanConnectRes?.ok) fanConnect = (await fanConnectRes.json()) as typeof fanConnect
     if (fanPayoutsRes?.ok) fanPayoutStats = (await fanPayoutsRes.json()) as typeof fanPayoutStats
-    if (galleryRes?.ok) channelGallery = (await galleryRes.json()) as typeof channelGallery
-    if (textLayerRes?.ok) channelTextLayer = (await textLayerRes.json()) as typeof channelTextLayer
-    if (visualRes?.ok) channelVisual = (await visualRes.json()) as typeof channelVisual
     if (programmeRes?.ok) channelProgramme = (await programmeRes.json()) as typeof channelProgramme
     if (channelItemsRes?.ok) archiveItems = (await channelItemsRes.json()) as ArchiveItem[]
     if (archiveRes?.ok) {
@@ -325,22 +296,6 @@ export default async function DashboardPage() {
 
   const otherModeratedChannels = moderatedChannels.filter((c) => !c.isOwner)
 
-  if (user.channel && !channelGallery) {
-    channelGallery = { galleryMode: 'NONE', slideshowImages: [] }
-  }
-  if (user.channel && !channelTextLayer) {
-    channelTextLayer = { textLayerMode: 'NONE', textLayerText: '', textLayerAlign: 'CENTER' }
-  }
-  if (user.channel && !channelVisual) {
-    channelVisual = {
-      visualPreset: 'MINIMAL',
-      colorSchemeJson: null,
-      slideshowPreset: 'FADE',
-      slideshowIntervalSeconds: 8,
-      slideshowTransitionMs: 600,
-      slideshowAutoplay: true,
-    }
-  }
   if (user.channel && !channelProgramme) {
     channelProgramme = { fallbackMode: 'shuffle', items: [] }
   }
@@ -497,37 +452,32 @@ export default async function DashboardPage() {
           />
         }
         broadcast={
-          user.channel &&
-          channelGallery &&
-          channelTextLayer &&
-          channelVisual &&
-          channelProgramme ? (
-            <>
-              <Panel
-                title="Broadcast studio"
-                headerTight
-                description="Connect OBS or Mixxx, preview your stream, and go live."
-              >
-                <NextLink href="/dashboard/broadcast" className="ui-btn ui-btn--primary">
-                  <SidebarNavIconSvg name="distribution" />
-                  Open broadcast studio →
-                </NextLink>
-              </Panel>
+          user.channel && channelProgramme ? (
+            <div className="studio-broadcast-tab">
+              <div className="studio-broadcast-tab__shortcuts">
+                <Panel
+                  title="Broadcast studio"
+                  headerTight
+                  description="Connect OBS or Mixxx, preview your stream, and go live."
+                >
+                  <NextLink href="/dashboard/broadcast" className="ui-btn ui-btn--primary">
+                    <SidebarNavIconSvg name="distribution" />
+                    Open broadcast studio →
+                  </NextLink>
+                </Panel>
+                <ChannelDesignLinkPanel />
+              </div>
               <BroadcastSettingsSections
                 channelSlug={user.channel.slug}
                 isLive={user.channel.state === 'LIVE'}
-                appearanceDefaultOpen
                 announcements={announcements}
                 moderators={moderators}
-                channelGallery={channelGallery}
-                channelTextLayer={channelTextLayer}
-                channelVisual={channelVisual}
                 channelProgramme={channelProgramme}
                 channelSchedule={channelSchedule}
                 mixcloudStatus={mixcloudStatus}
                 apiUrl={apiUrl}
               />
-            </>
+            </div>
           ) : undefined
         }
         catalog={

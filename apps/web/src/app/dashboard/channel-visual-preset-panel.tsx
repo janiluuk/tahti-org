@@ -41,7 +41,11 @@ function parseOrNull(json: string | null): ColorScheme | null {
   }
 }
 
-export default function ChannelVisualPresetPanel({ channelSlug, initial }: Props) {
+export default function ChannelVisualPresetPanel({
+  channelSlug,
+  initial,
+  bare = false,
+}: Props & { bare?: boolean }) {
   const router = useRouter()
   const [preset, setPreset] = useState<VisualPreset>(initial.visualPreset)
   const parsed = parseOrNull(initial.colorSchemeJson)
@@ -80,12 +84,8 @@ export default function ChannelVisualPresetPanel({ channelSlug, initial }: Props
     })
   }
 
-  return (
-    <Panel
-      title="Visual style"
-      headerTight
-      description="Background visualizer, color palette, and gallery slideshow transitions for your public channel page."
-    >
+  const form = (
+    <>
       <div className="studio-field--block">
         <span className="studio-label">Background visualizer</span>
         <VisualPresetPicker
@@ -220,10 +220,24 @@ export default function ChannelVisualPresetPanel({ channelSlug, initial }: Props
         >
           {isPending ? 'Saving…' : 'Save appearance'}
         </button>
-        <Link href={`/c/${channelSlug}`} className="ui-btn ui-btn--secondary" target="_blank">
-          Preview channel →
-        </Link>
+        {!bare ? (
+          <Link href={`/c/${channelSlug}`} className="ui-btn ui-btn--secondary" target="_blank">
+            Preview channel →
+          </Link>
+        ) : null}
       </div>
+    </>
+  )
+
+  if (bare) return form
+
+  return (
+    <Panel
+      title="Visual style"
+      headerTight
+      description="Background visualizer, color palette, and gallery slideshow transitions for your public channel page."
+    >
+      {form}
     </Panel>
   )
 }

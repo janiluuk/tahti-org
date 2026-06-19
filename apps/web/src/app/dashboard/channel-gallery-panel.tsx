@@ -22,12 +22,14 @@ const SIMPLE_MODES = CHANNEL_GALLERY_MODES.filter((m) => m === 'NONE' || m === '
 
 export default function ChannelGalleryPanel({
   initial,
+  bare = false,
 }: {
   initial: {
     galleryMode: ChannelGalleryMode
     slideshowImages: string[]
     videoBackgroundUrl?: string | null
   }
+  bare?: boolean
 }) {
   const router = useRouter()
   const [galleryMode, setGalleryMode] = useState<ChannelGalleryMode>(initial.galleryMode)
@@ -65,21 +67,8 @@ export default function ChannelGalleryPanel({
     })
   }
 
-  return (
-    <Panel
-      title="Channel gallery"
-      headerTight
-      description={
-        <>
-          Show your photos on your public channel page. Pick a style below — five WebGL galleries
-          are inspired by{' '}
-          <a href={CHANNEL_GALLERY_SOURCE_URL} target="_blank" rel="noopener noreferrer">
-            freefrontend.com/three-js
-          </a>
-          . Paste up to 10 HTTPS URLs to your own images (CDN or MinIO).
-        </>
-      }
-    >
+  const form = (
+    <>
       <label className="studio-field" htmlFor="gallery-mode">
         <span className="studio-label">Gallery style</span>
         <select
@@ -155,6 +144,27 @@ export default function ChannelGalleryPanel({
       <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
         {isPending ? 'Saving…' : 'Save gallery'}
       </button>
+    </>
+  )
+
+  if (bare) return form
+
+  return (
+    <Panel
+      title="Channel gallery"
+      headerTight
+      description={
+        <>
+          Show your photos on your public channel page. Pick a style below — five WebGL galleries
+          are inspired by{' '}
+          <a href={CHANNEL_GALLERY_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+            freefrontend.com/three-js
+          </a>
+          . Paste up to 10 HTTPS URLs to your own images (CDN or MinIO).
+        </>
+      }
+    >
+      {form}
     </Panel>
   )
 }

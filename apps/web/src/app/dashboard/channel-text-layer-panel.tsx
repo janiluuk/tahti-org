@@ -22,12 +22,14 @@ const EFFECT_MODES = CHANNEL_TEXT_LAYER_MODES.filter((m) => m !== 'NONE')
 
 export default function ChannelTextLayerPanel({
   initial,
+  bare = false,
 }: {
   initial: {
     textLayerMode: ChannelTextLayerMode
     textLayerText: string
     textLayerAlign: ChannelTextLayerAlignment
   }
+  bare?: boolean
 }) {
   const router = useRouter()
   const [textLayerMode, setTextLayerMode] = useState<ChannelTextLayerMode>(initial.textLayerMode)
@@ -66,20 +68,8 @@ export default function ChannelTextLayerPanel({
     })
   }
 
-  return (
-    <Panel
-      title="Channel text layer"
-      headerTight
-      description={
-        <>
-          Add a stylized headline on your public channel page. Five CSS text effects are inspired by{' '}
-          <a href={CHANNEL_TEXT_LAYER_SOURCE_URL} target="_blank" rel="noopener noreferrer">
-            freefrontend.com/css-text-effects
-          </a>
-          .
-        </>
-      }
-    >
+  const form = (
+    <>
       <label className="studio-field" htmlFor="text-layer-mode">
         <span className="studio-label">Text effect</span>
         <select
@@ -144,6 +134,26 @@ export default function ChannelTextLayerPanel({
       <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
         {isPending ? 'Saving…' : 'Save text layer'}
       </button>
+    </>
+  )
+
+  if (bare) return form
+
+  return (
+    <Panel
+      title="Channel text layer"
+      headerTight
+      description={
+        <>
+          Add a stylized headline on your public channel page. Five CSS text effects are inspired by{' '}
+          <a href={CHANNEL_TEXT_LAYER_SOURCE_URL} target="_blank" rel="noopener noreferrer">
+            freefrontend.com/css-text-effects
+          </a>
+          .
+        </>
+      }
+    >
+      {form}
     </Panel>
   )
 }

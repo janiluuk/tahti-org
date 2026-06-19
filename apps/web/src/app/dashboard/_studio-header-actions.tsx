@@ -47,10 +47,16 @@ export function StudioHeaderActions({
             {isLive ? 'On air' : 'Go live'}
           </NextLink>
           {channelSlug ? (
-            <NextLink href={`/c/${channelSlug}`} className="ui-btn ui-btn--sm ui-btn--ghost">
-              <SidebarNavIconSvg name="channel" />
-              View channel
-            </NextLink>
+            <>
+              <NextLink href="/dashboard/channel" className="ui-btn ui-btn--sm ui-btn--ghost">
+                <SidebarNavIconSvg name="appearance" />
+                Design
+              </NextLink>
+              <NextLink href={`/c/${channelSlug}`} className="ui-btn ui-btn--sm ui-btn--ghost">
+                <SidebarNavIconSvg name="channel" />
+                View channel
+              </NextLink>
+            </>
           ) : null}
         </>
       ) : (

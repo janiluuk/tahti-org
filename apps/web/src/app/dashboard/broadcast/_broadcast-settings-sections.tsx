@@ -8,62 +8,29 @@ import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import AnnouncementsPanel from '../announcements-panel'
 import ModeratorsPanel from '../moderators-panel'
 import type { ModeratorRow } from '../moderator-actions'
-import ChannelGalleryPanel from '../channel-gallery-panel'
-import ChannelTextLayerPanel from '../channel-text-layer-panel'
-import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
 import ProgrammePanel from '../programme-panel'
 import ChannelSchedulePanel from '../channel-schedule-panel'
 import type { ProgrammeItemRow } from '../programme-actions'
 import { MixcloudConnect } from '../mixcloud-connect'
 import { TahtiRadioPanel } from '../tahti-radio-panel'
-import type {
-  ChannelGalleryMode,
-  ChannelTextLayerAlignment,
-  ChannelTextLayerMode,
-  SlideshowPreset,
-  VisualPreset,
-} from '@tahti/shared'
 
 export type BroadcastSettingsSectionsProps = {
   channelSlug: string
   isLive: boolean
-  appearanceDefaultOpen?: boolean
   announcements: Array<{ id: string; body: string; createdAt: string }>
   moderators: ModeratorRow[]
-  channelGallery: {
-    galleryMode: ChannelGalleryMode
-    slideshowImages: string[]
-    videoBackgroundUrl?: string | null
-  }
-  channelTextLayer: {
-    textLayerMode: ChannelTextLayerMode
-    textLayerText: string
-    textLayerAlign: ChannelTextLayerAlignment
-  }
-  channelVisual: {
-    visualPreset: VisualPreset
-    colorSchemeJson: string | null
-    slideshowPreset: SlideshowPreset
-    slideshowIntervalSeconds: number
-    slideshowTransitionMs: number
-    slideshowAutoplay: boolean
-  }
   channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] }
   channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null }
   mixcloudStatus: { connected: boolean; configured: boolean }
   apiUrl: string
 }
 
-/** Collapsible channel appearance, schedule, and distribution settings. */
+/** Schedule, distribution, and chat settings for the broadcast studio. */
 export function BroadcastSettingsSections({
   channelSlug,
   isLive,
-  appearanceDefaultOpen = false,
   announcements,
   moderators,
-  channelGallery,
-  channelTextLayer,
-  channelVisual,
   channelProgramme,
   channelSchedule,
   mixcloudStatus,
@@ -77,19 +44,7 @@ export function BroadcastSettingsSections({
         </Panel>
       )}
 
-      <div id="channel-appearance" className="studio-section-anchor">
-        <StudioCollapse
-          title="Channel appearance"
-          hint="gallery, text overlay & visual style"
-          defaultOpen={appearanceDefaultOpen}
-        >
-          <ChannelGalleryPanel initial={channelGallery} />
-          <ChannelTextLayerPanel initial={channelTextLayer} />
-          <ChannelVisualPresetPanel channelSlug={channelSlug} initial={channelVisual} />
-        </StudioCollapse>
-      </div>
-
-      <StudioCollapse title="Schedule & programme" hint="next show & running order">
+      <StudioCollapse title="Schedule & programme" hint="next show & running order" defaultOpen>
         <ProgrammePanel initial={channelProgramme} />
         <ChannelSchedulePanel
           initialAt={channelSchedule.nextBroadcastAt}
@@ -129,5 +84,21 @@ export function BroadcastSettingsSections({
         <ModeratorsPanel initial={moderators} channelSlug={channelSlug} />
       </StudioCollapse>
     </section>
+  )
+}
+
+/** Compact link card pointing to the full channel design page. */
+export function ChannelDesignLinkPanel() {
+  return (
+    <Panel
+      title="Channel design"
+      headerTight
+      description="Gallery, text overlay, colors, and visual style for your public channel page."
+      className="studio-channel-design-link"
+    >
+      <NextLink href="/dashboard/channel" className="ui-btn ui-btn--primary">
+        Open channel editor →
+      </NextLink>
+    </Panel>
   )
 }
