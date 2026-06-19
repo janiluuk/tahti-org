@@ -169,14 +169,14 @@ describe('Release catalog journey (album + EP + single)', () => {
 
     const epSmart = await app.inject({ method: 'GET', url: `/api/v1/r/${ep.smartLinkSlug}` })
     expect(epSmart.statusCode).toBe(200)
-    expect(epSmart.json().colorScheme.accent).toBe(SCHEMES.EP.accent)
+    expect(epSmart.json().release.colorScheme.accent).toBe(SCHEMES.EP.accent)
 
     const singleSmart = await app.inject({
       method: 'GET',
       url: `/api/v1/r/${single.smartLinkSlug}`,
     })
     expect(singleSmart.statusCode).toBe(200)
-    expect(singleSmart.json().colorScheme.accent).toBe(SCHEMES.SINGLE.accent)
+    expect(singleSmart.json().release.colorScheme.accent).toBe(SCHEMES.SINGLE.accent)
 
     const profile = await app.inject({
       method: 'GET',
