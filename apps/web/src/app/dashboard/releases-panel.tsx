@@ -160,9 +160,9 @@ export default function ReleasesPanel({
         <span className="studio-text-muted-sm">
           {initial.length} release{initial.length === 1 ? '' : 's'}
         </span>
-        <a href={`/u/${username}`} className="ui-btn ui-btn--sm ui-btn--ghost">
+        <Link href={`/u/${username}`} className="ui-btn ui-btn--sm ui-btn--ghost">
           Public profile ↗
-        </a>
+        </Link>
       </div>
 
       {initial.length > 0 && (

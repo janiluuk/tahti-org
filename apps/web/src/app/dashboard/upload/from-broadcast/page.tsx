@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Link from 'next/link'
-import { Panel, Text } from '@tahti/ui'
+import { Panel, SidebarNavIconSvg, Text } from '@tahti/ui'
 import { ImportPageLayout, ImportSteps } from '../import/_import-page-layout'
 import { fetchRecentBroadcasts } from '../upload-actions'
 
@@ -54,8 +54,9 @@ export default async function FromBroadcastPage() {
           <Text as="p" tone="muted" className="import-page__panel-copy">
             Go live from the dashboard to create a broadcast recording you can publish here.
           </Text>
-          <Link href="/dashboard" className="ui-btn ui-btn--primary studio-mt-sm">
-            Go to live dashboard
+          <Link href="/dashboard/broadcast" className="ui-btn ui-btn--primary studio-mt-sm">
+            <SidebarNavIconSvg name="distribution" />
+            Open broadcast studio
           </Link>
         </Panel>
       ) : (

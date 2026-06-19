@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { cookies } from 'next/headers'
-import { Heading, PageShell } from '@tahti/ui'
+import { Heading, PageShell, SidebarNavIconSvg } from '@tahti/ui'
 import { CollectionsGrid } from './_collections-grid'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -46,18 +46,20 @@ export default async function CollectionsPage() {
           </div>
           <div className="studio-page-header__actions">
             <Link href="/dashboard/collections/new" className="ui-btn ui-btn--primary ui-btn--sm">
-              + New collection
+              <SidebarNavIconSvg name="collections" />
+              New collection
             </Link>
           </div>
         </header>
-        <div className="collections-empty">
-          <h2 className="collections-empty__heading">Group your content into collections</h2>
-          <p className="collections-empty__body">
+        <div className="studio-empty-card collections-empty">
+          <h2 className="studio-empty-card__text">Group your content into collections</h2>
+          <p className="studio-empty-card__hint">
             Albums, EPs, DJ-set series, live archives — a collection gives your listeners a curated
             way to explore your work. One track can live in multiple collections; removing it from a
             collection never deletes it.
           </p>
-          <Link href="/dashboard/collections/new" className="ui-btn ui-btn--primary">
+          <Link href="/dashboard/collections/new" className="ui-btn ui-btn--primary studio-mt-md">
+            <SidebarNavIconSvg name="collections" />
             Create your first collection
           </Link>
         </div>
@@ -73,7 +75,8 @@ export default async function CollectionsPage() {
         </div>
         <div className="studio-page-header__actions">
           <Link href="/dashboard/collections/new" className="ui-btn ui-btn--primary ui-btn--sm">
-            + New collection
+            <SidebarNavIconSvg name="collections" />
+            New collection
           </Link>
         </div>
       </header>

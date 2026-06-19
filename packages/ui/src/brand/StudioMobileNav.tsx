@@ -118,7 +118,6 @@ const MOBILE_NAV = [
     href: '/dashboard/revenue',
     label: 'Revenue',
     Icon: IconRevenue,
-    requiresChannel: true,
   },
   {
     href: '/dashboard#account',

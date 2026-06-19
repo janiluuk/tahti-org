@@ -36,6 +36,39 @@ run_artist_journey() {
   fi
 }
 
+# PLAT-050: a paid member's channel must resolve through the wildcard
+# *.tahti.live subdomain — Caddy sets X-Tahti-Channel-Slug, web middleware
+# rewrites to /c/[slug]. Simulate Caddy's header here since dev/CI has no
+# wildcard DNS in front of the web container.
+run_artist_subdomain_journey() {
+  echo ""
+  echo "── Artist subdomain journey (PLAT-050) ────────────────────"
+
+  local tier_check subdomain_code subdomain_body missing_body
+  tier_check=$(curl -sf -b "$COOKIE_JAR" "$API_URL/api/auth/me" 2>/dev/null || echo '{}')
+  e2e_check_json "demo artist is on a paid tier (ARTIST)" '"tier":"ARTIST"' "$tier_check"
+
+  if ! e2e_app_reachable "/"; then
+    e2e_yellow "web: subdomain journey skipped (APP not up)"
+    return 0
+  fi
+
+  subdomain_code=$(e2e_http_code -H "x-tahti-channel-slug: ${E2E_DEMO_ARTIST_USER}" "$APP_URL/")
+  e2e_check_http "web: ${E2E_DEMO_ARTIST_USER}.tahti.live resolves to the artist's channel" "200" "$subdomain_code"
+
+  subdomain_body=$(curl -sf -H "x-tahti-channel-slug: ${E2E_DEMO_ARTIST_USER}" "$APP_URL/" 2>/dev/null || echo '')
+  e2e_check_json "web: subdomain page renders the artist's channel content" "ch-archive-section" "$subdomain_body"
+
+  # KNOWN ISSUE: Next.js notFound() renders the not-found page correctly but
+  # returns HTTP 200 instead of 404 for this dynamic route (reproduces even on
+  # a direct /c/[slug] hit with no middleware involved — no not-found.tsx
+  # exists anywhere under apps/web/src/app). Tracked separately; assert on
+  # body content here since that's what's reachable without a deeper Next.js
+  # routing fix.
+  missing_body=$(curl -sf -H "x-tahti-channel-slug: no-such-artist-${RANDOM}" "$APP_URL/" 2>/dev/null || echo '')
+  e2e_check_json "web: unknown subdomain renders not-found content (not the artist's channel)" "could not be found" "$missing_body"
+}
+
 run_streamer_journey() {
   echo ""
   echo "── Streamer journey (artist ingest) ──────────────────────"
@@ -84,6 +117,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   source "$JOURNEYS_DIR/fixtures.sh"
   e2e_wait_for_api "$API_URL/health" || exit 1
   run_artist_journey
+  run_artist_subdomain_journey
   run_streamer_journey
   e2e_summary "Artist journey" || exit 1
 fi

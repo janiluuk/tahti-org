@@ -3,6 +3,7 @@
 
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { Panel } from '@tahti/ui'
 
@@ -37,7 +38,7 @@ export function CustomDomainPanel({
       <Panel title="Custom domain" headerTight>
         <p className="studio-help">
           Custom domains are available on the paid membership (€40/year).{' '}
-          <a href="/help/tier-limits">Upgrade →</a>
+          <Link href="/dashboard#membership">View membership →</Link>
         </p>
       </Panel>
     )

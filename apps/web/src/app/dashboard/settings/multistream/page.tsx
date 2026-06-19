@@ -3,6 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import NextLink from 'next/link'
 import { PageShell, StatusPill } from '@tahti/ui'
 import { MultistreamTargetsPanel } from './multistream-targets-panel'
 
@@ -64,7 +65,9 @@ export default async function MultistreamSettingsPage() {
           {isPaid ? (
             <StatusPill tone="cyan">PAID · UNLIMITED TARGETS</StatusPill>
           ) : (
-            <StatusPill tone="amber">PAID FEATURE</StatusPill>
+            <NextLink href="/dashboard#membership" className="ui-btn ui-btn--sm ui-btn--primary">
+              View membership →
+            </NextLink>
           )}
         </div>
       </div>
@@ -75,9 +78,11 @@ export default async function MultistreamSettingsPage() {
         <div className="studio-empty-card studio-mt-xl">
           <p className="studio-empty-card__text">Multistream is a Tahti membership feature.</p>
           <p className="studio-empty-card__hint">
-            Upgrade to mirror your live broadcast to YouTube, Twitch, Kick, and more —{' '}
-            <a href="/dashboard#account">see membership options in Settings</a>.
+            Upgrade to mirror your live broadcast to YouTube, Twitch, Kick, and more.
           </p>
+          <NextLink href="/dashboard#membership" className="ui-btn ui-btn--primary studio-mt-sm">
+            View membership →
+          </NextLink>
         </div>
       )}
     </PageShell>

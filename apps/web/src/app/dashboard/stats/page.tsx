@@ -3,7 +3,10 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Heading, PageShell, StatCard, StatCardGrid } from '@tahti/ui'
+import NextLink from 'next/link'
+import { Heading, PageShell, SidebarNavIconSvg, StatCard, StatCardGrid } from '@tahti/ui'
+import { getDashboardUser } from '@/lib/dashboard-session'
+import { StudioHeaderActions } from '../_studio-header-actions'
 import { StatsPlaysPanel } from './stats-plays-panel'
 import { ListenerMapPanel } from './listener-map-panel'
 
@@ -87,12 +90,42 @@ export default async function StatsPage() {
   const maxEng = Math.max(1, ...engagementUnits.map((e) => e.value))
 
   const hasData = totalPlays > 0 || tracks.length > 0 || countries.length > 0
+  const user = await getDashboardUser()
 
   return (
     <PageShell size="md">
       <div className="studio-page-header">
-        <Heading level={1}>Stats</Heading>
+        <div>
+          <Heading level={1}>Stats</Heading>
+        </div>
+        <div className="studio-page-header__actions">
+          <StudioHeaderActions
+            hasChannel={Boolean(user?.channel)}
+            isLive={user?.channel?.state === 'LIVE'}
+            channelSlug={user?.channel?.slug}
+            showBack
+          />
+        </div>
       </div>
+
+      {!hasData ? (
+        <div className="studio-empty-card studio-mb-md">
+          <p className="studio-empty-card__text">No listener activity yet.</p>
+          <p className="studio-empty-card__hint">
+            Stats appear once listeners play tracks, download sets, or use your smart links.
+          </p>
+          <div className="db-quick-actions db-quick-actions--centered studio-mt-md">
+            <NextLink href="/dashboard/upload" className="db-quick-action db-quick-action--primary">
+              <SidebarNavIconSvg name="upload" />
+              Upload a set
+            </NextLink>
+            <NextLink href="/dashboard/broadcast" className="db-quick-action">
+              <SidebarNavIconSvg name="distribution" />
+              Go live
+            </NextLink>
+          </div>
+        </div>
+      ) : null}
 
       <StatCardGrid>
         <StatCard variant="plays" value={totalPlays.toLocaleString()} label="Plays this month" />
@@ -101,7 +134,7 @@ export default async function StatsPage() {
         <StatCard
           variant="revenue"
           value={`€${(revenueCents / 100).toFixed(0)}`}
-          label="Fan-sub / mo"
+          label="Revenue this month"
         />
       </StatCardGrid>
 
@@ -177,15 +210,6 @@ export default async function StatsPage() {
           ))}
         </div>
       </div>
-
-      {!hasData && (
-        <div className="studio-empty-card studio-mt-xl">
-          <p className="studio-empty-card__text">No listener activity yet.</p>
-          <p className="studio-empty-card__hint">
-            Stats appear once listeners play tracks, download sets, or use your smart links.
-          </p>
-        </div>
-      )}
     </PageShell>
   )
 }

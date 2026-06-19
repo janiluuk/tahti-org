@@ -5,6 +5,11 @@ import { Heading, Link, Text } from '@tahti/ui'
 
 const GUIDES: { href: string; title: string; description: string }[] = [
   {
+    href: '/help/for-artists',
+    title: 'Artist guide',
+    description: 'Create your channel, go live, upload sets, and share your public links.',
+  },
+  {
     href: '/help/broadcast',
     title: 'Broadcast setup guides',
     description: 'Connect OBS, Streamlabs, Mixxx, or Traktor to your Tahti stream key.',

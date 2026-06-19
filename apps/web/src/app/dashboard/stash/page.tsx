@@ -4,6 +4,8 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Heading, PageShell } from '@tahti/ui'
+import { getDashboardUser } from '@/lib/dashboard-session'
+import { StudioHeaderActions } from '../_studio-header-actions'
 import { StashClient } from './stash-client'
 
 interface StashFile {
@@ -73,6 +75,8 @@ export default async function StashPage() {
       ? Math.min(100, Math.round((usedBytes / targetBytes) * 100))
       : 0
 
+  const user = await getDashboardUser()
+
   return (
     <PageShell size="md">
       <div className="studio-page-header stash-page-header">
@@ -80,10 +84,18 @@ export default async function StashPage() {
           <Heading level={1}>My Stash</Heading>
           {storage && (
             <p className="stash-storage-meta">
-              Private storage · {fmtBytes(usedBytes)} used
+              Private files · {fmtBytes(usedBytes)} used
               {showSoftTarget && targetBytes > 0 ? ` · soft target ${fmtBytes(targetBytes)}` : ''}
             </p>
           )}
+        </div>
+        <div className="studio-page-header__actions">
+          <StudioHeaderActions
+            hasChannel={Boolean(user?.channel)}
+            isLive={user?.channel?.state === 'LIVE'}
+            channelSlug={user?.channel?.slug}
+            showBack
+          />
         </div>
       </div>
 

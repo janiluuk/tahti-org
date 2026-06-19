@@ -40,7 +40,7 @@ export function OverviewStreamKey({ rtmpKey, icecastMount, icecastPass }: Props)
           {masked(rtmpKey)}
         </span>
         <CopyBtn value={rtmpKey} label="RTMP stream key" />
-        <Link href="/dashboard#broadcast" className="db-cred-copy-btn">
+        <Link href="/dashboard/broadcast" className="db-cred-copy-btn">
           Rotate
         </Link>
       </div>

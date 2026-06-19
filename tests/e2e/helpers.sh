@@ -30,8 +30,12 @@ e2e_wait_for_api() {
 
 # HTTP status only — do not use curl -f; failed requests still print %{http_code}
 # and -f would make `cmd || echo 000` append 000 → 404000.
+# curl exits non-zero on connection failure but still prints 000 — capture output
+# without aborting under set -e.
 e2e_http_code() {
-  curl -sS -o /dev/null -w '%{http_code}' "$@"
+  local code
+  code=$(curl -sS -o /dev/null -w '%{http_code}' "$@" 2>/dev/null) || true
+  echo "${code:-000}"
 }
 
 e2e_check_http() {

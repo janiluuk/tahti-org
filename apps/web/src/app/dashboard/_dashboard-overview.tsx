@@ -2,7 +2,14 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ComponentProps, ReactNode } from 'react'
-import { Link, StatCard, StatCardGrid, StudioCollapse, BroadcastStatusBar } from '@tahti/ui'
+import NextLink from 'next/link'
+import {
+  StatCard,
+  StatCardGrid,
+  StudioCollapse,
+  BroadcastStatusBar,
+  SidebarNavIconSvg,
+} from '@tahti/ui'
 import BroadcastUsageBanner, { type BroadcastUsage } from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
 import { OverviewStreamKey } from './overview-stream-key'
@@ -30,6 +37,9 @@ interface ModeratedChannel {
 
 export type DashboardOverviewProps = {
   channel: { slug: string; state: string } | null
+  username: string
+  isMember: boolean
+  memberNumber: number | null
   streamSettings: StreamSettings | null
   broadcastUsage: BroadcastUsage | null
   statDlCount: number
@@ -44,6 +54,43 @@ export type DashboardOverviewProps = {
   storageBar: ReactNode
 }
 
+function IconGuide() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M2 3.5c1.5-.7 3.3-.7 6 0v9c-2.7-.7-4.5-.7-6 0v-9ZM14 3.5c-1.5-.7-3.3-.7-6 0v9c2.7-.7 4.5-.7 6 0v-9Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function IconChart() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="2" y="9" width="3" height="5" rx="0.75" fill="currentColor" opacity=".6" />
+      <rect x="6.5" y="5" width="3" height="9" rx="0.75" fill="currentColor" opacity=".8" />
+      <rect x="11" y="2" width="3" height="12" rx="0.75" fill="currentColor" />
+    </svg>
+  )
+}
+
+function IconView() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M1.5 8s2.3-4.5 6.5-4.5S14.5 8 14.5 8s-2.3 4.5-6.5 4.5S1.5 8 1.5 8Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <circle cx="8" cy="8" r="1.75" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  )
+}
+
 function agoLabel(createdAt: string): string {
   const ms = Date.now() - new Date(createdAt).getTime()
   const d = Math.floor(ms / 86400000)
@@ -56,6 +103,9 @@ function agoLabel(createdAt: string): string {
 /** Channel overview — stats, credentials, quick actions, recent archive (matches website mock). */
 export function DashboardOverview({
   channel,
+  username,
+  isMember,
+  memberNumber,
   streamSettings,
   broadcastUsage,
   statDlCount,
@@ -70,22 +120,35 @@ export function DashboardOverview({
   storageBar,
 }: DashboardOverviewProps) {
   if (!channel) {
+    const channelHost = `${username}.tahti.live`
     return (
       <div className="db-overview">
         {storageBar}
-        <div className="studio-empty-card">
-          <p className="studio-empty-card__text">No artist channel yet</p>
-          <p className="studio-empty-card__hint">
-            Complete membership and channel setup to unlock broadcasting, archive uploads, and fan
-            subscriptions.
+        <div className="db-no-channel-card">
+          <div className="db-no-channel-card__icon" aria-hidden>
+            <SidebarNavIconSvg name="channel" />
+          </div>
+          <h2 className="db-no-channel-card__title">Create your artist channel</h2>
+          {isMember && memberNumber != null ? (
+            <p className="db-no-channel-card__badge">Tahti member #{memberNumber}</p>
+          ) : null}
+          <p className="db-no-channel-card__hint">
+            Your channel lives at <strong>{channelHost}</strong>. Broadcast live (1 hour per week
+            included), upload sets to your archive, and connect with listeners — no extra steps
+            required.
           </p>
-          <div className="db-quick-actions db-quick-actions--centered">
-            <Link href="/dashboard#account" className="db-quick-action db-quick-action--primary">
-              Open settings
-            </Link>
-            <Link href="/for-artists" className="db-quick-action">
+          <div className="db-quick-actions db-quick-actions--centered db-no-channel-card__actions">
+            <NextLink
+              href="/dashboard/setup-channel"
+              className="db-quick-action db-quick-action--primary"
+            >
+              <SidebarNavIconSvg name="channel" />
+              Design your artist channel
+            </NextLink>
+            <NextLink href="/help/for-artists" className="db-quick-action">
+              <IconGuide />
               Artist guide
-            </Link>
+            </NextLink>
           </div>
         </div>
         {otherModeratedChannels.length > 0 && (
@@ -102,7 +165,7 @@ export function DashboardOverview({
       {isLive ? (
         <BroadcastStatusBar
           state="live"
-          meta={<Link href={`/c/${channel.slug}`}>View channel →</Link>}
+          meta={<NextLink href={`/c/${channel.slug}`}>View channel →</NextLink>}
           action={<EndBroadcastBtn />}
         />
       ) : (
@@ -110,9 +173,9 @@ export function DashboardOverview({
           state="offline"
           offlineMessage="Channel offline — connect OBS or Icecast to go live"
           meta={
-            <Link href="/dashboard#broadcast" className="db-overview-broadcast-link">
+            <NextLink href="/dashboard/broadcast" className="db-overview-broadcast-link">
               Stream settings →
-            </Link>
+            </NextLink>
           }
         />
       )}
@@ -146,33 +209,37 @@ export function DashboardOverview({
           <div className="db-stream-panel__label">Stream credentials</div>
           <p className="studio-text-muted-sm studio-m-0">
             Could not load stream keys.{' '}
-            <Link href="/dashboard#broadcast">Open broadcast settings →</Link>
+            <NextLink href="/dashboard/broadcast">Open broadcast settings →</NextLink>
           </p>
         </div>
       )}
 
       <div className="db-quick-actions">
-        <Link href="/dashboard/upload" className="db-quick-action db-quick-action--primary">
-          ↑ Upload a set
-        </Link>
-        <Link href="/dashboard#broadcast" className="db-quick-action">
-          ≡ Broadcast settings
-        </Link>
-        <Link href={`/c/${channel.slug}`} className="db-quick-action">
-          → View my channel
-        </Link>
-        <Link href="/dashboard/stats" className="db-quick-action">
-          📊 Full stats
-        </Link>
+        <NextLink href="/dashboard/upload" className="db-quick-action db-quick-action--primary">
+          <SidebarNavIconSvg name="upload" />
+          Upload a set
+        </NextLink>
+        <NextLink href="/dashboard/broadcast" className="db-quick-action">
+          <SidebarNavIconSvg name="distribution" />
+          Broadcast settings
+        </NextLink>
+        <NextLink href={`/c/${channel.slug}`} className="db-quick-action">
+          <IconView />
+          View my channel
+        </NextLink>
+        <NextLink href="/dashboard/stats" className="db-quick-action">
+          <IconChart />
+          Full stats
+        </NextLink>
       </div>
 
       <div className="db-recent-archive">
         <div className="db-recent-archive__header">
           <h2 className="db-recent-archive__heading">Recent archive</h2>
           {archiveItems.length > 0 ? (
-            <Link href="/dashboard#archive" className="db-recent-archive__view-all">
+            <NextLink href="/dashboard#archive" className="db-recent-archive__view-all">
               View all →
-            </Link>
+            </NextLink>
           ) : null}
         </div>
         {archiveItems.length === 0 ? (
@@ -182,12 +249,13 @@ export function DashboardOverview({
               Upload a set or import from SoundCloud — it appears here and on your channel once
               published.
             </p>
-            <Link
+            <NextLink
               href="/dashboard/upload"
               className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm"
             >
+              <SidebarNavIconSvg name="upload" />
               Upload or import →
-            </Link>
+            </NextLink>
           </div>
         ) : (
           <ul className="db-recent-archive__list">
@@ -207,9 +275,9 @@ export function DashboardOverview({
                     </div>
                   </div>
                   <div className="db-recent-archive__actions">
-                    <Link href="/dashboard#archive" className="db-recent-archive__link">
+                    <NextLink href="/dashboard#archive" className="db-recent-archive__link">
                       Edit
-                    </Link>
+                    </NextLink>
                   </div>
                 </li>
               )
@@ -243,12 +311,12 @@ function ModerationAccess({ channels }: { channels: ModeratedChannel[] }) {
         {channels.map((c) => (
           <li key={c.slug} className="studio-item-row--list">
             <span className="studio-flex-1">{c.displayName}</span>
-            <Link
+            <NextLink
               href={`/dashboard/moderate/${c.slug}`}
               className="ui-btn ui-btn--sm ui-btn--ghost"
             >
               Moderate chat
-            </Link>
+            </NextLink>
           </li>
         ))}
       </ul>

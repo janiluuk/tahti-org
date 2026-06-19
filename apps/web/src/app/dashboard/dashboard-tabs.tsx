@@ -5,7 +5,7 @@
 
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { Panel, StudioTabs } from '@tahti/ui'
+import { Panel, SidebarNavIconSvg, StudioTabs } from '@tahti/ui'
 
 export type DashboardTabsProps = {
   hasChannel: boolean
@@ -20,11 +20,13 @@ function ChannelRequiredPanel({ title, description }: { title: string; descripti
   return (
     <Panel title={title} headerTight description={description}>
       <p className="studio-text-muted-sm">
-        Set up your channel during signup to unlock archive, releases, broadcast, and audience
-        tools.
+        Create your artist channel to use archive, releases, broadcast, and audience tools. Every
+        member can design a channel at username.tahti.live — broadcast up to 1 hour per week
+        included.
       </p>
-      <Link href="/signup/broadcast" className="ui-btn ui-btn--primary studio-mt-md">
-        Set up channel
+      <Link href="/dashboard/setup-channel" className="ui-btn ui-btn--primary studio-mt-md">
+        <SidebarNavIconSvg name="channel" />
+        Design your artist channel
       </Link>
     </Panel>
   )

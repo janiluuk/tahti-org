@@ -30,7 +30,7 @@ export function AdminShellHeader({ displayName, username, userInitial }: AdminSh
             <span className="studio-top-nav__user-name">{displayName}</span>
           </div>
           <Link href="/dashboard" className="studio-top-nav__link">
-            Artist dashboard
+            Switch to artist
           </Link>
           <Link href="/governance" className="studio-top-nav__link">
             Governance

@@ -711,6 +711,21 @@ Cross-referenced the **Channel appearance** slide in `website/index.html` (`#moc
 |:---:|:---|---|:---:|:---:|
 | [x] | **PLAT-079** | **Channel appearance editor (dashboard)** — Broadcast tab → **Channel appearance** (`#channel-appearance`, open by default): gallery mode + image URLs + video backdrop (`PATCH /api/me/channel/gallery`), CSS text-layer effects (`PATCH /api/me/channel/text-layer`), and visual style panel matching the website mockup — WebGL preset thumbnail grid with live mini-canvas, custom 5-color palette override, slideshow transition picker (Fade / Zoom / Pan / Blur cross) with interval + speed sliders, autoplay toggle (`PATCH /api/me/channel/visual`). **Preview channel →** opens `/c/:slug` in a new tab. Studio-dark UI on all three panels (no admin light-theme leakage). E2E manifest entry: `artist/channel-appearance.png` → `/dashboard#broadcast`. Website reference: `website/index.html` mockup tab **Visual preset**. | Medium | P2 |
 
+### Cloud drive import — archive uploads (PLAT-080)
+
+Artists should import audio from their own cloud storage without downloading to disk first. Prefer a provider-agnostic OAuth layer where possible; ship Google Drive first.
+
+| Status | ID | Description | Size | Priority |
+|:---:|:---|---|:---:|:---:|
+| [ ] | **PLAT-080** | **Google Drive import (phase 1)** — OAuth connect in dashboard upload flow; browse `audio/*` files in the user’s Drive; server-side fetch to MinIO via presigned multipart upload (no browser download). Scope: `drive.readonly` + `drive.metadata.readonly`. UI: “Import from Google Drive” tile beside Bandcamp/SoundCloud on `/dashboard/upload`. | Large | P2 |
+| [ ] | **PLAT-081** | **Cloud import abstraction** — Shared `CloudImportProvider` interface (`listFiles`, `getDownloadStream`, `revokeToken`) so Dropbox, OneDrive, or Box can plug in later without duplicating upload plumbing. Evaluate [Open Cloud Mesh](https://ocm.cern.ch/) / WebDAV as a fallback for self-hosted Nextcloud. | Medium | P3 |
+| [ ] | **PLAT-082** | **Import job UX** — Progress bar for cloud→MinIO transfer + transcode queue; retry on token expiry with reconnect prompt; audit log entry per import (`source: google_drive`, file id, bytes). | Medium | P2 |
+| [ ] | **PLAT-083** | **Security & privacy** — Store refresh tokens encrypted (same pattern as Mixcloud OAuth); document in `ops/VENDORS.md`; user can disconnect Drive from Account → Connections; no persistent copy of file metadata beyond import job. | Small | P1 |
+
+**Suggested implementation order:** PLAT-083 (token storage pattern) → PLAT-080 (Google Drive MVP) → PLAT-082 (progress UX) → PLAT-081 (second provider).
+
+**Out of scope for v1:** writing back to Drive, shared-drive team folders, Google Workspace admin install.
+
 ### Security, UX & performance audit (2026-06-05)
 
 Cross-cutting audit of auth, studio UX, and dashboard/API performance. Items marked `[x]` were implemented in the same sprint; others remain backlog.

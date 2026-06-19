@@ -5,7 +5,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Button, CopyRow, Heading, Panel, Stack } from '@/components/ui'
+import { Button, CopyRow, Heading, Panel, Stack } from '@tahti/ui'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }

@@ -109,6 +109,7 @@ import meSocialRoutes from './routes/me/social.js'
 import socialTwitterRoutes from './routes/me/social-twitter.js'
 import socialInstagramRoutes from './routes/me/social-instagram.js'
 import meChannelScheduleRoutes from './routes/me/channel-schedule.js'
+import meChannelProvisionRoutes from './routes/me/channel-provision.js'
 import meArchiveVersionRoutes from './routes/me/archive-versions.js'
 import meArchiveEditorRoutes from './routes/me/archive-editor.js'
 import meEditorProjectRoutes from './routes/me/editor-projects.js'
@@ -533,6 +534,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(socialTwitterRoutes)
   await fastify.register(socialInstagramRoutes)
   await fastify.register(meChannelScheduleRoutes)
+  await fastify.register(meChannelProvisionRoutes)
   await fastify.register(meArchiveVersionRoutes)
   await fastify.register(meArchiveEditorRoutes)
   await fastify.register(meEditorProjectRoutes)
