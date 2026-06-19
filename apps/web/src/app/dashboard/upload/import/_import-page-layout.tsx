@@ -19,7 +19,10 @@ const SERVICE_META: Record<ImportService, { abbr: string; tone: StudioFlowBadgeT
 }
 
 export const ImportSteps = StudioFlowSteps
-export const ImportServiceTags = StudioFlowTags
+
+export function ImportServiceTags({ services }: { services: string[] }) {
+  return <StudioFlowTags items={services} />
+}
 
 export function ImportPageLayout({
   service,
