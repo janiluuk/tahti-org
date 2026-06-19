@@ -16,6 +16,7 @@ WORKDIR /app
 COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/db/package.json      ./packages/db/
 COPY packages/shared/package.json  ./packages/shared/
+COPY packages/audio-edit/package.json ./packages/audio-edit/
 COPY apps/api/package.json         ./apps/api/
 COPY apps/worker/package.json      ./apps/worker/
 COPY apps/web/package.json         ./apps/web/
@@ -27,6 +28,7 @@ RUN pnpm install --frozen-lockfile
 COPY packages/db/src     ./packages/db/src
 COPY packages/db/prisma  ./packages/db/prisma
 COPY packages/shared/src ./packages/shared/src
+COPY packages/audio-edit/src ./packages/audio-edit/src
 COPY services/orchestrator/src ./services/orchestrator/src
 
 RUN pnpm --filter @tahti/db db:generate
