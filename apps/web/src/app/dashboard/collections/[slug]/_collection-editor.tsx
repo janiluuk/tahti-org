@@ -332,14 +332,23 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               Tracks &amp; releases
               <span className="collection-editor__count">{items.length}</span>
             </h2>
-            <Link href="/dashboard/archive" className="studio-btn-ghost studio-btn-sm">
+            <Link href="/dashboard#archive" className="studio-btn-ghost studio-btn-sm">
               + Add item
             </Link>
           </div>
 
           {items.length === 0 ? (
-            <div className="collection-editor__empty">
-              <p>No items yet. Add archive recordings or releases.</p>
+            <div className="studio-empty-card collection-editor__empty">
+              <p className="studio-empty-card__text">No items yet</p>
+              <p className="studio-empty-card__hint">
+                Add archive recordings or releases from your catalog tab.
+              </p>
+              <Link
+                href="/dashboard#archive"
+                className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm"
+              >
+                Open archive →
+              </Link>
             </div>
           ) : (
             <ol className="collection-tracklist" onPointerUp={() => void persistItemOrder()}>

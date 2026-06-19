@@ -1,38 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import UploadForm from './upload-form'
-import StreamSettingsPanel from './stream-settings'
-import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
-import AnnouncementsPanel from './announcements-panel'
-import ModeratorsPanel from './moderators-panel'
+import { BroadcastSettingsSections } from './broadcast/_broadcast-settings-sections'
 import type { ModeratorRow } from './moderator-actions'
 import FanSubscriptionsPanel from './fan-subscriptions'
 import NewsletterPanel from './newsletter-panel'
 import ReleasesPanel from './releases-panel'
 import CollectionsPanel from './collections-panel'
-import ChannelGalleryPanel from './channel-gallery-panel'
-import ChannelTextLayerPanel from './channel-text-layer-panel'
-import ChannelVisualPresetPanel from './channel-visual-preset-panel'
-import ProgrammePanel from './programme-panel'
-import ChannelSchedulePanel from './channel-schedule-panel'
 import type { ProgrammeItemRow } from './programme-actions'
 import MembershipPanel from './membership-panel'
 import PrivacyPanel from './privacy-panel'
 import SocialPromoPanel from './social-promo-panel'
 import type { SocialSettings } from './social-actions'
 import { CustomDomainPanel } from './custom-domain-panel'
-import { MixcloudConnect } from './mixcloud-connect'
 import { fetchMixcloudStatus } from './mixcloud-actions'
-import { TahtiRadioPanel } from './tahti-radio-panel'
 import { MentionsPanel } from './mentions-panel'
-import { Link, PageShell, Panel, StudioCollapse } from '@tahti/ui'
+import { PageShell, Panel, SidebarNavIconSvg } from '@tahti/ui'
+import NextLink from 'next/link'
 import { DashboardTabs } from './dashboard-tabs'
 import { DashboardOverview } from './_dashboard-overview'
 import { AccountSettings } from './_account-settings'
+import { StorageBar } from './_storage-bar'
 import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
@@ -404,9 +395,9 @@ export default async function DashboardPage() {
                   {user.channel.state === 'LIVE' ? 'broadcasting live' : 'offline'}
                 </span>
                 <span>·</span>
-                <Link href={`/c/${user.channel.slug}`} className="db-header-channel-url">
+                <NextLink href={`/c/${user.channel.slug}`} className="db-header-channel-url">
                   {user.channel.slug}.tahti.live
-                </Link>
+                </NextLink>
               </>
             ) : (
               <span>{user.displayName}</span>
@@ -414,9 +405,9 @@ export default async function DashboardPage() {
           </div>
           <div className="db-role-row" style={{ marginTop: '0.5rem' }}>
             {user.isBoard && (
-              <Link href="/admin" className="db-role-badge db-role-badge--board">
+              <NextLink href="/admin" className="db-role-badge db-role-badge--board">
                 Board · Admin
-              </Link>
+              </NextLink>
             )}
             {user.channel ? (
               <span className="db-role-badge db-role-badge--artist">
@@ -437,10 +428,10 @@ export default async function DashboardPage() {
             )}
           </div>
         </div>
-        {user.channel && (
+        {user.channel ? (
           <div className="studio-page-header__actions">
-            <Link
-              href={`/c/${user.channel.slug}`}
+            <NextLink
+              href="/dashboard/broadcast"
               className={`db-go-live-btn${user.channel.state === 'LIVE' ? ' db-go-live-btn--live' : ''}`}
             >
               <span
@@ -449,7 +440,17 @@ export default async function DashboardPage() {
                 style={{ width: 6, height: 6 }}
               />
               {user.channel.state === 'LIVE' ? 'On air' : 'Go live now'}
-            </Link>
+            </NextLink>
+          </div>
+        ) : (
+          <div className="studio-page-header__actions">
+            <NextLink
+              href="/dashboard/setup-channel"
+              className="db-go-live-btn db-go-live-btn--channel"
+            >
+              <SidebarNavIconSvg name="channel" />
+              Design your artist channel
+            </NextLink>
           </div>
         )}
       </div>
@@ -459,6 +460,9 @@ export default async function DashboardPage() {
         overview={
           <DashboardOverview
             channel={user.channel}
+            username={user.username}
+            isMember={user.isMember}
+            memberNumber={membershipInfo?.memberNumber ?? null}
             streamSettings={streamSettings}
             broadcastUsage={broadcastUsage}
             statDlCount={statDlCount}
@@ -493,84 +497,37 @@ export default async function DashboardPage() {
           />
         }
         broadcast={
-          user.channel ? (
-            <section id="broadcast" className="studio-section-anchor">
-              {streamSettings && (
-                <StreamSettingsPanel
-                  initial={streamSettings}
-                  isLive={user.channel.state === 'LIVE'}
-                />
-              )}
-
-              {user.channel.state === 'LIVE' && (
-                <Panel title="Live tracklist" headerTight>
-                  <LiveTracklistPanel
-                    slug={user.channel.slug}
-                    heading="Detected tracks"
-                    showPlaceholder
-                  />
-                </Panel>
-              )}
-
-              <div id="channel-appearance" className="studio-section-anchor">
-                <StudioCollapse
-                  title="Channel appearance"
-                  hint="gallery, text overlay & visual style"
-                  defaultOpen
-                >
-                  {channelGallery && <ChannelGalleryPanel initial={channelGallery} />}
-                  {channelTextLayer && <ChannelTextLayerPanel initial={channelTextLayer} />}
-                  {channelVisual && (
-                    <ChannelVisualPresetPanel
-                      channelSlug={user.channel.slug}
-                      initial={channelVisual}
-                    />
-                  )}
-                </StudioCollapse>
-              </div>
-
-              <StudioCollapse title="Schedule & programme" hint="next show & running order">
-                {channelProgramme && <ProgrammePanel initial={channelProgramme} />}
-                <ChannelSchedulePanel
-                  initialAt={channelSchedule.nextBroadcastAt}
-                  initialNote={channelSchedule.nextBroadcastNote}
-                />
-              </StudioCollapse>
-
+          user.channel &&
+          channelGallery &&
+          channelTextLayer &&
+          channelVisual &&
+          channelProgramme ? (
+            <>
               <Panel
-                title="Multistream"
+                title="Broadcast studio"
                 headerTight
-                description="Mirror your live broadcast to other platforms"
+                description="Connect OBS or Mixxx, preview your stream, and go live."
               >
-                <p className="studio-text-muted-sm studio-mb-sm">
-                  Manage RTMP targets, status, and stream keys on a dedicated page.
-                </p>
-                <Link
-                  href="/dashboard/settings/multistream"
-                  className="ui-btn ui-btn--sm ui-btn--secondary"
-                >
-                  Manage multistream targets →
-                </Link>
+                <NextLink href="/dashboard/broadcast" className="ui-btn ui-btn--primary">
+                  <SidebarNavIconSvg name="distribution" />
+                  Open broadcast studio →
+                </NextLink>
               </Panel>
-
-              <StudioCollapse
-                title="Distribution & chat"
-                hint="Mixcloud, Tahti Radio, announcements, mods"
-              >
-                <Suspense fallback={null}>
-                  <MixcloudConnect
-                    initial={{
-                      connected: mixcloudStatus.connected,
-                      configured: mixcloudStatus.configured,
-                    }}
-                    apiUrl={apiUrl}
-                  />
-                </Suspense>
-                <TahtiRadioPanel />
-                <AnnouncementsPanel initial={announcements} />
-                <ModeratorsPanel initial={moderators} channelSlug={user.channel.slug} />
-              </StudioCollapse>
-            </section>
+              <BroadcastSettingsSections
+                channelSlug={user.channel.slug}
+                isLive={user.channel.state === 'LIVE'}
+                appearanceDefaultOpen
+                announcements={announcements}
+                moderators={moderators}
+                channelGallery={channelGallery}
+                channelTextLayer={channelTextLayer}
+                channelVisual={channelVisual}
+                channelProgramme={channelProgramme}
+                channelSchedule={channelSchedule}
+                mixcloudStatus={mixcloudStatus}
+                apiUrl={apiUrl}
+              />
+            </>
           ) : undefined
         }
         catalog={
@@ -688,81 +645,5 @@ export default async function DashboardPage() {
         }
       />
     </PageShell>
-  )
-}
-
-function StorageBar({
-  trackCount,
-  usedBytes,
-  softTargetBytes,
-  showSoftTarget,
-}: {
-  trackCount: number
-  usedBytes: number
-  softTargetBytes?: number
-  showSoftTarget: boolean
-}) {
-  function fmtBytes(bytes: number): string {
-    if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`
-    if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
-    return `${Math.max(1, Math.round(bytes / 1024))} KB`
-  }
-
-  const trackLabel = `${trackCount} track${trackCount === 1 ? '' : 's'}`
-
-  if (!showSoftTarget || softTargetBytes == null) {
-    return (
-      <div className="studio-storage">
-        <div className="studio-storage-header">
-          <span className="studio-stat-box-title">Storage</span>
-          <span className="studio-text-sm studio-text-muted-sm">
-            {trackCount > 0 ? (
-              <>
-                {trackLabel}{' '}
-                <small className="studio-storage-bytes">{fmtBytes(usedBytes)} used</small>
-              </>
-            ) : (
-              '0 tracks'
-            )}
-          </span>
-        </div>
-      </div>
-    )
-  }
-
-  const pct = Math.min(100, Math.round((usedBytes / softTargetBytes) * 100))
-  const isNearLimit = pct >= 80
-
-  return (
-    <div className="studio-storage">
-      <div className="studio-storage-header">
-        <span className="studio-stat-box-title">Storage</span>
-        <span
-          className={`studio-text-sm${isNearLimit ? ' studio-text-error' : ' studio-text-muted-sm'}`}
-        >
-          {trackCount > 0 ? (
-            <>
-              {trackLabel}{' '}
-              <small className="studio-storage-bytes">
-                {fmtBytes(usedBytes)} used · soft target {fmtBytes(softTargetBytes)}
-              </small>
-            </>
-          ) : (
-            '0 tracks'
-          )}
-        </span>
-      </div>
-      <div className="studio-storage-track">
-        <div
-          className={`studio-storage-fill${isNearLimit ? ' studio-storage-fill--warn' : ''}`}
-          style={{ ['--studio-storage-pct' as string]: `${pct}%` }}
-        />
-      </div>
-      {isNearLimit && (
-        <p className="studio-text-muted-sm studio-mt-sm studio-m-0">
-          You&apos;ve passed the soft target — that&apos;s fine. We track usage, not hard limits.
-        </p>
-      )}
-    </div>
   )
 }

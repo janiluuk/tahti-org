@@ -68,12 +68,12 @@ export default function MembershipPanel({
           })
         : null
     return (
-      <Panel title="Tahti ry membership" headerTight>
+      <Panel title="Tahti ry membership" headerTight id="membership">
         <div className="studio-member-card">
           <span className="studio-member-card__badge">Active member #{memberNumber ?? '—'}</span>
           <p className="studio-help">
-            Thank you for supporting the cooperative — lossless streaming and unlimited live
-            broadcasting are unlocked.
+            Thank you for supporting the cooperative — your membership includes lossless streaming
+            for listeners and unlimited live broadcasting.
           </p>
           {subscriptionMigrationRequired && (
             <p className="studio-notice studio-notice--info">
@@ -125,7 +125,8 @@ export default function MembershipPanel({
       variant="warning"
       title={lapsed ? 'Renew your membership' : 'Complete your membership'}
       headerTight
-      description={`Tahti ry is a member-governed nonprofit. Annual membership is €${(priceCents / 100).toFixed(0)}/year (tax-deductible for eligible professionals in Finland). Unlocks lossless streaming and unlimited live broadcasting.`}
+      id="membership"
+      description={`Tahti ry is a member-governed nonprofit. Annual membership is €${(priceCents / 100).toFixed(0)}/year (tax-deductible for eligible professionals in Finland). Adds lossless streaming for listeners and unlimited live broadcasting.`}
     >
       {lapsed && (
         <p className="studio-notice studio-notice--error studio-mb-sm">

@@ -4,7 +4,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { PageShell } from '@tahti/ui'
+import { PageShell, SidebarNavIconSvg } from '@tahti/ui'
 import { createEmptyEditorProject, fetchEditorProjects } from './editor-actions'
 
 export default async function EditorIndexPage({
@@ -47,27 +47,30 @@ export default async function EditorIndexPage({
         <div className="studio-page-header__actions">
           <form action={createEmptyEditorProject}>
             <button type="submit" className="ui-btn ui-btn--sm ui-btn--primary">
+              <SidebarNavIconSvg name="upload" />
               New session
             </button>
           </form>
         </div>
       </div>
       {error && <p className="studio-text-error">{error}</p>}
-      <ul className="studio-list">
-        {(projects ?? []).map((p) => (
-          <li key={p.id} className="studio-card-row studio-mb-sm">
-            <div>
-              <div className="studio-stat-box-title">{p.title}</div>
-              <div className="studio-text-muted-sm">
-                Updated {new Date(p.updatedAt).toLocaleString()}
+      {(projects ?? []).length > 0 ? (
+        <ul className="studio-list">
+          {(projects ?? []).map((p) => (
+            <li key={p.id} className="studio-card-row studio-mb-sm">
+              <div>
+                <div className="studio-stat-box-title">{p.title}</div>
+                <div className="studio-text-muted-sm">
+                  Updated {new Date(p.updatedAt).toLocaleString()}
+                </div>
               </div>
-            </div>
-            <Link href={`/dashboard/editor/${p.id}`} className="ui-btn ui-btn--sm ui-btn--ghost">
-              Open
-            </Link>
-          </li>
-        ))}
-      </ul>
+              <Link href={`/dashboard/editor/${p.id}`} className="ui-btn ui-btn--sm ui-btn--ghost">
+                Open
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {projects?.length === 0 && (
         <div className="studio-empty-card studio-mt-md">
           <p className="studio-empty-card__text">No sessions yet</p>

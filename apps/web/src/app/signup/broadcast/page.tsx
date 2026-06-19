@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { BrandLogo, Heading, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
+import { getDashboardUser } from '@/lib/dashboard-session'
 import { SignupWizard } from '../signup-wizard'
 
 interface StreamSettings {
@@ -30,6 +31,9 @@ async function fetchStreamSettings(sessionValue: string): Promise<StreamSettings
 export default async function SignupBroadcastPage() {
   const sessionCookie = cookies().get('tahti_session')
   if (!sessionCookie) redirect('/login?next=/signup/broadcast')
+
+  const user = await getDashboardUser()
+  if (user?.channel) redirect('/dashboard/broadcast')
 
   const settings = await fetchStreamSettings(sessionCookie.value)
 
@@ -91,12 +95,13 @@ export default async function SignupBroadcastPage() {
 
           <Text tone="muted" size="sm">
             Your stream keys are also available any time from{' '}
-            <Link href="/dashboard">Dashboard → Channel</Link>. You can rotate them there if needed.
+            <Link href="/dashboard/broadcast">Dashboard → Broadcast studio</Link>. You can rotate
+            them there if needed.
           </Text>
 
           <div className="signup-broadcast-actions">
-            <Link href="/dashboard" className="ui-btn ui-btn--primary">
-              Go to dashboard →
+            <Link href="/dashboard/broadcast" className="ui-btn ui-btn--primary">
+              Open broadcast studio →
             </Link>
             <Link href="/signup/profile" className="ui-btn ui-btn--ghost">
               ← Back to profile

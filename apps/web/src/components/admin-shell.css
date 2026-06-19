@@ -3,6 +3,84 @@
 
 @import '@tahti/ui/src/styles/brand-studio.css';
 
+/* ── Ambient background (very subtle — admin productivity surface) ─────── */
+
+@keyframes admin-ambient-drift {
+  from {
+    transform: translate3d(-1.2%, -0.8%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(1.2%, 0.8%, 0) scale(1.035);
+  }
+}
+
+@keyframes admin-ambient-drift-alt {
+  from {
+    transform: translate3d(1%, 0.6%, 0) scale(1.02);
+  }
+  to {
+    transform: translate3d(-1%, -0.6%, 0) scale(0.98);
+  }
+}
+
+[data-tahti-ui='studio'].admin-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-tahti-ui='studio'].admin-shell::before,
+[data-tahti-ui='studio'].admin-shell::after {
+  content: '';
+  position: fixed;
+  inset: -12%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+[data-tahti-ui='studio'].admin-shell::before {
+  background:
+    radial-gradient(
+      ellipse 72% 58% at 16% 24%,
+      color-mix(in srgb, var(--cyan) 7%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 68% 52% at 84% 76%,
+      color-mix(in srgb, var(--purple) 6%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 58% 48% at 50% 48%,
+      color-mix(in srgb, var(--amber) 4%, transparent),
+      transparent 70%
+    );
+  animation: admin-ambient-drift 64s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+[data-tahti-ui='studio'].admin-shell::after {
+  background: radial-gradient(
+    ellipse 52% 44% at 72% 28%,
+    color-mix(in srgb, var(--green) 4%, transparent),
+    transparent 72%
+  );
+  animation: admin-ambient-drift-alt 88s ease-in-out infinite alternate-reverse;
+  opacity: 0.85;
+}
+
+[data-tahti-ui='studio'].admin-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='studio'].admin-shell::before,
+  [data-tahti-ui='studio'].admin-shell::after {
+    animation: none;
+    transform: none;
+  }
+}
+
 .admin-view-strip {
   position: sticky;
   top: 0;

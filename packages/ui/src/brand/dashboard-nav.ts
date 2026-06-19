@@ -140,10 +140,10 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     requiresChannel: true,
   },
   {
-    href: '/dashboard#broadcast',
-    label: 'Distribution',
+    href: '/dashboard/broadcast',
+    label: 'Broadcast',
     icon: 'distribution',
-    hash: '#broadcast',
+    isRoute: true,
     sectionKey: 'broadcast',
     requiresChannel: true,
   },

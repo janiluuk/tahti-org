@@ -5,8 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Alert, Button } from '@/components/ui'
-import { SidebarNavIconSvg } from '@tahti/ui'
+import { Alert, Button, SidebarNavIconSvg } from '@tahti/ui'
 import { provisionChannel } from './setup-channel-actions'
 
 export function SetupChannelClient({ slug }: { slug: string }) {
@@ -22,7 +21,7 @@ export function SetupChannelClient({ slug }: { slug: string }) {
         setError(res.error)
         return
       }
-      router.push('/dashboard')
+      router.push('/dashboard/broadcast')
       router.refresh()
     })
   }
@@ -30,7 +29,12 @@ export function SetupChannelClient({ slug }: { slug: string }) {
   return (
     <>
       {error && <Alert variant="error">{error}</Alert>}
-      <Button type="button" onClick={create} disabled={isPending}>
+      <Button
+        type="button"
+        onClick={create}
+        disabled={isPending}
+        className="setup-channel-page__cta"
+      >
         <SidebarNavIconSvg name="channel" />
         {isPending ? 'Creating your channel…' : `Create ${slug}.tahti.live`}
       </Button>

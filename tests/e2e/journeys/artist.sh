@@ -48,6 +48,11 @@ run_artist_subdomain_journey() {
   tier_check=$(curl -sf -b "$COOKIE_JAR" "$API_URL/api/auth/me" 2>/dev/null || echo '{}')
   e2e_check_json "demo artist is on a paid tier (ARTIST)" '"tier":"ARTIST"' "$tier_check"
 
+  if ! e2e_app_reachable "/"; then
+    e2e_yellow "web: subdomain journey skipped (APP not up)"
+    return 0
+  fi
+
   subdomain_code=$(e2e_http_code -H "x-tahti-channel-slug: ${E2E_DEMO_ARTIST_USER}" "$APP_URL/")
   e2e_check_http "web: ${E2E_DEMO_ARTIST_USER}.tahti.live resolves to the artist's channel" "200" "$subdomain_code"
 

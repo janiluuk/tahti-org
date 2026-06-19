@@ -4,6 +4,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { SidebarNavIconSvg } from '@tahti/ui'
 
 interface StashShare {
   id: string
@@ -193,11 +194,12 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
         />
         <button
           type="button"
-          className="stash-upload-btn"
+          className="ui-btn ui-btn--primary stash-upload-btn"
           disabled={uploading}
           onClick={() => fileInputRef.current?.click()}
         >
-          {uploading ? `Uploading… ${uploadProgress}%` : '+ Upload'}
+          <SidebarNavIconSvg name="upload" />
+          {uploading ? `Uploading… ${uploadProgress}%` : 'Upload file'}
         </button>
       </div>
 
@@ -211,7 +213,12 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
         <span className="db-section-label">WIP Tracks</span>
 
         {files.length === 0 ? (
-          <p className="stash-empty">No files yet. Upload your WIPs, stems, and mixes here.</p>
+          <div className="studio-empty-card studio-mb-0">
+            <p className="studio-empty-card__text">No files yet</p>
+            <p className="studio-empty-card__hint">
+              Upload WIPs, stems, and mixes here — private until you share a link.
+            </p>
+          </div>
         ) : (
           <ul className="stash-file-list">
             {files.map((f) => (
@@ -225,7 +232,7 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
                     {fileLabel(f)} · Modified {fmtDate(f.updatedAt)} ·{' '}
                     {f.shareCount > 0
                       ? `${f.shareCount} share${f.shareCount > 1 ? 's' : ''}`
-                      : '0 comments'}
+                      : 'Not shared'}
                   </span>
                 </div>
                 <div className="stash-file-actions">

@@ -4,6 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Panel } from '@tahti/ui'
 import { createFanTier, setFanTierActive, startFanSubConnectOnboarding } from './actions'
@@ -125,9 +126,9 @@ export default function FanSubscriptionsPanel({
     >
       <div className="studio-row--between studio-mb-sm">
         <span className="studio-text-muted-sm">Tiers & payouts</span>
-        <a href={`/u/${username}/subscribe`} className="ui-btn ui-btn--sm ui-btn--ghost">
+        <Link href={`/u/${username}/subscribe`} className="ui-btn ui-btn--sm ui-btn--ghost">
           View public page ↗
-        </a>
+        </Link>
       </div>
 
       {payoutStats && (

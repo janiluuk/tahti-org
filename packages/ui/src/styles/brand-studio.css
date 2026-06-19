@@ -2826,12 +2826,231 @@
   background: color-mix(in srgb, var(--green) 24%, var(--card));
 }
 
+[data-tahti-ui='studio'] .db-go-live-btn--channel {
+  background: var(--amber);
+  color: var(--bg);
+}
+
+[data-tahti-ui='studio'] .db-go-live-btn--channel:hover {
+  background: color-mix(in srgb, var(--amber) 88%, var(--white));
+}
+
 [data-tahti-ui='studio'] .db-go-live-btn--live {
   background: color-mix(in srgb, var(--green) 18%, var(--card));
   border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
 }
 
-/* ── Stream credentials (overview tab compact display) ─────────────────── */
+/* ── No-channel onboarding card ─────────────────────────────────────────── */
+[data-tahti-ui='studio'] .db-no-channel-card {
+  padding: var(--space-6) var(--space-5);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+[data-tahti-ui='studio'] .db-no-channel-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto var(--space-3);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cyan) 12%, var(--card2));
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .db-no-channel-card__icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+[data-tahti-ui='studio'] .db-no-channel-card__title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+}
+
+[data-tahti-ui='studio'] .db-no-channel-card__badge {
+  margin: 0 0 var(--space-3);
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--green) 14%, var(--card2));
+  color: var(--green);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .db-no-channel-card__hint {
+  margin: 0 auto var(--space-4);
+  max-width: 36rem;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+[data-tahti-ui='studio'] .db-no-channel-card__hint strong {
+  color: var(--text);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .db-no-channel-card__actions {
+  margin-bottom: 0;
+}
+
+[data-tahti-ui='studio'] .db-quick-action svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .ui-btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .ui-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* ── Setup channel page ─────────────────────────────────────────────────── */
+[data-tahti-ui='studio'] .setup-channel-page__header {
+  margin-bottom: var(--space-5);
+  text-align: center;
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: var(--space-3);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--amber) 16%, var(--card2));
+  color: var(--amber);
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__card {
+  padding: var(--space-5);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__features {
+  list-style: none;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__features li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__features li svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__cta svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+[data-tahti-ui='studio'] .db-overview .studio-storage {
+  margin-top: 0;
+}
+
+/* ── Subpage header actions ─────────────────────────────────────────────── */
+[data-tahti-ui='studio'] .studio-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='studio'] .db-go-live-btn--compact {
+  padding: 0.35rem 0.75rem;
+  font-size: var(--text-xs);
+}
+
+[data-tahti-ui='studio'] .upload-entry__topbar.studio-page-header {
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .setup-channel-page__header.studio-page-header {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  [data-tahti-ui='studio'] .setup-channel-page__header.studio-page-header {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  [data-tahti-ui='studio'] .setup-channel-page__header .studio-page-header__actions {
+    margin-left: auto;
+    align-self: flex-start;
+  }
+}
+
+[data-tahti-ui='studio'] .broadcast-studio-page__header.studio-page-header {
+  margin-bottom: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .collections-empty.studio-empty-card {
+  text-align: left;
+}
+
+[data-tahti-ui='studio'] .collections-empty .studio-empty-card__text {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .stash-upload-btn svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 [data-tahti-ui='studio'] .db-stream-panel {
   background: var(--card);
   border: 1px solid var(--border);
@@ -6255,15 +6474,31 @@
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--soundcloud {
-  background: color-mix(in srgb, #ff5500 18%, var(--card)); /* design-token-allow: platform brand color */
+  background: color-mix(
+    in srgb,
+    #ff5500 18%,
+    var(--card)
+  ); /* design-token-allow: platform brand color */
   color: color-mix(in srgb, #ff5500 55%, var(--fg)); /* design-token-allow: platform brand color */
-  border-color: color-mix(in srgb, #ff5500 35%, var(--border)); /* design-token-allow: platform brand color */
+  border-color: color-mix(
+    in srgb,
+    #ff5500 35%,
+    var(--border)
+  ); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--bandcamp {
-  background: color-mix(in srgb, #629aa9 18%, var(--card)); /* design-token-allow: platform brand color */
+  background: color-mix(
+    in srgb,
+    #629aa9 18%,
+    var(--card)
+  ); /* design-token-allow: platform brand color */
   color: color-mix(in srgb, #629aa9 55%, var(--fg)); /* design-token-allow: platform brand color */
-  border-color: color-mix(in srgb, #629aa9 35%, var(--border)); /* design-token-allow: platform brand color */
+  border-color: color-mix(
+    in srgb,
+    #629aa9 35%,
+    var(--border)
+  ); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--url {
@@ -6808,4 +7043,55 @@
   [data-tahti-ui='studio'] .venue-broadcast-form__fields {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Broadcast studio (/dashboard/broadcast) ── */
+
+[data-tahti-ui='studio'] .broadcast-studio-page__header {
+  margin-bottom: var(--space-5);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio-page__title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__preview-hint {
+  margin: var(--space-3) 0 0;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__public-link {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__steps-foot {
+  margin: var(--space-3) 0 0;
+}
+
+[data-tahti-ui='studio'] .broadcast-settings-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
