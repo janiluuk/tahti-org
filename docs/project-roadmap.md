@@ -711,6 +711,51 @@ Cross-referenced the **Channel appearance** slide in `website/index.html` (`#moc
 |:---:|:---|---|:---:|:---:|
 | [x] | **PLAT-079** | **Channel appearance editor (dashboard)** — Broadcast tab → **Channel appearance** (`#channel-appearance`, open by default): gallery mode + image URLs + video backdrop (`PATCH /api/me/channel/gallery`), CSS text-layer effects (`PATCH /api/me/channel/text-layer`), and visual style panel matching the website mockup — WebGL preset thumbnail grid with live mini-canvas, custom 5-color palette override, slideshow transition picker (Fade / Zoom / Pan / Blur cross) with interval + speed sliders, autoplay toggle (`PATCH /api/me/channel/visual`). **Preview channel →** opens `/c/:slug` in a new tab. Studio-dark UI on all three panels (no admin light-theme leakage). E2E manifest entry: `artist/channel-appearance.png` → `/dashboard#broadcast`. Website reference: `website/index.html` mockup tab **Visual preset**. | Medium | P2 |
 
+### Security, UX & performance audit (2026-06-05)
+
+Cross-cutting audit of auth, studio UX, and dashboard/API performance. Items marked `[x]` were implemented in the same sprint; others remain backlog.
+
+#### Security (SEC)
+
+| Status | ID | Description | Priority |
+|:---:|:---|---|:---:|
+| [x] | **SEC-001** | **Block public `/internal/*` ingest callbacks** — Caddy `respond 403` on `api.tahti.live/internal/*`; API hook rejects non-private IPs without `Bearer INTERNAL_SECRET`. Prevents forced stream disconnect via `on_disconnect` / `on_done`. | P0 |
+| [x] | **SEC-002** | **Stash upload objectKey ownership** — `POST /api/me/stash` rejects keys not under `stash/{userId}/`. | P1 |
+| [x] | **SEC-003** | **Mixcloud OAuth CSRF `state`** — authorize URL + callback cookie validation (SoundCloud/Bandcamp pattern). | P1 |
+| [x] | **SEC-004** | **Stripe webhook fail-closed in production** — refuse unsigned payloads when `STRIPE_WEBHOOK_SECRET` unset in prod. | P1 |
+| [x] | **SEC-005** | **Production secret validation at startup** — fail boot when `INTERNAL_SECRET`, `DOCS_PASS`, or `HCAPTCHA_SECRET` retain dev defaults. | P1 |
+| [x] | **SEC-006** | **`videoBackgroundUrl` CSS injection** — HTTPS allowlist + safe `url()` encoding on `/c/:slug`. | P2 |
+| [ ] | **SEC-007** | **Centrifugo publish proxy auth** — verify proxy signature or restrict `/api/chat/message` to internal network. | P2 |
+| [ ] | **SEC-008** | **Caddy HSTS + baseline CSP** on `app.tahti.live` / `api.tahti.live`. | P2 |
+| [x] | **SEC-009** | **Restrict `/metrics`** to internal scrape network or token. | P2 |
+| [ ] | **SEC-010** | **Session revocation on login** — delete other sessions when password/login succeeds. | P3 |
+
+#### UX (UX)
+
+| Status | ID | Description | Priority |
+|:---:|:---|---|:---:|
+| [x] | **UX-001** | **Mobile nav Revenue → `/dashboard/revenue`** (was mislabeled, opened `#newsletter`). | P0 |
+| [x] | **UX-002** | **Dead help links** — `/for-artists`, `/help/broadcast` on dashboard overview. | P0 |
+| [x] | **UX-003** | **`#collections` hash routing** — unique section key + catalog tab scroll. | P1 |
+| [x] | **UX-004** | **Focus-visible rings + reduced-motion** on studio buttons/tabs/live dots. | P1 |
+| [ ] | **UX-005** | **`studio-btn-*` → `ui-btn` sweep** — moderators, multistream, pro editor, upload flows (~15 files). | P1 |
+| [ ] | **UX-006** | **Panel wrappers** — Mixcloud, Tahti Radio, moderators, overview sub-sections. | P2 |
+| [ ] | **UX-007** | **Form labels + empty states** — fan tier creator, announcements, moderators add form. | P2 |
+| [x] | **UX-008** | **Mobile nav** — add Upload + Collections routes. | P2 |
+
+#### Performance (PERF)
+
+| Status | ID | Description | Priority |
+|:---:|:---|---|:---:|
+| [x] | **PERF-001** | **Parallelize dashboard SSR fetches** — single `Promise.all` after `/api/auth/me`. | P0 |
+| [x] | **PERF-002** | **DB indexes** — `Channel.state`, `Download(channelId, createdAt)`. | P1 |
+| [x] | **PERF-003** | **Code-split `ArchiveEditor`** on dashboard via `next/dynamic`. | P1 |
+| [x] | **PERF-004** | **Remove duplicate `/api/auth/me`** — layout vs page double-fetch. | P1 |
+| [ ] | **PERF-005** | **SQL aggregation for funnel/egress stats** — replace `findMany` + JS bucketing. | P1 |
+| [ ] | **PERF-006** | **Tab-lazy dashboard data** — don't fetch broadcast/catalog payloads on overview-only visits. | P2 |
+| [ ] | **PERF-007** | **Visual preset picker** — static thumbnails; one WebGL preview for selected preset only. | P2 |
+| [ ] | **PERF-008** | **Paginate** releases, stash, newsletter drafts, programme list endpoints. | P2 |
+
 ---
 
 ## Streaming infrastructure backlog

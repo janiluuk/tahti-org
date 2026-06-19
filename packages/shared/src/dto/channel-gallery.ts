@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { isAllowedBackdropUrl } from '../safe-background-url.js'
 
 /** All channel gallery modes (static + 5 WebGL styles from freefrontend.com/three-js). */
 export const CHANNEL_GALLERY_MODES = [
@@ -41,7 +42,14 @@ export const ChannelGalleryPatchSchema = z.object({
   galleryMode: z.enum(CHANNEL_GALLERY_MODES).optional(),
   slideshowImages: z.array(z.string().url().max(2048)).max(10).optional(),
   /** M26: HTTPS image or YouTube/Vimeo watch URL for full-width channel backdrop */
-  videoBackgroundUrl: z.string().max(2048).nullable().optional(),
+  videoBackgroundUrl: z
+    .string()
+    .max(2048)
+    .nullable()
+    .optional()
+    .refine((v) => v == null || v === '' || isAllowedBackdropUrl(v), {
+      message: 'Must be an HTTPS image URL or YouTube/Vimeo link',
+    }),
 })
 
 export type ChannelGalleryPatch = z.infer<typeof ChannelGalleryPatchSchema>

@@ -83,7 +83,7 @@ export function DashboardOverview({
             <Link href="/dashboard#account" className="db-quick-action db-quick-action--primary">
               Open settings
             </Link>
-            <Link href="/help/for-artists" className="db-quick-action">
+            <Link href="/for-artists" className="db-quick-action">
               Artist guide
             </Link>
           </div>

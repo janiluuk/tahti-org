@@ -66,6 +66,34 @@ function IconSettings() {
     </svg>
   )
 }
+function IconUpload() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M8 2.5v7M5.5 5 8 2.5 10.5 5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M3 11.5v1.5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+function IconCollections() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="2" y="4" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="9" y="4" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="5.5" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  )
+}
 
 const MOBILE_NAV = [
   {
@@ -84,12 +112,12 @@ const MOBILE_NAV = [
     sectionKey: 'archive' as const,
     requiresChannel: true,
   },
+  { href: '/dashboard/upload', label: 'Upload', Icon: IconUpload },
+  { href: '/dashboard/collections', label: 'Collections', Icon: IconCollections },
   {
-    href: '/dashboard#newsletter',
+    href: '/dashboard/revenue',
     label: 'Revenue',
     Icon: IconRevenue,
-    hash: '#newsletter',
-    sectionKey: 'newsletter' as const,
     requiresChannel: true,
   },
   {

@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Suspense } from 'react'
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import UploadForm from './upload-form'
 import StreamSettingsPanel from './stream-settings'
 import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
@@ -20,7 +20,6 @@ import ChannelVisualPresetPanel from './channel-visual-preset-panel'
 import ProgrammePanel from './programme-panel'
 import ChannelSchedulePanel from './channel-schedule-panel'
 import type { ProgrammeItemRow } from './programme-actions'
-import ArchiveEditor from './archive-editor'
 import MembershipPanel from './membership-panel'
 import PrivacyPanel from './privacy-panel'
 import SocialPromoPanel from './social-promo-panel'
@@ -44,30 +43,14 @@ import type {
   VisualPreset,
   SlideshowPreset,
 } from '@tahti/shared'
+import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
+
+const ArchiveEditor = dynamic(() => import('./archive-editor'))
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string }
   icecast: { server: string; mount: string; password: string }
   hlsUrl: string
-}
-
-interface MeResponse {
-  id: string
-  email: string
-  username: string
-  displayName: string
-  tier: string
-  emailVerifiedAt: string | null
-  isMember: boolean
-  isBoard: boolean
-  membership: { status: string; activatedAt: string | null } | null
-  channel: {
-    slug: string
-    state: string
-    customDomain: string | null
-    customDomainVerified: boolean
-  } | null
-  storage: { usedBytes: string; softTargetBytes?: string; showSoftTarget: boolean } | null
 }
 
 interface ModeratedChannel {
@@ -86,82 +69,21 @@ interface ArchiveItem {
 }
 
 export default async function DashboardPage() {
-  const cookieStore = cookies()
-  const sessionCookie = cookieStore.get('tahti_session')
-
-  if (!sessionCookie) {
+  const sessionValue = dashboardSessionCookie()
+  if (!sessionValue) {
     redirect('/login')
   }
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-
-  let user: MeResponse
-  try {
-    const response = await fetch(`${apiUrl}/api/auth/me`, {
-      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-      cache: 'no-store',
-    })
-    if (!response.ok) {
-      redirect('/login')
-    }
-    user = (await response.json()) as MeResponse
-  } catch {
+  const user = await getDashboardUser()
+  if (!user) {
     redirect('/login')
   }
 
-  let streamSettings: StreamSettings | null = null
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/stream-settings`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) {
-        streamSettings = (await res.json()) as StreamSettings
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  let announcements: Array<{ id: string; body: string; createdAt: string }> = []
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/chat/${user.channel.slug}/announcements`, {
-        cache: 'no-store',
-      })
-      if (res.ok) {
-        announcements = (await res.json()) as typeof announcements
-      }
-    } catch {
-      // ignore
-    }
-  }
-
-  let moderators: ModeratorRow[] = []
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/channel/moderators`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) moderators = (await res.json()) as ModeratorRow[]
-    } catch {
-      // ignore
-    }
-  }
-
-  let moderatedChannels: ModeratedChannel[] = []
-  try {
-    const res = await fetch(`${apiUrl}/api/me/moderate`, {
-      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-      cache: 'no-store',
-    })
-    if (res.ok) moderatedChannels = (await res.json()) as ModeratedChannel[]
-  } catch {
-    // ignore
-  }
-  const otherModeratedChannels = moderatedChannels.filter((c) => !c.isOwner)
+  const authHeaders = { Cookie: `tahti_session=${sessionValue}` }
+  const get = (path: string) =>
+    fetch(`${apiUrl}${path}`, { headers: authHeaders, cache: 'no-store' as const })
+  const slug = user.channel?.slug
 
   type MembershipInfo = {
     status: string
@@ -173,28 +95,6 @@ export default async function DashboardPage() {
     hasStripeSubscription?: boolean
     subscriptionMigrationRequired?: boolean
   }
-  let membershipInfo: MembershipInfo | null = null
-  try {
-    const res = await fetch(`${apiUrl}/api/me/membership`, {
-      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-      cache: 'no-store',
-    })
-    if (res.ok) membershipInfo = (await res.json()) as MembershipInfo
-  } catch {
-    // ignore
-  }
-
-  let socialSettings: SocialSettings | null = null
-  try {
-    const res = await fetch(`${apiUrl}/api/me/social`, {
-      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-      cache: 'no-store',
-    })
-    if (res.ok) socialSettings = (await res.json()) as SocialSettings
-  } catch {
-    // ignore
-  }
-
   type BroadcastUsageInfo = {
     unlimited: boolean
     secondsUsed: number
@@ -207,6 +107,13 @@ export default async function DashboardPage() {
     showUpgradeCta?: boolean
     weeklyCapSeconds: number
   }
+
+  let streamSettings: StreamSettings | null = null
+  let announcements: Array<{ id: string; body: string; createdAt: string }> = []
+  let moderators: ModeratorRow[] = []
+  let moderatedChannels: ModeratedChannel[] = []
+  let membershipInfo: MembershipInfo | null = null
+  let socialSettings: SocialSettings | null = null
   let broadcastUsage: BroadcastUsageInfo | null = null
   let downloadGateSummary: {
     artistFollowerCount: number
@@ -240,36 +147,6 @@ export default async function DashboardPage() {
     peakDailyListeners: number
     daily: Array<{ date: string; liveSeconds: number; broadcastCount: number; listeners: number }>
   } | null = null
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/broadcast-usage`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) broadcastUsage = (await res.json()) as BroadcastUsageInfo
-    } catch {
-      // ignore
-    }
-    try {
-      const res = await fetch(`${apiUrl}/api/me/channel-funnel-stats`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) {
-        const funnel = (await res.json()) as {
-          downloadGates: NonNullable<typeof downloadGateSummary>
-          live: NonNullable<typeof channelLiveStats>
-          egress: NonNullable<typeof channelEgress>
-        }
-        downloadGateSummary = funnel.downloadGates
-        channelLiveStats = funnel.live
-        channelEgress = funnel.egress
-      }
-    } catch {
-      // ignore
-    }
-  }
-
   let releases: Array<{
     id: string
     title: string
@@ -280,16 +157,6 @@ export default async function DashboardPage() {
     smartLinkTargets: Record<string, string> | null
     _count: { tracks: number }
   }> = []
-  try {
-    const res = await fetch(`${apiUrl}/api/me/releases`, {
-      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-      cache: 'no-store',
-    })
-    if (res.ok) releases = (await res.json()) as typeof releases
-  } catch {
-    // ignore
-  }
-
   let fanTiers: Array<{
     id: string
     name: string
@@ -298,18 +165,6 @@ export default async function DashboardPage() {
     perks: string[]
     active: boolean
   }> = []
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/fan-tiers`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) fanTiers = (await res.json()) as typeof fanTiers
-    } catch {
-      // ignore
-    }
-  }
-
   let fanConnect: {
     stripeConfigured: boolean
     paymentsReady: boolean
@@ -322,71 +177,16 @@ export default async function DashboardPage() {
     detailsSubmitted: true,
   }
   let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0 }
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/fan-subs/connect`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) fanConnect = (await res.json()) as typeof fanConnect
-    } catch {
-      // ignore
-    }
-    try {
-      const res = await fetch(`${apiUrl}/api/me/fan-sub-payouts`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) fanPayoutStats = (await res.json()) as typeof fanPayoutStats
-    } catch {
-      // ignore
-    }
-  }
-
   let channelGallery: {
     galleryMode: ChannelGalleryMode
     slideshowImages: string[]
     videoBackgroundUrl?: string | null
   } | null = null
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/channel/gallery`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) {
-        channelGallery = (await res.json()) as typeof channelGallery
-      }
-    } catch {
-      // ignore
-    }
-  }
-  if (user.channel && !channelGallery) {
-    channelGallery = { galleryMode: 'NONE', slideshowImages: [] }
-  }
-
   let channelTextLayer: {
     textLayerMode: ChannelTextLayerMode
     textLayerText: string
     textLayerAlign: ChannelTextLayerAlignment
   } | null = null
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/channel/text-layer`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) {
-        channelTextLayer = (await res.json()) as typeof channelTextLayer
-      }
-    } catch {
-      // ignore
-    }
-  }
-  if (user.channel && !channelTextLayer) {
-    channelTextLayer = { textLayerMode: 'NONE', textLayerText: '', textLayerAlign: 'CENTER' }
-  }
-
   let channelVisual: {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
@@ -395,75 +195,12 @@ export default async function DashboardPage() {
     slideshowTransitionMs: number
     slideshowAutoplay: boolean
   } | null = null
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/channel/visual`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) channelVisual = (await res.json()) as typeof channelVisual
-    } catch {
-      /* ignore */
-    }
-  }
-  if (user.channel && !channelVisual) {
-    channelVisual = {
-      visualPreset: 'MINIMAL',
-      colorSchemeJson: null,
-      slideshowPreset: 'FADE',
-      slideshowIntervalSeconds: 8,
-      slideshowTransitionMs: 600,
-      slideshowAutoplay: true,
-    }
-  }
-
   let channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] } | null =
     null
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/channel/programme`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) {
-        channelProgramme = (await res.json()) as typeof channelProgramme
-      }
-    } catch {
-      // ignore
-    }
-  }
-  if (user.channel && !channelProgramme) {
-    channelProgramme = { fallbackMode: 'shuffle', items: [] }
-  }
-
   let archiveItems: ArchiveItem[] = []
   let archiveItemsForEdit: Array<
     Record<string, unknown> & { id: string; title: string; status: string }
   > = []
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/channels/${user.channel.slug}/items`, {
-        cache: 'no-store',
-      })
-      if (res.ok) {
-        archiveItems = (await res.json()) as ArchiveItem[]
-      }
-    } catch {
-      // ignore — items section just shows empty
-    }
-    try {
-      const res = await fetch(`${apiUrl}/api/me/archive`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) {
-        archiveItemsForEdit = (await res.json()) as typeof archiveItemsForEdit
-      }
-    } catch {
-      // ignore
-    }
-  }
-
   let collections: Array<{
     id: string
     slug: string
@@ -485,20 +222,6 @@ export default async function DashboardPage() {
       release: { id: string; title: string } | null
     }>
   }> = []
-  try {
-    const res = await fetch(`${apiUrl}/api/me/collections?expand=items`, {
-      headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-      cache: 'no-store',
-    })
-    if (res.ok) collections = (await res.json()) as typeof collections
-  } catch {
-    // ignore
-  }
-
-  const publishedReleases = releases
-    .filter((r) => r.state === 'PUBLISHED')
-    .map((r) => ({ id: r.id, title: r.title }))
-
   type NewsletterStats = { total: number; confirmed: number; newLast30Days: number }
   type NewsletterDraft = {
     id: string
@@ -511,46 +234,135 @@ export default async function DashboardPage() {
   }
   let newsletterStats: NewsletterStats = { total: 0, confirmed: 0, newLast30Days: 0 }
   let newsletterDrafts: NewsletterDraft[] = []
-  if (user.channel) {
-    try {
-      const [statsRes, draftsRes] = await Promise.all([
-        fetch(`${apiUrl}/api/me/newsletter/subscribers`, {
-          headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-          cache: 'no-store',
-        }),
-        fetch(`${apiUrl}/api/me/newsletter/drafts`, {
-          headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-          cache: 'no-store',
-        }),
-      ])
+  let channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null } = {
+    nextBroadcastAt: null,
+    nextBroadcastNote: null,
+  }
+
+  try {
+    const [
+      streamSettingsRes,
+      announcementsRes,
+      moderatorsRes,
+      moderatedRes,
+      membershipRes,
+      socialRes,
+      broadcastUsageRes,
+      funnelRes,
+      releasesRes,
+      fanTiersRes,
+      fanConnectRes,
+      fanPayoutsRes,
+      galleryRes,
+      textLayerRes,
+      visualRes,
+      programmeRes,
+      channelItemsRes,
+      archiveRes,
+      collectionsRes,
+      scheduleRes,
+      newsletterPair,
+    ] = await Promise.all([
+      slug ? get('/api/me/stream-settings') : null,
+      slug ? fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }) : null,
+      slug ? get('/api/me/channel/moderators') : null,
+      get('/api/me/moderate'),
+      get('/api/me/membership'),
+      get('/api/me/social'),
+      slug ? get('/api/me/broadcast-usage') : null,
+      slug ? get('/api/me/channel-funnel-stats') : null,
+      get('/api/me/releases'),
+      slug ? get('/api/me/fan-tiers') : null,
+      slug ? get('/api/me/fan-subs/connect') : null,
+      slug ? get('/api/me/fan-sub-payouts') : null,
+      slug ? get('/api/me/channel/gallery') : null,
+      slug ? get('/api/me/channel/text-layer') : null,
+      slug ? get('/api/me/channel/visual') : null,
+      slug ? get('/api/me/channel/programme') : null,
+      slug ? fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }) : null,
+      slug ? get('/api/me/archive') : null,
+      get('/api/me/collections?expand=items'),
+      slug ? get('/api/me/channel/schedule') : null,
+      slug
+        ? Promise.all([get('/api/me/newsletter/subscribers'), get('/api/me/newsletter/drafts')])
+        : null,
+    ])
+
+    if (streamSettingsRes?.ok) streamSettings = (await streamSettingsRes.json()) as StreamSettings
+    if (announcementsRes?.ok) {
+      announcements = (await announcementsRes.json()) as typeof announcements
+    }
+    if (moderatorsRes?.ok) moderators = (await moderatorsRes.json()) as ModeratorRow[]
+    if (moderatedRes.ok) moderatedChannels = (await moderatedRes.json()) as ModeratedChannel[]
+    if (membershipRes.ok) membershipInfo = (await membershipRes.json()) as MembershipInfo
+    if (socialRes.ok) socialSettings = (await socialRes.json()) as SocialSettings
+    if (broadcastUsageRes?.ok) {
+      broadcastUsage = (await broadcastUsageRes.json()) as BroadcastUsageInfo
+    }
+    if (funnelRes?.ok) {
+      const funnel = (await funnelRes.json()) as {
+        downloadGates: NonNullable<typeof downloadGateSummary>
+        live: NonNullable<typeof channelLiveStats>
+        egress: NonNullable<typeof channelEgress>
+      }
+      downloadGateSummary = funnel.downloadGates
+      channelLiveStats = funnel.live
+      channelEgress = funnel.egress
+    }
+    if (releasesRes.ok) releases = (await releasesRes.json()) as typeof releases
+    if (fanTiersRes?.ok) fanTiers = (await fanTiersRes.json()) as typeof fanTiers
+    if (fanConnectRes?.ok) fanConnect = (await fanConnectRes.json()) as typeof fanConnect
+    if (fanPayoutsRes?.ok) fanPayoutStats = (await fanPayoutsRes.json()) as typeof fanPayoutStats
+    if (galleryRes?.ok) channelGallery = (await galleryRes.json()) as typeof channelGallery
+    if (textLayerRes?.ok) channelTextLayer = (await textLayerRes.json()) as typeof channelTextLayer
+    if (visualRes?.ok) channelVisual = (await visualRes.json()) as typeof channelVisual
+    if (programmeRes?.ok) channelProgramme = (await programmeRes.json()) as typeof channelProgramme
+    if (channelItemsRes?.ok) archiveItems = (await channelItemsRes.json()) as ArchiveItem[]
+    if (archiveRes?.ok) {
+      archiveItemsForEdit = (await archiveRes.json()) as typeof archiveItemsForEdit
+    }
+    if (collectionsRes.ok) collections = (await collectionsRes.json()) as typeof collections
+    if (scheduleRes?.ok) channelSchedule = (await scheduleRes.json()) as typeof channelSchedule
+    if (newsletterPair) {
+      const [statsRes, draftsRes] = newsletterPair
       if (statsRes.ok) newsletterStats = (await statsRes.json()) as NewsletterStats
       if (draftsRes.ok) newsletterDrafts = (await draftsRes.json()) as NewsletterDraft[]
-    } catch {
-      // ignore
+    }
+  } catch {
+    // ignore — dashboard renders with partial data
+  }
+
+  const otherModeratedChannels = moderatedChannels.filter((c) => !c.isOwner)
+
+  if (user.channel && !channelGallery) {
+    channelGallery = { galleryMode: 'NONE', slideshowImages: [] }
+  }
+  if (user.channel && !channelTextLayer) {
+    channelTextLayer = { textLayerMode: 'NONE', textLayerText: '', textLayerAlign: 'CENTER' }
+  }
+  if (user.channel && !channelVisual) {
+    channelVisual = {
+      visualPreset: 'MINIMAL',
+      colorSchemeJson: null,
+      slideshowPreset: 'FADE',
+      slideshowIntervalSeconds: 8,
+      slideshowTransitionMs: 600,
+      slideshowAutoplay: true,
     }
   }
+  if (user.channel && !channelProgramme) {
+    channelProgramme = { fallbackMode: 'shuffle', items: [] }
+  }
+
+  const publishedReleases = releases
+    .filter((r) => r.state === 'PUBLISHED')
+    .map((r) => ({ id: r.id, title: r.title }))
 
   const hasFanNewsletterPerk = fanTiers.some(
     (t) => t.active && t.perks.some((p) => p === 'FAN_NEWSLETTER'),
   )
 
   const mixcloudStatus = await fetchMixcloudStatus()
-
-  let channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null } = {
-    nextBroadcastAt: null,
-    nextBroadcastNote: null,
-  }
-  if (user.channel) {
-    try {
-      const res = await fetch(`${apiUrl}/api/me/channel/schedule`, {
-        headers: { Cookie: `tahti_session=${sessionCookie.value}` },
-        cache: 'no-store',
-      })
-      if (res.ok) channelSchedule = (await res.json()) as typeof channelSchedule
-    } catch {
-      // ignore
-    }
-  }
 
   const statDlCount =
     (downloadGateSummary as { totals: { countedDownloads?: number } } | null)?.totals

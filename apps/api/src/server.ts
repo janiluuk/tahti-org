@@ -222,6 +222,16 @@ export async function buildApp(opts: BuildOptions = {}) {
   // OPTIONS preflights for paths with no explicit OPTIONS handler.
   await fastify.register(corsPlugin)
 
+  // SEC-001: ingest + internal callbacks must not be reachable from the public internet.
+  fastify.addHook('onRequest', async (request, reply) => {
+    const path = request.url.split('?')[0] ?? ''
+    if (!path.startsWith('/internal/')) return
+    const { isTrustedInternalRequest } = await import('./lib/internal-request.js')
+    if (!isTrustedInternalRequest(request)) {
+      return reply.status(403).send('forbidden')
+    }
+  })
+
   // OpenAPI / Swagger (versioned; built on every startup, served at /docs)
   await fastify.register(swagger, {
     openapi: {

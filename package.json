@@ -33,6 +33,8 @@
     "test:e2e:dashboard-player": "bash tests/e2e/journeys/dashboard-player.sh",
     "test:e2e:dashboard-player:web": "node tests/e2e/dashboard-player.mjs",
     "test:e2e:release-upload": "node tests/e2e/release-track-upload.mjs",
+    "test:e2e:release-catalog": "node tests/e2e/release-catalog.mjs",
+    "test:e2e:pro-audio-editor": "node tests/e2e/pro-audio-editor.mjs",
     "test:e2e:live-chat": "node tests/e2e/live-chat.mjs",
     "smoke": "bash scripts/unified-smoke.sh",
     "smoke:prod": "bash scripts/unified-smoke.sh --prod",

@@ -33,6 +33,7 @@ export const VenueCalendarQuerySchema = z.object({
 
 export const MixcloudOAuthCallbackQuerySchema = z.object({
   code: z.string().min(1).max(512).optional(),
+  state: z.string().min(8).max(128).optional(),
   error: z.string().max(128).optional(),
 })
 

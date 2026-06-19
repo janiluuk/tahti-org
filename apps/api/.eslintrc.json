@@ -4,6 +4,10 @@
     {
       "files": ["src/lib/palette-extract.ts"],
       "rules": { "no-restricted-syntax": "off" }
+    },
+    {
+      "files": ["src/routes/journeys/**/*.ts"],
+      "rules": { "no-restricted-syntax": "off" }
     }
   ]
 }

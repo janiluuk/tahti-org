@@ -9,6 +9,7 @@ export type DashboardSectionKey =
   | 'overview'
   | 'archive'
   | 'releases'
+  | 'collections'
   | 'newsletter'
   | 'broadcast'
   | 'account'
@@ -31,6 +32,7 @@ export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabI
   overview: 'overview',
   archive: 'catalog',
   releases: 'catalog',
+  collections: 'catalog',
   newsletter: 'audience',
   broadcast: 'broadcast',
   account: 'account',
@@ -45,8 +47,10 @@ export const DASHBOARD_HASH_TO_SECTION: Record<string, DashboardSectionKey> = {
   archive: 'archive',
   'studio-archive': 'archive',
   releases: 'releases',
+  collections: 'collections',
   'smart-links': 'releases',
   'studio-releases': 'releases',
+  'studio-collections': 'collections',
   audience: 'newsletter',
   newsletter: 'newsletter',
   'studio-fans': 'newsletter',

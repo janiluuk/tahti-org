@@ -50,7 +50,7 @@ export function OverviewStreamKey({ rtmpKey, icecastMount, icecastPass }: Props)
           {icecastMount} · {masked(icecastPass)}
         </span>
         <CopyBtn value={icecastPass} label="Icecast password" />
-        <Link href="/help/broadcasting" className="db-cred-copy-btn">
+        <Link href="/help/broadcast" className="db-cred-copy-btn">
           Guide
         </Link>
       </div>

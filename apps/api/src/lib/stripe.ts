@@ -297,6 +297,9 @@ export interface StripeEvent {
 export function constructWebhookEvent(rawBody: string, signatureHeader?: string): StripeEvent {
   const secret = config.stripe.webhookSecret
   if (!secret) {
+    if (config.isProd) {
+      throw new Error('Stripe webhook secret is not configured')
+    }
     return JSON.parse(rawBody) as StripeEvent
   }
 

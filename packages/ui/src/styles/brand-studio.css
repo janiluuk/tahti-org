@@ -3554,6 +3554,23 @@
   line-height: 1.35;
 }
 
+[data-tahti-ui='studio'] a.ui-btn:focus-visible,
+[data-tahti-ui='studio'] button.ui-btn:focus-visible,
+[data-tahti-ui='studio'] .studio-tabs__trigger:focus-visible,
+[data-tahti-ui='studio'] .db-quick-action:focus-visible,
+[data-tahti-ui='studio'] .db-mobile-nav-item:focus-visible,
+[data-tahti-ui='studio'] .db-go-live-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='studio'] .signal-dot,
+  [data-tahti-ui='studio'] .db-live-dot {
+    animation: none !important;
+  }
+}
+
 [data-tahti-ui='studio'] .slideshow-preset-picker__grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -5028,7 +5045,7 @@
 
 [data-tahti-ui='studio'] .upload-entry__title {
   font-size: var(--text-xl);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--fg);
   margin: 0;
 }
@@ -5133,19 +5150,19 @@
 
 [data-tahti-ui='studio'] .upload-entry__drop-error {
   font-size: var(--text-sm);
-  color: var(--error, #f87171);
+  color: var(--coral);
   margin: 0;
   text-align: center;
 }
 
 [data-tahti-ui='studio'] .upload-entry__tile--broadcast {
-  border: 1.5px solid var(--green, #4ade80);
+  border: 1.5px solid var(--green);
   background: transparent;
 }
 
 [data-tahti-ui='studio'] .upload-entry__tile-title {
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--fg);
   margin: 0;
   text-transform: uppercase;
@@ -5213,7 +5230,7 @@
 
 [data-tahti-ui='studio'] .upload-entry__other-header {
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -5334,7 +5351,7 @@
 [data-tahti-ui='studio'] .upload-progress__cover-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--surface-2), var(--surface-3, #1e1e2e));
+  background: linear-gradient(135deg, var(--surface-2), var(--card));
 }
 
 [data-tahti-ui='studio'] .upload-progress__progress-area {
@@ -5372,11 +5389,11 @@
 }
 
 [data-tahti-ui='studio'] .upload-progress__status--ok {
-  color: var(--green, #4ade80);
+  color: var(--green);
 }
 
 [data-tahti-ui='studio'] .upload-progress__status--err {
-  color: var(--error, #f87171);
+  color: var(--coral);
 }
 
 [data-tahti-ui='studio'] .upload-progress__file-info {
@@ -5422,8 +5439,8 @@
 [data-tahti-ui='studio'] .upload-progress__tag-chip {
   font-size: var(--text-xs);
   font-weight: var(--weight-normal);
-  color: var(--green, #4ade80);
-  background: rgba(74, 222, 128, 0.1);
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
   padding: 1px 6px;
   border-radius: 10px;
 }
@@ -5549,7 +5566,7 @@
 
 [data-tahti-ui='studio'] .collections-page__title {
   font-size: var(--text-xl);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--fg);
   margin: 0;
 }
@@ -5569,7 +5586,7 @@
 
 [data-tahti-ui='studio'] .collections-empty__heading {
   font-size: var(--text-lg);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--fg);
   margin: 0;
 }
@@ -5704,13 +5721,13 @@
 }
 
 [data-tahti-ui='studio'] .collections-pill--purple {
-  color: #c084fc;
-  background: rgba(192, 132, 252, 0.12);
+  color: var(--purple);
+  background: color-mix(in srgb, var(--purple) 12%, transparent);
 }
 
 [data-tahti-ui='studio'] .collections-pill--amber {
-  color: var(--amber, #fbbf24);
-  background: rgba(251, 191, 36, 0.12);
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
 }
 
 [data-tahti-ui='studio'] .collections-pill--cyan {
@@ -5737,7 +5754,7 @@
 }
 
 [data-tahti-ui='studio'] .collections-status--public {
-  color: var(--green, #4ade80);
+  color: var(--green);
 }
 
 [data-tahti-ui='studio'] .collections-status--unlisted {
@@ -5745,7 +5762,7 @@
 }
 
 [data-tahti-ui='studio'] .collections-status--draft {
-  color: var(--amber, #fbbf24);
+  color: var(--amber);
 }
 
 @media (max-width: 900px) {
@@ -6043,7 +6060,7 @@
 [data-tahti-ui='studio'] .collection-editor__delete-confirm {
   background: var(--coral) !important;
   border-color: var(--coral) !important;
-  color: var(--text-on-brand, #fff) !important;
+  color: var(--text-on-brand) !important;
 }
 
 [data-tahti-ui='studio'] .collection-editor__confirm-delete {
@@ -6215,22 +6232,22 @@
   height: 2.5rem;
   border-radius: var(--radius-md);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   letter-spacing: 0.04em;
   flex-shrink: 0;
   border: 1px solid var(--border);
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--soundcloud {
-  background: color-mix(in srgb, #ff5500 18%, var(--card));
-  color: #ffb380;
-  border-color: color-mix(in srgb, #ff5500 35%, var(--border));
+  background: color-mix(in srgb, #ff5500 18%, var(--card)); /* design-token-allow: platform brand color */
+  color: color-mix(in srgb, #ff5500 55%, var(--fg)); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #ff5500 35%, var(--border)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--bandcamp {
-  background: color-mix(in srgb, #629aa9 18%, var(--card));
-  color: #9fd4e0;
-  border-color: color-mix(in srgb, #629aa9 35%, var(--border));
+  background: color-mix(in srgb, #629aa9 18%, var(--card)); /* design-token-allow: platform brand color */
+  color: color-mix(in srgb, #629aa9 55%, var(--fg)); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #629aa9 35%, var(--border)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--url {
@@ -6316,7 +6333,7 @@
   background: color-mix(in srgb, var(--cyan) 16%, transparent);
   color: var(--cyan);
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   flex-shrink: 0;
   margin-top: 0.1rem;
 }
@@ -6567,7 +6584,7 @@
 
 [data-tahti-ui='studio'] .url-paste__service {
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   color: var(--cyan);
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -6732,7 +6749,7 @@
   padding: 0 var(--space-1);
   border-radius: 3px;
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -6757,7 +6774,7 @@
 
 [data-tahti-ui='studio'] .studio-label-sm {
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-medium);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);

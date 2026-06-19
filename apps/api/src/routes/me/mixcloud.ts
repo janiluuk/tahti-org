@@ -64,7 +64,11 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
         path: '/',
       })
 
-      const url = buildMixcloudAuthorizeUrl(config.mixcloud.clientId, config.mixcloud.redirectUri)
+      const url = buildMixcloudAuthorizeUrl(
+        config.mixcloud.clientId,
+        config.mixcloud.redirectUri,
+        state,
+      )
       return reply.redirect(302, url)
     },
   )
@@ -75,7 +79,13 @@ const mixcloudRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
     }
     const code = parsedQuery.data.code
+    const state = parsedQuery.data.state
     if (!code) {
+      return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
+    }
+
+    const cookieState = request.cookies[config.mixcloud.oauthStateCookie]
+    if (!state || !cookieState || state !== cookieState) {
       return reply.redirect(302, `${config.appUrl}/dashboard?mixcloud=error`)
     }
 

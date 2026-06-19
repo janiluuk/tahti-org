@@ -297,4 +297,17 @@ describe('internal ingest (RTMP + Icecast)', () => {
       },
     })
   })
+
+  it('rejects Icecast disconnect from a public IP without internal auth (SEC-001)', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/internal/icecast/on_disconnect',
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        'x-forwarded-for': '203.0.113.50',
+      },
+      payload: `mount=/live/${SLUG}`,
+    })
+    expect(res.statusCode).toBe(403)
+  })
 })

@@ -77,8 +77,16 @@ export async function uploadToMixcloud(
   }
 }
 
-export function buildMixcloudAuthorizeUrl(clientId: string, redirectUri: string): string {
-  const params = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri })
+export function buildMixcloudAuthorizeUrl(
+  clientId: string,
+  redirectUri: string,
+  state: string,
+): string {
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    state,
+  })
   return `https://www.mixcloud.com/oauth/authorize?${params}`
 }
 

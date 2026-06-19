@@ -3,6 +3,8 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { PrometheusMetricsBodySchema, openApiResponse } from '@tahti/shared'
+import { config } from '../config.js'
+import { isTrustedInternalRequest } from '../lib/internal-request.js'
 import { collectBackupMetrics, renderBackupMetricLines } from '../lib/backup-metrics.js'
 import { renderAcrcloudMetricLines } from '../lib/acrcloud-metrics.js'
 import { renderPrometheusMetrics, runDependencyChecks } from '../lib/health-checks.js'
@@ -17,6 +19,13 @@ const metricsRoute: FastifyPluginAsync = async (fastify) => {
       schema: {
         tags: ['ops'],
         response: openApiResponse(PrometheusMetricsBodySchema, 'PrometheusMetricsBody'),
+      },
+      preHandler: async (request, reply) => {
+        if (config.nodeEnv !== 'production') return
+        const token = config.metricsToken
+        if (token && request.headers.authorization === `Bearer ${token}`) return
+        if (isTrustedInternalRequest(request)) return
+        return reply.code(403).send({ error: 'Forbidden' })
       },
     },
     async (_request, reply) => {
