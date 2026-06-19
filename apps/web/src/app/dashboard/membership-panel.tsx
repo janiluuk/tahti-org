@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Alert, Panel, Text } from '@tahti/ui'
+import { Panel } from '@tahti/ui'
 import { startMembershipCheckout, startMembershipPortal } from './actions'
 
 export default function MembershipPanel({
@@ -68,48 +68,52 @@ export default function MembershipPanel({
           })
         : null
     return (
-      <Panel title="Tahti ry membership">
-        <Text tone="success">
-          Active member #{memberNumber ?? '—'} — thank you for supporting the cooperative.
-        </Text>
-        {subscriptionMigrationRequired && (
-          <Text className="studio-mt-sm">
-            Your membership uses the legacy one-time path. Subscribe via Stripe for automatic annual
-            renewal and billing receipts.
-          </Text>
-        )}
-        {dueLabel && !hasStripeSubscription && !subscriptionMigrationRequired && (
-          <Text className="studio-mt-sm">
-            Renewal due around {dueLabel}. Pay again from this panel when reminded, or subscribe via
-            Stripe on your next checkout.
-          </Text>
-        )}
-        {hasStripeSubscription && dueLabel && (
-          <Text className="studio-mt-sm">
-            Next renewal around {dueLabel} (Stripe subscription).
-          </Text>
-        )}
-        {hasStripeSubscription ? (
-          <button
-            type="button"
-            className="ui-btn ui-btn--ghost studio-mt-md"
-            onClick={openPortal}
-            disabled={isPending}
-          >
-            {isPending ? 'Opening…' : 'Manage billing'}
-          </button>
-        ) : subscriptionMigrationRequired ? (
-          <button
-            type="button"
-            className="ui-btn ui-btn--primary studio-mt-md"
-            onClick={pay}
-            disabled={isPending}
-          >
-            {isPending
-              ? 'Processing…'
-              : `Subscribe for auto-renewal (€${(priceCents / 100).toFixed(0)}/year)`}
-          </button>
-        ) : null}
+      <Panel title="Tahti ry membership" headerTight>
+        <div className="studio-member-card">
+          <span className="studio-member-card__badge">Active member #{memberNumber ?? '—'}</span>
+          <p className="studio-help">
+            Thank you for supporting the cooperative — lossless streaming and unlimited live
+            broadcasting are unlocked.
+          </p>
+          {subscriptionMigrationRequired && (
+            <p className="studio-notice studio-notice--info">
+              Your membership uses the legacy one-time path. Subscribe via Stripe for automatic
+              annual renewal and billing receipts.
+            </p>
+          )}
+          {dueLabel && !hasStripeSubscription && !subscriptionMigrationRequired && (
+            <p className="studio-text-muted-sm">
+              Renewal due around {dueLabel}. Pay again from this panel when reminded, or subscribe
+              via Stripe on your next checkout.
+            </p>
+          )}
+          {hasStripeSubscription && dueLabel && (
+            <p className="studio-text-muted-sm">
+              Next renewal around {dueLabel} (Stripe subscription).
+            </p>
+          )}
+          {hasStripeSubscription ? (
+            <button
+              type="button"
+              className="ui-btn ui-btn--ghost"
+              onClick={openPortal}
+              disabled={isPending}
+            >
+              {isPending ? 'Opening…' : 'Manage billing'}
+            </button>
+          ) : subscriptionMigrationRequired ? (
+            <button
+              type="button"
+              className="ui-btn ui-btn--primary"
+              onClick={pay}
+              disabled={isPending}
+            >
+              {isPending
+                ? 'Processing…'
+                : `Subscribe for auto-renewal (€${(priceCents / 100).toFixed(0)}/year)`}
+            </button>
+          ) : null}
+        </div>
       </Panel>
     )
   }
@@ -120,18 +124,21 @@ export default function MembershipPanel({
     <Panel
       variant="warning"
       title={lapsed ? 'Renew your membership' : 'Complete your membership'}
+      headerTight
       description={`Tahti ry is a member-governed nonprofit. Annual membership is €${(priceCents / 100).toFixed(0)}/year (tax-deductible for eligible professionals in Finland). Unlocks lossless streaming and unlimited live broadcasting.`}
     >
       {lapsed && (
-        <Alert variant="error">
+        <p className="studio-notice studio-notice--error studio-mb-sm">
           Your membership lapsed — renew to restore lossless streaming and unlimited live time.
-        </Alert>
+        </p>
       )}
       {status === 'PENDING_EMAIL' && (
-        <Alert variant="error">Verify your email before paying.</Alert>
+        <p className="studio-notice studio-notice--error studio-mb-sm">
+          Verify your email before paying.
+        </p>
       )}
-      {error && <Alert variant="error">{error}</Alert>}
-      {message && <Alert variant="success">{message}</Alert>}
+      {error && <p className="studio-notice studio-notice--error studio-mb-sm">{error}</p>}
+      {message && <p className="studio-notice studio-notice--success studio-mb-sm">{message}</p>}
       <button
         type="button"
         className="ui-btn ui-btn--primary"

@@ -8,7 +8,6 @@ import { StudioTabs } from '@tahti/ui'
 
 export type DashboardTabsProps = {
   hasChannel: boolean
-  hashAliases: Record<string, string>
   overview: ReactNode
   broadcast?: ReactNode
   catalog?: ReactNode
@@ -19,7 +18,6 @@ export type DashboardTabsProps = {
 /** Client boundary for tabbed dashboard — compound StudioTabs must not cross RSC from @tahti/ui. */
 export function DashboardTabs({
   hasChannel,
-  hashAliases,
   overview,
   broadcast,
   catalog,
@@ -27,7 +25,7 @@ export function DashboardTabs({
   account,
 }: DashboardTabsProps) {
   return (
-    <StudioTabs defaultTab="overview" syncHash hashAliases={hashAliases}>
+    <StudioTabs defaultTab="overview" syncHash>
       <StudioTabs.List>
         <StudioTabs.Trigger value="overview">Overview</StudioTabs.Trigger>
         {hasChannel && <StudioTabs.Trigger value="broadcast">Broadcast</StudioTabs.Trigger>}
@@ -36,21 +34,31 @@ export function DashboardTabs({
         <StudioTabs.Trigger value="account">Account</StudioTabs.Trigger>
       </StudioTabs.List>
 
-      <StudioTabs.Panel value="overview">{overview}</StudioTabs.Panel>
+      <StudioTabs.Panel value="overview" id="overview">
+        {overview}
+      </StudioTabs.Panel>
 
       {hasChannel && broadcast ? (
-        <StudioTabs.Panel value="broadcast">{broadcast}</StudioTabs.Panel>
+        <StudioTabs.Panel value="broadcast" id="broadcast">
+          {broadcast}
+        </StudioTabs.Panel>
       ) : null}
 
       {hasChannel && catalog ? (
-        <StudioTabs.Panel value="catalog">{catalog}</StudioTabs.Panel>
+        <StudioTabs.Panel value="catalog" id="catalog">
+          {catalog}
+        </StudioTabs.Panel>
       ) : null}
 
       {hasChannel && audience ? (
-        <StudioTabs.Panel value="audience">{audience}</StudioTabs.Panel>
+        <StudioTabs.Panel value="audience" id="audience">
+          {audience}
+        </StudioTabs.Panel>
       ) : null}
 
-      <StudioTabs.Panel value="account">{account}</StudioTabs.Panel>
+      <StudioTabs.Panel value="account" id="account">
+        {account}
+      </StudioTabs.Panel>
     </StudioTabs>
   )
 }

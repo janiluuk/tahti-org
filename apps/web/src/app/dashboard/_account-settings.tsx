@@ -25,7 +25,7 @@ export function AccountSettings({
   privacy,
 }: AccountSettingsProps) {
   return (
-    <div className="studio-account" id="account">
+    <div className="studio-account">
       <div className="studio-page-header studio-section-anchor">
         <div>
           <h2 className="studio-page-title">Settings</h2>
@@ -36,19 +36,11 @@ export function AccountSettings({
         </div>
       </div>
 
-      <section className="studio-account__section" aria-labelledby="account-membership">
-        <h3 className="studio-account__section-label" id="account-membership">
-          Membership
-        </h3>
+      <div className="studio-settings-stack">
         {membership}
-      </section>
 
-      <section className="studio-account__section" aria-labelledby="account-profile">
-        <h3 className="studio-account__section-label" id="account-profile">
-          Profile &amp; connections
-        </h3>
         <Panel title="Account" headerTight description="Your public artist identity on Tahti.">
-          <dl className="studio-dl studio-mt-sm">
+          <dl className="studio-dl">
             <div className="studio-dl__row">
               <dt className="studio-dl__term">Username</dt>
               <dd className="studio-dl__value">
@@ -61,23 +53,12 @@ export function AccountSettings({
             </div>
           </dl>
         </Panel>
+
         {social}
         {mentions}
-      </section>
-
-      <section className="studio-account__section" aria-labelledby="account-channel">
-        <h3 className="studio-account__section-label" id="account-channel">
-          Channel
-        </h3>
         {domain}
-      </section>
-
-      <section className="studio-account__section" aria-labelledby="account-privacy">
-        <h3 className="studio-account__section-label" id="account-privacy">
-          Privacy &amp; data
-        </h3>
         {privacy}
-      </section>
+      </div>
     </div>
   )
 }

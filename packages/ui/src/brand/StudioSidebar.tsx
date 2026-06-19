@@ -4,8 +4,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { DASHBOARD_NAV, normaliseDashboardHash } from './dashboard-nav'
+import { useEffect, useState, type MouseEvent } from 'react'
+import {
+  DASHBOARD_NAV,
+  dashboardTabFromNavItem,
+  navigateDashboardHash,
+  normaliseDashboardHash,
+} from './dashboard-nav'
 import { SidebarNavLink } from './SidebarNavLink'
 
 type Props = {
@@ -22,9 +27,15 @@ export function StudioSidebar({ isBoard }: Props) {
     sync()
     window.addEventListener('hashchange', sync)
     return () => window.removeEventListener('hashchange', sync)
-  }, [])
+  }, [pathname])
 
   const onDashboard = pathname === '/dashboard' || pathname === '/dashboard/'
+
+  function onHashNavClick(e: MouseEvent<HTMLAnchorElement>, itemHash: string | undefined) {
+    if (!itemHash || !onDashboard) return
+    e.preventDefault()
+    navigateDashboardHash(itemHash)
+  }
 
   return (
     <aside className="db-sidebar">
@@ -38,7 +49,7 @@ export function StudioSidebar({ isBoard }: Props) {
               active =
                 onDashboard &&
                 itemHash !== undefined &&
-                normaliseDashboardHash(hash) === normaliseDashboardHash(itemHash)
+                normaliseDashboardHash(hash) === dashboardTabFromNavItem({ hash: itemHash })
             }
             return (
               <SidebarNavLink
@@ -47,6 +58,7 @@ export function StudioSidebar({ isBoard }: Props) {
                 icon={icon}
                 active={active}
                 surface="studio"
+                onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
               >
                 {label}
               </SidebarNavLink>

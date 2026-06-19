@@ -98,10 +98,24 @@ export function MentionsPanel() {
     }).catch(() => {})
   }
 
-  if (!settings) return null
+  if (!settings) {
+    return (
+      <Panel
+        title="Mentions"
+        headerTight
+        description="Control who can @mention you and manage your mute list."
+      >
+        <p className="studio-text-muted-sm">Loading…</p>
+      </Panel>
+    )
+  }
 
   return (
-    <Panel title="Mentions" description="Control who can @mention you and manage your mute list.">
+    <Panel
+      title="Mentions"
+      headerTight
+      description="Control who can @mention you and manage your mute list."
+    >
       <div className="mentions-settings studio-mt-sm">
         <label className="studio-toggle-row">
           <input
@@ -154,7 +168,7 @@ export function MentionsPanel() {
                   </span>
                   <button
                     type="button"
-                    className="studio-btn-ghost studio-btn-sm"
+                    className="ui-btn ui-btn--sm ui-btn--ghost"
                     onClick={() => unmuteHandle(m.username)}
                   >
                     Unmute
@@ -176,7 +190,7 @@ export function MentionsPanel() {
             />
             <button
               type="submit"
-              className="studio-btn-secondary studio-btn-sm"
+              className="ui-btn ui-btn--sm ui-btn--secondary"
               disabled={muting || !muteInput.trim()}
             >
               {muting ? 'Muting…' : 'Mute'}
