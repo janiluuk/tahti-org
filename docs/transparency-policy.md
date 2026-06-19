@@ -13,7 +13,7 @@ that we accept deliberately.
   pass-through, professional services)
 - Running surplus
 - Storage usage in aggregate (total TB, average per user, median per user)
-- Active channel count, paying member count, listener-hour total
+- Active channel count, member count, listener-hour total
 
 ### Annually (within 90 days of fiscal year-end)
 

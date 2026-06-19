@@ -10,7 +10,7 @@ describe('hls-egress-estimate', () => {
     expect(estimateLiveHlsBytes(10, 'FREE')).toBe(240_000)
   })
 
-  it('uses FLAC-class bitrate for paid tiers', () => {
+  it('uses FLAC-class bitrate for member tiers', () => {
     expect(estimatedLiveBytesPerSecond('ARTIST')).toBe(176_375)
     expect(estimatedLiveBytesPerSecond('STUDIO')).toBe(176_375)
   })

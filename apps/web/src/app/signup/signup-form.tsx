@@ -228,7 +228,7 @@ export function SignupForm() {
               </Field>
 
               <fieldset className="signup-fieldset">
-                <legend className="signup-fieldset__legend">Membership tier</legend>
+                <legend className="signup-fieldset__legend">Artist tier</legend>
                 <div className="signup-tier-grid">
                   <label
                     className={`signup-tier-card${tier === 'free' ? ' signup-tier-card--active' : ''}`}
@@ -247,14 +247,14 @@ export function SignupForm() {
                     <span className="signup-tier-card__desc">Full product otherwise</span>
                   </label>
                   <label
-                    className={`signup-tier-card signup-tier-card--member${tier === 'paid' ? ' signup-tier-card--active' : ''}`}
+                    className={`signup-tier-card signup-tier-card--member${tier === 'member' ? ' signup-tier-card--active' : ''}`}
                   >
                     <input
                       type="radio"
                       name="tier"
-                      value="paid"
-                      checked={tier === 'paid'}
-                      onChange={() => setTier('paid')}
+                      value="member"
+                      checked={tier === 'member'}
+                      onChange={() => setTier('member')}
                       className="signup-tier-radio"
                     />
                     <span className="signup-tier-card__header">

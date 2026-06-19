@@ -12,12 +12,10 @@ export async function apiLogin(apiBase, appBase, email, password) {
   const setCookie = res.headers.get('set-cookie') ?? ''
   const match = setCookie.match(/tahti_session=([^;]+)/)
   if (!match) throw new Error('no session cookie')
-  const host = new URL(appBase).hostname
   return {
     name: 'tahti_session',
     value: match[1],
-    domain: host === 'localhost' ? 'localhost' : host,
-    path: '/',
+    url: appBase,
     httpOnly: true,
     sameSite: 'Lax',
   }

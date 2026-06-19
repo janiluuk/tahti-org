@@ -43,7 +43,7 @@ The bylaws (*säännöt*) are the governing document. Key clauses for Tahti ry:
 
 - Membership is open to natural persons engaged in music creation or audio
   broadcasting
-- A member is created automatically upon first paid subscription to the Platform
+- A member is created when an artist activates Tahti ry membership (€40/year financial support)
 - Membership lapses if the subscription lapses for more than 90 days
 - Members have one vote each in the General Meeting
 

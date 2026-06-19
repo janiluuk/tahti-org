@@ -12,9 +12,10 @@ Screenshots are grouped by role:
 |--------|------|-------------|
 | `public/` | None | Marketing, channel, profile, help, transparency |
 | `free/` | Free listener | Verified account, no €40 membership |
-| `member/` | Paying member | Member dashboard + governance |
+| `member/` | Member (supporter) | Member dashboard + governance |
 | `artist/` | Artist channel owner | Full studio dashboard, stats, stash, editor |
 | `admin/` | Board (`isBoard`) | Admin console (all nav sections) |
+| `journey/` | Fresh artist + admin | Empty account → channel → releases (Playwright journey) |
 
 See `manifest.json` for the full route → file mapping.
 
@@ -62,8 +63,24 @@ CI runs lint, tests, and `tests/e2e/vital-flows.sh` — not Playwright screensho
 | Member | `screenshot-fan@e2e.tahti.live` | `screenshot-demo-pass` |
 | Free listener | `screenshot-free@e2e.tahti.live` | `screenshot-demo-pass` |
 | Board admin | `screenshot-board@e2e.tahti.live` | `screenshot-demo-pass` |
+| Fresh artist (no channel) | `screenshot-fresh@e2e.tahti.live` | `screenshot-demo-pass` |
 
 Username: `screenshot-demo` · Collection: `demo-mixes` · Smart link: `northern-lights-ep`
+
+### Fresh artist journey (Playwright)
+
+Empty verified account → channel provision → album + EP + single uploads. Captures
+screenshots under `journey/` (artist + admin login):
+
+```bash
+./scripts/stack-up.sh --seed
+WEB_PORT=17777 API_PORT=15011 node tests/e2e/fresh-artist-journey.mjs
+```
+
+Or after `./scripts/e2e-screenshots.sh`, run the journey script with the same ports.
+
+Seeded channel includes a **next live broadcast** schedule (`2026-07-10T20:00:00Z`) so the
+Archive countdown and dashboard schedule preview appear in captures.
 
 Linked from `docs/user-flows.md`.
 

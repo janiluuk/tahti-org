@@ -83,7 +83,7 @@ pricing model: **the artist pays, but the listener still gets a bad experience.*
 - The user-visible result: a Pro DJ uploads a flawless mixed-down master,
   and their listeners hear it through what sounds like a YouTube rip.
 
-Tahti's approach: **all paid users stream lossless to all listeners.** A
+Tahti's approach: **all members stream lossless to all listeners.** A
 €40/year Tahti member's listeners hear FLAC 16/44 from a real broadcast
 pipeline, not a degraded transcode. Free users on Tahti hear MP3 192 — better
 than what most listeners get on a paid Mixcloud Pro stream.
@@ -212,7 +212,7 @@ Secondary retention factors:
 
 ## What success looks like (Year 3)
 
-- 4,000 paying artists, ~70% renewal
+- 4,000 member artists, ~70% renewal
 - ~50 "anchor" channels with engaged audiences (>1k unique monthly listeners)
 - €190k in artist grants distributed annually
 - Audited financials, transparent ledger, satisfied auditor
@@ -223,7 +223,7 @@ Secondary retention factors:
 
 ## What failure looks like (early signals)
 
-- **Q3 Y1: <50 paying artists.** Pricing or feature gap. Likely fix: temporarily
+- **Q3 Y1: <50 member artists.** Pricing or feature gap. Likely fix: temporarily
   drop Artist tier to €25 for 12 months, see if it accelerates conversion.
 - **End Y1: founding grant didn't land.** Restructure: defer distribution
   feature, cut director salary to €20k, pure beta mode through Y2.
@@ -241,7 +241,7 @@ This shape has no VC fit:
   on growth velocity
 - Mission requires returning surplus to artists, not maximizing topline
 - Any capital should be grant capital (no return expectation) or member capital
-  (paying artists), not equity
+  (member artists), not equity
 
 If a values-aligned investor *wants* to support, the path is donation or grant,
 not equity. The bylaws prevent share issuance.

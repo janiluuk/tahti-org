@@ -36,7 +36,7 @@ run_artist_journey() {
   fi
 }
 
-# PLAT-050: a paid member's channel must resolve through the wildcard
+# PLAT-050: a member artist's channel must resolve through the wildcard
 # *.tahti.live subdomain — Caddy sets X-Tahti-Channel-Slug, web middleware
 # rewrites to /c/[slug]. Simulate Caddy's header here since dev/CI has no
 # wildcard DNS in front of the web container.
@@ -46,7 +46,7 @@ run_artist_subdomain_journey() {
 
   local tier_check subdomain_code subdomain_body missing_body
   tier_check=$(curl -sf -b "$COOKIE_JAR" "$API_URL/api/auth/me" 2>/dev/null || echo '{}')
-  e2e_check_json "demo artist is on a paid tier (ARTIST)" '"tier":"ARTIST"' "$tier_check"
+  e2e_check_json "demo artist has active membership (ARTIST tier)" '"tier":"ARTIST"' "$tier_check"
 
   if ! e2e_app_reachable "/"; then
     e2e_yellow "web: subdomain journey skipped (APP not up)"

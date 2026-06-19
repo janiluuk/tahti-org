@@ -135,7 +135,7 @@ export default function MembershipPanel({
       )}
       {status === 'PENDING_EMAIL' && (
         <p className="studio-notice studio-notice--error studio-mb-sm">
-          Verify your email before paying.
+          Verify your email before completing membership checkout.
         </p>
       )}
       {error && <p className="studio-notice studio-notice--error studio-mb-sm">{error}</p>}

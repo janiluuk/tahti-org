@@ -13,8 +13,8 @@ export default function ForArtistsHelpPage() {
 
       <Heading level={1}>Artist guide</Heading>
       <Text>
-        Set up your channel, go live, upload sets, and share your work. Every Tahti member can
-        create a 24/7 channel — broadcast up to 1 hour per week included.
+        Set up your channel, go live, upload sets, and share your work. Every artist can create a
+        24/7 channel on the free tier — up to 1 hour of live broadcasting per week included.
       </Text>
 
       <Heading level={2}>1. Create your channel</Heading>
@@ -74,7 +74,7 @@ export default function ForArtistsHelpPage() {
           <Link href="/help/multistream">Multistream to YouTube / Twitch</Link>
         </li>
         <li>
-          <Link href="/help/tier-limits">Free vs paid tier limits</Link>
+          <Link href="/help/tier-limits">Free tier vs membership benefits</Link>
         </li>
         <li>
           <Link href="/help/support">Contact support</Link>

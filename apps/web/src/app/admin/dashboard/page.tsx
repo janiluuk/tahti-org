@@ -223,7 +223,7 @@ export default async function AdminDashboardPage() {
       <h1 className="admin-section-title">Operations dashboard</h1>
 
       <KpiCardRow aria-label="Operations summary">
-        <KpiCard color="cyan" value={members.total} label="Paid members" />
+        <KpiCard color="cyan" value={members.total} label="Active members" />
         <KpiCard color="green" value={streams.count} label="Live now" />
         <KpiCard color="amber" value={betaApplications.length} label="Beta queue" />
         <KpiCard color="coral" value={openSupportCount} label="Open tickets" />

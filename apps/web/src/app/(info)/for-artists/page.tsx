@@ -14,7 +14,7 @@ const FEATURES = [
   {
     icon: '📡',
     title: 'Broadcast live',
-    desc: 'OBS, Mixxx, Traktor, or browser ingest. FLAC lossless for paid members, MP3 192 kbps for free — both better than most paid streaming services.',
+    desc: 'OBS, Mixxx, Traktor, or browser ingest. FLAC lossless for members, MP3 192 kbps on the free tier — both better than most commercial streaming services.',
   },
   {
     icon: '📁',
@@ -140,12 +140,14 @@ export default function ForArtistsPage() {
             Everything. Free.
           </p>
           <p>
-            <strong>Paid membership (€40/year)</strong> — FLAC lossless streaming for you and your
-            listeners, priority support, Stash file storage, and a vote at the AGM.
+            <strong>Tahti ry membership (€40/year)</strong> — financial support for the cooperative,
+            plus FLAC lossless streaming for you and your listeners, Stash file storage, and a vote
+            at the AGM.
           </p>
           <p>
-            There is no &quot;freemium&quot; catch. The free tier is a complete product. Paid
-            membership funds the grant pool and unlocks lossless audio.
+            There is no &quot;freemium&quot; catch. The free tier is a complete product. Membership
+            funds the grant pool and unlocks lossless audio — you are supporting the org, not buying
+            a subscription product.
           </p>
         </div>
       </div>

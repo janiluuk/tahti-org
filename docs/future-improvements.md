@@ -74,7 +74,7 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 | ~~P2~~ | ~~Release-track downloads~~ — done (basic) |
 | ~~P2~~ | ~~Tor exit / datacenter IP allowlist~~ — `DOWNLOAD_NO_COUNT_CIDRS` + bot UA (done) |
 | ~~P2~~ | ~~Nightly fraud-scan cron (velocity anomalies)~~ — done |
-| ~~P2~~ | ~~FLAC/source formats for all release-track tiers (parity with archive)~~ — paid artist + fan-sub FLAC; fan-sub `format=source` |
+| ~~P2~~ | ~~FLAC/source formats for all release-track tiers (parity with archive)~~ — member artist + fan-sub FLAC; fan-sub `format=source` |
 
 ### M11 — Hardening (remaining)
 | P | Item |

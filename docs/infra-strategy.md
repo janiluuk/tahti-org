@@ -70,7 +70,7 @@ This is the operational constraint that drives the Y3 fiber upgrade.
 
 At Y3 scale (4,000 paid + 12,000 free users):
 
-**Paid users** stream FLAC 16/44 (~800 kbps average):
+**Members** stream FLAC 16/44 (~800 kbps average):
 - Assumed listener-hours: ~35M/year
 - Bandwidth required: ~12,600 TB/year (~12.6 PB)
 

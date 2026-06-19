@@ -79,7 +79,7 @@ describe('PLAT-051 — custom domain resolution + management', () => {
     expect(res.statusCode).toBe(409)
   })
 
-  it('sets a custom domain for a paid tier and returns a TXT challenge', async () => {
+  it('sets a custom domain for a member and returns a TXT challenge', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/me/channel/custom-domain',

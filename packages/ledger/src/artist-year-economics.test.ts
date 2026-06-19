@@ -41,7 +41,7 @@ Net profit: €50.00"
 `)
   })
 
-  it('loss −€50: paid membership (€50), no supporter payments', () => {
+  it('loss −€50: membership (€50), no supporter payments', () => {
     const b = buildArtistYearBreakdown(SCENARIO_LOSS_50_EUR)
 
     expect(b.fanSub).toBeNull()

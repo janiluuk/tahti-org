@@ -4,8 +4,8 @@ Date: 2026-06-19
 
 ## Goal
 
-1. Verify, end-to-end, that a paid member's channel is reachable at their
-   `<slug>.tahti.live` vanity URL (and, for paid tiers, an optional fully
+1. Verify, end-to-end, that a member artist's channel is reachable at their
+   `<slug>.tahti.live` vanity URL (and, for members, an optional fully
    custom domain), with real test coverage backing it.
 2. Verify the artist can manage channel programming (24/7 archive rotation)
    and schedule a live set, and that the "next live show" countdown renders
@@ -16,10 +16,10 @@ Date: 2026-06-19
 ## Findings (current state before this work)
 
 - `*.tahti.live` wildcard subdomain routing already works for **every**
-  tier, not just paid — `infra/Caddyfile:18-29` sets
+  tier, not just members — `infra/Caddyfile:18-29` sets
   `X-Tahti-Channel-Slug`, `apps/web/src/middleware.ts:13-23` rewrites to
   `/c/[slug]`. No test coverage exists for this middleware.
-- Fully custom domains (`artistname.com`, PLAT-051) **are** paid-gated
+- Fully custom domains (`artistname.com`, PLAT-051) **require membership**
   (`isUnlimitedLiveTier` check in
   `apps/api/src/routes/channels/custom-domain.ts:75`), resolved via
   `apps/web/src/middleware.ts:25-43` → `/api/v1/custom-domain/resolve`. This

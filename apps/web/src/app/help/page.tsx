@@ -21,8 +21,8 @@ const GUIDES: { href: string; title: string; description: string }[] = [
   },
   {
     href: '/help/tier-limits',
-    title: 'Free vs paid broadcasting',
-    description: 'Live-hour limits, audio quality, and what changes on the paid tier.',
+    title: 'Free tier vs membership',
+    description: 'Live-hour limits, audio quality, and what changes when you support Tahti ry.',
   },
   {
     href: '/help/support',

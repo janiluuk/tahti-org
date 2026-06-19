@@ -16,11 +16,11 @@ These rules are constitutional. They are not changeable by management decision. 
 
 - **Legal form:** Finnish *yhdistys* (registered nonprofit association)
 - **License:** AGPL-3.0
-- **Audio quality:** lossless FLAC for paid members (all their listeners); MP3 192 kbps for free
+- **Audio quality:** lossless FLAC for members (all their listeners); MP3 192 kbps for free-tier artists
 - **Grant distribution:** annual, weighted by engagement units (downloads + fan-sub euros, not listener-hours)
 - **Direct artist revenue:** fan-to-artist subscriptions with 0% org take (2% operational fee covers Stripe + GDPR + ops)
 - **Hosting:** owned hardware in Helsinki + UpCloud Helsinki spillover; no CDN
-- **Pricing:** single paid tier €40/year; free tier with MP3 + 1 hr/week live broadcasting
+- **Membership:** €40/year to support Tahti ry; free-tier artists get MP3 + 1 hr/week live broadcasting
 
 ## Package structure
 
@@ -131,7 +131,7 @@ Manual semver production deploys still use `v*.*.*` tags via [`.github/workflows
 
 | | Y1 | Y2 | Y3 | 3-yr cum. |
 |---|---|---|---|---|
-| Paid members | 200 | 1,200 | 4,000 | — |
+| Members | 200 | 1,200 | 4,000 | — |
 | Total org revenue | €35,426 | €107,700 | €290,872 | €433,998 |
 | Total costs (incl. director salary) | €54,572 | €86,092 | €148,220 | €288,884 |
 | **Org surplus** | **-€19,146** | **+€21,608** | **+€141,500** | **+€143,962** |
@@ -140,12 +140,12 @@ Manual semver production deploys still use `v*.*.*` tags via [`.github/workflows
 | **Total artist money** | €1,622 | €42,152 | €268,131 | **€311,905** |
 | Director compensation | €30,000 | €40,000 | €45,000 | €115,000 |
 
-Break-even threshold: ~600 paid members in Y1 absent grant funding, ~775 in Y2, ~1,100 in Y3 (Y3 jump is the 10 Gbps fiber upgrade).
+Break-even threshold: ~600 members in Y1 absent grant funding, ~775 in Y2, ~1,100 in Y3 (Y3 jump is the 10 Gbps fiber upgrade).
 
 ## Three things that must go right
 
 1. A founding grant of €20-25k lands in Year 1 (Tempo, Koneen, or SKR).
-2. The org reaches at least 100 paid members by end of Year 1 (200 modeled).
+2. The org reaches at least 100 members by end of Year 1 (200 modeled).
 3. The director does not burn out or quit.
 
 If all three: Tahti is operationally self-funding by Y2 and distributes meaningful grants by Y3.
@@ -169,6 +169,6 @@ This package is the seventh major iteration of a multi-session design process. T
 
 7. **Listener-hours are vanity metrics only.** Grant share comes from engagement units. The constitution forbids designing around listener metrics.
 
-8. **The audio quality story is verifiable, not aspirational.** SoundCloud caps free listeners at 128 kbps Opus. Mixcloud caps free listeners at 64 kbps AAC. Tahti's paid members stream FLAC to a[...]
+8. **The audio quality story is verifiable, not aspirational.** SoundCloud caps free listeners at 128 kbps Opus. Mixcloud caps free listeners at 64 kbps AAC. Tahti's members stream FLAC to a[...]
 
 — Generated 2026-05-17

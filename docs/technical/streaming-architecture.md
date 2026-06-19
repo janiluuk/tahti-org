@@ -108,7 +108,7 @@ Individual segments expire via object headers (`x-amz-expiration`), not batch cr
 Between raw RTMP/Icecast input and Liquidsoap, an FFmpeg edge encoder container:
 
 1. **Normalizes codec** — RTMP sources send AAC, MP3, or Opus at varying bitrates. The edge encoder outputs a consistent 320 kbps PCM or Opus stream regardless of input.
-2. **Produces two feeds** — a high-quality FLAC-compatible feed for paid channels and an MP3 feed for free channels, from a single source input.
+2. **Produces two feeds** — a high-quality FLAC-compatible feed for member artists and an MP3 feed for free-tier artists, from a single source input.
 3. **Runs chromaprint fingerprint at ingest** — fpcalc sidecar posts segments every ~30s; **AcoustID** title lookup on archive/live (ACRCloud deferred until post-production).
 4. **Decouples ingest from Liquidsoap** — if Liquidsoap crashes and restarts mid-stream, the edge encoder continues receiving from the artist without dropping the connection. Liquidsoap reconnects to the edge encoder's output, not the artist's OBS.
 

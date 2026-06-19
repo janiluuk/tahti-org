@@ -3,7 +3,7 @@
 **Goal:** every artist has a permanent public URL at `tahti.fi/u/<handle>` that functions as their home page on the internet — bio, release timeline, channel embed, and social links. Artists can upload tracks, publish releases, and have the platform generate smart links automatically.
 
 **Timeline:** Months 10–12 (post-launch, alongside live beta)  
-**Entry state:** Phase 7 complete, public beta open, 50+ active paying artists.  
+**Entry state:** Phase 7 complete, public beta open, 50+ active member artists.  
 **New services:** none — existing `api`, `web`, and `worker-media` services extended.
 
 ---
@@ -77,7 +77,7 @@ sequenceDiagram
     WM->>WM: chromaprint — fingerprint for intra-catalog dedup
     WM->>WM: ffmpeg — Opus 256 kbps Ogg (stream default)
     WM->>WM: ffmpeg — HLS Opus ladder (64/128/256 kbps, 4s segments)
-    WM->>WM: ffmpeg — FLAC 16/44.1 (download, paid tier)
+    WM->>WM: ffmpeg — FLAC 16/44.1 (download, membership)
     WM->>MN: Upload streamKey, hlsManifest, flacKey
     WM->>PG: UPDATE release_tracks (state=READY, durationSec, sampleRate, bitDepth, streamKey, flacKey)
     WM-->>API: Webhook /internal/webhooks/track-ready {trackId}
@@ -125,7 +125,7 @@ GET    /v1/u/:handle                  → profile (bio, releases, channel state)
 GET    /v1/u/:handle/releases         → release timeline (paginated)
 GET    /v1/r/:slug                    → release detail + tracklist + smart link targets
 GET    /v1/r/:slug/tracks/:id/stream  → signed streaming URL (Opus 256)
-GET    /v1/r/:slug/tracks/:id/flac    → signed FLAC download (paid tier)
+GET    /v1/r/:slug/tracks/:id/flac    → signed FLAC download (membership)
 GET    /oembed?url=                   → oEmbed discovery
 
 # Artist-authed
@@ -197,7 +197,7 @@ docker exec $(docker ps -qf name=tahti_postgres) \
 | Profile renders | Open `tahti.fi/u/testartist` | Bio, avatar, release timeline visible |
 | OG image correct | Share URL on Telegram | Release artwork shows in card preview |
 | Track upload | Upload 24-bit WAV, 5 tracks | All in state=READY within 15 min |
-| FLAC download | Paid artist downloads own track | Correct FLAC 16/44 file served |
+| FLAC download | Member artist downloads own track | Correct FLAC 16/44 file served |
 | Anon cannot FLAC | Unauthenticated GET /r/:slug/tracks/:id/flac | 401 |
 | Smart link auto | Publish a release | `tahti.fi/r/<slug>` renders without error |
 | ISR works | Update bio, wait 60s, reload | Updated bio visible without redeploy |

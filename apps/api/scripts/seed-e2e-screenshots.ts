@@ -32,7 +32,16 @@ const FREE = {
   username: 'screenshot-free',
   displayName: 'Screenshot Free Listener',
 }
+const FRESH = {
+  email: 'screenshot-fresh@e2e.tahti.live',
+  username: 'screenshot-fresh',
+  displayName: 'Fresh Journey Artist',
+}
 const COLLECTION_SLUG = 'demo-mixes'
+
+/** Fixed future time so channel countdown screenshots stay stable between runs. */
+const NEXT_BROADCAST_AT = new Date('2026-07-10T20:00:00.000Z')
+const NEXT_BROADCAST_NOTE = 'Weekly live — Thursdays 20:00 UTC'
 
 const DEMO_MOTION_TITLE = 'E2E advisory motion'
 
@@ -41,7 +50,7 @@ async function main() {
 
   await prisma.motion.deleteMany({ where: { title: DEMO_MOTION_TITLE } })
 
-  for (const email of [ARTIST.email, MEMBER.email, BOARD.email, FREE.email]) {
+  for (const email of [ARTIST.email, MEMBER.email, BOARD.email, FREE.email, FRESH.email]) {
     const existing = await prisma.user.findUnique({
       where: { email },
       select: { id: true, channel: { select: { id: true } } },
@@ -68,6 +77,8 @@ async function main() {
       passwordHash,
       username: ARTIST.username,
       displayName: ARTIST.displayName,
+      bio: 'Deep house & ambient from Helsinki. Member-owned broadcasting on Tahti.',
+      countryCode: 'FI',
       emailVerifiedAt: new Date(),
       tier: 'ARTIST',
       isMember: true,
@@ -83,6 +94,19 @@ async function main() {
           rtmpStreamKey: `${ARTIST.username}__screenshot`,
           rtmpStreamKeyHash: await hashPassword(`${ARTIST.username}__screenshot`),
           state: 'OFFLINE',
+          fallbackMode: 'ordered',
+          nextBroadcastAt: NEXT_BROADCAST_AT,
+          nextBroadcastNote: NEXT_BROADCAST_NOTE,
+          visualPreset: 'AURORA',
+          textLayerMode: 'GRADIENT_SHIMMER',
+          textLayerText: 'Archive rotation · Live Thursdays 20:00 UTC',
+          colorSchemeJson: JSON.stringify({
+            bg: '#0a1628',
+            accent: '#00d4aa',
+            text: '#e8f4f0',
+            muted: '#4a6670',
+            highlight: '#66e3c4',
+          }),
         },
       },
     },
@@ -215,6 +239,9 @@ async function main() {
     data: {
       channelId: artist.channel!.id,
       title: 'Live at Klubi — March 2026',
+      description: 'Recorded live at Klubi, Helsinki — deep house and ambient.',
+      genre: 'Deep House',
+      commentary: 'Thank you to everyone who came through on the night.',
       rawKey: 'raw/screenshot-demo.wav',
       mp3Key: 'mp3/screenshot-demo/live.mp3',
       flacKey: 'flac/screenshot-demo/live.flac',
@@ -222,6 +249,8 @@ async function main() {
       fileSizeBytes: BigInt(50_000_000),
       status: 'READY',
       isPublic: true,
+      isFallback: true,
+      fallbackOrder: 0,
       editList: editListFromV0Trim({
         sourceDuration: 3600,
         startSec: 120,
@@ -294,6 +323,18 @@ async function main() {
 
   await prisma.user.create({
     data: {
+      email: FRESH.email,
+      passwordHash,
+      username: FRESH.username,
+      displayName: FRESH.displayName,
+      emailVerifiedAt: new Date(),
+      tier: 'FREE',
+      isMember: false,
+    },
+  })
+
+  await prisma.user.create({
+    data: {
       email: BOARD.email,
       passwordHash,
       username: BOARD.username,
@@ -357,6 +398,8 @@ async function main() {
         memberEmail: MEMBER.email,
         free: FREE.username,
         freeEmail: FREE.email,
+        fresh: FRESH.username,
+        freshEmail: FRESH.email,
         board: BOARD.username,
         boardEmail: BOARD.email,
         fan: MEMBER.username,
@@ -368,6 +411,8 @@ async function main() {
         collectionSlug: COLLECTION_SLUG,
         archiveItemId: archiveItem.id,
         editorProjectId: editorProject.id,
+        nextBroadcastAt: NEXT_BROADCAST_AT.toISOString(),
+        nextBroadcastNote: NEXT_BROADCAST_NOTE,
         motionTitle: DEMO_MOTION_TITLE,
         verifyToken,
       },

@@ -619,7 +619,7 @@ export const AuthMeResponseSchema = z.object({
     .nullable(),
   storage: z.object({
     usedBytes: z.string(),
-    /** Soft target for free-tier nudges only; omitted for paying members. */
+    /** Soft target for free-tier nudges only; omitted for members. */
     softTargetBytes: z.string().optional(),
     showSoftTarget: z.boolean(),
   }),

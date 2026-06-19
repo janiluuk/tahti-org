@@ -28,7 +28,9 @@ export function SignupPaymentPanel({
 
   useEffect(() => {
     const stored = sessionStorage.getItem(SIGNUP_TIER_KEY)
-    if (stored === 'paid' || stored === 'free') setTier(stored)
+    if (stored === 'member' || stored === 'paid' || stored === 'free') {
+      setTier(stored === 'paid' ? 'member' : (stored as SignupTier))
+    }
   }, [])
 
   useEffect(() => {
@@ -62,8 +64,8 @@ export function SignupPaymentPanel({
     })
   }
 
-  const paidSelected = tier === 'paid'
-  const paidComplete = paidSelected && isMember
+  const memberSelected = tier === 'member'
+  const membershipComplete = memberSelected && isMember
 
   return (
     <>
@@ -81,19 +83,20 @@ export function SignupPaymentPanel({
             </Alert>
           )}
 
-          {paidSelected ? (
+          {memberSelected ? (
             <>
               <Text tone="muted">
-                Paid membership is <strong>€40/year</strong> — FLAC lossless streaming, priority
-                support, Stash file storage, and a vote at the AGM.
+                Tahti ry membership is <strong>€40/year</strong> — financial support for the
+                cooperative, plus FLAC lossless streaming, Stash file storage, and a vote at the
+                AGM.
               </Text>
-              {paidComplete ? (
+              {membershipComplete ? (
                 <Alert variant="success">
-                  Your paid membership is active. Continue to set up your profile.
+                  Your membership is active. Continue to set up your profile.
                 </Alert>
               ) : (
                 <Text tone="muted" size="sm">
-                  Complete payment via Stripe to activate your membership benefits.
+                  Complete payment via Stripe to activate your membership.
                 </Text>
               )}
             </>
@@ -108,7 +111,7 @@ export function SignupPaymentPanel({
           {error && <Alert variant="error">{error}</Alert>}
 
           <Stack gap={3}>
-            {paidSelected && !paidComplete ? (
+            {memberSelected && !membershipComplete ? (
               <>
                 <Button
                   variant="primary"

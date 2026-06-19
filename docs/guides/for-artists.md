@@ -142,7 +142,7 @@ Check [future-improvements.md](../future-improvements.md) for the live backlog. 
 
 ## Checklist: “I’m ready to promote my Tahti”
 
-- [ ] Email verified, membership paid
+- [ ] Email verified, membership active
 - [ ] Stripe Connect **payments ready**
 - [ ] At least one **fan tier** active (optional)
 - [ ] **Published** release with **DSP URLs** (optional)
