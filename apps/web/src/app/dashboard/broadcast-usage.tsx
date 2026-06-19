@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 type WarningLevel = 'none' | '45m' | '55m' | 'grace' | 'blocked'
 
-interface BroadcastUsage {
+export type BroadcastUsage = {
   unlimited: boolean
   secondsUsed: number
   secondsRemaining: number | null

@@ -3,7 +3,7 @@
 
 import type { ReactNode } from 'react'
 import { Link, StatCard, StatCardGrid, StudioCollapse, BroadcastStatusBar } from '@tahti/ui'
-import BroadcastUsageBanner from './broadcast-usage'
+import BroadcastUsageBanner, { type BroadcastUsage } from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
 import { OverviewStreamKey } from './overview-stream-key'
 import { EndBroadcastBtn } from './end-broadcast-btn'
@@ -23,11 +23,6 @@ interface ArchiveItem {
   createdAt: string
 }
 
-interface BroadcastUsageInfo {
-  showUpgradeCta?: boolean
-  [key: string]: unknown
-}
-
 interface ModeratedChannel {
   slug: string
   displayName: string
@@ -36,7 +31,7 @@ interface ModeratedChannel {
 export type DashboardOverviewProps = {
   channel: { slug: string; state: string } | null
   streamSettings: StreamSettings | null
-  broadcastUsage: BroadcastUsageInfo | null
+  broadcastUsage: BroadcastUsage | null
   statDlCount: number
   statBroadcasts: number
   fanSubscribers: number
