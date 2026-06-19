@@ -62,8 +62,8 @@ export default async function UploadPage() {
                 {formatBytes(storage.usedBytes)} used
               </span>
             )}
-            {storage.tier === 'FREE' && (
-              <Link href="/dashboard/revenue" className="upload-entry__upgrade-link">
+            {storage.showSoftTarget && (
+              <Link href="/signup/payment" className="upload-entry__upgrade-link">
                 Upgrade for more
               </Link>
             )}
