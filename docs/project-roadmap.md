@@ -55,7 +55,7 @@ against `docs/AGENT.md`. Verified by `pnpm ci:check` (lint, format, typecheck),
 | **Quality** | 56 Vitest files, journey + vital-flows + user-journey bash e2e, OpenAPI at `/docs` |
 | **CI / DX** | Lint gate, format check, typecheck, AGPL header check, website Docker build |
 | **Local ops** | `infra/docker-compose.stack.yml`, `scripts/stack-up.sh`, `scripts/ci-check.sh`, `docs/scaling-node-distribution.md` |
-| **Docs / design** | `docs/design-system.md`, `packages/ui/` tokens + components (not yet wired into web), plain-language guides |
+| **Docs / design** | `docs/design/README.md`, `packages/ui/` tokens + components (not yet wired into web), plain-language guides |
 | **Marketing site** | OG tags, inline apply form, bg-audio + favicons, Three.js hero (`website/`) |
 
 ### Milestone matrix
@@ -572,7 +572,7 @@ live app. All items target the dark brand palette already defined in
 
 ### Public pages and signup (UI-brief gap audit, 2026-06-09)
 
-These routes are specified in `docs/UI-brief.md` but return 404 today.
+These routes were specified in the now-archived `docs/_archive/UI-brief.2026-06-20.md` but return 404 today.
 All are required before public beta (1 August 2026 target).
 
 | Done | ID | Item | Effort | Priority |
