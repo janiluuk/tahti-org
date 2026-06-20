@@ -615,6 +615,9 @@ export const AuthMeResponseSchema = z.object({
     .object({
       slug: z.string(),
       state: z.string(),
+      goneLiveAt: z.coerce.date().nullable(),
+      customDomain: z.string().nullable(),
+      customDomainVerified: z.boolean(),
     })
     .nullable(),
   storage: z.object({

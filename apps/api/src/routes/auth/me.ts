@@ -26,7 +26,7 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { slug: true, state: true },
+        select: { slug: true, state: true, goneLiveAt: true },
       })
 
       const storageInfo = await fastify.prisma.user.findUnique({
