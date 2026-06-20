@@ -39,6 +39,22 @@ export async function uploadFile(key: string, srcPath: string, contentType: stri
   await s3.send(command)
 }
 
+export async function uploadStream(
+  key: string,
+  body: Readable,
+  contentType: string,
+  contentLength?: number,
+): Promise<void> {
+  const command = new PutObjectCommand({
+    Bucket: MINIO_BUCKET,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+    ...(contentLength !== undefined ? { ContentLength: contentLength } : {}),
+  })
+  await s3.send(command)
+}
+
 export async function objectByteSize(key: string): Promise<number | null> {
   try {
     const response = await s3.send(new HeadObjectCommand({ Bucket: MINIO_BUCKET, Key: key }))

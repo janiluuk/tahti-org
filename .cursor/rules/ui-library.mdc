@@ -15,7 +15,7 @@ alwaysApply: true
 1. **Import UI from `@tahti/ui`** (or `@/components/ui`, which re-exports the package — no new implementations in `apps/web`).
 2. **Never add** Button, Panel, Field, layout shells, or brand chrome under `apps/web/src/components/ui/` or parallel folders. Add to `packages/ui` and export from `packages/ui/src/index.ts`.
 3. **Never use inline `style={{…}}` for colors, borders, or typography** when a `@tahti/ui` class or component exists. Use design tokens (`var(--cyan)`, `var(--tahti-primary)`) via CSS in `packages/ui/src/styles/`.
-4. **Read `docs/design-system.md`** before writing or changing UI.
+4. **Read `docs/design/README.md`** before writing or changing UI.
 
 ## Surfaces and CSS (import once per route layout)
 

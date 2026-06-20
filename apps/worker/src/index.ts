@@ -12,6 +12,7 @@ import { processSweepEditorPeaksBackfillJob } from './jobs/sweep-editor-peaks-ba
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
 import { processTranscodeReleaseTrackVersionJob } from './jobs/transcode-release-track-version.js'
 import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
+import { processCloudImportGoogleDriveJob } from './jobs/cloud-import-google-drive.js'
 import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
 import { processFinalizeBroadcastRecordingJob } from './jobs/finalize-broadcast-recording.js'
@@ -70,6 +71,8 @@ const worker = new Worker(
         await processTranscodeReleaseTrackVersionJob(job)
       } else if (job.name === 'mixcloud-upload') {
         await processMixcloudUploadJob(job)
+      } else if (job.name === 'cloud-import-google-drive') {
+        await processCloudImportGoogleDriveJob(job)
       } else if (job.name === 'newsletter-dispatch') {
         await processNewsletterDispatch(job)
       } else if (job.name === 'finalize-broadcast-recording') {

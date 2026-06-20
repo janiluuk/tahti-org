@@ -8,7 +8,7 @@
  * - Brand (dark public): tokens.css + components.css + brand-channel.css (or brand-studio.css)
  * - Admin (dashboard/forms): admin-tokens.css + admin-ui.css
  *
- * See docs/design-system.md and .cursor/rules/ui-library.mdc
+ * See docs/design/README.md and .cursor/rules/ui-library.mdc
  */
 
 // Dashboard / forms (default Button, Panel, etc.)
@@ -42,7 +42,7 @@ export { cn } from './lib/cn'
 export { SafePlainText } from './lib/safe-plain-text'
 export { escapeHtml, plainTextToHtml } from './lib/escape-html'
 
-/** v8 brand design tokens — see docs/design-closing-gap.md */
+/** v8 brand design tokens — see docs/design/README.md */
 export {
   tokens as brandTokens,
   statVariantToCssClass,

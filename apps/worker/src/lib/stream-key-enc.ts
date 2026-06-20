@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { createDecipheriv } from 'node:crypto'
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
 
 const ALG = 'aes-256-gcm'
 
@@ -12,6 +12,15 @@ function getKey(): Buffer {
   const buf = Buffer.from(hex.slice(0, 64), 'hex')
   if (buf.length !== 32) throw new Error('RTMP_KEY_ENC_KEY must be 32 bytes (64 hex chars)')
   return buf
+}
+
+export function encryptStreamKey(plaintext: string): string {
+  const key = getKey()
+  const nonce = randomBytes(12)
+  const cipher = createCipheriv(ALG, key, nonce)
+  const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
+  const tag = cipher.getAuthTag()
+  return Buffer.concat([nonce, ct, tag]).toString('base64')
 }
 
 export function decryptStreamKey(enc: string): string {

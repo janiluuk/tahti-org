@@ -203,6 +203,16 @@ export const config = {
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/soundcloud/oauth/callback`,
     oauthStateCookie: 'tahti_soundcloud_oauth',
   },
+  /** PLAT-080: Google Drive cloud import (optional — set GOOGLE_DRIVE_CLIENT_ID). */
+  googleDrive: {
+    clientId: process.env.GOOGLE_DRIVE_CLIENT_ID ?? '',
+    clientSecret: readSecret('GOOGLE_DRIVE_CLIENT_SECRET', 'GOOGLE_DRIVE_CLIENT_SECRET_FILE', ''),
+    developerKey: process.env.GOOGLE_DRIVE_DEVELOPER_KEY ?? '',
+    redirectUri:
+      process.env.GOOGLE_DRIVE_OAUTH_REDIRECT_URI ??
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/google-drive/oauth/callback`,
+    oauthStateCookie: 'tahti_google_drive_oauth',
+  },
   /** M14: Twitter / X OAuth 2.0 PKCE (optional — set TWITTER_CLIENT_ID). */
   twitter: {
     clientId: process.env.TWITTER_CLIENT_ID ?? '',

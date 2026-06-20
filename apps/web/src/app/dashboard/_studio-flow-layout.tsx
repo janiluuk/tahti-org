@@ -5,7 +5,13 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Heading, PageShell, Panel, Text } from '@tahti/ui'
 
-export type StudioFlowBadgeTone = 'soundcloud' | 'bandcamp' | 'url' | 'broadcast' | 'collection'
+export type StudioFlowBadgeTone =
+  | 'soundcloud'
+  | 'bandcamp'
+  | 'url'
+  | 'broadcast'
+  | 'collection'
+  | 'google-drive'
 
 export function StudioFlowSteps({ steps }: { steps: string[] }) {
   return (

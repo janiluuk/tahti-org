@@ -8,7 +8,7 @@ import { Button, Panel, ChannelPageLayout, StudioShell } from '@tahti/ui'
 import { Button, Panel } from '@/components/ui'
 ```
 
-See `docs/design-system.md`, `docs/AGENT.md` (UI section), and `.cursor/rules/ui-library.mdc`.
+See `docs/design/README.md`, `docs/AGENT.md` (UI section), and `.cursor/rules/ui-library.mdc`.
 
 **Exceptions (app-only, not in `@tahti/ui`):**
 

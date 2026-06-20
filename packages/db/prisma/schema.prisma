@@ -405,7 +405,41 @@ enum CollectionTextLayerAlign {
   @@schema("media")
 }
 
+enum CloudImportSource {
+  GOOGLE_DRIVE
+
+  @@schema("core")
+}
+
+enum CloudImportStatus {
+  QUEUED
+  DOWNLOADING
+  DONE
+  FAILED
+
+  @@schema("core")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
+
+model CloudImportJob {
+  id               String            @id @default(cuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source           CloudImportSource
+  externalFileId   String
+  fileName         String?
+  archiveItemId    String?           @unique
+  archiveItem      ArchiveItem?      @relation(fields: [archiveItemId], references: [id])
+  status           CloudImportStatus @default(QUEUED)
+  error            String?
+  bytesTransferred BigInt?
+  queuedAt         DateTime          @default(now())
+  completedAt      DateTime?
+
+  @@index([userId, queuedAt(sort: Desc)])
+  @@schema("core")
+}
 
 model User {
   id                    String     @id @default(cuid())
@@ -442,6 +476,8 @@ model User {
   mixcloudAccessTokenEnc   String?  // M7: OAuth access token (AES-GCM, same key as RTMP)
   bandcampAccessTokenEnc   String?  // Sprint 9: Bandcamp import OAuth
   soundcloudAccessTokenEnc String?  // Sprint 9: SoundCloud import OAuth
+  googleDriveAccessTokenEnc  String?  // PLAT-080: Google Drive import OAuth
+  googleDriveRefreshTokenEnc String?  // PLAT-083: encrypted refresh token
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
@@ -458,6 +494,7 @@ model User {
   releases              Release[]
   revelatorRoyaltyReports RevelatorRoyaltyReport[]
   mixUploads            MixUpload[]
+  cloudImportJobs       CloudImportJob[]
   newsletterSubscribers NewsletterSubscriber[]   @relation("ArtistSubscribers")
   newsletterDrafts      NewsletterDraft[]
   mentionsSent          Mention[]                @relation("MentionerMentions")
@@ -802,6 +839,7 @@ model ArchiveItem {
   updatedAt            DateTime          @updatedAt
 
   mixUpload      MixUpload?
+  cloudImportJob CloudImportJob?
   collectionItems CollectionItem[]
   versions        ArchiveItemVersion[]
 

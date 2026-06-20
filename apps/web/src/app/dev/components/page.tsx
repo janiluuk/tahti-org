@@ -35,7 +35,7 @@ export default function ComponentsPlaygroundPage() {
         <BrandHeading level={1}>Tahti component playground</BrandHeading>
         <BrandText tone="secondary">
           Build primitives here first. Compare side-by-side with v8 mockups before touching
-          user-facing routes. See <code>docs/design-closing-gap.md</code>.
+          user-facing routes. See <code>docs/design/README.md</code>.
         </BrandText>
       </header>
 
@@ -189,7 +189,7 @@ export default function ComponentsPlaygroundPage() {
 
       <PlaygroundSection title="Phase C — primitives" id="phase-c-header">
         <BrandText tone="secondary">
-          All 14 primitives from <code>docs/design-closing-gap.md</code> are listed above.
+          All 14 primitives from the v8 reference pack are listed above.
         </BrandText>
       </PlaygroundSection>
 

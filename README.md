@@ -50,7 +50,7 @@ These rules are constitutional. They are not changeable by management decision. 
 | File | Purpose |
 |---|---|
 | [`docs/AGENT.md`](docs/AGENT.md) | Coding-agent brief — repo, milestones M0-M20, data model, anti-patterns |
-| [`docs/style-guide.md`](docs/style-guide.md) | UI component library (`@/components/ui`), tokens, typography, patterns |
+| [`docs/design/README.md`](docs/design/README.md) | Design docs index — constitution, v8 mockups, reference HTML pack, active briefs |
 | [`docs/project-roadmap.md`](docs/project-roadmap.md) | Build audit, phase checklist, milestone status |
 | [`docs/future-improvements.md`](docs/future-improvements.md) | Deferred milestones + engineering efficiency backlog |
 | [`docs/governance-and-legal.md`](docs/governance-and-legal.md) | Yhdistys structure, bylaws (§1-12), AGPL implications, AGM mechanics |

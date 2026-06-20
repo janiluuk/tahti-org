@@ -5,7 +5,7 @@
  * Tahti v8 design tokens — TypeScript source of truth.
  *
  * CSS custom properties in `tokens.css` must stay in sync with these values.
- * See docs/design-closing-gap.md for the token lock workflow.
+ * See docs/design/README.md for the token lock workflow.
  *
  * EVERY color, spacing value, type size, and radius in brand UI comes from here.
  * If you need a hex in a component, add it here first, then wire CSS or import.

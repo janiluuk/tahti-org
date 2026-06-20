@@ -6598,31 +6598,76 @@
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--soundcloud {
-  background: color-mix(
-    in srgb,
-    #ff5500 18%,
-    var(--card)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #ff5500 18%, var(--card)); /* design-token-allow: platform brand color */
   color: color-mix(in srgb, #ff5500 55%, var(--fg)); /* design-token-allow: platform brand color */
-  border-color: color-mix(
-    in srgb,
-    #ff5500 35%,
-    var(--border)
-  ); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #ff5500 35%, var(--border)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--bandcamp {
-  background: color-mix(
-    in srgb,
-    #629aa9 18%,
-    var(--card)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #629aa9 18%, var(--card)); /* design-token-allow: platform brand color */
   color: color-mix(in srgb, #629aa9 55%, var(--fg)); /* design-token-allow: platform brand color */
-  border-color: color-mix(
-    in srgb,
-    #629aa9 35%,
-    var(--border)
-  ); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #629aa9 35%, var(--border)); /* design-token-allow: platform brand color */
+}
+
+[data-tahti-ui='studio'] .import-page__service-badge--google-drive {
+  background: color-mix(in srgb, #4285f4 18%, var(--card)); /* design-token-allow: platform brand color */
+  color: color-mix(in srgb, #4285f4 55%, var(--fg)); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #4285f4 35%, var(--border)); /* design-token-allow: platform brand color */
+}
+
+[data-tahti-ui='studio'] .import-drive__jobs {
+  margin-top: var(--space-md);
+}
+
+[data-tahti-ui='studio'] .import-drive__job-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .import-page__track-meta--error {
+  color: var(--danger);
+}
+
+[data-tahti-ui='studio'] .import-connections {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+[data-tahti-ui='studio'] .import-connections__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .import-connections__row:last-child {
+  border-bottom: none;
+}
+
+[data-tahti-ui='studio'] .import-connections__info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+[data-tahti-ui='studio'] .import-connections__label {
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .import-connections__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--url {

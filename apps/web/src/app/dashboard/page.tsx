@@ -17,6 +17,7 @@ import type { ProgrammeItemRow } from './programme-actions'
 import MembershipPanel from './membership-panel'
 import PrivacyPanel from './privacy-panel'
 import SocialPromoPanel from './social-promo-panel'
+import { ImportConnectionsPanel } from './_import-connections-panel'
 import type { SocialSettings } from './social-actions'
 import { CustomDomainPanel } from './custom-domain-panel'
 import { fetchMixcloudStatus } from './mixcloud-actions'
@@ -209,6 +210,10 @@ export default async function DashboardPage() {
     nextBroadcastAt: null,
     nextBroadcastNote: null,
   }
+  type ImportConnectStatus = { connected: boolean; configured: boolean }
+  let googleDriveImport: ImportConnectStatus = { connected: false, configured: false }
+  let bandcampImport: ImportConnectStatus = { connected: false, configured: false }
+  let soundcloudImport: ImportConnectStatus = { connected: false, configured: false }
 
   try {
     const [
@@ -230,6 +235,9 @@ export default async function DashboardPage() {
       collectionsRes,
       scheduleRes,
       newsletterPair,
+      googleDriveRes,
+      bandcampRes,
+      soundcloudImportRes,
     ] = await Promise.all([
       slug ? get('/api/me/stream-settings') : null,
       slug ? fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }) : null,
@@ -251,6 +259,9 @@ export default async function DashboardPage() {
       slug
         ? Promise.all([get('/api/me/newsletter/subscribers'), get('/api/me/newsletter/drafts')])
         : null,
+      get('/api/me/google-drive'),
+      get('/api/me/bandcamp'),
+      get('/api/me/soundcloud'),
     ])
 
     if (streamSettingsRes?.ok) streamSettings = (await streamSettingsRes.json()) as StreamSettings
@@ -289,6 +300,11 @@ export default async function DashboardPage() {
       const [statsRes, draftsRes] = newsletterPair
       if (statsRes.ok) newsletterStats = (await statsRes.json()) as NewsletterStats
       if (draftsRes.ok) newsletterDrafts = (await draftsRes.json()) as NewsletterDraft[]
+    }
+    if (googleDriveRes.ok) googleDriveImport = (await googleDriveRes.json()) as ImportConnectStatus
+    if (bandcampRes.ok) bandcampImport = (await bandcampRes.json()) as ImportConnectStatus
+    if (soundcloudImportRes.ok) {
+      soundcloudImport = (await soundcloudImportRes.json()) as ImportConnectStatus
     }
   } catch {
     // ignore — dashboard renders with partial data
@@ -581,6 +597,36 @@ export default async function DashboardPage() {
             }
             social={
               socialSettings ? <SocialPromoPanel initial={socialSettings} apiUrl={apiUrl} /> : null
+            }
+            importConnections={
+              <ImportConnectionsPanel
+                connections={[
+                  {
+                    id: 'google-drive',
+                    label: 'Google Drive',
+                    connected: googleDriveImport.connected,
+                    configured: googleDriveImport.configured,
+                    importHref: '/dashboard/upload/import/google-drive',
+                    disconnectPath: '/api/me/google-drive',
+                  },
+                  {
+                    id: 'bandcamp',
+                    label: 'Bandcamp',
+                    connected: bandcampImport.connected,
+                    configured: bandcampImport.configured,
+                    importHref: '/dashboard/upload/import/bandcamp',
+                    disconnectPath: '/api/me/bandcamp',
+                  },
+                  {
+                    id: 'soundcloud',
+                    label: 'SoundCloud',
+                    connected: soundcloudImport.connected,
+                    configured: soundcloudImport.configured,
+                    importHref: '/dashboard/upload/import/soundcloud',
+                    disconnectPath: '/api/me/soundcloud',
+                  },
+                ]}
+              />
             }
             mentions={<MentionsPanel />}
             domain={

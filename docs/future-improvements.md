@@ -14,7 +14,7 @@ Last reviewed: 2026-06-05 (M21 audio editor v0–v2 + beta onboarding)
 - Phase 5–6 product: profiles, smart links, downloads, fan-subs (Connect, crons, perks), collections/RSS, archive metadata, embed pages, mentions, Tahti Radio, venues, newsletter API
 - Quality: ~230 Vitest tests (56 files), OpenAPI `/docs`, journey + vital-flows + user-journey bash e2e in CI
 - Platform: `ci.yml` lint gate, `scripts/ci-check.sh`, Docker full stack (`stack-up.sh`), `docs/scaling-node-distribution.md`, local Playwright screenshots (`e2e-screenshots.sh`)
-- Design: `docs/design-system.md`, `packages/ui/` (tokens + React components — **not yet used by web**)
+- Design: `docs/design/README.md`, `packages/ui/` (tokens + React components — **not yet used by web**)
 - Marketing: OG tags, apply form, bg-audio, favicons on `website/`
 
 **Top gaps to close before beta:**
