@@ -73,6 +73,7 @@ secrets:
   chat_fingerprint_salt:     { external: true }
   revelator_api_key:         { external: true }
   mixcloud_client_secret:    { external: true }
+  google_drive_client_secret: { external: true }
   twitter_client_secret:     { external: true }
   instagram_client_secret:   { external: true }
   smtp_password:             { external: true }
@@ -287,6 +288,10 @@ services:
       DOCS_PASS_FILE: /run/secrets/docs_pass
       MIXCLOUD_CLIENT_ID: ${MIXCLOUD_CLIENT_ID:-}
       MIXCLOUD_OAUTH_REDIRECT_URI: ${MIXCLOUD_OAUTH_REDIRECT_URI:-}
+      GOOGLE_DRIVE_CLIENT_SECRET_FILE: /run/secrets/google_drive_client_secret
+      GOOGLE_DRIVE_CLIENT_ID: ${GOOGLE_DRIVE_CLIENT_ID:-}
+      GOOGLE_DRIVE_DEVELOPER_KEY: ${GOOGLE_DRIVE_DEVELOPER_KEY:-}
+      GOOGLE_DRIVE_OAUTH_REDIRECT_URI: ${GOOGLE_DRIVE_OAUTH_REDIRECT_URI:-}
       TWITTER_CLIENT_ID: ${TWITTER_CLIENT_ID:-}
       TWITTER_OAUTH_REDIRECT_URI: ${TWITTER_OAUTH_REDIRECT_URI:-}
       INSTAGRAM_CLIENT_ID: ${INSTAGRAM_CLIENT_ID:-}
@@ -300,6 +305,7 @@ services:
       - chat_fingerprint_salt
       - revelator_api_key
       - mixcloud_client_secret
+      - google_drive_client_secret
       - twitter_client_secret
       - instagram_client_secret
       - smtp_password
@@ -324,7 +330,7 @@ services:
   # ───────────────────────────────────────────────────────────────────────────
   worker-media:
     image: registry.tahti.live/tahti/worker:${TAG:-latest}
-    command: ["node", "dist/index.js", "--queues=transcode-archive,record-live,fingerprint"]
+    command: ["node", "dist/index.js", "--queues=transcode-archive,record-live,fingerprint,cloud-import-google-drive"]
     networks: [internal]
     environment:
       <<: *db-pool-env
@@ -336,7 +342,10 @@ services:
       HLS_STALE_SECONDS: "20"
       ARCHIVE_CACHE_ROOT: /archive-cache
       ACOUSTID_API_KEY_FILE: /run/secrets/acoustid_api_key
-    secrets: [pg_password, acoustid_api_key]
+      RTMP_KEY_FILE: /run/secrets/rtmp_key_encryption_key
+      GOOGLE_DRIVE_CLIENT_SECRET_FILE: /run/secrets/google_drive_client_secret
+      GOOGLE_DRIVE_CLIENT_ID: ${GOOGLE_DRIVE_CLIENT_ID:-}
+    secrets: [pg_password, acoustid_api_key, rtmp_key_encryption_key, google_drive_client_secret]
     volumes:
       - recordings_shared:/recordings:ro
       - hls_shared:/hls:ro

@@ -9,6 +9,7 @@ type AccountSettingsProps = {
   username: string
   membership: ReactNode
   social: ReactNode
+  importConnections: ReactNode
   mentions: ReactNode
   domain: ReactNode
   privacy: ReactNode
@@ -20,6 +21,7 @@ export function AccountSettings({
   username,
   membership,
   social,
+  importConnections,
   mentions,
   domain,
   privacy,
@@ -55,6 +57,7 @@ export function AccountSettings({
         </Panel>
 
         {social}
+        {importConnections}
         {mentions}
         {domain}
         {privacy}

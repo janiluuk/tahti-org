@@ -95,6 +95,7 @@ import sitemapRoutes from './routes/sitemap.js'
 import mixcloudRoutes from './routes/me/mixcloud.js'
 import bandcampRoutes from './routes/me/bandcamp.js'
 import soundcloudRoutes from './routes/me/soundcloud.js'
+import googleDriveRoutes from './routes/me/google-drive.js'
 import revelatorRoutes from './routes/me/revelator.js'
 import newsletterPublicRoutes from './routes/newsletter/public.js'
 import newsletterMeRoutes from './routes/newsletter/me.js'
@@ -509,6 +510,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(mixcloudRoutes)
   await fastify.register(bandcampRoutes)
   await fastify.register(soundcloudRoutes)
+  await fastify.register(googleDriveRoutes)
   await fastify.register(revelatorRoutes)
 
   // M13: newsletter (public + artist-facing)

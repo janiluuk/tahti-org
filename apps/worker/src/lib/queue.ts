@@ -39,3 +39,12 @@ export async function enqueueWarmArchiveFallbackCache(channelId: string): Promis
     await queue.close()
   }
 }
+
+export async function enqueueTranscodeArchive(itemId: string): Promise<void> {
+  const queue = new Queue('media', { connection })
+  try {
+    await queue.add('transcode-archive', { itemId })
+  } finally {
+    await queue.close()
+  }
+}

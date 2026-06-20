@@ -155,6 +155,16 @@ export default async function UploadPage() {
             <span className="upload-entry__other-name">SoundCloud</span>
             <span className="upload-entry__other-desc">Import downloadable tracks you own</span>
           </NextLink>
+          <NextLink
+            href="/dashboard/upload/import/google-drive"
+            className="upload-entry__other-card"
+          >
+            <span className="upload-entry__other-icon">▣</span>
+            <span className="upload-entry__other-name">Google Drive</span>
+            <span className="upload-entry__other-desc">
+              Pick audio from your cloud storage — no local download
+            </span>
+          </NextLink>
           <NextLink href="/dashboard/upload/import/url" className="upload-entry__other-card">
             <span className="upload-entry__other-icon">⊞</span>
             <span className="upload-entry__other-name">Paste URL</span>

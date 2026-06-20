@@ -19,6 +19,7 @@ Last reviewed: _YYYY-MM-DD_ | Maintainer: _name / role_
 | Vendor | Service | Account / ID | Support contact | Portal | DPA signed |
 |--------|---------|--------------|-----------------|--------|:----------:|
 | Mixcloud | OAuth / uploads | App ID | developers@mixcloud.com | https://www.mixcloud.com/developers/ | ☐ |
+| Google | Drive import (OAuth + Picker) | Cloud Console project | | https://console.cloud.google.com/ | ☐ |
 | Revelator | DSP distribution | | | | ☐ |
 | Postmark / _email_ | SMTP / newsletters | Server ID | | | ☐ |
 | AWS | SES (optional) | Account ID | | https://console.aws.amazon.com/ses/ | ☐ |
