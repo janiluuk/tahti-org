@@ -23,9 +23,9 @@ export default function MixcloudRescueImportPage() {
     >
       <Panel title="Second-best, and that's OK" className="import-page__panel">
         <p className="import-page__lede">
-          This is for mixes you have no other backup of. If you still have the original
-          session, export, or master file, upload that instead — it&rsquo;ll sound better and
-          Tahti will show it as lossless rather than a rescue.
+          This is for mixes you have no other backup of. If you still have the original session,
+          export, or master file, upload that instead — it&rsquo;ll sound better and Tahti will show
+          it as lossless rather than a rescue.
         </p>
       </Panel>
 

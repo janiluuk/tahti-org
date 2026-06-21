@@ -3,7 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
-import type { ArchiveItemSource } from '@tahti/shared'
+import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
 import { CollectionEditor } from './_collection-editor'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -19,6 +19,7 @@ interface CollectionItem {
     bannerUrl: string | null
     createdAt: string
     source: ArchiveItemSource
+    qualityBadge: ArchiveQualityBadge
   } | null
   release: {
     id: string
