@@ -120,6 +120,40 @@ enum ArchiveContentType {
   @@schema("channel")
 }
 
+// How this ArchiveItem's media was acquired — drives qualityBadge + player choice.
+enum ArchiveItemSource {
+  UPLOAD
+  BROADCAST
+  BANDCAMP
+  SOUNDCLOUD
+  GOOGLE_DRIVE
+  MIXCLOUD_RESCUE
+  SPOTIFY_EMBED
+  MIXCLOUD_EMBED
+  URL_EMBED
+
+  @@schema("channel")
+}
+
+// Derived-but-stored quality signal — see packages/shared/src/quality.ts for the source matrix.
+enum ArchiveQualityBadge {
+  LOSSLESS
+  TRANSCODED
+  EMBED_ONLY
+
+  @@schema("channel")
+}
+
+enum ArchiveEmbedProvider {
+  SPOTIFY
+  MIXCLOUD
+  YOUTUBE
+  APPLE
+  GENERIC
+
+  @@schema("channel")
+}
+
 enum ArchiveLicense {
   ALL_RIGHTS_RESERVED
   CC_BY
@@ -478,6 +512,7 @@ model User {
   soundcloudAccessTokenEnc String?  // Sprint 9: SoundCloud import OAuth
   googleDriveAccessTokenEnc  String?  // PLAT-080: Google Drive import OAuth
   googleDriveRefreshTokenEnc String?  // PLAT-083: encrypted refresh token
+  spotifyArtistId       String?  // mixed-source collections brief: resolved Spotify artist catalog ID for "Your tracks" — search itself uses an app-level token, no per-user OAuth
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
@@ -821,7 +856,7 @@ model ArchiveItem {
   license       ArchiveLicense    @default(ALL_RIGHTS_RESERVED)
   repostToDownload Boolean        @default(false)
   followToDownload Boolean        @default(false)
-  rawKey        String
+  rawKey        String?           // null for *_EMBED sources — no audio file exists
   mp3Key        String?
   flacKey       String?
   durationSec   Int?
@@ -829,7 +864,11 @@ model ArchiveItem {
   sourceBitrateKbps  Int?         // detected source bitrate (lossy only); null for lossless
   peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
   visualPreset  VisualPreset      @default(MINIMAL) // M31
-  fileSizeBytes BigInt
+  fileSizeBytes BigInt?           // null for *_EMBED sources
+  source        ArchiveItemSource   @default(UPLOAD)
+  qualityBadge  ArchiveQualityBadge @default(LOSSLESS)
+  embedUri      String?             // spotify:track:... / mixcloud.com/.../... — present iff source is *_EMBED
+  embedProvider ArchiveEmbedProvider?
   status        ArchiveItemStatus @default(PENDING)
   isPublic      Boolean           @default(true)
   isFallback           Boolean           @default(false)

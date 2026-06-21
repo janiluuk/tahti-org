@@ -41,6 +41,10 @@ const collectionItemInclude = {
       bannerUrl: true,
       description: true,
       createdAt: true,
+      source: true,
+      qualityBadge: true,
+      embedUri: true,
+      embedProvider: true,
     },
   },
   release: {

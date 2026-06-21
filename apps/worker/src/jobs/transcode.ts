@@ -128,6 +128,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
   })
 
   if (!item) throw new Error(`ArchiveItem ${itemId} not found`)
+  if (!item.rawKey) throw new Error(`ArchiveItem ${itemId} has no rawKey (embed-only source?)`)
 
   await prisma.archiveItem.update({
     where: { id: itemId },

@@ -41,7 +41,7 @@ export async function ensureInitialVersion(
   if (existing) return
 
   const item = await prisma.archiveItem.findUnique({ where: { id: archiveItemId } })
-  if (!item || item.status !== 'READY') return
+  if (!item || item.status !== 'READY' || !item.rawKey || item.fileSizeBytes == null) return
 
   await prisma.archiveItemVersion.create({
     data: {

@@ -24,6 +24,9 @@ export async function processMixcloudUploadJob(job: Job): Promise<void> {
 
   if (!upload) throw new Error(`MixUpload ${mixUploadId} not found`)
 
+  const audioKey = archivePlaybackKey(upload.archiveItem) ?? upload.archiveItem.rawKey
+  if (!audioKey) throw new Error(`MixUpload ${mixUploadId} has no audio (embed-only source?)`)
+
   await prisma.mixUpload.update({
     where: { id: mixUploadId },
     data: { status: 'UPLOADING' },
@@ -32,7 +35,6 @@ export async function processMixcloudUploadJob(job: Job): Promise<void> {
   const tmpDir = await mkdtemp(join(tmpdir(), 'tahti-mixcloud-'))
 
   try {
-    const audioKey = archivePlaybackKey(upload.archiveItem) ?? upload.archiveItem.rawKey
     const audioPath = join(tmpDir, 'mix.mp3')
     await downloadToFile(audioKey, audioPath)
 

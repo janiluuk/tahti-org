@@ -652,7 +652,7 @@
 [data-tahti-ui='studio']
   button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
     [class*='studio-top-nav']
-  ) {
+  ):not([class*='add-btn--spotify']) {
   background: var(--card2);
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -669,7 +669,7 @@
 [data-tahti-ui='studio']
   button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
     [class*='studio-top-nav']
-  ):hover:not(:disabled) {
+  ):not([class*='add-btn--spotify']):hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--muted) 60%, transparent);
   background: color-mix(in srgb, var(--card2) 80%, var(--card));
 }
@@ -6558,7 +6558,7 @@
 
 [data-tahti-ui='studio'] .collection-tracklist__row {
   display: grid;
-  grid-template-columns: 24px 28px 40px 1fr auto 16px;
+  grid-template-columns: 24px 28px 40px 1fr auto auto 16px;
   align-items: center;
   gap: var(--space-2);
   background: color-mix(in srgb, var(--bg) 35%, var(--card));
@@ -6611,6 +6611,43 @@
   font-variant-numeric: tabular-nums;
 }
 
+[data-tahti-ui='studio'] .collection-tracklist__badge {
+  font-size: 9px;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--cyan) 16%, var(--card2));
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .collection-tracklist__badge--spotify {
+  background: color-mix(in srgb, #1ed760 18%, var(--card2)); /* design-token-allow: platform brand color */
+  color: #1ed760; /* design-token-allow: platform brand color */
+}
+
+[data-tahti-ui='studio'] .collection-tracklist__badge--mixcloud {
+  background: color-mix(in srgb, #a78bfa 18%, var(--card2)); /* design-token-allow: platform brand color */
+  color: #a78bfa; /* design-token-allow: platform brand color */
+}
+
+[data-tahti-ui='studio'] .collection-editor__add-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .collection-editor__add-btn--spotify {
+  border-color: color-mix(in srgb, #1ed760 45%, var(--border)); /* design-token-allow: platform brand color */
+  color: #1ed760; /* design-token-allow: platform brand color */
+}
+
+[data-tahti-ui='studio'] .collection-editor__add-btn--spotify:hover {
+  background: color-mix(in srgb, #1ed760 10%, var(--card)); /* design-token-allow: platform brand color */
+}
+
 [data-tahti-ui='studio'] .collection-tracklist__saving {
   color: var(--muted);
   font-size: var(--text-sm);
@@ -6620,6 +6657,190 @@
   [data-tahti-ui='studio'] .collection-editor__body {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Spotify import modal (View 13) ──────────────────────────────────────── */
+[data-tahti-ui='studio'] .spotify-import-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 100;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal {
+  width: 620px;
+  max-width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 60px color-mix(in srgb, var(--bg) 60%, transparent);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__title {
+  margin: 0;
+  font-size: var(--text-h3);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__subline {
+  margin: 2px 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: var(--text-body);
+  cursor: pointer;
+  line-height: 1;
+  padding: var(--space-1);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__close:hover {
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__banner {
+  background: color-mix(in srgb, #1ed760 10%, var(--card2)); /* design-token-allow: platform brand color */
+  border: 1px solid color-mix(in srgb, #1ed760 30%, var(--border)); /* design-token-allow: platform brand color */
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__tabs {
+  display: flex;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-2);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__tab--active {
+  color: var(--text);
+  border-bottom-color: #1ed760; /* design-token-allow: platform brand color */
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__search-input {
+  width: 100%;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__url-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__url-row .studio-input {
+  flex: 1;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__hint {
+  margin: 0;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__results {
+  min-height: 120px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__row:hover {
+  background: var(--card2);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__cover {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__cover--ph {
+  background: var(--card2);
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__row-title {
+  font-size: var(--text-sm);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__row-meta {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__duration {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .spotify-import-modal__footer-tip {
+  margin: 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--muted2);
+  text-align: center;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

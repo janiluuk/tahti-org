@@ -213,6 +213,15 @@ export const config = {
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/google-drive/oauth/callback`,
     oauthStateCookie: 'tahti_google_drive_oauth',
   },
+  /**
+   * Mixed-source collections brief: Spotify search + embed (optional — set SPOTIFY_CLIENT_ID).
+   * App-level Client Credentials Grant only — search/catalog browsing never needs a per-user
+   * login, so there is no redirect/callback pair here (unlike bandcamp/soundcloud/googleDrive).
+   */
+  spotify: {
+    clientId: process.env.SPOTIFY_CLIENT_ID ?? '',
+    clientSecret: readSecret('SPOTIFY_CLIENT_SECRET', 'SPOTIFY_CLIENT_SECRET_FILE', ''),
+  },
   /** M14: Twitter / X OAuth 2.0 PKCE (optional — set TWITTER_CLIENT_ID). */
   twitter: {
     clientId: process.env.TWITTER_CLIENT_ID ?? '',
