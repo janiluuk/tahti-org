@@ -37,12 +37,6 @@ import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-sessio
 
 const ArchiveEditor = dynamic(() => import('./archive-editor'))
 
-interface StreamSettings {
-  rtmp: { server: string; streamKey: string }
-  icecast: { server: string; mount: string; password: string }
-  hlsUrl: string
-}
-
 interface ModeratedChannel {
   slug: string
   displayName: string
@@ -98,7 +92,6 @@ export default async function DashboardPage() {
     weeklyCapSeconds: number
   }
 
-  let streamSettings: StreamSettings | null = null
   let announcements: Array<{ id: string; body: string; createdAt: string }> = []
   let moderators: ModeratorRow[] = []
   let moderatedChannels: ModeratedChannel[] = []
@@ -217,7 +210,6 @@ export default async function DashboardPage() {
 
   try {
     const [
-      streamSettingsRes,
       announcementsRes,
       moderatorsRes,
       moderatedRes,
@@ -239,7 +231,6 @@ export default async function DashboardPage() {
       bandcampRes,
       soundcloudImportRes,
     ] = await Promise.all([
-      slug ? get('/api/me/stream-settings') : null,
       slug ? fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }) : null,
       slug ? get('/api/me/channel/moderators') : null,
       get('/api/me/moderate'),
@@ -264,7 +255,6 @@ export default async function DashboardPage() {
       get('/api/me/soundcloud'),
     ])
 
-    if (streamSettingsRes?.ok) streamSettings = (await streamSettingsRes.json()) as StreamSettings
     if (announcementsRes?.ok) {
       announcements = (await announcementsRes.json()) as typeof announcements
     }
@@ -329,8 +319,14 @@ export default async function DashboardPage() {
   const statDlCount =
     (downloadGateSummary as { totals: { countedDownloads?: number } } | null)?.totals
       .countedDownloads ?? 0
-  const statBroadcasts =
-    (channelLiveStats as { totalBroadcasts: number } | null)?.totalBroadcasts ?? 0
+  const weeklyListeners = Math.max(
+    0,
+    ...(
+      (channelLiveStats as { daily: Array<{ listeners: number }> } | null)?.daily ?? []
+    )
+      .slice(-7)
+      .map((d) => d.listeners),
+  )
 
   const now = new Date()
   const helsinkiHour = (now.getUTCHours() + 3) % 24
@@ -434,11 +430,9 @@ export default async function DashboardPage() {
             username={user.username}
             isMember={user.isMember}
             memberNumber={membershipInfo?.memberNumber ?? null}
-            streamSettings={streamSettings}
             broadcastUsage={broadcastUsage}
+            weeklyListeners={weeklyListeners}
             statDlCount={statDlCount}
-            statBroadcasts={statBroadcasts}
-            fanSubscribers={newsletterStats.confirmed}
             revenueCents={fanPayoutStats.paidLast30Days}
             archiveItems={archiveItemsForEdit.map((item) => ({
               id: item.id,

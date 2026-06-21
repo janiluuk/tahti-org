@@ -3298,6 +3298,87 @@
   margin: 0;
 }
 
+/* ── Channel home hero ──────────────────────────────────────────────────── */
+[data-tahti-ui='studio'] .db-hero {
+  border-radius: var(--radius-md);
+  padding: var(--space-6) var(--space-5);
+  margin-bottom: 0.25rem;
+  text-align: center;
+}
+
+[data-tahti-ui='studio'] .db-hero--offline {
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--cyan) 30%, var(--border));
+}
+
+[data-tahti-ui='studio'] .db-hero__go-live-btn {
+  height: 60px;
+  padding: 0 var(--space-6);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .db-hero__hint {
+  margin: var(--space-3) 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='studio'] .db-hero__last-broadcast {
+  margin: var(--space-2) 0 0;
+  color: var(--muted2);
+  font-size: var(--text-xs);
+}
+
+[data-tahti-ui='studio'] .db-hero--live {
+  background: color-mix(in srgb, var(--green) 10%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--green) 40%, var(--border));
+}
+
+[data-tahti-ui='studio'] .db-hero__live-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='studio'] .db-hero__pulse-dot {
+  width: 12px;
+  height: 12px;
+}
+
+[data-tahti-ui='studio'] .db-hero__live-label {
+  font-size: var(--text-h3);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  color: var(--green);
+}
+
+[data-tahti-ui='studio'] .db-hero__live-meta {
+  margin-top: var(--space-2);
+  font-size: var(--text-display);
+  font-weight: var(--weight-medium);
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+}
+
+[data-tahti-ui='studio'] .db-hero__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .db-hero__secondary-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='studio'] .db-hero__secondary-link:hover {
+  color: var(--cyan);
+}
+
 [data-tahti-ui='studio'] .db-overview-broadcast-link {
   color: var(--muted);
   text-decoration: none;

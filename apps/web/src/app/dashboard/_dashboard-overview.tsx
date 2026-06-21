@@ -3,25 +3,13 @@
 
 import type { ComponentProps, ReactNode } from 'react'
 import NextLink from 'next/link'
-import {
-  StatCard,
-  StatCardGrid,
-  StudioCollapse,
-  BroadcastStatusBar,
-  SidebarNavIconSvg,
-} from '@tahti/ui'
+import { StatCard, StatCardGrid, StudioCollapse, SidebarNavIconSvg } from '@tahti/ui'
 import BroadcastUsageBanner, { type BroadcastUsage } from './broadcast-usage'
 import UpgradeCta from './upgrade-cta'
-import { OverviewStreamKey } from './overview-stream-key'
-import { EndBroadcastBtn } from './end-broadcast-btn'
+import { ChannelHero } from './_channel-hero'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
 import { ChannelEgressPanel } from './channel-egress-panel'
-
-interface StreamSettings {
-  rtmp: { streamKey: string }
-  icecast: { mount: string; password: string }
-}
 
 interface ArchiveItem {
   id: string
@@ -36,15 +24,13 @@ interface ModeratedChannel {
 }
 
 export type DashboardOverviewProps = {
-  channel: { slug: string; state: string } | null
+  channel: { slug: string; state: string; goneLiveAt: string | null } | null
   username: string
   isMember: boolean
   memberNumber: number | null
-  streamSettings: StreamSettings | null
   broadcastUsage: BroadcastUsage | null
+  weeklyListeners: number
   statDlCount: number
-  statBroadcasts: number
-  fanSubscribers: number
   revenueCents: number
   archiveItems: ArchiveItem[]
   downloadGateSummary: ComponentProps<typeof DownloadGateSummaryPanel>['summary']
@@ -67,30 +53,6 @@ function IconGuide() {
   )
 }
 
-function IconChart() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect x="2" y="9" width="3" height="5" rx="0.75" fill="currentColor" opacity=".6" />
-      <rect x="6.5" y="5" width="3" height="9" rx="0.75" fill="currentColor" opacity=".8" />
-      <rect x="11" y="2" width="3" height="12" rx="0.75" fill="currentColor" />
-    </svg>
-  )
-}
-
-function IconView() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <path
-        d="M1.5 8s2.3-4.5 6.5-4.5S14.5 8 14.5 8s-2.3 4.5-6.5 4.5S1.5 8 1.5 8Z"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinejoin="round"
-      />
-      <circle cx="8" cy="8" r="1.75" stroke="currentColor" strokeWidth="1.3" />
-    </svg>
-  )
-}
-
 function agoLabel(createdAt: string): string {
   const ms = Date.now() - new Date(createdAt).getTime()
   const d = Math.floor(ms / 86400000)
@@ -106,11 +68,9 @@ export function DashboardOverview({
   username,
   isMember,
   memberNumber,
-  streamSettings,
   broadcastUsage,
+  weeklyListeners,
   statDlCount,
-  statBroadcasts,
-  fanSubscribers,
   revenueCents,
   archiveItems,
   downloadGateSummary,
@@ -158,84 +118,43 @@ export function DashboardOverview({
     )
   }
 
-  const isLive = channel.state === 'LIVE'
+  const lastBroadcast =
+    archiveItems[0] && typeof archiveItems[0].createdAt === 'string'
+      ? { title: archiveItems[0].title, ago: agoLabel(archiveItems[0].createdAt) }
+      : null
 
   return (
     <div className="db-overview">
-      {isLive ? (
-        <BroadcastStatusBar
-          state="live"
-          meta={<NextLink href={`/c/${channel.slug}`}>View channel →</NextLink>}
-          action={<EndBroadcastBtn />}
-        />
-      ) : (
-        <BroadcastStatusBar
-          state="offline"
-          offlineMessage="Channel offline — connect OBS or Icecast to go live"
-          meta={
-            <NextLink href="/dashboard/broadcast" className="db-overview-broadcast-link">
-              Stream settings →
-            </NextLink>
-          }
-        />
-      )}
-
-      <StatCardGrid aria-label="Channel summary">
-        <StatCard
-          variant="plays"
-          value={(statDlCount + statBroadcasts).toLocaleString()}
-          label="Plays this month"
-        />
-        <StatCard variant="downloads" value={statDlCount.toLocaleString()} label="Downloads" />
-        <StatCard variant="fans" value={fanSubscribers.toLocaleString()} label="Fan subscribers" />
-        <StatCard
-          variant="revenue"
-          value={`€${(revenueCents / 100).toFixed(0)}`}
-          label="Revenue this month"
-        />
-      </StatCardGrid>
+      <ChannelHero
+        slug={channel.slug}
+        goneLiveAt={channel.goneLiveAt}
+        lastBroadcast={channel.goneLiveAt ? null : lastBroadcast}
+      />
 
       <BroadcastUsageBanner usage={broadcastUsage} />
       <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
 
-      {streamSettings ? (
-        <OverviewStreamKey
-          rtmpKey={streamSettings.rtmp.streamKey}
-          icecastMount={streamSettings.icecast.mount}
-          icecastPass={streamSettings.icecast.password}
+      <StatCardGrid cols={3} aria-label="Channel summary">
+        <StatCard
+          variant="plays"
+          value={weeklyListeners.toLocaleString()}
+          label="Listeners this week"
         />
-      ) : (
-        <div className="db-stream-panel db-stream-panel--placeholder">
-          <div className="db-stream-panel__label">Stream credentials</div>
-          <p className="studio-text-muted-sm studio-m-0">
-            Could not load stream keys.{' '}
-            <NextLink href="/dashboard/broadcast">Open broadcast settings →</NextLink>
-          </p>
-        </div>
-      )}
-
-      <div className="db-quick-actions">
-        <NextLink href="/dashboard/upload" className="db-quick-action db-quick-action--primary">
-          <SidebarNavIconSvg name="upload" />
-          Upload a set
-        </NextLink>
-        <NextLink href="/dashboard/broadcast" className="db-quick-action">
-          <SidebarNavIconSvg name="distribution" />
-          Broadcast settings
-        </NextLink>
-        <NextLink href={`/c/${channel.slug}`} className="db-quick-action">
-          <IconView />
-          View my channel
-        </NextLink>
-        <NextLink href="/dashboard/stats" className="db-quick-action">
-          <IconChart />
-          Full stats
-        </NextLink>
-      </div>
+        <StatCard
+          variant="downloads"
+          value={statDlCount.toLocaleString()}
+          label="Downloads this month"
+        />
+        <StatCard
+          variant="revenue"
+          value={`€${(revenueCents / 100).toFixed(0)}`}
+          label="Fan-sub revenue"
+        />
+      </StatCardGrid>
 
       <div className="db-recent-archive">
         <div className="db-recent-archive__header">
-          <h2 className="db-recent-archive__heading">Recent archive</h2>
+          <h2 className="db-recent-archive__heading">Recent broadcasts</h2>
           {archiveItems.length > 0 ? (
             <NextLink href="/dashboard#archive" className="db-recent-archive__view-all">
               View all →
@@ -259,7 +178,7 @@ export function DashboardOverview({
           </div>
         ) : (
           <ul className="db-recent-archive__list">
-            {archiveItems.slice(0, 4).map((item) => {
+            {archiveItems.slice(0, 2).map((item) => {
               const dur = typeof item.durationSec === 'number' ? item.durationSec : null
               const durationMin = dur ? `${Math.floor(dur / 60)}m` : null
               const ago = typeof item.createdAt === 'string' ? agoLabel(item.createdAt) : null
@@ -276,7 +195,7 @@ export function DashboardOverview({
                   </div>
                   <div className="db-recent-archive__actions">
                     <NextLink href="/dashboard#archive" className="db-recent-archive__link">
-                      Edit
+                      Polish & publish →
                     </NextLink>
                   </div>
                 </li>
