@@ -19,6 +19,7 @@ import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { collectionRssUrl } from '@/lib/rss-feeds'
 import { SpotifyEmbedRow } from './_spotify-embed-row'
+import { MixcloudEmbedRow } from './_mixcloud-embed-row'
 
 async function fetchCollection(slug: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -162,6 +163,15 @@ export default async function CollectionPage({
               if (item.archiveItem?.source === 'SPOTIFY_EMBED' && item.archiveItem.embedUri) {
                 return (
                   <SpotifyEmbedRow
+                    key={item.id}
+                    title={item.archiveItem.title}
+                    embedUri={item.archiveItem.embedUri}
+                  />
+                )
+              }
+              if (item.archiveItem?.source === 'MIXCLOUD_EMBED' && item.archiveItem.embedUri) {
+                return (
+                  <MixcloudEmbedRow
                     key={item.id}
                     title={item.archiveItem.title}
                     embedUri={item.archiveItem.embedUri}

@@ -14,6 +14,7 @@ import {
 } from '../../collection-actions'
 import { STYLE_LABEL, STYLE_COLOR } from '../collection-labels'
 import { SpotifyImportModal, spotifyCoverProxySrc } from './_spotify-import-modal'
+import { MixcloudImportModal, mixcloudCoverProxySrc } from './_mixcloud-import-modal'
 
 const SOURCE_BADGE_LABEL: Partial<Record<ArchiveItemSource, string>> = {
   SPOTIFY_EMBED: 'SPOTIFY EMBED',
@@ -90,6 +91,9 @@ function itemThumb(item: CollectionItem): string | null {
   if (bannerUrl && item.archiveItem?.source === 'SPOTIFY_EMBED') {
     return spotifyCoverProxySrc(bannerUrl)
   }
+  if (bannerUrl && item.archiveItem?.source === 'MIXCLOUD_EMBED') {
+    return mixcloudCoverProxySrc(bannerUrl)
+  }
   return bannerUrl ?? item.release?.artworkUrl ?? null
 }
 
@@ -113,6 +117,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
   const [dragFrom, setDragFrom] = useState<number | null>(null)
   const [reorderSaving, setReorderSaving] = useState(false)
   const [spotifyModalOpen, setSpotifyModalOpen] = useState(false)
+  const [mixcloudModalOpen, setMixcloudModalOpen] = useState(false)
 
   // Delete
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -363,6 +368,13 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               >
                 + Spotify
               </button>
+              <button
+                type="button"
+                className="studio-btn-ghost studio-btn-sm collection-editor__add-btn--mixcloud"
+                onClick={() => setMixcloudModalOpen(true)}
+              >
+                + Mixcloud
+              </button>
             </div>
           </div>
 
@@ -384,6 +396,32 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                       bannerUrl: track.coverUrl,
                       createdAt: new Date().toISOString(),
                       source: 'SPOTIFY_EMBED',
+                    },
+                    release: null,
+                  },
+                ])
+              }}
+            />
+          ) : null}
+
+          {mixcloudModalOpen ? (
+            <MixcloudImportModal
+              collectionId={initial.id}
+              collectionTitle={name || initial.name}
+              onClose={() => setMixcloudModalOpen(false)}
+              onAdded={({ archiveItemId, collectionItemId, track }) => {
+                setItems((prev) => [
+                  ...prev,
+                  {
+                    id: collectionItemId,
+                    position: prev.length + 1,
+                    archiveItem: {
+                      id: archiveItemId,
+                      title: track.title,
+                      durationSec: track.durationSec,
+                      bannerUrl: track.coverUrl,
+                      createdAt: new Date().toISOString(),
+                      source: 'MIXCLOUD_EMBED',
                     },
                     release: null,
                   },

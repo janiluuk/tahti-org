@@ -652,7 +652,7 @@
 [data-tahti-ui='studio']
   button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
     [class*='studio-top-nav']
-  ):not([class*='add-btn--spotify']) {
+  ):not([class*='add-btn--']) {
   background: var(--card2);
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -669,7 +669,7 @@
 [data-tahti-ui='studio']
   button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
     [class*='studio-top-nav']
-  ):not([class*='add-btn--spotify']):hover:not(:disabled) {
+  ):not([class*='add-btn--']):hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--muted) 60%, transparent);
   background: color-mix(in srgb, var(--card2) 80%, var(--card));
 }
@@ -6648,6 +6648,15 @@
   background: color-mix(in srgb, #1ed760 10%, var(--card)); /* design-token-allow: platform brand color */
 }
 
+[data-tahti-ui='studio'] .collection-editor__add-btn--mixcloud {
+  border-color: color-mix(in srgb, #a78bfa 45%, var(--border)); /* design-token-allow: platform brand color */
+  color: #a78bfa; /* design-token-allow: platform brand color */
+}
+
+[data-tahti-ui='studio'] .collection-editor__add-btn--mixcloud:hover {
+  background: color-mix(in srgb, #a78bfa 10%, var(--card)); /* design-token-allow: platform brand color */
+}
+
 [data-tahti-ui='studio'] .collection-tracklist__saving {
   color: var(--muted);
   font-size: var(--text-sm);
@@ -6748,6 +6757,15 @@
 [data-tahti-ui='studio'] .spotify-import-modal__tab--active {
   color: var(--text);
   border-bottom-color: #1ed760; /* design-token-allow: platform brand color */
+}
+
+[data-tahti-ui='studio'] .mixcloud-import-modal .spotify-import-modal__banner {
+  background: color-mix(in srgb, #a78bfa 10%, var(--card2)); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #a78bfa 30%, var(--border)); /* design-token-allow: platform brand color */
+}
+
+[data-tahti-ui='studio'] .mixcloud-import-modal .spotify-import-modal__tab--active {
+  border-bottom-color: #a78bfa; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .spotify-import-modal__search-input {

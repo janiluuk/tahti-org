@@ -513,6 +513,7 @@ model User {
   googleDriveAccessTokenEnc  String?  // PLAT-080: Google Drive import OAuth
   googleDriveRefreshTokenEnc String?  // PLAT-083: encrypted refresh token
   spotifyArtistId       String?  // mixed-source collections brief: resolved Spotify artist catalog ID for "Your tracks" — search itself uses an app-level token, no per-user OAuth
+  mixcloudUsername      String?  // mixed-source collections brief: artist's own Mixcloud handle for "Your tracks" — Mixcloud's read API is public, no OAuth needed for catalog browsing
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
