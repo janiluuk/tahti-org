@@ -53,6 +53,7 @@ export async function finaliseUpload(params: {
   contentType?: string
   collectionSlugs?: string[]
   metadata?: Record<string, unknown>
+  source?: 'UPLOAD' | 'MIXCLOUD_RESCUE'
 }): Promise<{ itemId: string; error?: string }> {
   const res = await fetch(`${apiUrl}/api/uploads/complete`, {
     method: 'POST',

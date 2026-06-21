@@ -12,6 +12,7 @@ export type StudioFlowBadgeTone =
   | 'broadcast'
   | 'collection'
   | 'google-drive'
+  | 'mixcloud-rescue'
 
 export function StudioFlowSteps({ steps }: { steps: string[] }) {
   return (

@@ -259,6 +259,11 @@ services:
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
+      # Browser-side fetches (e.g. the Spotify/Mixcloud cover-art proxies) can't reach the
+      # `api` service name — they need the host-mapped API port, not API_URL's docker-network one.
+      args:
+        NEXT_PUBLIC_API_BASE: http://localhost:${API_PORT:-15011}
+        NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-15011}
     environment:
       <<: *app-env
       API_URL: http://api:3001

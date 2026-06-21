@@ -6,12 +6,34 @@
 import { useState, useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
+import { QUALITY_BADGE_LABEL } from '@tahti/shared'
 import {
   updateCollection,
   reorderCollectionItems,
   deleteCollection,
 } from '../../collection-actions'
 import { STYLE_LABEL, STYLE_COLOR } from '../collection-labels'
+import { SpotifyImportModal, spotifyCoverProxySrc } from './_spotify-import-modal'
+import { MixcloudImportModal, mixcloudCoverProxySrc } from './_mixcloud-import-modal'
+
+const SOURCE_BADGE_LABEL: Partial<Record<ArchiveItemSource, string>> = {
+  SPOTIFY_EMBED: 'SPOTIFY EMBED',
+  MIXCLOUD_EMBED: 'MIXCLOUD EMBED',
+  URL_EMBED: 'EMBED',
+}
+
+const SOURCE_BADGE_CLASS: Partial<Record<ArchiveItemSource, string>> = {
+  SPOTIFY_EMBED: 'collection-tracklist__badge--spotify',
+  MIXCLOUD_EMBED: 'collection-tracklist__badge--mixcloud',
+  URL_EMBED: 'collection-tracklist__badge--embed',
+}
+
+const QUALITY_BADGE_CLASS: Record<ArchiveQualityBadge, string> = {
+  LOSSLESS: '',
+  TRANSCODED: 'collection-tracklist__badge--transcoded',
+  EMBED_ONLY: 'collection-tracklist__badge--embed',
+}
 
 interface CollectionItem {
   id: string
@@ -22,6 +44,8 @@ interface CollectionItem {
     durationSec: number | null
     bannerUrl: string | null
     createdAt: string
+    source: ArchiveItemSource
+    qualityBadge: ArchiveQualityBadge
   } | null
   release: {
     id: string
@@ -71,7 +95,14 @@ function itemTitle(item: CollectionItem): string {
 }
 
 function itemThumb(item: CollectionItem): string | null {
-  return item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null
+  const bannerUrl = item.archiveItem?.bannerUrl ?? null
+  if (bannerUrl && item.archiveItem?.source === 'SPOTIFY_EMBED') {
+    return spotifyCoverProxySrc(bannerUrl)
+  }
+  if (bannerUrl && item.archiveItem?.source === 'MIXCLOUD_EMBED') {
+    return mixcloudCoverProxySrc(bannerUrl)
+  }
+  return bannerUrl ?? item.release?.artworkUrl ?? null
 }
 
 export function CollectionEditor({ collection: initial }: { collection: CollectionDetail }) {
@@ -93,6 +124,8 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
   const [items, setItems] = useState(initial.items)
   const [dragFrom, setDragFrom] = useState<number | null>(null)
   const [reorderSaving, setReorderSaving] = useState(false)
+  const [spotifyModalOpen, setSpotifyModalOpen] = useState(false)
+  const [mixcloudModalOpen, setMixcloudModalOpen] = useState(false)
 
   // Delete
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -332,10 +365,80 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               Tracks &amp; releases
               <span className="collection-editor__count">{items.length}</span>
             </h2>
-            <Link href="/dashboard#archive" className="studio-btn-ghost studio-btn-sm">
-              + Add item
-            </Link>
+            <div className="collection-editor__add-buttons">
+              <Link href="/dashboard#archive" className="studio-btn-ghost studio-btn-sm">
+                + Tahti library
+              </Link>
+              <button
+                type="button"
+                className="studio-btn-ghost studio-btn-sm collection-editor__add-btn--spotify"
+                onClick={() => setSpotifyModalOpen(true)}
+              >
+                + Spotify
+              </button>
+              <button
+                type="button"
+                className="studio-btn-ghost studio-btn-sm collection-editor__add-btn--mixcloud"
+                onClick={() => setMixcloudModalOpen(true)}
+              >
+                + Mixcloud
+              </button>
+            </div>
           </div>
+
+          {spotifyModalOpen ? (
+            <SpotifyImportModal
+              collectionId={initial.id}
+              collectionTitle={name || initial.name}
+              onClose={() => setSpotifyModalOpen(false)}
+              onAdded={({ archiveItemId, collectionItemId, track }) => {
+                setItems((prev) => [
+                  ...prev,
+                  {
+                    id: collectionItemId,
+                    position: prev.length + 1,
+                    archiveItem: {
+                      id: archiveItemId,
+                      title: track.title,
+                      durationSec: track.durationSec,
+                      bannerUrl: track.coverUrl,
+                      createdAt: new Date().toISOString(),
+                      source: 'SPOTIFY_EMBED',
+                      qualityBadge: 'EMBED_ONLY',
+                    },
+                    release: null,
+                  },
+                ])
+              }}
+            />
+          ) : null}
+
+          {mixcloudModalOpen ? (
+            <MixcloudImportModal
+              collectionId={initial.id}
+              collectionTitle={name || initial.name}
+              onClose={() => setMixcloudModalOpen(false)}
+              onAdded={({ archiveItemId, collectionItemId, track }) => {
+                setItems((prev) => [
+                  ...prev,
+                  {
+                    id: collectionItemId,
+                    position: prev.length + 1,
+                    archiveItem: {
+                      id: archiveItemId,
+                      title: track.title,
+                      durationSec: track.durationSec,
+                      bannerUrl: track.coverUrl,
+                      createdAt: new Date().toISOString(),
+                      source: 'MIXCLOUD_EMBED',
+                      qualityBadge: 'EMBED_ONLY',
+                    },
+                    release: null,
+                  },
+                ])
+              }}
+            />
+          ) : null}
 
           {items.length === 0 ? (
             <div className="studio-empty-card collection-editor__empty">
@@ -356,6 +459,14 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                 const thumb = itemThumb(item)
                 const title = itemTitle(item)
                 const dur = item.archiveItem?.durationSec
+                const source = item.archiveItem?.source
+                const quality = item.archiveItem?.qualityBadge
+                const badgeLabel =
+                  (source ? SOURCE_BADGE_LABEL[source] : undefined) ??
+                  (quality ? QUALITY_BADGE_LABEL[quality] : undefined)
+                const badgeClass =
+                  (source ? SOURCE_BADGE_CLASS[source] : undefined) ??
+                  (quality ? QUALITY_BADGE_CLASS[quality] : undefined)
                 return (
                   <li
                     key={item.id}
@@ -382,6 +493,11 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                       <div className="collection-tracklist__thumb collection-tracklist__thumb--ph" />
                     )}
                     <span className="collection-tracklist__title">{title}</span>
+                    {badgeLabel ? (
+                      <span className={`collection-tracklist__badge ${badgeClass ?? ''}`}>
+                        {badgeLabel}
+                      </span>
+                    ) : null}
                     {dur != null && (
                       <span className="collection-tracklist__dur">{formatDuration(dur)}</span>
                     )}

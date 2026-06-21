@@ -22,6 +22,10 @@ export const CompleteUploadSchema = z.object({
   etag: z.string().min(1),
   title: z.string().min(1).max(200).trim(),
   metadata: ArchiveUploadMetadataSchema.optional(),
+  // Mixed-source collections brief: lets the rescue-import flow (re-uploading your own
+  // backup of a Mixcloud mix) tag the resulting item honestly. Never accepts embed sources —
+  // those only ever come from the dedicated embed-add routes, not a file upload.
+  source: z.enum(['UPLOAD', 'MIXCLOUD_RESCUE']).optional(),
 })
 
 export type CompleteUploadInput = z.infer<typeof CompleteUploadSchema>

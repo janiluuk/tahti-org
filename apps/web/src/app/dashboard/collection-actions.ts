@@ -8,6 +8,8 @@ import type {
   CollectionGalleryMode,
   CollectionTextLayerAlignment,
   CollectionTextLayerMode,
+  MixcloudTrackResult,
+  SpotifyTrackResult,
 } from '@tahti/shared'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -147,4 +149,158 @@ export async function deleteCollection(slug: string): Promise<{ error: string | 
     return { error: (data as { error?: string }).error ?? 'Failed to delete collection' }
   }
   return { error: null }
+}
+
+// ── Mixed-source collections: Spotify search + embed (View 13) ────────────
+
+type SpotifyTracksResult = { tracks: SpotifyTrackResult[]; error: string | null }
+
+export async function searchSpotifyTracks(query: string): Promise<SpotifyTracksResult> {
+  const res = await fetch(
+    `${apiUrl}/api/v1/imports/spotify/search?q=${encodeURIComponent(query)}`,
+    { headers: { Cookie: sessionHeader() }, cache: 'no-store' },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { tracks: [], error: (data as { error?: string }).error ?? 'Spotify search failed' }
+  }
+  const data = (await res.json()) as { tracks: SpotifyTrackResult[] }
+  return { tracks: data.tracks, error: null }
+}
+
+export async function getSpotifyMyTracks(): Promise<
+  SpotifyTracksResult & { artistId: string | null }
+> {
+  const res = await fetch(`${apiUrl}/api/v1/imports/spotify/me-tracks`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return {
+      tracks: [],
+      artistId: null,
+      error: (data as { error?: string }).error ?? 'Spotify lookup failed',
+    }
+  }
+  const data = (await res.json()) as { artistId: string | null; tracks: SpotifyTrackResult[] }
+  return { tracks: data.tracks, artistId: data.artistId, error: null }
+}
+
+export async function getSpotifyTracksByArtistUrl(artistUrl: string): Promise<SpotifyTracksResult> {
+  const res = await fetch(
+    `${apiUrl}/api/v1/imports/spotify/by-artist-url?artistUrl=${encodeURIComponent(artistUrl)}`,
+    { headers: { Cookie: sessionHeader() }, cache: 'no-store' },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { tracks: [], error: (data as { error?: string }).error ?? 'Spotify lookup failed' }
+  }
+  const data = (await res.json()) as { tracks: SpotifyTrackResult[] }
+  return { tracks: data.tracks, error: null }
+}
+
+export async function addSpotifyTrackToCollection(
+  collectionId: string,
+  spotifyUri: string,
+): Promise<{
+  error: string | null
+  archiveItemId?: string
+  collectionItemId?: string
+  track?: SpotifyTrackResult
+}> {
+  const res = await fetch(`${apiUrl}/api/v1/imports/spotify/add`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ collectionId, spotifyUri }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to add Spotify track' }
+  }
+  const data = (await res.json()) as {
+    archiveItemId: string
+    collectionItemId: string
+    track: SpotifyTrackResult
+  }
+  return { error: null, ...data }
+}
+
+// ── Mixed-source collections: Mixcloud search + embed (View 14) ───────────
+
+type MixcloudTracksResult = { tracks: MixcloudTrackResult[]; error: string | null }
+
+export async function searchMixcloudTracks(query: string): Promise<MixcloudTracksResult> {
+  const res = await fetch(
+    `${apiUrl}/api/v1/imports/mixcloud/search?q=${encodeURIComponent(query)}`,
+    { headers: { Cookie: sessionHeader() }, cache: 'no-store' },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { tracks: [], error: (data as { error?: string }).error ?? 'Mixcloud search failed' }
+  }
+  const data = (await res.json()) as { tracks: MixcloudTrackResult[] }
+  return { tracks: data.tracks, error: null }
+}
+
+export async function getMixcloudMyTracks(): Promise<
+  MixcloudTracksResult & { username: string | null }
+> {
+  const res = await fetch(`${apiUrl}/api/v1/imports/mixcloud/me-tracks`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return {
+      tracks: [],
+      username: null,
+      error: (data as { error?: string }).error ?? 'Mixcloud lookup failed',
+    }
+  }
+  const data = (await res.json()) as { username: string | null; tracks: MixcloudTrackResult[] }
+  return { tracks: data.tracks, username: data.username, error: null }
+}
+
+export async function getMixcloudTracksByProfileUrl(
+  profileUrl: string,
+): Promise<MixcloudTracksResult> {
+  const res = await fetch(
+    `${apiUrl}/api/v1/imports/mixcloud/by-username?profileUrl=${encodeURIComponent(profileUrl)}`,
+    { headers: { Cookie: sessionHeader() }, cache: 'no-store' },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { tracks: [], error: (data as { error?: string }).error ?? 'Mixcloud lookup failed' }
+  }
+  const data = (await res.json()) as { tracks: MixcloudTrackResult[] }
+  return { tracks: data.tracks, error: null }
+}
+
+export async function addMixcloudTrackToCollection(
+  collectionId: string,
+  cloudcastUrl: string,
+): Promise<{
+  error: string | null
+  archiveItemId?: string
+  collectionItemId?: string
+  track?: MixcloudTrackResult
+}> {
+  const res = await fetch(`${apiUrl}/api/v1/imports/mixcloud/add`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ collectionId, cloudcastUrl }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to add Mixcloud track' }
+  }
+  const data = (await res.json()) as {
+    archiveItemId: string
+    collectionItemId: string
+    track: MixcloudTrackResult
+  }
+  return { error: null, ...data }
 }

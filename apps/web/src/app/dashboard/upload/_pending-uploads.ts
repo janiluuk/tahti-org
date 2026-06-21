@@ -8,12 +8,18 @@ export interface PendingUpload {
   uploadId: string
   file: File
   uploadUrl: string
+  source?: 'UPLOAD' | 'MIXCLOUD_RESCUE'
 }
 
 const pending = new Map<string, PendingUpload>()
 
-export function setPendingUpload(uploadId: string, file: File, uploadUrl: string): void {
-  pending.set(uploadId, { uploadId, file, uploadUrl })
+export function setPendingUpload(
+  uploadId: string,
+  file: File,
+  uploadUrl: string,
+  source?: 'UPLOAD' | 'MIXCLOUD_RESCUE',
+): void {
+  pending.set(uploadId, { uploadId, file, uploadUrl, source })
 }
 
 export function getPendingUpload(uploadId: string): PendingUpload | undefined {

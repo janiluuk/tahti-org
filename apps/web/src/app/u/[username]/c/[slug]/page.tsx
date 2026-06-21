@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProfilePageLayout, SafePlainText } from '@tahti/ui'
 import type {
+  ArchiveItemSource,
   CollectionGalleryMode,
   CollectionTextLayerAlignment,
   CollectionTextLayerMode,
@@ -17,6 +18,9 @@ import {
 import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { collectionRssUrl } from '@/lib/rss-feeds'
+import { SpotifyEmbedRow } from './_spotify-embed-row'
+import { MixcloudEmbedRow } from './_mixcloud-embed-row'
+import { ArchiveTrackRow } from './_archive-track-row'
 
 async function fetchCollection(slug: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -47,6 +51,9 @@ interface CollectionResponse {
       title: string
       durationSec: number | null
       bannerUrl: string | null
+      source: ArchiveItemSource
+      embedUri: string | null
+      audioUrl: string | null
     } | null
     release: {
       id: string
@@ -155,7 +162,42 @@ export default async function CollectionPage({
         ) : (
           <ol className="prof-list prof-collection-items">
             {data.items.map((item) => {
+              if (item.archiveItem?.source === 'SPOTIFY_EMBED' && item.archiveItem.embedUri) {
+                return (
+                  <SpotifyEmbedRow
+                    key={item.id}
+                    title={item.archiveItem.title}
+                    embedUri={item.archiveItem.embedUri}
+                  />
+                )
+              }
+              if (item.archiveItem?.source === 'MIXCLOUD_EMBED' && item.archiveItem.embedUri) {
+                return (
+                  <MixcloudEmbedRow
+                    key={item.id}
+                    title={item.archiveItem.title}
+                    embedUri={item.archiveItem.embedUri}
+                  />
+                )
+              }
               const thumbUrl = item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null
+              if (item.archiveItem?.audioUrl) {
+                return (
+                  <ArchiveTrackRow
+                    key={item.id}
+                    id={item.archiveItem.id}
+                    title={item.archiveItem.title}
+                    audioUrl={item.archiveItem.audioUrl}
+                    artistUsername={data.user.username}
+                    thumbUrl={thumbUrl}
+                    durationLabel={
+                      item.archiveItem.durationSec != null
+                        ? formatDuration(item.archiveItem.durationSec)
+                        : null
+                    }
+                  />
+                )
+              }
               return (
                 <li key={item.id} className="prof-collection-item-row">
                   <div className="prof-collection-cover prof-collection-cover--item">

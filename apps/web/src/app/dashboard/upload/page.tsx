@@ -172,6 +172,16 @@ export default async function UploadPage() {
               Spotify, Apple Music, YouTube — embed-only smart link
             </span>
           </NextLink>
+          <NextLink
+            href="/dashboard/upload/import/mixcloud-rescue"
+            className="upload-entry__other-card"
+          >
+            <span className="upload-entry__other-icon">◐</span>
+            <span className="upload-entry__other-name">Rescue from Mixcloud</span>
+            <span className="upload-entry__other-desc">
+              Re-upload your own backup of a mix — second-best, but better than nothing
+            </span>
+          </NextLink>
         </div>
 
         {/* ── Collections link ── */}
