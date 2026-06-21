@@ -137,7 +137,12 @@ export function SpotifyImportModal({ collectionId, collectionTitle, onClose, onA
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="spotify-import-modal" role="dialog" aria-modal="true" aria-label="Add Spotify track">
+      <div
+        className="spotify-import-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Add Spotify track"
+      >
         <div className="spotify-import-modal__header">
           <div>
             <h2 className="spotify-import-modal__title">
@@ -160,8 +165,8 @@ export function SpotifyImportModal({ collectionId, collectionTitle, onClose, onA
         <div className="spotify-import-modal__banner" role="note">
           <strong>Honest about quality.</strong> Spotify tracks render as embedded players in your
           collection. Listeners need a Spotify account to hear full tracks (30-second previews
-          otherwise). Best for compilations with collaborators&rsquo; tracks — not for your own
-          work you have masters of.
+          otherwise). Best for compilations with collaborators&rsquo; tracks — not for your own work
+          you have masters of.
         </div>
 
         <div className="spotify-import-modal__tabs" role="tablist">
@@ -228,8 +233,8 @@ export function SpotifyImportModal({ collectionId, collectionTitle, onClose, onA
 
         {tab === 'mine' && !loading && myArtistId == null ? (
           <p className="studio-text-muted-sm spotify-import-modal__hint">
-            We don&rsquo;t have your Spotify artist profile yet — paste your own Spotify artist
-            URL in &ldquo;By artist URL&rdquo; for now.
+            We don&rsquo;t have your Spotify artist profile yet — paste your own Spotify artist URL
+            in &ldquo;By artist URL&rdquo; for now.
           </p>
         ) : null}
 

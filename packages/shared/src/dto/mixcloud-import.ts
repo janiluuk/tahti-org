@@ -29,7 +29,10 @@ export const MixcloudAddTrackRequestSchema = z.object({
   collectionId: z.string().min(1),
   cloudcastUrl: z
     .string()
-    .regex(/^https:\/\/(www\.)?mixcloud\.com\/[^/]+\/[^/]+\/?$/, 'Expected a mixcloud.com cloudcast URL'),
+    .regex(
+      /^https:\/\/(www\.)?mixcloud\.com\/[^/]+\/[^/]+\/?$/,
+      'Expected a mixcloud.com cloudcast URL',
+    ),
 })
 
 export const MixcloudAddTrackResponseSchema = z.object({

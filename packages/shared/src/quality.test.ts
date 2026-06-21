@@ -22,7 +22,13 @@ describe('quality matrix', () => {
   })
 
   it('upload/bandcamp/google_drive/broadcast/soundcloud follow hasFlac', () => {
-    for (const source of ['UPLOAD', 'BANDCAMP', 'GOOGLE_DRIVE', 'BROADCAST', 'SOUNDCLOUD'] as const) {
+    for (const source of [
+      'UPLOAD',
+      'BANDCAMP',
+      'GOOGLE_DRIVE',
+      'BROADCAST',
+      'SOUNDCLOUD',
+    ] as const) {
       expect(deriveQualityBadge(source, true)).toBe('LOSSLESS')
       expect(deriveQualityBadge(source, false)).toBe('TRANSCODED')
     }

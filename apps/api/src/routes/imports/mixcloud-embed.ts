@@ -27,7 +27,8 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['imports'],
-        description: 'Mixed-source collections: Mixcloud cloudcast search (embed-only, no audio fetch)',
+        description:
+          'Mixed-source collections: Mixcloud cloudcast search (embed-only, no audio fetch)',
         response: openApiResponse(MixcloudSearchResponseSchema, 'MixcloudSearchResponse'),
       },
     },
@@ -90,7 +91,9 @@ const mixcloudEmbedImportRoutes: FastifyPluginAsync = async (fastify) => {
       const query = request.query as Record<string, string>
       const username = query.profileUrl ? parseMixcloudUsername(query.profileUrl) : null
       if (!username) {
-        return reply.status(400).send({ error: 'Could not parse a Mixcloud handle from profileUrl' })
+        return reply
+          .status(400)
+          .send({ error: 'Could not parse a Mixcloud handle from profileUrl' })
       }
 
       try {

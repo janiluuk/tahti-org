@@ -38,7 +38,10 @@ export function isEmbedOnlySource(source: ArchiveItemSource): boolean {
  * FLAC/WAV-derived file exists — this function only encodes the matrix,
  * not the ffprobe analysis that produces `hasFlac` (see archive-playback.ts).
  */
-export function deriveQualityBadge(source: ArchiveItemSource, hasFlac: boolean): ArchiveQualityBadge {
+export function deriveQualityBadge(
+  source: ArchiveItemSource,
+  hasFlac: boolean,
+): ArchiveQualityBadge {
   if (isEmbedOnlySource(source)) return 'EMBED_ONLY'
   // Mixcloud only ever serves transcoded M4A — there is no source to make a lossless copy from.
   if (source === 'MIXCLOUD_RESCUE') return 'TRANSCODED'

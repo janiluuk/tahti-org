@@ -94,7 +94,9 @@ export async function getMixcloudUserCloudcasts(
 }
 
 /** Direct lookup by resource key (e.g. /username/mix-slug/) — Mixcloud resolves any object key this way. */
-export async function getMixcloudCloudcastByUrl(cloudcastUrl: string): Promise<MixcloudTrackResult> {
+export async function getMixcloudCloudcastByUrl(
+  cloudcastUrl: string,
+): Promise<MixcloudTrackResult> {
   const key = new URL(cloudcastUrl).pathname
   const cast = await mixcloudApiGet<RawMixcloudCloudcast>(key)
   return mapMixcloudCloudcast(cast)
