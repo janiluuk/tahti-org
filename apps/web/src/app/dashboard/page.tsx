@@ -321,9 +321,7 @@ export default async function DashboardPage() {
       .countedDownloads ?? 0
   const weeklyListeners = Math.max(
     0,
-    ...(
-      (channelLiveStats as { daily: Array<{ listeners: number }> } | null)?.daily ?? []
-    )
+    ...((channelLiveStats as { daily: Array<{ listeners: number }> } | null)?.daily ?? [])
       .slice(-7)
       .map((d) => d.listeners),
   )

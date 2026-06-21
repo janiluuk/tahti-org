@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import { BrowserFrame } from '@tahti/ui'
+import channelImg from '/public/screenshots/channel.png'
+import dashboardImg from '/public/screenshots/dashboard.png'
+import statsImg from '/public/screenshots/stats.png'
+import profileImg from '/public/screenshots/profile.png'
 
 export const metadata: Metadata = {
   title: 'Tahti for artists — broadcast, archive, earn fairly',
@@ -85,7 +90,7 @@ export default function ForArtistsPage() {
         <div>
           <BrowserFrame url="tahti.live/c/your-channel">
             <div className="for-artists-screenshot">
-              <img src="/screenshots/channel.png" alt="Channel page — live broadcast view" />
+              <Image src={channelImg} alt="Channel page — live broadcast view" />
             </div>
           </BrowserFrame>
           <p className="for-artists-carousel-caption">Your live channel</p>
@@ -93,7 +98,7 @@ export default function ForArtistsPage() {
         <div>
           <BrowserFrame url="tahti.live/dashboard">
             <div className="for-artists-screenshot">
-              <img src="/screenshots/dashboard.png" alt="Artist dashboard — overview" />
+              <Image src={dashboardImg} alt="Artist dashboard — overview" />
             </div>
           </BrowserFrame>
           <p className="for-artists-carousel-caption">Artist dashboard</p>
@@ -101,7 +106,7 @@ export default function ForArtistsPage() {
         <div>
           <BrowserFrame url="tahti.live/dashboard/stats">
             <div className="for-artists-screenshot">
-              <img src="/screenshots/stats.png" alt="Stats — plays, grants, engagement" />
+              <Image src={statsImg} alt="Stats — plays, grants, engagement" />
             </div>
           </BrowserFrame>
           <p className="for-artists-carousel-caption">Analytics & grant estimate</p>
@@ -109,7 +114,7 @@ export default function ForArtistsPage() {
         <div>
           <BrowserFrame url="tahti.live/u/your-handle">
             <div className="for-artists-screenshot">
-              <img src="/screenshots/profile.png" alt="Public artist profile" />
+              <Image src={profileImg} alt="Public artist profile" />
             </div>
           </BrowserFrame>
           <p className="for-artists-carousel-caption">Your public profile</p>
