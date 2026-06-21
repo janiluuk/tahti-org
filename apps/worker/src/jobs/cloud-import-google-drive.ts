@@ -148,6 +148,7 @@ export async function processCloudImportGoogleDriveJob(job: Job): Promise<void> 
         rawKey,
         fileSizeBytes: BigInt(contentLength ?? 0),
         status: 'PENDING',
+        source: 'GOOGLE_DRIVE',
       },
       select: { id: true },
     })

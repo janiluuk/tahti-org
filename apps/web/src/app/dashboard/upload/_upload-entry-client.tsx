@@ -11,7 +11,11 @@ import { setPendingUpload } from './_pending-uploads'
 const ACCEPTED = '.flac,.wav,.aiff,.mp3,.m4a,.ogg,audio/*'
 const MAX_SIZE_BYTES = 4 * 1024 * 1024 * 1024 // 4 GB
 
-export function UploadEntryClient() {
+export function UploadEntryClient({
+  source,
+}: {
+  source?: 'UPLOAD' | 'MIXCLOUD_RESCUE'
+} = {}) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
@@ -45,14 +49,14 @@ export function UploadEntryClient() {
           setPreparing(false)
           return
         }
-        setPendingUpload(result.uploadId, file, result.uploadUrl)
+        setPendingUpload(result.uploadId, file, result.uploadUrl, source)
         router.push(`/dashboard/upload/${encodeURIComponent(result.uploadId)}`)
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Failed to prepare upload')
         setPreparing(false)
       }
     },
-    [router],
+    [router, source],
   )
 
   return (

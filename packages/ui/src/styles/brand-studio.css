@@ -6935,6 +6935,12 @@
   border-color: color-mix(in srgb, #4285f4 35%, var(--border)); /* design-token-allow: platform brand color */
 }
 
+[data-tahti-ui='studio'] .import-page__service-badge--mixcloud-rescue {
+  background: color-mix(in srgb, #a78bfa 18%, var(--card)); /* design-token-allow: platform brand color */
+  color: color-mix(in srgb, #a78bfa 55%, var(--fg)); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #a78bfa 35%, var(--border)); /* design-token-allow: platform brand color */
+}
+
 [data-tahti-ui='studio'] .import-drive__jobs {
   margin-top: var(--space-md);
 }
