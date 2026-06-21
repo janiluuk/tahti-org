@@ -17,6 +17,7 @@ export interface DashboardUser {
   channel: {
     slug: string
     state: string
+    goneLiveAt: string | null
     customDomain: string | null
     customDomainVerified: boolean
   } | null
