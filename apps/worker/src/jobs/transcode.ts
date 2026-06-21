@@ -9,6 +9,7 @@ import ffmpeg from 'fluent-ffmpeg'
 import { prisma, ensureInitialVersion, Prisma } from '@tahti/db'
 import {
   chooseLossyOutputBitrateKbps,
+  deriveQualityBadge,
   isLosslessCodec,
   isLosslessSource,
   mergeDetectedArchiveMetadata,
@@ -166,6 +167,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
           editorPeaks: (editorPeaks ?? undefined) as Prisma.InputJsonValue | undefined,
           sourceFormat,
           sourceBitrateKbps: null,
+          qualityBadge: deriveQualityBadge(item.source, true),
           ...tagPatch,
         },
       })
@@ -192,6 +194,7 @@ export async function processTranscodeJob(job: Job): Promise<void> {
         editorPeaks: (editorPeaks ?? undefined) as Prisma.InputJsonValue | undefined,
         sourceFormat,
         sourceBitrateKbps: sourceMeta.bitrateKbps,
+        qualityBadge: deriveQualityBadge(item.source, false),
         ...tagPatch,
       },
     })

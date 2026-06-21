@@ -22,6 +22,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
+import { presignedGetUrl } from '../../lib/minio.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -566,8 +567,21 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
+
+      // Presign playback URLs for items with real Tahti audio — embed-only items have
+      // no rawKey/flacKey/mp3Key and stay null, so the public page never tries to play them.
+      const items = await Promise.all(
+        col.items.map(async (colItem) => {
+          if (!colItem.archiveItem) return colItem
+          const playbackKey = archivePlaybackKey(colItem.archiveItem)
+          const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
+          return { ...colItem, archiveItem: { ...colItem.archiveItem, audioUrl } }
+        }),
+      )
+
       return reply.send({
         ...col,
+        items,
         links: {
           page: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
           rss: `${config.apiUrl}/api/v1/collections/${col.slug}/rss.xml`,

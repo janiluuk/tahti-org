@@ -6,7 +6,8 @@
 import { useState, useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import type { ArchiveItemSource } from '@tahti/shared'
+import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
+import { QUALITY_BADGE_LABEL } from '@tahti/shared'
 import {
   updateCollection,
   reorderCollectionItems,
@@ -28,6 +29,12 @@ const SOURCE_BADGE_CLASS: Partial<Record<ArchiveItemSource, string>> = {
   URL_EMBED: 'collection-tracklist__badge--embed',
 }
 
+const QUALITY_BADGE_CLASS: Record<ArchiveQualityBadge, string> = {
+  LOSSLESS: '',
+  TRANSCODED: 'collection-tracklist__badge--transcoded',
+  EMBED_ONLY: 'collection-tracklist__badge--embed',
+}
+
 interface CollectionItem {
   id: string
   position: number
@@ -38,6 +45,7 @@ interface CollectionItem {
     bannerUrl: string | null
     createdAt: string
     source: ArchiveItemSource
+    qualityBadge: ArchiveQualityBadge
   } | null
   release: {
     id: string
@@ -396,6 +404,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                       bannerUrl: track.coverUrl,
                       createdAt: new Date().toISOString(),
                       source: 'SPOTIFY_EMBED',
+                      qualityBadge: 'EMBED_ONLY',
                     },
                     release: null,
                   },
@@ -422,6 +431,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                       bannerUrl: track.coverUrl,
                       createdAt: new Date().toISOString(),
                       source: 'MIXCLOUD_EMBED',
+                      qualityBadge: 'EMBED_ONLY',
                     },
                     release: null,
                   },
@@ -450,8 +460,13 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                 const title = itemTitle(item)
                 const dur = item.archiveItem?.durationSec
                 const source = item.archiveItem?.source
-                const badgeLabel = source ? SOURCE_BADGE_LABEL[source] : undefined
-                const badgeClass = source ? SOURCE_BADGE_CLASS[source] : undefined
+                const quality = item.archiveItem?.qualityBadge
+                const badgeLabel =
+                  (source ? SOURCE_BADGE_LABEL[source] : undefined) ??
+                  (quality ? QUALITY_BADGE_LABEL[quality] : undefined)
+                const badgeClass =
+                  (source ? SOURCE_BADGE_CLASS[source] : undefined) ??
+                  (quality ? QUALITY_BADGE_CLASS[quality] : undefined)
                 return (
                   <li
                     key={item.id}

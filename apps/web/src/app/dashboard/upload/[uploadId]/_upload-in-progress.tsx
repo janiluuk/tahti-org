@@ -219,6 +219,7 @@ export function UploadInProgress({
         year: year ? Number(year) : undefined,
         genre: genre || undefined,
         collectionSlugs: selectedCollections,
+        source: pending?.source,
       })
       if (result.error) {
         setUploadState('error')
@@ -251,7 +252,7 @@ export function UploadInProgress({
       }
       setUploadState('done') // timeout — assume done
     },
-    [uploadId, title, artist, year, genre, selectedCollections],
+    [uploadId, title, artist, year, genre, selectedCollections, pending?.source],
   )
 
   const cancel = useCallback(() => {

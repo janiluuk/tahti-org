@@ -27,7 +27,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const { uploadId, title, metadata } = parsed.data
+      const { uploadId, title, metadata, source } = parsed.data
       const user = request.sessionUser!
 
       const channel = await fastify.prisma.channel.findUnique({
@@ -50,6 +50,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
           rawKey: uploadId,
           fileSizeBytes: 0,
           status: 'PENDING',
+          ...(source ? { source } : {}),
           ...metadataForNewUpload(metadata),
         },
         select: { id: true, status: true },

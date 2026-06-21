@@ -2497,6 +2497,26 @@
   min-width: 0;
 }
 
+[data-tahti-ui='brand'] .prof-collection-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .prof-collection-play:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
 /* ── Mixed-source collections (View 15) — Spotify embed row ────────────── */
 [data-tahti-ui='brand'] .embed-frame-spotify {
   position: relative;

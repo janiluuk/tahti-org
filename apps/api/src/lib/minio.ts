@@ -15,6 +15,23 @@ export const s3 = new S3Client({
   forcePathStyle: true,
 })
 
+// Presigned URLs are handed to browsers/listeners, so they must be signed against the
+// publicly-reachable endpoint — not the internal one (e.g. docker-compose's `minio:9000`
+// service name, unresolvable outside the network). Most deployments leave these equal;
+// only local/dev stacks where MinIO sits behind an internal-only hostname need the split.
+const presigningS3 =
+  config.minio.publicEndpoint === config.minio.endpoint
+    ? s3
+    : new S3Client({
+        endpoint: config.minio.publicEndpoint,
+        region: 'auto',
+        credentials: {
+          accessKeyId: config.minio.accessKey,
+          secretAccessKey: config.minio.secretKey,
+        },
+        forcePathStyle: true,
+      })
+
 export async function presignedPutUrl(
   key: string,
   contentType: string,
@@ -25,7 +42,7 @@ export async function presignedPutUrl(
     Key: key,
     ContentType: contentType,
   })
-  return getSignedUrl(s3, command, { expiresIn: expiresInSec })
+  return getSignedUrl(presigningS3, command, { expiresIn: expiresInSec })
 }
 
 export async function presignedGetUrl(key: string, expiresInSec = 3600): Promise<string> {
@@ -33,7 +50,7 @@ export async function presignedGetUrl(key: string, expiresInSec = 3600): Promise
     Bucket: config.minio.bucket,
     Key: key,
   })
-  return getSignedUrl(s3, command, { expiresIn: expiresInSec })
+  return getSignedUrl(presigningS3, command, { expiresIn: expiresInSec })
 }
 
 export async function getObjectStream(key: string): Promise<{
