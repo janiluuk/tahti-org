@@ -12,6 +12,7 @@ interface SubscriberStats {
   total: number
   confirmed: number
   newLast30Days: number
+  fanSubscriberCount: number
 }
 
 interface DraftRow {
@@ -46,6 +47,7 @@ export default function NewsletterPanel({
   const [sendingId, setSendingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [justSavedId, setJustSavedId] = useState<string | null>(null)
 
   const weeklyHint =
     tier === 'STUDIO'
@@ -53,6 +55,13 @@ export default function NewsletterPanel({
       : tier === 'ARTIST'
         ? 'Up to 4 newsletters per week (Artist tier).'
         : 'Up to 1 newsletter per week (Free tier).'
+
+  const newsletterOnlyCount = Math.max(0, stats.confirmed - stats.fanSubscriberCount)
+  const recipientLine = subscribersOnly
+    ? `Sending to ${stats.fanSubscriberCount} fan subscriber${stats.fanSubscriberCount === 1 ? '' : 's'}.`
+    : stats.fanSubscriberCount > 0
+      ? `Sending to ${stats.confirmed} people — ${stats.fanSubscriberCount} fan-subscriber${stats.fanSubscriberCount === 1 ? '' : 's'} + ${newsletterOnlyCount} newsletter-only.`
+      : `Sending to ${stats.confirmed} subscriber${stats.confirmed === 1 ? '' : 's'}.`
 
   async function handleCreate() {
     const subj = subject.trim()
@@ -70,10 +79,11 @@ export default function NewsletterPanel({
       setError(result.error)
     } else if (result.draft) {
       setDrafts((prev) => [result.draft!, ...prev])
+      setJustSavedId(result.draft.id)
       setSubject('')
       setBodyMd('')
       setSubscribersOnly(false)
-      setMessage('Draft saved.')
+      setMessage(null)
     }
     setSaving(false)
   }
@@ -102,6 +112,7 @@ export default function NewsletterPanel({
           ? `Queued for ${result.queued} ${result.audience === 'fans' ? 'fan ' : ''}subscriber${result.queued === 1 ? '' : 's'}.`
           : 'Newsletter queued.',
       )
+      if (justSavedId === draftId) setJustSavedId(null)
     }
     setSendingId(null)
   }
@@ -114,6 +125,7 @@ export default function NewsletterPanel({
       className="import-page__panel studio-mt-lg"
       flushTop
     >
+      <p className="nl-recipient-line studio-mb-sm">{recipientLine}</p>
       <div className="studio-row studio-row--wrap studio-gap-lg studio-mb-lg studio-text-sm">
         <span>
           <strong>{stats.confirmed}</strong> confirmed
@@ -196,6 +208,27 @@ export default function NewsletterPanel({
       >
         {saving ? 'Saving…' : 'Save draft'}
       </button>
+
+      {justSavedId &&
+        (() => {
+          const draft = drafts.find((d) => d.id === justSavedId)
+          if (!draft || draft.state !== 'DRAFT') return null
+          const target = draft.subscribersOnly ? stats.fanSubscriberCount : stats.confirmed
+          return (
+            <div className="nl-send-prompt studio-mt-md">
+              <p className="studio-text-sm studio-mb-sm">
+                Draft saved. Ready to send to {target} people?
+              </p>
+              <div className="studio-actions studio-actions--sm">
+                <SendButton
+                  label={`Send to ${target} people →`}
+                  disabled={sendingId === draft.id}
+                  onClick={() => void handleSend(draft.id, draft.subscribersOnly ? 'fans' : 'all')}
+                />
+              </div>
+            </div>
+          )
+        })()}
 
       {drafts.length > 0 && (
         <div className="studio-mt-xl">
