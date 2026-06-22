@@ -10,6 +10,50 @@ import { prisma } from '@tahti/db'
 import { editListFromV0Trim } from '@tahti/audio-edit'
 import { hashPassword } from '../src/lib/password.js'
 import { generateVerificationToken, verificationExpiresAt } from '../src/lib/token.js'
+import { s3 } from '../src/lib/minio.js'
+import { config } from '../src/config.js'
+import { PutObjectCommand } from '@aws-sdk/client-s3'
+
+/** Small mono 16-bit PCM WAV buffer (silence) — enough for the audio editor and
+ * channel player to actually have bytes to stream; format fidelity doesn't matter
+ * for a seed fixture, only that the object exists. */
+function makeSilentWav(durationSec = 5, sampleRate = 8000): Buffer {
+  const numSamples = sampleRate * durationSec
+  const dataSize = numSamples * 2
+  const buf = Buffer.alloc(44 + dataSize)
+  buf.write('RIFF', 0)
+  buf.writeUInt32LE(36 + dataSize, 4)
+  buf.write('WAVE', 8)
+  buf.write('fmt ', 12)
+  buf.writeUInt32LE(16, 16)
+  buf.writeUInt16LE(1, 20)
+  buf.writeUInt16LE(1, 22)
+  buf.writeUInt32LE(sampleRate, 24)
+  buf.writeUInt32LE(sampleRate * 2, 28)
+  buf.writeUInt16LE(2, 32)
+  buf.writeUInt16LE(16, 34)
+  buf.write('data', 36)
+  buf.writeUInt32LE(dataSize, 40)
+  return buf
+}
+
+// Best-effort: some seed contexts (lighter CI jobs that only need the DB rows,
+// not playable audio) don't run a MinIO container at all. Don't fail the whole
+// seed over a missing object store there.
+async function uploadFixtureAudio(key: string, contentType: string): Promise<void> {
+  try {
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: config.minio.bucket,
+        Key: key,
+        Body: makeSilentWav(),
+        ContentType: contentType,
+      }),
+    )
+  } catch (err) {
+    console.warn(`fixture audio upload skipped for ${key}: ${String(err)}`)
+  }
+}
 
 const PASS = 'screenshot-demo-pass'
 const ARTIST = {
@@ -267,6 +311,12 @@ async function main() {
       }),
     },
   })
+
+  await Promise.all([
+    uploadFixtureAudio(archiveItem.rawKey!, 'audio/wav'),
+    uploadFixtureAudio(archiveItem.mp3Key!, 'audio/mpeg'),
+    uploadFixtureAudio(archiveItem.flacKey!, 'audio/flac'),
+  ])
 
   const editorProject = await prisma.editorProject.create({
     data: {

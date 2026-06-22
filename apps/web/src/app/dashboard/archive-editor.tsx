@@ -153,7 +153,11 @@ export default function ArchiveEditor({
             followToDownload={meta.followToDownload}
           />
 
-          <ArchiveVersionPanel itemId={item.id} itemStatus={item.status} />
+          <ArchiveVersionPanel
+            itemId={item.id}
+            itemStatus={item.status}
+            embedUri={item.embedUri as string | null | undefined}
+          />
 
           <ArchiveVisualPanel
             itemId={item.id}

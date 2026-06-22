@@ -19,9 +19,11 @@ import {
 export function ArchiveVersionPanel({
   itemId,
   itemStatus,
+  embedUri,
 }: {
   itemId: string
   itemStatus: string
+  embedUri?: string | null
 }) {
   const [versions, setVersions] = useState<ArchiveVersionRow[]>([])
   const [versionLabel, setVersionLabel] = useState('')
@@ -129,6 +131,18 @@ export function ArchiveVersionPanel({
   }
 
   if (itemStatus !== 'READY') return null
+
+  if (embedUri) {
+    return (
+      <div className="studio-divider">
+        <h4 className="studio-text-strong-sm studio-m-0 studio-mb-sm">Audio versions</h4>
+        <p className="studio-text-muted-sm studio-m-0">
+          This track is embedded from its original source — there&apos;s no local audio file for
+          Tahti to edit or version.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="studio-divider">
