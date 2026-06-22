@@ -1623,6 +1623,19 @@
   border-left: 3px solid var(--green);
 }
 
+.broadcast-status-bar--preview {
+  background: var(--card2);
+  border-left: 3px solid var(--amber);
+}
+
+.broadcast-status-bar--preview .broadcast-status-bar__live {
+  color: var(--amber);
+}
+
+.broadcast-status-bar--preview .broadcast-status-bar__dot {
+  background: var(--amber);
+}
+
 .broadcast-status-bar--offline {
   background: var(--card2);
   border-left: 3px solid var(--border);

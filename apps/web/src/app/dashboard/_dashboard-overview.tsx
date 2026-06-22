@@ -127,6 +127,7 @@ export function DashboardOverview({
     <div className="db-overview">
       <ChannelHero
         slug={channel.slug}
+        state={channel.state}
         goneLiveAt={channel.goneLiveAt}
         lastBroadcast={channel.goneLiveAt ? null : lastBroadcast}
       />

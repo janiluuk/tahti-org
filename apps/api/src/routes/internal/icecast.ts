@@ -14,11 +14,7 @@ import {
   openApiResponse,
   openApiResponses,
 } from '@tahti/shared'
-import {
-  enqueueFinalizeBroadcastRecording,
-  enqueueWarmArchiveFallbackCache,
-} from '../../lib/queue.js'
-import { queueChannelLiveSocialPost } from '../../lib/social-post.js'
+import { enqueueFinalizeBroadcastRecording } from '../../lib/queue.js'
 
 // Icecast URL auth callbacks.
 // Icecast sends: mount, user, pass (plus optional ip, agent) as form-encoded body.
@@ -82,28 +78,15 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
         data: { channelId: channel.id, source: 'ICECAST' },
       })
 
-      const wasOffline = channel.state === 'OFFLINE'
-
+      // Connecting only puts the channel in private PREVIEW — only the artist can hear it
+      // in the studio until they explicitly promote to LIVE via /api/me/channel/go-live.
       await fastify.prisma.channel.update({
         where: { id: channel.id },
-        data: { state: 'LIVE', goneLiveAt: new Date() },
+        data: { state: 'PREVIEW' },
       })
-
-      if (wasOffline) {
-        queueChannelLiveSocialPost(fastify.prisma, channel.userId, channel.id, slug).catch(
-          (err: unknown) => fastify.log.warn({ err, slug }, 'channel live social post failed'),
-        )
-      }
 
       spawnChannelLiquidsoap(channel.id, slug, broadcast.id).catch((err: unknown) =>
         fastify.log.error({ err }, 'orchestrator spawn failed (icecast)'),
-      )
-
-      enqueueWarmArchiveFallbackCache(channel.id).catch((err: unknown) =>
-        fastify.log.error(
-          { err, channelId: channel.id },
-          'archive fallback cache warm enqueue failed',
-        ),
       )
 
       fastify.log.info(
@@ -147,20 +130,23 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
           where: { id: broadcast.id },
           data: { endedAt: new Date() },
         })
-        enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>
-          fastify.log.error(
-            {
-              err,
-              ...broadcastSessionLogFields({
-                broadcastId: broadcast.id,
-                channelId: channel.id,
-                slug,
-                source: 'ICECAST',
-              }),
-            },
-            'finalize-broadcast-recording enqueue failed',
-          ),
-        )
+        // A session that never went LIVE (preview-only) has no public archive to finalize.
+        if (broadcast.wentLiveAt) {
+          enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>
+            fastify.log.error(
+              {
+                err,
+                ...broadcastSessionLogFields({
+                  broadcastId: broadcast.id,
+                  channelId: channel.id,
+                  slug,
+                  source: 'ICECAST',
+                }),
+              },
+              'finalize-broadcast-recording enqueue failed',
+            ),
+          )
+        }
       }
 
       await fastify.prisma.channel.update({

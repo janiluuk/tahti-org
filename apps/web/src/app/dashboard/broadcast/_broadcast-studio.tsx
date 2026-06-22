@@ -11,11 +11,20 @@ import HlsPlayer from '@/app/c/[slug]/hls-player'
 import StreamSettingsPanel from '../stream-settings'
 import BroadcastUsageBanner, { type BroadcastUsage } from '../broadcast-usage'
 import { EndBroadcastBtn } from '../end-broadcast-btn'
+import { GoLiveBtn } from '../go-live-btn'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
   icecast: { server: string; mount: string; password: string; fallbackServers?: string[] }
   hlsUrl: string
+}
+
+type LiveStatus = 'offline' | 'preview' | 'live'
+
+function statusFromState(state: string | undefined): LiveStatus {
+  if (state === 'LIVE') return 'live'
+  if (state === 'PREVIEW') return 'preview'
+  return 'offline'
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
@@ -32,21 +41,22 @@ export function BroadcastStudio({
   broadcastUsage: BroadcastUsage | null
 }) {
   const router = useRouter()
-  const [isLive, setIsLive] = useState(initialState === 'LIVE')
+  const [status, setStatus] = useState<LiveStatus>(statusFromState(initialState))
 
   useEffect(() => {
-    setIsLive(initialState === 'LIVE')
+    setStatus(statusFromState(initialState))
   }, [initialState])
 
   useEffect(() => {
-    if (isLive) return
+    if (status === 'live') return
     const id = window.setInterval(async () => {
       try {
         const res = await fetch(`${API_BASE}/api/auth/me`, { credentials: 'include' })
         if (!res.ok) return
         const me = (await res.json()) as { channel?: { state?: string } }
-        if (me.channel?.state === 'LIVE') {
-          setIsLive(true)
+        const next = statusFromState(me.channel?.state)
+        if (next !== status) {
+          setStatus(next)
           router.refresh()
         }
       } catch {
@@ -54,7 +64,10 @@ export function BroadcastStudio({
       }
     }, 4000)
     return () => window.clearInterval(id)
-  }, [isLive, router])
+  }, [status, router])
+
+  const isLive = status === 'live'
+  const isPreview = status === 'preview'
 
   return (
     <div className="broadcast-studio">
@@ -66,12 +79,23 @@ export function BroadcastStudio({
               View public channel →
             </Link>
           }
-          action={<EndBroadcastBtn />}
+          action={<EndBroadcastBtn mode="live" />}
+        />
+      ) : isPreview ? (
+        <BroadcastStatusBar
+          state="preview"
+          meta="Listeners can't hear this yet — only you, in the preview player below."
+          action={
+            <div className="broadcast-studio__preview-actions">
+              <GoLiveBtn />
+              <EndBroadcastBtn mode="preview" />
+            </div>
+          }
         />
       ) : (
         <BroadcastStatusBar
           state="offline"
-          offlineMessage="Offline — paste credentials below, start streaming in OBS or Mixxx, then preview here before sharing your channel link."
+          offlineMessage="Offline — paste credentials below, then start streaming in OBS or Mixxx to enter preview."
         />
       )}
 
@@ -80,20 +104,26 @@ export function BroadcastStudio({
       <Panel
         title="Preview your stream"
         headerTight
-        description="Listen to your ingest here. When audio plays, your channel is live for listeners."
+        description={
+          isLive
+            ? 'You are on air — this is exactly what listeners hear.'
+            : "Listen to your ingest here first. It's private until you click Go live."
+        }
       >
         <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
         <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
           {isLive
             ? 'You are on air. Open your public channel when you are ready for listeners.'
-            : 'Start streaming with the credentials below — the preview updates automatically when ingest connects.'}
+            : isPreview
+              ? 'Audio is flowing and only you can hear it. Click Go live above when you are ready for listeners.'
+              : 'Start streaming with the credentials below — the preview updates automatically when ingest connects.'}
         </Text>
         <Link href={`/c/${channelSlug}`} className="broadcast-studio__public-link studio-link">
           Open public channel →
         </Link>
       </Panel>
 
-      <StreamSettingsPanel initial={streamSettings} isLive={isLive} />
+      <StreamSettingsPanel initial={streamSettings} isLive={isLive || isPreview} />
 
       <Panel title="Go live checklist" headerTight>
         <ol className="broadcast-studio__steps">

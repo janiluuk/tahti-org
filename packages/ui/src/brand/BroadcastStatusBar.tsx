@@ -5,7 +5,7 @@ import React from 'react'
 import { cn } from '../lib/cn'
 import { BrandButton } from './Button'
 
-export type BroadcastState = 'live' | 'starting' | 'ending' | 'offline'
+export type BroadcastState = 'live' | 'starting' | 'ending' | 'preview' | 'offline'
 
 export interface BroadcastStatusBarProps {
   state: BroadcastState
@@ -51,6 +51,7 @@ export function BroadcastStatusBar({
   className,
 }: BroadcastStatusBarProps) {
   const isLive = state === 'live' || state === 'starting' || state === 'ending'
+  const isPreview = state === 'preview'
 
   const statusLabel =
     state === 'live'
@@ -59,11 +60,13 @@ export function BroadcastStatusBar({
         ? 'STARTING…'
         : state === 'ending'
           ? 'ENDING…'
-          : null
+          : state === 'preview'
+            ? 'PREVIEW — ONLY YOU CAN HEAR THIS'
+            : null
 
   const endAction =
     action ??
-    (isLive && onEnd ? (
+    ((isLive || isPreview) && onEnd ? (
       <BrandButton variant="warn" onClick={onEnd} disabled={endDisabled}>
         {endLabel}
       </BrandButton>
@@ -73,13 +76,17 @@ export function BroadcastStatusBar({
     <div
       className={cn(
         'broadcast-status-bar',
-        isLive ? 'broadcast-status-bar--live' : 'broadcast-status-bar--offline',
+        isLive
+          ? 'broadcast-status-bar--live'
+          : isPreview
+            ? 'broadcast-status-bar--preview'
+            : 'broadcast-status-bar--offline',
         className,
       )}
       role="status"
     >
       <div className="broadcast-status-bar__main">
-        {isLive ? (
+        {isLive || isPreview ? (
           <>
             <div className="broadcast-status-bar__live">
               <span className="broadcast-status-bar__dot" aria-hidden />

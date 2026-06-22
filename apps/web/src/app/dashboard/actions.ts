@@ -285,3 +285,16 @@ export async function endBroadcast(): Promise<{ ok: boolean; error?: string }> {
   }
   return { ok: true }
 }
+
+export async function goLive(): Promise<{ ok: boolean; error?: string }> {
+  const response = await fetch(`${apiUrl}/api/me/channel/go-live`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    return { ok: false, error: (data as { error?: string }).error ?? 'Failed to go live' }
+  }
+  return { ok: true }
+}

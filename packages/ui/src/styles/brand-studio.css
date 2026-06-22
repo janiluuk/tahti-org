@@ -420,6 +420,11 @@
   color: var(--green);
 }
 
+[data-tahti-ui='studio'] .db-header-channel-state--preview {
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+  color: var(--amber);
+}
+
 [data-tahti-ui='studio'] .db-offline-dot {
   display: inline-block;
   width: 6px;
@@ -428,6 +433,15 @@
   background: var(--muted);
   flex-shrink: 0;
   opacity: 0.6;
+}
+
+[data-tahti-ui='studio'] .db-preview-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--amber);
+  flex-shrink: 0;
 }
 
 [data-tahti-ui='studio'] .db-header-channel-url {
@@ -2840,6 +2854,12 @@
   border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
 }
 
+[data-tahti-ui='studio'] .db-go-live-btn--preview {
+  background: color-mix(in srgb, var(--amber) 18%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+  color: var(--amber);
+}
+
 /* ── No-channel onboarding card ─────────────────────────────────────────── */
 [data-tahti-ui='studio'] .db-no-channel-card {
   padding: var(--space-6) var(--space-5);
@@ -3333,6 +3353,24 @@
 [data-tahti-ui='studio'] .db-hero--live {
   background: color-mix(in srgb, var(--green) 10%, var(--card));
   border: 1px solid color-mix(in srgb, var(--green) 40%, var(--border));
+}
+
+[data-tahti-ui='studio'] .db-hero--preview {
+  background: color-mix(in srgb, var(--amber) 10%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--amber) 40%, var(--border));
+}
+
+[data-tahti-ui='studio'] .db-hero--preview .db-hero__live-label {
+  color: var(--amber);
+}
+
+[data-tahti-ui='studio'] .db-hero__pulse-dot--preview {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  border-radius: 50%;
+  background: var(--amber);
+  animation: studio-pulse 1.5s ease-in-out infinite;
 }
 
 [data-tahti-ui='studio'] .db-hero__live-status {
@@ -7567,6 +7605,12 @@
 
 [data-tahti-ui='studio'] .broadcast-studio__preview-hint {
   margin: var(--space-3) 0 0;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__preview-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 [data-tahti-ui='studio'] .broadcast-studio__public-link {

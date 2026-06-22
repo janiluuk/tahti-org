@@ -8,12 +8,15 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { endBroadcast } from './actions'
 
-export function EndBroadcastBtn() {
+export function EndBroadcastBtn({ mode = 'live' }: { mode?: 'live' | 'preview' }) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const confirmMessage =
+    mode === 'preview' ? 'Stop your preview now?' : 'End your live broadcast now?'
+  const label = mode === 'preview' ? '■ Stop preview' : '■ End Broadcast'
 
   async function handleClick() {
-    if (!confirm('End your live broadcast now?')) return
+    if (!confirm(confirmMessage)) return
     setLoading(true)
     try {
       const result = await endBroadcast()
@@ -32,9 +35,9 @@ export function EndBroadcastBtn() {
       variant="warn"
       onClick={handleClick}
       disabled={loading}
-      aria-label="End live broadcast"
+      aria-label={mode === 'preview' ? 'Stop preview' : 'End live broadcast'}
     >
-      {loading ? '…' : '■ End Broadcast'}
+      {loading ? '…' : label}
     </BrandButton>
   )
 }

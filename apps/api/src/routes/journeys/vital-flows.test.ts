@@ -312,6 +312,18 @@ describe('Vital flows (E2E journeys)', () => {
     })
     expect(connect.statusCode).toBe(200)
     expect((await prisma.channel.findUniqueOrThrow({ where: { id: channel.id } })).state).toBe(
+      'PREVIEW',
+    )
+
+    // Artist confirms their signal in the studio preview, then promotes to public LIVE.
+    const artistCookie = await sessionCookieFor(prisma, artist.id)
+    const goLive = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/go-live',
+      headers: { cookie: artistCookie },
+    })
+    expect(goLive.statusCode).toBe(200)
+    expect((await prisma.channel.findUniqueOrThrow({ where: { id: channel.id } })).state).toBe(
       'LIVE',
     )
 

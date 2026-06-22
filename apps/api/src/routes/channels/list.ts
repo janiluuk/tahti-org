@@ -32,7 +32,9 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
             },
           }),
           fastify.prisma.channel.findMany({
-            where: { state: { not: 'LIVE' }, goneLiveAt: { not: null } },
+            // Exact OFFLINE match, not just "not LIVE" — a channel mid-PREVIEW (testing,
+            // not yet public) must not surface in the public "recently active" list.
+            where: { state: 'OFFLINE', goneLiveAt: { not: null } },
             orderBy: { goneLiveAt: 'desc' },
             take: 20,
             select: {
