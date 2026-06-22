@@ -24,6 +24,7 @@ export type ChannelIdentityDraft = {
   displayName: string
   avatarUrl: string | null
   countryCode: string | null
+  pronouns: string | null
   bio: string
   genres: string[]
 }
@@ -38,6 +39,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
   const [displayName, setDisplayName] = useState(initial.displayName)
   const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl ?? '')
   const [countryCode, setCountryCode] = useState(initial.countryCode ?? '')
+  const [pronouns, setPronouns] = useState(initial.pronouns ?? '')
   const [bio, setBio] = useState(initial.bio)
   const [genres, setGenres] = useState<string[]>(initial.genres)
   const [error, setError] = useState<string | null>(null)
@@ -53,11 +55,12 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       displayName,
       avatarUrl: avatarUrl || null,
       countryCode: countryCode || null,
+      pronouns: pronouns || null,
       bio,
       genres,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayName, avatarUrl, countryCode, bio, genres])
+  }, [displayName, avatarUrl, countryCode, pronouns, bio, genres])
 
   function onFile(file: File) {
     setAvatarError(null)
@@ -125,6 +128,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
         bio,
         avatarUrl,
         countryCode: countryCode || null,
+        pronouns: pronouns.trim() || null,
         socialLinks: { genres: genres.join(', ') },
       })
       if (res.error) {
@@ -222,6 +226,30 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="studio-field--block">
+        <label className="studio-label" htmlFor="identity-pronouns">
+          Pronouns
+        </label>
+        <input
+          id="identity-pronouns"
+          type="text"
+          list="identity-pronouns-suggestions"
+          placeholder="e.g. she/her"
+          maxLength={40}
+          value={pronouns}
+          disabled={isPending}
+          onChange={(e) => setPronouns(e.target.value)}
+          className="studio-input"
+        />
+        <datalist id="identity-pronouns-suggestions">
+          <option value="she/her" />
+          <option value="he/him" />
+          <option value="they/them" />
+          <option value="she/they" />
+          <option value="he/they" />
+        </datalist>
       </div>
 
       <div className="studio-field--block">

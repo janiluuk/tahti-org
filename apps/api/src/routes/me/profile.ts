@@ -44,6 +44,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.avatarUrl !== undefined) data.avatarUrl = body.avatarUrl.trim() || null
       if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl.trim() || null
       if (body.countryCode !== undefined) data.countryCode = body.countryCode?.toUpperCase() ?? null
+      if (body.pronouns !== undefined) data.pronouns = body.pronouns?.trim() || null
       if (body.socialLinks !== undefined) data.socialLinks = body.socialLinks
       if (body.publicAttribution !== undefined) data.publicAttribution = body.publicAttribution
 
@@ -58,6 +59,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
           avatarUrl: true,
           tipJarUrl: true,
           countryCode: true,
+          pronouns: true,
           socialLinks: true,
           publicAttribution: true,
         },

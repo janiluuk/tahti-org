@@ -55,6 +55,7 @@ interface ChannelResponse {
     bio: string | null
     avatarUrl: string | null
     countryCode?: string | null
+    pronouns?: string | null
     socialLinks?: Record<string, string> | null
     tier: string
   }
@@ -201,6 +202,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 <div>
                   <Heading level={1} className="ch-artist-name">
                     {channel.user.displayName}
+                    {channel.user.pronouns && (
+                      <span className="prof-pronouns">{channel.user.pronouns}</span>
+                    )}
                   </Heading>
                   <Text size="sm" tone="muted">
                     @{channel.user.username}

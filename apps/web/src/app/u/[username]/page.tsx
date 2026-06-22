@@ -57,6 +57,7 @@ interface ProfileResponse {
     avatarUrl: string | null
     tipJarUrl: string | null
     countryCode?: string | null
+    pronouns?: string | null
     tier: string
     socialLinks: Record<string, string> | null
   }
@@ -134,6 +135,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             avatarUrl={artist.avatarUrl}
             countryCode={artist.countryCode}
             countryLabel={countryName(artist.countryCode)}
+            pronouns={artist.pronouns}
             isLive={isLive}
             channelHref={links.channel}
             subscribeHref={links.subscribe}
