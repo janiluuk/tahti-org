@@ -366,7 +366,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               <span className="collection-editor__count">{items.length}</span>
             </h2>
             <div className="collection-editor__add-buttons">
-              <Link href="/dashboard#archive" className="studio-btn-ghost studio-btn-sm">
+              <Link href="/dashboard/archive" className="studio-btn-ghost studio-btn-sm">
                 + Tahti library
               </Link>
               <button
@@ -447,7 +447,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                 Add archive recordings or releases from your catalog tab.
               </p>
               <Link
-                href="/dashboard#archive"
+                href="/dashboard/archive"
                 className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm"
               >
                 Open archive →

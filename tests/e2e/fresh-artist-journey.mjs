@@ -247,9 +247,8 @@ async function main() {
     await publishRelease(api, single.id)
     ok('published album, EP, and single')
 
-    await page.goto(`${APP}/dashboard#releases`, { waitUntil: 'networkidle', timeout: 45_000 })
+    await page.goto(`${APP}/dashboard/releases`, { waitUntil: 'networkidle', timeout: 45_000 })
     await assertAuthenticated(page, 'releases tab')
-    await page.locator('#releases').scrollIntoViewIfNeeded()
     await page.waitForTimeout(800)
     for (const title of [albumTitle, epTitle, singleTitle]) {
       const row = page.getByText(title, { exact: false })

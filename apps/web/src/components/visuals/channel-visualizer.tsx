@@ -3,6 +3,7 @@
 
 'use client'
 
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { VisualPreset, ColorScheme } from '@tahti/shared'
 import { DEFAULT_COLOR_SCHEME, resolveColorScheme } from '@tahti/shared'
@@ -50,20 +51,19 @@ export function ChannelVisualizer({
   analyser,
   className,
 }: Props) {
-  if (preset === 'MINIMAL') return null
+  // window-dependent checks (WebGL support, prefers-reduced-motion) can only run on the
+  // client, and SSR always renders nothing — so defer them to after mount. Otherwise the
+  // client's first render diverges from the server-rendered HTML and React throws a
+  // hydration mismatch.
+  const [canRender, setCanRender] = useState(false)
+  useEffect(() => {
+    setCanRender(!window.matchMedia('(prefers-reduced-motion: reduce)').matches && supportsWebGL())
+  }, [])
+
+  if (preset === 'MINIMAL' || !canRender) return null
 
   const colorScheme: ColorScheme =
     resolveColorScheme(colorSchemeJson, paletteJson) ?? DEFAULT_COLOR_SCHEME
-
-  // Respect prefers-reduced-motion
-  if (
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  ) {
-    return null
-  }
-
-  if (!supportsWebGL()) return null
 
   const props = { colorScheme, analyser }
 
