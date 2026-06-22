@@ -7,6 +7,7 @@ import {
   IcecastPassRotateResponseSchema,
   StreamKeyRotateResponseSchema,
   StreamSettingsResponseSchema,
+  StreamSignalStatusResponseSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { hashPassword } from '../../lib/password.js'
@@ -17,6 +18,7 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { liveHlsUrl } from '../../lib/stream-quality.js'
+import { fetchMountSignalStatus } from '../../lib/icecast-status.js'
 import {
   parseIngestHostList,
   resolveIcecastIngestHosts,
@@ -89,8 +91,35 @@ const streamSettingsRoutes: FastifyPluginAsync = async (fastify) => {
             ? { fallbackServers: icecast.fallbackServers }
             : {}),
         },
-        hlsUrl: liveHlsUrl(config.hlsBaseUrl, channel.slug, user.tier),
+        // Artists always preview their own broadcast at full quality, regardless of tier.
+        hlsUrl: liveHlsUrl(config.hlsBaseUrl, channel.slug, 'STUDIO'),
       })
+    },
+  )
+
+  // GET /api/me/stream-settings/status — live signal check (codec/bitrate/listeners) for the test-signal step
+  fastify.get(
+    '/api/me/stream-settings/status',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Broadcasting Setup step 2: live signal check against Icecast status JSON',
+        response: openApiResponse(StreamSignalStatusResponseSchema, 'StreamSignalStatus'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { liveSourceMount: true },
+      })
+
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      const status = await fetchMountSignalStatus(config.icecastBaseUrl, channel.liveSourceMount)
+      return reply.send(status)
     },
   )
 
