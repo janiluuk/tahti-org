@@ -648,6 +648,8 @@ export const NewsletterSubscriberStatsSchema = z.object({
   total: z.number().int(),
   confirmed: z.number().int(),
   newLast30Days: z.number().int(),
+  /** Of `confirmed`, how many also hold an active fan-sub tier with the FAN_NEWSLETTER perk. */
+  fanSubscriberCount: z.number().int(),
 })
 
 export const NewsletterSubscribeStatusSchema = z.object({

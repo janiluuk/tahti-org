@@ -38,7 +38,7 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const user = request.sessionUser!
 
-      const [total, confirmed, recent] = await Promise.all([
+      const [total, confirmed, recent, fanSubscriberIds] = await Promise.all([
         fastify.prisma.newsletterSubscriber.count({ where: { artistUserId: user.id } }),
         fastify.prisma.newsletterSubscriber.count({
           where: { artistUserId: user.id, confirmedAt: { not: null }, unsubscribedAt: null },
@@ -50,9 +50,15 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
             unsubscribedAt: null,
           },
         }),
+        fanOnlyNewsletterSubscriberIds(fastify.prisma, user.id),
       ])
 
-      return reply.send({ total, confirmed, newLast30Days: recent })
+      return reply.send({
+        total,
+        confirmed,
+        newLast30Days: recent,
+        fanSubscriberCount: fanSubscriberIds.length,
+      })
     },
   )
 

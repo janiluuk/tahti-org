@@ -166,7 +166,12 @@ export default async function DashboardPage() {
       release: { id: string; title: string } | null
     }>
   }> = []
-  type NewsletterStats = { total: number; confirmed: number; newLast30Days: number }
+  type NewsletterStats = {
+    total: number
+    confirmed: number
+    newLast30Days: number
+    fanSubscriberCount: number
+  }
   type NewsletterDraft = {
     id: string
     subject: string
@@ -176,7 +181,12 @@ export default async function DashboardPage() {
     subscribersOnly: boolean
     _count: { sends: number }
   }
-  let newsletterStats: NewsletterStats = { total: 0, confirmed: 0, newLast30Days: 0 }
+  let newsletterStats: NewsletterStats = {
+    total: 0,
+    confirmed: 0,
+    newLast30Days: 0,
+    fanSubscriberCount: 0,
+  }
   let newsletterDrafts: NewsletterDraft[] = []
   let channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null } = {
     nextBroadcastAt: null,
