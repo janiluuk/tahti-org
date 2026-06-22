@@ -8,6 +8,8 @@ import Link from 'next/link'
 import ChannelGalleryPanel from '../channel-gallery-panel'
 import ChannelTextLayerPanel from '../channel-text-layer-panel'
 import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
+import ChannelIdentityPanel from '../channel-identity-panel'
+import ChannelLinksPanel, { type ChannelLink } from '../channel-links-panel'
 import { ChannelEditorSection } from './_channel-editor-section'
 import { ChannelLivePreview, type ChannelPreviewDraft } from './_channel-live-preview'
 import {
@@ -24,6 +26,10 @@ export type ChannelEditorData = {
   channelSlug: string
   displayName: string
   avatarUrl: string | null
+  countryCode: string | null
+  bio: string
+  genres: string[]
+  links: ChannelLink[]
   channelGallery: {
     galleryMode: ChannelGalleryMode
     slideshowImages: string[]
@@ -44,11 +50,15 @@ export type ChannelEditorData = {
   }
 }
 
-/** Full-page channel appearance editor — live preview beside gallery, text layer, and visual style controls. */
+/** Full-page channel customization studio — live preview beside identity, visual, and link controls. */
 export function ChannelEditorSections({
   channelSlug,
   displayName,
   avatarUrl,
+  countryCode,
+  bio,
+  genres,
+  links,
   channelGallery,
   channelTextLayer,
   channelVisual,
@@ -56,6 +66,10 @@ export function ChannelEditorSections({
   const [draft, setDraft] = useState<ChannelPreviewDraft>({
     displayName,
     avatarUrl,
+    countryCode,
+    bio,
+    genres,
+    links,
     gallery: {
       galleryMode: channelGallery.galleryMode,
       slideshowImages: channelGallery.slideshowImages,
@@ -81,6 +95,30 @@ export function ChannelEditorSections({
         </div>
 
         <div className="studio-channel-editor__controls-col">
+          <ChannelEditorSection
+            id="channel-identity"
+            title="Identity"
+            description="Who you are — shown at the top of your channel page."
+          >
+            <ChannelIdentityPanel
+              initial={{ displayName, avatarUrl, countryCode, bio, genres }}
+              onDraftChange={(identity) => setDraft((d) => ({ ...d, ...identity }))}
+            />
+          </ChannelEditorSection>
+
+          <ChannelEditorSection
+            id="channel-visual"
+            title="Visual style"
+            description="Background visualizer, color palette, and slideshow transitions."
+          >
+            <ChannelVisualPresetPanel
+              channelSlug={channelSlug}
+              initial={channelVisual}
+              bare
+              onDraftChange={(visual) => setDraft((d) => ({ ...d, visual }))}
+            />
+          </ChannelEditorSection>
+
           <ChannelEditorSection
             id="channel-gallery"
             title="Gallery & backdrop"
@@ -122,15 +160,13 @@ export function ChannelEditorSections({
           </ChannelEditorSection>
 
           <ChannelEditorSection
-            id="channel-visual"
-            title="Visual style"
-            description="Background visualizer, color palette, and slideshow transitions."
+            id="channel-links"
+            title="Links"
+            description="Where else listeners can find you — shown on your channel page."
           >
-            <ChannelVisualPresetPanel
-              channelSlug={channelSlug}
-              initial={channelVisual}
-              bare
-              onDraftChange={(visual) => setDraft((d) => ({ ...d, visual }))}
+            <ChannelLinksPanel
+              initial={links}
+              onDraftChange={(newLinks) => setDraft((d) => ({ ...d, links: newLinks }))}
             />
           </ChannelEditorSection>
         </div>

@@ -9,26 +9,10 @@ import { useRouter } from 'next/navigation'
 import { ARCHIVE_GENRES } from '@tahti/shared'
 import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, Text, Textarea } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
+import { COUNTRY_OPTIONS } from '@/lib/country-options'
+import { flagEmoji } from '@/lib/flag-emoji'
 import { updateSignupProfile } from '../actions'
 import { SignupWizard } from '../signup-wizard'
-
-const COUNTRY_OPTIONS = [
-  { code: 'FI', label: 'Finland' },
-  { code: 'SE', label: 'Sweden' },
-  { code: 'NO', label: 'Norway' },
-  { code: 'DK', label: 'Denmark' },
-  { code: 'EE', label: 'Estonia' },
-  { code: 'DE', label: 'Germany' },
-  { code: 'GB', label: 'United Kingdom' },
-  { code: 'US', label: 'United States' },
-  { code: 'FR', label: 'France' },
-  { code: 'NL', label: 'Netherlands' },
-  { code: 'ES', label: 'Spain' },
-  { code: 'IT', label: 'Italy' },
-  { code: 'PL', label: 'Poland' },
-  { code: 'CA', label: 'Canada' },
-  { code: 'AU', label: 'Australia' },
-] as const
 
 export function SignupProfileForm({ displayName }: { displayName: string }) {
   const router = useRouter()
@@ -127,7 +111,7 @@ export function SignupProfileForm({ displayName }: { displayName: string }) {
                   <option value="">Select country (optional)</option>
                   {COUNTRY_OPTIONS.map(({ code, label }) => (
                     <option key={code} value={code}>
-                      {label}
+                      {flagEmoji(code)} {label}
                     </option>
                   ))}
                 </select>

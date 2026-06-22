@@ -49,6 +49,8 @@ type ProfileHeroProps = {
   bioHtml?: string | null
   avatarUrl: string | null
   countryCode?: string | null
+  /** Resolved country name (e.g. "Finland"); falls back to the raw code if not supplied. */
+  countryLabel?: string | null
   isLive?: boolean
   channelHref?: string | null
   subscribeHref: string
@@ -63,6 +65,7 @@ export function ProfileHero({
   bioHtml,
   avatarUrl: _avatarUrl,
   countryCode,
+  countryLabel,
   isLive,
   channelHref,
   subscribeHref,
@@ -75,11 +78,10 @@ export function ProfileHero({
           <div className="prof-name">{displayName}</div>
           <div className="prof-meta-line">
             <span>@{username}</span>
-            {countryCode && (
-              <span className="prof-country-flag" title={countryCode} aria-label={countryCode}>
-                {countryCodeToFlag(countryCode)}
-              </span>
-            )}
+            <span className="prof-country-flag">
+              {countryCode ? countryCodeToFlag(countryCode) : '🌍'}{' '}
+              {countryCode ? countryLabel || countryCode : 'World citizen'}
+            </span>
             {isLive && (
               <span className="prof-live-badge">
                 <span className="signal-dot" style={{ width: 6, height: 6 }} aria-hidden />

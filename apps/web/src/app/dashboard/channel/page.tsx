@@ -47,6 +47,10 @@ export default async function ChannelDesignPage() {
   } | null = null
 
   let avatarUrl: string | null = null
+  let bio = ''
+  let countryCode: string | null = null
+  let genres: string[] = []
+  let links: Array<{ label: string; url: string }> = []
 
   try {
     const [galleryRes, textLayerRes, visualRes, channelRes] = await Promise.all([
@@ -59,8 +63,27 @@ export default async function ChannelDesignPage() {
     if (textLayerRes.ok) channelTextLayer = (await textLayerRes.json()) as typeof channelTextLayer
     if (visualRes.ok) channelVisual = (await visualRes.json()) as typeof channelVisual
     if (channelRes.ok) {
-      const channelData = (await channelRes.json()) as { user: { avatarUrl: string | null } }
+      const channelData = (await channelRes.json()) as {
+        user: {
+          avatarUrl: string | null
+          bio: string | null
+          countryCode: string | null
+          socialLinks: Record<string, string> | null
+        }
+      }
       avatarUrl = channelData.user.avatarUrl
+      bio = channelData.user.bio ?? ''
+      countryCode = channelData.user.countryCode
+      const socialLinks = channelData.user.socialLinks ?? {}
+      genres = socialLinks.genres
+        ? socialLinks.genres
+            .split(',')
+            .map((g) => g.trim())
+            .filter(Boolean)
+        : []
+      links = Object.entries(socialLinks)
+        .filter(([key, url]) => key !== 'genres' && url)
+        .map(([label, url]) => ({ label, url }))
     }
   } catch {
     // render with defaults
@@ -108,6 +131,10 @@ export default async function ChannelDesignPage() {
         channelSlug={user.channel.slug}
         displayName={user.displayName}
         avatarUrl={avatarUrl}
+        countryCode={countryCode}
+        bio={bio}
+        genres={genres}
+        links={links}
         channelGallery={channelGallery}
         channelTextLayer={channelTextLayer}
         channelVisual={channelVisual}
