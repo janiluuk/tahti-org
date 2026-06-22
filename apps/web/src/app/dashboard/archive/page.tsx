@@ -3,14 +3,12 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import NextLink from 'next/link'
 import { Heading, PageShell, Panel, SidebarNavIconSvg } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
 import { fetchMixcloudStatus } from '../mixcloud-actions'
-
-const ArchiveEditor = dynamic(() => import('../archive-editor'))
+import { ArchiveList } from './_archive-list'
 
 interface ArchiveItem {
   id: string
@@ -99,30 +97,14 @@ export default async function ArchivePage() {
             </NextLink>
           </div>
         ) : (
-          <ul className="studio-list studio-mt-sm">
-            {items.map((item) => {
-              const play = playable.find((a) => a.id === item.id)
-              return (
-                <li key={item.id}>
-                  <ArchiveEditor
-                    item={item}
-                    mixcloudConnected={mixcloudStatus.connected}
-                    mixcloudConfigured={mixcloudStatus.configured}
-                    apiUrl={apiUrl}
-                    channelSlug={slug ?? null}
-                  />
-                  {play?.audioUrl && (
-                    <audio
-                      controls
-                      src={play.audioUrl}
-                      className="studio-audio-full"
-                      data-testid="dashboard-archive-player"
-                    />
-                  )}
-                </li>
-              )
-            })}
-          </ul>
+          <ArchiveList
+            items={items}
+            playable={playable}
+            mixcloudConnected={mixcloudStatus.connected}
+            mixcloudConfigured={mixcloudStatus.configured}
+            apiUrl={apiUrl}
+            channelSlug={slug ?? null}
+          />
         )}
       </Panel>
     </PageShell>
