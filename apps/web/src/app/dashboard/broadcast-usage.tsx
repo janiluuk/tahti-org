@@ -72,7 +72,7 @@ export default function BroadcastUsageBanner({ usage }: { usage: BroadcastUsage 
           Your weekly hour is up — archive plays until Monday 00:00 UTC.{' '}
           <Link href="/help/tier-limits">Free tier vs membership benefits</Link>
           {' · '}
-          <Link href="/dashboard#membership">View membership →</Link>
+          <Link href="/dashboard/settings/account">View membership →</Link>
         </p>
       ) : level === '55m' ? (
         <p className="studio-text-warn studio-mt-sm">

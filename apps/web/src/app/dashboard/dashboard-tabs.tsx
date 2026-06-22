@@ -13,7 +13,6 @@ export type DashboardTabsProps = {
   broadcast?: ReactNode
   catalog?: ReactNode
   audience?: ReactNode
-  account: ReactNode
 }
 
 function ChannelRequiredPanel({ title, description }: { title: string; description: string }) {
@@ -39,7 +38,6 @@ export function DashboardTabs({
   broadcast,
   catalog,
   audience,
-  account,
 }: DashboardTabsProps) {
   return (
     <StudioTabs defaultTab="overview" syncHash>
@@ -48,7 +46,6 @@ export function DashboardTabs({
         <StudioTabs.Trigger value="broadcast">Broadcast</StudioTabs.Trigger>
         <StudioTabs.Trigger value="catalog">Catalog</StudioTabs.Trigger>
         <StudioTabs.Trigger value="audience">Audience</StudioTabs.Trigger>
-        <StudioTabs.Trigger value="account">Account</StudioTabs.Trigger>
       </StudioTabs.List>
 
       <StudioTabs.Panel value="overview" id="overview">
@@ -83,10 +80,6 @@ export function DashboardTabs({
         ) : (
           <ChannelRequiredPanel title="Audience" description="Fan subscriptions and newsletter." />
         )}
-      </StudioTabs.Panel>
-
-      <StudioTabs.Panel value="account" id="account">
-        {account}
       </StudioTabs.Panel>
     </StudioTabs>
   )

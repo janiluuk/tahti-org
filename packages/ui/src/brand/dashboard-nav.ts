@@ -3,7 +3,7 @@
 
 import type { SidebarNavIcon } from './SidebarNav'
 
-export type DashboardTabId = 'overview' | 'broadcast' | 'catalog' | 'audience' | 'account'
+export type DashboardTabId = 'overview' | 'broadcast' | 'catalog' | 'audience'
 
 export type DashboardSectionKey =
   | 'overview'
@@ -35,7 +35,8 @@ export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabI
   collections: 'catalog',
   newsletter: 'audience',
   broadcast: 'broadcast',
-  account: 'account',
+  // Account settings moved to /dashboard/settings/account — old in-page anchor falls back to overview.
+  account: 'overview',
 }
 
 /** Map URL hash keys (without #) to a unique dashboard section for nav highlighting. */
@@ -155,6 +156,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     requiresChannel: true,
   },
   { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true },
+  { href: '/dashboard/settings', label: 'Settings', icon: 'settings', isRoute: true },
   { href: '/admin', label: 'Admin', icon: 'admin', isRoute: true, adminOnly: true },
 ]
 

@@ -16,8 +16,8 @@ export default function TierLimitsHelpPage() {
         <strong>free tier</strong> at no cost, or become a <strong>Tahti ry member</strong> by
         financially supporting the cooperative (€40/year). Membership is not a “customer plan” — it
         is how you support the org and unlock lossless streaming plus unlimited live time. Your
-        status is shown on the dashboard and in <Link href="/dashboard#membership">membership</Link>
-        .
+        status is shown on the dashboard and in{' '}
+        <Link href="/dashboard/settings/account">membership</Link>.
       </Text>
 
       <Heading level={2}>Free-tier artist</Heading>

@@ -68,7 +68,10 @@ export default async function UploadPage() {
                   </>
                 ) : null}
                 {storage.showSoftTarget && (
-                  <NextLink href="/dashboard#membership" className="upload-entry__upgrade-link">
+                  <NextLink
+                    href="/dashboard/settings/account"
+                    className="upload-entry__upgrade-link"
+                  >
                     View membership →
                   </NextLink>
                 )}

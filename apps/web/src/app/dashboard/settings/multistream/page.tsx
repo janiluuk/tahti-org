@@ -4,7 +4,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import NextLink from 'next/link'
-import { PageShell, StatusPill } from '@tahti/ui'
+import { StatusPill } from '@tahti/ui'
 import { MultistreamTargetsPanel } from './multistream-targets-panel'
 
 interface RtmpTarget {
@@ -52,7 +52,7 @@ export default async function MultistreamSettingsPage() {
   const channelLive = me?.channel?.state === 'LIVE'
 
   return (
-    <PageShell size="md">
+    <>
       <div className="studio-page-header">
         <div>
           <h1 className="studio-page-title">Multistream targets</h1>
@@ -65,7 +65,10 @@ export default async function MultistreamSettingsPage() {
           {isPaid ? (
             <StatusPill tone="cyan">PAID · UNLIMITED TARGETS</StatusPill>
           ) : (
-            <NextLink href="/dashboard#membership" className="ui-btn ui-btn--sm ui-btn--primary">
+            <NextLink
+              href="/dashboard/settings/account"
+              className="ui-btn ui-btn--sm ui-btn--primary"
+            >
               View membership →
             </NextLink>
           )}
@@ -80,11 +83,14 @@ export default async function MultistreamSettingsPage() {
           <p className="studio-empty-card__hint">
             Upgrade to mirror your live broadcast to YouTube, Twitch, Kick, and more.
           </p>
-          <NextLink href="/dashboard#membership" className="ui-btn ui-btn--primary studio-mt-sm">
+          <NextLink
+            href="/dashboard/settings/account"
+            className="ui-btn ui-btn--primary studio-mt-sm"
+          >
             View membership →
           </NextLink>
         </div>
       )}
-    </PageShell>
+    </>
   )
 }
