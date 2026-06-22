@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   CHANNEL_TEXT_LAYER_ALIGN_LABELS,
@@ -23,6 +23,7 @@ const EFFECT_MODES = CHANNEL_TEXT_LAYER_MODES.filter((m) => m !== 'NONE')
 export default function ChannelTextLayerPanel({
   initial,
   bare = false,
+  onDraftChange,
 }: {
   initial: {
     textLayerMode: ChannelTextLayerMode
@@ -30,6 +31,12 @@ export default function ChannelTextLayerPanel({
     textLayerAlign: ChannelTextLayerAlignment
   }
   bare?: boolean
+  /** Fires on every edit (before save) so a live preview can mirror the draft. */
+  onDraftChange?: (draft: {
+    textLayerMode: ChannelTextLayerMode
+    textLayerText: string
+    textLayerAlign: ChannelTextLayerAlignment
+  }) => void
 }) {
   const router = useRouter()
   const [textLayerMode, setTextLayerMode] = useState<ChannelTextLayerMode>(initial.textLayerMode)
@@ -40,6 +47,11 @@ export default function ChannelTextLayerPanel({
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    onDraftChange?.({ textLayerMode, textLayerText, textLayerAlign })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [textLayerMode, textLayerText, textLayerAlign])
 
   const hint = CHANNEL_TEXT_LAYER_MODE_HINTS[textLayerMode]
 

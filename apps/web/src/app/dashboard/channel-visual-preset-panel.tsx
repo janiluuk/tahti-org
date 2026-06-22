@@ -4,7 +4,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   SLIDESHOW_PRESETS,
@@ -41,11 +41,21 @@ function parseOrNull(json: string | null): ColorScheme | null {
   }
 }
 
+export type ChannelVisualDraft = {
+  visualPreset: VisualPreset
+  colorSchemeJson: string | null
+  slideshowPreset: SlideshowPreset
+  slideshowIntervalSeconds: number
+  slideshowTransitionMs: number
+  slideshowAutoplay: boolean
+}
+
 export default function ChannelVisualPresetPanel({
   channelSlug,
   initial,
   bare = false,
-}: Props & { bare?: boolean }) {
+  onDraftChange,
+}: Props & { bare?: boolean; onDraftChange?: (draft: ChannelVisualDraft) => void }) {
   const router = useRouter()
   const [preset, setPreset] = useState<VisualPreset>(initial.visualPreset)
   const parsed = parseOrNull(initial.colorSchemeJson)
@@ -58,6 +68,18 @@ export default function ChannelVisualPresetPanel({
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    onDraftChange?.({
+      visualPreset: preset,
+      colorSchemeJson: useCustomScheme ? JSON.stringify(scheme) : null,
+      slideshowPreset,
+      slideshowIntervalSeconds: interval,
+      slideshowTransitionMs: transition,
+      slideshowAutoplay: autoplay,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preset, scheme, useCustomScheme, slideshowPreset, interval, transition, autoplay])
 
   function updateColor(key: keyof ColorScheme, value: string) {
     setScheme((s) => ({ ...s, [key]: value }))

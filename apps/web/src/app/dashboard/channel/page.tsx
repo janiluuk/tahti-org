@@ -46,15 +46,22 @@ export default async function ChannelDesignPage() {
     slideshowAutoplay: boolean
   } | null = null
 
+  let avatarUrl: string | null = null
+
   try {
-    const [galleryRes, textLayerRes, visualRes] = await Promise.all([
+    const [galleryRes, textLayerRes, visualRes, channelRes] = await Promise.all([
       get('/api/me/channel/gallery'),
       get('/api/me/channel/text-layer'),
       get('/api/me/channel/visual'),
+      fetch(`${apiUrl}/api/channels/${user.channel.slug}`, { cache: 'no-store' }),
     ])
     if (galleryRes.ok) channelGallery = (await galleryRes.json()) as typeof channelGallery
     if (textLayerRes.ok) channelTextLayer = (await textLayerRes.json()) as typeof channelTextLayer
     if (visualRes.ok) channelVisual = (await visualRes.json()) as typeof channelVisual
+    if (channelRes.ok) {
+      const channelData = (await channelRes.json()) as { user: { avatarUrl: string | null } }
+      avatarUrl = channelData.user.avatarUrl
+    }
   } catch {
     // render with defaults
   }
@@ -99,6 +106,8 @@ export default async function ChannelDesignPage() {
 
       <ChannelEditorSections
         channelSlug={user.channel.slug}
+        displayName={user.displayName}
+        avatarUrl={avatarUrl}
         channelGallery={channelGallery}
         channelTextLayer={channelTextLayer}
         channelVisual={channelVisual}

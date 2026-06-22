@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   CHANNEL_GALLERY_MODES,
@@ -23,6 +23,7 @@ const SIMPLE_MODES = CHANNEL_GALLERY_MODES.filter((m) => m === 'NONE' || m === '
 export default function ChannelGalleryPanel({
   initial,
   bare = false,
+  onDraftChange,
 }: {
   initial: {
     galleryMode: ChannelGalleryMode
@@ -30,6 +31,12 @@ export default function ChannelGalleryPanel({
     videoBackgroundUrl?: string | null
   }
   bare?: boolean
+  /** Fires on every edit (before save) so a live preview can mirror the draft. */
+  onDraftChange?: (draft: {
+    galleryMode: ChannelGalleryMode
+    slideshowImages: string[]
+    videoBackgroundUrl: string | null
+  }) => void
 }) {
   const router = useRouter()
   const [galleryMode, setGalleryMode] = useState<ChannelGalleryMode>(initial.galleryMode)
@@ -38,6 +45,15 @@ export default function ChannelGalleryPanel({
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    onDraftChange?.({
+      galleryMode,
+      slideshowImages: parseGalleryImageLines(imageLines),
+      videoBackgroundUrl: videoBackgroundUrl.trim() || null,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [galleryMode, imageLines, videoBackgroundUrl])
 
   const hint = CHANNEL_GALLERY_MODE_HINTS[galleryMode]
 
