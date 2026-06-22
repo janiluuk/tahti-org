@@ -5,6 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import NextLink from 'next/link'
 import type { TracklistEntry } from '@tahti/shared'
 import { updateArchiveMetadata } from './archive-actions'
 import {
@@ -24,11 +25,13 @@ export default function ArchiveEditor({
   mixcloudConnected,
   mixcloudConfigured,
   apiUrl,
+  channelSlug,
 }: {
   item: Record<string, unknown> & { id: string; title: string; status: string }
   mixcloudConnected: boolean
   mixcloudConfigured: boolean
   apiUrl: string
+  channelSlug?: string | null
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -59,6 +62,8 @@ export default function ArchiveEditor({
 
   const detectedBpm = item.bpmDetected as number | null | undefined
   const detectedKey = item.keyDetected as string | null | undefined
+  const isPublic = (item.isPublic as boolean | undefined) ?? true
+  const isReady = item.status === 'READY'
 
   return (
     <div className="studio-item-row--list">
@@ -77,13 +82,46 @@ export default function ArchiveEditor({
               }`}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          className="ui-btn ui-btn--sm ui-btn--ghost"
-        >
-          {open ? 'Close' : 'Edit metadata'}
-        </button>
+        {open ? (
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="ui-btn ui-btn--sm ui-btn--ghost"
+          >
+            Close
+          </button>
+        ) : isReady && isPublic ? (
+          <div className="studio-row-actions">
+            {channelSlug && (
+              <NextLink href={`/c/${channelSlug}`} className="ui-btn ui-btn--sm ui-btn--primary">
+                View on channel →
+              </NextLink>
+            )}
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="ui-btn ui-btn--sm ui-btn--ghost"
+            >
+              Re-edit
+            </button>
+          </div>
+        ) : isReady ? (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="ui-btn ui-btn--sm ui-btn--primary"
+          >
+            Polish &amp; publish →
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="ui-btn ui-btn--sm ui-btn--ghost"
+          >
+            Edit metadata
+          </button>
+        )}
       </div>
 
       {open && (

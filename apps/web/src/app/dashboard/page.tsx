@@ -550,6 +550,7 @@ export default async function DashboardPage() {
                               mixcloudConnected={mixcloudStatus.connected}
                               mixcloudConfigured={mixcloudStatus.configured}
                               apiUrl={apiUrl}
+                              channelSlug={user.channel?.slug ?? null}
                             />
                             {play?.audioUrl && (
                               <audio
