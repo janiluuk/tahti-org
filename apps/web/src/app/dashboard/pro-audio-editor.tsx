@@ -74,7 +74,7 @@ const AUTOSAVE_MS = 2000
 const AUTOSAVE_KNOB_MS = 6000
 const CANVAS_MIN_WIDTH = 320
 const CANVAS_DEFAULT_WIDTH = 1280
-const WAVE_HEIGHT = 210
+const WAVE_HEIGHT = 340
 const MINIMAP_HEIGHT = 38
 
 type EditorTab = 'waveform' | 'tracklist'
