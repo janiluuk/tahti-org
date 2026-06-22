@@ -4,6 +4,9 @@
 'use client'
 
 import { AvatarTile, Heading, Row, Text } from '@tahti/ui'
+import { SocialLinkIcon } from '@/components/social-link-icon'
+import { countryName } from '@/lib/country-options'
+import { flagEmoji } from '@/lib/flag-emoji'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
@@ -24,6 +27,10 @@ import type {
 export type ChannelPreviewDraft = {
   displayName: string
   avatarUrl: string | null
+  countryCode: string | null
+  bio: string
+  genres: string[]
+  links: Array<{ label: string; url: string }>
   gallery: {
     galleryMode: ChannelGalleryMode
     slideshowImages: string[]
@@ -77,6 +84,33 @@ export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
                 {draft.displayName}
               </Heading>
             </Row>
+            <Text size="sm" tone="muted" className="ch-artist-flag">
+              {draft.countryCode ? flagEmoji(draft.countryCode) : '🌍'}{' '}
+              {draft.countryCode ? countryName(draft.countryCode) : 'World citizen'}
+            </Text>
+            {draft.bio && (
+              <Text size="sm" className="ch-artist-bio">
+                {draft.bio}
+              </Text>
+            )}
+            {draft.genres.length > 0 && (
+              <div className="prof-tags">
+                {draft.genres.map((tag) => (
+                  <span key={tag} className="prof-tag-chip">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+            {draft.links.length > 0 && (
+              <div className="prof-social-links">
+                {draft.links.map((link) => (
+                  <span key={link.label} className="prof-social-link">
+                    <SocialLinkIcon label={link.label} url={link.url} /> {link.label}
+                  </span>
+                ))}
+              </div>
+            )}
           </header>
 
           <ChannelTextLayerView

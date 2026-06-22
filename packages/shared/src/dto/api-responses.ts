@@ -326,6 +326,8 @@ export const PublicChannelUserSchema = z.object({
   displayName: z.string(),
   bio: z.string().nullable(),
   avatarUrl: z.string().nullable(),
+  countryCode: z.string().nullable().optional(),
+  socialLinks: z.unknown().optional(),
 })
 
 export const PublicChannelViewSchema = z.object({

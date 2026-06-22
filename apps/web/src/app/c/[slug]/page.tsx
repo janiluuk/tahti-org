@@ -28,6 +28,8 @@ import { channelArchiveRssUrl } from '@/lib/rss-feeds'
 import { getSessionUser } from '@/lib/session'
 import { renderBio } from '@/lib/render-bio'
 import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
+import { countryName } from '@/lib/country-options'
+import { SocialLinkIcon } from '@/components/social-link-icon'
 
 interface ChannelResponse {
   slug: string
@@ -53,6 +55,7 @@ interface ChannelResponse {
     bio: string | null
     avatarUrl: string | null
     countryCode?: string | null
+    socialLinks?: Record<string, string> | null
     tier: string
   }
 }
@@ -114,12 +117,25 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
   const isFlac = channel.user.tier === 'STUDIO' || channel.user.tier === 'ARTIST'
-  const tagSet = new Set<string>()
-  for (const item of items) {
-    if (item.genre?.trim()) tagSet.add(item.genre.trim())
-    if (item.genreCustom?.trim()) tagSet.add(item.genreCustom.trim())
+  const socialLinks = (channel.user.socialLinks as Record<string, string> | null) ?? {}
+  const profileGenres = socialLinks.genres
+    ? socialLinks.genres
+        .split(',')
+        .map((g) => g.trim())
+        .filter(Boolean)
+    : []
+  const socialLinkEntries = Object.entries(socialLinks).filter(
+    ([key, url]) => key !== 'genres' && url,
+  )
+  let tags = profileGenres
+  if (tags.length === 0) {
+    const tagSet = new Set<string>()
+    for (const item of items) {
+      if (item.genre?.trim()) tagSet.add(item.genre.trim())
+      if (item.genreCustom?.trim()) tagSet.add(item.genreCustom.trim())
+    }
+    tags = [...tagSet].slice(0, 8)
   }
-  const tags = [...tagSet].slice(0, 8)
 
   let listenerCount: number | null = null
   if (channel.state === 'LIVE') {
@@ -188,15 +204,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   </Heading>
                   <Text size="sm" tone="muted">
                     @{channel.user.username}
-                    {channel.user.countryCode && (
-                      <span
-                        className="ch-artist-flag"
-                        title={channel.user.countryCode}
-                        aria-label={channel.user.countryCode}
-                      >
-                        {countryCodeToFlag(channel.user.countryCode)}
-                      </span>
-                    )}
+                    <span className="ch-artist-flag">
+                      {channel.user.countryCode
+                        ? countryCodeToFlag(channel.user.countryCode)
+                        : '🌍'}{' '}
+                      {channel.user.countryCode
+                        ? countryName(channel.user.countryCode)
+                        : 'World citizen'}
+                    </span>
                   </Text>
                 </div>
               </Row>
@@ -217,6 +232,25 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       {tag}
                     </span>
                   ))}
+                </div>
+              )}
+              {socialLinkEntries.length > 0 && (
+                <div className="prof-social-links">
+                  {socialLinkEntries.map(([key, url]) => {
+                    const label = key.charAt(0).toUpperCase() + key.slice(1)
+                    const isEmail = url.startsWith('mailto:')
+                    return (
+                      <a
+                        key={key}
+                        href={url}
+                        rel="noopener noreferrer"
+                        target={isEmail ? undefined : '_blank'}
+                        className="prof-social-link"
+                      >
+                        <SocialLinkIcon label={label} url={url} /> {label} ↗
+                      </a>
+                    )
+                  })}
                 </div>
               )}
               <div className="ch-artist-cta-row">

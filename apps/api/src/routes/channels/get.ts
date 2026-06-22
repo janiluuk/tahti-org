@@ -52,6 +52,8 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
               displayName: true,
               bio: true,
               avatarUrl: true,
+              countryCode: true,
+              socialLinks: true,
               tier: true,
             },
           },

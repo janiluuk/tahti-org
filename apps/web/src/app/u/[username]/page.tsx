@@ -7,6 +7,8 @@ import Link from 'next/link'
 import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { renderBio } from '@/lib/render-bio'
+import { SocialLinkIcon } from '@/components/social-link-icon'
+import { countryName } from '@/lib/country-options'
 
 export const revalidate = 60
 
@@ -131,6 +133,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             bioHtml={bioHtml}
             avatarUrl={artist.avatarUrl}
             countryCode={artist.countryCode}
+            countryLabel={countryName(artist.countryCode)}
             isLive={isLive}
             channelHref={links.channel}
             subscribeHref={links.subscribe}
@@ -251,7 +254,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
                     target={isEmail ? undefined : '_blank'}
                     className="prof-social-link"
                   >
-                    {label} ↗
+                    <SocialLinkIcon label={label} url={url} /> {label} ↗
                   </a>
                 )
               })}
