@@ -37,15 +37,22 @@ function makeSilentWav(durationSec = 5, sampleRate = 8000): Buffer {
   return buf
 }
 
+// Best-effort: some seed contexts (lighter CI jobs that only need the DB rows,
+// not playable audio) don't run a MinIO container at all. Don't fail the whole
+// seed over a missing object store there.
 async function uploadFixtureAudio(key: string, contentType: string): Promise<void> {
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: config.minio.bucket,
-      Key: key,
-      Body: makeSilentWav(),
-      ContentType: contentType,
-    }),
-  )
+  try {
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: config.minio.bucket,
+        Key: key,
+        Body: makeSilentWav(),
+        ContentType: contentType,
+      }),
+    )
+  } catch (err) {
+    console.warn(`fixture audio upload skipped for ${key}: ${String(err)}`)
+  }
 }
 
 const PASS = 'screenshot-demo-pass'
