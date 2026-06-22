@@ -82,11 +82,6 @@ export function CollectionsGrid({ collections }: { collections: CollectionSummar
       {items.map((c, idx) => (
         <CollectionCard key={c.slug} collection={c} index={idx} onMove={moveCard} />
       ))}
-      {/* New collection tile */}
-      <Link href="/dashboard/collections/new" className="collections-card collections-card--new">
-        <span className="collections-card__new-icon">+</span>
-        <span className="collections-card__new-label">New collection</span>
-      </Link>
     </div>
   )
 }
