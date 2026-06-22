@@ -46,6 +46,16 @@ interface ListenerGeoPayload {
   geo: ListenerGeoPoint[]
 }
 
+interface GrantEstimate {
+  year: number
+  estimateCents: number
+  eligible: boolean
+}
+
+function eur(cents: number): string {
+  return `€${(Number.isFinite(cents) ? cents / 100 : 0).toFixed(2)}`
+}
+
 async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
   try {
     const res = await fetch(`${apiUrl}${path}`, {
@@ -67,13 +77,15 @@ export default async function StatsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [plays, topTracks, topCountries, fanPayouts, listenerGeo] = await Promise.all([
-    apiFetch<PlaysPayload>(apiUrl, cookie, '/api/me/stats/plays?range=30'),
-    apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, '/api/me/stats/top-tracks'),
-    apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, '/api/me/stats/top-countries'),
-    apiFetch<FanPayoutStats>(apiUrl, cookie, '/api/me/fan-sub-payouts'),
-    apiFetch<ListenerGeoPayload>(apiUrl, cookie, '/api/me/listener-geo?period=30d'),
-  ])
+  const [plays, topTracks, topCountries, fanPayouts, listenerGeo, grantEstimate] =
+    await Promise.all([
+      apiFetch<PlaysPayload>(apiUrl, cookie, '/api/me/stats/plays?range=30'),
+      apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, '/api/me/stats/top-tracks'),
+      apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, '/api/me/stats/top-countries'),
+      apiFetch<FanPayoutStats>(apiUrl, cookie, '/api/me/fan-sub-payouts'),
+      apiFetch<ListenerGeoPayload>(apiUrl, cookie, '/api/me/listener-geo?period=30d'),
+      apiFetch<GrantEstimate>(apiUrl, cookie, '/api/me/grants/estimate'),
+    ])
 
   const downloads = plays?.totalDownloads ?? 0
   const totalPlays = plays?.totalPlays ?? 0
@@ -173,6 +185,13 @@ export default async function StatsPage() {
             </div>
           ))}
         </div>
+        {grantEstimate && (
+          <p className="stats-eng-grant-note">
+            {grantEstimate.eligible
+              ? `At this rate, your estimated share of the ${grantEstimate.year} grant pool is ~${eur(grantEstimate.estimateCents)}.`
+              : `Keep going — you need more engagement units to qualify for the ${grantEstimate.year} grant pool.`}
+          </p>
+        )}
       </div>
     </PageShell>
   )

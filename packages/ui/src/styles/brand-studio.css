@@ -2250,6 +2250,14 @@
   gap: var(--space-3);
 }
 
+[data-tahti-ui='studio'] .stats-eng-grant-note {
+  margin: var(--space-4) 0 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
 [data-tahti-ui='studio'] .stats-eng-label {
   font-size: var(--text-xs);
   color: var(--text);

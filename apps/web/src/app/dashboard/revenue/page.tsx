@@ -46,11 +46,6 @@ interface ConnectStatus {
   accountId: string | null
 }
 
-interface GrantEstimate {
-  year: number
-  estimateCents: number
-}
-
 interface RevelatorRoyaltyRow {
   id: string
   releaseTitle: string
@@ -90,11 +85,10 @@ export default async function RevenuePage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [tiers, payouts, connect, grantEstimate, royalties] = await Promise.all([
+  const [tiers, payouts, connect, royalties] = await Promise.all([
     apiFetch<FanTier[]>(apiUrl, cookie, '/api/me/fan-tiers'),
     apiFetch<FanPayoutsDashboard>(apiUrl, cookie, '/api/me/fan-sub-payouts'),
     apiFetch<ConnectStatus>(apiUrl, cookie, '/api/me/fan-subs/connect'),
-    apiFetch<GrantEstimate>(apiUrl, cookie, '/api/me/grants/estimate'),
     apiFetch<{ reports: RevelatorRoyaltyRow[] }>(apiUrl, cookie, '/api/me/revelator/royalties'),
   ])
 
@@ -105,7 +99,6 @@ export default async function RevenuePage() {
     paidYtdNetCents: 0,
     recent: [],
   }
-  const estimate = grantEstimate ?? { year: new Date().getFullYear(), estimateCents: 0 }
 
   const rows: PayoutRow[] = [
     ...stats.recent.map(
@@ -148,11 +141,6 @@ export default async function RevenuePage() {
         <KpiCard color="cyan" value={eur(stats.thisMonthNetCents)} label="This month" />
         <KpiCard color="purple" value={stats.activeSubscribers} label="Active fan-subs" />
         <KpiCard color="green" value={eur(stats.paidYtdNetCents)} label="Paid out YTD" />
-        <KpiCard
-          color="amber"
-          value={`~${eur(estimate.estimateCents)}`}
-          label={`Grant estimate (Y${estimate.year} pool)`}
-        />
       </KpiCardRow>
 
       {hasFanSubs ? (
