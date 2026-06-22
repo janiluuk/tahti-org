@@ -7,11 +7,13 @@ import { useEffect, useState } from 'react'
 import NextLink from 'next/link'
 import { BrandButton } from '@tahti/ui'
 import { EndBroadcastBtn } from './end-broadcast-btn'
+import { GoLiveBtn } from './go-live-btn'
 
 type LastBroadcast = { title: string; ago: string }
 
 type Props = {
   slug: string
+  state: string
   goneLiveAt: string | null
   lastBroadcast: LastBroadcast | null
 }
@@ -30,7 +32,7 @@ function elapsedSecondsSince(goneLiveAt: string): number {
 }
 
 /** Channel home hero — giant Go live CTA when offline, live status + ticking clock when on air. */
-export function ChannelHero({ slug, goneLiveAt, lastBroadcast }: Props) {
+export function ChannelHero({ slug, state, goneLiveAt, lastBroadcast }: Props) {
   const [listeners, setListeners] = useState<number | null>(null)
   const [elapsedSec, setElapsedSec] = useState(() =>
     goneLiveAt ? elapsedSecondsSince(goneLiveAt) : 0,
@@ -76,9 +78,26 @@ export function ChannelHero({ slug, goneLiveAt, lastBroadcast }: Props) {
           {formatElapsed(elapsedSec)}
         </div>
         <div className="db-hero__actions">
-          <EndBroadcastBtn />
+          <EndBroadcastBtn mode="live" />
           <NextLink href={`/c/${slug}`} className="db-hero__secondary-link">
             View channel →
+          </NextLink>
+        </div>
+      </div>
+    )
+  }
+
+  if (state === 'PREVIEW') {
+    return (
+      <div className="db-hero db-hero--preview">
+        <div className="db-hero__live-status">
+          <span className="db-hero__pulse-dot db-hero__pulse-dot--preview" aria-hidden />
+          <span className="db-hero__live-label">PREVIEW — only you can hear this</span>
+        </div>
+        <div className="db-hero__actions">
+          <GoLiveBtn />
+          <NextLink href="/dashboard/broadcast" className="db-hero__secondary-link">
+            Open broadcast studio →
           </NextLink>
         </div>
       </div>

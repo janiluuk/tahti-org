@@ -59,5 +59,6 @@ describe('broadcast-cap', () => {
     }
     expect(canAcceptSourceConnect(cap, 'OFFLINE')).toBe(false)
     expect(canAcceptSourceConnect(cap, 'LIVE')).toBe(true)
+    expect(canAcceptSourceConnect(cap, 'PREVIEW')).toBe(true)
   })
 })

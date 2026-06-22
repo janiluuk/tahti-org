@@ -107,10 +107,10 @@ export async function checkBroadcastCap(
   }
 }
 
-/** Whether a new Icecast/RTMP source connection may start (reconnect allowed during grace if already LIVE). */
+/** Whether a new Icecast/RTMP source connection may start (reconnect allowed during grace if already connected, live or preview). */
 export function canAcceptSourceConnect(cap: BroadcastCapResult, channelState: string): boolean {
   if (!cap.allowed) return false
-  if (cap.inGrace && channelState !== 'LIVE') return false
+  if (cap.inGrace && channelState === 'OFFLINE') return false
   return true
 }
 

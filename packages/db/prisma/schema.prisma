@@ -42,6 +42,8 @@ enum BetaApplicationStatus {
 
 enum ChannelState {
   OFFLINE
+  /// Encoder is connected and the artist can hear it in the studio, but it is not yet public.
+  PREVIEW
   LIVE
 
   @@schema("channel")
@@ -789,6 +791,8 @@ model Broadcast {
   channel       Channel         @relation(fields: [channelId], references: [id], onDelete: Cascade)
   source        BroadcastSource
   startedAt     DateTime        @default(now())
+  /// Set when this session was promoted PREVIEW -> LIVE. Null means it never went public — skip archive finalization.
+  wentLiveAt    DateTime?
   endedAt       DateTime?
   recordingKey  String?
   archiveItemId String?         @unique

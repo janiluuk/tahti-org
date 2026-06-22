@@ -27,20 +27,23 @@ export async function forceChannelOffline(
       where: { id: broadcast.id },
       data: { endedAt: new Date() },
     })
-    enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>
-      log.error(
-        {
-          err,
-          ...broadcastSessionLogFields({
-            broadcastId: broadcast.id,
-            channelId,
-            slug,
-            source: 'ADMIN',
-          }),
-        },
-        'finalize-broadcast-recording enqueue failed (force offline)',
-      ),
-    )
+    // A session that never went LIVE (preview-only) has no public archive to finalize.
+    if (broadcast.wentLiveAt) {
+      enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>
+        log.error(
+          {
+            err,
+            ...broadcastSessionLogFields({
+              broadcastId: broadcast.id,
+              channelId,
+              slug,
+              source: 'ADMIN',
+            }),
+          },
+          'finalize-broadcast-recording enqueue failed (force offline)',
+        ),
+      )
+    }
   }
 
   await prisma.channel.update({

@@ -39,7 +39,7 @@ export async function executeAccountDeletion(
   if (user.isBoard) throw new Error('Remove board role before deleting a board member')
   if (userId === actorId) throw new Error('Cannot delete your own account via admin')
 
-  if (user.channel?.state === 'LIVE') {
+  if (user.channel && user.channel.state !== 'OFFLINE') {
     await forceChannelOffline(prisma, log, {
       channelId: user.channel.id,
       slug: user.channel.slug,

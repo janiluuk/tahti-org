@@ -340,6 +340,38 @@ export default async function DashboardPage() {
             : 'Good night'
   const firstName = user.displayName.trim().split(/\s+/)[0] ?? user.displayName
 
+  const headerState = user.channel?.state
+  const headerStatusLabel =
+    headerState === 'LIVE'
+      ? 'broadcasting live'
+      : headerState === 'PREVIEW'
+        ? 'in preview'
+        : 'offline'
+  const headerStatusClass =
+    headerState === 'LIVE'
+      ? ' db-header-channel-state--live'
+      : headerState === 'PREVIEW'
+        ? ' db-header-channel-state--preview'
+        : ''
+  const headerDotClass =
+    headerState === 'LIVE'
+      ? 'signal-dot'
+      : headerState === 'PREVIEW'
+        ? 'db-preview-dot'
+        : 'db-offline-dot'
+  const goLiveBtnLabel =
+    headerState === 'LIVE'
+      ? 'On air'
+      : headerState === 'PREVIEW'
+        ? 'Continue to go live →'
+        : 'Go live now'
+  const goLiveBtnClass =
+    headerState === 'LIVE'
+      ? ' db-go-live-btn--live'
+      : headerState === 'PREVIEW'
+        ? ' db-go-live-btn--preview'
+        : ''
+
   return (
     <PageShell size="md">
       <div className="studio-section-anchor studio-page-header">
@@ -350,14 +382,9 @@ export default async function DashboardPage() {
           <div className="db-greeting-status">
             {user.channel ? (
               <>
-                <span
-                  className={`db-header-channel-state${user.channel.state === 'LIVE' ? ' db-header-channel-state--live' : ''}`}
-                >
-                  <span
-                    className={user.channel.state === 'LIVE' ? 'signal-dot' : 'db-offline-dot'}
-                    aria-hidden
-                  />
-                  {user.channel.state === 'LIVE' ? 'broadcasting live' : 'offline'}
+                <span className={`db-header-channel-state${headerStatusClass}`}>
+                  <span className={headerDotClass} aria-hidden />
+                  {headerStatusLabel}
                 </span>
                 <span>·</span>
                 <NextLink href={`/c/${user.channel.slug}`} className="db-header-channel-url">
@@ -395,16 +422,9 @@ export default async function DashboardPage() {
         </div>
         {user.channel ? (
           <div className="studio-page-header__actions">
-            <NextLink
-              href="/dashboard/broadcast"
-              className={`db-go-live-btn${user.channel.state === 'LIVE' ? ' db-go-live-btn--live' : ''}`}
-            >
-              <span
-                className={user.channel.state === 'LIVE' ? 'signal-dot' : 'db-offline-dot'}
-                aria-hidden
-                style={{ width: 6, height: 6 }}
-              />
-              {user.channel.state === 'LIVE' ? 'On air' : 'Go live now'}
+            <NextLink href="/dashboard/broadcast" className={`db-go-live-btn${goLiveBtnClass}`}>
+              <span className={headerDotClass} aria-hidden style={{ width: 6, height: 6 }} />
+              {goLiveBtnLabel}
             </NextLink>
           </div>
         ) : (

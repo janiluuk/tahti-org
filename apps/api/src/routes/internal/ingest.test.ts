@@ -9,6 +9,7 @@ import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../../lib/password.js'
 import { utcWeekStart } from '@tahti/shared/broadcast-cap'
+import { sessionCookieFor } from '../../test/helpers.js'
 
 const { enqueueFinalizeBroadcastRecording, enqueueWarmArchiveFallbackCache } = vi.hoisted(() => ({
   enqueueFinalizeBroadcastRecording: vi.fn().mockResolvedValue(undefined),
@@ -32,6 +33,8 @@ describe('internal ingest (RTMP + Icecast)', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let liveSourcePass: string
   let channelId: string
+  let userId: string
+  let sessionCookie: string
 
   beforeAll(async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
@@ -67,6 +70,8 @@ describe('internal ingest (RTMP + Icecast)', () => {
       include: { channel: true },
     })
     channelId = user.channel!.id
+    userId = user.id
+    sessionCookie = await sessionCookieFor(prisma, userId)
   })
 
   afterAll(async () => {
@@ -161,7 +166,7 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
   })
 
-  it('allows RTMP on_publish with valid form-encoded key', async () => {
+  it('allows RTMP on_publish with valid form-encoded key, entering private preview', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/internal/rtmp/on_publish',
@@ -172,8 +177,9 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(res.body).toContain('allowed')
 
     const channel = await prisma.channel.findUnique({ where: { id: channelId } })
-    expect(channel?.state).toBe('LIVE')
-    expect(enqueueWarmArchiveFallbackCache).toHaveBeenCalledWith(channelId)
+    expect(channel?.state).toBe('PREVIEW')
+    expect(channel?.goneLiveAt).toBeNull()
+    expect(enqueueWarmArchiveFallbackCache).not.toHaveBeenCalled()
 
     await prisma.broadcast.deleteMany({ where: { channelId } })
     await prisma.channel.update({
@@ -182,12 +188,59 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
   })
 
-  it('ends broadcast on RTMP on_done and enqueues partial archive finalize', async () => {
+  it('go-live promotes a preview session to public LIVE and warms the archive cache', async () => {
     await app.inject({
       method: 'POST',
       url: '/internal/rtmp/on_publish',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       payload: `name=${encodeURIComponent(STREAM_KEY)}`,
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/go-live',
+      headers: { cookie: sessionCookie },
+    })
+    expect(res.statusCode).toBe(200)
+
+    const channel = await prisma.channel.findUnique({ where: { id: channelId } })
+    expect(channel?.state).toBe('LIVE')
+    expect(channel?.goneLiveAt).toBeTruthy()
+    expect(enqueueWarmArchiveFallbackCache).toHaveBeenCalledWith(channelId)
+
+    const broadcast = await prisma.broadcast.findFirst({
+      where: { channelId, endedAt: null },
+      orderBy: { startedAt: 'desc' },
+    })
+    expect(broadcast?.wentLiveAt).toBeTruthy()
+
+    await prisma.broadcast.deleteMany({ where: { channelId } })
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { state: 'OFFLINE', goneLiveAt: null },
+    })
+  })
+
+  it('rejects go-live when the channel is not in preview', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/go-live',
+      headers: { cookie: sessionCookie },
+    })
+    expect(res.statusCode).toBe(409)
+  })
+
+  it('ends broadcast on RTMP on_done and enqueues partial archive finalize when it had gone live', async () => {
+    await app.inject({
+      method: 'POST',
+      url: '/internal/rtmp/on_publish',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `name=${encodeURIComponent(STREAM_KEY)}`,
+    })
+    await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/go-live',
+      headers: { cookie: sessionCookie },
     })
 
     const done = await app.inject({
@@ -213,7 +266,30 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(enqueueFinalizeBroadcastRecording).toHaveBeenCalledWith(ended!.id)
   })
 
-  it('ends broadcast on Icecast disconnect and enqueues partial archive finalize', async () => {
+  it('ends a preview-only RTMP session on on_done without enqueuing archive finalize', async () => {
+    enqueueFinalizeBroadcastRecording.mockClear()
+
+    await app.inject({
+      method: 'POST',
+      url: '/internal/rtmp/on_publish',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `name=${encodeURIComponent(STREAM_KEY)}`,
+    })
+
+    const done = await app.inject({
+      method: 'POST',
+      url: '/internal/rtmp/on_done',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `name=${encodeURIComponent(STREAM_KEY)}`,
+    })
+    expect(done.statusCode).toBe(200)
+
+    const channel = await prisma.channel.findUnique({ where: { id: channelId } })
+    expect(channel?.state).toBe('OFFLINE')
+    expect(enqueueFinalizeBroadcastRecording).not.toHaveBeenCalled()
+  })
+
+  it('ends broadcast on Icecast disconnect and enqueues partial archive finalize when it had gone live', async () => {
     enqueueFinalizeBroadcastRecording.mockClear()
 
     await app.inject({
@@ -221,6 +297,11 @@ describe('internal ingest (RTMP + Icecast)', () => {
       url: '/internal/icecast/on_connect',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       payload: `mount=/live/${SLUG}&pass=${liveSourcePass}`,
+    })
+    await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/go-live',
+      headers: { cookie: sessionCookie },
     })
 
     const disconnect = await app.inject({
@@ -245,7 +326,29 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
   })
 
-  it('allows Icecast on_connect with urlencoded mount and pass', async () => {
+  it('ends a preview-only Icecast session on disconnect without enqueuing archive finalize', async () => {
+    enqueueFinalizeBroadcastRecording.mockClear()
+
+    await app.inject({
+      method: 'POST',
+      url: '/internal/icecast/on_connect',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `mount=/live/${SLUG}&pass=${liveSourcePass}`,
+    })
+
+    const disconnect = await app.inject({
+      method: 'POST',
+      url: '/internal/icecast/on_disconnect',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `mount=/live/${SLUG}`,
+    })
+    expect(disconnect.statusCode).toBe(200)
+    expect(enqueueFinalizeBroadcastRecording).not.toHaveBeenCalled()
+  })
+
+  it('allows Icecast on_connect with urlencoded mount and pass, entering private preview', async () => {
+    enqueueWarmArchiveFallbackCache.mockClear()
+
     const res = await app.inject({
       method: 'POST',
       url: '/internal/icecast/on_connect',
@@ -254,7 +357,9 @@ describe('internal ingest (RTMP + Icecast)', () => {
     })
     expect(res.statusCode).toBe(200)
 
-    expect(enqueueWarmArchiveFallbackCache).toHaveBeenCalledWith(channelId)
+    const channel = await prisma.channel.findUnique({ where: { id: channelId } })
+    expect(channel?.state).toBe('PREVIEW')
+    expect(enqueueWarmArchiveFallbackCache).not.toHaveBeenCalled()
 
     await prisma.broadcast.deleteMany({ where: { channelId } })
     await prisma.channel.update({

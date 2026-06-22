@@ -123,6 +123,7 @@ import meChannelLiveStatsRoutes from './routes/me/channel-live-stats.js'
 import meChannelFunnelStatsRoutes from './routes/me/channel-funnel-stats.js'
 import meStatsRoutes from './routes/me/stats.js'
 import meEndBroadcastRoutes from './routes/me/end-broadcast.js'
+import meGoLiveRoutes from './routes/me/go-live.js'
 import meStashRoutes from './routes/me/stash.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
@@ -551,6 +552,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meChannelFunnelStatsRoutes)
   await fastify.register(meStatsRoutes)
   await fastify.register(meEndBroadcastRoutes)
+  await fastify.register(meGoLiveRoutes)
   await fastify.register(meStashRoutes)
   await fastify.register(meUsersRoutes)
 

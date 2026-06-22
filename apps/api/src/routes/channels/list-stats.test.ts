@@ -12,6 +12,7 @@ describe('Public channel directory and platform stats', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let liveSlug: string
   let recentSlug: string
+  let previewSlug: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -51,6 +52,21 @@ describe('Public channel directory and platform stats', () => {
         source: 'ICECAST',
       },
     })
+
+    // A channel mid-preview (testing, encoder connected, never promoted) carries a stale
+    // goneLiveAt from a past real broadcast — it must not leak into the public "recent" list.
+    const previewArtist = await createTestArtist(prisma, {
+      email: `${PREFIX}preview@example.com`,
+      username: `${PREFIX}preview`,
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98412,
+    })
+    previewSlug = previewArtist.username
+    await prisma.channel.update({
+      where: { id: previewArtist.channel!.id },
+      data: { state: 'PREVIEW', goneLiveAt: new Date(Date.now() - 7200_000) },
+    })
   })
 
   afterAll(async () => {
@@ -70,6 +86,9 @@ describe('Public channel directory and platform stats', () => {
     expect(body.recent.some((c) => c.slug === recentSlug && c.state === 'OFFLINE')).toBe(true)
     expect(body.live[0].slug).toBeTruthy()
     expect(body.live[0].user?.displayName).toBeTruthy()
+
+    expect(body.live.some((c) => c.slug === previewSlug)).toBe(false)
+    expect(body.recent.some((c) => c.slug === previewSlug)).toBe(false)
   })
 
   it('GET /api/v1/stats returns platform counters', async () => {

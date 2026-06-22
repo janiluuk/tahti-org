@@ -37,7 +37,7 @@ const adminChannelsRoutes: FastifyPluginAsync = async (fastify) => {
         select: { id: true, state: true, userId: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-      if (channel.state !== 'LIVE') {
+      if (channel.state === 'OFFLINE') {
         return reply.status(409).send({ error: 'Channel is not live' })
       }
 

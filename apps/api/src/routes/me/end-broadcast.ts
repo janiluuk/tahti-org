@@ -34,7 +34,7 @@ const meEndBroadcastRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
-      if (channel.state !== 'LIVE') {
+      if (channel.state === 'OFFLINE') {
         return reply.status(409).send({ error: 'Channel is not live' })
       }
 
