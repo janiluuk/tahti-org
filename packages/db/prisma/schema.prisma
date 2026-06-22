@@ -478,84 +478,84 @@ model CloudImportJob {
 }
 
 model User {
-  id                             String     @id @default(cuid())
-  email                          String     @unique
-  emailVerifiedAt                DateTime?
-  passwordHash                   String?
-  username                       String     @unique
-  displayName                    String
-  bio                            String?
-  avatarUrl                      String?
-  socialLinks                    Json?
-  tipJarUrl                      String?
-  countryCode                    String?
-  pronouns                       String?
-  tier                           ArtistTier @default(FREE)
-  isMember                       Boolean    @default(false)
-  isBoard                        Boolean    @default(false)
-  memberNumber                   Int?       @unique
-  memberSince                    DateTime?
-  publicAttribution              Boolean    @default(true)
-  stripeCustomerId               String?
-  stripeMembershipSubscriptionId String?    @unique
-  stripeConnectAccountId         String?    @unique
-  stripeConnectChargesEnabled    Boolean    @default(false)
-  softTargetBytes                BigInt     @default(524288000)
-  hiddenCeilingBytes             BigInt     @default(53687091200)
-  storageUsedBytes               BigInt     @default(0)
-  weeklyLiveSecondsUsed          Int        @default(0)
-  weeklyLiveResetAt              DateTime?
-  mentionsEnabled                Boolean    @default(true)
-  publicMentionsEnabled          Boolean    @default(false)
-  suspendedAt                    DateTime?
-  suspendReason                  String?
-  deletedAt                      DateTime?
-  mixcloudAccessTokenEnc         String? // M7: OAuth access token (AES-GCM, same key as RTMP)
-  bandcampAccessTokenEnc         String? // Sprint 9: Bandcamp import OAuth
-  soundcloudAccessTokenEnc       String? // Sprint 9: SoundCloud import OAuth
-  googleDriveAccessTokenEnc      String? // PLAT-080: Google Drive import OAuth
-  googleDriveRefreshTokenEnc     String? // PLAT-083: encrypted refresh token
-  spotifyArtistId                String? // mixed-source collections brief: resolved Spotify artist catalog ID for "Your tracks" — search itself uses an app-level token, no per-user OAuth
-  mixcloudUsername               String? // mixed-source collections brief: artist's own Mixcloud handle for "Your tracks" — Mixcloud's read API is public, no OAuth needed for catalog browsing
-  createdAt                      DateTime   @default(now())
-  updatedAt                      DateTime   @updatedAt
+  id                    String     @id @default(cuid())
+  email                 String     @unique
+  emailVerifiedAt       DateTime?
+  passwordHash          String?
+  username              String     @unique
+  displayName           String
+  bio                   String?
+  avatarUrl             String?
+  socialLinks           Json?
+  tipJarUrl             String?
+  countryCode           String?
+  pronouns              String?
+  tier                  ArtistTier @default(FREE)
+  isMember              Boolean    @default(false)
+  isBoard               Boolean    @default(false)
+  memberNumber          Int?       @unique
+  memberSince           DateTime?
+  publicAttribution     Boolean    @default(true)
+  stripeCustomerId                  String?
+  stripeMembershipSubscriptionId    String?  @unique
+  stripeConnectAccountId            String?  @unique
+  stripeConnectChargesEnabled   Boolean  @default(false)
+  softTargetBytes               BigInt   @default(524288000)
+  hiddenCeilingBytes    BigInt     @default(53687091200)
+  storageUsedBytes      BigInt     @default(0)
+  weeklyLiveSecondsUsed Int        @default(0)
+  weeklyLiveResetAt     DateTime?
+  mentionsEnabled         Boolean    @default(true)
+  publicMentionsEnabled   Boolean    @default(false)
+  suspendedAt             DateTime?
+  suspendReason           String?
+  deletedAt               DateTime?
+  mixcloudAccessTokenEnc   String?  // M7: OAuth access token (AES-GCM, same key as RTMP)
+  bandcampAccessTokenEnc   String?  // Sprint 9: Bandcamp import OAuth
+  soundcloudAccessTokenEnc String?  // Sprint 9: SoundCloud import OAuth
+  googleDriveAccessTokenEnc  String?  // PLAT-080: Google Drive import OAuth
+  googleDriveRefreshTokenEnc String?  // PLAT-083: encrypted refresh token
+  spotifyArtistId       String?  // mixed-source collections brief: resolved Spotify artist catalog ID for "Your tracks" — search itself uses an app-level token, no per-user OAuth
+  mixcloudUsername      String?  // mixed-source collections brief: artist's own Mixcloud handle for "Your tracks" — Mixcloud's read API is public, no OAuth needed for catalog browsing
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
 
-  sessions                 Session[]
-  emailVerifications       EmailVerification[]
-  membership               Membership?
-  channel                  Channel?
-  motionsProposed          Motion[]
-  votes                    Vote[]
-  grants                   GrantDisbursement[]
-  fanTiers                 FanTier[]
-  fanSubsAsArtist          FanSubscription[]        @relation("ArtistFanSubs")
-  fanSubsAsSubscriber      FanSubscription[]        @relation("SubscriberFanSubs")
-  releases                 Release[]
-  revelatorRoyaltyReports  RevelatorRoyaltyReport[]
-  mixUploads               MixUpload[]
-  cloudImportJobs          CloudImportJob[]
-  newsletterSubscribers    NewsletterSubscriber[]   @relation("ArtistSubscribers")
-  newsletterDrafts         NewsletterDraft[]
-  mentionsSent             Mention[]                @relation("MentionerMentions")
-  mentionsReceived         Mention[]                @relation("MentionTarget")
-  mentionsMuted            MentionMute[]            @relation("MuterMutes")
-  mentionsMutedBy          MentionMute[]            @relation("MuteTarget")
-  collections              Collection[]
-  artistFollowers          ArtistFollow[]           @relation("ArtistFollowers")
-  artistFollowing          ArtistFollow[]           @relation("ArtistFollowing")
-  supportTickets           SupportTicket[]          @relation("SupportTicketArtist")
-  supportTicketsAssigned   SupportTicket[]          @relation("SupportAssignee")
-  supportTicketNotes       SupportTicketNote[]
-  boardResolutionsCreated  BoardResolution[]
-  annualReportsGenerated   AnnualReport[]
-  socialConnections        SocialConnection[]
-  socialPosts              SocialPost[]
-  stashFiles               StashFile[]
-  betaApplication          BetaApplication?
-  betaApplicationsReviewed BetaApplication[]        @relation("BetaReviewedBy")
-  passwordSetups           PasswordSetup[]
-  editorProjects           EditorProject[]
-  moderatorOf              ChannelModerator[]
+  sessions              Session[]
+  emailVerifications    EmailVerification[]
+  membership            Membership?
+  channel               Channel?
+  motionsProposed       Motion[]
+  votes                 Vote[]
+  grants                GrantDisbursement[]
+  fanTiers              FanTier[]
+  fanSubsAsArtist       FanSubscription[]        @relation("ArtistFanSubs")
+  fanSubsAsSubscriber   FanSubscription[]        @relation("SubscriberFanSubs")
+  releases              Release[]
+  revelatorRoyaltyReports RevelatorRoyaltyReport[]
+  mixUploads            MixUpload[]
+  cloudImportJobs       CloudImportJob[]
+  newsletterSubscribers NewsletterSubscriber[]   @relation("ArtistSubscribers")
+  newsletterDrafts      NewsletterDraft[]
+  mentionsSent          Mention[]                @relation("MentionerMentions")
+  mentionsReceived      Mention[]                @relation("MentionTarget")
+  mentionsMuted         MentionMute[]            @relation("MuterMutes")
+  mentionsMutedBy       MentionMute[]            @relation("MuteTarget")
+  collections           Collection[]
+  artistFollowers       ArtistFollow[]       @relation("ArtistFollowers")
+  artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
+  supportTickets        SupportTicket[]      @relation("SupportTicketArtist")
+  supportTicketsAssigned SupportTicket[]     @relation("SupportAssignee")
+  supportTicketNotes    SupportTicketNote[]
+  boardResolutionsCreated BoardResolution[]
+  annualReportsGenerated  AnnualReport[]
+  socialConnections       SocialConnection[]
+  socialPosts             SocialPost[]
+  stashFiles              StashFile[]
+  betaApplication         BetaApplication?
+  betaApplicationsReviewed BetaApplication[] @relation("BetaReviewedBy")
+  passwordSetups          PasswordSetup[]
+  editorProjects          EditorProject[]
+  moderatorOf             ChannelModerator[]
 
   @@schema("core")
 }
@@ -665,10 +665,10 @@ model StashFile {
   userId      String
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   filename    String
-  objectKey   String // MinIO key
+  objectKey   String       // MinIO key
   contentType String
   sizeBytes   BigInt
-  format      String? // FLAC, WAV, MP3, ZIP, etc.
+  format      String?      // FLAC, WAV, MP3, ZIP, etc.
   bitDepth    Int?
   sampleRate  Int?
   createdAt   DateTime     @default(now())
@@ -680,15 +680,15 @@ model StashFile {
 }
 
 model StashShare {
-  id              String    @id @default(cuid())
+  id              String     @id @default(cuid())
   fileId          String
-  file            StashFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  file            StashFile  @relation(fields: [fileId], references: [id], onDelete: Cascade)
   granteeUsername String?
-  token           String    @unique @default(cuid())
-  permission      String    @default("READ")
-  fileCount       Int       @default(1)
+  token           String     @unique @default(cuid())
+  permission      String     @default("READ")
+  fileCount       Int        @default(1)
   expiresAt       DateTime?
-  createdAt       DateTime  @default(now())
+  createdAt       DateTime   @default(now())
 
   @@index([token])
   @@schema("core")
@@ -722,55 +722,55 @@ model Membership {
 // ── Channel schema ────────────────────────────────────────────────────────────
 
 model Channel {
-  id                              String                @id @default(cuid())
-  userId                          String                @unique
-  user                            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  slug                            String                @unique
-  customDomain                    String?
-  customDomainVerified            Boolean               @default(false)
-  state                           ChannelState          @default(OFFLINE)
-  containerId                     String?
-  liveSourceMount                 String
-  liveSourcePass                  String
-  liveSourcePassHash              String
-  rtmpStreamKey                   String
-  rtmpStreamKeyHash               String
-  rtmpStreamKeyPreviousHash       String? // ARTIST-002 hot rotation grace
-  rtmpStreamKeyPreviousExpiresAt  DateTime?
+  id                 String       @id @default(cuid())
+  userId             String       @unique
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug               String       @unique
+  customDomain         String?
+  customDomainVerified Boolean  @default(false)
+  state              ChannelState @default(OFFLINE)
+  containerId        String?
+  liveSourceMount    String
+  liveSourcePass     String
+  liveSourcePassHash String
+  rtmpStreamKey      String
+  rtmpStreamKeyHash  String
+  rtmpStreamKeyPreviousHash      String? // ARTIST-002 hot rotation grace
+  rtmpStreamKeyPreviousExpiresAt DateTime?
   liveSourcePassPreviousHash      String?
   liveSourcePassPreviousExpiresAt DateTime?
-  webrtcTokenHash                 String?
-  fallbackMode                    String                @default("shuffle")
-  totalLiveHours                  Float                 @default(0)
-  totalListenerHours              BigInt                @default(0)
-  goneLiveAt                      DateTime?
-  metaStreamOptOut                Boolean               @default(false)
-  galleryMode                     ChannelGalleryMode    @default(NONE)
-  slideshowImages                 String[] // M24: ordered image URLs for channel gallery
-  textLayerMode                   ChannelTextLayerMode  @default(NONE)
-  textLayerText                   String                @default("")
-  textLayerAlign                  ChannelTextLayerAlign @default(CENTER)
-  videoBackgroundUrl              String? // M26: YouTube/Vimeo or image URL for channel backdrop
+  webrtcTokenHash    String?
+  fallbackMode       String       @default("shuffle")
+  totalLiveHours     Float        @default(0)
+  totalListenerHours BigInt       @default(0)
+  goneLiveAt         DateTime?
+  metaStreamOptOut   Boolean              @default(false)
+  galleryMode        ChannelGalleryMode   @default(NONE)
+  slideshowImages    String[]             // M24: ordered image URLs for channel gallery
+  textLayerMode      ChannelTextLayerMode @default(NONE)
+  textLayerText      String               @default("")
+  textLayerAlign     ChannelTextLayerAlign @default(CENTER)
+  videoBackgroundUrl String?              // M26: YouTube/Vimeo or image URL for channel backdrop
   // M31: visual customization
-  colorSchemeJson                 String? // JSON {bg,accent,text,muted,highlight} hex overrides
-  visualPreset                    VisualPreset          @default(MINIMAL)
-  slideshowPreset                 SlideshowPreset       @default(FADE)
-  slideshowIntervalSeconds        Int                   @default(8)
-  slideshowTransitionMs           Int                   @default(600)
-  slideshowAutoplay               Boolean               @default(true)
-  nextBroadcastAt                 DateTime? // LISTENER-002: optional next live time for offline listeners
-  nextBroadcastNote               String? // e.g. "Weekly show — Thursdays 22:00 EET"
-  lastFeaturedAt                  DateTime? // M16: Tahti Radio fair rotation
-  createdAt                       DateTime              @default(now())
-  updatedAt                       DateTime              @updatedAt
+  colorSchemeJson    String?              // JSON {bg,accent,text,muted,highlight} hex overrides
+  visualPreset       VisualPreset         @default(MINIMAL)
+  slideshowPreset    SlideshowPreset      @default(FADE)
+  slideshowIntervalSeconds Int            @default(8)
+  slideshowTransitionMs    Int            @default(600)
+  slideshowAutoplay        Boolean        @default(true)
+  nextBroadcastAt    DateTime?            // LISTENER-002: optional next live time for offline listeners
+  nextBroadcastNote  String?              // e.g. "Weekly show — Thursdays 22:00 EET"
+  lastFeaturedAt     DateTime?            // M16: Tahti Radio fair rotation
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
-  archiveItems     ArchiveItem[]
-  broadcasts       Broadcast[]
-  announcements    ChannelAnnouncement[]
-  chatBans         ChatBan[]
-  moderators       ChannelModerator[]
-  rtmpTargets      RtmpTarget[]
-  radioFeatureLogs RadioFeatureLog[]
+  archiveItems      ArchiveItem[]
+  broadcasts        Broadcast[]
+  announcements     ChannelAnnouncement[]
+  chatBans          ChatBan[]
+  moderators        ChannelModerator[]
+  rtmpTargets       RtmpTarget[]
+  radioFeatureLogs  RadioFeatureLog[]
 
   @@index([state])
   @@schema("channel")
@@ -833,58 +833,58 @@ model RtmpTarget {
 }
 
 model ArchiveItem {
-  id                   String                @id @default(cuid())
-  channelId            String
-  channel              Channel               @relation(fields: [channelId], references: [id], onDelete: Cascade)
-  title                String
-  description          String?
-  tracklist            Json? // M22: [{startSec, title, artist?, artistUsername?}]
-  editList             Json? // Pro editor v3 draft (@tahti/audio-edit EditList v1)
-  editorPeaks          Json? // Pro editor: PeaksPyramid from ingest (PERF-04)
-  bannerUrl            String? // M24: cover image URL
-  backgroundUrl        String? // per-track background image
-  slideshowUrls        String[] // ordered images for track page slideshow
-  commentary           String? // M25: artist commentary (Markdown)
-  taggedNote           String? // draft @-mention text for collaborators
-  genre                String?
-  genreCustom          String? // when not in preset genre list
-  recordingLocation    String?
-  subGenres            String[]              @default([])
-  contentType          ArchiveContentType    @default(STUDIO)
-  mixVersion           String? // e.g. "Original Mix", "Rok Tek Remix"
-  bpm                  Int?
-  musicalKey           String?
-  bpmDetected          Int?
-  keyDetected          String?
-  useDetectedBpmKey    Boolean               @default(true)
-  isAiGenerated        Boolean               @default(false)
-  releasedAt           DateTime              @default(now())
-  license              ArchiveLicense        @default(ALL_RIGHTS_RESERVED)
-  repostToDownload     Boolean               @default(false)
-  followToDownload     Boolean               @default(false)
-  rawKey               String? // null for *_EMBED sources — no audio file exists
-  mp3Key               String?
-  flacKey              String?
-  durationSec          Int?
-  sourceFormat         String? // detected source codec, e.g. "MP3", "FLAC", "AAC", "WAV"
-  sourceBitrateKbps    Int? // detected source bitrate (lossy only); null for lossless
-  peaks                Json? // M27: per-set waveform visualisation — [0..255] amplitude buckets
-  visualPreset         VisualPreset          @default(MINIMAL) // M31
-  fileSizeBytes        BigInt? // null for *_EMBED sources
-  source               ArchiveItemSource     @default(UPLOAD)
-  qualityBadge         ArchiveQualityBadge   @default(LOSSLESS)
-  embedUri             String? // spotify:track:... / mixcloud.com/.../... — present iff source is *_EMBED
-  embedProvider        ArchiveEmbedProvider?
-  status               ArchiveItemStatus     @default(PENDING)
-  isPublic             Boolean               @default(true)
-  isFallback           Boolean               @default(false)
-  fallbackOrder        Int? // M27: position in ordered offline rotation
-  lastFallbackPlayedAt DateTime? // M27: fair shuffle — least recent first
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  id            String            @id @default(cuid())
+  channelId     String
+  channel       Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  tracklist     Json?             // M22: [{startSec, title, artist?, artistUsername?}]
+  editList      Json?             // Pro editor v3 draft (@tahti/audio-edit EditList v1)
+  editorPeaks   Json?             // Pro editor: PeaksPyramid from ingest (PERF-04)
+  bannerUrl     String?           // M24: cover image URL
+  backgroundUrl String?           // per-track background image
+  slideshowUrls String[]          // ordered images for track page slideshow
+  commentary    String?           // M25: artist commentary (Markdown)
+  taggedNote    String?           // draft @-mention text for collaborators
+  genre         String?
+  genreCustom   String?           // when not in preset genre list
+  recordingLocation String?
+  subGenres     String[]          @default([])
+  contentType   ArchiveContentType @default(STUDIO)
+  mixVersion    String?           // e.g. "Original Mix", "Rok Tek Remix"
+  bpm           Int?
+  musicalKey    String?
+  bpmDetected   Int?
+  keyDetected   String?
+  useDetectedBpmKey Boolean       @default(true)
+  isAiGenerated Boolean           @default(false)
+  releasedAt    DateTime          @default(now())
+  license       ArchiveLicense    @default(ALL_RIGHTS_RESERVED)
+  repostToDownload Boolean        @default(false)
+  followToDownload Boolean        @default(false)
+  rawKey        String?           // null for *_EMBED sources — no audio file exists
+  mp3Key        String?
+  flacKey       String?
+  durationSec   Int?
+  sourceFormat       String?      // detected source codec, e.g. "MP3", "FLAC", "AAC", "WAV"
+  sourceBitrateKbps  Int?         // detected source bitrate (lossy only); null for lossless
+  peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
+  visualPreset  VisualPreset      @default(MINIMAL) // M31
+  fileSizeBytes BigInt?           // null for *_EMBED sources
+  source        ArchiveItemSource   @default(UPLOAD)
+  qualityBadge  ArchiveQualityBadge @default(LOSSLESS)
+  embedUri      String?             // spotify:track:... / mixcloud.com/.../... — present iff source is *_EMBED
+  embedProvider ArchiveEmbedProvider?
+  status        ArchiveItemStatus @default(PENDING)
+  isPublic      Boolean           @default(true)
+  isFallback           Boolean           @default(false)
+  fallbackOrder        Int?              // M27: position in ordered offline rotation
+  lastFallbackPlayedAt DateTime?         // M27: fair shuffle — least recent first
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
-  mixUpload       MixUpload?
-  cloudImportJob  CloudImportJob?
+  mixUpload      MixUpload?
+  cloudImportJob CloudImportJob?
   collectionItems CollectionItem[]
   versions        ArchiveItemVersion[]
 
@@ -895,22 +895,22 @@ model ArchiveItem {
 
 // M28: audio file versions for a single archive track (stable public item id).
 model ArchiveItemVersion {
-  id                String            @id @default(cuid())
-  archiveItemId     String
-  archiveItem       ArchiveItem       @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
-  versionNumber     Int
-  versionLabel      String
-  rawKey            String
-  mp3Key            String?
-  flacKey           String?
-  durationSec       Int?
-  sourceFormat      String? // detected source codec, e.g. "MP3", "FLAC", "AAC", "WAV"
-  sourceBitrateKbps Int? // detected source bitrate (lossy only); null for lossless
-  peaks             Json? // M27: per-set waveform visualisation — [0..255] amplitude buckets
-  fileSizeBytes     BigInt            @default(0)
-  status            ArchiveItemStatus @default(PENDING)
-  isActive          Boolean           @default(false)
-  createdAt         DateTime          @default(now())
+  id            String            @id @default(cuid())
+  archiveItemId String
+  archiveItem   ArchiveItem       @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  versionNumber Int
+  versionLabel  String
+  rawKey        String
+  mp3Key        String?
+  flacKey       String?
+  durationSec   Int?
+  sourceFormat       String?      // detected source codec, e.g. "MP3", "FLAC", "AAC", "WAV"
+  sourceBitrateKbps  Int?         // detected source bitrate (lossy only); null for lossless
+  peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
+  fileSizeBytes BigInt            @default(0)
+  status        ArchiveItemStatus @default(PENDING)
+  isActive      Boolean           @default(false)
+  createdAt     DateTime          @default(now())
 
   @@unique([archiveItemId, versionNumber])
   @@index([archiveItemId, createdAt(sort: Desc)])
@@ -947,16 +947,16 @@ model ChannelModerator {
 // ── Ledger schema (append-only) ───────────────────────────────────────────────
 
 model LedgerEntry {
-  id          BigInt         @id @default(autoincrement())
-  category    LedgerCategory
-  amountCents BigInt
-  currency    String         @default("EUR")
-  description String
-  externalRef String?
-  periodStart DateTime
-  periodEnd   DateTime
-  createdAt   DateTime       @default(now())
-  createdBy   String
+  id           BigInt          @id @default(autoincrement())
+  category     LedgerCategory
+  amountCents  BigInt
+  currency     String          @default("EUR")
+  description  String
+  externalRef  String?
+  periodStart  DateTime
+  periodEnd    DateTime
+  createdAt    DateTime        @default(now())
+  createdBy    String
 
   @@index([category, periodStart])
   @@index([createdAt])
@@ -964,12 +964,12 @@ model LedgerEntry {
 }
 
 model MonthlyRollup {
-  yearMonth   String    @id
+  yearMonth   String   @id
   byCategory  Json
   surplus     BigInt
   finalizedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@schema("ledger")
 }
@@ -1001,12 +1001,12 @@ model GrantDisbursement {
 // ── Governance schema ─────────────────────────────────────────────────────────
 
 model AuditLog {
-  id        BigInt      @id @default(autoincrement())
-  action    AuditAction
-  actorId   String
-  targetId  String?
-  meta      Json?
-  createdAt DateTime    @default(now())
+  id         BigInt      @id @default(autoincrement())
+  action     AuditAction
+  actorId    String
+  targetId   String?
+  meta       Json?
+  createdAt  DateTime    @default(now())
 
   @@index([actorId, createdAt])
   @@index([action, createdAt])
@@ -1175,47 +1175,47 @@ model FanSubPayout {
 // ── Artist profile releases (M12 + M7 distribution) ────────────────────────
 
 model Release {
-  id                          String       @id @default(cuid())
-  userId                      String
-  user                        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title                       String
-  type                        ReleaseType
-  artworkUrl                  String?
-  artworkKey                  String? // M12: cover image in MinIO (presigned for public URLs)
-  releaseDate                 DateTime
-  description                 String?
-  smartLinkSlug               String       @unique
-  smartLinkTargets            Json? // {spotify, apple, tidal, bandcamp, ...}
-  smartLinkViewCount          Int          @default(0) // M14: public /r/:slug loads
-  state                       ReleaseState @default(DRAFT)
-  publishedAt                 DateTime?
-  commentary                  String? // M25: artist notes on the release (Markdown)
+  id               String       @id @default(cuid())
+  userId           String
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  type             ReleaseType
+  artworkUrl       String?
+  artworkKey       String?      // M12: cover image in MinIO (presigned for public URLs)
+  releaseDate      DateTime
+  description      String?
+  smartLinkSlug    String       @unique
+  smartLinkTargets Json?        // {spotify, apple, tidal, bandcamp, ...}
+  smartLinkViewCount Int        @default(0) // M14: public /r/:slug loads
+  state            ReleaseState @default(DRAFT)
+  publishedAt      DateTime?
+  commentary       String?      // M25: artist notes on the release (Markdown)
   // M7 — Revelator DSP distribution
-  revelatorId                 String?
-  revelatorStatus             String? // pending | submitted | delivered | failed
-  distributionFeeCents        Int?
-  distributionPaidAt          DateTime?
-  distributionStripeSessionId String?      @unique
+  revelatorId      String?
+  revelatorStatus  String?      // pending | submitted | delivered | failed
+  distributionFeeCents Int?
+  distributionPaidAt   DateTime?
+  distributionStripeSessionId String? @unique
   // M30 — release ops / catalog metadata
-  upc                         String?
-  musicbrainzReleaseId        String?
-  musicbrainzArtistId         String?
-  discogsReleaseId            String?
-  pLine                       String?
-  cLine                       String?
-  labelImprint                String?
-  credits                     Json? // [{ role, name, artistUsername? }]
+  upc                    String?
+  musicbrainzReleaseId   String?
+  musicbrainzArtistId    String?
+  discogsReleaseId       String?
+  pLine                  String?
+  cLine                  String?
+  labelImprint           String?
+  credits                Json?    // [{ role, name, artistUsername? }]
   // M31: visual customization
-  paletteJson                 String? // extracted from cover art: JSON {bg,accent,text,muted,highlight}
-  colorSchemeJson             String? // artist-override JSON {bg,accent,text,muted,highlight}
-  visualPreset                VisualPreset @default(MINIMAL)
-  createdAt                   DateTime     @default(now())
-  updatedAt                   DateTime     @updatedAt
+  paletteJson      String?      // extracted from cover art: JSON {bg,accent,text,muted,highlight}
+  colorSchemeJson  String?      // artist-override JSON {bg,accent,text,muted,highlight}
+  visualPreset     VisualPreset @default(MINIMAL)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
-  tracks                  ReleaseTrack[]
-  collectionItems         CollectionItem[]
+  tracks           ReleaseTrack[]
+  collectionItems  CollectionItem[]
   revelatorRoyaltyReports RevelatorRoyaltyReport[]
-  smartLinkClicks         SmartLinkClick[]
+  smartLinkClicks  SmartLinkClick[]
 
   @@index([userId, releaseDate])
   @@index([userId, state])
@@ -1256,28 +1256,28 @@ model RevelatorRoyaltyReport {
 }
 
 model ReleaseTrack {
-  id                     String      @id @default(cuid())
-  releaseId              String
-  release                Release     @relation(fields: [releaseId], references: [id], onDelete: Cascade)
-  position               Int
-  title                  String
-  isrc                   String?
+  id               String      @id @default(cuid())
+  releaseId        String
+  release          Release     @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+  position         Int
+  title            String
+  isrc             String?
   musicbrainzRecordingId String?
-  durationSec            Int?
-  archiveItemId          String?
+  durationSec      Int?
+  archiveItemId    String?
   // M12 — audio file pipeline
-  sourceKey              String? // original uploaded file in MinIO
-  sourceFormat           String? // wav | flac | mp3 | aac | aiff
-  sourceSampleRate       Int?
-  sourceBitDepth         Int?
-  streamKey              String? // Opus 256 kbps derivative
-  flacKey                String? // FLAC 16/44 derivative (Studio tier download)
-  fingerprint            String?
-  explicit               Boolean     @default(false)
-  status                 TrackStatus @default(PENDING)
-  createdAt              DateTime    @default(now())
+  sourceKey        String?     // original uploaded file in MinIO
+  sourceFormat     String?     // wav | flac | mp3 | aac | aiff
+  sourceSampleRate Int?
+  sourceBitDepth   Int?
+  streamKey        String?     // Opus 256 kbps derivative
+  flacKey          String?     // FLAC 16/44 derivative (Studio tier download)
+  fingerprint      String?
+  explicit         Boolean     @default(false)
+  status           TrackStatus @default(PENDING)
+  createdAt        DateTime    @default(now())
 
-  versions ReleaseTrackVersion[]
+  versions         ReleaseTrackVersion[]
 
   @@unique([releaseId, position])
   @@schema("release")
@@ -1285,7 +1285,7 @@ model ReleaseTrack {
 
 // M28: audio file versions for a release track (stable public track id).
 model ReleaseTrackVersion {
-  id               String       @id @default(cuid())
+  id               String      @id @default(cuid())
   releaseTrackId   String
   releaseTrack     ReleaseTrack @relation(fields: [releaseTrackId], references: [id], onDelete: Cascade)
   versionNumber    Int
@@ -1297,9 +1297,9 @@ model ReleaseTrackVersion {
   streamKey        String?
   flacKey          String?
   durationSec      Int?
-  status           TrackStatus  @default(PENDING)
-  isActive         Boolean      @default(false)
-  createdAt        DateTime     @default(now())
+  status           TrackStatus @default(PENDING)
+  isActive         Boolean     @default(false)
+  createdAt        DateTime    @default(now())
 
   @@unique([releaseTrackId, versionNumber])
   @@index([releaseTrackId, createdAt(sort: Desc)])
@@ -1344,16 +1344,16 @@ model NewsletterSubscriber {
 }
 
 model NewsletterDraft {
-  id              String               @id @default(cuid())
-  userId          String
-  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject         String
-  bodyMd          String
-  state           NewsletterDraftState @default(DRAFT)
-  subscribersOnly Boolean              @default(false) // M19: send only to fan-subscribers
-  scheduledAt     DateTime?
-  sentAt          DateTime?
-  createdAt       DateTime             @default(now())
+  id          String               @id @default(cuid())
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     String
+  bodyMd      String
+  state            NewsletterDraftState @default(DRAFT)
+  subscribersOnly  Boolean              @default(false) // M19: send only to fan-subscribers
+  scheduledAt      DateTime?
+  sentAt           DateTime?
+  createdAt   DateTime             @default(now())
 
   sends NewsletterSend[]
 
@@ -1362,17 +1362,17 @@ model NewsletterDraft {
 }
 
 model NewsletterSend {
-  id           String               @id @default(cuid())
+  id           String              @id @default(cuid())
   draftId      String
-  draft        NewsletterDraft      @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  draft        NewsletterDraft     @relation(fields: [draftId], references: [id], onDelete: Cascade)
   subscriberId String
   subscriber   NewsletterSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
-  state        NewsletterSendState  @default(QUEUED)
+  state        NewsletterSendState @default(QUEUED)
   sentAt       DateTime?
   openedAt     DateTime?
   clickedAt    DateTime?
   bouncedAt    DateTime?
-  createdAt    DateTime             @default(now())
+  createdAt    DateTime            @default(now())
 
   @@index([draftId, state])
   @@schema("newsletter")
@@ -1428,7 +1428,7 @@ model Mention {
   targetUserId    String
   target          User           @relation("MentionTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
   surface         MentionSurface
-  sourceId        String // bio userId | announcement id | release id | draft id
+  sourceId        String         // bio userId | announcement id | release id | draft id
   notifiedAt      DateTime?
   createdAt       DateTime       @default(now())
 
@@ -1439,9 +1439,9 @@ model Mention {
 
 model MentionMute {
   muterId      String
-  muter        User     @relation("MuterMutes", fields: [muterId], references: [id], onDelete: Cascade)
+  muter        User    @relation("MuterMutes", fields: [muterId], references: [id], onDelete: Cascade)
   targetUserId String
-  target       User     @relation("MuteTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+  target       User    @relation("MuteTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
 
   @@id([muterId, targetUserId])
@@ -1473,12 +1473,12 @@ model Collection {
   smartLinksJson     Json?
 
   // M26: per-collection backdrop theme (independent of the channel-wide theme)
-  galleryMode        CollectionGalleryMode    @default(NONE)
+  galleryMode        CollectionGalleryMode     @default(NONE)
   slideshowImages    String[]
   videoBackgroundUrl String?
-  textLayerMode      CollectionTextLayerMode  @default(NONE)
-  textLayerText      String                   @default("")
-  textLayerAlign     CollectionTextLayerAlign @default(CENTER)
+  textLayerMode      CollectionTextLayerMode   @default(NONE)
+  textLayerText      String                    @default("")
+  textLayerAlign     CollectionTextLayerAlign  @default(CENTER)
 
   items CollectionItem[]
 
@@ -1488,15 +1488,15 @@ model Collection {
 }
 
 model CollectionItem {
-  id            String       @id @default(cuid())
+  id            String      @id @default(cuid())
   collectionId  String
-  collection    Collection   @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collection    Collection  @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   archiveItemId String?
   archiveItem   ArchiveItem? @relation(fields: [archiveItemId], references: [id], onDelete: SetNull)
   releaseId     String?
-  release       Release?     @relation(fields: [releaseId], references: [id], onDelete: SetNull)
+  release       Release?    @relation(fields: [releaseId], references: [id], onDelete: SetNull)
   position      Int
-  createdAt     DateTime     @default(now())
+  createdAt     DateTime    @default(now())
 
   @@unique([collectionId, position])
   @@index([collectionId, position])
@@ -1582,18 +1582,18 @@ model SupportTicketNote {
 }
 
 model BoardResolution {
-  id          BigInt            @id @default(autoincrement())
-  title       String
-  body        String
-  votedAt     DateTime
-  outcome     ResolutionOutcome
-  voteFor     Int
-  voteAgainst Int
-  voteAbstain Int
-  createdById String
-  createdBy   User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  publishedAt DateTime?
-  createdAt   DateTime          @default(now())
+  id           BigInt            @id @default(autoincrement())
+  title        String
+  body         String
+  votedAt      DateTime
+  outcome      ResolutionOutcome
+  voteFor      Int
+  voteAgainst  Int
+  voteAbstain  Int
+  createdById  String
+  createdBy    User              @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  publishedAt  DateTime?
+  createdAt    DateTime          @default(now())
 
   @@index([votedAt(sort: Desc)])
   @@schema("admin")
