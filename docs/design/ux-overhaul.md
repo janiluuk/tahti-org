@@ -241,3 +241,44 @@ Moved into `docs/design/` (the active spec set):
 - `ux-overhaul.md` (this file).
 
 Referenced-but-not-yet-filed: this brief names three prior briefs — "design-reference-pack," "audio editor v3.2," "upload+collections" — that don't exist as files in the repo (likely delivered as chat content in an earlier session and never saved). `docs/audio-editor.md` is a related baseline spec but isn't the v3.2 doc. If these should be preserved as files, they need to be supplied and added here.
+
+## Broadcasting Setup — ingest feature scope (2026-06-22)
+
+Per "Stop and ask Long," scoped (not built) what Steps 2 and 3 of the
+Broadcasting Setup flow above would require. Architecture: RTMP
+(nginx-rtmp) and Icecast are the two ingest paths; on connect, the API
+(`apps/api/src/routes/internal/{icecast,rtmp}.ts`) validates and hands
+off to the orchestrator (`services/orchestrator/src/liquidsoap.ts`),
+which spawns a per-channel Liquidsoap container
+(`infra/liquidsoap-channel.liq.template`) that mixes the live input
+with archive fallback and outputs HLS in two pre-baked variants —
+`stream-mp3-192` (lossy) and `stream-flac` (lossless). `liveHlsUrl()`
+(`apps/api/src/lib/stream-quality.ts`) currently picks the variant by
+**listener tier**, not by "is this the artist."
+
+- **Step 2, "Test your signal":** connection state, codec, and bitrate
+  are genuinely free — Icecast's own `/status-json.xsl` already has
+  them per-mount, it's just never parsed or exposed today (only
+  polled for a binary up/down health check in
+  `apps/api/src/lib/health-checks.ts`). A new API route proxying that
+  JSON is UI+API-only work, no ingest change. **Live level meters and
+  ingest latency are not in that JSON** — they need actual PCM
+  analysis, which means a small new probe (an ffmpeg/Liquidsoap RMS
+  tap, or a small sidecar reading the mount) publishing to Centrifugo
+  (already used for chat presence, so the live-push transport already
+  exists). This is a small, scoped ingest-side addition — not a UI
+  change, but not a large one either.
+- **Step 3, "Listen to my own stream" at FLAC:** the `stream-flac` HLS
+  variant already exists per channel today, just gated to high
+  listener tiers. No raw pre-HLS audio is exposed anywhere — every
+  browser-reachable stream goes through Liquidsoap's HLS muxing. So
+  the higher-quality output path already exists; this needs **no
+  ingest pipeline change**, only wiring the studio preview player to
+  always request `stream-flac` for the artist's own channel,
+  regardless of their listener tier.
+
+Net: Step 3 is UI-only and can be built without further confirmation.
+Step 2's codec/bitrate/connection display is also UI+API-only. Step
+2's live level meters and ingest-latency reading are the one piece
+that's an actual (small) ingest-pipeline addition — build those last,
+and separately, once the rest of the flow is in place.

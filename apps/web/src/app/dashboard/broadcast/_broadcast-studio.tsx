@@ -101,13 +101,15 @@ export function BroadcastStudio({
 
       <BroadcastUsageBanner usage={broadcastUsage} />
 
+      <StreamSettingsPanel initial={streamSettings} isLive={isLive || isPreview} />
+
       <Panel
-        title="Preview your stream"
+        title="Test your signal"
         headerTight
         description={
           isLive
             ? 'You are on air — this is exactly what listeners hear.'
-            : "Listen to your ingest here first. It's private until you click Go live."
+            : 'Start streaming with the credentials above, then confirm it here before you go live.'
         }
       >
         <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
@@ -116,14 +118,12 @@ export function BroadcastStudio({
             ? 'You are on air. Open your public channel when you are ready for listeners.'
             : isPreview
               ? 'Audio is flowing and only you can hear it. Click Go live above when you are ready for listeners.'
-              : 'Start streaming with the credentials below — the preview updates automatically when ingest connects.'}
+              : 'Nothing yet — start streaming in OBS, Mixxx, or Traktor with the credentials above.'}
         </Text>
         <Link href={`/c/${channelSlug}`} className="broadcast-studio__public-link studio-link">
           Open public channel →
         </Link>
       </Panel>
-
-      <StreamSettingsPanel initial={streamSettings} isLive={isLive || isPreview} />
 
       <Panel title="Go live checklist" headerTight>
         <ol className="broadcast-studio__steps">

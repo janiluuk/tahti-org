@@ -7772,6 +7772,15 @@
   gap: var(--space-4);
 }
 
+[data-tahti-ui='studio'] .broadcast-studio-page__manage {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 /* ── Live broadcast countdown preview (studio) ──────────────────────────── */
 
 [data-tahti-ui='studio'] .studio-schedule-listener-preview {
