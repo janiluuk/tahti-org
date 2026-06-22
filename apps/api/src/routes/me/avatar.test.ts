@@ -4,7 +4,11 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
-import { cleanupUsersByEmailPrefix, createTestArtist, sessionCookieFor } from '../../test/helpers.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createTestArtist,
+  sessionCookieFor,
+} from '../../test/helpers.js'
 
 const PREFIX = 'avatar-route-'
 
@@ -72,7 +76,11 @@ describe('avatar upload routes', () => {
   it('GET proxy rejects a non-image content-type', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(new Response('not an image', { status: 200, headers: { 'content-type': 'text/html' } })),
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response('not an image', { status: 200, headers: { 'content-type': 'text/html' } }),
+        ),
     )
     const res = await app.inject({
       method: 'GET',
