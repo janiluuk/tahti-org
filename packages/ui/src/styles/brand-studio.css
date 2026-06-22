@@ -697,6 +697,20 @@
   color: var(--cyan);
 }
 
+/* BrandButton anchors must keep their own variant color, not the generic studio link color above. */
+[data-tahti-ui='studio'] a.brand-btn--primary,
+[data-tahti-ui='studio'] a.brand-btn--warn {
+  color: var(--text-on-brand);
+}
+
+[data-tahti-ui='studio'] a.brand-btn--secondary {
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] a.brand-btn--danger {
+  color: var(--coral);
+}
+
 [data-tahti-ui='studio'] h1,
 [data-tahti-ui='studio'] h2,
 [data-tahti-ui='studio'] .ui-heading {
