@@ -697,6 +697,20 @@
   color: var(--cyan);
 }
 
+/* BrandButton anchors must keep their own variant color, not the generic studio link color above. */
+[data-tahti-ui='studio'] a.brand-btn--primary,
+[data-tahti-ui='studio'] a.brand-btn--warn {
+  color: var(--text-on-brand);
+}
+
+[data-tahti-ui='studio'] a.brand-btn--secondary {
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] a.brand-btn--danger {
+  color: var(--coral);
+}
+
 [data-tahti-ui='studio'] h1,
 [data-tahti-ui='studio'] h2,
 [data-tahti-ui='studio'] .ui-heading {
@@ -4207,6 +4221,12 @@
   }
 }
 
+[data-tahti-ui='studio'] .nl-recipient-line {
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
 [data-tahti-ui='studio'] .nl-compose-label {
   display: block;
   font-size: var(--text-label);
@@ -4215,6 +4235,13 @@
   letter-spacing: 0.08em;
   color: var(--muted);
   margin-bottom: 0.5rem;
+}
+
+[data-tahti-ui='studio'] .nl-send-prompt {
+  background: color-mix(in srgb, var(--green) 10%, var(--card2));
+  border: 1px solid color-mix(in srgb, var(--green) 35%, var(--border));
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
 }
 
 [data-tahti-ui='studio'] .nl-preview-card {
