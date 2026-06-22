@@ -124,18 +124,20 @@ export default async function BroadcastStudioPage() {
           <Text tone="muted">Could not load stream credentials. Refresh or contact support.</Text>
         )}
 
-        <ChannelDesignLinkPanel />
-
-        <BroadcastSettingsSections
-          channelSlug={user.channel.slug}
-          isLive={isLive}
-          announcements={announcements}
-          moderators={moderators}
-          channelProgramme={channelProgramme}
-          channelSchedule={channelSchedule}
-          mixcloudStatus={mixcloudStatus}
-          apiUrl={apiUrl}
-        />
+        <div className="broadcast-studio-page__manage">
+          <h2 className="studio-text-strong-sm studio-mb-md">Channel &amp; distribution</h2>
+          <ChannelDesignLinkPanel />
+          <BroadcastSettingsSections
+            channelSlug={user.channel.slug}
+            isLive={isLive}
+            announcements={announcements}
+            moderators={moderators}
+            channelProgramme={channelProgramme}
+            channelSchedule={channelSchedule}
+            mixcloudStatus={mixcloudStatus}
+            apiUrl={apiUrl}
+          />
+        </div>
       </div>
     </PageShell>
   )
