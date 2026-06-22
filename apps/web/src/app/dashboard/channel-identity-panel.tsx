@@ -8,10 +8,17 @@ import { useRouter } from 'next/navigation'
 import { ARCHIVE_GENRES } from '@tahti/shared'
 import { COUNTRY_OPTIONS } from '@/lib/country-options'
 import { flagEmoji } from '@/lib/flag-emoji'
-import { updateChannelProfile } from './channel-identity-actions'
+import { AvatarCropModal } from '@/components/avatar-crop-modal'
+import {
+  completeAvatarUpload,
+  prepareAvatarUpload,
+  updateChannelProfile,
+} from './channel-identity-actions'
 
 const BIO_MAX = 280
 const MAX_GENRES = 6
+const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp']
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 export type ChannelIdentityDraft = {
   displayName: string
@@ -36,6 +43,10 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [avatarUrlInput, setAvatarUrlInput] = useState('')
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [avatarBusy, setAvatarBusy] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
 
   useEffect(() => {
     onDraftChange?.({
@@ -47,6 +58,55 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayName, avatarUrl, countryCode, bio, genres])
+
+  function onFile(file: File) {
+    setAvatarError(null)
+    const type = file.type || 'image/jpeg'
+    if (!ALLOWED_AVATAR_MIME.includes(type)) {
+      setAvatarError('Use JPEG, PNG, or WebP')
+      return
+    }
+    setCropSrc(URL.createObjectURL(file))
+  }
+
+  function onLoadUrl() {
+    const url = avatarUrlInput.trim()
+    if (!url) return
+    setAvatarError(null)
+    setCropSrc(`${API_BASE}/api/me/profile/avatar/proxy?url=${encodeURIComponent(url)}`)
+  }
+
+  async function onCropped(blob: Blob) {
+    setCropSrc(null)
+    setAvatarBusy(true)
+    setAvatarError(null)
+    try {
+      const prep = await prepareAvatarUpload({ filename: 'avatar.jpg', contentType: 'image/jpeg' })
+      if (prep.error || !prep.uploadUrl || !prep.uploadKey) {
+        setAvatarError(prep.error ?? 'Prepare failed')
+        return
+      }
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('PUT', prep.uploadUrl!)
+        xhr.setRequestHeader('Content-Type', 'image/jpeg')
+        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject())
+        xhr.onerror = () => reject(new Error('Upload failed'))
+        xhr.send(blob)
+      })
+      const done = await completeAvatarUpload(prep.uploadKey)
+      if (done.error) {
+        setAvatarError(done.error)
+        return
+      }
+      setAvatarUrl(done.avatarUrl ?? '')
+      setAvatarUrlInput('')
+    } catch {
+      setAvatarError('Upload failed')
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
 
   function toggleGenre(genre: string) {
     setGenres((prev) =>
@@ -94,19 +154,55 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       </div>
 
       <div className="studio-field--block">
-        <label className="studio-label" htmlFor="identity-avatar">
-          Avatar image URL
-        </label>
-        <input
-          id="identity-avatar"
-          type="url"
-          placeholder="https://…"
-          value={avatarUrl}
-          disabled={isPending}
-          onChange={(e) => setAvatarUrl(e.target.value)}
-          className="studio-input"
-        />
+        <span className="studio-label">Avatar</span>
+        <div className="studio-row studio-row--wrap studio-gap-lg">
+          {avatarUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="" width={56} height={56} className="studio-artwork-preview" />
+          )}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={avatarBusy}
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) onFile(f)
+              e.target.value = ''
+            }}
+            className="studio-file-input"
+          />
+        </div>
+        <div className="studio-row studio-row--wrap studio-gap-lg studio-mt-sm">
+          <input
+            type="url"
+            placeholder="…or paste an image URL"
+            value={avatarUrlInput}
+            disabled={avatarBusy}
+            onChange={(e) => setAvatarUrlInput(e.target.value)}
+            className="studio-input studio-input--grow"
+          />
+          <button
+            type="button"
+            className="ui-btn ui-btn--sm ui-btn--ghost"
+            disabled={avatarBusy || !avatarUrlInput.trim()}
+            onClick={onLoadUrl}
+          >
+            Use URL
+          </button>
+        </div>
+        {avatarBusy && <p className="studio-text-muted-sm studio-mt-sm">Uploading…</p>}
+        {avatarError && (
+          <p className="studio-notice studio-notice--error studio-mt-sm">{avatarError}</p>
+        )}
       </div>
+
+      {cropSrc && (
+        <AvatarCropModal
+          imageSrc={cropSrc}
+          onCancel={() => setCropSrc(null)}
+          onCropped={(blob) => void onCropped(blob)}
+        />
+      )}
 
       <div className="studio-field--block">
         <label className="studio-label" htmlFor="identity-country">

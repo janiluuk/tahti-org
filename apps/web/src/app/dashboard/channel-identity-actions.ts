@@ -32,3 +32,36 @@ export async function updateChannelProfile(patch: {
   }
   return { error: null }
 }
+
+export async function prepareAvatarUpload(body: {
+  filename: string
+  contentType: string
+}): Promise<{ uploadKey?: string; uploadUrl?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/profile/avatar/prepare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: data.error ?? 'Prepare failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function completeAvatarUpload(
+  uploadKey: string,
+): Promise<{ avatarUrl?: string | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/profile/avatar/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ uploadKey }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: data.error ?? 'Upload failed' }
+  }
+  return { ...(await res.json()), error: null }
+}

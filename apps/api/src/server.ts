@@ -105,6 +105,7 @@ import venueRoutes from './routes/venues/venues.js'
 import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
+import meAvatarRoutes from './routes/me/avatar.js'
 import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import meArchiveRoutes from './routes/me/archive.js'
 import meProgrammeRoutes from './routes/me/programme.js'
@@ -503,6 +504,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M12 / M15: profile update (bio, social links) + mention detection
   await fastify.register(meProfileRoutes)
+  await fastify.register(meAvatarRoutes)
   await fastify.register(mePrivacyRoutes)
   await fastify.register(publicPressKitRoutes)
 
