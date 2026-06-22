@@ -4,11 +4,13 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import NextLink from 'next/link'
-import { Heading, PageShell, SidebarNavIconSvg, StatCard, StatCardGrid } from '@tahti/ui'
+import { Heading, PageShell, SidebarNavIconSvg } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
 import { StatsPlaysPanel } from './stats-plays-panel'
 import { ListenerMapPanel } from './listener-map-panel'
+import { StatsHero } from './_stats-hero'
+import { StatsTopThree } from './_stats-top-three'
 
 interface FanPayoutStats {
   paidLast30Days: number
@@ -76,11 +78,9 @@ export default async function StatsPage() {
   const downloads = plays?.totalDownloads ?? 0
   const totalPlays = plays?.totalPlays ?? 0
   const fanSubs = fanPayouts?.activeSubscribers ?? 0
-  const revenueCents = fanPayouts?.paidLast30Days ?? 0
 
   const tracks = topTracks?.items ?? []
   const countries = topCountries?.items ?? []
-  const maxCountry = Math.max(1, ...countries.map((c) => c.count))
 
   const engagementUnits = [
     { label: `${downloads} downloads × 1`, value: downloads, color: 'green' as const },
@@ -88,6 +88,13 @@ export default async function StatsPage() {
     { label: `${fanSubs} fan-subs × 1`, value: fanSubs, color: 'purple' as const },
   ]
   const maxEng = Math.max(1, ...engagementUnits.map((e) => e.value))
+
+  const daily = plays?.daily ?? []
+  const last7 = daily.slice(-7)
+  const prev7 = daily.slice(-14, -7)
+  const last7Plays = last7.reduce((sum, d) => sum + d.plays, 0)
+  const prev7Plays = prev7.reduce((sum, d) => sum + d.plays, 0)
+  const busiestDay = daily.length > 0 ? daily.reduce((a, b) => (b.plays > a.plays ? b : a)) : null
 
   const hasData = totalPlays > 0 || tracks.length > 0 || countries.length > 0
   const user = await getDashboardUser()
@@ -127,16 +134,19 @@ export default async function StatsPage() {
         </div>
       ) : null}
 
-      <StatCardGrid>
-        <StatCard variant="plays" value={totalPlays.toLocaleString()} label="Plays this month" />
-        <StatCard variant="downloads" value={downloads.toLocaleString()} label="Downloads" />
-        <StatCard variant="fans" value={fanSubs.toLocaleString()} label="Fan subscribers" />
-        <StatCard
-          variant="revenue"
-          value={`€${(revenueCents / 100).toFixed(0)}`}
-          label="Revenue this month"
-        />
-      </StatCardGrid>
+      <StatsHero
+        last7Plays={last7Plays}
+        prev7Plays={prev7Plays}
+        hasEnoughHistory={daily.length >= 14}
+      />
+
+      <StatsTopThree
+        bestTrack={tracks[0] ? { title: tracks[0].title, plays: tracks[0].plays } : null}
+        bestCountry={
+          countries[0] ? { country: countries[0].country, count: countries[0].count } : null
+        }
+        busiestDay={busiestDay}
+      />
 
       {plays && <StatsPlaysPanel initial={plays} />}
 
@@ -144,52 +154,6 @@ export default async function StatsPage() {
         initial={listenerGeo?.geo ?? []}
         initialPeriod={listenerGeo?.period ?? '30d'}
       />
-
-      {(tracks.length > 0 || countries.length > 0) && (
-        <div className="stats-two-col">
-          {tracks.length > 0 && (
-            <div className="stats-panel">
-              <div className="stats-panel-header">
-                <span className="stats-section-label">TOP TRACKS</span>
-              </div>
-              <ol className="stats-top-list">
-                {tracks.map((t, i) => (
-                  <li key={t.archiveItemId} className="stats-top-row">
-                    <span className="stats-top-rank">{i + 1}</span>
-                    <span className="stats-top-name">{t.title}</span>
-                    <span className="stats-top-value stats-top-value--amber">{t.plays}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-
-          {countries.length > 0 && (
-            <div className="stats-panel">
-              <div className="stats-panel-header">
-                <span className="stats-section-label">TOP COUNTRIES</span>
-                <span className="stats-panel-total">from smart-link referers</span>
-              </div>
-              <ol className="stats-top-list">
-                {countries.map((c) => (
-                  <li key={c.country} className="stats-top-row stats-top-row--country">
-                    <span className="stats-top-name">{c.country}</span>
-                    <span className="stats-eng-bar-wrap stats-eng-bar-wrap--inline">
-                      <span
-                        className="stats-eng-bar stats-eng-bar--cyan"
-                        style={{
-                          ['--w' as string]: `${Math.round((c.count / maxCountry) * 100)}%`,
-                        }}
-                      />
-                    </span>
-                    <span className="stats-top-value stats-top-value--cyan">{c.count}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-        </div>
-      )}
 
       <div className="stats-panel">
         <div className="stats-panel-header">

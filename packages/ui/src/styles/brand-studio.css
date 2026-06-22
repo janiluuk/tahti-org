@@ -1925,6 +1925,34 @@
   color: var(--muted);
 }
 
+[data-tahti-ui='studio'] .stats-hero {
+  text-align: center;
+  padding: var(--space-6) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+[data-tahti-ui='studio'] .stats-hero__value {
+  font-size: 64px;
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+  color: var(--stat-plays);
+  font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+}
+
+[data-tahti-ui='studio'] .stats-hero__label {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+[data-tahti-ui='studio'] .stats-hero__sentence {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-body);
+  color: var(--text);
+}
+
 [data-tahti-ui='studio'] .stats-panel {
   background: var(--card2);
   border: 1px solid var(--border);
