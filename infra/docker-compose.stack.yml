@@ -154,6 +154,7 @@ services:
         mc mb --ignore-existing local/recordings &&
         mc anonymous set download local/covers &&
         mc anonymous set download local/hls-live &&
+        mc anonymous set download local/tahti/avatars &&
         echo 'MinIO buckets ready'
       "
     restart: "no"
