@@ -191,7 +191,7 @@ async function main() {
     }
 
     const dash = await ctx.newPage()
-    const dashRes = await dash.goto(`${APP}/dashboard#releases`, {
+    const dashRes = await dash.goto(`${APP}/dashboard/releases`, {
       waitUntil: 'load',
       timeout: 45_000,
     })

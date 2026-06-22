@@ -11,7 +11,6 @@ export type DashboardTabsProps = {
   hasChannel: boolean
   overview: ReactNode
   broadcast?: ReactNode
-  catalog?: ReactNode
   audience?: ReactNode
 }
 
@@ -32,19 +31,12 @@ function ChannelRequiredPanel({ title, description }: { title: string; descripti
 }
 
 /** Client boundary for tabbed dashboard — compound StudioTabs must not cross RSC from @tahti/ui. */
-export function DashboardTabs({
-  hasChannel,
-  overview,
-  broadcast,
-  catalog,
-  audience,
-}: DashboardTabsProps) {
+export function DashboardTabs({ hasChannel, overview, broadcast, audience }: DashboardTabsProps) {
   return (
     <StudioTabs defaultTab="overview" syncHash>
       <StudioTabs.List>
         <StudioTabs.Trigger value="overview">Overview</StudioTabs.Trigger>
         <StudioTabs.Trigger value="broadcast">Broadcast</StudioTabs.Trigger>
-        <StudioTabs.Trigger value="catalog">Catalog</StudioTabs.Trigger>
         <StudioTabs.Trigger value="audience">Audience</StudioTabs.Trigger>
       </StudioTabs.List>
 
@@ -59,17 +51,6 @@ export function DashboardTabs({
           <ChannelRequiredPanel
             title="Broadcast"
             description="Stream keys, channel appearance, and distribution."
-          />
-        )}
-      </StudioTabs.Panel>
-
-      <StudioTabs.Panel value="catalog" id="studio-tabpanel-catalog">
-        {hasChannel && catalog ? (
-          catalog
-        ) : (
-          <ChannelRequiredPanel
-            title="Archive & releases"
-            description="Upload sets, manage releases, and smart links."
           />
         )}
       </StudioTabs.Panel>

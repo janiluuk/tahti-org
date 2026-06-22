@@ -3,7 +3,7 @@
 
 import type { SidebarNavIcon } from './SidebarNav'
 
-export type DashboardTabId = 'overview' | 'broadcast' | 'catalog' | 'audience'
+export type DashboardTabId = 'overview' | 'broadcast' | 'audience'
 
 export type DashboardSectionKey =
   | 'overview'
@@ -30,9 +30,10 @@ export type DashboardNavDefinition = {
 
 export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabId> = {
   overview: 'overview',
-  archive: 'catalog',
-  releases: 'catalog',
-  collections: 'catalog',
+  // Archive, releases, and collections all moved to dedicated routes — old in-page anchors fall back to overview.
+  archive: 'overview',
+  releases: 'overview',
+  collections: 'overview',
   newsletter: 'audience',
   broadcast: 'broadcast',
   // Account settings moved to /dashboard/settings/account — old in-page anchor falls back to overview.
@@ -121,11 +122,10 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   },
   { href: '/dashboard/stats', label: 'Stats', icon: 'stats', isRoute: true },
   {
-    href: '/dashboard#archive',
+    href: '/dashboard/archive',
     label: 'Archive',
     icon: 'archive',
-    hash: '#archive',
-    sectionKey: 'archive',
+    isRoute: true,
     requiresChannel: true,
   },
   { href: '/dashboard/upload', label: 'Upload', icon: 'upload', isRoute: true },
@@ -140,11 +140,10 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     requiresChannel: true,
   },
   {
-    href: '/dashboard#releases',
+    href: '/dashboard/releases',
     label: 'Smart Links',
     icon: 'links',
-    hash: '#releases',
-    sectionKey: 'releases',
+    isRoute: true,
     requiresChannel: true,
   },
   {

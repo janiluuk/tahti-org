@@ -157,7 +157,7 @@ export function DashboardOverview({
         <div className="db-recent-archive__header">
           <h2 className="db-recent-archive__heading">Recent broadcasts</h2>
           {archiveItems.length > 0 ? (
-            <NextLink href="/dashboard#archive" className="db-recent-archive__view-all">
+            <NextLink href="/dashboard/archive" className="db-recent-archive__view-all">
               View all →
             </NextLink>
           ) : null}
@@ -195,7 +195,7 @@ export function DashboardOverview({
                     </div>
                   </div>
                   <div className="db-recent-archive__actions">
-                    <NextLink href="/dashboard#archive" className="db-recent-archive__link">
+                    <NextLink href="/dashboard/archive" className="db-recent-archive__link">
                       Polish & publish →
                     </NextLink>
                   </div>

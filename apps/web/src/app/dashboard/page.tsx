@@ -2,16 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { redirect } from 'next/navigation'
-import dynamic from 'next/dynamic'
-import UploadForm from './upload-form'
 import {
   BroadcastSettingsSections,
   ChannelDesignLinkPanel,
 } from './broadcast/_broadcast-settings-sections'
 import type { ModeratorRow } from './moderator-actions'
 import NewsletterPanel from './newsletter-panel'
-import ReleasesPanel from './releases-panel'
-import CollectionsPanel from './collections-panel'
 import type { ProgrammeItemRow } from './programme-actions'
 import { fetchMixcloudStatus } from './mixcloud-actions'
 import { PageShell, Panel, SidebarNavIconSvg } from '@tahti/ui'
@@ -19,28 +15,12 @@ import NextLink from 'next/link'
 import { DashboardTabs } from './dashboard-tabs'
 import { DashboardOverview } from './_dashboard-overview'
 import { StorageBar } from './_storage-bar'
-import type {
-  CollectionGalleryMode,
-  CollectionTextLayerAlignment,
-  CollectionTextLayerMode,
-} from '@tahti/shared'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
-
-const ArchiveEditor = dynamic(() => import('./archive-editor'))
 
 interface ModeratedChannel {
   slug: string
   displayName: string
   isOwner: boolean
-}
-
-interface ArchiveItem {
-  id: string
-  title: string
-  description: string | null
-  durationSec: number | null
-  audioUrl: string | null
-  createdAt: string
 }
 
 export default async function DashboardPage() {
@@ -120,16 +100,6 @@ export default async function DashboardPage() {
     peakDailyListeners: number
     daily: Array<{ date: string; liveSeconds: number; broadcastCount: number; listeners: number }>
   } | null = null
-  let releases: Array<{
-    id: string
-    title: string
-    type: string
-    state: string
-    releaseDate: string
-    smartLinkSlug: string
-    smartLinkTargets: Record<string, string> | null
-    _count: { tracks: number }
-  }> = []
   let fanTiers: Array<{
     id: string
     name: string
@@ -141,31 +111,9 @@ export default async function DashboardPage() {
   let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0 }
   let channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] } | null =
     null
-  let archiveItems: ArchiveItem[] = []
   let archiveItemsForEdit: Array<
     Record<string, unknown> & { id: string; title: string; status: string }
   > = []
-  let collections: Array<{
-    id: string
-    slug: string
-    name: string
-    type: string
-    isPublic: boolean
-    coverUrl?: string | null
-    galleryMode?: CollectionGalleryMode
-    slideshowImages?: string[]
-    videoBackgroundUrl?: string | null
-    textLayerMode?: CollectionTextLayerMode
-    textLayerText?: string
-    textLayerAlign?: CollectionTextLayerAlignment
-    _count?: { items: number }
-    items?: Array<{
-      id: string
-      position: number
-      archiveItem: { id: string; title: string } | null
-      release: { id: string; title: string } | null
-    }>
-  }> = []
   type NewsletterStats = {
     total: number
     confirmed: number
@@ -200,13 +148,10 @@ export default async function DashboardPage() {
       membershipRes,
       broadcastUsageRes,
       funnelRes,
-      releasesRes,
       fanTiersRes,
       fanPayoutsRes,
       programmeRes,
-      channelItemsRes,
       archiveRes,
-      collectionsRes,
       scheduleRes,
       newsletterPair,
     ] = await Promise.all([
@@ -216,13 +161,10 @@ export default async function DashboardPage() {
       get('/api/me/membership'),
       slug ? get('/api/me/broadcast-usage') : null,
       slug ? get('/api/me/channel-funnel-stats') : null,
-      get('/api/me/releases'),
       slug ? get('/api/me/fan-tiers') : null,
       slug ? get('/api/me/fan-sub-payouts') : null,
       slug ? get('/api/me/channel/programme') : null,
-      slug ? fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }) : null,
       slug ? get('/api/me/archive') : null,
-      get('/api/me/collections?expand=items'),
       slug ? get('/api/me/channel/schedule') : null,
       slug
         ? Promise.all([get('/api/me/newsletter/subscribers'), get('/api/me/newsletter/drafts')])
@@ -248,15 +190,12 @@ export default async function DashboardPage() {
       channelLiveStats = funnel.live
       channelEgress = funnel.egress
     }
-    if (releasesRes.ok) releases = (await releasesRes.json()) as typeof releases
     if (fanTiersRes?.ok) fanTiers = (await fanTiersRes.json()) as typeof fanTiers
     if (fanPayoutsRes?.ok) fanPayoutStats = (await fanPayoutsRes.json()) as typeof fanPayoutStats
     if (programmeRes?.ok) channelProgramme = (await programmeRes.json()) as typeof channelProgramme
-    if (channelItemsRes?.ok) archiveItems = (await channelItemsRes.json()) as ArchiveItem[]
     if (archiveRes?.ok) {
       archiveItemsForEdit = (await archiveRes.json()) as typeof archiveItemsForEdit
     }
-    if (collectionsRes.ok) collections = (await collectionsRes.json()) as typeof collections
     if (scheduleRes?.ok) channelSchedule = (await scheduleRes.json()) as typeof channelSchedule
     if (newsletterPair) {
       const [statsRes, draftsRes] = newsletterPair
@@ -272,10 +211,6 @@ export default async function DashboardPage() {
   if (user.channel && !channelProgramme) {
     channelProgramme = { fallbackMode: 'shuffle', items: [] }
   }
-
-  const publishedReleases = releases
-    .filter((r) => r.state === 'PUBLISHED')
-    .map((r) => ({ id: r.id, title: r.title }))
 
   const hasFanNewsletterPerk = fanTiers.some(
     (t) => t.active && t.perks.some((p) => p === 'FAN_NEWSLETTER'),
@@ -473,68 +408,6 @@ export default async function DashboardPage() {
                 apiUrl={apiUrl}
               />
             </div>
-          ) : undefined
-        }
-        catalog={
-          user.channel ? (
-            <>
-              <section id="releases" className="studio-catalog-section studio-section-anchor">
-                <ReleasesPanel initial={releases} username={user.username} />
-              </section>
-              <section id="collections" className="studio-catalog-section studio-section-anchor">
-                <CollectionsPanel
-                  initial={collections}
-                  username={user.username}
-                  apiUrl={apiUrl}
-                  archiveItems={archiveItems.map((a) => ({ id: a.id, title: a.title }))}
-                  publishedReleases={publishedReleases}
-                />
-              </section>
-              <section id="archive" className="studio-catalog-section studio-section-anchor">
-                <Panel
-                  title="Archive"
-                  headerTight
-                  description="Upload with genre, type, BPM, license, and access options."
-                  className="import-page__panel"
-                  flushTop
-                >
-                  <UploadForm />
-                  {archiveItemsForEdit.length === 0 ? (
-                    <div className="studio-empty-card studio-mt-sm studio-mb-0">
-                      <p className="studio-empty-card__text">No archive items yet.</p>
-                      <p className="studio-empty-card__hint">
-                        Upload a set above — it will appear on your channel once published.
-                      </p>
-                    </div>
-                  ) : (
-                    <ul className="studio-list studio-mt-sm">
-                      {archiveItemsForEdit.map((item) => {
-                        const play = archiveItems.find((a) => a.id === item.id)
-                        return (
-                          <li key={item.id}>
-                            <ArchiveEditor
-                              item={item}
-                              mixcloudConnected={mixcloudStatus.connected}
-                              mixcloudConfigured={mixcloudStatus.configured}
-                              apiUrl={apiUrl}
-                              channelSlug={user.channel?.slug ?? null}
-                            />
-                            {play?.audioUrl && (
-                              <audio
-                                controls
-                                src={play.audioUrl}
-                                className="studio-audio-full"
-                                data-testid="dashboard-archive-player"
-                              />
-                            )}
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
-                </Panel>
-              </section>
-            </>
           ) : undefined
         }
         audience={

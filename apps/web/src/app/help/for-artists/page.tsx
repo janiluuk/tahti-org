@@ -51,7 +51,7 @@ export default function ForArtistsHelpPage() {
         <li>Add title, genre, and artwork in the archive editor, then publish to your channel.</li>
         <li>
           Optional: group tracks in <NextLink href="/dashboard/collections">collections</NextLink>{' '}
-          or create a <NextLink href="/dashboard#releases">smart link</NextLink> for a release.
+          or create a <NextLink href="/dashboard/releases">smart link</NextLink> for a release.
         </li>
       </ol>
 
