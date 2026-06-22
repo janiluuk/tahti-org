@@ -199,6 +199,13 @@ export const StreamKeyRotateResponseSchema = z.object({
   rtmpStreamKey: z.string(),
 })
 
+export const StreamSignalStatusResponseSchema = z.object({
+  connected: z.boolean(),
+  codec: z.string().nullable(),
+  bitrateKbps: z.number().nullable(),
+  listeners: z.number().nullable(),
+})
+
 export const IcecastPassRotateResponseSchema = z.object({
   liveSourcePass: z.string(),
 })

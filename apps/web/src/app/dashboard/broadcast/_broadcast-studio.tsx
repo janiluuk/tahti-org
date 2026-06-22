@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BroadcastStatusBar, Panel, Text } from '@tahti/ui'
+import { BroadcastStatusBar, Panel, StatusPill, Text } from '@tahti/ui'
 import HlsPlayer from '@/app/c/[slug]/hls-player'
 import StreamSettingsPanel from '../stream-settings'
 import BroadcastUsageBanner, { type BroadcastUsage } from '../broadcast-usage'
@@ -19,6 +19,13 @@ interface StreamSettings {
   hlsUrl: string
 }
 
+interface SignalStatus {
+  connected: boolean
+  codec: string | null
+  bitrateKbps: number | null
+  listeners: number | null
+}
+
 type LiveStatus = 'offline' | 'preview' | 'live'
 
 function statusFromState(state: string | undefined): LiveStatus {
@@ -28,6 +35,13 @@ function statusFromState(state: string | undefined): LiveStatus {
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
+const WIZARD_STEPS = [
+  { num: 1, label: 'Credentials' },
+  { num: 2, label: 'Test signal' },
+  { num: 3, label: 'Pre-flight' },
+  { num: 4, label: 'Go live' },
+] as const
 
 export function BroadcastStudio({
   channelSlug,
@@ -41,7 +55,10 @@ export function BroadcastStudio({
   broadcastUsage: BroadcastUsage | null
 }) {
   const router = useRouter()
-  const [status, setStatus] = useState<LiveStatus>(statusFromState(initialState))
+  const initialStatus = statusFromState(initialState)
+  const [status, setStatus] = useState<LiveStatus>(initialStatus)
+  const [activeStep, setActiveStep] = useState(initialStatus === 'offline' ? 1 : 4)
+  const [signal, setSignal] = useState<SignalStatus | null>(null)
 
   useEffect(() => {
     setStatus(statusFromState(initialState))
@@ -57,6 +74,7 @@ export function BroadcastStudio({
         const next = statusFromState(me.channel?.state)
         if (next !== status) {
           setStatus(next)
+          if (next === 'preview' && activeStep < 2) setActiveStep(2)
           router.refresh()
         }
       } catch {
@@ -64,10 +82,38 @@ export function BroadcastStudio({
       }
     }, 4000)
     return () => window.clearInterval(id)
-  }, [status, router])
+  }, [status, activeStep, router])
+
+  // Step 2 (test signal) polls Icecast's own status JSON for live confirmation.
+  useEffect(() => {
+    if (activeStep !== 2 || status === 'live') return
+    let cancelled = false
+    async function poll() {
+      try {
+        const res = await fetch(`${API_BASE}/api/me/stream-settings/status`, {
+          credentials: 'include',
+        })
+        if (res.ok && !cancelled) setSignal((await res.json()) as SignalStatus)
+      } catch {
+        // ignore polling errors
+      }
+    }
+    poll()
+    const id = window.setInterval(poll, 5000)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [activeStep, status])
 
   const isLive = status === 'live'
   const isPreview = status === 'preview'
+  const signalConfirmed = isLive || isPreview || Boolean(signal?.connected)
+  const maxUnlockedStep = status === 'offline' ? (signalConfirmed ? 2 : 1) : 4
+
+  function goToStep(step: number) {
+    if (step <= maxUnlockedStep) setActiveStep(step)
+  }
 
   return (
     <div className="broadcast-studio">
@@ -95,54 +141,163 @@ export function BroadcastStudio({
       ) : (
         <BroadcastStatusBar
           state="offline"
-          offlineMessage="Offline — paste credentials below, then start streaming in OBS or Mixxx to enter preview."
+          offlineMessage="Offline — work through the steps below, then start streaming in OBS or Mixxx."
         />
       )}
 
       <BroadcastUsageBanner usage={broadcastUsage} />
 
-      <StreamSettingsPanel initial={streamSettings} isLive={isLive || isPreview} />
-
-      <Panel
-        title="Test your signal"
-        headerTight
-        description={
-          isLive
-            ? 'You are on air — this is exactly what listeners hear.'
-            : 'Start streaming with the credentials above, then confirm it here before you go live.'
-        }
-      >
-        <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
-        <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
-          {isLive
-            ? 'You are on air. Open your public channel when you are ready for listeners.'
-            : isPreview
-              ? 'Audio is flowing and only you can hear it. Click Go live above when you are ready for listeners.'
-              : 'Nothing yet — start streaming in OBS, Mixxx, or Traktor with the credentials above.'}
-        </Text>
-        <Link href={`/c/${channelSlug}`} className="broadcast-studio__public-link studio-link">
-          Open public channel →
-        </Link>
-      </Panel>
-
-      <Panel title="Go live checklist" headerTight>
-        <ol className="broadcast-studio__steps">
-          <li>Copy RTMP or Icecast credentials into OBS, Streamlabs, Mixxx, or Traktor.</li>
-          <li>Click Start Streaming in your software.</li>
-          <li>Confirm audio in the preview player above.</li>
-          <li>
-            Share your channel:{' '}
-            <Link href={`/c/${channelSlug}`} className="studio-link">
-              tahti.live/c/{channelSlug}
-            </Link>
-          </li>
+      <nav className="broadcast-wizard" aria-label="Broadcasting setup steps">
+        <ol className="broadcast-wizard__list">
+          {WIZARD_STEPS.map((step, index) => {
+            const unlocked = step.num <= maxUnlockedStep
+            const active = step.num === activeStep
+            const stepLabel = `${step.num} · ${step.label.toUpperCase()}`
+            return (
+              <li key={step.num} className="broadcast-wizard__step">
+                {index > 0 && <span className="broadcast-wizard__arrow">→</span>}
+                {active ? (
+                  <StatusPill tone="cyan">{stepLabel}</StatusPill>
+                ) : unlocked ? (
+                  <button
+                    type="button"
+                    className="broadcast-wizard__link"
+                    onClick={() => goToStep(step.num)}
+                  >
+                    {stepLabel}
+                  </button>
+                ) : (
+                  <span className="broadcast-wizard__link broadcast-wizard__link--locked">
+                    {stepLabel}
+                  </span>
+                )}
+              </li>
+            )
+          })}
         </ol>
-        <Text as="p" tone="muted" size="sm" className="broadcast-studio__steps-foot">
-          <Link href="/help/broadcast">Broadcast setup guides</Link>
-          {' · '}
-          <Link href="/help/multistream">Multistream to YouTube / Twitch</Link>
-        </Text>
-      </Panel>
+      </nav>
+
+      {activeStep === 1 && (
+        <>
+          <StreamSettingsPanel initial={streamSettings} isLive={isLive || isPreview} />
+          <div className="studio-actions">
+            <button
+              type="button"
+              className="ui-btn ui-btn--primary"
+              onClick={() => setActiveStep(2)}
+            >
+              Continue to test signal →
+            </button>
+          </div>
+        </>
+      )}
+
+      {activeStep === 2 && (
+        <Panel
+          title="Test your signal"
+          headerTight
+          description="Start streaming with the credentials from step 1, then confirm it here before you go live."
+        >
+          <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
+          {signal?.connected ? (
+            <p className="studio-notice studio-notice--success">
+              ✓ Signal received — {signal.codec ?? 'unknown codec'}
+              {signal.bitrateKbps ? ` · ${signal.bitrateKbps} kbps` : ''}
+            </p>
+          ) : (
+            <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
+              Waiting for signal — start streaming in OBS, Mixxx, or Traktor with the credentials
+              from step 1.
+            </Text>
+          )}
+          <div className="studio-actions">
+            <button type="button" className="ui-btn ui-btn--ghost" onClick={() => setActiveStep(1)}>
+              ← Back to credentials
+            </button>
+            <button
+              type="button"
+              className="ui-btn ui-btn--primary"
+              disabled={!signalConfirmed}
+              onClick={() => setActiveStep(3)}
+            >
+              Continue to pre-flight →
+            </button>
+          </div>
+        </Panel>
+      )}
+
+      {activeStep === 3 && (
+        <Panel
+          title="Pre-flight"
+          headerTight
+          description="Listen to your own stream at full quality, then double-check distribution before you go live."
+        >
+          <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview (full quality)" />
+          <ol className="broadcast-studio__steps">
+            <li>Confirm levels and mix sound right in the player above.</li>
+            <li>
+              Set up simulcast to YouTube/Twitch if you want it:{' '}
+              <Link href="/dashboard/settings/multistream" className="studio-link">
+                Multistream settings →
+              </Link>
+            </li>
+            <li>
+              Your channel:{' '}
+              <Link href={`/c/${channelSlug}`} className="studio-link">
+                tahti.live/c/{channelSlug}
+              </Link>
+            </li>
+          </ol>
+          <div className="studio-actions">
+            <button type="button" className="ui-btn ui-btn--ghost" onClick={() => setActiveStep(2)}>
+              ← Back to test signal
+            </button>
+            <button
+              type="button"
+              className="ui-btn ui-btn--primary"
+              onClick={() => setActiveStep(4)}
+            >
+              Continue to go live →
+            </button>
+          </div>
+        </Panel>
+      )}
+
+      {activeStep === 4 && (
+        <Panel title="Go live" headerTight>
+          {isLive ? (
+            <Text as="p" tone="muted" size="sm">
+              You are on air — this is exactly what listeners hear.
+            </Text>
+          ) : isPreview ? (
+            <>
+              <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
+                Audio is flowing and only you can hear it. Click Go live when you are ready for
+                listeners.
+              </Text>
+              <div className="studio-actions">
+                <button
+                  type="button"
+                  className="ui-btn ui-btn--ghost"
+                  onClick={() => setActiveStep(3)}
+                >
+                  ← Back to pre-flight
+                </button>
+                <GoLiveBtn />
+              </div>
+            </>
+          ) : (
+            <Text as="p" tone="muted" size="sm">
+              Start streaming in step 1 to unlock going live.
+            </Text>
+          )}
+          <Text as="p" tone="muted" size="sm" className="broadcast-studio__steps-foot">
+            <Link href="/help/broadcast">Broadcast setup guides</Link>
+            {' · '}
+            <Link href="/help/multistream">Multistream to YouTube / Twitch</Link>
+          </Text>
+        </Panel>
+      )}
     </div>
   )
 }
