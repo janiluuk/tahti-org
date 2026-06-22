@@ -501,6 +501,13 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
 #mockup-progress-ring{display:flex;justify-content:center;margin-top:20px}
 #slide-ring-fill{transform-origin:50% 50%;transform:rotate(-90deg)}
 
+/* ===== AUTO-SCROLL HINT RING ===== */
+#auto-scroll-hint{position:fixed;right:22px;bottom:22px;z-index:40;opacity:0;pointer-events:none;transition:opacity 0.4s ease,transform 0.4s ease;transform:scale(0.85)}
+#auto-scroll-hint.visible{opacity:0.45}
+#auto-scroll-hint.pulse{opacity:0.9;transform:scale(1.08)}
+#auto-scroll-ring-fill{transform-origin:50% 50%;transform:rotate(-90deg);transition:stroke-dashoffset 0.1s linear}
+@media (max-width:720px){#auto-scroll-hint{right:14px;bottom:14px}}
+
 /* ===== AUDIO EDITOR SCREENSHOT ===== */
 .ae-screenshot{display:flex;justify-content:center}
 .ae-screenshot-img{width:100%;max-width:631px;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,0.6)}
@@ -1893,6 +1900,15 @@ section{position:relative;z-index:10;min-height:100vh;display:flex;align-items:c
   </div>
 </div>
 
+<!-- AUTO-SCROLL HINT — fills as the page nears its next idle auto-scroll -->
+<div id="auto-scroll-hint" aria-hidden="true">
+  <svg viewBox="0 0 32 32" width="26" height="26">
+    <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2.5"/>
+    <circle id="auto-scroll-ring-fill" cx="16" cy="16" r="12" fill="none" stroke="var(--amber)" stroke-width="2.5"
+            stroke-dasharray="75.4" stroke-dashoffset="75.4" stroke-linecap="round"/>
+  </svg>
+</div>
+
 <script>
 // ===== UNMUTE BUTTON =====
 (function() {
@@ -2585,9 +2601,24 @@ window.audioReactive = (function() {
 (function() {
   const sections = ['hero','problem','problem2','one-url','broadcast','community','profile','tools','distribution','archive','visual','revenue','membership','discovery','pricing','open-source','mockups','mockup-profile','mockup-smartlink','mockup-analytics','cta'];
   let currentIdx = 0;
-  let lastActivity = Date.now();
   const INTERVAL = 20000;
   let autoScrollTimer;
+  let rafId = null;
+  let t0 = null;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hint = document.getElementById('auto-scroll-hint');
+  const ring = document.getElementById('auto-scroll-ring-fill');
+  const CIRC = 75.4;
+
+  function animateHint(ts) {
+    if (t0 === null) t0 = ts;
+    const frac = Math.min((ts - t0) / INTERVAL, 1);
+    if (ring) ring.setAttribute('stroke-dashoffset', (CIRC * (1 - frac)).toFixed(2));
+    // Only fade the hint in for the back half of the wait — a constant ring would be noise, not a hint.
+    if (hint) hint.classList.toggle('visible', frac > 0.5);
+    if (frac < 1) rafId = requestAnimationFrame(animateHint);
+  }
 
   function getCurrentSectionIndex() {
     const scrollPos = window.scrollY + window.innerHeight / 2;
@@ -2604,6 +2635,10 @@ window.audioReactive = (function() {
   }
 
   function scrollToNext() {
+    if (hint) {
+      hint.classList.add('pulse');
+      setTimeout(() => hint.classList.remove('pulse', 'visible'), 600);
+    }
     currentIdx = getCurrentSectionIndex();
     const nextIdx = (currentIdx + 1) % sections.length;
     const nextEl = document.getElementById(sections[nextIdx]);
@@ -2614,9 +2649,13 @@ window.audioReactive = (function() {
   }
 
   function resetTimer() {
-    lastActivity = Date.now();
     clearTimeout(autoScrollTimer);
+    if (rafId) cancelAnimationFrame(rafId);
+    t0 = null;
+    if (ring) ring.setAttribute('stroke-dashoffset', CIRC);
+    if (hint) hint.classList.remove('visible', 'pulse');
     autoScrollTimer = setTimeout(scrollToNext, INTERVAL);
+    if (!reduceMotion) rafId = requestAnimationFrame(animateHint);
   }
 
   const events = ['scroll', 'mousedown', 'touchstart', 'keydown', 'wheel', 'click'];
@@ -2624,7 +2663,7 @@ window.audioReactive = (function() {
     window.addEventListener(evt, resetTimer, { passive: true });
   });
 
-  autoScrollTimer = setTimeout(scrollToNext, INTERVAL);
+  resetTimer();
 })();
 
 // ===== ANALYTICS BAR CHART =====
