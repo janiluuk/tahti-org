@@ -13,7 +13,7 @@ export default function UpgradeCta({ show }: { show: boolean }) {
         remove the weekly hour cap — €40/year, tax-deductible for registered professionals in
         Finland.
       </p>
-      <Link href="/dashboard#membership" className="studio-link-cta">
+      <Link href="/dashboard/settings/account" className="studio-link-cta">
         View membership →
       </Link>
       <p className="studio-text-sm studio-text-muted studio-m-0 studio-mt-sm">

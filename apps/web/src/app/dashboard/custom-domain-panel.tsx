@@ -38,7 +38,7 @@ export function CustomDomainPanel({
       <Panel title="Custom domain" headerTight>
         <p className="studio-help">
           Custom domains are available with active Tahti ry membership (€40/year).{' '}
-          <Link href="/dashboard#membership">View membership →</Link>
+          <Link href="/dashboard/settings/account">View membership →</Link>
         </p>
       </Panel>
     )

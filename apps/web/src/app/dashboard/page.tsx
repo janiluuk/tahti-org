@@ -9,24 +9,15 @@ import {
   ChannelDesignLinkPanel,
 } from './broadcast/_broadcast-settings-sections'
 import type { ModeratorRow } from './moderator-actions'
-import FanSubscriptionsPanel from './fan-subscriptions'
 import NewsletterPanel from './newsletter-panel'
 import ReleasesPanel from './releases-panel'
 import CollectionsPanel from './collections-panel'
 import type { ProgrammeItemRow } from './programme-actions'
-import MembershipPanel from './membership-panel'
-import PrivacyPanel from './privacy-panel'
-import SocialPromoPanel from './social-promo-panel'
-import { ImportConnectionsPanel } from './_import-connections-panel'
-import type { SocialSettings } from './social-actions'
-import { CustomDomainPanel } from './custom-domain-panel'
 import { fetchMixcloudStatus } from './mixcloud-actions'
-import { MentionsPanel } from './mentions-panel'
 import { PageShell, Panel, SidebarNavIconSvg } from '@tahti/ui'
 import NextLink from 'next/link'
 import { DashboardTabs } from './dashboard-tabs'
 import { DashboardOverview } from './_dashboard-overview'
-import { AccountSettings } from './_account-settings'
 import { StorageBar } from './_storage-bar'
 import type {
   CollectionGalleryMode,
@@ -96,7 +87,6 @@ export default async function DashboardPage() {
   let moderators: ModeratorRow[] = []
   let moderatedChannels: ModeratedChannel[] = []
   let membershipInfo: MembershipInfo | null = null
-  let socialSettings: SocialSettings | null = null
   let broadcastUsage: BroadcastUsageInfo | null = null
   let downloadGateSummary: {
     artistFollowerCount: number
@@ -148,17 +138,6 @@ export default async function DashboardPage() {
     perks: string[]
     active: boolean
   }> = []
-  let fanConnect: {
-    stripeConfigured: boolean
-    paymentsReady: boolean
-    chargesEnabled: boolean
-    detailsSubmitted: boolean
-  } = {
-    stripeConfigured: false,
-    paymentsReady: true,
-    chargesEnabled: true,
-    detailsSubmitted: true,
-  }
   let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0 }
   let channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] } | null =
     null
@@ -203,23 +182,16 @@ export default async function DashboardPage() {
     nextBroadcastAt: null,
     nextBroadcastNote: null,
   }
-  type ImportConnectStatus = { connected: boolean; configured: boolean }
-  let googleDriveImport: ImportConnectStatus = { connected: false, configured: false }
-  let bandcampImport: ImportConnectStatus = { connected: false, configured: false }
-  let soundcloudImport: ImportConnectStatus = { connected: false, configured: false }
-
   try {
     const [
       announcementsRes,
       moderatorsRes,
       moderatedRes,
       membershipRes,
-      socialRes,
       broadcastUsageRes,
       funnelRes,
       releasesRes,
       fanTiersRes,
-      fanConnectRes,
       fanPayoutsRes,
       programmeRes,
       channelItemsRes,
@@ -227,20 +199,15 @@ export default async function DashboardPage() {
       collectionsRes,
       scheduleRes,
       newsletterPair,
-      googleDriveRes,
-      bandcampRes,
-      soundcloudImportRes,
     ] = await Promise.all([
       slug ? fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }) : null,
       slug ? get('/api/me/channel/moderators') : null,
       get('/api/me/moderate'),
       get('/api/me/membership'),
-      get('/api/me/social'),
       slug ? get('/api/me/broadcast-usage') : null,
       slug ? get('/api/me/channel-funnel-stats') : null,
       get('/api/me/releases'),
       slug ? get('/api/me/fan-tiers') : null,
-      slug ? get('/api/me/fan-subs/connect') : null,
       slug ? get('/api/me/fan-sub-payouts') : null,
       slug ? get('/api/me/channel/programme') : null,
       slug ? fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }) : null,
@@ -250,9 +217,6 @@ export default async function DashboardPage() {
       slug
         ? Promise.all([get('/api/me/newsletter/subscribers'), get('/api/me/newsletter/drafts')])
         : null,
-      get('/api/me/google-drive'),
-      get('/api/me/bandcamp'),
-      get('/api/me/soundcloud'),
     ])
 
     if (announcementsRes?.ok) {
@@ -261,7 +225,6 @@ export default async function DashboardPage() {
     if (moderatorsRes?.ok) moderators = (await moderatorsRes.json()) as ModeratorRow[]
     if (moderatedRes.ok) moderatedChannels = (await moderatedRes.json()) as ModeratedChannel[]
     if (membershipRes.ok) membershipInfo = (await membershipRes.json()) as MembershipInfo
-    if (socialRes.ok) socialSettings = (await socialRes.json()) as SocialSettings
     if (broadcastUsageRes?.ok) {
       broadcastUsage = (await broadcastUsageRes.json()) as BroadcastUsageInfo
     }
@@ -277,7 +240,6 @@ export default async function DashboardPage() {
     }
     if (releasesRes.ok) releases = (await releasesRes.json()) as typeof releases
     if (fanTiersRes?.ok) fanTiers = (await fanTiersRes.json()) as typeof fanTiers
-    if (fanConnectRes?.ok) fanConnect = (await fanConnectRes.json()) as typeof fanConnect
     if (fanPayoutsRes?.ok) fanPayoutStats = (await fanPayoutsRes.json()) as typeof fanPayoutStats
     if (programmeRes?.ok) channelProgramme = (await programmeRes.json()) as typeof channelProgramme
     if (channelItemsRes?.ok) archiveItems = (await channelItemsRes.json()) as ArchiveItem[]
@@ -290,11 +252,6 @@ export default async function DashboardPage() {
       const [statsRes, draftsRes] = newsletterPair
       if (statsRes.ok) newsletterStats = (await statsRes.json()) as NewsletterStats
       if (draftsRes.ok) newsletterDrafts = (await draftsRes.json()) as NewsletterDraft[]
-    }
-    if (googleDriveRes.ok) googleDriveImport = (await googleDriveRes.json()) as ImportConnectStatus
-    if (bandcampRes.ok) bandcampImport = (await bandcampRes.json()) as ImportConnectStatus
-    if (soundcloudImportRes.ok) {
-      soundcloudImport = (await soundcloudImportRes.json()) as ImportConnectStatus
     }
   } catch {
     // ignore — dashboard renders with partial data
@@ -572,13 +529,6 @@ export default async function DashboardPage() {
         audience={
           user.channel ? (
             <section id="newsletter" className="studio-section-anchor">
-              <FanSubscriptionsPanel
-                initial={fanTiers}
-                username={user.username}
-                apiUrl={apiUrl}
-                connect={fanConnect}
-                payoutStats={fanPayoutStats}
-              />
               <NewsletterPanel
                 initialStats={newsletterStats}
                 initialDrafts={newsletterDrafts}
@@ -588,68 +538,6 @@ export default async function DashboardPage() {
               />
             </section>
           ) : undefined
-        }
-        account={
-          <AccountSettings
-            email={user.email}
-            username={user.username}
-            membership={
-              membershipInfo ? (
-                <MembershipPanel
-                  status={membershipInfo.status}
-                  isMember={membershipInfo.isMember}
-                  memberNumber={membershipInfo.memberNumber}
-                  priceCents={membershipInfo.priceCents}
-                  emailVerified={membershipInfo.emailVerified}
-                  hasStripeSubscription={membershipInfo.hasStripeSubscription}
-                  renewalDueAt={membershipInfo.renewalDueAt}
-                  subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}
-                />
-              ) : null
-            }
-            social={
-              socialSettings ? <SocialPromoPanel initial={socialSettings} apiUrl={apiUrl} /> : null
-            }
-            importConnections={
-              <ImportConnectionsPanel
-                connections={[
-                  {
-                    id: 'google-drive',
-                    label: 'Google Drive',
-                    connected: googleDriveImport.connected,
-                    configured: googleDriveImport.configured,
-                    importHref: '/dashboard/upload/import/google-drive',
-                    disconnectPath: '/api/me/google-drive',
-                  },
-                  {
-                    id: 'bandcamp',
-                    label: 'Bandcamp',
-                    connected: bandcampImport.connected,
-                    configured: bandcampImport.configured,
-                    importHref: '/dashboard/upload/import/bandcamp',
-                    disconnectPath: '/api/me/bandcamp',
-                  },
-                  {
-                    id: 'soundcloud',
-                    label: 'SoundCloud',
-                    connected: soundcloudImport.connected,
-                    configured: soundcloudImport.configured,
-                    importHref: '/dashboard/upload/import/soundcloud',
-                    disconnectPath: '/api/me/soundcloud',
-                  },
-                ]}
-              />
-            }
-            mentions={<MentionsPanel />}
-            domain={
-              <CustomDomainPanel
-                initialDomain={user.channel?.customDomain ?? null}
-                initialVerified={user.channel?.customDomainVerified ?? false}
-                isPaid={user.tier !== 'FREE'}
-              />
-            }
-            privacy={<PrivacyPanel username={user.username} apiUrl={apiUrl} />}
-          />
         }
       />
     </PageShell>
