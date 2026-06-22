@@ -197,7 +197,7 @@ export default async function RevenuePage() {
             </DataRowList>
             <p className="admin-footnote">
               Subscriber CSV export + GDPR tools in{' '}
-              <Link href="/dashboard#audience">Settings → Fan subs</Link>.
+              <Link href="/dashboard/settings/fan-subs">Settings → Fan subs</Link>.
             </p>
           </div>
 
@@ -211,7 +211,7 @@ export default async function RevenuePage() {
           <p className="studio-empty-card__text">No fan subscriptions yet.</p>
           <p className="studio-empty-card__hint">
             Set up subscription tiers so fans can support you directly — head to{' '}
-            <Link href="/dashboard#audience">Settings → Fan subs</Link> to enable tiers.
+            <Link href="/dashboard/settings/fan-subs">Settings → Fan subs</Link> to enable tiers.
           </p>
         </div>
       )}
