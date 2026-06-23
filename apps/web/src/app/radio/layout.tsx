@@ -10,7 +10,7 @@ import '@tahti/ui/src/styles/shells.css'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { statusPageUrl } from '@/lib/status-page'
 
-/** Radio — shell-channel page content with dimmed gateway background. */
+/** Radio — shell-public page content with dimmed gateway background. */
 export default function RadioLayout({ children }: { children: ReactNode }) {
   return (
     <div data-tahti-ui="brand" className="brand-channel brand-channel--radio shell-public">
