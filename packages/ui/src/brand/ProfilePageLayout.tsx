@@ -51,6 +51,7 @@ type ProfileHeroProps = {
   countryCode?: string | null
   /** Resolved country name (e.g. "Finland"); falls back to the raw code if not supplied. */
   countryLabel?: string | null
+  pronouns?: string | null
   isLive?: boolean
   channelHref?: string | null
   subscribeHref: string
@@ -66,6 +67,7 @@ export function ProfileHero({
   avatarUrl: _avatarUrl,
   countryCode,
   countryLabel,
+  pronouns,
   isLive,
   channelHref,
   subscribeHref,
@@ -75,7 +77,10 @@ export function ProfileHero({
     <>
       <div className="prof-info-row">
         <div>
-          <div className="prof-name">{displayName}</div>
+          <div className="prof-name">
+            {displayName}
+            {pronouns && <span className="prof-pronouns">{pronouns}</span>}
+          </div>
           <div className="prof-meta-line">
             <span>@{username}</span>
             <span className="prof-country-flag">

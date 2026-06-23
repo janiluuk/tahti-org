@@ -27,6 +27,7 @@ export type ChannelEditorData = {
   displayName: string
   avatarUrl: string | null
   countryCode: string | null
+  pronouns: string | null
   bio: string
   genres: string[]
   links: ChannelLink[]
@@ -56,6 +57,7 @@ export function ChannelEditorSections({
   displayName,
   avatarUrl,
   countryCode,
+  pronouns,
   bio,
   genres,
   links,
@@ -67,6 +69,7 @@ export function ChannelEditorSections({
     displayName,
     avatarUrl,
     countryCode,
+    pronouns,
     bio,
     genres,
     links,
@@ -101,7 +104,7 @@ export function ChannelEditorSections({
             description="Who you are — shown at the top of your channel page."
           >
             <ChannelIdentityPanel
-              initial={{ displayName, avatarUrl, countryCode, bio, genres }}
+              initial={{ displayName, avatarUrl, countryCode, pronouns, bio, genres }}
               onDraftChange={(identity) => setDraft((d) => ({ ...d, ...identity }))}
             />
           </ChannelEditorSection>

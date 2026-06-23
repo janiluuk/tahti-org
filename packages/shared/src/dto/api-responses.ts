@@ -334,6 +334,7 @@ export const PublicChannelUserSchema = z.object({
   bio: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   countryCode: z.string().nullable().optional(),
+  pronouns: z.string().nullable().optional(),
   socialLinks: z.unknown().optional(),
 })
 
@@ -454,6 +455,8 @@ export const PublicProfileArtistSchema = z.object({
   socialLinks: z.unknown(),
   tipJarUrl: z.string().nullable(),
   tier: z.string(),
+  countryCode: z.string().nullable().optional(),
+  pronouns: z.string().nullable().optional(),
 })
 
 export const PublicProfileViewSchema = z.object({
@@ -645,6 +648,7 @@ export const ProfileFieldsSchema = z.object({
   avatarUrl: z.string().nullable(),
   tipJarUrl: z.string().nullable(),
   countryCode: z.string().nullable(),
+  pronouns: z.string().nullable(),
   socialLinks: z.unknown(),
   publicAttribution: z.boolean(),
 })

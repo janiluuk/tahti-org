@@ -49,12 +49,16 @@ describe('M12 — artist profile API', () => {
         displayName: 'Profile Artist',
         bio: 'Thanks @profile-mentioned for the collab',
         tipJarUrl: 'https://ko-fi.com/test',
+        countryCode: 'fi',
+        pronouns: 'they/them',
         publicAttribution: false,
       },
     })
     expect(res.statusCode).toBe(200)
     expect(res.json().displayName).toBe('Profile Artist')
     expect(res.json().publicAttribution).toBe(false)
+    expect(res.json().countryCode).toBe('FI')
+    expect(res.json().pronouns).toBe('they/them')
 
     await new Promise((r) => setTimeout(r, 500))
     const mention = await prisma.mention.findFirst({

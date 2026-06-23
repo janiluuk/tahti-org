@@ -40,6 +40,8 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
           socialLinks: true,
           tipJarUrl: true,
           tier: true,
+          countryCode: true,
+          pronouns: true,
           channel: { select: { slug: true, state: true } },
           releases: {
             where: { state: 'PUBLISHED' },
@@ -150,6 +152,8 @@ const publicProfileRoutes: FastifyPluginAsync = async (fastify) => {
           socialLinks: user.socialLinks,
           tipJarUrl: user.tipJarUrl,
           tier: user.tier,
+          countryCode: user.countryCode,
+          pronouns: user.pronouns,
         },
         channel: user.channel,
         releases,

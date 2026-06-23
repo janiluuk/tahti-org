@@ -489,6 +489,7 @@ model User {
   socialLinks           Json?
   tipJarUrl             String?
   countryCode           String?
+  pronouns              String?
   tier                  ArtistTier @default(FREE)
   isMember              Boolean    @default(false)
   isBoard               Boolean    @default(false)

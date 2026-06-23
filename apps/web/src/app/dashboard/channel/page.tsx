@@ -49,6 +49,7 @@ export default async function ChannelDesignPage() {
   let avatarUrl: string | null = null
   let bio = ''
   let countryCode: string | null = null
+  let pronouns: string | null = null
   let genres: string[] = []
   let links: Array<{ label: string; url: string }> = []
 
@@ -68,12 +69,14 @@ export default async function ChannelDesignPage() {
           avatarUrl: string | null
           bio: string | null
           countryCode: string | null
+          pronouns: string | null
           socialLinks: Record<string, string> | null
         }
       }
       avatarUrl = channelData.user.avatarUrl
       bio = channelData.user.bio ?? ''
       countryCode = channelData.user.countryCode
+      pronouns = channelData.user.pronouns
       const socialLinks = channelData.user.socialLinks ?? {}
       genres = socialLinks.genres
         ? socialLinks.genres
@@ -132,6 +135,7 @@ export default async function ChannelDesignPage() {
         displayName={user.displayName}
         avatarUrl={avatarUrl}
         countryCode={countryCode}
+        pronouns={pronouns}
         bio={bio}
         genres={genres}
         links={links}

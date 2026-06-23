@@ -10,6 +10,7 @@ export const ProfilePatchSchema = z
     avatarUrl: z.string().trim().max(2000).optional(),
     tipJarUrl: z.string().trim().max(2000).optional(),
     countryCode: z.string().length(2).toUpperCase().nullable().optional(),
+    pronouns: z.string().trim().max(40).nullable().optional(),
     socialLinks: z.record(z.string()).optional(),
     publicAttribution: z.boolean().optional(),
   })

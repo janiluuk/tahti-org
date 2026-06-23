@@ -28,6 +28,7 @@ export type ChannelPreviewDraft = {
   displayName: string
   avatarUrl: string | null
   countryCode: string | null
+  pronouns: string | null
   bio: string
   genres: string[]
   links: Array<{ label: string; url: string }>
@@ -82,6 +83,7 @@ export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
               <AvatarTile size="sm" name={draft.displayName} src={draft.avatarUrl} />
               <Heading level={2} className="ch-artist-name">
                 {draft.displayName}
+                {draft.pronouns && <span className="prof-pronouns">{draft.pronouns}</span>}
               </Heading>
             </Row>
             <Text size="sm" tone="muted" className="ch-artist-flag">
