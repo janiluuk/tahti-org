@@ -11,21 +11,57 @@
   REFERENCE: public channel page in LIVE state
   URL: https://dj-moonrise.tahti.eu  (or /c/dj-moonrise)
   Layout: 1fr content + FIXED 300px chat. Chat NEVER flexes.
+  Updated to match the real page (apps/web/src/app/c/[slug]/page.tsx),
+  which grew an artist-header (avatar/bio/tags/social links/CTA) and a
+  full archive section since the original v8 mock — both kept here.
+  Not depicted: FanChatPanel (a second, conditional chat panel shown
+  only to active fan-subscribers — rare enough not to be the default
+  view) and the optional newsletter signup block under the header.
 ================================================================ -->
 
-<nav class="topnav">
-  <div style="display:flex;align-items:center;gap:20px">
-    <div class="brand">TAHTI</div>
-    <span class="muted" style="font-size:12px">dj-moonrise</span>
-  </div>
+<header class="topnav">
+  <a href="#" style="display:flex;align-items:center;gap:4px;text-decoration:none">
+    <span class="brand">TAHTI</span>
+  </a>
+  <div class="muted" style="font-size:12px">@dj-moonrise</div>
   <div style="display:flex;align-items:center;gap:8px">
     <span class="pill pill--live"><span class="dot-live"></span>LIVE</span>
     <span class="faint" style="font-size:11px">247 listening</span>
   </div>
-</nav>
+</header>
 
 <div class="shell-channel">
   <main>
+    <!-- Artist header: avatar, name, pronouns, handle + country flag, bio,
+         genre tags, social links, support/profile CTA row. -->
+    <header class="artist-header">
+      <div style="display:flex;gap:14px;align-items:flex-start">
+        <div class="cover cover--sm" style="border-radius:50%"></div>
+        <div>
+          <h1 style="font-size:18px;font-weight:500;margin:0">
+            DJ Moonrise <span class="faint" style="font-size:13px;font-weight:400">she/her</span>
+          </h1>
+          <div class="muted" style="font-size:13px">
+            @dj-moonrise <span class="faint">🇫🇮 Finland</span>
+          </div>
+        </div>
+      </div>
+      <p class="artist-bio">Ambient/electronic producer based in Helsinki. Live sets every Thursday.</p>
+      <div class="tag-row">
+        <span class="tag-chip">Ambient</span>
+        <span class="tag-chip">Electronic</span>
+        <span class="tag-chip">Downtempo</span>
+      </div>
+      <div class="social-row">
+        <a href="#" class="social-link">↗ Instagram</a>
+        <a href="#" class="social-link">↗ Bandcamp</a>
+      </div>
+      <div class="artist-cta-row">
+        <a href="#" class="artist-sub-btn">Support directly</a>
+        <a href="#" class="artist-profile-link">View profile →</a>
+      </div>
+    </header>
+
     <!-- Player card -->
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;gap:14px;margin-bottom:12px">
@@ -56,27 +92,51 @@
       </div>
     </div>
 
-    <!-- Compact stats: 3 columns on channel page -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
-      <div class="stat-card">
-        <div class="stat-card__num stat-card__num--plays" style="font-size:22px">247</div>
-        <div class="stat-card__label">Listening now</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card__num stat-card__num--revenue" style="font-size:22px">1,247</div>
-        <div class="stat-card__label">Plays this month</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card__num stat-card__num--downloads" style="font-size:22px">89</div>
-        <div class="stat-card__label">Downloads</div>
-      </div>
-    </div>
+    <!-- No public play-count/listener/download stat tiles or a global subscribe/
+         download/share row below the player — that metric surface lives on the
+         artist's private /dashboard/stats only; "Support directly" in the header
+         above is the live page's one CTA. A live stream has no file to download
+         yet, only archive items below do (per-item, inside ArchiveItemPlayback). -->
 
-    <div style="display:flex;gap:6px">
-      <button class="btn btn--purple">♥ Subscribe €5/mo</button>
-      <button class="btn btn--secondary">⬇ Download</button>
-      <button class="btn btn--secondary">🔗 Share</button>
-    </div>
+    <!-- Archive section: RSS link + past broadcasts list -->
+    <section class="archive-section">
+      <div class="archive-section-head">
+        <h2 class="section-label">Archive</h2>
+        <a href="#" class="rss-link">RSS ↗</a>
+      </div>
+      <div class="archive-item">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div class="cover cover--xs" style="background:var(--cover-deep)"></div>
+          <div>
+            <div class="archive-item-title">Late Night Drift Vol. 3</div>
+            <div class="archive-item-date">Jun 2026 · 1h 42m</div>
+          </div>
+        </div>
+        <p class="archive-item-desc">Recorded live — ambient set with three new originals.</p>
+        <!-- Per-item play + download — a live stream has none, archive items do. -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <button aria-label="Play" style="width:26px;height:26px;border-radius:50%;
+            background:var(--brand);border:none;color:var(--text-on-accent);
+            font-size:10px;cursor:pointer">▶</button>
+          <button class="btn btn--secondary btn--sm">⬇ Download</button>
+        </div>
+      </div>
+      <div class="archive-item">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div class="cover cover--xs" style="background:var(--cover-violet)"></div>
+          <div>
+            <div class="archive-item-title">Helsinki Winter Session</div>
+            <div class="archive-item-date">May 2026 · 2h 08m</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <button aria-label="Play" style="width:26px;height:26px;border-radius:50%;
+            background:var(--brand);border:none;color:var(--text-on-accent);
+            font-size:10px;cursor:pointer">▶</button>
+          <button class="btn btn--secondary btn--sm">⬇ Download</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Chat rail: FIXED 300px. -->
@@ -85,21 +145,23 @@
       <div class="pinned__label">📌 Pinned</div>
       <div style="font-size:11px;line-height:1.45">Tonight 22:00 UTC — ambient set, three new originals</div>
     </div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-      <span class="label" style="margin:0">Live chat</span>
-      <span class="faint" style="font-size:11px">247 here</span>
+    <div class="chat-head">
+      <h4>Live chat</h4>
+      <span class="chat-live-badge">live</span>
+      <span class="chat-listeners">247 listeners</span>
     </div>
     <div class="card" style="padding:10px;margin-bottom:8px">
-      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-2)">@aurora_fi</span> <span class="muted">this bassline 🔥</span></div>
-      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-1)">@kai_studio</span> <span class="muted">been waiting for this set</span></div>
+      <div class="chat-msg"><span class="chat-flag">🇫🇮</span><span class="chat-handle" style="color:var(--chat-2)">@aurora_fi</span> <span class="muted">this bassline 🔥</span></div>
+      <div class="chat-msg"><span class="chat-flag">🇪🇪</span><span class="chat-handle" style="color:var(--chat-1)">@kai_studio</span> <span class="muted">been waiting for this set</span></div>
       <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-3)">dj-moonrise</span> <span class="muted">thank you! ❤️</span></div>
-      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-6)">@mia.waves</span> <span class="muted">sound quality is incredible</span></div>
-      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-4)">@tallinn_owl</span> <span class="muted">tuned in from EE 🇪🇪</span></div>
+      <div class="chat-msg"><span class="chat-handle" style="color:var(--chat-6)">@mia.waves</span><span class="chat-supporter-badge">supporter</span> <span class="muted">sound quality is incredible</span></div>
+      <div class="chat-msg"><span class="chat-flag">🇪🇪</span><span class="chat-handle" style="color:var(--chat-4)">@tallinn_owl</span> <span class="muted">tuned in from EE 🇪🇪</span></div>
     </div>
     <div style="display:flex;gap:4px">
       <input class="input" style="height:30px;font-size:11px" placeholder="Say something…">
       <button class="btn btn--primary" style="height:30px;padding:0 10px">→</button>
     </div>
+    <!-- Connection lost: .chat-error replaces the input row, message stays visible -->
   </aside>
 </div>
 </body>

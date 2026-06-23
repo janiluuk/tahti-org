@@ -337,3 +337,52 @@ body {
   padding: 0.45rem 0.75rem; border-radius: 6px;
 }
 .tabs__item--active { color: var(--brand); background: var(--bg-card); }
+
+/* ---- Public channel page: artist header, tags, social links, archive ---- */
+.artist-header { margin-bottom: var(--sp-6); }
+.artist-bio { margin-top: 6px; color: var(--text-secondary); font-size: var(--fs-sm); }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--sp-2); }
+.tag-chip {
+  display: inline-flex; align-items: center; padding: 4px 10px; border-radius: var(--r-full);
+  font-size: var(--fs-label); font-weight: var(--fw-medium); letter-spacing: 0.04em;
+  text-transform: uppercase; background: var(--bg-card-elevated);
+  border: 1px solid var(--border-subtle); color: var(--text-secondary);
+}
+.social-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--sp-2); }
+.social-link {
+  display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 6px;
+  border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-primary);
+  font-size: var(--fs-sm); text-decoration: none;
+}
+.artist-cta-row { display: flex; align-items: center; gap: var(--sp-2); margin-top: var(--sp-3); flex-wrap: wrap; }
+.artist-sub-btn {
+  display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: 7px;
+  font-size: var(--fs-sm); font-weight: var(--fw-medium); text-decoration: none;
+  background: var(--purple-bg-tint); border: 1px solid rgba(167,139,250,0.35); color: var(--stat-fans);
+}
+.artist-profile-link { font-size: var(--fs-sm); color: var(--text-secondary); text-decoration: none; padding: 7px 0; }
+
+.archive-section { margin-top: var(--sp-8); }
+.archive-section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.section-label { font-size: var(--fs-h3); font-weight: var(--fw-medium); padding-left: 11px; border-left: 3px solid var(--brand); }
+.rss-link {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: var(--r-full);
+  font-size: var(--fs-xs); font-weight: var(--fw-medium); text-decoration: none;
+  background: var(--warn-bg); border: 1px solid rgba(255,184,64,0.30); color: var(--warn);
+}
+.archive-item { padding: var(--sp-4) 0; border-bottom: 1px solid var(--border-subtle); }
+.archive-item-title { color: var(--text-primary); font-size: var(--fs-sm); }
+.archive-item-date { color: var(--text-tertiary); font-size: var(--fs-xs); margin-top: 2px; }
+.archive-item-desc { color: var(--text-secondary); font-size: var(--fs-sm); margin-top: var(--sp-2); }
+
+/* ---- Channel chat rail: head + live badge + listeners + messages + input ---- */
+.chat-head { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.chat-head h4 { font-size: var(--fs-micro); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-tertiary); margin: 0; }
+.chat-live-badge { font-size: var(--fs-micro); color: var(--live); text-transform: uppercase; }
+.chat-listeners { font-size: var(--fs-label); color: var(--text-tertiary); margin-left: auto; }
+.chat-flag { margin-right: 4px; }
+.chat-supporter-badge {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em; margin-left: 4px;
+  padding: 1px 6px; border-radius: var(--r-full); background: var(--purple-bg-tint); color: var(--stat-fans);
+}
+.chat-error { font-size: var(--fs-xs); color: var(--danger); margin-top: var(--sp-2); }
