@@ -386,3 +386,25 @@ body {
   padding: 1px 6px; border-radius: var(--r-full); background: var(--purple-bg-tint); color: var(--stat-fans);
 }
 .chat-error { font-size: var(--fs-xs); color: var(--danger); margin-top: var(--sp-2); }
+
+/* ---- Smart link credits/collections panel (conditional, between quote and DSP buttons) ---- */
+.sl-panel {
+  background: var(--bg-card-elevated); border: 1px solid var(--border-subtle);
+  border-top: 2px solid var(--brand-border-tint); border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-5);
+  text-align: left; font-size: var(--fs-sm); color: var(--text-secondary);
+}
+.sl-panel a { color: var(--brand); }
+.sl-panel-row { margin-bottom: 5px; }
+.sl-panel-row:last-child { margin-bottom: 0; }
+.sl-track-list { margin: 8px 0 0; padding-left: 1.2rem; }
+.sl-panel-action { margin-top: 8px; }
+.sl-collection-label {
+  margin: 0 0 8px; font-size: var(--fs-label); font-weight: var(--fw-medium);
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--warn);
+  padding-left: 9px; border-left: 2px solid var(--warn);
+}
+.sl-collection-list { list-style: none; padding: 0; margin: 0; }
+.sl-collection-item { margin-bottom: 5px; }
+.sl-collection-link { font-weight: var(--fw-medium); color: var(--text-primary); text-decoration: none; }
+.sl-collection-meta { font-size: var(--fs-xs); color: var(--text-tertiary); }

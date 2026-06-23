@@ -163,5 +163,93 @@
   </div>
 </div>
 
+<div class="demo">
+  <h2>Page header — greeting, role badge, go-live button</h2>
+  <div class="spec">greeting: 22px/500 · role-badge: 11px uppercase full-radius · go-live-btn: 13px/500 8px radius</div>
+  <div class="stage">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="greeting">Good evening, Moonrise.</div>
+        <div class="greeting-status"><span class="dot-live"></span><span style="color:var(--live)">LIVE</span><span>·</span><a href="#">dj-moonrise.tahti.live</a></div>
+        <div class="role-row">
+          <span class="role-badge role-badge--artist">Artist · #44012</span>
+          <span class="role-badge role-badge--member">Member #1029</span>
+          <span class="role-badge role-badge--board">Board · Admin</span>
+        </div>
+      </div>
+      <a href="#" class="go-live-btn go-live-btn--live"><span class="dot-live"></span> On air</a>
+    </div>
+  </div>
+</div>
+
+<div class="demo">
+  <h2>Tabs</h2>
+  <div class="spec">container: 4px padding elevated bg + 1px border 8px radius · item: 13px/500 6px radius</div>
+  <div class="stage">
+    <div class="tabs">
+      <button class="tabs__item tabs__item--active">Overview</button>
+      <button class="tabs__item">Broadcast</button>
+      <button class="tabs__item">Audience</button>
+    </div>
+  </div>
+</div>
+
+<div class="demo">
+  <h2>Tag chips &amp; social links</h2>
+  <div class="spec">tag-chip: 11px/500 uppercase full-radius elevated bg · social-link: 13px 6px radius bordered</div>
+  <div class="stage">
+    <div class="tag-row" style="margin-top:0">
+      <span class="tag-chip">Ambient</span>
+      <span class="tag-chip">Electronic</span>
+      <span class="tag-chip">Downtempo</span>
+    </div>
+    <div class="social-row">
+      <a href="#" class="social-link">↗ Instagram</a>
+      <a href="#" class="social-link">↗ Bandcamp</a>
+    </div>
+  </div>
+</div>
+
+<div class="demo">
+  <h2>Archive item (public channel page)</h2>
+  <div class="spec">padding: 16px 0 · 1px bottom border · title 13px · date 12px tertiary · desc 13px secondary</div>
+  <div class="stage" style="max-width:460px">
+    <div class="archive-item" style="border-bottom:none">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div class="cover cover--xs" style="background:var(--cover-deep)"></div>
+        <div>
+          <div class="archive-item-title">Late Night Drift Vol. 3</div>
+          <div class="archive-item-date">Jun 2026 · 1h 42m</div>
+        </div>
+      </div>
+      <p class="archive-item-desc">Recorded live — ambient set with three new originals.</p>
+    </div>
+  </div>
+</div>
+
+<div class="demo">
+  <h2>Chat rail head + flags + supporter badge</h2>
+  <div class="spec">head label: 10px uppercase tracking 1px · listeners: 11px right-aligned · supporter badge: 9px uppercase full-radius purple</div>
+  <div class="stage" style="max-width:300px">
+    <div class="chat-head">
+      <h4>Live chat</h4>
+      <span class="chat-live-badge">live</span>
+      <span class="chat-listeners">247 listeners</span>
+    </div>
+    <div class="chat-msg"><span class="chat-flag">🇫🇮</span><span class="chat-handle" style="color:var(--chat-2)">@aurora_fi</span><span class="chat-supporter-badge">supporter</span> <span class="muted">this bassline 🔥</span></div>
+  </div>
+</div>
+
+<div class="demo">
+  <h2>Smart link credits panel</h2>
+  <div class="spec">bg: elevated · 2px brand-tint top border · 8px radius · 12px/16px padding · 13px secondary text</div>
+  <div class="stage" style="max-width:460px">
+    <div class="sl-panel">
+      <div class="sl-panel-row"><strong>UPC:</strong> 196589403821</div>
+      <div class="sl-panel-action"><a href="#">View on MusicBrainz</a></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
