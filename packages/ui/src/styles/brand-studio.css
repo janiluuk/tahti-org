@@ -38,6 +38,22 @@
   margin: 0 auto;
 }
 
+/* Honesty banner above the admin top-nav — height tracked by --admin-strip-h so
+   .admin-shell .shell-app can subtract it and still fit 1440x900 (ground-rules.md Rule 1). */
+[data-tahti-ui='studio'] .admin-view-strip {
+  height: var(--admin-strip-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--amber) 18%, var(--bg));
+  border-bottom: 1px solid color-mix(in srgb, var(--amber) 40%, transparent);
+  color: var(--amber);
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 [data-tahti-ui='studio'] .studio-top-nav__logo {
   font-family: var(--font-head);
   font-size: var(--text-sm);
@@ -220,6 +236,11 @@
   min-height: calc(100vh - var(--topnav-h));
   max-width: var(--shell-max);
   margin: 0 auto;
+}
+
+/* Admin pages stack .admin-view-strip above .studio-top-nav — subtract both. */
+[data-tahti-ui='studio'].admin-shell .shell-app {
+  min-height: calc(100vh - var(--topnav-h) - var(--admin-strip-h));
 }
 
 [data-tahti-ui='studio'] .db-sidebar {
