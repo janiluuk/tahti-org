@@ -5,6 +5,8 @@
 
 import { useEffect, useState } from 'react'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 export function TahtiRadioPanel() {
   const [optOut, setOptOut] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -12,7 +14,7 @@ export function TahtiRadioPanel() {
   const [msg, setMsg] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/me/channel/meta-stream', { credentials: 'include' })
+    fetch(`${API_BASE}/api/me/channel/meta-stream`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((data: { metaStreamOptOut: boolean } | null) => {
         if (data) setOptOut(data.metaStreamOptOut)
@@ -27,7 +29,7 @@ export function TahtiRadioPanel() {
     setSaving(true)
     setMsg(null)
     try {
-      const res = await fetch('/api/me/channel/meta-stream', {
+      const res = await fetch(`${API_BASE}/api/me/channel/meta-stream`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

@@ -6,6 +6,8 @@
 import { useState } from 'react'
 import { Panel, StudioCollapse } from '@tahti/ui'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 interface VenueBroadcast {
   id: string
   startAt: string
@@ -57,7 +59,7 @@ function VenueCard({ venue, onUpdate }: { venue: Venue; onUpdate: (v: Venue) => 
     setSaving(true)
     setMsg(null)
     try {
-      const res = await fetch(`/api/v1/venues/${venue.slug}`, {
+      const res = await fetch(`${API_BASE}/api/v1/venues/${venue.slug}`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -149,7 +151,7 @@ function BroadcastList({
   onVenueUpdate: (v: Venue) => void
 }) {
   async function cancel(broadcastId: string) {
-    const res = await fetch(`/api/v1/venues/${venue.slug}/broadcasts/${broadcastId}`, {
+    const res = await fetch(`${API_BASE}/api/v1/venues/${venue.slug}/broadcasts/${broadcastId}`, {
       method: 'DELETE',
       credentials: 'include',
     })
@@ -218,7 +220,7 @@ function AddBroadcastForm({
     setPending(true)
     setError(null)
     try {
-      const res = await fetch(`/api/v1/venues/${venue.slug}/broadcasts`, {
+      const res = await fetch(`${API_BASE}/api/v1/venues/${venue.slug}/broadcasts`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },

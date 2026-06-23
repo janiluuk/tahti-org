@@ -6,6 +6,8 @@
 import { useEffect, useState } from 'react'
 import { Panel } from '@tahti/ui'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 interface MutedUser {
   username: string
   displayName: string
@@ -25,7 +27,7 @@ export function MentionsPanel() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    fetch('/api/me/mentions/settings', { credentials: 'include' })
+    fetch(`${API_BASE}/api/me/mentions/settings`, { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((data: Settings | null) => {
         if (data) setSettings(data)
@@ -41,7 +43,7 @@ export function MentionsPanel() {
     setSettings(optimistic)
     setSaving(true)
     try {
-      const res = await fetch('/api/me/mentions/settings', {
+      const res = await fetch(`${API_BASE}/api/me/mentions/settings`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -60,7 +62,7 @@ export function MentionsPanel() {
     setMuteError(null)
     setMuting(true)
     try {
-      const res = await fetch(`/api/me/mentions/mute/${encodeURIComponent(handle)}`, {
+      const res = await fetch(`${API_BASE}/api/me/mentions/mute/${encodeURIComponent(handle)}`, {
         method: 'POST',
         credentials: 'include',
       })
@@ -92,7 +94,7 @@ export function MentionsPanel() {
     setSettings((prev) =>
       prev ? { ...prev, muted: prev.muted.filter((m) => m.username !== username) } : prev,
     )
-    await fetch(`/api/me/mentions/mute/${encodeURIComponent(username)}`, {
+    await fetch(`${API_BASE}/api/me/mentions/mute/${encodeURIComponent(username)}`, {
       method: 'DELETE',
       credentials: 'include',
     }).catch(() => {})

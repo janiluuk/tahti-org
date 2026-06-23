@@ -10,6 +10,7 @@ import { ComposableMap, Geographies, Geography, Sphere, Graticule } from 'react-
 import { ISO_NUM_TO_A2 } from '@/lib/iso-numeric-to-a2'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 type Period = '7d' | '30d' | 'all'
 
@@ -40,7 +41,9 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
     if (p === period) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/me/listener-geo?period=${p}`)
+      const res = await fetch(`${API_BASE}/api/me/listener-geo?period=${p}`, {
+        credentials: 'include',
+      })
       if (res.ok) {
         const json = await res.json()
         setData(json.geo as GeoPoint[])
