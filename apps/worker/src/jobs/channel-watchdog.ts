@@ -56,6 +56,9 @@ export async function processChannelWatchdogJob(
         take: 1,
         select: { id: true },
       },
+      // Always-on curated channels (Tahti Selects) use the rotation template — no
+      // live source ever connects, so this is the only signal that distinguishes them.
+      curatedRotationItems: { select: { id: true }, take: 1 },
     },
   })
 
@@ -86,7 +89,8 @@ export async function processChannelWatchdogJob(
     }
 
     try {
-      await restartChannelLiquidsoap(ch.id, ch.slug, broadcastId)
+      const template = ch.curatedRotationItems.length > 0 ? 'rotation' : 'channel'
+      await restartChannelLiquidsoap(ch.id, ch.slug, broadcastId, template)
       restarted++
       console.warn(
         JSON.stringify({

@@ -29,6 +29,11 @@ const LIQUIDSOAP_IMAGE = process.env.LIQUIDSOAP_IMAGE ?? 'savonet/liquidsoap:v2.
 /** STREAM-010: allow Liquidsoap to flush the last HLS segment (4s × 4 segments). */
 const LIQUIDSOAP_STOP_TIMEOUT_SEC = parseInt(process.env.LIQUIDSOAP_STOP_TIMEOUT_SEC ?? '20', 10)
 const TEMPLATE_PATH = process.env.LIQUIDSOAP_TEMPLATE ?? '/srv/liquidsoap-channel.liq.template'
+/** Always-on curated-rotation channels (Tahti Selects) — no live input, see liquidsoap-rotation.liq.template. */
+const ROTATION_TEMPLATE_PATH =
+  process.env.LIQUIDSOAP_ROTATION_TEMPLATE ?? '/srv/liquidsoap-rotation.liq.template'
+
+export type LiquidsoapTemplateKind = 'channel' | 'rotation'
 const HLS_VOLUME = process.env.HLS_VOLUME ?? 'tahti_stack_hls'
 const RECORDINGS_VOLUME = process.env.RECORDINGS_VOLUME ?? 'tahti_recordings_shared'
 const API_URL = process.env.API_URL ?? 'http://api:3001'
@@ -61,10 +66,13 @@ export async function spawnLiquidsoapContainer(
   slug: string,
   broadcastId: string,
   source: BroadcastSource = 'ICECAST',
+  templateKind: LiquidsoapTemplateKind = 'channel',
 ): Promise<void> {
   if (activeChannels.has(channelId)) {
     return
   }
+
+  const templatePath = templateKind === 'rotation' ? ROTATION_TEMPLATE_PATH : TEMPLATE_PATH
 
   const inputUrl = liveInputUrl(source, slug)
 
@@ -93,7 +101,7 @@ export async function spawnLiquidsoapContainer(
   }))
 
   // Render Liquidsoap config from template
-  const templateRaw = await readFile(TEMPLATE_PATH, 'utf8')
+  const templateRaw = await readFile(templatePath, 'utf8')
   let config = templateRaw
     .replace(/\{\{CHANNEL_ID\}\}/g, channelId)
     .replace(/\{\{LIVE_INPUT_URL\}\}/g, inputUrl)
@@ -150,6 +158,7 @@ export async function spawnChannel(
   channelId: string,
   slug: string,
   broadcastId: string,
+  templateKind: LiquidsoapTemplateKind = 'channel',
 ): Promise<void> {
   const broadcast = await prisma.broadcast.findUnique({
     where: { id: broadcastId },
@@ -164,7 +173,11 @@ export async function spawnChannel(
     await spawnEdgeEncoder(channelId, slug, broadcast?.channel.rtmpStreamKey)
   }
 
-  await spawnLiquidsoapContainer(channelId, slug, broadcastId, source)
+  await spawnLiquidsoapContainer(channelId, slug, broadcastId, source, templateKind)
+
+  // Rotation channels never publish to the Icecast /live/<slug> mount the recorder
+  // and fingerprint-ingest read from (no live source ever connects) — skip both.
+  if (templateKind === 'rotation') return
 
   await spawnBroadcastRecorder(
     channelId,

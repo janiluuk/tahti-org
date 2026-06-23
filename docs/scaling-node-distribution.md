@@ -156,6 +156,13 @@ flowchart LR
 | RTMP disconnects under load | `rtmp-ingest` | Second ingest node (label `ingest`) | Host mode ports → one service per node |
 | Many simultaneous live channels | Liquidsoap pods | More worker RAM/CPU; orchestrator on manager | Orchestrator uses Docker socket |
 
+**Tahti Selects (always-on curated rotation):** unlike every other Liquidsoap pod above, which
+exists only for the duration of a live broadcast, the Tahti Selects channel
+(`infra/liquidsoap-rotation.liq.template`) keeps one Liquidsoap container running continuously —
+`channel-watchdog.ts` treats it like a permanently-LIVE channel with a persistent placeholder
+`Broadcast` row. Liquidsoap pod capacity planning above should add +1 baseline pod for this,
+not size it as if it scales with concurrent live sessions.
+
 ---
 
 ## PgBouncer before API replicas (PLAT-003)

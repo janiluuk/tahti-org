@@ -48,6 +48,7 @@ export async function restartChannelLiquidsoap(
   channelId: string,
   slug: string,
   broadcastId: string,
+  template: 'channel' | 'rotation' = 'channel',
 ): Promise<void> {
-  await orchestratorPost('/restart', { channelId, slug, broadcastId })
+  await orchestratorPost('/restart', { channelId, slug, broadcastId, template })
 }
