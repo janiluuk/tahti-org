@@ -96,7 +96,7 @@ export function ReleaseTrackVersionPanel({
   if (trackStatus !== 'READY' && trackStatus !== 'FAILED' && versions.length === 0) {
     return (
       <p className="studio-text-muted-sm studio-my-xs">
-        Upload audio for this track before managing versions.
+        {trackTitle}: upload audio for this track before managing versions.
       </p>
     )
   }
