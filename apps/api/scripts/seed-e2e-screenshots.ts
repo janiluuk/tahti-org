@@ -105,12 +105,18 @@ async function main() {
   await prisma.supportTicket.deleteMany({
     where: {
       contactEmail: {
-        in: ['screenshot-artist@e2e.tahti.live', 'screenshot-fan@e2e.tahti.live', 'listener@example.com'],
+        in: [
+          'screenshot-artist@e2e.tahti.live',
+          'screenshot-fan@e2e.tahti.live',
+          'listener@example.com',
+        ],
       },
     },
   })
   await prisma.betaApplication.deleteMany({
-    where: { email: { in: ['aino.korhonen@example.com', 'joel.makinen@example.com', 'spam@example.com'] } },
+    where: {
+      email: { in: ['aino.korhonen@example.com', 'joel.makinen@example.com', 'spam@example.com'] },
+    },
   })
   await prisma.ledgerEntry.deleteMany({
     where: {
@@ -127,7 +133,13 @@ async function main() {
   await prisma.auditLog.deleteMany({
     where: {
       action: {
-        in: ['MOTION_OPEN', 'BOARD_ROLE_CHANGE', 'GRANT_RUN', 'ARCHIVE_EDIT_PUBLISH', 'RTMP_TARGET_ADD'],
+        in: [
+          'MOTION_OPEN',
+          'BOARD_ROLE_CHANGE',
+          'GRANT_RUN',
+          'ARCHIVE_EDIT_PUBLISH',
+          'RTMP_TARGET_ADD',
+        ],
       },
     },
   })
@@ -644,8 +656,7 @@ async function main() {
   await prisma.boardResolution.create({
     data: {
       title: 'Approve FY2026 grant disbursement pool',
-      body:
-        '## Resolution\n\nThe board approves allocating the engagement-unit-weighted grant pool for FY2026 per the financial model.',
+      body: '## Resolution\n\nThe board approves allocating the engagement-unit-weighted grant pool for FY2026 per the financial model.',
       votedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
       outcome: 'PASSED',
       voteFor: 3,
@@ -765,8 +776,18 @@ async function main() {
 
   await prisma.auditLog.createMany({
     data: [
-      { action: 'MOTION_OPEN', actorId: artist.id, targetId: motion.id, meta: { title: DEMO_MOTION_TITLE } },
-      { action: 'BOARD_ROLE_CHANGE', actorId: board.id, targetId: board.id, meta: { isBoard: true } },
+      {
+        action: 'MOTION_OPEN',
+        actorId: artist.id,
+        targetId: motion.id,
+        meta: { title: DEMO_MOTION_TITLE },
+      },
+      {
+        action: 'BOARD_ROLE_CHANGE',
+        actorId: board.id,
+        targetId: board.id,
+        meta: { isBoard: true },
+      },
       {
         action: 'GRANT_RUN',
         actorId: board.id,

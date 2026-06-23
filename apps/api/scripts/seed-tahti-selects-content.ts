@@ -190,7 +190,9 @@ async function main() {
         const mp3Path = path.join(tmpDir, `${position}.mp3`)
 
         const res = await fetch(track.sourceUrl, {
-          headers: { 'User-Agent': 'TahtiSelectsSeed/1.0 (https://tahti.live; contact: ops@tahti.live)' },
+          headers: {
+            'User-Agent': 'TahtiSelectsSeed/1.0 (https://tahti.live; contact: ops@tahti.live)',
+          },
         })
         if (!res.ok) {
           throw new Error(`Download failed (${res.status}): ${track.sourceUrl}`)

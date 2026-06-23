@@ -55,7 +55,11 @@ export default async function AdminTahtiSelectsPage({
   const q = searchParams.q?.trim() ?? ''
   const [rotation, browse] = await Promise.all([
     adminGet<{ items: RotationItem[] }>('/api/admin/tahti-selects'),
-    q ? adminGet<{ items: BrowseItem[] }>(`/api/admin/tahti-selects/browse?q=${encodeURIComponent(q)}`) : null,
+    q
+      ? adminGet<{ items: BrowseItem[] }>(
+          `/api/admin/tahti-selects/browse?q=${encodeURIComponent(q)}`,
+        )
+      : null,
   ])
   const items = rotation?.items ?? []
   const browseItems = browse?.items ?? []
