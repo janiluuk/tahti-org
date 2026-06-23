@@ -248,10 +248,17 @@
   padding: 16px 0 24px;
   border-right: 1px solid var(--border);
   position: sticky;
-  top: 56px;
-  height: calc(100vh - 56px);
+  top: var(--topnav-h);
+  height: calc(100vh - var(--topnav-h));
   overflow-y: auto;
   scrollbar-width: none;
+}
+
+/* Admin pages stack .admin-view-strip above .studio-top-nav — the sidebar's sticky
+   offset and height must subtract both, same as .shell-app above (ground-rules.md Rule 1). */
+[data-tahti-ui='studio'].admin-shell .db-sidebar {
+  top: calc(var(--topnav-h) + var(--admin-strip-h));
+  height: calc(100vh - var(--topnav-h) - var(--admin-strip-h));
 }
 
 [data-tahti-ui='studio'] .db-sidebar::-webkit-scrollbar {
