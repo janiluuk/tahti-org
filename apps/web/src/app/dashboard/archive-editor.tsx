@@ -7,6 +7,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import type { TracklistEntry } from '@tahti/shared'
+import { resolveChannelUrl } from '@/lib/app-url'
 import { updateArchiveMetadata } from './archive-actions'
 import {
   ArchiveMetadataFields,
@@ -93,7 +94,10 @@ export default function ArchiveEditor({
         ) : isReady && isPublic ? (
           <div className="studio-row-actions">
             {channelSlug && (
-              <NextLink href={`/c/${channelSlug}`} className="ui-btn ui-btn--sm ui-btn--primary">
+              <NextLink
+                href={resolveChannelUrl(channelSlug)}
+                className="ui-btn ui-btn--sm ui-btn--primary"
+              >
                 View on channel →
               </NextLink>
             )}

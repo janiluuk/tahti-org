@@ -16,6 +16,7 @@ import { DashboardTabs } from './dashboard-tabs'
 import { DashboardOverview } from './_dashboard-overview'
 import { StorageBar } from './_storage-bar'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 interface ModeratedChannel {
   slug: string
@@ -289,7 +290,10 @@ export default async function DashboardPage() {
                   {headerStatusLabel}
                 </span>
                 <span>·</span>
-                <NextLink href={`/c/${user.channel.slug}`} className="db-header-channel-url">
+                <NextLink
+                  href={resolveChannelUrl(user.channel.slug)}
+                  className="db-header-channel-url"
+                >
                   {user.channel.slug}.tahti.live
                 </NextLink>
               </>
