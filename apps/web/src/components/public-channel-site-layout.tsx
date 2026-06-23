@@ -10,18 +10,20 @@ import { statusPageUrl } from '@/lib/status-page'
 type PublicChannelSiteLayoutProps = {
   children: ReactNode
   activeNav: SiteNavId
+  bgVariant?: 'default' | 'subtle'
 }
 
 /** shell-public with gateway background — Home, Discover, and similar brand routes. */
 export async function PublicChannelSiteLayout({
   children,
   activeNav,
+  bgVariant = 'default',
 }: PublicChannelSiteLayoutProps) {
   const user = await getSessionUser()
 
   return (
     <div data-tahti-ui="brand" className="brand-channel shell-public">
-      <BgCanvas />
+      <BgCanvas variant={bgVariant} />
       <ChannelHeader activeNav={activeNav} user={user} />
       {children}
       <PublicFooter statusUrl={statusPageUrl()} />
