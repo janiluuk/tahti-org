@@ -7,6 +7,8 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { STYLE_LABEL, STYLE_COLOR } from './collection-labels'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 interface CollectionSummary {
   slug: string
   name: string
@@ -66,7 +68,7 @@ export function CollectionsGrid({ collections }: { collections: CollectionSummar
     if (saving) return
     setSaving(true)
     try {
-      await fetch('/api/me/collections/reorder', {
+      await fetch(`${API_BASE}/api/me/collections/reorder`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

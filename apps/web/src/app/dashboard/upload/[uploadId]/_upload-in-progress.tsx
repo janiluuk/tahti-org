@@ -10,6 +10,8 @@ import type { CollectionOption } from '../upload-actions'
 import { finaliseUpload } from '../upload-actions'
 import { getPendingUpload, clearPendingUpload } from '../_pending-uploads'
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
 interface TaggedMeta {
   title?: string
   artist?: string
@@ -233,7 +235,9 @@ export function UploadInProgress({
       for (let i = 0; i < 90; i++) {
         await new Promise((r) => setTimeout(r, 2000))
         try {
-          const res = await fetch(`/api/me/archive/${result.itemId}`, { credentials: 'include' })
+          const res = await fetch(`${API_BASE}/api/me/archive/${result.itemId}`, {
+            credentials: 'include',
+          })
           if (res.ok) {
             const data = (await res.json()) as { status: string }
             if (data.status === 'READY') {
