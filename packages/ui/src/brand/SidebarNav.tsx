@@ -18,6 +18,7 @@ export type SidebarNavIcon =
   | 'stash'
   | 'admin'
   | 'appearance'
+  | 'schedule'
 
 export function SidebarNavIconSvg({ name }: { name: SidebarNavIcon }) {
   switch (name) {
@@ -238,6 +239,18 @@ export function SidebarNavIconSvg({ name }: { name: SidebarNavIcon }) {
             strokeWidth="1.5"
             strokeLinejoin="round"
           />
+        </svg>
+      )
+    case 'schedule':
+      return (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path
+            d="M2 4.5A2.5 2.5 0 0 1 4.5 2H10l3 3v6.5A2.5 2.5 0 0 1 10.5 14h-6A2.5 2.5 0 0 1 2 11.5v-7Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path d="M5 8h6M5 10.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       )
   }

@@ -29,27 +29,29 @@ export async function syncChannelArchiveFallbackCache(
 
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
-    select: { fallbackMode: true },
+    select: { fallbackMode: true, fallbackEnabled: true },
   })
   if (!channel) return summary
 
-  const items = await prisma.archiveItem.findMany({
-    where: {
-      channelId,
-      status: 'READY',
-      OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
-    },
-    select: {
-      id: true,
-      title: true,
-      mp3Key: true,
-      flacKey: true,
-      durationSec: true,
-      isFallback: true,
-      fallbackOrder: true,
-      lastFallbackPlayedAt: true,
-    },
-  })
+  const items = channel.fallbackEnabled
+    ? await prisma.archiveItem.findMany({
+        where: {
+          channelId,
+          status: 'READY',
+          OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
+        },
+        select: {
+          id: true,
+          title: true,
+          mp3Key: true,
+          flacKey: true,
+          durationSec: true,
+          isFallback: true,
+          fallbackOrder: true,
+          lastFallbackPlayedAt: true,
+        },
+      })
+    : []
 
   const rows = buildFallbackPlaybackRows(items, channel.fallbackMode).slice(0, maxItems)
   const channelDir = channelArchiveCacheDir(cacheRoot, channelId)

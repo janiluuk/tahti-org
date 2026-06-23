@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BroadcastStatusBar, Panel, StatusPill, Text } from '@tahti/ui'
 import HlsPlayer from '@/app/c/[slug]/hls-player'
+import { resolveChannelUrl } from '@/lib/app-url'
 import StreamSettingsPanel from '../stream-settings'
 import BroadcastUsageBanner, { type BroadcastUsage } from '../broadcast-usage'
 import { EndBroadcastBtn } from '../end-broadcast-btn'
@@ -121,7 +122,7 @@ export function BroadcastStudio({
         <BroadcastStatusBar
           state="live"
           meta={
-            <Link href={`/c/${channelSlug}`} className="db-overview-broadcast-link">
+            <Link href={resolveChannelUrl(channelSlug)} className="db-overview-broadcast-link">
               View public channel →
             </Link>
           }
@@ -243,8 +244,8 @@ export function BroadcastStudio({
             </li>
             <li>
               Your channel:{' '}
-              <Link href={`/c/${channelSlug}`} className="studio-link">
-                tahti.live/c/{channelSlug}
+              <Link href={resolveChannelUrl(channelSlug)} className="studio-link">
+                {channelSlug}.tahti.live
               </Link>
             </li>
           </ol>

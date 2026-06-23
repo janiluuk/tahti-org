@@ -24,47 +24,69 @@ export type ProgrammeItemRow = {
   lastFallbackPlayedAt: string | null
 }
 
-export async function fetchChannelProgramme(): Promise<{
+export type ProgrammeLibraryTrackRow = {
+  releaseTrackId: string
+  releaseId: string
+  releaseTitle: string
+  trackTitle: string
+  durationSec: number | null
+  archiveItemId: string | null
+}
+
+export type ProgrammeView = {
   fallbackMode: FallbackMode
+  fallbackEnabled: boolean
   items: ProgrammeItemRow[]
+  library: ProgrammeLibraryTrackRow[]
+}
+
+async function parseProgrammeResponse(
+  res: Response,
+): Promise<{ data: ProgrammeView | null; error: string | null }> {
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { data: null, error: (data as { error?: string }).error ?? 'Failed to load rotation' }
+  }
+  return { data: (await res.json()) as ProgrammeView, error: null }
+}
+
+export async function fetchChannelProgramme(): Promise<{
+  data: ProgrammeView | null
   error: string | null
 }> {
   const res = await fetch(`${apiUrl}/api/me/channel/programme`, {
     headers: { Cookie: sessionHeader() },
     cache: 'no-store',
   })
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}))
-    return {
-      fallbackMode: 'shuffle',
-      items: [],
-      error: (data as { error?: string }).error ?? 'Failed to load programme',
-    }
-  }
-  const data = (await res.json()) as {
-    fallbackMode: FallbackMode
-    items: ProgrammeItemRow[]
-  }
-  return { fallbackMode: data.fallbackMode, items: data.items, error: null }
+  return parseProgrammeResponse(res)
 }
 
 export async function updateChannelProgramme(payload: {
   fallbackMode?: FallbackMode
+  fallbackEnabled?: boolean
   items?: Array<{
     archiveItemId: string
     isFallback: boolean
     fallbackOrder?: number
   }>
-}): Promise<{ error: string | null }> {
+}): Promise<{ data: ProgrammeView | null; error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/channel/programme`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
     body: JSON.stringify(payload),
     cache: 'no-store',
   })
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}))
-    return { error: (data as { error?: string }).error ?? 'Failed to save programme' }
-  }
-  return { error: null }
+  return parseProgrammeResponse(res)
+}
+
+export async function addLibraryTrackToRotation(
+  releaseTrackId: string,
+): Promise<{ data: ProgrammeView | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/channel/programme/library`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ releaseTrackId }),
+    cache: 'no-store',
+  })
+  return parseProgrammeResponse(res)
 }

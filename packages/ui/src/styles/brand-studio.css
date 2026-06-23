@@ -390,6 +390,16 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 640px) {
+  /* flex-shrink: 0 keeps buttons full-size on desktop, but once this row wraps
+     onto its own line on narrow viewports it must take the full width so its
+     own buttons can wrap internally instead of overflowing past the edge. */
+  [data-tahti-ui='studio'] .studio-page-header__actions {
+    flex-shrink: 1;
+    flex-basis: 100%;
+  }
+}
+
 [data-tahti-ui='studio'] .db-header-welcome {
   font-size: var(--text-sm) !important;
 }
@@ -1812,6 +1822,19 @@
   gap: 0.5rem;
 }
 
+[data-tahti-ui='studio'] .schedule-rotation-row--draggable {
+  cursor: grab;
+}
+
+[data-tahti-ui='studio'] .schedule-rotation-row--draggable:active {
+  cursor: grabbing;
+}
+
+[data-tahti-ui='studio'] .schedule-rotation-row__handle {
+  color: var(--muted);
+  line-height: 1;
+}
+
 [data-tahti-ui='studio'] .studio-stripe-banner {
   margin-top: 1rem;
   padding: 1rem;
@@ -2900,6 +2923,9 @@
   flex-direction: column;
   gap: 0.65rem;
   min-width: 0;
+  /* StudioTabs syncHash scrollIntoView()s this on mount — offset for the sticky top nav
+     so its content (and the tab list above it) doesn't land underneath the header. */
+  scroll-margin-top: 56px;
 }
 
 [data-tahti-ui='studio'] .studio-collapse {

@@ -3,6 +3,7 @@
 
 import NextLink from 'next/link'
 import { SidebarNavIconSvg } from '@tahti/ui'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 type StudioHeaderActionsProps = {
   hasChannel?: boolean
@@ -52,7 +53,10 @@ export function StudioHeaderActions({
                 <SidebarNavIconSvg name="appearance" />
                 Design
               </NextLink>
-              <NextLink href={`/c/${channelSlug}`} className="ui-btn ui-btn--sm ui-btn--ghost">
+              <NextLink
+                href={resolveChannelUrl(channelSlug)}
+                className="ui-btn ui-btn--sm ui-btn--ghost"
+              >
                 <SidebarNavIconSvg name="channel" />
                 View channel
               </NextLink>

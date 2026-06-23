@@ -40,10 +40,15 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { id: channelId },
-        select: { fallbackMode: true },
+        select: { fallbackMode: true, fallbackEnabled: true },
       })
       if (!channel) {
         return reply.status(404).send('channel not found')
+      }
+
+      if (!channel.fallbackEnabled) {
+        const body = renderFallbackM3u([], config.minio.publicEndpoint, config.minio.bucket)
+        return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
       }
 
       // Curated channels (e.g. Tahti Selects) have an explicit, ordered, cross-channel

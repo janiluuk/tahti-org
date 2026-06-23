@@ -56,7 +56,7 @@ echo "==> Building images on ${HOST}"
 BUILD_ARGS=()
 [[ -n "$NO_CACHE" ]] && BUILD_ARGS+=(--no-cache)
 
-COMPOSE=(docker compose -f infra/docker-compose.stack.yml)
+COMPOSE=(docker compose -f infra/docker-compose.stack.yml --profile marketing)
 if ssh_remote "test -f '${REMOTE_PATH}/infra/stack.env'"; then
   COMPOSE+=(--env-file infra/stack.env)
   echo "==> Using infra/stack.env for SMTP and production overrides"
@@ -66,7 +66,7 @@ else
 fi
 
 ssh_remote "cd '${REMOTE_PATH}' && \
-  ${COMPOSE[*]} build ${BUILD_ARGS[*]:-} api web worker orchestrator db-push"
+  ${COMPOSE[*]} build ${BUILD_ARGS[*]:-} website api web worker orchestrator db-push"
 
 # ── Up ────────────────────────────────────────────────────────────────────────
 echo "==> Starting stack on ${HOST}"

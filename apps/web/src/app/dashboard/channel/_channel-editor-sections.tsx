@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { resolveChannelUrl } from '@/lib/app-url'
 import ChannelGalleryPanel from '../channel-gallery-panel'
 import ChannelTextLayerPanel from '../channel-text-layer-panel'
 import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
@@ -88,7 +89,7 @@ export function ChannelEditorSections({
         <div className="studio-channel-editor__preview-col">
           <ChannelLivePreview draft={draft} />
           <Link
-            href={`/c/${channelSlug}`}
+            href={resolveChannelUrl(channelSlug)}
             className="ui-btn ui-btn--secondary ui-btn--sm studio-channel-editor__preview-link"
             target="_blank"
             rel="noopener noreferrer"
