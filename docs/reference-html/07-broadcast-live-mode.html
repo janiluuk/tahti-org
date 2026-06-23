@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tahti reference — 07-broadcast-live-mode</title>
+<meta name="viewport" content="width=968,initial-scale=1">
+<style>
+/* ===== v8 design tokens and primitives (CANONICAL) ===== */
+/* Tahti v8 — shared tokens + primitives for standalone view mockups */
+*{box-sizing:border-box;min-width:0;margin:0;padding:0}
+body{
+  background:#0A0E1C;
+  color:#E6E9F0;
+  font-family:Inter,system-ui,-apple-system,sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  padding:24px;
+  -webkit-font-smoothing:antialiased;
+}
+.bw{background:#11172A;border:1px solid #1F2940;border-radius:12px;overflow:hidden}
+.bar{background:#080C16;padding:7px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1F2940}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.d1{background:#FF5F57}.d2{background:#FEBC2E}.d3{background:#28C840}
+.url{flex:1;background:#11172A;border:1px solid #1F2940;border-radius:7px;padding:4px 10px;font-size:11px;color:#A1A8BD;font-family:ui-monospace,monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.topnav{padding:9px 14px;border-bottom:1px solid #1F2940;display:flex;align-items:center;justify-content:space-between;background:#11172A}
+.brand{font-weight:500;font-size:12px;letter-spacing:1.5px;color:#E6E9F0}
+.mut{font-size:11px;color:#A1A8BD}
+.tn{font-size:10px;color:#5E6680}
+.mono{font-family:ui-monospace,"SF Mono",monospace}
+.lbl{font-size:9px;letter-spacing:1px;color:#5E6680;text-transform:uppercase;margin-bottom:6px}
+.r{display:flex;align-items:center}
+.layout{display:grid;grid-template-columns:130px 1fr}
+.sidebar{background:#0E1424;border-right:1px solid #1F2940;padding:10px 6px;min-height:480px}
+.si-grp{font-size:8px;letter-spacing:1px;color:#5E6680;text-transform:uppercase;padding:7px 8px 3px}
+.si{font-size:11px;padding:5px 8px;border-radius:6px;color:#A1A8BD;margin-bottom:1px}
+.si.ac{background:rgba(34,211,238,0.08);color:#22D3EE;border-left:2px solid #22D3EE;padding-left:6px}
+.stat-card{background:#162038;border:1px solid #1F2940;border-radius:8px;padding:10px}
+.stat-num{font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.5px;line-height:1}
+.stat-lbl{font-size:9px;letter-spacing:1px;color:#5E6680;text-transform:uppercase;margin-top:6px}
+.card{background:#162038;border:1px solid #1F2940;border-radius:10px;padding:14px}
+.bp{background:#22D3EE;color:#062028;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.bs{background:transparent;color:#E6E9F0;border:1px solid #2A3550;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.pill{font-size:10px;padding:3px 10px;border-radius:9999px;letter-spacing:0.5px;font-weight:500;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.p-green{background:rgba(63,224,122,0.12);color:#3FE07A}
+.p-amber{background:rgba(255,184,64,0.12);color:#FFB840}
+.p-cyan{background:rgba(34,211,238,0.12);color:#22D3EE}
+.p-purple{background:rgba(167,139,250,0.12);color:#A78BFA}
+.meterbar{height:9px;border-radius:9999px;background:#1F2940;overflow:hidden;position:relative}
+.dot-live{width:6px;height:6px;border-radius:50%;background:#3FE07A;display:inline-block}
+.dot-live-big{width:10px;height:10px;border-radius:50%;background:#3FE07A;display:inline-block;box-shadow:0 0 12px rgba(63,224,122,0.6)}
+.cv{border-radius:5px;background:linear-gradient(135deg,#A78BFA,#22D3EE,#3FE07A)}
+.cv-deep{background:linear-gradient(135deg,#5B6BC4,#22D3EE)}
+.cv-violet{background:linear-gradient(135deg,#8B5CF6,#6366F1)}
+.cv-rose{background:linear-gradient(135deg,#F472B6,#8B5CF6)}
+.cv-coral{background:linear-gradient(135deg,#F87171,#FFB840)}
+.cv-mint{background:linear-gradient(135deg,#3FE07A,#22D3EE)}
+.cv-amber{background:linear-gradient(135deg,#FFB840,#F59E0B)}
+input,textarea,select{background:#0A0E1C;color:#E6E9F0;border:1px solid #1F2940;border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;outline:none;width:100%}
+.step{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:9999px;letter-spacing:0.3px}
+.step.done{background:rgba(63,224,122,0.1);color:#3FE07A}
+.step.cur{background:#22D3EE;color:#062028;font-weight:500}
+.step.next{color:#5E6680;border:1px solid #1F2940}
+.step-arr{color:#5E6680;font-size:10px}
+.stepper{display:flex;align-items:center;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.ch{font-size:11px;line-height:1.5;margin-bottom:5px}
+.h{font-weight:500}
+.h1{color:#22D3EE}.h2{color:#FFB840}.h3{color:#A78BFA}.h4{color:#3FE07A}.h5{color:#F472B6}.h6{color:#FB923C}
+
+/* ===== /tokens ===== */
+</style>
+</head>
+<body>
+<!--
+  REFERENCE: 07-broadcast-live-mode
+  Designed for: viewport width 968px
+  Use this HTML as the STRUCTURAL spec when implementing the React route.
+  - Match element hierarchy (the agent does not invent its own structure)
+  - Match class names (or equivalent Tailwind utilities mapped through tailwind.config)
+  - Match content layout (do not add new sections; do not remove existing ones)
+  - Replace static content (text, numbers, covers) with real data
+-->
+
+<div class="bw" style="width:920px">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">tahti.live/dashboard</div></div>
+  <div class="topnav"><div class="brand">TAHTI</div><div class="mut">dj-moonrise</div></div>
+  <div style="padding:18px 20px">
+    <div style="background:linear-gradient(135deg,rgba(63,224,122,0.1),rgba(63,224,122,0.02));border:1px solid rgba(63,224,122,0.35);border-left:4px solid #3FE07A;border-radius:12px;padding:20px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <span class="dot-live-big"></span>
+            <span style="font-size:13px;color:#3FE07A;font-weight:500;letter-spacing:1.5px">BROADCASTING NOW</span>
+          </div>
+          <div style="font-size:26px;font-weight:500;color:#E6E9F0;margin-bottom:6px">Moonrise Sessions — Live</div>
+          <div class="mut" style="line-height:1.5">Public broadcast · simulcasting to Mixcloud, Twitch · auto-archiving</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:14px;font-size:11px">
+            <div><span class="tn">elapsed</span> <span class="mono" style="color:#E6E9F0;font-size:14px;font-weight:500">47:23</span></div>
+            <div><span class="tn">listeners</span> <span class="mono" style="color:#3FE07A;font-size:14px;font-weight:500">247</span> <span class="tn">peak 312</span></div>
+            <div><span class="tn">quality</span> <span class="pill p-cyan">FLAC · 24/96</span></div>
+          </div>
+        </div>
+        <button style="background:#F87171;color:#3B0808;border:none;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0">⏹ End broadcast</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:12px">
+      <div>
+        <div class="card" style="margin-bottom:10px">
+          <div class="lbl" style="margin-bottom:10px">Live signal · the listeners' ears</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">
+            <div>
+              <div class="tn" style="margin-bottom:4px">Left</div>
+              <div class="meterbar"><div style="position:absolute;left:0;top:0;height:100%;width:74%;background:linear-gradient(90deg,#3FE07A,#3FE07A 78%,#FFB840)"></div></div>
+              <div class="mono" style="font-size:11px;color:#3FE07A;margin-top:4px">−5.8 dBFS</div>
+            </div>
+            <div>
+              <div class="tn" style="margin-bottom:4px">Right</div>
+              <div class="meterbar"><div style="position:absolute;left:0;top:0;height:100%;width:71%;background:linear-gradient(90deg,#3FE07A,#3FE07A 78%,#FFB840)"></div></div>
+              <div class="mono" style="font-size:11px;color:#3FE07A;margin-top:4px">−6.2 dBFS</div>
+            </div>
+          </div>
+          <svg viewBox="0 0 480 22" preserveAspectRatio="none" style="width:100%;height:22px;display:block">
+            <g fill="#3FE07A" opacity="0.85"><rect x="0" y="9" width="2" height="6"/><rect x="5" y="6" width="2" height="12"/><rect x="10" y="3" width="2" height="18"/><rect x="15" y="10" width="2" height="4"/><rect x="20" y="7" width="2" height="10"/><rect x="25" y="2" width="2" height="20"/><rect x="30" y="9" width="2" height="6"/><rect x="35" y="5" width="2" height="14"/><rect x="40" y="11" width="2" height="2"/><rect x="45" y="7" width="2" height="10"/><rect x="50" y="1" width="2" height="22"/><rect x="55" y="8" width="2" height="8"/><rect x="60" y="4" width="2" height="16"/><rect x="65" y="10" width="2" height="4"/><rect x="70" y="6" width="2" height="12"/><rect x="75" y="2" width="2" height="20"/><rect x="80" y="9" width="2" height="6"/><rect x="85" y="5" width="2" height="14"/><rect x="90" y="11" width="2" height="2"/><rect x="95" y="7" width="2" height="10"/><rect x="100" y="3" width="2" height="18"/><rect x="105" y="8" width="2" height="8"/><rect x="110" y="4" width="2" height="16"/><rect x="115" y="10" width="2" height="4"/><rect x="120" y="6" width="2" height="12"/><rect x="125" y="1" width="2" height="22"/><rect x="130" y="9" width="2" height="6"/><rect x="135" y="5" width="2" height="14"/><rect x="140" y="11" width="2" height="2"/><rect x="145" y="7" width="2" height="10"/><rect x="150" y="3" width="2" height="18"/><rect x="155" y="8" width="2" height="8"/><rect x="160" y="4" width="2" height="16"/><rect x="165" y="10" width="2" height="4"/><rect x="170" y="6" width="2" height="12"/><rect x="175" y="2" width="2" height="20"/><rect x="180" y="9" width="2" height="6"/><rect x="185" y="5" width="2" height="14"/><rect x="190" y="11" width="2" height="2"/><rect x="195" y="7" width="2" height="10"/><rect x="200" y="3" width="2" height="18"/><rect x="205" y="8" width="2" height="8"/><rect x="210" y="4" width="2" height="16"/><rect x="215" y="10" width="2" height="4"/><rect x="220" y="6" width="2" height="12"/><rect x="225" y="1" width="2" height="22"/><rect x="230" y="9" width="2" height="6"/><rect x="235" y="5" width="2" height="14"/><rect x="240" y="11" width="2" height="2"/><rect x="245" y="7" width="2" height="10"/><rect x="250" y="3" width="2" height="18"/><rect x="255" y="8" width="2" height="8"/><rect x="260" y="4" width="2" height="16"/><rect x="265" y="10" width="2" height="4"/><rect x="270" y="6" width="2" height="12"/><rect x="275" y="2" width="2" height="20"/><rect x="280" y="9" width="2" height="6"/><rect x="285" y="5" width="2" height="14"/><rect x="290" y="11" width="2" height="2"/><rect x="295" y="7" width="2" height="10"/><rect x="300" y="3" width="2" height="18"/><rect x="305" y="8" width="2" height="8"/><rect x="310" y="4" width="2" height="16"/><rect x="315" y="10" width="2" height="4"/><rect x="320" y="6" width="2" height="12"/><rect x="325" y="1" width="2" height="22"/><rect x="330" y="9" width="2" height="6"/><rect x="335" y="5" width="2" height="14"/><rect x="340" y="11" width="2" height="2"/><rect x="345" y="7" width="2" height="10"/><rect x="350" y="3" width="2" height="18"/><rect x="355" y="8" width="2" height="8"/><rect x="360" y="4" width="2" height="16"/><rect x="365" y="10" width="2" height="4"/><rect x="370" y="6" width="2" height="12"/><rect x="375" y="2" width="2" height="20"/><rect x="380" y="9" width="2" height="6"/><rect x="385" y="5" width="2" height="14"/><rect x="390" y="11" width="2" height="2"/><rect x="395" y="7" width="2" height="10"/><rect x="400" y="3" width="2" height="18"/><rect x="405" y="8" width="2" height="8"/><rect x="410" y="4" width="2" height="16"/><rect x="415" y="10" width="2" height="4"/><rect x="420" y="6" width="2" height="12"/><rect x="425" y="1" width="2" height="22"/><rect x="430" y="9" width="2" height="6"/><rect x="435" y="5" width="2" height="14"/><rect x="440" y="11" width="2" height="2"/><rect x="445" y="7" width="2" height="10"/><rect x="450" y="3" width="2" height="18"/><rect x="455" y="8" width="2" height="8"/><rect x="460" y="4" width="2" height="16"/><rect x="465" y="10" width="2" height="4"/><rect x="470" y="6" width="2" height="12"/></g>
+          </svg>
+          <div class="tn" style="margin-top:6px">latency to ingest 42 ms · stream healthy</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="card">
+            <div class="lbl" style="margin-bottom:8px">Listeners last 30 min</div>
+            <svg viewBox="0 0 200 50" style="width:100%;height:42px;display:block">
+              <path d="M0,40 L20,35 L40,28 L60,32 L80,22 L100,18 L120,14 L140,16 L160,10 L180,12 L200,8" fill="none" stroke="#22D3EE" stroke-width="2"/>
+              <path d="M0,40 L20,35 L40,28 L60,32 L80,22 L100,18 L120,14 L140,16 L160,10 L180,12 L200,8 L200,50 L0,50 Z" fill="#22D3EE" opacity="0.1"/>
+            </svg>
+            <div class="mono" style="font-size:12px;color:#22D3EE;margin-top:4px">↗ +47 in last 5 min</div>
+          </div>
+          <div class="card">
+            <div class="lbl" style="margin-bottom:8px">Simulcast targets</div>
+            <div style="display:flex;flex-direction:column;gap:5px;font-size:11px">
+              <div style="display:flex;justify-content:space-between"><span style="color:#E6E9F0">📡 Mixcloud</span><span class="pill p-green" style="font-size:9px">LIVE</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#E6E9F0">📺 Twitch</span><span class="pill p-green" style="font-size:9px">LIVE</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:#A1A8BD">▶ YouTube Live</span><span class="pill" style="font-size:9px;background:#1B2540;color:#5E6680">OFF</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span class="lbl" style="margin:0">Live chat</span>
+          <span class="tn">247 listening</span>
+        </div>
+        <div class="card" style="padding:10px;margin-bottom:8px">
+          <div class="ch"><span class="h h2">@aurora_fi</span> <span class="mut">this bassline is everything 🔥</span></div>
+          <div class="ch"><span class="h h1">@kai_studio</span> <span class="mut">been waiting for this set all week</span></div>
+          <div class="ch"><span class="h h3">dj-moonrise</span> <span class="mut">thank you ❤️</span></div>
+          <div class="ch"><span class="h h6">@mia.waves</span> <span class="mut">sound quality is incredible on this</span></div>
+          <div class="ch"><span class="h h4">@tallinn_owl</span> <span class="mut">just tuned in from EE 🇪🇪</span></div>
+          <div class="ch"><span class="h h2">@aurora_fi</span> <span class="mut">is this the vhs mix or new material?</span></div>
+          <div class="ch"><span class="h h3">dj-moonrise</span> <span class="mut">mix of both — surprise at 50 min 🎁</span></div>
+          <div class="ch"><span class="h h5">@new_listener_12</span> <span class="mut">first time on tahti, this is gorgeous</span></div>
+        </div>
+        <div style="display:flex;gap:4px;margin-bottom:8px"><input placeholder="Reply as artist…"/><button class="bs" style="padding:5px 9px">→</button></div>
+        <div class="card" style="background:rgba(167,139,250,0.05);border-color:rgba(167,139,250,0.25);padding:8px 10px">
+          <div class="lbl" style="color:#A78BFA;font-size:9px;margin-bottom:3px">💜 fan moment</div>
+          <div class="tn" style="line-height:1.4;font-size:10px">@mia.waves just subscribed (€5/mo) · 3rd new fan-sub this hour</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid #1F2940">
+      <div class="tn">Auto-archive on · transcript &amp; tracklist captured · publishable when broadcast ends</div>
+      <div style="display:flex;gap:6px">
+        <button class="bs">📌 Pin to chat</button>
+        <button class="bs">⚙ Adjust settings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
