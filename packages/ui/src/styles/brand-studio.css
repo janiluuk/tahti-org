@@ -1822,6 +1822,19 @@
   gap: 0.5rem;
 }
 
+[data-tahti-ui='studio'] .schedule-rotation-row--draggable {
+  cursor: grab;
+}
+
+[data-tahti-ui='studio'] .schedule-rotation-row--draggable:active {
+  cursor: grabbing;
+}
+
+[data-tahti-ui='studio'] .schedule-rotation-row__handle {
+  color: var(--muted);
+  line-height: 1;
+}
+
 [data-tahti-ui='studio'] .studio-stripe-banner {
   margin-top: 1rem;
   padding: 1rem;

@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import NextLink from 'next/link'
 import { BrandButton } from '@tahti/ui'
+import { resolveChannelUrl } from '@/lib/app-url'
 import { EndBroadcastBtn } from './end-broadcast-btn'
 import { GoLiveBtn } from './go-live-btn'
 
@@ -79,7 +80,7 @@ export function ChannelHero({ slug, state, goneLiveAt, lastBroadcast }: Props) {
         </div>
         <div className="db-hero__actions">
           <EndBroadcastBtn mode="live" />
-          <NextLink href={`/c/${slug}`} className="db-hero__secondary-link">
+          <NextLink href={resolveChannelUrl(slug)} className="db-hero__secondary-link">
             View channel →
           </NextLink>
         </div>

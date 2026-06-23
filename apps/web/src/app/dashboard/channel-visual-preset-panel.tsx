@@ -6,6 +6,7 @@
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { resolveChannelUrl } from '@/lib/app-url'
 import {
   SLIDESHOW_PRESETS,
   SLIDESHOW_PRESET_LABELS,
@@ -243,7 +244,11 @@ export default function ChannelVisualPresetPanel({
           {isPending ? 'Saving…' : 'Save appearance'}
         </button>
         {!bare ? (
-          <Link href={`/c/${channelSlug}`} className="ui-btn ui-btn--secondary" target="_blank">
+          <Link
+            href={resolveChannelUrl(channelSlug)}
+            className="ui-btn ui-btn--secondary"
+            target="_blank"
+          >
             Preview channel →
           </Link>
         ) : null}

@@ -14,7 +14,14 @@ export const ChannelProgrammeItemPatchSchema = z.object({
 
 export const ChannelProgrammePatchSchema = z.object({
   fallbackMode: z.enum(FALLBACK_MODES).optional(),
+  fallbackEnabled: z.boolean().optional(),
   items: z.array(ChannelProgrammeItemPatchSchema).max(200).optional(),
 })
 
 export type ChannelProgrammePatch = z.infer<typeof ChannelProgrammePatchSchema>
+
+export const ChannelProgrammePromoteSchema = z.object({
+  releaseTrackId: z.string().min(1),
+})
+
+export type ChannelProgrammePromote = z.infer<typeof ChannelProgrammePromoteSchema>

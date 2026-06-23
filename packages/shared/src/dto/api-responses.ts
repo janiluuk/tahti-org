@@ -173,9 +173,21 @@ export const ChannelProgrammeItemViewSchema = z.object({
   createdAt: z.coerce.date(),
 })
 
+export const ChannelProgrammeLibraryTrackViewSchema = z.object({
+  releaseTrackId: z.string(),
+  releaseId: z.string(),
+  releaseTitle: z.string(),
+  trackTitle: z.string(),
+  durationSec: z.number().nullable(),
+  /** Set once this library track has been added to rotation (mirrors an ArchiveItem). */
+  archiveItemId: z.string().nullable(),
+})
+
 export const ChannelProgrammeViewSchema = z.object({
   fallbackMode: z.enum(['shuffle', 'ordered']),
+  fallbackEnabled: z.boolean(),
   items: z.array(ChannelProgrammeItemViewSchema),
+  library: z.array(ChannelProgrammeLibraryTrackViewSchema),
 })
 
 export const StreamSettingsResponseSchema = z.object({

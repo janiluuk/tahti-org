@@ -8,9 +8,7 @@ import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import AnnouncementsPanel from '../announcements-panel'
 import ModeratorsPanel from '../moderators-panel'
 import type { ModeratorRow } from '../moderator-actions'
-import ProgrammePanel from '../programme-panel'
 import ChannelSchedulePanel from '../channel-schedule-panel'
-import type { ProgrammeItemRow } from '../programme-actions'
 import { MixcloudConnect } from '../mixcloud-connect'
 import { TahtiRadioPanel } from '../tahti-radio-panel'
 
@@ -19,7 +17,6 @@ export type BroadcastSettingsSectionsProps = {
   isLive: boolean
   announcements: Array<{ id: string; body: string; createdAt: string }>
   moderators: ModeratorRow[]
-  channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] }
   channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null }
   mixcloudStatus: { connected: boolean; configured: boolean }
   apiUrl: string
@@ -31,7 +28,6 @@ export function BroadcastSettingsSections({
   isLive,
   announcements,
   moderators,
-  channelProgramme,
   channelSchedule,
   mixcloudStatus,
   apiUrl,
@@ -45,7 +41,16 @@ export function BroadcastSettingsSections({
       )}
 
       <StudioCollapse title="Schedule & programme" hint="next show & running order" defaultOpen>
-        <ProgrammePanel initial={channelProgramme} />
+        <Panel
+          title="24/7 rotation"
+          headerTight
+          description="Build your offline playlist from archive sets and library tracks on a dedicated page."
+          className="studio-channel-design-link"
+        >
+          <NextLink href="/dashboard/schedule" className="ui-btn ui-btn--primary">
+            Open rotation editor →
+          </NextLink>
+        </Panel>
         <ChannelSchedulePanel
           initialAt={channelSchedule.nextBroadcastAt}
           initialNote={channelSchedule.nextBroadcastNote}

@@ -741,6 +741,7 @@ model Channel {
   liveSourcePassPreviousExpiresAt DateTime?
   webrtcTokenHash    String?
   fallbackMode       String       @default("shuffle")
+  fallbackEnabled    Boolean      @default(true) // M33: explicit 24/7 rotation on/off
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
   goneLiveAt         DateTime?

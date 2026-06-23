@@ -27,7 +27,10 @@ describe('syncChannelArchiveFallbackCache', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     await mkdir(root, { recursive: true })
-    prismaMock.channel.findUnique.mockResolvedValue({ fallbackMode: 'shuffle' })
+    prismaMock.channel.findUnique.mockResolvedValue({
+      fallbackMode: 'shuffle',
+      fallbackEnabled: true,
+    })
     prismaMock.archiveItem.findMany.mockResolvedValue([
       {
         id: 'item-1',
@@ -131,5 +134,19 @@ describe('syncChannelArchiveFallbackCache', () => {
 
     expect(summary).toEqual({ downloaded: 0, skipped: 0, pruned: 0 })
     expect(downloadToFile).not.toHaveBeenCalled()
+  })
+
+  it('M33: skips the pool entirely and writes an empty m3u when fallbackEnabled is false', async () => {
+    prismaMock.channel.findUnique.mockResolvedValue({
+      fallbackMode: 'shuffle',
+      fallbackEnabled: false,
+    })
+
+    const summary = await syncChannelArchiveFallbackCache(prismaMock as never, channelId, root, 24)
+
+    expect(summary.downloaded).toBe(0)
+    expect(downloadToFile).not.toHaveBeenCalled()
+    const m3u = await readFile(join(root, channelId, 'fallback.m3u'), 'utf8')
+    expect(m3u).toContain('no items yet')
   })
 })
