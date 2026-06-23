@@ -11,6 +11,11 @@
   REFERENCE: release smart link page  /r/<slug>
   Layout: single NARROW centered column, max 460px. Never wider.
   This page is shared on social — it must look perfect at any size.
+  Updated to add the credits/collections panel (apps/web/src/components/
+  smart-link-release-details.tsx) that sits between the quote and the
+  DSP buttons — conditional on UPC/ISRC/MusicBrainz/Discogs data or
+  featured collections existing, but real and part of the reading
+  order, not a rare edge case to skip depicting.
 ================================================================ -->
 
 <nav class="topnav">
@@ -37,6 +42,29 @@
     <div class="muted" style="font-size:11px;font-style:italic;line-height:1.5">
       "Recorded live to tape, mixed in one take. Sides A and B are meant to be played together."
     </div>
+  </div>
+
+  <!-- Credits/collections panel: UPC, P/C-line, per-track ISRC, MusicBrainz/
+       Discogs links, and a "From this artist" featured-collections list.
+       Renders only when that data exists — omit the whole block otherwise. -->
+  <div class="sl-panel">
+    <div class="sl-panel-row"><strong>UPC:</strong> 196589403821</div>
+    <div class="sl-panel-row">℗ 2024 Tahti ry</div>
+    <div class="sl-panel-row">© 2024 dj-moonrise</div>
+    <ul class="sl-track-list">
+      <li>Drift (Intro): USRC17607839</li>
+      <li>Tidewater: USRC17607840</li>
+    </ul>
+    <div class="sl-panel-action"><a href="#">View on MusicBrainz</a></div>
+  </div>
+  <div class="sl-panel">
+    <p class="sl-collection-label">From this artist</p>
+    <ul class="sl-collection-list">
+      <li class="sl-collection-item">
+        <a href="#" class="sl-collection-link">Late Night Sessions</a>
+        <span class="sl-collection-meta"> · 6 items</span>
+      </li>
+    </ul>
   </div>
 
   <!-- DSP buttons: vertical stack, 6px gap, full width of the narrow column -->
@@ -67,12 +95,12 @@
        border-radius:8px;padding:8px 10px;display:flex;align-items:center;
        justify-content:space-between;font-size:11px;text-decoration:none">
       <span style="display:flex;align-items:center;gap:8px;color:var(--brand)">
-        <span style="width:18px;height:18px;background:var(--stat-plays);border-radius:4px"></span>tahti.eu
+        <span style="width:18px;height:18px;background:var(--stat-plays);border-radius:4px"></span>tahti.live
       </span><span style="color:var(--brand);font-size:10px">FLAC · best quality →</span>
     </a>
   </div>
 
-  <div class="faint" style="font-size:10px;margin-top:14px">Powered by tahti.eu · @dj-moonrise</div>
+  <div class="faint" style="font-size:10px;margin-top:14px">Powered by <a href="#" style="color:inherit">tahti.live</a> · <a href="#" style="color:inherit">@dj-moonrise</a></div>
 </div>
 </body>
 </html>
