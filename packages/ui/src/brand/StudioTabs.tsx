@@ -73,13 +73,18 @@ export function StudioTabs({
 
   useEffect(() => {
     if (!syncHash) return
-    const sync = () => {
+    // Only scroll when there's an actual hash to honor (e.g. a sidebar link to
+    // /dashboard#newsletter). A bare page load has no hash and is already at the
+    // top — scrollIntoView()ing the default tab anyway just shoves the tab list
+    // and its content partway under the sticky top nav on tall (mobile) layouts.
+    const sync = (opts: { scroll: boolean }) => {
       setActiveState(resolveHash(window.location.hash))
-      scrollToDashboardSection(window.location.hash)
+      if (opts.scroll) scrollToDashboardSection(window.location.hash)
     }
-    sync()
-    window.addEventListener('hashchange', sync)
-    return () => window.removeEventListener('hashchange', sync)
+    sync({ scroll: window.location.hash !== '' })
+    const onHashChange = () => sync({ scroll: true })
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
   }, [syncHash, resolveHash, pathname])
 
   return (
