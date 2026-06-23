@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tahti reference — 13-spotify-search-add-to-collection</title>
+<meta name="viewport" content="width=720,initial-scale=1">
+<style>
+/* ===== v8 design tokens and primitives (CANONICAL) ===== */
+/* Tahti v8 — shared tokens + primitives for standalone view mockups */
+*{box-sizing:border-box;min-width:0;margin:0;padding:0}
+body{
+  background:#0A0E1C;
+  color:#E6E9F0;
+  font-family:Inter,system-ui,-apple-system,sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  padding:24px;
+  -webkit-font-smoothing:antialiased;
+}
+.bw{background:#11172A;border:1px solid #1F2940;border-radius:12px;overflow:hidden}
+.bar{background:#080C16;padding:7px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1F2940}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.d1{background:#FF5F57}.d2{background:#FEBC2E}.d3{background:#28C840}
+.url{flex:1;background:#11172A;border:1px solid #1F2940;border-radius:7px;padding:4px 10px;font-size:11px;color:#A1A8BD;font-family:ui-monospace,monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.topnav{padding:9px 14px;border-bottom:1px solid #1F2940;display:flex;align-items:center;justify-content:space-between;background:#11172A}
+.brand{font-weight:500;font-size:12px;letter-spacing:1.5px;color:#E6E9F0}
+.mut{font-size:11px;color:#A1A8BD}
+.tn{font-size:10px;color:#5E6680}
+.mono{font-family:ui-monospace,"SF Mono",monospace}
+.lbl{font-size:9px;letter-spacing:1px;color:#5E6680;text-transform:uppercase;margin-bottom:6px}
+.r{display:flex;align-items:center}
+.layout{display:grid;grid-template-columns:130px 1fr}
+.sidebar{background:#0E1424;border-right:1px solid #1F2940;padding:10px 6px;min-height:480px}
+.si-grp{font-size:8px;letter-spacing:1px;color:#5E6680;text-transform:uppercase;padding:7px 8px 3px}
+.si{font-size:11px;padding:5px 8px;border-radius:6px;color:#A1A8BD;margin-bottom:1px}
+.si.ac{background:rgba(34,211,238,0.08);color:#22D3EE;border-left:2px solid #22D3EE;padding-left:6px}
+.stat-card{background:#162038;border:1px solid #1F2940;border-radius:8px;padding:10px}
+.stat-num{font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.5px;line-height:1}
+.stat-lbl{font-size:9px;letter-spacing:1px;color:#5E6680;text-transform:uppercase;margin-top:6px}
+.card{background:#162038;border:1px solid #1F2940;border-radius:10px;padding:14px}
+.bp{background:#22D3EE;color:#062028;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.bs{background:transparent;color:#E6E9F0;border:1px solid #2A3550;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.pill{font-size:10px;padding:3px 10px;border-radius:9999px;letter-spacing:0.5px;font-weight:500;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.p-green{background:rgba(63,224,122,0.12);color:#3FE07A}
+.p-amber{background:rgba(255,184,64,0.12);color:#FFB840}
+.p-cyan{background:rgba(34,211,238,0.12);color:#22D3EE}
+.p-purple{background:rgba(167,139,250,0.12);color:#A78BFA}
+.meterbar{height:9px;border-radius:9999px;background:#1F2940;overflow:hidden;position:relative}
+.dot-live{width:6px;height:6px;border-radius:50%;background:#3FE07A;display:inline-block}
+.dot-live-big{width:10px;height:10px;border-radius:50%;background:#3FE07A;display:inline-block;box-shadow:0 0 12px rgba(63,224,122,0.6)}
+.cv{border-radius:5px;background:linear-gradient(135deg,#A78BFA,#22D3EE,#3FE07A)}
+.cv-deep{background:linear-gradient(135deg,#5B6BC4,#22D3EE)}
+.cv-violet{background:linear-gradient(135deg,#8B5CF6,#6366F1)}
+.cv-rose{background:linear-gradient(135deg,#F472B6,#8B5CF6)}
+.cv-coral{background:linear-gradient(135deg,#F87171,#FFB840)}
+.cv-mint{background:linear-gradient(135deg,#3FE07A,#22D3EE)}
+.cv-amber{background:linear-gradient(135deg,#FFB840,#F59E0B)}
+input,textarea,select{background:#0A0E1C;color:#E6E9F0;border:1px solid #1F2940;border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;outline:none;width:100%}
+.step{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:9999px;letter-spacing:0.3px}
+.step.done{background:rgba(63,224,122,0.1);color:#3FE07A}
+.step.cur{background:#22D3EE;color:#062028;font-weight:500}
+.step.next{color:#5E6680;border:1px solid #1F2940}
+.step-arr{color:#5E6680;font-size:10px}
+.stepper{display:flex;align-items:center;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.ch{font-size:11px;line-height:1.5;margin-bottom:5px}
+.h{font-weight:500}
+.h1{color:#22D3EE}.h2{color:#FFB840}.h3{color:#A78BFA}.h4{color:#3FE07A}.h5{color:#F472B6}.h6{color:#FB923C}
+
+
+.modal-card{background:#11172A;border:1px solid #1F2940;border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.45)}
+.modal-head{padding:14px 18px;border-bottom:1px solid #1F2940;display:flex;align-items:center;justify-content:space-between}
+.modal-body{padding:0}
+.modal-foot{padding:12px 18px;border-top:1px solid #1F2940;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.row-pick{padding:10px 14px;display:grid;align-items:center;gap:12px;font-size:12px;cursor:pointer}
+.row-pick:hover{background:#1B2540}
+.row-pick+.row-pick{border-top:1px solid #1F2940}
+.checkbox{width:14px;height:14px;border-radius:4px;border:1.5px solid #2A3550;flex-shrink:0;background:#0A0E1C;display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:#062028}
+.checkbox.on{background:#22D3EE;border-color:#22D3EE}
+.src-tahti{background:rgba(34,211,238,0.12);color:#22D3EE;border:1px solid rgba(34,211,238,0.3)}
+.src-spotify{background:rgba(29,185,84,0.12);color:#1ED760;border:1px solid rgba(29,185,84,0.3)}
+.src-mixcloud{background:rgba(80,0,185,0.18);color:#A78BFA;border:1px solid rgba(167,139,250,0.3)}
+.src-bandcamp{background:rgba(29,160,195,0.12);color:#3CCFE5;border:1px solid rgba(29,160,195,0.3)}
+.src-badge{font-size:9px;padding:2px 7px;border-radius:5px;letter-spacing:0.4px;font-weight:500;display:inline-flex;align-items:center;gap:4px}
+.banner-warn{background:rgba(255,184,64,0.08);border:1px solid rgba(255,184,64,0.25);border-left:3px solid #FFB840;border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;color:#E6E9F0;line-height:1.5}
+.banner-warn .lead{color:#FFB840;font-weight:500;letter-spacing:0.3px}
+.embed-frame-spotify{background:linear-gradient(160deg,#1ED760 0%,#1DB954 60%,#179443 100%);border-radius:10px;padding:12px 14px;color:#000;display:flex;align-items:center;gap:12px;position:relative}
+.embed-frame-mixcloud{background:linear-gradient(160deg,#5000B9 0%,#3D008C 100%);border-radius:10px;padding:12px 14px;color:#fff;display:flex;align-items:center;gap:12px;position:relative}
+.embed-badge{position:absolute;top:6px;right:8px;font-size:9px;font-weight:600;letter-spacing:0.6px;opacity:0.85}
+.tahti-track-row{background:#162038;border:1px solid #1F2940;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px}
+.kn{width:54px;height:54px;border-radius:50%;border:3px solid #2A3550;position:relative;background:radial-gradient(circle at 38% 32%,#1B2540,#0E1424);flex-shrink:0}
+.kn::before{content:'';position:absolute;inset:-7px;border-radius:50%;border:2px solid #1F2940;border-bottom-color:transparent}
+.kn .ptr{position:absolute;left:50%;top:50%;width:3px;height:22px;margin-left:-1.5px;margin-top:-25px;border-radius:2px;transform-origin:50% 25px}
+.plugcard{background:#162038;border:1px solid #1F2940;border-radius:9px;padding:10px 12px;cursor:pointer;position:relative}
+.plugcard.ac{border-color:#22D3EE;background:rgba(34,211,238,0.06);border-left:3px solid #22D3EE;padding-left:9px}
+.plugcard.off{opacity:0.5}
+.arrow{position:absolute;right:-9px;top:50%;transform:translateY(-50%);color:#5E6680;font-size:14px;z-index:2;background:#11172A;padding:0 2px}
+.sw{width:30px;height:17px;border-radius:9999px;background:#2A3550;position:relative;flex-shrink:0}
+.sw.on{background:rgba(63,224,122,0.4)}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#A1A8BD}
+.sw.on::after{left:15px;background:#3FE07A}
+.tool{width:32px;height:30px;border-radius:7px;border:1px solid #2A3550;background:transparent;color:#A1A8BD;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.tool.ac{background:rgba(34,211,238,0.1);border-color:rgba(34,211,238,0.4);color:#22D3EE}
+
+/* ===== /tokens ===== */
+</style>
+</head>
+<body>
+<!--
+  REFERENCE: 13-spotify-search-add-to-collection
+  Designed for: viewport width 720px
+  Use this HTML as the STRUCTURAL spec when implementing the React route.
+  - Match element hierarchy (the agent does not invent its own structure)
+  - Match class names (or equivalent Tailwind utilities mapped through tailwind.config)
+  - Match content layout (do not add new sections; do not remove existing ones)
+  - Replace static content (text, numbers, covers) with real data
+-->
+
+<div class="modal-card" style="width:620px;margin:0 auto">
+  <div class="modal-head">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:24px;height:24px;background:#1DB954;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;font-size:13px">♪</div>
+      <div>
+        <div style="font-size:14px;font-weight:500;color:#E6E9F0">Add Spotify track to "Originals 2026"</div>
+        <div class="tn" style="margin-top:1px">these will play via Spotify's embed · not Tahti's FLAC</div>
+      </div>
+    </div>
+    <span class="tn" style="cursor:pointer;font-size:16px">✕</span>
+  </div>
+
+  <div style="padding:14px 18px 8px;border-bottom:1px solid #1F2940">
+    <div class="banner-warn" style="margin-bottom:12px;background:rgba(29,185,84,0.06);border-color:rgba(29,185,84,0.25);border-left-color:#1DB954">
+      <div class="lead" style="color:#1ED760">Honest about quality</div>
+      <div style="margin-top:2px;font-size:11px">Spotify tracks render as embedded players in your collection. Listeners need a Spotify account to hear full tracks (30-second previews otherwise). Best for compilations with collaborators' tracks — not for your own work you have masters of.</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;font-size:11px">
+      <span style="padding:5px 12px;background:#22D3EE;color:#062028;border-radius:6px;font-weight:500">Your tracks</span>
+      <span style="padding:5px 12px;color:#A1A8BD">Search Spotify</span>
+      <span style="padding:5px 12px;color:#A1A8BD">By artist URL</span>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span style="font-size:12px;color:#5E6680">🔍</span>
+      <input placeholder="Search any track on Spotify…" style="flex:1;font-size:12px"/>
+    </div>
+  </div>
+
+  <div class="modal-body" style="max-height:340px;overflow-y:auto">
+    <div class="row-pick" style="grid-template-columns:auto 1fr auto auto">
+      <div class="cv cv-violet" style="width:42px;height:42px"></div>
+      <div style="min-width:0">
+        <div style="color:#E6E9F0;font-weight:500">Slow Weather <span class="src-badge src-spotify" style="margin-left:6px">SPOTIFY</span></div>
+        <div class="tn">dj-moonrise · <span style="font-style:italic">Drift EP (2024)</span></div>
+      </div>
+      <span class="tn mono">9:04</span>
+      <button class="bp" style="padding:5px 10px;font-size:11px">+ Add</button>
+    </div>
+    <div class="row-pick" style="grid-template-columns:auto 1fr auto auto">
+      <div class="cv cv-deep" style="width:42px;height:42px"></div>
+      <div style="min-width:0">
+        <div style="color:#E6E9F0;font-weight:500">Aurora, December <span class="src-badge src-spotify" style="margin-left:6px">SPOTIFY</span></div>
+        <div class="tn">dj-moonrise · <span style="font-style:italic">Drift EP (2024)</span></div>
+      </div>
+      <span class="tn mono">5:32</span>
+      <button class="bp" style="padding:5px 10px;font-size:11px">+ Add</button>
+    </div>
+    <div class="row-pick" style="grid-template-columns:auto 1fr auto auto">
+      <div class="cv cv-rose" style="width:42px;height:42px"></div>
+      <div style="min-width:0">
+        <div style="color:#E6E9F0;font-weight:500">North Shore <span class="src-badge src-spotify" style="margin-left:6px">SPOTIFY</span></div>
+        <div class="tn">dj-moonrise · <span style="font-style:italic">Single (2023)</span></div>
+      </div>
+      <span class="tn mono">4:18</span>
+      <button class="bp" style="padding:5px 10px;font-size:11px">+ Add</button>
+    </div>
+    <div style="padding:12px 14px;font-size:11px;color:#5E6680;border-top:1px solid #1F2940;background:#0E1424">
+      <span style="color:#A1A8BD">Collaborator search:</span> &nbsp;@mia.waves found 12 tracks &nbsp;·&nbsp; @kai_studio found 8 tracks &nbsp;·&nbsp; <span style="color:#22D3EE;cursor:pointer">browse all</span>
+    </div>
+    <div class="row-pick" style="grid-template-columns:auto 1fr auto auto">
+      <div class="cv cv-coral" style="width:42px;height:42px"></div>
+      <div style="min-width:0">
+        <div style="color:#E6E9F0;font-weight:500">Tundra Lights <span class="src-badge src-spotify" style="margin-left:6px">SPOTIFY</span></div>
+        <div class="tn">mia.waves feat. dj-moonrise · <span style="font-style:italic">Boreal (2025)</span></div>
+      </div>
+      <span class="tn mono">7:24</span>
+      <button class="bp" style="padding:5px 10px;font-size:11px">+ Add</button>
+    </div>
+  </div>
+
+  <div class="modal-foot">
+    <span class="tn">tip: own work belongs as Tahti FLAC. embeds are best for collabs &amp; references.</span>
+    <button class="bs">Done</button>
+  </div>
+</div>
+
+</body>
+</html>

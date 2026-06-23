@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tahti reference — 09-stats-reframe</title>
+<meta name="viewport" content="width=748,initial-scale=1">
+<style>
+/* ===== v8 design tokens and primitives (CANONICAL) ===== */
+/* Tahti v8 — shared tokens + primitives for standalone view mockups */
+*{box-sizing:border-box;min-width:0;margin:0;padding:0}
+body{
+  background:#0A0E1C;
+  color:#E6E9F0;
+  font-family:Inter,system-ui,-apple-system,sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  padding:24px;
+  -webkit-font-smoothing:antialiased;
+}
+.bw{background:#11172A;border:1px solid #1F2940;border-radius:12px;overflow:hidden}
+.bar{background:#080C16;padding:7px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1F2940}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.d1{background:#FF5F57}.d2{background:#FEBC2E}.d3{background:#28C840}
+.url{flex:1;background:#11172A;border:1px solid #1F2940;border-radius:7px;padding:4px 10px;font-size:11px;color:#A1A8BD;font-family:ui-monospace,monospace;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.topnav{padding:9px 14px;border-bottom:1px solid #1F2940;display:flex;align-items:center;justify-content:space-between;background:#11172A}
+.brand{font-weight:500;font-size:12px;letter-spacing:1.5px;color:#E6E9F0}
+.mut{font-size:11px;color:#A1A8BD}
+.tn{font-size:10px;color:#5E6680}
+.mono{font-family:ui-monospace,"SF Mono",monospace}
+.lbl{font-size:9px;letter-spacing:1px;color:#5E6680;text-transform:uppercase;margin-bottom:6px}
+.r{display:flex;align-items:center}
+.layout{display:grid;grid-template-columns:130px 1fr}
+.sidebar{background:#0E1424;border-right:1px solid #1F2940;padding:10px 6px;min-height:480px}
+.si-grp{font-size:8px;letter-spacing:1px;color:#5E6680;text-transform:uppercase;padding:7px 8px 3px}
+.si{font-size:11px;padding:5px 8px;border-radius:6px;color:#A1A8BD;margin-bottom:1px}
+.si.ac{background:rgba(34,211,238,0.08);color:#22D3EE;border-left:2px solid #22D3EE;padding-left:6px}
+.stat-card{background:#162038;border:1px solid #1F2940;border-radius:8px;padding:10px}
+.stat-num{font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-0.5px;line-height:1}
+.stat-lbl{font-size:9px;letter-spacing:1px;color:#5E6680;text-transform:uppercase;margin-top:6px}
+.card{background:#162038;border:1px solid #1F2940;border-radius:10px;padding:14px}
+.bp{background:#22D3EE;color:#062028;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.bs{background:transparent;color:#E6E9F0;border:1px solid #2A3550;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.pill{font-size:10px;padding:3px 10px;border-radius:9999px;letter-spacing:0.5px;font-weight:500;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.p-green{background:rgba(63,224,122,0.12);color:#3FE07A}
+.p-amber{background:rgba(255,184,64,0.12);color:#FFB840}
+.p-cyan{background:rgba(34,211,238,0.12);color:#22D3EE}
+.p-purple{background:rgba(167,139,250,0.12);color:#A78BFA}
+.meterbar{height:9px;border-radius:9999px;background:#1F2940;overflow:hidden;position:relative}
+.dot-live{width:6px;height:6px;border-radius:50%;background:#3FE07A;display:inline-block}
+.dot-live-big{width:10px;height:10px;border-radius:50%;background:#3FE07A;display:inline-block;box-shadow:0 0 12px rgba(63,224,122,0.6)}
+.cv{border-radius:5px;background:linear-gradient(135deg,#A78BFA,#22D3EE,#3FE07A)}
+.cv-deep{background:linear-gradient(135deg,#5B6BC4,#22D3EE)}
+.cv-violet{background:linear-gradient(135deg,#8B5CF6,#6366F1)}
+.cv-rose{background:linear-gradient(135deg,#F472B6,#8B5CF6)}
+.cv-coral{background:linear-gradient(135deg,#F87171,#FFB840)}
+.cv-mint{background:linear-gradient(135deg,#3FE07A,#22D3EE)}
+.cv-amber{background:linear-gradient(135deg,#FFB840,#F59E0B)}
+input,textarea,select{background:#0A0E1C;color:#E6E9F0;border:1px solid #1F2940;border-radius:7px;padding:7px 10px;font-size:12px;font-family:inherit;outline:none;width:100%}
+.step{display:flex;align-items:center;gap:6px;font-size:11px;padding:5px 10px;border-radius:9999px;letter-spacing:0.3px}
+.step.done{background:rgba(63,224,122,0.1);color:#3FE07A}
+.step.cur{background:#22D3EE;color:#062028;font-weight:500}
+.step.next{color:#5E6680;border:1px solid #1F2940}
+.step-arr{color:#5E6680;font-size:10px}
+.stepper{display:flex;align-items:center;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.ch{font-size:11px;line-height:1.5;margin-bottom:5px}
+.h{font-weight:500}
+.h1{color:#22D3EE}.h2{color:#FFB840}.h3{color:#A78BFA}.h4{color:#3FE07A}.h5{color:#F472B6}.h6{color:#FB923C}
+
+/* ===== /tokens ===== */
+</style>
+</head>
+<body>
+<!--
+  REFERENCE: 09-stats-reframe
+  Designed for: viewport width 748px
+  Use this HTML as the STRUCTURAL spec when implementing the React route.
+  - Match element hierarchy (the agent does not invent its own structure)
+  - Match class names (or equivalent Tailwind utilities mapped through tailwind.config)
+  - Match content layout (do not add new sections; do not remove existing ones)
+  - Replace static content (text, numbers, covers) with real data
+-->
+
+<div class="bw" style="width:700px">
+  <div class="bar"><div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div><div class="url">tahti.live/dashboard/stats</div></div>
+  <div class="topnav">
+    <div class="brand">TAHTI</div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px">
+      <span style="padding:4px 10px;color:#A1A8BD">7d</span>
+      <span style="padding:4px 10px;background:#22D3EE;color:#062028;border-radius:6px;font-weight:500">30d</span>
+      <span style="padding:4px 10px;color:#A1A8BD">All</span>
+    </div>
+  </div>
+  <div style="padding:20px 22px">
+    <div style="margin-bottom:18px">
+      <div class="lbl">Plays · last 30 days</div>
+      <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:6px">
+        <div style="font-size:56px;font-weight:500;color:#FFB840;line-height:1;letter-spacing:-2px" class="mono">1,247</div>
+        <div style="font-size:14px;color:#3FE07A;font-weight:500">↑ 47%</div>
+        <div class="tn">vs previous 30 days</div>
+      </div>
+      <div class="mut" style="line-height:1.5">Your strongest 30-day window since launch. Driven mostly by <span style="color:#22D3EE;font-weight:500">Drift Vol. 3</span> (412 plays) and a feature from <span style="color:#22D3EE;font-weight:500">@mia.waves</span> on Tuesday.</div>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,rgba(34,211,238,0.05),transparent);border-color:rgba(34,211,238,0.25);margin-bottom:18px">
+      <div class="lbl" style="color:#22D3EE">What changed this period</div>
+      <div style="font-size:13px;color:#E6E9F0;line-height:1.65;margin-top:4px">
+        <span style="color:#3FE07A">●</span> Tuesday 14 May, @mia.waves shared "Drift Vol. 3" to her 8k followers — that single referral brought <span class="mono" style="color:#3FE07A">+312 plays</span> over the next 48 hours. Your weekly listener growth continued at <span class="mono" style="color:#3FE07A">+12%</span> without it.
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
+      <div class="card">
+        <div class="lbl">Top track</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <div class="cv cv-deep" style="width:36px;height:36px"></div>
+          <div style="min-width:0"><div style="font-size:12px;color:#E6E9F0;font-weight:500">Drift Vol. 3</div><div class="tn mono">412 plays · 33%</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="lbl">Top country</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <div style="font-size:20px">🇫🇮</div>
+          <div><div style="font-size:12px;color:#E6E9F0;font-weight:500">Finland</div><div class="tn mono">42% · 524 plays</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="lbl">Busiest day</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <div style="font-size:18px;color:#FFB840;font-weight:500" class="mono">Tue</div>
+          <div><div style="font-size:12px;color:#E6E9F0;font-weight:500">14 May</div><div class="tn mono">156 plays</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,rgba(167,139,250,0.04),transparent);border-color:rgba(167,139,250,0.2)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:14px">
+        <div>
+          <div class="lbl" style="color:#A78BFA">Engagement units · 2026</div>
+          <div style="font-size:11px;color:#A1A8BD;line-height:1.5;max-width:380px">Engagement units determine your share of the annual artist grant. Listener-hours are vanity; this is what counts.</div>
+        </div>
+        <div style="text-align:right">
+          <div class="mono" style="font-size:24px;color:#A78BFA;font-weight:500">344</div>
+          <div class="tn" style="color:#3FE07A;font-weight:500">~€31 est. grant</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px;font-size:11px">
+        <div><div class="tn">89 free dl × 1</div><div class="mono" style="color:#3FE07A;margin-top:2px">89</div></div>
+        <div><div class="tn">15 paid dl × 5</div><div class="mono" style="color:#22D3EE;margin-top:2px">75</div></div>
+        <div><div class="tn">€180/yr fan-subs × 1</div><div class="mono" style="color:#A78BFA;margin-top:2px">180</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
