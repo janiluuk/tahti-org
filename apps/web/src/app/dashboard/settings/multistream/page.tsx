@@ -61,18 +61,11 @@ export default async function MultistreamSettingsPage() {
             rest. One source — OBS pushes once, Tahti fans out.
           </p>
         </div>
-        <div className="studio-page-header__actions">
-          {isPaid ? (
+        {isPaid && (
+          <div className="studio-page-header__actions">
             <StatusPill tone="cyan">PAID · UNLIMITED TARGETS</StatusPill>
-          ) : (
-            <NextLink
-              href="/dashboard/settings/account"
-              className="ui-btn ui-btn--sm ui-btn--primary"
-            >
-              View membership →
-            </NextLink>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {isPaid ? (
