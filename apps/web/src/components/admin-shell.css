@@ -85,6 +85,10 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  height: var(--admin-strip-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: color-mix(in srgb, var(--amber) 18%, var(--bg));
   border-bottom: 1px solid color-mix(in srgb, var(--amber) 40%, transparent);
   color: var(--amber);
@@ -92,7 +96,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 5px 24px;
+  padding: 0 24px;
   text-align: center;
 }
 
