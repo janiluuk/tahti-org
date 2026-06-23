@@ -556,6 +556,7 @@ model User {
   passwordSetups          PasswordSetup[]
   editorProjects          EditorProject[]
   moderatorOf             ChannelModerator[]
+  curatedRotationItemsAdded CuratedRotationItem[]
 
   @@schema("core")
 }
@@ -772,6 +773,7 @@ model Channel {
   moderators        ChannelModerator[]
   rtmpTargets       RtmpTarget[]
   radioFeatureLogs  RadioFeatureLog[]
+  curatedRotationItems CuratedRotationItem[]
 
   @@index([state])
   @@schema("channel")
@@ -888,6 +890,7 @@ model ArchiveItem {
   cloudImportJob CloudImportJob?
   collectionItems CollectionItem[]
   versions        ArchiveItemVersion[]
+  curatedRotationItems CuratedRotationItem[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
@@ -915,6 +918,28 @@ model ArchiveItemVersion {
 
   @@unique([archiveItemId, versionNumber])
   @@index([archiveItemId, createdAt(sort: Desc)])
+  @@schema("channel")
+}
+
+// Curated, admin-programmed rotation for a channel (e.g. "Tahti Selects") — a thin
+// reference list pointing at ArchiveItems wherever they live (own channel or another
+// artist's already-public archive), so the same audio file is never duplicated.
+// Distinct from the per-artist ArchiveItem.isFallback/fallbackOrder offline rotation:
+// that's one artist's own archive; this is a curated cross-channel playlist for a
+// single admin-managed channel. See docs/planning-decisions.md (Tahti Selects).
+model CuratedRotationItem {
+  id            String      @id @default(cuid())
+  channelId     String
+  channel       Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  archiveItemId String
+  archiveItem   ArchiveItem @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  position      Int
+  addedById     String
+  addedBy       User        @relation(fields: [addedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+
+  @@unique([channelId, archiveItemId])
+  @@index([channelId, position])
   @@schema("channel")
 }
 

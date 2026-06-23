@@ -6911,20 +6911,12 @@
 }
 
 [data-tahti-ui='studio'] .collection-tracklist__badge--spotify {
-  background: color-mix(
-    in srgb,
-    #1ed760 18%,
-    var(--card2)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #1ed760 18%, var(--card2)); /* design-token-allow: platform brand color */
   color: #1ed760; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .collection-tracklist__badge--mixcloud {
-  background: color-mix(
-    in srgb,
-    #a78bfa 18%,
-    var(--card2)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #a78bfa 18%, var(--card2)); /* design-token-allow: platform brand color */
   color: #a78bfa; /* design-token-allow: platform brand color */
 }
 
@@ -6940,37 +6932,21 @@
 }
 
 [data-tahti-ui='studio'] .collection-editor__add-btn--spotify {
-  border-color: color-mix(
-    in srgb,
-    #1ed760 45%,
-    var(--border)
-  ); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #1ed760 45%, var(--border)); /* design-token-allow: platform brand color */
   color: #1ed760; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .collection-editor__add-btn--spotify:hover {
-  background: color-mix(
-    in srgb,
-    #1ed760 10%,
-    var(--card)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #1ed760 10%, var(--card)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .collection-editor__add-btn--mixcloud {
-  border-color: color-mix(
-    in srgb,
-    #a78bfa 45%,
-    var(--border)
-  ); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #a78bfa 45%, var(--border)); /* design-token-allow: platform brand color */
   color: #a78bfa; /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .collection-editor__add-btn--mixcloud:hover {
-  background: color-mix(
-    in srgb,
-    #a78bfa 10%,
-    var(--card)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #a78bfa 10%, var(--card)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .collection-tracklist__saving {
@@ -7045,11 +7021,7 @@
 }
 
 [data-tahti-ui='studio'] .spotify-import-modal__banner {
-  background: color-mix(
-    in srgb,
-    #1ed760 10%,
-    var(--card2)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #1ed760 10%, var(--card2)); /* design-token-allow: platform brand color */
   border: 1px solid color-mix(in srgb, #1ed760 30%, var(--border)); /* design-token-allow: platform brand color */
   border-radius: var(--radius-md);
   padding: var(--space-3);
@@ -7080,16 +7052,8 @@
 }
 
 [data-tahti-ui='studio'] .mixcloud-import-modal .spotify-import-modal__banner {
-  background: color-mix(
-    in srgb,
-    #a78bfa 10%,
-    var(--card2)
-  ); /* design-token-allow: platform brand color */
-  border-color: color-mix(
-    in srgb,
-    #a78bfa 30%,
-    var(--border)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #a78bfa 10%, var(--card2)); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #a78bfa 30%, var(--border)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .mixcloud-import-modal .spotify-import-modal__tab--active {
@@ -7246,59 +7210,27 @@
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--soundcloud {
-  background: color-mix(
-    in srgb,
-    #ff5500 18%,
-    var(--card)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #ff5500 18%, var(--card)); /* design-token-allow: platform brand color */
   color: color-mix(in srgb, #ff5500 55%, var(--fg)); /* design-token-allow: platform brand color */
-  border-color: color-mix(
-    in srgb,
-    #ff5500 35%,
-    var(--border)
-  ); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #ff5500 35%, var(--border)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--bandcamp {
-  background: color-mix(
-    in srgb,
-    #629aa9 18%,
-    var(--card)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #629aa9 18%, var(--card)); /* design-token-allow: platform brand color */
   color: color-mix(in srgb, #629aa9 55%, var(--fg)); /* design-token-allow: platform brand color */
-  border-color: color-mix(
-    in srgb,
-    #629aa9 35%,
-    var(--border)
-  ); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #629aa9 35%, var(--border)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--google-drive {
-  background: color-mix(
-    in srgb,
-    #4285f4 18%,
-    var(--card)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #4285f4 18%, var(--card)); /* design-token-allow: platform brand color */
   color: color-mix(in srgb, #4285f4 55%, var(--fg)); /* design-token-allow: platform brand color */
-  border-color: color-mix(
-    in srgb,
-    #4285f4 35%,
-    var(--border)
-  ); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #4285f4 35%, var(--border)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .import-page__service-badge--mixcloud-rescue {
-  background: color-mix(
-    in srgb,
-    #a78bfa 18%,
-    var(--card)
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #a78bfa 18%, var(--card)); /* design-token-allow: platform brand color */
   color: color-mix(in srgb, #a78bfa 55%, var(--fg)); /* design-token-allow: platform brand color */
-  border-color: color-mix(
-    in srgb,
-    #a78bfa 35%,
-    var(--border)
-  ); /* design-token-allow: platform brand color */
+  border-color: color-mix(in srgb, #a78bfa 35%, var(--border)); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='studio'] .import-drive__jobs {

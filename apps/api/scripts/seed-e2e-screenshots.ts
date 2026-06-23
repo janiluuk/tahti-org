@@ -81,6 +81,11 @@ const FRESH = {
   username: 'screenshot-fresh',
   displayName: 'Fresh Journey Artist',
 }
+const LIVE_ARTIST = {
+  email: 'screenshot-live@e2e.tahti.live',
+  username: 'screenshot-live-demo',
+  displayName: 'Screenshot Live Artist',
+}
 const COLLECTION_SLUG = 'demo-mixes'
 
 /** Fixed future time so channel countdown screenshots stay stable between runs. */
@@ -93,8 +98,60 @@ async function main() {
   const passwordHash = await hashPassword(PASS)
 
   await prisma.motion.deleteMany({ where: { title: DEMO_MOTION_TITLE } })
+  await prisma.venue.deleteMany({ where: { slug: { in: ['klubi-tampere', 'kuudes-linja'] } } })
+  await prisma.boardResolution.deleteMany({
+    where: { title: 'Approve FY2026 grant disbursement pool' },
+  })
+  await prisma.supportTicket.deleteMany({
+    where: {
+      contactEmail: {
+        in: [
+          'screenshot-artist@e2e.tahti.live',
+          'screenshot-fan@e2e.tahti.live',
+          'listener@example.com',
+        ],
+      },
+    },
+  })
+  await prisma.betaApplication.deleteMany({
+    where: {
+      email: { in: ['aino.korhonen@example.com', 'joel.makinen@example.com', 'spam@example.com'] },
+    },
+  })
+  await prisma.ledgerEntry.deleteMany({
+    where: {
+      description: {
+        in: [
+          'Member subscriptions (Stripe payout)',
+          'One-off donations',
+          'Hetzner + Icecast relay hosting',
+          'Accounting services',
+        ],
+      },
+    },
+  })
+  await prisma.auditLog.deleteMany({
+    where: {
+      action: {
+        in: [
+          'MOTION_OPEN',
+          'BOARD_ROLE_CHANGE',
+          'GRANT_RUN',
+          'ARCHIVE_EDIT_PUBLISH',
+          'RTMP_TARGET_ADD',
+        ],
+      },
+    },
+  })
 
-  for (const email of [ARTIST.email, MEMBER.email, BOARD.email, FREE.email, FRESH.email]) {
+  for (const email of [
+    ARTIST.email,
+    MEMBER.email,
+    BOARD.email,
+    FREE.email,
+    FRESH.email,
+    LIVE_ARTIST.email,
+  ]) {
     const existing = await prisma.user.findUnique({
       where: { email },
       select: { id: true, channel: { select: { id: true } } },
@@ -383,7 +440,7 @@ async function main() {
     },
   })
 
-  await prisma.user.create({
+  const board = await prisma.user.create({
     data: {
       email: BOARD.email,
       passwordHash,
@@ -398,12 +455,45 @@ async function main() {
     },
   })
 
+  const liveArtist = await prisma.user.create({
+    data: {
+      email: LIVE_ARTIST.email,
+      passwordHash,
+      username: LIVE_ARTIST.username,
+      displayName: LIVE_ARTIST.displayName,
+      bio: 'Live looping & techno, broadcasting from Tampere.',
+      countryCode: 'FI',
+      emailVerifiedAt: new Date(),
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 99004,
+      memberSince: new Date(),
+      membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
+      channel: {
+        create: {
+          slug: LIVE_ARTIST.username,
+          liveSourceMount: `/live/${LIVE_ARTIST.username}`,
+          liveSourcePass: 'screenshot-pass',
+          liveSourcePassHash: await hashPassword('screenshot-pass'),
+          rtmpStreamKey: `${LIVE_ARTIST.username}__screenshot`,
+          rtmpStreamKeyHash: await hashPassword(`${LIVE_ARTIST.username}__screenshot`),
+          state: 'LIVE',
+          goneLiveAt: new Date(),
+          fallbackMode: 'ordered',
+          visualPreset: 'MINIMAL',
+        },
+      },
+    },
+    include: { channel: true },
+  })
+
   const tier = await prisma.fanTier.findFirst({
     where: { artistUserId: artist.id },
     select: { name: true, amountCents: true },
   })
+  let fanSub: { id: string } | null = null
   if (tier) {
-    await prisma.fanSubscription.create({
+    fanSub = await prisma.fanSubscription.create({
       data: {
         artistUserId: artist.id,
         subscriberUserId: member.id,
@@ -416,8 +506,263 @@ async function main() {
     })
   }
 
+  await prisma.fanTier.create({
+    data: {
+      artistUserId: artist.id,
+      name: 'Patron',
+      amountCents: 1500,
+      description: 'Supporter perks + monthly stash drop',
+      perks: ['Early mixes', 'Name in credits', 'Monthly stash drop'],
+      position: 1,
+      active: true,
+    },
+  })
+  const patronSub = await prisma.fanSubscription.create({
+    data: {
+      artistUserId: artist.id,
+      subscriberUserId: board.id,
+      tierName: 'Patron',
+      amountCents: 1500,
+      state: 'ACTIVE',
+      stripeSubscriptionId: 'e2e_sub_screenshot_patron',
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
+  })
+
   const now = new Date()
-  await prisma.motion.create({
+  const periodStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
+  if (fanSub) {
+    await prisma.fanSubPayout.createMany({
+      data: [
+        {
+          fanSubscriptionId: fanSub.id,
+          artistUserId: artist.id,
+          forPeriodStart: new Date(now.getFullYear(), now.getMonth() - 1, 1),
+          forPeriodEnd: new Date(now.getFullYear(), now.getMonth(), 0),
+          grossCents: 500,
+          stripeFeeCents: 25,
+          orgFeeCents: 25,
+          netToArtistCents: 450,
+          stripeTransferId: 'tr_screenshot_paid',
+          state: 'PAID',
+          paidAt: new Date(now.getFullYear(), now.getMonth() - 1, 5),
+        },
+        {
+          fanSubscriptionId: fanSub.id,
+          artistUserId: artist.id,
+          forPeriodStart: periodStart,
+          forPeriodEnd: periodEnd,
+          grossCents: 500,
+          stripeFeeCents: 25,
+          orgFeeCents: 25,
+          netToArtistCents: 450,
+          state: 'PENDING',
+        },
+      ],
+    })
+  }
+  await prisma.fanSubPayout.create({
+    data: {
+      fanSubscriptionId: patronSub.id,
+      artistUserId: artist.id,
+      forPeriodStart: periodStart,
+      forPeriodEnd: periodEnd,
+      grossCents: 1500,
+      stripeFeeCents: 70,
+      orgFeeCents: 75,
+      netToArtistCents: 1355,
+      state: 'FAILED',
+    },
+  })
+
+  await prisma.betaApplication.createMany({
+    data: [
+      {
+        name: 'Aino Korhonen',
+        email: 'aino.korhonen@example.com',
+        artistType: 'DJ / electronic producer',
+        links: 'https://soundcloud.com/ainokorhonen',
+        message: 'Weekly ambient/techno show, currently self-hosting a Liquidsoap stream.',
+        source: 'twitter',
+        status: 'PENDING',
+      },
+      {
+        name: 'Joel Mäkinen',
+        email: 'joel.makinen@example.com',
+        artistType: 'Live band',
+        links: 'https://joelmakinen.bandcamp.com',
+        message: 'Touring band looking for an archive and smart links home.',
+        source: 'referral',
+        status: 'APPROVED',
+        reviewedAt: new Date(),
+        reviewedById: board.id,
+      },
+      {
+        name: 'Spam Bot 9000',
+        email: 'spam@example.com',
+        artistType: 'Unknown',
+        message: 'buy followers fast',
+        source: 'form',
+        status: 'REJECTED',
+        reviewedAt: new Date(),
+        reviewedById: board.id,
+      },
+    ],
+  })
+
+  const supportTicket = await prisma.supportTicket.create({
+    data: {
+      artistId: artist.id,
+      contactEmail: ARTIST.email,
+      subject: 'RTMP key rotated but OBS still rejects',
+      message:
+        'Rotated the stream key after the security email but OBS reports a 403 connecting to Icecast.',
+      category: 'TECHNICAL',
+      status: 'OPEN',
+    },
+  })
+  await prisma.supportTicketNote.create({
+    data: {
+      ticketId: supportTicket.id,
+      body: 'Asked for OBS log output; likely a stale key cached client-side.',
+      authorId: board.id,
+    },
+  })
+  await prisma.supportTicket.create({
+    data: {
+      artistId: member.id,
+      contactEmail: MEMBER.email,
+      subject: 'Fan subscription receipt missing VAT breakdown',
+      message:
+        'Need a VAT-itemized receipt for the Supporter tier subscription for accounting purposes.',
+      category: 'FINANCIAL',
+      status: 'IN_PROGRESS',
+      assignedToId: board.id,
+    },
+  })
+  await prisma.supportTicket.create({
+    data: {
+      contactEmail: 'listener@example.com',
+      subject: 'Engagement units look low for my downloads',
+      message: 'Downloaded 4 tracks last week as a fan-subscriber but units only show 1x weight.',
+      category: 'ENGAGEMENT_DISPUTE',
+      status: 'RESOLVED',
+      assignedToId: board.id,
+    },
+  })
+
+  await prisma.boardResolution.create({
+    data: {
+      title: 'Approve FY2026 grant disbursement pool',
+      body: '## Resolution\n\nThe board approves allocating the engagement-unit-weighted grant pool for FY2026 per the financial model.',
+      votedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+      outcome: 'PASSED',
+      voteFor: 3,
+      voteAgainst: 0,
+      voteAbstain: 0,
+      createdById: board.id,
+      publishedAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
+    },
+  })
+
+  const venue = await prisma.venue.create({
+    data: {
+      slug: 'klubi-tampere',
+      name: 'Klubi',
+      address: 'Tullikamarinaukio 2',
+      city: 'Tampere',
+      countryCode: 'FI',
+      capacity: 600,
+      description: 'Independent live music venue hosting member-broadcast nights.',
+      verifiedAt: new Date(),
+      createdBy: artist.id,
+    },
+  })
+  await prisma.venueBroadcast.create({
+    data: {
+      venueId: venue.id,
+      artistUserId: artist.id,
+      startAt: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
+      description: 'Live broadcast of the Northern Lights EP release show.',
+      state: 'SCHEDULED',
+    },
+  })
+  await prisma.venue.create({
+    data: {
+      slug: 'kuudes-linja',
+      name: 'Kuudes Linja',
+      address: 'Hämeentie 13',
+      city: 'Helsinki',
+      countryCode: 'FI',
+      description: 'New submission awaiting verification.',
+      createdBy: liveArtist.id,
+    },
+  })
+
+  await prisma.ledgerEntry.createMany({
+    data: [
+      {
+        category: 'REVENUE_SUBSCRIPTION',
+        amountCents: 50000n,
+        description: 'Member subscriptions (Stripe payout)',
+        periodStart,
+        periodEnd,
+        createdBy: board.id,
+      },
+      {
+        category: 'REVENUE_DONATION',
+        amountCents: 12000n,
+        description: 'One-off donations',
+        periodStart,
+        periodEnd,
+        createdBy: board.id,
+      },
+      {
+        category: 'COST_INFRASTRUCTURE',
+        amountCents: 18000n,
+        description: 'Hetzner + Icecast relay hosting',
+        periodStart,
+        periodEnd,
+        createdBy: board.id,
+      },
+      {
+        category: 'COST_PROFESSIONAL_SERVICES',
+        amountCents: 9000n,
+        description: 'Accounting services',
+        periodStart,
+        periodEnd,
+        createdBy: board.id,
+      },
+    ],
+  })
+
+  const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  await prisma.monthlyRollup.upsert({
+    where: { yearMonth },
+    create: {
+      yearMonth,
+      byCategory: {
+        REVENUE_SUBSCRIPTION: 50000,
+        REVENUE_DONATION: 12000,
+        COST_INFRASTRUCTURE: 18000,
+        COST_PROFESSIONAL_SERVICES: 9000,
+      },
+      surplus: 35000n,
+    },
+    update: {
+      byCategory: {
+        REVENUE_SUBSCRIPTION: 50000,
+        REVENUE_DONATION: 12000,
+        COST_INFRASTRUCTURE: 18000,
+        COST_PROFESSIONAL_SERVICES: 9000,
+      },
+      surplus: 35000n,
+    },
+  })
+
+  const motion = await prisma.motion.create({
     data: {
       title: DEMO_MOTION_TITLE,
       description: 'Seeded open motion for journey e2e.',
@@ -427,6 +772,61 @@ async function main() {
       openAt: new Date(now.getTime() - 60_000),
       closeAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
     },
+  })
+
+  await prisma.auditLog.createMany({
+    data: [
+      {
+        action: 'MOTION_OPEN',
+        actorId: artist.id,
+        targetId: motion.id,
+        meta: { title: DEMO_MOTION_TITLE },
+      },
+      {
+        action: 'BOARD_ROLE_CHANGE',
+        actorId: board.id,
+        targetId: board.id,
+        meta: { isBoard: true },
+      },
+      {
+        action: 'GRANT_RUN',
+        actorId: board.id,
+        targetId: String(now.getFullYear() - 1),
+        meta: { grantCount: 1, poolCents: 35000 },
+      },
+      {
+        action: 'ARCHIVE_EDIT_PUBLISH',
+        actorId: artist.id,
+        targetId: archiveItem.id,
+        meta: { title: archiveItem.title },
+      },
+      {
+        action: 'RTMP_TARGET_ADD',
+        actorId: artist.id,
+        targetId: artist.channel!.id,
+        meta: { platform: 'youtube' },
+      },
+    ],
+  })
+
+  const countries = ['FI', 'SE', 'DE', 'NO']
+  await prisma.download.createMany({
+    data: Array.from({ length: 24 }, (_, i) => {
+      const daysAgo = Math.floor((i / 24) * 28)
+      const createdAt = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000)
+      return {
+        channelId: artist.channel!.id,
+        archiveItemId: archiveItem.id,
+        format: ['mp3_320', 'flac', 'opus256'][i % 3],
+        byFingerprint: `screenshot-fp-${i}`,
+        byIpHash: `screenshot-ip-${i}`,
+        countryCode: countries[i % countries.length],
+        bytes: 4_000_000 + i * 10_000,
+        countedAt: createdAt,
+        weight: i % 5 === 0 ? 5 : 1,
+        createdAt,
+      }
+    }),
   })
 
   const verifyToken = generateVerificationToken()

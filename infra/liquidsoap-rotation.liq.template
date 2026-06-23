@@ -1,0 +1,79 @@
+#!/usr/bin/liquidsoap
+# Tahti — always-on curated rotation template (Tahti Selects).
+# Unlike liquidsoap-channel.liq.template, this channel has NO live input at all —
+# it is never tied to an artist's RTMP/Icecast session, just a perpetual loop of
+# the channel's CuratedRotationItem playlist. Spawned once via the orchestrator's
+# rotation template path and kept alive by the same watchdog as live channels,
+# against a persistent placeholder Broadcast row (see apps/api seed-tahti-selects-content.ts).
+
+settings.log.level := 3
+
+# --- Curated playlist (the entire program — no live() fallback needed) ---
+archive_local_path = "/archive-cache/{{CHANNEL_ID}}/fallback.m3u"
+archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u"
+archive = if file.exists(archive_local_path) then
+  playlist(
+    mode="{{FALLBACK_MODE}}",
+    reload=300,
+    reload_mode="rounds",
+    archive_local_path
+  )
+else
+  playlist(
+    mode="{{FALLBACK_MODE}}",
+    reload=300,
+    reload_mode="rounds",
+    archive_remote_url
+  )
+end
+archive = crossfade(duration=3., archive)
+archive = normalize(target=-14., archive)
+
+# Safety net so the process never dies even with an empty playlist.
+radio = fallback(track_sensitive=false, [archive, blank()])
+
+# --- Graceful shutdown (same telnet contract as the live-channel template) ---
+shutting_down = ref(false)
+
+def start_graceful_shutdown() =
+  shutting_down := true
+  thread.delay({{LIQUIDSOAP_FADE_SEC}}.)
+  shutdown(0)
+  "ok"
+end
+
+settings.server.telnet.set(true)
+settings.server.telnet.port.set({{LIQUIDSOAP_TELNET_PORT}})
+server.register(
+  "graceful_shutdown",
+  description="Fade out audio then exit (STREAM-010)",
+  start_graceful_shutdown
+)
+
+radio_out = switch(
+  track_sensitive=false,
+  [({ shutting_down() }, fade.out(type="log", duration={{LIQUIDSOAP_FADE_SEC}}., radio))],
+  radio
+)
+
+# --- HLS output for listeners ---
+output.file.hls(
+  playlist="stream.m3u8",
+  segments=4,
+  segment_duration=4.,
+  segments_overhead=10,
+  "/hls/{{CHANNEL_ID}}",
+  [
+    ("stream-mp3-192", %ffmpeg(format="mpegts", %audio(codec="libmp3lame", b="192k", ar=44100, ac=2))),
+    ("stream-flac", %ffmpeg(format="mpegts", %audio(codec="flac", samplerate=44100, channels=2)))
+  ],
+  radio_out
+)
+
+# --- Now-playing metadata endpoint ---
+output.harbor(
+  %mp3(bitrate=64),
+  port={{HARBOR_NOWPLAYING_PORT}},
+  mount="/now",
+  radio_out
+)

@@ -10,7 +10,8 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
-import { buildFallbackPlaybackRows, renderFallbackM3u } from '@tahti/shared'
+import { archivePlaybackKey, buildFallbackPlaybackRows, renderFallbackM3u } from '@tahti/shared'
+import type { FallbackPlaybackRow } from '@tahti/shared'
 
 // Liquidsoap calls this to get the current fallback playlist for a channel.
 // Returns an extended M3U with HTTP URLs to archive playback files (MP3 or FLAC).
@@ -45,25 +46,57 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(404).send('channel not found')
       }
 
-      const items = channel.fallbackEnabled
-        ? await fastify.prisma.archiveItem.findMany({
-            where: {
-              channelId,
-              status: 'READY',
-              OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
-            },
-            select: {
-              id: true,
-              title: true,
-              mp3Key: true,
-              flacKey: true,
-              durationSec: true,
-              isFallback: true,
-              fallbackOrder: true,
-              lastFallbackPlayedAt: true,
-            },
+      if (!channel.fallbackEnabled) {
+        const body = renderFallbackM3u([], config.minio.publicEndpoint, config.minio.bucket)
+        return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
+      }
+
+      // Curated channels (e.g. Tahti Selects) have an explicit, ordered, cross-channel
+      // playlist instead of the regular per-channel isFallback/fallbackOrder rotation.
+      // Every other channel has zero CuratedRotationItem rows, so this is additive only.
+      const curated = await fastify.prisma.curatedRotationItem.findMany({
+        where: { channelId },
+        orderBy: { position: 'asc' },
+        select: {
+          archiveItem: {
+            select: { id: true, title: true, mp3Key: true, flacKey: true, durationSec: true },
+          },
+        },
+      })
+
+      if (curated.length > 0) {
+        const rows: FallbackPlaybackRow[] = []
+        for (const { archiveItem } of curated) {
+          const playbackKey = archivePlaybackKey(archiveItem)
+          if (!playbackKey) continue
+          rows.push({
+            id: archiveItem.id,
+            title: archiveItem.title,
+            playbackKey,
+            durationSec: archiveItem.durationSec,
           })
-        : []
+        }
+        const body = renderFallbackM3u(rows, config.minio.publicEndpoint, config.minio.bucket)
+        return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
+      }
+
+      const items = await fastify.prisma.archiveItem.findMany({
+        where: {
+          channelId,
+          status: 'READY',
+          OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
+        },
+        select: {
+          id: true,
+          title: true,
+          mp3Key: true,
+          flacKey: true,
+          durationSec: true,
+          isFallback: true,
+          fallbackOrder: true,
+          lastFallbackPlayedAt: true,
+        },
+      })
 
       const rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
       const body = renderFallbackM3u(rows, config.minio.publicEndpoint, config.minio.bucket)

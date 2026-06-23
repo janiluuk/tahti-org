@@ -31,7 +31,7 @@
     "role": "public",
     "id": "verify-token",
     "file": "public/verify-token.png",
-    "url": "/verify?token=crC-KndP3eywL8LoyIMUchhDAOG_LiUh",
+    "url": "/verify?token=Zt5hIKhKgENeQjPGto4BTykCYXOowWIo",
     "label": "Verify email (with token)"
   },
   {
@@ -164,7 +164,7 @@
     "role": "public",
     "id": "embed-release",
     "file": "public/embed-release.png",
-    "url": "/embed/r/cmqli0dtg00063lavujibk1yi",
+    "url": "/embed/r/cmqqkpon00006nn70ge6hqlpb",
     "label": "Embed release player"
   },
   {
@@ -200,13 +200,13 @@
     "id": "channel-appearance",
     "file": "artist/channel-appearance.png",
     "url": "/dashboard/channel",
-    "label": "Channel design editor (full page)"
+    "label": "Channel design editor"
   },
   {
     "role": "artist",
     "id": "schedule-programme",
     "file": "artist/schedule-programme.png",
-    "url": "/dashboard#broadcast",
+    "url": "/dashboard/broadcast",
     "label": "Schedule & programme"
   },
   {

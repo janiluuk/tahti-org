@@ -3,11 +3,14 @@
 
 import { config } from '../config.js'
 
+export type LiquidsoapTemplateKind = 'channel' | 'rotation'
+
 /** Ensure per-channel Liquidsoap is running (HLS + archive fallback + multistream). */
 export async function spawnChannelLiquidsoap(
   channelId: string,
   slug: string,
   broadcastId: string,
+  template: LiquidsoapTemplateKind = 'channel',
 ): Promise<void> {
   const res = await fetch(`${config.orchestratorUrl}/spawn`, {
     method: 'POST',
@@ -15,7 +18,7 @@ export async function spawnChannelLiquidsoap(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${config.internalSecret}`,
     },
-    body: JSON.stringify({ channelId, slug, broadcastId }),
+    body: JSON.stringify({ channelId, slug, broadcastId, template }),
   })
   if (!res.ok) {
     throw new Error(`Orchestrator returned ${res.status}`)
@@ -26,6 +29,7 @@ export async function restartChannelLiquidsoap(
   channelId: string,
   slug: string,
   broadcastId: string,
+  template: LiquidsoapTemplateKind = 'channel',
 ): Promise<void> {
   const res = await fetch(`${config.orchestratorUrl}/restart`, {
     method: 'POST',
@@ -33,7 +37,7 @@ export async function restartChannelLiquidsoap(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${config.internalSecret}`,
     },
-    body: JSON.stringify({ channelId, slug, broadcastId }),
+    body: JSON.stringify({ channelId, slug, broadcastId, template }),
   })
   if (!res.ok) {
     throw new Error(`Orchestrator restart returned ${res.status}`)

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { cookies } from 'next/headers'
+import { Pill } from '@tahti/ui'
 import { optOutChannel, removeOptOut, resetRotation } from './actions'
 
 interface NowPlaying {
@@ -202,7 +203,7 @@ export default async function AdminRadioPage() {
                     </td>
                     <td>
                       {ch.isLive ? (
-                        <span className="admin-live-pill">Live</span>
+                        <Pill variant="live" />
                       ) : (
                         <span style={{ opacity: 0.5, fontSize: '0.85rem' }}>Offline</span>
                       )}

@@ -37,17 +37,18 @@ fastify.get('/health', async () => ({
 
 // Spawn (or ensure running) the Liquidsoap container for a channel
 fastify.post('/spawn', async (request, reply) => {
-  const { channelId, slug, broadcastId } = request.body as {
+  const { channelId, slug, broadcastId, template } = request.body as {
     channelId: string
     slug: string
     broadcastId: string
+    template?: 'channel' | 'rotation'
   }
 
   if (!channelId || !slug) {
     return reply.status(400).send({ error: 'channelId and slug required' })
   }
 
-  await spawnChannel(channelId, slug, broadcastId)
+  await spawnChannel(channelId, slug, broadcastId, template ?? 'channel')
   request.log.info(
     broadcastSessionLogFields({ broadcastId, channelId, slug }),
     'liquidsoap spawned',
@@ -66,10 +67,11 @@ fastify.post('/stop', async (request, reply) => {
 
 // STREAM-005: restart Liquidsoap after stale HLS segments (watchdog)
 fastify.post('/restart', async (request, reply) => {
-  const { channelId, slug, broadcastId } = request.body as {
+  const { channelId, slug, broadcastId, template } = request.body as {
     channelId: string
     slug: string
     broadcastId: string
+    template?: 'channel' | 'rotation'
   }
   if (!channelId || !slug || !broadcastId) {
     return reply.status(400).send({ error: 'channelId, slug, and broadcastId required' })
@@ -81,7 +83,13 @@ fastify.post('/restart', async (request, reply) => {
     where: { id: broadcastId },
     select: { source: true },
   })
-  await spawnLiquidsoapContainer(channelId, slug, broadcastId, broadcast?.source ?? 'ICECAST')
+  await spawnLiquidsoapContainer(
+    channelId,
+    slug,
+    broadcastId,
+    broadcast?.source ?? 'ICECAST',
+    template ?? 'channel',
+  )
   request.log.info(
     broadcastSessionLogFields({ broadcastId, channelId, slug }),
     'liquidsoap restarted (edge encoder + recorder sidecars kept running)',

@@ -301,3 +301,39 @@ body {
 .faint  { color: var(--text-tertiary); }
 .mono   { font-family: var(--font-mono); }
 .tabular{ font-variant-numeric: tabular-nums; }
+
+/* ---- Page header: greeting + status + role badges + go-live button ---- */
+.greeting { font-size: var(--fs-h2); font-weight: var(--fw-medium); margin-bottom: 2px; }
+.greeting-status {
+  font-size: var(--fs-xs); color: var(--text-tertiary);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.greeting-status a { color: var(--text-tertiary); font-family: var(--font-mono); text-decoration: none; }
+.greeting-status a:hover { color: var(--brand); }
+.role-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.role-badge {
+  display: inline-flex; align-items: center;
+  font-size: var(--fs-label); font-weight: var(--fw-medium);
+  padding: 2px 8px; border-radius: var(--r-full);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.role-badge--artist { background: rgba(248,113,113,0.16); color: #F87171; }   /* coral */
+.role-badge--member { background: var(--brand-bg-tint); color: var(--brand); }
+.role-badge--board  { background: var(--live-bg); color: var(--live); }
+.go-live-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0.45rem 1rem; border-radius: var(--r-md);
+  font-size: var(--fs-sm); font-weight: var(--fw-medium); text-decoration: none;
+}
+.go-live-btn--offline { background: var(--warn); color: #1A1408; }
+.go-live-btn--live    { background: var(--live-bg); color: var(--live); border: 1px solid var(--live-border); }
+
+/* ---- Tabs (Overview / Broadcast / Audience) ---- */
+.tabs { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px;
+        background: var(--bg-card-elevated); border: 1px solid var(--border-subtle); border-radius: var(--r-md); }
+.tabs__item {
+  border: none; background: transparent; color: var(--text-tertiary); cursor: pointer;
+  font-size: var(--fs-sm); font-weight: var(--fw-medium);
+  padding: 0.45rem 0.75rem; border-radius: 6px;
+}
+.tabs__item--active { color: var(--brand); background: var(--bg-card); }
