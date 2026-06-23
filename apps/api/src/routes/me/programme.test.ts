@@ -7,6 +7,7 @@ import { prisma } from '@tahti/db'
 import { config } from '../../config.js'
 import {
   cleanupUsersByEmailPrefix,
+  createPublishedReleaseWithTrack,
   createReadyArchiveItem,
   createTestArtist,
   sessionCookieFor,
@@ -18,8 +19,10 @@ describe('M27 — channel fallback programme', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
   let cookie: string
   let channelId: string
+  let userId: string
   let itemA: string
   let itemB: string
+  let releaseTrackId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -35,11 +38,17 @@ describe('M27 — channel fallback programme', () => {
     })
     cookie = await sessionCookieFor(prisma, artist.id)
     channelId = artist.channel!.id
+    userId = artist.id
 
     const a = await createReadyArchiveItem(prisma, channelId, 'Set A')
     const b = await createReadyArchiveItem(prisma, channelId, 'Set B')
     itemA = a.id
     itemB = b.id
+
+    const release = await createPublishedReleaseWithTrack(prisma, userId, {
+      streamKey: 'streams/programme-test-track.opus',
+    })
+    releaseTrackId = release.tracks[0]!.id
   })
 
   afterAll(async () => {
@@ -47,7 +56,7 @@ describe('M27 — channel fallback programme', () => {
     await app.close()
   })
 
-  it('GET programme lists ready archive items', async () => {
+  it('GET programme lists ready archive items and library tracks', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/me/channel/programme',
@@ -56,6 +65,40 @@ describe('M27 — channel fallback programme', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json().fallbackMode).toBe('shuffle')
     expect(res.json().items.length).toBeGreaterThanOrEqual(2)
+    const library = res.json().library as Array<{ releaseTrackId: string; archiveItemId: null }>
+    expect(library.some((t) => t.releaseTrackId === releaseTrackId)).toBe(true)
+    expect(library.find((t) => t.releaseTrackId === releaseTrackId)?.archiveItemId).toBeNull()
+  })
+
+  it('POST programme/library promotes a release track into the rotation', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/programme/library',
+      headers: { cookie },
+      payload: { releaseTrackId },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      items: Array<{ id: string; isFallback: boolean }>
+      library: Array<{ releaseTrackId: string; archiveItemId: string | null }>
+    }
+    const libraryRow = body.library.find((t) => t.releaseTrackId === releaseTrackId)
+    expect(libraryRow?.archiveItemId).not.toBeNull()
+    const promotedItem = body.items.find((i) => i.id === libraryRow?.archiveItemId)
+    expect(promotedItem?.isFallback).toBe(true)
+
+    // idempotent: promoting again just re-flags the same archive item, no duplicate.
+    const again = await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/programme/library',
+      headers: { cookie },
+      payload: { releaseTrackId },
+    })
+    expect(again.statusCode).toBe(200)
+    const againBody = again.json() as { library: Array<{ archiveItemId: string | null }> }
+    expect(
+      againBody.library.filter((t) => t.archiveItemId === libraryRow?.archiveItemId),
+    ).toHaveLength(1)
   })
 
   it('PATCH programme sets rotation flags and ordered mode', async () => {

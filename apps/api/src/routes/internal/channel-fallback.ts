@@ -39,29 +39,31 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { id: channelId },
-        select: { fallbackMode: true },
+        select: { fallbackMode: true, fallbackEnabled: true },
       })
       if (!channel) {
         return reply.status(404).send('channel not found')
       }
 
-      const items = await fastify.prisma.archiveItem.findMany({
-        where: {
-          channelId,
-          status: 'READY',
-          OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
-        },
-        select: {
-          id: true,
-          title: true,
-          mp3Key: true,
-          flacKey: true,
-          durationSec: true,
-          isFallback: true,
-          fallbackOrder: true,
-          lastFallbackPlayedAt: true,
-        },
-      })
+      const items = channel.fallbackEnabled
+        ? await fastify.prisma.archiveItem.findMany({
+            where: {
+              channelId,
+              status: 'READY',
+              OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
+            },
+            select: {
+              id: true,
+              title: true,
+              mp3Key: true,
+              flacKey: true,
+              durationSec: true,
+              isFallback: true,
+              fallbackOrder: true,
+              lastFallbackPlayedAt: true,
+            },
+          })
+        : []
 
       const rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
       const body = renderFallbackM3u(rows, config.minio.publicEndpoint, config.minio.bucket)

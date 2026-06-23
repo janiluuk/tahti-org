@@ -63,4 +63,19 @@ describe('GET /internal/channels/:channelId/fallback.m3u', () => {
     })
     expect(res.statusCode).toBe(404)
   })
+
+  it('M33: returns an empty playlist when fallbackEnabled is false', async () => {
+    await prisma.channel.update({ where: { id: channelId }, data: { fallbackEnabled: false } })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/internal/channels/${channelId}/fallback.m3u`,
+      headers: { authorization: `Bearer ${config.internalSecret}` },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).not.toContain('Fallback track')
+    expect(res.body).toContain('no items yet')
+
+    await prisma.channel.update({ where: { id: channelId }, data: { fallbackEnabled: true } })
+  })
 })

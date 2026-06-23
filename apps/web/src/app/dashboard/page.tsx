@@ -8,7 +8,6 @@ import {
 } from './broadcast/_broadcast-settings-sections'
 import type { ModeratorRow } from './moderator-actions'
 import NewsletterPanel from './newsletter-panel'
-import type { ProgrammeItemRow } from './programme-actions'
 import { fetchMixcloudStatus } from './mixcloud-actions'
 import { PageShell, Panel, SidebarNavIconSvg } from '@tahti/ui'
 import NextLink from 'next/link'
@@ -110,8 +109,6 @@ export default async function DashboardPage() {
     active: boolean
   }> = []
   let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0 }
-  let channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] } | null =
-    null
   let archiveItemsForEdit: Array<
     Record<string, unknown> & { id: string; title: string; status: string }
   > = []
@@ -151,7 +148,6 @@ export default async function DashboardPage() {
       funnelRes,
       fanTiersRes,
       fanPayoutsRes,
-      programmeRes,
       archiveRes,
       scheduleRes,
       newsletterPair,
@@ -164,7 +160,6 @@ export default async function DashboardPage() {
       slug ? get('/api/me/channel-funnel-stats') : null,
       slug ? get('/api/me/fan-tiers') : null,
       slug ? get('/api/me/fan-sub-payouts') : null,
-      slug ? get('/api/me/channel/programme') : null,
       slug ? get('/api/me/archive') : null,
       slug ? get('/api/me/channel/schedule') : null,
       slug
@@ -193,7 +188,6 @@ export default async function DashboardPage() {
     }
     if (fanTiersRes?.ok) fanTiers = (await fanTiersRes.json()) as typeof fanTiers
     if (fanPayoutsRes?.ok) fanPayoutStats = (await fanPayoutsRes.json()) as typeof fanPayoutStats
-    if (programmeRes?.ok) channelProgramme = (await programmeRes.json()) as typeof channelProgramme
     if (archiveRes?.ok) {
       archiveItemsForEdit = (await archiveRes.json()) as typeof archiveItemsForEdit
     }
@@ -208,10 +202,6 @@ export default async function DashboardPage() {
   }
 
   const otherModeratedChannels = moderatedChannels.filter((c) => !c.isOwner)
-
-  if (user.channel && !channelProgramme) {
-    channelProgramme = { fallbackMode: 'shuffle', items: [] }
-  }
 
   const hasFanNewsletterPerk = fanTiers.some(
     (t) => t.active && t.perks.some((p) => p === 'FAN_NEWSLETTER'),
@@ -386,7 +376,7 @@ export default async function DashboardPage() {
           />
         }
         broadcast={
-          user.channel && channelProgramme ? (
+          user.channel ? (
             <div className="studio-broadcast-tab">
               <div className="studio-broadcast-tab__shortcuts">
                 <Panel
@@ -406,7 +396,6 @@ export default async function DashboardPage() {
                 isLive={user.channel.state === 'LIVE'}
                 announcements={announcements}
                 moderators={moderators}
-                channelProgramme={channelProgramme}
                 channelSchedule={channelSchedule}
                 mixcloudStatus={mixcloudStatus}
                 apiUrl={apiUrl}
