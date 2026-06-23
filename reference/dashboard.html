@@ -43,6 +43,34 @@
 
   <main class="shell-app__content">
 
+    <!-- Page header: greeting, channel status, role badge, go-live button (real /dashboard
+         header — apps/web/src/app/dashboard/page.tsx — not part of the original v8 mock,
+         added once the header/role-badge UI shipped; kept in sync here since then). -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div class="greeting">Good evening, Moonrise.</div>
+        <div class="greeting-status">
+          <span class="dot-live"></span>
+          <span style="color:var(--live)">LIVE</span>
+          <span>·</span>
+          <a href="#">dj-moonrise.tahti.live</a>
+        </div>
+        <div class="role-row">
+          <span class="role-badge role-badge--artist">Artist · #44012</span>
+        </div>
+      </div>
+      <a href="#" class="go-live-btn go-live-btn--live">
+        <span class="dot-live"></span> On air
+      </a>
+    </div>
+
+    <!-- Tabs: Overview / Broadcast / Audience. Overview shown below. -->
+    <div class="tabs" style="margin-bottom:16px">
+      <button class="tabs__item tabs__item--active">Overview</button>
+      <button class="tabs__item">Broadcast</button>
+      <button class="tabs__item">Audience</button>
+    </div>
+
     <!-- Live status bar: full width of content column, 14px gap below -->
     <div class="live-bar" style="margin-bottom:16px">
       <div>
@@ -55,23 +83,21 @@
       <button class="btn btn--warn">⏹ End Broadcast</button>
     </div>
 
-    <!-- Stat grid: ALWAYS 4 equal columns, 12px gap. Colors are bound to meaning. -->
-    <div class="stat-grid" style="margin-bottom:16px">
+    <!-- Stat grid: dashboard overview shows 3 stats (Listeners/Downloads/Fan-sub revenue) —
+         Fan subscriber count lives on the Stats page now, not duplicated here. Colors stay
+         meaning-bound: amber=activity, green=downloads, cyan=revenue. -->
+    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
       <div class="stat-card">
-        <div class="stat-card__num stat-card__num--plays">1,247</div>
-        <div class="stat-card__label">Plays this month</div>
+        <div class="stat-card__num stat-card__num--plays">47</div>
+        <div class="stat-card__label">Listeners this week</div>
       </div>
       <div class="stat-card">
         <div class="stat-card__num stat-card__num--downloads">89</div>
-        <div class="stat-card__label">Downloads</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card__num stat-card__num--fans">23</div>
-        <div class="stat-card__label">Fan subscribers</div>
+        <div class="stat-card__label">Downloads this month</div>
       </div>
       <div class="stat-card">
         <div class="stat-card__num stat-card__num--revenue">€115</div>
-        <div class="stat-card__label">Revenue / mo</div>
+        <div class="stat-card__label">Fan-sub revenue</div>
       </div>
     </div>
 

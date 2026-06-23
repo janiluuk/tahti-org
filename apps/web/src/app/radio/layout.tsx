@@ -16,7 +16,7 @@ export default function RadioLayout({ children }: { children: ReactNode }) {
     <div data-tahti-ui="brand" className="brand-channel brand-channel--radio shell-public">
       <BgCanvas variant="subtle" />
       <div className="radio-shell">
-        {children}
+        <div className="shell-public__inner">{children}</div>
         <PublicFooter statusUrl={statusPageUrl()} />
       </div>
     </div>

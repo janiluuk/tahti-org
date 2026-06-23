@@ -2532,11 +2532,7 @@
   padding: 10px 0;
   margin: 4px 0;
   overflow: hidden;
-  background: linear-gradient(
-    135deg,
-    #1ed760,
-    #1db954
-  ); /* design-token-allow: platform brand color */
+  background: linear-gradient(135deg, #1ed760, #1db954); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .embed-frame-spotify__badge {
@@ -2548,11 +2544,7 @@
   letter-spacing: 0.4px;
   text-transform: uppercase;
   color: #04140a; /* design-token-allow: platform brand color */
-  background: color-mix(
-    in srgb,
-    #ffffff 55%,
-    transparent
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #ffffff 55%, transparent); /* design-token-allow: platform brand color */
   border-radius: 999px;
   padding: 2px 8px;
   z-index: 1;
@@ -2592,11 +2584,7 @@
 
 [data-tahti-ui='brand'] .embed-frame-spotify__subline {
   font-size: var(--text-xs);
-  color: color-mix(
-    in srgb,
-    #04140a 75%,
-    transparent
-  ); /* design-token-allow: platform brand color */
+  color: color-mix(in srgb, #04140a 75%, transparent); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .embed-frame-spotify iframe {
@@ -2610,11 +2598,7 @@
   padding: 10px 0;
   margin: 4px 0;
   overflow: hidden;
-  background: linear-gradient(
-    135deg,
-    #a78bfa,
-    #7c3aed
-  ); /* design-token-allow: platform brand color */
+  background: linear-gradient(135deg, #a78bfa, #7c3aed); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .embed-frame-mixcloud__badge {
@@ -2626,11 +2610,7 @@
   letter-spacing: 0.4px;
   text-transform: uppercase;
   color: #1a0a36; /* design-token-allow: platform brand color */
-  background: color-mix(
-    in srgb,
-    #ffffff 55%,
-    transparent
-  ); /* design-token-allow: platform brand color */
+  background: color-mix(in srgb, #ffffff 55%, transparent); /* design-token-allow: platform brand color */
   border-radius: 999px;
   padding: 2px 8px;
   z-index: 1;
@@ -2670,11 +2650,7 @@
 
 [data-tahti-ui='brand'] .embed-frame-mixcloud__subline {
   font-size: var(--text-xs);
-  color: color-mix(
-    in srgb,
-    #1a0a36 75%,
-    transparent
-  ); /* design-token-allow: platform brand color */
+  color: color-mix(in srgb, #1a0a36 75%, transparent); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .embed-frame-mixcloud iframe {

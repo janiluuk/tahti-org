@@ -25,7 +25,7 @@ export async function PublicChannelSiteLayout({
     <div data-tahti-ui="brand" className="brand-channel shell-public">
       <BgCanvas variant={bgVariant} />
       <ChannelHeader activeNav={activeNav} user={user} />
-      {children}
+      <div className="shell-public__inner">{children}</div>
       <PublicFooter statusUrl={statusPageUrl()} />
     </div>
   )
