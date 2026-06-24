@@ -137,6 +137,13 @@ export default async function RevenuePage() {
         ) : null}
       </div>
 
+      {hasFanSubs && !connect?.accountId && (
+        <p className="studio-notice studio-notice--error studio-mb-md">
+          Stripe isn&apos;t connected yet — fan-sub payouts can&apos;t reach you until it is.{' '}
+          <Link href="/dashboard/settings/fan-subs">Connect Stripe in Settings → Fan subs →</Link>
+        </p>
+      )}
+
       <KpiCardRow aria-label="Revenue summary">
         <KpiCard color="cyan" value={eur(stats.thisMonthNetCents)} label="This month" />
         <KpiCard color="purple" value={stats.activeSubscribers} label="Active fan-subs" />
