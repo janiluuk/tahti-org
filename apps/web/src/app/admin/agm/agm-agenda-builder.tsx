@@ -83,9 +83,9 @@ export function AgmAgendaBuilder() {
           listStyle: 'none',
           padding: 0,
           margin: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: '0.5rem 1rem',
         }}
       >
         {items.map((item, i) => (
@@ -139,7 +139,7 @@ export function AgmAgendaBuilder() {
         ))}
       </ol>
 
-      <button onClick={addItem} className="admin-btn" style={{ marginTop: '0.75rem' }}>
+      <button onClick={addItem} className="admin-btn" style={{ marginTop: '0.5rem' }}>
         + Add item
       </button>
     </section>

@@ -26,7 +26,10 @@ const EXEMPT = new Set([
   '/dashboard/archive', // paginated history view — header + first rows must fit, list itself may scroll
   '/dashboard/editor', // full-bleed audio editor instrument — renders tall, not scrolling
   '/admin/grants', // per-year allocation tables paginate
+  '/admin/governance/audit', // same pattern: 50 rows/page, header+filter bar fits above the fold
+  '/admin/users', // paginated user directory (page param + search/filter); filter bar fits above the fold, table paginates
   '/', // marketing homepage — scroll allowed but discouraged
+  '/transparency', // public report page, not a task surface; header+KPI+ledger preview bottoms out at 598px, well above the fold — YTD/monthly/resolutions/storage sections below are normal scrolling public content
   '/dashboard/stats/detail', // plays chart + listener world map — shrinking the map to fit would make it illegible
 ])
 

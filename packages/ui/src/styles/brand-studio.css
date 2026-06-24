@@ -7188,7 +7188,7 @@
 
 [data-tahti-ui='studio'] .import-page.ui-page {
   padding-top: var(--space-5);
-  padding-bottom: var(--space-8);
+  padding-bottom: var(--space-6);
 }
 
 [data-tahti-ui='studio'] .import-page__header {

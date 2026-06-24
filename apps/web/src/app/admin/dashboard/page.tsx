@@ -325,22 +325,24 @@ export default async function AdminDashboardPage() {
       </section>
 
       {streams.streams.length > 0 && (
-        <section className="admin-card" style={{ marginBottom: '1.5rem' }}>
-          <h2>Live now</h2>
-          {streams.streams.slice(0, 3).map((s) => (
-            <p key={s.slug} className="admin-stat-sub">
-              <Link href={`/c/${s.slug}`}>{s.artistName}</Link> · {formatDuration(s.elapsedSec)}
+        <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
+          <summary>Live now ({streams.streams.length})</summary>
+          <div style={{ marginTop: '0.75rem' }}>
+            {streams.streams.slice(0, 3).map((s) => (
+              <p key={s.slug} className="admin-stat-sub">
+                <Link href={`/c/${s.slug}`}>{s.artistName}</Link> · {formatDuration(s.elapsedSec)}
+              </p>
+            ))}
+            <p className="admin-stat-sub">
+              <Link href="/admin/streams">View stream manager →</Link>
             </p>
-          ))}
-          <p className="admin-stat-sub">
-            <Link href="/admin/streams">View stream manager →</Link>
-          </p>
-        </section>
+          </div>
+        </details>
       )}
 
-      <section className="admin-card" style={{ marginBottom: '1.5rem' }}>
-        <h2>Queue health</h2>
-        <div className="admin-table-wrap">
+      <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
+        <summary>Queue health</summary>
+        <div className="admin-table-wrap" style={{ marginTop: '0.75rem' }}>
           <table className="admin-table">
             <thead>
               <tr>
@@ -362,11 +364,11 @@ export default async function AdminDashboardPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </details>
 
-      <section className="admin-card" style={{ marginBottom: '1.5rem' }}>
-        <h2>Cron jobs</h2>
-        <div className="admin-table-wrap">
+      <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
+        <summary>Cron jobs</summary>
+        <div className="admin-table-wrap" style={{ marginTop: '0.75rem' }}>
           <table className="admin-table">
             <thead>
               <tr>
@@ -376,7 +378,7 @@ export default async function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {cronJobs.slice(0, 10).map((job) => (
+              {cronJobs.slice(0, 5).map((job) => (
                 <tr key={job.jobName}>
                   <td title={job.description}>{job.jobName}</td>
                   <td>
@@ -403,36 +405,38 @@ export default async function AdminDashboardPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </details>
 
-      <section className="admin-card">
-        <h2>Recent audit events</h2>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Action</th>
-                <th>Actor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {audit.map((row) => (
-                <tr key={row.id}>
-                  <td>{new Date(row.createdAt).toLocaleString()}</td>
-                  <td>{row.action}</td>
-                  <td>{row.actorId.slice(0, 8)}…</td>
+      <details className="admin-card studio-details-block">
+        <summary>Recent audit events</summary>
+        <div style={{ marginTop: '0.75rem' }}>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Action</th>
+                  <th>Actor</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {audit.slice(0, 5).map((row) => (
+                  <tr key={row.id}>
+                    <td>{new Date(row.createdAt).toLocaleString()}</td>
+                    <td>{row.action}</td>
+                    <td>{row.actorId.slice(0, 8)}…</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="admin-stat-sub">
+            <Link href="/admin/governance/audit">Full audit log →</Link>
+            {' · '}
+            <a href="/api/admin/audit/export.csv">Export CSV</a>
+          </p>
         </div>
-        <p className="admin-stat-sub">
-          <Link href="/admin/governance/audit">Full audit log →</Link>
-          {' · '}
-          <a href="/api/admin/audit/export.csv">Export CSV</a>
-        </p>
-      </section>
+      </details>
     </>
   )
 }
