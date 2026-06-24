@@ -54,44 +54,46 @@ export function LedgerEntryForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="admin-card" style={{ marginBottom: '1.5rem' }}>
-      <h2>New manual entry</h2>
-      <div style={{ display: 'grid', gap: '0.75rem', maxWidth: '36rem' }}>
-        <label>
-          Category
-          <select name="category" required defaultValue="COST_INFRASTRUCTURE">
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Amount (EUR)
-          <input name="amountEur" type="number" step="0.01" min="0.01" required />
-        </label>
-        <label>
-          Description
-          <input name="description" required maxLength={500} />
-        </label>
-        <label>
-          Period start
-          <input name="periodStart" type="date" required defaultValue={monthStart} />
-        </label>
-        <label>
-          Period end
-          <input name="periodEnd" type="date" required defaultValue={monthEnd} />
-        </label>
-        <label>
-          External reference (optional)
-          <input name="externalRef" maxLength={200} />
-        </label>
-        <button type="submit" disabled={pending}>
-          {pending ? 'Saving…' : 'Create entry'}
-        </button>
-        {msg ? <p className={msg === 'Entry created' ? 'admin-ok' : 'admin-err'}>{msg}</p> : null}
-      </div>
-    </form>
+    <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
+      <summary>New manual entry</summary>
+      <form onSubmit={onSubmit} style={{ marginTop: '0.75rem' }}>
+        <div style={{ display: 'grid', gap: '0.75rem', maxWidth: '36rem' }}>
+          <label>
+            Category
+            <select name="category" required defaultValue="COST_INFRASTRUCTURE">
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Amount (EUR)
+            <input name="amountEur" type="number" step="0.01" min="0.01" required />
+          </label>
+          <label>
+            Description
+            <input name="description" required maxLength={500} />
+          </label>
+          <label>
+            Period start
+            <input name="periodStart" type="date" required defaultValue={monthStart} />
+          </label>
+          <label>
+            Period end
+            <input name="periodEnd" type="date" required defaultValue={monthEnd} />
+          </label>
+          <label>
+            External reference (optional)
+            <input name="externalRef" maxLength={200} />
+          </label>
+          <button type="submit" disabled={pending}>
+            {pending ? 'Saving…' : 'Create entry'}
+          </button>
+          {msg ? <p className={msg === 'Entry created' ? 'admin-ok' : 'admin-err'}>{msg}</p> : null}
+        </div>
+      </form>
+    </details>
   )
 }

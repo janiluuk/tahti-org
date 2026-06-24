@@ -159,6 +159,15 @@
   min-height: 100vh;
 }
 
+/* The auth-shell pages (signup, join) center their own card inside a
+   full-viewport flex box — the generic margin/padding here just adds
+   extra height on top of that. */
+[data-tahti-ui='brand'] .brand-public.brand-public--center {
+  margin: 0 auto;
+  padding: 0;
+  min-height: 0;
+}
+
 [data-tahti-ui='brand'] .brand-public h1 {
   font-family: var(--font-head);
   font-weight: 500;

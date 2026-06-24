@@ -201,9 +201,9 @@ export default async function AdminVendorsPage() {
         </section>
       )}
 
-      <section style={{ marginBottom: '2rem' }}>
-        <h2 className="admin-subsection-title">GDPR / DPA checklist</h2>
-        <div className="admin-card" style={{ padding: '1rem' }}>
+      <details className="studio-details-block" style={{ marginBottom: '2rem' }}>
+        <summary className="admin-subsection-title">GDPR / DPA checklist</summary>
+        <div className="admin-card" style={{ padding: '1rem', marginTop: '0.75rem' }}>
           {DPA_CHECKLIST.map((c) => (
             <div
               key={c.item}
@@ -234,7 +234,7 @@ export default async function AdminVendorsPage() {
             accepted.
           </p>
         </div>
-      </section>
+      </details>
 
       <section style={{ marginBottom: '2rem' }}>
         <h2 className="admin-subsection-title">Critical path (SEV-1)</h2>
@@ -277,9 +277,9 @@ export default async function AdminVendorsPage() {
         </div>
       </section>
 
-      <section style={{ marginBottom: '2rem' }}>
-        <h2 className="admin-subsection-title">Platform integrations</h2>
-        <div className="admin-panel-grid">
+      <details className="studio-details-block" style={{ marginBottom: '2rem' }}>
+        <summary className="admin-subsection-title">Platform integrations</summary>
+        <div className="admin-panel-grid" style={{ marginTop: '0.75rem' }}>
           {INTEGRATION_VENDORS.map((v) => (
             <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
               <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
@@ -355,11 +355,11 @@ export default async function AdminVendorsPage() {
             </div>
           ))}
         </div>
-      </section>
+      </details>
 
-      <section>
-        <h2 className="admin-subsection-title">Infrastructure &amp; tooling</h2>
-        <div className="admin-panel-grid">
+      <details className="studio-details-block">
+        <summary className="admin-subsection-title">Infrastructure &amp; tooling</summary>
+        <div className="admin-panel-grid" style={{ marginTop: '0.75rem' }}>
           {INFRA_VENDORS.map((v) => (
             <div key={v.name} className="admin-card" style={{ padding: '1rem' }}>
               <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>{v.name}</div>
@@ -386,7 +386,7 @@ export default async function AdminVendorsPage() {
             </div>
           ))}
         </div>
-      </section>
+      </details>
     </>
   )
 }
