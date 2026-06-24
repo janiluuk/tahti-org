@@ -33,46 +33,48 @@ export function ResolutionCreateForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="admin-card" style={{ marginBottom: '1.5rem' }}>
-      <h2>New resolution</h2>
-      <div style={{ display: 'grid', gap: '0.75rem', maxWidth: '40rem' }}>
-        <label>
-          Title
-          <input name="title" required maxLength={200} />
-        </label>
-        <label>
-          Body (Markdown)
-          <textarea name="body" required rows={6} />
-        </label>
-        <label>
-          Voted at
-          <input name="votedAt" type="datetime-local" required />
-        </label>
-        <label>
-          Outcome
-          <select name="outcome" defaultValue="PASSED">
-            <option value="PASSED">Passed</option>
-            <option value="FAILED">Failed</option>
-            <option value="DEFERRED">Deferred</option>
-          </select>
-        </label>
-        <label>
-          Votes for
-          <input name="voteFor" type="number" min={0} defaultValue={0} required />
-        </label>
-        <label>
-          Votes against
-          <input name="voteAgainst" type="number" min={0} defaultValue={0} required />
-        </label>
-        <label>
-          Abstain
-          <input name="voteAbstain" type="number" min={0} defaultValue={0} required />
-        </label>
-        <button type="submit" disabled={pending}>
-          {pending ? 'Saving…' : 'Save draft'}
-        </button>
-        {msg ? <p className="admin-err">{msg}</p> : null}
-      </div>
-    </form>
+    <details className="admin-card studio-details-block" style={{ marginBottom: '1.5rem' }}>
+      <summary>New resolution</summary>
+      <form onSubmit={onSubmit} style={{ marginTop: '0.75rem' }}>
+        <div style={{ display: 'grid', gap: '0.75rem', maxWidth: '40rem' }}>
+          <label>
+            Title
+            <input name="title" required maxLength={200} />
+          </label>
+          <label>
+            Body (Markdown)
+            <textarea name="body" required rows={6} />
+          </label>
+          <label>
+            Voted at
+            <input name="votedAt" type="datetime-local" required />
+          </label>
+          <label>
+            Outcome
+            <select name="outcome" defaultValue="PASSED">
+              <option value="PASSED">Passed</option>
+              <option value="FAILED">Failed</option>
+              <option value="DEFERRED">Deferred</option>
+            </select>
+          </label>
+          <label>
+            Votes for
+            <input name="voteFor" type="number" min={0} defaultValue={0} required />
+          </label>
+          <label>
+            Votes against
+            <input name="voteAgainst" type="number" min={0} defaultValue={0} required />
+          </label>
+          <label>
+            Abstain
+            <input name="voteAbstain" type="number" min={0} defaultValue={0} required />
+          </label>
+          <button type="submit" disabled={pending}>
+            {pending ? 'Saving…' : 'Save draft'}
+          </button>
+          {msg ? <p className="admin-err">{msg}</p> : null}
+        </div>
+      </form>
+    </details>
   )
 }

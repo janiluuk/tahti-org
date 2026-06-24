@@ -3,17 +3,12 @@
 
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { ARCHIVE_GENRES } from '@tahti/shared'
 import { COUNTRY_OPTIONS } from '@/lib/country-options'
 import { flagEmoji } from '@/lib/flag-emoji'
 import { AvatarCropModal } from '@/components/avatar-crop-modal'
-import {
-  completeAvatarUpload,
-  prepareAvatarUpload,
-  updateChannelProfile,
-} from './channel-identity-actions'
+import { completeAvatarUpload, prepareAvatarUpload } from './channel-identity-actions'
 
 const BIO_MAX = 280
 const MAX_GENRES = 6
@@ -35,16 +30,12 @@ interface Props {
 }
 
 export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) {
-  const router = useRouter()
   const [displayName, setDisplayName] = useState(initial.displayName)
   const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl ?? '')
   const [countryCode, setCountryCode] = useState(initial.countryCode ?? '')
   const [pronouns, setPronouns] = useState(initial.pronouns ?? '')
   const [bio, setBio] = useState(initial.bio)
   const [genres, setGenres] = useState<string[]>(initial.genres)
-  const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
   const [avatarUrlInput, setAvatarUrlInput] = useState('')
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const [avatarBusy, setAvatarBusy] = useState(false)
@@ -119,27 +110,6 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
     )
   }
 
-  function save() {
-    setError(null)
-    setMessage(null)
-    startTransition(async () => {
-      const res = await updateChannelProfile({
-        displayName,
-        bio,
-        avatarUrl,
-        countryCode: countryCode || null,
-        pronouns: pronouns.trim() || null,
-        socialLinks: { genres: genres.join(', ') },
-      })
-      if (res.error) {
-        setError(res.error)
-        return
-      }
-      setMessage('Identity saved.')
-      router.refresh()
-    })
-  }
-
   return (
     <>
       <div className="studio-field--block">
@@ -151,7 +121,6 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           type="text"
           maxLength={100}
           value={displayName}
-          disabled={isPending}
           onChange={(e) => setDisplayName(e.target.value)}
           className="studio-input"
         />
@@ -215,7 +184,6 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
         <select
           id="identity-country"
           value={countryCode}
-          disabled={isPending}
           onChange={(e) => setCountryCode(e.target.value)}
           className="studio-input"
         >
@@ -239,7 +207,6 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           placeholder="e.g. she/her"
           maxLength={40}
           value={pronouns}
-          disabled={isPending}
           onChange={(e) => setPronouns(e.target.value)}
           className="studio-input"
         />
@@ -265,7 +232,6 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           rows={4}
           maxLength={BIO_MAX}
           value={bio}
-          disabled={isPending}
           onChange={(e) => setBio(e.target.value)}
           className="studio-input"
           placeholder="Tell listeners about your sound, shows, and releases…"
@@ -280,27 +246,12 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
               <input
                 type="checkbox"
                 checked={genres.includes(genre)}
-                disabled={isPending}
                 onChange={() => toggleGenre(genre)}
               />
               <span>{genre}</span>
             </label>
           ))}
         </div>
-      </div>
-
-      {error && <p className="studio-notice studio-notice--error">{error}</p>}
-      {message && <p className="studio-notice studio-notice--success">{message}</p>}
-
-      <div className="studio-actions">
-        <button
-          type="button"
-          className="ui-btn ui-btn--primary"
-          onClick={save}
-          disabled={isPending}
-        >
-          {isPending ? 'Saving…' : 'Save identity'}
-        </button>
       </div>
     </>
   )

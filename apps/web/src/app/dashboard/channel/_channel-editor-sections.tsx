@@ -3,25 +3,32 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { resolveChannelUrl } from '@/lib/app-url'
-import ChannelGalleryPanel from '../channel-gallery-panel'
-import ChannelTextLayerPanel from '../channel-text-layer-panel'
+import { updateChannelProfile } from '../channel-identity-actions'
+import { updateChannelVisual } from '../channel-visual-actions'
 import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
 import ChannelIdentityPanel from '../channel-identity-panel'
 import ChannelLinksPanel, { type ChannelLink } from '../channel-links-panel'
 import { ChannelEditorSection } from './_channel-editor-section'
 import { ChannelLivePreview, type ChannelPreviewDraft } from './_channel-live-preview'
-import {
-  CHANNEL_GALLERY_SOURCE_URL,
-  CHANNEL_TEXT_LAYER_SOURCE_URL,
-  type ChannelGalleryMode,
-  type ChannelTextLayerAlignment,
-  type ChannelTextLayerMode,
-  type SlideshowPreset,
-  type VisualPreset,
+import type {
+  ChannelGalleryMode,
+  ChannelTextLayerAlignment,
+  ChannelTextLayerMode,
+  SlideshowPreset,
+  VisualPreset,
 } from '@tahti/shared'
+
+function linksToSocialLinks(links: ChannelLink[]): Record<string, string> {
+  const map: Record<string, string> = {}
+  for (const { label, url } of links) {
+    const key = label.trim()
+    if (key && url.trim()) map[key] = url.trim()
+  }
+  return map
+}
 
 export type ChannelEditorData = {
   channelSlug: string
@@ -82,9 +89,58 @@ export function ChannelEditorSections({
     textLayer: channelTextLayer,
     visual: channelVisual,
   })
+  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  function publish() {
+    setError(null)
+    setMessage(null)
+    startTransition(async () => {
+      const [profileRes, visualRes] = await Promise.all([
+        updateChannelProfile({
+          displayName: draft.displayName,
+          bio: draft.bio,
+          avatarUrl: draft.avatarUrl ?? undefined,
+          countryCode: draft.countryCode,
+          pronouns: draft.pronouns,
+          socialLinks: {
+            genres: draft.genres.join(', '),
+            ...linksToSocialLinks(draft.links),
+          },
+        }),
+        updateChannelVisual({
+          visualPreset: draft.visual.visualPreset,
+          colorScheme: draft.visual.colorSchemeJson
+            ? JSON.parse(draft.visual.colorSchemeJson)
+            : null,
+        }),
+      ])
+      const err = profileRes.error ?? visualRes.error
+      if (err) {
+        setError(err)
+        return
+      }
+      setMessage('Channel published.')
+    })
+  }
 
   return (
     <div className="studio-channel-editor">
+      <div className="studio-channel-editor__publish-bar">
+        <div className="studio-channel-editor__publish-bar-notice">
+          {error && <p className="studio-notice studio-notice--error">{error}</p>}
+          {message && <p className="studio-notice studio-notice--success">{message}</p>}
+        </div>
+        <button
+          type="button"
+          className="ui-btn ui-btn--primary ui-btn--lg"
+          onClick={publish}
+          disabled={isPending}
+        >
+          {isPending ? 'Publishing…' : 'Publish changes'}
+        </button>
+      </div>
       <div className="studio-channel-editor__layout">
         <div className="studio-channel-editor__preview-col">
           <ChannelLivePreview draft={draft} />
@@ -113,53 +169,13 @@ export function ChannelEditorSections({
           <ChannelEditorSection
             id="channel-visual"
             title="Visual style"
-            description="Background visualizer, color palette, and slideshow transitions."
+            description="Background visualizer and color palette."
           >
             <ChannelVisualPresetPanel
               channelSlug={channelSlug}
               initial={channelVisual}
               bare
               onDraftChange={(visual) => setDraft((d) => ({ ...d, visual }))}
-            />
-          </ChannelEditorSection>
-
-          <ChannelEditorSection
-            id="channel-gallery"
-            title="Gallery & backdrop"
-            description={
-              <>
-                Photos and optional video behind your channel player. WebGL styles are inspired by{' '}
-                <a href={CHANNEL_GALLERY_SOURCE_URL} target="_blank" rel="noopener noreferrer">
-                  freefrontend.com/three-js
-                </a>
-                .
-              </>
-            }
-          >
-            <ChannelGalleryPanel
-              initial={channelGallery}
-              bare
-              onDraftChange={(gallery) => setDraft((d) => ({ ...d, gallery }))}
-            />
-          </ChannelEditorSection>
-
-          <ChannelEditorSection
-            id="channel-text"
-            title="Text overlay"
-            description={
-              <>
-                A stylized headline on your channel page. Effects from{' '}
-                <a href={CHANNEL_TEXT_LAYER_SOURCE_URL} target="_blank" rel="noopener noreferrer">
-                  freefrontend.com/css-text-effects
-                </a>
-                .
-              </>
-            }
-          >
-            <ChannelTextLayerPanel
-              initial={channelTextLayer}
-              bare
-              onDraftChange={(textLayer) => setDraft((d) => ({ ...d, textLayer }))}
             />
           </ChannelEditorSection>
 

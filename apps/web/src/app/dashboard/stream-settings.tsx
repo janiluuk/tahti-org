@@ -51,7 +51,7 @@ export default function StreamSettingsPanel({
   }
 
   return (
-    <Panel title="Go Live">
+    <Panel title="Your stream credentials">
       <Stack gap={6}>
         <div>
           <Heading level={3}>OBS / Streamlabs (RTMP)</Heading>

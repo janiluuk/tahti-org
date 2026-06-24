@@ -8,25 +8,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
 import { Panel } from '@tahti/ui'
-import {
-  createRelease,
-  importReleasesFromCsv,
-  publishRelease,
-  updateReleaseSmartLinks,
-} from './release-actions'
-import ReleaseOpsPanel, { parseCredits } from './release-ops-panel'
-import { ReleaseArtworkUpload } from './release-artwork-upload'
-import { ReleaseTrackVersionPanel } from './release-track-version-panel'
-import ReleaseVisualPanel from './release-visual-panel'
-
-const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
-  { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
-  { key: 'apple', label: 'Apple Music', placeholder: 'https://music.apple.com/...' },
-  { key: 'bandcamp', label: 'Bandcamp', placeholder: 'https://artist.bandcamp.com/...' },
-  { key: 'soundcloud', label: 'SoundCloud', placeholder: 'https://soundcloud.com/...' },
-  { key: 'youtube', label: 'YouTube Music', placeholder: 'https://music.youtube.com/...' },
-  { key: 'tidal', label: 'Tidal', placeholder: 'https://listen.tidal.com/...' },
-]
+import { createRelease, importReleasesFromCsv, publishRelease } from './release-actions'
 
 interface ReleaseSummary {
   id: string
@@ -68,8 +50,6 @@ export default function ReleasesPanel({
   const [isPending, startTransition] = useTransition()
   const [title, setTitle] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [targets, setTargets] = useState<Record<string, string>>({})
   const [importCsv, setImportCsv] = useState('')
   const [importMsg, setImportMsg] = useState<string | null>(null)
 
@@ -95,34 +75,6 @@ export default function ReleasesPanel({
   function publish(id: string) {
     startTransition(async () => {
       await publishRelease(id)
-      router.refresh()
-    })
-  }
-
-  function openSmartLinks(r: ReleaseSummary) {
-    const existing =
-      r.smartLinkTargets && typeof r.smartLinkTargets === 'object'
-        ? (r.smartLinkTargets as Record<string, string>)
-        : {}
-    setTargets(existing)
-    setEditingId(r.id)
-    setError(null)
-  }
-
-  function saveSmartLinks() {
-    if (!editingId) return
-    setError(null)
-    const cleaned: Record<string, string> = {}
-    for (const [k, v] of Object.entries(targets)) {
-      if (v.trim()) cleaned[k] = v.trim()
-    }
-    startTransition(async () => {
-      const res = await updateReleaseSmartLinks(editingId, cleaned)
-      if (res.error) {
-        setError(res.error)
-        return
-      }
-      setEditingId(null)
       router.refresh()
     })
   }
@@ -178,24 +130,15 @@ export default function ReleasesPanel({
                 </div>
                 <div className="studio-actions studio-actions--sm">
                   {r.state === 'PUBLISHED' && (
-                    <>
-                      <Link
-                        href={`/r/${r.smartLinkSlug}`}
-                        className="ui-btn ui-btn--sm ui-btn--ghost"
-                      >
-                        Smart link
-                        {typeof r.smartLinkViewCount === 'number' && r.smartLinkViewCount > 0
-                          ? ` (${r.smartLinkViewCount})`
-                          : ''}
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => openSmartLinks(r)}
-                        className="ui-btn ui-btn--sm ui-btn--secondary"
-                      >
-                        DSP URLs
-                      </button>
-                    </>
+                    <Link
+                      href={`/r/${r.smartLinkSlug}`}
+                      className="ui-btn ui-btn--sm ui-btn--ghost"
+                    >
+                      Smart link
+                      {typeof r.smartLinkViewCount === 'number' && r.smartLinkViewCount > 0
+                        ? ` (${r.smartLinkViewCount})`
+                        : ''}
+                    </Link>
                   )}
                   {r.state === 'DRAFT' && (
                     <button
@@ -207,99 +150,17 @@ export default function ReleasesPanel({
                       Publish
                     </button>
                   )}
+                  <Link
+                    href={`/dashboard/releases/${r.id}`}
+                    className="ui-btn ui-btn--sm ui-btn--secondary"
+                  >
+                    Manage →
+                  </Link>
                 </div>
               </div>
-
-              <ReleaseArtworkUpload releaseId={r.id} artworkUrl={r.artworkUrl} />
-              {(r.tracks ?? []).map((t) => (
-                <ReleaseTrackVersionPanel
-                  key={t.id}
-                  releaseId={r.id}
-                  trackId={t.id}
-                  trackTitle={t.title}
-                  trackStatus={t.status ?? 'PENDING'}
-                />
-              ))}
-              <ReleaseOpsPanel
-                releaseId={r.id}
-                releaseTitle={r.title}
-                smartLinkSlug={r.smartLinkSlug}
-                initial={{
-                  upc: r.upc ?? '',
-                  musicbrainzReleaseId: r.musicbrainzReleaseId ?? '',
-                  musicbrainzArtistId: r.musicbrainzArtistId ?? '',
-                  discogsReleaseId: r.discogsReleaseId ?? '',
-                  pLine: r.pLine ?? '',
-                  cLine: r.cLine ?? '',
-                  labelImprint: r.labelImprint ?? '',
-                }}
-                initialCredits={parseCredits(r.credits)}
-                checklist={
-                  r.checklist ?? [
-                    { id: 'metadata', label: 'Release metadata', done: false },
-                    { id: 'identifiers', label: 'UPC / ISRC', done: false },
-                    { id: 'musicbrainz', label: 'MusicBrainz', done: false },
-                    { id: 'dsp', label: 'DSP / smart links', done: false },
-                    {
-                      id: 'published',
-                      label: 'Published on profile',
-                      done: r.state === 'PUBLISHED',
-                    },
-                  ]
-                }
-                revelatorStatus={r.revelatorStatus}
-                revelatorId={r.revelatorId}
-              />
-              <ReleaseVisualPanel
-                releaseId={r.id}
-                initial={{
-                  visualPreset: (r.visualPreset ??
-                    'MINIMAL') as import('@tahti/shared').VisualPreset,
-                  colorSchemeJson: r.colorSchemeJson ?? null,
-                  paletteJson: r.paletteJson ?? null,
-                }}
-              />
             </li>
           ))}
         </ul>
-      )}
-
-      {editingId && (
-        <div className="studio-smart-links-panel studio-mt-md">
-          <p className="studio-label studio-mb-sm">Streaming links</p>
-          {DSP_FIELDS.map((f) => (
-            <div key={f.key} className="studio-field--block">
-              <label className="studio-label" htmlFor={`dsp-${f.key}`}>
-                {f.label}
-              </label>
-              <input
-                id={`dsp-${f.key}`}
-                type="url"
-                value={targets[f.key] ?? ''}
-                onChange={(e) => setTargets((t) => ({ ...t, [f.key]: e.target.value }))}
-                placeholder={f.placeholder}
-                className="studio-input"
-              />
-            </div>
-          ))}
-          <div className="studio-actions studio-mt-md">
-            <button
-              type="button"
-              onClick={saveSmartLinks}
-              disabled={isPending}
-              className="ui-btn ui-btn--primary"
-            >
-              Save links
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditingId(null)}
-              className="ui-btn ui-btn--ghost"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
       )}
 
       <div className="studio-input-row studio-mt-md">

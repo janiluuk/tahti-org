@@ -114,7 +114,7 @@
 }
 
 .admin-shell .admin-main {
-  padding: 2rem 2.5rem 4rem;
+  padding: 2rem 2.5rem 2rem;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
@@ -231,7 +231,7 @@
 
 .admin-table th,
 .admin-table td {
-  padding: 0.6rem 0.875rem;
+  padding: 0.45rem 0.875rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }

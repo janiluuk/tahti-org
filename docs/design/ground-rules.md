@@ -83,8 +83,11 @@ This blocks PRs that introduce a scrolling dashboard route. The first run will f
 | `/u/:handle` channel page | Listener-facing; standard web-page scroll is acceptable here, but the player + chat must be above the fold. |
 | `/` homepage | Marketing-like; scroll allowed but discouraged. |
 | `/dashboard/stats/detail` | New route (not in the 16 reference HTMLs) created to hold the plays-over-time chart and the listener choropleth map that had been bolted onto `/dashboard/stats` itself, violating Rule B against the 09-stats-reframe.html reference. The map is an SVG world projection scaled to container width; shrinking it enough to clear the remaining ~185px would make country shapes illegible at 1440×900. Header + chart fit above the fold; the map renders tall below it. |
+| `/admin/governance/audit` | Same pattern as `/admin/grants`: 50 rows/page with Previous/Next pagination, not an unbounded list. Header + filter form bottoms out at 231px, comfortably above the fold; the table itself is the part that's tall, by design. |
+| `/admin/users` | Paginated user directory (`page` query param, search/filter form). Filter bar fits at 192px, well above the fold; the table is the part that scrolls, and it's expected to grow with the org's membership. |
+| `/transparency` | Public report page, not a task surface — same category as `/` and the channel page. Header + KPI strip + ledger preview bottom out at 598px, well above the fold; the YTD breakdown, monthly detail, board resolutions, and storage stats below are normal scrolling report content. |
 
-That's it. Seven exceptions. Every other route fits.
+That's it. Ten exceptions. Every other route fits.
 
 ### Mobile is a separate rule
 
