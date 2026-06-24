@@ -5,11 +5,7 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  SLIDESHOW_PRESETS,
-  SLIDESHOW_PRESET_LABELS,
-  type SlideshowPreset,
-} from '@tahti/shared'
+import { SLIDESHOW_PRESETS, SLIDESHOW_PRESET_LABELS, type SlideshowPreset } from '@tahti/shared'
 import { Panel } from '@tahti/ui'
 import { updateChannelVisual } from './channel-visual-actions'
 

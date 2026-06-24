@@ -130,7 +130,10 @@ export default function ReleasesPanel({
                 </div>
                 <div className="studio-actions studio-actions--sm">
                   {r.state === 'PUBLISHED' && (
-                    <Link href={`/r/${r.smartLinkSlug}`} className="ui-btn ui-btn--sm ui-btn--ghost">
+                    <Link
+                      href={`/r/${r.smartLinkSlug}`}
+                      className="ui-btn ui-btn--sm ui-btn--ghost"
+                    >
                       Smart link
                       {typeof r.smartLinkViewCount === 'number' && r.smartLinkViewCount > 0
                         ? ` (${r.smartLinkViewCount})`
