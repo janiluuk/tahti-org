@@ -49,13 +49,15 @@ export default function ChannelSchedulePanel({
 
   const previewLabel = [
     previewNote,
-    previewAtIso ? new Date(previewAtIso).toLocaleString(undefined, {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-    }) : null,
+    previewAtIso
+      ? new Date(previewAtIso).toLocaleString(undefined, {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : null,
   ]
     .filter(Boolean)
     .join(' · ')
