@@ -82,8 +82,9 @@ This blocks PRs that introduce a scrolling dashboard route. The first run will f
 | `/dashboard/archive` (history view) | Paginated, like grants. Header + first ~6 rows fit; older entries paginate. |
 | `/u/:handle` channel page | Listener-facing; standard web-page scroll is acceptable here, but the player + chat must be above the fold. |
 | `/` homepage | Marketing-like; scroll allowed but discouraged. |
+| `/dashboard/stats/detail` | New route (not in the 16 reference HTMLs) created to hold the plays-over-time chart and the listener choropleth map that had been bolted onto `/dashboard/stats` itself, violating Rule B against the 09-stats-reframe.html reference. The map is an SVG world projection scaled to container width; shrinking it enough to clear the remaining ~185px would make country shapes illegible at 1440×900. Header + chart fit above the fold; the map renders tall below it. |
 
-That's it. Six exceptions. Every other route fits.
+That's it. Seven exceptions. Every other route fits.
 
 ### Mobile is a separate rule
 

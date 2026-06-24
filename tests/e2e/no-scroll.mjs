@@ -27,6 +27,7 @@ const EXEMPT = new Set([
   '/dashboard/editor', // full-bleed audio editor instrument — renders tall, not scrolling
   '/admin/grants', // per-year allocation tables paginate
   '/', // marketing homepage — scroll allowed but discouraged
+  '/dashboard/stats/detail', // plays chart + listener world map — shrinking the map to fit would make it illegible
 ])
 
 const ARTIST_ROUTES = [
@@ -53,6 +54,7 @@ const ARTIST_ROUTES = [
   '/dashboard/setup-channel',
   '/dashboard/stash',
   '/dashboard/stats',
+  '/dashboard/stats/detail',
   '/dashboard/upload',
   '/dashboard/venues',
   '/dashboard/archive',
