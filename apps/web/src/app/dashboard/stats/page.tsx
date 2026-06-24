@@ -56,16 +56,24 @@ async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promis
   }
 }
 
-export default async function StatsPage() {
+const RANGES = [
+  { value: '7', label: '7d' },
+  { value: '30', label: '30d' },
+  { value: 'all', label: 'All' },
+] as const
+
+export default async function StatsPage({ searchParams }: { searchParams: { range?: string } }) {
   const cookieStore = cookies()
   const sessionCookie = cookieStore.get('tahti_session')
   if (!sessionCookie) redirect('/login')
+
+  const range = RANGES.some((r) => r.value === searchParams.range) ? searchParams.range! : '30'
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
   const [plays, topTracks, topCountries, fanPayouts, grantEstimate] = await Promise.all([
-    apiFetch<PlaysPayload>(apiUrl, cookie, '/api/me/stats/plays?range=30'),
+    apiFetch<PlaysPayload>(apiUrl, cookie, `/api/me/stats/plays?range=${range}`),
     apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, '/api/me/stats/top-tracks'),
     apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, '/api/me/stats/top-countries'),
     apiFetch<FanPayoutStats>(apiUrl, cookie, '/api/me/fan-sub-payouts'),
@@ -103,6 +111,18 @@ export default async function StatsPage() {
           <Heading level={1}>Stats</Heading>
         </div>
         <div className="studio-page-header__actions">
+          <div className="stats-range-tabs" role="group" aria-label="Period">
+            {RANGES.map((r) => (
+              <NextLink
+                key={r.value}
+                href={`/dashboard/stats?range=${r.value}`}
+                className={`stats-range-tab${range === r.value ? ' stats-range-tab--active' : ''}`}
+                aria-current={range === r.value ? 'true' : undefined}
+              >
+                {r.label}
+              </NextLink>
+            ))}
+          </div>
           <NextLink href="/dashboard/stats/detail" className="ui-btn ui-btn--sm ui-btn--secondary">
             Plays &amp; listeners →
           </NextLink>
@@ -151,6 +171,9 @@ export default async function StatsPage() {
       <div className="stats-panel">
         <div className="stats-panel-header">
           <span className="stats-section-label">ENGAGEMENT UNITS</span>
+          <span className="stats-section-label-period">
+            {range === '7' ? 'Last 7 days' : range === 'all' ? 'All time' : 'Last 30 days'}
+          </span>
         </div>
         <div className="stats-engagement-rows">
           {engagementUnits.map((row) => (
