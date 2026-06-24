@@ -143,7 +143,7 @@ export function NewCollectionForm() {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Optional — shown on your collection page"
           maxLength={1000}
-          rows={3}
+          rows={2}
         />
       </div>
 
