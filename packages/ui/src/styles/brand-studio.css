@@ -248,10 +248,17 @@
   padding: 16px 0 24px;
   border-right: 1px solid var(--border);
   position: sticky;
-  top: 56px;
-  height: calc(100vh - 56px);
+  top: var(--topnav-h);
+  height: calc(100vh - var(--topnav-h));
   overflow-y: auto;
   scrollbar-width: none;
+}
+
+/* Admin pages stack .admin-view-strip above .studio-top-nav — the sidebar's sticky
+   offset and height must subtract both, same as .shell-app above (ground-rules.md Rule 1). */
+[data-tahti-ui='studio'].admin-shell .db-sidebar {
+  top: calc(var(--topnav-h) + var(--admin-strip-h));
+  height: calc(100vh - var(--topnav-h) - var(--admin-strip-h));
 }
 
 [data-tahti-ui='studio'] .db-sidebar::-webkit-scrollbar {
@@ -3468,7 +3475,7 @@
 }
 
 [data-tahti-ui='studio'] .broadcast-studio-page__header.studio-page-header {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 [data-tahti-ui='studio'] .collections-empty.studio-empty-card {
@@ -7869,8 +7876,8 @@
 [data-tahti-ui='studio'] .broadcast-studio {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
+  gap: var(--space-3);
+  margin-bottom: 0;
 }
 
 [data-tahti-ui='studio'] .broadcast-wizard {
@@ -7955,38 +7962,21 @@
   gap: var(--space-4);
 }
 
-[data-tahti-ui='studio'] .broadcast-studio-page__manage {
-  margin-top: var(--space-6);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--border);
+/* ── Next-broadcast compact row (/dashboard/schedule) ───────────────────── */
+
+[data-tahti-ui='studio'] .studio-schedule-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+[data-tahti-ui='studio'] .studio-schedule-row__field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-}
-
-/* ── Live broadcast countdown preview (studio) ──────────────────────────── */
-
-[data-tahti-ui='studio'] .studio-schedule-listener-preview {
-  margin-top: var(--space-4);
-  padding: var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card2);
-}
-
-[data-tahti-ui='studio'] .studio-schedule-listener-preview__heading {
-  margin: 0 0 var(--space-3);
-  font-size: var(--text-label);
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-[data-tahti-ui='studio'] .studio-schedule-listener-preview__note {
+  gap: 4px;
   margin: 0;
-  font-size: var(--text-sm);
-  color: var(--text);
+  min-width: 9rem;
 }
 
 [data-tahti-ui='studio'] .studio-countdown-preview__label {

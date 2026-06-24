@@ -7,8 +7,6 @@ import NextLink from 'next/link'
 import { Heading, PageShell, SidebarNavIconSvg } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
-import { StatsPlaysPanel } from './stats-plays-panel'
-import { ListenerMapPanel } from './listener-map-panel'
 import { StatsHero } from './_stats-hero'
 import { StatsTopThree } from './_stats-top-three'
 
@@ -33,17 +31,6 @@ interface PlaysPayload {
   totalPlays: number
   totalDownloads: number
   daily: Array<{ date: string; plays: number }>
-}
-
-interface ListenerGeoPoint {
-  countryCode: string
-  displayName: string
-  count: number
-}
-
-interface ListenerGeoPayload {
-  period: '7d' | '30d' | 'all'
-  geo: ListenerGeoPoint[]
 }
 
 interface GrantEstimate {
@@ -77,15 +64,13 @@ export default async function StatsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [plays, topTracks, topCountries, fanPayouts, listenerGeo, grantEstimate] =
-    await Promise.all([
-      apiFetch<PlaysPayload>(apiUrl, cookie, '/api/me/stats/plays?range=30'),
-      apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, '/api/me/stats/top-tracks'),
-      apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, '/api/me/stats/top-countries'),
-      apiFetch<FanPayoutStats>(apiUrl, cookie, '/api/me/fan-sub-payouts'),
-      apiFetch<ListenerGeoPayload>(apiUrl, cookie, '/api/me/listener-geo?period=30d'),
-      apiFetch<GrantEstimate>(apiUrl, cookie, '/api/me/grants/estimate'),
-    ])
+  const [plays, topTracks, topCountries, fanPayouts, grantEstimate] = await Promise.all([
+    apiFetch<PlaysPayload>(apiUrl, cookie, '/api/me/stats/plays?range=30'),
+    apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, '/api/me/stats/top-tracks'),
+    apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, '/api/me/stats/top-countries'),
+    apiFetch<FanPayoutStats>(apiUrl, cookie, '/api/me/fan-sub-payouts'),
+    apiFetch<GrantEstimate>(apiUrl, cookie, '/api/me/grants/estimate'),
+  ])
 
   const downloads = plays?.totalDownloads ?? 0
   const totalPlays = plays?.totalPlays ?? 0
@@ -118,6 +103,9 @@ export default async function StatsPage() {
           <Heading level={1}>Stats</Heading>
         </div>
         <div className="studio-page-header__actions">
+          <NextLink href="/dashboard/stats/detail" className="ui-btn ui-btn--sm ui-btn--secondary">
+            Plays &amp; listeners →
+          </NextLink>
           <StudioHeaderActions
             hasChannel={Boolean(user?.channel)}
             isLive={user?.channel?.state === 'LIVE'}
@@ -158,13 +146,6 @@ export default async function StatsPage() {
           countries[0] ? { country: countries[0].country, count: countries[0].count } : null
         }
         busiestDay={busiestDay}
-      />
-
-      {plays && <StatsPlaysPanel initial={plays} />}
-
-      <ListenerMapPanel
-        initial={listenerGeo?.geo ?? []}
-        initialPeriod={listenerGeo?.period ?? '30d'}
       />
 
       <div className="stats-panel">

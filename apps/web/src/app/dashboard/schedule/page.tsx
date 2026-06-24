@@ -6,6 +6,7 @@ import { PageShell, Text } from '@tahti/ui'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
 import { fetchChannelProgramme } from '../programme-actions'
+import ChannelSchedulePanel from '../channel-schedule-panel'
 import { RotationEditor } from './_rotation-editor'
 
 export default async function SchedulePage() {
@@ -16,6 +17,7 @@ export default async function SchedulePage() {
   if (!user) redirect('/login?next=/dashboard/schedule')
   if (!user.channel) redirect('/dashboard/setup-channel')
 
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const { data } = await fetchChannelProgramme()
   const initial = data ?? {
     fallbackMode: 'shuffle' as const,
@@ -24,6 +26,20 @@ export default async function SchedulePage() {
     library: [],
   }
   const isLive = user.channel.state === 'LIVE'
+
+  let channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null } = {
+    nextBroadcastAt: null,
+    nextBroadcastNote: null,
+  }
+  try {
+    const res = await fetch(`${apiUrl}/api/me/channel/schedule`, {
+      headers: { Cookie: `tahti_session=${sessionValue}` },
+      cache: 'no-store',
+    })
+    if (res.ok) channelSchedule = (await res.json()) as typeof channelSchedule
+  } catch {
+    // render with partial data
+  }
 
   return (
     <PageShell size="lg" className="studio-channel-editor-page">
@@ -46,6 +62,12 @@ export default async function SchedulePage() {
           />
         </div>
       </header>
+
+      <ChannelSchedulePanel
+        initialAt={channelSchedule.nextBroadcastAt}
+        initialNote={channelSchedule.nextBroadcastNote}
+        isLive={isLive}
+      />
 
       <RotationEditor initial={initial} channelSlug={user.channel.slug} />
     </PageShell>

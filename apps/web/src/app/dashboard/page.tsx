@@ -2,13 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { redirect } from 'next/navigation'
-import {
-  BroadcastSettingsSections,
-  ChannelDesignLinkPanel,
-} from './broadcast/_broadcast-settings-sections'
-import type { ModeratorRow } from './moderator-actions'
 import NewsletterPanel from './newsletter-panel'
-import { fetchMixcloudStatus } from './mixcloud-actions'
 import { PageShell, Panel, SidebarNavIconSvg } from '@tahti/ui'
 import NextLink from 'next/link'
 import { DashboardTabs } from './dashboard-tabs'
@@ -63,8 +57,6 @@ export default async function DashboardPage() {
     weeklyCapSeconds: number
   }
 
-  let announcements: Array<{ id: string; body: string; createdAt: string }> = []
-  let moderators: ModeratorRow[] = []
   let moderatedChannels: ModeratedChannel[] = []
   let membershipInfo: MembershipInfo | null = null
   let broadcastUsage: BroadcastUsageInfo | null = null
@@ -134,14 +126,8 @@ export default async function DashboardPage() {
     fanSubscriberCount: 0,
   }
   let newsletterDrafts: NewsletterDraft[] = []
-  let channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null } = {
-    nextBroadcastAt: null,
-    nextBroadcastNote: null,
-  }
   try {
     const [
-      announcementsRes,
-      moderatorsRes,
       moderatedRes,
       membershipRes,
       broadcastUsageRes,
@@ -149,11 +135,8 @@ export default async function DashboardPage() {
       fanTiersRes,
       fanPayoutsRes,
       archiveRes,
-      scheduleRes,
       newsletterPair,
     ] = await Promise.all([
-      slug ? fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }) : null,
-      slug ? get('/api/me/channel/moderators') : null,
       get('/api/me/moderate'),
       get('/api/me/membership'),
       slug ? get('/api/me/broadcast-usage') : null,
@@ -161,16 +144,11 @@ export default async function DashboardPage() {
       slug ? get('/api/me/fan-tiers') : null,
       slug ? get('/api/me/fan-sub-payouts') : null,
       slug ? get('/api/me/archive') : null,
-      slug ? get('/api/me/channel/schedule') : null,
       slug
         ? Promise.all([get('/api/me/newsletter/subscribers'), get('/api/me/newsletter/drafts')])
         : null,
     ])
 
-    if (announcementsRes?.ok) {
-      announcements = (await announcementsRes.json()) as typeof announcements
-    }
-    if (moderatorsRes?.ok) moderators = (await moderatorsRes.json()) as ModeratorRow[]
     if (moderatedRes.ok) moderatedChannels = (await moderatedRes.json()) as ModeratedChannel[]
     if (membershipRes.ok) membershipInfo = (await membershipRes.json()) as MembershipInfo
     if (broadcastUsageRes?.ok) {
@@ -191,7 +169,6 @@ export default async function DashboardPage() {
     if (archiveRes?.ok) {
       archiveItemsForEdit = (await archiveRes.json()) as typeof archiveItemsForEdit
     }
-    if (scheduleRes?.ok) channelSchedule = (await scheduleRes.json()) as typeof channelSchedule
     if (newsletterPair) {
       const [statsRes, draftsRes] = newsletterPair
       if (statsRes.ok) newsletterStats = (await statsRes.json()) as NewsletterStats
@@ -206,8 +183,6 @@ export default async function DashboardPage() {
   const hasFanNewsletterPerk = fanTiers.some(
     (t) => t.active && t.perks.some((p) => p === 'FAN_NEWSLETTER'),
   )
-
-  const mixcloudStatus = await fetchMixcloudStatus()
 
   const statDlCount =
     (downloadGateSummary as { totals: { countedDownloads?: number } } | null)?.totals
@@ -389,17 +364,49 @@ export default async function DashboardPage() {
                     Open broadcast studio →
                   </NextLink>
                 </Panel>
-                <ChannelDesignLinkPanel />
+                <Panel
+                  title="Channel design"
+                  headerTight
+                  description="Gallery, text overlay, colors, and visual style for your public channel page."
+                >
+                  <NextLink href="/dashboard/channel" className="ui-btn ui-btn--primary">
+                    Open channel editor →
+                  </NextLink>
+                </Panel>
+                <Panel
+                  title="Schedule"
+                  headerTight
+                  description="24/7 rotation and your next-broadcast announcement for listeners."
+                >
+                  <NextLink href="/dashboard/schedule" className="ui-btn ui-btn--secondary">
+                    Open schedule →
+                  </NextLink>
+                </Panel>
+                <Panel
+                  title="Distribution"
+                  headerTight
+                  description="Mixcloud, Tahti Radio, and pinned announcements."
+                >
+                  <NextLink
+                    href="/dashboard/settings/distribution"
+                    className="ui-btn ui-btn--secondary"
+                  >
+                    Open distribution settings →
+                  </NextLink>
+                </Panel>
+                <Panel
+                  title="Moderators"
+                  headerTight
+                  description="Delegate chat moderation to trusted listeners."
+                >
+                  <NextLink
+                    href="/dashboard/settings/moderators"
+                    className="ui-btn ui-btn--secondary"
+                  >
+                    Open moderators →
+                  </NextLink>
+                </Panel>
               </div>
-              <BroadcastSettingsSections
-                channelSlug={user.channel.slug}
-                isLive={user.channel.state === 'LIVE'}
-                announcements={announcements}
-                moderators={moderators}
-                channelSchedule={channelSchedule}
-                mixcloudStatus={mixcloudStatus}
-                apiUrl={apiUrl}
-              />
             </div>
           ) : undefined
         }

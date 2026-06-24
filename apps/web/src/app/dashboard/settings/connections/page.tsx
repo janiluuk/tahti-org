@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import { Suspense } from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import SocialPromoPanel from '../../social-promo-panel'
 import { ImportConnectionsPanel } from '../../_import-connections-panel'
 import type { SocialSettings } from '../../social-actions'
+import { fetchMixcloudStatus } from '../../mixcloud-actions'
+import { MixcloudConnect } from '../../mixcloud-connect'
 
 interface ImportConnectStatus {
   connected: boolean
@@ -33,12 +36,14 @@ export default async function ConnectionsSettingsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [socialSettings, googleDriveImport, bandcampImport, soundcloudImport] = await Promise.all([
-    apiFetch<SocialSettings>(apiUrl, cookie, '/api/me/social'),
-    apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/google-drive'),
-    apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/bandcamp'),
-    apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/soundcloud'),
-  ])
+  const [socialSettings, googleDriveImport, bandcampImport, soundcloudImport, mixcloudStatus] =
+    await Promise.all([
+      apiFetch<SocialSettings>(apiUrl, cookie, '/api/me/social'),
+      apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/google-drive'),
+      apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/bandcamp'),
+      apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/soundcloud'),
+      fetchMixcloudStatus(),
+    ])
 
   return (
     <div className="studio-settings-stack">
@@ -81,6 +86,16 @@ export default async function ConnectionsSettingsPage() {
           },
         ]}
       />
+
+      <Suspense fallback={null}>
+        <MixcloudConnect
+          initial={{
+            connected: mixcloudStatus.connected,
+            configured: mixcloudStatus.configured,
+          }}
+          apiUrl={apiUrl}
+        />
+      </Suspense>
     </div>
   )
 }
