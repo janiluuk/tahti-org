@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { BroadcastStatusBar, Panel, StatusPill, Text } from '@tahti/ui'
 import HlsPlayer from '@/app/c/[slug]/hls-player'
 import { resolveChannelUrl } from '@/lib/app-url'
@@ -56,10 +56,21 @@ export function BroadcastStudio({
   broadcastUsage: BroadcastUsage | null
 }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const initialStatus = statusFromState(initialState)
   const [status, setStatus] = useState<LiveStatus>(initialStatus)
-  const [activeStep, setActiveStep] = useState(initialStatus === 'offline' ? 1 : 4)
   const [signal, setSignal] = useState<SignalStatus | null>(null)
+
+  const requestedStep = Number(searchParams.get('step'))
+  const activeStep = [1, 2, 3, 4].includes(requestedStep)
+    ? requestedStep
+    : initialStatus === 'offline'
+      ? 1
+      : 4
+
+  function setActiveStep(step: number) {
+    router.push(`/dashboard/broadcast?step=${step}`)
+  }
 
   useEffect(() => {
     setStatus(statusFromState(initialState))
@@ -75,7 +86,7 @@ export function BroadcastStudio({
         const next = statusFromState(me.channel?.state)
         if (next !== status) {
           setStatus(next)
-          if (next === 'preview' && activeStep < 2) setActiveStep(2)
+          if (next === 'preview' && activeStep < 2) router.push('/dashboard/broadcast?step=2')
           router.refresh()
         }
       } catch {

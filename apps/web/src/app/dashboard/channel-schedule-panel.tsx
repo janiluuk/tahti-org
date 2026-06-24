@@ -5,7 +5,6 @@
 
 import { useState, useTransition } from 'react'
 import { Panel } from '@/components/ui'
-import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import { updateChannelSchedule } from './channel-schedule-actions'
 
 export default function ChannelSchedulePanel({
@@ -48,57 +47,60 @@ export default function ChannelSchedulePanel({
   const previewAtIso = at ? new Date(at).toISOString() : null
   const previewNote = note.trim() || null
 
+  const previewLabel = [
+    previewNote,
+    previewAtIso ? new Date(previewAtIso).toLocaleString(undefined, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }) : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
   return (
-    <Panel title="Next broadcast" className="studio-mt-xl">
-      <p className="studio-text-muted-sm studio-mb-md">
-        When you are offline, listeners see when you plan to go live next.
-      </p>
-      <label className="studio-field--block studio-mb-sm">
-        Date & time (local)
-        <input
-          type="datetime-local"
-          value={at}
-          onChange={(e) => setAt(e.target.value)}
-          disabled={isPending}
-          className="studio-input studio-mt-sm"
-        />
-      </label>
-      <label className="studio-field--block studio-mb-md">
-        Short note
-        <input
-          type="text"
-          value={note}
-          placeholder="e.g. Weekly — Thursdays 22:00 EET"
-          onChange={(e) => setNote(e.target.value)}
-          disabled={isPending}
-          className="studio-input studio-mt-sm"
-        />
-      </label>
-      {error && <p className="studio-text-error">{error}</p>}
-      <div className="studio-actions">
+    <Panel
+      title="Next broadcast"
+      headerTight
+      description="What listeners see when you're offline."
+      className="studio-mt-lg"
+    >
+      <div className="studio-schedule-row">
+        <label className="studio-schedule-row__field">
+          <span className="studio-label-sm">Date &amp; time</span>
+          <input
+            type="datetime-local"
+            value={at}
+            onChange={(e) => setAt(e.target.value)}
+            disabled={isPending}
+            className="studio-input"
+          />
+        </label>
+        <label className="studio-schedule-row__field studio-flex-1">
+          <span className="studio-label-sm">Note</span>
+          <input
+            type="text"
+            value={note}
+            placeholder="e.g. Weekly — Thursdays 22:00 EET"
+            onChange={(e) => setNote(e.target.value)}
+            disabled={isPending}
+            className="studio-input"
+          />
+        </label>
         <button type="button" onClick={save} disabled={isPending} className="studio-btn-primary">
-          {isPending ? 'Saving…' : 'Save schedule'}
+          {isPending ? 'Saving…' : 'Save'}
         </button>
         <button type="button" onClick={clear} disabled={isPending} className="studio-btn-ghost">
           Clear
         </button>
       </div>
-
-      {!isLive && previewAtIso && (
-        <div className="studio-schedule-listener-preview" aria-live="polite">
-          <p className="studio-schedule-listener-preview__heading">Listener preview</p>
-          <BroadcastCountdown
-            variant="studio-compact"
-            targetIso={previewAtIso}
-            note={previewNote}
-          />
-        </div>
-      )}
-      {!isLive && !previewAtIso && previewNote && (
-        <div className="studio-schedule-listener-preview studio-schedule-listener-preview--note-only">
-          <p className="studio-schedule-listener-preview__heading">Listener preview</p>
-          <p className="studio-schedule-listener-preview__note">{previewNote}</p>
-        </div>
+      {error && <p className="studio-text-error studio-mt-xs">{error}</p>}
+      {!isLive && previewLabel && (
+        <p className="studio-text-muted-sm studio-mt-sm" aria-live="polite">
+          Listener preview: {previewLabel}
+        </p>
       )}
     </Panel>
   )

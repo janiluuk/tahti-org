@@ -31,7 +31,10 @@ const EXEMPT = new Set([
 
 const ARTIST_ROUTES = [
   '/dashboard',
-  '/dashboard/broadcast',
+  '/dashboard/broadcast?step=1',
+  '/dashboard/broadcast?step=2',
+  '/dashboard/broadcast?step=3',
+  '/dashboard/broadcast?step=4',
   '/dashboard/channel',
   '/dashboard/collections',
   '/dashboard/collections/new',
@@ -41,9 +44,11 @@ const ARTIST_ROUTES = [
   '/dashboard/settings',
   '/dashboard/settings/account',
   '/dashboard/settings/connections',
+  '/dashboard/settings/distribution',
   '/dashboard/settings/domain',
   '/dashboard/settings/fan-subs',
   '/dashboard/settings/mentions',
+  '/dashboard/settings/moderators',
   '/dashboard/settings/multistream',
   '/dashboard/setup-channel',
   '/dashboard/stash',

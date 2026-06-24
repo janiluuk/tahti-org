@@ -9,7 +9,9 @@ import { usePathname } from 'next/navigation'
 const ITEMS = [
   { href: '/dashboard/settings/account', label: 'Account' },
   { href: '/dashboard/settings/connections', label: 'Connections' },
+  { href: '/dashboard/settings/distribution', label: 'Distribution' },
   { href: '/dashboard/settings/mentions', label: 'Mentions' },
+  { href: '/dashboard/settings/moderators', label: 'Moderators' },
   { href: '/dashboard/settings/domain', label: 'Domain' },
   { href: '/dashboard/settings/fan-subs', label: 'Fan subs' },
   { href: '/dashboard/settings/multistream', label: 'Multistream' },
