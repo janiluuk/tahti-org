@@ -4,8 +4,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { resolveChannelUrl } from '@/lib/app-url'
 import {
   ColorSchemeSchema,
@@ -16,7 +15,6 @@ import {
 } from '@tahti/shared'
 import { Panel } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
-import { updateChannelVisual } from './channel-visual-actions'
 
 interface Props {
   channelSlug: string
@@ -55,14 +53,10 @@ export default function ChannelVisualPresetPanel({
   bare = false,
   onDraftChange,
 }: Props & { bare?: boolean; onDraftChange?: (draft: ChannelVisualDraft) => void }) {
-  const router = useRouter()
   const [preset, setPreset] = useState<VisualPreset>(initial.visualPreset)
   const parsed = parseOrNull(initial.colorSchemeJson)
   const [scheme, setScheme] = useState<ColorScheme>(parsed ?? DEFAULT_COLOR_SCHEME)
   const [useCustomScheme, setUseCustomScheme] = useState(!!parsed)
-  const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
 
   // Slideshow-transition fields live on /dashboard/channel/gallery (ChannelSlideshowPanel) now —
   // pass them through unchanged so this panel's save doesn't clobber them.
@@ -82,23 +76,6 @@ export default function ChannelVisualPresetPanel({
     setScheme((s) => ({ ...s, [key]: value }))
   }
 
-  function save() {
-    setError(null)
-    setMessage(null)
-    startTransition(async () => {
-      const res = await updateChannelVisual({
-        visualPreset: preset,
-        colorScheme: useCustomScheme ? scheme : null,
-      })
-      if (res.error) {
-        setError(res.error)
-        return
-      }
-      setMessage('Visual settings saved.')
-      router.refresh()
-    })
-  }
-
   const form = (
     <>
       <div className="studio-field--block">
@@ -106,7 +83,6 @@ export default function ChannelVisualPresetPanel({
         <VisualPresetPicker
           value={preset}
           onChange={setPreset}
-          disabled={isPending}
           colorScheme={useCustomScheme ? scheme : undefined}
           showPreview
         />
@@ -117,7 +93,6 @@ export default function ChannelVisualPresetPanel({
           id="custom-scheme-toggle"
           type="checkbox"
           checked={useCustomScheme}
-          disabled={isPending}
           onChange={(e) => setUseCustomScheme(e.target.checked)}
         />
         <span>Use custom color scheme</span>
@@ -135,13 +110,11 @@ export default function ChannelVisualPresetPanel({
                   id={`color-${key}`}
                   type="color"
                   value={scheme[key]}
-                  disabled={isPending}
                   onChange={(e) => updateColor(key, e.target.value)}
                 />
                 <input
                   type="text"
                   value={scheme[key]}
-                  disabled={isPending}
                   maxLength={7}
                   onChange={(e) => updateColor(key, e.target.value)}
                   className="studio-input"
@@ -152,19 +125,8 @@ export default function ChannelVisualPresetPanel({
         </div>
       )}
 
-      {error && <p className="studio-notice studio-notice--error">{error}</p>}
-      {message && <p className="studio-notice studio-notice--success">{message}</p>}
-
-      <div className="studio-actions studio-row--wrap">
-        <button
-          type="button"
-          className="ui-btn ui-btn--primary"
-          onClick={save}
-          disabled={isPending}
-        >
-          {isPending ? 'Saving…' : 'Save appearance'}
-        </button>
-        {!bare ? (
+      {!bare ? (
+        <div className="studio-actions studio-row--wrap">
           <Link
             href={resolveChannelUrl(channelSlug)}
             className="ui-btn ui-btn--secondary"
@@ -172,8 +134,8 @@ export default function ChannelVisualPresetPanel({
           >
             Preview channel →
           </Link>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </>
   )
 
