@@ -111,7 +111,9 @@ export function ChannelEditorSections({
         }),
         updateChannelVisual({
           visualPreset: draft.visual.visualPreset,
-          colorScheme: draft.visual.colorSchemeJson ? JSON.parse(draft.visual.colorSchemeJson) : null,
+          colorScheme: draft.visual.colorSchemeJson
+            ? JSON.parse(draft.visual.colorSchemeJson)
+            : null,
         }),
       ])
       const err = profileRes.error ?? visualRes.error

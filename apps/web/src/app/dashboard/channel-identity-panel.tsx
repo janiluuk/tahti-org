@@ -253,7 +253,6 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           ))}
         </div>
       </div>
-
     </>
   )
 }

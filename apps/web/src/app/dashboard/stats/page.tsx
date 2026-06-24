@@ -62,11 +62,7 @@ const RANGES = [
   { value: 'all', label: 'All' },
 ] as const
 
-export default async function StatsPage({
-  searchParams,
-}: {
-  searchParams: { range?: string }
-}) {
+export default async function StatsPage({ searchParams }: { searchParams: { range?: string } }) {
   const cookieStore = cookies()
   const sessionCookie = cookieStore.get('tahti_session')
   if (!sessionCookie) redirect('/login')
