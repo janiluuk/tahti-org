@@ -48,6 +48,7 @@ const meRoute: FastifyPluginAsync = async (fastify) => {
         email: user.email,
         username: user.username,
         displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
         tier: user.tier,
         emailVerifiedAt: user.emailVerifiedAt,
         isMember: user.isMember,

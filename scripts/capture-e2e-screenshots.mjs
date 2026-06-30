@@ -85,10 +85,20 @@ function buildPages(seed) {
       label: 'Smart link',
       waitMs: 1500,
     },
-    { role: 'public', id: 'help-tier-limits', path: '/help/tier-limits', label: 'Tier limits help' },
+    {
+      role: 'public',
+      id: 'help-tier-limits',
+      path: '/help/tier-limits',
+      label: 'Tier limits help',
+    },
     { role: 'public', id: 'help-support', path: '/help/support', label: 'Support help' },
     { role: 'public', id: 'help-broadcast', path: '/help/broadcast', label: 'Broadcast help' },
-    { role: 'public', id: 'help-multistream', path: '/help/multistream', label: 'Multistream help' },
+    {
+      role: 'public',
+      id: 'help-multistream',
+      path: '/help/multistream',
+      label: 'Multistream help',
+    },
     { role: 'public', id: 'help-for-artists', path: '/help/for-artists', label: 'Artist guide' },
     {
       role: 'public',
@@ -110,7 +120,12 @@ function buildPages(seed) {
   }
 
   // ── Free listener (verified, no membership) ───────────────────────────
-  pages.push({ role: 'free', id: 'dashboard', path: '/dashboard', label: 'Free listener dashboard' })
+  pages.push({
+    role: 'free',
+    id: 'dashboard',
+    path: '/dashboard',
+    label: 'Free listener dashboard',
+  })
 
   // ── Member (financial supporter, no channel) ───────────────────────────
   pages.push(
@@ -124,20 +139,16 @@ function buildPages(seed) {
     {
       role: 'artist',
       id: 'channel-appearance',
-      path: '/dashboard/channel',
+      path: '/dashboard/channel/edit',
       label: 'Channel design editor',
       waitMs: 1200,
     },
     {
       role: 'artist',
       id: 'schedule-programme',
-      path: '/dashboard/broadcast',
+      path: '/dashboard/schedule',
       label: 'Schedule & programme',
       waitMs: 800,
-      async prepare(tab) {
-        await tab.locator('summary:has-text("Schedule & programme")').click()
-        await tab.waitForTimeout(600)
-      },
     },
     {
       role: 'artist',
@@ -160,7 +171,12 @@ function buildPages(seed) {
     { role: 'admin', id: 'support', path: '/admin/support', label: 'Support tickets' },
     { role: 'admin', id: 'financial', path: '/admin/financial', label: 'Financial hub' },
     { role: 'admin', id: 'financial-ledger', path: '/admin/financial/ledger', label: 'Ledger' },
-    { role: 'admin', id: 'financial-fansubs', path: '/admin/financial/fansubs', label: 'Fan subs & payouts' },
+    {
+      role: 'admin',
+      id: 'financial-fansubs',
+      path: '/admin/financial/fansubs',
+      label: 'Fan subs & payouts',
+    },
     {
       role: 'admin',
       id: 'financial-legacy',
@@ -195,9 +211,22 @@ async function main() {
   const password = seed.password ?? 'screenshot-demo-pass'
 
   try {
-    spawnSync('docker', ['compose', '-f', join(__dirname, '../infra/docker-compose.stack.yml'), 'exec', '-T', 'redis', 'redis-cli', 'FLUSHDB'], {
-      encoding: 'utf8',
-    })
+    spawnSync(
+      'docker',
+      [
+        'compose',
+        '-f',
+        join(__dirname, '../infra/docker-compose.stack.yml'),
+        'exec',
+        '-T',
+        'redis',
+        'redis-cli',
+        'FLUSHDB',
+      ],
+      {
+        encoding: 'utf8',
+      },
+    )
   } catch {
     /* optional — clears rate-limit buckets before a long capture run */
   }

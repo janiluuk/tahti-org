@@ -107,14 +107,13 @@ export function isDashboardNavItemActive(
 
 export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   {
-    href: '/dashboard#overview',
+    href: '/dashboard',
     label: 'Channel',
     icon: 'channel',
-    hash: '#overview',
-    sectionKey: 'overview',
+    isRoute: true,
   },
   {
-    href: '/dashboard/channel',
+    href: '/dashboard/channel/edit',
     label: 'Design',
     icon: 'appearance',
     isRoute: true,
@@ -139,11 +138,10 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   { href: '/dashboard/collections', label: 'Collections', icon: 'collections', isRoute: true },
   { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
   {
-    href: '/dashboard#newsletter',
+    href: '/dashboard/newsletter/compose',
     label: 'Newsletter',
     icon: 'newsletter',
-    hash: '#newsletter',
-    sectionKey: 'newsletter',
+    isRoute: true,
     requiresChannel: true,
   },
   {

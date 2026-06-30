@@ -90,8 +90,6 @@ function formatEta(seconds: number): string {
 const CONTENT_TYPES = ['track', 'set'] as const
 type ContentType = (typeof CONTENT_TYPES)[number]
 
-const SMART_LINK_PLATFORMS = ['spotify', 'apple', 'bandcamp', 'soundcloud', 'youtube'] as const
-
 export function UploadInProgress({
   uploadId,
   collectionOptions,
@@ -111,7 +109,6 @@ export function UploadInProgress({
   const [genre, setGenre] = useState('')
   const [contentType, setContentType] = useState<ContentType>('track')
   const [selectedCollections, setSelectedCollections] = useState<string[]>([])
-  const [smartLinks, setSmartLinks] = useState<Record<string, string>>({})
   const [coverDataUrl, setCoverDataUrl] = useState<string | null>(null)
 
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -494,29 +491,6 @@ export function UploadInProgress({
               </div>
             </div>
           )}
-
-          {/* Smart links */}
-          <details className="upload-progress__smart-links">
-            <summary className="upload-progress__smart-links-summary">
-              Smart links (optional)
-            </summary>
-            <div className="upload-progress__smart-links-fields">
-              {SMART_LINK_PLATFORMS.map((p) => (
-                <div key={p} className="upload-progress__field">
-                  <label className="upload-progress__label">
-                    {p[0]!.toUpperCase() + p.slice(1)}
-                  </label>
-                  <input
-                    type="url"
-                    className="studio-input"
-                    value={smartLinks[p] ?? ''}
-                    onChange={(e) => setSmartLinks((prev) => ({ ...prev, [p]: e.target.value }))}
-                    placeholder={`https://${p}.com/…`}
-                  />
-                </div>
-              ))}
-            </div>
-          </details>
         </div>
       </div>
 
@@ -526,6 +500,9 @@ export function UploadInProgress({
           <>
             <Link href={`/dashboard/archive/${itemId}`} className="studio-btn-ghost">
               View in archive
+            </Link>
+            <Link href="/dashboard/releases" className="studio-btn-ghost">
+              Add smart links →
             </Link>
             <Link href={`/dashboard/archive/${itemId}/editor`} className="studio-btn-primary">
               Polish & publish →

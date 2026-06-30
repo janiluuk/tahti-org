@@ -36,7 +36,7 @@ export default async function ChannelGalleryPage() {
             isLive={isLive}
             channelSlug={user.channel.slug}
             showBack
-            backHref="/dashboard/channel"
+            backHref="/dashboard/channel/edit"
             backLabel="Channel design"
           />
         </div>

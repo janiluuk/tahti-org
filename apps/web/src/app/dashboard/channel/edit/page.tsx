@@ -5,19 +5,29 @@ import { redirect } from 'next/navigation'
 import { PageShell, Text } from '@tahti/ui'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../../_studio-header-actions'
+import { ChannelEditorSections } from '../_channel-editor-sections'
 import { fetchChannelEditorData } from '../_channel-editor-data'
-import { ChannelTextSections } from './_channel-text-sections'
 
-export default async function ChannelTextPage() {
+export default async function ChannelDesignPage() {
   const sessionValue = dashboardSessionCookie()
-  if (!sessionValue) redirect('/login?next=/dashboard/channel/text')
+  if (!sessionValue) redirect('/login?next=/dashboard/channel/edit')
 
   const user = await getDashboardUser()
-  if (!user) redirect('/login?next=/dashboard/channel/text')
+  if (!user) redirect('/login?next=/dashboard/channel/edit')
   if (!user.channel) redirect('/dashboard/setup-channel')
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const data = await fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug)
+  const {
+    channelGallery,
+    channelTextLayer,
+    channelVisual,
+    avatarUrl,
+    bio,
+    countryCode,
+    pronouns,
+    genres,
+    links,
+  } = await fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug)
 
   const isLive = user.channel.state === 'LIVE'
 
@@ -25,9 +35,9 @@ export default async function ChannelTextPage() {
     <PageShell size="lg" className="studio-channel-editor-page">
       <header className="studio-page-header studio-channel-editor-page__header">
         <div>
-          <h1 className="studio-page-title">Text overlay</h1>
+          <h1 className="studio-page-title">Channel design</h1>
           <Text tone="muted" size="sm">
-            A stylized headline shown on your public channel page.
+            Customize how your public channel looks.
           </Text>
         </div>
         <div className="studio-page-header__actions">
@@ -36,16 +46,25 @@ export default async function ChannelTextPage() {
             isLive={isLive}
             channelSlug={user.channel.slug}
             showBack
-            backHref="/dashboard/channel/edit"
-            backLabel="Channel design"
+            backHref="/dashboard"
+            backLabel="Dashboard"
           />
         </div>
       </header>
 
-      <ChannelTextSections
+      <ChannelEditorSections
         channelSlug={user.channel.slug}
+        tier={user.tier}
         displayName={user.displayName}
-        {...data}
+        avatarUrl={avatarUrl}
+        countryCode={countryCode}
+        pronouns={pronouns}
+        bio={bio}
+        genres={genres}
+        links={links}
+        channelGallery={channelGallery}
+        channelTextLayer={channelTextLayer}
+        channelVisual={channelVisual}
       />
     </PageShell>
   )

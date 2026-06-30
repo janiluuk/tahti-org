@@ -36,11 +36,16 @@ function resolveWarningLevel(usage: BroadcastUsage): WarningLevel {
 export default function BroadcastUsageBanner({ usage }: { usage: BroadcastUsage | null }) {
   if (!usage || usage.unlimited) return null
 
+  const level = resolveWarningLevel(usage)
+  const nearCap = level !== 'none'
+
+  // docs/design/literal-reference-method.md: only surface the weekly cap gauge
+  // once the artist is actually within range of it, not pinned to every step.
+  if (!nearCap) return null
+
   const cap = usage.weeklyCapSeconds
   const used = usage.secondsUsed
   const pct = Math.min(100, Math.round((used / cap) * 100))
-  const level = resolveWarningLevel(usage)
-  const nearCap = level !== 'none'
 
   const fillClass =
     level === 'blocked'

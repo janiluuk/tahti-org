@@ -3,6 +3,7 @@
 
 'use client'
 
+import type { CSSProperties } from 'react'
 import { AvatarTile, Heading, Row, Text } from '@tahti/ui'
 import { SocialLinkIcon } from '@/components/social-link-icon'
 import { countryName } from '@/lib/country-options'
@@ -16,12 +17,16 @@ import {
   ArchiveVideoBackdrop,
   resolveArchiveBackground,
 } from '@/app/c/[slug]/archive-item-backdrop'
-import type {
-  ChannelGalleryMode,
-  ChannelTextLayerAlignment,
-  ChannelTextLayerMode,
-  SlideshowPreset,
-  VisualPreset,
+import {
+  BRAND_ACCENT_PRESETS,
+  DEFAULT_COLOR_SCHEME,
+  parseColorScheme,
+  type ChannelGalleryMode,
+  type ChannelHeaderStyle,
+  type ChannelTextLayerAlignment,
+  type ChannelTextLayerMode,
+  type SlideshowPreset,
+  type VisualPreset,
 } from '@tahti/shared'
 
 export type ChannelPreviewDraft = {
@@ -45,6 +50,8 @@ export type ChannelPreviewDraft = {
   visual: {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
+    headerStyle: ChannelHeaderStyle
+    brandAccentPreset: string | null
     slideshowPreset: SlideshowPreset
     slideshowIntervalSeconds: number
     slideshowTransitionMs: number
@@ -52,9 +59,22 @@ export type ChannelPreviewDraft = {
   }
 }
 
+function resolveHeaderBannerStyle(
+  visual: ChannelPreviewDraft['visual'],
+): CSSProperties | undefined {
+  if (visual.headerStyle === 'VIDEO_LOOP') return undefined // rendered via the backdrop below
+  const preset = BRAND_ACCENT_PRESETS.find((p) => p.id === visual.brandAccentPreset)
+  if (visual.headerStyle === 'SOLID') {
+    const scheme = parseColorScheme(visual.colorSchemeJson)
+    return { background: preset?.accent ?? scheme?.accent ?? DEFAULT_COLOR_SCHEME.accent }
+  }
+  return { background: (preset ?? BRAND_ACCENT_PRESETS[0])?.gradient }
+}
+
 /** Mirrors the top-of-page visual stack from the public channel page, fed by live draft state. */
 export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
   const backdrop = resolveArchiveBackground(draft.gallery.videoBackgroundUrl)
+  const bannerStyle = resolveHeaderBannerStyle(draft.visual)
 
   return (
     <div data-tahti-ui="brand" data-channel-root className="brand-channel studio-channel-preview">
@@ -77,6 +97,8 @@ export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
               style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
             />
           )}
+
+          {bannerStyle && <div className="ch-header-banner" style={bannerStyle} aria-hidden />}
 
           <header className="ch-artist-header">
             <Row className="ui-row--gap-3 ch-artist-header-row">

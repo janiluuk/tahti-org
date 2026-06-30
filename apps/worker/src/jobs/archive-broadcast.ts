@@ -109,7 +109,7 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
     await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
 
     const startedAt = broadcast.startedAt
-    const title = `Live set — ${startedAt.toISOString().slice(0, 10)}`
+    const title = broadcast.title ?? `Live set — ${startedAt.toISOString().slice(0, 10)}`
 
     const rotationCount = await prisma.archiveItem.count({
       where: { channelId: broadcast.channel.id, isFallback: true },
@@ -147,7 +147,9 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         genre: 'Electronic',
         license: 'ALL_RIGHTS_RESERVED',
         releasedAt: startedAt,
-        isPublic: true,
+        // Broadcasting Setup step 3 "auto-archive" toggle: off means the recording is
+        // saved as a draft for the artist to polish & publish manually (archive-editor.tsx).
+        isPublic: broadcast.autoArchive,
         isFallback: true,
         fallbackOrder: rotationCount,
         useDetectedBpmKey: true,

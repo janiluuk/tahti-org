@@ -3,7 +3,8 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Panel } from '@tahti/ui'
+import Link from 'next/link'
+import { AvatarTile } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import MembershipPanel from '../../membership-panel'
 import PrivacyPanel from '../../privacy-panel'
@@ -48,14 +49,18 @@ export default async function AccountSettingsPage() {
 
   return (
     <div className="studio-settings-stack">
-      <div className="studio-page-header">
-        <div>
-          <h1 className="studio-page-title">Account</h1>
-          <p className="studio-text-muted-sm studio-mt-xs">
-            Your identity, membership, and data for{' '}
-            <span className="studio-account__identity">{user.email}</span>
-          </p>
+      <div className="account-hero" data-hero>
+        <AvatarTile size="md" name={user.displayName} src={user.avatarUrl} bordered />
+        <div className="account-hero__identity">
+          <h1 className="account-hero__name">{user.displayName}</h1>
+          <p className="account-hero__handle">@{user.username}</p>
+          <p className="studio-text-muted-sm studio-mt-xs">{user.email}</p>
         </div>
+        {user.channel && (
+          <Link href="/dashboard/channel/edit" className="ui-btn ui-btn--sm ui-btn--secondary">
+            Edit identity in Channel design →
+          </Link>
+        )}
       </div>
 
       {membershipInfo && (
@@ -70,21 +75,6 @@ export default async function AccountSettingsPage() {
           subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}
         />
       )}
-
-      <Panel title="Account" headerTight description="Your public artist identity on Tahti.">
-        <dl className="studio-dl">
-          <div className="studio-dl__row">
-            <dt className="studio-dl__term">Username</dt>
-            <dd className="studio-dl__value">
-              <code>@{user.username}</code>
-            </dd>
-          </div>
-          <div className="studio-dl__row">
-            <dt className="studio-dl__term">Email</dt>
-            <dd className="studio-dl__value">{user.email}</dd>
-          </div>
-        </dl>
-      </Panel>
 
       <PrivacyPanel username={user.username} apiUrl={apiUrl} />
     </div>

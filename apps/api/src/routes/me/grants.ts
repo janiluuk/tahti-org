@@ -75,6 +75,9 @@ const meGrantsRoutes: FastifyPluginAsync = async (fastify) => {
         estimateCents: myAllocation?.amountCents ?? 0,
         units: mine?.units ?? 0,
         eligible: (mine?.units ?? 0) >= 5,
+        freeDownloads: mine?.freeDownloads ?? 0,
+        paidDownloads: mine?.paidDownloads ?? 0,
+        fanSubEuros: mine?.fanSubEuros ?? 0,
       })
     },
   )

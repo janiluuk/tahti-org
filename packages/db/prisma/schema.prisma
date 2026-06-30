@@ -61,6 +61,16 @@ enum ChannelGalleryMode {
   @@schema("channel")
 }
 
+/// Channel page header banner treatment (docs/reference-html/08-channel-designer.html "Header style").
+enum ChannelHeaderStyle {
+  GRADIENT
+  SOLID
+  /// Reuses Channel.videoBackgroundUrl (Gallery & backdrop) — paid tiers only.
+  VIDEO_LOOP
+
+  @@schema("channel")
+}
+
 enum ChannelTextLayerMode {
   NONE
   GRADIENT_SHIMMER
@@ -172,6 +182,13 @@ enum BroadcastSource {
   RTMP
   ICECAST
   WEBRTC
+
+  @@schema("channel")
+}
+
+enum BroadcastVisibility {
+  PUBLIC
+  FAN_ONLY
 
   @@schema("channel")
 }
@@ -507,6 +524,11 @@ model User {
   weeklyLiveResetAt     DateTime?
   mentionsEnabled         Boolean    @default(true)
   publicMentionsEnabled   Boolean    @default(false)
+  // ground-rules.md /dashboard/settings/notifications instrument-pattern worked example
+  notifyMoneyMovesEmail       Boolean @default(true)
+  notifyMoneyMovesInApp       Boolean @default(true)
+  notifyListenerActivityEmail Boolean @default(true)
+  notifyWeeklyRecapEmail      Boolean @default(true)
   suspendedAt             DateTime?
   suspendReason           String?
   deletedAt               DateTime?
@@ -756,6 +778,8 @@ model Channel {
   // M31: visual customization
   colorSchemeJson    String?              // JSON {bg,accent,text,muted,highlight} hex overrides
   visualPreset       VisualPreset         @default(MINIMAL)
+  headerStyle        ChannelHeaderStyle   @default(GRADIENT)
+  brandAccentPreset  String?              // id into BRAND_ACCENT_PRESETS (@tahti/shared); null = custom/default colorScheme
   slideshowPreset    SlideshowPreset      @default(FADE)
   slideshowIntervalSeconds Int            @default(8)
   slideshowTransitionMs    Int            @default(600)
@@ -790,16 +814,20 @@ model RadioFeatureLog {
 }
 
 model Broadcast {
-  id            String          @id @default(cuid())
+  id            String              @id @default(cuid())
   channelId     String
-  channel       Channel         @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channel       Channel             @relation(fields: [channelId], references: [id], onDelete: Cascade)
   source        BroadcastSource
-  startedAt     DateTime        @default(now())
+  startedAt     DateTime            @default(now())
   /// Set when this session was promoted PREVIEW -> LIVE. Null means it never went public — skip archive finalization.
   wentLiveAt    DateTime?
   endedAt       DateTime?
   recordingKey  String?
-  archiveItemId String?         @unique
+  archiveItemId String?             @unique
+  /// Show name set in Broadcasting Setup step 3 (pre-flight). Falls back to a generated title if unset.
+  title         String?
+  visibility    BroadcastVisibility @default(PUBLIC)
+  autoArchive   Boolean             @default(true)
 
   @@index([channelId, startedAt(sort: Desc)])
   @@schema("channel")

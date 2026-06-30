@@ -48,8 +48,11 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
+      const raw = (request.query as { range?: string }).range
+      const parsed = StatsRangeQuerySchema.safeParse(raw ?? 'all')
+      const range = parsed.success ? parsed.data : 'all'
       const user = request.sessionUser!
-      return reply.send(await buildTopTracksStats(fastify.prisma, user.id))
+      return reply.send(await buildTopTracksStats(fastify.prisma, user.id, range))
     },
   )
 
@@ -64,8 +67,11 @@ const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (request, reply) => {
+      const raw = (request.query as { range?: string }).range
+      const parsed = StatsRangeQuerySchema.safeParse(raw ?? 'all')
+      const range = parsed.success ? parsed.data : 'all'
       const user = request.sessionUser!
-      return reply.send(await buildTopCountriesStats(fastify.prisma, user.id))
+      return reply.send(await buildTopCountriesStats(fastify.prisma, user.id, range))
     },
   )
 }

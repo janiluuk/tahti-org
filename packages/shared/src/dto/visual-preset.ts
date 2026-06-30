@@ -31,6 +31,63 @@ export const VISUAL_PRESET_DESCRIPTIONS: Record<VisualPreset, string> = {
   REACTIVE_GRID: 'Pulsing grid that reacts to your palette.',
 }
 
+export const CHANNEL_HEADER_STYLES = ['GRADIENT', 'SOLID', 'VIDEO_LOOP'] as const
+export type ChannelHeaderStyle = (typeof CHANNEL_HEADER_STYLES)[number]
+
+export const CHANNEL_HEADER_STYLE_LABELS: Record<ChannelHeaderStyle, string> = {
+  GRADIENT: 'gradient',
+  SOLID: 'solid color',
+  VIDEO_LOOP: 'video loop',
+}
+
+/** Fixed brand-accent gradient swatches (08-channel-designer.html "Brand accent").
+ * `accent`/`highlight` feed the existing ColorScheme when a preset is selected. */
+export interface BrandAccentPreset {
+  id: string
+  gradient: string
+  accent: string
+  highlight: string
+}
+
+export const BRAND_ACCENT_PRESETS: BrandAccentPreset[] = [
+  {
+    id: 'aurora',
+    gradient: 'linear-gradient(135deg,#A78BFA,#22D3EE,#3FE07A)',
+    accent: '#22D3EE',
+    highlight: '#A78BFA',
+  },
+  {
+    id: 'coral',
+    gradient: 'linear-gradient(135deg,#F87171,#FFB840)',
+    accent: '#FFB840',
+    highlight: '#F87171',
+  },
+  {
+    id: 'deep',
+    gradient: 'linear-gradient(135deg,#5B6BC4,#22D3EE)',
+    accent: '#22D3EE',
+    highlight: '#5B6BC4',
+  },
+  {
+    id: 'violet',
+    gradient: 'linear-gradient(135deg,#8B5CF6,#6366F1)',
+    accent: '#8B5CF6',
+    highlight: '#6366F1',
+  },
+  {
+    id: 'mint',
+    gradient: 'linear-gradient(135deg,#3FE07A,#22D3EE)',
+    accent: '#3FE07A',
+    highlight: '#22D3EE',
+  },
+  {
+    id: 'rose',
+    gradient: 'linear-gradient(135deg,#F472B6,#8B5CF6)',
+    accent: '#F472B6',
+    highlight: '#8B5CF6',
+  },
+]
+
 export const SLIDESHOW_PRESETS = ['FADE', 'ZOOM', 'PAN', 'BLUR_CROSS'] as const
 export type SlideshowPreset = (typeof SLIDESHOW_PRESETS)[number]
 
@@ -81,6 +138,8 @@ export function resolveColorScheme(
 export const ChannelVisualPatchSchema = z.object({
   visualPreset: z.enum(VISUAL_PRESETS).optional(),
   colorScheme: ColorSchemeSchema.nullable().optional(),
+  headerStyle: z.enum(CHANNEL_HEADER_STYLES).optional(),
+  brandAccentPreset: z.string().nullable().optional(),
   slideshowPreset: z.enum(SLIDESHOW_PRESETS).optional(),
   slideshowIntervalSeconds: z.number().int().min(5).max(30).optional(),
   slideshowTransitionMs: z.number().int().min(300).max(1500).optional(),
