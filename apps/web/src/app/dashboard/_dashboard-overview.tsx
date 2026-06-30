@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { ComponentProps, ReactNode } from 'react'
+import type { ComponentProps } from 'react'
 import NextLink from 'next/link'
 import { StatCard, StatCardGrid, StudioCollapse, SidebarNavIconSvg } from '@tahti/ui'
 import BroadcastUsageBanner, { type BroadcastUsage } from './broadcast-usage'
-import UpgradeCta from './upgrade-cta'
 import { ChannelHero } from './_channel-hero'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
@@ -25,6 +24,7 @@ interface ModeratedChannel {
 
 export type DashboardOverviewProps = {
   channel: { slug: string; state: string; goneLiveAt: string | null } | null
+  liveBroadcastTitle: string | null
   username: string
   isMember: boolean
   memberNumber: number | null
@@ -37,7 +37,6 @@ export type DashboardOverviewProps = {
   channelLiveStats: ComponentProps<typeof ChannelLiveStatsPanel>['stats']
   channelEgress: ComponentProps<typeof ChannelEgressPanel>['stats']
   otherModeratedChannels: ModeratedChannel[]
-  storageBar: ReactNode
 }
 
 function IconGuide() {
@@ -65,6 +64,7 @@ function agoLabel(createdAt: string): string {
 /** Channel overview — stats, credentials, quick actions, recent archive (matches website mock). */
 export function DashboardOverview({
   channel,
+  liveBroadcastTitle,
   username,
   isMember,
   memberNumber,
@@ -77,13 +77,11 @@ export function DashboardOverview({
   channelLiveStats,
   channelEgress,
   otherModeratedChannels,
-  storageBar,
 }: DashboardOverviewProps) {
   if (!channel) {
     const channelHost = `${username}.tahti.live`
     return (
       <div className="db-overview">
-        {storageBar}
         <div className="db-no-channel-card">
           <div className="db-no-channel-card__icon" aria-hidden>
             <SidebarNavIconSvg name="channel" />
@@ -129,11 +127,11 @@ export function DashboardOverview({
         slug={channel.slug}
         state={channel.state}
         goneLiveAt={channel.goneLiveAt}
+        broadcastTitle={liveBroadcastTitle}
         lastBroadcast={channel.goneLiveAt ? null : lastBroadcast}
       />
 
       <BroadcastUsageBanner usage={broadcastUsage} />
-      <UpgradeCta show={!!broadcastUsage?.showUpgradeCta} />
 
       <StatCardGrid cols={3} aria-label="Channel summary">
         <StatCard
@@ -205,8 +203,6 @@ export function DashboardOverview({
           </ul>
         )}
       </div>
-
-      {storageBar}
 
       {Boolean(downloadGateSummary || channelLiveStats || channelEgress) && (
         <StudioCollapse title="Analytics detail" hint="downloads, live time, egress">

@@ -9,11 +9,7 @@ import { getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
 import { StatsHero } from './_stats-hero'
 import { StatsTopThree } from './_stats-top-three'
-
-interface FanPayoutStats {
-  paidLast30Days: number
-  activeSubscribers: number
-}
+import { StatsWhatChanged } from './_stats-what-changed'
 
 interface TopTrack {
   archiveItemId: string
@@ -36,7 +32,11 @@ interface PlaysPayload {
 interface GrantEstimate {
   year: number
   estimateCents: number
+  units: number
   eligible: boolean
+  freeDownloads: number
+  paidDownloads: number
+  fanSubEuros: number
 }
 
 function eur(cents: number): string {
@@ -62,6 +62,17 @@ const RANGES = [
   { value: 'all', label: 'All' },
 ] as const
 
+const PERIOD_LABEL: Record<string, string> = {
+  '7': 'this week',
+  '30': 'this month',
+  all: 'all time',
+}
+
+const COMPARISON_LABEL: Record<string, string> = {
+  '7': 'the previous 7 days',
+  '30': 'the previous 30 days',
+}
+
 export default async function StatsPage({ searchParams }: { searchParams: { range?: string } }) {
   const cookieStore = cookies()
   const sessionCookie = cookieStore.get('tahti_session')
@@ -72,34 +83,49 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [plays, topTracks, topCountries, fanPayouts, grantEstimate] = await Promise.all([
+  const [plays, topTracks, topCountries, grantEstimate, allDaily] = await Promise.all([
     apiFetch<PlaysPayload>(apiUrl, cookie, `/api/me/stats/plays?range=${range}`),
-    apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, '/api/me/stats/top-tracks'),
-    apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, '/api/me/stats/top-countries'),
-    apiFetch<FanPayoutStats>(apiUrl, cookie, '/api/me/fan-sub-payouts'),
+    apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, `/api/me/stats/top-tracks?range=${range}`),
+    apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, `/api/me/stats/top-countries?range=${range}`),
     apiFetch<GrantEstimate>(apiUrl, cookie, '/api/me/grants/estimate'),
+    range === 'all'
+      ? null
+      : apiFetch<PlaysPayload>(apiUrl, cookie, '/api/me/stats/plays?range=all'),
   ])
 
-  const downloads = plays?.totalDownloads ?? 0
   const totalPlays = plays?.totalPlays ?? 0
-  const fanSubs = fanPayouts?.activeSubscribers ?? 0
-
   const tracks = topTracks?.items ?? []
   const countries = topCountries?.items ?? []
 
+  // Engagement units — the canonical free/paid-download + fan-sub-euro weighting
+  // from @tahti/ledger (computeEngagementUnits), the same formula used for real
+  // grant disbursement. Never recomputed here, only displayed.
+  const freeDownloads = grantEstimate?.freeDownloads ?? 0
+  const paidDownloads = grantEstimate?.paidDownloads ?? 0
+  const fanSubEuros = grantEstimate?.fanSubEuros ?? 0
+  const totalUnits = grantEstimate?.units ?? freeDownloads + paidDownloads * 5 + fanSubEuros
   const engagementUnits = [
-    { label: `${downloads} downloads × 1`, value: downloads, color: 'green' as const },
-    { label: `${totalPlays} plays × 1`, value: totalPlays, color: 'amber' as const },
-    { label: `${fanSubs} fan-subs × 1`, value: fanSubs, color: 'purple' as const },
+    { label: `${freeDownloads} free dl × 1`, value: freeDownloads, color: 'green' as const },
+    { label: `${paidDownloads} paid dl × 5`, value: paidDownloads * 5, color: 'cyan' as const },
+    { label: `€${fanSubEuros}/yr fan-subs × 1`, value: fanSubEuros, color: 'purple' as const },
   ]
   const maxEng = Math.max(1, ...engagementUnits.map((e) => e.value))
 
   const daily = plays?.daily ?? []
-  const last7 = daily.slice(-7)
-  const prev7 = daily.slice(-14, -7)
-  const last7Plays = last7.reduce((sum, d) => sum + d.plays, 0)
-  const prev7Plays = prev7.reduce((sum, d) => sum + d.plays, 0)
   const busiestDay = daily.length > 0 ? daily.reduce((a, b) => (b.plays > a.plays ? b : a)) : null
+
+  // Hero comparison: current period vs. the immediately preceding period of the
+  // same length. The selected range's own daily series is too short for this
+  // when range is 7d/30d, so pull the full history once to slice both windows.
+  const comparisonDaily = range === 'all' ? daily : (allDaily?.daily ?? [])
+  const periodDays = range === '7' ? 7 : range === '30' ? 30 : null
+  const currentWindow = periodDays ? comparisonDaily.slice(-periodDays) : comparisonDaily
+  const prevWindow = periodDays
+    ? comparisonDaily.slice(-periodDays * 2, -periodDays)
+    : ([] as typeof comparisonDaily)
+  const periodPlays = currentWindow.reduce((sum, d) => sum + d.plays, 0)
+  const prevPeriodPlays = prevWindow.reduce((sum, d) => sum + d.plays, 0)
+  const hasEnoughHistory = periodDays != null && comparisonDaily.length >= periodDays * 2
 
   const hasData = totalPlays > 0 || tracks.length > 0 || countries.length > 0
   const user = await getDashboardUser()
@@ -155,10 +181,14 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
       ) : null}
 
       <StatsHero
-        last7Plays={last7Plays}
-        prev7Plays={prev7Plays}
-        hasEnoughHistory={daily.length >= 14}
+        periodPlays={periodPlays}
+        prevPeriodPlays={prevPeriodPlays}
+        hasEnoughHistory={hasEnoughHistory}
+        periodLabel={PERIOD_LABEL[range] ?? 'this period'}
+        comparisonLabel={COMPARISON_LABEL[range] ?? ''}
       />
+
+      <StatsWhatChanged daily={daily} busiestDay={busiestDay} />
 
       <StatsTopThree
         bestTrack={tracks[0] ? { title: tracks[0].title, plays: tracks[0].plays } : null}
@@ -170,10 +200,8 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
 
       <div className="stats-panel">
         <div className="stats-panel-header">
-          <span className="stats-section-label">ENGAGEMENT UNITS</span>
-          <span className="stats-section-label-period">
-            {range === '7' ? 'Last 7 days' : range === 'all' ? 'All time' : 'Last 30 days'}
-          </span>
+          <span className="stats-section-label">ENGAGEMENT UNITS · {grantEstimate?.year}</span>
+          <span className="stats-eng-total">{totalUnits}</span>
         </div>
         <div className="stats-engagement-rows">
           {engagementUnits.map((row) => (

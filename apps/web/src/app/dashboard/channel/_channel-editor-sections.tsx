@@ -10,11 +10,13 @@ import { updateChannelProfile } from '../channel-identity-actions'
 import { updateChannelVisual } from '../channel-visual-actions'
 import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
 import ChannelIdentityPanel from '../channel-identity-panel'
+import ChannelBioPanel from '../channel-bio-panel'
 import ChannelLinksPanel, { type ChannelLink } from '../channel-links-panel'
 import { ChannelEditorSection } from './_channel-editor-section'
 import { ChannelLivePreview, type ChannelPreviewDraft } from './_channel-live-preview'
 import type {
   ChannelGalleryMode,
+  ChannelHeaderStyle,
   ChannelTextLayerAlignment,
   ChannelTextLayerMode,
   SlideshowPreset,
@@ -32,6 +34,7 @@ function linksToSocialLinks(links: ChannelLink[]): Record<string, string> {
 
 export type ChannelEditorData = {
   channelSlug: string
+  tier: string
   displayName: string
   avatarUrl: string | null
   countryCode: string | null
@@ -52,6 +55,8 @@ export type ChannelEditorData = {
   channelVisual: {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
+    headerStyle: ChannelHeaderStyle
+    brandAccentPreset: string | null
     slideshowPreset: SlideshowPreset
     slideshowIntervalSeconds: number
     slideshowTransitionMs: number
@@ -62,6 +67,7 @@ export type ChannelEditorData = {
 /** Full-page channel customization studio — live preview beside identity, visual, and link controls. */
 export function ChannelEditorSections({
   channelSlug,
+  tier,
   displayName,
   avatarUrl,
   countryCode,
@@ -114,6 +120,8 @@ export function ChannelEditorSections({
           colorScheme: draft.visual.colorSchemeJson
             ? JSON.parse(draft.visual.colorSchemeJson)
             : null,
+          headerStyle: draft.visual.headerStyle,
+          brandAccentPreset: draft.visual.brandAccentPreset,
         }),
       ])
       const err = profileRes.error ?? visualRes.error
@@ -161,18 +169,23 @@ export function ChannelEditorSections({
             description="Who you are — shown at the top of your channel page."
           >
             <ChannelIdentityPanel
-              initial={{ displayName, avatarUrl, countryCode, pronouns, bio, genres }}
+              initial={{ displayName, avatarUrl, countryCode, pronouns, genres }}
               onDraftChange={(identity) => setDraft((d) => ({ ...d, ...identity }))}
             />
           </ChannelEditorSection>
 
-          <ChannelEditorSection
-            id="channel-visual"
-            title="Visual style"
-            description="Background visualizer and color palette."
-          >
+          <ChannelEditorSection id="channel-bio" title="Bio">
+            <ChannelBioPanel
+              initial={{ bio }}
+              onDraftChange={(newBio) => setDraft((d) => ({ ...d, bio: newBio }))}
+            />
+          </ChannelEditorSection>
+
+          <ChannelEditorSection id="channel-visual" title="Visual">
             <ChannelVisualPresetPanel
               channelSlug={channelSlug}
+              tier={tier}
+              hasVideoBackground={Boolean(channelGallery.videoBackgroundUrl)}
               initial={channelVisual}
               bare
               onDraftChange={(visual) => setDraft((d) => ({ ...d, visual }))}

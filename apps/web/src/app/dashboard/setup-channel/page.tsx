@@ -28,7 +28,7 @@ const FEATURES = [
 export default async function SetupChannelPage() {
   const user = await getDashboardUser()
   if (!user) redirect('/login?next=/dashboard/setup-channel')
-  if (user.channel) redirect('/dashboard/channel')
+  if (user.channel) redirect('/dashboard/channel/edit')
 
   const channelHost = `${user.username}.tahti.live`
 

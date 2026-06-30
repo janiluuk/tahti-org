@@ -16,6 +16,7 @@ type Props = {
   slug: string
   state: string
   goneLiveAt: string | null
+  broadcastTitle: string | null
   lastBroadcast: LastBroadcast | null
 }
 
@@ -33,7 +34,7 @@ function elapsedSecondsSince(goneLiveAt: string): number {
 }
 
 /** Channel home hero — giant Go live CTA when offline, live status + ticking clock when on air. */
-export function ChannelHero({ slug, state, goneLiveAt, lastBroadcast }: Props) {
+export function ChannelHero({ slug, state, goneLiveAt, broadcastTitle, lastBroadcast }: Props) {
   const [listeners, setListeners] = useState<number | null>(null)
   const [elapsedSec, setElapsedSec] = useState(() =>
     goneLiveAt ? elapsedSecondsSince(goneLiveAt) : 0,
@@ -69,7 +70,7 @@ export function ChannelHero({ slug, state, goneLiveAt, lastBroadcast }: Props) {
 
   if (goneLiveAt) {
     return (
-      <div className="db-hero db-hero--live">
+      <div className="db-hero db-hero--live" data-hero>
         <div className="db-hero__live-status">
           <span className="signal-dot db-hero__pulse-dot" aria-hidden />
           <span className="db-hero__live-label">LIVE NOW</span>
@@ -78,6 +79,7 @@ export function ChannelHero({ slug, state, goneLiveAt, lastBroadcast }: Props) {
           {listeners != null ? `${listeners} listener${listeners === 1 ? '' : 's'} · ` : ''}
           {formatElapsed(elapsedSec)}
         </div>
+        {broadcastTitle ? <div className="db-hero__show-name">{broadcastTitle}</div> : null}
         <div className="db-hero__actions">
           <EndBroadcastBtn mode="live" />
           <NextLink href={resolveChannelUrl(slug)} className="db-hero__secondary-link">
@@ -90,7 +92,7 @@ export function ChannelHero({ slug, state, goneLiveAt, lastBroadcast }: Props) {
 
   if (state === 'PREVIEW') {
     return (
-      <div className="db-hero db-hero--preview">
+      <div className="db-hero db-hero--preview" data-hero>
         <div className="db-hero__live-status">
           <span className="db-hero__pulse-dot db-hero__pulse-dot--preview" aria-hidden />
           <span className="db-hero__live-label">PREVIEW — only you can hear this</span>
@@ -106,16 +108,18 @@ export function ChannelHero({ slug, state, goneLiveAt, lastBroadcast }: Props) {
   }
 
   return (
-    <div className="db-hero db-hero--offline">
-      <BrandButton as="a" href="/dashboard/broadcast" className="db-hero__go-live-btn">
-        Go live →
-      </BrandButton>
+    <div className="db-hero db-hero--offline" data-hero>
+      <div className="db-hero__eyebrow">Your channel is offline</div>
+      <div className="db-hero__headline">Ready to broadcast?</div>
       <p className="db-hero__hint">Configure your broadcasting tool and start streaming.</p>
       {lastBroadcast ? (
         <p className="db-hero__last-broadcast">
           Last broadcast: {lastBroadcast.title}, {lastBroadcast.ago}
         </p>
       ) : null}
+      <BrandButton as="a" href="/dashboard/broadcast" className="db-hero__go-live-btn">
+        Go live →
+      </BrandButton>
     </div>
   )
 }

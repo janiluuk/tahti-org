@@ -3,6 +3,7 @@
 
 import type {
   ChannelGalleryMode,
+  ChannelHeaderStyle,
   ChannelTextLayerAlignment,
   ChannelTextLayerMode,
   SlideshowPreset,
@@ -23,6 +24,8 @@ export type ChannelEditorFetchResult = {
   channelVisual: {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
+    headerStyle: ChannelHeaderStyle
+    brandAccentPreset: string | null
     slideshowPreset: SlideshowPreset
     slideshowIntervalSeconds: number
     slideshowTransitionMs: number
@@ -106,6 +109,8 @@ export async function fetchChannelEditorData(
     channelVisual: channelVisual ?? {
       visualPreset: 'MINIMAL',
       colorSchemeJson: null,
+      headerStyle: 'GRADIENT',
+      brandAccentPreset: null,
       slideshowPreset: 'FADE',
       slideshowIntervalSeconds: 8,
       slideshowTransitionMs: 600,

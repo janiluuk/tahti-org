@@ -49,7 +49,7 @@ export function StudioHeaderActions({
           </NextLink>
           {channelSlug ? (
             <>
-              <NextLink href="/dashboard/channel" className="ui-btn ui-btn--sm ui-btn--ghost">
+              <NextLink href="/dashboard/channel/edit" className="ui-btn ui-btn--sm ui-btn--ghost">
                 <SidebarNavIconSvg name="appearance" />
                 Design
               </NextLink>

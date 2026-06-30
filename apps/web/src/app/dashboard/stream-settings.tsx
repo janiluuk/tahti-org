@@ -59,7 +59,7 @@ export default function StreamSettingsPanel({
           {settings.rtmp.fallbackServers?.map((server) => (
             <CopyRow key={server} label="Fallback server" value={server} />
           ))}
-          <CopyRow label="Stream Key" value={settings.rtmp.streamKey} />
+          <CopyRow label="Stream Key" value={settings.rtmp.streamKey} secret />
           <Button
             variant="ghost"
             size="sm"
@@ -83,7 +83,7 @@ export default function StreamSettingsPanel({
             <CopyRow key={server} label="Fallback server" value={server} />
           ))}
           <CopyRow label="Mount" value={settings.icecast.mount} />
-          <CopyRow label="Password" value={settings.icecast.password} />
+          <CopyRow label="Password" value={settings.icecast.password} secret />
           <Button
             variant="ghost"
             size="sm"
@@ -100,17 +100,8 @@ export default function StreamSettingsPanel({
           )}
         </div>
 
-        <div>
-          <Heading level={3}>HLS stream URL</Heading>
-          <CopyRow label="URL" value={settings.hlsUrl} />
-        </div>
-
         <p className="studio-text-sm studio-m-0">
-          <Link href="/help/broadcast">OBS, Mixxx &amp; Traktor setup guides</Link>
-          {' · '}
-          <Link href="/help/multistream">Multistream to YouTube / Twitch</Link>
-          {' · '}
-          <Link href="/help/support">Contact support</Link>
+          <Link href="/help/broadcast">Broadcasting guide for your tool</Link>
         </p>
       </Stack>
     </Panel>

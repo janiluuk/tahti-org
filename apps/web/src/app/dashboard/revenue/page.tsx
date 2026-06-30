@@ -39,6 +39,7 @@ interface FanPayoutsDashboard {
   activeSubscribers: number
   thisMonthNetCents: number
   paidYtdNetCents: number
+  pending: number
   recent: FanSubPayout[]
 }
 
@@ -97,6 +98,7 @@ export default async function RevenuePage() {
     activeSubscribers: 0,
     thisMonthNetCents: 0,
     paidYtdNetCents: 0,
+    pending: 0,
     recent: [],
   }
 
@@ -148,6 +150,7 @@ export default async function RevenuePage() {
         <KpiCard color="cyan" value={eur(stats.thisMonthNetCents)} label="This month" />
         <KpiCard color="purple" value={stats.activeSubscribers} label="Active fan-subs" />
         <KpiCard color="green" value={eur(stats.paidYtdNetCents)} label="Paid out YTD" />
+        <KpiCard color="amber" value={stats.pending} label="Pending payouts" />
       </KpiCardRow>
 
       {hasFanSubs ? (

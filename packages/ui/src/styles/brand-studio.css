@@ -1347,14 +1347,14 @@
 }
 
 [data-tahti-ui='studio'] .ui-btn--primary {
-  background: var(--amber);
+  background: var(--cyan);
   color: var(--bg);
-  border-color: var(--amber);
+  border-color: var(--cyan);
 }
 
 [data-tahti-ui='studio'] .ui-btn--primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--amber) 88%, var(--white));
-  border-color: color-mix(in srgb, var(--amber) 88%, var(--white));
+  background: color-mix(in srgb, var(--cyan) 88%, var(--white));
+  border-color: color-mix(in srgb, var(--cyan) 88%, var(--white));
 }
 
 [data-tahti-ui='studio'] .ui-btn--secondary {
@@ -2155,8 +2155,8 @@
 }
 
 [data-tahti-ui='studio'] .stats-hero__value {
-  font-size: 64px;
-  font-weight: var(--weight-semibold);
+  font-size: 56px;
+  font-weight: var(--weight-medium);
   line-height: 1;
   color: var(--stat-plays);
   font-family: ui-monospace, 'SF Mono', Consolas, monospace;
@@ -2174,6 +2174,42 @@
   margin: var(--space-3) 0 0;
   font-size: var(--text-body);
   color: var(--text);
+}
+
+[data-tahti-ui='studio'] .stats-what-changed {
+  background: color-mix(in srgb, var(--cyan) 5%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--cyan) 25%, var(--border));
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+[data-tahti-ui='studio'] .stats-what-changed__label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .stats-what-changed__body {
+  margin: 4px 0 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: 1.65;
+}
+
+[data-tahti-ui='studio'] .stats-what-changed__dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  margin-right: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .stats-what-changed__accent {
+  color: var(--green);
+  font-family: ui-monospace, monospace;
 }
 
 [data-tahti-ui='studio'] .stats-panel {
@@ -2197,6 +2233,14 @@
   color: var(--muted);
 }
 
+[data-tahti-ui='studio'] .stats-eng-total {
+  font-size: var(--text-h2);
+  font-weight: var(--weight-medium);
+  color: var(--purple);
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, monospace;
+}
+
 [data-tahti-ui='studio'] .stats-range-tabs {
   display: flex;
   gap: 2px;
@@ -2212,7 +2256,9 @@
   font-weight: var(--weight-medium);
   color: var(--muted);
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 [data-tahti-ui='studio'] .stats-range-tab:hover {
@@ -3688,10 +3734,25 @@
   padding: 0 var(--space-6);
   font-size: var(--text-h3);
   font-weight: var(--weight-medium);
+  margin-top: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .db-hero__eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .db-hero__headline {
+  font-size: var(--text-h2);
+  font-weight: var(--weight-medium);
+  color: var(--text);
 }
 
 [data-tahti-ui='studio'] .db-hero__hint {
-  margin: var(--space-3) 0 0;
+  margin: var(--space-2) 0 0;
   color: var(--muted);
   font-size: var(--text-sm);
 }
@@ -3700,6 +3761,13 @@
   margin: var(--space-2) 0 0;
   color: var(--muted2);
   font-size: var(--text-xs);
+}
+
+[data-tahti-ui='studio'] .db-hero__show-name {
+  margin-top: var(--space-2);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-medium);
+  color: var(--text);
 }
 
 [data-tahti-ui='studio'] .db-hero--live {
@@ -3830,6 +3898,162 @@
 [data-tahti-ui='studio'] .studio-account__identity {
   font-family: ui-monospace, monospace;
   color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .fan-subs-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+[data-tahti-ui='studio'] .fan-subs-hero__count {
+  font-size: var(--text-display);
+  font-weight: var(--weight-medium);
+  color: var(--purple);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-tahti-ui='studio'] .fan-subs-hero__label {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .fan-subs-hero__link {
+  margin-left: auto;
+}
+
+[data-tahti-ui='studio'] .fan-tier-price {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .fan-tier-price__value {
+  font-size: var(--text-h3);
+  font-weight: var(--weight-medium);
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+  min-width: 5ch;
+}
+
+[data-tahti-ui='studio'] .fan-tier-price__slider {
+  flex: 1;
+}
+
+[data-tahti-ui='studio'] .fan-tier-perks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .fan-tier-perk-card {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .fan-tier-perk-card--active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .account-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+[data-tahti-ui='studio'] .account-hero__identity {
+  flex: 1;
+}
+
+[data-tahti-ui='studio'] .account-hero__name {
+  margin: 0;
+  font-size: var(--text-h2);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .account-hero__handle {
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+}
+
+/* /dashboard/settings/notifications — ground-rules.md instrument-pattern worked example */
+
+[data-tahti-ui='studio'] .notification-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .notification-prefs__hero {
+  padding: var(--space-5) 0 var(--space-2);
+}
+
+[data-tahti-ui='studio'] .notification-prefs__hero-title {
+  margin: 0;
+  font-size: var(--text-h2);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .notification-prefs__card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+[data-tahti-ui='studio'] .notification-prefs__card-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .notification-prefs__toggles {
+  display: flex;
+  gap: var(--space-4);
+  margin: var(--space-3) 0;
+}
+
+[data-tahti-ui='studio'] .notification-prefs__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: var(--text-xs);
+}
+
+[data-tahti-ui='studio'] .notification-prefs__preview-from {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 9px;
+}
+
+[data-tahti-ui='studio'] .notification-prefs__preview-body {
+  color: var(--text);
 }
 
 [data-tahti-ui='studio'] .studio-member-card {
@@ -4168,6 +4392,62 @@
   scroll-margin-top: 5rem;
 }
 
+/* Channel designer — brand accent + header style (08-channel-designer.html) */
+
+[data-tahti-ui='studio'] .channel-accent-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .channel-accent-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 2px solid transparent;
+  padding: 0;
+}
+
+[data-tahti-ui='studio'] .channel-accent-swatch--active {
+  border-color: var(--text);
+}
+
+[data-tahti-ui='studio'] .channel-header-style-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .channel-header-style-tile {
+  position: relative;
+  aspect-ratio: 1.6;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .channel-header-style-tile:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .channel-header-style-tile--active {
+  border-color: var(--cyan);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .channel-header-style-tile__badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 9px;
+  color: var(--amber);
+}
+
 [data-tahti-ui='studio'] .studio-dl {
   margin: 0;
   display: flex;
@@ -4396,7 +4676,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   [data-tahti-ui='studio'] .signal-dot,
-  [data-tahti-ui='studio'] .db-live-dot {
+  [data-tahti-ui='studio'] .db-live-dot,
+  [data-tahti-ui='studio'] .db-hero__pulse-dot--preview {
     animation: none !important;
   }
 }
@@ -6349,27 +6630,6 @@
   background: rgba(0, 240, 255, 0.08);
 }
 
-[data-tahti-ui='studio'] .upload-progress__smart-links {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-}
-
-[data-tahti-ui='studio'] .upload-progress__smart-links-summary {
-  font-size: var(--text-sm);
-  color: var(--muted);
-  cursor: pointer;
-  user-select: none;
-  list-style: none;
-}
-
-[data-tahti-ui='studio'] .upload-progress__smart-links-fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
-}
-
 [data-tahti-ui='studio'] .upload-progress__footer {
   display: flex;
   justify-content: flex-end;
@@ -6924,6 +7184,11 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  /* ground-rules.md Rule 1: the page must fit 1440x900 — the tracklist scrolls
+     internally instead of growing the page when a collection has many tracks. */
+  max-height: calc(100vh - 360px);
+  min-height: 240px;
+  overflow-y: auto;
 }
 
 [data-tahti-ui='studio'] .collection-tracklist__row {
@@ -8015,6 +8280,127 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+/* Step 3 — pre-flight form (docs/reference-html/05-broadcasting-step-3-preview.html) */
+
+[data-tahti-ui='studio'] .broadcast-studio__card-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__targets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__pin-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__pin-row .studio-input {
+  flex: 1;
+}
+
+/* Step 4 — go live (docs/reference-html/06-broadcasting-step-4-go-live.html) */
+
+[data-tahti-ui='studio'] .broadcast-studio__go-live-hero {
+  text-align: center;
+  padding: var(--space-6) var(--space-4) var(--space-5);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__go-live-title {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__go-live-sub {
+  margin: 0 auto var(--space-5);
+  max-width: 380px;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__go-live-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--green);
+  color: var(--bg);
+  border: none;
+  padding: 18px 40px;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  margin-bottom: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__go-live-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--green) 88%, var(--white));
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__go-live-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__go-live-hint {
+  margin: 0 0 var(--space-4);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__summary-card {
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__summary-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__summary-list {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__summary-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__summary-list dt {
+  font-weight: var(--weight-regular);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__summary-list dd {
+  margin: 0;
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__summary-accent {
+  color: var(--green) !important;
 }
 
 /* ── Next-broadcast compact row (/dashboard/schedule) ───────────────────── */

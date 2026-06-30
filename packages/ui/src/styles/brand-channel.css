@@ -376,6 +376,12 @@
   }
 }
 
+[data-tahti-ui='brand'] .ch-header-banner {
+  height: 80px;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
 [data-tahti-ui='brand'] .ch-artist-header {
   margin-bottom: 1.5rem;
 }

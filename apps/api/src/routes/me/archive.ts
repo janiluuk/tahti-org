@@ -314,6 +314,8 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       select: {
         colorSchemeJson: true,
         visualPreset: true,
+        headerStyle: true,
+        brandAccentPreset: true,
         slideshowPreset: true,
         slideshowIntervalSeconds: true,
         slideshowTransitionMs: true,
@@ -333,11 +335,19 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     const {
       visualPreset,
       colorScheme,
+      headerStyle,
+      brandAccentPreset,
       slideshowPreset,
       slideshowIntervalSeconds,
       slideshowTransitionMs,
       slideshowAutoplay,
     } = parsed.data
+
+    if (headerStyle === 'VIDEO_LOOP' && user.tier === 'FREE') {
+      return reply
+        .status(403)
+        .send({ error: 'Video loop header is a paid-tier feature — upgrade to use it' })
+    }
 
     const channel = await fastify.prisma.channel.findUnique({
       where: { userId: user.id },
@@ -352,6 +362,8 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         ...(colorScheme !== undefined
           ? { colorSchemeJson: colorScheme ? JSON.stringify(colorScheme) : null }
           : {}),
+        ...(headerStyle !== undefined ? { headerStyle } : {}),
+        ...(brandAccentPreset !== undefined ? { brandAccentPreset } : {}),
         ...(slideshowPreset !== undefined ? { slideshowPreset } : {}),
         ...(slideshowIntervalSeconds !== undefined ? { slideshowIntervalSeconds } : {}),
         ...(slideshowTransitionMs !== undefined ? { slideshowTransitionMs } : {}),
@@ -360,6 +372,8 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       select: {
         colorSchemeJson: true,
         visualPreset: true,
+        headerStyle: true,
+        brandAccentPreset: true,
         slideshowPreset: true,
         slideshowIntervalSeconds: true,
         slideshowTransitionMs: true,

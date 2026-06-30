@@ -9,6 +9,7 @@ export interface DashboardUser {
   email: string
   username: string
   displayName: string
+  avatarUrl: string | null
   tier: string
   emailVerifiedAt: string | null
   isMember: boolean

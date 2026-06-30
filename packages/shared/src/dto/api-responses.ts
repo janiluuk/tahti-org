@@ -625,6 +625,7 @@ export const AuthMeResponseSchema = z.object({
   email: z.string().email(),
   username: z.string(),
   displayName: z.string(),
+  avatarUrl: z.string().nullable(),
   tier: z.string(),
   emailVerifiedAt: z.coerce.date().nullable(),
   isMember: z.boolean(),
@@ -908,6 +909,9 @@ export const MeGrantEstimateSchema = z.object({
   estimateCents: z.number().int().nonnegative(),
   units: z.number().nonnegative(),
   eligible: z.boolean(),
+  freeDownloads: z.number().int().nonnegative(),
+  paidDownloads: z.number().int().nonnegative(),
+  fanSubEuros: z.number().int().nonnegative(),
 })
 
 export const FanConnectPortalResponseSchema = z.object({

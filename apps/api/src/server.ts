@@ -44,6 +44,7 @@ import chatAnnouncementsRoute from './routes/chat/announcements.js'
 import chatReactRoute from './routes/chat/react.js'
 import chatPresenceRoute from './routes/chat/presence.js'
 import meChat from './routes/me/chat.js'
+import meNotificationPreferencesRoutes from './routes/me/notification-preferences.js'
 import meModerators from './routes/me/moderators.js'
 import rtmpTargetRoutes from './routes/me/rtmp-targets.js'
 import transparencyRoutes from './routes/transparency/index.js'
@@ -126,6 +127,7 @@ import meChannelFunnelStatsRoutes from './routes/me/channel-funnel-stats.js'
 import meStatsRoutes from './routes/me/stats.js'
 import meEndBroadcastRoutes from './routes/me/end-broadcast.js'
 import meGoLiveRoutes from './routes/me/go-live.js'
+import meBroadcastPreflightRoutes from './routes/me/broadcast-preflight.js'
 import meStashRoutes from './routes/me/stash.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
@@ -437,6 +439,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(chatReactRoute)
   await fastify.register(chatPresenceRoute)
   await fastify.register(meChat)
+  await fastify.register(meNotificationPreferencesRoutes)
   await fastify.register(meModerators)
 
   // M6: RTMP multistream targets
@@ -557,6 +560,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meStatsRoutes)
   await fastify.register(meEndBroadcastRoutes)
   await fastify.register(meGoLiveRoutes)
+  await fastify.register(meBroadcastPreflightRoutes)
   await fastify.register(meStashRoutes)
   await fastify.register(meUsersRoutes)
 

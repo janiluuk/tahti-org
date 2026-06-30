@@ -2,12 +2,9 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { redirect } from 'next/navigation'
-import NewsletterPanel from './newsletter-panel'
-import { PageShell, Panel, SidebarNavIconSvg } from '@tahti/ui'
+import { PageShell, SidebarNavIconSvg } from '@tahti/ui'
 import NextLink from 'next/link'
-import { DashboardTabs } from './dashboard-tabs'
 import { DashboardOverview } from './_dashboard-overview'
-import { StorageBar } from './_storage-bar'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { resolveChannelUrl } from '@/lib/app-url'
 
@@ -92,61 +89,29 @@ export default async function DashboardPage() {
     peakDailyListeners: number
     daily: Array<{ date: string; liveSeconds: number; broadcastCount: number; listeners: number }>
   } | null = null
-  let fanTiers: Array<{
-    id: string
-    name: string
-    amountCents: number
-    description: string | null
-    perks: string[]
-    active: boolean
-  }> = []
   let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0 }
   let archiveItemsForEdit: Array<
     Record<string, unknown> & { id: string; title: string; status: string }
   > = []
-  type NewsletterStats = {
-    total: number
-    confirmed: number
-    newLast30Days: number
-    fanSubscriberCount: number
-  }
-  type NewsletterDraft = {
-    id: string
-    subject: string
-    state: string
-    sentAt: string | null
-    createdAt: string
-    subscribersOnly: boolean
-    _count: { sends: number }
-  }
-  let newsletterStats: NewsletterStats = {
-    total: 0,
-    confirmed: 0,
-    newLast30Days: 0,
-    fanSubscriberCount: 0,
-  }
-  let newsletterDrafts: NewsletterDraft[] = []
+  let liveBroadcastTitle: string | null = null
+  const isOnAir = user.channel?.state === 'LIVE' || user.channel?.state === 'PREVIEW'
   try {
     const [
       moderatedRes,
       membershipRes,
       broadcastUsageRes,
       funnelRes,
-      fanTiersRes,
       fanPayoutsRes,
       archiveRes,
-      newsletterPair,
+      preflightRes,
     ] = await Promise.all([
       get('/api/me/moderate'),
       get('/api/me/membership'),
       slug ? get('/api/me/broadcast-usage') : null,
       slug ? get('/api/me/channel-funnel-stats') : null,
-      slug ? get('/api/me/fan-tiers') : null,
       slug ? get('/api/me/fan-sub-payouts') : null,
       slug ? get('/api/me/archive') : null,
-      slug
-        ? Promise.all([get('/api/me/newsletter/subscribers'), get('/api/me/newsletter/drafts')])
-        : null,
+      slug && isOnAir ? get('/api/me/channel/preflight') : null,
     ])
 
     if (moderatedRes.ok) moderatedChannels = (await moderatedRes.json()) as ModeratedChannel[]
@@ -164,25 +129,19 @@ export default async function DashboardPage() {
       channelLiveStats = funnel.live
       channelEgress = funnel.egress
     }
-    if (fanTiersRes?.ok) fanTiers = (await fanTiersRes.json()) as typeof fanTiers
     if (fanPayoutsRes?.ok) fanPayoutStats = (await fanPayoutsRes.json()) as typeof fanPayoutStats
     if (archiveRes?.ok) {
       archiveItemsForEdit = (await archiveRes.json()) as typeof archiveItemsForEdit
     }
-    if (newsletterPair) {
-      const [statsRes, draftsRes] = newsletterPair
-      if (statsRes.ok) newsletterStats = (await statsRes.json()) as NewsletterStats
-      if (draftsRes.ok) newsletterDrafts = (await draftsRes.json()) as NewsletterDraft[]
+    if (preflightRes?.ok) {
+      const preflight = (await preflightRes.json()) as { title: string | null }
+      liveBroadcastTitle = preflight.title
     }
   } catch {
     // ignore — dashboard renders with partial data
   }
 
   const otherModeratedChannels = moderatedChannels.filter((c) => !c.isOwner)
-
-  const hasFanNewsletterPerk = fanTiers.some(
-    (t) => t.active && t.perks.some((p) => p === 'FAN_NEWSLETTER'),
-  )
 
   const statDlCount =
     (downloadGateSummary as { totals: { countedDownloads?: number } } | null)?.totals
@@ -311,118 +270,29 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      <DashboardTabs
-        hasChannel={!!user.channel}
-        overview={
-          <DashboardOverview
-            channel={user.channel}
-            username={user.username}
-            isMember={user.isMember}
-            memberNumber={membershipInfo?.memberNumber ?? null}
-            broadcastUsage={broadcastUsage}
-            weeklyListeners={weeklyListeners}
-            statDlCount={statDlCount}
-            revenueCents={fanPayoutStats.paidLast30Days}
-            archiveItems={archiveItemsForEdit.map((item) => ({
-              id: item.id,
-              title: item.title,
-              durationSec:
-                typeof item.durationSec === 'number' || item.durationSec === null
-                  ? item.durationSec
-                  : undefined,
-              createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
-            }))}
-            downloadGateSummary={downloadGateSummary}
-            channelLiveStats={channelLiveStats}
-            channelEgress={channelEgress}
-            otherModeratedChannels={otherModeratedChannels}
-            storageBar={
-              user.storage ? (
-                <StorageBar
-                  trackCount={archiveItemsForEdit.length}
-                  usedBytes={Number(user.storage.usedBytes)}
-                  softTargetBytes={
-                    user.storage.softTargetBytes ? Number(user.storage.softTargetBytes) : undefined
-                  }
-                  showSoftTarget={user.storage.showSoftTarget}
-                />
-              ) : null
-            }
-          />
-        }
-        broadcast={
-          user.channel ? (
-            <div className="studio-broadcast-tab">
-              <div className="studio-broadcast-tab__shortcuts">
-                <Panel
-                  title="Broadcast studio"
-                  headerTight
-                  description="Connect OBS or Mixxx, preview your stream, and go live."
-                >
-                  <NextLink href="/dashboard/broadcast" className="ui-btn ui-btn--primary">
-                    <SidebarNavIconSvg name="distribution" />
-                    Open broadcast studio →
-                  </NextLink>
-                </Panel>
-                <Panel
-                  title="Channel design"
-                  headerTight
-                  description="Gallery, text overlay, colors, and visual style for your public channel page."
-                >
-                  <NextLink href="/dashboard/channel" className="ui-btn ui-btn--primary">
-                    Open channel editor →
-                  </NextLink>
-                </Panel>
-                <Panel
-                  title="Schedule"
-                  headerTight
-                  description="24/7 rotation and your next-broadcast announcement for listeners."
-                >
-                  <NextLink href="/dashboard/schedule" className="ui-btn ui-btn--secondary">
-                    Open schedule →
-                  </NextLink>
-                </Panel>
-                <Panel
-                  title="Distribution"
-                  headerTight
-                  description="Mixcloud, Tahti Radio, and pinned announcements."
-                >
-                  <NextLink
-                    href="/dashboard/settings/distribution"
-                    className="ui-btn ui-btn--secondary"
-                  >
-                    Open distribution settings →
-                  </NextLink>
-                </Panel>
-                <Panel
-                  title="Moderators"
-                  headerTight
-                  description="Delegate chat moderation to trusted listeners."
-                >
-                  <NextLink
-                    href="/dashboard/settings/moderators"
-                    className="ui-btn ui-btn--secondary"
-                  >
-                    Open moderators →
-                  </NextLink>
-                </Panel>
-              </div>
-            </div>
-          ) : undefined
-        }
-        audience={
-          user.channel ? (
-            <section id="newsletter" className="studio-section-anchor">
-              <NewsletterPanel
-                initialStats={newsletterStats}
-                initialDrafts={newsletterDrafts}
-                hasFanNewsletterPerk={hasFanNewsletterPerk}
-                tier={user.tier}
-                displayName={user.displayName}
-              />
-            </section>
-          ) : undefined
-        }
+      <DashboardOverview
+        channel={user.channel}
+        liveBroadcastTitle={liveBroadcastTitle}
+        username={user.username}
+        isMember={user.isMember}
+        memberNumber={membershipInfo?.memberNumber ?? null}
+        broadcastUsage={broadcastUsage}
+        weeklyListeners={weeklyListeners}
+        statDlCount={statDlCount}
+        revenueCents={fanPayoutStats.paidLast30Days}
+        archiveItems={archiveItemsForEdit.map((item) => ({
+          id: item.id,
+          title: item.title,
+          durationSec:
+            typeof item.durationSec === 'number' || item.durationSec === null
+              ? item.durationSec
+              : undefined,
+          createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
+        }))}
+        downloadGateSummary={downloadGateSummary}
+        channelLiveStats={channelLiveStats}
+        channelEgress={channelEgress}
+        otherModeratedChannels={otherModeratedChannels}
       />
     </PageShell>
   )

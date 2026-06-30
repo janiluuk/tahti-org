@@ -177,7 +177,12 @@ export async function buildArtistPlaysStats(
   }
 }
 
-export async function buildTopTracksStats(prisma: PrismaClient, userId: string, limit = 10) {
+export async function buildTopTracksStats(
+  prisma: PrismaClient,
+  userId: string,
+  range: StatsRangeQuery = 'all',
+  limit = 10,
+) {
   const channel = await prisma.channel.findUnique({
     where: { userId },
     select: { id: true },
@@ -194,9 +199,16 @@ export async function buildTopTracksStats(prisma: PrismaClient, userId: string, 
   const itemIds = items.map((i) => i.id)
   if (itemIds.length === 0) return { items: [] }
 
+  const days = rangeDays(range)
+  const since = days != null ? utcDayKeys(days).since : undefined
+
   const counts = await prisma.download.groupBy({
     by: ['archiveItemId'],
-    where: { archiveItemId: { in: itemIds }, countedAt: { not: null } },
+    where: {
+      archiveItemId: { in: itemIds },
+      countedAt: { not: null },
+      ...(since ? { createdAt: { gte: since } } : {}),
+    },
     _count: { _all: true },
   })
 
@@ -217,7 +229,12 @@ export async function buildTopTracksStats(prisma: PrismaClient, userId: string, 
   return { items: ranked }
 }
 
-export async function buildTopCountriesStats(prisma: PrismaClient, userId: string, limit = 10) {
+export async function buildTopCountriesStats(
+  prisma: PrismaClient,
+  userId: string,
+  range: StatsRangeQuery = 'all',
+  limit = 10,
+) {
   const releaseIds = (
     await prisma.release.findMany({
       where: { userId },
@@ -227,8 +244,11 @@ export async function buildTopCountriesStats(prisma: PrismaClient, userId: strin
 
   if (releaseIds.length === 0) return { items: [] as Array<{ country: string; count: number }> }
 
+  const days = rangeDays(range)
+  const since = days != null ? utcDayKeys(days).since : undefined
+
   const clicks = await prisma.smartLinkClick.findMany({
-    where: { releaseId: { in: releaseIds } },
+    where: { releaseId: { in: releaseIds }, ...(since ? { createdAt: { gte: since } } : {}) },
     select: { referer: true },
   })
 

@@ -13,6 +13,8 @@ import StreamSettingsPanel from '../stream-settings'
 import BroadcastUsageBanner, { type BroadcastUsage } from '../broadcast-usage'
 import { EndBroadcastBtn } from '../end-broadcast-btn'
 import { GoLiveBtn } from '../go-live-btn'
+import { Step3Preflight } from './_step3-preflight'
+import { Step4GoLive } from './_step4-go-live'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -245,21 +247,7 @@ export function BroadcastStudio({
           description="Listen to your own stream at full quality, then double-check distribution before you go live."
         >
           <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview (full quality)" />
-          <ol className="broadcast-studio__steps">
-            <li>Confirm levels and mix sound right in the player above.</li>
-            <li>
-              Set up simulcast to YouTube/Twitch if you want it:{' '}
-              <Link href="/dashboard/settings/multistream" className="studio-link">
-                Multistream settings →
-              </Link>
-            </li>
-            <li>
-              Your channel:{' '}
-              <Link href={resolveChannelUrl(channelSlug)} className="studio-link">
-                {channelSlug}.tahti.live
-              </Link>
-            </li>
-          </ol>
+          <Step3Preflight />
           <div className="studio-actions">
             <button type="button" className="ui-btn ui-btn--ghost" onClick={() => setActiveStep(2)}>
               ← Back to test signal
@@ -282,32 +270,12 @@ export function BroadcastStudio({
               You are on air — this is exactly what listeners hear.
             </Text>
           ) : isPreview ? (
-            <>
-              <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
-                Audio is flowing and only you can hear it. Click Go live when you are ready for
-                listeners.
-              </Text>
-              <div className="studio-actions">
-                <button
-                  type="button"
-                  className="ui-btn ui-btn--ghost"
-                  onClick={() => setActiveStep(3)}
-                >
-                  ← Back to pre-flight
-                </button>
-                <GoLiveBtn />
-              </div>
-            </>
+            <Step4GoLive />
           ) : (
             <Text as="p" tone="muted" size="sm">
               Start streaming in step 1 to unlock going live.
             </Text>
           )}
-          <Text as="p" tone="muted" size="sm" className="broadcast-studio__steps-foot">
-            <Link href="/help/broadcast">Broadcast setup guides</Link>
-            {' · '}
-            <Link href="/help/multistream">Multistream to YouTube / Twitch</Link>
-          </Text>
         </Panel>
       )}
     </div>
