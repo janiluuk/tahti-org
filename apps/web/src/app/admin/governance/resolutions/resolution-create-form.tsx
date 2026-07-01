@@ -69,7 +69,7 @@ export function ResolutionCreateForm() {
             Abstain
             <input name="voteAbstain" type="number" min={0} defaultValue={0} required />
           </label>
-          <button type="submit" disabled={pending}>
+          <button type="submit" className="admin-btn" disabled={pending}>
             {pending ? 'Saving…' : 'Save draft'}
           </button>
           {msg ? <p className="admin-err">{msg}</p> : null}

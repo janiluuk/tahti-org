@@ -147,6 +147,7 @@ function BroadcastList({
   onVenueUpdate: (v: Venue) => void
 }) {
   async function cancel(broadcastId: string) {
+    if (!confirm('Cancel this scheduled broadcast?')) return
     const res = await fetch(`${API_BASE}/api/v1/venues/${venue.slug}/broadcasts/${broadcastId}`, {
       method: 'DELETE',
       credentials: 'include',

@@ -42,7 +42,7 @@ export function AnnualReportGenerator() {
             onChange={(e) => setSelectedYear(e.target.value)}
           />
         </label>
-        <button type="button" disabled={pending} onClick={onGenerate}>
+        <button type="button" className="admin-btn" disabled={pending} onClick={onGenerate}>
           {pending ? 'Assembling…' : 'Generate & save'}
         </button>
       </div>
