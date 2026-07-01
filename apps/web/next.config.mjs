@@ -52,6 +52,17 @@ const nextConfig = {
         ],
       },
       {
+        // The editor route above sets COEP: require-corp so ffmpeg.wasm can use
+        // SharedArrayBuffer, but that also requires every sub-resource it loads
+        // (including this app's own JS chunks) to carry a CORP header — without
+        // it, browsers correctly block the ffmpeg.wasm chunk with
+        // ERR_BLOCKED_BY_RESPONSE and the editor hangs on "Loading ffmpeg…"
+        // forever. This isn't Firefox-specific, just stricter engines catch it
+        // more reliably.
+        source: '/_next/static/:path*',
+        headers: [{ key: 'Cross-Origin-Resource-Policy', value: 'same-origin' }],
+      },
+      {
         source: '/embed/:path*',
         headers: [
           { key: 'X-Frame-Options', value: 'ALLOWALL' },
