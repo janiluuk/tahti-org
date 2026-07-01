@@ -442,7 +442,8 @@ function EditTargetForm({
         <button type="button" onClick={onClose} className="ui-btn ui-btn--sm ui-btn--secondary">
           Close
         </button>
-        <button type="button" onClick={onDelete} className="studio-btn-danger">
+        <button type="button" onClick={onDelete} className="ui-btn ui-btn--danger ui-btn--sm">
+          <ButtonIcon name="trash" />
           Remove
         </button>
       </div>

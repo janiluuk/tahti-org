@@ -46,7 +46,7 @@ export function ImportConnectionsPanel({ connections }: { connections: Connectio
               </StatusPill>
             </div>
             <div className="import-connections__actions">
-              <NextLink href={row.importHref} className="studio-btn-ghost studio-btn-sm">
+              <NextLink href={row.importHref} className="ui-btn ui-btn--ghost ui-btn--sm">
                 Import →
               </NextLink>
               {row.connected ? (

@@ -71,7 +71,7 @@ export function MixcloudConnect({
       ) : (
         <a
           href={`${apiUrl}/api/me/mixcloud/oauth/start`}
-          className="studio-btn-ghost studio-link-cta"
+          className="ui-btn ui-btn--ghost ui-btn--sm studio-link-cta"
         >
           Connect Mixcloud →
         </a>

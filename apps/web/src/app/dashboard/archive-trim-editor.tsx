@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js'
 import { editListFromV0Trim } from '@tahti/audio-edit'
+import { ButtonIcon } from '@tahti/ui'
 import { fetchArchiveEditorSource, renderArchiveEditList } from './archive-actions'
 
 function formatSec(sec: number): string {
@@ -183,7 +184,11 @@ export function ArchiveTrimEditor({
     <div className="studio-trim-editor">
       <div className="studio-row studio-row--between studio-mb-sm">
         <h4 className="studio-text-strong-sm studio-m-0">Trim &amp; fade (v0)</h4>
-        <button type="button" className="studio-btn-ghost" onClick={() => setOpen(!open)}>
+        <button
+          type="button"
+          className="ui-btn ui-btn--ghost ui-btn--sm"
+          onClick={() => setOpen(!open)}
+        >
           {open ? 'Close trimmer' : 'Open trimmer'}
         </button>
       </div>
@@ -360,7 +365,7 @@ export function ArchiveTrimEditor({
                 <button
                   type="button"
                   onClick={playSelection}
-                  className="studio-btn-ghost"
+                  className="ui-btn ui-btn--ghost ui-btn--sm"
                   disabled={isPending}
                 >
                   Preview
@@ -369,8 +374,9 @@ export function ArchiveTrimEditor({
                   type="button"
                   onClick={bounce}
                   disabled={isPending || !versionLabel.trim()}
-                  className="studio-btn-primary"
+                  className="ui-btn ui-btn--primary"
                 >
+                  <ButtonIcon name="save" />
                   {isPending ? 'Saving…' : 'Save to archive'}
                 </button>
               </div>

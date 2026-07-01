@@ -4,6 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 import { banChatFingerprint, unbanChatFingerprint } from '../../moderator-actions'
 
 export interface ChatBanRow {
@@ -73,7 +74,7 @@ export function ChatModerationPanel({ slug, initial }: { slug: string; initial: 
                 type="button"
                 onClick={() => unban(b.fingerprintHash)}
                 disabled={isPending}
-                className="studio-btn-ghost"
+                className="ui-btn ui-btn--ghost ui-btn--sm"
               >
                 Unban
               </button>
@@ -93,8 +94,9 @@ export function ChatModerationPanel({ slug, initial }: { slug: string; initial: 
           type="button"
           onClick={ban}
           disabled={isPending || !fingerprintHash.trim()}
-          className="studio-btn-danger"
+          className="ui-btn ui-btn--danger ui-btn--sm"
         >
+          <ButtonIcon name="trash" />
           Ban
         </button>
       </div>

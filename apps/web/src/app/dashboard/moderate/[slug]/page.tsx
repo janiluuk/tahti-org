@@ -26,7 +26,7 @@ export default async function ModerateChannelPage({ params }: { params: { slug: 
       <PageShell>
         <Heading level={1}>Chat moderation</Heading>
         <p className="studio-text-error">Could not load this channel&apos;s chat bans.</p>
-        <Link href="/dashboard" className="studio-btn-ghost">
+        <Link href="/dashboard" className="ui-btn ui-btn--ghost ui-btn--sm">
           Back to dashboard
         </Link>
       </PageShell>
@@ -44,7 +44,7 @@ export default async function ModerateChannelPage({ params }: { params: { slug: 
             Moderating <Link href={`/c/${params.slug}`}>{params.slug}.tahti.live</Link>
           </Text>
         </div>
-        <Link href="/dashboard" className="studio-btn-ghost">
+        <Link href="/dashboard" className="ui-btn ui-btn--ghost ui-btn--sm">
           Back to dashboard
         </Link>
       </div>

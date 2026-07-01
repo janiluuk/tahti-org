@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { ButtonIcon } from '@tahti/ui'
 import type { ClipTrack } from '@waveform-playlist/browser'
 import {
   PauseButton,
@@ -92,10 +93,11 @@ function ExportPanel({
     <div className="studio-row studio-row--wrap studio-mt-md">
       <button
         type="button"
-        className="studio-btn-primary"
+        className="ui-btn ui-btn--primary"
         disabled={isExporting || !archiveItemId}
         onClick={() => void exportToArchive()}
       >
+        <ButtonIcon name="save" />
         {isExporting ? `Exporting ${Math.round(progress * 100)}%…` : 'Save mix to archive'}
       </button>
       {done && <span className="studio-text-muted-sm">Queued for transcode.</span>}

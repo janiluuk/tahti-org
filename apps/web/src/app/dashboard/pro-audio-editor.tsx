@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 import type {
   EditList,
   EditListV2,
@@ -1008,7 +1009,7 @@ export function ProAudioEditor({
               {!draftConflict && (
                 <button
                   type="button"
-                  className="studio-btn-ghost studio-btn-sm"
+                  className="ui-btn ui-btn--ghost ui-btn--sm"
                   style={{ marginLeft: 8 }}
                   onClick={() => void flushDraftSave()}
                 >
@@ -1020,7 +1021,7 @@ export function ProAudioEditor({
           {draftConflict && (
             <button
               type="button"
-              className="studio-btn-ghost studio-btn-sm"
+              className="ui-btn ui-btn--ghost ui-btn--sm"
               onClick={() => window.location.reload()}
             >
               Reload draft
@@ -1042,9 +1043,10 @@ export function ProAudioEditor({
           </span>
           <button
             type="button"
-            className="studio-btn-primary"
+            className="ui-btn ui-btn--primary"
             onClick={() => setExportDialogOpen(true)}
           >
+            <ButtonIcon name="download" />
             Export →
           </button>
         </div>
@@ -1091,10 +1093,11 @@ export function ProAudioEditor({
           {tracklistError && <p className="studio-text-error">{tracklistError}</p>}
           <button
             type="button"
-            className="studio-btn-primary"
+            className="ui-btn ui-btn--primary"
             disabled={tracklistSaving}
             onClick={() => void saveTracklist()}
           >
+            <ButtonIcon name="save" />
             {tracklistSaving ? 'Saving…' : 'Save tracklist'}
           </button>
         </section>
@@ -1156,7 +1159,7 @@ export function ProAudioEditor({
               <span className="pro-editor-zoom-ratio">1 px = {msPerPx.toFixed(0)} ms</span>
               <button
                 type="button"
-                className="studio-btn-ghost"
+                className="ui-btn ui-btn--ghost ui-btn--sm"
                 onClick={() => {
                   setViewStart(0)
                   setViewEnd(1)
@@ -1166,7 +1169,7 @@ export function ProAudioEditor({
               </button>
               <button
                 type="button"
-                className="studio-btn-ghost"
+                className="ui-btn ui-btn--ghost ui-btn--sm"
                 disabled={!selection}
                 onClick={() => {
                   if (!selection) return
@@ -1456,7 +1459,7 @@ export function ProAudioEditor({
                 <div className="pro-editor-panel__actions">
                   <button
                     type="button"
-                    className="studio-btn-ghost studio-btn-sm"
+                    className="ui-btn ui-btn--ghost ui-btn--sm"
                     onClick={() => {
                       const defaults =
                         focusedPlugin.pluginId === 'gain'
@@ -1596,7 +1599,7 @@ export function ProAudioEditor({
             <div className="pro-editor-dialog__actions">
               <button
                 type="button"
-                className="studio-btn-ghost"
+                className="ui-btn ui-btn--ghost ui-btn--sm"
                 disabled={
                   previewLoading ||
                   exportProgress !== null ||
@@ -1608,17 +1611,18 @@ export function ProAudioEditor({
               </button>
               <button
                 type="button"
-                className="studio-btn-ghost"
+                className="ui-btn ui-btn--ghost ui-btn--sm"
                 onClick={() => setExportDialogOpen(false)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="studio-btn-primary"
+                className="ui-btn ui-btn--primary"
                 disabled={exportProgress !== null || (browserRender && (!ffmpeg || ffmpegLoading))}
                 onClick={() => void handleExport(exportFormat)}
               >
+                <ButtonIcon name="download" />
                 {browserRender
                   ? `Export ${exportFormat.toUpperCase()}`
                   : `Export ${exportFormat.toUpperCase()} (server)`}

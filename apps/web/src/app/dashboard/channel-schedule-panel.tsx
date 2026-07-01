@@ -4,6 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 import { Panel } from '@/components/ui'
 import { updateChannelSchedule } from './channel-schedule-actions'
 
@@ -91,10 +92,21 @@ export default function ChannelSchedulePanel({
             className="studio-input"
           />
         </label>
-        <button type="button" onClick={save} disabled={isPending} className="studio-btn-primary">
+        <button
+          type="button"
+          onClick={save}
+          disabled={isPending}
+          className="ui-btn ui-btn--primary"
+        >
+          <ButtonIcon name="save" />
           {isPending ? 'Saving…' : 'Save'}
         </button>
-        <button type="button" onClick={clear} disabled={isPending} className="studio-btn-ghost">
+        <button
+          type="button"
+          onClick={clear}
+          disabled={isPending}
+          className="ui-btn ui-btn--ghost ui-btn--sm"
+        >
           Clear
         </button>
       </div>

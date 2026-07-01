@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Panel, StudioCollapse } from '@tahti/ui'
+import { ButtonIcon, Panel, StudioCollapse } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -116,10 +116,11 @@ function VenueCard({ venue, onUpdate }: { venue: Venue; onUpdate: (v: Venue) => 
       </label>
       <button
         type="button"
-        className="studio-btn-primary studio-btn-sm"
+        className="ui-btn ui-btn--primary ui-btn--sm"
         onClick={saveDescription}
         disabled={saving}
       >
+        <ButtonIcon name="save" />
         {saving ? 'Saving…' : 'Save description'}
       </button>
       {msg && (
@@ -189,7 +190,7 @@ function BroadcastList({
             </div>
             <button
               type="button"
-              className="studio-btn-ghost studio-btn-sm studio-text-error"
+              className="ui-btn ui-btn--ghost ui-btn--sm studio-text-error"
               onClick={() => cancel(b.id)}
             >
               Cancel
@@ -289,9 +290,10 @@ function AddBroadcastForm({
       </div>
       <button
         type="submit"
-        className="studio-btn-primary studio-btn-sm studio-mt-sm"
+        className="ui-btn ui-btn--primary ui-btn--sm studio-mt-sm"
         disabled={pending || !startAt}
       >
+        <ButtonIcon name="plus" />
         {pending ? 'Adding…' : 'Add broadcast'}
       </button>
       {error && <p className="studio-text-error studio-text-sm studio-mt-xs">{error}</p>}

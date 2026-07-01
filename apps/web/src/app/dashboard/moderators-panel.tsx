@@ -4,6 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 import { addModerator, removeModerator, type ModeratorRow } from './moderator-actions'
 
 export default function ModeratorsPanel({
@@ -80,8 +81,9 @@ export default function ModeratorsPanel({
                 type="button"
                 onClick={() => remove(m.userId, m.username)}
                 disabled={isPending}
-                className="studio-btn-danger"
+                className="ui-btn ui-btn--danger ui-btn--sm"
               >
+                <ButtonIcon name="unlink" />
                 Revoke
               </button>
             </li>
@@ -100,8 +102,9 @@ export default function ModeratorsPanel({
           type="button"
           onClick={add}
           disabled={isPending || !username.trim()}
-          className="studio-btn-primary"
+          className="ui-btn ui-btn--primary"
         >
+          <ButtonIcon name="plus" />
           Add moderator
         </button>
       </div>

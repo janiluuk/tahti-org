@@ -24,7 +24,7 @@ export default async function ProArchiveEditorPage({ params }: { params: { id: s
     return (
       <div className="pro-editor-shell">
         <p className="studio-text-error">{source.error ?? 'Archive not ready'}</p>
-        <a href="/dashboard" className="studio-btn-ghost">
+        <a href="/dashboard" className="ui-btn ui-btn--ghost ui-btn--sm">
           ← Dashboard
         </a>
       </div>
@@ -35,7 +35,7 @@ export default async function ProArchiveEditorPage({ params }: { params: { id: s
     return (
       <div className="pro-editor-shell">
         <p className="studio-text-error">{draft.error ?? 'Failed to load draft'}</p>
-        <a href="/dashboard" className="studio-btn-ghost">
+        <a href="/dashboard" className="ui-btn ui-btn--ghost ui-btn--sm">
           ← Dashboard
         </a>
       </div>

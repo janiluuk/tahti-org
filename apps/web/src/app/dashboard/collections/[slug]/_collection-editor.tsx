@@ -312,10 +312,11 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
           {settingsDirty && (
             <button
               type="button"
-              className="studio-btn-primary"
+              className="ui-btn ui-btn--primary"
               onClick={() => void saveSettings()}
               disabled={settingsSaving || isPending}
             >
+              <ButtonIcon name="save" />
               {settingsSaving ? 'Saving…' : 'Save settings'}
             </button>
           )}
@@ -329,7 +330,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
             {!confirmDelete ? (
               <button
                 type="button"
-                className="studio-btn-ghost collection-editor__delete-btn"
+                className="ui-btn ui-btn--ghost ui-btn--sm collection-editor__delete-btn"
                 onClick={() => setConfirmDelete(true)}
               >
                 Delete collection
@@ -340,17 +341,18 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                 <div className="collection-editor__confirm-btns">
                   <button
                     type="button"
-                    className="studio-btn-ghost"
+                    className="ui-btn ui-btn--ghost ui-btn--sm"
                     onClick={() => setConfirmDelete(false)}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
-                    className="studio-btn-primary collection-editor__delete-confirm"
+                    className="ui-btn ui-btn--primary collection-editor__delete-confirm"
                     onClick={() => void handleDelete()}
                     disabled={deleting}
                   >
+                    <ButtonIcon name="trash" />
                     {deleting ? 'Deleting…' : 'Yes, delete'}
                   </button>
                 </div>
@@ -367,19 +369,19 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               <span className="collection-editor__count">{items.length}</span>
             </h2>
             <div className="collection-editor__add-buttons">
-              <Link href="/dashboard/archive" className="studio-btn-ghost studio-btn-sm">
+              <Link href="/dashboard/archive" className="ui-btn ui-btn--ghost ui-btn--sm">
                 + Tahti library
               </Link>
               <button
                 type="button"
-                className="studio-btn-ghost studio-btn-sm collection-editor__add-btn--spotify"
+                className="ui-btn ui-btn--ghost ui-btn--sm collection-editor__add-btn--spotify"
                 onClick={() => setSpotifyModalOpen(true)}
               >
                 + Spotify
               </button>
               <button
                 type="button"
-                className="studio-btn-ghost studio-btn-sm collection-editor__add-btn--mixcloud"
+                className="ui-btn ui-btn--ghost ui-btn--sm collection-editor__add-btn--mixcloud"
                 onClick={() => setMixcloudModalOpen(true)}
               >
                 + Mixcloud

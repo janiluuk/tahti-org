@@ -235,7 +235,7 @@ export function GoogleDrivePickerPanel({ connected }: { connected: boolean }) {
                 {job.status === 'DONE' && job.archiveItemId ? (
                   <Link
                     href={`/dashboard/archive/${job.archiveItemId}/editor`}
-                    className="studio-btn-ghost studio-btn-sm"
+                    className="ui-btn ui-btn--ghost ui-btn--sm"
                   >
                     Open in editor →
                   </Link>
