@@ -205,7 +205,7 @@ export function SignupForm() {
                 />
               </Field>
 
-              <Field label="Display name" htmlFor="signup-display-name">
+              <Field label="Artist name" htmlFor="signup-display-name">
                 <Input
                   id="signup-display-name"
                   name="displayName"

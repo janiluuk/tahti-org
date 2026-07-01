@@ -57,8 +57,11 @@ export default async function AccountSettingsPage() {
           <p className="studio-text-muted-sm studio-mt-xs">{user.email}</p>
         </div>
         {user.channel && (
-          <Link href="/dashboard/channel/edit" className="ui-btn ui-btn--sm ui-btn--secondary">
-            Edit identity in Channel design →
+          <Link
+            href="/dashboard/settings/artist-info"
+            className="ui-btn ui-btn--sm ui-btn--secondary"
+          >
+            Edit artist info →
           </Link>
         )}
       </div>

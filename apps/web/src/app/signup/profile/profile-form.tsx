@@ -84,7 +84,7 @@ export function SignupProfileForm({ displayName }: { displayName: string }) {
             <Stack gap={4}>
               {error && <Alert variant="error">{error}</Alert>}
 
-              <Field label="Display name" htmlFor="signup-profile-name">
+              <Field label="Artist name" htmlFor="signup-profile-name">
                 <Input
                   id="signup-profile-name"
                   name="displayName"
