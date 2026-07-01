@@ -8,6 +8,7 @@ import '@tahti/ui/src/components.css'
 import '@tahti/ui/src/styles/brand-studio.css'
 import '@tahti/ui/src/styles/shells.css'
 import { getDashboardUser } from '@/lib/dashboard-session'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 /** Dashboard uses StudioShell from @tahti/ui (import brand-studio.css once here). */
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -16,6 +17,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const isLive = user?.channel?.state === 'LIVE'
   const isBoard = user?.isBoard ?? false
   const hasChannel = Boolean(user?.channel)
+  const channelUrl = user?.channel ? resolveChannelUrl(user.channel.slug) : undefined
 
   return (
     <StudioShell
@@ -23,6 +25,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       isLive={isLive}
       isBoard={isBoard}
       hasChannel={hasChannel}
+      channelUrl={channelUrl}
     >
       {children}
     </StudioShell>

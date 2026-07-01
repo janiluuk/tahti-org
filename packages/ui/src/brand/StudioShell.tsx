@@ -12,6 +12,7 @@ type StudioShellProps = {
   isLive?: boolean
   isBoard?: boolean
   hasChannel?: boolean
+  channelUrl?: string
 }
 
 /** Production v8 dashboard layout (studio surface). Playground preview: DashboardShell. */
@@ -21,10 +22,16 @@ export function StudioShell({
   isLive,
   isBoard,
   hasChannel = true,
+  channelUrl,
 }: StudioShellProps) {
   return (
     <div data-tahti-ui="studio" className="tahti-studio">
-      <StudioTopNav displayName={displayName} isLive={isLive} isBoard={isBoard} />
+      <StudioTopNav
+        displayName={displayName}
+        isLive={isLive}
+        isBoard={isBoard}
+        channelUrl={channelUrl}
+      />
       <div className="db-layout shell-app">
         <StudioSidebar isBoard={isBoard} hasChannel={hasChannel} />
         <main className="db-main shell-app__content">{children}</main>
