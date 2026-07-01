@@ -22,6 +22,7 @@ export function MixcloudConnect({
   const [isPending, startTransition] = useTransition()
 
   function disconnect() {
+    if (!confirm("Disconnect Mixcloud? You'll need to reconnect to upload mixes again.")) return
     setError(null)
     startTransition(async () => {
       const res = await disconnectMixcloud()
@@ -70,7 +71,7 @@ export function MixcloudConnect({
       ) : (
         <a
           href={`${apiUrl}/api/me/mixcloud/oauth/start`}
-          className="studio-btn-ghost studio-link-cta"
+          className="ui-btn ui-btn--ghost ui-btn--sm studio-link-cta"
         >
           Connect Mixcloud →
         </a>

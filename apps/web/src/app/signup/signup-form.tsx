@@ -5,7 +5,18 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, StatusPill, Text } from '@tahti/ui'
+import {
+  Alert,
+  BrandLogo,
+  Button,
+  ButtonIcon,
+  Field,
+  Heading,
+  Input,
+  Stack,
+  StatusPill,
+  Text,
+} from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { SIGNUP_TIER_KEY, type SignupTier } from '@/lib/signup'
@@ -278,6 +289,7 @@ export function SignupForm() {
                 disabled={pending}
                 className="signup-continue-btn"
               >
+                <ButtonIcon name="arrowRight" />
                 {pending ? 'Creating account…' : 'Continue →'}
               </Button>
 

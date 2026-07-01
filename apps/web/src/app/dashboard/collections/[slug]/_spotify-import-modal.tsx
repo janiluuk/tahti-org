@@ -4,6 +4,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ButtonIcon, Button } from '@tahti/ui'
 import type { SpotifyTrackResult } from '@tahti/shared'
 import {
   addSpotifyTrackToCollection,
@@ -225,9 +226,10 @@ export function SpotifyImportModal({ collectionId, collectionTitle, onClose, onA
               value={artistUrl}
               onChange={(e) => setArtistUrl(e.target.value)}
             />
-            <button type="submit" className="ui-btn ui-btn--sm ui-btn--primary">
+            <Button type="submit" variant="primary" size="sm">
+              <ButtonIcon name="search" />
               Find tracks
-            </button>
+            </Button>
           </form>
         ) : null}
 
@@ -268,14 +270,14 @@ export function SpotifyImportModal({ collectionId, collectionTitle, onClose, onA
                     <span className="spotify-import-modal__duration">
                       {formatDuration(track.durationSec)}
                     </span>
-                    <button
-                      type="button"
-                      className="ui-btn ui-btn--sm ui-btn--primary"
+                    <Button
                       disabled={added || addingUri === track.uri}
                       onClick={() => void handleAdd(track)}
+                      variant="primary"
+                      size="sm"
                     >
                       {added ? '✓ Added' : addingUri === track.uri ? 'Adding…' : '+ Add'}
-                    </button>
+                    </Button>
                   </li>
                 )
               })}

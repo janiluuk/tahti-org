@@ -4,6 +4,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ButtonIcon, Button } from '@tahti/ui'
 import type { MixcloudTrackResult } from '@tahti/shared'
 import {
   addMixcloudTrackToCollection,
@@ -224,9 +225,10 @@ export function MixcloudImportModal({ collectionId, collectionTitle, onClose, on
               value={profileUrl}
               onChange={(e) => setProfileUrl(e.target.value)}
             />
-            <button type="submit" className="ui-btn ui-btn--sm ui-btn--primary">
+            <Button type="submit" variant="primary" size="sm">
+              <ButtonIcon name="search" />
               Find tracks
-            </button>
+            </Button>
           </form>
         ) : null}
 
@@ -264,14 +266,14 @@ export function MixcloudImportModal({ collectionId, collectionTitle, onClose, on
                     <span className="spotify-import-modal__duration">
                       {formatDuration(track.durationSec)}
                     </span>
-                    <button
-                      type="button"
-                      className="ui-btn ui-btn--sm ui-btn--primary"
+                    <Button
                       disabled={added || addingUrl === track.url}
                       onClick={() => void handleAdd(track)}
+                      variant="primary"
+                      size="sm"
                     >
                       {added ? '✓ Added' : addingUrl === track.url ? 'Adding…' : '+ Add'}
-                    </button>
+                    </Button>
                   </li>
                 )
               })}

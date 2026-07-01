@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState, useTransition } from 'react'
+import { ButtonIcon, Button } from '@tahti/ui'
 import type { ArchiveVersionRow } from '@tahti/shared'
 import { ArchiveTrimEditor } from './archive-trim-editor'
 import {
@@ -169,14 +170,14 @@ export function ArchiveVersionPanel({
                 )}
               </span>
               {!v.isActive && v.status === 'READY' && (
-                <button
-                  type="button"
+                <Button
                   onClick={() => activate(v.id)}
                   disabled={isPending}
-                  className="ui-btn ui-btn--sm ui-btn--ghost"
+                  variant="ghost"
+                  size="sm"
                 >
                   Set active
-                </button>
+                </Button>
               )}
             </li>
           ))}
@@ -190,6 +191,7 @@ export function ArchiveVersionPanel({
           href={`/dashboard/archive/${itemId}/editor`}
           className="ui-btn ui-btn--sm ui-btn--primary"
         >
+          <ButtonIcon name="edit" />
           Pro editor
         </Link>
         <Link
@@ -219,14 +221,10 @@ export function ArchiveVersionPanel({
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              onClick={publishToRelease}
-              disabled={isPublishing}
-              className="ui-btn ui-btn--sm ui-btn--primary"
-            >
+            <Button onClick={publishToRelease} disabled={isPublishing} variant="primary" size="sm">
+              <ButtonIcon name="send" />
               {isPublishing ? 'Publishing…' : 'Publish'}
-            </button>
+            </Button>
           </div>
           {publishMessage && (
             <p className="studio-text-muted-sm studio-mt-sm studio-m-0">{publishMessage}</p>

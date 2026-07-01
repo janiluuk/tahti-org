@@ -4,7 +4,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { PageShell, SidebarNavIconSvg } from '@tahti/ui'
+import { PageShell, SidebarNavIconSvg, Button } from '@tahti/ui'
 import { createEmptyEditorProject, fetchEditorProjects } from './editor-actions'
 
 export default async function EditorIndexPage({
@@ -46,10 +46,10 @@ export default async function EditorIndexPage({
         </div>
         <div className="studio-page-header__actions">
           <form action={createEmptyEditorProject}>
-            <button type="submit" className="ui-btn ui-btn--sm ui-btn--primary">
+            <Button type="submit" variant="primary" size="sm">
               <SidebarNavIconSvg name="upload" />
               New session
-            </button>
+            </Button>
           </form>
         </div>
       </div>

@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ButtonIcon, SidebarNavIconSvg, Button } from '@tahti/ui'
 import type { CollectionOption } from '../upload-actions'
 import { finaliseUpload } from '../upload-actions'
 import { getPendingUpload, clearPendingUpload } from '../_pending-uploads'
@@ -273,7 +274,8 @@ export function UploadInProgress({
         <div className="upload-progress__no-file">
           <p>No upload in progress for this ID.</p>
           <p className="studio-muted">The file may have been lost on page refresh.</p>
-          <Link href="/dashboard/upload" className="studio-btn-primary">
+          <Link href="/dashboard/upload" className="ui-btn ui-btn--primary">
+            <SidebarNavIconSvg name="upload" />
             Start a new upload
           </Link>
         </div>
@@ -327,9 +329,9 @@ export function UploadInProgress({
                   )}
                   {etaSeconds !== null && <span>ETA {formatEta(etaSeconds)}</span>}
                 </div>
-                <button type="button" className="studio-btn-ghost studio-btn-sm" onClick={cancel}>
+                <Button onClick={cancel} variant="ghost" size="sm">
                   Cancel
-                </button>
+                </Button>
               </>
             )}
             {uploadState === 'completing' && (
@@ -498,29 +500,30 @@ export function UploadInProgress({
       <div className="upload-progress__footer">
         {canPublish ? (
           <>
-            <Link href={`/dashboard/archive/${itemId}`} className="studio-btn-ghost">
+            <Link href={`/dashboard/archive/${itemId}`} className="ui-btn ui-btn--ghost ui-btn--sm">
               View in archive
             </Link>
-            <Link href="/dashboard/releases" className="studio-btn-ghost">
+            <Link href="/dashboard/releases" className="ui-btn ui-btn--ghost ui-btn--sm">
               Add smart links →
             </Link>
-            <Link href={`/dashboard/archive/${itemId}/editor`} className="studio-btn-primary">
+            <Link href={`/dashboard/archive/${itemId}/editor`} className="ui-btn ui-btn--primary">
+              <ButtonIcon name="send" />
               Polish & publish →
             </Link>
           </>
         ) : (
           <>
-            <Link href="/dashboard/upload" className="studio-btn-ghost">
+            <Link href="/dashboard/upload" className="ui-btn ui-btn--ghost ui-btn--sm">
               Add another file
             </Link>
-            <button
-              type="button"
-              className="studio-btn-primary"
+            <Button
               disabled={isActive || tagsLoading}
               title={isActive ? 'Upload in progress' : ''}
+              variant="primary"
             >
+              <ButtonIcon name="save" />
               {isActive ? 'Upload in progress…' : 'Save as draft'}
-            </button>
+            </Button>
           </>
         )}
       </div>

@@ -6,7 +6,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Alert, BrandLogo, Button, Heading, Stack, Text } from '@tahti/ui'
+import { Alert, BrandLogo, Button, ButtonIcon, Heading, Stack, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { SIGNUP_TIER_KEY, type SignupTier } from '@/lib/signup'
 import { startSignupMembershipCheckout } from '../actions'
@@ -118,6 +118,7 @@ export function SignupPaymentPanel({
                   disabled={!emailVerified || isPending}
                   onClick={payMembership}
                 >
+                  <ButtonIcon name="check" />
                   {isPending ? 'Starting checkout…' : 'Pay €40/year via Stripe'}
                 </Button>
                 <Button variant="ghost" onClick={continueToProfile} disabled={isPending}>
@@ -126,6 +127,7 @@ export function SignupPaymentPanel({
               </>
             ) : (
               <Button variant="primary" disabled={!emailVerified} onClick={continueToProfile}>
+                <ButtonIcon name="arrowRight" />
                 Continue to profile →
               </Button>
             )}

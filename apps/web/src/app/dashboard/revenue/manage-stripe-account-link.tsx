@@ -5,6 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { openFanSubConnectPortal } from '../actions'
+import { Button } from '@tahti/ui'
 
 export function ManageStripeAccountLink() {
   const [isPending, startTransition] = useTransition()
@@ -26,14 +27,9 @@ export function ManageStripeAccountLink() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={open}
-        disabled={isPending}
-        className="ui-btn ui-btn--sm ui-btn--secondary"
-      >
+      <Button onClick={open} disabled={isPending} variant="secondary" size="sm">
         {isPending ? 'Opening…' : 'Manage Stripe account ↗'}
-      </button>
+      </Button>
       {error && <p className="admin-footnote admin-footnote--warn">{error}</p>}
     </>
   )

@@ -4,7 +4,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, Text } from '@tahti/ui'
+import { Alert, BrandLogo, Button, ButtonIcon, Field, Heading, Input, Stack, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { safeSignupRedirect } from '@/lib/signup'
@@ -173,6 +173,7 @@ export default function LoginPage() {
                   </Field>
 
                   <Button variant="primary" size="lg" type="submit" disabled={pending}>
+                    <ButtonIcon name="check" />
                     {pending ? 'Logging in…' : 'Log in'}
                   </Button>
                 </Stack>
@@ -224,6 +225,7 @@ export default function LoginPage() {
                   {captchaRequired && <div ref={captchaRef} />}
 
                   <Button variant="primary" size="lg" type="submit" disabled={pending}>
+                    <ButtonIcon name="plus" />
                     {pending ? 'Creating account…' : 'Create account'}
                   </Button>
                 </Stack>

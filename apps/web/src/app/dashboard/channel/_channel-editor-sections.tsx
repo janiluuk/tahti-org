@@ -5,6 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
+import { ButtonIcon, Button } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { updateChannelProfile } from '../channel-identity-actions'
 import { updateChannelVisual } from '../channel-visual-actions'
@@ -140,14 +141,10 @@ export function ChannelEditorSections({
           {error && <p className="studio-notice studio-notice--error">{error}</p>}
           {message && <p className="studio-notice studio-notice--success">{message}</p>}
         </div>
-        <button
-          type="button"
-          className="ui-btn ui-btn--primary ui-btn--lg"
-          onClick={publish}
-          disabled={isPending}
-        >
+        <Button onClick={publish} disabled={isPending} variant="primary">
+          <ButtonIcon name="send" />
           {isPending ? 'Publishing…' : 'Publish changes'}
-        </button>
+        </Button>
       </div>
       <div className="studio-channel-editor__layout">
         <div className="studio-channel-editor__preview-col" data-hero>

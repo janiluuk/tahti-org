@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { StatusPill } from '@tahti/ui'
+import { ButtonIcon, StatusPill, Button } from '@tahti/ui'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -43,6 +43,7 @@ export function SoundCloudConnectPanel({
           your tracks.
         </p>
         <a href={`${apiUrl}/api/me/soundcloud/oauth/start`} className="ui-btn ui-btn--primary">
+          <ButtonIcon name="refresh" />
           Retry connection
         </a>
       </div>
@@ -53,14 +54,14 @@ export function SoundCloudConnectPanel({
     return (
       <div className="import-connect import-connect--connected">
         <StatusPill tone="green">Connected to SoundCloud</StatusPill>
-        <button
-          type="button"
-          className="ui-btn ui-btn--ghost ui-btn--sm"
+        <Button
           onClick={() => void handleDisconnect()}
           disabled={disconnecting}
+          variant="ghost"
+          size="sm"
         >
           {disconnecting ? 'Disconnecting…' : 'Disconnect'}
-        </button>
+        </Button>
       </div>
     )
   }
@@ -72,6 +73,7 @@ export function SoundCloudConnectPanel({
         your tracks.
       </p>
       <a href={`${apiUrl}/api/me/soundcloud/oauth/start`} className="ui-btn ui-btn--primary">
+        <ButtonIcon name="link" />
         Connect SoundCloud account
       </a>
     </div>

@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { ButtonIcon, Button } from '@tahti/ui'
 import { createSmartLinkEntry } from '../../../release-actions'
 
 type Service =
@@ -148,14 +149,9 @@ export function UrlPasteClient() {
       </div>
 
       <div className="url-paste__actions">
-        <button
-          type="button"
-          className="ui-btn ui-btn--ghost ui-btn--sm"
-          onClick={handleParse}
-          disabled={!rawInput.trim()}
-        >
+        <Button onClick={handleParse} disabled={!rawInput.trim()} variant="ghost" size="sm">
           Detect services
-        </button>
+        </Button>
       </div>
 
       {entries.length > 0 && (
@@ -212,14 +208,14 @@ export function UrlPasteClient() {
 
       {entries.length > 0 && (
         <div className="url-paste__submit">
-          <button
-            type="button"
-            className="ui-btn ui-btn--primary"
+          <Button
             onClick={() => void handleSubmit()}
             disabled={saving || !title.trim()}
+            variant="primary"
           >
+            <ButtonIcon name="plus" />
             {saving ? 'Creating…' : 'Create smart link'}
-          </button>
+          </Button>
         </div>
       )}
     </div>

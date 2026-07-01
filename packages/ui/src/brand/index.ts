@@ -96,6 +96,7 @@ export {
 export type { DashboardNavDefinition, DashboardTabId, DashboardSectionKey } from './dashboard-nav'
 export { SidebarNavLink, type SidebarNavLinkProps, type SidebarNavSurface } from './SidebarNavLink'
 export { SidebarNavIconSvg } from './SidebarNav'
+export { ButtonIcon, type ButtonIconName } from './ButtonIcon'
 export { ReleaseSmartLink, type ReleaseSmartLinkProps } from './ReleaseSmartLink'
 export {
   DspLinkButton,

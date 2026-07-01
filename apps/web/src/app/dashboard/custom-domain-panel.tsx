@@ -5,7 +5,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -125,9 +125,9 @@ export function CustomDomainPanel({
             Point your own domain to your channel page. Add a CNAME or A record to{' '}
             <code>app.tahti.live</code>, then enter the domain below.
           </p>
-          <button className="ui-btn ui-btn--sm ui-btn--secondary" onClick={() => setMode('edit')}>
+          <Button onClick={() => setMode('edit')} variant="secondary" size="sm">
             Set custom domain
-          </button>
+          </Button>
         </>
       )}
 
@@ -140,16 +140,18 @@ export function CustomDomainPanel({
             placeholder="music.example.com"
             className="studio-input studio-input--grow"
           />
-          <button
-            className="ui-btn ui-btn--sm ui-btn--primary"
+          <Button
             onClick={saveDomain}
             disabled={pending || !input.trim()}
+            variant="primary"
+            size="sm"
           >
+            <ButtonIcon name="save" />
             {pending ? 'Saving…' : 'Save'}
-          </button>
-          <button className="ui-btn ui-btn--sm ui-btn--ghost" onClick={() => setMode('view')}>
+          </Button>
+          <Button onClick={() => setMode('view')} variant="ghost" size="sm">
             Cancel
-          </button>
+          </Button>
         </div>
       )}
 
@@ -164,13 +166,9 @@ export function CustomDomainPanel({
                 <span className="studio-text-muted-sm">Unverified</span>
               )}
             </div>
-            <button
-              className="ui-btn ui-btn--sm ui-btn--ghost"
-              onClick={removeDomain}
-              disabled={pending}
-            >
+            <Button onClick={removeDomain} disabled={pending} variant="ghost" size="sm">
               Remove
-            </button>
+            </Button>
           </div>
 
           {!current.verified && current.txtHost && (
@@ -185,13 +183,16 @@ export function CustomDomainPanel({
               <p className="studio-text-muted-sm">
                 Value: <code>{current.txtRecord}</code>
               </p>
-              <button
-                className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm"
+              <Button
                 onClick={verifyDomain}
                 disabled={pending}
+                variant="primary"
+                size="sm"
+                className="studio-mt-sm"
               >
+                <ButtonIcon name="check" />
                 {pending ? 'Checking DNS…' : 'Verify domain'}
-              </button>
+              </Button>
             </div>
           )}
         </div>

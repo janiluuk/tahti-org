@@ -23,7 +23,7 @@ export default async function EditorProjectPage({ params }: { params: { id: stri
       <PageShell>
         <Heading level={1}>Editor</Heading>
         <p className="studio-text-error">{error ?? 'Project not found'}</p>
-        <Link href="/dashboard/editor" className="studio-btn-ghost">
+        <Link href="/dashboard/editor" className="ui-btn ui-btn--ghost ui-btn--sm">
           Back to sessions
         </Link>
       </PageShell>
@@ -34,7 +34,7 @@ export default async function EditorProjectPage({ params }: { params: { id: stri
     <PageShell>
       <div className="studio-row studio-row--between studio-mb-lg">
         <Heading level={1}>Multitrack editor</Heading>
-        <Link href="/dashboard/editor" className="studio-btn-ghost">
+        <Link href="/dashboard/editor" className="ui-btn ui-btn--ghost ui-btn--sm">
           All sessions
         </Link>
       </div>

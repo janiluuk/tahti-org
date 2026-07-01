@@ -15,7 +15,7 @@ import {
   type ChannelTextLayerAlignment,
   type ChannelTextLayerMode,
 } from '@tahti/shared'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { updateChannelTextLayer } from './channel-text-layer-actions'
 
 const EFFECT_MODES = CHANNEL_TEXT_LAYER_MODES.filter((m) => m !== 'NONE')
@@ -143,9 +143,10 @@ export default function ChannelTextLayerPanel({
       {error && <p className="studio-notice studio-notice--error">{error}</p>}
       {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-      <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
+      <Button onClick={save} disabled={isPending} variant="primary">
+        <ButtonIcon name="save" />
         {isPending ? 'Saving…' : 'Save text layer'}
-      </button>
+      </Button>
     </>
   )
 

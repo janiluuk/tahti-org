@@ -123,7 +123,7 @@ export default async function UploadPage() {
                             ? `/dashboard/archive/${b.archiveItemId}/editor`
                             : `/dashboard/upload/from-broadcast?id=${b.id}`
                         }
-                        className="studio-btn-ghost studio-btn-sm"
+                        className="ui-btn ui-btn--ghost ui-btn--sm"
                       >
                         {b.archiveItemId ? 'Polish & publish' : 'Edit & publish'} →
                       </NextLink>

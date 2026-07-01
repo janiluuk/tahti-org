@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import NextLink from 'next/link'
-import { Panel, StatusPill } from '@tahti/ui'
+import { Panel, StatusPill, Button } from '@tahti/ui'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -24,7 +24,8 @@ export function ImportConnectionsPanel({ connections }: { connections: Connectio
   const visible = connections.filter((c) => c.configured || c.connected)
   if (visible.length === 0) return null
 
-  const disconnect = async (path: string) => {
+  const disconnect = async (path: string, label: string) => {
+    if (!confirm(`Disconnect ${label}? You'll need to reconnect to import from it again.`)) return
     setBusy(path)
     await fetch(`${apiUrl}${path}`, { method: 'DELETE', credentials: 'include' })
     window.location.reload()
@@ -45,18 +46,18 @@ export function ImportConnectionsPanel({ connections }: { connections: Connectio
               </StatusPill>
             </div>
             <div className="import-connections__actions">
-              <NextLink href={row.importHref} className="studio-btn-ghost studio-btn-sm">
+              <NextLink href={row.importHref} className="ui-btn ui-btn--ghost ui-btn--sm">
                 Import →
               </NextLink>
               {row.connected ? (
-                <button
-                  type="button"
-                  className="ui-btn ui-btn--ghost ui-btn--sm"
+                <Button
                   disabled={busy === row.disconnectPath}
-                  onClick={() => void disconnect(row.disconnectPath)}
+                  onClick={() => void disconnect(row.disconnectPath, row.label)}
+                  variant="ghost"
+                  size="sm"
                 >
                   {busy === row.disconnectPath ? 'Disconnecting…' : 'Disconnect'}
-                </button>
+                </Button>
               ) : null}
             </div>
           </li>

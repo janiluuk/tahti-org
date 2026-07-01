@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ButtonIcon } from '@tahti/ui'
 import { runGrantCycle } from './actions'
 
 type Props = { year: number; poolCents: number; artistCount: number; sumCheckOk: boolean }
@@ -41,6 +42,7 @@ export function GrantRunPanel({ year, poolCents, artistCount, sumCheckOk }: Prop
         onClick={handleApprove}
         disabled={loading || !sumCheckOk}
       >
+        <ButtonIcon name="check" />
         {loading ? 'Approving…' : 'Approve distribution'}
       </button>
       {error && <p className="admin-footnote admin-footnote--warn">{error}</p>}

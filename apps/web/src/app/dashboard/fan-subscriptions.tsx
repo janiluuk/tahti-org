@@ -6,7 +6,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { createFanTier, setFanTierActive, startFanSubConnectOnboarding } from './actions'
 
 interface FanTier {
@@ -218,14 +218,10 @@ export default function FanSubscriptionsPanel({
             {connectError && (
               <p className="studio-text-error studio-m-0 studio-mb-sm">{connectError}</p>
             )}
-            <button
-              type="button"
-              onClick={startConnect}
-              disabled={isPending}
-              className="ui-btn ui-btn--primary"
-            >
+            <Button onClick={startConnect} disabled={isPending} variant="primary">
+              <ButtonIcon name="link" />
               {isPending ? 'Opening Stripe…' : 'Connect with Stripe'}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -242,13 +238,14 @@ export default function FanSubscriptionsPanel({
                     <span className="studio-text-muted-sm"> — {t.description}</span>
                   )}
                 </span>
-                <button
+                <Button
                   onClick={() => toggle(t.id, !t.active)}
                   disabled={isPending}
-                  className="ui-btn ui-btn--sm ui-btn--ghost"
+                  variant="ghost"
+                  size="sm"
                 >
                   {t.active ? 'Disable' : 'Enable'}
-                </button>
+                </Button>
               </li>
             ))}
           </ul>
@@ -304,9 +301,10 @@ export default function FanSubscriptionsPanel({
             className="studio-textarea"
           />
           {error && <p className="studio-text-error studio-m-0">{error}</p>}
-          <button onClick={add} disabled={isPending} className="ui-btn ui-btn--primary">
+          <Button onClick={add} disabled={isPending} variant="primary">
+            <ButtonIcon name="plus" />
             {isPending ? 'Saving…' : 'Add tier'}
-          </button>
+          </Button>
         </div>
       </Panel>
     </>

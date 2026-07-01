@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Alert, Button, Heading, StatusPill, Text } from '@tahti/ui'
+import { Alert, Button, ButtonIcon, Heading, StatusPill, Text } from '@tahti/ui'
 import { castVote, transitionMotion } from './actions'
 
 export interface MotionSummary {
@@ -133,6 +133,7 @@ export default function MotionCard({
               disabled={pending}
               onClick={() => transition('CLOSED')}
             >
+              <ButtonIcon name="send" />
               Close & publish result
             </Button>
           </div>

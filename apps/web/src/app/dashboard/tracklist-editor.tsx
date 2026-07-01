@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState, useTransition } from 'react'
 import type { TracklistEntry } from '@tahti/shared'
 import { searchTahtiUsers } from './archive-actions'
+import { Button } from '@tahti/ui'
 
 type Row = { startSec: string; title: string; artist: string }
 
@@ -155,25 +156,26 @@ export function TracklistEditor({
               </ul>
             )}
           </div>
-          <button
-            type="button"
+          <Button
             disabled={disabled || rows.length <= 1}
             onClick={() => sync(rows.filter((_, j) => j !== i))}
             aria-label="Remove row"
-            className="ui-btn ui-btn--sm ui-btn--ghost"
+            variant="ghost"
+            size="sm"
           >
             ×
-          </button>
+          </Button>
         </div>
       ))}
-      <button
-        type="button"
+      <Button
         disabled={disabled}
         onClick={() => sync([...rows, { startSec: '0', title: '', artist: '' }])}
-        className="ui-btn ui-btn--sm ui-btn--ghost studio-mt-sm"
+        variant="ghost"
+        size="sm"
+        className="studio-mt-sm"
       >
         + Add track
-      </button>
+      </Button>
     </fieldset>
   )
 }
