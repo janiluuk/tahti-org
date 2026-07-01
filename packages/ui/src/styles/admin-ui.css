@@ -481,17 +481,21 @@
 /* ---- Signup step 1 (account) ---- */
 .signup-card {
   max-width: 440px;
-  padding-top: 28px;
+}
+
+.auth-card--dark.signup-card {
+  padding-top: 16px;
+  padding-bottom: var(--tahti-space-6);
 }
 
 .signup-card__title {
   text-align: center;
-  margin-top: var(--tahti-space-3);
+  margin-top: var(--tahti-space-2);
 }
 
 .signup-card__subtitle {
   text-align: center;
-  margin-bottom: var(--tahti-space-4);
+  margin-bottom: var(--tahti-space-3);
 }
 
 .signup-handle-status {
@@ -1701,6 +1705,18 @@ a.signup-wizard__link:hover {
   border-radius: 999px;
   border: 1px solid currentColor;
   font-size: 0.65rem;
+}
+
+.signup-password-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--tahti-space-3);
+}
+
+@media (max-width: 480px) {
+  .signup-password-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .signup-fieldset {
