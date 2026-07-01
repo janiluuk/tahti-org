@@ -334,11 +334,18 @@ export function UploadInProgress({
                 </Button>
               </>
             )}
-            {uploadState === 'completing' && (
-              <p className="upload-progress__status">Registering upload…</p>
-            )}
-            {uploadState === 'transcoding' && (
-              <p className="upload-progress__status">Processing audio…</p>
+            {(uploadState === 'completing' || uploadState === 'transcoding') && (
+              <>
+                <div className="upload-progress__bar-wrap">
+                  <div className="upload-progress__bar-fill upload-progress__bar-fill--indeterminate" />
+                </div>
+                <p className="upload-progress__status upload-progress__status--processing">
+                  <span className="upload-progress__spinner" aria-hidden />
+                  {uploadState === 'completing'
+                    ? 'Registering upload…'
+                    : 'Processing audio — this can take a few minutes for longer files…'}
+                </p>
+              </>
             )}
             {isDone && (
               <p className="upload-progress__status upload-progress__status--ok">✓ Ready</p>

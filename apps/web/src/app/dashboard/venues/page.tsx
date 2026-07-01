@@ -57,11 +57,11 @@ export default async function VenuesDashboardPage() {
           </p>
         </div>
         <div className="studio-page-header__actions">
-          <Link href="/venues/register" className="ui-btn ui-btn--sm ui-btn--primary">
-            + Register new venue
-          </Link>
           <Link href="/dashboard" className="ui-btn ui-btn--sm ui-btn--ghost">
             ← Dashboard
+          </Link>
+          <Link href="/venues/register" className="ui-btn ui-btn--sm ui-btn--primary">
+            + Register new venue
           </Link>
         </div>
       </div>
