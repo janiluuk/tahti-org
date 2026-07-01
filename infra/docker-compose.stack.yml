@@ -221,6 +221,9 @@ services:
       - ./stack/nginx-rtmp.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "${RTMP_PORT:-1935}:1935"
+    depends_on:
+      api:
+        condition: service_healthy
 
   # STREAM-003: optional second RTMP ingest for local failover testing
   rtmp-ingest-b:
@@ -231,6 +234,9 @@ services:
     ports:
       - "${RTMP_B_PORT:-1936}:1935"
       - "${RTMP_B_HEALTH_PORT:-8086}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
 
   db-push:
     build:
