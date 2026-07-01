@@ -1534,6 +1534,13 @@ model Collection {
   textLayerText      String                    @default("")
   textLayerAlign     CollectionTextLayerAlign  @default(CENTER)
 
+  // Mood/color editor — same shape as Release: paletteJson is auto-extracted from the
+  // first track's cover art, colorSchemeJson is the artist's override (null = use the
+  // extracted palette), visualPreset picks the background visualizer.
+  paletteJson     String?
+  colorSchemeJson String?
+  visualPreset    VisualPreset @default(MINIMAL)
+
   items CollectionItem[]
 
   @@index([userId, isPublic])
