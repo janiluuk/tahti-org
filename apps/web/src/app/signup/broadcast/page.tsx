@@ -4,7 +4,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { BrandLogo, Heading, Text } from '@tahti/ui'
+import { BrandLogo, Heading, SidebarNavIconSvg, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { SignupWizard } from '../signup-wizard'
@@ -101,6 +101,7 @@ export default async function SignupBroadcastPage() {
 
           <div className="signup-broadcast-actions">
             <Link href="/dashboard/broadcast" className="ui-btn ui-btn--primary">
+              <SidebarNavIconSvg name="distribution" />
               Open broadcast studio →
             </Link>
             <Link href="/signup/profile" className="ui-btn ui-btn--ghost">

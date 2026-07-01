@@ -6,7 +6,7 @@
 import { useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { DEFAULT_SOCIAL_TEMPLATE } from '@tahti/shared'
-import { Panel, StudioCollapse } from '@tahti/ui'
+import { ButtonIcon, Panel, StudioCollapse } from '@tahti/ui'
 import {
   SocialActions,
   SocialField,
@@ -97,6 +97,7 @@ function PlatformSection({
                   }
                 }}
               >
+                <ButtonIcon name="unlink" />
                 Disconnect
               </button>
             </SocialActions>
@@ -294,6 +295,7 @@ export default function SocialPromoPanel({
               disabled={pending}
               onClick={saveMastodon}
             >
+              <ButtonIcon name="link" />
               {initial.mastodon.connected ? 'Update Mastodon' : 'Connect Mastodon'}
             </button>
           </SocialActions>
@@ -372,6 +374,7 @@ export default function SocialPromoPanel({
               disabled={pending}
               onClick={saveBluesky}
             >
+              <ButtonIcon name="link" />
               {initial.bluesky.connected ? 'Update Bluesky' : 'Connect Bluesky'}
             </button>
           </SocialActions>
@@ -455,6 +458,7 @@ export default function SocialPromoPanel({
                     })
                   }}
                 >
+                  <ButtonIcon name="link" />
                   Update X settings
                 </button>
               </SocialActions>
@@ -465,6 +469,7 @@ export default function SocialPromoPanel({
                 href={`${apiUrl}/api/me/social/twitter/oauth/start`}
                 className="ui-btn ui-btn--primary"
               >
+                <ButtonIcon name="link" />
                 Connect X account
               </a>
             </SocialActions>
@@ -550,6 +555,7 @@ export default function SocialPromoPanel({
                     })
                   }}
                 >
+                  <ButtonIcon name="link" />
                   Update Instagram settings
                 </button>
               </SocialActions>
@@ -560,6 +566,7 @@ export default function SocialPromoPanel({
                 href={`${apiUrl}/api/me/social/instagram/oauth/start`}
                 className="ui-btn ui-btn--primary"
               >
+                <ButtonIcon name="link" />
                 Connect Instagram account
               </a>
             </SocialActions>

@@ -7,7 +7,18 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ARCHIVE_GENRES } from '@tahti/shared'
-import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, Text, Textarea } from '@tahti/ui'
+import {
+  Alert,
+  BrandLogo,
+  Button,
+  ButtonIcon,
+  Field,
+  Heading,
+  Input,
+  Stack,
+  Text,
+  Textarea,
+} from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { COUNTRY_OPTIONS } from '@/lib/country-options'
 import { flagEmoji } from '@/lib/flag-emoji'
@@ -166,6 +177,7 @@ export function SignupProfileForm({ displayName }: { displayName: string }) {
               </div>
 
               <Button type="submit" variant="primary" disabled={isPending}>
+                <ButtonIcon name="arrowRight" />
                 {isPending ? 'Saving…' : 'Save and continue →'}
               </Button>
 

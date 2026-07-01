@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { BroadcastStatusBar, Panel, StatusPill, Text } from '@tahti/ui'
+import { BroadcastStatusBar, ButtonIcon, Panel, StatusPill, Text } from '@tahti/ui'
 import HlsPlayer from '@/app/c/[slug]/hls-player'
 import { resolveChannelUrl } from '@/lib/app-url'
 import StreamSettingsPanel from '../stream-settings'
@@ -202,6 +202,7 @@ export function BroadcastStudio({
               className="ui-btn ui-btn--primary"
               onClick={() => setActiveStep(2)}
             >
+              <ButtonIcon name="arrowRight" />
               Continue to test signal →
             </button>
           </div>
@@ -238,6 +239,7 @@ export function BroadcastStudio({
               disabled={!signalConfirmed}
               onClick={() => setActiveStep(3)}
             >
+              <ButtonIcon name="arrowRight" />
               Continue to pre-flight →
             </button>
           </div>
@@ -263,6 +265,7 @@ export function BroadcastStudio({
               className="ui-btn ui-btn--primary"
               onClick={() => setActiveStep(4)}
             >
+              <ButtonIcon name="arrowRight" />
               Continue to go live →
             </button>
           </div>

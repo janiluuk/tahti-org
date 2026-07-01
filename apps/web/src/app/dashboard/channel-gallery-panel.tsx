@@ -14,7 +14,7 @@ import {
   parseGalleryImageLines,
   type ChannelGalleryMode,
 } from '@tahti/shared'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel } from '@tahti/ui'
 import { updateChannelGallery } from './channel-gallery-actions'
 
 const WEBGL_MODES = CHANNEL_GALLERY_MODES.filter((m) => m !== 'NONE' && m !== 'STATIC_SLIDESHOW')
@@ -158,6 +158,7 @@ export default function ChannelGalleryPanel({
       {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
       <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
+        <ButtonIcon name="save" />
         {isPending ? 'Saving…' : 'Save gallery'}
       </button>
     </>

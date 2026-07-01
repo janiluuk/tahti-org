@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Alert, Button, Field, Heading, Input, Row, Stack, Textarea } from '@tahti/ui'
+import { Alert, Button, ButtonIcon, Field, Heading, Input, Row, Stack, Textarea } from '@tahti/ui'
 import { createMotion } from './actions'
 
 function isoDaysFromNow(days: number): string {
@@ -91,6 +91,7 @@ export default function NewMotionForm() {
             onClick={submit}
             disabled={pending || !title.trim() || !description.trim()}
           >
+            <ButtonIcon name="plus" />
             {pending ? 'Saving…' : 'Create draft'}
           </Button>
           <Button variant="ghost" onClick={() => setOpen(false)}>

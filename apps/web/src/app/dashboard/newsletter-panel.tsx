@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel } from '@tahti/ui'
 import { createNewsletterDraft, sendNewsletterDraft } from './actions'
 import { renderNewsletterPreview } from '@/lib/render-newsletter-preview'
 
@@ -206,6 +206,7 @@ export default function NewsletterPanel({
         disabled={saving || !subject.trim() || !bodyMd.trim()}
         className="ui-btn ui-btn--primary"
       >
+        <ButtonIcon name="save" />
         {saving ? 'Saving…' : 'Save draft'}
       </button>
 
@@ -309,6 +310,7 @@ function SendButton({
         secondary ? 'ui-btn ui-btn--sm ui-btn--secondary' : 'ui-btn ui-btn--sm ui-btn--primary'
       }
     >
+      {!secondary && <ButtonIcon name="send" />}
       {disabled ? 'Sending…' : label}
     </button>
   )

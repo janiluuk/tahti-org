@@ -5,7 +5,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -145,6 +145,7 @@ export function CustomDomainPanel({
             onClick={saveDomain}
             disabled={pending || !input.trim()}
           >
+            <ButtonIcon name="save" />
             {pending ? 'Saving…' : 'Save'}
           </button>
           <button className="ui-btn ui-btn--sm ui-btn--ghost" onClick={() => setMode('view')}>
@@ -190,6 +191,7 @@ export function CustomDomainPanel({
                 onClick={verifyDomain}
                 disabled={pending}
               >
+                <ButtonIcon name="check" />
                 {pending ? 'Checking DNS…' : 'Verify domain'}
               </button>
             </div>

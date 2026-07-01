@@ -3,7 +3,7 @@
 
 import type { ChannelCard } from '@tahti/shared'
 import Link from 'next/link'
-import { BrandLogo, StatCard, StatCardStrip } from '@tahti/ui'
+import { BrandLogo, ButtonIcon, StatCard, StatCardStrip } from '@tahti/ui'
 
 interface PlatformStats {
   activeArtists: number
@@ -82,6 +82,7 @@ export default async function HomePage() {
         <p className="home-sub">A nonprofit platform built to support artists — not algorithms.</p>
         <div className="home-ctas">
           <Link href="/listen" className="ui-btn ui-btn--primary ui-btn--lg home-cta-primary">
+            <ButtonIcon name="play" />
             Listen now
           </Link>
           <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">

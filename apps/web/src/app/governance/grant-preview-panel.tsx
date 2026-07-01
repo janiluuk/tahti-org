@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Alert, Button, Field, Heading, Input, Text } from '@tahti/ui'
+import { Alert, Button, ButtonIcon, Field, Heading, Input, Text } from '@tahti/ui'
 import { fetchGrantPreview } from './grant-preview-actions'
 
 interface GrantPreviewArtist {
@@ -59,6 +59,7 @@ export default function GrantPreviewPanel() {
           />
         </Field>
         <Button type="button" variant="primary" size="sm" onClick={load} disabled={loading}>
+          <ButtonIcon name="search" />
           {loading ? 'Loading…' : 'Preview'}
         </Button>
       </div>

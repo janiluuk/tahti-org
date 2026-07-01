@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { ButtonIcon } from '@tahti/ui'
 import { createSmartLinkEntry } from '../../../release-actions'
 
 type Service =
@@ -218,6 +219,7 @@ export function UrlPasteClient() {
             onClick={() => void handleSubmit()}
             disabled={saving || !title.trim()}
           >
+            <ButtonIcon name="plus" />
             {saving ? 'Creating…' : 'Create smart link'}
           </button>
         </div>

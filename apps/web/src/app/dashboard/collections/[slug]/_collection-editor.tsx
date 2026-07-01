@@ -6,6 +6,7 @@
 import { useState, useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ButtonIcon } from '@tahti/ui'
 import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
 import { QUALITY_BADGE_LABEL } from '@tahti/shared'
 import {
@@ -450,6 +451,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                 href="/dashboard/archive"
                 className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm"
               >
+                <ButtonIcon name="link" />
                 Open archive →
               </Link>
             </div>

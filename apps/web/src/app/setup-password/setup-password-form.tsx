@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, Text } from '@tahti/ui'
+import { Alert, BrandLogo, Button, ButtonIcon, Field, Heading, Input, Stack, Text } from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { setupPassword } from './actions'
 
@@ -81,6 +81,7 @@ export function SetupPasswordForm({ token, info }: { token: string; info: SetupI
               </Field>
 
               <Button variant="primary" size="lg" type="submit" disabled={pending}>
+                <ButtonIcon name="check" />
                 {pending ? 'Saving…' : 'Create password & sign in'}
               </Button>
 

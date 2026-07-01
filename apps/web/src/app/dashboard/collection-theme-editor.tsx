@@ -4,6 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 import {
   COLLECTION_GALLERY_MODES,
   COLLECTION_GALLERY_MODE_HINTS,
@@ -216,6 +217,7 @@ export function CollectionThemeEditor({
           disabled={isPending}
           className="ui-btn ui-btn--primary"
         >
+          <ButtonIcon name="save" />
           {isPending ? 'Saving…' : 'Save theme'}
         </button>
         <button type="button" onClick={onDone} className="ui-btn ui-btn--ghost">

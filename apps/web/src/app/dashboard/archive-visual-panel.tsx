@@ -6,7 +6,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { type VisualPreset } from '@tahti/shared'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 import { updateArchiveItemVisual } from './channel-visual-actions'
 
@@ -49,6 +49,7 @@ export default function ArchiveVisualPanel({ itemId, initial }: Props) {
       {error && <p className="studio-notice studio-notice--error">{error}</p>}
       {message && <p className="studio-notice studio-notice--success">{message}</p>}
       <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
+        <ButtonIcon name="save" />
         {isPending ? 'Saving…' : 'Save'}
       </button>
     </Panel>

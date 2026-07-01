@@ -4,6 +4,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 import {
   COLLECTING_SOCIETY_POINTERS,
   DISCOGS_GUIDE_STEPS,
@@ -282,6 +283,7 @@ export default function ReleaseOpsPanel({
               disabled={isPending}
               className="ui-btn ui-btn--primary"
             >
+              <ButtonIcon name="save" />
               {isPending ? 'Saving…' : 'Save catalog'}
             </button>
             <button

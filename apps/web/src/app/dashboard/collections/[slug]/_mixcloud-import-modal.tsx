@@ -4,6 +4,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 import type { MixcloudTrackResult } from '@tahti/shared'
 import {
   addMixcloudTrackToCollection,
@@ -225,6 +226,7 @@ export function MixcloudImportModal({ collectionId, collectionTitle, onClose, on
               onChange={(e) => setProfileUrl(e.target.value)}
             />
             <button type="submit" className="ui-btn ui-btn--sm ui-btn--primary">
+              <ButtonIcon name="search" />
               Find tracks
             </button>
           </form>

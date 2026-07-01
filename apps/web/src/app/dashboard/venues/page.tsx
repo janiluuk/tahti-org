@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Link, PageShell } from '@tahti/ui'
+import { ButtonIcon, Link, PageShell } from '@tahti/ui'
 import { VenueManager } from './_venue-manager'
 
 interface VenueBroadcast {
@@ -74,6 +74,7 @@ export default async function VenuesDashboardPage() {
             calendar. Venues are reviewed by the board before they appear publicly.
           </p>
           <Link href="/venues/register" className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm">
+            <ButtonIcon name="plus" />
             Register a venue →
           </Link>
         </div>

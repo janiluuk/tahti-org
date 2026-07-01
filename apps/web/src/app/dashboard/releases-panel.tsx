@@ -7,7 +7,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel } from '@tahti/ui'
 import { createRelease, importReleasesFromCsv, publishRelease } from './release-actions'
 
 interface ReleaseSummary {
@@ -147,6 +147,7 @@ export default function ReleasesPanel({
                       disabled={isPending}
                       className="ui-btn ui-btn--sm ui-btn--primary"
                     >
+                      <ButtonIcon name="send" />
                       Publish
                     </button>
                   )}
@@ -177,6 +178,7 @@ export default function ReleasesPanel({
           disabled={isPending}
           className="ui-btn ui-btn--primary"
         >
+          <ButtonIcon name="plus" />
           Add draft
         </button>
       </div>

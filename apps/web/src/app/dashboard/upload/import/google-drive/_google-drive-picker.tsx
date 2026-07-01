@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { StatusPill } from '@tahti/ui'
+import { ButtonIcon, StatusPill } from '@tahti/ui'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -213,6 +213,7 @@ export function GoogleDrivePickerPanel({ connected }: { connected: boolean }) {
         onClick={() => void openPicker()}
         disabled={opening || importing}
       >
+        <ButtonIcon name="import" />
         {opening ? 'Opening picker…' : importing ? 'Queueing import…' : 'Choose files from Drive'}
       </button>
       {error ? <p className="import-connect__note import-connect__note--error">{error}</p> : null}

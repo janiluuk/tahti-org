@@ -4,6 +4,7 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import {
+  ButtonIcon,
   DataRowList,
   DataRowListEmpty,
   DataRowListRow,
@@ -254,6 +255,7 @@ export default async function AdminDashboardPage() {
                           : 'ui-btn--primary'
                       }`}
                     >
+                      <ButtonIcon name="arrowRight" />
                       {row.actionLabel}
                     </Link>
                     <Link href={row.href} className="ui-btn ui-btn--secondary ui-btn--sm">

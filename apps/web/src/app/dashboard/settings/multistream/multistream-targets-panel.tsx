@@ -5,6 +5,7 @@
 
 import { Fragment, useState } from 'react'
 import {
+  ButtonIcon,
   DataRowList,
   DataRowListEmpty,
   DataRowListHeader,
@@ -290,6 +291,7 @@ export function MultistreamTargetsPanel({
               disabled={saving || !form.label || !form.streamKey}
               className="ui-btn ui-btn--sm ui-btn--primary"
             >
+              <ButtonIcon name="save" />
               {saving ? 'Saving…' : 'Save destination'}
             </button>
             <button
@@ -434,6 +436,7 @@ function EditTargetForm({
           disabled={saving}
           className="ui-btn ui-btn--sm ui-btn--primary"
         >
+          <ButtonIcon name="save" />
           {saving ? 'Saving…' : 'Save changes'}
         </button>
         <button type="button" onClick={onClose} className="ui-btn ui-btn--sm ui-btn--secondary">

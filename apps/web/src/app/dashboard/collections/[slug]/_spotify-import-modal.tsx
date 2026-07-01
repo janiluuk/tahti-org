@@ -4,6 +4,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 import type { SpotifyTrackResult } from '@tahti/shared'
 import {
   addSpotifyTrackToCollection,
@@ -226,6 +227,7 @@ export function SpotifyImportModal({ collectionId, collectionTitle, onClose, onA
               onChange={(e) => setArtistUrl(e.target.value)}
             />
             <button type="submit" className="ui-btn ui-btn--sm ui-btn--primary">
+              <ButtonIcon name="search" />
               Find tracks
             </button>
           </form>

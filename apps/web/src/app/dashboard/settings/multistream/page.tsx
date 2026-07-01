@@ -4,7 +4,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import NextLink from 'next/link'
-import { StatusPill } from '@tahti/ui'
+import { ButtonIcon, StatusPill } from '@tahti/ui'
 import { MultistreamTargetsPanel } from './multistream-targets-panel'
 
 interface RtmpTarget {
@@ -80,6 +80,7 @@ export default async function MultistreamSettingsPage() {
             href="/dashboard/settings/account"
             className="ui-btn ui-btn--primary studio-mt-sm"
           >
+            <ButtonIcon name="link" />
             View membership →
           </NextLink>
         </div>

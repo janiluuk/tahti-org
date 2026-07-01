@@ -6,6 +6,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
+import { ButtonIcon } from '@tahti/ui'
 import type { TracklistEntry } from '@tahti/shared'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { updateArchiveMetadata } from './archive-actions'
@@ -98,6 +99,7 @@ export default function ArchiveEditor({
                 href={resolveChannelUrl(channelSlug)}
                 className="ui-btn ui-btn--sm ui-btn--primary"
               >
+                <ButtonIcon name="link" />
                 View on channel →
               </NextLink>
             )}
@@ -115,6 +117,7 @@ export default function ArchiveEditor({
             onClick={() => setOpen(true)}
             className="ui-btn ui-btn--sm ui-btn--primary"
           >
+            <ButtonIcon name="send" />
             Polish &amp; publish →
           </button>
         ) : (
@@ -186,6 +189,7 @@ export default function ArchiveEditor({
               disabled={isPending || !title.trim()}
               className="ui-btn ui-btn--primary"
             >
+              <ButtonIcon name="save" />
               {isPending ? 'Saving…' : 'Save'}
             </button>
             <button type="button" onClick={() => setOpen(false)} className="ui-btn ui-btn--ghost">

@@ -7,7 +7,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel } from '@tahti/ui'
 import { publishRelease, updateReleaseSmartLinks } from '../../release-actions'
 import ReleaseOpsPanel, { parseCredits } from '../../release-ops-panel'
 import { ReleaseArtworkUpload } from '../../release-artwork-upload'
@@ -107,6 +107,7 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
                 disabled={isPending}
                 className="ui-btn ui-btn--sm ui-btn--primary"
               >
+                <ButtonIcon name="send" />
                 Publish
               </button>
             )}
@@ -154,6 +155,7 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
             disabled={isPending}
             className="ui-btn ui-btn--primary"
           >
+            <ButtonIcon name="save" />
             Save links
           </button>
         </div>

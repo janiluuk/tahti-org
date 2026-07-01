@@ -261,11 +261,12 @@ A sweep of `app.tahti.live` found dozens of `<button className="ui-btn ui-btn--p
 
 ### Migration status (be honest about scope)
 
-This rule is retrofitted onto an app with ~60 existing hand-typed `ui-btn` call sites in `apps/web/src/app/dashboard/**`. The padding bug itself is fixed at the CSS layer (base `.ui-btn` now carries the big/44px padding, so every existing call site is visually correct today even without code changes). The remaining migration work — replacing hand-typed `className="ui-btn ..."` with `<Button>`, and adding icons to primary actions — is incremental:
+This rule was retrofitted onto an app with ~60 existing hand-typed `ui-btn` call sites in `apps/web/src/app/dashboard/**` (plus a handful in `signup/`, `login/`, `governance/`, `admin/`). Two passes are done, one remains:
 
-- New code: always use `<Button>`, always with an icon on primary/destructive actions. No exceptions.
-- Existing code: migrate opportunistically when a file is touched for other reasons. Don't do a mechanical drive-by rename with no icon just to close out the class name — that's swapping one inconsistency (missing modifier) for another (icon-less "standard" button that doesn't match the new bar).
-- A full migration + icon pass across all ~60 call sites is real design work (each action needs a considered icon, not a placeholder) — track it as its own follow-up, don't silently half-finish it inside an unrelated PR.
+- **Done — the padding bug**: base `.ui-btn`/`.brand-btn` now carry the big/44px padding directly, so every call site is visually correct even without touching the markup.
+- **Done — the icon pass**: every primary and destructive button across the app now renders a leading `ButtonIcon` (new component, `packages/ui/src/brand/ButtonIcon.tsx`) or the existing `SidebarNavIconSvg` where an equivalent nav icon already existed (e.g. every "upload" action). One icon per action *type* (save, plus, trash, send, link/unlink, check, refresh, download, arrowRight, heart, import, play, edit, search) reused across buttons that do the same kind of thing, not a bespoke glyph per button. A few buttons were left as-is because their label already carries an equivalent glyph (`+ Add`, `✓ Added`, `● Go live`) — adding a redundant icon there would double up, not clarify.
+- **Not done — component consolidation**: the buttons above are still hand-typed `className="ui-btn ui-btn--primary"` markup, not the shared `<Button>` component. Migrate opportunistically when a file is touched for other reasons; don't do a mechanical drive-by rename with no other benefit.
+- **Separately found, not fixed here**: a second, older button class family (`studio-btn-primary` / `studio-btn-ghost` / `studio-btn-danger`, ~17 files) duplicates `ui-btn` outside this sweep's scope. That's its own consolidation follow-up — don't fold it silently into unrelated work.
 
 ### Enforcement
 

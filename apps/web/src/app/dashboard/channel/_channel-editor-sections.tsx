@@ -5,6 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
+import { ButtonIcon } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { updateChannelProfile } from '../channel-identity-actions'
 import { updateChannelVisual } from '../channel-visual-actions'
@@ -146,6 +147,7 @@ export function ChannelEditorSections({
           onClick={publish}
           disabled={isPending}
         >
+          <ButtonIcon name="send" />
           {isPending ? 'Publishing…' : 'Publish changes'}
         </button>
       </div>

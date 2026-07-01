@@ -5,6 +5,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useState, useTransition } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 import type { ArchiveVersionRow } from '@tahti/shared'
 import { ArchiveTrimEditor } from './archive-trim-editor'
 import {
@@ -190,6 +191,7 @@ export function ArchiveVersionPanel({
           href={`/dashboard/archive/${itemId}/editor`}
           className="ui-btn ui-btn--sm ui-btn--primary"
         >
+          <ButtonIcon name="edit" />
           Pro editor
         </Link>
         <Link
@@ -225,6 +227,7 @@ export function ArchiveVersionPanel({
               disabled={isPublishing}
               className="ui-btn ui-btn--sm ui-btn--primary"
             >
+              <ButtonIcon name="send" />
               {isPublishing ? 'Publishing…' : 'Publish'}
             </button>
           </div>

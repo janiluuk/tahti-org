@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { ButtonIcon } from '@tahti/ui'
 import { approveBetaApplication, rejectBetaApplication, resendBetaSetupLink } from '../actions'
 
 export type BetaApplicationRow = {
@@ -90,6 +91,7 @@ function BetaApproveForm({ application }: { application: BetaApplicationRow }) {
           disabled={pending}
           onClick={onApprove}
         >
+          <ButtonIcon name="check" />
           {pending ? 'Approving…' : 'Approve'}
         </button>
         <RejectButton id={application.id} disabled={pending} />

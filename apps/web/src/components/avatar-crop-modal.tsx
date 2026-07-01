@@ -4,6 +4,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { ButtonIcon } from '@tahti/ui'
 
 const VIEWPORT_SIZE = 280
 const OUTPUT_SIZE = 512
@@ -178,6 +179,7 @@ export function AvatarCropModal({ imageSrc, onCancel, onCropped }: Props) {
             onClick={handleSave}
             disabled={!ready || saving || Boolean(error)}
           >
+            <ButtonIcon name="check" />
             {saving ? 'Saving…' : 'Use this avatar'}
           </button>
         </div>

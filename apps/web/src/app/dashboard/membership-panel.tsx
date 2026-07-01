@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel } from '@tahti/ui'
 import { startMembershipCheckout, startMembershipPortal } from './actions'
 
 export default function MembershipPanel({
@@ -108,6 +108,7 @@ export default function MembershipPanel({
               onClick={pay}
               disabled={isPending}
             >
+              <ButtonIcon name="check" />
               {isPending
                 ? 'Processing…'
                 : `Subscribe for auto-renewal (€${(priceCents / 100).toFixed(0)}/year)`}
@@ -146,6 +147,7 @@ export default function MembershipPanel({
         onClick={pay}
         disabled={isPending || !emailVerified || status === 'PENDING_EMAIL'}
       >
+        <ButtonIcon name="check" />
         {isPending ? 'Processing…' : `Pay €${(priceCents / 100).toFixed(0)} / year`}
       </button>
     </Panel>

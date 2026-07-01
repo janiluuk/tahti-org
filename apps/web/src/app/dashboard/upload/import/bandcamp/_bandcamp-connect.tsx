@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { StatusPill } from '@tahti/ui'
+import { ButtonIcon, StatusPill } from '@tahti/ui'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -43,6 +43,7 @@ export function BandcampConnectPanel({
           your releases.
         </p>
         <a href={`${apiUrl}/api/me/bandcamp/oauth/start`} className="ui-btn ui-btn--primary">
+          <ButtonIcon name="refresh" />
           Retry connection
         </a>
       </div>
@@ -72,6 +73,7 @@ export function BandcampConnectPanel({
         your releases.
       </p>
       <a href={`${apiUrl}/api/me/bandcamp/oauth/start`} className="ui-btn ui-btn--primary">
+        <ButtonIcon name="link" />
         Connect Bandcamp account
       </a>
     </div>

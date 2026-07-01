@@ -6,7 +6,7 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel } from '@tahti/ui'
 import { createFanTier, setFanTierActive, startFanSubConnectOnboarding } from './actions'
 
 interface FanTier {
@@ -224,6 +224,7 @@ export default function FanSubscriptionsPanel({
               disabled={isPending}
               className="ui-btn ui-btn--primary"
             >
+              <ButtonIcon name="link" />
               {isPending ? 'Opening Stripe…' : 'Connect with Stripe'}
             </button>
           </div>
@@ -305,6 +306,7 @@ export default function FanSubscriptionsPanel({
           />
           {error && <p className="studio-text-error studio-m-0">{error}</p>}
           <button onClick={add} disabled={isPending} className="ui-btn ui-btn--primary">
+            <ButtonIcon name="plus" />
             {isPending ? 'Saving…' : 'Add tier'}
           </button>
         </div>

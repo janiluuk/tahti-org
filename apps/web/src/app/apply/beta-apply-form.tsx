@@ -6,7 +6,18 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { BETA_APPLY_MAX_LINKS } from '@tahti/shared'
-import { Alert, BrandLogo, Button, Field, Heading, Input, Stack, Text, Textarea } from '@tahti/ui'
+import {
+  Alert,
+  BrandLogo,
+  Button,
+  ButtonIcon,
+  Field,
+  Heading,
+  Input,
+  Stack,
+  Text,
+  Textarea,
+} from '@tahti/ui'
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { submitBetaApplication } from './actions'
 
@@ -151,6 +162,7 @@ export function BetaApplyForm() {
               </Field>
 
               <Button variant="primary" size="lg" type="submit" disabled={pending}>
+                <ButtonIcon name="send" />
                 {pending ? 'Sending…' : 'Apply for beta'}
               </Button>
 

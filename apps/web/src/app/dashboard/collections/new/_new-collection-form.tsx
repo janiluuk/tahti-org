@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { ButtonIcon } from '@tahti/ui'
 import { createCollection } from '../../collection-actions'
 
 const STYLE_OPTIONS = [
@@ -185,6 +186,7 @@ export function NewCollectionForm() {
           onClick={() => void handleSubmit()}
           disabled={saving || !name.trim()}
         >
+          <ButtonIcon name="plus" />
           {saving ? 'Creating…' : 'Create collection'}
         </button>
       </div>

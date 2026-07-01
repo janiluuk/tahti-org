@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Panel } from '@tahti/ui'
+import { ButtonIcon, Panel } from '@tahti/ui'
 import { postAnnouncement, deleteAnnouncement } from './actions'
 
 interface Announcement {
@@ -88,6 +88,7 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
           disabled={posting || !draft.trim() || announcements.length >= 3}
           className="ui-btn ui-btn--primary"
         >
+          <ButtonIcon name="plus" />
           {posting ? 'Posting…' : 'Pin'}
         </button>
       </div>
