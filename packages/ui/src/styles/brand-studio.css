@@ -8214,6 +8214,48 @@
   margin: var(--space-3) 0 0;
 }
 
+/* Stereo input-level meters — docs/reference-html/04-broadcasting-step-2-test-signal.html */
+[data-tahti-ui='studio'] .signal-meters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin: var(--space-3) 0;
+}
+
+[data-tahti-ui='studio'] .signal-meter__label {
+  margin-bottom: 4px;
+}
+
+[data-tahti-ui='studio'] .signal-meter__bar {
+  height: 9px;
+  border-radius: 9999px;
+  background: var(--border);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 5px;
+}
+
+[data-tahti-ui='studio'] .signal-meter__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(
+    90deg,
+    var(--green),
+    var(--green) 75%,
+    var(--amber) 90%,
+    var(--coral)
+  );
+  transition: width 60ms linear;
+}
+
+[data-tahti-ui='studio'] .signal-meter__peak {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
 [data-tahti-ui='studio'] .broadcast-studio__preview-actions {
   display: flex;
   align-items: center;

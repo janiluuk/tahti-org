@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { BroadcastStatusBar, ButtonIcon, Panel, StatusPill, Text, Button } from '@tahti/ui'
 import HlsPlayer from '@/app/c/[slug]/hls-player'
+import { usePlayer } from '@/contexts/player-context'
 import { resolveChannelUrl } from '@/lib/app-url'
 import StreamSettingsPanel from '../stream-settings'
 import BroadcastUsageBanner, { type BroadcastUsage } from '../broadcast-usage'
@@ -15,6 +16,7 @@ import { EndBroadcastBtn } from '../end-broadcast-btn'
 import { GoLiveBtn } from '../go-live-btn'
 import { Step3Preflight } from './_step3-preflight'
 import { Step4GoLive } from './_step4-go-live'
+import { SignalMeters } from './_signal-meters'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -59,6 +61,7 @@ export function BroadcastStudio({
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { analyserL, analyserR, track, playing } = usePlayer()
   const initialStatus = statusFromState(initialState)
   const [status, setStatus] = useState<LiveStatus>(initialStatus)
   const [signal, setSignal] = useState<SignalStatus | null>(null)
@@ -215,10 +218,22 @@ export function BroadcastStudio({
             <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
           </div>
           {signal?.connected ? (
-            <p className="studio-notice studio-notice--success">
-              ✓ Signal received — {signal.codec ?? 'unknown codec'}
-              {signal.bitrateKbps ? ` · ${signal.bitrateKbps} kbps` : ''}
-            </p>
+            <>
+              <p className="studio-notice studio-notice--success">
+                ✓ Signal received — {signal.codec ?? 'unknown codec'}
+                {signal.bitrateKbps ? ` · ${signal.bitrateKbps} kbps` : ''}
+              </p>
+              <SignalMeters
+                analyserL={analyserL}
+                analyserR={analyserR}
+                active={track?.id === streamSettings.hlsUrl && playing}
+              />
+              {!(track?.id === streamSettings.hlsUrl && playing) && (
+                <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
+                  Press play on the preview above to see input levels.
+                </Text>
+              )}
+            </>
           ) : (
             <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
               Waiting for signal — start streaming in OBS, Mixxx, or Traktor with the credentials

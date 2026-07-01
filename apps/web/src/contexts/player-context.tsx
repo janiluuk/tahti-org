@@ -55,6 +55,9 @@ interface PlayerContextValue extends PlayerState {
   audioRef: React.RefObject<HTMLAudioElement>
   /** Single shared analyser node connected to the playing audio, for visualizers. */
   analyser: AnalyserNode | null
+  /** Per-channel analysers (split before any downmixing) for stereo level meters. */
+  analyserL: AnalyserNode | null
+  analyserR: AnalyserNode | null
   load: (track: PlayerTrack, opts?: { autoplay?: boolean }) => void
   togglePlay: () => void | Promise<void>
   seek: (ratio: number) => void
@@ -75,9 +78,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     duration: 0,
   })
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
+  const [analyserL, setAnalyserL] = useState<AnalyserNode | null>(null)
+  const [analyserR, setAnalyserR] = useState<AnalyserNode | null>(null)
 
   // Connect a single AnalyserNode to the shared <audio> element once, on first
   // playback — createMediaElementSource can only be called once per element.
+  // Also split the source into per-channel analysers (before AnalyserNode's
+  // implicit downmix) so stereo level meters (broadcast test-signal step) can
+  // show true L/R levels rather than a single mixed reading.
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
@@ -92,6 +100,19 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         source.connect(node)
         node.connect(ctx.destination)
         setAnalyser(node)
+
+        const splitter = ctx.createChannelSplitter(2)
+        const left = ctx.createAnalyser()
+        const right = ctx.createAnalyser()
+        left.fftSize = 1024
+        right.fftSize = 1024
+        left.smoothingTimeConstant = 0.4
+        right.smoothingTimeConstant = 0.4
+        source.connect(splitter)
+        splitter.connect(left, 0)
+        splitter.connect(right, 1)
+        setAnalyserL(left)
+        setAnalyserR(right)
       } catch (e) {
         console.warn('[player] analyser setup failed', e)
       }
@@ -230,8 +251,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => () => teardownHls(), [teardownHls])
 
   const value = useMemo<PlayerContextValue>(
-    () => ({ ...state, audioRef, analyser, load, togglePlay, seek, close }),
-    [state, analyser, load, togglePlay, seek, close],
+    () => ({ ...state, audioRef, analyser, analyserL, analyserR, load, togglePlay, seek, close }),
+    [state, analyser, analyserL, analyserR, load, togglePlay, seek, close],
   )
 
   const testId =
