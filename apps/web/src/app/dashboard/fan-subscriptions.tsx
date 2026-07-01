@@ -163,7 +163,7 @@ export default function FanSubscriptionsPanel({
         title="Fan subscriptions"
         headerTight
         description="Fans subscribe directly to you. You keep the revenue minus Stripe fees and a 2% operational fee. Subscribers get the 5× download weighting that boosts your annual grant."
-        className="import-page__panel studio-mt-lg"
+        className="import-page__panel studio-mt-md"
         flushTop
       >
         {payoutStats && (
@@ -226,7 +226,7 @@ export default function FanSubscriptionsPanel({
         )}
 
         {initial.length > 0 && (
-          <ul className="studio-list studio-mt-lg">
+          <ul className="studio-list studio-mt-md">
             {initial.map((t) => (
               <li
                 key={t.id}
@@ -251,7 +251,7 @@ export default function FanSubscriptionsPanel({
           </ul>
         )}
 
-        <div className="studio-grid studio-mt-lg">
+        <div className="studio-grid studio-mt-md">
           <input
             placeholder="Tier name (e.g. Backer)"
             value={name}

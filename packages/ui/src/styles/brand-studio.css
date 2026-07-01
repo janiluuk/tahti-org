@@ -4323,7 +4323,7 @@
 
 [data-tahti-ui='studio'] .channel-header-style-tile {
   position: relative;
-  aspect-ratio: 1.6;
+  aspect-ratio: 2.6;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: var(--card2);
@@ -4494,16 +4494,16 @@
 /* M31: color scheme palette grid in visual-preset panel */
 [data-tahti-ui='studio'] .studio-color-scheme-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 [data-tahti-ui='studio'] .visual-preset-picker__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 [data-tahti-ui='studio'] .visual-preset-picker__card {
@@ -4531,7 +4531,7 @@
 
 [data-tahti-ui='studio'] .visual-preset-picker__preview {
   position: relative;
-  height: 72px;
+  height: 52px;
   border-radius: 6px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -6781,7 +6781,7 @@
 [data-tahti-ui='studio'] .collection-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 [data-tahti-ui='studio'] .collection-form__style-grid {
@@ -8161,8 +8161,17 @@
 [data-tahti-ui='studio'] .broadcast-studio {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin-bottom: 0;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio .studio-field,
+[data-tahti-ui='studio'] .broadcast-studio .studio-field--block {
+  margin-bottom: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio .studio-mb-md {
+  margin-bottom: var(--space-2);
 }
 
 [data-tahti-ui='studio'] .broadcast-wizard {

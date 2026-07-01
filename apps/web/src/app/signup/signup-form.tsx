@@ -135,14 +135,12 @@ export function SignupForm() {
             Start your channel
           </Heading>
           <Text tone="muted" size="sm" className="signup-card__subtitle">
-            One URL that always plays. Yours.
-          </Text>
-          <Text tone="muted" size="sm">
-            Already have an account? <Link href="/login">Sign in</Link>
+            One URL that always plays. Yours. Already have an account?{' '}
+            <Link href="/login">Sign in</Link>
           </Text>
 
           <form onSubmit={onSubmit}>
-            <Stack gap={4}>
+            <Stack gap={2}>
               {error && <Alert variant="error">{error}</Alert>}
 
               <Field label="Email" htmlFor="signup-email">
@@ -156,87 +154,91 @@ export function SignupForm() {
                 />
               </Field>
 
-              <Field
-                label="Handle"
-                htmlFor="signup-username"
-                hint={
-                  handleStatus === 'available' ? (
-                    <span className="signup-handle-status signup-handle-status--ok">
-                      ✓ available — your channel will live at{' '}
-                      <span className="signup-handle-status__url">{handle}.tahti.live</span>
-                    </span>
-                  ) : handleStatus === 'taken' ? (
-                    <span className="signup-handle-status signup-handle-status--error">
-                      Already taken
-                      {handleSuggestions.length > 0 && (
-                        <>
-                          {' — try '}
-                          {handleSuggestions.map((s, i) => (
-                            <span key={s}>
-                              {i > 0 && ' or '}
-                              <button
-                                type="button"
-                                className="signup-handle-suggestion"
-                                onClick={() => setHandle(s)}
-                              >
-                                {s}
-                              </button>
-                            </span>
-                          ))}
-                        </>
-                      )}
-                    </span>
-                  ) : (
-                    `Lowercase letters, numbers, - and _ only. Your channel URL: ${handle || 'your-handle'}.tahti.live`
-                  )
-                }
-              >
-                <Input
-                  id="signup-username"
-                  name="username"
-                  required
-                  minLength={2}
-                  maxLength={32}
-                  pattern="[a-z0-9_-]+"
-                  autoComplete="username"
-                  placeholder="dj-moonrise"
-                  value={handle}
-                  onChange={(e) => setHandle(e.target.value.toLowerCase())}
-                />
-              </Field>
+              <div className="signup-password-row">
+                <Field
+                  label="Handle"
+                  htmlFor="signup-username"
+                  hint={
+                    handleStatus === 'available' ? (
+                      <span className="signup-handle-status signup-handle-status--ok">
+                        ✓ available — your channel will live at{' '}
+                        <span className="signup-handle-status__url">{handle}.tahti.live</span>
+                      </span>
+                    ) : handleStatus === 'taken' ? (
+                      <span className="signup-handle-status signup-handle-status--error">
+                        Already taken
+                        {handleSuggestions.length > 0 && (
+                          <>
+                            {' — try '}
+                            {handleSuggestions.map((s, i) => (
+                              <span key={s}>
+                                {i > 0 && ' or '}
+                                <button
+                                  type="button"
+                                  className="signup-handle-suggestion"
+                                  onClick={() => setHandle(s)}
+                                >
+                                  {s}
+                                </button>
+                              </span>
+                            ))}
+                          </>
+                        )}
+                      </span>
+                    ) : (
+                      `Lowercase letters, numbers, - and _ only. Your channel URL: ${handle || 'your-handle'}.tahti.live`
+                    )
+                  }
+                >
+                  <Input
+                    id="signup-username"
+                    name="username"
+                    required
+                    minLength={2}
+                    maxLength={32}
+                    pattern="[a-z0-9_-]+"
+                    autoComplete="username"
+                    placeholder="dj-moonrise"
+                    value={handle}
+                    onChange={(e) => setHandle(e.target.value.toLowerCase())}
+                  />
+                </Field>
 
-              <Field label="Artist name" htmlFor="signup-display-name">
-                <Input
-                  id="signup-display-name"
-                  name="displayName"
-                  required
-                  maxLength={64}
-                  autoComplete="name"
-                  placeholder="DJ Moonrise"
-                />
-              </Field>
+                <Field label="Artist name" htmlFor="signup-display-name">
+                  <Input
+                    id="signup-display-name"
+                    name="displayName"
+                    required
+                    maxLength={64}
+                    autoComplete="name"
+                    placeholder="DJ Moonrise"
+                  />
+                </Field>
+              </div>
 
-              <Field label="Password" htmlFor="signup-password" hint="At least 8 characters">
-                <Input
-                  id="signup-password"
-                  name="password"
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                />
-              </Field>
+              <div className="signup-password-row">
+                <Field label="Password" htmlFor="signup-password" hint="At least 8 characters">
+                  <Input
+                    id="signup-password"
+                    name="password"
+                    type="password"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+                </Field>
 
-              <Field label="Confirm password" htmlFor="signup-confirm">
-                <Input
-                  id="signup-confirm"
-                  name="confirm"
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                />
-              </Field>
+                <Field label="Confirm password" htmlFor="signup-confirm">
+                  <Input
+                    id="signup-confirm"
+                    name="confirm"
+                    type="password"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+                </Field>
+              </div>
 
               <fieldset className="signup-fieldset">
                 <legend className="signup-fieldset__legend">Artist tier</legend>
@@ -252,10 +254,13 @@ export function SignupForm() {
                       onChange={() => setTier('free')}
                       className="signup-tier-radio"
                     />
-                    <span className="signup-tier-card__name">Free</span>
-                    <span className="signup-tier-card__price">€0</span>
-                    <span className="signup-tier-card__desc">MP3 192 · 1 hr live/week</span>
-                    <span className="signup-tier-card__desc">Full product otherwise</span>
+                    <span className="signup-tier-card__header">
+                      <span className="signup-tier-card__name">Free</span>
+                      <span className="signup-tier-card__price">€0</span>
+                    </span>
+                    <span className="signup-tier-card__desc">
+                      MP3 192 · 1 hr live/week · full product otherwise
+                    </span>
                   </label>
                   <label
                     className={`signup-tier-card signup-tier-card--member${tier === 'member' ? ' signup-tier-card--active' : ''}`}
@@ -275,8 +280,9 @@ export function SignupForm() {
                     <span className="signup-tier-card__price signup-tier-card__price--cyan">
                       €40/yr
                     </span>
-                    <span className="signup-tier-card__desc">Lossless FLAC · unlimited live</span>
-                    <span className="signup-tier-card__desc">Vote at AGM · grant-eligible</span>
+                    <span className="signup-tier-card__desc">
+                      Lossless FLAC · unlimited live · vote at AGM · grant-eligible
+                    </span>
                   </label>
                 </div>
               </fieldset>
@@ -293,13 +299,9 @@ export function SignupForm() {
                 {pending ? 'Creating account…' : 'Continue'}
               </Button>
 
-              <Text tone="muted" size="sm">
+              <Text tone="muted" size="sm" className="signup-footnote">
                 By creating an account you agree to the <Link href="/terms">terms of service</Link>{' '}
                 and <Link href="/privacy">privacy policy</Link>.
-              </Text>
-
-              <Text tone="muted" size="sm" className="signup-footnote">
-                No upgrade pressure. Free is a complete product — the constitution says so.
               </Text>
             </Stack>
           </form>
