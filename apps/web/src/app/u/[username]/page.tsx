@@ -146,6 +146,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
         <NewsletterSubscribeForm
           artistUsername={artist.username}
           artistDisplayName={artist.displayName}
+          isLoggedIn={false}
         />
 
         {links.feeds?.archive && (

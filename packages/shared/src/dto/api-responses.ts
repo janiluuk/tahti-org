@@ -682,6 +682,11 @@ export const NewsletterSubscribeStatusSchema = z.object({
   status: z.string(),
 })
 
+/** Logged-in viewer's subscription state to a specific artist's newsletter. */
+export const NewsletterMySubscriptionSchema = z.object({
+  subscribed: z.boolean(),
+})
+
 export const RepostAckResponseSchema = z.object({
   acknowledged: z.boolean(),
 })

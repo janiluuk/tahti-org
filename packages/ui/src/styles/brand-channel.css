@@ -1062,9 +1062,9 @@
 [data-tahti-ui='brand'] .ch-chat-panel {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--cyan) 25%, var(--border));
   border-radius: var(--radius);
-  background: var(--card);
+  background: color-mix(in srgb, var(--cyan) 5%, var(--card));
   height: calc(100vh - 6rem);
   position: sticky;
   top: 68px;
@@ -2538,7 +2538,11 @@
   padding: 10px 0;
   margin: 4px 0;
   overflow: hidden;
-  background: linear-gradient(135deg, #1ed760, #1db954); /* design-token-allow: platform brand color */
+  background: linear-gradient(
+    135deg,
+    #1ed760,
+    #1db954
+  ); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .embed-frame-spotify__badge {
@@ -2550,7 +2554,11 @@
   letter-spacing: 0.4px;
   text-transform: uppercase;
   color: #04140a; /* design-token-allow: platform brand color */
-  background: color-mix(in srgb, #ffffff 55%, transparent); /* design-token-allow: platform brand color */
+  background: color-mix(
+    in srgb,
+    #ffffff 55%,
+    transparent
+  ); /* design-token-allow: platform brand color */
   border-radius: 999px;
   padding: 2px 8px;
   z-index: 1;
@@ -2590,7 +2598,11 @@
 
 [data-tahti-ui='brand'] .embed-frame-spotify__subline {
   font-size: var(--text-xs);
-  color: color-mix(in srgb, #04140a 75%, transparent); /* design-token-allow: platform brand color */
+  color: color-mix(
+    in srgb,
+    #04140a 75%,
+    transparent
+  ); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .embed-frame-spotify iframe {
@@ -2604,7 +2616,11 @@
   padding: 10px 0;
   margin: 4px 0;
   overflow: hidden;
-  background: linear-gradient(135deg, #a78bfa, #7c3aed); /* design-token-allow: platform brand color */
+  background: linear-gradient(
+    135deg,
+    #a78bfa,
+    #7c3aed
+  ); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .embed-frame-mixcloud__badge {
@@ -2616,7 +2632,11 @@
   letter-spacing: 0.4px;
   text-transform: uppercase;
   color: #1a0a36; /* design-token-allow: platform brand color */
-  background: color-mix(in srgb, #ffffff 55%, transparent); /* design-token-allow: platform brand color */
+  background: color-mix(
+    in srgb,
+    #ffffff 55%,
+    transparent
+  ); /* design-token-allow: platform brand color */
   border-radius: 999px;
   padding: 2px 8px;
   z-index: 1;
@@ -2656,7 +2676,11 @@
 
 [data-tahti-ui='brand'] .embed-frame-mixcloud__subline {
   font-size: var(--text-xs);
-  color: color-mix(in srgb, #1a0a36 75%, transparent); /* design-token-allow: platform brand color */
+  color: color-mix(
+    in srgb,
+    #1a0a36 75%,
+    transparent
+  ); /* design-token-allow: platform brand color */
 }
 
 [data-tahti-ui='brand'] .embed-frame-mixcloud iframe {
@@ -2848,8 +2872,37 @@
   margin: 1.25rem 0 1.5rem;
   padding: 1rem 1.1rem;
   border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--card2);
+  border: 1px solid color-mix(in srgb, var(--cyan) 30%, var(--border));
+  background: color-mix(in srgb, var(--cyan) 7%, var(--card2));
+}
+
+[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 1.25rem 0 1.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 40%, var(--border));
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card2));
+  color: var(--cyan);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle:hover {
+  background: color-mix(in srgb, var(--cyan) 18%, var(--card2));
+}
+
+[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle--active {
+  background: var(--cyan);
+  color: var(--bg);
 }
 
 [data-tahti-ui='brand'].brand-channel .nl-subscribe-title {
@@ -2875,7 +2928,7 @@
   min-width: 0;
   padding: 0.5rem 0.65rem;
   border-radius: 6px;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--cyan) 25%, var(--border));
   background: var(--card);
   color: var(--text);
 }

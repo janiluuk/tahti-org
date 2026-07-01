@@ -270,6 +270,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             <NewsletterSubscribeForm
               artistUsername={channel.user.username}
               artistDisplayName={channel.user.displayName}
+              isLoggedIn={Boolean(user)}
             />
 
             <ChannelTextLayerView
