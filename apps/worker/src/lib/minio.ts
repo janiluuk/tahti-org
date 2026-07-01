@@ -9,7 +9,8 @@ import { readSecret } from './read-secret.js'
 
 const MINIO_ENDPOINT = process.env.MINIO_ENDPOINT ?? 'http://localhost:9000'
 const MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY ?? 'tahti'
-const MINIO_SECRET_KEY = readSecret('MINIO_SECRET_KEY', 'MINIO_SECRET_KEY_FILE') ?? 'tahti_dev_secret'
+const MINIO_SECRET_KEY =
+  readSecret('MINIO_SECRET_KEY', 'MINIO_SECRET_KEY_FILE') ?? 'tahti_dev_secret'
 const MINIO_BUCKET = process.env.MINIO_BUCKET ?? 'tahti'
 
 export const s3 = new S3Client({
