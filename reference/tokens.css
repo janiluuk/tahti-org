@@ -93,8 +93,8 @@
   --content-max:      1080px;  /* dashboard content column max */
   --public-max:       1140px;  /* public pages max */
   --narrow-max:       460px;   /* release page / subscribe hero max */
-  --btn-h:            36px;
-  --btn-h-sm:         28px;
+  --btn-h:            44px;   /* standard/big button — the only size for primary+secondary actions, see ground-rules.md Rule 4 */
+  --btn-h-sm:         36px;   /* opt-in exception for dense inline contexts only */
   --input-h:          36px;
   --sidebar-item-h:   34px;
   --cover-xs: 24px; --cover-sm: 46px; --cover-md: 80px; --cover-lg: 140px;
@@ -211,10 +211,10 @@ body {
 
 /* ---- Buttons ---- */
 .btn {
-  height: var(--btn-h); padding: 0 var(--sp-4);
+  height: var(--btn-h); padding: 0 var(--sp-5);
   border-radius: var(--r-md); font-size: var(--fs-sm);
   font-weight: var(--fw-medium); font-family: inherit;
-  cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
   border: none;
 }
 .btn--primary   { background: var(--brand); color: var(--text-on-accent); }
@@ -222,7 +222,8 @@ body {
                   border: 1px solid var(--border-strong); font-weight: var(--fw-regular); }
 .btn--warn      { background: var(--warn); color: #1A1408; }
 .btn--purple    { background: var(--stat-fans); color: #0E0420; }
-.btn--sm        { height: var(--btn-h-sm); padding: 0 var(--sp-3); font-size: var(--fs-xs); }
+.btn--sm        { height: var(--btn-h-sm); padding: 0 var(--sp-4); font-size: var(--fs-xs); }
+.btn svg        { width: 16px; height: 16px; flex-shrink: 0; }
 
 /* ---- Pills ---- */
 .pill {

@@ -1,14 +1,15 @@
 # Tahti — design system ground rules (addendum)
 
-This document extends `tahti-design-system-enforcement.md` with three hard rules that govern *what* views look like at the structural level. Where the previous brief enforces *consistency* (tokens, shells, primitives), this one enforces *density and character* (no-scroll, no-form-aesthetic).
+This document extends `tahti-design-system-enforcement.md` with four hard rules that govern *what* views look like at the structural level. Where the previous brief enforces *consistency* (tokens, shells, primitives), this one enforces *density, character, and control affordance* (no-scroll, no-form-aesthetic, no-anemic-buttons).
 
 These rules are non-negotiable. They are added to the conformance gate, not advisory.
 
-## The three rules
+## The four rules
 
 1. **No scrolling unless it's the last option.** Every dashboard task view fits on a 1440×900 viewport at 100% zoom. The artist completes the task without scrolling.
 2. **All views manageable from one screen.** Everything needed to perform the view's job is visible simultaneously. No tabbing between sections to find a control. No collapsed accordions hiding the primary affordance.
 3. **Never a tax filing form.** No view consists primarily of stacked label+input pairs. Every view has a hero element that conveys state or affords direct manipulation.
+4. **Every button is a standard, big, icon button.** One button component, one size (big), everywhere. No bespoke `<button>` markup, no accidental unpadded/unstyled buttons, no tiny click targets.
 
 The constitution already implies these (rule 2: "highest quality, community-driven"; rule 3: "the artist shines brightest, no rip-offs"). This document makes them operational.
 
@@ -245,7 +246,39 @@ The view is a tax form if any of these:
 
 PR reviewers run a quick mental check against these on every screen.
 
-## Existing views — audit against the three rules
+## Rule 4 — every button is a standard, big, icon button
+
+### Why this rule exists
+
+A sweep of `app.tahti.live` found dozens of `<button className="ui-btn ui-btn--primary">` call sites across the dashboard with no size modifier applied. Both button stylesheets (`admin-ui.css`, `brand-studio.css`) put all padding on the size modifier classes (`.ui-btn--sm/md/lg`) and none on the base `.ui-btn` rule — so any call site that forgot the modifier rendered a button with zero padding: a blue/cyan smear of background color hugging the text with no click target to speak of. That is a correctness bug, not a taste issue, and it shipped because there was no single button component enforcing it.
+
+### What it means concretely
+
+1. **One component, one size.** Every actionable control renders through the shared `Button` component (`packages/ui/src/admin/button.tsx` for the dashboard/admin surfaces, `packages/ui/src/brand/Button.tsx` for public/channel pages) — never a raw `<button className="ui-btn ...">` or `<a className="ui-btn ...">` typed out by hand. Hand-typed class strings are exactly how the padding bug happened; they drift the moment someone forgets a modifier.
+2. **Big is the default, not an opt-in.** Standard button height is **44px** (`--btn-h` in `reference/tokens.css`), padding `0 20px`. This is what renders when no size is specified — the base `.ui-btn` / `.brand-btn` rules carry this padding directly so a missing size modifier can never produce an unpadded button again. `sm` (36px) is the only smaller size, reserved for dense inline contexts (table row actions, chip-like toggles) — it must be an explicit, deliberate choice, never the accidental default.
+3. **Icon + label, not label alone.** Every primary and destructive action button carries a leading icon (16×16, inline SVG, matching the hand-drawn icon style already used in `SidebarNav.tsx` / `StudioTopNav.tsx` — the app has no icon font/library, and this rule does not introduce one). Rationale: an icon gives the button a recognizable silhouette at a glance, before the artist reads the label — same reason the Go Live and End Broadcast buttons already do this in the mockups (`⏹ End Broadcast`, `♥ Subscribe`). Secondary/tertiary buttons and plain inline links are the exception — icons are for actions the artist needs to find fast, not every clickable thing.
+4. **No color-only variants.** `variant` communicates intent (primary/secondary/danger/ghost) via both color *and* the icon; a button is never distinguished from surrounding text only by a link-blue color with no border, padding, or background.
+
+### Migration status (be honest about scope)
+
+This rule is retrofitted onto an app with ~60 existing hand-typed `ui-btn` call sites in `apps/web/src/app/dashboard/**`. The padding bug itself is fixed at the CSS layer (base `.ui-btn` now carries the big/44px padding, so every existing call site is visually correct today even without code changes). The remaining migration work — replacing hand-typed `className="ui-btn ..."` with `<Button>`, and adding icons to primary actions — is incremental:
+
+- New code: always use `<Button>`, always with an icon on primary/destructive actions. No exceptions.
+- Existing code: migrate opportunistically when a file is touched for other reasons. Don't do a mechanical drive-by rename with no icon just to close out the class name — that's swapping one inconsistency (missing modifier) for another (icon-less "standard" button that doesn't match the new bar).
+- A full migration + icon pass across all ~60 call sites is real design work (each action needs a considered icon, not a placeholder) — track it as its own follow-up, don't silently half-finish it inside an unrelated PR.
+
+### Enforcement
+
+```bash
+# Any hand-typed ui-btn/brand-btn className outside the Button components themselves
+# is a Rule 4 violation waiting to happen — flag it in review.
+grep -rn 'className="ui-btn\|className="brand-btn' apps/web/src --include="*.tsx" \
+  | grep -v 'packages/ui/src'
+```
+
+> **Rule 4 check**: Does this button render through the shared `Button` component? Is it the standard big size unless there's a specific, stated reason for `sm`? Does a primary/destructive action have a leading icon?
+
+## Existing views — audit against the four rules
 
 Quick assessment of each conformance-spec view against the new rules. The agent runs this audit and produces a fix list before the conformance pass.
 
@@ -291,9 +324,14 @@ Step 11 — Rule 3 (not a tax form) check
   ☐ Label+input pairs are not the dominant visual content
   ☐ Direct manipulation used where possible (sliders, swatches, toggles) over text entry
   ☐ Live preview of consequence where applicable (channel designer pattern)
+
+Step 12 — Rule 4 (standard, big, icon buttons) check
+  ☐ Every button on the view renders through the shared Button component, no hand-typed ui-btn/brand-btn classNames
+  ☐ Standard (big, 44px) size used unless sm is a deliberate, stated choice
+  ☐ Primary/destructive actions carry a leading icon
 ```
 
-A view passes the conformance gate only when steps 1–11 all check.
+A view passes the conformance gate only when steps 1–12 all check.
 
 ## Implementation order
 

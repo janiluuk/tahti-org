@@ -245,14 +245,19 @@
 }
 
 /* ---- Button ---- */
+/* Base size is the "lg"/standard size — every button is big by default per
+   the button standard in docs/design/ground-rules.md. .ui-btn--sm and
+   .ui-btn--md are opt-in exceptions for dense contexts; a bare `ui-btn`
+   (no size modifier) must never render unpadded. */
 .ui-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--tahti-space-2);
   max-width: 100%;
+  padding: var(--tahti-space-3) var(--tahti-space-6);
   font-family: var(--tahti-font-body);
-  font-size: var(--tahti-text-sm);
+  font-size: var(--tahti-text-base);
   font-weight: 500;
   line-height: 1.25;
   border-radius: var(--tahti-radius-sm);

@@ -783,10 +783,9 @@
   font-size: var(--text-sm);
 }
 
-[data-tahti-ui='studio'] .ui-btn--lg {
-  padding: 0.5rem 1rem;
-  font-size: var(--text-body);
-}
+/* .ui-btn--lg intentionally omitted: the base .ui-btn rule above (near the
+   a.ui-btn/button.ui-btn selector) already is the "lg" standard size. The
+   class stays valid for explicit call sites but adds nothing further. */
 
 [data-tahti-ui='studio'] input[type='file'] {
   display: block;
@@ -1294,6 +1293,10 @@
 }
 
 /* Studio ui-btn — dashboard action buttons (collections, settings, import flows) */
+/* Base size is the "lg"/standard size — every button is big by default per the
+   button standard in docs/design/ground-rules.md. .ui-btn--sm and .ui-btn--md
+   are opt-in exceptions for dense contexts; a bare `ui-btn` (no size modifier)
+   must never render unpadded. */
 [data-tahti-ui='studio'] a.ui-btn,
 [data-tahti-ui='studio'] button.ui-btn {
   display: inline-flex;
@@ -1301,8 +1304,9 @@
   justify-content: center;
   gap: 0.35rem;
   max-width: 100%;
+  padding: 0.5rem 1rem;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-body);
   font-weight: var(--weight-medium);
   line-height: 1.25;
   border-radius: var(--radius);

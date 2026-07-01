@@ -54,7 +54,7 @@ These elements have exact pixel dimensions in tokens.css. Use them. Never derive
 | Element | Size |
 |---|---|
 | Cover art | 24 / 46 / 80 / 140 px (or `width:100%; aspect-ratio:1` ONLY inside a fixed-column grid) |
-| Buttons | height 36px (small: 28px) |
+| Buttons | height 44px, standard/big size for every button (small 36px is an opt-in exception for dense inline contexts — see `ground-rules.md` Rule 4) |
 | Inputs | height 36px |
 | Sidebar items | height 34px |
 | Top nav | height 56px |
