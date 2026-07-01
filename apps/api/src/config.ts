@@ -58,6 +58,8 @@ if (process.env.NODE_ENV === 'production' && rtmpKeyEncKey.startsWith('dev0000')
 const hcaptchaSecret = process.env.HCAPTCHA_SECRET ?? 'dev'
 const metricsToken = process.env.METRICS_TOKEN?.trim() ?? ''
 
+const minioSecretKey = readSecret('MINIO_SECRET_KEY', 'MINIO_SECRET_KEY_FILE', 'tahti_dev_secret')
+
 /** SEC-005: refuse boot in production when critical secrets retain dev defaults. */
 function assertProductionSecrets(): void {
   if (process.env.NODE_ENV !== 'production') return
@@ -65,6 +67,7 @@ function assertProductionSecrets(): void {
   if (internalSecret === 'dev-internal-secret-change-in-prod') missing.push('INTERNAL_SECRET')
   if (docsPass === 'changeme') missing.push('DOCS_PASS')
   if (!hcaptchaSecret || hcaptchaSecret === 'dev') missing.push('HCAPTCHA_SECRET')
+  if (minioSecretKey === 'tahti_dev_secret') missing.push('MINIO_SECRET_KEY')
   if (missing.length > 0) {
     console.error(`[config] Refusing to start in production — set: ${missing.join(', ')}`)
     process.exit(1)
@@ -97,7 +100,7 @@ export const config = {
   minio: {
     endpoint: process.env.MINIO_ENDPOINT ?? 'http://localhost:9000',
     accessKey: process.env.MINIO_ACCESS_KEY ?? 'tahti',
-    secretKey: process.env.MINIO_SECRET_KEY ?? 'tahti_dev_secret',
+    secretKey: minioSecretKey,
     bucket: process.env.MINIO_BUCKET ?? 'tahti',
     /** Bucket for Postgres dumps (`pg/*.sql.gz`). See `scripts/backup.sh`. */
     backupsBucket: process.env.MINIO_BACKUPS_BUCKET ?? 'backups',
