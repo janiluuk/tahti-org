@@ -5,8 +5,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState, type MouseEvent } from 'react'
-import { isDashboardNavItemActive, navigateDashboardHash } from './dashboard-nav'
 
 function IconChannel() {
   return (
@@ -96,74 +94,34 @@ function IconCollections() {
 }
 
 const MOBILE_NAV = [
-  {
-    href: '/dashboard#overview',
-    label: 'Channel',
-    Icon: IconChannel,
-    hash: '#overview',
-    sectionKey: 'overview' as const,
-  },
+  { href: '/dashboard', label: 'Channel', Icon: IconChannel },
   { href: '/dashboard/stats', label: 'Stats', Icon: IconStats },
-  {
-    href: '/dashboard#archive',
-    label: 'Archive',
-    Icon: IconArchive,
-    hash: '#archive',
-    sectionKey: 'archive' as const,
-    requiresChannel: true,
-  },
+  { href: '/dashboard/archive', label: 'Archive', Icon: IconArchive, requiresChannel: true },
   { href: '/dashboard/upload', label: 'Upload', Icon: IconUpload },
   { href: '/dashboard/collections', label: 'Collections', Icon: IconCollections },
-  {
-    href: '/dashboard/revenue',
-    label: 'Revenue',
-    Icon: IconRevenue,
-  },
-  {
-    href: '/dashboard#account',
-    label: 'Settings',
-    Icon: IconSettings,
-    hash: '#account',
-    sectionKey: 'account' as const,
-  },
+  { href: '/dashboard/revenue', label: 'Revenue', Icon: IconRevenue },
+  { href: '/dashboard/settings/account', label: 'Settings', Icon: IconSettings },
 ]
 
 /** Mobile bottom nav for the dashboard (hidden on desktop). */
 export function StudioMobileNav({ hasChannel = true }: { hasChannel?: boolean }) {
   const pathname = usePathname()
-  const [hash, setHash] = useState('')
-
-  useEffect(() => {
-    const sync = () => setHash(window.location.hash)
-    sync()
-    window.addEventListener('hashchange', sync)
-    return () => window.removeEventListener('hashchange', sync)
-  }, [pathname])
-
-  const onDashboard = pathname === '/dashboard' || pathname === '/dashboard/'
-
-  function onHashNavClick(e: MouseEvent<HTMLAnchorElement>, itemHash: string) {
-    if (!onDashboard) return
-    e.preventDefault()
-    navigateDashboardHash(itemHash)
-  }
 
   return (
     <nav className="db-mobile-nav" aria-label="Mobile navigation">
       {MOBILE_NAV.filter((item) => !item.requiresChannel || hasChannel).map(
-        ({ href, label, Icon, hash: itemHash, sectionKey }) => {
-          let active: boolean
-          if (itemHash && sectionKey) {
-            active = isDashboardNavItemActive(hash, { sectionKey, hash: itemHash }, onDashboard)
-          } else {
-            active = pathname === href || pathname.startsWith(`${href}/`)
-          }
+        ({ href, label, Icon }) => {
+          // `/dashboard` is a path prefix of every other dashboard route, so it can only
+          // ever match exactly — a startsWith check here would light up Channel everywhere.
+          const active =
+            href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname === href || pathname.startsWith(`${href}/`)
           return (
             <Link
               key={label}
               href={href}
               className={`db-mobile-nav-item${active ? ' active' : ''}`}
-              onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
             >
               <Icon />
               <span>{label}</span>
