@@ -7,12 +7,9 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { ButtonIcon, Button } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
-import { updateChannelProfile } from '../channel-identity-actions'
 import { updateChannelVisual } from '../channel-visual-actions'
 import ChannelVisualPresetPanel from '../channel-visual-preset-panel'
-import ChannelIdentityPanel from '../channel-identity-panel'
-import ChannelBioPanel from '../channel-bio-panel'
-import ChannelLinksPanel, { type ChannelLink } from '../channel-links-panel'
+import type { ChannelLink } from '../channel-links-panel'
 import { ChannelEditorSection } from './_channel-editor-section'
 import { ChannelLivePreview, type ChannelPreviewDraft } from './_channel-live-preview'
 import type {
@@ -23,15 +20,6 @@ import type {
   SlideshowPreset,
   VisualPreset,
 } from '@tahti/shared'
-
-function linksToSocialLinks(links: ChannelLink[]): Record<string, string> {
-  const map: Record<string, string> = {}
-  for (const { label, url } of links) {
-    const key = label.trim()
-    if (key && url.trim()) map[key] = url.trim()
-  }
-  return map
-}
 
 export type ChannelEditorData = {
   channelSlug: string
@@ -104,30 +92,14 @@ export function ChannelEditorSections({
     setError(null)
     setMessage(null)
     startTransition(async () => {
-      const [profileRes, visualRes] = await Promise.all([
-        updateChannelProfile({
-          displayName: draft.displayName,
-          bio: draft.bio,
-          avatarUrl: draft.avatarUrl ?? undefined,
-          countryCode: draft.countryCode,
-          pronouns: draft.pronouns,
-          socialLinks: {
-            genres: draft.genres.join(', '),
-            ...linksToSocialLinks(draft.links),
-          },
-        }),
-        updateChannelVisual({
-          visualPreset: draft.visual.visualPreset,
-          colorScheme: draft.visual.colorSchemeJson
-            ? JSON.parse(draft.visual.colorSchemeJson)
-            : null,
-          headerStyle: draft.visual.headerStyle,
-          brandAccentPreset: draft.visual.brandAccentPreset,
-        }),
-      ])
-      const err = profileRes.error ?? visualRes.error
-      if (err) {
-        setError(err)
+      const visualRes = await updateChannelVisual({
+        visualPreset: draft.visual.visualPreset,
+        colorScheme: draft.visual.colorSchemeJson ? JSON.parse(draft.visual.colorSchemeJson) : null,
+        headerStyle: draft.visual.headerStyle,
+        brandAccentPreset: draft.visual.brandAccentPreset,
+      })
+      if (visualRes.error) {
+        setError(visualRes.error)
         return
       }
       setMessage('Channel published.')
@@ -149,35 +121,25 @@ export function ChannelEditorSections({
       <div className="studio-channel-editor__layout">
         <div className="studio-channel-editor__preview-col" data-hero>
           <ChannelLivePreview draft={draft} />
-          <Link
-            href={resolveChannelUrl(channelSlug)}
-            className="ui-btn ui-btn--secondary ui-btn--sm studio-channel-editor__preview-link"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open full channel page →
-          </Link>
+          <div className="studio-row studio-gap-md studio-mt-sm">
+            <Link
+              href={resolveChannelUrl(channelSlug)}
+              className="ui-btn ui-btn--secondary ui-btn--sm studio-channel-editor__preview-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open full channel page →
+            </Link>
+            <Link
+              href="/dashboard/settings/artist-info"
+              className="ui-btn ui-btn--ghost ui-btn--sm"
+            >
+              Edit name, bio & links →
+            </Link>
+          </div>
         </div>
 
         <div className="studio-channel-editor__controls-col">
-          <ChannelEditorSection
-            id="channel-identity"
-            title="Identity"
-            description="Who you are — shown at the top of your channel page."
-          >
-            <ChannelIdentityPanel
-              initial={{ displayName, avatarUrl, countryCode, pronouns, genres }}
-              onDraftChange={(identity) => setDraft((d) => ({ ...d, ...identity }))}
-            />
-          </ChannelEditorSection>
-
-          <ChannelEditorSection id="channel-bio" title="Bio">
-            <ChannelBioPanel
-              initial={{ bio }}
-              onDraftChange={(newBio) => setDraft((d) => ({ ...d, bio: newBio }))}
-            />
-          </ChannelEditorSection>
-
           <ChannelEditorSection id="channel-visual" title="Visual">
             <ChannelVisualPresetPanel
               channelSlug={channelSlug}
@@ -186,17 +148,6 @@ export function ChannelEditorSections({
               initial={channelVisual}
               bare
               onDraftChange={(visual) => setDraft((d) => ({ ...d, visual }))}
-            />
-          </ChannelEditorSection>
-
-          <ChannelEditorSection
-            id="channel-links"
-            title="Links"
-            description="Where else listeners can find you — shown on your channel page."
-          >
-            <ChannelLinksPanel
-              initial={links}
-              onDraftChange={(newLinks) => setDraft((d) => ({ ...d, links: newLinks }))}
             />
           </ChannelEditorSection>
         </div>

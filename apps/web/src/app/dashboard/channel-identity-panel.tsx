@@ -111,7 +111,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
     <>
       <div className="studio-field--block">
         <label className="studio-label" htmlFor="identity-display-name">
-          Display name
+          Artist name
         </label>
         <input
           id="identity-display-name"

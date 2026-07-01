@@ -81,7 +81,7 @@ function BetaApproveForm({ application }: { application: BetaApplicationRow }) {
         />
       </label>
       <label>
-        Display name
+        Artist name
         <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
       </label>
       <div className="admin-beta-action-row">

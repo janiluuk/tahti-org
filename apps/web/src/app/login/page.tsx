@@ -195,7 +195,7 @@ export default function LoginPage() {
                     <Input name="email" type="email" required autoComplete="email" />
                   </Field>
 
-                  <Field label="Display name">
+                  <Field label="Artist name">
                     <Input name="displayName" type="text" required autoComplete="name" />
                   </Field>
 
