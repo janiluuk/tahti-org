@@ -17,7 +17,7 @@ type PublicChannelSiteLayoutProps = {
 export async function PublicChannelSiteLayout({
   children,
   activeNav,
-  bgVariant = 'default',
+  bgVariant = 'subtle',
 }: PublicChannelSiteLayoutProps) {
   const user = await getSessionUser()
 

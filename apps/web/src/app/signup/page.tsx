@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 function SignupClosed() {
   return (
     <>
-      <BgCanvas />
+      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
           <BrandLogo />

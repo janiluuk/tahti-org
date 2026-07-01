@@ -42,7 +42,7 @@ export function SetupPasswordForm({ token, info }: { token: string; info: SetupI
 
   return (
     <>
-      <BgCanvas />
+      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
           <BrandLogo />

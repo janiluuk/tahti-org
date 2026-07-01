@@ -22,30 +22,29 @@
   --tahti-info-bg: color-mix(in srgb, var(--cyan) 12%, var(--card));
 }
 
-/* Three.js gateway background (BgCanvas) — same as login; shell must not paint over fixed canvas */
+/* Three.js gateway background (BgCanvas) — same treatment on every public page: calm,
+   dark gateway bg + thin dark veil, so the animation never fights with page content. */
 [data-tahti-ui='brand'].brand-channel:has(.bg-canvas),
-[data-tahti-ui='brand'].brand-channel.brand-channel--canvas {
+[data-tahti-ui='brand'].brand-channel.brand-channel--canvas,
+[data-tahti-ui='brand'].brand-public-shell:has(.bg-canvas) {
   background: transparent;
 }
 
 [data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .listen-shell,
 [data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .home-shell,
-[data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .radio-shell {
+[data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .radio-shell,
+[data-tahti-ui='brand'].brand-public-shell:has(.bg-canvas) > *:not(.bg-canvas) {
   position: relative;
   z-index: 1;
 }
 
-/* /radio — calm gateway bg + thin dark veil (same public shell as Home / Discover) */
-[data-tahti-ui='brand'].brand-channel--radio {
-  background: transparent;
-}
-
-[data-tahti-ui='brand'].brand-channel--radio .bg-canvas--subtle {
+.bg-canvas--subtle {
   background: var(--bg);
   filter: blur(32px) brightness(0.42) saturate(0.35);
 }
 
-[data-tahti-ui='brand'].brand-channel--radio::before {
+[data-tahti-ui='brand'].brand-channel:has(.bg-canvas)::before,
+[data-tahti-ui='brand'].brand-public-shell:has(.bg-canvas)::before {
   content: '';
   position: fixed;
   inset: 0;

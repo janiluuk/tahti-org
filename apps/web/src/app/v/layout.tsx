@@ -4,13 +4,20 @@
 import type { ReactNode } from 'react'
 import { PublicBrandShell } from '@tahti/ui'
 import '@/lib/import-public-brand-css'
+import { BgCanvas } from '@/components/ui/bg-canvas'
 import { getSessionUser } from '@/lib/session'
 
 export default async function VenueProfileLayout({ children }: { children: ReactNode }) {
   const user = await getSessionUser()
 
   return (
-    <PublicBrandShell wide showHeader showFooter user={user}>
+    <PublicBrandShell
+      wide
+      showHeader
+      showFooter
+      user={user}
+      background={<BgCanvas variant="subtle" />}
+    >
       {children}
     </PublicBrandShell>
   )

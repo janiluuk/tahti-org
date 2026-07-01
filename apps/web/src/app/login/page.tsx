@@ -95,7 +95,7 @@ export default function LoginPage() {
   if (registerSuccess) {
     return (
       <>
-        <BgCanvas />
+        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark">
             <BrandLogo />
@@ -120,7 +120,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <BgCanvas />
+      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
           <BrandLogo />
