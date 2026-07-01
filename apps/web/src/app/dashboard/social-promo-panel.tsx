@@ -91,7 +91,11 @@ function PlatformSection({
                 type="button"
                 className="ui-btn ui-btn--sm ui-btn--danger"
                 disabled={pending}
-                onClick={onDisconnect}
+                onClick={() => {
+                  if (confirm(`Disconnect ${title}? You'll need to reconnect to post again.`)) {
+                    onDisconnect()
+                  }
+                }}
               >
                 Disconnect
               </button>

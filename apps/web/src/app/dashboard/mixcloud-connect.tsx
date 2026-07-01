@@ -22,6 +22,7 @@ export function MixcloudConnect({
   const [isPending, startTransition] = useTransition()
 
   function disconnect() {
+    if (!confirm("Disconnect Mixcloud? You'll need to reconnect to upload mixes again.")) return
     setError(null)
     startTransition(async () => {
       const res = await disconnectMixcloud()

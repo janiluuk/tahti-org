@@ -24,7 +24,8 @@ export function ImportConnectionsPanel({ connections }: { connections: Connectio
   const visible = connections.filter((c) => c.configured || c.connected)
   if (visible.length === 0) return null
 
-  const disconnect = async (path: string) => {
+  const disconnect = async (path: string, label: string) => {
+    if (!confirm(`Disconnect ${label}? You'll need to reconnect to import from it again.`)) return
     setBusy(path)
     await fetch(`${apiUrl}${path}`, { method: 'DELETE', credentials: 'include' })
     window.location.reload()
@@ -53,7 +54,7 @@ export function ImportConnectionsPanel({ connections }: { connections: Connectio
                   type="button"
                   className="ui-btn ui-btn--ghost ui-btn--sm"
                   disabled={busy === row.disconnectPath}
-                  onClick={() => void disconnect(row.disconnectPath)}
+                  onClick={() => void disconnect(row.disconnectPath, row.label)}
                 >
                   {busy === row.disconnectPath ? 'Disconnecting…' : 'Disconnect'}
                 </button>

@@ -40,6 +40,7 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
   }
 
   async function handleDelete(id: string) {
+    if (!confirm('Delete this announcement?')) return
     const result = await deleteAnnouncement(id)
     if (!result.error) {
       setAnnouncements((prev) => prev.filter((a) => a.id !== id))
