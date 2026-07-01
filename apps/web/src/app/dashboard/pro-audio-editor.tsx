@@ -260,6 +260,7 @@ export function ProAudioEditor({
   const [peaksLoading, setPeaksLoading] = useState(true)
   const [ffmpeg, setFfmpeg] = useState<FFmpeg | null>(null)
   const [ffmpegLoading, setFfmpegLoading] = useState(true)
+  const [ffmpegUnavailable, setFfmpegUnavailable] = useState(false)
   const [exportProgress, setExportProgress] = useState<number | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
   const [exportFormat, setExportFormat] = useState<OutputFormat>('flac')
@@ -436,32 +437,59 @@ export function ProAudioEditor({
         const file = new File([blob], 'source.flac', { type: blob.type || 'audio/flac' })
         sourceFileRef.current = file
 
-        const ff = await loadFfmpeg((r) => {
-          if (exportProgress !== null) setExportProgress(r)
-        })
+        // Peaks display never needs ffmpeg.wasm at all — the worker pre-renders
+        // a PeaksPyramid during ingest (or a prior browser session cached one).
+        // Check those first so the waveform shows immediately regardless of
+        // whether ffmpeg.wasm loads, which browser-support issues (e.g. some
+        // Firefox configurations don't expose the SharedArrayBuffer/WASM
+        // threading ffmpeg.wasm wants) can otherwise block indefinitely.
+        const cached = await loadPeaksCache(archiveId, sourceKey)
+        if (cached) {
+          setPeaks(cached)
+          setPeaksLoading(false)
+        } else if (initialEditorPeaks?.levels?.length) {
+          setPeaks(initialEditorPeaks)
+          await savePeaksCache(archiveId, sourceKey, initialEditorPeaks)
+          setPeaksLoading(false)
+        }
         if (cancelled) return
+
+        // ffmpeg.wasm is still needed for in-browser preview render/export and,
+        // failing the above, client-side peak generation — but never let a
+        // hung load (observed in some Firefox setups) block the editor forever.
+        // A timeout gives up cleanly and falls back to server-side rendering
+        // instead of leaving the UI stuck on "Loading ffmpeg…".
+        const FFMPEG_LOAD_TIMEOUT_MS = 20_000
+        const ff = await Promise.race([
+          loadFfmpeg((r) => {
+            if (exportProgress !== null) setExportProgress(r)
+          }),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), FFMPEG_LOAD_TIMEOUT_MS)),
+        ])
+        if (cancelled) return
+
+        if (!ff) {
+          setFfmpegUnavailable(true)
+          if (!cached && !initialEditorPeaks?.levels?.length) {
+            setSaveError(
+              "This browser couldn't load the in-editor audio engine, so the waveform and " +
+                "browser-side preview aren't available here — export still works via the " +
+                'server. Try Chrome/Edge, or check back shortly if this track was just ' +
+                'uploaded (the waveform renders in the background).',
+            )
+          }
+          return
+        }
         setFfmpeg(ff)
 
         const path = await mountSourceFile(ff, file)
         inputPathRef.current = path
 
-        const cached = await loadPeaksCache(archiveId, sourceKey)
-        if (cached) {
-          setPeaks(cached)
-          setPeaksLoading(false)
-          return
+        if (!cached && !initialEditorPeaks?.levels?.length) {
+          const pyramid = await generatePeaksFromFfmpeg(ff, path, editList.sourceDuration)
+          await savePeaksCache(archiveId, sourceKey, pyramid)
+          if (!cancelled) setPeaks(pyramid)
         }
-
-        if (initialEditorPeaks?.levels?.length) {
-          setPeaks(initialEditorPeaks)
-          await savePeaksCache(archiveId, sourceKey, initialEditorPeaks)
-          setPeaksLoading(false)
-          return
-        }
-
-        const pyramid = await generatePeaksFromFfmpeg(ff, path, editList.sourceDuration)
-        await savePeaksCache(archiveId, sourceKey, pyramid)
-        if (!cancelled) setPeaks(pyramid)
       } catch (e) {
         setSaveError(e instanceof Error ? e.message : 'Failed to init ffmpeg')
       } finally {
@@ -585,15 +613,17 @@ export function ProAudioEditor({
 
   const editListV1 = useMemo(() => v2ToV1(editList), [editList])
   const browserRender = useMemo(
-    () => shouldRenderInBrowser(editListV1, sourceFileSizeBytes),
-    [editListV1, sourceFileSizeBytes],
+    () => !ffmpegUnavailable && shouldRenderInBrowser(editListV1, sourceFileSizeBytes),
+    [editListV1, sourceFileSizeBytes, ffmpegUnavailable],
   )
 
-  const renderModePill = browserRender
-    ? ffmpegLoading
-      ? 'Loading ffmpeg…'
-      : `LOCAL · ffmpeg.wasm${!isolated ? ' · 1 thread' : ''}`
-    : 'Server worker render'
+  const renderModePill = ffmpegUnavailable
+    ? 'Server worker render (browser engine unavailable)'
+    : browserRender
+      ? ffmpegLoading
+        ? 'Loading ffmpeg…'
+        : `LOCAL · ffmpeg.wasm${!isolated ? ' · 1 thread' : ''}`
+      : 'Server worker render'
 
   function setSpan(rawSpan: number) {
     const span = Math.min(1, Math.max(0.001, rawSpan))
