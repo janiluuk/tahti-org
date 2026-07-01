@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { ButtonIcon } from '@tahti/ui'
+import { ButtonIcon, Button } from '@tahti/ui'
 import {
   COLLECTION_GALLERY_MODES,
   COLLECTION_GALLERY_MODE_HINTS,
@@ -211,18 +211,13 @@ export function CollectionThemeEditor({
       {message && <p className="studio-text-success studio-m-0">{message}</p>}
 
       <div className="studio-row">
-        <button
-          type="button"
-          onClick={save}
-          disabled={isPending}
-          className="ui-btn ui-btn--primary"
-        >
+        <Button onClick={save} disabled={isPending} variant="primary">
           <ButtonIcon name="save" />
           {isPending ? 'Saving…' : 'Save theme'}
-        </button>
-        <button type="button" onClick={onDone} className="ui-btn ui-btn--ghost">
+        </Button>
+        <Button onClick={onDone} variant="ghost">
           Close
-        </button>
+        </Button>
       </div>
     </div>
   )

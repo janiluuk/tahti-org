@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { ButtonIcon } from '@tahti/ui'
+import { ButtonIcon, Button } from '@tahti/ui'
 import { createCollection } from '../../collection-actions'
 
 const STYLE_OPTIONS = [
@@ -172,23 +172,17 @@ export function NewCollectionForm() {
       {error && <p className="studio-text-error studio-text-sm">{error}</p>}
 
       <div className="collection-form__actions">
-        <button
-          type="button"
-          className="ui-btn ui-btn--ghost"
-          onClick={() => router.back()}
-          disabled={saving}
-        >
+        <Button onClick={() => router.back()} disabled={saving} variant="ghost">
           Cancel
-        </button>
-        <button
-          type="button"
-          className="ui-btn ui-btn--primary"
+        </Button>
+        <Button
           onClick={() => void handleSubmit()}
           disabled={saving || !name.trim()}
+          variant="primary"
         >
           <ButtonIcon name="plus" />
           {saving ? 'Creating…' : 'Create collection'}
-        </button>
+        </Button>
       </div>
     </div>
   )

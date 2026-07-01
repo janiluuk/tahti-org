@@ -4,7 +4,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import { ButtonIcon } from '@tahti/ui'
+import { ButtonIcon, Button } from '@tahti/ui'
 import {
   COLLECTING_SOCIETY_POINTERS,
   DISCOGS_GUIDE_STEPS,
@@ -172,9 +172,9 @@ export default function ReleaseOpsPanel({
 
   return (
     <div className="studio-divider">
-      <button type="button" onClick={() => setOpen(!open)} className="ui-btn ui-btn--ghost">
+      <Button onClick={() => setOpen(!open)} variant="ghost">
         {open ? 'Hide' : 'Release ops'} ({doneCount}/{checklist.length})
-      </button>
+      </Button>
 
       {open && (
         <div className="studio-editor-panel studio-mt-md">
@@ -253,42 +253,33 @@ export default function ReleaseOpsPanel({
                     }}
                     className="studio-input"
                   />
-                  <button
-                    type="button"
+                  <Button
                     disabled={isPending}
                     onClick={() => setCredits(credits.filter((_, i) => i !== index))}
-                    className="ui-btn ui-btn--ghost"
+                    variant="ghost"
                   >
                     Remove
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>
-            <button
-              type="button"
+            <Button
               disabled={isPending}
               onClick={() => setCredits([...credits, { ...EMPTY_CREDIT }])}
-              className="ui-btn ui-btn--ghost"
+              variant="ghost"
             >
               Add credit
-            </button>
+            </Button>
           </div>
 
           {error && <p className="studio-text-error">{error}</p>}
 
           <div className="studio-actions studio-row--wrap studio-mt-md">
-            <button
-              type="button"
-              onClick={save}
-              disabled={isPending}
-              className="ui-btn ui-btn--primary"
-            >
+            <Button onClick={save} disabled={isPending} variant="primary">
               <ButtonIcon name="save" />
               {isPending ? 'Saving…' : 'Save catalog'}
-            </button>
-            <button
-              type="button"
-              className="ui-btn ui-btn--ghost"
+            </Button>
+            <Button
               disabled={isPending}
               onClick={() => {
                 startTransition(async () => {
@@ -306,12 +297,11 @@ export default function ReleaseOpsPanel({
                   URL.revokeObjectURL(url)
                 })
               }}
+              variant="ghost"
             >
               Export JSON
-            </button>
-            <button
-              type="button"
-              className="ui-btn ui-btn--ghost"
+            </Button>
+            <Button
               disabled={isPending}
               onClick={() => {
                 setError(null)
@@ -334,9 +324,10 @@ export default function ReleaseOpsPanel({
                   }
                 })
               }}
+              variant="ghost"
             >
               Copy MusicBrainz prefill
-            </button>
+            </Button>
             <a
               href={MUSICBRAINZ_SUBMIT_URL}
               target="_blank"
@@ -345,9 +336,7 @@ export default function ReleaseOpsPanel({
             >
               Add on MusicBrainz →
             </a>
-            <button
-              type="button"
-              className="ui-btn ui-btn--ghost"
+            <Button
               disabled={isPending}
               onClick={() => {
                 setError(null)
@@ -370,9 +359,10 @@ export default function ReleaseOpsPanel({
                   }
                 })
               }}
+              variant="ghost"
             >
               Copy Discogs prefill
-            </button>
+            </Button>
             <a
               href={DISCOGS_SUBMIT_URL}
               target="_blank"
@@ -407,8 +397,7 @@ export default function ReleaseOpsPanel({
                 {billing.waived ? 'Fee waived (Studio included)' : 'Distribution fee paid'}
               </p>
             )}
-            <button
-              type="button"
+            <Button
               disabled={isPending || !canSubmitRevelator}
               onClick={() => {
                 setError(null)
@@ -426,14 +415,14 @@ export default function ReleaseOpsPanel({
                   setBilling((prev) => (prev ? { ...prev, paid: true } : prev))
                 })
               }}
-              className="ui-btn ui-btn--ghost"
+              variant="ghost"
             >
               {isPending
                 ? 'Submitting…'
                 : billing && !billing.paid && billing.feeCents > 0
                   ? `Pay ${formatMoney(billing.feeCents, 'EUR')} & submit`
                   : 'Submit to Revelator'}
-            </button>
+            </Button>
             {showRoyalties && (
               <div className="studio-mt-md">
                 <div className="studio-text-strong-sm studio-mb-sm">Royalty reports</div>

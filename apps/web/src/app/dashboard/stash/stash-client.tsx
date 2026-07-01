@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { SidebarNavIconSvg } from '@tahti/ui'
+import { SidebarNavIconSvg, Button } from '@tahti/ui'
 
 interface StashShare {
   id: string
@@ -192,15 +192,15 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
           onChange={handleUpload}
           disabled={uploading}
         />
-        <button
-          type="button"
-          className="ui-btn ui-btn--primary stash-upload-btn"
+        <Button
           disabled={uploading}
           onClick={() => fileInputRef.current?.click()}
+          variant="primary"
+          className="stash-upload-btn"
         >
           <SidebarNavIconSvg name="upload" />
           {uploading ? `Uploading… ${uploadProgress}%` : 'Upload file'}
-        </button>
+        </Button>
       </div>
 
       {uploading && (

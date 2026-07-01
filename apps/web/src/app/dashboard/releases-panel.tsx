@@ -7,7 +7,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
-import { ButtonIcon, Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { createRelease, importReleasesFromCsv, publishRelease } from './release-actions'
 
 interface ReleaseSummary {
@@ -141,15 +141,15 @@ export default function ReleasesPanel({
                     </Link>
                   )}
                   {r.state === 'DRAFT' && (
-                    <button
-                      type="button"
+                    <Button
                       onClick={() => publish(r.id)}
                       disabled={isPending}
-                      className="ui-btn ui-btn--sm ui-btn--primary"
+                      variant="primary"
+                      size="sm"
                     >
                       <ButtonIcon name="send" />
                       Publish
-                    </button>
+                    </Button>
                   )}
                   <Link
                     href={`/dashboard/releases/${r.id}`}
@@ -172,15 +172,10 @@ export default function ReleasesPanel({
           className="studio-input studio-input--grow"
           aria-label="New release title"
         />
-        <button
-          type="button"
-          onClick={addRelease}
-          disabled={isPending}
-          className="ui-btn ui-btn--primary"
-        >
+        <Button onClick={addRelease} disabled={isPending} variant="primary">
           <ButtonIcon name="plus" />
           Add draft
-        </button>
+        </Button>
       </div>
 
       <details className="studio-details-block">
@@ -196,14 +191,14 @@ export default function ReleasesPanel({
           className="studio-input studio-mt-sm"
           placeholder={`releaseTitle,type,releaseDate,trackTitle\nMy EP,EP,2026-06-01,Track 1`}
         />
-        <button
-          type="button"
+        <Button
           onClick={runBulkImport}
           disabled={isPending}
-          className="ui-btn ui-btn--secondary studio-mt-sm"
+          variant="secondary"
+          className="studio-mt-sm"
         >
           Import drafts
-        </button>
+        </Button>
         {importMsg ? (
           <p className="studio-notice studio-notice--success studio-mt-sm">{importMsg}</p>
         ) : null}

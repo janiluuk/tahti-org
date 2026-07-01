@@ -4,6 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useEffect, useState } from 'react'
+import { Button } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -169,14 +170,14 @@ export function Step3Preflight() {
             placeholder="e.g. 'three new originals tonight, requests open at 23:00'"
             className="studio-input"
           />
-          <button
-            type="button"
-            className="ui-btn ui-btn--sm ui-btn--secondary"
+          <Button
             disabled={pinning || !pinText.trim()}
             onClick={() => void pinToChat()}
+            variant="secondary"
+            size="sm"
           >
             {pinned ? 'Pinned ✓' : pinning ? 'Pinning…' : 'Pin'}
-          </button>
+          </Button>
         </div>
       </div>
 

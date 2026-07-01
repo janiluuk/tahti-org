@@ -11,7 +11,7 @@ import {
   type VisualPreset,
   type ColorScheme,
 } from '@tahti/shared'
-import { ButtonIcon, Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
 import { updateReleaseVisual } from './channel-visual-actions'
 
@@ -132,10 +132,10 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
       {error && <p className="studio-notice studio-notice--error">{error}</p>}
       {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-      <button type="button" className="ui-btn ui-btn--primary" onClick={save} disabled={isPending}>
+      <Button onClick={save} disabled={isPending} variant="primary">
         <ButtonIcon name="save" />
         {isPending ? 'Saving…' : 'Save visual style'}
-      </button>
+      </Button>
     </Panel>
   )
 }

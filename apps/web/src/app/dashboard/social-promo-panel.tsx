@@ -6,7 +6,7 @@
 import { useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { DEFAULT_SOCIAL_TEMPLATE } from '@tahti/shared'
-import { ButtonIcon, Panel, StudioCollapse } from '@tahti/ui'
+import { ButtonIcon, Panel, StudioCollapse, Button } from '@tahti/ui'
 import {
   SocialActions,
   SocialField,
@@ -79,27 +79,27 @@ function PlatformSection({
               />
             </SocialField>
             <SocialActions>
-              <button
-                type="button"
-                className="ui-btn ui-btn--sm ui-btn--ghost"
+              <Button
                 disabled={pending || !manualPost.trim()}
                 onClick={onManualPost}
+                variant="ghost"
+                size="sm"
               >
                 {manualPostLabel}
-              </button>
-              <button
-                type="button"
-                className="ui-btn ui-btn--sm ui-btn--danger"
+              </Button>
+              <Button
                 disabled={pending}
                 onClick={() => {
                   if (confirm(`Disconnect ${title}? You'll need to reconnect to post again.`)) {
                     onDisconnect()
                   }
                 }}
+                variant="danger"
+                size="sm"
               >
                 <ButtonIcon name="unlink" />
                 Disconnect
-              </button>
+              </Button>
             </SocialActions>
           </div>
         ) : null}
@@ -289,15 +289,10 @@ export default function SocialPromoPanel({
             />
           </SocialOptions>
           <SocialActions>
-            <button
-              type="button"
-              className="ui-btn ui-btn--primary"
-              disabled={pending}
-              onClick={saveMastodon}
-            >
+            <Button disabled={pending} onClick={saveMastodon} variant="primary">
               <ButtonIcon name="link" />
               {initial.mastodon.connected ? 'Update Mastodon' : 'Connect Mastodon'}
-            </button>
+            </Button>
           </SocialActions>
         </PlatformSection>
 
@@ -368,15 +363,10 @@ export default function SocialPromoPanel({
             />
           </SocialOptions>
           <SocialActions>
-            <button
-              type="button"
-              className="ui-btn ui-btn--primary"
-              disabled={pending}
-              onClick={saveBluesky}
-            >
+            <Button disabled={pending} onClick={saveBluesky} variant="primary">
               <ButtonIcon name="link" />
               {initial.bluesky.connected ? 'Update Bluesky' : 'Connect Bluesky'}
-            </button>
+            </Button>
           </SocialActions>
         </PlatformSection>
 
@@ -439,9 +429,7 @@ export default function SocialPromoPanel({
                 />
               </SocialOptions>
               <SocialActions>
-                <button
-                  type="button"
-                  className="ui-btn ui-btn--primary"
+                <Button
                   disabled={pending}
                   onClick={() => {
                     startTransition(async () => {
@@ -457,10 +445,11 @@ export default function SocialPromoPanel({
                       }
                     })
                   }}
+                  variant="primary"
                 >
                   <ButtonIcon name="link" />
                   Update X settings
-                </button>
+                </Button>
               </SocialActions>
             </>
           ) : (
@@ -536,9 +525,7 @@ export default function SocialPromoPanel({
                 />
               </SocialOptions>
               <SocialActions>
-                <button
-                  type="button"
-                  className="ui-btn ui-btn--primary"
+                <Button
                   disabled={pending}
                   onClick={() => {
                     startTransition(async () => {
@@ -554,10 +541,11 @@ export default function SocialPromoPanel({
                       }
                     })
                   }}
+                  variant="primary"
                 >
                   <ButtonIcon name="link" />
                   Update Instagram settings
-                </button>
+                </Button>
               </SocialActions>
             </>
           ) : (

@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ButtonIcon, SidebarNavIconSvg } from '@tahti/ui'
+import { ButtonIcon, SidebarNavIconSvg, Button } from '@tahti/ui'
 import type { CollectionOption } from '../upload-actions'
 import { finaliseUpload } from '../upload-actions'
 import { getPendingUpload, clearPendingUpload } from '../_pending-uploads'
@@ -329,9 +329,9 @@ export function UploadInProgress({
                   )}
                   {etaSeconds !== null && <span>ETA {formatEta(etaSeconds)}</span>}
                 </div>
-                <button type="button" className="ui-btn ui-btn--ghost ui-btn--sm" onClick={cancel}>
+                <Button onClick={cancel} variant="ghost" size="sm">
                   Cancel
-                </button>
+                </Button>
               </>
             )}
             {uploadState === 'completing' && (
@@ -516,15 +516,14 @@ export function UploadInProgress({
             <Link href="/dashboard/upload" className="ui-btn ui-btn--ghost ui-btn--sm">
               Add another file
             </Link>
-            <button
-              type="button"
-              className="ui-btn ui-btn--primary"
+            <Button
               disabled={isActive || tagsLoading}
               title={isActive ? 'Upload in progress' : ''}
+              variant="primary"
             >
               <ButtonIcon name="save" />
               {isActive ? 'Upload in progress…' : 'Save as draft'}
-            </button>
+            </Button>
           </>
         )}
       </div>

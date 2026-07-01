@@ -11,6 +11,7 @@ import {
   fetchReleaseTrackVersions,
   prepareReleaseTrackVersionUpload,
 } from './release-actions'
+import { Button } from '@tahti/ui'
 
 export function ReleaseTrackVersionPanel({
   releaseId,
@@ -110,14 +111,15 @@ export function ReleaseTrackVersionPanel({
             v{v.versionNumber} {v.versionLabel} — {v.status}
             {v.isActive ? ' (active)' : ''}
             {v.status === 'READY' && !v.isActive && (
-              <button
-                type="button"
+              <Button
                 disabled={isPending}
                 onClick={() => activate(v.id)}
-                className="ui-btn ui-btn--sm ui-btn--ghost studio-ml-sm"
+                variant="ghost"
+                size="sm"
+                className="studio-ml-sm"
               >
                 Activate
-              </button>
+              </Button>
             )}
           </li>
         ))}

@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { SocialLinkIcon } from '@/components/social-link-icon'
+import { Button } from '@tahti/ui'
 
 export type ChannelLink = { label: string; url: string }
 
@@ -59,19 +60,19 @@ export default function ChannelLinksPanel({ initial, onDraftChange }: Props) {
               className="studio-input studio-input--grow"
               maxLength={2000}
             />
-            <button
-              type="button"
-              className="ui-btn ui-btn--sm ui-btn--ghost"
+            <Button
               onClick={() => removeLink(i)}
               aria-label="Remove link"
+              variant="ghost"
+              size="sm"
             >
               Remove
-            </button>
+            </Button>
           </div>
         ))}
-        <button type="button" className="ui-btn ui-btn--sm ui-btn--secondary" onClick={addLink}>
+        <Button onClick={addLink} variant="secondary" size="sm">
           + Add link
-        </button>
+        </Button>
       </div>
     </>
   )

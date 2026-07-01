@@ -6,7 +6,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { SLIDESHOW_PRESETS, SLIDESHOW_PRESET_LABELS, type SlideshowPreset } from '@tahti/shared'
-import { ButtonIcon, Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { updateChannelVisual } from './channel-visual-actions'
 
 export type ChannelSlideshowDraft = {
@@ -132,15 +132,10 @@ export default function ChannelSlideshowPanel({ initial, bare = false, onDraftCh
       {message && <p className="studio-notice studio-notice--success">{message}</p>}
 
       <div className="studio-actions studio-mt-md">
-        <button
-          type="button"
-          className="ui-btn ui-btn--primary"
-          onClick={save}
-          disabled={isPending}
-        >
+        <Button onClick={save} disabled={isPending} variant="primary">
           <ButtonIcon name="save" />
           {isPending ? 'Saving…' : 'Save slideshow'}
-        </button>
+        </Button>
       </div>
     </>
   )

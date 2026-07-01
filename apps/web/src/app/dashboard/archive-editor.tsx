@@ -6,7 +6,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
-import { ButtonIcon } from '@tahti/ui'
+import { ButtonIcon, Button } from '@tahti/ui'
 import type { TracklistEntry } from '@tahti/shared'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { updateArchiveMetadata } from './archive-actions'
@@ -85,13 +85,9 @@ export default function ArchiveEditor({
           </div>
         </div>
         {open ? (
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="ui-btn ui-btn--sm ui-btn--ghost"
-          >
+          <Button onClick={() => setOpen(false)} variant="ghost" size="sm">
             Close
-          </button>
+          </Button>
         ) : isReady && isPublic ? (
           <div className="studio-row-actions">
             {channelSlug && (
@@ -103,31 +99,19 @@ export default function ArchiveEditor({
                 View on channel →
               </NextLink>
             )}
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="ui-btn ui-btn--sm ui-btn--ghost"
-            >
+            <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
               Re-edit
-            </button>
+            </Button>
           </div>
         ) : isReady ? (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="ui-btn ui-btn--sm ui-btn--primary"
-          >
+          <Button onClick={() => setOpen(true)} variant="primary" size="sm">
             <ButtonIcon name="send" />
             Polish &amp; publish →
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            className="ui-btn ui-btn--sm ui-btn--ghost"
-          >
+          <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
             Edit metadata
-          </button>
+          </Button>
         )}
       </div>
 
@@ -183,18 +167,13 @@ export default function ArchiveEditor({
           />
 
           <div className="studio-actions studio-mt-lg">
-            <button
-              type="button"
-              onClick={save}
-              disabled={isPending || !title.trim()}
-              className="ui-btn ui-btn--primary"
-            >
+            <Button onClick={save} disabled={isPending || !title.trim()} variant="primary">
               <ButtonIcon name="save" />
               {isPending ? 'Saving…' : 'Save'}
-            </button>
-            <button type="button" onClick={() => setOpen(false)} className="ui-btn ui-btn--ghost">
+            </Button>
+            <Button onClick={() => setOpen(false)} variant="ghost">
               Cancel
-            </button>
+            </Button>
           </div>
           {error && <p className="studio-notice studio-notice--error">{error}</p>}
         </div>

@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ButtonIcon, Panel, StudioCollapse } from '@tahti/ui'
+import { ButtonIcon, Panel, StudioCollapse, Button } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -114,15 +114,10 @@ function VenueCard({ venue, onUpdate }: { venue: Venue; onUpdate: (v: Venue) => 
           onChange={(e) => setDescription(e.target.value)}
         />
       </label>
-      <button
-        type="button"
-        className="ui-btn ui-btn--primary ui-btn--sm"
-        onClick={saveDescription}
-        disabled={saving}
-      >
+      <Button onClick={saveDescription} disabled={saving} variant="primary" size="sm">
         <ButtonIcon name="save" />
         {saving ? 'Saving…' : 'Save description'}
-      </button>
+      </Button>
       {msg && (
         <span
           className={`studio-text-sm studio-ml-sm ${msg === 'Saved.' ? 'studio-text-success' : 'studio-text-error'}`}
@@ -188,13 +183,14 @@ function BroadcastList({
                 <span className="studio-text-muted-sm studio-ml-sm">{b.description}</span>
               )}
             </div>
-            <button
-              type="button"
-              className="ui-btn ui-btn--ghost ui-btn--sm studio-text-error"
+            <Button
               onClick={() => cancel(b.id)}
+              variant="ghost"
+              size="sm"
+              className="studio-text-error"
             >
               Cancel
-            </button>
+            </Button>
           </li>
         )
       })}
@@ -288,14 +284,16 @@ function AddBroadcastForm({
           />
         </label>
       </div>
-      <button
+      <Button
         type="submit"
-        className="ui-btn ui-btn--primary ui-btn--sm studio-mt-sm"
         disabled={pending || !startAt}
+        variant="primary"
+        size="sm"
+        className="studio-mt-sm"
       >
         <ButtonIcon name="plus" />
         {pending ? 'Adding…' : 'Add broadcast'}
-      </button>
+      </Button>
       {error && <p className="studio-text-error studio-text-sm studio-mt-xs">{error}</p>}
     </form>
   )

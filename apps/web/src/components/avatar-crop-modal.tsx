@@ -4,7 +4,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ButtonIcon } from '@tahti/ui'
+import { ButtonIcon, Button } from '@tahti/ui'
 
 const VIEWPORT_SIZE = 280
 const OUTPUT_SIZE = 512
@@ -165,23 +165,17 @@ export function AvatarCropModal({ imageSrc, onCancel, onCropped }: Props) {
           </>
         )}
         <div className="studio-actions">
-          <button
-            type="button"
-            className="ui-btn ui-btn--ghost"
-            onClick={onCancel}
-            disabled={saving}
-          >
+          <Button onClick={onCancel} disabled={saving} variant="ghost">
             Cancel
-          </button>
-          <button
-            type="button"
-            className="ui-btn ui-btn--primary"
+          </Button>
+          <Button
             onClick={handleSave}
             disabled={!ready || saving || Boolean(error)}
+            variant="primary"
           >
             <ButtonIcon name="check" />
             {saving ? 'Saving…' : 'Use this avatar'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

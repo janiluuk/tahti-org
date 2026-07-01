@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js'
 import { editListFromV0Trim } from '@tahti/audio-edit'
-import { ButtonIcon } from '@tahti/ui'
+import { ButtonIcon, Button } from '@tahti/ui'
 import { fetchArchiveEditorSource, renderArchiveEditList } from './archive-actions'
 
 function formatSec(sec: number): string {
@@ -184,13 +184,9 @@ export function ArchiveTrimEditor({
     <div className="studio-trim-editor">
       <div className="studio-row studio-row--between studio-mb-sm">
         <h4 className="studio-text-strong-sm studio-m-0">Trim &amp; fade (v0)</h4>
-        <button
-          type="button"
-          className="ui-btn ui-btn--ghost ui-btn--sm"
-          onClick={() => setOpen(!open)}
-        >
+        <Button onClick={() => setOpen(!open)} variant="ghost" size="sm">
           {open ? 'Close trimmer' : 'Open trimmer'}
-        </button>
+        </Button>
       </div>
       {!open ? (
         <p className="studio-text-muted-sm studio-m-0">
@@ -362,23 +358,17 @@ export function ArchiveTrimEditor({
                   disabled={isPending}
                   className="studio-input studio-input--grow"
                 />
-                <button
-                  type="button"
-                  onClick={playSelection}
-                  className="ui-btn ui-btn--ghost ui-btn--sm"
-                  disabled={isPending}
-                >
+                <Button onClick={playSelection} disabled={isPending} variant="ghost" size="sm">
                   Preview
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
                   onClick={bounce}
                   disabled={isPending || !versionLabel.trim()}
-                  className="ui-btn ui-btn--primary"
+                  variant="primary"
                 >
                   <ButtonIcon name="save" />
                   {isPending ? 'Saving…' : 'Save to archive'}
-                </button>
+                </Button>
               </div>
             </>
           )}

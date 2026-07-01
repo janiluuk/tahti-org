@@ -4,7 +4,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Panel } from '@tahti/ui'
+import { Panel, Button } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -186,13 +186,9 @@ export function MentionsPanel() {
                       <span>@{m.username}</span>
                     )}
                   </span>
-                  <button
-                    type="button"
-                    className="ui-btn ui-btn--sm ui-btn--ghost"
-                    onClick={() => unmuteHandle(m.username)}
-                  >
+                  <Button onClick={() => unmuteHandle(m.username)} variant="ghost" size="sm">
                     Unmute
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ul>
@@ -208,13 +204,14 @@ export function MentionsPanel() {
               aria-label="Mute artist by username"
               maxLength={40}
             />
-            <button
+            <Button
               type="submit"
-              className="ui-btn ui-btn--sm ui-btn--secondary"
               disabled={muting || !muteInput.trim()}
+              variant="secondary"
+              size="sm"
             >
               {muting ? 'Muting…' : 'Mute'}
-            </button>
+            </Button>
           </form>
           {muteError && (
             <p className="studio-notice studio-notice--error studio-mt-xs">{muteError}</p>

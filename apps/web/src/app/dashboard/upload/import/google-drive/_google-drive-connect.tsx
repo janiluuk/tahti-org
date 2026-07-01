@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ButtonIcon, StatusPill } from '@tahti/ui'
+import { ButtonIcon, StatusPill, Button } from '@tahti/ui'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -56,19 +56,19 @@ export function GoogleDriveConnectPanel({
     return (
       <div className="import-connect import-connect--connected">
         <StatusPill tone="green">Connected to Google Drive</StatusPill>
-        <button
-          type="button"
-          className="ui-btn ui-btn--ghost ui-btn--sm"
+        <Button
           onClick={() => void handleDisconnect()}
           disabled={disconnecting}
+          variant="ghost"
+          size="sm"
         >
           {disconnecting ? 'Disconnecting…' : 'Disconnect'}
-        </button>
+        </Button>
         {onConnected ? (
-          <button type="button" className="ui-btn ui-btn--primary" onClick={onConnected}>
+          <Button onClick={onConnected} variant="primary">
             <ButtonIcon name="import" />
             Choose files from Drive
-          </button>
+          </Button>
         ) : null}
       </div>
     )

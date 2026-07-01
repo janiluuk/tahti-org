@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { ButtonIcon } from '@tahti/ui'
+import { ButtonIcon, Button } from '@tahti/ui'
 import { addModerator, removeModerator, type ModeratorRow } from './moderator-actions'
 
 export default function ModeratorsPanel({
@@ -77,15 +77,15 @@ export default function ModeratorsPanel({
                 <strong>{m.displayName}</strong>{' '}
                 <span className="studio-text-muted-sm">@{m.username}</span>
               </span>
-              <button
-                type="button"
+              <Button
                 onClick={() => remove(m.userId, m.username)}
                 disabled={isPending}
-                className="ui-btn ui-btn--danger ui-btn--sm"
+                variant="danger"
+                size="sm"
               >
                 <ButtonIcon name="unlink" />
                 Revoke
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
@@ -98,15 +98,10 @@ export default function ModeratorsPanel({
           placeholder="Username to add as moderator"
           className="studio-input studio-flex-1"
         />
-        <button
-          type="button"
-          onClick={add}
-          disabled={isPending || !username.trim()}
-          className="ui-btn ui-btn--primary"
-        >
+        <Button onClick={add} disabled={isPending || !username.trim()} variant="primary">
           <ButtonIcon name="plus" />
           Add moderator
-        </button>
+        </Button>
       </div>
       {error && <p className="studio-notice studio-notice--error">{error}</p>}
       {message && <p className="studio-notice studio-notice--success">{message}</p>}

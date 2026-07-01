@@ -7,7 +7,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
-import { ButtonIcon, Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { publishRelease, updateReleaseSmartLinks } from '../../release-actions'
 import ReleaseOpsPanel, { parseCredits } from '../../release-ops-panel'
 import { ReleaseArtworkUpload } from '../../release-artwork-upload'
@@ -101,15 +101,10 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
                   : ''}
               </Link>
             ) : (
-              <button
-                type="button"
-                onClick={publish}
-                disabled={isPending}
-                className="ui-btn ui-btn--sm ui-btn--primary"
-              >
+              <Button onClick={publish} disabled={isPending} variant="primary" size="sm">
                 <ButtonIcon name="send" />
                 Publish
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -149,15 +144,10 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
           </div>
         ))}
         <div className="studio-actions studio-mt-md">
-          <button
-            type="button"
-            onClick={saveSmartLinks}
-            disabled={isPending}
-            className="ui-btn ui-btn--primary"
-          >
+          <Button onClick={saveSmartLinks} disabled={isPending} variant="primary">
             <ButtonIcon name="save" />
             Save links
-          </button>
+          </Button>
         </div>
         {error && <p className="studio-notice studio-notice--error studio-mt-sm">{error}</p>}
       </Panel>

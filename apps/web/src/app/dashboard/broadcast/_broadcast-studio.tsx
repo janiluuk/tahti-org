@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { BroadcastStatusBar, ButtonIcon, Panel, StatusPill, Text } from '@tahti/ui'
+import { BroadcastStatusBar, ButtonIcon, Panel, StatusPill, Text, Button } from '@tahti/ui'
 import HlsPlayer from '@/app/c/[slug]/hls-player'
 import { resolveChannelUrl } from '@/lib/app-url'
 import StreamSettingsPanel from '../stream-settings'
@@ -197,14 +197,10 @@ export function BroadcastStudio({
         <>
           <StreamSettingsPanel initial={streamSettings} isLive={isLive || isPreview} />
           <div className="studio-actions">
-            <button
-              type="button"
-              className="ui-btn ui-btn--primary"
-              onClick={() => setActiveStep(2)}
-            >
+            <Button onClick={() => setActiveStep(2)} variant="primary">
               <ButtonIcon name="arrowRight" />
               Continue to test signal →
-            </button>
+            </Button>
           </div>
         </>
       )}
@@ -230,18 +226,13 @@ export function BroadcastStudio({
             </Text>
           )}
           <div className="studio-actions">
-            <button type="button" className="ui-btn ui-btn--ghost" onClick={() => setActiveStep(1)}>
+            <Button onClick={() => setActiveStep(1)} variant="ghost">
               ← Back to credentials
-            </button>
-            <button
-              type="button"
-              className="ui-btn ui-btn--primary"
-              disabled={!signalConfirmed}
-              onClick={() => setActiveStep(3)}
-            >
+            </Button>
+            <Button disabled={!signalConfirmed} onClick={() => setActiveStep(3)} variant="primary">
               <ButtonIcon name="arrowRight" />
               Continue to pre-flight →
-            </button>
+            </Button>
           </div>
         </Panel>
       )}
@@ -257,17 +248,13 @@ export function BroadcastStudio({
           </div>
           <Step3Preflight />
           <div className="studio-actions">
-            <button type="button" className="ui-btn ui-btn--ghost" onClick={() => setActiveStep(2)}>
+            <Button onClick={() => setActiveStep(2)} variant="ghost">
               ← Back to test signal
-            </button>
-            <button
-              type="button"
-              className="ui-btn ui-btn--primary"
-              onClick={() => setActiveStep(4)}
-            >
+            </Button>
+            <Button onClick={() => setActiveStep(4)} variant="primary">
               <ButtonIcon name="arrowRight" />
               Continue to go live →
-            </button>
+            </Button>
           </div>
         </Panel>
       )}

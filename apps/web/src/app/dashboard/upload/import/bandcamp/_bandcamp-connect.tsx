@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ButtonIcon, StatusPill } from '@tahti/ui'
+import { ButtonIcon, StatusPill, Button } from '@tahti/ui'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -54,14 +54,14 @@ export function BandcampConnectPanel({
     return (
       <div className="import-connect import-connect--connected">
         <StatusPill tone="green">Connected to Bandcamp</StatusPill>
-        <button
-          type="button"
-          className="ui-btn ui-btn--ghost ui-btn--sm"
+        <Button
           onClick={() => void handleDisconnect()}
           disabled={disconnecting}
+          variant="ghost"
+          size="sm"
         >
           {disconnecting ? 'Disconnecting…' : 'Disconnect'}
-        </button>
+        </Button>
       </div>
     )
   }

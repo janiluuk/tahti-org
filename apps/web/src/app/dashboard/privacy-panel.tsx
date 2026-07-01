@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ButtonIcon, Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { requestAccountDeletion } from './privacy-actions'
 
 export default function PrivacyPanel({ username, apiUrl }: { username: string; apiUrl: string }) {
@@ -67,14 +67,15 @@ export default function PrivacyPanel({ username, apiUrl }: { username: string; a
           aria-label="Reason for deletion request"
           placeholder="Brief reason (optional context for the board)"
         />
-        <button
+        <Button
           type="submit"
-          className="ui-btn ui-btn--danger studio-mt-sm"
           disabled={pending || !reason.trim()}
+          variant="danger"
+          className="studio-mt-sm"
         >
           <ButtonIcon name="trash" />
           {pending ? 'Submitting…' : 'Submit deletion request'}
-        </button>
+        </Button>
       </form>
       {msg ? (
         <p

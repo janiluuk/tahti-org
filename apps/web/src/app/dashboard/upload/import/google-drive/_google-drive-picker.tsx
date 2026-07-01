@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ButtonIcon, StatusPill } from '@tahti/ui'
+import { ButtonIcon, StatusPill, Button } from '@tahti/ui'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -207,15 +207,10 @@ export function GoogleDrivePickerPanel({ connected }: { connected: boolean }) {
         Pick one or more audio files from your Google Drive. Tahti downloads them server-side and
         queues transcoding — nothing passes through your browser disk.
       </p>
-      <button
-        type="button"
-        className="ui-btn ui-btn--primary"
-        onClick={() => void openPicker()}
-        disabled={opening || importing}
-      >
+      <Button onClick={() => void openPicker()} disabled={opening || importing} variant="primary">
         <ButtonIcon name="import" />
         {opening ? 'Opening picker…' : importing ? 'Queueing import…' : 'Choose files from Drive'}
-      </button>
+      </Button>
       {error ? <p className="import-connect__note import-connect__note--error">{error}</p> : null}
 
       {jobs.length > 0 ? (

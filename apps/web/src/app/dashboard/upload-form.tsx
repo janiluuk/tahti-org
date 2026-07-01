@@ -5,7 +5,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { SidebarNavIconSvg } from '@tahti/ui'
+import { SidebarNavIconSvg, Button } from '@tahti/ui'
 import { prepareUpload, completeUpload, getArchiveItemStatus } from './actions'
 import {
   ArchiveMetadataFields,
@@ -152,14 +152,14 @@ export default function UploadForm({ onUploaded }: { onUploaded?: () => void }) 
 
       {showMeta && <ArchiveMetadataFields state={meta} onChange={setMeta} disabled={isLoading} />}
 
-      <button type="submit" disabled={isLoading} className="ui-btn ui-btn--primary studio-mt-md">
+      <Button type="submit" disabled={isLoading} variant="primary" className="studio-mt-md">
         <SidebarNavIconSvg name="upload" />
         {state === 'preparing' && 'Preparing...'}
         {state === 'uploading' && `Uploading ${progress}%`}
         {state === 'completing' && 'Registering upload...'}
         {state === 'transcoding' && `Transcoding… ${progress}%`}
         {(state === 'idle' || state === 'done' || state === 'error') && 'Upload'}
-      </button>
+      </Button>
 
       {state === 'done' && (
         <p className="studio-text-success studio-mt-sm">

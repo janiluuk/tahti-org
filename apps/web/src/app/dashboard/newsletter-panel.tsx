@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ButtonIcon, Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { createNewsletterDraft, sendNewsletterDraft } from './actions'
 import { renderNewsletterPreview } from '@/lib/render-newsletter-preview'
 
@@ -200,15 +200,14 @@ export default function NewsletterPanel({
         Fan subscribers only (requires FAN_NEWSLETTER on a fan tier)
       </label>
 
-      <button
-        type="button"
+      <Button
         onClick={() => void handleCreate()}
         disabled={saving || !subject.trim() || !bodyMd.trim()}
-        className="ui-btn ui-btn--primary"
+        variant="primary"
       >
         <ButtonIcon name="save" />
         {saving ? 'Saving…' : 'Save draft'}
-      </button>
+      </Button>
 
       {justSavedId &&
         (() => {

@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ButtonIcon } from '@tahti/ui'
+import { ButtonIcon, Button } from '@tahti/ui'
 import { approveBetaApplication, rejectBetaApplication, resendBetaSetupLink } from '../actions'
 
 export type BetaApplicationRow = {
@@ -85,15 +85,10 @@ function BetaApproveForm({ application }: { application: BetaApplicationRow }) {
         <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
       </label>
       <div className="admin-beta-action-row">
-        <button
-          type="button"
-          className="ui-btn ui-btn--primary"
-          disabled={pending}
-          onClick={onApprove}
-        >
+        <Button disabled={pending} onClick={onApprove} variant="primary">
           <ButtonIcon name="check" />
           {pending ? 'Approving…' : 'Approve'}
-        </button>
+        </Button>
         <RejectButton id={application.id} disabled={pending} />
       </div>
       {error ? <p className="admin-form-error">{error}</p> : null}
@@ -112,14 +107,9 @@ function RejectButton({ id, disabled }: { id: string; disabled?: boolean }) {
   }
 
   return (
-    <button
-      type="button"
-      className="ui-btn ui-btn--ghost"
-      disabled={disabled || pending}
-      onClick={onReject}
-    >
+    <Button disabled={disabled || pending} onClick={onReject} variant="ghost">
       {pending ? 'Rejecting…' : 'Reject'}
-    </button>
+    </Button>
   )
 }
 
@@ -142,14 +132,9 @@ function ResendSetupButton({ id }: { id: string }) {
 
   return (
     <div>
-      <button
-        type="button"
-        className="ui-btn ui-btn--secondary"
-        disabled={pending}
-        onClick={onResend}
-      >
+      <Button disabled={pending} onClick={onResend} variant="secondary">
         {pending ? 'Sending…' : 'Resend setup link'}
-      </button>
+      </Button>
       {setupUrl ? (
         <p className="admin-text-muted">
           New link:{' '}

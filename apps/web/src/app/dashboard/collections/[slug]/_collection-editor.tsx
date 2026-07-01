@@ -6,7 +6,7 @@
 import { useState, useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ButtonIcon } from '@tahti/ui'
+import { ButtonIcon, Button } from '@tahti/ui'
 import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
 import { QUALITY_BADGE_LABEL } from '@tahti/shared'
 import {
@@ -310,15 +310,14 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
           {settingsError && <p className="studio-text-error studio-text-sm">{settingsError}</p>}
 
           {settingsDirty && (
-            <button
-              type="button"
-              className="ui-btn ui-btn--primary"
+            <Button
               onClick={() => void saveSettings()}
               disabled={settingsSaving || isPending}
+              variant="primary"
             >
               <ButtonIcon name="save" />
               {settingsSaving ? 'Saving…' : 'Save settings'}
-            </button>
+            </Button>
           )}
           {settingsSaved && !settingsDirty && (
             <span className="collection-editor__saved">Saved</span>
@@ -328,33 +327,30 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
           <div className="collection-editor__danger">
             <h3 className="collection-editor__danger-title">Danger zone</h3>
             {!confirmDelete ? (
-              <button
-                type="button"
-                className="ui-btn ui-btn--ghost ui-btn--sm collection-editor__delete-btn"
+              <Button
                 onClick={() => setConfirmDelete(true)}
+                variant="ghost"
+                size="sm"
+                className="collection-editor__delete-btn"
               >
                 Delete collection
-              </button>
+              </Button>
             ) : (
               <div className="collection-editor__confirm-delete">
                 <p>Delete &ldquo;{initial.name}&rdquo;? This removes it from all smart links.</p>
                 <div className="collection-editor__confirm-btns">
-                  <button
-                    type="button"
-                    className="ui-btn ui-btn--ghost ui-btn--sm"
-                    onClick={() => setConfirmDelete(false)}
-                  >
+                  <Button onClick={() => setConfirmDelete(false)} variant="ghost" size="sm">
                     Cancel
-                  </button>
-                  <button
-                    type="button"
-                    className="ui-btn ui-btn--primary collection-editor__delete-confirm"
+                  </Button>
+                  <Button
                     onClick={() => void handleDelete()}
                     disabled={deleting}
+                    variant="primary"
+                    className="collection-editor__delete-confirm"
                   >
                     <ButtonIcon name="trash" />
                     {deleting ? 'Deleting…' : 'Yes, delete'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -372,20 +368,22 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               <Link href="/dashboard/archive" className="ui-btn ui-btn--ghost ui-btn--sm">
                 + Tahti library
               </Link>
-              <button
-                type="button"
-                className="ui-btn ui-btn--ghost ui-btn--sm collection-editor__add-btn--spotify"
+              <Button
                 onClick={() => setSpotifyModalOpen(true)}
+                variant="ghost"
+                size="sm"
+                className="collection-editor__add-btn--spotify"
               >
                 + Spotify
-              </button>
-              <button
-                type="button"
-                className="ui-btn ui-btn--ghost ui-btn--sm collection-editor__add-btn--mixcloud"
+              </Button>
+              <Button
                 onClick={() => setMixcloudModalOpen(true)}
+                variant="ghost"
+                size="sm"
+                className="collection-editor__add-btn--mixcloud"
               >
                 + Mixcloud
-              </button>
+              </Button>
             </div>
           </div>
 

@@ -12,6 +12,7 @@ import {
   DataRowListRow,
   StatusPill,
   brandTokens,
+  Button,
 } from '@tahti/ui'
 import {
   RTMP_PROVIDERS,
@@ -165,13 +166,13 @@ export function MultistreamTargetsPanel({
                 <StatusPill tone={mirroring ? 'green' : 'amber'}>
                   {mirroring ? 'MIRRORING' : 'PAUSED'}
                 </StatusPill>
-                <button
-                  type="button"
-                  className="ui-btn ui-btn--sm ui-btn--secondary"
+                <Button
                   onClick={() => setEditingId((prev) => (prev === t.id ? null : t.id))}
+                  variant="secondary"
+                  size="sm"
                 >
                   Edit
-                </button>
+                </Button>
               </DataRowListRow>
               {editingId === t.id && (
                 <DataRowListRow columns="1fr">
@@ -191,13 +192,9 @@ export function MultistreamTargetsPanel({
 
       <div className="multistream-footer">
         {targets.length < MAX_TARGETS && !adding && (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="ui-btn ui-btn--sm ui-btn--primary"
-          >
+          <Button onClick={() => setAdding(true)} variant="primary" size="sm">
             + Add target
-          </button>
+          </Button>
         )}
         <p className="admin-footnote multistream-footer__note">
           This is an audio-only simulcast — YouTube/Twitch may reject music-only streams without
@@ -285,25 +282,25 @@ export function MultistreamTargetsPanel({
           {error && <p className="studio-notice studio-notice--error studio-mb-sm">{error}</p>}
 
           <div className="studio-actions">
-            <button
-              type="button"
+            <Button
               onClick={() => void addTarget()}
               disabled={saving || !form.label || !form.streamKey}
-              className="ui-btn ui-btn--sm ui-btn--primary"
+              variant="primary"
+              size="sm"
             >
               <ButtonIcon name="save" />
               {saving ? 'Saving…' : 'Save destination'}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
               onClick={() => {
                 setAdding(false)
                 setError(null)
               }}
-              className="ui-btn ui-btn--sm ui-btn--secondary"
+              variant="secondary"
+              size="sm"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -406,14 +403,14 @@ function EditTargetForm({
           <div className="studio-text-muted-sm studio-mt-sm studio-font-mono">{revealed}</div>
         ) : (
           <div className="studio-mt-sm">
-            <button
-              type="button"
+            <Button
               onClick={() => void reveal()}
               disabled={revealing}
-              className="ui-btn ui-btn--sm ui-btn--secondary"
+              variant="secondary"
+              size="sm"
             >
               {revealing ? 'Revealing…' : `Reveal (••••••${target.keyLast4 ?? '????'})`}
-            </button>
+            </Button>
           </div>
         )}
         {revealError && <p className="studio-text-error studio-m-0 studio-mt-sm">{revealError}</p>}
@@ -430,22 +427,17 @@ function EditTargetForm({
       {saveError && <p className="studio-notice studio-notice--error studio-mb-sm">{saveError}</p>}
 
       <div className="studio-actions">
-        <button
-          type="button"
-          onClick={() => void save()}
-          disabled={saving}
-          className="ui-btn ui-btn--sm ui-btn--primary"
-        >
+        <Button onClick={() => void save()} disabled={saving} variant="primary" size="sm">
           <ButtonIcon name="save" />
           {saving ? 'Saving…' : 'Save changes'}
-        </button>
-        <button type="button" onClick={onClose} className="ui-btn ui-btn--sm ui-btn--secondary">
+        </Button>
+        <Button onClick={onClose} variant="secondary" size="sm">
           Close
-        </button>
-        <button type="button" onClick={onDelete} className="ui-btn ui-btn--danger ui-btn--sm">
+        </Button>
+        <Button onClick={onDelete} variant="danger" size="sm">
           <ButtonIcon name="trash" />
           Remove
-        </button>
+        </Button>
       </div>
     </div>
   )

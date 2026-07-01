@@ -9,6 +9,7 @@ import { COUNTRY_OPTIONS } from '@/lib/country-options'
 import { flagEmoji } from '@/lib/flag-emoji'
 import { AvatarCropModal } from '@/components/avatar-crop-modal'
 import { completeAvatarUpload, prepareAvatarUpload } from './channel-identity-actions'
+import { Button } from '@tahti/ui'
 
 const MAX_GENRES = 6
 const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp']
@@ -150,14 +151,14 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
             onChange={(e) => setAvatarUrlInput(e.target.value)}
             className="studio-input studio-input--grow"
           />
-          <button
-            type="button"
-            className="ui-btn ui-btn--sm ui-btn--ghost"
+          <Button
             disabled={avatarBusy || !avatarUrlInput.trim()}
             onClick={onLoadUrl}
+            variant="ghost"
+            size="sm"
           >
             Use URL
-          </button>
+          </Button>
         </div>
         {avatarBusy && <p className="studio-text-muted-sm studio-mt-sm">Uploading…</p>}
         {avatarError && (

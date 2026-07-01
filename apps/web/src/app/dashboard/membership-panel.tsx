@@ -5,7 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ButtonIcon, Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { startMembershipCheckout, startMembershipPortal } from './actions'
 
 export default function MembershipPanel({
@@ -93,26 +93,16 @@ export default function MembershipPanel({
             </p>
           )}
           {hasStripeSubscription ? (
-            <button
-              type="button"
-              className="ui-btn ui-btn--ghost"
-              onClick={openPortal}
-              disabled={isPending}
-            >
+            <Button onClick={openPortal} disabled={isPending} variant="ghost">
               {isPending ? 'Opening…' : 'Manage billing'}
-            </button>
+            </Button>
           ) : subscriptionMigrationRequired ? (
-            <button
-              type="button"
-              className="ui-btn ui-btn--primary"
-              onClick={pay}
-              disabled={isPending}
-            >
+            <Button onClick={pay} disabled={isPending} variant="primary">
               <ButtonIcon name="check" />
               {isPending
                 ? 'Processing…'
                 : `Subscribe for auto-renewal (€${(priceCents / 100).toFixed(0)}/year)`}
-            </button>
+            </Button>
           ) : null}
         </div>
       </Panel>
@@ -141,15 +131,14 @@ export default function MembershipPanel({
       )}
       {error && <p className="studio-notice studio-notice--error studio-mb-sm">{error}</p>}
       {message && <p className="studio-notice studio-notice--success studio-mb-sm">{message}</p>}
-      <button
-        type="button"
-        className="ui-btn ui-btn--primary"
+      <Button
         onClick={pay}
         disabled={isPending || !emailVerified || status === 'PENDING_EMAIL'}
+        variant="primary"
       >
         <ButtonIcon name="check" />
         {isPending ? 'Processing…' : `Pay €${(priceCents / 100).toFixed(0)} / year`}
-      </button>
+      </Button>
     </Panel>
   )
 }

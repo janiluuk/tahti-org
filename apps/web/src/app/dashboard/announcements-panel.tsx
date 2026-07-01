@@ -4,7 +4,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ButtonIcon, Panel } from '@tahti/ui'
+import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { postAnnouncement, deleteAnnouncement } from './actions'
 
 interface Announcement {
@@ -61,13 +61,14 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
       {announcements.map((a) => (
         <div key={a.id} className="studio-announce-item">
           <span className="studio-announce-item__body">{a.body}</span>
-          <button
+          <Button
             onClick={() => void handleDelete(a.id)}
-            className="ui-btn ui-btn--sm ui-btn--ghost"
             aria-label="Delete announcement"
+            variant="ghost"
+            size="sm"
           >
             ×
-          </button>
+          </Button>
         </div>
       ))}
 
@@ -83,14 +84,14 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
           disabled={posting || announcements.length >= 3}
           className="studio-input studio-flex-1"
         />
-        <button
+        <Button
           onClick={() => void handlePost()}
           disabled={posting || !draft.trim() || announcements.length >= 3}
-          className="ui-btn ui-btn--primary"
+          variant="primary"
         >
           <ButtonIcon name="plus" />
           {posting ? 'Posting…' : 'Pin'}
-        </button>
+        </Button>
       </div>
 
       {error && <p className="studio-notice studio-notice--error studio-mt-sm">{error}</p>}

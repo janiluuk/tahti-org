@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import NextLink from 'next/link'
-import { Panel, StatusPill } from '@tahti/ui'
+import { Panel, StatusPill, Button } from '@tahti/ui'
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ''
 
@@ -50,14 +50,14 @@ export function ImportConnectionsPanel({ connections }: { connections: Connectio
                 Import →
               </NextLink>
               {row.connected ? (
-                <button
-                  type="button"
-                  className="ui-btn ui-btn--ghost ui-btn--sm"
+                <Button
                   disabled={busy === row.disconnectPath}
                   onClick={() => void disconnect(row.disconnectPath, row.label)}
+                  variant="ghost"
+                  size="sm"
                 >
                   {busy === row.disconnectPath ? 'Disconnecting…' : 'Disconnect'}
-                </button>
+                </Button>
               ) : null}
             </div>
           </li>
