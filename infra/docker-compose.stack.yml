@@ -11,12 +11,17 @@ name: tahti-stack
 x-app-env: &app-env
   NODE_ENV: production
   # PLAT-003: transaction pool via PgBouncer (migrations use direct postgres in db-push)
-  DATABASE_URL: postgresql://tahti:tahti_dev@pgbouncer:5432/tahti?pgbouncer=true
+  # PROD: set POSTGRES_PASSWORD, SESSION_SECRET, INTERNAL_SECRET, DOCS_PASS, HCAPTCHA_SECRET,
+  # MINIO_SECRET_KEY, CENTRIFUGO_JWT_SECRET, CENTRIFUGO_API_KEY in infra/stack.env — see
+  # infra/stack.env.vimage.example. deploy_prod.sh passes that file via --env-file; without it
+  # every value below falls back to a well-known dev default (fine for ./scripts/stack-up.sh,
+  # never fine for a publicly reachable deploy).
+  DATABASE_URL: postgresql://tahti:${POSTGRES_PASSWORD:-tahti_dev}@pgbouncer:5432/tahti?pgbouncer=true
   REDIS_URL: redis://redis:6379
-  SESSION_SECRET: dev-session-secret-do-not-use-in-prod
-  INTERNAL_SECRET: local-stack-internal-secret
-  DOCS_PASS: local-stack-docs-pass
-  HCAPTCHA_SECRET: local-stack-hcaptcha-secret
+  SESSION_SECRET: ${SESSION_SECRET:-dev-session-secret-do-not-use-in-prod}
+  INTERNAL_SECRET: ${INTERNAL_SECRET:-local-stack-internal-secret}
+  DOCS_PASS: ${DOCS_PASS:-local-stack-docs-pass}
+  HCAPTCHA_SECRET: ${HCAPTCHA_SECRET:-local-stack-hcaptcha-secret}
   SMTP_HOST: ${SMTP_HOST:-mailhog}
   SMTP_PORT: ${SMTP_PORT:-1025}
   SMTP_USER: ${SMTP_USER:-}
@@ -24,19 +29,19 @@ x-app-env: &app-env
   SMTP_FROM: ${SMTP_FROM:-Tahti <noreply@tahti.live>}
   SUPPORT_INBOX: ${SUPPORT_INBOX:-support@tahti.live}
   MINIO_ENDPOINT: http://minio:9000
-  MINIO_PUBLIC_ENDPOINT: http://localhost:19000
+  MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:19000}
   MINIO_ACCESS_KEY: tahti
-  MINIO_SECRET_KEY: tahti_dev_secret
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-tahti_dev_secret}
   MINIO_BUCKET: tahti
   CENTRIFUGO_API_URL: http://chat:8000/api
-  CENTRIFUGO_API_KEY: dev
-  CENTRIFUGO_JWT_SECRET: dev_secret_do_not_use_in_prod
+  CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-dev}
+  CENTRIFUGO_JWT_SECRET: ${CENTRIFUGO_JWT_SECRET:-dev_secret_do_not_use_in_prod}
   ORCHESTRATOR_URL: http://orchestrator:3003
   ICECAST_HOST: icecast:8000
   ICECAST_BASE_URL: http://icecast:8000
   ICECAST_PUBLIC_URL: ${ICECAST_PUBLIC_URL:-http://localhost:${ICECAST_PORT:-18100}}
   ICECAST_INGEST_HOSTS: ${ICECAST_INGEST_HOSTS:-}
-  RTMP_INGEST_HOST: rtmp-ingest
+  RTMP_INGEST_HOST: ${RTMP_INGEST_HOST:-rtmp-ingest}
   RTMP_INGEST_HEALTH_PORT: "8080"
   # STREAM-003: comma-separated public RTMP ingest hosts for OBS failover (second replica in prod)
   RTMP_INGEST_HOSTS: ""
@@ -49,7 +54,7 @@ x-app-env: &app-env
   ACRCLOUD_HOST: identify-eu-west-1.acrcloud.com
   ACRCLOUD_ACCESS_KEY: ""
   ACRCLOUD_ACCESS_SECRET: ""
-  HLS_BASE_URL: http://localhost:19000/hls-live
+  HLS_BASE_URL: ${HLS_BASE_URL:-http://localhost:19000/hls-live}
   HLS_SEGMENT_ROOT: /hls
   HLS_MINIO_BUCKET: hls-live
   HLS_MINIO_PREFIX: hls-live
@@ -78,7 +83,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: tahti
-      POSTGRES_PASSWORD: tahti_dev
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tahti_dev}
       POSTGRES_DB: tahti
     # No host port — isolated stack DB; seed via `docker compose exec` on the api service.
     volumes:
@@ -93,7 +98,7 @@ services:
   pgbouncer:
     image: edoburu/pgbouncer:1.22.1-p0
     environment:
-      DATABASE_URL: postgres://tahti:tahti_dev@postgres:5432/tahti
+      DATABASE_URL: postgres://tahti:${POSTGRES_PASSWORD:-tahti_dev}@postgres:5432/tahti
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       MAX_CLIENT_CONN: "200"
@@ -126,7 +131,7 @@ services:
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: tahti
-      MINIO_ROOT_PASSWORD: tahti_dev_secret
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-tahti_dev_secret}
     ports:
       - "${MINIO_PORT:-19000}:9000"
       - "${MINIO_CONSOLE_PORT:-19001}:9001"
@@ -141,12 +146,14 @@ services:
 
   minio-init:
     image: minio/mc:latest
+    environment:
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-tahti_dev_secret}
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-        mc alias set local http://minio:9000 tahti tahti_dev_secret &&
+        mc alias set local http://minio:9000 tahti \"$$MINIO_SECRET_KEY\" &&
         mc mb --ignore-existing local/tahti &&
         mc mb --ignore-existing local/audio &&
         mc mb --ignore-existing local/covers &&
@@ -162,6 +169,14 @@ services:
   chat:
     image: centrifugo/centrifugo:v5
     command: centrifugo --config /centrifugo/config.json --port=8000 --health
+    environment:
+      # Centrifugo reads CENTRIFUGO_-prefixed env vars over the mounted config file, so
+      # infra/stack.env can override the dev secrets baked into stack/centrifugo.dev.json
+      # without needing a separate, untracked config file.
+      CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-dev}
+      CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_JWT_SECRET:-dev_secret_do_not_use_in_prod}
+      CENTRIFUGO_ADMIN_PASSWORD: ${CENTRIFUGO_ADMIN_PASSWORD:-}
+      CENTRIFUGO_ADMIN_SECRET: ${CENTRIFUGO_ADMIN_SECRET:-}
     volumes:
       - ./stack/centrifugo.dev.json:/centrifugo/config.json:ro
     ports:
@@ -224,7 +239,7 @@ services:
     environment:
       <<: *app-env
       # Migrations bypass PgBouncer (transaction pooling breaks Prisma migrate)
-      DATABASE_URL: postgresql://tahti:tahti_dev@postgres:5432/tahti
+      DATABASE_URL: postgresql://tahti:${POSTGRES_PASSWORD:-tahti_dev}@postgres:5432/tahti
     depends_on:
       postgres:
         condition: service_healthy
@@ -261,10 +276,15 @@ services:
       context: ..
       dockerfile: apps/web/Dockerfile
       # Browser-side fetches (e.g. the Spotify/Mixcloud cover-art proxies) can't reach the
-      # `api` service name — they need the host-mapped API port, not API_URL's docker-network one.
+      # `api` service name — they need a browser-reachable address, not API_URL's
+      # docker-network one. Defaults to the host-mapped port for local stack use;
+      # PROD: set NEXT_PUBLIC_API_BASE/NEXT_PUBLIC_API_URL in infra/stack.env to the
+      # public API hostname, since these are baked into the client bundle at build time.
       args:
-        NEXT_PUBLIC_API_BASE: http://localhost:${API_PORT:-15011}
-        NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-15011}
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:${API_PORT:-15011}}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:${API_PORT:-15011}}
+        NEXT_PUBLIC_CENTRIFUGO_WS: ${NEXT_PUBLIC_CENTRIFUGO_WS:-ws://localhost:${CHAT_PORT:-18000}/connection/websocket}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:${WEB_PORT:-17777}}
     environment:
       <<: *app-env
       API_URL: http://api:3001

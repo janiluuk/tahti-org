@@ -31,8 +31,11 @@ export function GoogleDriveConnectPanel({
     return (
       <div className="import-connect">
         <p className="import-connect__note import-connect__note--muted">
-          Google Drive import is not yet available in this environment.
+          Google Drive import needs a platform API key that hasn&apos;t been set up yet.
         </p>
+        <a href="/admin/settings/vendors" className="ui-btn ui-btn--secondary ui-btn--sm">
+          Configure
+        </a>
       </div>
     )
   }

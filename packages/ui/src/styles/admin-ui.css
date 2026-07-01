@@ -885,12 +885,14 @@
 .home-footer {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--tahti-space-2);
   font-size: var(--tahti-text-xs);
   color: var(--muted);
   padding-top: var(--tahti-space-2);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   flex-wrap: wrap;
+  text-align: center;
 }
 
 .home-footer__link {

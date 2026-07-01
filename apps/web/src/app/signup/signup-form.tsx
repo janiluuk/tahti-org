@@ -290,7 +290,7 @@ export function SignupForm() {
                 className="signup-continue-btn"
               >
                 <ButtonIcon name="arrowRight" />
-                {pending ? 'Creating account…' : 'Continue →'}
+                {pending ? 'Creating account…' : 'Continue'}
               </Button>
 
               <Text tone="muted" size="sm">

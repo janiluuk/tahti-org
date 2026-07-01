@@ -42,10 +42,9 @@ function statusFromState(state: string | undefined): LiveStatus {
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
 const WIZARD_STEPS = [
-  { num: 1, label: 'Credentials' },
-  { num: 2, label: 'Test signal' },
-  { num: 3, label: 'Pre-flight' },
-  { num: 4, label: 'Go live' },
+  { num: 1, label: 'Credentials & test' },
+  { num: 2, label: 'Pre-flight' },
+  { num: 3, label: 'Go live' },
 ] as const
 
 export function BroadcastStudio({
@@ -67,11 +66,11 @@ export function BroadcastStudio({
   const [signal, setSignal] = useState<SignalStatus | null>(null)
 
   const requestedStep = Number(searchParams.get('step'))
-  const activeStep = [1, 2, 3, 4].includes(requestedStep)
+  const activeStep = [1, 2, 3].includes(requestedStep)
     ? requestedStep
     : initialStatus === 'offline'
       ? 1
-      : 4
+      : 3
 
   function setActiveStep(step: number) {
     router.push(`/dashboard/broadcast?step=${step}`)
@@ -91,7 +90,6 @@ export function BroadcastStudio({
         const next = statusFromState(me.channel?.state)
         if (next !== status) {
           setStatus(next)
-          if (next === 'preview' && activeStep < 2) router.push('/dashboard/broadcast?step=2')
           router.refresh()
         }
       } catch {
@@ -101,9 +99,9 @@ export function BroadcastStudio({
     return () => window.clearInterval(id)
   }, [status, activeStep, router])
 
-  // Step 2 (test signal) polls Icecast's own status JSON for live confirmation.
+  // Step 1 (credentials & test) polls Icecast's own status JSON for live confirmation.
   useEffect(() => {
-    if (activeStep !== 2 || status === 'live') return
+    if (activeStep !== 1 || status === 'live') return
     let cancelled = false
     async function poll() {
       try {
@@ -126,7 +124,7 @@ export function BroadcastStudio({
   const isLive = status === 'live'
   const isPreview = status === 'preview'
   const signalConfirmed = isLive || isPreview || Boolean(signal?.connected)
-  const maxUnlockedStep = status === 'offline' ? (signalConfirmed ? 2 : 1) : 4
+  const maxUnlockedStep = status === 'offline' ? (signalConfirmed ? 2 : 1) : 3
 
   function goToStep(step: number) {
     if (step <= maxUnlockedStep) setActiveStep(step)
@@ -199,82 +197,78 @@ export function BroadcastStudio({
       {activeStep === 1 && (
         <>
           <StreamSettingsPanel initial={streamSettings} isLive={isLive || isPreview} />
-          <div className="studio-actions">
-            <Button onClick={() => setActiveStep(2)} variant="primary">
-              <ButtonIcon name="arrowRight" />
-              Continue to test signal →
-            </Button>
-          </div>
+          <Panel
+            title="Test your signal"
+            headerTight
+            description="Once you're streaming with the credentials above, confirm it here before you go live."
+          >
+            <div data-hero>
+              <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
+            </div>
+            {signal?.connected ? (
+              <>
+                <p className="studio-notice studio-notice--success">
+                  ✓ Signal received — {signal.codec ?? 'unknown codec'}
+                  {signal.bitrateKbps ? ` · ${signal.bitrateKbps} kbps` : ''}
+                </p>
+                <SignalMeters
+                  analyserL={analyserL}
+                  analyserR={analyserR}
+                  active={track?.id === streamSettings.hlsUrl && playing}
+                />
+                {!(track?.id === streamSettings.hlsUrl && playing) && (
+                  <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
+                    Press play on the preview above to see input levels.
+                  </Text>
+                )}
+              </>
+            ) : (
+              <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
+                Waiting for signal — start streaming in OBS, Mixxx, or Traktor with the credentials
+                above.
+              </Text>
+            )}
+            <div className="studio-actions">
+              <Button
+                disabled={!signalConfirmed}
+                onClick={() => setActiveStep(2)}
+                variant="primary"
+              >
+                <ButtonIcon name="arrowRight" />
+                Continue to pre-flight
+              </Button>
+            </div>
+          </Panel>
         </>
       )}
 
       {activeStep === 2 && (
         <Panel
-          title="Test your signal"
-          headerTight
-          description="Start streaming with the credentials from step 1, then confirm it here before you go live."
-        >
-          <div data-hero>
-            <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
-          </div>
-          {signal?.connected ? (
-            <>
-              <p className="studio-notice studio-notice--success">
-                ✓ Signal received — {signal.codec ?? 'unknown codec'}
-                {signal.bitrateKbps ? ` · ${signal.bitrateKbps} kbps` : ''}
-              </p>
-              <SignalMeters
-                analyserL={analyserL}
-                analyserR={analyserR}
-                active={track?.id === streamSettings.hlsUrl && playing}
-              />
-              {!(track?.id === streamSettings.hlsUrl && playing) && (
-                <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
-                  Press play on the preview above to see input levels.
-                </Text>
-              )}
-            </>
-          ) : (
-            <Text as="p" tone="muted" size="sm" className="broadcast-studio__preview-hint">
-              Waiting for signal — start streaming in OBS, Mixxx, or Traktor with the credentials
-              from step 1.
-            </Text>
-          )}
-          <div className="studio-actions">
-            <Button onClick={() => setActiveStep(1)} variant="ghost">
-              ← Back to credentials
-            </Button>
-            <Button disabled={!signalConfirmed} onClick={() => setActiveStep(3)} variant="primary">
-              <ButtonIcon name="arrowRight" />
-              Continue to pre-flight →
-            </Button>
-          </div>
-        </Panel>
-      )}
-
-      {activeStep === 3 && (
-        <Panel
           title="Pre-flight"
           headerTight
-          description="Listen to your own stream at full quality, then double-check distribution before you go live."
+          description={
+            signal?.connected
+              ? `Listen to your own stream at full quality (${signal.codec ?? 'unknown codec'}${signal.bitrateKbps ? ` · ${signal.bitrateKbps} kbps` : ''}), then double-check distribution before you go live.`
+              : 'Listen to your own stream at full quality, then double-check distribution before you go live.'
+          }
         >
           <div data-hero>
             <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview (full quality)" />
           </div>
           <Step3Preflight />
           <div className="studio-actions">
-            <Button onClick={() => setActiveStep(2)} variant="ghost">
-              ← Back to test signal
+            <Button onClick={() => setActiveStep(1)} variant="ghost">
+              ← Back to credentials & test
             </Button>
-            <Button onClick={() => setActiveStep(4)} variant="primary">
+            <Button onClick={() => setActiveStep(3)} variant="primary">
               <ButtonIcon name="arrowRight" />
-              Continue to go live →
+              Continue to go live
             </Button>
           </div>
         </Panel>
       )}
 
-      {activeStep === 4 && (
+      {activeStep === 3 && (
         <Panel title="Go live" headerTight>
           {isLive ? (
             <Text as="p" tone="muted" size="sm">

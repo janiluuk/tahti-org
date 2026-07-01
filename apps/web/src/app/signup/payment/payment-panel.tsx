@@ -128,7 +128,7 @@ export function SignupPaymentPanel({
             ) : (
               <Button variant="primary" disabled={!emailVerified} onClick={continueToProfile}>
                 <ButtonIcon name="arrowRight" />
-                Continue to profile →
+                Continue to profile
               </Button>
             )}
 

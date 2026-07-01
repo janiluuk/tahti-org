@@ -4,6 +4,7 @@
 import type { ChannelCard } from '@tahti/shared'
 import Link from 'next/link'
 import { BrandLogo, ButtonIcon, StatCard, StatCardStrip } from '@tahti/ui'
+import { getSessionUser } from '@/lib/session'
 
 interface PlatformStats {
   activeArtists: number
@@ -68,7 +69,7 @@ function hasMeaningfulPlatformStats(stats: PlatformStats): boolean {
 }
 
 export default async function HomePage() {
-  const { live, stats } = await fetchData()
+  const [{ live, stats }, user] = await Promise.all([fetchData(), getSessionUser()])
 
   return (
     <div className="home-shell">
@@ -85,9 +86,11 @@ export default async function HomePage() {
             <ButtonIcon name="play" />
             Listen now
           </Link>
-          <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
-            Sign in
-          </Link>
+          {!user && (
+            <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
+              Sign in
+            </Link>
+          )}
         </div>
       </section>
 
