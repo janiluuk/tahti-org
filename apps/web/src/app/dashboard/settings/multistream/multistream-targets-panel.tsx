@@ -68,6 +68,7 @@ export function MultistreamTargetsPanel({
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [toggleError, setToggleError] = useState<string | null>(null)
 
   const help = RTMP_PROVIDER_HELP[form.provider]
 
@@ -97,6 +98,7 @@ export function MultistreamTargetsPanel({
   }
 
   async function toggleTarget(id: string, enabled: boolean) {
+    setToggleError(null)
     const res = await fetch(`${API_BASE}/api/me/rtmp-targets/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -105,6 +107,8 @@ export function MultistreamTargetsPanel({
     })
     if (res.ok) {
       setTargets((prev) => prev.map((t) => (t.id === id ? { ...t, enabled } : t)))
+    } else {
+      setToggleError('Failed to update — try again.')
     }
   }
 
@@ -122,6 +126,9 @@ export function MultistreamTargetsPanel({
 
   return (
     <>
+      {toggleError && (
+        <p className="studio-notice studio-notice--error studio-mb-sm">{toggleError}</p>
+      )}
       <DataRowList>
         <DataRowListHeader columns={TARGET_COLUMNS}>
           <span />
@@ -274,7 +281,7 @@ export function MultistreamTargetsPanel({
             </div>
           )}
 
-          {error && <p className="studio-text-error studio-m-0 studio-mb-sm">{error}</p>}
+          {error && <p className="studio-notice studio-notice--error studio-mb-sm">{error}</p>}
 
           <div className="studio-actions">
             <button
@@ -418,7 +425,7 @@ function EditTargetForm({
         />
       </div>
 
-      {saveError && <p className="studio-text-error studio-m-0 studio-mb-sm">{saveError}</p>}
+      {saveError && <p className="studio-notice studio-notice--error studio-mb-sm">{saveError}</p>}
 
       <div className="studio-actions">
         <button

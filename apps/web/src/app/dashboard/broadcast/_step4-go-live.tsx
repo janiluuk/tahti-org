@@ -64,7 +64,7 @@ export function Step4GoLive() {
   const activeTargets = targets.filter((t) => t.enabled)
 
   return (
-    <div className="broadcast-studio__go-live-hero">
+    <div className="broadcast-studio__go-live-hero" data-hero>
       <h3 className="broadcast-studio__go-live-title">Ready when you are</h3>
       <p className="broadcast-studio__go-live-sub">
         Pressing this opens your channel to listeners. Your stream is healthy, audio sounds right,

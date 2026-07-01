@@ -28,7 +28,7 @@ export function GoLiveBtn() {
 
   return (
     <BrandButton variant="primary" onClick={handleClick} disabled={loading} aria-label="Go live">
-      {loading ? '…' : '● Go live →'}
+      {loading ? 'Going live…' : '● Go live'}
     </BrandButton>
   )
 }

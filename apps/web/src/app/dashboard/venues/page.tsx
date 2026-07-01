@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Link, PageShell, Panel } from '@tahti/ui'
+import { Link, PageShell } from '@tahti/ui'
 import { VenueManager } from './_venue-manager'
 
 interface VenueBroadcast {
@@ -67,15 +67,16 @@ export default async function VenuesDashboardPage() {
       </div>
 
       {venues.length === 0 ? (
-        <Panel title="No venues yet">
-          <p className="studio-text-muted-sm">
+        <div className="studio-empty-card">
+          <p className="studio-empty-card__text">No venues yet</p>
+          <p className="studio-empty-card__hint">
             Register a venue to add it to the Tahti venue directory and publish your broadcast
             calendar. Venues are reviewed by the board before they appear publicly.
           </p>
           <Link href="/venues/register" className="ui-btn ui-btn--sm ui-btn--primary studio-mt-sm">
             Register a venue →
           </Link>
-        </Panel>
+        </div>
       ) : (
         <VenueManager initialVenues={venues} />
       )}

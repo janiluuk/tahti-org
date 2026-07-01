@@ -146,12 +146,14 @@ export default async function RevenuePage() {
         </p>
       )}
 
-      <KpiCardRow aria-label="Revenue summary">
-        <KpiCard color="cyan" value={eur(stats.thisMonthNetCents)} label="This month" />
-        <KpiCard color="purple" value={stats.activeSubscribers} label="Active fan-subs" />
-        <KpiCard color="green" value={eur(stats.paidYtdNetCents)} label="Paid out YTD" />
-        <KpiCard color="amber" value={stats.pending} label="Pending payouts" />
-      </KpiCardRow>
+      <div data-hero>
+        <KpiCardRow aria-label="Revenue summary">
+          <KpiCard color="cyan" value={eur(stats.thisMonthNetCents)} label="This month" />
+          <KpiCard color="purple" value={stats.activeSubscribers} label="Active fan-subs" />
+          <KpiCard color="green" value={eur(stats.paidYtdNetCents)} label="Paid out YTD" />
+          <KpiCard color="amber" value={stats.pending} label="Pending payouts" />
+        </KpiCardRow>
+      </div>
 
       {hasFanSubs ? (
         <div className="revenue-grid">

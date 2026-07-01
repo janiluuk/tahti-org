@@ -191,7 +191,7 @@ export default async function DashboardPage() {
       ? 'On air'
       : headerState === 'PREVIEW'
         ? 'Continue to go live →'
-        : 'Go live now'
+        : 'Go live →'
   const goLiveBtnClass =
     headerState === 'LIVE'
       ? ' db-go-live-btn--live'

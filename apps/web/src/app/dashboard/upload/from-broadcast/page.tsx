@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Link from 'next/link'
-import { Panel, SidebarNavIconSvg, Text } from '@tahti/ui'
+import { Panel, SidebarNavIconSvg } from '@tahti/ui'
 import { ImportPageLayout, ImportSteps } from '../import/_import-page-layout'
 import { fetchRecentBroadcasts } from '../upload-actions'
 
@@ -50,15 +50,16 @@ export default async function FromBroadcastPage() {
       aside={<ImportSteps steps={HOW_IT_WORKS} />}
     >
       {broadcasts.length === 0 ? (
-        <Panel title="No broadcasts yet" className="import-page__panel">
-          <Text as="p" tone="muted" className="import-page__panel-copy">
+        <div className="studio-empty-card">
+          <p className="studio-empty-card__text">No broadcasts yet</p>
+          <p className="studio-empty-card__hint">
             Go live from the dashboard to create a broadcast recording you can publish here.
-          </Text>
+          </p>
           <Link href="/dashboard/broadcast" className="ui-btn ui-btn--primary studio-mt-sm">
             <SidebarNavIconSvg name="distribution" />
             Open broadcast studio
           </Link>
-        </Panel>
+        </div>
       ) : (
         <Panel
           title={`Recent broadcasts (${broadcasts.length})`}

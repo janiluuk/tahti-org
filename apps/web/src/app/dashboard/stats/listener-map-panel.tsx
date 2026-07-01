@@ -158,7 +158,7 @@ export function ListenerMapPanel({ initial, initialPeriod }: Props) {
       )}
 
       {data.length === 0 && !loading && (
-        <p className="studio-text-muted-sm studio-mt-sm">
+        <p className="studio-empty studio-mt-sm">
           No listener location data yet. Plays and downloads will appear here.
         </p>
       )}

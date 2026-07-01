@@ -135,6 +135,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     isRoute: true,
     requiresChannel: true,
   },
+  { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
   { href: '/dashboard/collections', label: 'Collections', icon: 'collections', isRoute: true },
   { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
   {

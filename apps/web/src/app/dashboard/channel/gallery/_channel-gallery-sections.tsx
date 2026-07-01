@@ -53,7 +53,7 @@ export function ChannelGallerySections({
   return (
     <div className="studio-channel-editor">
       <div className="studio-channel-editor__layout">
-        <div className="studio-channel-editor__preview-col">
+        <div className="studio-channel-editor__preview-col" data-hero>
           <ChannelLivePreview draft={draft} />
           <Link
             href={resolveChannelUrl(channelSlug)}

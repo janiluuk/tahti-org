@@ -543,10 +543,6 @@
   background: color-mix(in srgb, var(--green) 26%, transparent);
 }
 
-[data-tahti-ui='studio'] .studio-section-anchor {
-  scroll-margin-top: 1rem;
-}
-
 [data-tahti-ui='studio'] .ui-page {
   max-width: none;
   margin: 0;
@@ -831,10 +827,6 @@
   margin-top: 0.5rem;
 }
 
-[data-tahti-ui='studio'] .studio-ml-sm {
-  margin-left: 0.35rem;
-}
-
 [data-tahti-ui='studio'] .studio-mr-sm {
   margin-right: 0.35rem;
 }
@@ -857,10 +849,6 @@
 
 [data-tahti-ui='studio'] .studio-mb-sm {
   margin-bottom: 0.5rem;
-}
-
-[data-tahti-ui='studio'] .studio-mb-md {
-  margin-bottom: 0.75rem;
 }
 
 [data-tahti-ui='studio'] .studio-mb-lg {
@@ -1183,10 +1171,6 @@
   min-width: 140px;
 }
 
-[data-tahti-ui='studio'] .studio-input--narrow {
-  width: 90px;
-}
-
 [data-tahti-ui='studio'] .studio-font-mono {
   font-family: monospace;
 }
@@ -1296,11 +1280,6 @@
 [data-tahti-ui='studio'] .studio-btn-secondary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-[data-tahti-ui='studio'] .studio-btn-sm {
-  padding: 0.2rem 0.5rem;
-  font-size: var(--text-xs);
 }
 
 [data-tahti-ui='studio'] .studio-btn-danger {
@@ -2100,6 +2079,23 @@
 /* ── End Broadcast button (PLAT-033) — use BrandButton variant="warn" ─────── */
 
 /* ── Settings split (focused sub-pages, not one big settings page) ──────── */
+
+[data-tahti-ui='studio'] .settings-subnav-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .settings-subnav__back {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+[data-tahti-ui='studio'] .settings-subnav__back:hover {
+  color: var(--text);
+}
 
 [data-tahti-ui='studio'] .settings-subnav {
   display: flex;
@@ -4359,12 +4355,6 @@
   margin-bottom: 0.5rem;
 }
 
-[data-tahti-ui='studio'] .studio-color-scheme-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
-  gap: 0.65rem;
-  margin-bottom: 0.75rem;
-}
 
 [data-tahti-ui='studio'] .studio-color-input-row {
   display: flex;

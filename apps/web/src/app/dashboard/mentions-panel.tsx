@@ -23,8 +23,10 @@ export function MentionsPanel() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [muteInput, setMuteInput] = useState('')
   const [muteError, setMuteError] = useState<string | null>(null)
+  const [muteMessage, setMuteMessage] = useState<string | null>(null)
   const [muting, setMuting] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch(`${API_BASE}/api/me/mentions/settings`, { credentials: 'include' })
@@ -39,6 +41,7 @@ export function MentionsPanel() {
     patch: Partial<Pick<Settings, 'mentionsEnabled' | 'publicMentionsEnabled'>>,
   ) {
     if (!settings) return
+    setSaveError(null)
     const optimistic = { ...settings, ...patch }
     setSettings(optimistic)
     setSaving(true)
@@ -49,7 +52,13 @@ export function MentionsPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
       })
-      if (!res.ok) setSettings(settings)
+      if (!res.ok) {
+        setSettings(settings)
+        setSaveError('Failed to save — try again.')
+      }
+    } catch {
+      setSettings(settings)
+      setSaveError('Failed to save — try again.')
     } finally {
       setSaving(false)
     }
@@ -60,6 +69,7 @@ export function MentionsPanel() {
     const handle = muteInput.trim().replace(/^@/, '')
     if (!handle) return
     setMuteError(null)
+    setMuteMessage(null)
     setMuting(true)
     try {
       const res = await fetch(`${API_BASE}/api/me/mentions/mute/${encodeURIComponent(handle)}`, {
@@ -82,6 +92,7 @@ export function MentionsPanel() {
               }
             : prev,
         )
+        setMuteMessage(`@${handle} muted.`)
       }
     } catch {
       setMuteError('Network error')
@@ -91,13 +102,19 @@ export function MentionsPanel() {
   }
 
   async function unmuteHandle(username: string) {
+    setMuteError(null)
     setSettings((prev) =>
       prev ? { ...prev, muted: prev.muted.filter((m) => m.username !== username) } : prev,
     )
-    await fetch(`${API_BASE}/api/me/mentions/mute/${encodeURIComponent(username)}`, {
+    const res = await fetch(`${API_BASE}/api/me/mentions/mute/${encodeURIComponent(username)}`, {
       method: 'DELETE',
       credentials: 'include',
-    }).catch(() => {})
+    }).catch(() => null)
+    if (res?.ok) {
+      setMuteMessage(`@${username} unmuted.`)
+    } else {
+      setMuteError('Failed to unmute — try again.')
+    }
   }
 
   if (!settings) {
@@ -132,6 +149,7 @@ export function MentionsPanel() {
         <p className="studio-text-muted-sm studio-mt-xs studio-mb-sm">
           When enabled, other Tahti members can @mention you in their bio and posts.
         </p>
+        {saveError && <p className="studio-notice studio-notice--error">{saveError}</p>}
 
         {settings.mentionsEnabled && (
           <>
@@ -199,7 +217,10 @@ export function MentionsPanel() {
             </button>
           </form>
           {muteError && (
-            <p className="studio-text-error studio-text-sm studio-mt-xs">{muteError}</p>
+            <p className="studio-notice studio-notice--error studio-mt-xs">{muteError}</p>
+          )}
+          {muteMessage && (
+            <p className="studio-notice studio-notice--success studio-mt-xs">{muteMessage}</p>
           )}
         </div>
       </div>
