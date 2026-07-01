@@ -51,7 +51,7 @@ export function BetaApplyForm() {
   if (sent) {
     return (
       <>
-        <BgCanvas />
+        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark auth-card--wide">
             <BrandLogo />
@@ -68,7 +68,7 @@ export function BetaApplyForm() {
 
   return (
     <>
-      <BgCanvas />
+      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark auth-card--wide">
           <BrandLogo />

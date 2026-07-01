@@ -21,7 +21,7 @@ export default async function SetupPasswordPage({
   if (!token) {
     return (
       <>
-        <BgCanvas />
+        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark">
             <BrandLogo />
@@ -47,7 +47,7 @@ export default async function SetupPasswordPage({
   if (!res.ok || !data.email || !data.username || !data.displayName) {
     return (
       <>
-        <BgCanvas />
+        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark">
             <BrandLogo />

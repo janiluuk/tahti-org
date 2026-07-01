@@ -104,7 +104,7 @@ export function SignupForm() {
   if (done) {
     return (
       <>
-        <BgCanvas />
+        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark">
             <BrandLogo />
@@ -126,7 +126,7 @@ export function SignupForm() {
 
   return (
     <>
-      <BgCanvas />
+      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark signup-card">
           <BrandLogo />

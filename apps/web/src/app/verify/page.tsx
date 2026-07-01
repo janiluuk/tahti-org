@@ -14,7 +14,7 @@ export default async function VerifyPage({ searchParams }: Props) {
   if (!token) {
     return (
       <>
-        <BgCanvas />
+        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark">
             <BrandLogo />
@@ -52,7 +52,7 @@ export default async function VerifyPage({ searchParams }: Props) {
 
   return (
     <>
-      <BgCanvas />
+      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
           <BrandLogo />
