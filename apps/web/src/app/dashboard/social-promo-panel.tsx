@@ -404,9 +404,14 @@ export default function SocialPromoPanel({
           }}
         >
           {!initial.twitter.configured ? (
-            <p className="studio-text-muted-sm studio-mt-sm">
-              X OAuth is not configured on this server.
-            </p>
+            <div className="import-connect">
+              <p className="import-connect__note import-connect__note--muted">
+                X (Twitter) posting needs a platform API key that hasn&apos;t been set up yet.
+              </p>
+              <a href="/admin/settings/vendors" className="ui-btn ui-btn--secondary ui-btn--sm">
+                Configure
+              </a>
+            </div>
           ) : initial.twitter.connected ? (
             <>
               <SocialField label="Post template">
@@ -500,9 +505,14 @@ export default function SocialPromoPanel({
           }}
         >
           {!initial.instagram.configured ? (
-            <p className="studio-text-muted-sm studio-mt-sm">
-              Instagram OAuth is not configured on this server.
-            </p>
+            <div className="import-connect">
+              <p className="import-connect__note import-connect__note--muted">
+                Instagram posting needs a platform API key that hasn&apos;t been set up yet.
+              </p>
+              <a href="/admin/settings/vendors" className="ui-btn ui-btn--secondary ui-btn--sm">
+                Configure
+              </a>
+            </div>
           ) : initial.instagram.connected ? (
             <>
               <SocialField label="Post template">
