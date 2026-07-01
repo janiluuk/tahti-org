@@ -67,7 +67,9 @@ export default async function AdminUsersPage({
           <option value="true">Members</option>
           <option value="false">Non-members</option>
         </select>
-        <button type="submit">Filter</button>
+        <button type="submit" className="admin-btn admin-btn--sm">
+          Filter
+        </button>
       </form>
 
       <p className="admin-stat-sub">

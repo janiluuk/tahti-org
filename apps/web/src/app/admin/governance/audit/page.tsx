@@ -79,7 +79,9 @@ export default async function AdminAuditPage({
           placeholder="Filter by action (e.g. USER_SUSPEND)"
           className="admin-search-input"
         />
-        <button type="submit">Filter</button>
+        <button type="submit" className="admin-btn admin-btn--sm">
+          Filter
+        </button>
       </form>
 
       <div className="admin-table-wrap">

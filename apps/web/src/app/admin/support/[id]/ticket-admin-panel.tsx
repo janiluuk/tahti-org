@@ -86,17 +86,32 @@ export function TicketAdminPanel({
       <h2>Actions</h2>
       <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
         {status !== 'IN_PROGRESS' ? (
-          <button type="button" disabled={pending} onClick={() => onStatus('IN_PROGRESS')}>
+          <button
+            type="button"
+            className="admin-btn admin-btn--sm"
+            disabled={pending}
+            onClick={() => onStatus('IN_PROGRESS')}
+          >
             Mark in progress
           </button>
         ) : null}
         {status !== 'RESOLVED' ? (
-          <button type="button" disabled={pending} onClick={() => onStatus('RESOLVED')}>
+          <button
+            type="button"
+            className="admin-btn admin-btn--sm"
+            disabled={pending}
+            onClick={() => onStatus('RESOLVED')}
+          >
             Resolve
           </button>
         ) : null}
         {status !== 'OPEN' ? (
-          <button type="button" disabled={pending} onClick={() => onStatus('OPEN')}>
+          <button
+            type="button"
+            className="admin-btn admin-btn--sm"
+            disabled={pending}
+            onClick={() => onStatus('OPEN')}
+          >
             Reopen
           </button>
         ) : null}
@@ -107,14 +122,19 @@ export function TicketAdminPanel({
           Add note
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} />
         </label>
-        <button type="submit" disabled={pending}>
+        <button type="submit" className="admin-btn admin-btn--sm" disabled={pending}>
           Save note
         </button>
       </form>
 
       {artistId && subject === 'Account deletion request' ? (
         <p style={{ marginBottom: '1rem' }}>
-          <button type="button" disabled={pending} onClick={onExecuteDeletion}>
+          <button
+            type="button"
+            className="admin-btn admin-btn--danger"
+            disabled={pending}
+            onClick={onExecuteDeletion}
+          >
             Execute account deletion
           </button>
         </p>
@@ -136,7 +156,7 @@ export function TicketAdminPanel({
             Reason
             <input value={reason} onChange={(e) => setReason(e.target.value)} required />
           </label>
-          <button type="submit" disabled={pending}>
+          <button type="submit" className="admin-btn admin-btn--sm" disabled={pending}>
             Record adjustment
           </button>
         </form>

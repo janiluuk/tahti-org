@@ -697,10 +697,17 @@
 }
 
 /* Studio button overrides */
+/* AdminShell (packages/ui/src/brand/AdminShell.tsx) also stamps
+   data-tahti-ui="studio" on every /admin/* page so it can share studio
+   layout/typography — which means this fallback would otherwise clobber
+   the admin panel's own button system (admin-btn, defined in
+   apps/web/src/components/admin-shell.css) on any admin button that
+   forgot a `ui-btn` class. Exclude admin-btn explicitly rather than
+   relying on every admin button remembering to opt out. */
 [data-tahti-ui='studio']
   button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
     [class*='studio-top-nav']
-  ):not([class*='add-btn--']) {
+  ):not([class*='add-btn--']):not([class*='admin-btn']) {
   background: var(--card2);
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -717,7 +724,7 @@
 [data-tahti-ui='studio']
   button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
     [class*='studio-top-nav']
-  ):not([class*='add-btn--']):hover:not(:disabled) {
+  ):not([class*='add-btn--']):not([class*='admin-btn']):hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--muted) 60%, transparent);
   background: color-mix(in srgb, var(--card2) 80%, var(--card));
 }

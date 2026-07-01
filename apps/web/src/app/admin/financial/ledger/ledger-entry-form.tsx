@@ -88,7 +88,7 @@ export function LedgerEntryForm() {
             External reference (optional)
             <input name="externalRef" maxLength={200} />
           </label>
-          <button type="submit" disabled={pending}>
+          <button type="submit" className="admin-btn" disabled={pending}>
             {pending ? 'Saving…' : 'Create entry'}
           </button>
           {msg ? <p className={msg === 'Entry created' ? 'admin-ok' : 'admin-err'}>{msg}</p> : null}
