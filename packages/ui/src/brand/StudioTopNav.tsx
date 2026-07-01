@@ -5,14 +5,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
-import { navigateDashboardHash } from './dashboard-nav'
+import { useEffect, useRef, useState } from 'react'
 import { SidebarNavIconSvg } from './SidebarNav'
 
 type StudioTopNavProps = {
   displayName?: string
   isLive?: boolean
   isBoard?: boolean
+  channelUrl?: string
 }
 
 function IconLogout() {
@@ -58,12 +58,11 @@ function IconSwitch() {
 }
 
 /** PLAT-020: dashboard top bar — TAHTI logo + user menu (settings, log out, admin switch). */
-export function StudioTopNav({ displayName, isLive, isBoard }: StudioTopNavProps) {
+export function StudioTopNav({ displayName, isLive, isBoard, channelUrl }: StudioTopNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const initial = displayName ? displayName.trim().charAt(0).toUpperCase() : null
-  const onDashboard = pathname === '/dashboard' || pathname === '/dashboard/'
 
   useEffect(() => {
     if (!open) return
@@ -84,13 +83,6 @@ export function StudioTopNav({ displayName, isLive, isBoard }: StudioTopNavProps
   useEffect(() => {
     setOpen(false)
   }, [pathname])
-
-  function onSettingsClick(e: MouseEvent<HTMLAnchorElement>) {
-    setOpen(false)
-    if (!onDashboard) return
-    e.preventDefault()
-    navigateDashboardHash('#account')
-  }
 
   return (
     <header className="studio-top-nav">
@@ -125,11 +117,24 @@ export function StudioTopNav({ displayName, isLive, isBoard }: StudioTopNavProps
             </button>
             {open && (
               <div className="studio-top-nav__menu" role="menu">
+                {channelUrl && (
+                  <Link
+                    href={channelUrl}
+                    className="studio-top-nav__menu-item"
+                    role="menuitem"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setOpen(false)}
+                  >
+                    <SidebarNavIconSvg name="channel" />
+                    My channel
+                  </Link>
+                )}
                 <Link
-                  href="/dashboard#account"
+                  href="/dashboard/settings/account"
                   className="studio-top-nav__menu-item"
                   role="menuitem"
-                  onClick={onSettingsClick}
+                  onClick={() => setOpen(false)}
                 >
                   <SidebarNavIconSvg name="settings" />
                   Settings
