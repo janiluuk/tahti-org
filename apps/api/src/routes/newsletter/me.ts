@@ -2,13 +2,16 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { nanoid } from 'nanoid'
 import {
   DraftIdParamSchema,
   NewsletterDraftListSchema,
   NewsletterDraftSchema,
   NewsletterDraftViewSchema,
+  NewsletterMySubscriptionSchema,
   NewsletterSendSchema,
   NewsletterSubscriberStatsSchema,
+  UsernameParamSchema,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -207,6 +210,103 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
         queued: subscriberIds.length,
         audience: fanAudience ? 'fans' : 'all',
       })
+    },
+  )
+
+  // GET /api/me/newsletter/subscription/:username — is the logged-in viewer subscribed
+  // to this artist's newsletter? Lets the channel page show a toggle instead of a form.
+  fastify.get(
+    '/api/me/newsletter/subscription/:username',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['newsletter'],
+        response: openApiResponse(NewsletterMySubscriptionSchema, 'NewsletterMySubscription'),
+      },
+    },
+    async (request, reply) => {
+      const viewer = request.sessionUser!
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const artist = await fastify.prisma.user.findUnique({
+        where: { username: routeParams.username },
+        select: { id: true },
+      })
+      if (!artist) return reply.status(404).send({ error: 'Artist not found' })
+
+      const sub = await fastify.prisma.newsletterSubscriber.findUnique({
+        where: { artistUserId_email: { artistUserId: artist.id, email: viewer.email } },
+      })
+
+      return reply.send({ subscribed: Boolean(sub?.confirmedAt && !sub.unsubscribedAt) })
+    },
+  )
+
+  // POST /api/me/newsletter/subscription/:username — subscribe using the viewer's own,
+  // already-verified account email. Skips the double opt-in email a stranger would need.
+  fastify.post(
+    '/api/me/newsletter/subscription/:username',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['newsletter'],
+        response: openApiResponse(NewsletterMySubscriptionSchema, 'NewsletterMySubscription'),
+      },
+    },
+    async (request, reply) => {
+      const viewer = request.sessionUser!
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const artist = await fastify.prisma.user.findUnique({
+        where: { username: routeParams.username },
+        select: { id: true },
+      })
+      if (!artist) return reply.status(404).send({ error: 'Artist not found' })
+
+      await fastify.prisma.newsletterSubscriber.upsert({
+        where: { artistUserId_email: { artistUserId: artist.id, email: viewer.email } },
+        create: {
+          artistUserId: artist.id,
+          email: viewer.email,
+          confirmedAt: new Date(),
+          unsubToken: nanoid(32),
+        },
+        update: { confirmedAt: new Date(), unsubscribedAt: null },
+      })
+
+      return reply.send({ subscribed: true })
+    },
+  )
+
+  // DELETE /api/me/newsletter/subscription/:username — unsubscribe the logged-in viewer.
+  fastify.delete(
+    '/api/me/newsletter/subscription/:username',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['newsletter'],
+        response: openApiResponse(NewsletterMySubscriptionSchema, 'NewsletterMySubscription'),
+      },
+    },
+    async (request, reply) => {
+      const viewer = request.sessionUser!
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const artist = await fastify.prisma.user.findUnique({
+        where: { username: routeParams.username },
+        select: { id: true },
+      })
+      if (!artist) return reply.status(404).send({ error: 'Artist not found' })
+
+      await fastify.prisma.newsletterSubscriber.updateMany({
+        where: { artistUserId: artist.id, email: viewer.email },
+        data: { unsubscribedAt: new Date() },
+      })
+
+      return reply.send({ subscribed: false })
     },
   )
 }
