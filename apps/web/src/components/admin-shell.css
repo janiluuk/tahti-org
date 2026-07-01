@@ -295,6 +295,14 @@
   color: var(--text);
 }
 
+.admin-subsection-title {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--text);
+}
+
 .admin-help {
   font-size: 0.85rem;
   color: var(--muted);

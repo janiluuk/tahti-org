@@ -173,6 +173,7 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
   }
 
   async function handleRevokeShare(shareId: string) {
+    if (!confirm('Revoke this share? They will lose access immediately.')) return
     const res = await apiFetch(`/api/me/stash/shares/${shareId}`, { method: 'DELETE' })
     if (!res.ok) return alert('Revoke failed')
     const listRes = await apiFetch('/api/me/stash')

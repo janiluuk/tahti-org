@@ -21,6 +21,10 @@ export function UserAdminActions({
   const [pending, setPending] = useState(false)
 
   async function onToggleBoard() {
+    const action = isBoard
+      ? 'Remove board role from this account?'
+      : 'Grant board role to this account?'
+    if (!window.confirm(action)) return
     setPending(true)
     setMsg(null)
     const { error } = await toggleBoardRole(userId, !isBoard)
@@ -60,16 +64,31 @@ export function UserAdminActions({
     <section className="admin-card" style={{ marginBottom: '1rem' }}>
       <h2>Actions</h2>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <button type="button" disabled={pending} onClick={onToggleBoard}>
+        <button
+          type="button"
+          className="admin-btn admin-btn--sm"
+          disabled={pending}
+          onClick={onToggleBoard}
+        >
           {isBoard ? 'Remove board role' : 'Grant board role'}
         </button>
         {suspended ? (
-          <button type="button" disabled={pending} onClick={onUnsuspend}>
+          <button
+            type="button"
+            className="admin-btn admin-btn--sm"
+            disabled={pending}
+            onClick={onUnsuspend}
+          >
             Unsuspend account
           </button>
         ) : null}
         {!deleted ? (
-          <button type="button" disabled={pending || isBoard} onClick={onDeleteAccount}>
+          <button
+            type="button"
+            className="admin-btn admin-btn--danger admin-btn--sm"
+            disabled={pending || isBoard}
+            onClick={onDeleteAccount}
+          >
             Delete account (GDPR)
           </button>
         ) : null}
@@ -87,6 +106,7 @@ export function SuspendUserForm({ userId }: { userId: string }) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!reason.trim()) return
+    if (!window.confirm('Suspend this account? They will lose access immediately.')) return
     setPending(true)
     setMsg(null)
     const { error } = await suspendUser(userId, reason.trim())
@@ -107,7 +127,7 @@ export function SuspendUserForm({ userId }: { userId: string }) {
           style={{ width: '100%', marginBottom: '0.5rem' }}
           required
         />
-        <button type="submit" disabled={pending}>
+        <button type="submit" className="admin-btn admin-btn--danger" disabled={pending}>
           Suspend
         </button>
       </form>
