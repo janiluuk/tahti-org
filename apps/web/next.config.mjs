@@ -4,9 +4,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
-  transpilePackages: ['@tahti/audio-edit', '@tahti/shared', '@tahti/ui', '@waveform-playlist/browser'],
+  transpilePackages: [
+    '@tahti/audio-edit',
+    '@tahti/shared',
+    '@tahti/ui',
+    '@waveform-playlist/browser',
+  ],
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: false },
+  // ffmpeg.wasm is browser-only (WASM + Worker); its package.json "node" export condition
+  // resolves to an empty stub, which the RSC server-graph build otherwise tries to analyze
+  // for real exports (FFFSType etc.) and warns. Treat it as external so only the client
+  // bundle (which 'use client' callers actually load) ever resolves it.
+  experimental: {
+    serverComponentsExternalPackages: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+  },
   webpack: (config, { webpack, isServer }) => {
     // TypeScript ESM uses .js extensions in source; webpack needs this to resolve them to .ts
     config.resolve.extensionAlias = {
@@ -18,9 +30,15 @@ const nextConfig = {
       config.plugins.push(
         new webpack.NormalModuleReplacementPlugin(/^node:/, (r) => {
           r.request = r.request.replace(/^node:/, '')
-        })
+        }),
       )
-      config.resolve.fallback = { ...config.resolve.fallback, fs: false, path: false, url: false, crypto: false }
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        url: false,
+        crypto: false,
+      }
     }
     return config
   },
