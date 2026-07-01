@@ -37,9 +37,14 @@ export function MixcloudConnect({
 
   if (!initial.configured) {
     return (
-      <p className="studio-text-muted-sm studio-mt-sm">
-        Mixcloud OAuth is not configured on this server (set MIXCLOUD_CLIENT_ID).
-      </p>
+      <div className="import-connect">
+        <p className="import-connect__note import-connect__note--muted">
+          Mixcloud import needs a platform API key that hasn&apos;t been set up yet.
+        </p>
+        <a href="/admin/settings/vendors" className="ui-btn ui-btn--secondary ui-btn--sm">
+          Configure
+        </a>
+      </div>
     )
   }
 

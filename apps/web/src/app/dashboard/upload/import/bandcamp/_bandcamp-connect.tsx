@@ -29,8 +29,11 @@ export function BandcampConnectPanel({
     return (
       <div className="import-connect">
         <p className="import-connect__note import-connect__note--muted">
-          Bandcamp import is not yet available in this environment.
+          Bandcamp import needs a platform API key that hasn&apos;t been set up yet.
         </p>
+        <a href="/admin/settings/vendors" className="ui-btn ui-btn--secondary ui-btn--sm">
+          Configure
+        </a>
       </div>
     )
   }

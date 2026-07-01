@@ -178,7 +178,7 @@ export function SignupProfileForm({ displayName }: { displayName: string }) {
 
               <Button type="submit" variant="primary" disabled={isPending}>
                 <ButtonIcon name="arrowRight" />
-                {isPending ? 'Saving…' : 'Save and continue →'}
+                {isPending ? 'Saving…' : 'Save and continue'}
               </Button>
 
               <Button type="button" variant="ghost" onClick={skip} disabled={isPending}>

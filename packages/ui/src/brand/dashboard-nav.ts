@@ -26,6 +26,8 @@ export type DashboardNavDefinition = {
   /** Hide when the user has no channel (archive, broadcast, etc.). */
   requiresChannel?: boolean
   adminOnly?: boolean
+  /** Group label rendered above the first item of each group; omit to stay ungrouped. */
+  group?: string
 }
 
 export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabId> = {
@@ -113,21 +115,42 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     isRoute: true,
   },
   {
-    href: '/dashboard/channel/edit',
-    label: 'Design',
-    icon: 'appearance',
+    href: '/dashboard/stats',
+    label: 'Stats',
+    icon: 'stats',
     isRoute: true,
-    requiresChannel: true,
   },
-  { href: '/dashboard/stats', label: 'Stats', icon: 'stats', isRoute: true },
+
+  // My Library — the artist's own catalog and files.
   {
     href: '/dashboard/archive',
     label: 'Archive',
     icon: 'archive',
     isRoute: true,
     requiresChannel: true,
+    group: 'My Library',
   },
   { href: '/dashboard/upload', label: 'Upload', icon: 'upload', isRoute: true },
+  { href: '/dashboard/collections', label: 'Collections', icon: 'collections', isRoute: true },
+  {
+    href: '/dashboard/releases',
+    label: 'Smart Links',
+    icon: 'links',
+    isRoute: true,
+    requiresChannel: true,
+  },
+  { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true },
+
+  // Broadcasting — going live and scheduling it.
+  {
+    href: '/dashboard/broadcast',
+    label: 'Broadcast',
+    icon: 'distribution',
+    isRoute: true,
+    sectionKey: 'broadcast',
+    requiresChannel: true,
+    group: 'Broadcasting',
+  },
   {
     href: '/dashboard/schedule',
     label: 'Schedule',
@@ -136,32 +159,29 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     requiresChannel: true,
   },
   { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
-  { href: '/dashboard/collections', label: 'Collections', icon: 'collections', isRoute: true },
-  { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
+
+  // Audience — fans, mailing list, and money.
   {
     href: '/dashboard/newsletter/compose',
     label: 'Newsletter',
     icon: 'newsletter',
     isRoute: true,
     requiresChannel: true,
+    group: 'Audience',
   },
+  { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
+
+  // Channel setup — appearance and account-level settings.
   {
-    href: '/dashboard/releases',
-    label: 'Smart Links',
-    icon: 'links',
+    href: '/dashboard/channel/edit',
+    label: 'Design',
+    icon: 'appearance',
     isRoute: true,
     requiresChannel: true,
+    group: 'Channel setup',
   },
-  {
-    href: '/dashboard/broadcast',
-    label: 'Broadcast',
-    icon: 'distribution',
-    isRoute: true,
-    sectionKey: 'broadcast',
-    requiresChannel: true,
-  },
-  { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true },
   { href: '/dashboard/settings', label: 'Settings', icon: 'settings', isRoute: true },
+
   { href: '/admin', label: 'Admin', icon: 'admin', isRoute: true, adminOnly: true },
 ]
 

@@ -4,7 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { usePathname } from 'next/navigation'
-import { useEffect, useState, type MouseEvent } from 'react'
+import { Fragment, useEffect, useState, type MouseEvent } from 'react'
 import { DASHBOARD_NAV, isDashboardNavItemActive, navigateDashboardHash } from './dashboard-nav'
 import { SidebarNavLink } from './SidebarNavLink'
 
@@ -38,24 +38,31 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
       <nav aria-label="Dashboard sections">
         {DASHBOARD_NAV.filter(
           (item) => (!item.adminOnly || isBoard) && (!item.requiresChannel || hasChannel),
-        ).map(({ href, label, icon, isRoute, hash: itemHash, sectionKey }) => {
+        ).map(({ href, label, icon, isRoute, hash: itemHash, sectionKey, group }) => {
           let active: boolean
           if (isRoute) {
-            active = pathname === href || pathname.startsWith(`${href}/`)
+            // `/dashboard` is a path prefix of every other dashboard route, so it can only
+            // ever match exactly — a startsWith check here would light up Channel everywhere.
+            active =
+              href === '/dashboard'
+                ? pathname === '/dashboard'
+                : pathname === href || pathname.startsWith(`${href}/`)
           } else {
             active = isDashboardNavItemActive(hash, { sectionKey, hash: itemHash }, onDashboard)
           }
           return (
-            <SidebarNavLink
-              key={`${href}-${label}`}
-              href={href}
-              icon={icon}
-              active={active}
-              surface="studio"
-              onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
-            >
-              {label}
-            </SidebarNavLink>
+            <Fragment key={`${href}-${label}`}>
+              {group && <div className="db-nav-group-label">{group}</div>}
+              <SidebarNavLink
+                href={href}
+                icon={icon}
+                active={active}
+                surface="studio"
+                onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
+              >
+                {label}
+              </SidebarNavLink>
+            </Fragment>
           )
         })}
       </nav>
