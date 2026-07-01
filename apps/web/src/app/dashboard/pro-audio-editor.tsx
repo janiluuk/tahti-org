@@ -1238,7 +1238,7 @@ export function ProAudioEditor({
           </div>
 
           {/* ---- Waveform ---- */}
-          <section className="pro-editor-wave" aria-label="Waveform">
+          <section className="pro-editor-wave" aria-label="Waveform" data-hero>
             {peaksLoading && <p className="pro-editor-hint">Generating waveform peaks…</p>}
             <div className="pro-editor-wave-panel" ref={wavePanelRef}>
               <div className="pro-editor-canvas-stack">

@@ -23,20 +23,25 @@ export function SettingsSubnav() {
   const pathname = usePathname()
 
   return (
-    <nav className="settings-subnav" aria-label="Settings sections">
-      {ITEMS.map((item) => {
-        const active = pathname === item.href || pathname?.startsWith(`${item.href}/`)
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`settings-subnav__item${active ? ' settings-subnav__item--active' : ''}`}
-            aria-current={active ? 'page' : undefined}
-          >
-            {item.label}
-          </Link>
-        )
-      })}
-    </nav>
+    <div className="settings-subnav-row">
+      <Link href="/dashboard" className="settings-subnav__back">
+        ← Dashboard
+      </Link>
+      <nav className="settings-subnav" aria-label="Settings sections">
+        {ITEMS.map((item) => {
+          const active = pathname === item.href || pathname?.startsWith(`${item.href}/`)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`settings-subnav__item${active ? ' settings-subnav__item--active' : ''}`}
+              aria-current={active ? 'page' : undefined}
+            >
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
+    </div>
   )
 }

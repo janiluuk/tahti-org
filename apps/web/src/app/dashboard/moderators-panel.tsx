@@ -16,10 +16,12 @@ export default function ModeratorsPanel({
   const [moderators, setModerators] = useState(initial)
   const [username, setUsername] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function add() {
     setError(null)
+    setMessage(null)
     const handle = username.trim()
     if (!handle) return
     startTransition(async () => {
@@ -33,11 +35,14 @@ export default function ModeratorsPanel({
         res.moderator!,
       ])
       setUsername('')
+      setMessage(`@${res.moderator.username} added as moderator.`)
     })
   }
 
-  function remove(userId: string) {
+  function remove(userId: string, username2: string) {
+    if (!confirm(`Revoke moderator access for @${username2}?`)) return
     setError(null)
+    setMessage(null)
     startTransition(async () => {
       const res = await removeModerator(userId)
       if (res.error) {
@@ -45,6 +50,7 @@ export default function ModeratorsPanel({
         return
       }
       setModerators((prev) => prev.filter((m) => m.userId !== userId))
+      setMessage(`@${username2} removed as moderator.`)
     })
   }
 
@@ -72,7 +78,7 @@ export default function ModeratorsPanel({
               </span>
               <button
                 type="button"
-                onClick={() => remove(m.userId)}
+                onClick={() => remove(m.userId, m.username)}
                 disabled={isPending}
                 className="studio-btn-danger"
               >
@@ -99,7 +105,8 @@ export default function ModeratorsPanel({
           Add moderator
         </button>
       </div>
-      {error && <p className="studio-text-error">{error}</p>}
+      {error && <p className="studio-notice studio-notice--error">{error}</p>}
+      {message && <p className="studio-notice studio-notice--success">{message}</p>}
     </section>
   )
 }

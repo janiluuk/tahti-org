@@ -218,7 +218,7 @@ export default function ReleaseOpsPanel({
           <div className="studio-mt-lg studio-max-w-md">
             <div className="studio-text-strong-sm studio-mb-sm">Credits & roles</div>
             {credits.length === 0 && (
-              <p className="studio-text-muted-sm studio-m-0 studio-mb-sm">
+              <p className="studio-empty">
                 No credits yet — add writers, performers, producers, etc.
               </p>
             )}
@@ -438,7 +438,7 @@ export default function ReleaseOpsPanel({
                 {!royaltiesLoaded ? (
                   <p className="studio-text-muted-sm studio-m-0">Loading…</p>
                 ) : royalties.length === 0 ? (
-                  <p className="studio-text-muted-sm studio-m-0">
+                  <p className="studio-empty">
                     No reports yet — synced monthly after DSP delivery.
                   </p>
                 ) : (

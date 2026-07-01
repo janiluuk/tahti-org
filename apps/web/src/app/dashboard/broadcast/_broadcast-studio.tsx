@@ -131,33 +131,35 @@ export function BroadcastStudio({
 
   return (
     <div className="broadcast-studio">
-      {isLive ? (
-        <BroadcastStatusBar
-          state="live"
-          meta={
-            <Link href={resolveChannelUrl(channelSlug)} className="db-overview-broadcast-link">
-              View public channel →
-            </Link>
-          }
-          action={<EndBroadcastBtn mode="live" />}
-        />
-      ) : isPreview ? (
-        <BroadcastStatusBar
-          state="preview"
-          meta="Listeners can't hear this yet — only you, in the preview player below."
-          action={
-            <div className="broadcast-studio__preview-actions">
-              <GoLiveBtn />
-              <EndBroadcastBtn mode="preview" />
-            </div>
-          }
-        />
-      ) : (
-        <BroadcastStatusBar
-          state="offline"
-          offlineMessage="Offline — work through the steps below, then start streaming in OBS or Mixxx."
-        />
-      )}
+      <div data-hero>
+        {isLive ? (
+          <BroadcastStatusBar
+            state="live"
+            meta={
+              <Link href={resolveChannelUrl(channelSlug)} className="db-overview-broadcast-link">
+                View public channel →
+              </Link>
+            }
+            action={<EndBroadcastBtn mode="live" />}
+          />
+        ) : isPreview ? (
+          <BroadcastStatusBar
+            state="preview"
+            meta="Listeners can't hear this yet — only you, in the preview player below."
+            action={
+              <div className="broadcast-studio__preview-actions">
+                <GoLiveBtn />
+                <EndBroadcastBtn mode="preview" />
+              </div>
+            }
+          />
+        ) : (
+          <BroadcastStatusBar
+            state="offline"
+            offlineMessage="Offline — work through the steps below, then start streaming in OBS or Mixxx."
+          />
+        )}
+      </div>
 
       <BroadcastUsageBanner usage={broadcastUsage} />
 
@@ -212,7 +214,9 @@ export function BroadcastStudio({
           headerTight
           description="Start streaming with the credentials from step 1, then confirm it here before you go live."
         >
-          <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
+          <div data-hero>
+            <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
+          </div>
           {signal?.connected ? (
             <p className="studio-notice studio-notice--success">
               ✓ Signal received — {signal.codec ?? 'unknown codec'}
@@ -246,7 +250,9 @@ export function BroadcastStudio({
           headerTight
           description="Listen to your own stream at full quality, then double-check distribution before you go live."
         >
-          <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview (full quality)" />
+          <div data-hero>
+            <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview (full quality)" />
+          </div>
           <Step3Preflight />
           <div className="studio-actions">
             <button type="button" className="ui-btn ui-btn--ghost" onClick={() => setActiveStep(2)}>
