@@ -22,7 +22,11 @@ describe('shellQuote', () => {
 
 describe('buildCoverCacheDockerCommand', () => {
   it('fetches the avatar via an env var, never interpolating the URL into the script text', () => {
-    const cmd = buildCoverCacheDockerCommand('chan-1', 'https://cdn.tahti.live/avatar.jpg', 'cover_vol')
+    const cmd = buildCoverCacheDockerCommand(
+      'chan-1',
+      'https://cdn.tahti.live/avatar.jpg',
+      'cover_vol',
+    )
     expect(cmd).toContain('docker run --rm')
     expect(cmd).toContain('-e AVATAR_URL=')
     expect(cmd).toContain('https://cdn.tahti.live/avatar.jpg')

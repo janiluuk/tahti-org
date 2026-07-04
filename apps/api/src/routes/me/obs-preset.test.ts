@@ -72,9 +72,7 @@ describe('GET /api/me/obs-preset', () => {
 
     expect(body.sceneCollectionFilename).toBe(`tahti-${channelSlug}-scene.json`)
     expect(body.sceneCollection.name).toContain(channelSlug)
-    const sceneSource = body.sceneCollection.sources.find(
-      (s: { id: string }) => s.id === 'scene',
-    )
+    const sceneSource = body.sceneCollection.sources.find((s: { id: string }) => s.id === 'scene')
     expect(sceneSource).toBeTruthy()
     const titleSource = body.sceneCollection.sources.find(
       (s: { name: string }) => s.name === 'Title',
