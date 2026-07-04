@@ -140,8 +140,14 @@ export default function StreamSettingsPanel({
             </p>
             {obsPreset && (
               <Stack gap={2} className="studio-mt-sm">
-                <CopyRow label="Audio" value={`${obsPreset.recommended.audioCodec} ${obsPreset.recommended.audioBitrateKbps}kbps, ${obsPreset.recommended.sampleRateHz}Hz, ${obsPreset.recommended.channels}`} />
-                <CopyRow label="Video" value={`${obsPreset.recommended.videoCodec} ${obsPreset.recommended.videoBitrateKbps}kbps CBR, keyframe ${obsPreset.recommended.keyframeIntervalSec}s, ${obsPreset.recommended.preset}, ${obsPreset.recommended.profile}, ${obsPreset.recommended.tune}`} />
+                <CopyRow
+                  label="Audio"
+                  value={`${obsPreset.recommended.audioCodec} ${obsPreset.recommended.audioBitrateKbps}kbps, ${obsPreset.recommended.sampleRateHz}Hz, ${obsPreset.recommended.channels}`}
+                />
+                <CopyRow
+                  label="Video"
+                  value={`${obsPreset.recommended.videoCodec} ${obsPreset.recommended.videoBitrateKbps}kbps CBR, keyframe ${obsPreset.recommended.keyframeIntervalSec}s, ${obsPreset.recommended.preset}, ${obsPreset.recommended.profile}, ${obsPreset.recommended.tune}`}
+                />
               </Stack>
             )}
           </Stack>

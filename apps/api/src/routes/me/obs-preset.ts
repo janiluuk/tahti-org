@@ -138,7 +138,11 @@ const obsPresetRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       const sceneName = `Tahti — ${channel.slug}`
-      const sceneCollection = buildSceneCollection(sceneName, user.avatarUrl ?? null, user.displayName)
+      const sceneCollection = buildSceneCollection(
+        sceneName,
+        user.avatarUrl ?? null,
+        user.displayName,
+      )
 
       return reply.send({
         server: rtmp.server,
