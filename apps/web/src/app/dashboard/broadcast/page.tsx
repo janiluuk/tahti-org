@@ -5,7 +5,11 @@ import { redirect } from 'next/navigation'
 import { PageShell, Text } from '@tahti/ui'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
+import { fetchMixcloudStatus } from '../mixcloud-actions'
+import type { ModeratorRow } from '../moderator-actions'
+import type { ProgrammeItemRow } from '../programme-actions'
 import { BroadcastStudio } from './_broadcast-studio'
+import { BroadcastSettingsSections, ChannelDesignLinkPanel } from './_broadcast-settings-sections'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -41,21 +45,52 @@ export default async function BroadcastStudioPage() {
 
   let streamSettings: StreamSettings | null = null
   let broadcastUsage: BroadcastUsageInfo | null = null
+  let announcements: Array<{ id: string; body: string; createdAt: string }> = []
+  let moderators: ModeratorRow[] = []
+  let channelProgramme: { fallbackMode: 'shuffle' | 'ordered'; items: ProgrammeItemRow[] } | null =
+    null
+  let channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null } = {
+    nextBroadcastAt: null,
+    nextBroadcastNote: null,
+  }
 
   try {
-    const [streamSettingsRes, broadcastUsageRes] = await Promise.all([
+    const [
+      streamSettingsRes,
+      broadcastUsageRes,
+      announcementsRes,
+      moderatorsRes,
+      programmeRes,
+      scheduleRes,
+    ] = await Promise.all([
       get('/api/me/stream-settings'),
       get('/api/me/broadcast-usage'),
+      fetch(`${apiUrl}/api/chat/${user.channel.slug}/announcements`, {
+        headers: authHeaders,
+        cache: 'no-store',
+      }),
+      get('/api/me/channel/moderators'),
+      get('/api/me/channel/programme'),
+      get('/api/me/channel/schedule'),
     ])
 
     if (streamSettingsRes.ok) streamSettings = (await streamSettingsRes.json()) as StreamSettings
     if (broadcastUsageRes.ok) {
       broadcastUsage = (await broadcastUsageRes.json()) as BroadcastUsageInfo
     }
+    if (announcementsRes.ok) {
+      announcements = (await announcementsRes.json()) as typeof announcements
+    }
+    if (moderatorsRes.ok) moderators = (await moderatorsRes.json()) as ModeratorRow[]
+    if (programmeRes.ok) channelProgramme = (await programmeRes.json()) as typeof channelProgramme
+    if (scheduleRes.ok) channelSchedule = (await scheduleRes.json()) as typeof channelSchedule
   } catch {
     // render with partial data
   }
 
+  if (!channelProgramme) channelProgramme = { fallbackMode: 'shuffle', items: [] }
+
+  const mixcloudStatus = await fetchMixcloudStatus()
   const isLive = user.channel.state === 'LIVE'
 
   return (
@@ -88,6 +123,19 @@ export default async function BroadcastStudioPage() {
         ) : (
           <Text tone="muted">Could not load stream credentials. Refresh or contact support.</Text>
         )}
+
+        <ChannelDesignLinkPanel />
+
+        <BroadcastSettingsSections
+          channelSlug={user.channel.slug}
+          isLive={isLive}
+          announcements={announcements}
+          moderators={moderators}
+          channelProgramme={channelProgramme}
+          channelSchedule={channelSchedule}
+          mixcloudStatus={mixcloudStatus}
+          apiUrl={apiUrl}
+        />
       </div>
     </PageShell>
   )
