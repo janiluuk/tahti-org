@@ -1,8 +1,10 @@
 # Tahti ry — broadcasting tool guides
 
-Every member gets one-click access to a personalized setup guide for their
-preferred broadcasting tool. The guide includes their current credentials,
-recommended settings, and a "test connection" button.
+Manual step-by-step setup guides for every supported broadcasting tool, plus a
+downloadable OBS preset (see "Downloadable OBS preset" below) — a fully
+personalized, one-click per-tool guide with a "test connection" button is a
+future direction, described in "What the guide rendering does technically"
+below, but not yet built.
 
 ## Multistream to Twitch, YouTube, and other sites
 
@@ -11,6 +13,33 @@ then add **Multistream** destinations in the dashboard (stream key per platform)
 
 Step-by-step for every supported service: **[guides/multistream-simulcast.md](guides/multistream-simulcast.md)**.
 In the web app: `/help/multistream`.
+
+**Video on the mirror:** the YouTube/Twitch (and other) multistream targets carry a
+video track showing the channel's cover art with the current title overlaid, baked
+in server-side by Tahti — this is separate from whatever OBS itself is showing, since
+Tahti's own ingest is audio-only end to end (video from OBS is not used, even if OBS
+is sending it).
+
+---
+
+## Downloadable OBS preset
+
+From the dashboard's **Go Live** panel, **Download OBS preset** fetches:
+
+- The recommended audio/video encoder settings below, shown as copyable rows.
+- A real OBS **Scene Collection** JSON file (`Scene Collection → Import` in OBS) with
+  the channel's cover art and display name pre-wired as an Image + Text source.
+
+This scene is a **local OBS convenience only** — it doesn't change what reaches
+Tahti or the multistream mirror (see above); it's there if an artist wants their own
+OBS output to look right too. The Text source is created as `text_gdiplus_v2`
+(Windows); on macOS/Linux, re-add it as *Text (FreeType 2)* if it doesn't show up
+after import.
+
+The RTMP server + stream key still need to be pasted manually into OBS's
+*Settings → Stream → Custom* (stock OBS has no single-file way to import service
+credentials outside a full Profile bundle) — both are already available as copy
+buttons in the same panel.
 
 ---
 
@@ -368,7 +397,16 @@ This is the friendliest way to verify a new setup before going live for real.
 
 ## What the guide rendering does technically
 
-When the agent serves `GET /v1/me/broadcast/guides/obs`, it:
+**Status:** this section (per-tool `GET /v1/me/broadcast/guides/:tool` Markdown
+rendering, screenshots, "Test connection" probe) is a design spec, not yet
+implemented — there is no such route in `apps/api/src/routes`. The one part of
+this vision that *is* real today is `GET /api/me/obs-preset` (see "Downloadable
+OBS preset" above): recommended settings + a downloadable OBS scene collection.
+The manual walkthroughs elsewhere in this file remain the actual, current
+onboarding path for every other tool.
+
+If/when the fuller personalized-guide endpoint above is built, the intended
+design was:
 
 1. Loads the OBS guide template from a `.md.hbs` file
 2. Fills in the artist's current `rtmpStreamKey`, `liveSourcePass`, channel slug

@@ -61,6 +61,7 @@ volumes:
   hls_shared:
   recordings_shared:
   archive_cache_shared:
+  cover_cache_shared:
   prometheus_data:
   grafana_data:
 
@@ -258,10 +259,8 @@ services:
       <<: *db-pool-env
       NODE_ENV: production
       REDIS_URL: redis://redis:6379
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_PUBLIC_ENDPOINT: https://cdn.tahti.live
-      MINIO_ACCESS_KEY: tahti
-      MINIO_SECRET_KEY_FILE: /run/secrets/minio_root_password
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
       CENTRIFUGO_HOST: chat
       PUBLIC_CDN_BASE: https://cdn.tahti.live
       PUBLIC_HLS_BASE: https://stream.tahti.live
@@ -314,7 +313,6 @@ services:
       - docs_user
       - docs_pass
       - acoustid_api_key
-      - minio_root_password
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
       interval: 15s
@@ -338,9 +336,8 @@ services:
     environment:
       <<: *db-pool-env
       REDIS_URL: redis://redis:6379
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: tahti
-      MINIO_SECRET_KEY_FILE: /run/secrets/minio_root_password
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
       HLS_SEGMENT_ROOT: /hls
       HLS_MINIO_BUCKET: hls-live
       HLS_STALE_SECONDS: "20"
@@ -349,7 +346,7 @@ services:
       RTMP_KEY_FILE: /run/secrets/rtmp_key_encryption_key
       GOOGLE_DRIVE_CLIENT_SECRET_FILE: /run/secrets/google_drive_client_secret
       GOOGLE_DRIVE_CLIENT_ID: ${GOOGLE_DRIVE_CLIENT_ID:-}
-    secrets: [pg_password, acoustid_api_key, rtmp_key_encryption_key, google_drive_client_secret, minio_root_password]
+    secrets: [pg_password, acoustid_api_key, rtmp_key_encryption_key, google_drive_client_secret]
     volumes:
       - recordings_shared:/recordings:ro
       - hls_shared:/hls:ro
@@ -386,11 +383,10 @@ services:
     environment:
       <<: *db-pool-env
       REDIS_URL: redis://redis:6379
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: tahti
-      MINIO_SECRET_KEY_FILE: /run/secrets/minio_root_password
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: "9000"
       ARCHIVE_CACHE_ROOT: /archive-cache
-    secrets: [pg_password, minio_root_password]
+    secrets: [pg_password]
     volumes:
       - archive_cache_shared:/archive-cache
     deploy:
@@ -438,6 +434,7 @@ services:
       HLS_VOLUME: hls_shared
       RECORDINGS_VOLUME: recordings_shared
       ARCHIVE_CACHE_VOLUME: archive_cache_shared
+      COVER_CACHE_VOLUME: cover_cache_shared
     secrets: [pg_password]
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro

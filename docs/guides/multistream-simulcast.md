@@ -157,7 +157,9 @@ flowchart LR
   Tahti --> Other[Other targets]
 ```
 
-Liquidsoap on your channel reads enabled targets and pushes a copy of the live audio to each RTMP URL using the encrypted keys you saved.
+Liquidsoap on your channel reads enabled targets and pushes your live audio, plus a
+video track showing your cover art and current title, to each RTMP URL using the
+encrypted keys you saved — so YouTube/Twitch see a normal video stream.
 
 ---
 

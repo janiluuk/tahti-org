@@ -44,9 +44,9 @@ import chatAnnouncementsRoute from './routes/chat/announcements.js'
 import chatReactRoute from './routes/chat/react.js'
 import chatPresenceRoute from './routes/chat/presence.js'
 import meChat from './routes/me/chat.js'
-import meNotificationPreferencesRoutes from './routes/me/notification-preferences.js'
 import meModerators from './routes/me/moderators.js'
 import rtmpTargetRoutes from './routes/me/rtmp-targets.js'
+import obsPresetRoutes from './routes/me/obs-preset.js'
 import transparencyRoutes from './routes/transparency/index.js'
 import adminLedgerRoutes from './routes/admin/ledger.js'
 import governanceRoutes from './routes/governance/index.js'
@@ -67,7 +67,6 @@ import adminMembersRoutes from './routes/admin/members.js'
 import adminStatsRoutes from './routes/admin/stats.js'
 import adminStreamsRoutes from './routes/admin/streams.js'
 import adminRadioRoutes from './routes/admin/radio.js'
-import adminTahtiSelectsRoutes from './routes/admin/tahti-selects.js'
 import adminChannelsRoutes from './routes/admin/channels.js'
 import adminFanSubsRoutes from './routes/admin/fansubs.js'
 import adminUsersRoutes from './routes/admin/users.js'
@@ -98,8 +97,6 @@ import mixcloudRoutes from './routes/me/mixcloud.js'
 import bandcampRoutes from './routes/me/bandcamp.js'
 import soundcloudRoutes from './routes/me/soundcloud.js'
 import googleDriveRoutes from './routes/me/google-drive.js'
-import spotifyImportRoutes from './routes/imports/spotify.js'
-import mixcloudEmbedImportRoutes from './routes/imports/mixcloud-embed.js'
 import revelatorRoutes from './routes/me/revelator.js'
 import newsletterPublicRoutes from './routes/newsletter/public.js'
 import newsletterMeRoutes from './routes/newsletter/me.js'
@@ -107,7 +104,6 @@ import venueRoutes from './routes/venues/venues.js'
 import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
-import meAvatarRoutes from './routes/me/avatar.js'
 import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import meArchiveRoutes from './routes/me/archive.js'
 import meProgrammeRoutes from './routes/me/programme.js'
@@ -126,8 +122,6 @@ import meChannelLiveStatsRoutes from './routes/me/channel-live-stats.js'
 import meChannelFunnelStatsRoutes from './routes/me/channel-funnel-stats.js'
 import meStatsRoutes from './routes/me/stats.js'
 import meEndBroadcastRoutes from './routes/me/end-broadcast.js'
-import meGoLiveRoutes from './routes/me/go-live.js'
-import meBroadcastPreflightRoutes from './routes/me/broadcast-preflight.js'
 import meStashRoutes from './routes/me/stash.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
@@ -439,11 +433,11 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(chatReactRoute)
   await fastify.register(chatPresenceRoute)
   await fastify.register(meChat)
-  await fastify.register(meNotificationPreferencesRoutes)
   await fastify.register(meModerators)
 
   // M6: RTMP multistream targets
   await fastify.register(rtmpTargetRoutes)
+  await fastify.register(obsPresetRoutes)
 
   // M8: transparency ledger
   await fastify.register(transparencyRoutes)
@@ -475,7 +469,6 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminStatsRoutes)
   await fastify.register(adminStreamsRoutes)
   await fastify.register(adminRadioRoutes)
-  await fastify.register(adminTahtiSelectsRoutes)
   await fastify.register(adminChannelsRoutes)
   await fastify.register(adminFanSubsRoutes)
   await fastify.register(adminUsersRoutes)
@@ -509,7 +502,6 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M12 / M15: profile update (bio, social links) + mention detection
   await fastify.register(meProfileRoutes)
-  await fastify.register(meAvatarRoutes)
   await fastify.register(mePrivacyRoutes)
   await fastify.register(publicPressKitRoutes)
 
@@ -521,8 +513,6 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(bandcampRoutes)
   await fastify.register(soundcloudRoutes)
   await fastify.register(googleDriveRoutes)
-  await fastify.register(spotifyImportRoutes)
-  await fastify.register(mixcloudEmbedImportRoutes)
   await fastify.register(revelatorRoutes)
 
   // M13: newsletter (public + artist-facing)
@@ -559,8 +549,6 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meChannelFunnelStatsRoutes)
   await fastify.register(meStatsRoutes)
   await fastify.register(meEndBroadcastRoutes)
-  await fastify.register(meGoLiveRoutes)
-  await fastify.register(meBroadcastPreflightRoutes)
   await fastify.register(meStashRoutes)
   await fastify.register(meUsersRoutes)
 

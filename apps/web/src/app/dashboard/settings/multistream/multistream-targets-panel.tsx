@@ -197,8 +197,9 @@ export function MultistreamTargetsPanel({
           </Button>
         )}
         <p className="admin-footnote multistream-footer__note">
-          This is an audio-only simulcast — YouTube/Twitch may reject music-only streams without
-          visuals. Guide: <a href={GUIDE_PATH}>{GUIDE_PATH}</a>
+          The mirror includes a video track showing your cover art with the current title —
+          YouTube/Twitch see a normal video stream, not audio-only. Guide:{' '}
+          <a href={GUIDE_PATH}>{GUIDE_PATH}</a>
         </p>
       </div>
 

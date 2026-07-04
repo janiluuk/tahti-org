@@ -173,21 +173,9 @@ export const ChannelProgrammeItemViewSchema = z.object({
   createdAt: z.coerce.date(),
 })
 
-export const ChannelProgrammeLibraryTrackViewSchema = z.object({
-  releaseTrackId: z.string(),
-  releaseId: z.string(),
-  releaseTitle: z.string(),
-  trackTitle: z.string(),
-  durationSec: z.number().nullable(),
-  /** Set once this library track has been added to rotation (mirrors an ArchiveItem). */
-  archiveItemId: z.string().nullable(),
-})
-
 export const ChannelProgrammeViewSchema = z.object({
   fallbackMode: z.enum(['shuffle', 'ordered']),
-  fallbackEnabled: z.boolean(),
   items: z.array(ChannelProgrammeItemViewSchema),
-  library: z.array(ChannelProgrammeLibraryTrackViewSchema),
 })
 
 export const StreamSettingsResponseSchema = z.object({
@@ -211,11 +199,26 @@ export const StreamKeyRotateResponseSchema = z.object({
   rtmpStreamKey: z.string(),
 })
 
-export const StreamSignalStatusResponseSchema = z.object({
-  connected: z.boolean(),
-  codec: z.string().nullable(),
-  bitrateKbps: z.number().nullable(),
-  listeners: z.number().nullable(),
+export const ObsPresetResponseSchema = z.object({
+  server: z.string(),
+  streamKey: z.string(),
+  recommended: z.object({
+    audioCodec: z.string(),
+    audioBitrateKbps: z.number(),
+    sampleRateHz: z.number(),
+    channels: z.string(),
+    videoCodec: z.string(),
+    videoBitrateKbps: z.number(),
+    keyframeIntervalSec: z.number(),
+    preset: z.string(),
+    profile: z.string(),
+    tune: z.string(),
+  }),
+  /** Real OBS scene-collection JSON (Scene Collection → Import) with cover art + title
+   * pre-wired — a local-OBS convenience only; does not affect Tahti's own ingest or
+   * the YouTube/Twitch multistream mirror (which bakes its own video track server-side). */
+  sceneCollection: z.record(z.string(), z.unknown()),
+  sceneCollectionFilename: z.string(),
 })
 
 export const IcecastPassRotateResponseSchema = z.object({
@@ -345,9 +348,6 @@ export const PublicChannelUserSchema = z.object({
   displayName: z.string(),
   bio: z.string().nullable(),
   avatarUrl: z.string().nullable(),
-  countryCode: z.string().nullable().optional(),
-  pronouns: z.string().nullable().optional(),
-  socialLinks: z.unknown().optional(),
 })
 
 export const PublicChannelViewSchema = z.object({
@@ -467,8 +467,6 @@ export const PublicProfileArtistSchema = z.object({
   socialLinks: z.unknown(),
   tipJarUrl: z.string().nullable(),
   tier: z.string(),
-  countryCode: z.string().nullable().optional(),
-  pronouns: z.string().nullable().optional(),
 })
 
 export const PublicProfileViewSchema = z.object({
@@ -625,7 +623,6 @@ export const AuthMeResponseSchema = z.object({
   email: z.string().email(),
   username: z.string(),
   displayName: z.string(),
-  avatarUrl: z.string().nullable(),
   tier: z.string(),
   emailVerifiedAt: z.coerce.date().nullable(),
   isMember: z.boolean(),
@@ -640,9 +637,6 @@ export const AuthMeResponseSchema = z.object({
     .object({
       slug: z.string(),
       state: z.string(),
-      goneLiveAt: z.coerce.date().nullable(),
-      customDomain: z.string().nullable(),
-      customDomainVerified: z.boolean(),
     })
     .nullable(),
   storage: z.object({
@@ -661,7 +655,6 @@ export const ProfileFieldsSchema = z.object({
   avatarUrl: z.string().nullable(),
   tipJarUrl: z.string().nullable(),
   countryCode: z.string().nullable(),
-  pronouns: z.string().nullable(),
   socialLinks: z.unknown(),
   publicAttribution: z.boolean(),
 })
@@ -674,17 +667,10 @@ export const NewsletterSubscriberStatsSchema = z.object({
   total: z.number().int(),
   confirmed: z.number().int(),
   newLast30Days: z.number().int(),
-  /** Of `confirmed`, how many also hold an active fan-sub tier with the FAN_NEWSLETTER perk. */
-  fanSubscriberCount: z.number().int(),
 })
 
 export const NewsletterSubscribeStatusSchema = z.object({
   status: z.string(),
-})
-
-/** Logged-in viewer's subscription state to a specific artist's newsletter. */
-export const NewsletterMySubscriptionSchema = z.object({
-  subscribed: z.boolean(),
 })
 
 export const RepostAckResponseSchema = z.object({
@@ -914,9 +900,6 @@ export const MeGrantEstimateSchema = z.object({
   estimateCents: z.number().int().nonnegative(),
   units: z.number().nonnegative(),
   eligible: z.boolean(),
-  freeDownloads: z.number().int().nonnegative(),
-  paidDownloads: z.number().int().nonnegative(),
-  fanSubEuros: z.number().int().nonnegative(),
 })
 
 export const FanConnectPortalResponseSchema = z.object({
