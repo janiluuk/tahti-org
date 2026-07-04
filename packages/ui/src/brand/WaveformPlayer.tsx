@@ -39,13 +39,7 @@ export function WaveformPlayer({
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
-    (buffering
-      ? 'Buffering…'
-      : isLive
-        ? 'LIVE NOW'
-        : playing
-          ? 'Now playing'
-          : 'Ready to play')
+    (buffering ? 'Buffering…' : isLive ? 'LIVE NOW' : playing ? 'Now playing' : 'Ready to play')
 
   const progress = isLive || duration <= 0 ? 0 : Math.min(1, currentTime / duration)
 
