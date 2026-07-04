@@ -13,8 +13,9 @@ import {
   stopChannelFingerprintIngest,
   stopFingerprintIngest,
 } from './fingerprint-ingest.js'
-import { ARCHIVE_CACHE_VOLUME } from './docker-streaming.js'
+import { ARCHIVE_CACHE_VOLUME, COVER_CACHE_VOLUME } from './docker-streaming.js'
 import { spawnEdgeEncoder, stopChannelEdgeEncoders } from './edge-encoder.js'
+import { ensureCoverImage, coverImagePath } from './cover-cache.js'
 import { liveInputUrl } from './live-input.js'
 import {
   LIQUIDSOAP_FADE_SEC,
@@ -54,6 +55,36 @@ function decryptKey(enc: string): string {
   return Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8')
 }
 
+/** Escape a display name for embedding in a Liquidsoap double-quoted string literal. */
+export function escapeLiquidsoapString(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+}
+
+interface RtmpMirrorTarget {
+  rtmpUrl: string
+  streamKey: string
+  alwaysMirror: boolean
+}
+
+/**
+ * Renders one multistream RTMP output: the live/archive audio muxed with a video
+ * track built from the channel's cover-cache image + title text. Verified against
+ * savonet/liquidsoap:v2.2.5's actual API surface (video.add_image has no `duration`
+ * arg; the mux call is `source.mux.video`, not `mux(...)`; the ffmpeg video format
+ * key is `%video`, not `%video.raw` — all three differ from what an earlier,
+ * never-wired-up draft of this block assumed).
+ */
+export function buildRtmpMirrorOutput(
+  target: RtmpMirrorTarget,
+  coverPath: string,
+  titleText: string,
+): string {
+  const audioSource = target.alwaysMirror ? 'radio' : 'live_source'
+  const escapedTitle = escapeLiquidsoapString(titleText)
+  const videoSource = `video.add_text(color=0xffffff, size=28, x=20, y=628, "${escapedTitle}", video.add_image(file="${coverPath}", width=1280, height=720, blank()))`
+  return `output.url(\n  url="${target.rtmpUrl}/${target.streamKey}",\n  fallible=true,\n  %ffmpeg(\n    format="flv",\n    %audio(codec="aac", b="128k", ar=44100, ac=2),\n    %video(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)\n  ),\n  source.mux.video(video=${videoSource}, ${audioSource})\n)`
+}
+
 // Track running containers: channelId → containerName
 const activeChannels = new Map<string, string>()
 
@@ -87,6 +118,7 @@ export async function spawnLiquidsoapContainer(
         where: { enabled: true },
         select: { provider: true, rtmpUrl: true, streamKeyEnc: true, alwaysMirror: true },
       },
+      user: { select: { displayName: true, avatarUrl: true } },
     },
   })
 
@@ -99,6 +131,13 @@ export async function spawnLiquidsoapContainer(
     streamKey: decryptKey(t.streamKeyEnc),
     alwaysMirror: t.alwaysMirror,
   }))
+
+  // Multistream mirrors need a video track (YouTube/Twitch reject/flag audio-only
+  // RTMP) — bake the channel's cover art + title into a static video frame. Only
+  // populate the cache when there's actually a mirror target enabled.
+  if (targets.length > 0) {
+    await ensureCoverImage(channelId, channel.user.avatarUrl, COVER_CACHE_VOLUME)
+  }
 
   // Render Liquidsoap config from template
   const templateRaw = await readFile(templatePath, 'utf8')
@@ -117,12 +156,13 @@ export async function spawnLiquidsoapContainer(
     // Strip the entire RTMP_TARGETS block
     config = config.replace(/\{\{#RTMP_TARGETS\}\}[\s\S]*?\{\{\/RTMP_TARGETS\}\}/g, '')
   } else {
-    // Replace the template block with rendered outputs
+    // Replace the template block with rendered outputs — each target gets its own
+    // video source built from the shared cover-cache image (cheap: it's a static
+    // decoded-once image, see cover-cache.ts) with the channel's display name
+    // overlaid. See buildRtmpMirrorOutput for the Liquidsoap API details.
+    const coverPath = coverImagePath(channelId)
     const rtmpBlock = targets
-      .map((t) => {
-        const alwaysMirrorFlag = t.alwaysMirror ? '1' : ''
-        return `output.url(\n  url="${t.rtmpUrl}/${t.streamKey}",\n  fallible=true,\n  %ffmpeg(format="flv", %audio(codec="aac", b="128k")),\n  ${alwaysMirrorFlag ? 'radio' : 'live_source'}\n)`
-      })
+      .map((t) => buildRtmpMirrorOutput(t, coverPath, channel.user.displayName))
       .join('\n\n')
     config = config.replace(/\{\{#RTMP_TARGETS\}\}[\s\S]*?\{\{\/RTMP_TARGETS\}\}/g, rtmpBlock)
   }
@@ -140,6 +180,7 @@ export async function spawnLiquidsoapContainer(
     `-v ${HLS_VOLUME}:/hls`,
     `-v ${RECORDINGS_VOLUME}:/recordings`,
     `-v ${ARCHIVE_CACHE_VOLUME}:/archive-cache`,
+    `-v ${COVER_CACHE_VOLUME}:/cover-cache`,
     `-v ${configPath}:/etc/liquidsoap/channel.liq:ro`,
     `-e CHANNEL_ID=${channelId}`,
     `-e BROADCAST_ID=${broadcastId}`,
