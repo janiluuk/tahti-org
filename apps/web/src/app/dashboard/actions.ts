@@ -4,6 +4,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
+import { revalidateTag } from 'next/cache'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -283,6 +284,9 @@ export async function endBroadcast(): Promise<{ ok: boolean; error?: string }> {
     const data = await response.json().catch(() => ({}))
     return { ok: false, error: (data as { error?: string }).error ?? 'Failed to end broadcast' }
   }
+  // Listeners on /listen and the homepage should stop seeing this channel as live
+  // immediately, not after the up-to-30s time-based ISR window.
+  revalidateTag('channels-live')
   return { ok: true }
 }
 
@@ -296,5 +300,8 @@ export async function goLive(): Promise<{ ok: boolean; error?: string }> {
     const data = await response.json().catch(() => ({}))
     return { ok: false, error: (data as { error?: string }).error ?? 'Failed to go live' }
   }
+  // Listeners on /listen and the homepage should see this channel as live
+  // immediately, not after the up-to-30s time-based ISR window.
+  revalidateTag('channels-live')
   return { ok: true }
 }

@@ -89,7 +89,7 @@ export default async function DashboardPage() {
     peakDailyListeners: number
     daily: Array<{ date: string; liveSeconds: number; broadcastCount: number; listeners: number }>
   } | null = null
-  let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0 }
+  let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0, thisMonthNetCents: 0 }
   let archiveItemsForEdit: Array<
     Record<string, unknown> & { id: string; title: string; status: string }
   > = []
@@ -279,7 +279,7 @@ export default async function DashboardPage() {
         broadcastUsage={broadcastUsage}
         weeklyListeners={weeklyListeners}
         statDlCount={statDlCount}
-        revenueCents={fanPayoutStats.paidLast30Days}
+        revenueCents={fanPayoutStats.thisMonthNetCents}
         archiveItems={archiveItemsForEdit.map((item) => ({
           id: item.id,
           title: item.title,

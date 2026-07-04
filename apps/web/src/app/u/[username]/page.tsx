@@ -9,6 +9,7 @@ import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { renderBio } from '@/lib/render-bio'
 import { SocialLinkIcon } from '@/components/social-link-icon'
 import { countryName } from '@/lib/country-options'
+import { getSessionUser } from '@/lib/session'
 
 export const revalidate = 60
 
@@ -94,7 +95,7 @@ interface ProfileResponse {
 }
 
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
-  const data = await fetchProfile(params.username)
+  const [data, user] = await Promise.all([fetchProfile(params.username), getSessionUser()])
   if (!data) notFound()
 
   const { artist, channel, releases, links, collections = [] } = data
@@ -125,6 +126,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
       />
       <ProfilePageLayout
         isLive={isLive}
+        user={user}
         cover={<ProfileCover displayName={artist.displayName} avatarUrl={artist.avatarUrl} />}
         hero={
           <ProfileHero
@@ -146,7 +148,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
         <NewsletterSubscribeForm
           artistUsername={artist.username}
           artistDisplayName={artist.displayName}
-          isLoggedIn={false}
+          isLoggedIn={Boolean(user)}
         />
 
         {links.feeds?.archive && (

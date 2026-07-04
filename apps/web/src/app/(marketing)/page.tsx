@@ -19,7 +19,7 @@ async function fetchData(): Promise<{
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   try {
     const [channelsRes, statsRes] = await Promise.all([
-      fetch(`${apiUrl}/api/v1/channels`, { next: { revalidate: 30 } }),
+      fetch(`${apiUrl}/api/v1/channels`, { next: { revalidate: 30, tags: ['channels-live'] } }),
       fetch(`${apiUrl}/api/v1/stats`, { next: { revalidate: 300 } }),
     ])
     const channels = channelsRes.ok

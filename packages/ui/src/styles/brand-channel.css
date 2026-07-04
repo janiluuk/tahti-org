@@ -1492,7 +1492,11 @@
 }
 
 [data-tahti-ui='brand'] .prof-section {
-  margin-bottom: 2rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
 [data-tahti-ui='brand'] .prof-section h2 {

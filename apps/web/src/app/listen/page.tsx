@@ -7,7 +7,7 @@ async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCa
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   try {
     const res = await fetch(`${apiUrl}/api/v1/channels`, {
-      next: { revalidate: 30 },
+      next: { revalidate: 30, tags: ['channels-live'] },
     })
     if (!res.ok) return { live: [], recent: [] }
     return (await res.json()) as { live: ChannelCard[]; recent: ChannelCard[] }
