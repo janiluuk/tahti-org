@@ -153,6 +153,8 @@ type ProfilePageLayoutProps = {
   children: ReactNode
   /** Subscribe flow — max-width var(--narrow-max) */
   narrow?: boolean
+  /** Logged-in viewer — shows their name/avatar instead of "Sign in" in the header. */
+  user?: { username: string; displayName: string } | null
 }
 
 /** PLAT-020: profile / subscribe page shell. `cover` renders full-width outside the max-width container. */
@@ -163,10 +165,11 @@ export function ProfilePageLayout({
   hero,
   children,
   narrow,
+  user,
 }: ProfilePageLayoutProps) {
   return (
     <>
-      <ChannelHeader isLive={isLive} contextLink={contextLink} />
+      <ChannelHeader isLive={isLive} contextLink={contextLink} user={user} />
       {cover}
       <div className={`prof-page${narrow ? ' prof-page--narrow shell-narrow' : ''}`}>
         {hero}

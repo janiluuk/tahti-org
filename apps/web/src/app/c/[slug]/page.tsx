@@ -14,7 +14,6 @@ import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
 import { ArchiveItemPlayback } from './archive-item-playback'
 import { BroadcastCountdown } from '@/components/broadcast-countdown'
-import { StickyLiveBar } from './sticky-live-bar'
 import { ArchiveVideoBackdrop, resolveArchiveBackground } from './archive-item-backdrop'
 import type {
   ChannelGalleryMode,
@@ -117,7 +116,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const hlsUrl = channel.hlsUrl
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
-  const isFlac = channel.user.tier === 'STUDIO' || channel.user.tier === 'ARTIST'
   const socialLinks = (channel.user.socialLinks as Record<string, string> | null) ?? {}
   const profileGenres = socialLinks.genres
     ? socialLinks.genres
@@ -179,9 +177,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           )}
 
           <div className="ch-page-foreground">
-            {channel.state === 'LIVE' && (
-              <StickyLiveBar slug={slug} artistName={channel.user.displayName} isFlac={isFlac} />
-            )}
             {channelBackdrop.videoEmbedUrl && (
               <ArchiveVideoBackdrop embedUrl={channelBackdrop.videoEmbedUrl} />
             )}

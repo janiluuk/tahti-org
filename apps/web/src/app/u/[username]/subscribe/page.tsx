@@ -4,6 +4,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProfilePageLayout, SafePlainText } from '@tahti/ui'
+import { getSessionUser } from '@/lib/session'
 import TierCards from './tier-cards'
 
 interface TiersResponse {
@@ -38,9 +39,12 @@ export default async function SubscribePage({ params }: { params: { username: st
     notFound()
   }
 
+  const user = await getSessionUser()
+
   return (
     <ProfilePageLayout
       narrow
+      user={user}
       contextLink={{
         href: `/u/${data.artist.username}`,
         label: `← ${data.artist.displayName}`,

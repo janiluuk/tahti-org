@@ -558,7 +558,12 @@ async function main() {
           stripeFeeCents: 25,
           orgFeeCents: 25,
           netToArtistCents: 450,
-          state: 'PENDING',
+          // PAID (not PENDING) so the dashboard's "Revenue this month" stat — which
+          // only aggregates state:'PAID' payouts paidAt this month — isn't zero on
+          // the /for-artists marketing screenshot captured from this account.
+          stripeTransferId: 'tr_screenshot_paid_current',
+          state: 'PAID',
+          paidAt: now,
         },
       ],
     })
@@ -827,6 +832,30 @@ async function main() {
         createdAt,
       }
     }),
+  })
+
+  // Non-zero "Plays this month" / broadcast count on the dashboard, which is
+  // otherwise zero on this account and shows up as-is on the /for-artists
+  // marketing screenshot.
+  await prisma.broadcast.create({
+    data: {
+      channelId: artist.channel!.id,
+      source: 'ICECAST',
+      startedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+      endedAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000 + 90 * 60 * 1000),
+      archiveItemId: archiveItem.id,
+    },
+  })
+
+  // Non-zero "Fan subscribers" (confirmed newsletter subscriber count) for the
+  // same screenshot.
+  await prisma.newsletterSubscriber.createMany({
+    data: Array.from({ length: 5 }, (_, i) => ({
+      artistUserId: artist.id,
+      email: `e2e-newsletter-${i}@e2e.tahti.live`,
+      confirmedAt: new Date(now.getTime() - i * 24 * 60 * 60 * 1000),
+      unsubToken: `e2e-unsub-${i}`,
+    })),
   })
 
   const verifyToken = generateVerificationToken()
