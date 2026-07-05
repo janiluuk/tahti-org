@@ -81,6 +81,7 @@ export const PatchReleaseSchema = z.object({
   ),
   description: z.string().trim().max(10_000).optional(),
   smartLinkTargets: SmartLinkTargetsSchema,
+  releaseDate: z.coerce.date().optional(),
 })
 
 export type PatchReleaseInput = z.infer<typeof PatchReleaseSchema>

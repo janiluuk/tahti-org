@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
 import { ButtonIcon, Panel, Button } from '@tahti/ui'
-import { publishRelease, updateReleaseSmartLinks } from '../../release-actions'
+import { publishRelease, updateReleaseDate, updateReleaseSmartLinks } from '../../release-actions'
 import ReleaseOpsPanel, { parseCredits } from '../../release-ops-panel'
 import { ReleaseArtworkUpload } from '../../release-artwork-upload'
 import { ReleaseTrackVersionPanel } from '../../release-track-version-panel'
@@ -61,10 +61,29 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
       : {},
   )
   const [error, setError] = useState<string | null>(null)
+  const [releaseDate, setReleaseDate] = useState(r.releaseDate.slice(0, 10))
+  const [dateSaving, setDateSaving] = useState(false)
+  const [dateSaved, setDateSaved] = useState(false)
 
   function publish() {
     startTransition(async () => {
       await publishRelease(r.id)
+      router.refresh()
+    })
+  }
+
+  function saveReleaseDate() {
+    setError(null)
+    setDateSaving(true)
+    setDateSaved(false)
+    startTransition(async () => {
+      const res = await updateReleaseDate(r.id, releaseDate)
+      setDateSaving(false)
+      if (res.error) {
+        setError(res.error)
+        return
+      }
+      setDateSaved(true)
       router.refresh()
     })
   }
@@ -107,6 +126,26 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
               </Button>
             )}
           </div>
+        </div>
+      </Panel>
+
+      <Panel title="Release date" headerTight className="studio-mb-md">
+        <div className="studio-row studio-row--wrap studio-gap-xs">
+          <input
+            type="date"
+            value={releaseDate}
+            disabled={dateSaving}
+            onChange={(e) => {
+              setReleaseDate(e.target.value)
+              setDateSaved(false)
+            }}
+            className="studio-input"
+          />
+          <Button onClick={saveReleaseDate} disabled={dateSaving} variant="primary" size="sm">
+            <ButtonIcon name="save" />
+            {dateSaving ? 'Saving…' : 'Save'}
+          </Button>
+          {dateSaved && <span className="studio-text-muted-sm">Saved.</span>}
         </div>
       </Panel>
 

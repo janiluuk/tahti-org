@@ -70,6 +70,23 @@ export async function importReleasesFromCsv(
   return { error: null, created: data.created }
 }
 
+export async function updateReleaseDate(
+  id: string,
+  releaseDate: string,
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ releaseDate }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to update release date' }
+  }
+  return { error: null }
+}
+
 export async function updateReleaseSmartLinks(
   id: string,
   smartLinkTargets: Record<string, string>,

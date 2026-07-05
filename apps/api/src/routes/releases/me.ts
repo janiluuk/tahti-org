@@ -188,6 +188,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         publishedAt?: Date | null
         smartLinkTargets?: Record<string, string>
         description?: string | null
+        releaseDate?: Date
       } = {}
 
       if (body.smartLinkTargets !== undefined) {
@@ -195,6 +196,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (body.description !== undefined) {
         data.description = body.description || null
+      }
+      if (body.releaseDate !== undefined) {
+        data.releaseDate = body.releaseDate
       }
 
       if (body.state) {
