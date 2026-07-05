@@ -69,6 +69,7 @@ interface CollectionDetail {
   description: string | null
   type: string
   style: string
+  trackSortMode: string
   visibility: string
   coverMode: string
   coverUrl: string | null
@@ -76,6 +77,12 @@ interface CollectionDetail {
   isFeatured: boolean
   items: CollectionItem[]
 }
+
+const SORT_MODE_OPTIONS = [
+  { value: 'MANUAL', label: 'Manual (drag to reorder)' },
+  { value: 'TIME', label: 'By time added' },
+  { value: 'NAME', label: 'By name' },
+]
 
 const STYLE_OPTIONS = [
   'PLAYLIST',
@@ -126,6 +133,7 @@ export function CollectionEditor({
   // Settings state
   const [name, setName] = useState(initial.name)
   const [style, setStyle] = useState(initial.style)
+  const [trackSortMode, setTrackSortMode] = useState(initial.trackSortMode)
   const [isPublic, setIsPublic] = useState(initial.isPublic)
   const [isFeatured, setIsFeatured] = useState(initial.isFeatured)
   const [description, setDescription] = useState(initial.description ?? '')
@@ -162,6 +170,7 @@ export function CollectionEditor({
       isPublic,
       isFeatured,
       style,
+      trackSortMode,
       description: description.trim() || null,
     })
     setSettingsSaving(false)
@@ -172,7 +181,7 @@ export function CollectionEditor({
       setSettingsSaved(true)
       startTransition(() => router.refresh())
     }
-  }, [initial.slug, isPublic, isFeatured, style, description, router])
+  }, [initial.slug, isPublic, isFeatured, style, trackSortMode, description, router])
 
   const moveItem = useCallback((fromIdx: number, toIdx: number) => {
     setItems((prev) => {
@@ -285,6 +294,27 @@ export function CollectionEditor({
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="studio-field">
+            <label className="studio-label" htmlFor={`collection-sort-${initial.id}`}>
+              Track order
+            </label>
+            <select
+              id={`collection-sort-${initial.id}`}
+              className="studio-input"
+              value={trackSortMode}
+              onChange={(e) => {
+                setTrackSortMode(e.target.value)
+                markDirty()
+              }}
+            >
+              {SORT_MODE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="studio-field">

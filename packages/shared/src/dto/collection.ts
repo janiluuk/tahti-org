@@ -15,6 +15,9 @@ export const COLLECTION_STYLES = [
   'PLAYLIST',
 ] as const
 
+/** MANUAL respects drag-reordered position; TIME/NAME are computed at display time. */
+export const COLLECTION_TRACK_SORT_MODES = ['MANUAL', 'TIME', 'NAME'] as const
+
 export const CreateCollectionSchema = z.object({
   name: z.string().trim().min(1, 'name is required').max(100),
   slug: z.string().min(2).max(64).optional(),
@@ -32,6 +35,7 @@ export const PatchCollectionSchema = z
     name: z.string().trim().min(1).max(100).optional(),
     description: z.string().max(1000).nullable().optional(),
     style: z.enum(COLLECTION_STYLES).optional(),
+    trackSortMode: z.enum(COLLECTION_TRACK_SORT_MODES).optional(),
     isPublic: z.boolean().optional(),
     isFeatured: z.boolean().optional(),
     coverUrl: z.string().max(500).nullable().optional(),

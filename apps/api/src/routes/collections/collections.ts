@@ -61,6 +61,25 @@ const collectionItemInclude = {
   },
 } as const
 
+type SortableItem = {
+  position: number
+  archiveItem: { title: string; createdAt: Date } | null
+  release: { title: string; releaseDate: Date } | null
+}
+
+/** MANUAL keeps drag-reordered position; TIME/NAME are computed for display, not persisted. */
+function sortCollectionItems<T extends SortableItem>(items: T[], mode: string): T[] {
+  const itemTitle = (i: T) => i.archiveItem?.title ?? i.release?.title ?? ''
+  const itemTime = (i: T) => i.archiveItem?.createdAt ?? i.release?.releaseDate ?? new Date(0)
+  if (mode === 'NAME') {
+    return [...items].sort((a, b) => itemTitle(a).localeCompare(itemTitle(b)))
+  }
+  if (mode === 'TIME') {
+    return [...items].sort((a, b) => itemTime(a).getTime() - itemTime(b).getTime())
+  }
+  return items
+}
+
 // M23 — Collections: named groupings of archive items / releases
 const collectionRoutes: FastifyPluginAsync = async (fastify) => {
   // ── Artist-facing management ─────────────────────────────────────────────
@@ -203,6 +222,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.name !== undefined) data.name = body.name
       if (body.description !== undefined) data.description = body.description
       if (body.style !== undefined) data.style = body.style
+      if (body.trackSortMode !== undefined) data.trackSortMode = body.trackSortMode
       if (body.isPublic !== undefined) data.isPublic = body.isPublic
       if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
       if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl?.trim() || null
@@ -570,10 +590,12 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
+      const ordered = sortCollectionItems(col.items, col.trackSortMode)
+
       // Presign playback URLs for items with real Tahti audio — embed-only items have
       // no rawKey/flacKey/mp3Key and stay null, so the public page never tries to play them.
       const items = await Promise.all(
-        col.items.map(async (colItem) => {
+        ordered.map(async (colItem) => {
           if (!colItem.archiveItem) return colItem
           const playbackKey = archivePlaybackKey(colItem.archiveItem)
           const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null

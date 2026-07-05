@@ -3,7 +3,7 @@
 
 'use client'
 
-import { usePlayer } from '@/contexts/player-context'
+import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 
 type Props = {
   id: string
@@ -12,6 +12,8 @@ type Props = {
   artistUsername: string
   thumbUrl: string | null
   durationLabel: string | null
+  /** Sibling playable tracks in display order — enables auto-advance + loop on 'ended'. */
+  queue?: PlayerTrack[]
 }
 
 /** Public collection page — play button for a regular Tahti-hosted track, driving the shared mini-player. */
@@ -22,6 +24,7 @@ export function ArchiveTrackRow({
   artistUsername,
   thumbUrl,
   durationLabel,
+  queue,
 }: Props) {
   const { track, playing, load, togglePlay } = usePlayer()
   const isCurrent = track?.id === id
@@ -30,7 +33,7 @@ export function ArchiveTrackRow({
     if (!isCurrent) {
       load(
         { id, kind: 'archive', url: audioUrl, title, subtitle: `@${artistUsername}` },
-        { autoplay: true },
+        { autoplay: true, queue },
       )
       return
     }

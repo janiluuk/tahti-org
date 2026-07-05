@@ -49,6 +49,7 @@ export async function syncChannelArchiveFallbackCache(
           isFallback: true,
           fallbackOrder: true,
           lastFallbackPlayedAt: true,
+          createdAt: true,
         },
       })
     : []

@@ -95,6 +95,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
           isFallback: true,
           fallbackOrder: true,
           lastFallbackPlayedAt: true,
+          createdAt: true,
         },
       })
 

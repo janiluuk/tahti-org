@@ -143,6 +143,7 @@ export async function updateCollection(
     coverUrl?: string | null
     description?: string | null
     style?: string
+    trackSortMode?: string
   },
 ): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}`, {
