@@ -23,6 +23,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -185,19 +186,26 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
     const existing = await fastify.prisma.collection.findUnique({ where: { slug } })
     if (existing) return reply.status(409).send({ error: 'Slug already taken' })
 
-    const col = await fastify.prisma.collection.create({
-      data: {
-        userId: user.id,
-        slug,
-        name: body.name,
-        description: body.description?.trim() || null,
-        type,
-        style: body.style,
-        isPublic: body.isPublic ?? true,
-        coverUrl: body.coverUrl?.trim() || null,
-      },
-    })
-    return reply.status(201).send(col)
+    try {
+      const col = await fastify.prisma.collection.create({
+        data: {
+          userId: user.id,
+          slug,
+          name: body.name,
+          description: body.description?.trim() || null,
+          type,
+          style: body.style,
+          isPublic: body.isPublic ?? true,
+          coverUrl: body.coverUrl?.trim() || null,
+        },
+      })
+      return reply.status(201).send(col)
+    } catch (err) {
+      if (isUniqueConstraintError(err)) {
+        return reply.status(409).send({ error: 'Slug already taken' })
+      }
+      throw err
+    }
   })
 
   fastify.patch(
@@ -289,21 +297,31 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       const position = body.position ?? col._count.items + 1
 
-      // Shift existing items to make room
-      await fastify.prisma.collectionItem.updateMany({
-        where: { collectionId: col.id, position: { gte: position } },
-        data: { position: { increment: 1 } },
-      })
-
-      const item = await fastify.prisma.collectionItem.create({
-        data: {
-          collectionId: col.id,
-          archiveItemId: body.archiveItemId ?? null,
-          releaseId: body.releaseId ?? null,
-          position,
-        },
-      })
-      return reply.status(201).send(item)
+      try {
+        const item = await fastify.prisma.$transaction(async (tx) => {
+          // Shift existing items to make room
+          await tx.collectionItem.updateMany({
+            where: { collectionId: col.id, position: { gte: position } },
+            data: { position: { increment: 1 } },
+          })
+          return tx.collectionItem.create({
+            data: {
+              collectionId: col.id,
+              archiveItemId: body.archiveItemId ?? null,
+              releaseId: body.releaseId ?? null,
+              position,
+            },
+          })
+        })
+        return reply.status(201).send(item)
+      } catch (err) {
+        if (isUniqueConstraintError(err)) {
+          return reply
+            .status(409)
+            .send({ error: 'Another item was added at the same time — please retry' })
+        }
+        throw err
+      }
     },
   )
 

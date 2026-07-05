@@ -124,6 +124,12 @@ export function UploadInProgress({
   const xhrRef = useRef<XMLHttpRequest | null>(null)
   const startTimeRef = useRef<number>(0)
   const throughputRef = useRef<number[]>([]) // rolling window of bytes/sec
+  // startUpload only ever runs once (mount effect) and registers the xhr 'load'
+  // listener at that instant — without this ref the listener would permanently
+  // call the handleComplete closure from that first render (empty title/artist,
+  // and even the auto-detected tag values set moments later), ignoring every
+  // edit made while the upload is in flight.
+  const handleCompleteRef = useRef<(etag: string) => void>(() => {})
 
   // Extract tags and start upload on mount
   useEffect(() => {
@@ -191,7 +197,7 @@ export function UploadInProgress({
           /"/g,
           '',
         )
-        void handleComplete(etag)
+        handleCompleteRef.current(etag)
       } else {
         setUploadState('error')
         setErrorMsg(`Upload failed (HTTP ${xhr.status})`)
@@ -256,6 +262,10 @@ export function UploadInProgress({
     },
     [uploadId, title, artist, year, genre, selectedCollections, pending?.source],
   )
+
+  useEffect(() => {
+    handleCompleteRef.current = handleComplete
+  }, [handleComplete])
 
   const cancel = useCallback(() => {
     xhrRef.current?.abort()

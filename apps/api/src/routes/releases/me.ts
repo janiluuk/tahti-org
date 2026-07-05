@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import { requireAuth } from '../../plugins/auth.js'
+import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import {
   buildReleaseExportPack,
   catalogPatchFromBody,
@@ -134,28 +135,37 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const tracks = (body.tracks ?? []).slice(0, 50)
-      const release = await fastify.prisma.release.create({
-        data: {
-          userId: user.id,
-          title: body.title,
-          type: body.type,
-          releaseDate: body.releaseDate,
-          description: body.description ?? null,
-          artworkUrl: body.artworkUrl ?? null,
-          smartLinkSlug,
-          tracks: {
-            create: tracks.map((t, i) => ({
-              position: i + 1,
-              title: t.title,
-              durationSec: t.durationSec ?? null,
-              archiveItemId: t.archiveItemId ?? null,
-            })),
+      try {
+        const release = await fastify.prisma.release.create({
+          data: {
+            userId: user.id,
+            title: body.title,
+            type: body.type,
+            releaseDate: body.releaseDate,
+            description: body.description ?? null,
+            artworkUrl: body.artworkUrl ?? null,
+            smartLinkSlug,
+            tracks: {
+              create: tracks.map((t, i) => ({
+                position: i + 1,
+                title: t.title,
+                durationSec: t.durationSec ?? null,
+                archiveItemId: t.archiveItemId ?? null,
+              })),
+            },
           },
-        },
-        include: { tracks: { orderBy: { position: 'asc' } } },
-      })
+          include: { tracks: { orderBy: { position: 'asc' } } },
+        })
 
-      return reply.status(201).send(release)
+        return reply.status(201).send(release)
+      } catch (err) {
+        if (isUniqueConstraintError(err)) {
+          return reply
+            .status(409)
+            .send({ error: 'A release with this smart link already exists — try again' })
+        }
+        throw err
+      }
     },
   )
 
