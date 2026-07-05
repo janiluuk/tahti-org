@@ -6440,6 +6440,44 @@
 
 /* ── Upload in-progress (View 2) ───────────────────────────────────────────── */
 
+[data-tahti-ui='studio'] .archive-preview-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+[data-tahti-ui='studio'] .archive-preview-page__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .archive-preview-page__back {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='studio'] .archive-preview-page__back:hover {
+  color: var(--fg);
+}
+
+[data-tahti-ui='studio'] .archive-preview-page__title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--fg);
+  margin: 0;
+}
+
+[data-tahti-ui='studio'] .archive-preview-page__actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
 [data-tahti-ui='studio'] .upload-progress-page {
   max-width: 960px;
   margin: 0 auto;

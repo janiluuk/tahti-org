@@ -64,6 +64,19 @@ export async function fetchArchiveBannerFromUrl(
   return { ...(await res.json()), error: null }
 }
 
+export async function deleteArchiveItem(id: string): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${id}`, {
+    method: 'DELETE',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok && res.status !== 204) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to delete item' }
+  }
+  return { error: null }
+}
+
 export async function updateArchiveMetadata(
   id: string,
   payload: Record<string, unknown>,
