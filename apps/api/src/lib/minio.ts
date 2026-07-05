@@ -82,3 +82,18 @@ export async function putObjectText(key: string, body: string, contentType: stri
     }),
   )
 }
+
+export async function putObjectBuffer(
+  key: string,
+  body: Buffer,
+  contentType: string,
+): Promise<void> {
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: config.minio.bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  )
+}

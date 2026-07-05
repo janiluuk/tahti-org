@@ -9,10 +9,14 @@ import Link from 'next/link'
 import { ButtonIcon, Button } from '@tahti/ui'
 import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
 import { QUALITY_BADGE_LABEL } from '@tahti/shared'
+import { CoverImageUpload } from '@/components/cover-image-upload'
 import {
   updateCollection,
   reorderCollectionItems,
   deleteCollection,
+  prepareCollectionCoverUpload,
+  completeCollectionCoverUpload,
+  fetchCollectionCoverFromUrl,
 } from '../../collection-actions'
 import { STYLE_LABEL, STYLE_COLOR } from '../collection-labels'
 import { SpotifyImportModal, spotifyCoverProxySrc } from './_spotify-import-modal'
@@ -116,6 +120,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
   const [isPublic, setIsPublic] = useState(initial.isPublic)
   const [isFeatured, setIsFeatured] = useState(initial.isFeatured)
   const [description, setDescription] = useState(initial.description ?? '')
+  const [coverUrl, setCoverUrl] = useState(initial.coverUrl)
   const [settingsDirty, setSettingsDirty] = useState(false)
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsError, setSettingsError] = useState<string | null>(null)
@@ -143,6 +148,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
     const { error } = await updateCollection(initial.slug, {
       isPublic,
       isFeatured,
+      style,
       description: description.trim() || null,
     })
     setSettingsSaving(false)
@@ -153,7 +159,7 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
       setSettingsSaved(true)
       startTransition(() => router.refresh())
     }
-  }, [initial.slug, isPublic, isFeatured, description, router])
+  }, [initial.slug, isPublic, isFeatured, style, description, router])
 
   const moveItem = useCallback((fromIdx: number, toIdx: number) => {
     setItems((prev) => {
@@ -240,6 +246,17 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="studio-field">
+            <CoverImageUpload
+              currentUrl={coverUrl}
+              label="Cover image"
+              prepare={(args) => prepareCollectionCoverUpload(initial.slug, args)}
+              complete={(uploadKey) => completeCollectionCoverUpload(initial.slug, uploadKey)}
+              fromUrl={(sourceUrl) => fetchCollectionCoverFromUrl(initial.slug, sourceUrl)}
+              onUploaded={(url) => setCoverUrl(url)}
+            />
           </div>
 
           <fieldset className="collection-form__vis-fieldset">

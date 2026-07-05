@@ -13,6 +13,57 @@ function sessionHeader() {
   return sessionCookie ? `tahti_session=${sessionCookie.value}` : ''
 }
 
+export async function prepareArchiveBannerUpload(
+  itemId: string,
+  body: { filename: string; contentType: string },
+): Promise<{ uploadKey?: string; uploadUrl?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/banner/prepare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Prepare failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function completeArchiveBannerUpload(
+  itemId: string,
+  uploadKey: string,
+): Promise<{ url?: string | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/banner/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ uploadKey }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Upload failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function fetchArchiveBannerFromUrl(
+  itemId: string,
+  sourceUrl: string,
+): Promise<{ url?: string | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/banner/from-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ sourceUrl }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Fetch failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
 export async function updateArchiveMetadata(
   id: string,
   payload: Record<string, unknown>,

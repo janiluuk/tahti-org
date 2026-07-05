@@ -166,6 +166,23 @@ export async function completeReleaseArtworkUpload(
   return { ...(await res.json()), error: null }
 }
 
+export async function fetchReleaseArtworkFromUrl(
+  releaseId: string,
+  sourceUrl: string,
+): Promise<{ artworkUrl?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${releaseId}/artwork/from-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ sourceUrl }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Fetch failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
 export async function fetchReleaseTrackVersions(
   releaseId: string,
   trackId: string,

@@ -134,6 +134,7 @@ export default function ArchiveEditor({
             disabled={isPending}
             detectedBpm={detectedBpm ?? null}
             detectedKey={detectedKey ?? null}
+            itemId={item.id}
           />
 
           <TracklistEditor value={tracklist} onChange={setTracklist} disabled={isPending} />

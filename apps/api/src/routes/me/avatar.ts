@@ -10,11 +10,13 @@ import {
   AvatarUploadCompleteSchema,
   AvatarUploadPrepareResponseSchema,
   AvatarUploadPrepareSchema,
+  ImageFromUrlSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { presignedPutUrl } from '../../lib/minio.js'
+import { presignedPutUrl, putObjectBuffer } from '../../lib/minio.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
+import { extFromMime, fetchImageFromUrl } from '../../lib/fetch-image-url.js'
 
 const PRESIGN_TTL_SEC = 900
 const PROXY_FETCH_TIMEOUT_MS = 8000
@@ -110,6 +112,38 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const avatarUrl = publicMediaUrl(parsed.data.uploadKey)
+      await fastify.prisma.user.update({
+        where: { id: user.id },
+        data: { avatarUrl },
+      })
+
+      return reply.send({ avatarUrl })
+    },
+  )
+
+  fastify.post(
+    '/api/me/profile/avatar/from-url',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(AvatarUploadCompleteResponseSchema, 'AvatarUploadFromUrl'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = ImageFromUrlSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const user = request.sessionUser!
+
+      const fetched = await fetchImageFromUrl(parsed.data.sourceUrl)
+      if (!fetched.ok) return reply.status(422).send({ error: fetched.error })
+
+      const uploadKey = `avatars/${user.username}/avatar-${nanoid(8)}.${extFromMime(fetched.contentType)}`
+      await putObjectBuffer(uploadKey, fetched.bytes, fetched.contentType)
+
+      const avatarUrl = publicMediaUrl(uploadKey)
       await fastify.prisma.user.update({
         where: { id: user.id },
         data: { avatarUrl },

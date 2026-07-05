@@ -1511,6 +1511,97 @@
   margin-bottom: 0.35rem;
 }
 
+[data-tahti-ui='studio'] .cover-upload {
+  margin-top: 0.5rem;
+}
+
+[data-tahti-ui='studio'] .cover-upload__zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1.5px dashed var(--cyan);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.15s;
+  user-select: none;
+}
+
+[data-tahti-ui='studio'] .cover-upload__zone:hover,
+[data-tahti-ui='studio'] .cover-upload__zone:focus-visible {
+  background: rgba(0, 240, 255, 0.05);
+  outline: none;
+}
+
+[data-tahti-ui='studio'] .cover-upload__zone--dragover {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .cover-upload__preview {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .cover-upload__placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .cover-upload__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .cover-upload__label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--fg);
+}
+
+[data-tahti-ui='studio'] .cover-upload__hint {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .cover-upload__url-toggle {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .cover-upload__url-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg);
+}
+
+[data-tahti-ui='studio'] .cover-upload__file-input {
+  display: none;
+}
+
+[data-tahti-ui='studio'] .cover-upload__url-row {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  cursor: default;
+}
+
 [data-tahti-ui='studio'] .studio-audio-full {
   margin: 0 0 0.75rem;
   width: 100%;

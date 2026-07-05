@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import {
   IdParamSchema,
+  ImageFromUrlSchema,
   ReleaseArtworkCompleteSchema,
   ReleaseArtworkCompleteResponseSchema,
   ReleaseArtworkPrepareSchema,
@@ -13,9 +14,10 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { presignedPutUrl } from '../../lib/minio.js'
+import { presignedPutUrl, putObjectBuffer } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { extractPalette } from '../../lib/palette-extract.js'
+import { extFromMime, fetchImageFromUrl } from '../../lib/fetch-image-url.js'
 
 const PRESIGN_TTL_SEC = 900
 const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
@@ -24,6 +26,39 @@ const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
       where: { id: releaseId, userId },
       select: { id: true, user: { select: { username: true } } },
     })
+  }
+
+  async function attachArtwork(id: string, uploadKey: string) {
+    const updated = await fastify.prisma.release.update({
+      where: { id },
+      data: { artworkKey: uploadKey, artworkUrl: null },
+      select: { id: true, artworkKey: true, artworkUrl: true },
+    })
+
+    const artworkUrl = await resolveReleaseArtworkUrl(updated)
+
+    // Fire-and-forget palette extraction — don't block the response
+    if (artworkUrl) {
+      extractPalette(artworkUrl)
+        .then(async (palette) => {
+          if (!palette) return
+          const current = await fastify.prisma.release.findUnique({
+            where: { id },
+            select: { colorSchemeJson: true },
+          })
+          const paletteStr = JSON.stringify(palette)
+          return fastify.prisma.release.update({
+            where: { id },
+            data: {
+              paletteJson: paletteStr,
+              ...(current?.colorSchemeJson ? {} : { colorSchemeJson: paletteStr }),
+            },
+          })
+        })
+        .catch(() => undefined)
+    }
+
+    return { artworkUrl, artworkKey: updated.artworkKey }
   }
 
   fastify.post(
@@ -84,36 +119,41 @@ const releaseArtworkRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Upload does not belong to this release' })
       }
 
-      const updated = await fastify.prisma.release.update({
-        where: { id },
-        data: { artworkKey: parsed.data.uploadKey, artworkUrl: null },
-        select: { id: true, artworkKey: true, artworkUrl: true },
-      })
+      const result = await attachArtwork(id, parsed.data.uploadKey)
+      return reply.send(result)
+    },
+  )
 
-      const artworkUrl = await resolveReleaseArtworkUrl(updated)
-
-      // Fire-and-forget palette extraction — don't block the response
-      if (artworkUrl) {
-        extractPalette(artworkUrl)
-          .then(async (palette) => {
-            if (!palette) return
-            const current = await fastify.prisma.release.findUnique({
-              where: { id },
-              select: { colorSchemeJson: true },
-            })
-            const paletteStr = JSON.stringify(palette)
-            return fastify.prisma.release.update({
-              where: { id },
-              data: {
-                paletteJson: paletteStr,
-                ...(current?.colorSchemeJson ? {} : { colorSchemeJson: paletteStr }),
-              },
-            })
-          })
-          .catch(() => undefined)
+  fastify.post(
+    '/api/me/releases/:id/artwork/from-url',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(ReleaseArtworkCompleteResponseSchema, 'ReleaseArtworkFromUrl'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = ImageFromUrlSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
       }
 
-      return reply.send({ artworkUrl, artworkKey: updated.artworkKey })
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const release = await ownedRelease(user.id, id)
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const fetched = await fetchImageFromUrl(parsed.data.sourceUrl)
+      if (!fetched.ok) return reply.status(422).send({ error: fetched.error })
+
+      const uploadKey = `releases/${release.user.username}/${id}/artwork-${nanoid(8)}.${extFromMime(fetched.contentType)}`
+      await putObjectBuffer(uploadKey, fetched.bytes, fetched.contentType)
+
+      const result = await attachArtwork(id, uploadKey)
+      return reply.send(result)
     },
   )
 }

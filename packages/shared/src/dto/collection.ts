@@ -5,11 +5,22 @@ import { z } from 'zod'
 
 export const COLLECTION_TYPES = ['MIX_SERIES', 'ALBUM', 'CUSTOM'] as const
 
+export const COLLECTION_STYLES = [
+  'ALBUM',
+  'EP',
+  'SINGLE',
+  'DJ_SET_SERIES',
+  'LIVE_ARCHIVE',
+  'COMPILATION',
+  'PLAYLIST',
+] as const
+
 export const CreateCollectionSchema = z.object({
   name: z.string().trim().min(1, 'name is required').max(100),
   slug: z.string().min(2).max(64).optional(),
   description: z.string().max(1000).optional(),
   type: z.enum(COLLECTION_TYPES).optional(),
+  style: z.enum(COLLECTION_STYLES).optional(),
   isPublic: z.boolean().optional(),
   coverUrl: z.string().max(500).optional(),
 })
@@ -20,6 +31,7 @@ export const PatchCollectionSchema = z
   .object({
     name: z.string().trim().min(1).max(100).optional(),
     description: z.string().max(1000).nullable().optional(),
+    style: z.enum(COLLECTION_STYLES).optional(),
     isPublic: z.boolean().optional(),
     isFeatured: z.boolean().optional(),
     coverUrl: z.string().max(500).nullable().optional(),
