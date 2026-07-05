@@ -5,7 +5,7 @@
 
 import { useMemo, useState, useTransition } from 'react'
 import type { FallbackMode } from '@tahti/shared'
-import { Alert, Button, Field, Panel, Select, Text } from '@tahti/ui'
+import { Alert, Button, ButtonIcon, Field, Panel, Select, Text } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import {
   addLibraryTrackToRotation,
@@ -161,7 +161,14 @@ export function RotationEditor({
           </Alert>
         )}
 
-        <Button type="button" className="studio-mt-md" disabled={isPending} onClick={save}>
+        <Button
+          type="button"
+          variant="primary"
+          className="studio-mt-md"
+          disabled={isPending}
+          onClick={save}
+        >
+          <ButtonIcon name="save" />
           {isPending ? 'Saving…' : 'Save rotation'}
         </Button>
       </Panel>

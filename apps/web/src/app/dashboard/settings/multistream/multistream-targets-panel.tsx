@@ -193,7 +193,8 @@ export function MultistreamTargetsPanel({
       <div className="multistream-footer">
         {targets.length < MAX_TARGETS && !adding && (
           <Button onClick={() => setAdding(true)} variant="primary" size="sm">
-            + Add target
+            <ButtonIcon name="plus" />
+            Add target
           </Button>
         )}
         <p className="admin-footnote multistream-footer__note">
