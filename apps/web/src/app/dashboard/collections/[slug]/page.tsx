@@ -50,22 +50,62 @@ interface CollectionDetail {
   items: CollectionItem[]
 }
 
-async function fetchCollection(slug: string): Promise<CollectionDetail | null> {
+function sessionCookieHeader(): string {
   const cookieStore = cookies()
   const session = cookieStore.get('tahti_session')
-  const cookie = session ? `tahti_session=${session.value}` : ''
+  return session ? `tahti_session=${session.value}` : ''
+}
 
+async function fetchCollection(slug: string): Promise<CollectionDetail | null> {
   const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}`, {
-    headers: { Cookie: cookie },
+    headers: { Cookie: sessionCookieHeader() },
     cache: 'no-store',
   })
   if (!res.ok) return null
   return res.json()
 }
 
+export interface LibraryArchiveItem {
+  id: string
+  title: string
+  status: string
+}
+
+export interface LibraryRelease {
+  id: string
+  title: string
+  state: string
+}
+
+async function fetchMyArchiveItems(): Promise<LibraryArchiveItem[]> {
+  const res = await fetch(`${apiUrl}/api/me/archive`, {
+    headers: { Cookie: sessionCookieHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return []
+  const items = (await res.json()) as Array<{ id: string; title: string; status: string }>
+  return items.map((i) => ({ id: i.id, title: i.title, status: i.status }))
+}
+
+async function fetchMyReleases(): Promise<LibraryRelease[]> {
+  const res = await fetch(`${apiUrl}/api/me/releases`, {
+    headers: { Cookie: sessionCookieHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return []
+  const releases = (await res.json()) as Array<{ id: string; title: string; state: string }>
+  return releases.map((r) => ({ id: r.id, title: r.title, state: r.state }))
+}
+
 export default async function CollectionDetailPage({ params }: { params: { slug: string } }) {
-  const collection = await fetchCollection(params.slug)
+  const [collection, myArchiveItems, myReleases] = await Promise.all([
+    fetchCollection(params.slug),
+    fetchMyArchiveItems(),
+    fetchMyReleases(),
+  ])
   if (!collection) notFound()
 
-  return <CollectionEditor collection={collection} />
+  return (
+    <CollectionEditor collection={collection} myArchiveItems={myArchiveItems} myReleases={myReleases} />
+  )
 }

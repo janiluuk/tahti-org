@@ -14,6 +14,7 @@ import {
   updateCollection,
   reorderCollectionItems,
   deleteCollection,
+  addCollectionItem,
   prepareCollectionCoverUpload,
   completeCollectionCoverUpload,
   fetchCollectionCoverFromUrl,
@@ -110,7 +111,15 @@ function itemThumb(item: CollectionItem): string | null {
   return bannerUrl ?? item.release?.artworkUrl ?? null
 }
 
-export function CollectionEditor({ collection: initial }: { collection: CollectionDetail }) {
+export function CollectionEditor({
+  collection: initial,
+  myArchiveItems = [],
+  myReleases = [],
+}: {
+  collection: CollectionDetail
+  myArchiveItems?: Array<{ id: string; title: string; status: string }>
+  myReleases?: Array<{ id: string; title: string; state: string }>
+}) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -132,6 +141,10 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
   const [reorderSaving, setReorderSaving] = useState(false)
   const [spotifyModalOpen, setSpotifyModalOpen] = useState(false)
   const [mixcloudModalOpen, setMixcloudModalOpen] = useState(false)
+  const [libraryPickerOpen, setLibraryPickerOpen] = useState(false)
+  const [libraryPick, setLibraryPick] = useState('')
+  const [libraryAdding, setLibraryAdding] = useState(false)
+  const [libraryError, setLibraryError] = useState<string | null>(null)
 
   // Delete
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -179,6 +192,32 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
     )
     setReorderSaving(false)
   }, [initial.slug, items, reorderSaving])
+
+  const addFromLibrary = useCallback(async () => {
+    if (!libraryPick) return
+    setLibraryAdding(true)
+    setLibraryError(null)
+    const [kind, id] = libraryPick.split(':')
+    const { error } = await addCollectionItem(
+      initial.slug,
+      kind === 'archive' ? { archiveItemId: id } : { releaseId: id },
+    )
+    setLibraryAdding(false)
+    if (error) {
+      setLibraryError(error)
+      return
+    }
+    setLibraryPick('')
+    setLibraryPickerOpen(false)
+    startTransition(() => router.refresh())
+  }, [initial.slug, libraryPick, router])
+
+  const usedArchiveIds = new Set(items.map((i) => i.archiveItem?.id).filter(Boolean))
+  const usedReleaseIds = new Set(items.map((i) => i.release?.id).filter(Boolean))
+  const availableArchiveItems = myArchiveItems.filter(
+    (a) => a.status === 'READY' && !usedArchiveIds.has(a.id),
+  )
+  const availableReleases = myReleases.filter((r) => !usedReleaseIds.has(r.id))
 
   const handleDelete = useCallback(async () => {
     setDeleting(true)
@@ -382,9 +421,13 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               <span className="collection-editor__count">{items.length}</span>
             </h2>
             <div className="collection-editor__add-buttons">
-              <Link href="/dashboard/archive" className="ui-btn ui-btn--ghost ui-btn--sm">
+              <Button
+                onClick={() => setLibraryPickerOpen((v) => !v)}
+                variant="ghost"
+                size="sm"
+              >
                 + Tahti library
-              </Link>
+              </Button>
               <Button
                 onClick={() => setSpotifyModalOpen(true)}
                 variant="ghost"
@@ -403,6 +446,46 @@ export function CollectionEditor({ collection: initial }: { collection: Collecti
               </Button>
             </div>
           </div>
+
+          {libraryPickerOpen ? (
+            <div className="collection-editor__library-picker studio-row studio-row--wrap studio-gap-xs studio-mt-sm">
+              <select
+                className="studio-input studio-flex-1"
+                value={libraryPick}
+                onChange={(e) => setLibraryPick(e.target.value)}
+              >
+                <option value="">Choose an archive item or release…</option>
+                {availableArchiveItems.length > 0 && (
+                  <optgroup label="Archive items">
+                    {availableArchiveItems.map((a) => (
+                      <option key={a.id} value={`archive:${a.id}`}>
+                        {a.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {availableReleases.length > 0 && (
+                  <optgroup label="Releases">
+                    {availableReleases.map((r) => (
+                      <option key={r.id} value={`release:${r.id}`}>
+                        {r.title}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+              <Button
+                onClick={() => void addFromLibrary()}
+                disabled={!libraryPick || libraryAdding}
+                variant="primary"
+                size="sm"
+              >
+                <ButtonIcon name="plus" />
+                {libraryAdding ? 'Adding…' : 'Add'}
+              </Button>
+              {libraryError && <p className="studio-text-error studio-text-sm">{libraryError}</p>}
+            </div>
+          ) : null}
 
           {spotifyModalOpen ? (
             <SpotifyImportModal
