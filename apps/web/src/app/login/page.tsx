@@ -183,7 +183,7 @@ export default function LoginPage() {
             <div id="auth-panel-register" role="tabpanel" aria-labelledby="auth-tab-register">
               <Heading level={1}>Create an artist account</Heading>
               <Text tone="muted">
-                Your channel URL will be tahti.live/u/yourname. We&apos;ll email you a verification
+                Your channel URL will be yourname.tahti.live. We&apos;ll email you a verification
                 link.
               </Text>
 

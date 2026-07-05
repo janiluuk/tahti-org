@@ -76,7 +76,7 @@ export function SignupProfileForm({ displayName }: { displayName: string }) {
           <SignupWizard current="profile" />
           <Heading level={1}>Set up your profile</Heading>
           <Text tone="muted" size="sm">
-            Listeners see this on your public page at tahti.live/u/your-handle. You can change it
+            Listeners see this on your public page at your-handle.tahti.live. You can change it
             any time from the dashboard.
           </Text>
 

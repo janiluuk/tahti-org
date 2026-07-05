@@ -49,7 +49,7 @@ export function SetupPasswordForm({ token, info }: { token: string; info: SetupI
           <Heading level={1}>Create your password</Heading>
           <Text tone="muted">
             Welcome, {info.displayName}. Your channel will be{' '}
-            <strong>tahti.live/u/{info.username}</strong>.
+            <strong>{info.username}.tahti.live</strong>.
           </Text>
 
           <form onSubmit={onSubmit}>

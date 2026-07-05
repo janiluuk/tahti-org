@@ -112,7 +112,7 @@ export default function ForArtistsPage() {
           <p className="for-artists-carousel-caption">Analytics & grant estimate</p>
         </div>
         <div>
-          <BrowserFrame url="tahti.live/u/your-handle">
+          <BrowserFrame url="your-handle.tahti.live">
             <div className="for-artists-screenshot">
               <Image src={profileImg} alt="Public artist profile" />
             </div>
