@@ -107,6 +107,10 @@ export default async function CollectionDetailPage({ params }: { params: { slug:
   if (!collection) notFound()
 
   return (
-    <CollectionEditor collection={collection} myArchiveItems={myArchiveItems} myReleases={myReleases} />
+    <CollectionEditor
+      collection={collection}
+      myArchiveItems={myArchiveItems}
+      myReleases={myReleases}
+    />
   )
 }

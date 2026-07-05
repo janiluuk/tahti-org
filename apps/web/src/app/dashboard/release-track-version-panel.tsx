@@ -116,7 +116,9 @@ export function ReleaseTrackVersionPanel({
           ))}
         </ul>
       ) : (
-        <p className="studio-text-muted-sm studio-my-xs">No audio yet — upload the first version below.</p>
+        <p className="studio-text-muted-sm studio-my-xs">
+          No audio yet — upload the first version below.
+        </p>
       )}
       <div className="studio-row studio-row--wrap studio-gap-xs">
         <input

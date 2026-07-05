@@ -41,10 +41,7 @@ export default async function ArchivePreviewPage({ params }: { params: { id: str
       />
 
       <div className="archive-preview-page__actions">
-        <Link
-          href={`/dashboard/archive/${params.id}/editor`}
-          className="ui-btn ui-btn--primary"
-        >
+        <Link href={`/dashboard/archive/${params.id}/editor`} className="ui-btn ui-btn--primary">
           <ButtonIcon name="edit" />
           Open audio editor →
         </Link>

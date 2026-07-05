@@ -201,7 +201,9 @@ export default function ArchiveEditor({
               </Button>
             ) : (
               <div className="studio-row studio-row--wrap studio-gap-xs">
-                <span className="studio-text-sm">Delete &ldquo;{item.title}&rdquo; permanently?</span>
+                <span className="studio-text-sm">
+                  Delete &ldquo;{item.title}&rdquo; permanently?
+                </span>
                 <Button onClick={() => setConfirmDelete(false)} variant="ghost" size="sm">
                   Cancel
                 </Button>
