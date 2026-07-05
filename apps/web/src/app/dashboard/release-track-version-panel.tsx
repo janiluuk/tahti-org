@@ -17,12 +17,10 @@ export function ReleaseTrackVersionPanel({
   releaseId,
   trackId,
   trackTitle,
-  trackStatus,
 }: {
   releaseId: string
   trackId: string
   trackTitle: string
-  trackStatus: string
 }) {
   const [versions, setVersions] = useState<ReleaseTrackVersionRow[]>([])
   const [versionLabel, setVersionLabel] = useState('')
@@ -39,9 +37,8 @@ export function ReleaseTrackVersionPanel({
   }, [releaseId, trackId])
 
   useEffect(() => {
-    if (trackStatus === 'READY' || trackStatus === 'FAILED') void load()
-    else setLoading(false)
-  }, [trackStatus, load])
+    void load()
+  }, [load])
 
   async function handleUpload(file: File) {
     const label = versionLabel.trim()

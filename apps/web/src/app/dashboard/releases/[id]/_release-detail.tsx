@@ -113,13 +113,7 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
       <ReleaseArtworkUpload releaseId={r.id} artworkUrl={r.artworkUrl} />
 
       {(r.tracks ?? []).map((t) => (
-        <ReleaseTrackVersionPanel
-          key={t.id}
-          releaseId={r.id}
-          trackId={t.id}
-          trackTitle={t.title}
-          trackStatus={t.status ?? 'PENDING'}
-        />
+        <ReleaseTrackVersionPanel key={t.id} releaseId={r.id} trackId={t.id} trackTitle={t.title} />
       ))}
 
       <Panel
