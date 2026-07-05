@@ -451,11 +451,7 @@ export function CollectionEditor({
               <span className="collection-editor__count">{items.length}</span>
             </h2>
             <div className="collection-editor__add-buttons">
-              <Button
-                onClick={() => setLibraryPickerOpen((v) => !v)}
-                variant="ghost"
-                size="sm"
-              >
+              <Button onClick={() => setLibraryPickerOpen((v) => !v)} variant="ghost" size="sm">
                 + Tahti library
               </Button>
               <Button

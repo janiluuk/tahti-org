@@ -116,7 +116,8 @@ export function CoverImageUpload({
         tabIndex={0}
         aria-label={label}
         onKeyDown={(e) => {
-          if (!uploading && !urlMode && (e.key === 'Enter' || e.key === ' ')) inputRef.current?.click()
+          if (!uploading && !urlMode && (e.key === 'Enter' || e.key === ' '))
+            inputRef.current?.click()
         }}
       >
         {currentUrl ? (
