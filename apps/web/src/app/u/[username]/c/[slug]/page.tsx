@@ -18,6 +18,7 @@ import {
 import { ChannelGalleryView } from '@/components/gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { collectionRssUrl } from '@/lib/rss-feeds'
+import type { PlayerTrack } from '@/contexts/player-context'
 import { SpotifyEmbedRow } from './_spotify-embed-row'
 import { MixcloudEmbedRow } from './_mixcloud-embed-row'
 import { ArchiveTrackRow } from './_archive-track-row'
@@ -112,6 +113,17 @@ export default async function CollectionPage({
   const rssUrl = data.links?.rss ?? collectionRssUrl(apiUrl, params.slug)
   const backdrop = resolveArchiveBackground(data.videoBackgroundUrl ?? null)
 
+  // Only Tahti-hosted tracks are playable in-page — embeds/releases sit outside the queue.
+  const queue: PlayerTrack[] = data.items
+    .filter((i) => i.archiveItem?.audioUrl)
+    .map((i) => ({
+      id: i.archiveItem!.id,
+      kind: 'archive',
+      url: i.archiveItem!.audioUrl!,
+      title: i.archiveItem!.title,
+      subtitle: `@${data.user.username}`,
+    }))
+
   return (
     <ProfilePageLayout
       hero={
@@ -195,6 +207,7 @@ export default async function CollectionPage({
                         ? formatDuration(item.archiveItem.durationSec)
                         : null
                     }
+                    queue={queue}
                   />
                 )
               }

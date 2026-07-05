@@ -13,6 +13,7 @@ export type FallbackSourceRow = {
   isFallback: boolean
   fallbackOrder: number | null
   lastFallbackPlayedAt: Date | null
+  createdAt: Date
 }
 
 export type FallbackPlaybackRow = {
@@ -44,6 +45,14 @@ export function orderFallbackPool(
       if (ao !== bo) return ao - bo
       return a.id.localeCompare(b.id)
     })
+  }
+
+  if (fallbackMode === 'name') {
+    return [...pool].sort((a, b) => a.title.localeCompare(b.title))
+  }
+
+  if (fallbackMode === 'time') {
+    return [...pool].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
   }
 
   // shuffle: fair rotation — longest since last play first

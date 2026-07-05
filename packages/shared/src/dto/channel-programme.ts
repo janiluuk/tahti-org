@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 
-export const FALLBACK_MODES = ['shuffle', 'ordered'] as const
+export const FALLBACK_MODES = ['shuffle', 'ordered', 'time', 'name'] as const
 export type FallbackMode = (typeof FALLBACK_MODES)[number]
 
 export const ChannelProgrammeItemPatchSchema = z.object({

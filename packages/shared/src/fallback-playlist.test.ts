@@ -16,6 +16,7 @@ const base = {
   mp3Key: 'mp3/a.mp3',
   flacKey: null as string | null,
   durationSec: 100,
+  createdAt: new Date('2026-01-01'),
 }
 
 describe('fallback-playlist', () => {
@@ -154,6 +155,7 @@ describe('buildFallbackPlaybackRows', () => {
           isFallback: true,
           fallbackOrder: null,
           lastFallbackPlayedAt: null,
+          createdAt: new Date('2026-01-01'),
         },
         {
           id: 'b',
@@ -164,6 +166,7 @@ describe('buildFallbackPlaybackRows', () => {
           isFallback: true,
           fallbackOrder: null,
           lastFallbackPlayedAt: null,
+          createdAt: new Date('2026-01-01'),
         },
       ],
       'ordered',

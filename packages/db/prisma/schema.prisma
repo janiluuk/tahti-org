@@ -411,6 +411,14 @@ enum CollectionStyle {
   @@schema("media")
 }
 
+enum CollectionTrackSortMode {
+  MANUAL
+  TIME
+  NAME
+
+  @@schema("media")
+}
+
 enum CollectionVisibility {
   PUBLIC
   UNLISTED
@@ -1525,6 +1533,7 @@ model Collection {
   publicProfileOrder Int                  @default(0)
   scheduledPublishAt DateTime?
   smartLinksJson     Json?
+  trackSortMode      CollectionTrackSortMode @default(MANUAL)
 
   // M26: per-collection backdrop theme (independent of the channel-wide theme)
   galleryMode        CollectionGalleryMode     @default(NONE)

@@ -145,7 +145,9 @@ export function RotationEditor({
               onChange={(e) => setFallbackMode(e.target.value as FallbackMode)}
             >
               <option value="shuffle">Shuffle (fair rotation)</option>
-              <option value="ordered">Ordered playlist</option>
+              <option value="ordered">Manual (drag to reorder)</option>
+              <option value="time">By time added</option>
+              <option value="name">By name</option>
             </Select>
           </Field>
         </div>

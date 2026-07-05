@@ -37,6 +37,7 @@ interface CollectionDetail {
   description: string | null
   type: string
   style: string
+  trackSortMode: string
   visibility: string
   coverMode: string
   coverUrl: string | null
