@@ -24,6 +24,7 @@ export async function createCollection(params: {
   name: string
   slug?: string
   type?: string
+  style?: string
   description?: string
   isPublic?: boolean
 }): Promise<{ error: string | null }> {
@@ -38,6 +39,66 @@ export async function createCollection(params: {
     return { error: (data as { error?: string }).error ?? 'Failed to create collection' }
   }
   return { error: null }
+}
+
+export async function prepareCollectionCoverUpload(
+  slug: string,
+  body: { filename: string; contentType: string },
+): Promise<{ uploadKey?: string; uploadUrl?: string; error: string | null }> {
+  const res = await fetch(
+    `${apiUrl}/api/me/collections/${encodeURIComponent(slug)}/cover/prepare`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Prepare failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function completeCollectionCoverUpload(
+  slug: string,
+  uploadKey: string,
+): Promise<{ url?: string | null; error: string | null }> {
+  const res = await fetch(
+    `${apiUrl}/api/me/collections/${encodeURIComponent(slug)}/cover/complete`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+      body: JSON.stringify({ uploadKey }),
+      cache: 'no-store',
+    },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Upload failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function fetchCollectionCoverFromUrl(
+  slug: string,
+  sourceUrl: string,
+): Promise<{ url?: string | null; error: string | null }> {
+  const res = await fetch(
+    `${apiUrl}/api/me/collections/${encodeURIComponent(slug)}/cover/from-url`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+      body: JSON.stringify({ sourceUrl }),
+      cache: 'no-store',
+    },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Fetch failed' }
+  }
+  return { ...(await res.json()), error: null }
 }
 
 export async function addCollectionItem(
@@ -81,6 +142,7 @@ export async function updateCollection(
     isPublic?: boolean
     coverUrl?: string | null
     description?: string | null
+    style?: string
   },
 ): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/collections/${encodeURIComponent(slug)}`, {

@@ -13,6 +13,12 @@ import {
   CONTENT_TYPE_LABELS,
 } from '../../lib/archive-metadata-options'
 import { TracklistEditor } from './tracklist-editor'
+import { CoverImageUpload } from '@/components/cover-image-upload'
+import {
+  prepareArchiveBannerUpload,
+  completeArchiveBannerUpload,
+  fetchArchiveBannerFromUrl,
+} from './archive-actions'
 
 export type ArchiveMetadataFormState = {
   description: string
@@ -147,12 +153,14 @@ export function ArchiveMetadataFields({
   disabled,
   detectedBpm,
   detectedKey,
+  itemId,
 }: {
   state: ArchiveMetadataFormState
   onChange: (next: ArchiveMetadataFormState) => void
   disabled?: boolean
   detectedBpm?: number | null
   detectedKey?: string | null
+  itemId?: string
 }) {
   const set = (patch: Partial<ArchiveMetadataFormState>) => onChange({ ...state, ...patch })
 
@@ -356,6 +364,17 @@ export function ArchiveMetadataFields({
           className="studio-textarea"
         />
       </label>
+
+      {itemId && (
+        <CoverImageUpload
+          currentUrl={state.bannerUrl || null}
+          label="Upload cover image"
+          prepare={(args) => prepareArchiveBannerUpload(itemId, args)}
+          complete={(uploadKey) => completeArchiveBannerUpload(itemId, uploadKey)}
+          fromUrl={(sourceUrl) => fetchArchiveBannerFromUrl(itemId, sourceUrl)}
+          onUploaded={(url) => set({ bannerUrl: url ?? '' })}
+        />
+      )}
 
       <div className="studio-grid studio-grid--2">
         <label className="studio-field">

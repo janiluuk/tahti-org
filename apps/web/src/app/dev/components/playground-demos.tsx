@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { LiveChatPanel, PinnedAnnouncement, WaveformPlayer, type LiveChatMessage } from '@tahti/ui'
+import { CoverImageUpload } from '@/components/cover-image-upload'
 
 const DEMO_MESSAGES: LiveChatMessage[] = [
   { id: '1', handle: 'neon_ghost', text: 'this set is incredible', tone: 'default' },
@@ -41,6 +42,28 @@ export function PlaygroundWaveformDemo() {
       onTogglePlay={togglePlay}
       formatBadge="HLS"
     />
+  )
+}
+
+/** Self-contained demo — mimics the real prepare/complete/from-url contract without a backend. */
+export function PlaygroundCoverUploadDemo() {
+  const [url, setUrl] = useState<string | null>(null)
+
+  return (
+    <div data-tahti-ui="studio" style={{ maxWidth: 420 }}>
+      <CoverImageUpload
+        currentUrl={url}
+        label="Cover image"
+        prepare={async (args) => ({ uploadKey: `demo/${args.filename}` })}
+        complete={async (uploadKey) => {
+          // In the real widget this PUTs to `uploadUrl` first, then calls complete() —
+          // the playground just fabricates a URL so the preview updates.
+          return { url: `https://picsum.photos/seed/${encodeURIComponent(uploadKey)}/200` }
+        }}
+        fromUrl={async (sourceUrl) => ({ url: sourceUrl })}
+        onUploaded={setUrl}
+      />
+    </div>
   )
 }
 

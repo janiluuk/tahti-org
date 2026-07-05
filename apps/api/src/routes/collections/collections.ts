@@ -173,6 +173,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         name: body.name,
         description: body.description?.trim() || null,
         type,
+        style: body.style,
         isPublic: body.isPublic ?? true,
         coverUrl: body.coverUrl?.trim() || null,
       },
@@ -201,6 +202,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       const data: Record<string, any> = {}
       if (body.name !== undefined) data.name = body.name
       if (body.description !== undefined) data.description = body.description
+      if (body.style !== undefined) data.style = body.style
       if (body.isPublic !== undefined) data.isPublic = body.isPublic
       if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
       if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl?.trim() || null

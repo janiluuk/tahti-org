@@ -20,7 +20,11 @@ import {
   StatCard,
   StatCardGrid,
 } from '@tahti/ui'
-import { PlaygroundChatDemo, PlaygroundWaveformDemo } from './playground-demos'
+import {
+  PlaygroundChatDemo,
+  PlaygroundCoverUploadDemo,
+  PlaygroundWaveformDemo,
+} from './playground-demos'
 import { PlaygroundComposites } from './playground-composites'
 
 /** Dev-only component playground — compare each section to v8 mockups. */
@@ -100,6 +104,15 @@ export default function ComponentsPlaygroundPage() {
         <BrandText tone="tertiary" size="xs">
           Sizes: xs 24 · sm 46 · md 80 · lg 140 · full 280. Gradients: aurora, coral, deep, amber,
           violet.
+        </BrandText>
+      </PlaygroundSection>
+
+      <PlaygroundSection title="CoverImageUpload" id="cover-image-upload">
+        <PlaygroundCoverUploadDemo />
+        <BrandText tone="tertiary" size="xs">
+          Drag/drop, click-to-browse, or the 🔗 URL toggle to fetch-and-rehost an external image.
+          The same component now backs release artwork, archive banners, collection covers, and
+          avatars.
         </BrandText>
       </PlaygroundSection>
 

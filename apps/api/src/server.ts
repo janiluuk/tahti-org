@@ -111,6 +111,7 @@ import meProfileRoutes from './routes/me/profile.js'
 import meAvatarRoutes from './routes/me/avatar.js'
 import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import meArchiveRoutes from './routes/me/archive.js'
+import meArchiveBannerRoutes from './routes/me/archive-banner.js'
 import meProgrammeRoutes from './routes/me/programme.js'
 import meSocialRoutes from './routes/me/social.js'
 import socialTwitterRoutes from './routes/me/social-twitter.js'
@@ -132,6 +133,7 @@ import meBroadcastPreflightRoutes from './routes/me/broadcast-preflight.js'
 import meStashRoutes from './routes/me/stash.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
+import collectionCoverRoutes from './routes/collections/cover.js'
 import rateLimitPlugin from './plugins/rate-limit.js'
 import requestLogPlugin from './plugins/request-log.js'
 import corsPlugin from './plugins/cors.js'
@@ -545,6 +547,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M22/M24/M25: archive item metadata edit + channel slideshow
   await fastify.register(meArchiveRoutes)
+  await fastify.register(meArchiveBannerRoutes)
   await fastify.register(meProgrammeRoutes)
   await fastify.register(meSocialRoutes)
   await fastify.register(socialTwitterRoutes)
@@ -568,6 +571,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M23: collections + RSS feeds
   await fastify.register(collectionRoutes)
+  await fastify.register(collectionCoverRoutes)
 
   return fastify
 }

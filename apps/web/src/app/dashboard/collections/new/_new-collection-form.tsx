@@ -65,6 +65,7 @@ export function NewCollectionForm() {
       name: name.trim(),
       slug: derivedSlug || undefined,
       type: 'CUSTOM',
+      style,
       description: description.trim() || undefined,
       isPublic,
     })
@@ -74,7 +75,7 @@ export function NewCollectionForm() {
       return
     }
     router.push(`/dashboard/collections/${derivedSlug || slugify(name)}`)
-  }, [name, derivedSlug, description, isPublic, router])
+  }, [name, derivedSlug, style, description, isPublic, router])
 
   return (
     <div className="collection-form">
