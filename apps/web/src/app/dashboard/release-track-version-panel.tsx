@@ -94,36 +94,33 @@ export function ReleaseTrackVersionPanel({
   }
 
   if (loading) return null
-  if (trackStatus !== 'READY' && trackStatus !== 'FAILED' && versions.length === 0) {
-    return (
-      <p className="studio-text-muted-sm studio-my-xs">
-        {trackTitle}: upload audio for this track before managing versions.
-      </p>
-    )
-  }
 
   return (
-    <details className="studio-details studio-mt-sm studio-text-sm">
+    <details className="studio-details studio-mt-sm studio-text-sm" open={versions.length === 0}>
       <summary>Versions — {trackTitle}</summary>
-      <ul className="studio-list-indented">
-        {versions.map((v) => (
-          <li key={v.id} className="studio-mb-sm">
-            v{v.versionNumber} {v.versionLabel} — {v.status}
-            {v.isActive ? ' (active)' : ''}
-            {v.status === 'READY' && !v.isActive && (
-              <Button
-                disabled={isPending}
-                onClick={() => activate(v.id)}
-                variant="ghost"
-                size="sm"
-                className="studio-ml-sm"
-              >
-                Activate
-              </Button>
-            )}
-          </li>
-        ))}
-      </ul>
+      {versions.length > 0 ? (
+        <ul className="studio-list-indented">
+          {versions.map((v) => (
+            <li key={v.id} className="studio-mb-sm">
+              v{v.versionNumber} {v.versionLabel} — {v.status}
+              {v.isActive ? ' (active)' : ''}
+              {v.status === 'READY' && !v.isActive && (
+                <Button
+                  disabled={isPending}
+                  onClick={() => activate(v.id)}
+                  variant="ghost"
+                  size="sm"
+                  className="studio-ml-sm"
+                >
+                  Activate
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="studio-text-muted-sm studio-my-xs">No audio yet — upload the first version below.</p>
+      )}
       <div className="studio-row studio-row--wrap studio-gap-xs">
         <input
           placeholder="Version label"
