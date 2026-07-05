@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { Prisma } from '@tahti/db'
 import {
   ChannelGalleryPatchSchema,
   ChannelTextLayerPatchSchema,
@@ -139,6 +140,42 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       return reply.send(serializeArchiveItem(updated))
+    },
+  )
+
+  fastify.delete(
+    '/api/me/archive/:id',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Delete an archive item and its versions/rotation entries',
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const item = await fastify.prisma.archiveItem.findFirst({
+        where: { id, channel: { userId: user.id } },
+        select: { id: true },
+      })
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      try {
+        await fastify.prisma.archiveItem.delete({ where: { id } })
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2003') {
+          return reply.status(409).send({
+            error: 'This item has a linked Mixcloud upload — disconnect that first, then delete.',
+          })
+        }
+        throw err
+      }
+
+      return reply.status(204).send()
     },
   )
 

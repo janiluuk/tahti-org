@@ -507,15 +507,12 @@ export function UploadInProgress({
       <div className="upload-progress__footer">
         {canPublish ? (
           <>
-            <Link href={`/dashboard/archive/${itemId}`} className="ui-btn ui-btn--ghost ui-btn--sm">
-              View in archive
-            </Link>
             <Link href="/dashboard/releases" className="ui-btn ui-btn--ghost ui-btn--sm">
               Add smart links →
             </Link>
-            <Link href={`/dashboard/archive/${itemId}/editor`} className="ui-btn ui-btn--primary">
+            <Link href={`/dashboard/archive/${itemId}`} className="ui-btn ui-btn--primary">
               <ButtonIcon name="send" />
-              Polish & publish →
+              Preview & publish →
             </Link>
           </>
         ) : (

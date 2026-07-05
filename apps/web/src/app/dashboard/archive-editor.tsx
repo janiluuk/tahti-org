@@ -9,7 +9,7 @@ import NextLink from 'next/link'
 import { ButtonIcon, Button } from '@tahti/ui'
 import type { TracklistEntry } from '@tahti/shared'
 import { resolveChannelUrl } from '@/lib/app-url'
-import { updateArchiveMetadata } from './archive-actions'
+import { deleteArchiveItem, updateArchiveMetadata } from './archive-actions'
 import {
   ArchiveMetadataFields,
   metadataFormToPayload,
@@ -44,6 +44,8 @@ export default function ArchiveEditor({
   )
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   function save() {
     setError(null)
@@ -60,6 +62,19 @@ export default function ArchiveEditor({
       setOpen(false)
       router.refresh()
     })
+  }
+
+  async function handleDelete() {
+    setDeleting(true)
+    setError(null)
+    const res = await deleteArchiveItem(item.id)
+    if (res.error) {
+      setDeleting(false)
+      setConfirmDelete(false)
+      setError(res.error)
+      return
+    }
+    router.refresh()
   }
 
   const detectedBpm = item.bpmDetected as number | null | undefined
@@ -177,6 +192,31 @@ export default function ArchiveEditor({
             </Button>
           </div>
           {error && <p className="studio-notice studio-notice--error">{error}</p>}
+
+          <div className="studio-danger-zone studio-mt-lg">
+            {!confirmDelete ? (
+              <Button onClick={() => setConfirmDelete(true)} variant="ghost" size="sm">
+                <ButtonIcon name="trash" />
+                Delete recording
+              </Button>
+            ) : (
+              <div className="studio-row studio-row--wrap studio-gap-xs">
+                <span className="studio-text-sm">Delete &ldquo;{item.title}&rdquo; permanently?</span>
+                <Button onClick={() => setConfirmDelete(false)} variant="ghost" size="sm">
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => void handleDelete()}
+                  disabled={deleting}
+                  variant="danger"
+                  size="sm"
+                >
+                  <ButtonIcon name="trash" />
+                  {deleting ? 'Deleting…' : 'Yes, delete'}
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
