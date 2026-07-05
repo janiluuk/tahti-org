@@ -44,6 +44,28 @@ export default function BroadcastHelpPage() {
         not point OBS at those keys directly.
       </Text>
 
+      <Heading level={2}>Streaming from your phone</Heading>
+      <Text>
+        Same RTMP credentials as OBS above — any RTMP broadcasting app works.{' '}
+        <strong>Larix Broadcaster</strong> (free, iOS/Android) is a solid default.
+      </Text>
+      <ol>
+        <li>
+          Dashboard → <strong>Go Live</strong> → copy <strong>Server</strong> and{' '}
+          <strong>Stream Key</strong> under OBS / Streamlabs (same ones as desktop).
+        </li>
+        <li>
+          Install Larix Broadcaster → add a connection → paste the server URL as{' '}
+          <strong>URL</strong> and the stream key as <strong>Stream name</strong> (Larix splits them
+          automatically if you paste the full <code>rtmp://.../key</code> into URL).
+        </li>
+        <li>Audio: AAC, 128–192 kbps. Turn off video if you only want an audio broadcast.</li>
+        <li>
+          Tap the connection to go live. Your channel page shows Live when ingest connects — same as
+          OBS.
+        </li>
+      </ol>
+
       <Heading level={2}>Mixxx / Traktor / butt (Icecast)</Heading>
       <ol>
         <li>

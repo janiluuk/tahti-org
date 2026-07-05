@@ -45,22 +45,31 @@ buttons in the same panel.
 
 ## Coverage
 
-Each artist's `/me/broadcast/guides/:tool` endpoint generates a personalized
-guide for:
+**Documented in this file today** (manual walkthroughs, the actual current
+onboarding path — see "What the guide rendering does technically" below):
 
 - **OBS Studio** — most popular, video+audio capable
-- **Streamlabs Desktop** — OBS-based, similar setup
-- **vMix** — Windows pro tool
 - **Mixxx** — open-source DJ software
 - **Traktor Pro** — Native Instruments DJ software
-- **Rekordbox** — Pioneer DJ software
-- **VirtualDJ** — DJ software with streaming built-in
 - **butt** (Broadcast Using This Tool) — minimal Icecast/Shoutcast streamer
-- **BUTT** alternative spelling, same tool
-- **SAM Cast** — Windows Icecast streamer
+- **Mobile (Larix Broadcaster or any RTMP app)** — same RTMP credentials as OBS
+
+**Named only in the not-yet-built personalized-guide vision** (`/me/broadcast/guides/:tool`,
+see below) — no dedicated walkthrough exists in this file or the app for these;
+they'd use the same RTMP (OBS-style) or Icecast (Mixxx-style) fields as the tools
+above, so an artist can adapt the closest matching guide meanwhile:
+
+- **Streamlabs Desktop** — OBS-based, same RTMP fields as OBS above
+- **vMix** — Windows pro tool, same RTMP fields as OBS above
+- **Rekordbox** — Pioneer DJ software, same Icecast fields as Mixxx above
+- **VirtualDJ** — DJ software with streaming built-in, same Icecast fields as Mixxx above
+- **SAM Cast** — Windows Icecast streamer, same Icecast fields as Mixxx above
 - **Liquidsoap** — for power users running their own scripts
 - **FFmpeg** — for pure command-line broadcasters
-- **Browser** — our built-in WebRTC-based Go Live client
+- **Browser** — a built-in WebRTC "Go Live from browser" client. **This does not
+  exist in the app** — there is no such button, page, or route anywhere in
+  `apps/web` or `apps/api`. Do not tell artists to use it; see the explicit note
+  at "Detailed: browser-based broadcaster" below.
 
 ## What each guide includes
 
@@ -195,6 +204,45 @@ reveal the current key, and copy it again — there are no spaces or quotes.
 Save your OBS settings as a profile (*Profile → Export*). Save your scene
 collection too. Carry both as a USB stick or sync via cloud, and on each
 machine, import them.
+
+---
+
+## Detailed: mobile (Larix Broadcaster) guide content
+
+Same RTMP server + stream key as the OBS guide above — no separate credentials,
+no backend work needed. Any RTMP-capable mobile app works; **Larix Broadcaster**
+(free, iOS/Android) is the recommended default.
+
+### Broadcasting to your Tahti channel from a phone
+
+**Step 1 — copy your RTMP credentials**
+
+From the dashboard's **Go Live** panel, copy **Server** and **Stream Key** under
+OBS / Streamlabs — the same ones used for desktop OBS.
+
+**Step 2 — add a connection in Larix Broadcaster**
+
+Install Larix Broadcaster, then add a new connection:
+
+- **URL:** the RTMP server, e.g. `rtmp://rtmp.tahti.live/live`
+- **Stream name:** the stream key *(or paste the full `rtmp://.../<key>` into
+  URL — Larix splits it automatically)*
+
+**Step 3 — configure audio**
+
+- **Codec:** AAC
+- **Bitrate:** 128–192 kbps
+- Turn off video if this is an audio-only broadcast (saves battery and data).
+
+**Step 4 — go live**
+
+Tap the connection to start. Your channel page shows Live when ingest connects
+— identical behavior to OBS.
+
+**Step 5 — when you're done**
+
+Tap to disconnect. Channel returns to archive playback within about 10 seconds,
+same as any other RTMP source.
 
 ---
 
@@ -334,6 +382,13 @@ Click the **STOP** button. Channel returns to archive.
 ---
 
 ## Detailed: browser-based broadcaster
+
+> **NOT IMPLEMENTED.** Everything below this line is a design sketch for a
+> feature that does not exist in the app — no "Go Live (Browser)" button, no
+> WebRTC ingest route, nothing. Do not give these steps to an artist; if
+> someone wants zero-install streaming today, point them at the mobile
+> (Larix Broadcaster) guide above instead. Kept here only as a spec for
+> whoever eventually builds it.
 
 For artists who want to broadcast with zero installation — useful for
 talk-show-style channels or quick mobile broadcasts.
