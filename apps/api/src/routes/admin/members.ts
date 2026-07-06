@@ -23,10 +23,15 @@ const memberRegisterSelect = {
 } as const
 
 async function fetchMemberRegister(prisma: PrismaClient) {
+  // No real pagination here — Finnish Associations Act compliance requires this
+  // register to be complete, not a truncated page. `take` is just a safety cap
+  // against a pathological unbounded query, matching admin/users.ts and
+  // admin/audit.ts's same generous-cap pattern.
   const members = await prisma.user.findMany({
     where: { isMember: true },
     orderBy: [{ memberNumber: 'asc' }],
     select: memberRegisterSelect,
+    take: 50_000,
   })
 
   return members.map((m) => ({

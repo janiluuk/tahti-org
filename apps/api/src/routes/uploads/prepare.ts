@@ -29,7 +29,7 @@ const prepareUploadRoute: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const { filename, contentType, title } = parsed.data
+      const { filename, contentType, title, fileSizeBytes } = parsed.data
       const user = request.sessionUser!
 
       const channel = await fastify.prisma.channel.findUnique({
@@ -44,7 +44,7 @@ const prepareUploadRoute: FastifyPluginAsync = async (fastify) => {
       const ext = filename.includes('.') ? filename.split('.').pop() : 'mp3'
       const uploadId = `raw/${channel.slug}/${nanoid(16)}.${ext}`
 
-      const uploadUrl = await presignedPutUrl(uploadId, contentType, PRESIGN_TTL_SEC)
+      const uploadUrl = await presignedPutUrl(uploadId, contentType, PRESIGN_TTL_SEC, fileSizeBytes)
       const expiresAt = new Date(Date.now() + PRESIGN_TTL_SEC * 1000).toISOString()
 
       return reply.status(200).send({ uploadId, uploadUrl, expiresAt, title })

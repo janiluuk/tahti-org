@@ -9,6 +9,7 @@ import { hashPassword } from '../../lib/password.js'
 vi.mock('../../lib/minio.js', () => ({
   presignedPutUrl: vi.fn().mockResolvedValue('https://minio.test/presigned'),
   presignedGetUrl: vi.fn().mockResolvedValue('https://minio.test/get'),
+  headObjectSize: vi.fn().mockResolvedValue(123456),
   s3: {},
 }))
 
@@ -114,6 +115,8 @@ describe('POST /api/uploads/complete', () => {
     expect(item!.contentType).toBe('STUDIO')
     expect(item!.license).toBe('ALL_RIGHTS_RESERVED')
     expect(item!.genre).toBe('Electronic')
+    // Ground-truth size from storage (headObjectSize), never trusted from the client.
+    expect(item!.fileSizeBytes).toBe(BigInt(123456))
     expect(item!.isPublic).toBe(true)
   })
 

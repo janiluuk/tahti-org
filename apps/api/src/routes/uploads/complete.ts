@@ -6,6 +6,7 @@ import { CompleteUploadResponseSchema, CompleteUploadSchema, openApiResponse } f
 import { requireAuth } from '../../plugins/auth.js'
 import { enqueueTranscode } from '../../lib/queue.js'
 import { metadataForNewUpload } from '../../lib/archive-metadata.js'
+import { headObjectSize } from '../../lib/minio.js'
 
 const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -43,12 +44,14 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Upload does not belong to your channel' })
       }
 
+      const fileSizeBytes = (await headObjectSize(uploadId)) ?? 0
+
       const item = await fastify.prisma.archiveItem.create({
         data: {
           channelId: channel.id,
           title,
           rawKey: uploadId,
-          fileSizeBytes: 0,
+          fileSizeBytes,
           status: 'PENDING',
           ...(source ? { source } : {}),
           ...metadataForNewUpload(metadata),
