@@ -107,6 +107,25 @@ function buildPages(seed) {
       label: 'Embed channel player',
       waitMs: 1500,
     },
+    { role: 'public', id: 'help-index', path: '/help', label: 'Help center index' },
+    { role: 'public', id: 'about', path: '/about', label: 'About' },
+    { role: 'public', id: 'agpl', path: '/agpl', label: 'AGPL source' },
+    { role: 'public', id: 'privacy', path: '/privacy', label: 'Privacy policy' },
+    { role: 'public', id: 'terms', path: '/terms', label: 'Terms' },
+    { role: 'public', id: 'signup', path: '/signup', label: 'Signup' },
+    {
+      role: 'public',
+      id: 'venues-register',
+      path: '/venues/register',
+      label: 'Venue registration',
+    },
+    { role: 'public', id: 'how-it-works', path: '/how-it-works', label: 'How Tahti works' },
+    {
+      role: 'public',
+      id: 'help-for-listeners',
+      path: '/help/for-listeners',
+      label: 'Listener guide',
+    },
   ]
 
   if (releaseId) {
@@ -158,9 +177,131 @@ function buildPages(seed) {
       waitMs: 1500,
     },
     { role: 'artist', id: 'stats', path: '/dashboard/stats', label: 'Artist stats' },
+    { role: 'artist', id: 'stats-detail', path: '/dashboard/stats/detail', label: 'Stats detail' },
     { role: 'artist', id: 'stash', path: '/dashboard/stash', label: 'Stash file manager' },
     { role: 'artist', id: 'editor', path: '/dashboard/editor', label: 'Audio editor' },
+    { role: 'artist', id: 'revenue', path: '/dashboard/revenue', label: 'Revenue' },
+    { role: 'artist', id: 'upload', path: '/dashboard/upload', label: 'Upload' },
+    {
+      role: 'artist',
+      id: 'newsletter-compose',
+      path: '/dashboard/newsletter/compose',
+      label: 'Newsletter compose',
+    },
+    { role: 'artist', id: 'venues', path: '/dashboard/venues', label: 'Venue bookings' },
+    { role: 'artist', id: 'releases', path: '/dashboard/releases', label: 'Releases catalog' },
+    { role: 'artist', id: 'collections', path: '/dashboard/collections', label: 'Collections' },
+    {
+      role: 'artist',
+      id: 'collections-new',
+      path: '/dashboard/collections/new',
+      label: 'New collection',
+    },
+    { role: 'artist', id: 'archive', path: '/dashboard/archive', label: 'Archive history' },
+    {
+      role: 'artist',
+      id: 'settings-account',
+      path: '/dashboard/settings/account',
+      label: 'Settings — account',
+    },
+    {
+      role: 'artist',
+      id: 'settings-artist-info',
+      path: '/dashboard/settings/artist-info',
+      label: 'Settings — artist info',
+    },
+    {
+      role: 'artist',
+      id: 'settings-connections',
+      path: '/dashboard/settings/connections',
+      label: 'Settings — connections',
+    },
+    {
+      role: 'artist',
+      id: 'settings-distribution',
+      path: '/dashboard/settings/distribution',
+      label: 'Settings — distribution',
+    },
+    {
+      role: 'artist',
+      id: 'settings-domain',
+      path: '/dashboard/settings/domain',
+      label: 'Settings — custom domain',
+    },
+    {
+      role: 'artist',
+      id: 'settings-fan-subs',
+      path: '/dashboard/settings/fan-subs',
+      label: 'Settings — fan subs',
+    },
+    {
+      role: 'artist',
+      id: 'settings-mentions',
+      path: '/dashboard/settings/mentions',
+      label: 'Settings — mentions',
+    },
+    {
+      role: 'artist',
+      id: 'settings-moderators',
+      path: '/dashboard/settings/moderators',
+      label: 'Settings — moderators',
+    },
+    {
+      role: 'artist',
+      id: 'settings-multistream',
+      path: '/dashboard/settings/multistream',
+      label: 'Settings — multistream',
+    },
+    {
+      role: 'artist',
+      id: 'settings-notifications',
+      path: '/dashboard/settings/notifications',
+      label: 'Settings — notifications',
+    },
   )
+
+  if (seed.releaseId) {
+    pages.push({
+      role: 'artist',
+      id: 'release-detail',
+      path: `/dashboard/releases/${seed.releaseId}`,
+      label: 'Release detail',
+    })
+  }
+  if (seed.collectionSlug) {
+    pages.push({
+      role: 'artist',
+      id: 'collection-editor',
+      path: `/dashboard/collections/${seed.collectionSlug}`,
+      label: 'Collection editor',
+    })
+  }
+  if (seed.archiveItemId) {
+    pages.push(
+      {
+        role: 'artist',
+        id: 'archive-item',
+        path: `/dashboard/archive/${seed.archiveItemId}`,
+        label: 'Archive item preview',
+      },
+      {
+        role: 'artist',
+        id: 'archive-item-editor',
+        path: `/dashboard/archive/${seed.archiveItemId}/editor`,
+        label: 'Archive item — audio editor',
+        waitMs: 1500,
+      },
+    )
+  }
+  if (seed.editorProjectId) {
+    pages.push({
+      role: 'artist',
+      id: 'editor-project',
+      path: `/dashboard/editor/${seed.editorProjectId}`,
+      label: 'Editor project',
+      waitMs: 1500,
+    })
+  }
 
   // ── Board admin ───────────────────────────────────────────────────────
   pages.push(
@@ -199,6 +340,21 @@ function buildPages(seed) {
     },
     { role: 'admin', id: 'status', path: '/admin/status', label: 'Admin status view' },
     { role: 'admin', id: 'venues', path: '/governance/venues', label: 'Venue verification queue' },
+    { role: 'admin', id: 'grants', path: '/admin/grants', label: 'Grants overview' },
+    { role: 'admin', id: 'agm', path: '/admin/agm', label: 'AGM' },
+    { role: 'admin', id: 'radio', path: '/admin/radio', label: 'Tahti Radio admin' },
+    {
+      role: 'admin',
+      id: 'settings-vendors',
+      path: '/admin/settings/vendors',
+      label: 'Vendor settings',
+    },
+    {
+      role: 'admin',
+      id: 'tahti-selects',
+      path: '/admin/tahti-selects',
+      label: 'Tahti Selects admin',
+    },
   )
 
   return pages

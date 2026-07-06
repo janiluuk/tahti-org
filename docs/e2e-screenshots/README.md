@@ -17,7 +17,12 @@ Screenshots are grouped by role:
 | `admin/` | Board (`isBoard`) | Admin console (all nav sections) |
 | `journey/` | Fresh artist + admin | Empty account → channel → releases (Playwright journey) |
 
-See `manifest.json` for the full route → file mapping.
+See `manifest.json` for the full route → file mapping — 87 views as of the July 2026 audit
+(see `../design-audit-2026-07.md`), covering every `/dashboard/settings/*` sub-page,
+collections, archive, upload, revenue, releases, and most admin routes. Known remaining
+gaps (routes needing seed data or dynamic-ID lookups the capture script doesn't do yet):
+`/dashboard/moderate/[slug]`, `/v/[slug]`, `/admin/users/[id]`, `/admin/support/[id]`,
+`/dashboard/upload/[uploadId]` and its import sub-flows.
 
 ## When to update (agents)
 
