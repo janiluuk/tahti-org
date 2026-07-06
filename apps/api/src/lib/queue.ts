@@ -10,7 +10,13 @@ const connection = {
   port: parseInt(new URL(config.redisUrl).port || '6379', 10),
 }
 
-export const mediaQueue = new Queue('media', { connection })
+// Retries give lane-filtered workers (see apps/worker/src/index.ts's --queues
+// handling) a chance to land on a worker that actually handles this job name —
+// without a default, a job with no explicit `attempts` gets exactly 1 try and is
+// lost for good if the worker that first dequeues it isn't in the right lane.
+const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 5000 } }
+
+export const mediaQueue = new Queue('media', { connection, defaultJobOptions })
 
 export async function enqueueTranscode(itemId: string): Promise<void> {
   await mediaQueue.add('transcode-archive', { itemId })

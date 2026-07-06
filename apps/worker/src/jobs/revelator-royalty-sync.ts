@@ -3,7 +3,7 @@
 
 import type { Job } from 'bullmq'
 import type { PrismaClient } from '@tahti/db'
-import { fetchRoyaltyReports } from '@tahti/revelator'
+import { fetchRoyaltyReports, isRevelatorConfigured } from '@tahti/revelator'
 
 const SYNCABLE_STATUSES = ['submitted', 'delivered'] as const
 
@@ -33,6 +33,19 @@ export async function processRevelatorRoyaltySyncJob(
   prisma: PrismaClient,
   job: Job,
 ): Promise<RevelatorRoyaltySyncSummary> {
+  // Without a real API key, fetchRoyaltyReports() returns deterministic-but-fake
+  // stub amounts (packages/revelator, intentionally so CI/dev can exercise this
+  // job's upsert logic — see revelator-royalty-sync.test.ts). That's fine in
+  // dev/test, but persisting fabricated numbers in production — indistinguishable
+  // from real royalty data once in the DB — would misinform artists if ops ever
+  // forgets to configure the key. Only refuse to run in production.
+  if (!isRevelatorConfigured() && process.env.NODE_ENV === 'production') {
+    console.error(
+      '[worker] revelator-royalty-sync: REVELATOR_API_KEY not set in production, skipping sync',
+    )
+    return { period: 'skipped-unconfigured', releases: 0, upserted: 0 }
+  }
+
   const { yearMonth } = job.data as { yearMonth?: string }
   const period = yearMonth ? parseYearMonth(yearMonth) : priorCalendarMonth()
   if (!period) throw new Error(`Invalid yearMonth: ${yearMonth}`)

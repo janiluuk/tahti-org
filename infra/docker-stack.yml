@@ -334,7 +334,10 @@ services:
   # ───────────────────────────────────────────────────────────────────────────
   worker-media:
     image: registry.tahti.live/tahti/worker:${TAG:-latest}
-    command: ["node", "dist/index.js", "--queues=transcode-archive,record-live,fingerprint,cloud-import-google-drive"]
+    # Lane name, not individual job names — see packages/shared/src/worker-job-lanes.ts
+    # for the full job-name mapping (kept there so it can't drift out of sync with
+    # the worker's actual dispatch table the way the old per-job list here had).
+    command: ["node", "dist/index.js", "--queues=media"]
     networks: [internal]
     environment:
       <<: *db-pool-env
@@ -350,6 +353,9 @@ services:
       RTMP_KEY_FILE: /run/secrets/rtmp_key_encryption_key
       GOOGLE_DRIVE_CLIENT_SECRET_FILE: /run/secrets/google_drive_client_secret
       GOOGLE_DRIVE_CLIENT_ID: ${GOOGLE_DRIVE_CLIENT_ID:-}
+      # ffmpeg jobs are CPU-bound — 2 concurrent per replica keeps 2 replicas x
+      # 4 CPU each from oversubscribing.
+      WORKER_CONCURRENCY: "2"
     secrets: [pg_password, acoustid_api_key, rtmp_key_encryption_key, google_drive_client_secret, minio_root_password]
     volumes:
       - recordings_shared:/recordings:ro
@@ -364,7 +370,7 @@ services:
 
   worker-dist:
     image: registry.tahti.live/tahti/worker:${TAG:-latest}
-    command: ["node", "dist/index.js", "--queues=mixcloud-upload,revelator-deliver,revelator-royalty-sync"]
+    command: ["node", "dist/index.js", "--queues=dist"]
     networks: [internal]
     environment:
       <<: *db-pool-env
@@ -372,6 +378,8 @@ services:
       REVELATOR_API_KEY_FILE: /run/secrets/revelator_api_key
       MIXCLOUD_CLIENT_SECRET_FILE: /run/secrets/mixcloud_client_secret
       MIXCLOUD_CLIENT_ID: ${MIXCLOUD_CLIENT_ID:-}
+      # External API calls are I/O-bound, not CPU-bound — safe to run several at once.
+      WORKER_CONCURRENCY: "4"
     secrets: [pg_password, revelator_api_key, mixcloud_client_secret]
     deploy:
       replicas: 1
@@ -382,7 +390,7 @@ services:
 
   worker-light:
     image: registry.tahti.live/tahti/worker:${TAG:-latest}
-    command: ["node", "dist/index.js", "--queues=stats-rollup,chat-cleanup,chat-ban-rotate"]
+    command: ["node", "dist/index.js", "--queues=light"]
     networks: [internal]
     environment:
       <<: *db-pool-env
@@ -391,6 +399,8 @@ services:
       MINIO_ACCESS_KEY: tahti
       MINIO_SECRET_KEY_FILE: /run/secrets/minio_root_password
       ARCHIVE_CACHE_ROOT: /archive-cache
+      # Cheap DB-only cron work — fine to run several concurrently.
+      WORKER_CONCURRENCY: "4"
     secrets: [pg_password, minio_root_password]
     volumes:
       - archive_cache_shared:/archive-cache
@@ -403,6 +413,9 @@ services:
 
   worker-edge-log:
     image: registry.tahti.live/tahti/worker:${TAG:-latest}
+    # The old value here ("edge-log") never matched any real BullMQ job name —
+    # this container's actual, only job is hls-caddy-egress-sync (see the
+    # CADDY_HLS_ACCESS_LOG-gated registration in apps/worker/src/index.ts).
     command: ["node", "dist/index.js", "--queues=edge-log"]
     networks: [internal]
     environment:
