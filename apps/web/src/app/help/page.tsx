@@ -10,6 +10,12 @@ const GUIDES: { href: string; title: string; description: string }[] = [
     description: 'Create your channel, go live, upload sets, and share your public links.',
   },
   {
+    href: '/help/for-listeners',
+    title: 'Listener guide',
+    description:
+      'Find channels, support artists directly, download, and chat — no account required.',
+  },
+  {
     href: '/help/broadcast',
     title: 'Broadcast setup guides',
     description: 'Connect OBS, Streamlabs, Mixxx, or Traktor to your Tahti stream key.',
