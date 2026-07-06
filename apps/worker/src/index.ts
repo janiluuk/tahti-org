@@ -40,6 +40,7 @@ import {
 } from './jobs/archive-fallback-cache.js'
 import { WORKER_CRON_JOBS } from './cron-manifest.js'
 import { runWithCronLog } from './lib/cron-run.js'
+import { jobNamesForLanes } from '@tahti/shared'
 
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
@@ -48,9 +49,38 @@ const connection = {
   port: parseInt(new URL(REDIS_URL).port || '6379', 10),
 }
 
+// Retries give a lane-filtered worker a chance to land on the right worker
+// instead of losing the job on first mismatch (see below).
+const defaultJobOptions = { attempts: 3, backoff: { type: 'exponential' as const, delay: 5000 } }
+
+// --queues=media,dist — restricts this process to job names in those lanes
+// (see packages/shared/src/worker-job-lanes.ts). Every container in
+// infra/docker-stack.yml passes this so e.g. the 256MB worker-edge-log
+// container never gets handed a 4GB ffmpeg transcode job. Omit entirely (as
+// local dev / `pnpm dev` does) to process every job name, unfiltered.
+const queuesArg = process.argv.find((a) => a.startsWith('--queues='))
+const requestedLanes = queuesArg
+  ? queuesArg
+      .slice('--queues='.length)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+  : []
+const allowedJobNames = jobNamesForLanes(requestedLanes)
+if (requestedLanes.length > 0) {
+  console.log(
+    `[worker] lane filter active: ${requestedLanes.join(',')} (${allowedJobNames.size} job names)`,
+  )
+}
+
 const worker = new Worker(
   'media',
   async (job) => {
+    if (allowedJobNames.size > 0 && !allowedJobNames.has(job.name)) {
+      // Not our lane — throw so BullMQ retries (per defaultJobOptions) until a
+      // worker whose --queues covers this job name picks it up instead.
+      throw new Error(`lane-mismatch: ${job.name} is not handled by this worker's --queues`)
+    }
     await runWithCronLog(job.name, async () => {
       if (job.name === 'transcode-archive') {
         await processTranscodeJob(job)
@@ -147,7 +177,10 @@ const worker = new Worker(
       }
     })
   },
-  { connection },
+  // Explicit and per-container-tunable rather than silently defaulting to
+  // BullMQ's factory concurrency of 1 — set WORKER_CONCURRENCY to match each
+  // container's actual CPU/memory allocation in infra/docker-stack.yml.
+  { connection, concurrency: parseInt(process.env.WORKER_CONCURRENCY ?? '1', 10) },
 )
 
 worker.on('completed', (job) => {
@@ -158,9 +191,19 @@ worker.on('failed', (job, err) => {
   console.error(`[worker] job ${job?.id} (${job?.name}) failed:`, err)
 })
 
+// A stray error anywhere outside the guarded job-processing path above (e.g. a
+// timer, or an awaited call whose rejection escapes) would otherwise crash the
+// whole process silently, halting every queue until something restarts it.
+process.on('unhandledRejection', (reason) => {
+  console.error('[worker] unhandledRejection:', reason)
+})
+process.on('uncaughtException', (err) => {
+  console.error('[worker] uncaughtException:', err)
+})
+
 // Register repeatable cron jobs — idempotent (BullMQ deduplicates by key)
 async function registerCrons() {
-  const queue = new Queue('media', { connection })
+  const queue = new Queue('media', { connection, defaultJobOptions })
   const hasCaddyLog = Boolean(process.env.CADDY_HLS_ACCESS_LOG)
 
   for (const job of WORKER_CRON_JOBS) {
