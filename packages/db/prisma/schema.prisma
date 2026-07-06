@@ -1138,6 +1138,7 @@ model Download {
   @@index([channelId, createdAt(sort: Desc)])
   @@index([byFingerprint, archiveItemId])
   @@index([archiveItemId, createdAt])
+  @@index([byIpHash, createdAt])
   @@schema("engagement")
 }
 

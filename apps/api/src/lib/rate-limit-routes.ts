@@ -14,6 +14,14 @@ export function usesAuthRateLimit(url: string, method: string): boolean {
   return method === 'POST' && url.startsWith('/api/chat/')
 }
 
+/** Up to 100 releases × 50 tracks per request — same 120/min default bucket as
+ * everything else would let a single account trigger tens of thousands of row
+ * inserts per minute. */
+export function isBulkImportRoute(url: string, method: string): boolean {
+  const path = url.split('?')[0] ?? url
+  return method === 'POST' && path === '/api/me/releases/import'
+}
+
 export type EditorRateLimitTier = 'heavy' | 'draft'
 
 /** Expensive ffmpeg enqueue + autosave storm protection for archive editor. */

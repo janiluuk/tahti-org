@@ -10,7 +10,11 @@ import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
 import { config } from '../config.js'
 import { getRedisClient } from '../lib/redis.js'
 import { rateLimitWhenRedisUnavailable } from '../lib/rate-limit-fallback.js'
-import { usesAuthRateLimit, editorRateLimitTier } from '../lib/rate-limit-routes.js'
+import {
+  usesAuthRateLimit,
+  editorRateLimitTier,
+  isBulkImportRoute,
+} from '../lib/rate-limit-routes.js'
 
 interface RateLimitConfig {
   max: number
@@ -78,6 +82,22 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
         return reply
           .status(429)
           .send({ error: 'Too many support requests', retryAfterSec: resetSec })
+      }
+      return
+    }
+
+    if (isBulkImportRoute(request.url, request.method)) {
+      const limit = { max: 5, windowSec: 3600, keyPrefix: 'bulk-import' }
+      const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
+        rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec),
+      )
+      reply.header('X-RateLimit-Remaining', remaining)
+      reply.header('X-RateLimit-Reset', resetSec)
+      if (!ok) {
+        return reply.status(429).send({
+          error: 'Too many bulk import requests',
+          retryAfterSec: resetSec,
+        })
       }
       return
     }

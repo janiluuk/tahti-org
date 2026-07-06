@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { config } from '../config.js'
 
@@ -36,11 +36,17 @@ export async function presignedPutUrl(
   key: string,
   contentType: string,
   expiresInSec = 900,
+  contentLength?: number,
 ): Promise<string> {
   const command = new PutObjectCommand({
     Bucket: config.minio.bucket,
     Key: key,
     ContentType: contentType,
+    // Baking the declared length into the signature makes S3/MinIO reject any PUT
+    // whose actual Content-Length doesn't match — without this, a client can prepare
+    // a small declared size and then stream an arbitrarily large body through the
+    // same presigned URL.
+    ...(contentLength != null ? { ContentLength: contentLength } : {}),
   })
   return getSignedUrl(presigningS3, command, { expiresIn: expiresInSec })
 }
@@ -69,6 +75,16 @@ export async function getObjectStream(key: string): Promise<{
     body: res.Body as NodeJS.ReadableStream,
     contentType: res.ContentType ?? 'application/octet-stream',
     contentLength: res.ContentLength,
+  }
+}
+
+/** Ground-truth object size straight from storage — never trust a client-declared size. */
+export async function headObjectSize(key: string): Promise<number | null> {
+  try {
+    const res = await s3.send(new HeadObjectCommand({ Bucket: config.minio.bucket, Key: key }))
+    return res.ContentLength ?? null
+  } catch {
+    return null
   }
 }
 
