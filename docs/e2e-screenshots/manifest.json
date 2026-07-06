@@ -31,7 +31,7 @@
     "role": "public",
     "id": "verify-token",
     "file": "public/verify-token.png",
-    "url": "/verify?token=Zt5hIKhKgENeQjPGto4BTykCYXOowWIo",
+    "url": "/verify?token=pc7E0mq4slK5kpoH8iAsqGx9iSfTuHeC",
     "label": "Verify email (with token)"
   },
   {
@@ -162,9 +162,72 @@
   },
   {
     "role": "public",
+    "id": "help-index",
+    "file": "public/help-index.png",
+    "url": "/help",
+    "label": "Help center index"
+  },
+  {
+    "role": "public",
+    "id": "about",
+    "file": "public/about.png",
+    "url": "/about",
+    "label": "About"
+  },
+  {
+    "role": "public",
+    "id": "agpl",
+    "file": "public/agpl.png",
+    "url": "/agpl",
+    "label": "AGPL source"
+  },
+  {
+    "role": "public",
+    "id": "privacy",
+    "file": "public/privacy.png",
+    "url": "/privacy",
+    "label": "Privacy policy"
+  },
+  {
+    "role": "public",
+    "id": "terms",
+    "file": "public/terms.png",
+    "url": "/terms",
+    "label": "Terms"
+  },
+  {
+    "role": "public",
+    "id": "signup",
+    "file": "public/signup.png",
+    "url": "/signup",
+    "label": "Signup"
+  },
+  {
+    "role": "public",
+    "id": "venues-register",
+    "file": "public/venues-register.png",
+    "url": "/venues/register",
+    "label": "Venue registration"
+  },
+  {
+    "role": "public",
+    "id": "how-it-works",
+    "file": "public/how-it-works.png",
+    "url": "/how-it-works",
+    "label": "How Tahti works"
+  },
+  {
+    "role": "public",
+    "id": "help-for-listeners",
+    "file": "public/help-for-listeners.png",
+    "url": "/help/for-listeners",
+    "label": "Listener guide"
+  },
+  {
+    "role": "public",
     "id": "embed-release",
     "file": "public/embed-release.png",
-    "url": "/embed/r/cmqqkpon00006nn70ge6hqlpb",
+    "url": "/embed/r/cmr98iwge0006n3nsw2dej348",
     "label": "Embed release player"
   },
   {
@@ -199,14 +262,14 @@
     "role": "artist",
     "id": "channel-appearance",
     "file": "artist/channel-appearance.png",
-    "url": "/dashboard/channel",
+    "url": "/dashboard/channel/edit",
     "label": "Channel design editor"
   },
   {
     "role": "artist",
     "id": "schedule-programme",
     "file": "artist/schedule-programme.png",
-    "url": "/dashboard/broadcast",
+    "url": "/dashboard/schedule",
     "label": "Schedule & programme"
   },
   {
@@ -225,6 +288,13 @@
   },
   {
     "role": "artist",
+    "id": "stats-detail",
+    "file": "artist/stats-detail.png",
+    "url": "/dashboard/stats/detail",
+    "label": "Stats detail"
+  },
+  {
+    "role": "artist",
     "id": "stash",
     "file": "artist/stash.png",
     "url": "/dashboard/stash",
@@ -236,6 +306,167 @@
     "file": "artist/editor.png",
     "url": "/dashboard/editor",
     "label": "Audio editor"
+  },
+  {
+    "role": "artist",
+    "id": "revenue",
+    "file": "artist/revenue.png",
+    "url": "/dashboard/revenue",
+    "label": "Revenue"
+  },
+  {
+    "role": "artist",
+    "id": "upload",
+    "file": "artist/upload.png",
+    "url": "/dashboard/upload",
+    "label": "Upload"
+  },
+  {
+    "role": "artist",
+    "id": "newsletter-compose",
+    "file": "artist/newsletter-compose.png",
+    "url": "/dashboard/newsletter/compose",
+    "label": "Newsletter compose"
+  },
+  {
+    "role": "artist",
+    "id": "venues",
+    "file": "artist/venues.png",
+    "url": "/dashboard/venues",
+    "label": "Venue bookings"
+  },
+  {
+    "role": "artist",
+    "id": "releases",
+    "file": "artist/releases.png",
+    "url": "/dashboard/releases",
+    "label": "Releases catalog"
+  },
+  {
+    "role": "artist",
+    "id": "collections",
+    "file": "artist/collections.png",
+    "url": "/dashboard/collections",
+    "label": "Collections"
+  },
+  {
+    "role": "artist",
+    "id": "collections-new",
+    "file": "artist/collections-new.png",
+    "url": "/dashboard/collections/new",
+    "label": "New collection"
+  },
+  {
+    "role": "artist",
+    "id": "archive",
+    "file": "artist/archive.png",
+    "url": "/dashboard/archive",
+    "label": "Archive history"
+  },
+  {
+    "role": "artist",
+    "id": "settings-account",
+    "file": "artist/settings-account.png",
+    "url": "/dashboard/settings/account",
+    "label": "Settings — account"
+  },
+  {
+    "role": "artist",
+    "id": "settings-artist-info",
+    "file": "artist/settings-artist-info.png",
+    "url": "/dashboard/settings/artist-info",
+    "label": "Settings — artist info"
+  },
+  {
+    "role": "artist",
+    "id": "settings-connections",
+    "file": "artist/settings-connections.png",
+    "url": "/dashboard/settings/connections",
+    "label": "Settings — connections"
+  },
+  {
+    "role": "artist",
+    "id": "settings-distribution",
+    "file": "artist/settings-distribution.png",
+    "url": "/dashboard/settings/distribution",
+    "label": "Settings — distribution"
+  },
+  {
+    "role": "artist",
+    "id": "settings-domain",
+    "file": "artist/settings-domain.png",
+    "url": "/dashboard/settings/domain",
+    "label": "Settings — custom domain"
+  },
+  {
+    "role": "artist",
+    "id": "settings-fan-subs",
+    "file": "artist/settings-fan-subs.png",
+    "url": "/dashboard/settings/fan-subs",
+    "label": "Settings — fan subs"
+  },
+  {
+    "role": "artist",
+    "id": "settings-mentions",
+    "file": "artist/settings-mentions.png",
+    "url": "/dashboard/settings/mentions",
+    "label": "Settings — mentions"
+  },
+  {
+    "role": "artist",
+    "id": "settings-moderators",
+    "file": "artist/settings-moderators.png",
+    "url": "/dashboard/settings/moderators",
+    "label": "Settings — moderators"
+  },
+  {
+    "role": "artist",
+    "id": "settings-multistream",
+    "file": "artist/settings-multistream.png",
+    "url": "/dashboard/settings/multistream",
+    "label": "Settings — multistream"
+  },
+  {
+    "role": "artist",
+    "id": "settings-notifications",
+    "file": "artist/settings-notifications.png",
+    "url": "/dashboard/settings/notifications",
+    "label": "Settings — notifications"
+  },
+  {
+    "role": "artist",
+    "id": "release-detail",
+    "file": "artist/release-detail.png",
+    "url": "/dashboard/releases/cmr98iwge0006n3nsw2dej348",
+    "label": "Release detail"
+  },
+  {
+    "role": "artist",
+    "id": "collection-editor",
+    "file": "artist/collection-editor.png",
+    "url": "/dashboard/collections/demo-mixes",
+    "label": "Collection editor"
+  },
+  {
+    "role": "artist",
+    "id": "archive-item",
+    "file": "artist/archive-item.png",
+    "url": "/dashboard/archive/cmr98iwh9000sn3nsulao6ij5",
+    "label": "Archive item preview"
+  },
+  {
+    "role": "artist",
+    "id": "archive-item-editor",
+    "file": "artist/archive-item-editor.png",
+    "url": "/dashboard/archive/cmr98iwh9000sn3nsulao6ij5/editor",
+    "label": "Archive item — audio editor"
+  },
+  {
+    "role": "artist",
+    "id": "editor-project",
+    "file": "artist/editor-project.png",
+    "url": "/dashboard/editor/cmr98iwit000un3nszwyoume0",
+    "label": "Editor project"
   },
   {
     "role": "admin",
@@ -341,5 +572,40 @@
     "file": "admin/venues.png",
     "url": "/governance/venues",
     "label": "Venue verification queue"
+  },
+  {
+    "role": "admin",
+    "id": "grants",
+    "file": "admin/grants.png",
+    "url": "/admin/grants",
+    "label": "Grants overview"
+  },
+  {
+    "role": "admin",
+    "id": "agm",
+    "file": "admin/agm.png",
+    "url": "/admin/agm",
+    "label": "AGM"
+  },
+  {
+    "role": "admin",
+    "id": "radio",
+    "file": "admin/radio.png",
+    "url": "/admin/radio",
+    "label": "Tahti Radio admin"
+  },
+  {
+    "role": "admin",
+    "id": "settings-vendors",
+    "file": "admin/settings-vendors.png",
+    "url": "/admin/settings/vendors",
+    "label": "Vendor settings"
+  },
+  {
+    "role": "admin",
+    "id": "tahti-selects",
+    "file": "admin/tahti-selects.png",
+    "url": "/admin/tahti-selects",
+    "label": "Tahti Selects admin"
   }
 ]
