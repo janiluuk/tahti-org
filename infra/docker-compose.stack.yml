@@ -4,7 +4,7 @@
 # App UI:     http://localhost:17777  (override WEB_PORT)
 # API:        http://localhost:15011  (override API_PORT)
 # MailHog:    http://localhost:18025
-# MinIO:      http://localhost:19001  (tahti / tahti_dev_secret)
+# MinIO:      http://localhost:19001  (tahti / local-stack-minio-secret)
 
 name: tahti-stack
 
@@ -31,7 +31,10 @@ x-app-env: &app-env
   MINIO_ENDPOINT: http://minio:9000
   MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:19000}
   MINIO_ACCESS_KEY: tahti
-  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-tahti_dev_secret}
+  # SEC-005 (apps/api/src/config.ts) fatally refuses to boot in production if this
+  # equals the literal dev sentinel — "local-stack-*" avoids that, matching the
+  # pattern already used by INTERNAL_SECRET/DOCS_PASS/HCAPTCHA_SECRET above.
+  MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-local-stack-minio-secret}
   MINIO_BUCKET: tahti
   CENTRIFUGO_API_URL: http://chat:8000/api
   CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-dev}
@@ -42,23 +45,23 @@ x-app-env: &app-env
   ICECAST_PUBLIC_URL: ${ICECAST_PUBLIC_URL:-http://localhost:${ICECAST_PORT:-18100}}
   ICECAST_INGEST_HOSTS: ${ICECAST_INGEST_HOSTS:-}
   RTMP_INGEST_HOST: ${RTMP_INGEST_HOST:-rtmp-ingest}
-  RTMP_INGEST_HEALTH_PORT: "8080"
+  RTMP_INGEST_HEALTH_PORT: '8080'
   # STREAM-003: comma-separated public RTMP ingest hosts for OBS failover (second replica in prod)
-  RTMP_INGEST_HOSTS: ""
+  RTMP_INGEST_HOSTS: ''
   # STREAM-007: comma-separated public Icecast hosts for Mixxx failover (second replica in prod)
   ICECAST_INGEST_HEALTH_PATH: /status-json.xsl
   # STREAM-008 phase 3: optional AcoustID key for archive tracklist title lookup (https://acoustid.org/new-application)
-  ACOUSTID_API_KEY: ""
-  ACRCLOUD_ENABLED: "false"
+  ACOUSTID_API_KEY: ''
+  ACRCLOUD_ENABLED: 'false'
   # Post-production: ACRCLOUD_ENABLED=true + keys; set orchestrator FINGERPRINT_SEND_AUDIO=1
   ACRCLOUD_HOST: identify-eu-west-1.acrcloud.com
-  ACRCLOUD_ACCESS_KEY: ""
-  ACRCLOUD_ACCESS_SECRET: ""
+  ACRCLOUD_ACCESS_KEY: ''
+  ACRCLOUD_ACCESS_SECRET: ''
   HLS_BASE_URL: ${HLS_BASE_URL:-http://localhost:19000/hls-live}
   HLS_SEGMENT_ROOT: /hls
   HLS_MINIO_BUCKET: hls-live
   HLS_MINIO_PREFIX: hls-live
-  HLS_STALE_SECONDS: "20"
+  HLS_STALE_SECONDS: '20'
   ARCHIVE_CACHE_ROOT: /archive-cache
   APP_URL: ${APP_URL:-http://localhost:${WEB_PORT:-17777}}
   API_URL: ${API_URL:-http://localhost:${API_PORT:-15011}}
@@ -78,7 +81,6 @@ x-app-env: &app-env
   TAHTI_RADIO_AUDIO_URL: ${TAHTI_RADIO_AUDIO_URL:-${TAHTI_RADIO_HLS_URL:-}}
 
 services:
-
   postgres:
     image: postgres:16-alpine
     environment:
@@ -89,7 +91,7 @@ services:
     volumes:
       - stack_postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tahti -d tahti"]
+      test: ['CMD-SHELL', 'pg_isready -U tahti -d tahti']
       interval: 5s
       timeout: 5s
       retries: 12
@@ -101,15 +103,15 @@ services:
       DATABASE_URL: postgres://tahti:${POSTGRES_PASSWORD:-tahti_dev}@postgres:5432/tahti
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
-      MAX_CLIENT_CONN: "200"
-      DEFAULT_POOL_SIZE: "25"
+      MAX_CLIENT_CONN: '200'
+      DEFAULT_POOL_SIZE: '25'
     ports:
-      - "${PGBOUNCER_PORT:-16432}:5432"
+      - '${PGBOUNCER_PORT:-16432}:5432'
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-p", "5432"]
+      test: ['CMD', 'pg_isready', '-h', '127.0.0.1', '-p', '5432']
       interval: 5s
       timeout: 3s
       retries: 8
@@ -117,11 +119,11 @@ services:
 
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes", "--loglevel", "warning"]
+    command: ['redis-server', '--appendonly', 'yes', '--loglevel', 'warning']
     volumes:
       - stack_redis:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
@@ -131,14 +133,14 @@ services:
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: tahti
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-tahti_dev_secret}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-local-stack-minio-secret}
     ports:
-      - "${MINIO_PORT:-19000}:9000"
-      - "${MINIO_CONSOLE_PORT:-19001}:9001"
+      - '${MINIO_PORT:-19000}:9000'
+      - '${MINIO_CONSOLE_PORT:-19001}:9001'
     volumes:
       - stack_minio:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ['CMD', 'mc', 'ready', 'local']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -147,7 +149,7 @@ services:
   minio-init:
     image: minio/mc:latest
     environment:
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-tahti_dev_secret}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-local-stack-minio-secret}
     depends_on:
       minio:
         condition: service_healthy
@@ -164,7 +166,7 @@ services:
         mc anonymous set download local/tahti/avatars &&
         echo 'MinIO buckets ready'
       "
-    restart: "no"
+    restart: 'no'
 
   chat:
     image: centrifugo/centrifugo:v5
@@ -180,9 +182,9 @@ services:
     volumes:
       - ./stack/centrifugo.dev.json:/centrifugo/config.json:ro
     ports:
-      - "${CHAT_PORT:-18000}:8000"
+      - '${CHAT_PORT:-18000}:8000'
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8000/health']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -190,50 +192,50 @@ services:
   mailhog:
     image: mailhog/mailhog:latest
     ports:
-      - "${MAILHOG_SMTP_PORT:-15025}:1025"
-      - "${MAILHOG_UI_PORT:-18025}:8025"
+      - '${MAILHOG_SMTP_PORT:-15025}:1025'
+      - '${MAILHOG_UI_PORT:-18025}:8025'
 
   icecast:
     image: moul/icecast:latest
-    user: "101:102"
-    entrypoint: ["/usr/bin/icecast2"]
-    command: ["-n", "-c", "/etc/icecast2/icecast.xml"]
+    user: '101:102'
+    entrypoint: ['/usr/bin/icecast2']
+    command: ['-n', '-c', '/etc/icecast2/icecast.xml']
     volumes:
       - ./stack/icecast.xml:/etc/icecast2/icecast.xml:ro
     ports:
-      - "${ICECAST_PORT:-18100}:8000"
+      - '${ICECAST_PORT:-18100}:8000'
 
   # STREAM-007: optional second Icecast for local failover testing (`docker compose --profile icecast-failover up`)
   icecast-b:
-    profiles: ["icecast-failover"]
+    profiles: ['icecast-failover']
     image: moul/icecast:latest
-    user: "101:102"
-    entrypoint: ["/usr/bin/icecast2"]
-    command: ["-n", "-c", "/etc/icecast2/icecast.xml"]
+    user: '101:102'
+    entrypoint: ['/usr/bin/icecast2']
+    command: ['-n', '-c', '/etc/icecast2/icecast.xml']
     volumes:
       - ./stack/icecast.xml:/etc/icecast2/icecast.xml:ro
     ports:
-      - "${ICECAST_B_PORT:-18101}:8000"
+      - '${ICECAST_B_PORT:-18101}:8000'
 
   rtmp-ingest:
     image: tiangolo/nginx-rtmp:latest
     volumes:
       - ./stack/nginx-rtmp.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "${RTMP_PORT:-1935}:1935"
+      - '${RTMP_PORT:-1935}:1935'
     depends_on:
       api:
         condition: service_healthy
 
   # STREAM-003: optional second RTMP ingest for local failover testing
   rtmp-ingest-b:
-    profiles: ["rtmp-failover"]
+    profiles: ['rtmp-failover']
     image: tiangolo/nginx-rtmp:latest
     volumes:
       - ./stack/nginx-rtmp.conf:/etc/nginx/nginx.conf:ro
     ports:
-      - "${RTMP_B_PORT:-1936}:1935"
-      - "${RTMP_B_HEALTH_PORT:-8086}:8080"
+      - '${RTMP_B_PORT:-1936}:1935'
+      - '${RTMP_B_HEALTH_PORT:-8086}:8080'
     depends_on:
       api:
         condition: service_healthy
@@ -249,8 +251,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["sh", "-c", "pnpm --filter @tahti/db exec prisma db push --accept-data-loss"]
-    restart: "no"
+    command: ['sh', '-c', 'pnpm --filter @tahti/db exec prisma db push --accept-data-loss']
+    restart: 'no'
 
   api:
     build:
@@ -258,9 +260,9 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       <<: *app-env
-      PORT: "3001"
+      PORT: '3001'
     ports:
-      - "${API_PORT:-15011}:3001"
+      - '${API_PORT:-15011}:3001'
     depends_on:
       pgbouncer:
         condition: service_healthy
@@ -271,7 +273,7 @@ services:
       mailhog:
         condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/health"]
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3001/health']
       interval: 15s
       timeout: 10s
       retries: 8
@@ -294,14 +296,14 @@ services:
     environment:
       <<: *app-env
       API_URL: http://api:3001
-      PORT: "3000"
+      PORT: '3000'
     ports:
-      - "${WEB_PORT:-17777}:3000"
+      - '${WEB_PORT:-17777}:3000'
     depends_on:
       api:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3000/']
       interval: 10s
       timeout: 5s
       retries: 8
@@ -330,7 +332,7 @@ services:
       dockerfile: services/orchestrator/Dockerfile
     environment:
       <<: *app-env
-      PORT: "3003"
+      PORT: '3003'
       FFMPEG_IMAGE: jrotting/ffmpeg:6-alpine
       ICECAST_BASE_URL: http://icecast:8000
       RTMP_INGEST_URL: rtmp://rtmp-ingest:1935
@@ -338,9 +340,9 @@ services:
       RECORDINGS_VOLUME: tahti_stack_recordings
       ARCHIVE_CACHE_VOLUME: tahti_stack_archive_cache
       COVER_CACHE_VOLUME: tahti_stack_cover_cache
-      FINGERPRINT_SEND_AUDIO: "0"
+      FINGERPRINT_SEND_AUDIO: '0'
     ports:
-      - "${ORCHESTRATOR_PORT:-15003}:3003"
+      - '${ORCHESTRATOR_PORT:-15003}:3003'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - stack_hls:/hls
@@ -355,11 +357,11 @@ services:
       context: ../website
       dockerfile: Dockerfile
     ports:
-      - "${WEBSITE_PORT:-18080}:80"
+      - '${WEBSITE_PORT:-18080}:80'
     volumes:
       - ../website/output_vhs.mp4:/usr/share/nginx/html/output_vhs.mp4:ro,optional
       - ../website/bg-audio.mp3:/usr/share/nginx/html/bg-audio.mp3:ro
-    profiles: ["marketing"]
+    profiles: ['marketing']
 
 volumes:
   stack_postgres:
