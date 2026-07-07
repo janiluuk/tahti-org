@@ -100,6 +100,7 @@ import bandcampRoutes from './routes/me/bandcamp.js'
 import soundcloudRoutes from './routes/me/soundcloud.js'
 import googleDriveRoutes from './routes/me/google-drive.js'
 import spotifyImportRoutes from './routes/imports/spotify.js'
+import spotifyProfileRoute from './routes/me/spotify-profile.js'
 import mixcloudEmbedImportRoutes from './routes/imports/mixcloud-embed.js'
 import revelatorRoutes from './routes/me/revelator.js'
 import newsletterPublicRoutes from './routes/newsletter/public.js'
@@ -526,6 +527,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(soundcloudRoutes)
   await fastify.register(googleDriveRoutes)
   await fastify.register(spotifyImportRoutes)
+  await fastify.register(spotifyProfileRoute)
   await fastify.register(mixcloudEmbedImportRoutes)
   await fastify.register(revelatorRoutes)
 
