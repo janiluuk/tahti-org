@@ -35,3 +35,18 @@ export const SpotifyAddTrackResponseSchema = z.object({
   collectionItemId: z.string(),
   track: SpotifyTrackResultSchema,
 })
+
+export const SpotifyArtistProfileSchema = z.object({
+  artistId: z.string(),
+  name: z.string(),
+  imageUrl: z.string().nullable(),
+})
+
+export const SpotifyProfileStatusResponseSchema = z.object({
+  configured: z.boolean(),
+  profile: SpotifyArtistProfileSchema.nullable(),
+})
+
+export const SpotifyLinkProfileRequestSchema = z.object({
+  artistUrl: z.string().min(1),
+})

@@ -135,6 +135,31 @@ export async function getSpotifyTrack(
   return mapSpotifyTrack(data)
 }
 
+export interface SpotifyArtistResult {
+  id: string
+  name: string
+  imageUrl: string | null
+}
+
+interface RawSpotifyArtist {
+  id: string
+  name: string
+  images?: Array<{ url: string }>
+}
+
+/** Fetches artist metadata — used to verify a pasted artist URL/ID is real before saving it. */
+export async function getSpotifyArtist(
+  accessToken: string,
+  artistId: string,
+): Promise<SpotifyArtistResult> {
+  const data = await spotifyApiGet<RawSpotifyArtist>(accessToken, `/artists/${artistId}`)
+  return {
+    id: data.id,
+    name: data.name,
+    imageUrl: data.images?.[0]?.url ?? null,
+  }
+}
+
 /**
  * Lists tracks where `artistId` is the primary (first-credited) artist, across
  * that artist's albums/singles — the catalogue view for "Your tracks" / "By

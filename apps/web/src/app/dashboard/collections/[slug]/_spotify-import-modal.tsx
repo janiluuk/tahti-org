@@ -235,8 +235,10 @@ export function SpotifyImportModal({ collectionId, collectionTitle, onClose, onA
 
         {tab === 'mine' && !loading && myArtistId == null ? (
           <p className="studio-text-muted-sm spotify-import-modal__hint">
-            We don&rsquo;t have your Spotify artist profile yet — paste your own Spotify artist URL
-            in &ldquo;By artist URL&rdquo; for now.
+            We don&rsquo;t have your Spotify artist profile yet —{' '}
+            <a href="/dashboard/settings/connections">link it in Settings → Connections</a> and
+            it&rsquo;ll auto-load here every time. Or paste your artist URL in &ldquo;By artist
+            URL&rdquo; for a one-off lookup.
           </p>
         ) : null}
 
