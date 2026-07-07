@@ -3097,3 +3097,80 @@
 [data-tahti-ui='brand'].brand-channel .brand-muted {
   color: var(--muted);
 }
+
+/* Report button — content moderation (anonymous, no account required) */
+[data-tahti-ui='brand'].brand-channel .report-button__trigger {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+[data-tahti-ui='brand'].brand-channel .report-button__trigger:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+[data-tahti-ui='brand'].brand-channel .report-button__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 320px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+}
+
+[data-tahti-ui='brand'].brand-channel .report-button__form select,
+[data-tahti-ui='brand'].brand-channel .report-button__form textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+  font-family: inherit;
+}
+
+[data-tahti-ui='brand'].brand-channel .report-button__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'].brand-channel .report-button__actions button {
+  border-radius: var(--radius-pill);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'].brand-channel .report-button__actions button:first-child {
+  background: var(--coral);
+  border-color: var(--coral);
+  color: var(--black);
+}
+
+[data-tahti-ui='brand'].brand-channel .report-button__actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='brand'].brand-channel .report-button__done,
+[data-tahti-ui='brand'].brand-channel .report-button__error {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'].brand-channel .report-button__error {
+  color: var(--coral);
+}

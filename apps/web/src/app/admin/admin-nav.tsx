@@ -118,6 +118,22 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/content-reports',
+    label: 'Reports',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path
+          d="M8 1.5 14.5 13.5H1.5L8 1.5Z"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+        <path d="M8 6.5V9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <circle cx="8" cy="11.2" r="0.9" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/financial',
     label: 'Financial',
     icon: (
