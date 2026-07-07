@@ -26,16 +26,28 @@ function utcDayKeys(days: number): { since: Date; keys: string[] } {
   return { since: start, keys }
 }
 
-function bucketByUtcDay(rows: { createdAt: Date }[], keys: string[]): Record<string, number> {
+interface DailyCountRow {
+  day: Date
+  count: bigint
+}
+
+function bucketRows(rows: DailyCountRow[], keys: string[]): Record<string, number> {
   const counts = Object.fromEntries(keys.map((k) => [k, 0]))
   for (const row of rows) {
-    const key = row.createdAt.toISOString().slice(0, 10)
-    if (key in counts) counts[key]++
+    const key = row.day.toISOString().slice(0, 10)
+    if (key in counts) counts[key] = Number(row.count)
   }
   return counts
 }
 
-/** M22: last N UTC days of gate funnel activity for dashboard sparklines. */
+/**
+ * PERF-005: SQL-side count-by-day instead of pulling every matching row (plus,
+ * previously, *every archive item the channel owns* just to get IDs for an `in:`
+ * filter) into Node to bucket in a loop. Same DATE_TRUNC approach as
+ * buildEgressDailySeries — Prisma groupBy can't truncate a timestamp to a day, so
+ * this needs a raw query. The repost-ack join replaces the old two-step
+ * findMany-then-findMany(in:) with one query.
+ */
 export async function buildGateDailySeries(
   prisma: PrismaClient,
   channelId: string,
@@ -43,37 +55,34 @@ export async function buildGateDailySeries(
 ): Promise<GateDailyPoint[]> {
   const { since, keys } = utcDayKeys(days)
 
-  const channelItems = await prisma.archiveItem.findMany({
-    where: { channelId },
-    select: { id: true },
-  })
-  const archiveItemIds = channelItems.map((i) => i.id)
-
   const [repostRows, blockedRows, countedRows] = await Promise.all([
-    archiveItemIds.length > 0
-      ? prisma.archiveRepostAck.findMany({
-          where: { archiveItemId: { in: archiveItemIds }, createdAt: { gte: since } },
-          select: { createdAt: true },
-        })
-      : [],
-    prisma.download.findMany({
-      where: {
-        channelId,
-        createdAt: { gte: since },
-        countedAt: null,
-        reason: { in: ['gate_repost', 'gate_follow'] },
-      },
-      select: { createdAt: true },
-    }),
-    prisma.download.findMany({
-      where: { channelId, createdAt: { gte: since }, countedAt: { not: null } },
-      select: { createdAt: true },
-    }),
+    prisma.$queryRaw<DailyCountRow[]>`
+      SELECT DATE_TRUNC('day', ra."createdAt") AS day, COUNT(*) AS count
+      FROM engagement."ArchiveRepostAck" ra
+      JOIN channel."ArchiveItem" ai ON ai.id = ra."archiveItemId"
+      WHERE ai."channelId" = ${channelId} AND ra."createdAt" >= ${since}
+      GROUP BY DATE_TRUNC('day', ra."createdAt")
+    `,
+    prisma.$queryRaw<DailyCountRow[]>`
+      SELECT DATE_TRUNC('day', "createdAt") AS day, COUNT(*) AS count
+      FROM engagement."Download"
+      WHERE "channelId" = ${channelId}
+        AND "createdAt" >= ${since}
+        AND "countedAt" IS NULL
+        AND "reason" IN ('gate_repost', 'gate_follow')
+      GROUP BY DATE_TRUNC('day', "createdAt")
+    `,
+    prisma.$queryRaw<DailyCountRow[]>`
+      SELECT DATE_TRUNC('day', "createdAt") AS day, COUNT(*) AS count
+      FROM engagement."Download"
+      WHERE "channelId" = ${channelId} AND "createdAt" >= ${since} AND "countedAt" IS NOT NULL
+      GROUP BY DATE_TRUNC('day', "createdAt")
+    `,
   ])
 
-  const repost = bucketByUtcDay(repostRows, keys)
-  const blocked = bucketByUtcDay(blockedRows, keys)
-  const counted = bucketByUtcDay(countedRows, keys)
+  const repost = bucketRows(repostRows, keys)
+  const blocked = bucketRows(blockedRows, keys)
+  const counted = bucketRows(countedRows, keys)
 
   return keys.map((date) => ({
     date,

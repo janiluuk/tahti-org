@@ -25,7 +25,19 @@ function utcDayKeys(days: number): { since: Date; keys: string[] } {
   return { since: start, keys }
 }
 
-/** STREAM-006: last N UTC days of attributed download egress per channel. */
+interface EgressDailyRow {
+  day: Date
+  bytes: bigint | null
+  downloads: bigint
+}
+
+/**
+ * PERF-005: SQL-side sum/count by day instead of pulling every Download row for the
+ * window into Node and bucketing in a loop — a popular channel's 30-day download
+ * history has no upper bound on row count. Prisma's groupBy can't truncate a
+ * timestamp to a day, so this needs a raw query; DATE_TRUNC + GROUP BY does in one
+ * index-backed aggregate what the old code did with an unbounded findMany.
+ */
 export async function buildEgressDailySeries(
   prisma: PrismaClient,
   channelId: string,
@@ -33,19 +45,24 @@ export async function buildEgressDailySeries(
 ): Promise<EgressDailyPoint[]> {
   const { since, keys } = utcDayKeys(days)
 
-  const rows = await prisma.download.findMany({
-    where: { channelId, createdAt: { gte: since } },
-    select: { createdAt: true, bytes: true },
-  })
+  const rows = await prisma.$queryRaw<EgressDailyRow[]>`
+    SELECT
+      DATE_TRUNC('day', "createdAt") AS day,
+      SUM("bytes") AS bytes,
+      COUNT(*) AS downloads
+    FROM engagement."Download"
+    WHERE "channelId" = ${channelId} AND "createdAt" >= ${since}
+    GROUP BY DATE_TRUNC('day', "createdAt")
+  `
 
   const bytesByDay = Object.fromEntries(keys.map((k) => [k, 0]))
   const countByDay = Object.fromEntries(keys.map((k) => [k, 0]))
 
   for (const row of rows) {
-    const key = row.createdAt.toISOString().slice(0, 10)
+    const key = row.day.toISOString().slice(0, 10)
     if (!(key in bytesByDay)) continue
-    bytesByDay[key] += row.bytes
-    countByDay[key]++
+    bytesByDay[key] += Number(row.bytes ?? 0)
+    countByDay[key] += Number(row.downloads)
   }
 
   return keys.map((date) => ({
