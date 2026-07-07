@@ -8,6 +8,7 @@ import { SmartLinkDspButtons } from '@/components/smart-link-dsp-buttons'
 import { SmartLinkReleaseDetails } from '@/components/smart-link-release-details'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
+import { ReportButton } from '@/components/report-button'
 
 interface SmartLinkTrack {
   title: string
@@ -122,6 +123,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
           </div>
         ) : null}
       </ReleaseSmartLink>
+      <ReportButton targetType="RELEASE" targetId={data.release.id} />
     </SmartLinkPageLayout>
   )
 }

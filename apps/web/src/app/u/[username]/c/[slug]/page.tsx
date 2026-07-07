@@ -22,6 +22,7 @@ import type { PlayerTrack } from '@/contexts/player-context'
 import { SpotifyEmbedRow } from './_spotify-embed-row'
 import { MixcloudEmbedRow } from './_mixcloud-embed-row'
 import { ArchiveTrackRow } from './_archive-track-row'
+import { ReportButton } from '@/components/report-button'
 
 async function fetchCollection(slug: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -248,6 +249,10 @@ export default async function CollectionPage({
             })}
           </ol>
         )}
+      </section>
+
+      <section className="prof-section">
+        <ReportButton targetType="COLLECTION" targetId={params.slug} />
       </section>
     </ProfilePageLayout>
   )
