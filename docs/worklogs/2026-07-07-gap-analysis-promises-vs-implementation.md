@@ -1,0 +1,177 @@
+# Gap analysis: implementation docs vs. website promises vs. actual code (2026-07-07)
+
+Requested: read through the implementation/planning docs, compare against what the
+website promises publicly, and produce a worklog of what's missing or needs
+improvement. Method: two research passes (planning-doc inventory, website-promise
+inventory) cross-referenced against `docs/project-roadmap.md` — the repo's own
+maintained build audit — plus direct verification of the handful of items where
+the roadmap's claimed status looked surprising or where two public sources
+disagreed with each other.
+
+**Headline finding, before the details: the platform is far more complete than a
+worklog request like this usually turns up.** `docs/project-roadmap.md` tracks
+M0–M31 plus ~100 PLAT-/SEC-/UX-/PERF- backlog items, and the overwhelming majority
+are marked done and verify as done. The genuine gaps are a short, specific list
+(below), not a broad "half the roadmap is unbuilt" situation. The more interesting
+findings from this pass are **inconsistencies between what's promised in different
+public places** — which is a trust/credibility risk for a transparency-first
+nonprofit even where the underlying feature is fully built — and **one place where
+the roadmap doc itself under-reports real progress.**
+
+## 1. Public promises contradict each other (highest priority — fix before anyone reads both pages)
+
+`apps/web` (the actual Next.js app: homepage, `/for-artists`, `/about`,
+`/how-it-works`, `/transparency`, help pages) and `website/index.html` (a
+**separate, standalone static marketing page**, not part of the Next.js app, with
+its own OG tags/meta) disagree on at least four concrete numbers:
+
+| Claim | `apps/web` says | `website/index.html` says | Which is real? |
+|---|---|---|---|
+| Fan-subscription price range | €3–€10/month | €1–€100/month | Verify against `packages/shared` fan-tier validation bounds and fix whichever page is wrong |
+| Operating reserve target | 6 months of costs (CONSTITUTION.md, `/about`, `/how-it-works`) | 3 months (`/transparency/methodology`) | Code implements the 90/10 split correctly (`packages/ledger/src/allocate.ts:43`, `reservePct = 0.1`) — the "months of runway" figure is a **board policy statement, not a code-enforced cap**, so this is a pure prose inconsistency. `transparency/methodology/page.tsx` is the one that needs correcting to match the constitution's "6 months," since the constitution is the higher-authority document per its own text ("if a future director... reads only one file... this is the one that matters") |
+| Distribution/release fee | Not stated as a flat number in the app | "€3–5 per release" (`transparency/methodology`) vs **"€8/release"** (`website/index.html`) — these two contradict each other even within the same claim category | Pick one number and use it everywhere; check `apps/api/src/routes/me/revelator.ts` / `distribution-integrations.ts` for what's actually charged |
+| Pricing tier structure | Exactly two tiers: Free and €40/yr membership | A **third "Studio" tier** with FLAC downloads, custom domain, press kit, 12 releases/yr included — this tier doesn't exist anywhere in the live app | `website/index.html` is describing a pricing model that was apparently retired (the app's own `financial-model.md` v7 changelog says *"One membership (€40/yr), Studio dropped"*) but the static marketing page was never updated to match |
+
+**Root cause**: `website/index.html` reads like an earlier, more elaborate draft of
+the pitch that was never reconciled with the shipped product. It also describes
+several real features more specifically than the app does (Stash 20GB quota, visual
+customization presets, venue directory details) — those parts are accurate, just
+not numerically consistent on money. Per `.cursor/rules/website-off-limits.mdc`,
+`website/` isn't touched without being asked — flagging this here rather than
+editing it.
+
+## 2. Roadmap under-reports real progress: Google Drive cloud import
+
+`docs/project-roadmap.md`'s "Cloud drive import" section (PLAT-080 through
+PLAT-083) marks all four items `[ ]` — not started. Verified directly against the
+code:
+
+```
+apps/web/src/app/dashboard/upload/import/google-drive/_google-drive-connect.tsx
+apps/web/src/app/dashboard/upload/import/google-drive/_google-drive-picker.tsx
+apps/web/src/app/dashboard/upload/import/google-drive/page.tsx
+apps/api/src/routes/me/google-drive.ts
+apps/worker/src/jobs/cloud-import-google-drive.ts
+```
+
+This is a complete, working pipeline — OAuth connect UI, Google Picker integration,
+a real worker job that streams the file server-side straight into MinIO and
+enqueues a transcode (confirmed earlier this session as *"the only fully working
+'download real audio into Tahti' pipeline"* among all the import integrations,
+ahead of SoundCloud and Bandcamp which are genuinely still stubs), plus encrypted
+token storage and a disconnect route. **Fixed in `project-roadmap.md`**:
+PLAT-080 (core import) and PLAT-083 (token security) → `[x]`; PLAT-082 (import job
+UX) → `[~]` partial — a status-pill progress UI exists, but no audit-log entry per
+import was found; PLAT-081 (the generic `CloudImportProvider` abstraction for a
+second provider like Dropbox) is legitimately still open — only Google Drive is
+implemented, the same bespoke-per-provider pattern as Mixcloud/Bandcamp/SoundCloud.
+
+## 3. Genuinely open items (verified directly, not just roadmap-status)
+
+Pulled from `project-roadmap.md`'s own tracked backlog, then re-checked against
+the live code rather than trusted at face value:
+
+### Security (highest severity of anything in this list)
+- **SEC-007 — Centrifugo publish-proxy has no signature verification.**
+  Confirmed: `apps/api/src/routes/chat/message.ts` parses and trusts the proxy
+  request body with no check that the caller is actually Centrifugo (no shared
+  secret, no signature header check). Impact is bounded — hitting this endpoint
+  directly doesn't let an attacker publish a chat message (Centrifugo itself still
+  gates the actual WebSocket publish), but it's an unauthenticated endpoint that
+  performs DB lookups and captcha-verification logic on arbitrary input. Worth
+  closing before public beta, matching the roadmap's own P2 rating.
+- **SEC-008 — No HSTS or baseline CSP header on `app.tahti.live`/`api.tahti.live`.**
+  Confirmed: no `Strict-Transport-Security` or `Content-Security-Policy` in the
+  Caddy config. Cheap to add, meaningful defense-in-depth for a platform handling
+  session cookies and payment flows.
+- **SEC-010 — No session revocation on login.** Confirmed: `apps/api/src/routes/auth/login.ts`
+  doesn't invalidate other active sessions on a fresh login. Lower severity (P3 per
+  roadmap) but relevant if an account is ever compromised — the legitimate owner
+  regaining access via password reset wouldn't kick out an attacker's existing
+  session.
+
+### UX debt (tracked, not regressions)
+- **UX-005** — ~15 files still use hand-typed `studio-btn-*` classes instead of the
+  shared `ui-btn` component (moderators, multistream, pro editor, upload flows).
+  Consistent with this session's own earlier design audit, which found 72 total
+  hand-typed `ui-btn`/`brand-btn` call sites still outstanding app-wide — this is
+  the same tracked, accepted-as-gradual migration, not a new finding.
+- **UX-006** — Missing panel wrappers on Mixcloud/Tahti Radio/moderators/overview
+  sub-sections (visual consistency, not a functional bug).
+- **UX-007** — Missing form labels + empty states on fan-tier creator,
+  announcements, moderators add-form.
+
+### Performance (tracked, moderate priority)
+- **PERF-005** — Funnel/egress stats still use `findMany` + JS-side bucketing
+  instead of SQL aggregation. Matters more as the download/listener volume grows.
+- **PERF-006** — Dashboard fetches broadcast/catalog payloads even on
+  overview-only page visits (no tab-lazy loading).
+- **PERF-007** — Visual preset picker renders a live WebGL preview for every
+  preset thumbnail instead of just the selected one.
+- **PERF-008** — Releases/stash/newsletter-drafts/programme-list endpoints aren't
+  paginated yet.
+
+### Content moderation — the one genuine product gap, not just tech debt
+No `ContentReport`/`Flag`/takedown model exists anywhere in the schema. `ChatBan`
+and `ChannelModerator` cover artist-side chat moderation only — there's no path for
+a listener to report an upload, release, or profile for review, and nothing for
+board/admin to triage such reports at scale. Today this has to route through
+generic support tickets. Fine for a closed beta with a known cohort; **this is the
+one item on this whole list I'd actually block public/open beta on**, since an
+open platform accepting public uploads without any abuse-reporting surface is a
+real trust-and-safety gap, not a polish item. Already correctly flagged in the
+roadmap's "Improvements identified" table as unstarted, tagged for "M21 follow-up
+(post-beta)" — worth reconsidering whether "post-beta" is the right sequencing
+given open beta launches 1 August 2026.
+
+### Infra/ops (already known, not new)
+- **PLAT-053** — Tahti Radio → Mixcloud Live multistream blocked: no Liquidsoap
+  `.liq` config for Tahti Radio exists in-repo (the radio service sends telnet
+  commands to an external Liquidsoap process not tracked in version control).
+- **M29** — pgBackRest point-in-time recovery still deferred (current backup is
+  `pg_dump`-based with ~24h RPO, which the roadmap and `ops/RUNBOOK.md` are honest
+  about).
+- **M7 / M11 / M13** — partial states are all pure ops blockers (live Mixcloud app
+  approval, live Revelator API key, live Upptime fork deploy, SES API transport if
+  SMTP limits are hit) — no code work needed, just credentials/deployment actions.
+
+## 4. Documentation hygiene (not a feature gap, but worth a five-minute fix)
+
+`docs/project-roadmap.md`'s "Listener geography map (PLAT-061–065)" and "Audio
+editor: remaining DSP (PLAT-066–069)" sections are each **duplicated verbatim
+three times** in the file (lines ~609–619 / 632–642 / 655–665, and similarly for
+the audio editor section) — looks like a copy-paste/merge artifact from editing
+history. Harmless (both say `[x]` done consistently across all three copies, so
+nothing is contradicted), but worth collapsing to one copy each so the doc doesn't
+mislead a future reader into thinking there are six separate initiatives.
+
+## 5. Milestone-numbering inconsistency (cosmetic, but confusing to a new reader)
+
+Two unrelated things are both labeled "M21" across different docs: the admin panel
+(`docs/technical/phase-12.md`'s actual M21 spec, confirmed shipped) and, separately,
+`docs/audio-editor.md`/the PLAT-066-069 backlog entries refer to the pro audio
+editor as "M21" too. Both are fully shipped, so this doesn't hide a gap — it's
+purely a documentation cross-referencing error. Separately, the milestone sequence
+jumps from M31 straight to an undocumented **M33** (`Channel.fallbackEnabled` — pull
+a published release track into 24/7 rotation alongside archive sets, referenced
+only in code: `apps/api/src/routes/me/programme.ts`,
+`apps/worker/src/lib/archive-fallback-cache.test.ts`) with no M32 anywhere and no
+spec doc for M33 at all. The feature itself works; it's just never been written up.
+
+## 6. Recommendations, in priority order
+
+1. **Reconcile `website/index.html` against the live app's numbers** (fan-sub
+   range, reserve months, distribution fee, and the phantom Studio tier) — this is
+   the single most visible risk, since a visitor comparing the pitch page against
+   the actual app or transparency dashboard would find the org contradicting
+   itself on money, which is a bad look specifically for a radical-transparency
+   nonprofit.
+2. **Close SEC-007 and SEC-008** before public beta (1 August 2026) — both are
+   small, well-scoped fixes already sized correctly (P2) by the existing audit.
+3. **Decide explicitly whether content moderation ships before or shortly after
+   open beta** — currently slotted "post-beta," worth a deliberate board/director
+   call given the launch date rather than letting it drift by default.
+4. ~~Fix the roadmap's Google Drive status~~ — done as part of this pass (see §2).
+5. Everything else on this list (UX-005/006/007, PERF-005/006/007/008, PLAT-053,
+   M29 PITR) is real but lower-stakes — reasonable to pick up opportunistically
+   rather than as a dedicated push.
