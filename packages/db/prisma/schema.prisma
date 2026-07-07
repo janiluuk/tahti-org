@@ -576,6 +576,7 @@ model User {
   supportTickets        SupportTicket[]      @relation("SupportTicketArtist")
   supportTicketsAssigned SupportTicket[]     @relation("SupportAssignee")
   supportTicketNotes    SupportTicketNote[]
+  contentReportsResolved ContentReport[]
   boardResolutionsCreated BoardResolution[]
   annualReportsGenerated  AnnualReport[]
   socialConnections       SocialConnection[]
@@ -1609,6 +1610,58 @@ enum SupportStatus {
   IN_PROGRESS
   RESOLVED
 
+  @@schema("admin")
+}
+
+enum ContentReportTargetType {
+  ARCHIVE_ITEM
+  RELEASE
+  CHANNEL
+  COLLECTION
+
+  @@schema("admin")
+}
+
+enum ContentReportReason {
+  COPYRIGHT
+  HARASSMENT
+  SPAM
+  ILLEGAL_CONTENT
+  OTHER
+
+  @@schema("admin")
+}
+
+enum ContentReportStatus {
+  OPEN
+  REVIEWING
+  ACTIONED
+  DISMISSED
+
+  @@schema("admin")
+}
+
+/// Anonymous report of a public upload/release/channel/collection — the platform-level
+/// abuse-report queue that was previously entirely missing (only artist-side chat
+/// moderation existed via ChatBan/ChannelModerator). No account required to report,
+/// consistent with the platform's anonymous-by-default listener model; reporterIpHash
+/// uses the same daily-rotating salt pattern as Download.byIpHash.
+model ContentReport {
+  id             BigInt                   @id @default(autoincrement())
+  targetType     ContentReportTargetType
+  targetId       String
+  reason         ContentReportReason
+  details        String?
+  reporterIpHash String
+  status         ContentReportStatus      @default(OPEN)
+  resolvedById   String?
+  resolvedBy     User?                    @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolutionNote String?
+  resolvedAt     DateTime?
+  createdAt      DateTime                 @default(now())
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([targetType, targetId])
   @@schema("admin")
 }
 

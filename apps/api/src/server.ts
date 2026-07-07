@@ -77,9 +77,11 @@ import adminEngagementRoutes from './routes/admin/engagement.js'
 import adminSupportRoutes from './routes/admin/support.js'
 import adminResolutionsRoutes from './routes/admin/resolutions.js'
 import adminReportsRoutes from './routes/admin/reports.js'
+import adminContentReportRoutes from './routes/admin/content-reports.js'
 import adminAuditRoutes from './routes/admin/audit.js'
 import adminVenueRoutes from './routes/admin/venues.js'
 import supportContactRoutes from './routes/support/contact.js'
+import contentReportsRoute from './routes/reports/submit.js'
 import adminBetaRoutes from './routes/admin/beta.js'
 import adminIntegrationsRoutes from './routes/admin/integrations.js'
 import betaApplyRoutes from './routes/beta/apply.js'
@@ -494,6 +496,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminSupportRoutes)
   await fastify.register(adminResolutionsRoutes)
   await fastify.register(adminReportsRoutes)
+  await fastify.register(adminContentReportRoutes)
 
   // M20: tier gating
   await fastify.register(broadcastUsageRoutes)
@@ -504,6 +507,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminBetaRoutes)
   await fastify.register(adminIntegrationsRoutes)
   await fastify.register(supportContactRoutes)
+  await fastify.register(contentReportsRoute)
   await fastify.register(betaApplyRoutes)
 
   // M12: artist profile + releases + audio upload pipeline
