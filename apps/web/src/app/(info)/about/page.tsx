@@ -37,8 +37,9 @@ export default function AboutPage() {
           (capped at 6 months of costs). Surplus above the cap goes back to artists.
         </p>
         <p>
-          Fan subscriptions (€3–€10/month per artist) go directly to the artist, minus a 2% platform
-          fee that rolls into the next grant pool. Tahti takes no cut of fan-sub revenue for itself.
+          Fan subscriptions (€1–€100/month, set by the artist) go directly to the artist, minus a 2%
+          platform fee that rolls into the next grant pool. Tahti takes no cut of fan-sub revenue
+          for itself.
         </p>
         <p>
           The full financial picture — every euro in and out — is published on the{' '}

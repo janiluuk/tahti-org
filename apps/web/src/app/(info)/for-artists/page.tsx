@@ -29,7 +29,7 @@ const FEATURES = [
   {
     icon: '💸',
     title: 'Earn through fan-subs',
-    desc: 'Listeners can support you directly at €3–€10/month. 98% goes to you; 2% rolls into the grant pool for the whole community.',
+    desc: 'Listeners can support you directly at €1–€100/month — you set the price. 98% goes to you; 2% rolls into the grant pool for the whole community.',
   },
   {
     icon: '🏆',

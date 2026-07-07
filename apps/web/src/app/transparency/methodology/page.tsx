@@ -39,8 +39,9 @@ export default function MethodologyPage() {
           </dd>
           <dt>REVENUE_DISTRIBUTION</dt>
           <dd>
-            Distribution handling fees charged to artists for Revelator/DSP delivery (€3–5 per
-            release). Pass-through cost is recorded separately.
+            Distribution handling fees charged to artists for Revelator/DSP delivery (€8 per
+            release; Studio-tier accounts get a number of releases included per year). Pass-through
+            cost is recorded separately.
           </dd>
           <dt>REVENUE_GRANT_INBOUND</dt>
           <dd>Grants received from public or private bodies (e.g. Taiteen edistämiskeskus).</dd>
@@ -89,8 +90,9 @@ export default function MethodologyPage() {
           </dd>
           <dt>RESERVE_TRANSFER</dt>
           <dd>
-            Movements to or from the operating reserve fund. The reserve target is 3 months of
-            operating costs.
+            Movements to or from the operating reserve fund. The reserve is capped at 6 months of
+            average operating costs; surplus above the cap goes back to the annual grant pool
+            instead of being retained.
           </dd>
         </dl>
       </section>

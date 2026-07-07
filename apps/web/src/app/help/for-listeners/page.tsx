@@ -39,7 +39,7 @@ export default function ForListenersHelpPage() {
           Open an artist&apos;s profile at <code>/u/their-username</code> and choose{' '}
           <strong>Subscribe</strong>.
         </li>
-        <li>Fan subscriptions run €3–€10/month — set by the artist, billed to you directly.</li>
+        <li>Fan subscriptions run €1–€100/month — set by the artist, billed to you directly.</li>
         <li>98% of what you pay goes to the artist. Cancel any time from your account.</li>
       </ol>
       <Text size="sm" tone="muted">
