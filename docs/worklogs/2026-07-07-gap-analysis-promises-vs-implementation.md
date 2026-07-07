@@ -276,3 +276,45 @@ and `caddy fmt` clean on both Caddyfiles; new test suites for the SEC-007 hook
 (4 tests) and the tls-ask endpoint (9 tests), all passing; full API/web/shared
 suite (198 files, 793 tests) passing with no regressions; `prettier --check` and
 `eslint` clean on every touched file.
+
+## 8. Content moderation (minimal MVP, 2026-07-07)
+
+Item 3 from §6 was a scope decision, not a fix — asked the user how to handle
+it rather than guessing. Chosen: build a minimal version now.
+
+Deliberately small, mirroring the existing `SupportTicket`/`admin/support`
+pattern rather than introducing a new one:
+
+- **`ContentReport` model** (`packages/db/prisma/schema.prisma`) —
+  `targetType` (`ARCHIVE_ITEM`/`RELEASE`/`CHANNEL`/`COLLECTION`) + `targetId`,
+  no FK (a report can reference any of four different tables), `reason`,
+  optional `details`, `status` (`OPEN`/`REVIEWING`/`ACTIONED`/`DISMISSED`),
+  `reporterIpHash` (same daily-rotating-salt pattern as `Download.byIpHash` —
+  no tracking beyond what abuse-prevention needs).
+- **`POST /api/v1/reports`** — no auth required, matching the platform's
+  anonymous-by-default listener model (you can already listen, download, and
+  chat with no account; reporting content shouldn't need one either).
+  Rate-limited 5/hour/IP via the same plugin pattern as
+  `/api/support/contact`.
+- **`/admin/content-reports`** (board-only) — status-filtered queue with
+  inline resolve actions (start review / mark actioned / dismiss + optional
+  resolution note), reusing `admin-table`/`admin-filter-pills` styling. New
+  sidebar nav entry.
+- **`<ReportButton>`** (`apps/web/src/components/report-button.tsx`) — a
+  small reusable component, wired onto the channel page (`/c/[slug]`,
+  sidebar) and the public profile page (`/u/[username]`), reporting the
+  channel by slug.
+
+**Deliberately not built**: automated takedown. Resolving a report is a
+manual admin action — the queue tracks the report and its outcome, but
+actually removing content still goes through existing tools (artist
+self-deletion, admin user suspension). Also not wired onto individual
+release/archive-item/collection pages yet — the two highest-value surfaces
+(channel, profile) are covered; extending the same `<ReportButton>` to more
+surfaces is a small, mechanical follow-up.
+
+**Verification**: schema pushed and validated; new test suite for the
+report/admin routes (8 tests, all passing); `tsc --noEmit` clean across
+api/web/shared; full `apps/web` production build succeeds with the new routes
+present; full test suite re-run (199 files, 801 tests) with no regressions;
+`eslint` and `prettier --check` clean on every touched file.
