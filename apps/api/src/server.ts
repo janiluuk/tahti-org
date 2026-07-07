@@ -32,6 +32,7 @@ import itemReadyRoute from './routes/internal/item-ready.js'
 import rtmpRoutes from './routes/internal/rtmp.js'
 import icecastRoutes from './routes/internal/icecast.js'
 import channelFallbackRoute from './routes/internal/channel-fallback.js'
+import tlsAskRoute from './routes/internal/tls-ask.js'
 import broadcastFingerprintInternalRoutes from './routes/internal/broadcast-fingerprint.js'
 import internalRadioRoutes from './routes/internal/radio.js'
 import streamSettingsRoutes from './routes/me/stream-settings.js'
@@ -236,9 +237,13 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(corsPlugin)
 
   // SEC-001: ingest + internal callbacks must not be reachable from the public internet.
+  // SEC-007: /api/chat/message is Centrifugo's publish-proxy webhook (infra/centrifugo.json
+  // "publish_proxy_name": "chat_publish") — Centrifugo always calls it over the internal Docker
+  // network, so it belongs in the same trust boundary as /internal/* even though its path
+  // doesn't start with that prefix. Previously reachable by anyone who could reach the API.
   fastify.addHook('onRequest', async (request, reply) => {
     const path = request.url.split('?')[0] ?? ''
-    if (!path.startsWith('/internal/')) return
+    if (!path.startsWith('/internal/') && path !== '/api/chat/message') return
     const { isTrustedInternalRequest } = await import('./lib/internal-request.js')
     if (!isTrustedInternalRequest(request)) {
       return reply.status(403).send('forbidden')
@@ -429,6 +434,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(rtmpRoutes)
   await fastify.register(icecastRoutes)
   await fastify.register(channelFallbackRoute)
+  await fastify.register(tlsAskRoute)
   await fastify.register(broadcastFingerprintInternalRoutes)
   await fastify.register(internalRadioRoutes)
   await fastify.register(streamSettingsRoutes)

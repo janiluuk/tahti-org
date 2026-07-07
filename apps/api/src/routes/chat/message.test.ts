@@ -59,4 +59,14 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     })
     expect(res.statusCode).toBe(400)
   })
+
+  it('SEC-007: rejects requests from outside the internal network', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      remoteAddress: '203.0.113.50',
+      payload: { channel: `channel:${slug}`, data: { text: 'hello chat' } },
+    })
+    expect(res.statusCode).toBe(403)
+  })
 })
