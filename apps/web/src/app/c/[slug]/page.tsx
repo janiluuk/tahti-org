@@ -29,6 +29,7 @@ import { renderBio } from '@/lib/render-bio'
 import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
 import { countryName } from '@/lib/country-options'
 import { SocialLinkIcon } from '@/components/social-link-icon'
+import { ReportButton } from '@/components/report-button'
 
 interface ChannelResponse {
   slug: string
@@ -403,6 +404,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
         <>
           <ChatPanel slug={slug} announcements={announcements} />
           <FanChatPanel slug={slug} />
+          <ReportButton targetType="CHANNEL" targetId={slug} />
         </>
       }
     />

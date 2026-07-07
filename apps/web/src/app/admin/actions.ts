@@ -246,3 +246,22 @@ export async function resendBetaSetupLink(
   revalidatePath('/admin/beta')
   return { error: null, setupUrl: body.setupUrl }
 }
+
+export async function resolveContentReport(
+  id: string,
+  status: 'REVIEWING' | 'ACTIONED' | 'DISMISSED',
+  resolutionNote?: string,
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/content-reports/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ status, ...(resolutionNote ? { resolutionNote } : {}) }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Update failed' }
+  }
+  revalidatePath('/admin/content-reports')
+  return { error: null }
+}

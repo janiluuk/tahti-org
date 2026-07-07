@@ -10,6 +10,7 @@ import { renderBio } from '@/lib/render-bio'
 import { SocialLinkIcon } from '@/components/social-link-icon'
 import { countryName } from '@/lib/country-options'
 import { getSessionUser } from '@/lib/session'
+import { ReportButton } from '@/components/report-button'
 
 export const revalidate = 60
 
@@ -266,6 +267,12 @@ export default async function ArtistProfilePage({ params }: { params: { username
             </div>
           </section>
         )}
+
+        {channel?.slug ? (
+          <section className="prof-section">
+            <ReportButton targetType="CHANNEL" targetId={channel.slug} />
+          </section>
+        ) : null}
       </ProfilePageLayout>
     </>
   )
