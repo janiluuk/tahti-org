@@ -175,3 +175,104 @@ spec doc for M33 at all. The feature itself works; it's just never been written 
 5. Everything else on this list (UX-005/006/007, PERF-005/006/007/008, PLAT-053,
    M29 PITR) is real but lower-stakes — reasonable to pick up opportunistically
    rather than as a dedicated push.
+
+## 7. Implementation pass (2026-07-07, same day)
+
+Items 1 and 2 above are done. Item 3 (content moderation) is a scope decision,
+not something to build unprompted — flagged separately for the user rather than
+guessed at.
+
+**Number reconciliation** — turned out to run the opposite direction from what
+§1 assumed. Checked every contested figure against the actual enforced code
+(`packages/shared/src/dto/fan-tier.ts`'s Zod bounds, `config.distribution` in
+`apps/api/src/config.ts`, `packages/ledger/src/allocate.ts`) rather than trusting
+either public page:
+
+- Fan-sub price: the enforced range is **€1–€100/month** (`FanTierBodySchema`,
+  100–10,000 cents). `website/index.html` had this right; it was the app's own
+  pages (`for-artists`, `about`, `how-it-works`, `help/for-listeners`) that
+  understated it as €3–€10 — fixed in all four.
+- Distribution fee: the actual charge is **€8/release**
+  (`DISTRIBUTION_FEE_CENTS` default 800) with a real **`STUDIO` tier** getting 12
+  releases/year included (`studioIncludedPerYear`) — `website/index.html` had
+  this right too. `transparency/methodology/page.tsx`'s "€3–5 per release" was
+  the wrong number — fixed.
+- Operating reserve: no code enforces a "months of runway" cap at all — this is
+  pure board policy, never mechanically checked. Fixed
+  `transparency/methodology/page.tsx`'s "3 months" to "6 months" to match
+  `CONSTITUTION.md`, the higher-authority document.
+- **`website/index.html` needed no edits** — every number checked against it
+  turned out to be correct. Not touched, consistent with it being off-limits
+  without being asked.
+- **New finding, not fixed**: `STUDIO` is a real `ArtistTier` enum value with
+  real billing logic, but no self-serve path exists anywhere to become a Studio
+  member — `admin/users.ts` is the only place that sets it. The website markets
+  it as if it's purchasable; the app doesn't even mention it exists. Whether to
+  build self-serve Studio checkout or drop it from the pitch page is a product
+  decision, not something fixed here.
+
+**SEC-007** — Centrifugo's publish-proxy webhook (`/api/chat/message`) now sits
+behind the same `isTrustedInternalRequest` check (private network or
+`Bearer $INTERNAL_SECRET`) that already protects `/internal/*` — one line
+extending the existing `onRequest` hook in `apps/api/src/server.ts`, since
+Centrifugo always calls it over the internal Docker network anyway. Verified with
+a new test asserting a public-IP request gets 403.
+
+**SEC-008** — Added HSTS (enforcing) and a baseline CSP (**report-only**,
+deliberately — this app embeds Stripe Checkout, Spotify/YouTube/Vimeo/Mixcloud
+iframes, and a chat WebSocket, and an enforcing policy risks silently breaking
+one of those without being able to verify against real production traffic;
+promote to enforcing once collected reports confirm the allow-list is complete)
+to `infra/Caddyfile` via a reusable `(security_headers)` snippet.
+
+**Unplanned discoveries while validating the Caddy change** — running
+`caddy validate`/`caddy fmt` against `infra/Caddyfile` surfaced that the file
+would not have started at all as committed:
+
+- `chat.tahti.live`'s two `@ws header ...` lines were two separate matcher
+  *definitions* sharing one name, which Caddy rejects outright
+  (`matcher is defined more than once: @ws`) — needed to be one matcher block
+  with both header conditions. Same bug, same fix, also existed in
+  `infra/Caddyfile.staging`.
+- The custom-domain catch-all (`:443`, PLAT-051) had `tls { on_demand }` nested
+  inside a `handle` block, which Caddy also rejects (`tls` isn't an ordered HTTP
+  handler). Moved to the site-block level.
+- `on_demand` TLS (used by both the `*.tahti.live` wildcard and the
+  custom-domain catch-all) had no permission/`ask` module configured — Caddy
+  refuses to enable on-demand TLS at all without one, to prevent cert-issuance
+  abuse. Since none existed, **this means the committed Caddyfile has never
+  actually been able to start**, which in turn means the custom-domain feature
+  (PLAT-051, marked done in the roadmap) has likely never been deploy-tested
+  end-to-end. Added `apps/api/src/routes/internal/tls-ask.ts` (a new
+  `/internal/tls-ask` endpoint, protected by the same SEC-001 mechanism,
+  validating the requested hostname is either a non-reserved `*.tahti.live` /
+  `*.staging.tahti.live` label or a `Channel.customDomain` with
+  `customDomainVerified: true`) and wired it via `on_demand_tls { ask ... }` in
+  both `infra/Caddyfile` and `infra/Caddyfile.staging`.
+- **`infra/Caddyfile` and `infra/docker-stack.yml` proxy to `api:3000`
+  throughout (5 occurrences) — the API container actually listens on 3001**
+  (`apps/api/Dockerfile`: `ENV PORT=3001` / `EXPOSE 3001`; `config.ts`'s own
+  default; and the locally-verified `infra/docker-compose.stack.yml` explicitly
+  sets `PORT: '3001'` / `API_URL: http://api:3001`). `infra/Caddyfile.staging`
+  already had it right at 3001. This means, as committed, `api.tahti.live`
+  would be unreachable (connection refused) and the `api` service's own
+  Swarm healthcheck would never pass. Fixed all 5 references (2 in Caddyfile, 3
+  in docker-stack.yml, one of which was a healthcheck that would have kept the
+  service permanently marked unhealthy).
+
+None of this affects the *actual* current production deployment — per prior
+session context, live production runs on a Raspberry Pi 4 behind Nginx Proxy
+Manager, a different topology entirely from `infra/docker-stack.yml` +
+`infra/Caddyfile`, which represents the target Swarm/colo architecture for a
+later migration. But as tracked, committed infrastructure-as-code that's
+supposed to be ready when that migration happens, it was silently broken in
+three independent ways, and would have failed immediately on first deploy
+attempt. All four Caddyfiles/configs (`Caddyfile`, `Caddyfile.staging`,
+`docker-stack.yml`, plus the new `tls-ask.ts`) now validate cleanly via
+`caddy validate` and pass their respective test suites.
+
+**Verification**: `tsc --noEmit` clean across api/web/shared; `caddy validate`
+and `caddy fmt` clean on both Caddyfiles; new test suites for the SEC-007 hook
+(4 tests) and the tls-ask endpoint (9 tests), all passing; full API/web/shared
+suite (198 files, 793 tests) passing with no regressions; `prettier --check` and
+`eslint` clean on every touched file.
