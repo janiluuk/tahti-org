@@ -41,7 +41,7 @@ export default function HowItWorksPage() {
           </li>
           <li>
             <strong>Support an artist directly, if you want to.</strong> Fan subscriptions run
-            €3–€10/month, straight from you to them. See{' '}
+            €1–€100/month — the artist sets the price — straight from you to them. See{' '}
             <a href="/help/for-listeners">the listener guide</a> for how to subscribe, download, and
             chat.
           </li>
