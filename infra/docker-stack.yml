@@ -317,7 +317,7 @@ services:
       - acoustid_api_key
       - minio_root_password
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
       interval: 15s
       retries: 5
     deploy:
@@ -447,7 +447,7 @@ services:
       CHANNEL_NETWORK: tahti_internal
       ICECAST_BASE_URL: http://icecast:8000
       RTMP_INGEST_URL: rtmp://rtmp-ingest:1935
-      API_URL: http://api:3000
+      API_URL: http://api:3001
       FINGERPRINT_SEND_AUDIO: "0"
       HLS_VOLUME: hls_shared
       RECORDINGS_VOLUME: recordings_shared
@@ -547,7 +547,7 @@ services:
     # setting them here has no effect at runtime. The real values are baked in
     # by the `build-args` in .github/workflows/deploy.yml's web build step.
     environment:
-      INTERNAL_API_BASE: http://api:3000
+      INTERNAL_API_BASE: http://api:3001
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 15s
