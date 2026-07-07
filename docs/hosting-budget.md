@@ -2,7 +2,7 @@
 
 Current strategy: **owned hardware in Finnish colocation** as the primary, **UpCloud Helsinki** as secondary/DR. This document prices out the current setup, the Hetzner Helsinki alternative, and the bandwidth inflection points where choices change.
 
-See also: `docs/infra-strategy.md` for the reasoning behind the no-CDN, Finnish-jurisdiction approach.
+See also: `docs/infra-strategy.md` for the reasoning behind the no-CDN, Finnish-jurisdiction approach. A fourth scenario — home-hosted on owner-supplied hardware at 1,000-user scale — is priced out separately in [`hosting-budget-home-2026-2027.md`](hosting-budget-home-2026-2027.md), using this document's same bandwidth methodology.
 
 ---
 
