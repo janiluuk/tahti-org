@@ -1,69 +1,78 @@
 {
-    email ops@tahti.live
-    admin 0.0.0.0:2019
+	email ops@tahti.live
+	admin 0.0.0.0:2019
+	# Required for the on_demand TLS block below — see infra/Caddyfile for the
+	# same fix and apps/api/src/routes/internal/tls-ask.ts for the endpoint.
+	# Staging's api container listens on 3001 (see api.staging.tahti.live below),
+	# not 3000 like the production Caddyfile.
+	on_demand_tls {
+		ask http://api:3001/internal/tls-ask
+	}
 }
 
 # ── Staging: marketing site ───────────────────────────────────────────────────
 staging.tahti.live {
-    encode zstd gzip
-    reverse_proxy website:80
+	encode zstd gzip
+	reverse_proxy website:80
 }
 
 # ── Staging: artist app ───────────────────────────────────────────────────────
 app.staging.tahti.live {
-    encode zstd gzip
-    reverse_proxy web:3000
+	encode zstd gzip
+	reverse_proxy web:3000
 }
 
 # ── Staging: API ──────────────────────────────────────────────────────────────
 api.staging.tahti.live {
-    encode zstd gzip
-    @cors method OPTIONS
-    header @cors Access-Control-Allow-Origin "https://staging.tahti.live https://app.staging.tahti.live"
-    header @cors Access-Control-Allow-Credentials "true"
-    header @cors Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-    header @cors Access-Control-Allow-Headers "Content-Type, Authorization"
-    reverse_proxy api:3001
+	encode zstd gzip
+	@cors method OPTIONS
+	header @cors Access-Control-Allow-Origin "https://staging.tahti.live https://app.staging.tahti.live"
+	header @cors Access-Control-Allow-Credentials "true"
+	header @cors Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+	header @cors Access-Control-Allow-Headers "Content-Type, Authorization"
+	reverse_proxy api:3001
 }
 
 # ── Staging: chat WebSocket ───────────────────────────────────────────────────
 chat.staging.tahti.live {
-    @ws header Connection *Upgrade*
-    @ws header Upgrade websocket
-    reverse_proxy @ws chat:8000
-    reverse_proxy chat:8000
+	@ws {
+		header Connection *Upgrade*
+		header Upgrade websocket
+	}
+	reverse_proxy @ws chat:8000
+	reverse_proxy chat:8000
 }
 
 # ── Staging: HLS streams (MinIO hls-live — STREAM-001) ───────────────────────
 stream.staging.tahti.live {
-    log {
-        output file /var/log/caddy/hls-access.log {
-            roll_size 100mb
-            roll_keep 3
-        }
-        format json
-    }
-    encode gzip
-    header Access-Control-Allow-Origin "*"
-    header Cache-Control "public, max-age=2, s-maxage=10"
-    rewrite * /hls-live{uri}
-    reverse_proxy minio:9000
+	log {
+		output file /var/log/caddy/hls-access.log {
+			roll_size 100mb
+			roll_keep 3
+		}
+		format json
+	}
+	encode gzip
+	header Access-Control-Allow-Origin "*"
+	header Cache-Control "public, max-age=2, s-maxage=10"
+	rewrite * /hls-live{uri}
+	reverse_proxy minio:9000
 }
 
 # ── Staging: per-channel wildcard ─────────────────────────────────────────────
 *.staging.tahti.live {
-    @valid expression {labels.1} == "staging" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream"
-    encode zstd gzip
-    reverse_proxy @valid web:3000 {
-        header_up X-Tahti-Channel-Slug {labels.0}
-    }
-    tls {
-        on_demand
-    }
+	@valid expression {labels.1} == "staging" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream"
+	encode zstd gzip
+	reverse_proxy @valid web:3000 {
+		header_up X-Tahti-Channel-Slug {labels.0}
+	}
+	tls {
+		on_demand
+	}
 }
 
 # ── Staging: smoke test endpoint (direct health access without TLS) ───────────
 :2080 {
-    respond /smoke "ok" 200
-    respond /health "ok" 200
+	respond /smoke "ok" 200
+	respond /health "ok" 200
 }

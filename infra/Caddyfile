@@ -1,97 +1,131 @@
 {
-    email ops@tahti.live
-    admin 0.0.0.0:2019
+	email ops@tahti.live
+	admin 0.0.0.0:2019
+	# Required for on_demand TLS below (*.tahti.live wildcard + custom-domain catch-all) —
+	# Caddy refuses to enable on-demand TLS at all without a permission endpoint to prevent
+	# cert-issuance abuse. See apps/api/src/routes/internal/tls-ask.ts.
+	on_demand_tls {
+		ask http://api:3001/internal/tls-ask
+	}
+}
+
+# SEC-008: HSTS + baseline CSP applied to every site block below via `import security_headers`.
+#
+# HSTS is enforcing — safe by construction, since every *.tahti.live host is already
+# HTTPS-only (Caddy auto-TLS / on-demand TLS), so forcing HTTPS costs nothing.
+#
+# CSP ships in *report-only* mode deliberately. This app embeds a genuinely wide set of
+# third-party origins (Stripe Checkout, Spotify/YouTube/Vimeo/Mixcloud iframes, MinIO-backed
+# cdn.tahti.live images, the chat.tahti.live WebSocket, inline styles from React) that an
+# enforcing policy could silently break in ways that can't be fully verified without
+# production traffic. Report-only gives real visibility (violations logged, nothing blocked)
+# — promote to enforcing `Content-Security-Policy` once a review of collected reports confirms
+# the allow-list is complete.
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; font-src 'self' data:; connect-src 'self' https://api.tahti.live wss://chat.tahti.live https://*.tahti.live https://api.stripe.com; frame-src 'self' https://js.stripe.com https://open.spotify.com https://www.youtube.com https://player.vimeo.com https://www.mixcloud.com; frame-ancestors 'self'; base-uri 'self'"
+	}
 }
 
 # ── Marketing site ────────────────────────────────────────────────────────────
 tahti.live, www.tahti.live {
-    encode zstd gzip
-    reverse_proxy website:80
+	import security_headers
+	encode zstd gzip
+	reverse_proxy website:80
 }
 
 # ── Artist app ────────────────────────────────────────────────────────────────
 app.tahti.live {
-    encode zstd gzip
-    reverse_proxy web:3000
+	import security_headers
+	encode zstd gzip
+	reverse_proxy web:3000
 }
 
 # ── Per-channel landing pages — wildcard subdomain routing ───────────────────
 *.tahti.live {
-    @app host app.tahti.live
-    @valid expression {labels.0} != "www" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream" && {labels.0} != "cdn" && {labels.0} != "ingest-icecast" && {labels.0} != "ingest-icecast-b" && {labels.0} != "minio" && {labels.0} != "grafana"
-    encode zstd gzip
-    reverse_proxy @valid web:3000 {
-        header_up X-Tahti-Channel-Slug {labels.0}
-    }
-    tls {
-        on_demand
-    }
+	import security_headers
+	@app host app.tahti.live
+	@valid expression {labels.0} != "www" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream" && {labels.0} != "cdn" && {labels.0} != "ingest-icecast" && {labels.0} != "ingest-icecast-b" && {labels.0} != "minio" && {labels.0} != "grafana"
+	encode zstd gzip
+	reverse_proxy @valid web:3000 {
+		header_up X-Tahti-Channel-Slug {labels.0}
+	}
+	tls {
+		on_demand
+	}
 }
 
 # ── Artist API ────────────────────────────────────────────────────────────────
 api.tahti.live {
-    encode zstd gzip
-    # Internal ingest callbacks are Docker-network only (SEC-001).
-    @internal path /internal/*
-    respond @internal 403
-    # CORS is handled by the API itself (apps/api/src/plugins/cors.ts) — it
-    # reflects the actual matched origin (incl. *.tahti.live channel pages),
-    # which a static header here can't do, and covers OPTIONS preflights too.
-    reverse_proxy api:3000
+	import security_headers
+	encode zstd gzip
+	# Internal ingest callbacks are Docker-network only (SEC-001).
+	@internal path /internal/*
+	respond @internal 403
+	# CORS is handled by the API itself (apps/api/src/plugins/cors.ts) — it
+	# reflects the actual matched origin (incl. *.tahti.live channel pages),
+	# which a static header here can't do, and covers OPTIONS preflights too.
+	reverse_proxy api:3001
 }
 
 # ── Centrifugo WebSocket for live chat ────────────────────────────────────────
 chat.tahti.live {
-    @ws header Connection *Upgrade*
-    @ws header Upgrade websocket
-    reverse_proxy @ws chat:8000
-    reverse_proxy chat:8000
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	@ws {
+		header Connection *Upgrade*
+		header Upgrade websocket
+	}
+	reverse_proxy @ws chat:8000
+	reverse_proxy chat:8000
 }
 
 # ── Public HLS streams — MinIO hls-live bucket (STREAM-001; synced from Liquidsoap volume) ─
 stream.tahti.live {
-    log {
-        output file /var/log/caddy/hls-access.log {
-            roll_size 100mb
-            roll_keep 3
-        }
-        format json
-    }
-    encode gzip
-    header Access-Control-Allow-Origin "*"
-    header Cache-Control "public, max-age=2, s-maxage=10"
-    rewrite * /hls-live{uri}
-    reverse_proxy minio:9000
+	log {
+		output file /var/log/caddy/hls-access.log {
+			roll_size 100mb
+			roll_keep 3
+		}
+		format json
+	}
+	encode gzip
+	header Access-Control-Allow-Origin "*"
+	header Cache-Control "public, max-age=2, s-maxage=10"
+	rewrite * /hls-live{uri}
+	reverse_proxy minio:9000
 }
 
 # ── CDN origin for archive items, covers, waveforms ──────────────────────────
 cdn.tahti.live {
-    reverse_proxy minio:9000
-    header Cross-Origin-Resource-Policy "cross-origin"
-    header Cache-Control "public, max-age=86400"
+	reverse_proxy minio:9000
+	header Cross-Origin-Resource-Policy "cross-origin"
+	header Cache-Control "public, max-age=86400"
 }
 
 # ── Icecast ingest ────────────────────────────────────────────────────────────
 ingest-icecast.tahti.live {
-    reverse_proxy icecast:8000
+	reverse_proxy icecast:8000
 }
 
 ingest-icecast-b.tahti.live {
-    reverse_proxy icecast-b:8000
+	reverse_proxy icecast-b:8000
 }
 
 # ── MinIO admin console — restrict to ops IPs ────────────────────────────────
 minio.tahti.live {
-    @allowed remote_ip 127.0.0.1/32 10.0.0.0/8
-    reverse_proxy @allowed minio:9001
-    respond 403
+	@allowed remote_ip 127.0.0.1/32 10.0.0.0/8
+	reverse_proxy @allowed minio:9001
+	respond 403
 }
 
 # ── Grafana dashboards — restrict to ops IPs ─────────────────────────────────
 grafana.tahti.live {
-    @allowed remote_ip 127.0.0.1/32 10.0.0.0/8
-    reverse_proxy @allowed grafana:3000
-    respond 403
+	@allowed remote_ip 127.0.0.1/32 10.0.0.0/8
+	reverse_proxy @allowed grafana:3000
+	respond 403
 }
 
 # ── Custom domains (PLAT-051) — artist-owned domains pointing to the platform ─
@@ -99,16 +133,16 @@ grafana.tahti.live {
 # On-demand TLS provisions a Let's Encrypt cert automatically on first hit.
 # Next.js reads X-Tahti-Custom-Host and resolves the channel via /api/v1/custom-domain/resolve.
 :443 {
-    @custom_domain {
-        not host tahti.live www.tahti.live app.tahti.live api.tahti.live chat.tahti.live stream.tahti.live cdn.tahti.live ingest-icecast.tahti.live ingest-icecast-b.tahti.live minio.tahti.live grafana.tahti.live *.tahti.live
-    }
-    handle @custom_domain {
-        encode zstd gzip
-        reverse_proxy web:3000 {
-            header_up X-Tahti-Custom-Host {http.request.host}
-        }
-        tls {
-            on_demand
-        }
-    }
+	tls {
+		on_demand
+	}
+	@custom_domain {
+		not host tahti.live www.tahti.live app.tahti.live api.tahti.live chat.tahti.live stream.tahti.live cdn.tahti.live ingest-icecast.tahti.live ingest-icecast-b.tahti.live minio.tahti.live grafana.tahti.live *.tahti.live
+	}
+	handle @custom_domain {
+		encode zstd gzip
+		reverse_proxy web:3000 {
+			header_up X-Tahti-Custom-Host {http.request.host}
+		}
+	}
 }
