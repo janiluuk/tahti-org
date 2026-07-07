@@ -86,6 +86,19 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
       return
     }
 
+    if (request.url.startsWith('/api/v1/reports') && request.method === 'POST') {
+      const limit = { max: 5, windowSec: 3600, keyPrefix: 'content-report' }
+      const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
+        rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec),
+      )
+      reply.header('X-RateLimit-Remaining', remaining)
+      reply.header('X-RateLimit-Reset', resetSec)
+      if (!ok) {
+        return reply.status(429).send({ error: 'Too many reports', retryAfterSec: resetSec })
+      }
+      return
+    }
+
     if (isBulkImportRoute(request.url, request.method)) {
       const limit = { max: 5, windowSec: 3600, keyPrefix: 'bulk-import' }
       const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
