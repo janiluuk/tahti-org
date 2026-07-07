@@ -720,7 +720,7 @@ Cross-cutting audit of auth, studio UX, and dashboard/API performance. Items mar
 | [x] | **PERF-002** | **DB indexes** — `Channel.state`, `Download(channelId, createdAt)`. | P1 |
 | [x] | **PERF-003** | **Code-split `ArchiveEditor`** on dashboard via `next/dynamic`. | P1 |
 | [x] | **PERF-004** | **Remove duplicate `/api/auth/me`** — layout vs page double-fetch. | P1 |
-| [ ] | **PERF-005** | **SQL aggregation for funnel/egress stats** — replace `findMany` + JS bucketing. | P1 |
+| [x] | **PERF-005** | **SQL aggregation for funnel/egress stats** — `buildEgressDailySeries`/`buildGateDailySeries` rewritten to `DATE_TRUNC`+`GROUP BY` raw queries (Prisma `groupBy` can't truncate a timestamp to a day). Fixed 2026-07-08. `channel-live-daily.ts` deliberately left as `findMany` — naturally small row counts, and its per-day overlap-allocation math isn't a plain `GROUP BY`. | P1 |
 | [ ] | **PERF-006** | **Tab-lazy dashboard data** — don't fetch broadcast/catalog payloads on overview-only visits. | P2 |
 | [ ] | **PERF-007** | **Visual preset picker** — static thumbnails; one WebGL preview for selected preset only. | P2 |
 | [ ] | **PERF-008** | **Paginate** releases, stash, newsletter drafts, programme list endpoints. | P2 |
