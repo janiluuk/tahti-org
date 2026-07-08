@@ -97,8 +97,18 @@ the live code rather than trusted at face value:
   call sites moved to `ui-btn`, all `studio-btn-*` CSS deleted. Caught and
   corrected 2026-07-09 when picking this up as the "next worklog item" turned up
   zero remaining `studio-btn` references anywhere in `apps/web/src`.
-- **UX-006** — Missing panel wrappers on Mixcloud/Tahti Radio/moderators/overview
-  sub-sections (visual consistency, not a functional bug).
+- ~~**UX-006**~~ — **Fixed 2026-07-08**, unlike UX-005 this one really was still
+  open. Confirmed real (unlike UX-005), then fixed: `Panel` now wraps Mixcloud,
+  Tahti Radio, moderators (+ the chat-bans sibling in the same file family,
+  same code smell), and the overview's "Recent broadcasts" section — all four
+  used to render bare hand-typed card classes instead of the shared wrapper.
+  Overview's other two sub-sections were already correctly using
+  `StudioCollapse`, a distinct-but-valid wrapper for collapsible content — the
+  original worklog wording overstated the overview gap slightly. Verified live
+  in a browser (Playwright, seeded local account) on all four settings/overview
+  pages before and after; orphaned CSS (`studio-panel-section`,
+  `studio-section-heading`, the old `tahti-radio-panel`/`db-recent-archive`
+  outer-wrapper rules) deleted.
 - **UX-007** — Missing form labels + empty states on fan-tier creator,
   announcements, moderators add-form.
 

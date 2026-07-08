@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { ButtonIcon, Button } from '@tahti/ui'
+import { ButtonIcon, Button, Panel } from '@tahti/ui'
 import { banChatFingerprint, unbanChatFingerprint } from '../../moderator-actions'
 
 export interface ChatBanRow {
@@ -49,8 +49,7 @@ export function ChatModerationPanel({ slug, initial }: { slug: string; initial: 
   }
 
   return (
-    <section className="studio-panel-section">
-      <h2 className="studio-section-heading">Chat bans</h2>
+    <Panel title="Chat bans">
       <p className="studio-help">
         Banned listeners are blocked by their anonymous chat fingerprint — a hash derived from their
         browser, not their account. Find a fingerprint by asking a moderator who saw the message,
@@ -101,6 +100,6 @@ export function ChatModerationPanel({ slug, initial }: { slug: string; initial: 
         </Button>
       </div>
       {error && <p className="studio-text-error">{error}</p>}
-    </section>
+    </Panel>
   )
 }

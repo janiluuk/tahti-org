@@ -5,6 +5,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Panel } from '@tahti/ui'
 import { disconnectMixcloud } from './mixcloud-actions'
 
 export function MixcloudConnect({
@@ -37,20 +38,21 @@ export function MixcloudConnect({
 
   if (!initial.configured) {
     return (
-      <div className="import-connect">
-        <p className="import-connect__note import-connect__note--muted">
-          Mixcloud import needs a platform API key that hasn&apos;t been set up yet.
-        </p>
-        <a href="/admin/settings/vendors" className="ui-btn ui-btn--secondary ui-btn--sm">
-          Configure
-        </a>
-      </div>
+      <Panel title="Mixcloud (M7)" headerTight>
+        <div className="import-connect">
+          <p className="import-connect__note import-connect__note--muted">
+            Mixcloud import needs a platform API key that hasn&apos;t been set up yet.
+          </p>
+          <a href="/admin/settings/vendors" className="ui-btn ui-btn--secondary ui-btn--sm">
+            Configure
+          </a>
+        </div>
+      </Panel>
     )
   }
 
   return (
-    <div className="studio-mixcloud-box">
-      <div className="studio-text-strong-sm studio-mb-sm">Mixcloud (M7)</div>
+    <Panel title="Mixcloud (M7)" headerTight>
       {flash === 'connected' && <p className="studio-text-success">Mixcloud account connected.</p>}
       {flash === 'error' && (
         <p className="studio-text-error">Mixcloud connection failed. Try again.</p>
@@ -82,6 +84,6 @@ export function MixcloudConnect({
         </a>
       )}
       {error && <p className="studio-text-error studio-mt-sm studio-m-0">{error}</p>}
-    </div>
+    </Panel>
   )
 }
