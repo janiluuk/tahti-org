@@ -55,10 +55,16 @@ export default async function StashPage() {
 
   try {
     const [stashRes, meRes] = await Promise.all([
-      fetch(`${apiUrl}/api/me/stash`, { headers: { Cookie: cookieHeader }, cache: 'no-store' }),
+      fetch(`${apiUrl}/api/me/stash?limit=100`, {
+        headers: { Cookie: cookieHeader },
+        cache: 'no-store',
+      }),
       fetch(`${apiUrl}/api/auth/me`, { headers: { Cookie: cookieHeader }, cache: 'no-store' }),
     ])
-    if (stashRes.ok) files = (await stashRes.json()) as StashFile[]
+    if (stashRes.ok) {
+      const stashPage = (await stashRes.json()) as { files: StashFile[] }
+      files = stashPage.files
+    }
     if (meRes.ok) {
       const me = (await meRes.json()) as { storage?: StorageInfo }
       storage = me.storage ?? null

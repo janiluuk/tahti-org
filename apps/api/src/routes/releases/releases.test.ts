@@ -177,7 +177,7 @@ describe('M12 — releases and public profile', () => {
       url: '/api/me/releases',
       headers: { cookie },
     })
-    const id = list.json()[0].id
+    const id = list.json().releases[0].id
 
     const patch = await app.inject({
       method: 'PATCH',

@@ -55,11 +55,14 @@ export default async function NewsletterComposePage() {
     const [fanTiersRes, statsRes, draftsRes] = await Promise.all([
       get('/api/me/fan-tiers'),
       get('/api/me/newsletter/subscribers'),
-      get('/api/me/newsletter/drafts'),
+      get('/api/me/newsletter/drafts?limit=100'),
     ])
     if (fanTiersRes.ok) fanTiers = (await fanTiersRes.json()) as FanTier[]
     if (statsRes.ok) newsletterStats = (await statsRes.json()) as NewsletterStats
-    if (draftsRes.ok) newsletterDrafts = (await draftsRes.json()) as NewsletterDraft[]
+    if (draftsRes.ok) {
+      const draftsPage = (await draftsRes.json()) as { drafts: NewsletterDraft[] }
+      newsletterDrafts = draftsPage.drafts
+    }
   } catch {
     // render with partial data
   }

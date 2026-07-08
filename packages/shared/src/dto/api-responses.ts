@@ -755,6 +755,19 @@ export const NewsletterDraftSummarySchema = z.object({
 
 export const NewsletterDraftListSchema = z.array(NewsletterDraftSummarySchema)
 
+// PERF-008: was a fully unbounded findMany.
+export const NewsletterDraftListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(100),
+})
+
+export const NewsletterDraftPagedListSchema = z.object({
+  page: z.number().int(),
+  limit: z.number().int(),
+  total: z.number().int(),
+  drafts: NewsletterDraftListSchema,
+})
+
 export const NewsletterDraftViewSchema = NewsletterDraftSummarySchema.extend({
   bodyMd: z.string(),
   updatedAt: z.coerce.date().optional(),
@@ -890,6 +903,21 @@ export const LedgerEntryListSchema = z.array(LedgerEntryViewSchema)
 const meReleaseRow = z.object({ id: z.string(), title: z.string() }).passthrough()
 
 export const MeReleaseListSchema = z.array(meReleaseRow)
+
+// PERF-008: was a fully unbounded findMany. page/limit default to today's
+// effective behavior (everything, up to a safety cap) rather than forcing a
+// "load more" UI on a list that's realistically small per artist.
+export const MeReleaseListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(100),
+})
+
+export const MeReleasePagedListSchema = z.object({
+  page: z.number().int(),
+  limit: z.number().int(),
+  total: z.number().int(),
+  releases: MeReleaseListSchema,
+})
 
 export const MeReleaseDetailSchema = meReleaseRow
 

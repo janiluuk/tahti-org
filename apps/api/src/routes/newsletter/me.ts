@@ -5,7 +5,8 @@ import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
 import {
   DraftIdParamSchema,
-  NewsletterDraftListSchema,
+  NewsletterDraftListQuerySchema,
+  NewsletterDraftPagedListSchema,
   NewsletterDraftSchema,
   NewsletterDraftViewSchema,
   NewsletterMySubscriptionSchema,
@@ -102,27 +103,40 @@ const newsletterMeRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['newsletter'],
-        response: openApiResponse(NewsletterDraftListSchema, 'NewsletterDraftList'),
+        description: 'PERF-008: paginated draft + past-send list',
+        response: openApiResponse(NewsletterDraftPagedListSchema, 'NewsletterDraftPagedList'),
       },
     },
     async (request, reply) => {
       const user = request.sessionUser!
+      const parsedQuery = NewsletterDraftListQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply
+          .status(400)
+          .send({ error: parsedQuery.error.issues[0]?.message ?? 'Invalid query' })
+      }
+      const { page, limit } = parsedQuery.data
 
-      const drafts = await fastify.prisma.newsletterDraft.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          subject: true,
-          state: true,
-          sentAt: true,
-          createdAt: true,
-          subscribersOnly: true,
-          _count: { select: { sends: true } },
-        },
-      })
+      const [total, drafts] = await Promise.all([
+        fastify.prisma.newsletterDraft.count({ where: { userId: user.id } }),
+        fastify.prisma.newsletterDraft.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+          select: {
+            id: true,
+            subject: true,
+            state: true,
+            sentAt: true,
+            createdAt: true,
+            subscribersOnly: true,
+            _count: { select: { sends: true } },
+          },
+        }),
+      ])
 
-      return reply.send(drafts)
+      return reply.send({ page, limit, total, drafts })
     },
   )
 

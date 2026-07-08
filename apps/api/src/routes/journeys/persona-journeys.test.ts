@@ -173,7 +173,7 @@ describe('Persona journeys', () => {
         headers: { cookie },
       })
       expect(releases.statusCode).toBe(200)
-      expect(releases.json().length).toBeGreaterThan(0)
+      expect(releases.json().releases.length).toBeGreaterThan(0)
 
       const stream = await app.inject({
         method: 'GET',

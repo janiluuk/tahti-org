@@ -260,7 +260,7 @@ describe('Release catalog journey (album + EP + single)', () => {
       headers: { cookie: artistCookie },
     })
     expect(stashList.statusCode).toBe(200)
-    const stashFiles = stashList.json() as Array<{
+    const stashFiles = stashList.json().files as Array<{
       filename: string
       shares: Array<{ granteeUsername: string | null }>
     }>
@@ -273,7 +273,7 @@ describe('Release catalog journey (album + EP + single)', () => {
       headers: { cookie: artistCookie },
     })
     expect(meReleases.statusCode).toBe(200)
-    const listed = meReleases.json() as Array<{
+    const listed = meReleases.json().releases as Array<{
       title: string
       type: string
       state: string

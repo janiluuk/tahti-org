@@ -3,46 +3,73 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
+import { StashListQuerySchema, StashPagedListSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl, presignedGetUrl } from '../../lib/minio.js'
 
 const PRESIGN_TTL_SEC = 900
 
 const meStashRoutes: FastifyPluginAsync = async (fastify) => {
-  // GET /api/me/stash — list all stash files with share counts
-  fastify.get('/api/me/stash', { preHandler: requireAuth }, async (request, reply) => {
-    const user = request.sessionUser!
+  // GET /api/me/stash — list stash files with share counts
+  fastify.get(
+    '/api/me/stash',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'PERF-008: paginated stash file list',
+        response: openApiResponse(StashPagedListSchema, 'StashPagedList'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsedQuery = StashListQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply
+          .status(400)
+          .send({ error: parsedQuery.error.issues[0]?.message ?? 'Invalid query' })
+      }
+      const { page, limit } = parsedQuery.data
 
-    const files = await fastify.prisma.stashFile.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: 'desc' },
-      include: { shares: true },
-    })
+      const [total, files] = await Promise.all([
+        fastify.prisma.stashFile.count({ where: { userId: user.id } }),
+        fastify.prisma.stashFile.findMany({
+          where: { userId: user.id },
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+          include: { shares: true },
+        }),
+      ])
 
-    return reply.send(
-      files.map((f) => ({
-        id: f.id,
-        filename: f.filename,
-        contentType: f.contentType,
-        sizeBytes: f.sizeBytes.toString(),
-        format: f.format,
-        bitDepth: f.bitDepth,
-        sampleRate: f.sampleRate,
-        createdAt: f.createdAt,
-        updatedAt: f.updatedAt,
-        shareCount: f.shares.length,
-        shares: f.shares.map((s) => ({
-          id: s.id,
-          granteeUsername: s.granteeUsername,
-          token: s.token,
-          permission: s.permission,
-          fileCount: s.fileCount,
-          expiresAt: s.expiresAt,
-          createdAt: s.createdAt,
+      return reply.send({
+        page,
+        limit,
+        total,
+        files: files.map((f) => ({
+          id: f.id,
+          filename: f.filename,
+          contentType: f.contentType,
+          sizeBytes: f.sizeBytes.toString(),
+          format: f.format,
+          bitDepth: f.bitDepth,
+          sampleRate: f.sampleRate,
+          createdAt: f.createdAt,
+          updatedAt: f.updatedAt,
+          shareCount: f.shares.length,
+          shares: f.shares.map((s) => ({
+            id: s.id,
+            granteeUsername: s.granteeUsername,
+            token: s.token,
+            permission: s.permission,
+            fileCount: s.fileCount,
+            expiresAt: s.expiresAt,
+            createdAt: s.createdAt,
+          })),
         })),
-      })),
-    )
-  })
+      })
+    },
+  )
 
   // POST /api/me/stash/prepare — presigned PUT URL for uploading to stash
   fastify.post('/api/me/stash/prepare', { preHandler: requireAuth }, async (request, reply) => {

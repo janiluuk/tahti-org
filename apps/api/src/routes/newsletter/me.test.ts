@@ -112,7 +112,7 @@ describe('M13/M19 — newsletter drafts', () => {
       headers: { cookie },
     })
     expect(list.statusCode).toBe(200)
-    const rows = list.json() as Array<{ subject: string; subscribersOnly: boolean }>
+    const rows = list.json().drafts as Array<{ subject: string; subscribersOnly: boolean }>
     const fanDraft = rows.find((r) => r.subject === 'Listed fan draft')
     expect(fanDraft?.subscribersOnly).toBe(true)
   })
