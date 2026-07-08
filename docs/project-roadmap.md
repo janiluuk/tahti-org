@@ -721,7 +721,7 @@ Cross-cutting audit of auth, studio UX, and dashboard/API performance. Items mar
 | [x] | **PERF-003** | **Code-split `ArchiveEditor`** on dashboard via `next/dynamic`. | P1 |
 | [x] | **PERF-004** | **Remove duplicate `/api/auth/me`** — layout vs page double-fetch. | P1 |
 | [x] | **PERF-005** | **SQL aggregation for funnel/egress stats** — `buildEgressDailySeries`/`buildGateDailySeries` rewritten to `DATE_TRUNC`+`GROUP BY` raw queries (Prisma `groupBy` can't truncate a timestamp to a day). Fixed 2026-07-08. `channel-live-daily.ts` deliberately left as `findMany` — naturally small row counts, and its per-day overlap-allocation math isn't a plain `GROUP BY`. | P1 |
-| [ ] | **PERF-006** | **Tab-lazy dashboard data** — don't fetch broadcast/catalog payloads on overview-only visits. | P2 |
+| [x] | **PERF-006** | **Tab-lazy dashboard data** — dashboard routing is already per-tab (not client tabs), so the fix was slimming the overview's own SSR fetch: new `GET /api/me/archive/recent` (2 items, 4 fields) replaces the full 100-item/full-metadata list; new `GET /api/me/fan-sub-payouts/summary` (1 field) replaces the 7-query dashboard payload; egress dropped entirely from `channel-funnel-stats` (it was only ever shown in a collapsed-by-default panel, yet triggered a live Caddy-log read every visit). Fixed 2026-07-08. | P2 |
 | [ ] | **PERF-007** | **Visual preset picker** — static thumbnails; one WebGL preview for selected preset only. | P2 |
 | [ ] | **PERF-008** | **Paginate** releases, stash, newsletter drafts, programme list endpoints. | P2 |
 

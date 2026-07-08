@@ -72,10 +72,13 @@ export const DownloadGateStatsResponseSchema = z.object({
   daily: z.array(GateDailyPointSchema),
 })
 
+// PERF-006: egress was dropped from this bundle — it's only ever shown inside the
+// overview's collapsed-by-default "Analytics detail" panel, never used for a KPI, yet
+// building it means a live Caddy-log read on every dashboard visit. Fetch
+// GET /api/me/channel-egress directly if/when that detail is needed.
 export const ChannelFunnelResponseSchema = z.object({
   downloadGates: DownloadGateStatsResponseSchema,
   live: ChannelLiveStatsResponseSchema,
-  egress: ChannelEgressResponseSchema,
 })
 
 export const ChannelScheduleViewSchema = z.object({
@@ -477,6 +480,17 @@ export const ArchiveItemViewSchema = z
   .passthrough()
 
 export const ArchiveItemListSchema = z.array(ArchiveItemViewSchema)
+
+// PERF-006: dashboard overview only ever shows the 1-2 most recent items — no need to
+// pull the full 100-item, full-metadata payload GET /api/me/archive returns.
+export const ArchiveItemRecentSchema = z.array(
+  z.object({
+    id: z.string(),
+    title: z.string(),
+    durationSec: z.number().int().nullable(),
+    createdAt: z.string(),
+  }),
+)
 
 /** Public channel archive list (includes presigned audioUrl and full metadata). */
 export const ChannelArchiveItemsResponseSchema = z.array(z.record(z.string(), z.unknown()))
@@ -915,6 +929,12 @@ export const FanSubPayoutsDashboardSchema = z.object({
       createdAt: z.coerce.date(),
     }),
   ),
+})
+
+// PERF-006: dashboard overview only ever reads thisMonthNetCents for a single KPI —
+// avoids the 7-query FanSubPayoutsDashboardSchema payload's counts/aggregates/recent list.
+export const FanSubPayoutsSummarySchema = z.object({
+  thisMonthNetCents: z.number().int(),
 })
 
 export const MeGrantDisbursementSchema = z.object({

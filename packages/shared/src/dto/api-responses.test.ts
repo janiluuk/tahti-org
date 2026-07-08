@@ -35,16 +35,6 @@ describe('api response schemas', () => {
         peakDailyListeners: 0,
         daily: [],
       },
-      egress: {
-        windowDays: 30,
-        totalBytes: 0,
-        downloadBytes: 0,
-        liveHlsBytes: 0,
-        estimatedLiveHlsBytes: 0,
-        totalDownloads: 0,
-        daily: [],
-        liveEstimateNote: 'test',
-      },
     })
     expect(parsed.success).toBe(true)
   })

@@ -9,6 +9,7 @@ import {
   ChannelVisualPatchSchema,
   ArchiveItemVisualPatchSchema,
   ArchiveItemListSchema,
+  ArchiveItemRecentSchema,
   ArchiveItemViewSchema,
   IdParamSchema,
   openApiResponse,
@@ -49,6 +50,36 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         select: archiveItemMetadataSelect,
       })
       return reply.send(items.map((i) => serializeArchiveItem(i)))
+    },
+  )
+
+  // PERF-006: slim variant for the dashboard overview, which only ever shows the
+  // 1-2 most recent items — avoids the full-metadata select GET /api/me/archive does.
+  fastify.get(
+    '/api/me/archive/recent',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'PERF-006: slim recent-items list for the dashboard overview',
+        response: openApiResponse(ArchiveItemRecentSchema, 'ArchiveItemRecent'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.send([])
+
+      const items = await fastify.prisma.archiveItem.findMany({
+        where: { channelId: channel.id },
+        orderBy: { createdAt: 'desc' },
+        take: 2,
+        select: { id: true, title: true, durationSec: true, createdAt: true },
+      })
+      return reply.send(items.map((i) => ({ ...i, createdAt: i.createdAt.toISOString() })))
     },
   )
 

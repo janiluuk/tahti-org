@@ -76,12 +76,6 @@ export default async function DashboardPage() {
       countedDownloadCount?: number
     }>
   } | null = null
-  let channelEgress: {
-    windowDays: number
-    totalBytes: number
-    totalDownloads: number
-    daily: Array<{ date: string; bytes: number; downloads: number }>
-  } | null = null
   let channelLiveStats: {
     windowDays: number
     totalLiveSeconds: number
@@ -89,10 +83,13 @@ export default async function DashboardPage() {
     peakDailyListeners: number
     daily: Array<{ date: string; liveSeconds: number; broadcastCount: number; listeners: number }>
   } | null = null
-  let fanPayoutStats = { pending: 0, failed: 0, paidLast30Days: 0, thisMonthNetCents: 0 }
-  let archiveItemsForEdit: Array<
-    Record<string, unknown> & { id: string; title: string; status: string }
-  > = []
+  let fanPayoutStats = { thisMonthNetCents: 0 }
+  let recentArchiveItems: Array<{
+    id: string
+    title: string
+    durationSec: number | null
+    createdAt: string
+  }> = []
   let liveBroadcastTitle: string | null = null
   const isOnAir = user.channel?.state === 'LIVE' || user.channel?.state === 'PREVIEW'
   try {
@@ -101,16 +98,16 @@ export default async function DashboardPage() {
       membershipRes,
       broadcastUsageRes,
       funnelRes,
-      fanPayoutsRes,
-      archiveRes,
+      fanPayoutsSummaryRes,
+      recentArchiveRes,
       preflightRes,
     ] = await Promise.all([
       get('/api/me/moderate'),
       get('/api/me/membership'),
       slug ? get('/api/me/broadcast-usage') : null,
       slug ? get('/api/me/channel-funnel-stats') : null,
-      slug ? get('/api/me/fan-sub-payouts') : null,
-      slug ? get('/api/me/archive') : null,
+      slug ? get('/api/me/fan-sub-payouts/summary') : null,
+      slug ? get('/api/me/archive/recent') : null,
       slug && isOnAir ? get('/api/me/channel/preflight') : null,
     ])
 
@@ -123,15 +120,15 @@ export default async function DashboardPage() {
       const funnel = (await funnelRes.json()) as {
         downloadGates: NonNullable<typeof downloadGateSummary>
         live: NonNullable<typeof channelLiveStats>
-        egress: NonNullable<typeof channelEgress>
       }
       downloadGateSummary = funnel.downloadGates
       channelLiveStats = funnel.live
-      channelEgress = funnel.egress
     }
-    if (fanPayoutsRes?.ok) fanPayoutStats = (await fanPayoutsRes.json()) as typeof fanPayoutStats
-    if (archiveRes?.ok) {
-      archiveItemsForEdit = (await archiveRes.json()) as typeof archiveItemsForEdit
+    if (fanPayoutsSummaryRes?.ok) {
+      fanPayoutStats = (await fanPayoutsSummaryRes.json()) as typeof fanPayoutStats
+    }
+    if (recentArchiveRes?.ok) {
+      recentArchiveItems = (await recentArchiveRes.json()) as typeof recentArchiveItems
     }
     if (preflightRes?.ok) {
       const preflight = (await preflightRes.json()) as { title: string | null }
@@ -280,18 +277,9 @@ export default async function DashboardPage() {
         weeklyListeners={weeklyListeners}
         statDlCount={statDlCount}
         revenueCents={fanPayoutStats.thisMonthNetCents}
-        archiveItems={archiveItemsForEdit.map((item) => ({
-          id: item.id,
-          title: item.title,
-          durationSec:
-            typeof item.durationSec === 'number' || item.durationSec === null
-              ? item.durationSec
-              : undefined,
-          createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
-        }))}
+        archiveItems={recentArchiveItems}
         downloadGateSummary={downloadGateSummary}
         channelLiveStats={channelLiveStats}
-        channelEgress={channelEgress}
         otherModeratedChannels={otherModeratedChannels}
       />
     </PageShell>
