@@ -22,6 +22,14 @@ const ARCHIVE_ITEM_SELECT = {
   createdAt: true,
 } as const
 
+// PERF-008: the rotation editor (schedule/_rotation-editor.tsx) filters this
+// list client-side to derive "in rotation" vs "available" — it needs to see
+// the whole set to do that, so real page/limit pagination would break the
+// editor's UX. This caps worst-case query cost instead (matching the
+// precedent in routes/me/archive.ts's own take: 100), rather than the
+// unbounded findManys this had before.
+const PROGRAMME_ITEM_CAP = 500
+
 async function fetchProgrammeView(prisma: PrismaClient, channelId: string, userId: string) {
   const [channel, items, tracks] = await Promise.all([
     prisma.channel.findUnique({
@@ -31,11 +39,13 @@ async function fetchProgrammeView(prisma: PrismaClient, channelId: string, userI
     prisma.archiveItem.findMany({
       where: { channelId, status: 'READY' },
       orderBy: [{ fallbackOrder: 'asc' }, { createdAt: 'asc' }],
+      take: PROGRAMME_ITEM_CAP,
       select: ARCHIVE_ITEM_SELECT,
     }),
     prisma.releaseTrack.findMany({
       where: { release: { userId }, status: 'READY' },
       orderBy: [{ createdAt: 'asc' }],
+      take: PROGRAMME_ITEM_CAP,
       select: {
         id: true,
         title: true,

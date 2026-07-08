@@ -124,8 +124,8 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
 
       setUploadProgress(100)
 
-      const listRes = await apiFetch('/api/me/stash')
-      if (listRes.ok) setFiles((await listRes.json()) as StashFile[])
+      const listRes = await apiFetch('/api/me/stash?limit=100')
+      if (listRes.ok) setFiles(((await listRes.json()) as { files: StashFile[] }).files)
     } catch (err) {
       alert(`Upload failed: ${String(err)}`)
     } finally {
@@ -166,8 +166,8 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
     })
     if (!res.ok) return alert('Share creation failed')
 
-    const listRes = await apiFetch('/api/me/stash')
-    if (listRes.ok) setFiles((await listRes.json()) as StashFile[])
+    const listRes = await apiFetch('/api/me/stash?limit=100')
+    if (listRes.ok) setFiles(((await listRes.json()) as { files: StashFile[] }).files)
     setSharingFileId(null)
     setShareGrantee('')
   }
@@ -176,8 +176,8 @@ export function StashClient({ initialFiles }: { initialFiles: StashFile[] }) {
     if (!confirm('Revoke this share? They will lose access immediately.')) return
     const res = await apiFetch(`/api/me/stash/shares/${shareId}`, { method: 'DELETE' })
     if (!res.ok) return alert('Revoke failed')
-    const listRes = await apiFetch('/api/me/stash')
-    if (listRes.ok) setFiles((await listRes.json()) as StashFile[])
+    const listRes = await apiFetch('/api/me/stash?limit=100')
+    if (listRes.ok) setFiles(((await listRes.json()) as { files: StashFile[] }).files)
   }
 
   const allShares = files.flatMap((f) => f.shares.map((s) => ({ ...s, filename: f.filename })))

@@ -59,11 +59,12 @@ export default async function ReleasesPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [user, releases] = await Promise.all([
+  const [user, releasesPage] = await Promise.all([
     getDashboardUser(),
-    apiFetch<ReleaseSummary[]>(apiUrl, cookie, '/api/me/releases'),
+    apiFetch<{ releases: ReleaseSummary[] }>(apiUrl, cookie, '/api/me/releases?limit=100'),
   ])
   if (!user) redirect('/login')
+  const releases = releasesPage?.releases ?? null
 
   return (
     <PageShell size="md">

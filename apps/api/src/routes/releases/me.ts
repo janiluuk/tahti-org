@@ -15,7 +15,8 @@ import {
   computeReleaseChecklist,
   CreateReleaseSchema,
   MeReleaseDetailSchema,
-  MeReleaseListSchema,
+  MeReleaseListQuerySchema,
+  MeReleasePagedListSchema,
   PatchReleaseSchema,
   ReleaseCatalogViewSchema,
   ReleaseImportBodySchema,
@@ -53,55 +54,71 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['releases'],
-        response: openApiResponse(MeReleaseListSchema, 'MeReleaseList'),
+        response: openApiResponse(MeReleasePagedListSchema, 'MeReleasePagedList'),
       },
     },
     async (request, reply) => {
       const user = request.sessionUser!
-      const releases = await fastify.prisma.release.findMany({
-        where: { userId: user.id },
-        orderBy: { releaseDate: 'desc' },
-        select: {
-          id: true,
-          title: true,
-          type: true,
-          state: true,
-          releaseDate: true,
-          description: true,
-          artworkUrl: true,
-          artworkKey: true,
-          smartLinkSlug: true,
-          smartLinkViewCount: true,
-          smartLinkTargets: true,
-          upc: true,
-          musicbrainzReleaseId: true,
-          musicbrainzArtistId: true,
-          discogsReleaseId: true,
-          pLine: true,
-          cLine: true,
-          labelImprint: true,
-          credits: true,
-          revelatorStatus: true,
-          revelatorId: true,
-          visualPreset: true,
-          colorSchemeJson: true,
-          paletteJson: true,
-          tracks: {
-            orderBy: { position: 'asc' },
-            select: { id: true, position: true, title: true, isrc: true, status: true },
+      const parsedQuery = MeReleaseListQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply
+          .status(400)
+          .send({ error: parsedQuery.error.issues[0]?.message ?? 'Invalid query' })
+      }
+      const { page, limit } = parsedQuery.data
+
+      const [total, releases] = await Promise.all([
+        fastify.prisma.release.count({ where: { userId: user.id } }),
+        fastify.prisma.release.findMany({
+          where: { userId: user.id },
+          orderBy: { releaseDate: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            state: true,
+            releaseDate: true,
+            description: true,
+            artworkUrl: true,
+            artworkKey: true,
+            smartLinkSlug: true,
+            smartLinkViewCount: true,
+            smartLinkTargets: true,
+            upc: true,
+            musicbrainzReleaseId: true,
+            musicbrainzArtistId: true,
+            discogsReleaseId: true,
+            pLine: true,
+            cLine: true,
+            labelImprint: true,
+            credits: true,
+            revelatorStatus: true,
+            revelatorId: true,
+            visualPreset: true,
+            colorSchemeJson: true,
+            paletteJson: true,
+            tracks: {
+              orderBy: { position: 'asc' },
+              select: { id: true, position: true, title: true, isrc: true, status: true },
+            },
+            _count: { select: { tracks: true } },
           },
-          _count: { select: { tracks: true } },
-        },
-      })
-      return reply.send(
-        await Promise.all(
+        }),
+      ])
+      return reply.send({
+        page,
+        limit,
+        total,
+        releases: await Promise.all(
           releases.map(async (r) => ({
             ...r,
             artworkUrl: await resolveReleaseArtworkUrl(r),
             checklist: computeReleaseChecklist(r),
           })),
         ),
-      )
+      })
     },
   )
 
