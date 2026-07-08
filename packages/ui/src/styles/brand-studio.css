@@ -4683,6 +4683,29 @@
   opacity: 0.9;
 }
 
+[data-tahti-ui='studio'] .visual-preset-picker__thumb {
+  position: absolute;
+  inset: 0;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__thumb--bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-evenly;
+  padding: 8px 6px 4px;
+  gap: 3px;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__thumb-bar {
+  flex: 1;
+  border-radius: 2px 2px 0 0;
+  opacity: 0.8;
+}
+
+[data-tahti-ui='studio'] .visual-preset-picker__thumb--particles {
+  opacity: 0.85;
+}
+
 [data-tahti-ui='studio'] .visual-preset-picker__name {
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);

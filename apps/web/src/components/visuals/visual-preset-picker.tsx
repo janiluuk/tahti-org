@@ -24,6 +24,73 @@ interface Props {
   showPreview?: boolean
 }
 
+/**
+ * PERF-007: a static CSS approximation of each preset's look, shown for every
+ * card except the currently-selected one. Previously every non-MINIMAL card
+ * mounted a live ChannelVisualizer — 4 simultaneous WebGL contexts + RAF loops
+ * just to animate thumbnails nobody was looking at, on a page that can show
+ * this picker more than once (channel/release/archive-item visual settings).
+ */
+function StaticPresetThumbnail({ preset, scheme }: { preset: VisualPreset; scheme: ColorScheme }) {
+  if (preset === 'WAVEFORM_BARS') {
+    const heights = [40, 70, 50, 90, 60, 35, 80, 55]
+    return (
+      <div className="visual-preset-picker__thumb visual-preset-picker__thumb--bars" aria-hidden>
+        {heights.map((h, i) => (
+          <span
+            key={i}
+            style={{ height: `${h}%`, background: scheme.accent }}
+            className="visual-preset-picker__thumb-bar"
+          />
+        ))}
+      </div>
+    )
+  }
+  if (preset === 'PARTICLE_FIELD') {
+    return (
+      <div
+        className="visual-preset-picker__thumb visual-preset-picker__thumb--particles"
+        aria-hidden
+        style={{
+          backgroundImage: [
+            `radial-gradient(circle, ${scheme.accent} 0 3px, transparent 4px)`,
+            `radial-gradient(circle, ${scheme.highlight} 0 2px, transparent 3px)`,
+          ].join(', '),
+          backgroundSize: '28% 34%, 22% 40%',
+          backgroundPosition: '10% 20%, 70% 60%',
+          backgroundRepeat: 'repeat',
+        }}
+      />
+    )
+  }
+  if (preset === 'AURORA') {
+    return (
+      <div
+        className="visual-preset-picker__thumb"
+        aria-hidden
+        style={{
+          background: `linear-gradient(135deg, ${scheme.accent}, ${scheme.highlight}, ${scheme.muted})`,
+          opacity: 0.85,
+        }}
+      />
+    )
+  }
+  // REACTIVE_GRID
+  return (
+    <div
+      className="visual-preset-picker__thumb"
+      aria-hidden
+      style={{
+        backgroundImage: [
+          `linear-gradient(${scheme.accent}55 1px, transparent 1px)`,
+          `linear-gradient(90deg, ${scheme.accent}55 1px, transparent 1px)`,
+        ].join(', '),
+        backgroundSize: '20% 20%',
+      }}
+    />
+  )
+}
+
 export function VisualPresetPicker({
   value,
   onChange,
@@ -50,7 +117,15 @@ export function VisualPresetPicker({
               className={`visual-preset-picker__card${active ? ' visual-preset-picker__card--active' : ''}`}
               onClick={() => onChange(preset)}
             >
-              {showPreview && preset !== 'MINIMAL' ? (
+              {preset === 'MINIMAL' ? (
+                <div
+                  className="visual-preset-picker__preview visual-preset-picker__preview--minimal"
+                  style={{ background: scheme.bg }}
+                  aria-hidden
+                >
+                  <span className="visual-preset-picker__minimal-label">None</span>
+                </div>
+              ) : showPreview && active ? (
                 <div
                   className="visual-preset-picker__preview"
                   style={{ background: scheme.bg }}
@@ -64,11 +139,11 @@ export function VisualPresetPicker({
                 </div>
               ) : (
                 <div
-                  className="visual-preset-picker__preview visual-preset-picker__preview--minimal"
+                  className="visual-preset-picker__preview"
                   style={{ background: scheme.bg }}
                   aria-hidden
                 >
-                  <span className="visual-preset-picker__minimal-label">None</span>
+                  <StaticPresetThumbnail preset={preset} scheme={scheme} />
                 </div>
               )}
               <span className="visual-preset-picker__name">{VISUAL_PRESET_LABELS[preset]}</span>
