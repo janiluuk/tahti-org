@@ -709,7 +709,7 @@ Cross-cutting audit of auth, studio UX, and dashboard/API performance. Items mar
 | [x] | **UX-004** | **Focus-visible rings + reduced-motion** on studio buttons/tabs/live dots. | P1 |
 | [x] | **UX-005** | **`studio-btn-*` → `ui-btn` sweep** — moderators, multistream, pro editor, upload flows (~15 files). Done `d7acdc1` (2026-07-01) — 17 call sites migrated, all `studio-btn-*` CSS deleted. Was already fixed when the 2026-07-07 gap-analysis worklog flagged it as outstanding; caught and corrected 2026-07-09. | P1 |
 | [x] | **UX-006** | **Panel wrappers** — Mixcloud, Tahti Radio, moderators (+ chat-bans sibling), overview "Recent broadcasts" all now use `<Panel>` instead of hand-typed legacy card classes (`studio-mixcloud-box`, `tahti-radio-panel`, `studio-panel-section`, `db-recent-archive`). Overview's other two sub-sections (Analytics detail, Moderation access) were already correctly using `StudioCollapse`, a different-but-valid wrapper — not a gap. Verified live in a browser; orphaned CSS deleted. Fixed 2026-07-08. | P2 |
-| [ ] | **UX-007** | **Form labels + empty states** — fan tier creator, announcements, moderators add form. | P2 |
+| [x] | **UX-007** | **Form labels + empty states** — fan tier creator, announcements, moderators add form. Fan-tier creator got labels on all 3 fields plus its missing "No fan tiers yet" empty state (only one of the three still missing both); announcements/moderators only needed `aria-label` on their compact inline inputs — their empty states were already correct. Verified live in a browser. Fixed 2026-07-09. | P2 |
 | [x] | **UX-008** | **Mobile nav** — add Upload + Collections routes. | P2 |
 
 #### Performance (PERF)
