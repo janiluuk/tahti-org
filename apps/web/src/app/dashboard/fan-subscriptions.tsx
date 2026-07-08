@@ -225,6 +225,8 @@ export default function FanSubscriptionsPanel({
           </div>
         )}
 
+        {initial.length === 0 && <p className="studio-empty">No fan tiers yet.</p>}
+
         {initial.length > 0 && (
           <ul className="studio-list studio-mt-md">
             {initial.map((t) => (
@@ -252,12 +254,15 @@ export default function FanSubscriptionsPanel({
         )}
 
         <div className="studio-grid studio-mt-md">
-          <input
-            placeholder="Tier name (e.g. Backer)"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="studio-input"
-          />
+          <label className="studio-field">
+            <span className="studio-label">Tier name</span>
+            <input
+              placeholder="e.g. Backer"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="studio-input"
+            />
+          </label>
 
           <div className="fan-tier-price">
             <span className="fan-tier-price__value">{eur(Math.round(amount * 100))}/mo</span>
@@ -273,12 +278,15 @@ export default function FanSubscriptionsPanel({
             />
           </div>
 
-          <input
-            placeholder="Short description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="studio-input"
-          />
+          <label className="studio-field">
+            <span className="studio-label">Description (optional)</span>
+            <input
+              placeholder="Short description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="studio-input"
+            />
+          </label>
 
           <div className="fan-tier-perks">
             {KNOWN_PERKS.map((perk) => (
@@ -293,13 +301,16 @@ export default function FanSubscriptionsPanel({
             ))}
           </div>
 
-          <textarea
-            placeholder="Additional perks, one per line (optional)"
-            value={customPerks}
-            onChange={(e) => setCustomPerks(e.target.value)}
-            rows={2}
-            className="studio-textarea"
-          />
+          <label className="studio-field">
+            <span className="studio-label">Additional perks (optional)</span>
+            <textarea
+              placeholder="One per line"
+              value={customPerks}
+              onChange={(e) => setCustomPerks(e.target.value)}
+              rows={2}
+              className="studio-textarea"
+            />
+          </label>
           {error && <p className="studio-text-error studio-m-0">{error}</p>}
           <Button onClick={add} disabled={isPending} variant="primary">
             <ButtonIcon name="plus" />
