@@ -34,3 +34,9 @@ export const VoteMotionSchema = z.object({
 })
 
 export type VoteMotionInput = z.infer<typeof VoteMotionSchema>
+
+export const PostMotionCommentSchema = z.object({
+  body: z.string().trim().min(1, 'comment is required').max(2000),
+})
+
+export type PostMotionCommentInput = z.infer<typeof PostMotionCommentSchema>

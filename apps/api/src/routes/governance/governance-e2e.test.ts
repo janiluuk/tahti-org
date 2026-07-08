@@ -4,9 +4,10 @@
 /**
  * Realistic end-to-end coverage of the member-governance system: 10 members + 1
  * board account, multiple motions with varied vote outcomes, the full
- * propose -> open -> vote -> close -> tally lifecycle, and the manual bridge to
- * the public transparency page (BoardResolution). Complements the narrower
- * boundary-condition tests in motions.test.ts.
+ * propose -> open -> vote -> close -> tally lifecycle, the discussion/comment
+ * thread, and the manual bridge to the public transparency page
+ * (BoardResolution). Complements the narrower boundary-condition tests in
+ * motions.test.ts.
  *
  * Also exercises two known gaps on purpose (see comments below): voting twice
  * is rejected even though the UI implies a vote can be changed, and a closed
@@ -180,6 +181,19 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
     await castVotes(motionId, choices)
     const tally = await closeAndGetTally(motionId)
     expect(tally).toEqual({ YES: 7, NO: 2, ABSTAIN: 1 })
+
+    // The list endpoint (not just the detail one) must also carry the tally —
+    // the /governance page has no per-motion detail fetch, so this is the
+    // only place a closed motion's result is ever shown.
+    const listRes = await app.inject({
+      method: 'GET',
+      url: '/api/v1/governance/motions',
+      headers: { cookie: board.cookie },
+    })
+    const listed = (
+      listRes.json() as Array<{ id: string; tally?: { YES: number; NO: number; ABSTAIN: number } }>
+    ).find((m) => m.id === motionId)
+    expect(listed?.tally).toEqual({ YES: 7, NO: 2, ABSTAIN: 1 })
   })
 
   it('motion 2 (3 YES / 6 NO / 1 ABSTAIN) — a motion that fails', async () => {
@@ -359,15 +373,14 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
     expect(published?.voteAgainst).toBe(2)
   })
 
-  it('GAP (c): no discussion/comment endpoint exists for a motion in DRAFT', async () => {
+  it('discussion thread: members can comment during DRAFT circulation, in order, attributed', async () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/api/v1/governance/motions',
       headers: { cookie: board.cookie },
       payload: {
         title: 'Motion sitting in the "discussion" DRAFT state',
-        description:
-          'The UI labels DRAFT as "Discussion · 7-day circulation" but there is no comment thread.',
+        description: 'Exercises the comment thread during the 7-day circulation period.',
         openAt: new Date(Date.now() + 7 * 86400000).toISOString(),
         closeAt: new Date(Date.now() + 14 * 86400000).toISOString(),
       },
@@ -375,16 +388,112 @@ describe('Governance E2E — 10 members, multiple motions, full lifecycle', () =
     expect(createRes.statusCode).toBe(201)
     const motionId = createRes.json().id as string
 
-    // No comment/discussion route exists anywhere for motions — confirm the
-    // detail response has no field resembling one, since there's nothing to POST to.
-    const detail = await app.inject({
+    const post = (cookie: string, body: string) =>
+      app.inject({
+        method: 'POST',
+        url: `/api/v1/governance/motions/${motionId}/comments`,
+        headers: { cookie },
+        payload: { body },
+      })
+
+    const c1 = await post(members[0].cookie, 'I support this in principle.')
+    expect(c1.statusCode).toBe(201)
+    expect(c1.json().authorDisplayName).toBe('Test Member 1')
+
+    const c2 = await post(members[1].cookie, 'What is the expected cost?')
+    expect(c2.statusCode).toBe(201)
+
+    const empty = await post(members[2].cookie, '   ')
+    expect(empty.statusCode).toBe(400)
+
+    const list = await app.inject({
       method: 'GET',
-      url: `/api/v1/governance/motions/${motionId}`,
+      url: `/api/v1/governance/motions/${motionId}/comments`,
       headers: { cookie: members[0].cookie },
     })
-    expect(detail.statusCode).toBe(200)
-    const body = detail.json() as Record<string, unknown>
-    expect(body.comments).toBeUndefined()
-    expect(body.discussion).toBeUndefined()
+    expect(list.statusCode).toBe(200)
+    const comments = list.json() as Array<{ body: string; authorDisplayName: string | null }>
+    expect(comments).toHaveLength(2)
+    expect(comments[0].body).toBe('I support this in principle.')
+    expect(comments[1].body).toBe('What is the expected cost?')
+
+    // commentCount surfaces on the list/detail endpoints so the UI can show a
+    // count without an extra fetch.
+    const motionList = await app.inject({
+      method: 'GET',
+      url: '/api/v1/governance/motions',
+      headers: { cookie: members[0].cookie },
+    })
+    const summary = (motionList.json() as Array<{ id: string; commentCount: number }>).find(
+      (m) => m.id === motionId,
+    )
+    expect(summary?.commentCount).toBe(2)
+  })
+
+  it('discussion thread stays open once voting starts, but closes with the motion', async () => {
+    const motionId = await proposeAndOpen(
+      'Motion discussed during OPEN voting',
+      'Comments should still be postable while OPEN, not just DRAFT.',
+    )
+    const duringOpen = await app.inject({
+      method: 'POST',
+      url: `/api/v1/governance/motions/${motionId}/comments`,
+      headers: { cookie: members[0].cookie },
+      payload: { body: 'Voting YES, here is why.' },
+    })
+    expect(duringOpen.statusCode).toBe(201)
+
+    await castVotes(motionId, [
+      'YES',
+      'YES',
+      'YES',
+      'NO',
+      'NO',
+      'NO',
+      'ABSTAIN',
+      'ABSTAIN',
+      'ABSTAIN',
+      'YES',
+    ])
+    await closeAndGetTally(motionId)
+
+    const afterClose = await app.inject({
+      method: 'POST',
+      url: `/api/v1/governance/motions/${motionId}/comments`,
+      headers: { cookie: members[1].cookie },
+      payload: { body: 'Too late to add this.' },
+    })
+    expect(afterClose.statusCode).toBe(409)
+
+    // Existing comments remain readable after close — the discussion record persists.
+    const list = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/${motionId}/comments`,
+      headers: { cookie: members[0].cookie },
+    })
+    expect(list.statusCode).toBe(200)
+    expect((list.json() as unknown[]).length).toBe(1)
+  })
+
+  it('a non-member cannot read or post to a motion discussion thread', async () => {
+    const motionId = await proposeAndOpen(
+      'Motion a non-member should not be able to comment on',
+      'x',
+    )
+    const nonMemberCookie = 'tahti_session=not-a-real-session'
+    const listRes = await app.inject({
+      method: 'GET',
+      url: `/api/v1/governance/motions/${motionId}/comments`,
+      headers: { cookie: nonMemberCookie },
+    })
+    expect(listRes.statusCode).toBe(401)
+
+    const postRes = await app.inject({
+      method: 'POST',
+      url: `/api/v1/governance/motions/${motionId}/comments`,
+      headers: { cookie: nonMemberCookie },
+      payload: { body: 'x' },
+    })
+    expect(postRes.statusCode).toBe(401)
   })
 })

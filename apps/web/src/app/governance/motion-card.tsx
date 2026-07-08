@@ -4,8 +4,16 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Alert, Button, ButtonIcon, Heading, StatusPill, Text } from '@tahti/ui'
-import { castVote, transitionMotion } from './actions'
+import { Alert, Button, ButtonIcon, Heading, StatusPill, Text, Textarea } from '@tahti/ui'
+import { castVote, postMotionComment, transitionMotion } from './actions'
+
+export interface MotionComment {
+  id: string
+  body: string
+  authorId: string | null
+  authorDisplayName: string | null
+  createdAt: string
+}
 
 export interface MotionSummary {
   id: string
@@ -18,7 +26,100 @@ export interface MotionSummary {
   totalVotes: number
   youVoted: boolean
   yourChoice: 'YES' | 'NO' | 'ABSTAIN' | null
+  commentCount: number
+  comments?: MotionComment[]
   tally?: { YES: number; NO: number; ABSTAIN: number }
+}
+
+function DiscussionThread({ motion }: { motion: MotionSummary }) {
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+  // Seeded from the SSR'd prop, then updated optimistically on post so the
+  // poster sees their own comment immediately without the thread collapsing
+  // when revalidatePath() remounts this component with fresh server data.
+  const [comments, setComments] = useState(motion.comments ?? [])
+  const canPost = motion.state !== 'CLOSED'
+
+  function submit() {
+    const body = draft.trim()
+    if (!body) return
+    setError(null)
+    startTransition(async () => {
+      const res = await postMotionComment(motion.id, body)
+      if (res.error || !res.comment) {
+        setError(res.error ?? 'Failed to post comment')
+      } else {
+        setComments((prev) => [...prev, res.comment!])
+        setDraft('')
+      }
+    })
+  }
+
+  return (
+    <div className="gov-motion-card__discussion">
+      <button
+        type="button"
+        className="gov-motion-card__discussion-toggle"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? '▾' : '▸'}{' '}
+        {comments.length === 0
+          ? 'No comments yet'
+          : `${comments.length} comment${comments.length === 1 ? '' : 's'}`}
+      </button>
+
+      {open && (
+        <div className="gov-motion-card__discussion-body">
+          {comments.length > 0 && (
+            <ul className="gov-motion-card__comment-list">
+              {comments.map((c) => (
+                <li key={c.id} className="gov-motion-card__comment">
+                  <Text size="sm" className="gov-motion-card__comment-meta">
+                    <strong>{c.authorDisplayName ?? 'Former member'}</strong> ·{' '}
+                    {new Date(c.createdAt).toLocaleDateString('fi-FI')}
+                  </Text>
+                  <Text size="sm">{c.body}</Text>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {canPost ? (
+            <div className="gov-motion-card__comment-form">
+              <Textarea
+                rows={2}
+                maxLength={2000}
+                placeholder="Add to the discussion…"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                disabled={pending}
+              />
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={pending || !draft.trim()}
+                onClick={submit}
+              >
+                Post
+              </Button>
+            </div>
+          ) : (
+            <Text size="sm" tone="muted">
+              This motion is closed — discussion is archived.
+            </Text>
+          )}
+
+          {error && (
+            <Alert variant="error" className="brand-card__error">
+              {error}
+            </Alert>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 const CHOICES: Array<{ value: 'YES' | 'NO' | 'ABSTAIN'; label: string }> = [
@@ -83,6 +184,7 @@ export default function MotionCard({
             {error}
           </Alert>
         )}
+        <DiscussionThread motion={motion} />
       </article>
     )
   }
@@ -144,6 +246,7 @@ export default function MotionCard({
             {error}
           </Alert>
         )}
+        <DiscussionThread motion={motion} />
       </article>
     )
   }
@@ -171,6 +274,7 @@ export default function MotionCard({
           {motion.advisory && ' (advisory — not legally binding)'}
         </Text>
       )}
+      <DiscussionThread motion={motion} />
     </article>
   )
 }

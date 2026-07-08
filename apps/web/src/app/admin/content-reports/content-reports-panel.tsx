@@ -10,7 +10,7 @@ import { resolveContentReport } from '../actions'
 
 export type ContentReportRow = {
   id: string
-  targetType: 'ARCHIVE_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION'
+  targetType: 'ARCHIVE_ITEM' | 'RELEASE' | 'CHANNEL' | 'COLLECTION' | 'MOTION_COMMENT'
   targetId: string
   reason: 'COPYRIGHT' | 'HARASSMENT' | 'SPAM' | 'ILLEGAL_CONTENT' | 'OTHER'
   details: string | null

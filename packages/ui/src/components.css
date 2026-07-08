@@ -2768,6 +2768,63 @@
   justify-content: flex-end;
 }
 
+.gov-motion-card__discussion {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.gov-motion-card__discussion-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--text-label);
+  color: var(--muted2);
+  cursor: pointer;
+}
+
+.gov-motion-card__discussion-toggle:hover {
+  color: var(--text);
+}
+
+.gov-motion-card__discussion-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.gov-motion-card__comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.gov-motion-card__comment {
+  padding: var(--space-2) var(--space-3);
+  background: var(--card);
+  border-radius: var(--radius-sm);
+}
+
+.gov-motion-card__comment-meta {
+  color: var(--muted2);
+  margin-bottom: var(--space-1);
+}
+
+.gov-motion-card__comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+
+.gov-motion-card__comment-form .ui-textarea {
+  width: 100%;
+}
+
 @media (max-width: 640px) {
   .gov-header-row {
     flex-direction: column;
