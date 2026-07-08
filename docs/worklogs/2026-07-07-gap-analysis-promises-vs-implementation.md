@@ -109,8 +109,13 @@ the live code rather than trusted at face value:
   pages before and after; orphaned CSS (`studio-panel-section`,
   `studio-section-heading`, the old `tahti-radio-panel`/`db-recent-archive`
   outer-wrapper rules) deleted.
-- **UX-007** — Missing form labels + empty states on fan-tier creator,
-  announcements, moderators add-form.
+- ~~**UX-007**~~ — **Fixed 2026-07-09.** Confirmed real, but narrower than the
+  original wording for two of three areas: fan-tier creator needed both a
+  label on all 3 fields and its missing "No fan tiers yet" empty state (its
+  tier list had no else-branch at all when empty); announcements and
+  moderators only needed `aria-label` on their compact inline inputs — both
+  files' empty states were already correct independent of this fix. Verified
+  live in a browser.
 
 ### Performance (tracked, moderate priority)
 - **PERF-005** — Funnel/egress stats still use `findMany` + JS-side bucketing
