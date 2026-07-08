@@ -3,7 +3,7 @@
 
 import type { ComponentProps } from 'react'
 import NextLink from 'next/link'
-import { StatCard, StatCardGrid, StudioCollapse, SidebarNavIconSvg } from '@tahti/ui'
+import { Panel, StatCard, StatCardGrid, StudioCollapse, SidebarNavIconSvg } from '@tahti/ui'
 import BroadcastUsageBanner, { type BroadcastUsage } from './broadcast-usage'
 import { ChannelHero } from './_channel-hero'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
@@ -148,15 +148,19 @@ export function DashboardOverview({
         />
       </StatCardGrid>
 
-      <div className="db-recent-archive">
-        <div className="db-recent-archive__header">
-          <h2 className="db-recent-archive__heading">Recent broadcasts</h2>
-          {archiveItems.length > 0 ? (
-            <NextLink href="/dashboard/archive" className="db-recent-archive__view-all">
-              View all →
-            </NextLink>
-          ) : null}
-        </div>
+      <Panel
+        title={
+          <div className="db-recent-archive__header">
+            <h2 className="ui-heading ui-heading--2">Recent broadcasts</h2>
+            {archiveItems.length > 0 ? (
+              <NextLink href="/dashboard/archive" className="db-recent-archive__view-all">
+                View all →
+              </NextLink>
+            ) : null}
+          </div>
+        }
+        headerTight
+      >
         {archiveItems.length === 0 ? (
           <div className="studio-empty-card studio-mb-0">
             <p className="studio-empty-card__text">No archive items yet</p>
@@ -199,7 +203,7 @@ export function DashboardOverview({
             })}
           </ul>
         )}
-      </div>
+      </Panel>
 
       {Boolean(downloadGateSummary || channelLiveStats) && (
         <StudioCollapse title="Analytics detail" hint="downloads, live time">

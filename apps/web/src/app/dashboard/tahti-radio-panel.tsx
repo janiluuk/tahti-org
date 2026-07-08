@@ -4,6 +4,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Panel } from '@tahti/ui'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -53,18 +54,23 @@ export function TahtiRadioPanel() {
   if (!loaded) return null
 
   return (
-    <div className="tahti-radio-panel studio-mt-sm" data-testid="tahti-radio-panel">
-      <div className="tahti-radio-panel__header">
-        <span className="studio-label">Tahti Radio</span>
-        <a
-          href="https://tahti.live/radio"
-          target="_blank"
-          rel="noreferrer"
-          className="studio-text-muted-sm studio-link"
-        >
-          What is Tahti Radio?
-        </a>
-      </div>
+    <Panel
+      title={
+        <div className="tahti-radio-panel__header">
+          <h2 className="ui-heading ui-heading--2">Tahti Radio</h2>
+          <a
+            href="https://tahti.live/radio"
+            target="_blank"
+            rel="noreferrer"
+            className="studio-text-muted-sm studio-link"
+          >
+            What is Tahti Radio?
+          </a>
+        </div>
+      }
+      headerTight
+      data-testid="tahti-radio-panel"
+    >
       <p className="studio-text-muted-sm studio-mt-xs studio-mb-sm">
         Tahti Radio is an auto-curated meta-stream built from members&apos; archive. Your channel is
         included by default.
@@ -92,6 +98,6 @@ export function TahtiRadioPanel() {
         Opting out removes all your archive items from the meta-stream rotation. Individual items
         can also be excluded in the Archive editor.
       </p>
-    </div>
+    </Panel>
   )
 }

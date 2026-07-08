@@ -4,7 +4,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { ButtonIcon, Button } from '@tahti/ui'
+import { ButtonIcon, Button, Panel } from '@tahti/ui'
 import { addModerator, removeModerator, type ModeratorRow } from './moderator-actions'
 
 export default function ModeratorsPanel({
@@ -56,8 +56,7 @@ export default function ModeratorsPanel({
   }
 
   return (
-    <section className="studio-panel-section">
-      <h2 className="studio-section-heading">Moderators</h2>
+    <Panel title="Moderators">
       <p className="studio-help">
         Delegate chat moderation to trusted listeners — they can ban and unban disruptive
         fingerprints from{' '}
@@ -105,6 +104,6 @@ export default function ModeratorsPanel({
       </div>
       {error && <p className="studio-notice studio-notice--error">{error}</p>}
       {message && <p className="studio-notice studio-notice--success">{message}</p>}
-    </section>
+    </Panel>
   )
 }
