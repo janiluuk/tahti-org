@@ -44,14 +44,11 @@ decision, not something fixed here — flagged below.
   check against the stored counts, since vote counts aren't patchable but
   `outcome` alone is) — `apps/api/src/routes/admin/resolutions.ts`.
 
-**Flagged, not fixed — each is a scope/product decision:**
+**Built same-day, see the 2026-07-08 addendum below:**
 
-- **No discussion/comment feature.** The `DRAFT` state UI is labeled
-  *"Discussion · 7-day circulation"* and the empty-state copy says motions
-  appear "for member discussion and voting," but there is no `Comment` model,
-  route, or thread anywhere — "discussion" is only the 7-day gap before a
-  board member can open voting. Building real threaded discussion is a real
-  feature, not a bug fix.
+- ~~No discussion/comment feature.~~ Built — see "Discussion threads" addendum.
+
+**Flagged, not fixed — each is a scope/product decision:**
 - **Closed motion tallies don't automatically reach the public transparency
   page.** `Motion`/`Vote` (member-facing, `requireMember`-gated) and
   `BoardResolution` (public, the `/transparency` page's data source) are
@@ -88,3 +85,60 @@ decision, not something fixed here — flagged below.
 `tsc --noEmit` clean (api/web/shared); full suite 200 files / 811 tests passing,
 no regressions; `eslint` + `prettier --check` clean; `apps/web` production build
 succeeds.
+
+## Addendum, same day: discussion threads
+
+Built the discussion/comment thread flagged above. Design mirrors the closest
+existing pattern in the codebase, `SupportTicketNote` (flat chronological list,
+`body: String`, nullable `authorId` with `onDelete: SetNull` so a deleted
+account doesn't delete their comments, single `@@index([motionId, createdAt])`,
+no edit/soft-delete).
+
+**Model**: `MotionComment` (schema `governance`, alongside `Motion`/`Vote`).
+
+**API**: `GET/POST /api/v1/governance/motions/:id/comments`, both
+`requireMember`. Posting is allowed through `DRAFT` and `OPEN` (discussion
+continues alongside voting, not just during circulation) and blocked once
+`CLOSED` (`409`, mirrors the vote-after-close rule) — existing comments stay
+readable after close, since the discussion record should persist. Rate-limited
+30/hour/IP (`apps/api/src/plugins/rate-limit.ts`). `commentCount` added to
+`MotionSummarySchema` so the list view can show a count with no extra fetch.
+
+**UI**: no motion detail route exists (everything renders inline as cards on
+one list page), so this is an expandable section inside `MotionCard`
+(`DiscussionThread` sub-component) rather than a new page. Comments for every
+motion are fetched server-side in `page.tsx` alongside motions/members —
+governance data volume is small (capped at 100 motions, realistically a
+handful open at once), so this was simpler than inventing a client-side
+authenticated fetch-on-expand pattern.
+
+**Real bug found and fixed while building this**: `MotionSummarySchema` (the
+list response) never actually returned a `tally` field — only the per-motion
+detail endpoint did, and the `/governance` page has no per-motion detail fetch.
+Every closed motion on the page was silently showing "0 for · 0 against · 0
+abstained" regardless of the real vote outcome. Fixed by computing tally in the
+list route too (now fetches full vote rows for every motion, not just the
+caller's own vote, and derives `youVoted`/`yourChoice`/`tally` from one query).
+Caught and locked in with a test asserting the list endpoint carries the same
+tally as the detail endpoint.
+
+**Second bug found and fixed via live browser testing** (Playwright against a
+seeded local account, not just `vitest`/`app.inject`): posting a comment
+visibly collapsed the discussion thread you were actively typing in. Root
+cause — `postMotionComment`'s `revalidatePath('/governance')` call was
+remounting `DiscussionThread`, resetting its `open` state, even though
+`page.tsx`'s fetches are already `cache: 'no-store'` and have no Data Cache for
+`revalidatePath` to usefully invalidate; its only real effect was a disruptive
+Router Cache refresh of the page the user was actively on. Fixed by dropping
+`revalidatePath` from that one action (kept on `castVote`/`transitionMotion`,
+which don't have this problem) and having the action return the created
+comment so the client can append it optimistically instead.
+
+Verified live in a browser as both a board and a non-board member account
+(seeded locally, not production) — comment posting, ordering, attribution, and
+the closed-motion read-only state all confirmed visually correct after the fix.
+
+New tests added to `governance-e2e.test.ts`: posting during DRAFT/OPEN,
+blocked after CLOSE with existing comments still readable, a non-member gets
+401 on both routes, and the list-endpoint tally fix. Full suite: 200 files /
+813 tests, no regressions.

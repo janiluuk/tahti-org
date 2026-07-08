@@ -49,6 +49,41 @@ export async function transitionMotion(
   return { error: null }
 }
 
+export interface PostedMotionComment {
+  id: string
+  body: string
+  authorId: string | null
+  authorDisplayName: string | null
+  createdAt: string
+}
+
+export async function postMotionComment(
+  motionId: string,
+  body: string,
+): Promise<{ error: string | null; comment: PostedMotionComment | null }> {
+  const res = await fetch(`${apiUrl}/api/v1/governance/motions/${motionId}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ body }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to post comment', comment: null }
+  }
+  const comment = (await res.json()) as PostedMotionComment
+  // Deliberately no revalidatePath() here, unlike the other actions in this
+  // file. page.tsx's fetches are already `cache: 'no-store'`, so there's no
+  // Data Cache for it to invalidate — its only real effect is forcing a
+  // Router Cache refresh of the current view, which remounts DiscussionThread
+  // and collapses the very thread the user is actively posting to. The
+  // poster's own view is already updated from the returned comment below
+  // (see motion-card.tsx); a stale comment count for a client-side
+  // back/forward navigation within the same session is an acceptable
+  // trade-off against every post visibly collapsing the thread.
+  return { error: null, comment }
+}
+
 export async function createMotion(params: {
   title: string
   description: string

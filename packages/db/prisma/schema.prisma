@@ -248,6 +248,7 @@ enum AuditAction {
   MOTION_CREATE
   MOTION_OPEN
   MOTION_CLOSE
+  MOTION_COMMENT_CREATE
   VOTE_CAST
   GRANT_RUN
   STRIPE_WEBHOOK_ERROR
@@ -556,6 +557,7 @@ model User {
   channel               Channel?
   motionsProposed       Motion[]
   votes                 Vote[]
+  motionComments        MotionComment[]
   grants                GrantDisbursement[]
   fanTiers              FanTier[]
   fanSubsAsArtist       FanSubscription[]        @relation("ArtistFanSubs")
@@ -1094,7 +1096,8 @@ model Motion {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  votes Vote[]
+  votes    Vote[]
+  comments MotionComment[]
 
   @@index([state, closeAt])
   @@schema("governance")
@@ -1110,6 +1113,24 @@ model Vote {
 
   @@id([motionId, userId])
   @@index([motionId])
+  @@schema("governance")
+}
+
+/// Discussion thread on a Motion — the "Discussion · 7-day circulation" DRAFT-state
+/// label implied this existed but it never did (found in the 2026-07-08 governance
+/// E2E audit). Mirrors SupportTicketNote's shape: flat chronological list, no
+/// edit/soft-delete, author kept nullable so deleting a user doesn't cascade-delete
+/// their comments (their contribution to the discussion record persists).
+model MotionComment {
+  id        BigInt   @id @default(autoincrement())
+  motionId  String
+  motion    Motion   @relation(fields: [motionId], references: [id], onDelete: Cascade)
+  body      String
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([motionId, createdAt(sort: Asc)])
   @@schema("governance")
 }
 
@@ -1618,6 +1639,7 @@ enum ContentReportTargetType {
   RELEASE
   CHANNEL
   COLLECTION
+  MOTION_COMMENT
 
   @@schema("admin")
 }

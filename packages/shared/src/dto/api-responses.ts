@@ -619,14 +619,30 @@ export const MotionSummarySchema = z.object({
   totalVotes: z.number().int(),
   youVoted: z.boolean(),
   yourChoice: z.string().nullable(),
+  commentCount: z.number().int(),
+  // Only present once CLOSED (hidden while OPEN to avoid a bandwagon effect —
+  // see comment in apps/api/src/routes/governance/index.ts). Included in the
+  // list response, not just the detail one, since the governance page has no
+  // per-motion detail fetch and this is the only place a closed motion's
+  // result is shown.
+  tally: MotionVoteTallySchema.optional(),
 })
 
 export const MotionListSchema = z.array(MotionSummarySchema)
 
 export const MotionDetailSchema = MotionSummarySchema.extend({
   description: z.string(),
-  tally: MotionVoteTallySchema.optional(),
 })
+
+export const MotionCommentSchema = z.object({
+  id: z.string(),
+  body: z.string(),
+  authorId: z.string().nullable(),
+  authorDisplayName: z.string().nullable(),
+  createdAt: z.coerce.date(),
+})
+
+export const MotionCommentListSchema = z.array(MotionCommentSchema)
 
 export const CollectionPublicViewSchema = z
   .object({

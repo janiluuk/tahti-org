@@ -17,6 +17,7 @@ interface AuditParams {
     | 'MOTION_CREATE'
     | 'MOTION_OPEN'
     | 'MOTION_CLOSE'
+    | 'MOTION_COMMENT_CREATE'
     | 'VOTE_CAST'
     | 'GRANT_RUN'
     | 'STRIPE_WEBHOOK_ERROR'

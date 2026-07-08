@@ -6,10 +6,13 @@ import {
   CreateMotionSchema,
   GovernanceMemberListSchema,
   IdParamSchema,
+  MotionCommentListSchema,
+  MotionCommentSchema,
   MotionDetailSchema,
   MotionListSchema,
   MotionRefResponseSchema,
   PatchMotionSchema,
+  PostMotionCommentSchema,
   VoteCastResponseSchema,
   VoteMotionSchema,
   openApiResponse,
@@ -84,24 +87,39 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         take: 100,
         include: {
           proposer: { select: { displayName: true, username: true } },
-          _count: { select: { votes: true } },
-          votes: { where: { userId: user.id }, select: { choice: true } },
+          _count: { select: { votes: true, comments: true } },
+          // Fetched for every state (not just CLOSED) since per-motion vote
+          // counts are small (bounded by member count) and this lets youVoted
+          // /yourChoice/tally all come from one query instead of a second
+          // lookup — this page has no per-motion detail fetch, so the list
+          // response is the only place a CLOSED motion's tally is ever shown.
+          votes: { select: { userId: true, choice: true } },
         },
       })
 
       return reply.send(
-        motions.map((m) => ({
-          id: m.id,
-          title: m.title,
-          state: m.state,
-          advisory: m.advisory,
-          openAt: m.openAt,
-          closeAt: m.closeAt,
-          proposer: m.proposer.displayName,
-          totalVotes: m._count.votes,
-          youVoted: m.votes.length > 0,
-          yourChoice: m.votes[0]?.choice ?? null,
-        })),
+        motions.map((m) => {
+          const myVote = m.votes.find((v) => v.userId === user.id)
+          let tally: { YES: number; NO: number; ABSTAIN: number } | undefined
+          if (m.state === 'CLOSED') {
+            tally = { YES: 0, NO: 0, ABSTAIN: 0 }
+            for (const v of m.votes) tally[v.choice] += 1
+          }
+          return {
+            id: m.id,
+            title: m.title,
+            state: m.state,
+            advisory: m.advisory,
+            openAt: m.openAt,
+            closeAt: m.closeAt,
+            proposer: m.proposer.displayName,
+            totalVotes: m._count.votes,
+            youVoted: Boolean(myVote),
+            yourChoice: myVote?.choice ?? null,
+            commentCount: m._count.comments,
+            tally,
+          }
+        }),
       )
     },
   )
@@ -170,6 +188,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         include: {
           proposer: { select: { displayName: true, username: true } },
           votes: { select: { userId: true, choice: true } },
+          _count: { select: { comments: true } },
         },
       })
       if (!motion) return reply.status(404).send({ error: 'Motion not found' })
@@ -188,6 +207,7 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
         totalVotes: motion.votes.length,
         youVoted: Boolean(myVote),
         yourChoice: myVote?.choice ?? null,
+        commentCount: motion._count.comments,
       }
 
       // Per-choice tally is published only once voting has closed.
@@ -313,6 +333,98 @@ const governanceRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       return reply.status(201).send({ ok: true, choice })
+    },
+  )
+
+  // GET /api/v1/governance/motions/:id/comments — discussion thread, members-only,
+  // visible in every state (including CLOSED, so the record of discussion persists).
+  fastify.get(
+    '/api/v1/governance/motions/:id/comments',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponse(MotionCommentListSchema, 'MotionCommentList'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const motion = await fastify.prisma.motion.findUnique({ where: { id }, select: { id: true } })
+      if (!motion) return reply.status(404).send({ error: 'Motion not found' })
+
+      const comments = await fastify.prisma.motionComment.findMany({
+        where: { motionId: id },
+        orderBy: { createdAt: 'asc' },
+        include: { author: { select: { displayName: true } } },
+      })
+
+      return reply.send(
+        comments.map((c) => ({
+          id: c.id.toString(),
+          body: c.body,
+          authorId: c.authorId,
+          authorDisplayName: c.author?.displayName ?? null,
+          createdAt: c.createdAt,
+        })),
+      )
+    },
+  )
+
+  // POST /api/v1/governance/motions/:id/comments — post to the discussion thread.
+  // Allowed while DRAFT (the "circulation" period) or OPEN (discussion continues
+  // alongside voting); blocked once CLOSED, mirroring the vote-after-close rule —
+  // the matter is settled, further comments belong on a new motion.
+  fastify.post(
+    '/api/v1/governance/motions/:id/comments',
+    {
+      preHandler: requireMember,
+      schema: {
+        tags: ['governance'],
+        response: openApiResponses([
+          { status: 201, schema: MotionCommentSchema, name: 'MotionComment' },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+      const parsed = PostMotionCommentSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+
+      const motion = await fastify.prisma.motion.findUnique({
+        where: { id },
+        select: { state: true },
+      })
+      if (!motion) return reply.status(404).send({ error: 'Motion not found' })
+      if (motion.state === 'CLOSED') {
+        return reply.status(409).send({ error: 'This motion is closed to further discussion' })
+      }
+
+      const comment = await fastify.prisma.motionComment.create({
+        data: { motionId: id, authorId: user.id, body: parsed.data.body },
+        include: { author: { select: { displayName: true } } },
+      })
+
+      await auditLog(fastify.prisma, {
+        action: 'MOTION_COMMENT_CREATE',
+        actorId: user.id,
+        targetId: id,
+      })
+
+      return reply.status(201).send({
+        id: comment.id.toString(),
+        body: comment.body,
+        authorId: comment.authorId,
+        authorDisplayName: comment.author?.displayName ?? null,
+        createdAt: comment.createdAt,
+      })
     },
   )
 }

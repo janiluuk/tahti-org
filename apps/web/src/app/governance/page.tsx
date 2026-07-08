@@ -4,7 +4,7 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Link, PublicPageHeader, Text } from '@tahti/ui'
-import { type MotionSummary } from './motion-card'
+import { type MotionComment, type MotionSummary } from './motion-card'
 import MotionsList from './motions-list'
 import NewMotionForm from './new-motion-form'
 import GrantPreviewPanel from './grant-preview-panel'
@@ -74,6 +74,25 @@ export default async function GovernancePage() {
     : []
   const members: Member[] = membersRes.ok ? ((await membersRes.json()) as Member[]) : []
 
+  // Governance data volume is small (motions capped at 100, a handful open at
+  // once in practice) — fetching every motion's discussion thread up front on
+  // this already-fully-SSR'd page is simpler than a client-side authenticated
+  // fetch-on-expand, and avoids inventing a new auth-forwarding pattern for it.
+  const commentLists = await Promise.all(
+    motions.map((m) =>
+      fetch(`${apiUrl}/api/v1/governance/motions/${m.id}/comments`, {
+        headers: { Cookie: cookie },
+        cache: 'no-store',
+      })
+        .then((r) => (r.ok ? (r.json() as Promise<MotionComment[]>) : []))
+        .catch(() => []),
+    ),
+  )
+  const motionsWithComments: MotionSummary[] = motions.map((m, i) => ({
+    ...m,
+    comments: commentLists[i],
+  }))
+
   return (
     <>
       <PublicPageHeader
@@ -104,7 +123,11 @@ export default async function GovernancePage() {
             </p>
           </div>
         ) : (
-          <MotionsList motions={motions} totalMembers={members.length} isBoard={me.isBoard} />
+          <MotionsList
+            motions={motionsWithComments}
+            totalMembers={members.length}
+            isBoard={me.isBoard}
+          />
         )}
       </section>
 

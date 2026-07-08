@@ -8,6 +8,7 @@ export const ContentReportTargetTypeSchema = z.enum([
   'RELEASE',
   'CHANNEL',
   'COLLECTION',
+  'MOTION_COMMENT',
 ])
 
 export const ContentReportReasonSchema = z.enum([

@@ -99,6 +99,22 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
       return
     }
 
+    if (
+      /^\/api\/v1\/governance\/motions\/[^/]+\/comments$/.test(request.url) &&
+      request.method === 'POST'
+    ) {
+      const limit = { max: 30, windowSec: 3600, keyPrefix: 'motion-comment' }
+      const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
+        rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec),
+      )
+      reply.header('X-RateLimit-Remaining', remaining)
+      reply.header('X-RateLimit-Reset', resetSec)
+      if (!ok) {
+        return reply.status(429).send({ error: 'Too many comments', retryAfterSec: resetSec })
+      }
+      return
+    }
+
     if (isBulkImportRoute(request.url, request.method)) {
       const limit = { max: 5, windowSec: 3600, keyPrefix: 'bulk-import' }
       const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
