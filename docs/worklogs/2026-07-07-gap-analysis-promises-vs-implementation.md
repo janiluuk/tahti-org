@@ -91,11 +91,12 @@ the live code rather than trusted at face value:
   session.
 
 ### UX debt (tracked, not regressions)
-- **UX-005** — ~15 files still use hand-typed `studio-btn-*` classes instead of the
-  shared `ui-btn` component (moderators, multistream, pro editor, upload flows).
-  Consistent with this session's own earlier design audit, which found 72 total
-  hand-typed `ui-btn`/`brand-btn` call sites still outstanding app-wide — this is
-  the same tracked, accepted-as-gradual migration, not a new finding.
+- ~~**UX-005**~~ — **Stale by the time this was written.** This item claimed ~15
+  files still used hand-typed `studio-btn-*` classes, but that migration had
+  already shipped in `d7acdc1` (2026-07-01, six days before this worklog) — 17
+  call sites moved to `ui-btn`, all `studio-btn-*` CSS deleted. Caught and
+  corrected 2026-07-09 when picking this up as the "next worklog item" turned up
+  zero remaining `studio-btn` references anywhere in `apps/web/src`.
 - **UX-006** — Missing panel wrappers on Mixcloud/Tahti Radio/moderators/overview
   sub-sections (visual consistency, not a functional bug).
 - **UX-007** — Missing form labels + empty states on fan-tier creator,

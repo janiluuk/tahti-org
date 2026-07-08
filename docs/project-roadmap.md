@@ -707,7 +707,7 @@ Cross-cutting audit of auth, studio UX, and dashboard/API performance. Items mar
 | [x] | **UX-002** | **Dead help links** — `/for-artists`, `/help/broadcast` on dashboard overview. | P0 |
 | [x] | **UX-003** | **`#collections` hash routing** — unique section key + catalog tab scroll. | P1 |
 | [x] | **UX-004** | **Focus-visible rings + reduced-motion** on studio buttons/tabs/live dots. | P1 |
-| [ ] | **UX-005** | **`studio-btn-*` → `ui-btn` sweep** — moderators, multistream, pro editor, upload flows (~15 files). | P1 |
+| [x] | **UX-005** | **`studio-btn-*` → `ui-btn` sweep** — moderators, multistream, pro editor, upload flows (~15 files). Done `d7acdc1` (2026-07-01) — 17 call sites migrated, all `studio-btn-*` CSS deleted. Was already fixed when the 2026-07-07 gap-analysis worklog flagged it as outstanding; caught and corrected 2026-07-09. | P1 |
 | [ ] | **UX-006** | **Panel wrappers** — Mixcloud, Tahti Radio, moderators, overview sub-sections. | P2 |
 | [ ] | **UX-007** | **Form labels + empty states** — fan tier creator, announcements, moderators add form. | P2 |
 | [x] | **UX-008** | **Mobile nav** — add Upload + Collections routes. | P2 |
