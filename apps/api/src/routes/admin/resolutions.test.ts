@@ -77,4 +77,49 @@ describe('M21-G — board resolutions', () => {
     const rows = res.json() as Array<{ id: string }>
     expect(rows.some((r) => r.id === resolutionId)).toBe(true)
   })
+
+  it('rejects a PASSED outcome whose vote counts do not support it', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/admin/resolutions',
+      headers: { cookie: boardCookie },
+      payload: {
+        title: 'Mismatched outcome',
+        body: 'x',
+        votedAt: '2026-03-15T12:00:00.000Z',
+        outcome: 'PASSED',
+        voteFor: 0,
+        voteAgainst: 100,
+        voteAbstain: 0,
+      },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('rejects a PATCH that flips outcome to PASSED against the stored vote counts', async () => {
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/api/admin/resolutions',
+      headers: { cookie: boardCookie },
+      payload: {
+        title: 'Failed motion',
+        body: 'x',
+        votedAt: '2026-03-15T12:00:00.000Z',
+        outcome: 'FAILED',
+        voteFor: 2,
+        voteAgainst: 8,
+        voteAbstain: 0,
+      },
+    })
+    expect(createRes.statusCode).toBe(201)
+    const id = (createRes.json() as { id: string }).id
+
+    const patchRes = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/resolutions/${id}`,
+      headers: { cookie: boardCookie },
+      payload: { outcome: 'PASSED' },
+    })
+    expect(patchRes.statusCode).toBe(400)
+  })
 })

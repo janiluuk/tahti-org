@@ -104,7 +104,7 @@ export default function MotionCard({
 
         {motion.youVoted ? (
           <Text tone="success" size="sm">
-            ✓ You voted · change before close
+            ✓ You voted {motion.yourChoice?.toLowerCase()} · votes can&apos;t be changed
           </Text>
         ) : (
           <div className="gov-motion-card__vote-row">
