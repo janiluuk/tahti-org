@@ -11,6 +11,7 @@ import {
   ResolutionIdParamSchema,
   openApiResponse,
   openApiResponses,
+  outcomeMatchesVotes,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
@@ -132,6 +133,19 @@ const adminResolutionsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const existing = await fastify.prisma.boardResolution.findUnique({ where: { id } })
       if (!existing) return reply.status(404).send({ error: 'Resolution not found' })
+
+      if (parsed.data.outcome) {
+        const outcomeCheck = outcomeMatchesVotes({
+          outcome: parsed.data.outcome,
+          voteFor: existing.voteFor,
+          voteAgainst: existing.voteAgainst,
+        })
+        if (!outcomeCheck) {
+          return reply.status(400).send({
+            error: 'outcome does not match the recorded vote counts for this resolution',
+          })
+        }
+      }
 
       const row = await fastify.prisma.boardResolution.update({
         where: { id },
