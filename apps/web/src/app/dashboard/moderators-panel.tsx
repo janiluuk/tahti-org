@@ -95,6 +95,7 @@ export default function ModeratorsPanel({
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="Username to add as moderator"
+          aria-label="Username to add as moderator"
           className="studio-input studio-flex-1"
         />
         <Button onClick={add} disabled={isPending || !username.trim()} variant="primary">

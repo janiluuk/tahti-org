@@ -80,6 +80,7 @@ export default function AnnouncementsPanel({ initial }: { initial: Announcement[
             if (e.key === 'Enter' && !e.shiftKey) void handlePost()
           }}
           placeholder="Type an announcement…"
+          aria-label="New announcement"
           maxLength={500}
           disabled={posting || announcements.length >= 3}
           className="studio-input studio-flex-1"
