@@ -8,7 +8,6 @@ import BroadcastUsageBanner, { type BroadcastUsage } from './broadcast-usage'
 import { ChannelHero } from './_channel-hero'
 import { DownloadGateSummaryPanel } from './download-gate-summary'
 import { ChannelLiveStatsPanel } from './channel-live-stats-panel'
-import { ChannelEgressPanel } from './channel-egress-panel'
 
 interface ArchiveItem {
   id: string
@@ -35,7 +34,6 @@ export type DashboardOverviewProps = {
   archiveItems: ArchiveItem[]
   downloadGateSummary: ComponentProps<typeof DownloadGateSummaryPanel>['summary']
   channelLiveStats: ComponentProps<typeof ChannelLiveStatsPanel>['stats']
-  channelEgress: ComponentProps<typeof ChannelEgressPanel>['stats']
   otherModeratedChannels: ModeratedChannel[]
 }
 
@@ -75,7 +73,6 @@ export function DashboardOverview({
   archiveItems,
   downloadGateSummary,
   channelLiveStats,
-  channelEgress,
   otherModeratedChannels,
 }: DashboardOverviewProps) {
   if (!channel) {
@@ -204,11 +201,10 @@ export function DashboardOverview({
         )}
       </div>
 
-      {Boolean(downloadGateSummary || channelLiveStats || channelEgress) && (
-        <StudioCollapse title="Analytics detail" hint="downloads, live time, egress">
+      {Boolean(downloadGateSummary || channelLiveStats) && (
+        <StudioCollapse title="Analytics detail" hint="downloads, live time">
           <DownloadGateSummaryPanel summary={downloadGateSummary} />
           <ChannelLiveStatsPanel stats={channelLiveStats} />
-          <ChannelEgressPanel stats={channelEgress} />
         </StudioCollapse>
       )}
 

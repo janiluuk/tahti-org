@@ -2,11 +2,39 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { FanSubPayoutsDashboardSchema, openApiResponse } from '@tahti/shared'
+import {
+  FanSubPayoutsDashboardSchema,
+  FanSubPayoutsSummarySchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { sendCsv } from '../../lib/csv.js'
 
 const fanSubPayoutRoutes: FastifyPluginAsync = async (fastify) => {
+  // PERF-006: slim variant for the dashboard overview, which only ever renders
+  // thisMonthNetCents as a single StatCard — avoids the full dashboard payload's
+  // 7 parallel queries (counts, a 10-row findMany with a join, two more aggregates).
+  fastify.get(
+    '/api/me/fan-sub-payouts/summary',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['fansubs'],
+        description: 'PERF-006: slim this-month-net summary for the dashboard overview',
+        response: openApiResponse(FanSubPayoutsSummarySchema, 'FanSubPayoutsSummary'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      const thisMonthAgg = await fastify.prisma.fanSubPayout.aggregate({
+        _sum: { netToArtistCents: true },
+        where: { artistUserId: user.id, state: 'PAID', paidAt: { gte: startOfMonth } },
+      })
+      return reply.send({ thisMonthNetCents: thisMonthAgg._sum.netToArtistCents ?? 0 })
+    },
+  )
+
   fastify.get(
     '/api/me/fan-sub-payouts',
     {
