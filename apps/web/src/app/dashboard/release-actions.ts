@@ -14,22 +14,65 @@ function sessionHeader() {
   return sessionCookie ? `tahti_session=${sessionCookie.value}` : ''
 }
 
+export interface CreatedReleaseTrack {
+  id: string
+  position: number
+  title: string
+}
+
 export async function createRelease(params: {
   title: string
   type: string
   releaseDate: string
   description?: string
   tracks?: Array<{ title: string; durationSec?: number; archiveItemId?: string }>
-}): Promise<{ error: string | null }> {
+}): Promise<{ error: string | null; releaseId?: string; tracks?: CreatedReleaseTrack[] }> {
   const res = await fetch(`${apiUrl}/api/me/releases`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
     body: JSON.stringify(params),
     cache: 'no-store',
   })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    return { error: (data as { error?: string }).error ?? 'Failed to create release' }
+  }
+  const release = data as { id: string; tracks: CreatedReleaseTrack[] }
+  return { error: null, releaseId: release.id, tracks: release.tracks }
+}
+
+export async function prepareReleaseTrackUpload(
+  releaseId: string,
+  trackId: string,
+  filename: string,
+  contentType: string,
+): Promise<{ error: string | null; uploadUrl?: string; sourceKey?: string }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${releaseId}/tracks/${trackId}/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ filename, contentType }),
+    cache: 'no-store',
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    return { error: (data as { error?: string }).error ?? 'Failed to prepare track upload' }
+  }
+  const body = data as { uploadUrl: string; sourceKey: string }
+  return { error: null, uploadUrl: body.uploadUrl, sourceKey: body.sourceKey }
+}
+
+export async function finalizeReleaseTrack(
+  releaseId: string,
+  trackId: string,
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${releaseId}/tracks/${trackId}/finalize`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
-    return { error: (data as { error?: string }).error ?? 'Failed to create release' }
+    return { error: (data as { error?: string }).error ?? 'Failed to finalize track' }
   }
   return { error: null }
 }
