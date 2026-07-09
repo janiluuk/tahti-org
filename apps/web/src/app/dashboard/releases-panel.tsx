@@ -9,6 +9,7 @@ import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
 import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { createRelease, importReleasesFromCsv, publishRelease } from './release-actions'
+import { ReleaseBulkDrop } from './_release-bulk-drop'
 
 interface ReleaseSummary {
   id: string
@@ -177,6 +178,15 @@ export default function ReleasesPanel({
           Add draft
         </Button>
       </div>
+
+      <details className="studio-details-block">
+        <summary>Create an album by dragging in your tracks</summary>
+        <p className="studio-help studio-mt-sm">
+          Drop a folder of WAV/FLAC/MP3 files (or select several at once) — track order and titles
+          come from the filenames, so name them like &quot;01 - Intro.wav&quot;.
+        </p>
+        <ReleaseBulkDrop />
+      </details>
 
       <details className="studio-details-block">
         <summary>Bulk import from CSV</summary>

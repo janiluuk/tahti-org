@@ -48,11 +48,16 @@ export default async function ReleaseDetailPage({ params }: { params: { id: stri
 
   const [user, releasesRes] = await Promise.all([
     getDashboardUser(),
-    fetch(`${apiUrl}/api/me/releases`, { headers: { Cookie: cookie }, cache: 'no-store' }),
+    fetch(`${apiUrl}/api/me/releases?limit=100`, {
+      headers: { Cookie: cookie },
+      cache: 'no-store',
+    }),
   ])
   if (!user) redirect('/login')
 
-  const releases = releasesRes.ok ? ((await releasesRes.json()) as ReleaseSummary[]) : []
+  const releases = releasesRes.ok
+    ? ((await releasesRes.json()) as { releases: ReleaseSummary[] }).releases
+    : []
   const release = releases.find((r) => r.id === params.id)
   if (!release) notFound()
 
