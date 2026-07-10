@@ -11,6 +11,8 @@ type SocialPlatform =
   | 'youtube'
   | 'spotify'
   | 'discord'
+  | 'twitch'
+  | 'hearthis'
   | 'email'
   | 'website'
 
@@ -24,6 +26,8 @@ const LABEL_KEYWORDS: Array<[RegExp, SocialPlatform]> = [
   [/youtube|\byt\b/i, 'youtube'],
   [/spotify/i, 'spotify'],
   [/discord/i, 'discord'],
+  [/twitch/i, 'twitch'],
+  [/hearthis/i, 'hearthis'],
   [/email|mail/i, 'email'],
 ]
 
@@ -40,6 +44,8 @@ const HOSTNAME_KEYWORDS: Array<[string, SocialPlatform]> = [
   ['spotify.com', 'spotify'],
   ['discord.gg', 'discord'],
   ['discord.com', 'discord'],
+  ['twitch.tv', 'twitch'],
+  ['hearthis.at', 'hearthis'],
 ]
 
 export function detectSocialPlatform(label: string, url: string): SocialPlatform {
@@ -177,6 +183,41 @@ function PlatformGlyph({ platform }: { platform: SocialPlatform }) {
           />
           <circle cx="6" cy="8.2" r="0.9" fill="currentColor" />
           <circle cx="10" cy="8.2" r="0.9" fill="currentColor" />
+        </svg>
+      )
+    case 'twitch':
+      return (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path
+            d="M3 2.5h10v7l-2.5 2.5H8l-2 2v-2H3v-9.5Z"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M7 5.5v3M10.5 5.5v3"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+          />
+        </svg>
+      )
+    case 'hearthis':
+      return (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path
+            d="M8 13S2.5 9.4 2.5 5.9A2.9 2.9 0 0 1 8 4.3a2.9 2.9 0 0 1 5.5 1.6C13.5 9.4 8 13 8 13Z"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M4.5 7h1.5l1-1.5 1.5 3 1-2h2"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       )
     case 'email':
