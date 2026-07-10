@@ -441,6 +441,7 @@ export const ChannelCardSchema = z.object({
   goneLiveAt: z.string().datetime().nullable(),
   nextBroadcastAt: z.string().datetime().nullable(),
   nextBroadcastNote: z.string().nullable(),
+  genres: z.array(z.string()),
   user: PublicChannelUserSchema,
 })
 
