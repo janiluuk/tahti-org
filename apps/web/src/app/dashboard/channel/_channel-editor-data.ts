@@ -37,7 +37,10 @@ export type ChannelEditorFetchResult = {
   pronouns: string | null
   genres: string[]
   links: Array<{ label: string; url: string }>
+  streamingLinks: { youtube: string; hearthisAt: string; twitch: string; soundcloud: string }
 }
+
+const STREAMING_LINK_KEYS = ['youtube', 'hearthisAt', 'twitch', 'soundcloud'] as const
 
 /** Shared fetch used by every /dashboard/channel/* editor page so the live preview always has the full, current channel state. */
 export async function fetchChannelEditorData(
@@ -59,6 +62,12 @@ export async function fetchChannelEditorData(
   let pronouns: string | null = null
   let genres: string[] = []
   let links: Array<{ label: string; url: string }> = []
+  let streamingLinks: ChannelEditorFetchResult['streamingLinks'] = {
+    youtube: '',
+    hearthisAt: '',
+    twitch: '',
+    soundcloud: '',
+  }
 
   try {
     const [galleryRes, textLayerRes, visualRes, channelRes] = await Promise.all([
@@ -92,8 +101,17 @@ export async function fetchChannelEditorData(
             .filter(Boolean)
         : []
       links = Object.entries(socialLinks)
-        .filter(([key, url]) => key !== 'genres' && url)
+        .filter(
+          ([key, url]) =>
+            key !== 'genres' && !(STREAMING_LINK_KEYS as readonly string[]).includes(key) && url,
+        )
         .map(([label, url]) => ({ label, url }))
+      streamingLinks = {
+        youtube: socialLinks.youtube ?? '',
+        hearthisAt: socialLinks.hearthisAt ?? '',
+        twitch: socialLinks.twitch ?? '',
+        soundcloud: socialLinks.soundcloud ?? '',
+      }
     }
   } catch {
     // render with defaults
@@ -122,5 +140,6 @@ export async function fetchChannelEditorData(
     pronouns,
     genres,
     links,
+    streamingLinks,
   }
 }
