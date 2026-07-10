@@ -4,11 +4,13 @@
 import NextLink from 'next/link'
 import { SidebarNavIconSvg } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { ShareEmbedButton } from './share-embed-button'
 
 type StudioHeaderActionsProps = {
   hasChannel?: boolean
   isLive?: boolean
   channelSlug?: string
+  channelDisplayName?: string
   showBack?: boolean
   backHref?: string
   backLabel?: string
@@ -19,6 +21,7 @@ export function StudioHeaderActions({
   hasChannel = true,
   isLive = false,
   channelSlug,
+  channelDisplayName,
   showBack = false,
   backHref = '/dashboard',
   backLabel = 'Dashboard',
@@ -60,6 +63,10 @@ export function StudioHeaderActions({
                 <SidebarNavIconSvg name="channel" />
                 View channel
               </NextLink>
+              <ShareEmbedButton
+                channelSlug={channelSlug}
+                displayName={channelDisplayName ?? channelSlug}
+              />
             </>
           ) : null}
         </>
