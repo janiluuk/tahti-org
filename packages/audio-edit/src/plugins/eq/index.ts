@@ -36,10 +36,13 @@ function bandToFilter(band: EqBand): string {
   switch (band.type) {
     case 'bell':
       return `equalizer=f=${band.freq}:t=q:w=${band.q}:g=${band.gainDb}`
+    // ffmpeg's `equalizer` is always a peaking filter — `t=h`/`t=l` there just picks the unit
+    // the width is measured in (Hz), not a shelf shape. Real shelf filters are the dedicated
+    // `treble` (highshelf) / `bass` (lowshelf) filters.
     case 'highshelf':
-      return `equalizer=f=${band.freq}:t=h:w=${band.q}:g=${band.gainDb}`
+      return `treble=f=${band.freq}:t=q:w=${band.q}:g=${band.gainDb}`
     case 'lowshelf':
-      return `equalizer=f=${band.freq}:t=l:w=${band.q}:g=${band.gainDb}`
+      return `bass=f=${band.freq}:t=q:w=${band.q}:g=${band.gainDb}`
     case 'highpass':
       return `highpass=f=${band.freq}:poles=2`
     case 'lowpass':

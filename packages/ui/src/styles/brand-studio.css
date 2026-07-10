@@ -6051,6 +6051,35 @@
   color: var(--ts);
 }
 
+.plug-panel__segment-group {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--bd);
+}
+
+.plug-panel__segment {
+  font-size: var(--text-sm);
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--ts);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.plug-panel__segment:hover {
+  color: var(--text);
+}
+
+.plug-panel__segment--active {
+  background: var(--cyan);
+  color: var(--bg);
+}
+
 /* EQ panel SVG curve */
 .plug-eq-curve {
   width: 100%;

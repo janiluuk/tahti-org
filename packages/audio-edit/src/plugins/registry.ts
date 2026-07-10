@@ -31,6 +31,14 @@ import {
 } from './limiter/index.js'
 import type { LimiterParams } from './limiter/index.js'
 
+import {
+  FilterParamsSchema,
+  DEFAULT_FILTER_PARAMS,
+  compileFilter,
+  filterChainSummary,
+} from './filter/index.js'
+import type { FilterParams } from './filter/index.js'
+
 import type { z } from 'zod'
 
 export interface Plugin<P> {
@@ -85,15 +93,39 @@ const limiterPlugin: Plugin<LimiterParams> = {
   chainSummary: limiterChainSummary,
 }
 
+const filterPlugin: Plugin<FilterParams> = {
+  id: 'filter',
+  name: 'Filter',
+  defaultParams: DEFAULT_FILTER_PARAMS,
+  paramsSchema: FilterParamsSchema,
+  compile: compileFilter,
+  chainSummary: filterChainSummary,
+}
+
 export const PLUGINS = {
   gain: gainPlugin,
   eq: eqPlugin,
   comp: compPlugin,
   limiter: limiterPlugin,
+  filter: filterPlugin,
   // future plugins go here
 } as const satisfies Record<string, AnyPlugin>
 
 export type PluginId = keyof typeof PLUGINS
 
-export type { GainParams, EqParams, EqBand, CompParams, LimiterParams, MeasuredLoudness }
-export { DEFAULT_GAIN_PARAMS, DEFAULT_EQ_PARAMS, DEFAULT_COMP_PARAMS, DEFAULT_LIMITER_PARAMS }
+export type {
+  GainParams,
+  EqParams,
+  EqBand,
+  CompParams,
+  LimiterParams,
+  FilterParams,
+  MeasuredLoudness,
+}
+export {
+  DEFAULT_GAIN_PARAMS,
+  DEFAULT_EQ_PARAMS,
+  DEFAULT_COMP_PARAMS,
+  DEFAULT_LIMITER_PARAMS,
+  DEFAULT_FILTER_PARAMS,
+}

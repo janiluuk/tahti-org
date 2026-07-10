@@ -29,8 +29,9 @@ describe('compileFiltergraphV2', () => {
 
   it('emits gain filter when db != 0', () => {
     const el = createDefaultEditListV2(60)
-    el.plugins[0] = {
-      ...el.plugins[0]!,
+    const gainIdx = el.plugins.findIndex((p) => p.pluginId === 'gain')
+    el.plugins[gainIdx] = {
+      ...el.plugins[gainIdx]!,
       params: { db: 3, normalize: { enabled: false, targetLufs: -14, targetTp: -1.5 } },
     }
     const result = compileFiltergraphV2(el)
@@ -39,8 +40,9 @@ describe('compileFiltergraphV2', () => {
 
   it('emits loudnorm filter when normalize enabled', () => {
     const el = createDefaultEditListV2(60)
-    el.plugins[0] = {
-      ...el.plugins[0]!,
+    const gainIdx = el.plugins.findIndex((p) => p.pluginId === 'gain')
+    el.plugins[gainIdx] = {
+      ...el.plugins[gainIdx]!,
       params: { db: 0, normalize: { enabled: true, targetLufs: -14, targetTp: -1.5 } },
     }
     const result = compileFiltergraphV2(el)
@@ -80,17 +82,18 @@ describe('migrateV1toV2', () => {
     const v2 = migrateV1toV2(v1)
     expect(v2.version).toBe(2)
     expect(v2.sourceDuration).toBe(100)
-    expect(v2.plugins.length).toBe(4)
-    expect(v2.plugins[0]!.pluginId).toBe('gain')
-    expect(v2.plugins[1]!.pluginId).toBe('eq')
-    expect(v2.plugins[2]!.pluginId).toBe('comp')
-    expect(v2.plugins[3]!.pluginId).toBe('limiter')
+    expect(v2.plugins.length).toBe(5)
+    expect(v2.plugins[0]!.pluginId).toBe('filter')
+    expect(v2.plugins[1]!.pluginId).toBe('gain')
+    expect(v2.plugins[2]!.pluginId).toBe('eq')
+    expect(v2.plugins[3]!.pluginId).toBe('comp')
+    expect(v2.plugins[4]!.pluginId).toBe('limiter')
   })
 
   it('preserves gainDb in gain plugin params', () => {
     const v1 = { ...createDefaultEditList(100), gainDb: 6 }
     const v2 = migrateV1toV2(v1)
-    const gainParams = v2.plugins[0]!.params as { db: number }
+    const gainParams = v2.plugins.find((p) => p.pluginId === 'gain')!.params as { db: number }
     expect(gainParams.db).toBe(6)
   })
 
@@ -105,13 +108,27 @@ describe('migrateV1toV2', () => {
     expect(v2.fades[0]).toHaveProperty('id')
   })
 
-  it('preserves enabled state of eq, comp, limiter', () => {
+  it('preserves enabled state of eq, comp, limiter, filter', () => {
     const v1 = createDefaultEditList(100)
     v1.eq = { ...v1.eq, enabled: true }
     v1.comp = { ...v1.comp, enabled: true }
+    v1.filter = { ...v1.filter, enabled: true, mode: 'lowpass', freq: 12000, slope: '24db' }
     const v2 = migrateV1toV2(v1)
     expect(v2.plugins.find((p) => p.pluginId === 'eq')?.enabled).toBe(true)
     expect(v2.plugins.find((p) => p.pluginId === 'comp')?.enabled).toBe(true)
     expect(v2.plugins.find((p) => p.pluginId === 'limiter')?.enabled).toBe(false)
+    const filterPlugin = v2.plugins.find((p) => p.pluginId === 'filter')
+    expect(filterPlugin?.enabled).toBe(true)
+    expect(filterPlugin?.params).toEqual({ mode: 'lowpass', freq: 12000, slope: '24db' })
+  })
+
+  it('backfills a default filter when v1.filter is missing (pre-existing saved edits)', () => {
+    const v1 = createDefaultEditList(100)
+    // @ts-expect-error -- simulating an old, already-saved EditList JSON that predates this field
+    delete v1.filter
+    const v2 = migrateV1toV2(v1)
+    const filterPlugin = v2.plugins.find((p) => p.pluginId === 'filter')
+    expect(filterPlugin?.enabled).toBe(false)
+    expect(filterPlugin?.params).toEqual({ mode: 'highpass', freq: 80, slope: '12db' })
   })
 })
