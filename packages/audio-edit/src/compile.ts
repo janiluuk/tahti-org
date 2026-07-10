@@ -14,6 +14,7 @@ import type {
 import { BROWSER_RENDER_MAX_BYTES } from './types.js'
 import { PLUGINS } from './plugins/registry.js'
 import type { AnyPlugin } from './plugins/registry.js'
+import { compileFilter } from './plugins/filter/index.js'
 
 function fadeCurveParam(curve: EditFade['curve']): string {
   return curve === 'exp' ? ':curve=exp' : ''
@@ -72,6 +73,12 @@ function buildHpLpStage(inputLabel: string, edit: EditList): string {
     .slice(0, -1)
     .concat(last.replace(/\[(hp|lp)\]$/, '[fhp]'))
     .join(';')
+}
+
+function buildFilterStage(inputLabel: string, edit: EditList): string {
+  if (!edit.filter.enabled) return `${inputLabel}anull[filt]`
+  const step = compileFilter(edit.filter, { inputLabel, outputLabel: '[filt]' })
+  return step ? step.graph : `${inputLabel}anull[filt]`
 }
 
 function buildFadeStage(inputLabel: string, fades: EditFade[], segments: KeepSegment[]): string {
@@ -167,7 +174,8 @@ export function compileFiltergraph(edit: EditList, options: CompileOptions = {})
   const stages = [
     cutStage.filter,
     buildHpLpStage(chainLabel, edit),
-    buildFadeStage('[fhp]', edit.fades, segments),
+    buildFilterStage('[fhp]', edit),
+    buildFadeStage('[filt]', edit.fades, segments),
     buildGainStage('[fad]', edit.gainDb),
     buildEqStage('[g]', edit),
     buildCompStage('[eq]', edit),

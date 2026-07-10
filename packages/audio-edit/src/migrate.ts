@@ -9,11 +9,13 @@ import {
   DEFAULT_EQ_PARAMS,
   DEFAULT_COMP_PARAMS,
   DEFAULT_LIMITER_PARAMS,
+  DEFAULT_FILTER_PARAMS,
 } from './plugins/registry.js'
 import type { GainParams } from './plugins/gain/index.js'
 import type { EqParams } from './plugins/eq/index.js'
 import type { CompParams } from './plugins/comp/index.js'
 import type { LimiterParams } from './plugins/limiter/index.js'
+import type { FilterParams } from './plugins/filter/index.js'
 
 function uuid(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
@@ -54,7 +56,20 @@ export function migrateV1toV2(v1: EditList): EditListV2 {
     releaseMs: v1.limiter.releaseMs,
   }
 
+  // v1.filter is optional at runtime — existing saved edits predate this field.
+  const filterParams: FilterParams = {
+    mode: v1.filter?.mode ?? DEFAULT_FILTER_PARAMS.mode,
+    freq: v1.filter?.freq ?? DEFAULT_FILTER_PARAMS.freq,
+    slope: v1.filter?.slope ?? DEFAULT_FILTER_PARAMS.slope,
+  }
+
   const plugins: PluginInstance[] = [
+    {
+      instanceId: uuid(),
+      pluginId: 'filter',
+      enabled: v1.filter?.enabled ?? false,
+      params: filterParams,
+    },
     { instanceId: uuid(), pluginId: 'gain', enabled: true, params: gainParams },
     { instanceId: uuid(), pluginId: 'eq', enabled: v1.eq.enabled, params: eqParams },
     { instanceId: uuid(), pluginId: 'comp', enabled: v1.comp.enabled, params: compParams },
@@ -81,7 +96,7 @@ export function migrateV1toV2(v1: EditList): EditListV2 {
   }
 }
 
-/** Create a fresh v2 EditList with the default four-plugin chain. */
+/** Create a fresh v2 EditList with the default five-plugin chain. */
 export function createDefaultEditListV2(sourceDuration: number): EditListV2 {
   return {
     version: 2,
@@ -89,6 +104,12 @@ export function createDefaultEditListV2(sourceDuration: number): EditListV2 {
     cuts: [],
     fades: [],
     plugins: [
+      {
+        instanceId: uuid(),
+        pluginId: 'filter',
+        enabled: false,
+        params: { ...DEFAULT_FILTER_PARAMS },
+      },
       { instanceId: uuid(), pluginId: 'gain', enabled: true, params: { ...DEFAULT_GAIN_PARAMS } },
       { instanceId: uuid(), pluginId: 'eq', enabled: false, params: { ...DEFAULT_EQ_PARAMS } },
       {

@@ -7,6 +7,7 @@ import { compileGain, DEFAULT_GAIN_PARAMS, gainChainSummary } from './gain/index
 import { compileEq, DEFAULT_EQ_PARAMS, eqChainSummary } from './eq/index.js'
 import { compileComp, DEFAULT_COMP_PARAMS, compChainSummary } from './comp/index.js'
 import { compileLimiter, DEFAULT_LIMITER_PARAMS, limiterChainSummary } from './limiter/index.js'
+import { compileFilter, DEFAULT_FILTER_PARAMS, filterChainSummary } from './filter/index.js'
 
 const CTX = { inputLabel: '[in]', outputLabel: '[out]' }
 
@@ -60,12 +61,12 @@ describe('eq plugin', () => {
     expect(compileEq(DEFAULT_EQ_PARAMS, CTX)).toBeNull()
   })
 
-  it('emits equalizer filters for active bands', () => {
+  it('emits equalizer filters for active bell bands', () => {
     const params = {
       bands: [
         { freq: 80, q: 1, gainDb: 2, type: 'bell' as const },
         { freq: 1200, q: 1, gainDb: 0, type: 'bell' as const },
-        { freq: 9000, q: 0.7, gainDb: 1.5, type: 'highshelf' as const },
+        { freq: 9000, q: 0.7, gainDb: 1.5, type: 'bell' as const },
       ],
     }
     const step = compileEq(params, CTX)
@@ -73,6 +74,24 @@ describe('eq plugin', () => {
     // Only 2 active bands (middle is 0 dB)
     const eqCount = (step?.graph.match(/equalizer=/g) ?? []).length
     expect(eqCount).toBe(2)
+  })
+
+  it('highshelf/lowshelf bands use ffmpeg treble/bass, not the equalizer peaking filter', () => {
+    // ffmpeg's `equalizer` filter is always a two-pole peaking filter — it has no shelf mode.
+    // `t=h`/`t=l` there selects the width *unit* (Hz), not a shelf shape, so using it for a
+    // "highshelf" band silently produced a near-zero-width peaking notch instead of a shelf.
+    const params = {
+      bands: [{ freq: 9000, q: 0.7, gainDb: 1.5, type: 'highshelf' as const }],
+    }
+    const step = compileEq(params, CTX)
+    expect(step?.graph).toContain('treble=f=9000:')
+    expect(step?.graph).not.toContain('equalizer=')
+
+    const lowParams = {
+      bands: [{ freq: 200, q: 0.7, gainDb: -3, type: 'lowshelf' as const }],
+    }
+    const lowStep = compileEq(lowParams, CTX)
+    expect(lowStep?.graph).toContain('bass=f=200:')
   })
 
   it('two simultaneous EQ instances compile independently', () => {
@@ -136,5 +155,45 @@ describe('limiter plugin', () => {
   it('chainSummary shows ceiling and bypassed state', () => {
     expect(limiterChainSummary(DEFAULT_LIMITER_PARAMS, true)).toBe('-1 dBTP ceiling')
     expect(limiterChainSummary(DEFAULT_LIMITER_PARAMS, false)).toBe('bypassed')
+  })
+})
+
+// ── Filter ───────────────────────────────────────────────────────────────────
+describe('filter plugin', () => {
+  it('highpass emits a single poles=2 stage at the 12dB slope', () => {
+    const step = compileFilter({ mode: 'highpass', freq: 100, slope: '12db' }, CTX)
+    expect(step?.graph).toBe('[in]highpass=f=100:poles=2[out]')
+  })
+
+  it('lowpass cascades two poles=2 stages at the 24dB slope', () => {
+    const step = compileFilter({ mode: 'lowpass', freq: 8000, slope: '24db' }, CTX)
+    expect(step?.graph).toBe('[in]lowpass=f=8000:poles=2,lowpass=f=8000:poles=2[out]')
+  })
+
+  it('brickwall slope cascades more stages than 12db/24db', () => {
+    const twelve = compileFilter({ mode: 'highpass', freq: 100, slope: '12db' }, CTX)
+    const twentyFour = compileFilter({ mode: 'highpass', freq: 100, slope: '24db' }, CTX)
+    const brick = compileFilter({ mode: 'highpass', freq: 100, slope: 'brickwall' }, CTX)
+    const stageCount = (graph: string) => (graph.match(/highpass=/g) ?? []).length
+    expect(stageCount(twelve!.graph)).toBe(1)
+    expect(stageCount(twentyFour!.graph)).toBe(2)
+    expect(stageCount(brick!.graph)).toBeGreaterThan(stageCount(twentyFour!.graph))
+  })
+
+  it('highshelf/lowshelf use ffmpeg treble/bass shelf filters, not equalizer', () => {
+    // ffmpeg's `equalizer` is always a peaking filter — it has no shelf `t=` type, despite
+    // `t=h`/`t=l` looking like one (those just pick the width unit). The real shelf filters
+    // are the dedicated `treble` (highshelf) / `bass` (lowshelf) filters.
+    const hs = compileFilter({ mode: 'highshelf', freq: 5000, slope: '12db' }, CTX)
+    const ls = compileFilter({ mode: 'lowshelf', freq: 200, slope: '12db' }, CTX)
+    expect(hs?.graph).toContain('treble=f=5000:')
+    expect(ls?.graph).toContain('bass=f=200:')
+    expect(hs?.graph).not.toContain('equalizer=')
+    expect(ls?.graph).not.toContain('equalizer=')
+  })
+
+  it('chainSummary shows mode, frequency, and slope', () => {
+    expect(filterChainSummary(DEFAULT_FILTER_PARAMS, true)).toBe('Highpass · 80 Hz · 12 dB/oct')
+    expect(filterChainSummary(DEFAULT_FILTER_PARAMS, false)).toBe('bypassed')
   })
 })

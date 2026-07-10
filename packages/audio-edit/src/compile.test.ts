@@ -76,6 +76,21 @@ describe('limiter', () => {
   })
 })
 
+describe('filter', () => {
+  it('wires the filter plugin into the v1 filtergraph when enabled', () => {
+    const edit = createDefaultEditList(120)
+    edit.filter = { enabled: true, mode: 'lowpass', freq: 12000, slope: '24db' }
+    const { filtergraph } = compileFiltergraph(edit)
+    expect(filtergraph).toContain('lowpass=f=12000:poles=2,lowpass=f=12000:poles=2')
+  })
+
+  it('emits nothing when bypassed', () => {
+    const edit = createDefaultEditList(120)
+    expect(compileFiltergraph(edit).filtergraph).not.toContain('highpass=')
+    expect(compileFiltergraph(edit).filtergraph).not.toContain('lowpass=')
+  })
+})
+
 describe('validateEditListParsed', () => {
   it('rejects full cut', () => {
     const edit = createDefaultEditList(60)

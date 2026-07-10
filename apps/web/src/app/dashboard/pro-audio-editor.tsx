@@ -26,19 +26,23 @@ import {
   eqChainSummary,
   compChainSummary,
   limiterChainSummary,
+  filterChainSummary,
   DEFAULT_GAIN_PARAMS,
   DEFAULT_EQ_PARAMS,
   DEFAULT_COMP_PARAMS,
   DEFAULT_LIMITER_PARAMS,
+  DEFAULT_FILTER_PARAMS,
 } from '@tahti/audio-edit'
 import type { GainParams } from '@tahti/audio-edit'
 import type { EqParams } from '@tahti/audio-edit'
 import type { CompParams } from '@tahti/audio-edit'
 import type { LimiterParams } from '@tahti/audio-edit'
+import type { FilterParams } from '@tahti/audio-edit'
 import { GainPanel } from '@/lib/audio-editor/panels/GainPanel'
 import { EqPanel } from '@/lib/audio-editor/panels/EqPanel'
 import { CompPanel } from '@/lib/audio-editor/panels/CompPanel'
 import { LimiterPanel } from '@/lib/audio-editor/panels/LimiterPanel'
+import { FilterPanel } from '@/lib/audio-editor/panels/FilterPanel'
 import type { TracklistEntry } from '@tahti/shared'
 import type { FFmpeg } from '@ffmpeg/ffmpeg'
 import {
@@ -87,10 +91,12 @@ function v2ToV1(v2: EditListV2): EditList {
   const eqP = v2.plugins.find((p) => p.pluginId === 'eq')
   const compP = v2.plugins.find((p) => p.pluginId === 'comp')
   const limP = v2.plugins.find((p) => p.pluginId === 'limiter')
+  const filterP = v2.plugins.find((p) => p.pluginId === 'filter')
   const gp = gainP?.params as GainParams | undefined
   const ep = eqP?.params as EqParams | undefined
   const cp = compP?.params as CompParams | undefined
   const lp = limP?.params as LimiterParams | undefined
+  const fp = filterP?.params as FilterParams | undefined
   return {
     version: 1 as const,
     sourceDuration: v2.sourceDuration,
@@ -123,6 +129,12 @@ function v2ToV1(v2: EditListV2): EditList {
       enabled: limP?.enabled ?? false,
       ceilingDb: lp?.ceilingDb ?? DEFAULT_LIMITER_PARAMS.ceilingDb,
       releaseMs: lp?.releaseMs ?? DEFAULT_LIMITER_PARAMS.releaseMs,
+    },
+    filter: {
+      enabled: filterP?.enabled ?? false,
+      mode: fp?.mode ?? DEFAULT_FILTER_PARAMS.mode,
+      freq: fp?.freq ?? DEFAULT_FILTER_PARAMS.freq,
+      slope: fp?.slope ?? DEFAULT_FILTER_PARAMS.slope,
     },
     cuts: v2.cuts.map((c) => ({ start: c.start, end: c.end })),
     fades: v2.fades.map((f) => ({ type: f.type, at: f.at, duration: f.duration, curve: f.curve })),
@@ -990,10 +1002,12 @@ export function ProAudioEditor({
   const eqPlugin = editList.plugins.find((p) => p.pluginId === 'eq')
   const compPlugin = editList.plugins.find((p) => p.pluginId === 'comp')
   const limiterPlugin = editList.plugins.find((p) => p.pluginId === 'limiter')
+  const filterPlugin = editList.plugins.find((p) => p.pluginId === 'filter')
   const gainParams = gainPlugin?.params as GainParams | undefined
   const eqParams = eqPlugin?.params as EqParams | undefined
   const compParams = compPlugin?.params as CompParams | undefined
   const limiterParams = limiterPlugin?.params as LimiterParams | undefined
+  const filterParams = filterPlugin?.params as FilterParams | undefined
 
   const focusedPlugin =
     editList.plugins.find((p) => p.instanceId === focusedInstanceId) ?? editList.plugins[0]!
@@ -1420,6 +1434,8 @@ export function ProAudioEditor({
                   summary = compChainSummary(plugin.params as CompParams, plugin.enabled)
                 else if (plugin.pluginId === 'limiter')
                   summary = limiterChainSummary(plugin.params as LimiterParams, plugin.enabled)
+                else if (plugin.pluginId === 'filter')
+                  summary = filterChainSummary(plugin.params as FilterParams, plugin.enabled)
 
                 const pluginName =
                   plugin.pluginId === 'gain'
@@ -1428,7 +1444,9 @@ export function ProAudioEditor({
                       ? 'EQ'
                       : plugin.pluginId === 'comp'
                         ? 'Comp'
-                        : 'Limiter'
+                        : plugin.pluginId === 'limiter'
+                          ? 'Limiter'
+                          : 'Filter'
 
                 return (
                   <div key={plugin.instanceId} className="pro-editor-chain__cell">
@@ -1466,7 +1484,9 @@ export function ProAudioEditor({
                         ? 'EQ — 3 band parametric'
                         : focusedPlugin.pluginId === 'comp'
                           ? 'Compressor'
-                          : 'Limiter'}
+                          : focusedPlugin.pluginId === 'limiter'
+                            ? 'Limiter'
+                            : 'Filter'}
                   </h2>
                   <span className="pro-editor-panel__pill">
                     POSITION {pluginPosition(focusedPlugin.instanceId)} ·{' '}
@@ -1483,7 +1503,9 @@ export function ProAudioEditor({
                             ? { ...DEFAULT_EQ_PARAMS }
                             : focusedPlugin.pluginId === 'comp'
                               ? { ...DEFAULT_COMP_PARAMS }
-                              : { ...DEFAULT_LIMITER_PARAMS }
+                              : focusedPlugin.pluginId === 'limiter'
+                                ? { ...DEFAULT_LIMITER_PARAMS }
+                                : { ...DEFAULT_FILTER_PARAMS }
                       patchPlugin(focusedPlugin.instanceId, defaults)
                     }}
                     variant="ghost"
@@ -1524,6 +1546,12 @@ export function ProAudioEditor({
                   <LimiterPanel
                     params={limiterParams}
                     onChange={(p) => patchPlugin(limiterPlugin.instanceId, p)}
+                  />
+                )}
+                {focusedPlugin.pluginId === 'filter' && filterPlugin && filterParams && (
+                  <FilterPanel
+                    params={filterParams}
+                    onChange={(p) => patchPlugin(filterPlugin.instanceId, p)}
                   />
                 )}
               </div>

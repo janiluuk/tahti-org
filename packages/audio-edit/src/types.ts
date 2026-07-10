@@ -55,6 +55,16 @@ export const EditLimiterSchema = z.object({
   releaseMs: z.number().finite().min(1).max(1000),
 })
 
+export const FILTER_MODES = ['highpass', 'highshelf', 'lowpass', 'lowshelf'] as const
+export const FILTER_SLOPES = ['12db', '24db', 'brickwall'] as const
+
+export const EditFilterSchema = z.object({
+  enabled: z.boolean(),
+  mode: z.enum(FILTER_MODES),
+  freq: z.number().finite().min(20).max(20000),
+  slope: z.enum(FILTER_SLOPES),
+})
+
 export const EditListSchema = z.object({
   version: z.literal(1),
   sourceDuration: z.number().finite().min(0.000001),
@@ -64,6 +74,12 @@ export const EditListSchema = z.object({
   eq: EditEqSchema,
   comp: EditCompSchema,
   limiter: EditLimiterSchema.default({ enabled: false, ceilingDb: -1, releaseMs: 50 }),
+  filter: EditFilterSchema.default({
+    enabled: false,
+    mode: 'highpass',
+    freq: 80,
+    slope: '12db',
+  }),
   loudnorm: EditLoudnormSchema,
   /** v0 trim HP/LP filters (Hz, 0 = off). */
   highPassHz: z.number().finite().min(0).max(2000).default(0),
@@ -76,6 +92,9 @@ export type EditEqBand = z.infer<typeof EditEqBandSchema>
 export type EditEq = z.infer<typeof EditEqSchema>
 export type EditComp = z.infer<typeof EditCompSchema>
 export type EditLimiter = z.infer<typeof EditLimiterSchema>
+export type FilterMode = (typeof FILTER_MODES)[number]
+export type FilterSlope = (typeof FILTER_SLOPES)[number]
+export type EditFilter = z.infer<typeof EditFilterSchema>
 export type LoudnormMeasured = z.infer<typeof LoudnormMeasuredSchema>
 export type EditLoudnorm = z.infer<typeof EditLoudnormSchema>
 export type EditList = z.infer<typeof EditListSchema>
@@ -125,6 +144,13 @@ export const DEFAULT_LIMITER: EditLimiter = {
   releaseMs: 50,
 }
 
+export const DEFAULT_FILTER: EditFilter = {
+  enabled: false,
+  mode: 'highpass',
+  freq: 80,
+  slope: '12db',
+}
+
 export function createDefaultEditList(sourceDuration: number): EditList {
   return {
     version: 1,
@@ -135,6 +161,7 @@ export function createDefaultEditList(sourceDuration: number): EditList {
     eq: { enabled: false, bands: DEFAULT_EQ_BANDS.map((b) => ({ ...b })) },
     comp: { ...DEFAULT_COMP },
     limiter: { ...DEFAULT_LIMITER },
+    filter: { ...DEFAULT_FILTER },
     loudnorm: { enabled: false, targetLufs: -14, targetTp: -1.5 },
     highPassHz: 0,
     lowPassHz: 0,
