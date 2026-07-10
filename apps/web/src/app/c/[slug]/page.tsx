@@ -103,10 +103,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const channel = (await channelRes.json()) as ChannelResponse
 
-  const [itemsRes, announcementsRes, eventsRes, user] = await Promise.all([
+  const [itemsRes, announcementsRes, eventsRes, postsRes, user] = await Promise.all([
     fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/channels/${slug}/events`, { cache: 'no-store' }),
+    fetch(`${apiUrl}/api/channels/${slug}/posts`, { cache: 'no-store' }),
     getSessionUser(),
   ])
 
@@ -122,6 +123,13 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     eventUrl: string | null
     startAt: string
   }> = eventsRes.ok ? await eventsRes.json() : []
+  const posts: Array<{
+    id: string
+    title: string | null
+    body: string
+    images: string[]
+    createdAt: string
+  }> = postsRes.ok ? await postsRes.json() : []
 
   const hlsUrl = channel.hlsUrl
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
@@ -334,6 +342,37 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                           </a>
                         )}
                       </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {posts.length > 0 && (
+              <section className="ch-archive-section">
+                <div className="ch-archive-section-head">
+                  <h2 className="ch-section-label">Updates</h2>
+                </div>
+                <ul className="ch-posts-list">
+                  {posts.map((p) => (
+                    <li key={p.id} className="ch-posts-list__item">
+                      {p.title && <div className="ch-posts-list__title">{p.title}</div>}
+                      <div className="ch-posts-list__date">
+                        {new Date(p.createdAt).toLocaleDateString(undefined, {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </div>
+                      <p className="ch-posts-list__body">{p.body}</p>
+                      {p.images.length > 0 && (
+                        <div className="ch-posts-list__images">
+                          {p.images.map((url) => (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={url} src={url} alt="" className="ch-posts-list__image" />
+                          ))}
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
