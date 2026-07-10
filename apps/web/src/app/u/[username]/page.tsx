@@ -244,29 +244,65 @@ export default async function ArtistProfilePage({ params }: { params: { username
           )}
         </section>
 
-        {artist.socialLinks && Object.keys(artist.socialLinks).length > 0 && (
-          <section className="prof-section">
-            <div className="prof-sec-label">Find me elsewhere</div>
-            <div className="prof-social-links">
-              {Object.entries(artist.socialLinks).map(([key, url]) => {
-                if (!url || key === 'genres') return null
-                const label = key.charAt(0).toUpperCase() + key.slice(1)
-                const isEmail = url.startsWith('mailto:')
-                return (
-                  <a
-                    key={key}
-                    href={url}
-                    rel="noopener noreferrer"
-                    target={isEmail ? undefined : '_blank'}
-                    className="prof-social-link"
-                  >
-                    <SocialLinkIcon label={label} url={url} /> {label} ↗
-                  </a>
-                )
-              })}
-            </div>
-          </section>
-        )}
+        {artist.socialLinks &&
+          (() => {
+            const STREAMING_LINK_LABELS: Record<string, string> = {
+              youtube: 'YouTube',
+              hearthisAt: 'hearthis.at',
+              twitch: 'Twitch',
+              soundcloud: 'SoundCloud',
+            }
+            const streamingLinkEntries = Object.entries(STREAMING_LINK_LABELS)
+              .map(([key, label]) => [label, artist.socialLinks![key]] as const)
+              .filter(([, url]) => !!url)
+            const otherLinkEntries = Object.entries(artist.socialLinks).filter(
+              ([key, url]) => !!url && key !== 'genres' && !(key in STREAMING_LINK_LABELS),
+            )
+            return (
+              <>
+                {streamingLinkEntries.length > 0 && (
+                  <section className="prof-section">
+                    <div className="prof-sec-label">Streaming platforms</div>
+                    <div className="prof-streaming-links">
+                      {streamingLinkEntries.map(([label, url]) => (
+                        <a
+                          key={label}
+                          href={url}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                          className="prof-social-link"
+                        >
+                          <SocialLinkIcon label={label} url={url} /> {label} ↗
+                        </a>
+                      ))}
+                    </div>
+                  </section>
+                )}
+                {otherLinkEntries.length > 0 && (
+                  <section className="prof-section">
+                    <div className="prof-sec-label">Find me elsewhere</div>
+                    <div className="prof-social-links">
+                      {otherLinkEntries.map(([key, url]) => {
+                        const label = key.charAt(0).toUpperCase() + key.slice(1)
+                        const isEmail = url.startsWith('mailto:')
+                        return (
+                          <a
+                            key={key}
+                            href={url}
+                            rel="noopener noreferrer"
+                            target={isEmail ? undefined : '_blank'}
+                            className="prof-social-link"
+                          >
+                            <SocialLinkIcon label={label} url={url} /> {label} ↗
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </section>
+                )}
+              </>
+            )
+          })()}
 
         {channel?.slug ? (
           <section className="prof-section">

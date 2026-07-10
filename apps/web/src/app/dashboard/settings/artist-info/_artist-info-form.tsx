@@ -9,6 +9,14 @@ import { updateChannelProfile } from '../../channel-identity-actions'
 import ChannelIdentityPanel, { type ChannelIdentityDraft } from '../../channel-identity-panel'
 import ChannelBioPanel from '../../channel-bio-panel'
 import ChannelLinksPanel, { type ChannelLink } from '../../channel-links-panel'
+import { SocialLinkIcon } from '@/components/social-link-icon'
+
+export interface StreamingLinksDraft {
+  youtube: string
+  hearthisAt: string
+  twitch: string
+  soundcloud: string
+}
 
 function linksToSocialLinks(links: ChannelLink[]): Record<string, string> {
   const map: Record<string, string> = {}
@@ -27,6 +35,7 @@ export interface ArtistInfoFormData {
   genres: string[]
   bio: string
   links: ChannelLink[]
+  streamingLinks: StreamingLinksDraft
 }
 
 export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
@@ -39,6 +48,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
   })
   const [bio, setBio] = useState(initial.bio)
   const [links, setLinks] = useState<ChannelLink[]>(initial.links)
+  const [streamingLinks, setStreamingLinks] = useState<StreamingLinksDraft>(initial.streamingLinks)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -55,6 +65,10 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
         pronouns: identity.pronouns,
         socialLinks: {
           genres: identity.genres.join(', '),
+          youtube: streamingLinks.youtube.trim(),
+          hearthisAt: streamingLinks.hearthisAt.trim(),
+          twitch: streamingLinks.twitch.trim(),
+          soundcloud: streamingLinks.soundcloud.trim(),
           ...linksToSocialLinks(links),
         },
       })
@@ -88,6 +102,70 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
 
       <Panel title="Bio">
         <ChannelBioPanel initial={{ bio }} onDraftChange={setBio} />
+      </Panel>
+
+      <Panel
+        title="Streaming platforms"
+        description="Your channels on other platforms — shown in their own section on your profile."
+      >
+        <div className="studio-field--block">
+          <div className="studio-row studio-row--wrap studio-mb-sm">
+            <span className="studio-link-row__icon">
+              <SocialLinkIcon label="YouTube" url={streamingLinks.youtube} />
+            </span>
+            <input
+              type="url"
+              placeholder="YouTube channel URL"
+              value={streamingLinks.youtube}
+              onChange={(e) => setStreamingLinks((prev) => ({ ...prev, youtube: e.target.value }))}
+              className="studio-input studio-input--grow"
+              maxLength={2000}
+            />
+          </div>
+          <div className="studio-row studio-row--wrap studio-mb-sm">
+            <span className="studio-link-row__icon">
+              <SocialLinkIcon label="hearthis.at" url={streamingLinks.hearthisAt} />
+            </span>
+            <input
+              type="url"
+              placeholder="hearthis.at profile URL"
+              value={streamingLinks.hearthisAt}
+              onChange={(e) =>
+                setStreamingLinks((prev) => ({ ...prev, hearthisAt: e.target.value }))
+              }
+              className="studio-input studio-input--grow"
+              maxLength={2000}
+            />
+          </div>
+          <div className="studio-row studio-row--wrap studio-mb-sm">
+            <span className="studio-link-row__icon">
+              <SocialLinkIcon label="Twitch" url={streamingLinks.twitch} />
+            </span>
+            <input
+              type="url"
+              placeholder="Twitch channel URL"
+              value={streamingLinks.twitch}
+              onChange={(e) => setStreamingLinks((prev) => ({ ...prev, twitch: e.target.value }))}
+              className="studio-input studio-input--grow"
+              maxLength={2000}
+            />
+          </div>
+          <div className="studio-row studio-row--wrap studio-mb-sm">
+            <span className="studio-link-row__icon">
+              <SocialLinkIcon label="SoundCloud" url={streamingLinks.soundcloud} />
+            </span>
+            <input
+              type="url"
+              placeholder="SoundCloud profile URL"
+              value={streamingLinks.soundcloud}
+              onChange={(e) =>
+                setStreamingLinks((prev) => ({ ...prev, soundcloud: e.target.value }))
+              }
+              className="studio-input studio-input--grow"
+              maxLength={2000}
+            />
+          </div>
+        </div>
       </Panel>
 
       <Panel

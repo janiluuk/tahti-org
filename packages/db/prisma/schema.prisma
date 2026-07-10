@@ -592,6 +592,7 @@ model User {
   curatedRotationItemsAdded CuratedRotationItem[]
   events                  ArtistEvent[]
   posts                   ArtistPost[]
+  embeds                  ArtistEmbed[]
 
   @@schema("core")
 }
@@ -623,6 +624,22 @@ model ArtistPost {
   body      String
   images    String[] @default([])
   createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@schema("core")
+}
+
+// Embedded external tracks (SoundCloud, etc.) shown on the artist's profile.
+model ArtistEmbed {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      String
+  url           String
+  title         String?
+  authorName    String?
+  thumbnailUrl  String?
+  createdAt     DateTime @default(now())
 
   @@index([userId, createdAt(sort: Desc)])
   @@schema("core")
