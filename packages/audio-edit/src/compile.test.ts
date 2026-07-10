@@ -74,6 +74,32 @@ describe('limiter', () => {
     const bypassed = createDefaultEditList(120)
     expect(compileFiltergraph(bypassed).filtergraph).not.toContain('alimiter=')
   })
+
+  it('disables ffmpeg alimiter auto-leveling — otherwise it boosts audio that never approached the ceiling', () => {
+    const edit = createDefaultEditList(120)
+    edit.limiter = { enabled: true, ceilingDb: -1, releaseMs: 50 }
+    expect(compileFiltergraph(edit).filtergraph).toContain('level=0')
+  })
+})
+
+describe('compressor', () => {
+  it('converts makeupDb to a linear multiplier — ffmpeg acompressor `makeup` is linear (range [1, 64]), not dB', () => {
+    // At the default 0dB makeup, ffmpeg's valid range starts at 1 (not 0) — passing 0
+    // straight through crashes the whole render with "out of range".
+    const edit = createDefaultEditList(120)
+    edit.comp = {
+      enabled: true,
+      thresholdDb: -18,
+      ratio: 3,
+      attackMs: 25,
+      releaseMs: 250,
+      makeupDb: 0,
+    }
+    expect(compileFiltergraph(edit).filtergraph).toContain('makeup=1')
+
+    edit.comp.makeupDb = 6
+    expect(compileFiltergraph(edit).filtergraph).toContain(`makeup=${(10 ** (6 / 20)).toFixed(4)}`)
+  })
 })
 
 describe('validateEditListParsed', () => {

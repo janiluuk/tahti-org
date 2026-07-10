@@ -113,14 +113,18 @@ function buildEqStage(inputLabel: string, edit: EditList): string {
 function buildCompStage(inputLabel: string, edit: EditList): string {
   if (!edit.comp.enabled) return `${inputLabel}anull[cmp]`
   const c = edit.comp
-  return `${inputLabel}acompressor=threshold=${c.thresholdDb}dB:ratio=${c.ratio}:attack=${c.attackMs}:release=${c.releaseMs}:makeup=${c.makeupDb}[cmp]`
+  // ffmpeg's acompressor `makeup` is a linear multiplier (range [1, 64]), not dB.
+  const makeupLinear = 10 ** (c.makeupDb / 20)
+  return `${inputLabel}acompressor=threshold=${c.thresholdDb}dB:ratio=${c.ratio}:attack=${c.attackMs}:release=${c.releaseMs}:makeup=${formatSec(makeupLinear)}[cmp]`
 }
 
 function buildLimiterStage(inputLabel: string, edit: EditList): string {
   if (!edit.limiter.enabled) return `${inputLabel}anull[lim]`
   const { ceilingDb, releaseMs } = edit.limiter
   const limit = 10 ** (ceilingDb / 20)
-  return `${inputLabel}alimiter=limit=${formatSec(limit)}:release=${releaseMs}[lim]`
+  // level=0 disables ffmpeg's default auto-leveling, which otherwise boosts audio that
+  // never approached the ceiling up toward it — a limiter should only touch true peaks.
+  return `${inputLabel}alimiter=limit=${formatSec(limit)}:release=${releaseMs}:level=0[lim]`
 }
 
 function buildLoudnormStage(inputLabel: string, edit: EditList): string {
