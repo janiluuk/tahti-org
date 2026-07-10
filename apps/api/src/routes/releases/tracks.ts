@@ -66,6 +66,8 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
           archiveItemId: body.archiveItemId ?? null,
           isrc: body.isrc ?? null,
           explicit: body.explicit ?? false,
+          genre: body.genre ?? release.genre,
+          genreCustom: body.genre ? (body.genreCustom ?? null) : release.genreCustom,
           status: 'PENDING',
         },
       })

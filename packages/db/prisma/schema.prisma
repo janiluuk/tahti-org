@@ -1320,6 +1320,8 @@ model Release {
   artworkKey       String?      // M12: cover image in MinIO (presigned for public URLs)
   releaseDate      DateTime
   description      String?
+  genre            String?
+  genreCustom      String?      // when not in preset genre list
   smartLinkSlug    String       @unique
   smartLinkTargets Json?        // {spotify, apple, tidal, bandcamp, ...}
   smartLinkViewCount Int        @default(0) // M14: public /r/:slug loads
@@ -1401,6 +1403,8 @@ model ReleaseTrack {
   musicbrainzRecordingId String?
   durationSec      Int?
   archiveItemId    String?
+  genre            String?
+  genreCustom      String?     // when not in preset genre list
   // M12 — audio file pipeline
   sourceKey        String?     // original uploaded file in MinIO
   sourceFormat     String?     // wav | flac | mp3 | aac | aiff

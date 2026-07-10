@@ -56,6 +56,8 @@ export const ReleaseTrackInputSchema = z.object({
     .optional()
     .transform((s) => (s === '' ? null : (s ?? null))),
   explicit: z.boolean().optional(),
+  genre: z.string().trim().max(80).optional(),
+  genreCustom: z.string().trim().max(80).optional(),
 })
 
 export const ReleaseTrackUploadSchema = z.object({
@@ -69,6 +71,8 @@ export const CreateReleaseSchema = z.object({
   releaseDate: z.coerce.date({ invalid_type_error: 'releaseDate is required' }),
   description: z.string().trim().max(10_000).optional(),
   artworkUrl: z.string().trim().max(2000).optional(),
+  genre: z.string().trim().max(80).optional(),
+  genreCustom: z.string().trim().max(80).optional(),
   tracks: z.array(ReleaseTrackInputSchema).max(50).optional(),
 })
 

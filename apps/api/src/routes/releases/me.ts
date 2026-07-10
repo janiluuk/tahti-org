@@ -83,6 +83,8 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
             description: true,
             artworkUrl: true,
             artworkKey: true,
+            genre: true,
+            genreCustom: true,
             smartLinkSlug: true,
             smartLinkViewCount: true,
             smartLinkTargets: true,
@@ -101,7 +103,15 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
             paletteJson: true,
             tracks: {
               orderBy: { position: 'asc' },
-              select: { id: true, position: true, title: true, isrc: true, status: true },
+              select: {
+                id: true,
+                position: true,
+                title: true,
+                isrc: true,
+                status: true,
+                genre: true,
+                genreCustom: true,
+              },
             },
             _count: { select: { tracks: true } },
           },
@@ -161,6 +171,8 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
             releaseDate: body.releaseDate,
             description: body.description ?? null,
             artworkUrl: body.artworkUrl ?? null,
+            genre: body.genre ?? null,
+            genreCustom: body.genreCustom ?? null,
             smartLinkSlug,
             tracks: {
               create: tracks.map((t, i) => ({
@@ -168,6 +180,8 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
                 title: t.title,
                 durationSec: t.durationSec ?? null,
                 archiveItemId: t.archiveItemId ?? null,
+                genre: t.genre ?? body.genre ?? null,
+                genreCustom: t.genre ? (t.genreCustom ?? null) : (body.genreCustom ?? null),
               })),
             },
           },
