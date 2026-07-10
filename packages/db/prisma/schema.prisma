@@ -590,7 +590,26 @@ model User {
   editorProjects          EditorProject[]
   moderatorOf             ChannelModerator[]
   curatedRotationItemsAdded CuratedRotationItem[]
+  events                  ArtistEvent[]
 
+  @@schema("core")
+}
+
+// Simple "I'm playing here" listing on an artist's profile — freeform place/location,
+// deliberately not linked to the structured Venue directory (that's a heavier, board-
+// reviewed system; this is just the artist's own show calendar).
+model ArtistEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  place     String
+  location  String
+  eventUrl  String?
+  startAt   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, startAt])
   @@schema("core")
 }
 

@@ -159,6 +159,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     requiresChannel: true,
   },
   { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
+  { href: '/dashboard/events', label: 'Events', icon: 'schedule', isRoute: true },
 
   // Audience — fans, mailing list, and money.
   {
