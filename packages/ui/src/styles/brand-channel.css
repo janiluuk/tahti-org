@@ -1027,6 +1027,44 @@
   color: var(--muted);
 }
 
+[data-tahti-ui='brand'] .ch-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .ch-events-list__item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+[data-tahti-ui='brand'] .ch-events-list__date {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--cyan);
+  min-width: 6.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-events-list__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+[data-tahti-ui='brand'] .ch-events-list__title {
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .ch-events-list__link {
+  font-size: var(--text-xs);
+  color: var(--amber);
+}
+
 [data-tahti-ui='brand'] .ch-archive-section .public-empty-card {
   margin-top: var(--space-2);
 }

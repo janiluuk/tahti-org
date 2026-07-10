@@ -103,9 +103,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const channel = (await channelRes.json()) as ChannelResponse
 
-  const [itemsRes, announcementsRes, user] = await Promise.all([
+  const [itemsRes, announcementsRes, eventsRes, user] = await Promise.all([
     fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
+    fetch(`${apiUrl}/api/channels/${slug}/events`, { cache: 'no-store' }),
     getSessionUser(),
   ])
 
@@ -113,6 +114,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const announcements: Announcement[] = announcementsRes.ok
     ? ((await announcementsRes.json()) as Announcement[])
     : []
+  const events: Array<{
+    id: string
+    title: string
+    place: string
+    location: string
+    eventUrl: string | null
+    startAt: string
+  }> = eventsRes.ok ? await eventsRes.json() : []
 
   const hlsUrl = channel.hlsUrl
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
@@ -294,6 +303,42 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             )}
 
             {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
+
+            {events.length > 0 && (
+              <section className="ch-archive-section">
+                <div className="ch-archive-section-head">
+                  <h2 className="ch-section-label">Events</h2>
+                </div>
+                <ul className="ch-events-list">
+                  {events.map((ev) => (
+                    <li key={ev.id} className="ch-events-list__item">
+                      <div className="ch-events-list__date">
+                        {new Date(ev.startAt).toLocaleDateString(undefined, {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </div>
+                      <div className="ch-events-list__body">
+                        <div className="ch-events-list__title">
+                          {ev.title} — {ev.place}, {ev.location}
+                        </div>
+                        {ev.eventUrl && (
+                          <a
+                            href={ev.eventUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ch-events-list__link"
+                          >
+                            Tickets / event link ↗
+                          </a>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
 
             <section className="ch-archive-section">
               <div className="ch-archive-section-head">

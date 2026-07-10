@@ -109,6 +109,8 @@ import revelatorRoutes from './routes/me/revelator.js'
 import newsletterPublicRoutes from './routes/newsletter/public.js'
 import newsletterMeRoutes from './routes/newsletter/me.js'
 import venueRoutes from './routes/venues/venues.js'
+import meEventRoutes from './routes/me/events.js'
+import channelEventsRoute from './routes/channels/events.js'
 import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
@@ -553,6 +555,8 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M17: venue directory + iCalendar feeds
   await fastify.register(venueRoutes)
+  await fastify.register(meEventRoutes)
+  await fastify.register(channelEventsRoute)
 
   // M18: public release-track downloads with anti-fraud
   await fastify.register(releaseDownloadRoutes)
