@@ -1841,6 +1841,13 @@
   line-height: 1;
 }
 
+/* Fixed-width flex sibling — without this, .studio-input's width:100% becomes this
+   select's flex-basis (auto -> width substitution), starving flex:1 siblings in the row. */
+[data-tahti-ui='studio'] .release-bulk-drop__track-genre {
+  flex: 0 0 9rem;
+  width: auto;
+}
+
 [data-tahti-ui='studio'] .studio-stripe-banner {
   margin-top: 1rem;
   padding: 1rem;

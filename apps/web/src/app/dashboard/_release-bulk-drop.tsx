@@ -5,8 +5,18 @@
 
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ARCHIVE_GENRES } from '@tahti/shared'
 import { Button, ButtonIcon } from '@tahti/ui'
 import { createRelease, finalizeReleaseTrack, prepareReleaseTrackUpload } from './release-actions'
+
+const GENRE_OPTIONS: readonly string[] = ARCHIVE_GENRES
+
+/** Splits a resolved genre value back into the {genre, genreCustom} pair the API expects. */
+function genrePayload(value: string): { genre?: string; genreCustom?: string } {
+  const trimmed = value.trim()
+  if (!trimmed) return {}
+  return GENRE_OPTIONS.includes(trimmed) ? { genre: trimmed } : { genreCustom: trimmed }
+}
 
 const EXT_CONTENT_TYPE: Record<string, string> = {
   wav: 'audio/wav',
@@ -86,18 +96,27 @@ interface ReviewTrack {
   key: string
   file: File
   title: string
+  genre: string
 }
 
 export function ReleaseBulkDrop() {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [releaseTitle, setReleaseTitle] = useState('')
+  const [genre, setGenre] = useState<string>(GENRE_OPTIONS[0] ?? '')
+  const [genreCustom, setGenreCustom] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [progress, setProgress] = useState<Record<string, TrackProgress>>({})
   const [review, setReview] = useState<ReviewTrack[] | null>(null)
   const [dragIdx, setDragIdx] = useState<number | null>(null)
+
+  const effectiveGenre = genreCustom.trim() || genre
+  const trackGenreOptions =
+    effectiveGenre && !GENRE_OPTIONS.includes(effectiveGenre)
+      ? [effectiveGenre, ...GENRE_OPTIONS]
+      : GENRE_OPTIONS
 
   function stageFiles(rawFiles: File[]) {
     const audioFiles = rawFiles.filter((f) => f.size > 0 && contentTypeFor(f) != null)
@@ -116,6 +135,7 @@ export function ReleaseBulkDrop() {
         key: `${file.name}:${file.size}:${i}`,
         file,
         title: titleFromFilename(file.name),
+        genre: effectiveGenre,
       })),
     )
   }
@@ -132,6 +152,12 @@ export function ReleaseBulkDrop() {
 
   function updateReviewTitle(key: string, title: string) {
     setReview((prev) => (prev ? prev.map((t) => (t.key === key ? { ...t, title } : t)) : prev))
+  }
+
+  function updateReviewGenre(key: string, genreValue: string) {
+    setReview((prev) =>
+      prev ? prev.map((t) => (t.key === key ? { ...t, genre: genreValue } : t)) : prev,
+    )
   }
 
   function cancelReview() {
@@ -154,7 +180,11 @@ export function ReleaseBulkDrop() {
       title: releaseTitle.trim(),
       type: review.length > 1 ? 'ALBUM' : 'SINGLE',
       releaseDate: new Date().toISOString().slice(0, 10),
-      tracks: review.map((t) => ({ title: t.title.trim() || titleFromFilename(t.file.name) })),
+      ...genrePayload(effectiveGenre),
+      tracks: review.map((t) => ({
+        title: t.title.trim() || titleFromFilename(t.file.name),
+        ...genrePayload(t.genre),
+      })),
     })
     if (created.error || !created.releaseId || !created.tracks) {
       setError(created.error ?? 'Failed to create release')
@@ -207,6 +237,37 @@ export function ReleaseBulkDrop() {
         aria-label="New release title for bulk upload"
         disabled={busy || review != null}
       />
+
+      <div className="studio-grid studio-grid--2 studio-mt-sm">
+        <label className="studio-field">
+          <span className="studio-label">Genre</span>
+          <select
+            value={genre}
+            onChange={(e) => setGenre(e.target.value)}
+            className="studio-input"
+            aria-label="Default genre for all tracks in this album"
+            disabled={busy || review != null}
+          >
+            {GENRE_OPTIONS.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="studio-field">
+          <span className="studio-label">Custom genre</span>
+          <input
+            type="text"
+            placeholder="Not in the list?"
+            value={genreCustom}
+            onChange={(e) => setGenreCustom(e.target.value)}
+            className="studio-input"
+            aria-label="Custom default genre for all tracks in this album"
+            disabled={busy || review != null}
+          />
+        </label>
+      </div>
 
       {!review && (
         <div
@@ -282,6 +343,18 @@ export function ReleaseBulkDrop() {
                     aria-label={`Track title for ${track.file.name}`}
                   />
                 </span>
+                <select
+                  value={track.genre}
+                  onChange={(e) => updateReviewGenre(track.key, e.target.value)}
+                  className="studio-input release-bulk-drop__track-genre"
+                  aria-label={`Genre for ${track.file.name}`}
+                >
+                  {trackGenreOptions.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </select>
               </li>
             ))}
           </ul>

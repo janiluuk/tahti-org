@@ -25,7 +25,15 @@ export async function createRelease(params: {
   type: string
   releaseDate: string
   description?: string
-  tracks?: Array<{ title: string; durationSec?: number; archiveItemId?: string }>
+  genre?: string
+  genreCustom?: string
+  tracks?: Array<{
+    title: string
+    durationSec?: number
+    archiveItemId?: string
+    genre?: string
+    genreCustom?: string
+  }>
 }): Promise<{ error: string | null; releaseId?: string; tracks?: CreatedReleaseTrack[] }> {
   const res = await fetch(`${apiUrl}/api/me/releases`, {
     method: 'POST',
