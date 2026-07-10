@@ -133,6 +133,16 @@ describe('comp plugin', () => {
     expect(step?.graph).toContain('release=250')
   })
 
+  it('converts makeupDb to a linear multiplier — ffmpeg acompressor `makeup` is linear (range [1, 64]), not dB', () => {
+    // At the default 0dB makeup, ffmpeg's valid range starts at 1 (not 0) — passing 0
+    // straight through crashes the whole render with "out of range".
+    const zero = compileComp({ ...DEFAULT_COMP_PARAMS, makeupDb: 0 }, CTX)
+    expect(zero?.graph).toContain('makeup=1.000000')
+
+    const six = compileComp({ ...DEFAULT_COMP_PARAMS, makeupDb: 6 }, CTX)
+    expect(six?.graph).toContain(`makeup=${Math.pow(10, 6 / 20).toFixed(6)}`)
+  })
+
   it('chainSummary shows threshold, ratio, attack', () => {
     expect(compChainSummary(DEFAULT_COMP_PARAMS, true)).toBe('-18 dB · 3:1 · 25 ms')
     expect(compChainSummary(DEFAULT_COMP_PARAMS, false)).toBe('bypassed')
@@ -150,6 +160,11 @@ describe('limiter plugin', () => {
   it('converts ceilingDb to linear amplitude', () => {
     const step = compileLimiter({ ceilingDb: 0, releaseMs: 50 }, CTX)
     expect(step?.graph).toContain('limit=1.0')
+  })
+
+  it('disables ffmpeg alimiter auto-leveling — otherwise it boosts audio that never approached the ceiling', () => {
+    const step = compileLimiter(DEFAULT_LIMITER_PARAMS, CTX)
+    expect(step?.graph).toContain('level=0')
   })
 
   it('chainSummary shows ceiling and bypassed state', () => {

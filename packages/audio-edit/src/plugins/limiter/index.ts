@@ -20,7 +20,9 @@ export function compileLimiter(params: LimiterParams, ctx: CompileCtx): FilterSt
   const { ceilingDb, releaseMs } = params
   const limit = Math.pow(10, ceilingDb / 20)
   const outLabel = ctx.outputLabel.replace(/[[\]]/g, '')
-  const graph = `${ctx.inputLabel}alimiter=limit=${limit.toFixed(6)}:release=${releaseMs}[${outLabel}]`
+  // level=0 disables ffmpeg's default auto-leveling, which otherwise boosts audio that
+  // never approached the ceiling up toward it — a limiter should only touch true peaks.
+  const graph = `${ctx.inputLabel}alimiter=limit=${limit.toFixed(6)}:release=${releaseMs}:level=0[${outLabel}]`
   return { graph, inLabel: ctx.inputLabel, outLabel: ctx.outputLabel }
 }
 

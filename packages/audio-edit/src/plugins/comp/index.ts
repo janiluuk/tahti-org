@@ -25,9 +25,11 @@ export const DEFAULT_COMP_PARAMS: CompParams = {
 export function compileComp(params: CompParams, ctx: CompileCtx): FilterStep | null {
   const { thresholdDb, ratio, attackMs, releaseMs, makeupDb } = params
   const outLabel = ctx.outputLabel.replace(/[[\]]/g, '')
+  // ffmpeg's acompressor `makeup` is a linear multiplier (range [1, 64]), not dB.
+  const makeupLinear = Math.pow(10, makeupDb / 20)
   const graph =
     `${ctx.inputLabel}acompressor=threshold=${thresholdDb}dB:ratio=${ratio}` +
-    `:attack=${attackMs}:release=${releaseMs}:makeup=${makeupDb}[${outLabel}]`
+    `:attack=${attackMs}:release=${releaseMs}:makeup=${makeupLinear.toFixed(6)}[${outLabel}]`
   return { graph, inLabel: ctx.inputLabel, outLabel: ctx.outputLabel }
 }
 
