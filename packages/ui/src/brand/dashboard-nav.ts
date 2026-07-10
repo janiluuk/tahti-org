@@ -161,6 +161,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
   { href: '/dashboard/events', label: 'Events', icon: 'schedule', isRoute: true },
   { href: '/dashboard/posts', label: 'Posts', icon: 'posts', isRoute: true },
+  { href: '/dashboard/embeds', label: 'Embeds', icon: 'embeds', isRoute: true },
 
   // Audience — fans, mailing list, and money.
   {

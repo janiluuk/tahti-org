@@ -103,11 +103,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const channel = (await channelRes.json()) as ChannelResponse
 
-  const [itemsRes, announcementsRes, eventsRes, postsRes, user] = await Promise.all([
+  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, user] = await Promise.all([
     fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/channels/${slug}/events`, { cache: 'no-store' }),
     fetch(`${apiUrl}/api/channels/${slug}/posts`, { cache: 'no-store' }),
+    fetch(`${apiUrl}/api/channels/${slug}/embeds`, { cache: 'no-store' }),
     getSessionUser(),
   ])
 
@@ -130,6 +131,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     images: string[]
     createdAt: string
   }> = postsRes.ok ? await postsRes.json() : []
+  const embeds: Array<{ id: string; url: string; title: string | null }> = embedsRes.ok
+    ? await embedsRes.json()
+    : []
 
   const hlsUrl = channel.hlsUrl
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
@@ -141,8 +145,17 @@ export default async function ChannelPage({ params }: { params: { slug: string }
         .map((g) => g.trim())
         .filter(Boolean)
     : []
+  const STREAMING_LINK_LABELS: Record<string, string> = {
+    youtube: 'YouTube',
+    hearthisAt: 'hearthis.at',
+    twitch: 'Twitch',
+    soundcloud: 'SoundCloud',
+  }
+  const streamingLinkEntries = Object.entries(STREAMING_LINK_LABELS)
+    .map(([key, label]) => [label, socialLinks[key]] as const)
+    .filter(([, url]) => !!url)
   const socialLinkEntries = Object.entries(socialLinks).filter(
-    ([key, url]) => key !== 'genres' && url,
+    ([key, url]) => key !== 'genres' && !(key in STREAMING_LINK_LABELS) && url,
   )
   let tags = profileGenres
   if (tags.length === 0) {
@@ -248,6 +261,21 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     <span key={tag} className="prof-tag-chip">
                       {tag}
                     </span>
+                  ))}
+                </div>
+              )}
+              {streamingLinkEntries.length > 0 && (
+                <div className="prof-streaming-links">
+                  {streamingLinkEntries.map(([label, url]) => (
+                    <a
+                      key={label}
+                      href={url}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      className="prof-social-link"
+                    >
+                      <SocialLinkIcon label={label} url={url} /> {label} ↗
+                    </a>
                   ))}
                 </div>
               )}
@@ -376,6 +404,27 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     </li>
                   ))}
                 </ul>
+              </section>
+            )}
+
+            {embeds.length > 0 && (
+              <section className="ch-archive-section">
+                <div className="ch-archive-section-head">
+                  <h2 className="ch-section-label">Listen on SoundCloud</h2>
+                </div>
+                <div className="ch-embeds-list">
+                  {embeds.map((e) => (
+                    <iframe
+                      key={e.id}
+                      title={e.title ?? 'SoundCloud track'}
+                      className="ch-embeds-list__frame"
+                      scrolling="no"
+                      frameBorder="no"
+                      allow="autoplay"
+                      src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(e.url)}&color=%23ff5500&auto_play=false&show_comments=false&show_user=true&show_reposts=false&visual=false`}
+                    />
+                  ))}
+                </div>
               </section>
             )}
 
