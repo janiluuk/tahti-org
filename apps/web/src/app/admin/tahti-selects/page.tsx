@@ -2,7 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { cookies } from 'next/headers'
-import { addToRotation, removeFromRotation, reorderItem } from './actions'
+import {
+  addToRotation,
+  removeFromRotation,
+  reorderItem,
+  startRotationStream,
+  stopRotationStream,
+} from './actions'
 
 interface RotationItem {
   id: string
@@ -68,10 +74,49 @@ export default async function AdminTahtiSelectsPage({
   return (
     <>
       <h1 className="admin-section-title">Tahti Selects</h1>
-      <p className="admin-stat-sub" style={{ marginBottom: '2rem' }}>
+      <p className="admin-stat-sub" style={{ marginBottom: '1rem' }}>
         Always-on curated rotation — loops the list below endlessly. Only public archive items can
         be added.
       </p>
+
+      <div
+        style={{
+          marginBottom: '2rem',
+          padding: '1rem',
+          border: '1px solid var(--admin-border, #333)',
+          borderRadius: '8px',
+        }}
+      >
+        <p className="admin-stat-sub" style={{ marginBottom: '0.75rem' }}>
+          The rotation above is just playlist content — starting the stream spawns the actual
+          always-on Liquidsoap container that turns it into audio. Once running, point Tahti
+          Radio&apos;s <code>TAHTI_RADIO_AUDIO_URL</code> env var at its public HLS output
+          (typically <code>https://stream.tahti.live/tahti-selects/stream.m3u8</code>) so the /radio
+          page plays it 24/7 instead of the default placeholder video.
+        </p>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <form
+            action={async () => {
+              'use server'
+              await startRotationStream()
+            }}
+          >
+            <button type="submit" className="admin-btn admin-btn--sm">
+              Start stream
+            </button>
+          </form>
+          <form
+            action={async () => {
+              'use server'
+              await stopRotationStream()
+            }}
+          >
+            <button type="submit" className="admin-btn admin-btn--danger admin-btn--sm">
+              Stop stream
+            </button>
+          </form>
+        </div>
+      </div>
 
       <h2 className="admin-section-title" style={{ marginBottom: '0.5rem' }}>
         Current rotation

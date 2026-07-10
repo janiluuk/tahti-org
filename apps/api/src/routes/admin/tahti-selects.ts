@@ -4,6 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { spawnChannelLiquidsoap, stopOrchestratorChannel } from '../../lib/orchestrator.js'
 
 async function getTahtiSelectsChannelId(
   prisma: Parameters<FastifyPluginAsync>[0]['prisma'],
@@ -186,6 +187,63 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
         ),
       )
 
+      return reply.send({ ok: true as const })
+    },
+  )
+
+  // POST /api/admin/tahti-selects/stream/start — spawn the always-on rotation Liquidsoap
+  // container (the curated playlist above becomes an actual HLS/Icecast stream).
+  fastify.post(
+    '/api/admin/tahti-selects/stream/start',
+    { preHandler: requireBoard, schema: { tags: ['admin'] } },
+    async (_request, reply) => {
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { slug: TAHTI_SELECTS_SLUG },
+        select: { id: true, slug: true },
+      })
+      if (!channel) {
+        return reply
+          .status(404)
+          .send({
+            error:
+              'Tahti Selects channel not found — run scripts/seed-tahti-selects-content.ts first',
+          })
+      }
+
+      // Rotation channels use a persistent placeholder broadcast (never ended) so the
+      // existing watchdog/orchestrator-restart paths, which require a broadcastId, work
+      // unmodified — see infra/liquidsoap-rotation.liq.template.
+      let broadcast = await fastify.prisma.broadcast.findFirst({
+        where: { channelId: channel.id, endedAt: null },
+      })
+      if (!broadcast) {
+        broadcast = await fastify.prisma.broadcast.create({
+          data: { channelId: channel.id, source: 'ICECAST' },
+        })
+      }
+
+      try {
+        await spawnChannelLiquidsoap(channel.id, channel.slug, broadcast.id, 'rotation')
+      } catch (err) {
+        fastify.log.error({ err }, 'orchestrator spawn failed (tahti-selects rotation)')
+        return reply
+          .status(502)
+          .send({ error: 'Orchestrator spawn failed — check the orchestrator service is running' })
+      }
+
+      return reply.send({ ok: true as const, channelId: channel.id, broadcastId: broadcast.id })
+    },
+  )
+
+  // POST /api/admin/tahti-selects/stream/stop
+  fastify.post(
+    '/api/admin/tahti-selects/stream/stop',
+    { preHandler: requireBoard, schema: { tags: ['admin'] } },
+    async (_request, reply) => {
+      const channelId = await getTahtiSelectsChannelId(fastify.prisma)
+      if (!channelId) return reply.status(404).send({ error: 'Tahti Selects channel not found' })
+
+      await stopOrchestratorChannel(channelId)
       return reply.send({ ok: true as const })
     },
   )

@@ -37,3 +37,19 @@ export async function reorderItem(itemId: string, position: number) {
   })
   revalidatePath('/admin/tahti-selects')
 }
+
+export async function startRotationStream(): Promise<{ error: string | null }> {
+  const res = await adminFetch('/api/admin/tahti-selects/stream/start', { method: 'POST' })
+  const data = await res.json().catch(() => ({}))
+  revalidatePath('/admin/tahti-selects')
+  if (!res.ok) return { error: (data as { error?: string }).error ?? 'Failed to start stream' }
+  return { error: null }
+}
+
+export async function stopRotationStream(): Promise<{ error: string | null }> {
+  const res = await adminFetch('/api/admin/tahti-selects/stream/stop', { method: 'POST' })
+  const data = await res.json().catch(() => ({}))
+  revalidatePath('/admin/tahti-selects')
+  if (!res.ok) return { error: (data as { error?: string }).error ?? 'Failed to stop stream' }
+  return { error: null }
+}
