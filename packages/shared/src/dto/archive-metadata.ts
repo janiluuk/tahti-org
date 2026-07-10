@@ -41,6 +41,17 @@ export const ARCHIVE_GENRES = [
   'Other',
 ] as const
 
+/** A channel's genre tags live as a comma-joined string inside the User.socialLinks JSON bag. */
+export function parseSocialLinksGenres(socialLinks: unknown): string[] {
+  if (!socialLinks || typeof socialLinks !== 'object') return []
+  const raw = (socialLinks as Record<string, unknown>).genres
+  if (typeof raw !== 'string' || !raw.trim()) return []
+  return raw
+    .split(',')
+    .map((g) => g.trim())
+    .filter(Boolean)
+}
+
 export const ARCHIVE_LICENSE_LABELS: Record<(typeof ARCHIVE_LICENSES)[number], string> = {
   ALL_RIGHTS_RESERVED: 'All rights reserved',
   CC_BY: 'Creative Commons — Attribution (CC BY)',

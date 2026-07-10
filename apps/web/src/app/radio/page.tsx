@@ -107,6 +107,9 @@ export default async function RadioPage() {
                 text="24/7 community radio — always on while we grow the member meta-stream. Tune in and chat with listeners worldwide."
                 className="ch-artist-bio"
               />
+              <Text size="sm" tone="muted" className="studio-mt-xs">
+                Looking for a specific sound? <a href="/listen">Browse live channels by genre</a>.
+              </Text>
             </header>
 
             {playback.kind === 'none' ? (

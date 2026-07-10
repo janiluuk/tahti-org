@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { ChannelListResponseSchema, openApiResponse } from '@tahti/shared'
+import { ChannelListResponseSchema, openApiResponse, parseSocialLinksGenres } from '@tahti/shared'
 import { getCachedJson } from '../../lib/json-cache.js'
 
 const channelListRoute: FastifyPluginAsync = async (fastify) => {
@@ -28,7 +28,15 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
               goneLiveAt: true,
               nextBroadcastAt: true,
               nextBroadcastNote: true,
-              user: { select: { username: true, displayName: true, bio: true, avatarUrl: true } },
+              user: {
+                select: {
+                  username: true,
+                  displayName: true,
+                  bio: true,
+                  avatarUrl: true,
+                  socialLinks: true,
+                },
+              },
             },
           }),
           fastify.prisma.channel.findMany({
@@ -43,7 +51,15 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
               goneLiveAt: true,
               nextBroadcastAt: true,
               nextBroadcastNote: true,
-              user: { select: { username: true, displayName: true, bio: true, avatarUrl: true } },
+              user: {
+                select: {
+                  username: true,
+                  displayName: true,
+                  bio: true,
+                  avatarUrl: true,
+                  socialLinks: true,
+                },
+              },
             },
           }),
         ])
@@ -52,6 +68,7 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
           ...ch,
           goneLiveAt: ch.goneLiveAt?.toISOString() ?? null,
           nextBroadcastAt: ch.nextBroadcastAt?.toISOString() ?? null,
+          genres: parseSocialLinksGenres(ch.user.socialLinks),
         })
 
         return {

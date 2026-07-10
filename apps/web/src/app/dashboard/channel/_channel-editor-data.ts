@@ -9,6 +9,7 @@ import type {
   SlideshowPreset,
   VisualPreset,
 } from '@tahti/shared'
+import { parseSocialLinksGenres } from '@tahti/shared'
 
 export type ChannelEditorFetchResult = {
   channelGallery: {
@@ -94,12 +95,7 @@ export async function fetchChannelEditorData(
       countryCode = channelData.user.countryCode
       pronouns = channelData.user.pronouns
       const socialLinks = channelData.user.socialLinks ?? {}
-      genres = socialLinks.genres
-        ? socialLinks.genres
-            .split(',')
-            .map((g) => g.trim())
-            .filter(Boolean)
-        : []
+      genres = parseSocialLinksGenres(socialLinks)
       links = Object.entries(socialLinks)
         .filter(
           ([key, url]) =>
