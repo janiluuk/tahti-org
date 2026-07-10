@@ -20,6 +20,7 @@ export type SidebarNavIcon =
   | 'appearance'
   | 'schedule'
   | 'venues'
+  | 'posts'
 
 export function SidebarNavIconSvg({ name }: { name: SidebarNavIcon }) {
   switch (name) {
@@ -264,6 +265,23 @@ export function SidebarNavIconSvg({ name }: { name: SidebarNavIcon }) {
             strokeLinejoin="round"
           />
           <circle cx="8" cy="6.5" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+        </svg>
+      )
+    case 'posts':
+      return (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path
+            d="M3 2.5h7l3 3v8a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M5 7h6M5 9.5h6M5 12h3.5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
         </svg>
       )
   }
