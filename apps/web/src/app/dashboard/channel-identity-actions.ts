@@ -19,6 +19,7 @@ export async function updateChannelProfile(patch: {
   avatarUrl?: string
   countryCode?: string | null
   pronouns?: string | null
+  defaultLocation?: string | null
   socialLinks?: Record<string, string>
 }): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/profile`, {

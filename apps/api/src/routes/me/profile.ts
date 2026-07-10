@@ -21,6 +21,38 @@ function zodError(
 
 // PATCH /api/me/profile — update bio, display name, social links, tip jar, meta-stream opt-out
 const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/api/me/profile',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ProfileFieldsSchema, 'ProfileFields'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const profile = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          bio: true,
+          avatarUrl: true,
+          tipJarUrl: true,
+          countryCode: true,
+          pronouns: true,
+          defaultLocation: true,
+          socialLinks: true,
+          publicAttribution: true,
+        },
+      })
+      if (!profile) return reply.status(404).send({ error: 'User not found' })
+      return reply.send(profile)
+    },
+  )
+
   fastify.patch(
     '/api/me/profile',
     {
@@ -45,6 +77,8 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl.trim() || null
       if (body.countryCode !== undefined) data.countryCode = body.countryCode?.toUpperCase() ?? null
       if (body.pronouns !== undefined) data.pronouns = body.pronouns?.trim() || null
+      if (body.defaultLocation !== undefined)
+        data.defaultLocation = body.defaultLocation?.trim() || null
       if (body.socialLinks !== undefined) data.socialLinks = body.socialLinks
       if (body.publicAttribution !== undefined) data.publicAttribution = body.publicAttribution
 
@@ -60,6 +94,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
           tipJarUrl: true,
           countryCode: true,
           pronouns: true,
+          defaultLocation: true,
           socialLinks: true,
           publicAttribution: true,
         },
