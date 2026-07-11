@@ -202,12 +202,10 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
         select: { id: true, slug: true },
       })
       if (!channel) {
-        return reply
-          .status(404)
-          .send({
-            error:
-              'Tahti Selects channel not found — run scripts/seed-tahti-selects-content.ts first',
-          })
+        return reply.status(404).send({
+          error:
+            'Tahti Selects channel not found — run scripts/seed-tahti-selects-content.ts first',
+        })
       }
 
       // Rotation channels use a persistent placeholder broadcast (never ended) so the
