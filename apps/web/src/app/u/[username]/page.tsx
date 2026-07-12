@@ -95,6 +95,43 @@ interface ProfileResponse {
   }>
 }
 
+interface ArtistEventItem {
+  id: string
+  title: string
+  place: string
+  location: string
+  eventUrl: string | null
+  startAt: string
+}
+
+interface ArtistPostItem {
+  id: string
+  title: string | null
+  body: string
+  images: string[]
+  createdAt: string
+}
+
+interface ArtistEmbedItem {
+  id: string
+  url: string
+  title: string | null
+}
+
+async function fetchChannelExtras(slug: string | undefined) {
+  if (!slug) return { events: [], posts: [], embeds: [] }
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  const [eventsRes, postsRes, embedsRes] = await Promise.all([
+    fetch(`${apiUrl}/api/channels/${slug}/events`, { next: { revalidate: 60 } }),
+    fetch(`${apiUrl}/api/channels/${slug}/posts`, { next: { revalidate: 60 } }),
+    fetch(`${apiUrl}/api/channels/${slug}/embeds`, { next: { revalidate: 60 } }),
+  ])
+  const events: ArtistEventItem[] = eventsRes.ok ? await eventsRes.json() : []
+  const posts: ArtistPostItem[] = postsRes.ok ? await postsRes.json() : []
+  const embeds: ArtistEmbedItem[] = embedsRes.ok ? await embedsRes.json() : []
+  return { events, posts, embeds }
+}
+
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
   const [data, user] = await Promise.all([fetchProfile(params.username), getSessionUser()])
   if (!data) notFound()
@@ -102,6 +139,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const { artist, channel, releases, links, collections = [] } = data
   const isLive = channel?.state === 'LIVE'
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
+  const { events, posts, embeds } = await fetchChannelExtras(channel?.slug)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'https://app.tahti.live'
   const profileUrl = `${appUrl.replace(/\/$/, '')}/u/${artist.username}`
 
@@ -200,6 +238,88 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {events.length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Events</div>
+            <ul className="ch-events-list">
+              {events.map((ev) => (
+                <li key={ev.id} className="ch-events-list__item">
+                  <div className="ch-events-list__date">
+                    {new Date(ev.startAt).toLocaleDateString(undefined, {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </div>
+                  <div className="ch-events-list__body">
+                    <div className="ch-events-list__title">
+                      {ev.title} — {ev.place}, {ev.location}
+                    </div>
+                    {ev.eventUrl && (
+                      <a
+                        href={ev.eventUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ch-events-list__link"
+                      >
+                        Tickets / event link ↗
+                      </a>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {posts.length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Updates</div>
+            <ul className="ch-posts-list">
+              {posts.map((p) => (
+                <li key={p.id} className="ch-posts-list__item">
+                  {p.title && <div className="ch-posts-list__title">{p.title}</div>}
+                  <div className="ch-posts-list__date">
+                    {new Date(p.createdAt).toLocaleDateString(undefined, {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </div>
+                  <p className="ch-posts-list__body">{p.body}</p>
+                  {p.images.length > 0 && (
+                    <div className="ch-posts-list__images">
+                      {p.images.map((url) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={url} src={url} alt="" className="ch-posts-list__image" />
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {embeds.length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Listen on SoundCloud</div>
+            <div className="ch-embeds-list">
+              {embeds.map((e) => (
+                <iframe
+                  key={e.id}
+                  title={e.title ?? 'SoundCloud track'}
+                  className="ch-embeds-list__frame"
+                  scrolling="no"
+                  frameBorder="no"
+                  allow="autoplay"
+                  src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(e.url)}&color=%23ff5500&auto_play=false&show_comments=false&show_user=true&show_reposts=false&visual=false`}
+                />
+              ))}
+            </div>
           </section>
         )}
 

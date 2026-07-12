@@ -11,6 +11,7 @@ export type PublicFooterProps = {
 const FOOTER_LINKS: { href: string; label: string }[] = [
   { href: '/how-it-works', label: 'How it works' },
   { href: '/for-artists', label: 'For artists' },
+  { href: '/help', label: 'Help' },
   { href: '/about', label: 'About' },
   { href: '/venues', label: 'Venues' },
   { href: '/governance', label: 'Governance' },
