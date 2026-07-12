@@ -23,6 +23,224 @@
   --tahti-info-bg: color-mix(in srgb, var(--cyan) 12%, var(--card));
 }
 
+/* ── Ambient background (studio + admin shells) ───────────────────────────── */
+
+@keyframes studio-ambient-drift {
+  from {
+    transform: translate3d(-1.4%, -1%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(1.4%, 1%, 0) scale(1.045);
+  }
+}
+
+@keyframes studio-ambient-drift-alt {
+  from {
+    transform: translate3d(1.2%, 0.8%, 0) scale(1.025);
+  }
+  to {
+    transform: translate3d(-1.2%, -0.8%, 0) scale(0.975);
+  }
+}
+
+@keyframes studio-ambient-breathe {
+  from {
+    opacity: 0.82;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+[data-tahti-ui='studio'].studio-ambient {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-tahti-ui='studio'].studio-ambient::before,
+[data-tahti-ui='studio'].studio-ambient::after {
+  content: '';
+  position: fixed;
+  inset: -14%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Color washes — artist default slightly livelier than admin */
+[data-tahti-ui='studio'].studio-ambient::before {
+  background:
+    radial-gradient(
+      ellipse 74% 60% at 14% 22%,
+      color-mix(in srgb, var(--cyan) 9%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 70% 54% at 86% 78%,
+      color-mix(in srgb, var(--purple) 8%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 50% 50%,
+      color-mix(in srgb, var(--amber) 5%, transparent),
+      transparent 70%
+    );
+  animation:
+    studio-ambient-drift 52s ease-in-out infinite alternate,
+    studio-ambient-breathe 18s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+[data-tahti-ui='studio'].studio-ambient::after {
+  animation: studio-ambient-drift-alt 72s ease-in-out infinite alternate-reverse;
+  will-change: transform, opacity;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='day']::before {
+  background:
+    radial-gradient(
+      ellipse 76% 62% at 18% 20%,
+      color-mix(in srgb, var(--cyan) 10%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 72% 56% at 82% 74%,
+      color-mix(in srgb, var(--amber) 7%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 58% 48% at 48% 52%,
+      color-mix(in srgb, var(--green) 4%, transparent),
+      transparent 70%
+    );
+}
+
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='night']::before {
+  background:
+    radial-gradient(
+      ellipse 74% 58% at 12% 18%,
+      color-mix(in srgb, var(--purple) 9%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 68% 54% at 88% 80%,
+      color-mix(in srgb, var(--cyan) 6%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 62% 50% at 52% 46%,
+      color-mix(in srgb, var(--text) 3%, transparent),
+      transparent 70%
+    );
+}
+
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='twilight']::before {
+  background:
+    radial-gradient(
+      ellipse 72% 58% at 20% 24%,
+      color-mix(in srgb, var(--purple) 7%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 70% 52% at 80% 70%,
+      color-mix(in srgb, var(--amber) 8%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 56% 46% at 50% 48%,
+      color-mix(in srgb, var(--cyan) 4%, transparent),
+      transparent 70%
+    );
+}
+
+/* Day — barely-there sun disc upper right */
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='day']::after {
+  opacity: 0.62;
+  background:
+    radial-gradient(
+      circle closest-side at 91% 9%,
+      color-mix(in srgb, var(--amber) 11%, transparent),
+      transparent 56%
+    ),
+    radial-gradient(
+      circle closest-side at 91.4% 9.2%,
+      color-mix(in srgb, var(--text) 3%, transparent),
+      transparent 34%
+    );
+}
+
+/* Night — barely-there moon crescent upper left */
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='night']::after {
+  opacity: 0.58;
+  background:
+    radial-gradient(
+      circle closest-side at 10% 11%,
+      color-mix(in srgb, var(--text) 7%, transparent),
+      transparent 54%
+    ),
+    radial-gradient(
+      circle closest-side at 8.2% 9.5%,
+      transparent 36%,
+      color-mix(in srgb, var(--bg) 88%, transparent) 37%,
+      transparent 50%
+    );
+}
+
+/* Twilight — soft horizon glow, no distinct celestial shape */
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='twilight']::after {
+  opacity: 0.48;
+  background: radial-gradient(
+    ellipse 48% 28% at 72% 92%,
+    color-mix(in srgb, var(--amber) 8%, transparent),
+    transparent 72%
+  );
+}
+
+/* Admin: calmer motion + lower wash intensity (matches prior admin-shell) */
+[data-tahti-ui='studio'].studio-ambient.studio-ambient--admin::before {
+  background:
+    radial-gradient(
+      ellipse 72% 58% at 16% 24%,
+      color-mix(in srgb, var(--cyan) 7%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 68% 52% at 84% 76%,
+      color-mix(in srgb, var(--purple) 6%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 58% 48% at 50% 48%,
+      color-mix(in srgb, var(--amber) 4%, transparent),
+      transparent 70%
+    );
+  animation: studio-ambient-drift 64s ease-in-out infinite alternate;
+}
+
+[data-tahti-ui='studio'].studio-ambient.studio-ambient--admin::after {
+  animation: studio-ambient-drift-alt 88s ease-in-out infinite alternate-reverse;
+  opacity: 0.85;
+  background: radial-gradient(
+    ellipse 52% 44% at 72% 28%,
+    color-mix(in srgb, var(--green) 4%, transparent),
+    transparent 72%
+  );
+}
+
+[data-tahti-ui='studio'].studio-ambient > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='studio'].studio-ambient::before,
+  [data-tahti-ui='studio'].studio-ambient::after {
+    animation: none;
+    transform: none;
+  }
+}
+
 [data-tahti-ui='studio'] .studio-top-nav {
   background: var(--card);
   padding: 0 24px;
