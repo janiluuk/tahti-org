@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { AvatarTile } from './AvatarTile'
 import { ChannelHeader } from './ChannelPageLayout'
+import { PublicFooter } from './PublicFooter'
 import { SafePlainText } from '../lib/safe-plain-text'
 import { flagEmoji as countryCodeToFlag } from '../lib/flag-emoji'
 
@@ -175,6 +176,7 @@ export function ProfilePageLayout({
         {hero}
         <div className="prof-content">{children}</div>
       </div>
+      {!narrow && <PublicFooter />}
     </>
   )
 }

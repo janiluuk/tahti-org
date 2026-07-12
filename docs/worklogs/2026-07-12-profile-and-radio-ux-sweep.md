@@ -43,12 +43,11 @@ links) via their respective layouts. `/u/[username]` uses `ProfilePageLayout`,
 which never renders a footer — so the profile page has zero path to
 `/governance`, `/transparency`, `/privacy`, `/terms`, `/help`, etc.
 
-**Not fixed in this pass.** `ProfilePageLayout` is shared between the main
-profile page and the narrow `/u/[username]/subscribe` checkout-style flow,
-where omitting a footer full of outbound links is a defensible, possibly
-intentional choice (reduce checkout distractions). Adding it unconditionally
-would affect both. This is a product decision, not a safe mechanical fix —
-flagging for a follow-up rather than guessing.
+**Fixed in this pass (follow-up).** `ProfilePageLayout` already takes a
+`narrow` prop that's `true` only on the `/subscribe` checkout flow — tied
+footer rendering to `!narrow`, so the main profile page gets the footer and
+the checkout flow stays distraction-free. Verified live: footer present on
+`/u/[username]`, absent on `/u/[username]/subscribe`.
 
 ## Finding: `/help` index page has no inbound links
 
