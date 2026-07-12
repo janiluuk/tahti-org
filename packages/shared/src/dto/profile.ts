@@ -13,6 +13,7 @@ export const ProfilePatchSchema = z
     pronouns: z.string().trim().max(40).nullable().optional(),
     socialLinks: z.record(z.string()).optional(),
     publicAttribution: z.boolean().optional(),
+    showJoinDate: z.boolean().optional(),
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
 

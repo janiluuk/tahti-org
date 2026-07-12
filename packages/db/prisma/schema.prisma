@@ -522,6 +522,7 @@ model User {
   memberNumber          Int?       @unique
   memberSince           DateTime?
   publicAttribution     Boolean    @default(true)
+  showJoinDate          Boolean    @default(true)
   stripeCustomerId                  String?
   stripeMembershipSubscriptionId    String?  @unique
   stripeConnectAccountId            String?  @unique

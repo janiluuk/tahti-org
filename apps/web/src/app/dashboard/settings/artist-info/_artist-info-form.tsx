@@ -33,6 +33,7 @@ export interface ArtistInfoFormData {
   avatarUrl: string | null
   countryCode: string | null
   pronouns: string | null
+  showJoinDate: boolean
   genres: string[]
   bio: string
   links: ChannelLink[]
@@ -50,6 +51,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
   const [bio, setBio] = useState(initial.bio)
   const [links, setLinks] = useState<ChannelLink[]>(initial.links)
   const [streamingLinks, setStreamingLinks] = useState<StreamingLinksDraft>(initial.streamingLinks)
+  const [showJoinDate, setShowJoinDate] = useState(initial.showJoinDate)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -64,6 +66,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
         avatarUrl: identity.avatarUrl ?? undefined,
         countryCode: identity.countryCode,
         pronouns: identity.pronouns,
+        showJoinDate,
         socialLinks: {
           genres: identity.genres.join(', '),
           youtube: streamingLinks.youtube.trim(),
@@ -100,6 +103,19 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
         description="Who you are — shown at the top of your channel page."
       >
         <ChannelIdentityPanel initial={identity} onDraftChange={setIdentity} />
+        <label className="studio-toggle-row studio-mt-sm">
+          <input
+            type="checkbox"
+            className="studio-toggle-checkbox"
+            checked={showJoinDate}
+            onChange={(e) => setShowJoinDate(e.target.checked)}
+          />
+          <span className="studio-toggle-label">Show join date on my profile</span>
+        </label>
+        <p className="studio-text-muted-sm studio-mt-xs">
+          Displays &ldquo;Member since {new Date().getFullYear()}&rdquo; on your public profile and
+          channel page. Recommended setting: on.
+        </p>
       </Panel>
 
       <Panel title="Bio">

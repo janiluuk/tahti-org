@@ -15,6 +15,13 @@ import { resolveChannelUrl } from '@/lib/app-url'
 
 export const revalidate = 60
 
+function formatJoinDateLabel(joinDate: string | null | undefined): string | null {
+  if (!joinDate) return null
+  const date = new Date(joinDate)
+  if (Number.isNaN(date.getTime())) return null
+  return `Member since ${date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}`
+}
+
 async function fetchProfile(username: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const res = await fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(username)}/profile`, {
@@ -68,6 +75,7 @@ interface ProfileResponse {
     pronouns?: string | null
     tier: string
     socialLinks: Record<string, string> | null
+    joinDate?: string | null
   }
   channel: { slug: string; state: string } | null
   releases: Array<{
@@ -186,6 +194,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             channelHref={links.channel}
             subscribeHref={links.subscribe}
             tipJarUrl={artist.tipJarUrl}
+            joinDateLabel={formatJoinDateLabel(artist.joinDate)}
           />
         }
       >

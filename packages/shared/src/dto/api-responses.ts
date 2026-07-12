@@ -373,6 +373,7 @@ export const PublicChannelUserSchema = z.object({
   countryCode: z.string().nullable().optional(),
   pronouns: z.string().nullable().optional(),
   socialLinks: z.unknown().optional(),
+  joinDate: z.string().datetime().nullable().optional(),
 })
 
 export const PublicChannelViewSchema = z.object({
@@ -506,6 +507,7 @@ export const PublicProfileArtistSchema = z.object({
   tier: z.string(),
   countryCode: z.string().nullable().optional(),
   pronouns: z.string().nullable().optional(),
+  joinDate: z.string().datetime().nullable().optional(),
 })
 
 export const PublicProfileViewSchema = z.object({
@@ -717,6 +719,8 @@ export const ProfileFieldsSchema = z.object({
   pronouns: z.string().nullable(),
   socialLinks: z.unknown(),
   publicAttribution: z.boolean(),
+  showJoinDate: z.boolean(),
+  createdAt: z.string().datetime(),
 })
 
 export const MetaStreamOptResponseSchema = z.object({

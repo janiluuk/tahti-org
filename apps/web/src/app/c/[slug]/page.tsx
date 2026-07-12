@@ -31,6 +31,13 @@ import { countryName } from '@/lib/country-options'
 import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
 import { ReportButton } from '@/components/report-button'
 
+function formatJoinDateLabel(joinDate: string | null | undefined): string | null {
+  if (!joinDate) return null
+  const date = new Date(joinDate)
+  if (Number.isNaN(date.getTime())) return null
+  return `Member since ${date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}`
+}
+
 interface ChannelResponse {
   slug: string
   state: string
@@ -58,6 +65,7 @@ interface ChannelResponse {
     pronouns?: string | null
     socialLinks?: Record<string, string> | null
     tier: string
+    joinDate?: string | null
   }
 }
 
@@ -244,6 +252,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         ? countryName(channel.user.countryCode)
                         : 'World citizen'}
                     </span>
+                    {formatJoinDateLabel(channel.user.joinDate) && (
+                      <span className="ch-artist-flag">
+                        {formatJoinDateLabel(channel.user.joinDate)}
+                      </span>
+                    )}
                   </Text>
                 </div>
               </Row>
