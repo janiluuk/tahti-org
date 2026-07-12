@@ -94,6 +94,72 @@ export async function updateArchiveMetadata(
   return { error: null }
 }
 
+export interface VenuePickerOption {
+  id: string
+  slug: string
+  name: string
+  city: string
+  countryCode: string
+}
+
+export async function fetchMyDefaultLocation(): Promise<string | null> {
+  const res = await fetch(`${apiUrl}/api/me/profile`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  const data = (await res.json().catch(() => ({}))) as { defaultLocation?: string | null }
+  return data.defaultLocation ?? null
+}
+
+export async function fetchVenuesForPicker(): Promise<VenuePickerOption[]> {
+  const [mineRes, publicRes] = await Promise.all([
+    fetch(`${apiUrl}/api/me/venues`, { headers: { Cookie: sessionHeader() }, cache: 'no-store' }),
+    fetch(`${apiUrl}/api/v1/venues`, { cache: 'no-store' }),
+  ])
+  const mine = mineRes.ok ? ((await mineRes.json()) as VenuePickerOption[]) : []
+  const pub = publicRes.ok ? ((await publicRes.json()) as VenuePickerOption[]) : []
+  const byId = new Map<string, VenuePickerOption>()
+  for (const v of [...mine, ...pub]) byId.set(v.id, v)
+  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function slugifyVenueName(name: string): string {
+  return (
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 60) || 'venue'
+  )
+}
+
+export async function createVenueQuick(params: {
+  name: string
+  address: string
+  city: string
+  countryCode?: string
+  latitude?: number
+  longitude?: number
+  photos?: string[]
+}): Promise<{ error: string | null; venue?: VenuePickerOption }> {
+  const res = await fetch(`${apiUrl}/api/v1/venues`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({
+      ...params,
+      slug: `${slugifyVenueName(params.name)}-${Date.now().toString(36)}`,
+    }),
+    cache: 'no-store',
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    return { error: (data as { error?: string }).error ?? 'Failed to create venue' }
+  }
+  return { error: null, venue: data as VenuePickerOption }
+}
+
 export async function searchTahtiUsers(
   q: string,
 ): Promise<Array<{ username: string; displayName: string }>> {

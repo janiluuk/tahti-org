@@ -715,6 +715,7 @@ export const ProfileFieldsSchema = z.object({
   tipJarUrl: z.string().nullable(),
   countryCode: z.string().nullable(),
   pronouns: z.string().nullable(),
+  defaultLocation: z.string().nullable(),
   socialLinks: z.unknown(),
   publicAttribution: z.boolean(),
 })
