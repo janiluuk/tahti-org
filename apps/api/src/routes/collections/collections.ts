@@ -24,6 +24,7 @@ import { config } from '../../config.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
+import { resolveArtistUrl } from '../../lib/artist-url.js'
 
 function zodError(
   reply: { status: (n: number) => { send: (b: unknown) => unknown } },
@@ -740,7 +741,7 @@ function buildChannelArchiveRssXml(channel: ChannelArchiveRssSource): string {
   return buildRss({
     title: `${channel.user.displayName} — Tahti`,
     description: channel.user.bio ?? `${channel.user.displayName} on Tahti`,
-    link: `${config.appUrl}/u/${channel.user.username}`,
+    link: resolveArtistUrl(channel.user.username),
     items: channel.archiveItems.map((i) => ({
       title: i.title,
       description: i.description ?? '',
