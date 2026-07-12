@@ -149,6 +149,8 @@ describe('api response schemas', () => {
         fanChatEnabled: true,
         isSupporter: false,
         canJoinFanChat: false,
+        subscribersOnly: false,
+        canPostInChat: true,
       }).success,
     ).toBe(true)
   })
