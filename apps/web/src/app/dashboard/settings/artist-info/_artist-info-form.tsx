@@ -16,6 +16,7 @@ export interface StreamingLinksDraft {
   hearthisAt: string
   twitch: string
   soundcloud: string
+  kick: string
 }
 
 function linksToSocialLinks(links: ChannelLink[]): Record<string, string> {
@@ -69,6 +70,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
           hearthisAt: streamingLinks.hearthisAt.trim(),
           twitch: streamingLinks.twitch.trim(),
           soundcloud: streamingLinks.soundcloud.trim(),
+          kick: streamingLinks.kick.trim(),
           ...linksToSocialLinks(links),
         },
       })
@@ -161,6 +163,19 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
               onChange={(e) =>
                 setStreamingLinks((prev) => ({ ...prev, soundcloud: e.target.value }))
               }
+              className="studio-input studio-input--grow"
+              maxLength={2000}
+            />
+          </div>
+          <div className="studio-row studio-row--wrap studio-mb-sm">
+            <span className="studio-link-row__icon">
+              <SocialLinkIcon label="Kick" url={streamingLinks.kick} />
+            </span>
+            <input
+              type="url"
+              placeholder="Kick channel URL"
+              value={streamingLinks.kick}
+              onChange={(e) => setStreamingLinks((prev) => ({ ...prev, kick: e.target.value }))}
               className="studio-input studio-input--grow"
               maxLength={2000}
             />

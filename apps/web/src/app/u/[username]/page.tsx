@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { renderBio } from '@/lib/render-bio'
-import { SocialLinkIcon } from '@/components/social-link-icon'
+import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
 import { countryName } from '@/lib/country-options'
 import { getSessionUser } from '@/lib/session'
 import { ReportButton } from '@/components/report-button'
@@ -323,6 +323,26 @@ export default async function ArtistProfilePage({ params }: { params: { username
           </section>
         )}
 
+        {(() => {
+          const kickUrl = artist.socialLinks?.kick
+          const kickUsername = kickUrl ? kickUsernameFromUrl(kickUrl) : null
+          if (!kickUsername) return null
+          return (
+            <section className="prof-section">
+              <div className="prof-sec-label">Live on Kick</div>
+              <div className="ch-embeds-list">
+                <iframe
+                  title="Kick channel"
+                  className="ch-embeds-list__frame ch-embeds-list__frame--kick"
+                  frameBorder="no"
+                  allowFullScreen
+                  src={`https://player.kick.com/${kickUsername}`}
+                />
+              </div>
+            </section>
+          )
+        })()}
+
         <section className="prof-section">
           <div className="prof-sec-label-row">
             <div className="prof-sec-label">Releases</div>
@@ -371,6 +391,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
               hearthisAt: 'hearthis.at',
               twitch: 'Twitch',
               soundcloud: 'SoundCloud',
+              kick: 'Kick',
             }
             const streamingLinkEntries = Object.entries(STREAMING_LINK_LABELS)
               .map(([key, label]) => [label, artist.socialLinks![key]] as const)

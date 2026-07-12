@@ -38,10 +38,16 @@ export type ChannelEditorFetchResult = {
   pronouns: string | null
   genres: string[]
   links: Array<{ label: string; url: string }>
-  streamingLinks: { youtube: string; hearthisAt: string; twitch: string; soundcloud: string }
+  streamingLinks: {
+    youtube: string
+    hearthisAt: string
+    twitch: string
+    soundcloud: string
+    kick: string
+  }
 }
 
-const STREAMING_LINK_KEYS = ['youtube', 'hearthisAt', 'twitch', 'soundcloud'] as const
+const STREAMING_LINK_KEYS = ['youtube', 'hearthisAt', 'twitch', 'soundcloud', 'kick'] as const
 
 /** Shared fetch used by every /dashboard/channel/* editor page so the live preview always has the full, current channel state. */
 export async function fetchChannelEditorData(
@@ -68,6 +74,7 @@ export async function fetchChannelEditorData(
     hearthisAt: '',
     twitch: '',
     soundcloud: '',
+    kick: '',
   }
 
   try {
@@ -107,6 +114,7 @@ export async function fetchChannelEditorData(
         hearthisAt: socialLinks.hearthisAt ?? '',
         twitch: socialLinks.twitch ?? '',
         soundcloud: socialLinks.soundcloud ?? '',
+        kick: socialLinks.kick ?? '',
       }
     }
   } catch {
