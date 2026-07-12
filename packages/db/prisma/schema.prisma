@@ -549,11 +549,15 @@ model User {
   googleDriveRefreshTokenEnc String?  // PLAT-083: encrypted refresh token
   spotifyArtistId       String?  // mixed-source collections brief: resolved Spotify artist catalog ID for "Your tracks" — search itself uses an app-level token, no per-user OAuth
   mixcloudUsername      String?  // mixed-source collections brief: artist's own Mixcloud handle for "Your tracks" — Mixcloud's read API is public, no OAuth needed for catalog browsing
+  totpSecretEnc         String?  // 2FA: TOTP secret, AES-GCM encrypted at rest
+  totpEnabledAt         DateTime? // null = 2FA off (default)
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
   sessions              Session[]
   emailVerifications    EmailVerification[]
+  totpBackupCodes       TotpBackupCode[]
+  totpChallenges        TotpChallenge[]
   membership            Membership?
   channel               Channel?
   motionsProposed       Motion[]
@@ -735,6 +739,31 @@ model SocialPost {
 }
 
 model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@schema("core")
+}
+
+// 2FA: hashed one-time-use recovery codes issued when TOTP is confirmed.
+model TotpBackupCode {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@schema("core")
+}
+
+// 2FA: short-lived "password verified, awaiting TOTP code" pending-login state.
+model TotpChallenge {
   id        String   @id
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)

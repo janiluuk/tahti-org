@@ -31,6 +31,25 @@ export const LoginSchema = z.object({
 
 export type LoginInput = z.infer<typeof LoginSchema>
 
+export const LoginTotpSchema = z.object({
+  challengeId: z.string().min(1, 'challengeId is required'),
+  code: z.string().trim().min(1, 'code is required').max(32),
+})
+
+export type LoginTotpInput = z.infer<typeof LoginTotpSchema>
+
+export const TotpConfirmSchema = z.object({
+  code: z.string().trim().min(1, 'code is required').max(32),
+})
+
+export type TotpConfirmInput = z.infer<typeof TotpConfirmSchema>
+
+export const TotpDisableSchema = z.object({
+  password: z.string().min(1, 'password is required'),
+})
+
+export type TotpDisableInput = z.infer<typeof TotpDisableSchema>
+
 export const VerifyEmailSchema = z.object({
   token: z.string().min(1),
 })

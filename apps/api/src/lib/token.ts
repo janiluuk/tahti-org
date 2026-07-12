@@ -28,3 +28,13 @@ export function passwordSetupExpiresAt(): Date {
   d.setDate(d.getDate() + 7)
   return d
 }
+
+export function generateTotpChallengeId(): string {
+  return nanoid(40)
+}
+
+export function totpChallengeExpiresAt(): Date {
+  const d = new Date()
+  d.setMinutes(d.getMinutes() + 10)
+  return d
+}
