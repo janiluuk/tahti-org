@@ -45,6 +45,7 @@ export default function ChatPanel({
   const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
   const [error, setError] = useState<string | null>(null)
   const [listenerCount, setListenerCount] = useState<number | null>(null)
+  const [subscribersOnly, setSubscribersOnly] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const msgIdRef = useRef(1)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -56,6 +57,19 @@ export default function ChatPanel({
       setPendingHandle(saved)
     }
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(`${API_BASE}/api/chat/${slug}/access`, { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { subscribersOnly: boolean; canPostInChat: boolean } | null) => {
+        if (!cancelled && data) setSubscribersOnly(data.subscribersOnly && !data.canPostInChat)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [slug])
 
   useEffect(() => {
     let cancelled = false
@@ -169,7 +183,12 @@ export default function ChatPanel({
         body: JSON.stringify({ handle: h }),
       })
       if (res.status === 403) {
-        setError('You are banned from this channel.')
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        setError(
+          body.error === 'subscribers_only'
+            ? 'This chat is subscribers-only — subscribe to the artist to post.'
+            : 'You are banned from this channel.',
+        )
         return
       }
       if (!res.ok) throw new Error('Failed to get token')
@@ -220,6 +239,12 @@ export default function ChatPanel({
     countryCode: m.countryCode,
   }))
 
+  const displayError =
+    error ??
+    (subscribersOnly && !handle
+      ? 'This chat is subscribers-only to post — you can still read along.'
+      : null)
+
   return (
     <LiveChatPanel
       surface="channel"
@@ -242,7 +267,7 @@ export default function ChatPanel({
       onSend={sendMessage}
       inputDisabled={!publishToken || status !== 'connected'}
       sendDisabled={!publishToken || status !== 'connected'}
-      error={error}
+      error={displayError}
     />
   )
 }

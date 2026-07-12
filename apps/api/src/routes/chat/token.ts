@@ -64,7 +64,7 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true, userId: true },
+        select: { id: true, userId: true, chatSubscribersOnly: true },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
@@ -100,6 +100,10 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
       ])
 
       const countryCode = sessionUserCountry ?? countryFromIp(ip)
+
+      if (channel.chatSubscribersOnly && !supporter) {
+        return reply.status(403).send({ error: 'subscribers_only' })
+      }
 
       // sub encodes handle + fingerprint; info carries supporter badge + country for Centrifugo
       const sub = `${cleanHandle}#${fingerprint}`

@@ -1268,6 +1268,8 @@ export const ChatAccessResponseSchema = z.object({
   fanChatEnabled: z.boolean(),
   isSupporter: z.boolean(),
   canJoinFanChat: z.boolean(),
+  subscribersOnly: z.boolean(),
+  canPostInChat: z.boolean(),
 })
 
 export const ChatFanTokenResponseSchema = z.object({
