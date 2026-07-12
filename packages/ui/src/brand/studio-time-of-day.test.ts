@@ -15,8 +15,20 @@ describe('studioTimeOfDayFromHour', () => {
     expect(studioTimeOfDayFromHour(17)).toBe('day')
   })
 
-  it('marks twilight at dawn and dusk', () => {
-    expect(studioTimeOfDayFromHour(6)).toBe('twilight')
-    expect(studioTimeOfDayFromHour(19)).toBe('twilight')
+  it('marks dawn hours', () => {
+    expect(studioTimeOfDayFromHour(6)).toBe('dawn')
+    expect(studioTimeOfDayFromHour(7)).toBe('dawn')
+  })
+
+  it('marks dusk hours', () => {
+    expect(studioTimeOfDayFromHour(18)).toBe('dusk')
+    expect(studioTimeOfDayFromHour(20)).toBe('dusk')
+  })
+
+  it('marks boundary hours correctly', () => {
+    expect(studioTimeOfDayFromHour(5)).toBe('night')
+    expect(studioTimeOfDayFromHour(8)).toBe('day')
+    expect(studioTimeOfDayFromHour(17)).toBe('day')
+    expect(studioTimeOfDayFromHour(21)).toBe('night')
   })
 })

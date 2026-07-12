@@ -88,13 +88,19 @@
     studio-ambient-drift 52s ease-in-out infinite alternate,
     studio-ambient-breathe 18s ease-in-out infinite alternate;
   will-change: transform, opacity;
+  /* Crossfade the wash when data-studio-time flips (day/dawn/night/dusk). Gradient
+     interpolation support varies by browser; unsupported browsers just snap, same
+     as before this transition was added. */
+  transition: background 2.4s ease-in-out;
 }
 
 [data-tahti-ui='studio'].studio-ambient::after {
   animation: studio-ambient-drift-alt 72s ease-in-out infinite alternate-reverse;
   will-change: transform, opacity;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition:
+    opacity 1.2s ease,
+    background 2.4s ease-in-out;
 }
 
 [data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='day']::before {
@@ -135,16 +141,37 @@
     );
 }
 
-[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='twilight']::before {
+/* Dawn — cool night residue fading, warm light rising from the east */
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='dawn']::before {
   background:
     radial-gradient(
-      ellipse 72% 58% at 20% 24%,
-      color-mix(in srgb, var(--purple) 7%, transparent),
+      ellipse 70% 56% at 16% 20%,
+      color-mix(in srgb, var(--purple) 6%, transparent),
       transparent 74%
     ),
     radial-gradient(
-      ellipse 70% 52% at 80% 70%,
+      ellipse 72% 54% at 84% 76%,
       color-mix(in srgb, var(--amber) 8%, transparent),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 56% 46% at 50% 48%,
+      color-mix(in srgb, var(--cyan) 4%, transparent),
+      transparent 70%
+    );
+}
+
+/* Dusk — warm daylight fading, cool purple rising in the west */
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='dusk']::before {
+  background:
+    radial-gradient(
+      ellipse 72% 54% at 16% 20%,
+      color-mix(in srgb, var(--amber) 6%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 70% 56% at 84% 76%,
+      color-mix(in srgb, var(--purple) 8%, transparent),
       transparent 72%
     ),
     radial-gradient(
@@ -187,12 +214,22 @@
     );
 }
 
-/* Twilight — soft horizon glow, no distinct celestial shape */
-[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='twilight']::after {
-  opacity: 0.48;
+/* Dawn — soft horizon glow rising bottom-right, no distinct celestial shape */
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='dawn']::after {
+  opacity: 0.46;
   background: radial-gradient(
-    ellipse 48% 28% at 72% 92%,
+    ellipse 48% 28% at 78% 92%,
     color-mix(in srgb, var(--amber) 8%, transparent),
+    transparent 72%
+  );
+}
+
+/* Dusk — soft horizon glow setting bottom-left, no distinct celestial shape */
+[data-tahti-ui='studio'].studio-ambient:not(.studio-ambient--admin)[data-studio-time='dusk']::after {
+  opacity: 0.5;
+  background: radial-gradient(
+    ellipse 48% 28% at 22% 92%,
+    color-mix(in srgb, var(--amber) 9%, transparent),
     transparent 72%
   );
 }
@@ -238,6 +275,7 @@
   [data-tahti-ui='studio'].studio-ambient::after {
     animation: none;
     transform: none;
+    transition: none;
   }
 }
 
