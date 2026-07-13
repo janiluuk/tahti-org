@@ -36,6 +36,7 @@ export type ChannelEditorFetchResult = {
   bio: string
   countryCode: string | null
   pronouns: string | null
+  showJoinDate: boolean
   genres: string[]
   links: Array<{ label: string; url: string }>
   streamingLinks: {
@@ -67,6 +68,7 @@ export async function fetchChannelEditorData(
   let bio = ''
   let countryCode: string | null = null
   let pronouns: string | null = null
+  let showJoinDate = true
   let genres: string[] = []
   let links: Array<{ label: string; url: string }> = []
   let streamingLinks: ChannelEditorFetchResult['streamingLinks'] = {
@@ -78,15 +80,20 @@ export async function fetchChannelEditorData(
   }
 
   try {
-    const [galleryRes, textLayerRes, visualRes, channelRes] = await Promise.all([
+    const [galleryRes, textLayerRes, visualRes, channelRes, profileRes] = await Promise.all([
       get('/api/me/channel/gallery'),
       get('/api/me/channel/text-layer'),
       get('/api/me/channel/visual'),
       fetch(`${apiUrl}/api/channels/${channelSlug}`, { cache: 'no-store' }),
+      get('/api/me/profile'),
     ])
     if (galleryRes.ok) channelGallery = (await galleryRes.json()) as typeof channelGallery
     if (textLayerRes.ok) channelTextLayer = (await textLayerRes.json()) as typeof channelTextLayer
     if (visualRes.ok) channelVisual = (await visualRes.json()) as typeof channelVisual
+    if (profileRes.ok) {
+      const profile = (await profileRes.json()) as { showJoinDate: boolean }
+      showJoinDate = profile.showJoinDate
+    }
     if (channelRes.ok) {
       const channelData = (await channelRes.json()) as {
         user: {
@@ -142,6 +149,7 @@ export async function fetchChannelEditorData(
     bio,
     countryCode,
     pronouns,
+    showJoinDate,
     genres,
     links,
     streamingLinks,

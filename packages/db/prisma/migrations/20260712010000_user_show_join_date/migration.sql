@@ -1,0 +1,1 @@
+ALTER TABLE "core"."User" ADD COLUMN "showJoinDate" BOOLEAN NOT NULL DEFAULT true;

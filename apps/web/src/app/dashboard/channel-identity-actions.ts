@@ -20,6 +20,7 @@ export async function updateChannelProfile(patch: {
   countryCode?: string | null
   pronouns?: string | null
   socialLinks?: Record<string, string>
+  showJoinDate?: boolean
 }): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/profile`, {
     method: 'PATCH',

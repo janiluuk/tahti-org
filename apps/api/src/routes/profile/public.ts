@@ -53,6 +53,8 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       tier: true,
       countryCode: true,
       pronouns: true,
+      showJoinDate: true,
+      createdAt: true,
       channel: { select: { slug: true, state: true } },
       releases: {
         where: { state: 'PUBLISHED' },
@@ -165,6 +167,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       tier: user.tier,
       countryCode: user.countryCode,
       pronouns: user.pronouns,
+      joinDate: user.showJoinDate ? user.createdAt.toISOString() : null,
     },
     channel: user.channel,
     releases,

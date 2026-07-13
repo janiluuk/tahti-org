@@ -56,6 +56,8 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
               pronouns: true,
               socialLinks: true,
               tier: true,
+              showJoinDate: true,
+              createdAt: true,
             },
           },
         },
@@ -70,8 +72,14 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
           ? liveHlsUrl(config.hlsBaseUrl, channel.slug, channel.user.tier)
           : null
 
+      const { showJoinDate, createdAt, ...userRest } = channel.user
+
       return reply.send({
         ...channel,
+        user: {
+          ...userRest,
+          joinDate: showJoinDate ? createdAt.toISOString() : null,
+        },
         nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
         hlsUrl,
         colorScheme: resolveColorScheme(channel.colorSchemeJson, null),
