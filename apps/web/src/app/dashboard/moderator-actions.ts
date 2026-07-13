@@ -78,3 +78,20 @@ export async function unbanChatFingerprint(
   }
   return { error: null }
 }
+
+export async function updateChatSubscribersOnly(
+  subscribersOnly: boolean,
+): Promise<{ error: string | null; subscribersOnly?: boolean }> {
+  const response = await fetch(`${apiUrl}/api/me/chat/settings`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ subscribersOnly }),
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to save' }
+  }
+  const data = (await response.json()) as { subscribersOnly: boolean }
+  return { error: null, subscribersOnly: data.subscribersOnly }
+}

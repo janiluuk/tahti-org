@@ -18,6 +18,7 @@ import registerRoute from './routes/auth/register.js'
 import verifyRoute from './routes/auth/verify.js'
 import usernameAvailableRoute from './routes/auth/username-available.js'
 import loginRoute from './routes/auth/login.js'
+import loginTotpRoute from './routes/auth/login-totp.js'
 import logoutRoute from './routes/auth/logout.js'
 import meRoute from './routes/auth/me.js'
 import prepareUploadRoute from './routes/uploads/prepare.js'
@@ -118,6 +119,7 @@ import channelEmbedsRoute from './routes/channels/embeds.js'
 import radioRoutes from './routes/radio/index.js'
 import mentionRoutes from './routes/me/mentions.js'
 import meProfileRoutes from './routes/me/profile.js'
+import meTotpRoutes from './routes/me/totp.js'
 import meAvatarRoutes from './routes/me/avatar.js'
 import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import meArchiveRoutes from './routes/me/archive.js'
@@ -426,6 +428,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(usernameAvailableRoute)
   await fastify.register(setupPasswordRoute)
   await fastify.register(loginRoute)
+  await fastify.register(loginTotpRoute)
   await fastify.register(logoutRoute)
   await fastify.register(meRoute)
   await fastify.register(prepareUploadRoute)
@@ -530,6 +533,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M12 / M15: profile update (bio, social links) + mention detection
   await fastify.register(meProfileRoutes)
+  await fastify.register(meTotpRoutes)
   await fastify.register(meAvatarRoutes)
   await fastify.register(mePrivacyRoutes)
   await fastify.register(publicPressKitRoutes)

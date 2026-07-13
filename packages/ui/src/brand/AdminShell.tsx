@@ -3,6 +3,7 @@
 
 import React from 'react'
 import { cn } from '../lib/cn'
+import { StudioAmbientClock } from './StudioAmbientClock'
 
 export interface AdminShellProps {
   displayName: string
@@ -28,7 +29,11 @@ export function AdminShell({
 
   if (variant === 'studio') {
     return (
-      <div data-tahti-ui="studio" className={cn('tahti-studio admin-shell', className)}>
+      <div
+        data-tahti-ui="studio"
+        className={cn('tahti-studio admin-shell studio-ambient studio-ambient--admin', className)}
+      >
+        <StudioAmbientClock celestial={false} />
         {header}
         <div className="db-layout shell-app">
           <aside className="db-sidebar">{sidebar}</aside>

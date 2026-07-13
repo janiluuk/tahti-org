@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import { StudioSidebar } from './StudioSidebar'
 import { StudioTopNav } from './StudioTopNav'
 import { StudioMobileNav } from './StudioMobileNav'
+import { StudioAmbientClock } from './StudioAmbientClock'
 
 type StudioShellProps = {
   children: ReactNode
@@ -25,7 +26,8 @@ export function StudioShell({
   channelUrl,
 }: StudioShellProps) {
   return (
-    <div data-tahti-ui="studio" className="tahti-studio">
+    <div data-tahti-ui="studio" className="tahti-studio studio-ambient">
+      <StudioAmbientClock />
       <StudioTopNav
         displayName={displayName}
         isLive={isLive}

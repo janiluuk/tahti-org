@@ -28,8 +28,15 @@ import { getSessionUser } from '@/lib/session'
 import { renderBio } from '@/lib/render-bio'
 import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
 import { countryName } from '@/lib/country-options'
-import { SocialLinkIcon } from '@/components/social-link-icon'
+import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
 import { ReportButton } from '@/components/report-button'
+
+function formatJoinDateLabel(joinDate: string | null | undefined): string | null {
+  if (!joinDate) return null
+  const date = new Date(joinDate)
+  if (Number.isNaN(date.getTime())) return null
+  return `Member since ${date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}`
+}
 
 interface ChannelResponse {
   slug: string
@@ -58,6 +65,7 @@ interface ChannelResponse {
     pronouns?: string | null
     socialLinks?: Record<string, string> | null
     tier: string
+    joinDate?: string | null
   }
 }
 
@@ -150,10 +158,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     hearthisAt: 'hearthis.at',
     twitch: 'Twitch',
     soundcloud: 'SoundCloud',
+    kick: 'Kick',
   }
   const streamingLinkEntries = Object.entries(STREAMING_LINK_LABELS)
     .map(([key, label]) => [label, socialLinks[key]] as const)
     .filter(([, url]) => !!url)
+  const kickUsername = socialLinks.kick ? kickUsernameFromUrl(socialLinks.kick) : null
   const socialLinkEntries = Object.entries(socialLinks).filter(
     ([key, url]) => key !== 'genres' && !(key in STREAMING_LINK_LABELS) && url,
   )
@@ -242,6 +252,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         ? countryName(channel.user.countryCode)
                         : 'World citizen'}
                     </span>
+                    {formatJoinDateLabel(channel.user.joinDate) && (
+                      <span className="ch-artist-flag">
+                        {formatJoinDateLabel(channel.user.joinDate)}
+                      </span>
+                    )}
                   </Text>
                 </div>
               </Row>
@@ -424,6 +439,23 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(e.url)}&color=%23ff5500&auto_play=false&show_comments=false&show_user=true&show_reposts=false&visual=false`}
                     />
                   ))}
+                </div>
+              </section>
+            )}
+
+            {kickUsername && (
+              <section className="ch-archive-section">
+                <div className="ch-archive-section-head">
+                  <h2 className="ch-section-label">Live on Kick</h2>
+                </div>
+                <div className="ch-embeds-list">
+                  <iframe
+                    title="Kick channel"
+                    className="ch-embeds-list__frame ch-embeds-list__frame--kick"
+                    frameBorder="no"
+                    allowFullScreen
+                    src={`https://player.kick.com/${kickUsername}`}
+                  />
                 </div>
               </section>
             )}

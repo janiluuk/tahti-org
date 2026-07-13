@@ -8,6 +8,7 @@ import { AvatarTile } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import MembershipPanel from '../../membership-panel'
 import PrivacyPanel from '../../privacy-panel'
+import { TwoFactorPanel } from '../../two-factor-panel'
 
 interface MembershipInfo {
   status: string
@@ -78,6 +79,8 @@ export default async function AccountSettingsPage() {
           subscriptionMigrationRequired={membershipInfo.subscriptionMigrationRequired}
         />
       )}
+
+      <TwoFactorPanel />
 
       <PrivacyPanel username={user.username} apiUrl={apiUrl} />
     </div>

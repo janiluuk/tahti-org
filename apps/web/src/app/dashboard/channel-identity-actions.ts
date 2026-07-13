@@ -21,6 +21,7 @@ export async function updateChannelProfile(patch: {
   pronouns?: string | null
   defaultLocation?: string | null
   socialLinks?: Record<string, string>
+  showJoinDate?: boolean
 }): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/profile`, {
     method: 'PATCH',

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { AvatarTile } from './AvatarTile'
 import { ChannelHeader } from './ChannelPageLayout'
+import { PublicFooter } from './PublicFooter'
 import { SafePlainText } from '../lib/safe-plain-text'
 import { flagEmoji as countryCodeToFlag } from '../lib/flag-emoji'
 
@@ -56,6 +57,8 @@ type ProfileHeroProps = {
   channelHref?: string | null
   subscribeHref: string
   tipJarUrl?: string | null
+  /** Pre-formatted, e.g. "Member since 2026" — resolved by the caller so this component stays locale-agnostic. */
+  joinDateLabel?: string | null
 }
 
 /** PLAT-020: artist profile hero — info row, bio, CTAs. Cover is rendered separately via ProfileCover. */
@@ -72,6 +75,7 @@ export function ProfileHero({
   channelHref,
   subscribeHref,
   tipJarUrl,
+  joinDateLabel,
 }: ProfileHeroProps) {
   return (
     <>
@@ -93,6 +97,7 @@ export function ProfileHero({
                 ON AIR NOW
               </span>
             )}
+            {joinDateLabel && <span className="prof-join-date">{joinDateLabel}</span>}
           </div>
         </div>
         <div className="prof-cta-row">
@@ -175,6 +180,7 @@ export function ProfilePageLayout({
         {hero}
         <div className="prof-content">{children}</div>
       </div>
+      {!narrow && <PublicFooter />}
     </>
   )
 }

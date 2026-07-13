@@ -34,6 +34,7 @@
     "nanoid": "^5.0.7",
     "node-vibrant": "^4.0.4",
     "nodemailer": "^6.9.14",
+    "otpauth": "^9.5.1",
     "redis": "^6.0.0",
     "zod": "^3.23.8"
   },

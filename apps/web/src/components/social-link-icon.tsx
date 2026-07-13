@@ -13,6 +13,7 @@ type SocialPlatform =
   | 'discord'
   | 'twitch'
   | 'hearthis'
+  | 'kick'
   | 'email'
   | 'website'
 
@@ -28,6 +29,7 @@ const LABEL_KEYWORDS: Array<[RegExp, SocialPlatform]> = [
   [/discord/i, 'discord'],
   [/twitch/i, 'twitch'],
   [/hearthis/i, 'hearthis'],
+  [/\bkick\b/i, 'kick'],
   [/email|mail/i, 'email'],
 ]
 
@@ -46,7 +48,20 @@ const HOSTNAME_KEYWORDS: Array<[string, SocialPlatform]> = [
   ['discord.com', 'discord'],
   ['twitch.tv', 'twitch'],
   ['hearthis.at', 'hearthis'],
+  ['kick.com', 'kick'],
 ]
+
+/** Extracts the username from a kick.com channel URL, for building the player.kick.com embed. */
+export function kickUsernameFromUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url)
+    if (!parsed.hostname.replace(/^www\./, '').includes('kick.com')) return null
+    const username = parsed.pathname.split('/').filter(Boolean)[0]
+    return username || null
+  } catch {
+    return null
+  }
+}
 
 export function detectSocialPlatform(label: string, url: string): SocialPlatform {
   for (const [pattern, platform] of LABEL_KEYWORDS) {
@@ -217,6 +232,15 @@ function PlatformGlyph({ platform }: { platform: SocialPlatform }) {
             strokeWidth="1"
             strokeLinecap="round"
             strokeLinejoin="round"
+          />
+        </svg>
+      )
+    case 'kick':
+      return (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path
+            d="M2.5 2.5v11h3V9.5l1.5 1.5v2.5h3v-3l-2.5-2.5 2.5-2.5v-3h-3v2.5L5.5 6.5V2.5h-3Z"
+            fill="currentColor"
           />
         </svg>
       )

@@ -19,8 +19,25 @@ function zodError(
   return reply.status(400).send({ error: err.issues[0]?.message ?? 'Invalid request body' })
 }
 
+const profileSelect = {
+  id: true,
+  username: true,
+  displayName: true,
+  bio: true,
+  avatarUrl: true,
+  tipJarUrl: true,
+  countryCode: true,
+  pronouns: true,
+  defaultLocation: true,
+  socialLinks: true,
+  publicAttribution: true,
+  showJoinDate: true,
+  createdAt: true,
+} as const
+
 // PATCH /api/me/profile — update bio, display name, social links, tip jar, meta-stream opt-out
 const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
+  // GET /api/me/profile — current profile fields, for the settings form
   fastify.get(
     '/api/me/profile',
     {
@@ -34,22 +51,10 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const profile = await fastify.prisma.user.findUnique({
         where: { id: user.id },
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
-          bio: true,
-          avatarUrl: true,
-          tipJarUrl: true,
-          countryCode: true,
-          pronouns: true,
-          defaultLocation: true,
-          socialLinks: true,
-          publicAttribution: true,
-        },
+        select: profileSelect,
       })
       if (!profile) return reply.status(404).send({ error: 'User not found' })
-      return reply.send(profile)
+      return reply.send({ ...profile, createdAt: profile.createdAt.toISOString() })
     },
   )
 
@@ -81,23 +86,12 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
         data.defaultLocation = body.defaultLocation?.trim() || null
       if (body.socialLinks !== undefined) data.socialLinks = body.socialLinks
       if (body.publicAttribution !== undefined) data.publicAttribution = body.publicAttribution
+      if (body.showJoinDate !== undefined) data.showJoinDate = body.showJoinDate
 
       const updated = await fastify.prisma.user.update({
         where: { id: user.id },
         data,
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
-          bio: true,
-          avatarUrl: true,
-          tipJarUrl: true,
-          countryCode: true,
-          pronouns: true,
-          defaultLocation: true,
-          socialLinks: true,
-          publicAttribution: true,
-        },
+        select: profileSelect,
       })
 
       if (body.bio) {
@@ -106,7 +100,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
         )
       }
 
-      return reply.send(updated)
+      return reply.send({ ...updated, createdAt: updated.createdAt.toISOString() })
     },
   )
 

@@ -373,6 +373,7 @@ export const PublicChannelUserSchema = z.object({
   countryCode: z.string().nullable().optional(),
   pronouns: z.string().nullable().optional(),
   socialLinks: z.unknown().optional(),
+  joinDate: z.string().datetime().nullable().optional(),
 })
 
 export const PublicChannelViewSchema = z.object({
@@ -506,6 +507,7 @@ export const PublicProfileArtistSchema = z.object({
   tier: z.string(),
   countryCode: z.string().nullable().optional(),
   pronouns: z.string().nullable().optional(),
+  joinDate: z.string().datetime().nullable().optional(),
 })
 
 export const PublicProfileViewSchema = z.object({
@@ -718,6 +720,8 @@ export const ProfileFieldsSchema = z.object({
   defaultLocation: z.string().nullable(),
   socialLinks: z.unknown(),
   publicAttribution: z.boolean(),
+  showJoinDate: z.boolean(),
+  createdAt: z.string().datetime(),
 })
 
 export const MetaStreamOptResponseSchema = z.object({
@@ -799,7 +803,22 @@ export const AuthUserSummarySchema = z.object({
 })
 
 export const AuthLoginResponseSchema = z.object({
-  user: AuthUserSummarySchema,
+  user: AuthUserSummarySchema.optional(),
+  requiresTotp: z.boolean().optional(),
+  challengeId: z.string().optional(),
+})
+
+export const TotpStatusResponseSchema = z.object({
+  enabled: z.boolean(),
+})
+
+export const TotpSetupResponseSchema = z.object({
+  secret: z.string(),
+  otpauthUri: z.string(),
+})
+
+export const TotpConfirmResponseSchema = z.object({
+  backupCodes: z.array(z.string()),
 })
 
 export const AuthRegisterResponseSchema = z.object({
@@ -1265,6 +1284,8 @@ export const ChatAccessResponseSchema = z.object({
   fanChatEnabled: z.boolean(),
   isSupporter: z.boolean(),
   canJoinFanChat: z.boolean(),
+  subscribersOnly: z.boolean(),
+  canPostInChat: z.boolean(),
 })
 
 export const ChatFanTokenResponseSchema = z.object({

@@ -7,8 +7,11 @@ import {
   ChatAnnouncementViewSchema,
   ChatBanSchema,
   ChatOkResponseSchema,
+  ChatSettingsPatchSchema,
+  ChatSettingsResponseSchema,
   FingerprintHashParamSchema,
   IdParamSchema,
+  openApiResponse,
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
@@ -23,6 +26,52 @@ function zodError(
 }
 
 const meChat: FastifyPluginAsync = async (fastify) => {
+  // GET /api/me/chat/settings — current chat-access settings for the artist's own channel
+  fastify.get(
+    '/api/me/chat/settings',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(ChatSettingsResponseSchema, 'ChatSettings') },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { chatSubscribersOnly: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      return reply.send({ subscribersOnly: channel.chatSubscribersOnly })
+    },
+  )
+
+  // PATCH /api/me/chat/settings { subscribersOnly: boolean }
+  fastify.patch(
+    '/api/me/chat/settings',
+    {
+      preHandler: requireAuth,
+      schema: { response: openApiResponse(ChatSettingsResponseSchema, 'ChatSettings') },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = ChatSettingsPatchSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      const updated = await fastify.prisma.channel.update({
+        where: { id: channel.id },
+        data: { chatSubscribersOnly: parsed.data.subscribersOnly },
+        select: { chatSubscribersOnly: true },
+      })
+
+      return reply.send({ subscribersOnly: updated.chatSubscribersOnly })
+    },
+  )
+
   // POST /api/me/chat/announcements { body: string }
   fastify.post(
     '/api/me/chat/announcements',

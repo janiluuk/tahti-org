@@ -523,6 +523,7 @@ model User {
   memberNumber          Int?       @unique
   memberSince           DateTime?
   publicAttribution     Boolean    @default(true)
+  showJoinDate          Boolean    @default(true)
   stripeCustomerId                  String?
   stripeMembershipSubscriptionId    String?  @unique
   stripeConnectAccountId            String?  @unique
@@ -549,11 +550,15 @@ model User {
   googleDriveRefreshTokenEnc String?  // PLAT-083: encrypted refresh token
   spotifyArtistId       String?  // mixed-source collections brief: resolved Spotify artist catalog ID for "Your tracks" — search itself uses an app-level token, no per-user OAuth
   mixcloudUsername      String?  // mixed-source collections brief: artist's own Mixcloud handle for "Your tracks" — Mixcloud's read API is public, no OAuth needed for catalog browsing
+  totpSecretEnc         String?  // 2FA: TOTP secret, AES-GCM encrypted at rest
+  totpEnabledAt         DateTime? // null = 2FA off (default)
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
   sessions              Session[]
   emailVerifications    EmailVerification[]
+  totpBackupCodes       TotpBackupCode[]
+  totpChallenges        TotpChallenge[]
   membership            Membership?
   channel               Channel?
   motionsProposed       Motion[]
@@ -745,6 +750,31 @@ model Session {
   @@schema("core")
 }
 
+// 2FA: hashed one-time-use recovery codes issued when TOTP is confirmed.
+model TotpBackupCode {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@schema("core")
+}
+
+// 2FA: short-lived "password verified, awaiting TOTP code" pending-login state.
+model TotpChallenge {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@schema("core")
+}
+
 // PLAT-038: private WIP file storage
 model StashFile {
   id          String       @id @default(cuid())
@@ -832,6 +862,7 @@ model Channel {
   totalListenerHours BigInt       @default(0)
   goneLiveAt         DateTime?
   metaStreamOptOut   Boolean              @default(false)
+  chatSubscribersOnly Boolean             @default(false) // only active fan-subscribers can post in chat; everyone can still read
   galleryMode        ChannelGalleryMode   @default(NONE)
   slideshowImages    String[]             // M24: ordered image URLs for channel gallery
   textLayerMode      ChannelTextLayerMode @default(NONE)
