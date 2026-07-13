@@ -21,7 +21,7 @@ describe('liquidsoap channel template', () => {
 
   it('buffers archive fallback before live-or-archive switch (ARTIST-003)', async () => {
     const template = await readFile(templatePath, 'utf8')
-    expect(template).toContain('delay(delay=3., archive)')
+    expect(template).toContain('delay(3., archive)')
   })
 
   it('registers telnet graceful shutdown fade (STREAM-010)', async () => {

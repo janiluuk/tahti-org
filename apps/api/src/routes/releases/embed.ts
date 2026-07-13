@@ -17,6 +17,7 @@ import {
 import { config } from '../../config.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { resolveArtistUrl } from '../../lib/artist-url.js'
 
 // M14 — oEmbed discovery endpoint + embed metadata
 // oEmbed spec: https://oembed.com/
@@ -64,7 +65,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
 
         title = release.title
         authorName = release.user.displayName
-        authorUrl = `${config.appUrl}/u/${release.user.username}`
+        authorUrl = resolveArtistUrl(release.user.username)
         embedUrl = `${config.appUrl}/embed/r/${release.id}`
         thumbnailUrl = (await resolveReleaseArtworkUrl(release)) ?? undefined
       } else {
@@ -81,7 +82,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
 
         title = `${channel.user.displayName} — live channel`
         authorName = channel.user.displayName
-        authorUrl = `${config.appUrl}/u/${channel.user.username}`
+        authorUrl = resolveArtistUrl(channel.user.username)
         embedUrl = `${config.appUrl}/embed/c/${slug}`
       }
 
@@ -153,7 +154,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
           hasStream: !!t.streamKey,
         })),
         embedUrl: `${config.appUrl}/embed/r/${release.id}`,
-        profileUrl: `${config.appUrl}/u/${release.user.username}`,
+        profileUrl: resolveArtistUrl(release.user.username),
       })
     },
   )
@@ -188,7 +189,7 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         state: channel.state,
         artist: channel.user,
         embedUrl: `${config.appUrl}/embed/c/${slug}`,
-        profileUrl: `${config.appUrl}/u/${channel.user.username}`,
+        profileUrl: resolveArtistUrl(channel.user.username),
         hlsUrl: channel.state === 'LIVE' ? `${config.hlsBaseUrl}/${slug}/index.m3u8` : null,
       })
     },

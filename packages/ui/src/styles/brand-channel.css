@@ -1123,6 +1123,11 @@
   border-radius: var(--radius);
 }
 
+[data-tahti-ui='brand'] .ch-embeds-list__frame--kick {
+  aspect-ratio: 16 / 9;
+  height: auto;
+}
+
 [data-tahti-ui='brand'] .ch-archive-section .public-empty-card {
   margin-top: var(--space-2);
 }

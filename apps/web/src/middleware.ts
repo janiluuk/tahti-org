@@ -22,7 +22,9 @@ export async function middleware(request: NextRequest) {
   if (channelSlug) {
     if (isRoot) {
       const url = request.nextUrl.clone()
-      url.pathname = `/c/${channelSlug}`
+      // radio.tahti.live is the 24/7 Tahti Radio station, not an artist channel
+      // (whose slug is 'tahti-radio', not 'radio') — send it to /radio instead.
+      url.pathname = channelSlug === 'radio' ? '/radio' : `/c/${channelSlug}`
       return NextResponse.rewrite(url)
     }
     return NextResponse.next()

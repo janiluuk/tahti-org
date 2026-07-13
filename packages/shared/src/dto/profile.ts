@@ -11,8 +11,10 @@ export const ProfilePatchSchema = z
     tipJarUrl: z.string().trim().max(2000).optional(),
     countryCode: z.string().length(2).toUpperCase().nullable().optional(),
     pronouns: z.string().trim().max(40).nullable().optional(),
+    defaultLocation: z.string().trim().max(120).nullable().optional(),
     socialLinks: z.record(z.string()).optional(),
     publicAttribution: z.boolean().optional(),
+    showJoinDate: z.boolean().optional(),
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
 

@@ -21,6 +21,10 @@ export const archiveItemMetadataSelect = {
   genre: true,
   genreCustom: true,
   recordingLocation: true,
+  venueId: true,
+  venue: {
+    select: { id: true, slug: true, name: true, city: true, countryCode: true },
+  },
   subGenres: true,
   contentType: true,
   mixVersion: true,
@@ -101,6 +105,7 @@ function fieldsToPrismaData(fields: ArchiveMetadataFields): Record<string, unkno
   if (fields.genreCustom !== undefined) data.genreCustom = fields.genreCustom || null
   if (fields.recordingLocation !== undefined)
     data.recordingLocation = fields.recordingLocation || null
+  if (fields.venueId !== undefined) data.venueId = fields.venueId || null
   if (fields.subGenres !== undefined) data.subGenres = fields.subGenres
   if (fields.contentType !== undefined) data.contentType = fields.contentType
   if (fields.mixVersion !== undefined) data.mixVersion = fields.mixVersion || null

@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { AuthLoginResponseSchema, LoginSchema, openApiResponse } from '@tahti/shared'
 import { verifyPassword } from '../../lib/password.js'
 import { createSession } from '../../lib/session.js'
+import { generateTotpChallengeId, totpChallengeExpiresAt } from '../../lib/token.js'
 import { config } from '../../config.js'
 
 const loginRoute: FastifyPluginAsync = async (fastify) => {
@@ -36,6 +37,7 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
           tier: true,
           suspendedAt: true,
           deletedAt: true,
+          totpEnabledAt: true,
         },
       })
 
@@ -60,6 +62,17 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
 
       if (user.deletedAt) {
         return reply.status(403).send({ error: 'This account has been deleted' })
+      }
+
+      if (user.totpEnabledAt) {
+        const challenge = await fastify.prisma.totpChallenge.create({
+          data: {
+            id: generateTotpChallengeId(),
+            userId: user.id,
+            expiresAt: totpChallengeExpiresAt(),
+          },
+        })
+        return reply.send({ requiresTotp: true, challengeId: challenge.id })
       }
 
       const session = await createSession(fastify.prisma, user.id)

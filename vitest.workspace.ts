@@ -7,4 +7,6 @@ export default defineWorkspace([
   'packages/shared',
   'packages/db',
   'packages/ledger',
+  'packages/ui',
+  'services/orchestrator',
 ])

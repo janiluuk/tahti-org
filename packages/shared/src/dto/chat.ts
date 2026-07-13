@@ -40,3 +40,13 @@ export const ChatTokenSchema = z.object({
 })
 
 export type ChatTokenInput = z.infer<typeof ChatTokenSchema>
+
+export const ChatSettingsPatchSchema = z.object({
+  subscribersOnly: z.boolean(),
+})
+
+export type ChatSettingsPatchInput = z.infer<typeof ChatSettingsPatchSchema>
+
+export const ChatSettingsResponseSchema = z.object({
+  subscribersOnly: z.boolean(),
+})

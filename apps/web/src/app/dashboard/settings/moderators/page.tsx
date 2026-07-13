@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import ModeratorsPanel from '../../moderators-panel'
 import type { ModeratorRow } from '../../moderator-actions'
+import { ChatSettingsPanel } from '../../chat-settings-panel'
 
 export default async function ModeratorsSettingsPage() {
   const sessionValue = dashboardSessionCookie()
@@ -16,12 +17,23 @@ export default async function ModeratorsSettingsPage() {
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   let moderators: ModeratorRow[] = []
+  let subscribersOnly = false
   try {
-    const res = await fetch(`${apiUrl}/api/me/channel/moderators`, {
-      headers: { Cookie: `tahti_session=${sessionValue}` },
-      cache: 'no-store',
-    })
-    if (res.ok) moderators = (await res.json()) as ModeratorRow[]
+    const [moderatorsRes, chatSettingsRes] = await Promise.all([
+      fetch(`${apiUrl}/api/me/channel/moderators`, {
+        headers: { Cookie: `tahti_session=${sessionValue}` },
+        cache: 'no-store',
+      }),
+      fetch(`${apiUrl}/api/me/chat/settings`, {
+        headers: { Cookie: `tahti_session=${sessionValue}` },
+        cache: 'no-store',
+      }),
+    ])
+    if (moderatorsRes.ok) moderators = (await moderatorsRes.json()) as ModeratorRow[]
+    if (chatSettingsRes.ok) {
+      const settings = (await chatSettingsRes.json()) as { subscribersOnly: boolean }
+      subscribersOnly = settings.subscribersOnly
+    }
   } catch {
     // render with partial data
   }
@@ -32,6 +44,7 @@ export default async function ModeratorsSettingsPage() {
         <h1 className="studio-page-title">Moderators</h1>
       </div>
 
+      <ChatSettingsPanel initialSubscribersOnly={subscribersOnly} />
       <ModeratorsPanel initial={moderators} channelSlug={user.channel.slug} />
     </div>
   )
