@@ -160,7 +160,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       // shared <audio> element.
       audio.loop = track.kind === 'live' && !isHlsUrl
 
-      if (track.kind === 'live' && isHlsUrl && !audio.canPlayType('application/vnd.apple.mpegurl')) {
+      if (
+        track.kind === 'live' &&
+        isHlsUrl &&
+        !audio.canPlayType('application/vnd.apple.mpegurl')
+      ) {
         const init = () => {
           const Hls = window.Hls
           if (Hls?.isSupported()) {
