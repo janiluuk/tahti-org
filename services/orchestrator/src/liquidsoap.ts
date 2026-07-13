@@ -37,6 +37,11 @@ const ROTATION_TEMPLATE_PATH =
 export type LiquidsoapTemplateKind = 'channel' | 'rotation'
 const HLS_VOLUME = process.env.HLS_VOLUME ?? 'tahti_stack_hls'
 const RECORDINGS_VOLUME = process.env.RECORDINGS_VOLUME ?? 'tahti_recordings_shared'
+/** Shared named volume for rendered per-channel Liquidsoap configs — see spawnLiquidsoapContainer. */
+const LIQUIDSOAP_CONFIG_VOLUME =
+  process.env.LIQUIDSOAP_CONFIG_VOLUME ?? 'tahti_stack_liquidsoap_configs'
+/** Where LIQUIDSOAP_CONFIG_VOLUME is mounted inside *this* (orchestrator) container. */
+const LIQUIDSOAP_CONFIG_MOUNT = process.env.LIQUIDSOAP_CONFIG_MOUNT ?? '/liquidsoap-configs'
 const API_URL = process.env.API_URL ?? 'http://api:3001'
 const DOCKER_NETWORK = process.env.CHANNEL_NETWORK ?? 'tahti-stack_default'
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
@@ -167,8 +172,16 @@ export async function spawnLiquidsoapContainer(
     config = config.replace(/\{\{#RTMP_TARGETS\}\}[\s\S]*?\{\{\/RTMP_TARGETS\}\}/g, rtmpBlock)
   }
 
-  const configPath = `/tmp/liquidsoap-${channelId}.liq`
-  await writeFile(configPath, config)
+  const configFileName = `liquidsoap-${channelId}.liq`
+  // Written through the orchestrator's own mount of the shared named volume — but
+  // the `docker run` below reaches the HOST's dockerd via the mounted socket, so its
+  // bind-mount source must be a host path, not a path inside this container. Resolve
+  // the volume's real host directory rather than reusing this container-local path.
+  await writeFile(`${LIQUIDSOAP_CONFIG_MOUNT}/${configFileName}`, config)
+  const { stdout: volumeMountpoint } = await execAsync(
+    `docker volume inspect ${LIQUIDSOAP_CONFIG_VOLUME} --format '{{ .Mountpoint }}'`,
+  )
+  const hostConfigPath = `${volumeMountpoint.trim()}/${configFileName}`
 
   const containerName = `tahti-channel-${slug}`
 
@@ -181,7 +194,7 @@ export async function spawnLiquidsoapContainer(
     `-v ${RECORDINGS_VOLUME}:/recordings`,
     `-v ${ARCHIVE_CACHE_VOLUME}:/archive-cache`,
     `-v ${COVER_CACHE_VOLUME}:/cover-cache`,
-    `-v ${configPath}:/etc/liquidsoap/channel.liq:ro`,
+    `-v ${hostConfigPath}:/etc/liquidsoap/channel.liq:ro`,
     `-e CHANNEL_ID=${channelId}`,
     `-e BROADCAST_ID=${broadcastId}`,
     `-e API_URL=${API_URL}`,

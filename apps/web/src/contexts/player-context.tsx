@@ -150,7 +150,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         if (opts?.autoplay !== false) void audio.play()
       }
 
-      if (track.kind === 'live' && !audio.canPlayType('application/vnd.apple.mpegurl')) {
+      // 'live' tracks are usually an HLS (.m3u8) playlist, but can also be a plain
+      // audio file standing in for a stream (e.g. a looping demo track) — only take
+      // the hls.js path for an actual playlist URL.
+      const isHlsUrl = track.url.split(/[#?]/)[0]!.toLowerCase().endsWith('.m3u8')
+      // A 'live' track that isn't an HLS playlist is a stand-in file for a stream
+      // (e.g. a demo loop) — it should never audibly "end". Set unconditionally so
+      // switching away from such a track doesn't leave loop=true behind on the
+      // shared <audio> element.
+      audio.loop = track.kind === 'live' && !isHlsUrl
+
+      if (track.kind === 'live' && isHlsUrl && !audio.canPlayType('application/vnd.apple.mpegurl')) {
         const init = () => {
           const Hls = window.Hls
           if (Hls?.isSupported()) {
