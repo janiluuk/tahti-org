@@ -802,7 +802,22 @@ export const AuthUserSummarySchema = z.object({
 })
 
 export const AuthLoginResponseSchema = z.object({
-  user: AuthUserSummarySchema,
+  user: AuthUserSummarySchema.optional(),
+  requiresTotp: z.boolean().optional(),
+  challengeId: z.string().optional(),
+})
+
+export const TotpStatusResponseSchema = z.object({
+  enabled: z.boolean(),
+})
+
+export const TotpSetupResponseSchema = z.object({
+  secret: z.string(),
+  otpauthUri: z.string(),
+})
+
+export const TotpConfirmResponseSchema = z.object({
+  backupCodes: z.array(z.string()),
 })
 
 export const AuthRegisterResponseSchema = z.object({

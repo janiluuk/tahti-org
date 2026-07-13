@@ -8,9 +8,9 @@ import { Alert, BrandLogo, Button, ButtonIcon, Field, Heading, Input, Stack, Tex
 import { BgCanvas } from '@/components/ui/bg-canvas'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { safeSignupRedirect } from '@/lib/signup'
-import { login, register } from '../auth/actions'
+import { login, register, verifyTotp } from '../auth/actions'
 
-type AuthMode = 'login' | 'register'
+type AuthMode = 'login' | 'register' | 'totp'
 
 function initialMode(): AuthMode {
   if (typeof window === 'undefined') return 'login'
@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [pending, setPending] = useState(false)
   const [registerSuccess, setRegisterSuccess] = useState(false)
   const [nextPath, setNextPath] = useState('/dashboard')
+  const [totpChallengeId, setTotpChallengeId] = useState<string | null>(null)
   const {
     captchaRef,
     required: captchaRequired,
@@ -52,6 +53,30 @@ export default function LoginPage() {
     const result = await login({
       email: form.get('email') as string,
       password: form.get('password') as string,
+    })
+
+    if (result.error) {
+      setError(result.error)
+      setPending(false)
+    } else if (result.requiresTotp && result.challengeId) {
+      setTotpChallengeId(result.challengeId)
+      setMode('totp')
+      setPending(false)
+    } else {
+      window.location.href = nextPath
+    }
+  }
+
+  async function handleTotpSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!totpChallengeId) return
+    setPending(true)
+    setError(null)
+
+    const form = new FormData(e.currentTarget)
+    const result = await verifyTotp({
+      challengeId: totpChallengeId,
+      code: (form.get('code') as string).trim(),
     })
 
     if (result.error) {
@@ -90,6 +115,57 @@ export default function LoginPage() {
     } else {
       setRegisterSuccess(true)
     }
+  }
+
+  if (mode === 'totp') {
+    return (
+      <>
+        <BgCanvas variant="subtle" />
+        <div className="auth-shell">
+          <div className="auth-card auth-card--dark">
+            <BrandLogo />
+            <Heading level={1}>Enter your 2FA code</Heading>
+            <Text tone="muted">
+              Open your authenticator app and enter the 6-digit code, or use one of your backup
+              codes.
+            </Text>
+
+            <form onSubmit={handleTotpSubmit}>
+              <Stack gap={4}>
+                {error && <Alert variant="error">{error}</Alert>}
+
+                <Field label="Code">
+                  <Input
+                    name="code"
+                    type="text"
+                    required
+                    autoComplete="one-time-code"
+                    autoFocus
+                    maxLength={9}
+                  />
+                </Field>
+
+                <Button variant="primary" size="lg" type="submit" disabled={pending}>
+                  <ButtonIcon name="check" />
+                  {pending ? 'Verifying…' : 'Verify'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  type="button"
+                  onClick={() => {
+                    setTotpChallengeId(null)
+                    switchMode('login')
+                  }}
+                >
+                  Back to log in
+                </Button>
+              </Stack>
+            </form>
+          </div>
+        </div>
+      </>
+    )
   }
 
   if (registerSuccess) {

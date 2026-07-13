@@ -19,7 +19,25 @@ interface RegisterInput {
   hcaptchaToken?: string
 }
 
-export async function login(input: LoginInput): Promise<{ error: string | null }> {
+function applySessionCookieFrom(response: Response) {
+  const setCookieHeader = response.headers.get('set-cookie') ?? ''
+  const match = setCookieHeader.match(/tahti_session=([^;]+)/)
+  if (match) {
+    cookies().set({
+      name: 'tahti_session',
+      value: match[1],
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+    })
+  }
+}
+
+export async function login(
+  input: LoginInput,
+): Promise<{ error: string | null; requiresTotp?: boolean; challengeId?: string }> {
   const parsed = LoginSchema.safeParse(input)
   if (!parsed.success) {
     return { error: 'Invalid email or password' }
@@ -34,7 +52,11 @@ export async function login(input: LoginInput): Promise<{ error: string | null }
       body: JSON.stringify(parsed.data),
     })
 
-    const data = (await response.json()) as { error?: string }
+    const data = (await response.json()) as {
+      error?: string
+      requiresTotp?: boolean
+      challengeId?: string
+    }
 
     if (!response.ok) {
       if (response.status === 403) {
@@ -43,21 +65,36 @@ export async function login(input: LoginInput): Promise<{ error: string | null }
       return { error: data.error ?? 'Login failed' }
     }
 
-    const setCookieHeader = response.headers.get('set-cookie') ?? ''
-    const match = setCookieHeader.match(/tahti_session=([^;]+)/)
-    if (match) {
-      const cookieStore = cookies()
-      cookieStore.set({
-        name: 'tahti_session',
-        value: match[1],
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 30 * 24 * 60 * 60,
-        path: '/',
-      })
+    if (data.requiresTotp && data.challengeId) {
+      return { error: null, requiresTotp: true, challengeId: data.challengeId }
     }
 
+    applySessionCookieFrom(response)
+    return { error: null }
+  } catch {
+    return { error: 'Could not reach the server — please try again' }
+  }
+}
+
+export async function verifyTotp(input: {
+  challengeId: string
+  code: string
+}): Promise<{ error: string | null }> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+
+  try {
+    const response = await fetch(`${apiUrl}/api/auth/login/totp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+
+    const data = (await response.json()) as { error?: string }
+    if (!response.ok) {
+      return { error: data.error ?? 'Invalid code' }
+    }
+
+    applySessionCookieFrom(response)
     return { error: null }
   } catch {
     return { error: 'Could not reach the server — please try again' }
