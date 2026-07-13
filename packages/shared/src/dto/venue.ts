@@ -19,6 +19,7 @@ export const CreateVenueSchema = z.object({
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   externalLinks: z.record(z.string().url()).optional(),
+  photos: z.array(z.string().max(2048)).max(10).optional(),
 })
 
 export type CreateVenueInput = z.infer<typeof CreateVenueSchema>
@@ -43,6 +44,7 @@ export const PatchVenueSchema = z
     latitude: z.number().min(-90).max(90).nullable().optional(),
     longitude: z.number().min(-180).max(180).nullable().optional(),
     externalLinks: z.record(z.string().url()).optional(),
+    photos: z.array(z.string().max(2048)).max(10).optional(),
   })
   .refine((b) => Object.keys(b).length > 0, { message: 'No fields to update' })
 

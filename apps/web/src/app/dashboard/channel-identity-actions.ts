@@ -19,6 +19,7 @@ export async function updateChannelProfile(patch: {
   avatarUrl?: string
   countryCode?: string | null
   pronouns?: string | null
+  defaultLocation?: string | null
   socialLinks?: Record<string, string>
   showJoinDate?: boolean
 }): Promise<{ error: string | null }> {

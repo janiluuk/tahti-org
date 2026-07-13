@@ -34,6 +34,7 @@ export interface ArtistInfoFormData {
   countryCode: string | null
   pronouns: string | null
   showJoinDate: boolean
+  defaultLocation: string | null
   genres: string[]
   bio: string
   links: ChannelLink[]
@@ -46,6 +47,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
     avatarUrl: initial.avatarUrl,
     countryCode: initial.countryCode,
     pronouns: initial.pronouns,
+    defaultLocation: initial.defaultLocation,
     genres: initial.genres,
   })
   const [bio, setBio] = useState(initial.bio)
@@ -67,6 +69,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
         countryCode: identity.countryCode,
         pronouns: identity.pronouns,
         showJoinDate,
+        defaultLocation: identity.defaultLocation,
         socialLinks: {
           genres: identity.genres.join(', '),
           youtube: streamingLinks.youtube.trim(),

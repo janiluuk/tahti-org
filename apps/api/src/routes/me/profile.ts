@@ -28,6 +28,7 @@ const profileSelect = {
   tipJarUrl: true,
   countryCode: true,
   pronouns: true,
+  defaultLocation: true,
   socialLinks: true,
   publicAttribution: true,
   showJoinDate: true,
@@ -81,6 +82,8 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl.trim() || null
       if (body.countryCode !== undefined) data.countryCode = body.countryCode?.toUpperCase() ?? null
       if (body.pronouns !== undefined) data.pronouns = body.pronouns?.trim() || null
+      if (body.defaultLocation !== undefined)
+        data.defaultLocation = body.defaultLocation?.trim() || null
       if (body.socialLinks !== undefined) data.socialLinks = body.socialLinks
       if (body.publicAttribution !== undefined) data.publicAttribution = body.publicAttribution
       if (body.showJoinDate !== undefined) data.showJoinDate = body.showJoinDate

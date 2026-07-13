@@ -15,8 +15,17 @@ export default async function ArtistInfoSettingsPage() {
   if (!user.channel) redirect('/dashboard/setup-channel')
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const { avatarUrl, bio, countryCode, pronouns, showJoinDate, genres, links, streamingLinks } =
-    await fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug)
+  const {
+    avatarUrl,
+    bio,
+    countryCode,
+    pronouns,
+    showJoinDate,
+    defaultLocation,
+    genres,
+    links,
+    streamingLinks,
+  } = await fetchChannelEditorData(apiUrl, sessionValue, user.channel.slug)
 
   return (
     <div>
@@ -41,6 +50,7 @@ export default async function ArtistInfoSettingsPage() {
           countryCode,
           pronouns,
           showJoinDate,
+          defaultLocation,
           genres,
           bio,
           links,
