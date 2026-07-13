@@ -35,10 +35,10 @@ radio = fallback(track_sensitive=false, [archive, blank()])
 # --- Graceful shutdown (same telnet contract as the live-channel template) ---
 shutting_down = ref(false)
 
-def start_graceful_shutdown() =
+def start_graceful_shutdown(_) =
   shutting_down := true
-  thread.delay({{LIQUIDSOAP_FADE_SEC}}.)
-  shutdown(0)
+  thread.pause({{LIQUIDSOAP_FADE_SEC}}.)
+  shutdown(code=0)
   "ok"
 end
 
@@ -52,9 +52,16 @@ server.register(
 
 radio_out = switch(
   track_sensitive=false,
-  [({ shutting_down() }, fade.out(type="log", duration={{LIQUIDSOAP_FADE_SEC}}., radio))],
-  radio
+  [
+    ({ shutting_down() }, fade.out(type="log", duration={{LIQUIDSOAP_FADE_SEC}}., radio)),
+    ({ true }, radio)
+  ]
 )
+
+# output.file.hls doesn't create its target directory itself.
+if not file.exists("/hls/{{CHANNEL_ID}}") then
+  file.mkdir("/hls/{{CHANNEL_ID}}")
+end
 
 # --- HLS output for listeners ---
 output.file.hls(
@@ -62,6 +69,9 @@ output.file.hls(
   segments=4,
   segment_duration=4.,
   segments_overhead=10,
+  # Same filesystem as the target dir, or segment writes fall back to a slow
+  # copy instead of an atomic rename.
+  temp_dir="/hls/{{CHANNEL_ID}}",
   "/hls/{{CHANNEL_ID}}",
   [
     ("stream-mp3-192", %ffmpeg(format="mpegts", %audio(codec="libmp3lame", b="192k", ar=44100, ac=2))),
