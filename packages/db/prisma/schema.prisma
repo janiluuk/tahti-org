@@ -832,6 +832,7 @@ model Channel {
   totalListenerHours BigInt       @default(0)
   goneLiveAt         DateTime?
   metaStreamOptOut   Boolean              @default(false)
+  chatSubscribersOnly Boolean             @default(false) // only active fan-subscribers can post in chat; everyone can still read
   galleryMode        ChannelGalleryMode   @default(NONE)
   slideshowImages    String[]             // M24: ordered image URLs for channel gallery
   textLayerMode      ChannelTextLayerMode @default(NONE)
