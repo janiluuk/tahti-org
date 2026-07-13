@@ -340,6 +340,8 @@ services:
       RECORDINGS_VOLUME: tahti_stack_recordings
       ARCHIVE_CACHE_VOLUME: tahti_stack_archive_cache
       COVER_CACHE_VOLUME: tahti_stack_cover_cache
+      LIQUIDSOAP_CONFIG_VOLUME: tahti_stack_liquidsoap_configs
+      LIQUIDSOAP_CONFIG_MOUNT: /liquidsoap-configs
       FINGERPRINT_SEND_AUDIO: '0'
     ports:
       - '${ORCHESTRATOR_PORT:-15003}:3003'
@@ -348,6 +350,9 @@ services:
       - stack_hls:/hls
       - stack_recordings:/recordings
       - stack_archive_cache:/archive-cache
+      - stack_liquidsoap_configs:/liquidsoap-configs
+      - ./liquidsoap-channel.liq.template:/srv/liquidsoap-channel.liq.template:ro
+      - ./liquidsoap-rotation.liq.template:/srv/liquidsoap-rotation.liq.template:ro
     depends_on:
       api:
         condition: service_healthy
@@ -375,3 +380,5 @@ volumes:
     name: tahti_stack_archive_cache
   stack_cover_cache:
     name: tahti_stack_cover_cache
+  stack_liquidsoap_configs:
+    name: tahti_stack_liquidsoap_configs
