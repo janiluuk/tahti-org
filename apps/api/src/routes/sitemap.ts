@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { config } from '../config.js'
+import { resolveArtistUrl } from '../lib/artist-url.js'
 
 function xmlEscape(text: string): string {
   return text
@@ -38,8 +39,7 @@ const sitemapRoutes: FastifyPluginAsync = async (fastify) => {
       take: 10_000,
     })
 
-    const base = config.appUrl.replace(/\/$/, '')
-    const body = wrapUrlset(users.map((u) => urlEntry(`${base}/u/${u.username}`, u.updatedAt)))
+    const body = wrapUrlset(users.map((u) => urlEntry(resolveArtistUrl(u.username), u.updatedAt)))
 
     return reply.type('application/xml').send(body)
   })

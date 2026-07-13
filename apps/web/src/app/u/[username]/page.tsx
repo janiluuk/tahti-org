@@ -11,6 +11,7 @@ import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-ic
 import { countryName } from '@/lib/country-options'
 import { getSessionUser } from '@/lib/session'
 import { ReportButton } from '@/components/report-button'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 export const revalidate = 60
 
@@ -35,17 +36,22 @@ export async function generateMetadata({
   const description =
     artist.bio?.slice(0, 160) ??
     `Listen to ${artist.displayName} on Tahti — nonprofit broadcasting for independent artists.`
+  const canonicalUrl = resolveChannelUrl(artist.username)
 
   return {
     title: `${artist.displayName} (@${artist.username})`,
     description,
-    alternates: data.links.feeds?.archive
-      ? { types: { 'application/rss+xml': [{ url: data.links.feeds.archive }] } }
-      : undefined,
+    alternates: {
+      canonical: canonicalUrl,
+      ...(data.links.feeds?.archive
+        ? { types: { 'application/rss+xml': [{ url: data.links.feeds.archive }] } }
+        : {}),
+    },
     openGraph: {
       title: artist.displayName,
       description,
       type: 'profile',
+      url: canonicalUrl,
       ...(artist.avatarUrl ? { images: [{ url: artist.avatarUrl }] } : {}),
     },
   }
@@ -140,8 +146,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const isLive = channel?.state === 'LIVE'
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
   const { events, posts, embeds } = await fetchChannelExtras(channel?.slug)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'https://app.tahti.live'
-  const profileUrl = `${appUrl.replace(/\/$/, '')}/u/${artist.username}`
+  const profileUrl = resolveChannelUrl(artist.username)
 
   const jsonLd = {
     '@context': 'https://schema.org',
