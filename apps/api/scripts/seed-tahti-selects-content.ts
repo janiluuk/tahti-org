@@ -128,6 +128,10 @@ async function main() {
         displayName: 'Tahti Selects',
         emailVerifiedAt: new Date(),
         isMember: true,
+        // Perpetual system station — must not be subject to the free-tier weekly
+        // live-broadcast cap (packages/shared/src/broadcast-cap.ts), which would
+        // otherwise force-disconnect it every ~61 minutes.
+        tier: 'STUDIO',
         channel: {
           create: {
             slug: TAHTI_SELECTS_SLUG,
@@ -141,7 +145,7 @@ async function main() {
           },
         },
       },
-      update: { displayName: 'Tahti Selects' },
+      update: { displayName: 'Tahti Selects', tier: 'STUDIO' },
       include: { channel: true },
     })
 

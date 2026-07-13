@@ -20,6 +20,7 @@ export type ChannelIdentityDraft = {
   avatarUrl: string | null
   countryCode: string | null
   pronouns: string | null
+  defaultLocation: string | null
   genres: string[]
 }
 
@@ -33,6 +34,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
   const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl ?? '')
   const [countryCode, setCountryCode] = useState(initial.countryCode ?? '')
   const [pronouns, setPronouns] = useState(initial.pronouns ?? '')
+  const [defaultLocation, setDefaultLocation] = useState(initial.defaultLocation ?? '')
   const [genres, setGenres] = useState<string[]>(initial.genres)
   const [avatarUrlInput, setAvatarUrlInput] = useState('')
   const [cropSrc, setCropSrc] = useState<string | null>(null)
@@ -45,10 +47,11 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       avatarUrl: avatarUrl || null,
       countryCode: countryCode || null,
       pronouns: pronouns || null,
+      defaultLocation: defaultLocation || null,
       genres,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayName, avatarUrl, countryCode, pronouns, genres])
+  }, [displayName, avatarUrl, countryCode, pronouns, defaultLocation, genres])
 
   function onFile(file: File) {
     setAvatarError(null)
@@ -214,6 +217,24 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           <option value="she/they" />
           <option value="he/they" />
         </datalist>
+      </div>
+
+      <div className="studio-field--block">
+        <label className="studio-label" htmlFor="identity-default-location">
+          Default location
+        </label>
+        <input
+          id="identity-default-location"
+          type="text"
+          placeholder="e.g. Helsinki, Finland"
+          maxLength={120}
+          value={defaultLocation}
+          onChange={(e) => setDefaultLocation(e.target.value)}
+          className="studio-input"
+        />
+        <p className="studio-help studio-mt-xs">
+          Prefills the city/country when you tag a venue on a live set.
+        </p>
       </div>
 
       <div className="studio-field--block">

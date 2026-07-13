@@ -516,6 +516,7 @@ model User {
   tipJarUrl             String?
   countryCode           String?
   pronouns              String?
+  defaultLocation       String?    // freeform "City, Country" — prefills venue creation, live-set tagging
   tier                  ArtistTier @default(FREE)
   isMember              Boolean    @default(false)
   isBoard               Boolean    @default(false)
@@ -972,7 +973,9 @@ model ArchiveItem {
   taggedNote    String?           // draft @-mention text for collaborators
   genre         String?
   genreCustom   String?           // when not in preset genre list
-  recordingLocation String?
+  recordingLocation String?       // freeform fallback when no structured Venue is linked
+  venueId       String?
+  venue         Venue?            @relation(fields: [venueId], references: [id], onDelete: SetNull)
   subGenres     String[]          @default([])
   contentType   ArchiveContentType @default(STUDIO)
   mixVersion    String?           // e.g. "Original Mix", "Rok Tek Remix"
@@ -1568,7 +1571,8 @@ model Venue {
   createdBy     String
   createdAt     DateTime  @default(now())
 
-  broadcasts VenueBroadcast[]
+  broadcasts   VenueBroadcast[]
+  archiveItems ArchiveItem[]
 
   @@schema("venue")
 }

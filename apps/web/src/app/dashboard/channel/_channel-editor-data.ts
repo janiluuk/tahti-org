@@ -37,6 +37,7 @@ export type ChannelEditorFetchResult = {
   countryCode: string | null
   pronouns: string | null
   showJoinDate: boolean
+  defaultLocation: string | null
   genres: string[]
   links: Array<{ label: string; url: string }>
   streamingLinks: {
@@ -69,6 +70,7 @@ export async function fetchChannelEditorData(
   let countryCode: string | null = null
   let pronouns: string | null = null
   let showJoinDate = true
+  let defaultLocation: string | null = null
   let genres: string[] = []
   let links: Array<{ label: string; url: string }> = []
   let streamingLinks: ChannelEditorFetchResult['streamingLinks'] = {
@@ -91,8 +93,12 @@ export async function fetchChannelEditorData(
     if (textLayerRes.ok) channelTextLayer = (await textLayerRes.json()) as typeof channelTextLayer
     if (visualRes.ok) channelVisual = (await visualRes.json()) as typeof channelVisual
     if (profileRes.ok) {
-      const profile = (await profileRes.json()) as { showJoinDate: boolean }
+      const profile = (await profileRes.json()) as {
+        showJoinDate: boolean
+        defaultLocation: string | null
+      }
       showJoinDate = profile.showJoinDate
+      defaultLocation = profile.defaultLocation
     }
     if (channelRes.ok) {
       const channelData = (await channelRes.json()) as {
@@ -150,6 +156,7 @@ export async function fetchChannelEditorData(
     countryCode,
     pronouns,
     showJoinDate,
+    defaultLocation,
     genres,
     links,
     streamingLinks,

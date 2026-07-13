@@ -201,6 +201,7 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
         capacity: body.capacity ?? null,
         latitude: body.latitude ?? null,
         longitude: body.longitude ?? null,
+        photos: body.photos ?? [],
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         externalLinks: (body.externalLinks ?? null) as any,
         createdBy: user.id,
@@ -270,6 +271,7 @@ const venueRoutes: FastifyPluginAsync = async (fastify) => {
     if (body.latitude !== undefined) data.latitude = body.latitude
     if (body.longitude !== undefined) data.longitude = body.longitude
     if (body.externalLinks !== undefined) data.externalLinks = body.externalLinks
+    if (body.photos !== undefined) data.photos = body.photos
 
     const updated = await fastify.prisma.venue.update({
       where: { slug: routeParams.slug },

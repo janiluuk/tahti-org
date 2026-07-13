@@ -87,6 +87,7 @@ export const ArchiveMetadataFieldsSchema = z.object({
   genre: z.string().max(80).nullable().optional(),
   genreCustom: z.string().max(80).nullable().optional(),
   recordingLocation: z.string().max(120).nullable().optional(),
+  venueId: z.string().max(64).nullable().optional(),
   subGenres: z.array(z.string().max(40).trim()).max(12).optional(),
   contentType: z.enum(ARCHIVE_CONTENT_TYPES).optional(),
   mixVersion: z.string().max(120).nullable().optional(),

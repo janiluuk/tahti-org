@@ -14,6 +14,7 @@ import {
 } from '../../lib/archive-metadata-options'
 import { TracklistEditor } from './tracklist-editor'
 import { CoverImageUpload } from '@/components/cover-image-upload'
+import { VenuePicker } from './venue-picker'
 import {
   prepareArchiveBannerUpload,
   completeArchiveBannerUpload,
@@ -25,6 +26,7 @@ export type ArchiveMetadataFormState = {
   genre: string
   genreCustom: string
   recordingLocation: string
+  venueId: string | null
   subGenres: string
   contentType: string
   mixVersion: string
@@ -55,6 +57,7 @@ export function defaultMetadataFormState(): ArchiveMetadataFormState {
     genre: 'Electronic',
     genreCustom: '',
     recordingLocation: '',
+    venueId: null,
     subGenres: '',
     contentType: ARCHIVE_METADATA_DEFAULTS.contentType,
     mixVersion: '',
@@ -88,6 +91,7 @@ export function metadataFormToPayload(state: ArchiveMetadataFormState): Record<s
     genre: state.genre || undefined,
     genreCustom: state.genreCustom.trim() || undefined,
     recordingLocation: state.recordingLocation.trim() || undefined,
+    venueId: state.venueId,
     subGenres: subGenres.length ? subGenres : undefined,
     contentType: state.contentType,
     mixVersion: state.mixVersion.trim() || undefined,
@@ -124,6 +128,7 @@ export function metadataFromApi(item: Record<string, unknown>): ArchiveMetadataF
     genre: (item.genre as string) ?? 'Electronic',
     genreCustom: (item.genreCustom as string) ?? '',
     recordingLocation: (item.recordingLocation as string) ?? '',
+    venueId: (item.venueId as string | null) ?? null,
     subGenres: Array.isArray(item.subGenres) ? (item.subGenres as string[]).join(', ') : '',
     contentType: (item.contentType as string) ?? ARCHIVE_METADATA_DEFAULTS.contentType,
     mixVersion: (item.mixVersion as string) ?? '',
@@ -195,11 +200,17 @@ export function ArchiveMetadataFields({
         </label>
       </div>
 
+      <VenuePicker
+        venueId={state.venueId}
+        disabled={disabled}
+        onChange={(venueId) => set({ venueId })}
+      />
+
       <label className="studio-field">
-        <span className="studio-label">Recording location</span>
+        <span className="studio-label">Recording location notes (optional)</span>
         <input
           type="text"
-          placeholder="Helsinki, Finland"
+          placeholder="e.g. backstage, second stage — extra detail beyond the venue"
           value={state.recordingLocation}
           disabled={disabled}
           onChange={(e) => set({ recordingLocation: e.target.value })}
