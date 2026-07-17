@@ -1205,6 +1205,16 @@
   font-size: var(--text-body);
 }
 
+[data-tahti-ui='studio'] .studio-field-note {
+  margin: 6px 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .studio-field-note--warning {
+  color: var(--amber);
+}
+
 /* Layout */
 [data-tahti-ui='studio'] .studio-row {
   display: flex;

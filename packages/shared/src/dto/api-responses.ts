@@ -165,6 +165,14 @@ export const RadioNowPlayingSchema = z
   })
   .passthrough()
 
+/** Public, read-only view of the Tahti Selects curated rotation order (STREAM-011). */
+export const RadioRotationItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  artistName: z.string(),
+})
+export const RadioRotationSchema = z.array(RadioRotationItemSchema)
+
 export const ChannelProgrammeItemViewSchema = z.object({
   id: z.string(),
   title: z.string(),

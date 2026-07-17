@@ -40,6 +40,7 @@ export const archiveItemMetadataSelect = {
   followToDownload: true,
   isPublic: true,
   isFallback: true,
+  commentsEnabled: true,
   fallbackOrder: true,
   lastFallbackPlayedAt: true,
   visualPreset: true,
@@ -119,6 +120,7 @@ function fieldsToPrismaData(fields: ArchiveMetadataFields): Record<string, unkno
   if (fields.followToDownload !== undefined) data.followToDownload = fields.followToDownload
   if (fields.isPublic !== undefined) data.isPublic = fields.isPublic
   if (fields.isFallback !== undefined) data.isFallback = fields.isFallback
+  if (fields.commentsEnabled !== undefined) data.commentsEnabled = fields.commentsEnabled
   return data
 }
 

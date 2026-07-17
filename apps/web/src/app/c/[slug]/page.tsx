@@ -30,6 +30,8 @@ import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
 import { countryName } from '@/lib/country-options'
 import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
 import { ReportButton } from '@/components/report-button'
+import { CommentsSection, type CommentItem } from '@/components/comments-section'
+import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 
 function formatJoinDateLabel(joinDate: string | null | undefined): string | null {
   if (!joinDate) return null
@@ -111,14 +113,16 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const channel = (await channelRes.json()) as ChannelResponse
 
-  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, user] = await Promise.all([
-    fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/api/channels/${slug}/events`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/api/channels/${slug}/posts`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/api/channels/${slug}/embeds`, { cache: 'no-store' }),
-    getSessionUser(),
-  ])
+  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, commentsRes, user] =
+    await Promise.all([
+      fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/channels/${slug}/events`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/channels/${slug}/posts`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/channels/${slug}/embeds`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/comments/channel/${slug}`, { cache: 'no-store' }),
+      getSessionUser(),
+    ])
 
   const items: ArchiveItem[] = itemsRes.ok ? ((await itemsRes.json()) as ArchiveItem[]) : []
   const announcements: Announcement[] = announcementsRes.ok
@@ -142,6 +146,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const embeds: Array<{ id: string; url: string; title: string | null }> = embedsRes.ok
     ? await embedsRes.json()
     : []
+  const channelComments: { comments: CommentItem[]; commentsEnabled: boolean } = commentsRes.ok
+    ? await commentsRes.json()
+    : { comments: [], commentsEnabled: true }
 
   const hlsUrl = channel.hlsUrl
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
@@ -556,11 +563,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                             colorSchemeJson={channel.colorSchemeJson}
                           />
                         )}
+                        <TrackCommentsToggle archiveItemId={item.id} isLoggedIn={!!user} />
                       </li>
                     )
                   })}
                 </ul>
               )}
+            </section>
+
+            <section className="ch-comments-section prof-section">
+              <div className="prof-sec-label">Comments</div>
+              <CommentsSection
+                target={{ type: 'channel', slug }}
+                isLoggedIn={!!user}
+                initialComments={channelComments.comments}
+                initialCommentsEnabled={channelComments.commentsEnabled}
+              />
             </section>
           </div>
         </div>

@@ -46,6 +46,8 @@ import chatAnnouncementsRoute from './routes/chat/announcements.js'
 import chatReactRoute from './routes/chat/react.js'
 import chatPresenceRoute from './routes/chat/presence.js'
 import meChat from './routes/me/chat.js'
+import meCommentSettings from './routes/me/comment-settings.js'
+import commentsRoutes from './routes/comments/index.js'
 import meNotificationPreferencesRoutes from './routes/me/notification-preferences.js'
 import meModerators from './routes/me/moderators.js'
 import rtmpTargetRoutes from './routes/me/rtmp-targets.js'
@@ -460,6 +462,8 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(chatReactRoute)
   await fastify.register(chatPresenceRoute)
   await fastify.register(meChat)
+  await fastify.register(meCommentSettings)
+  await fastify.register(commentsRoutes)
   await fastify.register(meNotificationPreferencesRoutes)
   await fastify.register(meModerators)
 
