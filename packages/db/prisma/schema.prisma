@@ -901,6 +901,7 @@ model Channel {
   curatedRotationItems CuratedRotationItem[]
   comments          Comment[]
   pressKitImages    PressKitImage[]
+  radioSlotBookings RadioSlotBooking[]
 
   @@index([state])
   @@schema("channel")
@@ -920,6 +921,24 @@ model PressKitImage {
   createdAt    DateTime @default(now())
 
   @@index([channelId, position])
+  @@schema("channel")
+}
+
+// Tahti Radio slot booking — logged-in artists reserve an hourly window (2h max)
+// to play a live set on the shared Tahti Radio channel. Only the reservation is
+// tracked here (so double-booking is prevented and the calendar shows what's
+// taken); the actual broadcast switch-over/fallback mechanics are separate.
+model RadioSlotBooking {
+  id        String   @id @default(cuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  startAt   DateTime
+  endAt     DateTime
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([startAt, endAt])
+  @@index([channelId, startAt])
   @@schema("channel")
 }
 
