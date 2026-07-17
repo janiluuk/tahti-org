@@ -16,6 +16,7 @@ interface Props {
     id: string
     title: string
     audioUrl: string
+    bannerUrl?: string | null
     peaks?: number[] | null
     visualPreset?: VisualPreset | string | null
     repostToDownload?: boolean
@@ -25,24 +26,24 @@ interface Props {
 }
 
 export function ArchiveItemPlayback({ channelSlug, artistUsername, item, colorSchemeJson }: Props) {
-  const { track, playing, analyser, load, togglePlay } = usePlayer()
+  const { track, playing, analyser, load, togglePlay, addToQueue } = usePlayer()
   const isCurrent = track?.id === item.id
   const preset = (item.visualPreset ?? 'MINIMAL') as VisualPreset
   const showViz = isCurrent && playing && preset !== 'MINIMAL'
 
+  const playerTrack = {
+    id: item.id,
+    kind: 'archive' as const,
+    url: item.audioUrl,
+    title: item.title,
+    subtitle: `@${artistUsername}`,
+    href: `/c/${channelSlug}#archive-item-${item.id}`,
+    artworkUrl: item.bannerUrl,
+  }
+
   async function handleTogglePlay() {
     if (!isCurrent) {
-      load(
-        {
-          id: item.id,
-          kind: 'archive',
-          url: item.audioUrl,
-          title: item.title,
-          subtitle: `@${artistUsername}`,
-          href: `/c/${channelSlug}#archive-item-${item.id}`,
-        },
-        { autoplay: true },
-      )
+      load(playerTrack, { autoplay: true })
       return
     }
     await togglePlay()
@@ -70,6 +71,15 @@ export function ArchiveItemPlayback({ channelSlug, artistUsername, item, colorSc
           {isCurrent && playing ? '❚❚' : '▶'}
         </button>
         <span className="ch-archive-controls__title">{item.title}</span>
+        <button
+          type="button"
+          className="ch-archive-controls__queue"
+          onClick={() => addToQueue(playerTrack)}
+          aria-label={`Add ${item.title} to queue`}
+          title="Add to queue"
+        >
+          +
+        </button>
       </div>
       <ArchiveDownloadButton
         channelSlug={channelSlug}
