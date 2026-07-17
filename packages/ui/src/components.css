@@ -1433,6 +1433,11 @@
   animation: waveform-player-pulse 1.5s ease-in-out infinite;
 }
 
+.waveform-player__dot--waiting {
+  background: var(--amber);
+  animation: waveform-player-pulse 2s ease-in-out infinite;
+}
+
 @keyframes waveform-player-pulse {
   0%,
   100% {
@@ -1465,8 +1470,9 @@
 .waveform-player__waveform {
   display: flex;
   align-items: center;
-  gap: 2px;
-  height: 48px;
+  justify-content: stretch;
+  gap: 3px;
+  height: 64px;
   padding: 4px 0;
   overflow: hidden;
 }
@@ -1474,7 +1480,9 @@
 .waveform-player__bar {
   flex: 1;
   min-width: 3px;
-  max-width: 8px;
+  /* No max-width — bars fill the row edge to edge regardless of container width
+     (previously capped at 8px, which left a big empty gap in wide panels like the
+     broadcast studio's "test your signal" step). */
   height: var(--h, 8px);
   background: var(--cyan);
   border-radius: 2px;
@@ -1493,6 +1501,24 @@
   }
   100% {
     transform: scaleY(1);
+  }
+}
+
+/* Waiting for signal — a slow amber ripple travels across the bars (same per-bar
+   --delay stagger as the active state), reading as "listening", not "frozen". */
+.waveform-player__bar--waiting {
+  opacity: 0.55;
+  background: var(--amber);
+  animation: waveform-player-wave 2.4s ease-in-out var(--delay, 0s) infinite;
+}
+
+@keyframes waveform-player-wave {
+  0%,
+  100% {
+    transform: scaleY(0.2);
+  }
+  50% {
+    transform: scaleY(0.9);
   }
 }
 

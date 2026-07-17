@@ -11,11 +11,14 @@ export default function HlsPlayer({
   title,
   subtitle,
   href,
+  waitingForSignal = false,
 }: {
   url: string
   title?: string
   subtitle?: string
   href?: string
+  /** No source connected yet (broadcast test-signal step) — shows a waiting animation. */
+  waitingForSignal?: boolean
 }) {
   const { track, playing, buffering, currentTime, duration, load, togglePlay, seek } = usePlayer()
 
@@ -54,6 +57,7 @@ export default function HlsPlayer({
         formatBadge={formatBadge}
         onTogglePlay={handleTogglePlay}
         onSeek={isLive ? undefined : handleSeek}
+        waitingForSignal={waitingForSignal}
       />
     </div>
   )

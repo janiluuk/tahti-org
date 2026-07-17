@@ -21,6 +21,10 @@ export interface WaveformPlayerProps {
   /** Strip outer card chrome when nested inside channel player shell. */
   embedded?: boolean
   className?: string
+  /** No source connected yet (e.g. broadcast test-signal step) — shows a slow amber
+   * traveling-wave animation instead of the frozen idle bars, so it reads as "the
+   * server is listening" rather than "nothing is happening". */
+  waitingForSignal?: boolean
 }
 
 /** Custom HLS/archive player chrome — waveform, play/pause, seek bar. */
@@ -36,10 +40,19 @@ export function WaveformPlayer({
   onSeek,
   embedded = false,
   className,
+  waitingForSignal = false,
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
-    (buffering ? 'Buffering…' : isLive ? 'LIVE NOW' : playing ? 'Now playing' : 'Ready to play')
+    (waitingForSignal
+      ? 'Waiting for signal…'
+      : buffering
+        ? 'Buffering…'
+        : isLive
+          ? 'LIVE NOW'
+          : playing
+            ? 'Now playing'
+            : 'Ready to play')
 
   const progress = isLive || duration <= 0 ? 0 : Math.min(1, currentTime / duration)
 
@@ -58,7 +71,11 @@ export function WaveformPlayer({
     <div className={cn('waveform-player', embedded && 'waveform-player--embedded', className)}>
       <div className="waveform-player__status">
         <span
-          className={cn('waveform-player__dot', playing && 'waveform-player__dot--live')}
+          className={cn(
+            'waveform-player__dot',
+            playing && 'waveform-player__dot--live',
+            waitingForSignal && 'waveform-player__dot--waiting',
+          )}
           aria-hidden
         />
         <span className="waveform-player__status-label">{label}</span>
@@ -69,7 +86,11 @@ export function WaveformPlayer({
         {WAVEFORM_BAR_HEIGHTS.map((h, i) => (
           <div
             key={i}
-            className={cn('waveform-player__bar', playing && 'waveform-player__bar--active')}
+            className={cn(
+              'waveform-player__bar',
+              playing && 'waveform-player__bar--active',
+              waitingForSignal && 'waveform-player__bar--waiting',
+            )}
             style={
               {
                 '--h': `${h}px`,
