@@ -3,8 +3,9 @@
 
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { usePlayer } from '@/contexts/player-context'
+import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 
 function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return '0:00'
@@ -13,8 +14,63 @@ function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+function QueueItem({
+  item,
+  onPlay,
+  onRemove,
+}: {
+  item: PlayerTrack
+  onPlay: () => void
+  onRemove: () => void
+}) {
+  return (
+    <li className="mini-player-queue__item">
+      <button
+        type="button"
+        className="mini-player-queue__item-play"
+        onClick={onPlay}
+        aria-label={`Play ${item.title}`}
+      >
+        {item.artworkUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.artworkUrl} alt="" className="mini-player-queue__art" />
+        ) : (
+          <span className="mini-player-queue__art mini-player-queue__art--blank" aria-hidden />
+        )}
+        <span className="mini-player-queue__meta">
+          <span className="mini-player-queue__title">{item.title}</span>
+          {item.subtitle && <span className="mini-player-queue__subtitle">{item.subtitle}</span>}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="mini-player-queue__remove"
+        onClick={onRemove}
+        aria-label={`Remove ${item.title} from queue`}
+      >
+        ✕
+      </button>
+    </li>
+  )
+}
+
 export function MiniPlayer() {
-  const { track, playing, buffering, currentTime, duration, togglePlay, seek, close } = usePlayer()
+  const {
+    track,
+    playing,
+    buffering,
+    currentTime,
+    duration,
+    togglePlay,
+    seek,
+    close,
+    upNext,
+    repeat,
+    toggleRepeat,
+    removeFromQueue,
+    load,
+  } = usePlayer()
+  const [queueOpen, setQueueOpen] = useState(false)
 
   if (!track) return null
 
@@ -22,6 +78,27 @@ export function MiniPlayer() {
 
   return (
     <div className="mini-player" data-testid="mini-player" role="region" aria-label="Now playing">
+      {queueOpen && (
+        <div className="mini-player-queue" role="region" aria-label="Play queue">
+          <div className="mini-player-queue__header">
+            <span className="mini-player-queue__label">Up next</span>
+          </div>
+          {upNext.length === 0 ? (
+            <p className="mini-player-queue__empty">Nothing queued — add tracks to play next.</p>
+          ) : (
+            <ul className="mini-player-queue__list">
+              {upNext.map((item) => (
+                <QueueItem
+                  key={item.id}
+                  item={item}
+                  onPlay={() => load(item, { autoplay: true })}
+                  onRemove={() => removeFromQueue(item.id)}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       {track.kind === 'archive' && duration > 0 && (
         <button
           type="button"
@@ -62,6 +139,25 @@ export function MiniPlayer() {
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
         )}
+        <button
+          type="button"
+          className={`mini-player__repeat${repeat ? ' mini-player__repeat--active' : ''}`}
+          onClick={toggleRepeat}
+          aria-pressed={repeat}
+          aria-label={repeat ? 'Repeat queue: on' : 'Repeat queue: off'}
+          title={repeat ? 'Repeat queue: on' : 'Repeat queue: off'}
+        >
+          ⟲
+        </button>
+        <button
+          type="button"
+          className={`mini-player__queue-toggle${queueOpen ? ' mini-player__queue-toggle--active' : ''}`}
+          onClick={() => setQueueOpen((v) => !v)}
+          aria-expanded={queueOpen}
+          aria-label="Toggle play queue"
+        >
+          {upNext.length > 0 ? `Queue · ${upNext.length}` : 'Queue'}
+        </button>
         <button
           type="button"
           className="mini-player__close"

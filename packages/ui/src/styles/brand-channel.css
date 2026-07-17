@@ -510,6 +510,28 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1 1 auto;
+}
+
+[data-tahti-ui='brand'] .ch-archive-controls__queue {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-body);
+  line-height: 1;
+}
+
+[data-tahti-ui='brand'] .ch-archive-controls__queue:hover {
+  color: var(--cyan);
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
 }
 
 [data-tahti-ui='brand'] .ch-download {
