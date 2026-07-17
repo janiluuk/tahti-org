@@ -151,3 +151,55 @@ body {
 body:has(.mini-player) {
   padding-bottom: 56px;
 }
+
+/* ── Global toast notifications ──────────────────────────────────────── */
+.toast-stack {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 360px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: var(--text-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  animation: toast-in 0.2s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.toast--success {
+  border-color: color-mix(in srgb, var(--green) 40%, var(--border));
+}
+
+.toast--error {
+  border-color: color-mix(in srgb, var(--coral) 40%, var(--border));
+}
+
+@media (max-width: 640px) {
+  .toast-stack {
+    left: var(--space-3);
+    right: var(--space-3);
+    max-width: none;
+  }
+}
