@@ -125,20 +125,36 @@ describe('/api/comments — tracks and channels', () => {
     })
     const commentId = post.json().id
 
-    const forbidden = await app.inject({
-      method: 'DELETE',
-      url: `/api/comments/${commentId}`,
-      headers: { cookie: ownerCookie },
-    })
-    // owner may also delete (moderation) — only assert the AUTHOR can delete their own
-    expect([204, 403]).toContain(forbidden.statusCode)
-
     const del = await app.inject({
       method: 'DELETE',
       url: `/api/comments/${commentId}`,
       headers: { cookie: otherCookie },
     })
     expect(del.statusCode).toBe(204)
+  })
+
+  it('forbids a third party from deleting someone else’s comment', async () => {
+    const post = await app.inject({
+      method: 'POST',
+      url: `/api/comments/track/${archiveItemId}`,
+      headers: { cookie: otherCookie, 'content-type': 'application/json' },
+      payload: { body: 'not yours to delete' },
+    })
+    const commentId = post.json().id
+
+    const thirdParty = await createTestArtist(prisma, {
+      email: `${PREFIX}third@example.com`,
+      username: `${PREFIX}third`,
+      displayName: 'Comment Test Third Party',
+    })
+    const thirdCookie = await sessionCookieFor(prisma, thirdParty.id)
+
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/api/comments/${commentId}`,
+      headers: { cookie: thirdCookie },
+    })
+    expect(res.statusCode).toBe(403)
   })
 
   it('lets the channel owner delete any comment on their track', async () => {
