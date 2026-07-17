@@ -203,7 +203,11 @@ export function BroadcastStudio({
             description="Once you're streaming with the credentials above, confirm it here before you go live."
           >
             <div data-hero>
-              <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview" />
+              <HlsPlayer
+                url={streamSettings.hlsUrl}
+                title="Studio preview"
+                waitingForSignal={!signal?.connected}
+              />
             </div>
             {signal?.connected ? (
               <>
