@@ -11,6 +11,7 @@ import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-ic
 import { countryName } from '@/lib/country-options'
 import { getSessionUser } from '@/lib/session'
 import { ReportButton } from '@/components/report-button'
+import { ReleasesGrid } from '@/components/releases-grid'
 import { resolveChannelUrl } from '@/lib/app-url'
 
 export const revalidate = 60
@@ -374,27 +375,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
               </p>
             </div>
           ) : (
-            <ul className="prof-release-grid">
-              {releases.map((r) => {
-                const year = new Date(r.releaseDate).getFullYear()
-                return (
-                  <li id={`release-${r.id}`} key={r.id} className="prof-release-card">
-                    <Link href={`/r/${r.smartLinkSlug}`} className="prof-release-card-art">
-                      {r.artworkUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.artworkUrl} alt={r.title} />
-                      ) : null}
-                    </Link>
-                    <Link href={`/r/${r.smartLinkSlug}`} className="prof-release-card-title">
-                      {r.title}
-                    </Link>
-                    <div className="prof-release-card-meta">
-                      {r.type} · {year}
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
+            <ReleasesGrid releases={releases} />
           )}
         </section>
 

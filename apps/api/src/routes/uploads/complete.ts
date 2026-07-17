@@ -33,7 +33,11 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { id: true, slug: true },
+        select: {
+          id: true,
+          slug: true,
+          user: { select: { defaultTrackCommentsEnabled: true } },
+        },
       })
 
       if (!channel) {
@@ -55,6 +59,9 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
           status: 'PENDING',
           ...(source ? { source } : {}),
           ...metadataForNewUpload(metadata),
+          // Always the account default at creation time — commentsEnabled isn't
+          // client-settable until the track exists (PATCH /api/me/archive/:id).
+          commentsEnabled: channel.user.defaultTrackCommentsEnabled,
         },
         select: { id: true, status: true },
       })

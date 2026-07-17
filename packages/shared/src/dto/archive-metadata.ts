@@ -101,6 +101,7 @@ export const ArchiveMetadataFieldsSchema = z.object({
   followToDownload: z.boolean().optional(),
   isPublic: z.boolean().optional(),
   isFallback: z.boolean().optional(),
+  commentsEnabled: z.boolean().optional(),
 })
 
 export type ArchiveMetadataFields = z.infer<typeof ArchiveMetadataFieldsSchema>

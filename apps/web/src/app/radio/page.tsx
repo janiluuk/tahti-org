@@ -35,6 +35,12 @@ interface RadioNowPlaying {
   channel: RadioChannel | null
 }
 
+interface RadioRotationItem {
+  id: string
+  title: string
+  artistName: string
+}
+
 async function fetchAnnouncements(): Promise<Announcement[]> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   try {
@@ -59,6 +65,17 @@ async function fetchMemberRelay(): Promise<RadioNowPlaying> {
   }
 }
 
+async function fetchRotation(): Promise<RadioRotationItem[]> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/radio/rotation`, { next: { revalidate: 60 } })
+    if (!res.ok) return []
+    return (await res.json()) as RadioRotationItem[]
+  } catch {
+    return []
+  }
+}
+
 function radioStreamEnv() {
   return {
     TAHTI_RADIO_STREAM_MODE: process.env.TAHTI_RADIO_STREAM_MODE,
@@ -73,9 +90,10 @@ export default async function RadioPage() {
   const streamConfig = resolveTahtiRadioStream(radioStreamEnv())
   const playback = resolveActiveRadioPlayback(streamConfig)
 
-  const [announcements, memberRelay, user] = await Promise.all([
+  const [announcements, memberRelay, rotation, user] = await Promise.all([
     fetchAnnouncements(),
     fetchMemberRelay(),
+    fetchRotation(),
     getSessionUser(),
   ])
 
@@ -121,6 +139,22 @@ export default async function RadioPage() {
               </div>
             ) : (
               <RadioPlayerSection playback={playback} slug={TAHTI_RADIO_SLUG} />
+            )}
+
+            {rotation.length > 0 && (
+              <section className="ch-radio-rotation">
+                <Text size="sm" tone="muted" className="ch-radio-rotation__label">
+                  In the rotation
+                </Text>
+                <ul className="ch-radio-rotation__list">
+                  {rotation.slice(0, 5).map((item) => (
+                    <li key={item.id} className="ch-radio-rotation__item">
+                      <span className="ch-radio-rotation__title">{item.title}</span>
+                      <span className="ch-radio-rotation__artist">{item.artistName}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
 
             {memberRelay.live && memberRelay.channel && (

@@ -933,6 +933,159 @@
   color: var(--muted);
 }
 
+[data-tahti-ui='brand'] .ch-radio-rotation {
+  margin-bottom: 1rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-rotation__label {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-rotation__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+[data-tahti-ui='brand'] .ch-radio-rotation__item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .ch-radio-rotation__item:last-child {
+  border-bottom: none;
+}
+
+[data-tahti-ui='brand'] .ch-radio-rotation__title {
+  color: var(--text);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='brand'] .ch-radio-rotation__artist {
+  color: var(--muted2);
+}
+
+/* ── Comments ─────────────────────────────────────────────────────────────── */
+[data-tahti-ui='brand'] .comments-section {
+  margin-top: 1rem;
+}
+
+[data-tahti-ui='brand'] .comments-section__empty {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .comments-section__list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+[data-tahti-ui='brand'] .comments-section__item {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+[data-tahti-ui='brand'] .comments-section__author {
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .comments-section__time {
+  margin-left: 0.5rem;
+  font-size: var(--text-xs);
+  color: var(--muted2);
+}
+
+[data-tahti-ui='brand'] .comments-section__body {
+  margin: 0.25rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+[data-tahti-ui='brand'] .comments-section__disabled,
+[data-tahti-ui='brand'] .comments-section__login-hint {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .comments-section__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .comments-section__form textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .comments-section__submit {
+  align-self: flex-end;
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .comments-section__submit:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+[data-tahti-ui='brand'] .comments-section__error {
+  color: var(--coral);
+  font-size: var(--text-xs);
+}
+
+[data-tahti-ui='brand'] .track-comments-toggle {
+  margin-top: 0.5rem;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .track-comments-toggle--open {
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .track-comments-toggle__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 [data-tahti-ui='brand'] .ch-player-wrap {
   position: relative;
   background: var(--card);
@@ -2458,6 +2611,24 @@
   [data-tahti-ui='brand'] .prof-release-grid {
     grid-template-columns: 1fr;
   }
+}
+
+[data-tahti-ui='brand'] .prof-release-expand {
+  display: block;
+  margin: 16px auto 0;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+[data-tahti-ui='brand'] .prof-release-expand:hover {
+  border-color: var(--muted2);
 }
 
 [data-tahti-ui='brand'] .prof-release-card {

@@ -535,6 +535,10 @@ model User {
   weeklyLiveResetAt     DateTime?
   mentionsEnabled         Boolean    @default(true)
   publicMentionsEnabled   Boolean    @default(false)
+  // Defaults applied to new tracks/channel when created — each item can still be
+  // overridden individually afterward (ArchiveItem.commentsEnabled / Channel.commentsEnabled).
+  defaultTrackCommentsEnabled   Boolean @default(true)
+  defaultChannelCommentsEnabled Boolean @default(true)
   // ground-rules.md /dashboard/settings/notifications instrument-pattern worked example
   notifyMoneyMovesEmail       Boolean @default(true)
   notifyMoneyMovesInApp       Boolean @default(true)
@@ -599,6 +603,7 @@ model User {
   events                  ArtistEvent[]
   posts                   ArtistPost[]
   embeds                  ArtistEmbed[]
+  comments                Comment[]
 
   @@schema("core")
 }
@@ -881,6 +886,7 @@ model Channel {
   nextBroadcastAt    DateTime?            // LISTENER-002: optional next live time for offline listeners
   nextBroadcastNote  String?              // e.g. "Weekly show — Thursdays 22:00 EET"
   lastFeaturedAt     DateTime?            // M16: Tahti Radio fair rotation
+  commentsEnabled    Boolean      @default(true) // initialized from User.defaultChannelCommentsEnabled
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -892,6 +898,7 @@ model Channel {
   rtmpTargets       RtmpTarget[]
   radioFeatureLogs  RadioFeatureLog[]
   curatedRotationItems CuratedRotationItem[]
+  comments          Comment[]
 
   @@index([state])
   @@schema("channel")
@@ -1007,6 +1014,7 @@ model ArchiveItem {
   isFallback           Boolean           @default(false)
   fallbackOrder        Int?              // M27: position in ordered offline rotation
   lastFallbackPlayedAt DateTime?         // M27: fair shuffle — least recent first
+  commentsEnabled      Boolean           @default(true) // initialized from User.defaultTrackCommentsEnabled
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
@@ -1015,6 +1023,7 @@ model ArchiveItem {
   collectionItems CollectionItem[]
   versions        ArchiveItemVersion[]
   curatedRotationItems CuratedRotationItem[]
+  comments        Comment[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
@@ -1259,6 +1268,26 @@ model ArtistFollow {
 
   @@id([followerUserId, artistUserId])
   @@index([artistUserId])
+  @@schema("engagement")
+}
+
+// Comments on a track (ArchiveItem) or a channel — exactly one of archiveItemId /
+// channelId is set per row (enforced in the API, not the DB). Posting is blocked
+// when the target's commentsEnabled is false; existing comments are left in place
+// (toggling off just stops new ones, it isn't a moderation wipe).
+model Comment {
+  id            String       @id @default(cuid())
+  body          String
+  authorId      String
+  author        User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  archiveItemId String?
+  archiveItem   ArchiveItem? @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  channelId     String?
+  channel       Channel?     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now())
+
+  @@index([archiveItemId, createdAt])
+  @@index([channelId, createdAt])
   @@schema("engagement")
 }
 

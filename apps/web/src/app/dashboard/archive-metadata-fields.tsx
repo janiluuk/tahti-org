@@ -44,6 +44,7 @@ export type ArchiveMetadataFormState = {
   commentary: string
   taggedNote: string
   isPublic: boolean
+  commentsEnabled: boolean
   tracklist: TracklistEntry[] | null
 }
 
@@ -75,6 +76,7 @@ export function defaultMetadataFormState(): ArchiveMetadataFormState {
     commentary: '',
     taggedNote: '',
     isPublic: ARCHIVE_METADATA_DEFAULTS.isPublic,
+    commentsEnabled: true,
     tracklist: null,
   }
 }
@@ -113,6 +115,7 @@ export function metadataFormToPayload(state: ArchiveMetadataFormState): Record<s
     commentary: state.commentary.trim() || undefined,
     taggedNote: state.taggedNote.trim() || undefined,
     isPublic: state.isPublic,
+    commentsEnabled: state.commentsEnabled,
     tracklist: state.tracklist,
   }
 }
@@ -148,6 +151,7 @@ export function metadataFromApi(item: Record<string, unknown>): ArchiveMetadataF
     commentary: (item.commentary as string) ?? '',
     taggedNote: (item.taggedNote as string) ?? '',
     isPublic: (item.isPublic as boolean) ?? true,
+    commentsEnabled: (item.commentsEnabled as boolean) ?? true,
     tracklist: Array.isArray(item.tracklist) ? (item.tracklist as TracklistEntry[]) : null,
   }
 }
@@ -244,6 +248,12 @@ export function ArchiveMetadataFields({
               </option>
             ))}
           </select>
+          {state.contentType !== 'DJ_MIX' && (
+            <p className="studio-field-note studio-field-note--warning">
+              You must own the rights to this music, or have permission from the rights holder, to
+              publish it here.
+            </p>
+          )}
         </label>
         <label className="studio-field">
           <span className="studio-label">Version</span>
@@ -457,6 +467,17 @@ export function ArchiveMetadataFields({
           />
           Follow to download
         </label>
+        {itemId && (
+          <label className="studio-label-row">
+            <input
+              type="checkbox"
+              checked={state.commentsEnabled}
+              disabled={disabled}
+              onChange={(e) => set({ commentsEnabled: e.target.checked })}
+            />
+            Allow comments on this track
+          </label>
+        )}
       </div>
     </div>
   )
