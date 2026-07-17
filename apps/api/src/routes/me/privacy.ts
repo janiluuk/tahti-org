@@ -2,17 +2,22 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import type { Readable } from 'node:stream'
+import * as archiver from 'archiver'
 import {
   AccountDeletionRequestSchema,
   AccountDeletionResponseSchema,
   PressKitSchema,
+  PublicPressKitImageListSchema,
   UsernameParamSchema,
   openApiResponse,
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { buildPressKit } from '../../lib/press-kit.js'
+import { buildPressKit, formatPressKitText } from '../../lib/press-kit.js'
+import { getObjectStream } from '../../lib/minio.js'
+import { publicMediaUrl } from '../../lib/public-media-url.js'
 
 const mePrivacyRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -158,6 +163,95 @@ const publicPressKitRoutes: FastifyPluginAsync = async (fastify) => {
       const kit = await buildPressKit(fastify.prisma, routeParams.username)
       if (!kit) return reply.status(404).send({ error: 'Artist not found' })
       return reply.send(kit)
+    },
+  )
+
+  // GET /api/v1/u/:username/press-kit-images.json — public gallery, empty unless the
+  // channel opted in via pressKitGalleryPublic.
+  fastify.get(
+    '/api/v1/u/:username/press-kit-images.json',
+    {
+      schema: {
+        tags: ['releases'],
+        description: 'Public press-kit image gallery (empty unless the artist made it public)',
+        response: openApiResponse(PublicPressKitImageListSchema, 'PublicPressKitImageList'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const channel = await fastify.prisma.channel.findFirst({
+        where: { user: { username: routeParams.username } },
+        select: { id: true, pressKitGalleryPublic: true },
+      })
+      if (!channel || !channel.pressKitGalleryPublic) return reply.send([])
+
+      const rows = await fastify.prisma.pressKitImage.findMany({
+        where: { channelId: channel.id },
+        orderBy: { position: 'asc' },
+        select: { id: true, imageKey: true, title: true },
+      })
+      return reply.send(
+        rows.map((r) => ({ id: r.id, imageUrl: publicMediaUrl(r.imageKey), title: r.title })),
+      )
+    },
+  )
+
+  // GET /api/v1/u/:username/press-kit.zip — bio.txt + the images the artist marked
+  // includeInZip, for clubs/promoters. Not gated on pressKitGalleryPublic: an artist
+  // can maintain a downloadable kit without publishing a gallery on their page.
+  fastify.get(
+    '/api/v1/u/:username/press-kit.zip',
+    {
+      schema: {
+        tags: ['releases'],
+        description: 'Downloadable press-kit zip: bio.txt + selected promo images',
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(UsernameParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const [kit, channel] = await Promise.all([
+        buildPressKit(fastify.prisma, routeParams.username),
+        fastify.prisma.channel.findFirst({
+          where: { user: { username: routeParams.username } },
+          select: { id: true },
+        }),
+      ])
+      if (!kit) return reply.status(404).send({ error: 'Artist not found' })
+
+      const images = channel
+        ? await fastify.prisma.pressKitImage.findMany({
+            where: { channelId: channel.id, includeInZip: true },
+            orderBy: { position: 'asc' },
+          })
+        : []
+
+      reply.header('Content-Type', 'application/zip')
+      reply.header(
+        'Content-Disposition',
+        `attachment; filename="${routeParams.username}-press-kit.zip"`,
+      )
+
+      const archive = new archiver.ZipArchive({ zlib: { level: 9 } })
+      archive.append(formatPressKitText(kit), { name: 'bio.txt' })
+      for (const img of images) {
+        try {
+          const { body } = await getObjectStream(img.imageKey)
+          const ext = img.imageKey.includes('.') ? img.imageKey.split('.').pop() : 'jpg'
+          const safeName = (img.title?.trim() || img.imageKey.split('/').pop() || img.id)
+            .replace(/[^a-z0-9-_ ]/gi, '')
+            .slice(0, 80)
+          archive.append(body as unknown as Readable, { name: `images/${safeName}.${ext}` })
+        } catch (err) {
+          fastify.log.warn(err, `press-kit zip: failed to fetch image ${img.imageKey}`)
+        }
+      }
+      void archive.finalize()
+
+      return reply.send(archive)
     },
   )
 }

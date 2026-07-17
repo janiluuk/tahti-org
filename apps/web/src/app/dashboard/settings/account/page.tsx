@@ -7,8 +7,10 @@ import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import MembershipPanel from '../../membership-panel'
+import PressKitImagesPanel from '../../press-kit-images-panel'
 import PrivacyPanel from '../../privacy-panel'
 import { TwoFactorPanel } from '../../two-factor-panel'
+import type { PressKitImageItem } from '@tahti/shared'
 
 interface MembershipInfo {
   status: string
@@ -42,9 +44,15 @@ export default async function AccountSettingsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [user, membershipInfo] = await Promise.all([
+  const [user, membershipInfo, pressKitImages, gallerySettings] = await Promise.all([
     getDashboardUser(),
     apiFetch<MembershipInfo>(apiUrl, cookie, '/api/me/membership'),
+    apiFetch<PressKitImageItem[]>(apiUrl, cookie, '/api/me/press-kit/images'),
+    apiFetch<{ pressKitGalleryPublic: boolean }>(
+      apiUrl,
+      cookie,
+      '/api/me/press-kit/gallery-settings',
+    ),
   ])
   if (!user) redirect('/login')
 
@@ -81,6 +89,15 @@ export default async function AccountSettingsPage() {
       )}
 
       <TwoFactorPanel />
+
+      {user.channel && (
+        <PressKitImagesPanel
+          initialImages={pressKitImages ?? []}
+          initialGalleryPublic={gallerySettings?.pressKitGalleryPublic ?? false}
+          username={user.username}
+          apiUrl={apiUrl}
+        />
+      )}
 
       <PrivacyPanel username={user.username} apiUrl={apiUrl} />
     </div>

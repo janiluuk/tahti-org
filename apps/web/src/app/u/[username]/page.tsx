@@ -12,7 +12,9 @@ import { countryName } from '@/lib/country-options'
 import { getSessionUser } from '@/lib/session'
 import { ReportButton } from '@/components/report-button'
 import { ReleasesGrid } from '@/components/releases-grid'
+import { PressKitGallery } from '@/components/press-kit-gallery'
 import { resolveChannelUrl } from '@/lib/app-url'
+import type { PublicPressKitImage } from '@tahti/shared'
 
 export const revalidate = 60
 
@@ -133,6 +135,18 @@ interface ArtistEmbedItem {
   title: string | null
 }
 
+async function fetchPressKitImages(username: string): Promise<PublicPressKitImage[]> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  const res = await fetch(
+    `${apiUrl}/api/v1/u/${encodeURIComponent(username)}/press-kit-images.json`,
+    {
+      next: { revalidate: 60 },
+    },
+  )
+  if (!res.ok) return []
+  return (await res.json()) as PublicPressKitImage[]
+}
+
 async function fetchChannelExtras(slug: string | undefined) {
   if (!slug) return { events: [], posts: [], embeds: [] }
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -154,7 +168,10 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const { artist, channel, releases, links, collections = [] } = data
   const isLive = channel?.state === 'LIVE'
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
-  const { events, posts, embeds } = await fetchChannelExtras(channel?.slug)
+  const [{ events, posts, embeds }, pressKitImages] = await Promise.all([
+    fetchChannelExtras(channel?.slug),
+    fetchPressKitImages(artist.username),
+  ])
   const profileUrl = resolveChannelUrl(artist.username)
 
   const jsonLd = {
@@ -253,6 +270,13 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {pressKitImages.length > 0 && (
+          <section className="prof-section">
+            <div className="prof-sec-label">Gallery</div>
+            <PressKitGallery images={pressKitImages} />
           </section>
         )}
 

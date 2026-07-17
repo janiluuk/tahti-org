@@ -71,3 +71,36 @@ export async function buildPressKit(
     releases,
   }
 }
+
+/** Plain-text summary for the press-kit zip — bio, contact, and links a club or
+ * promoter would actually want, not the full releases JSON. */
+export function formatPressKitText(kit: Awaited<ReturnType<typeof buildPressKit>>): string {
+  if (!kit) return ''
+  const lines: string[] = []
+  lines.push(kit.displayName, '='.repeat(kit.displayName.length), '')
+  if (kit.bio) lines.push(kit.bio, '')
+  lines.push(`Profile: ${kit.profileUrl}`)
+  if (kit.channelUrl) lines.push(`Channel: ${kit.channelUrl}`)
+  if (kit.email) lines.push(`Contact: ${kit.email}`)
+  if (kit.tipJarUrl) lines.push(`Support: ${kit.tipJarUrl}`)
+
+  const links = kit.socialLinks as Record<string, string> | null
+  const linkEntries = links
+    ? Object.entries(links).filter(([key, url]) => key !== 'genres' && url)
+    : []
+  if (linkEntries.length > 0) {
+    lines.push('', 'Links:')
+    for (const [label, url] of linkEntries) lines.push(`  ${label}: ${url}`)
+  }
+
+  if (kit.releases.length > 0) {
+    lines.push('', 'Releases:')
+    for (const r of kit.releases) {
+      const year = new Date(r.releaseDate).getFullYear()
+      lines.push(`  ${r.title} (${r.type}, ${year}) — ${r.smartLinkUrl}`)
+    }
+  }
+
+  lines.push('', `Generated ${kit.generatedAt.toISOString().slice(0, 10)} via tahti.live`)
+  return lines.join('\n')
+}
