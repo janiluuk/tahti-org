@@ -4570,6 +4570,153 @@
   background: color-mix(in srgb, var(--card) 60%, var(--border));
 }
 
+/* ── Tahti Radio slot booking calendar ───────────────────────────────────── */
+[data-tahti-ui='studio'] .studio-radio-calendar__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__week-label {
+  font-weight: var(--weight-medium);
+  min-width: 11rem;
+  text-align: center;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__grid {
+  display: grid;
+  grid-template-columns: 4.5rem repeat(7, minmax(6.5rem, 1fr));
+  min-width: 50rem;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__corner {
+  position: sticky;
+  left: 0;
+  background: var(--card2);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0.4rem 0.25rem;
+  background: var(--card2);
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__hour-label {
+  position: sticky;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.5rem;
+  font-size: var(--text-micro);
+  color: var(--muted);
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  height: 2.25rem;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__cell {
+  height: 2.25rem;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background: transparent;
+  padding: 0 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__cell--free:hover {
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__cell--past {
+  background: color-mix(in srgb, var(--card2) 50%, transparent);
+  cursor: default;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__cell--busy {
+  background: color-mix(in srgb, var(--muted) 25%, var(--card2));
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__cell--mine {
+  background: color-mix(in srgb, var(--cyan) 30%, var(--card2));
+  cursor: pointer;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__cell--selected {
+  background: color-mix(in srgb, var(--amber) 35%, var(--card2));
+  outline: 2px solid var(--amber);
+  outline-offset: -2px;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__cell-label {
+  font-size: var(--text-micro);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__actionbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card2);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__legend-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__legend-swatch--mine {
+  background: color-mix(in srgb, var(--cyan) 30%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .studio-radio-calendar__legend-swatch--busy {
+  background: color-mix(in srgb, var(--muted) 25%, var(--card2));
+}
+
 [data-tahti-ui='studio'] .studio-danger-zone {
   margin-top: 1rem;
   padding-top: 1rem;

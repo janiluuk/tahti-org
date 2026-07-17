@@ -160,6 +160,13 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   },
   { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
   { href: '/dashboard/events', label: 'Events', icon: 'schedule', isRoute: true },
+  {
+    href: '/dashboard/tahti-radio-slots',
+    label: 'Radio slot',
+    icon: 'schedule',
+    isRoute: true,
+    requiresChannel: true,
+  },
   { href: '/dashboard/posts', label: 'Posts', icon: 'posts', isRoute: true },
   { href: '/dashboard/embeds', label: 'Embeds', icon: 'embeds', isRoute: true },
 

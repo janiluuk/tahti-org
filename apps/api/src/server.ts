@@ -125,6 +125,7 @@ import meTotpRoutes from './routes/me/totp.js'
 import meAvatarRoutes from './routes/me/avatar.js'
 import mePrivacyRoutes, { publicPressKitRoutes } from './routes/me/privacy.js'
 import mePressKitImages from './routes/me/press-kit-images.js'
+import meRadioSlotBookings from './routes/me/radio-slot-bookings.js'
 import meArchiveRoutes from './routes/me/archive.js'
 import meArchiveBannerRoutes from './routes/me/archive-banner.js'
 import meProgrammeRoutes from './routes/me/programme.js'
@@ -543,6 +544,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(mePrivacyRoutes)
   await fastify.register(mePressKitImages)
   await fastify.register(publicPressKitRoutes)
+  await fastify.register(meRadioSlotBookings)
 
   // M14: embed widget + oEmbed
   await fastify.register(embedRoutes)
