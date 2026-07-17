@@ -4,7 +4,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { prisma } from '@tahti/db'
 import { buildApp } from '../../server.js'
-import { cleanupUsersByEmailPrefix, createTestArtist, sessionCookieFor } from '../../test/helpers.js'
+import {
+  cleanupUsersByEmailPrefix,
+  createTestArtist,
+  sessionCookieFor,
+} from '../../test/helpers.js'
 
 const PREFIX = 'comments-test-'
 

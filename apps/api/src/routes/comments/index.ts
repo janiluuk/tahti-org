@@ -66,48 +66,44 @@ const commentsRoutes: FastifyPluginAsync = async (fastify) => {
   )
 
   // POST /api/comments/track/:id { body }
-  fastify.post(
-    '/api/comments/track/:id',
-    { preHandler: requireAuth },
-    async (request, reply) => {
-      const routeParams = parseRouteParams(IdParamSchema, request.params)
-      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
-      const parsed = CommentBodySchema.safeParse(request.body)
-      if (!parsed.success) return zodError(reply, parsed.error)
+  fastify.post('/api/comments/track/:id', { preHandler: requireAuth }, async (request, reply) => {
+    const routeParams = parseRouteParams(IdParamSchema, request.params)
+    if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+    const parsed = CommentBodySchema.safeParse(request.body)
+    if (!parsed.success) return zodError(reply, parsed.error)
 
-      const item = await fastify.prisma.archiveItem.findUnique({
-        where: { id: routeParams.id },
-        select: { commentsEnabled: true, isPublic: true },
-      })
-      if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
-      if (!item.commentsEnabled) {
-        return reply.status(403).send({ error: 'Comments are off for this track' })
-      }
+    const item = await fastify.prisma.archiveItem.findUnique({
+      where: { id: routeParams.id },
+      select: { commentsEnabled: true, isPublic: true },
+    })
+    if (!item || !item.isPublic) return reply.status(404).send({ error: 'Track not found' })
+    if (!item.commentsEnabled) {
+      return reply.status(403).send({ error: 'Comments are off for this track' })
+    }
 
-      const comment = await fastify.prisma.comment.create({
-        data: {
-          body: parsed.data.body,
-          authorId: request.sessionUser!.id,
-          archiveItemId: routeParams.id,
-        },
-        select: {
-          id: true,
-          body: true,
-          createdAt: true,
-          author: { select: { username: true, displayName: true, avatarUrl: true } },
-        },
-      })
+    const comment = await fastify.prisma.comment.create({
+      data: {
+        body: parsed.data.body,
+        authorId: request.sessionUser!.id,
+        archiveItemId: routeParams.id,
+      },
+      select: {
+        id: true,
+        body: true,
+        createdAt: true,
+        author: { select: { username: true, displayName: true, avatarUrl: true } },
+      },
+    })
 
-      return reply.status(201).send({
-        id: comment.id,
-        body: comment.body,
-        createdAt: comment.createdAt,
-        authorUsername: comment.author.username,
-        authorDisplayName: comment.author.displayName,
-        authorAvatarUrl: comment.author.avatarUrl,
-      })
-    },
-  )
+    return reply.status(201).send({
+      id: comment.id,
+      body: comment.body,
+      createdAt: comment.createdAt,
+      authorUsername: comment.author.username,
+      authorDisplayName: comment.author.displayName,
+      authorAvatarUrl: comment.author.avatarUrl,
+    })
+  })
 
   // GET /api/comments/channel/:slug
   fastify.get(

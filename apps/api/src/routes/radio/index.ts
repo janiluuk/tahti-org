@@ -77,7 +77,10 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         select: {
           id: true,
           archiveItem: {
-            select: { title: true, channel: { select: { user: { select: { displayName: true } } } } },
+            select: {
+              title: true,
+              channel: { select: { user: { select: { displayName: true } } } },
+            },
           },
         },
       })
