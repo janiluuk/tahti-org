@@ -887,6 +887,7 @@ model Channel {
   nextBroadcastNote  String?              // e.g. "Weekly show — Thursdays 22:00 EET"
   lastFeaturedAt     DateTime?            // M16: Tahti Radio fair rotation
   commentsEnabled    Boolean      @default(true) // initialized from User.defaultChannelCommentsEnabled
+  pressKitGalleryPublic Boolean   @default(false) // show press-kit images in a public gallery on the artist page
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
@@ -899,8 +900,26 @@ model Channel {
   radioFeatureLogs  RadioFeatureLog[]
   curatedRotationItems CuratedRotationItem[]
   comments          Comment[]
+  pressKitImages    PressKitImage[]
 
   @@index([state])
+  @@schema("channel")
+}
+
+// High-quality promo photos beyond the profile avatar — used to build a
+// downloadable press-kit zip (with a generated bio.txt) and, if the channel opts
+// in via pressKitGalleryPublic, shown in a gallery on the public artist page.
+model PressKitImage {
+  id           String   @id @default(cuid())
+  channelId    String
+  channel      Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  imageKey     String
+  title        String?
+  position     Int
+  includeInZip Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([channelId, position])
   @@schema("channel")
 }
 

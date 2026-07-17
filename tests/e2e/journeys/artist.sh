@@ -109,6 +109,62 @@ run_streamer_journey() {
   fi
 }
 
+run_press_kit_journey() {
+  echo ""
+  echo "── Press kit journey ───────────────────────────────────────"
+
+  if ! e2e_api_login "$E2E_DEMO_ARTIST_EMAIL" "$E2E_DEMO_PASS"; then
+    e2e_yellow "press kit journey skipped — no artist session"
+    return 0
+  fi
+
+  local prepare upload_key upload_url complete image_id list gallery_on public_gallery zip_code
+
+  prepare=$(curl -sf -b "$COOKIE_JAR" -X POST "$API_URL/api/me/press-kit/images/prepare" \
+    -H 'Content-Type: application/json' \
+    -d '{"filename":"promo.jpg","contentType":"image/jpeg"}' 2>/dev/null || echo '{}')
+  e2e_check_json "press kit image upload prepared" '"uploadKey"' "$prepare"
+  upload_key=$(echo "$prepare" | grep -oP '"uploadKey":"\K[^"]+' || echo '')
+  upload_url=$(echo "$prepare" | grep -oP '"uploadUrl":"\K[^"]+' | sed 's/\\u0026/\&/g' || echo '')
+
+  if [[ -z "$upload_key" || -z "$upload_url" ]]; then
+    e2e_yellow "press kit journey skipped — could not parse prepare response"
+    return 0
+  fi
+
+  if ! curl -sf -X PUT -H 'Content-Type: image/jpeg' --data-binary 'fake-jpeg-bytes' "$upload_url" >/dev/null 2>&1; then
+    e2e_yellow "press kit journey skipped — MinIO not reachable for direct PUT"
+    return 0
+  fi
+  e2e_green "press kit image bytes uploaded to storage"
+
+  complete=$(curl -sf -b "$COOKIE_JAR" -X POST "$API_URL/api/me/press-kit/images/complete" \
+    -H 'Content-Type: application/json' \
+    -d "{\"uploadKey\":\"${upload_key}\",\"title\":\"E2E promo shot\"}" 2>/dev/null || echo '{}')
+  e2e_check_json "press kit image saved with title" '"E2E promo shot"' "$complete"
+  image_id=$(echo "$complete" | grep -oP '"id":"\K[^"]+' || echo '')
+
+  list=$(curl -sf -b "$COOKIE_JAR" "$API_URL/api/me/press-kit/images" 2>/dev/null || echo '[]')
+  e2e_check_json "press kit dashboard list includes the new image" "$image_id" "$list"
+
+  gallery_on=$(curl -sf -b "$COOKIE_JAR" -X PATCH "$API_URL/api/me/press-kit/gallery-settings" \
+    -H 'Content-Type: application/json' -d '{"pressKitGalleryPublic":true}' 2>/dev/null || echo '{}')
+  e2e_check_json "gallery visibility set to public" '"pressKitGalleryPublic":true' "$gallery_on"
+
+  public_gallery=$(curl -sf "$API_URL/api/v1/u/${E2E_DEMO_ARTIST_USER}/press-kit-images.json" 2>/dev/null || echo '[]')
+  e2e_check_json "public gallery lists the photo once opted in" "E2E promo shot" "$public_gallery"
+
+  zip_code=$(e2e_http_code "$API_URL/api/v1/u/${E2E_DEMO_ARTIST_USER}/press-kit.zip")
+  e2e_check_http "public press-kit.zip download" "200" "$zip_code"
+
+  # Cleanup — leave the demo artist's profile as we found it.
+  curl -sf -b "$COOKIE_JAR" -X PATCH "$API_URL/api/me/press-kit/gallery-settings" \
+    -H 'Content-Type: application/json' -d '{"pressKitGalleryPublic":false}' >/dev/null 2>&1 || true
+  if [[ -n "$image_id" ]]; then
+    curl -sf -b "$COOKIE_JAR" -X DELETE "$API_URL/api/me/press-kit/images/${image_id}" >/dev/null 2>&1 || true
+  fi
+}
+
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   JOURNEYS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   # shellcheck source=../helpers.sh
@@ -119,5 +175,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   run_artist_journey
   run_artist_subdomain_journey
   run_streamer_journey
+  run_press_kit_journey
   e2e_summary "Artist journey" || exit 1
 fi

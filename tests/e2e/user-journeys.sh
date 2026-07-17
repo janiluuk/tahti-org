@@ -58,6 +58,7 @@ run_listener_journey
 run_artist_journey
 run_artist_subdomain_journey
 run_streamer_journey
+run_press_kit_journey
 run_member_journey
 run_fan_supporter_journey
 run_director_journey
