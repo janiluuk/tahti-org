@@ -4,9 +4,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { ButtonIcon, Button } from '@tahti/ui'
 import type { ArchiveVersionRow } from '@tahti/shared'
+import { useToast } from '@/contexts/toast-context'
 import { ArchiveTrimEditor } from './archive-trim-editor'
 import {
   activateArchiveVersion,
@@ -16,6 +17,9 @@ import {
   prepareArchiveVersionUpload,
   publishArchiveToRelease,
 } from './archive-actions'
+
+const PROCESSING_STATUSES = new Set(['PENDING', 'SCANNING', 'TRANSCODING'])
+const POLL_INTERVAL_MS = 4000
 
 export function ArchiveVersionPanel({
   itemId,
@@ -39,17 +43,43 @@ export function ArchiveVersionPanel({
   const [publishError, setPublishError] = useState<string | null>(null)
   const [isPublishing, startPublishTransition] = useTransition()
 
+  const { showToast } = useToast()
+  const processingIdsRef = useRef<Set<string>>(new Set())
+
+  const applyVersions = useCallback(
+    (next: ArchiveVersionRow[]) => {
+      const stillProcessing = new Set<string>()
+      for (const v of next) {
+        if (PROCESSING_STATUSES.has(v.status)) {
+          stillProcessing.add(v.id)
+        } else if (v.status === 'READY' && processingIdsRef.current.has(v.id)) {
+          showToast(`"${v.versionLabel}" finished processing.`, 'success')
+        }
+      }
+      processingIdsRef.current = stillProcessing
+      setVersions(next)
+    },
+    [showToast],
+  )
+
   const load = useCallback(async () => {
     const res = await fetchArchiveVersions(itemId)
     if (res.error) setError(res.error)
-    else if (res.versions) setVersions(res.versions)
+    else if (res.versions) applyVersions(res.versions)
     setLoading(false)
-  }, [itemId])
+  }, [itemId, applyVersions])
 
   useEffect(() => {
     if (itemStatus === 'READY') void load()
     else setLoading(false)
   }, [itemStatus, load])
+
+  const hasProcessingVersion = versions.some((v) => PROCESSING_STATUSES.has(v.status))
+  useEffect(() => {
+    if (!hasProcessingVersion) return
+    const interval = setInterval(() => void load(), POLL_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [hasProcessingVersion, load])
 
   useEffect(() => {
     if (itemStatus !== 'READY') return
@@ -127,7 +157,7 @@ export function ArchiveVersionPanel({
     startTransition(async () => {
       const res = await activateArchiveVersion(itemId, versionId)
       if (res.error) setError(res.error)
-      else if (res.versions) setVersions(res.versions)
+      else if (res.versions) applyVersions(res.versions)
     })
   }
 
@@ -165,9 +195,14 @@ export function ArchiveVersionPanel({
                     v.sourceBitrateKbps != null ? ` ${v.sourceBitrateKbps} kbps` : ' (lossless)'
                   }`}
                 {v.isActive && <strong className="studio-badge--success"> active</strong>}
-                {v.status !== 'READY' && (
-                  <span className="studio-text-muted-sm"> ({v.status})</span>
-                )}
+                {v.status !== 'READY' &&
+                  (PROCESSING_STATUSES.has(v.status) ? (
+                    <span className="upload-progress__status--processing-inline studio-text-muted-sm">
+                      <span className="upload-progress__spinner" aria-hidden />({v.status})
+                    </span>
+                  ) : (
+                    <span className="studio-text-muted-sm"> ({v.status})</span>
+                  ))}
               </span>
               {!v.isActive && v.status === 'READY' && (
                 <Button

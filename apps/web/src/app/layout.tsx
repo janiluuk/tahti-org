@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { PlayerProvider } from '@/contexts/player-context'
 import { MiniPlayer } from '@/components/mini-player'
+import { ToastProvider } from '@/contexts/toast-context'
 import './globals.css'
 
 const inter = Inter({
@@ -29,10 +30,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body>
-        <PlayerProvider>
-          <main>{children}</main>
-          <MiniPlayer />
-        </PlayerProvider>
+        <ToastProvider>
+          <PlayerProvider>
+            <main>{children}</main>
+            <MiniPlayer />
+          </PlayerProvider>
+        </ToastProvider>
       </body>
     </html>
   )
