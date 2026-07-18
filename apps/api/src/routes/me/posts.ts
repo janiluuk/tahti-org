@@ -27,9 +27,14 @@ function serialize(post: {
   title: string | null
   body: string
   images: string[]
+  publishAt: Date
   createdAt: Date
 }) {
-  return { ...post, createdAt: post.createdAt.toISOString() }
+  return {
+    ...post,
+    publishAt: post.publishAt.toISOString(),
+    createdAt: post.createdAt.toISOString(),
+  }
 }
 
 const mePostRoutes: FastifyPluginAsync = async (fastify) => {
@@ -51,7 +56,7 @@ const mePostRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const posts = await fastify.prisma.artistPost.findMany({
         where: { userId: user.id },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { publishAt: 'desc' },
       })
       return reply.send(posts.map(serialize))
     },
@@ -78,7 +83,12 @@ const mePostRoutes: FastifyPluginAsync = async (fastify) => {
       const body = parsed.data
 
       const post = await fastify.prisma.artistPost.create({
-        data: { userId: user.id, title: body.title?.trim() || null, body: body.body },
+        data: {
+          userId: user.id,
+          title: body.title?.trim() || null,
+          body: body.body,
+          ...(body.publishAt ? { publishAt: new Date(body.publishAt) } : {}),
+        },
       })
 
       return reply.status(201).send(serialize(post))

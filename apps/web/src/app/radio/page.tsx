@@ -9,10 +9,13 @@ import {
   TAHTI_RADIO_SLUG,
 } from '@tahti/shared'
 import { getSessionUser } from '@/lib/session'
+import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import ChatPanel from '../c/[slug]/chat-panel'
 import { RadioPlayerSection } from './radio-player-section'
 import { RadioSlotsCalendar } from './radio-slots-calendar'
 import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
+
+const NEXT_LIVE_ANNOUNCE_WINDOW_MS = 2 * 60 * 60 * 1000
 
 export const revalidate = 60
 
@@ -132,6 +135,11 @@ export default async function RadioPage() {
   const liveSlot = upcomingSlots.find(
     (s) => new Date(s.startAt).getTime() <= now && new Date(s.endAt).getTime() > now,
   )
+  const nextSlot = upcomingSlots.find((s) => new Date(s.startAt).getTime() > now)
+  const showNextLiveAnnouncement =
+    !liveSlot &&
+    nextSlot &&
+    new Date(nextSlot.startAt).getTime() - now <= NEXT_LIVE_ANNOUNCE_WINDOW_MS
 
   return (
     <ChannelPageShell
@@ -176,6 +184,13 @@ export default async function RadioPage() {
                   </>
                 )}
               </p>
+            )}
+
+            {showNextLiveAnnouncement && nextSlot && (
+              <BroadcastCountdown
+                targetIso={nextSlot.startAt}
+                note={`${nextSlot.artist.displayName}${nextSlot.note ? ` — ${nextSlot.note}` : ''}`}
+              />
             )}
 
             {playback.kind === 'none' ? (

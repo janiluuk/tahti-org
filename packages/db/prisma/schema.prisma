@@ -645,9 +645,14 @@ model ArtistPost {
   title     String?
   body      String
   images    String[] @default([])
+  // Defaults to createdAt (immediate publish). A future value schedules the
+  // post — public routes filter on publishAt <= now, so "publishing" is a
+  // pure query-time check, not a status flipped by a cron job.
+  publishAt DateTime @default(now())
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, publishAt(sort: Desc)])
   @@schema("core")
 }
 

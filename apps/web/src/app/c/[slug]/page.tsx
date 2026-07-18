@@ -141,6 +141,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     title: string | null
     body: string
     images: string[]
+    publishAt: string
     createdAt: string
   }> = postsRes.ok ? await postsRes.json() : []
   const embeds: Array<{ id: string; url: string; title: string | null }> = embedsRes.ok
@@ -330,6 +331,31 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               </div>
             </header>
 
+            {posts.length > 0 && (
+              <section className="ch-featured-post">
+                <div className="ch-featured-post__label">
+                  Latest from {channel.user.displayName}
+                </div>
+                {posts[0]!.title && <div className="ch-posts-list__title">{posts[0]!.title}</div>}
+                <div className="ch-posts-list__date">
+                  {new Date(posts[0]!.publishAt).toLocaleDateString(undefined, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </div>
+                <p className="ch-posts-list__body">{posts[0]!.body}</p>
+                {posts[0]!.images.length > 0 && (
+                  <div className="ch-posts-list__images">
+                    {posts[0]!.images.map((url) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={url} src={url} alt="" className="ch-posts-list__image" />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
             <NewsletterSubscribeForm
               artistUsername={channel.user.username}
               artistDisplayName={channel.user.displayName}
@@ -398,17 +424,17 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               </section>
             )}
 
-            {posts.length > 0 && (
+            {posts.length > 1 && (
               <section className="ch-archive-section">
                 <div className="ch-archive-section-head">
                   <h2 className="ch-section-label">Updates</h2>
                 </div>
                 <ul className="ch-posts-list">
-                  {posts.map((p) => (
+                  {posts.slice(1).map((p) => (
                     <li key={p.id} className="ch-posts-list__item">
                       {p.title && <div className="ch-posts-list__title">{p.title}</div>}
                       <div className="ch-posts-list__date">
-                        {new Date(p.createdAt).toLocaleDateString(undefined, {
+                        {new Date(p.publishAt).toLocaleDateString(undefined, {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',

@@ -37,6 +37,7 @@
     "test:e2e:fresh-artist": "node tests/e2e/fresh-artist-journey.mjs",
     "test:e2e:pro-audio-editor": "node tests/e2e/pro-audio-editor.mjs",
     "test:e2e:live-chat": "node tests/e2e/live-chat.mjs",
+    "test:e2e:artist-posts-radio": "node tests/e2e/artist-posts-and-radio.mjs",
     "smoke": "bash scripts/unified-smoke.sh",
     "smoke:prod": "bash scripts/unified-smoke.sh --prod",
     "smoke:all": "bash scripts/unified-smoke.sh --all --seed",
