@@ -165,6 +165,45 @@ run_press_kit_journey() {
   fi
 }
 
+run_radio_slot_journey() {
+  echo ""
+  echo "── Tahti Radio slot booking journey ────────────────────────"
+
+  if ! e2e_api_login "$E2E_DEMO_ARTIST_EMAIL" "$E2E_DEMO_PASS"; then
+    e2e_yellow "radio slot journey skipped — no artist session"
+    return 0
+  fi
+
+  local start_at end_at booking booking_id list dup_code cancel_code
+
+  start_at=$(date -u -d "+6 hour" +"%Y-%m-%dT%H:00:00.000Z")
+  end_at=$(date -u -d "+8 hour" +"%Y-%m-%dT%H:00:00.000Z")
+
+  booking=$(curl -sf -b "$COOKIE_JAR" -X POST "$API_URL/api/me/radio-slot-bookings" \
+    -H 'Content-Type: application/json' \
+    -d "{\"startAt\":\"${start_at}\",\"endAt\":\"${end_at}\",\"note\":\"E2E live set\"}" 2>/dev/null || echo '{}')
+  e2e_check_json "radio slot booked (2h)" '"E2E live set"' "$booking"
+  booking_id=$(echo "$booking" | grep -oP '"id":"\K[^"]+' || echo '')
+
+  if [[ -z "$booking_id" ]]; then
+    e2e_yellow "radio slot journey skipped — could not parse booking response"
+    return 0
+  fi
+
+  list=$(curl -sf -b "$COOKIE_JAR" \
+    "$API_URL/api/me/radio-slot-bookings?from=${start_at}&to=${end_at}" 2>/dev/null || echo '[]')
+  e2e_check_json "radio slot calendar lists the new booking" "$booking_id" "$list"
+  e2e_check_json "radio slot calendar flags it as mine" '"isMine":true' "$list"
+
+  dup_code=$(e2e_http_code -b "$COOKIE_JAR" -X POST "$API_URL/api/me/radio-slot-bookings" \
+    -H 'Content-Type: application/json' \
+    -d "{\"startAt\":\"${start_at}\",\"endAt\":\"${end_at}\"}")
+  e2e_check_http "overlapping slot is rejected (already booked)" "409" "$dup_code"
+
+  cancel_code=$(e2e_http_code -b "$COOKIE_JAR" -X DELETE "$API_URL/api/me/radio-slot-bookings/${booking_id}")
+  e2e_check_http "own booking can be cancelled" "204" "$cancel_code"
+}
+
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   JOURNEYS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   # shellcheck source=../helpers.sh
@@ -176,5 +215,6 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   run_artist_subdomain_journey
   run_streamer_journey
   run_press_kit_journey
+  run_radio_slot_journey
   e2e_summary "Artist journey" || exit 1
 fi

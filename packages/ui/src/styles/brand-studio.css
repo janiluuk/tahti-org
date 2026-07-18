@@ -998,7 +998,9 @@
 [data-tahti-ui='studio']
   button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
     [class*='studio-top-nav']
-  ):not([class*='add-btn--']):not([class*='admin-btn']) {
+  ):not([class*='add-btn--']):not([class*='admin-btn']):not(
+    [class*='studio-radio-calendar__cell']
+  ) {
   background: var(--card2);
   border: 1px solid var(--border);
   border-radius: 7px;
@@ -1015,7 +1017,9 @@
 [data-tahti-ui='studio']
   button:not([class*='ui-btn']):not([class*='db-']):not([class*='studio-tabs__trigger']):not(
     [class*='studio-top-nav']
-  ):not([class*='add-btn--']):not([class*='admin-btn']):hover:not(:disabled) {
+  ):not([class*='add-btn--']):not([class*='admin-btn']):not(
+    [class*='studio-radio-calendar__cell']
+  ):hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--muted) 60%, transparent);
   background: color-mix(in srgb, var(--card2) 80%, var(--card));
 }
@@ -4526,7 +4530,7 @@
   color: var(--muted);
 }
 
-[data-tahti-ui='studio'] .studio-hidden-file-input {
+[data-tahti-ui='studio'] input[type='file'].studio-hidden-file-input {
   display: none;
 }
 
