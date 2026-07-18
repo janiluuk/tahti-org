@@ -113,15 +113,16 @@ function radioStreamEnv() {
 }
 
 export default async function RadioPage() {
-  const [announcements, memberRelay, rotation, upcomingSlots, realHlsUrl, user] =
-    await Promise.all([
+  const [announcements, memberRelay, rotation, upcomingSlots, realHlsUrl, user] = await Promise.all(
+    [
       fetchAnnouncements(),
       fetchMemberRelay(),
       fetchRotation(),
       fetchUpcomingSlots(),
       fetchRealHlsUrl(),
       getSessionUser(),
-    ])
+    ],
+  )
 
   const playback = realHlsUrl
     ? ({ kind: 'audio', audioUrl: realHlsUrl } as const)
