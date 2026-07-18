@@ -52,3 +52,13 @@ export async function restartChannelLiquidsoap(
 ): Promise<void> {
   await orchestratorPost('/restart', { channelId, slug, broadcastId, template })
 }
+
+/** Idempotent — orchestrator no-ops if this channel's container is already tracked. */
+export async function spawnOrchestratorChannel(
+  channelId: string,
+  slug: string,
+  broadcastId: string,
+  template: 'channel' | 'rotation' = 'channel',
+): Promise<void> {
+  await orchestratorPost('/spawn', { channelId, slug, broadcastId, template }, { warnOnly: true })
+}

@@ -35,6 +35,12 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'STREAM-005: restart Liquidsoap when HLS segments are stale',
   },
   {
+    name: 'radio-slot-switchover',
+    pattern: '* * * * *',
+    jobId: 'radio-slot-switchover-cron',
+    description: 'Switch Tahti Radio to a booked artist live source at slot boundaries',
+  },
+  {
     name: 'hls-minio-sync',
     pattern: '* * * * *',
     jobId: 'hls-minio-sync-cron',

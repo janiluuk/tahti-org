@@ -32,6 +32,7 @@ import { processMentionDigestJob } from './jobs/mention-digest.js'
 import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
 import { processRevelatorRoyaltySyncJob } from './jobs/revelator-royalty-sync.js'
 import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
+import { processRadioSlotSwitchoverJob } from './jobs/radio-slot-switchover.js'
 import { processHlsMinioSyncJob } from './jobs/hls-minio-sync.js'
 import { processHlsCaddyEgressSyncJob } from './jobs/hls-caddy-egress-sync.js'
 import {
@@ -114,6 +115,11 @@ const worker = new Worker(
       } else if (job.name === 'channel-watchdog') {
         const summary = await processChannelWatchdogJob(prisma, job)
         console.log('[worker] channel-watchdog:', JSON.stringify(summary))
+      } else if (job.name === 'radio-slot-switchover') {
+        const summary = await processRadioSlotSwitchoverJob(prisma, job)
+        if (summary.switched) {
+          console.log('[worker] radio-slot-switchover:', JSON.stringify(summary))
+        }
       } else if (job.name === 'hls-minio-sync') {
         const summary = await processHlsMinioSyncJob(prisma, job)
         if (summary.uploaded > 0) {

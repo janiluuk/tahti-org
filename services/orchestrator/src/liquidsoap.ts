@@ -110,8 +110,6 @@ export async function spawnLiquidsoapContainer(
 
   const templatePath = templateKind === 'rotation' ? ROTATION_TEMPLATE_PATH : TEMPLATE_PATH
 
-  const inputUrl = liveInputUrl(source, slug)
-
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
     select: {
@@ -119,6 +117,7 @@ export async function spawnLiquidsoapContainer(
       slug: true,
       liveSourcePass: true,
       fallbackMode: true,
+      liveInputOverrideSlug: true,
       rtmpTargets: {
         where: { enabled: true },
         select: { provider: true, rtmpUrl: true, streamKeyEnc: true, alwaysMirror: true },
@@ -128,6 +127,12 @@ export async function spawnLiquidsoapContainer(
   })
 
   if (!channel) throw new Error(`Channel ${channelId} not found`)
+
+  // Tahti Radio relaying a booked artist's live source during their slot (or any
+  // future "one channel's Liquidsoap reads another's mount" need) — see
+  // Channel.liveInputOverrideSlug. Falls through to the channel's own slug/mount
+  // for every regular channel (override is null), matching prior behavior exactly.
+  const inputUrl = liveInputUrl(source, channel.liveInputOverrideSlug ?? slug)
 
   // Decrypt RTMP stream keys
   const targets = channel.rtmpTargets.map((t) => ({
