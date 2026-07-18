@@ -55,6 +55,7 @@ import obsPresetRoutes from './routes/me/obs-preset.js'
 import transparencyRoutes from './routes/transparency/index.js'
 import adminLedgerRoutes from './routes/admin/ledger.js'
 import governanceRoutes from './routes/governance/index.js'
+import featureRequestsRoutes from './routes/governance/feature-requests.js'
 import downloadRoutes from './routes/downloads/archive.js'
 import artistFollowRoutes from './routes/engagement/artist-follows.js'
 import archiveRepostRoutes from './routes/engagement/archive-repost.js'
@@ -81,6 +82,7 @@ import adminSupportRoutes from './routes/admin/support.js'
 import adminResolutionsRoutes from './routes/admin/resolutions.js'
 import adminReportsRoutes from './routes/admin/reports.js'
 import adminContentReportRoutes from './routes/admin/content-reports.js'
+import adminFeatureRequestRoutes from './routes/admin/feature-requests.js'
 import adminAuditRoutes from './routes/admin/audit.js'
 import adminVenueRoutes from './routes/admin/venues.js'
 import supportContactRoutes from './routes/support/contact.js'
@@ -479,6 +481,7 @@ export async function buildApp(opts: BuildOptions = {}) {
 
   // M10: member governance (motions + advisory voting)
   await fastify.register(governanceRoutes)
+  await fastify.register(featureRequestsRoutes)
 
   // M18: downloads as first-class action (engagement units)
   await fastify.register(downloadRoutes)
@@ -512,6 +515,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminResolutionsRoutes)
   await fastify.register(adminReportsRoutes)
   await fastify.register(adminContentReportRoutes)
+  await fastify.register(adminFeatureRequestRoutes)
 
   // M20: tier gating
   await fastify.register(broadcastUsageRoutes)

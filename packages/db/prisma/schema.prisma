@@ -264,6 +264,12 @@ enum AuditAction {
   ARCHIVE_EDIT_RENDER
   ARCHIVE_EDIT_BOUNCE
   ARCHIVE_EDIT_PUBLISH
+  FEATURE_REQUEST_CREATE
+  FEATURE_REQUEST_VOTE
+  FEATURE_REQUEST_UNVOTE
+  FEATURE_REQUEST_COMMENT_CREATE
+  FEATURE_REQUEST_STATUS_UPDATE
+  FEATURE_REQUEST_QUARTERLY_REPORT
 
   @@schema("governance")
 }
@@ -604,6 +610,11 @@ model User {
   posts                   ArtistPost[]
   embeds                  ArtistEmbed[]
   comments                Comment[]
+  featureRequestsProposed FeatureRequest[]        @relation("FeatureRequestProposer")
+  featureRequestsReviewed FeatureRequest[]        @relation("FeatureRequestReviewer")
+  featureRequestVotes     FeatureRequestVote[]
+  featureRequestComments  FeatureRequestComment[] @relation("FeatureRequestCommentAuthor")
+  featureRequestReportsGenerated FeatureRequestQuarterlyReport[]
 
   @@schema("core")
 }
@@ -1266,6 +1277,76 @@ model MotionComment {
   @@schema("governance")
 }
 
+enum FeatureRequestStatus {
+  OPEN
+  PLANNED
+  IN_PROGRESS
+  DONE
+  DECLINED
+  DUPLICATE
+
+  @@schema("governance")
+}
+
+/// Member-suggested feature board: propose, vote, discuss. Reviewed quarterly by
+/// the board (see FeatureRequestQuarterlyReport) — status moves to PLANNED/
+/// IN_PROGRESS/DONE/DECLINED, or DUPLICATE with mergedInto pointing at the
+/// original so duplicate suggestions consolidate their votes/discussion there.
+model FeatureRequest {
+  id           String               @id @default(cuid())
+  title        String
+  description  String
+  proposedById String
+  proposedBy   User                 @relation("FeatureRequestProposer", fields: [proposedById], references: [id], onDelete: Cascade)
+  status       FeatureRequestStatus @default(OPEN)
+  mergedIntoId String?
+  mergedInto   FeatureRequest?      @relation("FeatureRequestDuplicateOf", fields: [mergedIntoId], references: [id], onDelete: SetNull)
+  duplicates   FeatureRequest[]     @relation("FeatureRequestDuplicateOf")
+  reviewNote   String?
+  reviewedById String?
+  reviewedBy   User?                @relation("FeatureRequestReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  // Stamped the quarter a request first moves to PLANNED/IN_PROGRESS/DONE —
+  // the "voted in" record the quarterly report reads from.
+  votedInYear    Int?
+  votedInQuarter Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  votes    FeatureRequestVote[]
+  comments FeatureRequestComment[]
+
+  @@index([status, createdAt])
+  @@schema("governance")
+}
+
+model FeatureRequestVote {
+  featureRequestId String
+  featureRequest   FeatureRequest @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@id([featureRequestId, userId])
+  @@index([featureRequestId])
+  @@schema("governance")
+}
+
+/// Mirrors MotionComment's shape (flat, nullable author) for the same reason —
+/// deleting a user shouldn't erase their contribution to the discussion record.
+model FeatureRequestComment {
+  id               BigInt         @id @default(autoincrement())
+  featureRequestId String
+  featureRequest   FeatureRequest @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+  body             String
+  authorId         String?
+  author           User?          @relation("FeatureRequestCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt        DateTime       @default(now())
+
+  @@index([featureRequestId, createdAt(sort: Asc)])
+  @@schema("governance")
+}
+
 // ── Engagement (M18) ──────────────────────────────────────────────────────────
 // Every download is logged for grant accounting. A row that counts toward grants
 // has `countedAt` set and a `weight` (1 free, 5 fan-subscriber). Rows that don't
@@ -1910,5 +1991,21 @@ model AnnualReport {
   generatedById String
   generatedBy   User     @relation(fields: [generatedById], references: [id], onDelete: Cascade)
 
+  @@schema("admin")
+}
+
+/// Board-triggered quarterly log of feature-request review outcomes (what got
+/// voted in / declined / merged as duplicate that quarter). Mirrors AnnualReport's
+/// shape but keyed on year+quarter instead of year alone.
+model FeatureRequestQuarterlyReport {
+  id            BigInt   @id @default(autoincrement())
+  year          Int
+  quarter       Int
+  storageKey    String
+  generatedAt   DateTime @default(now())
+  generatedById String
+  generatedBy   User     @relation(fields: [generatedById], references: [id], onDelete: Cascade)
+
+  @@unique([year, quarter])
   @@schema("admin")
 }

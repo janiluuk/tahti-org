@@ -44,6 +44,56 @@ run_member_journey() {
   fi
 }
 
+run_feature_request_journey() {
+  echo ""
+  echo "── Feature request journey ─────────────────────────────────"
+
+  if ! e2e_api_login "$E2E_DEMO_MEMBER_EMAIL" "$E2E_DEMO_PASS"; then
+    e2e_yellow "feature request journey skipped — no member session"
+    return 0
+  fi
+
+  local create_res feature_id list vote_res comment_res
+
+  create_res=$(curl -sf -b "$COOKIE_JAR" -X POST "$API_URL/api/v1/governance/feature-requests" \
+    -H 'Content-Type: application/json' \
+    -d '{"title":"E2E: add keyboard shortcuts","description":"Would help power users navigate faster."}' \
+    2>/dev/null || echo '{}')
+  e2e_check_json "feature request created" '"status":"OPEN"' "$create_res"
+  feature_id=$(echo "$create_res" | grep -oP '"id":"\K[^"]+' || echo '')
+
+  if [[ -z "$feature_id" ]]; then
+    e2e_yellow "feature request journey skipped — could not parse create response"
+    return 0
+  fi
+
+  list=$(curl -sf -b "$COOKIE_JAR" "$API_URL/api/v1/governance/feature-requests" 2>/dev/null || echo '[]')
+  e2e_check_json "feature request appears in the board" "$feature_id" "$list"
+
+  vote_res=$(curl -sf -b "$COOKIE_JAR" -X POST \
+    "$API_URL/api/v1/governance/feature-requests/${feature_id}/vote" 2>/dev/null || echo '{}')
+  e2e_check_json "member can vote for a feature request" '"voteCount":1' "$vote_res"
+
+  comment_res=$(curl -sf -b "$COOKIE_JAR" -X POST \
+    "$API_URL/api/v1/governance/feature-requests/${feature_id}/comments" \
+    -H 'Content-Type: application/json' \
+    -d '{"body":"E2E discussion comment"}' 2>/dev/null || echo '{}')
+  e2e_check_json "member can comment on a feature request" 'E2E discussion comment' "$comment_res"
+
+  if e2e_api_login "$E2E_DEMO_BOARD_EMAIL" "$E2E_DEMO_PASS"; then
+    local admin_list patch_res
+    admin_list=$(curl -sf -b "$COOKIE_JAR" "$API_URL/api/admin/feature-requests" 2>/dev/null || echo '[]')
+    e2e_check_json "board sees the request in the admin list" "$feature_id" "$admin_list"
+
+    patch_res=$(curl -sf -b "$COOKIE_JAR" -X PATCH "$API_URL/api/admin/feature-requests/${feature_id}" \
+      -H 'Content-Type: application/json' \
+      -d '{"status":"PLANNED","reviewNote":"E2E: adding to roadmap"}' 2>/dev/null || echo '{}')
+    e2e_check_json "board can mark a request planned" '"status":"PLANNED"' "$patch_res"
+  else
+    e2e_yellow "board review step skipped — no board session"
+  fi
+}
+
 run_fan_supporter_journey() {
   echo ""
   echo "── Fan supporter journey ─────────────────────────────────"
@@ -75,6 +125,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   source "$JOURNEYS_DIR/fixtures.sh"
   e2e_wait_for_api "$API_URL/health" || exit 1
   run_member_journey
+  run_feature_request_journey
   run_fan_supporter_journey
   e2e_summary "Member journey" || exit 1
 fi

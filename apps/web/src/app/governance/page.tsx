@@ -103,6 +103,10 @@ export default async function GovernancePage() {
         binding decisions are confirmed at a live AGM until the bylaws authorize electronic voting.
       </PublicPageHeader>
 
+      <Text size="sm">
+        <Link href="/governance/feature-requests">Suggest and vote on feature requests →</Link>
+      </Text>
+
       {me.isBoard && <NewMotionForm />}
 
       {me.isBoard && (
