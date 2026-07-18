@@ -87,6 +87,7 @@ export function RadioSlotsCalendar({ initialSlots }: { initialSlots: PublicRadio
         </div>
       </div>
 
+      <p className="ch-radio-slots__scroll-hint">Swipe sideways to see all 7 days →</p>
       <div className="ch-radio-slots__scroll">
         <div className="ch-radio-slots__grid">
           <div className="ch-radio-slots__corner" />
