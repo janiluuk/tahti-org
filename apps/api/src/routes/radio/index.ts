@@ -3,9 +3,11 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  PublicRadioSlotListSchema,
   RadioFeatureHistorySchema,
   RadioNowPlayingSchema,
   RadioRotationSchema,
+  RadioSlotBookingListQuerySchema,
   TAHTI_SELECTS_SLUG,
   openApiResponse,
 } from '@tahti/shared'
@@ -90,6 +92,56 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           id: item.id,
           title: item.archiveItem.title,
           artistName: item.archiveItem.channel.user.displayName,
+        })),
+      )
+    },
+  )
+
+  // Public calendar of booked live-artist slots on Tahti Radio — no auth, so
+  // listeners (not just members) can see who's playing live and when.
+  fastify.get(
+    '/api/v1/radio/slots',
+    {
+      schema: {
+        tags: ['radio'],
+        description: 'Public calendar of booked live-artist slots on Tahti Radio',
+        response: openApiResponse(PublicRadioSlotListSchema, 'PublicRadioSlotList'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = RadioSlotBookingListQuerySchema.safeParse(request.query)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid query' })
+      }
+      const from = new Date(parsed.data.from)
+      const to = new Date(parsed.data.to)
+      if (to <= from) return reply.status(400).send({ error: '"to" must be after "from"' })
+
+      const rows = await fastify.prisma.radioSlotBooking.findMany({
+        where: { startAt: { lt: to }, endAt: { gt: from } },
+        orderBy: { startAt: 'asc' },
+        include: {
+          channel: {
+            select: {
+              slug: true,
+              user: { select: { displayName: true, username: true, avatarUrl: true } },
+            },
+          },
+        },
+      })
+
+      return reply.send(
+        rows.map((r) => ({
+          id: r.id,
+          startAt: r.startAt.toISOString(),
+          endAt: r.endAt.toISOString(),
+          note: r.note,
+          artist: {
+            displayName: r.channel.user.displayName,
+            username: r.channel.user.username,
+            avatarUrl: r.channel.user.avatarUrl,
+            channelSlug: r.channel.slug,
+          },
         })),
       )
     },

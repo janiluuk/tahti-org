@@ -997,6 +997,187 @@
   color: var(--muted2);
 }
 
+/* ── Public live-artist slot calendar (radio page) ───────────────────────── */
+[data-tahti-ui='brand'] .ch-radio-slots {
+  margin-bottom: 1.25rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__nav-btn {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  width: 1.75rem;
+  height: 1.75rem;
+  cursor: pointer;
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__nav-btn:hover {
+  border-color: color-mix(in srgb, var(--cyan) 40%, var(--border));
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__week-label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  min-width: 8rem;
+  text-align: center;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__grid {
+  display: grid;
+  grid-template-columns: 3.5rem repeat(7, minmax(3.5rem, 1fr));
+  min-width: 32rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__corner {
+  position: sticky;
+  left: 0;
+  background: var(--card2);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem;
+  background: var(--card2);
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__day-date {
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__hour-label {
+  position: sticky;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.35rem;
+  font-size: var(--text-micro);
+  color: var(--muted);
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  height: 1.35rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__cell {
+  height: 1.35rem;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  background: transparent;
+  padding: 0 0.2rem;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__cell--booked {
+  background: color-mix(in srgb, var(--cyan) 25%, var(--card2));
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__cell--booked:hover {
+  background: color-mix(in srgb, var(--cyan) 40%, var(--card2));
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__cell-label {
+  font-size: var(--text-micro);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__popover-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__popover {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 20rem;
+  max-width: 90vw;
+  cursor: default;
+  text-align: center;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__popover-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: var(--text-body);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__popover-name {
+  font-weight: var(--weight-medium);
+  font-size: var(--text-base);
+  color: var(--text);
+  margin-top: 0.35rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__popover-time {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__popover-note {
+  font-size: var(--text-sm);
+  color: var(--text);
+  margin: 0.25rem 0;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__popover-link {
+  color: var(--cyan);
+  font-size: var(--text-sm);
+  margin-top: 0.35rem;
+}
+
 /* ── Comments ─────────────────────────────────────────────────────────────── */
 [data-tahti-ui='brand'] .comments-section {
   margin-top: 1rem;

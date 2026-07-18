@@ -127,3 +127,60 @@ describe('STREAM-011 — Tahti Selects rotation preview', () => {
     expect(body.every((b) => b.artistName === 'Rotation Test Artist')).toBe(true)
   })
 })
+
+describe('public live-artist slot calendar', () => {
+  const PREFIX2 = 'radio-slots-test-'
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let channelId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX2)
+
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX2}artist@example.com`,
+      username: `${PREFIX2}artist`,
+      displayName: 'Slot Test Artist',
+    })
+    channelId = artist.channel!.id
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX2)
+  })
+
+  it('rejects a query without from/to', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/radio/slots' })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('lists a booked slot with public artist info, no auth required', async () => {
+    const startAt = new Date()
+    startAt.setUTCMinutes(0, 0, 0)
+    startAt.setUTCDate(startAt.getUTCDate() + 1)
+    const endAt = new Date(startAt.getTime() + 60 * 60 * 1000)
+
+    await prisma.radioSlotBooking.create({
+      data: { channelId, startAt, endAt, note: 'Test live set' },
+    })
+
+    const from = new Date(startAt.getTime() - 3600_000).toISOString()
+    const to = new Date(endAt.getTime() + 3600_000).toISOString()
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/radio/slots?from=${from}&to=${to}`,
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as Array<{
+      note: string | null
+      artist: { displayName: string; username: string; channelSlug: string | null }
+    }>
+    expect(body).toHaveLength(1)
+    expect(body[0]?.note).toBe('Test live set')
+    expect(body[0]?.artist.displayName).toBe('Slot Test Artist')
+    expect(body[0]?.artist.username).toBe(`${PREFIX2}artist`)
+    expect(body[0]?.artist.channelSlug).toBe(`${PREFIX2}artist`)
+  })
+})

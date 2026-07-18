@@ -173,6 +173,21 @@ export const RadioRotationItemSchema = z.object({
 })
 export const RadioRotationSchema = z.array(RadioRotationItemSchema)
 
+/** Public, read-only view of booked live-artist slots on Tahti Radio. */
+export const PublicRadioSlotSchema = z.object({
+  id: z.string(),
+  startAt: z.string(),
+  endAt: z.string(),
+  note: z.string().nullable(),
+  artist: z.object({
+    displayName: z.string(),
+    username: z.string(),
+    avatarUrl: z.string().nullable(),
+    channelSlug: z.string().nullable(),
+  }),
+})
+export const PublicRadioSlotListSchema = z.array(PublicRadioSlotSchema)
+
 export const ChannelProgrammeItemViewSchema = z.object({
   id: z.string(),
   title: z.string(),
