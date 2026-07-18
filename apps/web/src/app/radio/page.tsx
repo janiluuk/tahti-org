@@ -11,6 +11,8 @@ import {
 import { getSessionUser } from '@/lib/session'
 import ChatPanel from '../c/[slug]/chat-panel'
 import { RadioPlayerSection } from './radio-player-section'
+import { RadioSlotsCalendar } from './radio-slots-calendar'
+import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
 
 export const revalidate = 60
 
@@ -76,6 +78,13 @@ async function fetchRotation(): Promise<RadioRotationItem[]> {
   }
 }
 
+async function fetchUpcomingSlots(): Promise<PublicRadioSlot[]> {
+  const now = new Date()
+  const to = new Date(now.getTime() + 9 * 24 * 60 * 60 * 1000)
+  const { slots } = await listPublicRadioSlots(now.toISOString(), to.toISOString())
+  return slots
+}
+
 function radioStreamEnv() {
   return {
     TAHTI_RADIO_STREAM_MODE: process.env.TAHTI_RADIO_STREAM_MODE,
@@ -90,10 +99,11 @@ export default async function RadioPage() {
   const streamConfig = resolveTahtiRadioStream(radioStreamEnv())
   const playback = resolveActiveRadioPlayback(streamConfig)
 
-  const [announcements, memberRelay, rotation, user] = await Promise.all([
+  const [announcements, memberRelay, rotation, upcomingSlots, user] = await Promise.all([
     fetchAnnouncements(),
     fetchMemberRelay(),
     fetchRotation(),
+    fetchUpcomingSlots(),
     getSessionUser(),
   ])
 
@@ -156,6 +166,8 @@ export default async function RadioPage() {
                 </ul>
               </section>
             )}
+
+            <RadioSlotsCalendar initialSlots={upcomingSlots} />
 
             {memberRelay.live && memberRelay.channel && (
               <section className="ch-next-broadcast" role="status">
