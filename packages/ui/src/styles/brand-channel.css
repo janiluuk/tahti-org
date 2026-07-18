@@ -902,6 +902,19 @@
   color: var(--muted);
 }
 
+[data-tahti-ui='brand'] .ch-radio-live-now {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--coral) 35%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--coral) 10%, var(--card));
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .ch-radio-live-now a {
+  color: var(--cyan);
+}
+
 [data-tahti-ui='brand'] .ch-artist-cta-row {
   display: flex;
   align-items: center;

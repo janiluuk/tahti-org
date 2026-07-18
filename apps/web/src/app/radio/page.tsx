@@ -85,6 +85,23 @@ async function fetchUpcomingSlots(): Promise<PublicRadioSlot[]> {
   return slots
 }
 
+/** Real HLS output once Tahti Radio's own Liquidsoap process is running (spawned by
+ * the radio-slot-switchover cron) — preferred over the static env-configured
+ * placeholder when available, since it's the actual live-artist-or-rotation feed. */
+async function fetchRealHlsUrl(): Promise<string | null> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  try {
+    const res = await fetch(`${apiUrl}/api/channels/${TAHTI_RADIO_SLUG}`, {
+      next: { revalidate: 30 },
+    })
+    if (!res.ok) return null
+    const data = (await res.json()) as { hlsUrl: string | null }
+    return data.hlsUrl
+  } catch {
+    return null
+  }
+}
+
 function radioStreamEnv() {
   return {
     TAHTI_RADIO_STREAM_MODE: process.env.TAHTI_RADIO_STREAM_MODE,
@@ -96,16 +113,24 @@ function radioStreamEnv() {
 }
 
 export default async function RadioPage() {
-  const streamConfig = resolveTahtiRadioStream(radioStreamEnv())
-  const playback = resolveActiveRadioPlayback(streamConfig)
+  const [announcements, memberRelay, rotation, upcomingSlots, realHlsUrl, user] =
+    await Promise.all([
+      fetchAnnouncements(),
+      fetchMemberRelay(),
+      fetchRotation(),
+      fetchUpcomingSlots(),
+      fetchRealHlsUrl(),
+      getSessionUser(),
+    ])
 
-  const [announcements, memberRelay, rotation, upcomingSlots, user] = await Promise.all([
-    fetchAnnouncements(),
-    fetchMemberRelay(),
-    fetchRotation(),
-    fetchUpcomingSlots(),
-    getSessionUser(),
-  ])
+  const playback = realHlsUrl
+    ? ({ kind: 'audio', audioUrl: realHlsUrl } as const)
+    : resolveActiveRadioPlayback(resolveTahtiRadioStream(radioStreamEnv()))
+
+  const now = Date.now()
+  const liveSlot = upcomingSlots.find(
+    (s) => new Date(s.startAt).getTime() <= now && new Date(s.endAt).getTime() > now,
+  )
 
   return (
     <ChannelPageShell
@@ -139,6 +164,18 @@ export default async function RadioPage() {
                 Looking for a specific sound? <a href="/listen">Browse live channels by genre</a>.
               </Text>
             </header>
+
+            {liveSlot && (
+              <p className="ch-radio-live-now" role="status">
+                🔴 Live now: <strong>{liveSlot.artist.displayName}</strong>
+                {liveSlot.artist.channelSlug && (
+                  <>
+                    {' — '}
+                    <a href={`/u/${liveSlot.artist.username}`}>view artist page</a>
+                  </>
+                )}
+              </p>
+            )}
 
             {playback.kind === 'none' ? (
               <div className="public-empty-card">

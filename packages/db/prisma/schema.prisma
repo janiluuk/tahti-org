@@ -899,6 +899,11 @@ model Channel {
   lastFeaturedAt     DateTime?            // M16: Tahti Radio fair rotation
   commentsEnabled    Boolean      @default(true) // initialized from User.defaultChannelCommentsEnabled
   pressKitGalleryPublic Boolean   @default(false) // show press-kit images in a public gallery on the artist page
+  // When set, THIS channel's Liquidsoap process reads its live input from the
+  // named channel's mount instead of its own — e.g. Tahti Radio relaying a
+  // booked artist's live source during their RadioSlotBooking window. Null for
+  // every regular channel; only ever set on the tahti-radio row.
+  liveInputOverrideSlug String?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
