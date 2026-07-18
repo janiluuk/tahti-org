@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import {
@@ -9,6 +9,12 @@ import {
   createTestArtist,
   sessionCookieFor,
 } from '../../test/helpers.js'
+
+vi.mock('../../lib/minio.js', () => ({
+  presignedGetUrl: vi.fn().mockResolvedValue('https://minio.test/report.md'),
+  putObjectText: vi.fn().mockResolvedValue(undefined),
+  s3: {},
+}))
 
 const PREFIX = 'feature-request-test-'
 
