@@ -61,6 +61,7 @@ run_streamer_journey
 run_press_kit_journey
 run_radio_slot_journey
 run_member_journey
+run_feature_request_journey
 run_fan_supporter_journey
 run_director_journey
 run_dashboard_player_journey

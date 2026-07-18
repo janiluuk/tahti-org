@@ -169,6 +169,26 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/feature-requests',
+    label: 'Features',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path
+          d="M8 2a4 4 0 0 0-2 7.5V11h4V9.5A4 4 0 0 0 8 2z"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M6.5 13.5h3M7 12h2"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/grants',
     label: 'Grants',
     icon: (

@@ -33,6 +33,12 @@ interface AuditParams {
     | 'ARCHIVE_EDIT_RENDER'
     | 'ARCHIVE_EDIT_BOUNCE'
     | 'ARCHIVE_EDIT_PUBLISH'
+    | 'FEATURE_REQUEST_CREATE'
+    | 'FEATURE_REQUEST_VOTE'
+    | 'FEATURE_REQUEST_UNVOTE'
+    | 'FEATURE_REQUEST_COMMENT_CREATE'
+    | 'FEATURE_REQUEST_STATUS_UPDATE'
+    | 'FEATURE_REQUEST_QUARTERLY_REPORT'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

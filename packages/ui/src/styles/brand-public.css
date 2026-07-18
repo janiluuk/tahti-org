@@ -60,6 +60,15 @@
   color: var(--text);
 }
 
+/* --3/--4 have no dedicated layout rule elsewhere (e.g. gov-motion-card__title,
+   used by governance motions and feature requests) but still inherit .ui-heading's
+   --tahti-text admin-panel token (#111827, near-black) unless corrected here —
+   unreadable on this page's dark background. */
+[data-tahti-ui='brand'] .brand-public .ui-heading--3,
+[data-tahti-ui='brand'] .brand-public .ui-heading--4 {
+  color: var(--text);
+}
+
 [data-tahti-ui='brand'] .brand-public .brand-section > .ui-heading--2,
 [data-tahti-ui='brand'] .brand-public .brand-prose .brand-section > .ui-heading--2 {
   font-size: 1.125rem;
