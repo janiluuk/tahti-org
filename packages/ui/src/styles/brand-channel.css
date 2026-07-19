@@ -1023,6 +1023,104 @@
   color: var(--muted2);
 }
 
+/* ── Player-attached schedule/rotation overlay (radio page) ─────────────── */
+[data-tahti-ui='brand'] .ch-radio-info-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.5rem 0.75rem 0.75rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-toggle:hover {
+  border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  cursor: pointer;
+  padding: 1rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-panel {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  width: 32rem;
+  max-width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  cursor: default;
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-panel__tabs {
+  display: flex;
+  gap: 0.4rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-panel__tab {
+  padding: 0.35rem 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--muted2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-panel__tab.active {
+  background: color-mix(in srgb, var(--cyan) 18%, var(--card2));
+  border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-panel__close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: var(--text-body);
+  line-height: 1;
+  padding: 0.25rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-panel__empty {
+  color: var(--muted2);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .ch-radio-info-panel__note {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  color: var(--muted2);
+  font-size: var(--text-sm);
+}
+
 /* ── Public live-artist slot calendar (radio page) ───────────────────────── */
 [data-tahti-ui='brand'] .ch-radio-slots {
   margin-bottom: 1.25rem;
