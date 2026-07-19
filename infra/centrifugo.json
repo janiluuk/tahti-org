@@ -1,6 +1,6 @@
 {
   "log_level": "info",
-  "allowed_origins": ["https://tahti.live", "https://www.tahti.live", "https://app.tahti.live"],
+  "allowed_origins": ["https://tahti.live", "https://www.tahti.live", "https://*.tahti.live"],
   "websocket_compression": true,
   "client_anonymous": false,
   "history_size": 100,

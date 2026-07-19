@@ -1,6 +1,12 @@
 {
   "log_level": "info",
-  "allowed_origins": ["http://localhost:17777", "http://localhost:3000"],
+  "allowed_origins": [
+    "http://localhost:17777",
+    "http://localhost:3000",
+    "https://tahti.live",
+    "https://www.tahti.live",
+    "https://*.tahti.live"
+  ],
   "api_key": "dev",
   "token_hmac_secret_key": "dev_secret_do_not_use_in_prod",
   "admin": true,
