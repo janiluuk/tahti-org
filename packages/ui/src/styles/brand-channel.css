@@ -3612,6 +3612,12 @@
   text-align: center;
 }
 
+[data-tahti-ui='brand'] .presskit-lightbox__error {
+  padding: 48px 32px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: var(--text-sm);
+}
+
 [data-tahti-ui='brand'] .presskit-lightbox__close {
   position: absolute;
   top: 16px;
