@@ -8,7 +8,6 @@ import { getSessionUser } from '@/lib/session'
 import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import ChatPanel from '../c/[slug]/chat-panel'
 import { RadioPlayerSection } from './radio-player-section'
-import { RadioSlotsCalendar } from './radio-slots-calendar'
 import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
 
 const NEXT_LIVE_ANNOUNCE_WINDOW_MS = 2 * 60 * 60 * 1000
@@ -188,36 +187,17 @@ export default async function RadioPage() {
                 </p>
               </div>
             ) : (
-              <RadioPlayerSection playback={playback} slug={TAHTI_RADIO_SLUG} />
-            )}
-
-            {rotation.length > 0 && (
-              <section className="ch-radio-rotation">
-                <Text size="sm" tone="muted" className="ch-radio-rotation__label">
-                  In the rotation
-                </Text>
-                <ul className="ch-radio-rotation__list">
-                  {rotation.slice(0, 5).map((item) => (
-                    <li key={item.id} className="ch-radio-rotation__item">
-                      <span className="ch-radio-rotation__title">{item.title}</span>
-                      <span className="ch-radio-rotation__artist">{item.artistName}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            <RadioSlotsCalendar initialSlots={upcomingSlots} />
-
-            {memberRelay.live && memberRelay.channel && (
-              <section className="ch-next-broadcast" role="status">
-                <Text size="sm" tone="muted">
-                  Member relay also live:{' '}
-                  <a href={`/c/${memberRelay.channel.slug}`} className="ch-artist-profile-link">
-                    {memberRelay.channel.artistName}
-                  </a>
-                </Text>
-              </section>
+              <RadioPlayerSection
+                playback={playback}
+                slug={TAHTI_RADIO_SLUG}
+                rotation={rotation}
+                slots={upcomingSlots}
+                memberRelay={
+                  memberRelay.live && memberRelay.channel
+                    ? { slug: memberRelay.channel.slug, artistName: memberRelay.channel.artistName }
+                    : null
+                }
+              />
             )}
           </div>
         </div>
