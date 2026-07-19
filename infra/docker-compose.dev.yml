@@ -102,6 +102,8 @@ services:
         mc anonymous set download local/covers &&
         mc anonymous set download local/hls-live &&
         mc anonymous set download local/tahti/avatars &&
+        mc anonymous set download local/tahti/press-kit &&
+        mc anonymous set download local/tahti/posts &&
         echo 'MinIO buckets ready'
       "
     restart: "no"

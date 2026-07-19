@@ -3,8 +3,35 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
 import type { PublicPressKitImage } from '@tahti/shared'
+
+/** Tracks whether an <img> failed to load — including the failure having
+ * already happened by the time this mounts or re-targets. The src is present
+ * in the server-rendered HTML (or set directly, for the lightbox reusing one
+ * <img> across images), so the browser can start — and finish, if it's a fast
+ * same-machine failure like an ORB block — loading it before React commits
+ * and attaches onError/onLoad; without the `src`-keyed re-check via the ref,
+ * that race silently drops the failure. */
+function useBrokenImage(src: string) {
+  const ref = useRef<HTMLImageElement>(null)
+  const [broken, setBroken] = useState(false)
+
+  useEffect(() => {
+    setBroken(false)
+    const el = ref.current
+    if (el?.complete && el.naturalWidth === 0) setBroken(true)
+  }, [src])
+
+  function onError() {
+    setBroken(true)
+  }
+  function onLoad(e: SyntheticEvent<HTMLImageElement>) {
+    if (e.currentTarget.naturalWidth === 0) setBroken(true)
+  }
+
+  return { ref, broken, onError, onLoad }
+}
 
 function GalleryModal({
   images,
@@ -17,6 +44,9 @@ function GalleryModal({
   onClose: () => void
   onNavigate: (nextIndex: number) => void
 }) {
+  const current = images[index]
+  const { ref, broken, onError, onLoad } = useBrokenImage(current.imageUrl)
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
@@ -26,8 +56,6 @@ function GalleryModal({
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [index, images.length, onClose, onNavigate])
-
-  const current = images[index]
 
   return (
     <div
@@ -61,8 +89,19 @@ function GalleryModal({
       )}
 
       <figure className="presskit-lightbox__figure" onClick={(e) => e.stopPropagation()}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={current.imageUrl} alt={current.title ?? ''} className="presskit-lightbox__img" />
+        {broken ? (
+          <p className="presskit-lightbox__error">This photo couldn&rsquo;t be loaded.</p>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            ref={ref}
+            src={current.imageUrl}
+            alt={current.title ?? ''}
+            className="presskit-lightbox__img"
+            onError={onError}
+            onLoad={onLoad}
+          />
+        )}
         {current.title && (
           <figcaption className="presskit-lightbox__caption">{current.title}</figcaption>
         )}
@@ -85,6 +124,34 @@ function GalleryModal({
   )
 }
 
+function Thumb({ img, onOpen }: { img: PublicPressKitImage; onOpen: () => void }) {
+  const { ref, broken, onError, onLoad } = useBrokenImage(img.imageUrl)
+
+  // A thumbnail whose object is gone or unreachable is just noise in a promo
+  // gallery — drop it silently rather than show the browser's broken-image icon.
+  if (broken) return null
+
+  return (
+    <button
+      type="button"
+      className="prof-presskit-thumb"
+      onClick={onOpen}
+      aria-label={img.title ?? 'View photo'}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={ref}
+        src={img.imageUrl}
+        alt={img.title ?? ''}
+        loading="lazy"
+        onError={onError}
+        onLoad={onLoad}
+      />
+      {img.title && <span className="prof-presskit-thumb__caption">{img.title}</span>}
+    </button>
+  )
+}
+
 export function PressKitGallery({ images }: { images: PublicPressKitImage[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
@@ -94,17 +161,7 @@ export function PressKitGallery({ images }: { images: PublicPressKitImage[] }) {
     <>
       <div className="prof-presskit-grid">
         {images.map((img, i) => (
-          <button
-            key={img.id}
-            type="button"
-            className="prof-presskit-thumb"
-            onClick={() => setOpenIndex(i)}
-            aria-label={img.title ?? 'View photo'}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img.imageUrl} alt={img.title ?? ''} loading="lazy" />
-            {img.title && <span className="prof-presskit-thumb__caption">{img.title}</span>}
-          </button>
+          <Thumb key={img.id} img={img} onOpen={() => setOpenIndex(i)} />
         ))}
       </div>
 
