@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-export const FFMPEG_IMAGE = process.env.FFMPEG_IMAGE ?? 'jrotting/ffmpeg:6-alpine'
+// jrottenberg/ffmpeg is the well-known, actively-maintained public image; the
+// prior default ("jrotting/ffmpeg") never resolved — no such repository ever
+// existed — so every recorder/edge-encoder/cover-cache spawn using it 404'd.
+export const FFMPEG_IMAGE = process.env.FFMPEG_IMAGE ?? 'jrottenberg/ffmpeg:6-alpine'
 export const RECORDINGS_VOLUME = process.env.RECORDINGS_VOLUME ?? 'tahti_stack_recordings'
 export const ARCHIVE_CACHE_VOLUME = process.env.ARCHIVE_CACHE_VOLUME ?? 'tahti_stack_archive_cache'
 export const COVER_CACHE_VOLUME = process.env.COVER_CACHE_VOLUME ?? 'tahti_stack_cover_cache'

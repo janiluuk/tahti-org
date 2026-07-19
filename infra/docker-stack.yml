@@ -443,7 +443,7 @@ services:
       REDIS_URL: redis://redis:6379
       DOCKER_HOST: unix:///var/run/docker.sock
       CHANNEL_IMAGE: registry.tahti.live/tahti/liquidsoap:latest
-      FFMPEG_IMAGE: jrotting/ffmpeg:6-alpine
+      FFMPEG_IMAGE: jrottenberg/ffmpeg:6-alpine
       CHANNEL_NETWORK: tahti_internal
       ICECAST_BASE_URL: http://icecast:8000
       RTMP_INGEST_URL: rtmp://rtmp-ingest:1935
