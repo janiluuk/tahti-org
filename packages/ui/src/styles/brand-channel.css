@@ -193,7 +193,7 @@
   }
 
   [data-tahti-ui='brand'] .ch-header__nav-link {
-    padding: 5px 9px;
+    padding: 10px 9px;
     font-size: var(--text-label);
     white-space: nowrap;
   }
@@ -397,6 +397,19 @@
 
 [data-tahti-ui='brand'] .ch-artist-name {
   margin-bottom: 0.15rem;
+}
+
+/* Country and join-date segments in the artist metadata line — was unstyled,
+ * so "@handle", country, and join date ran together with no gap. */
+[data-tahti-ui='brand'] .ch-artist-flag {
+  display: inline-flex;
+  align-items: center;
+}
+
+[data-tahti-ui='brand'] .ch-artist-flag::before {
+  content: '·';
+  margin: 0 6px;
+  color: var(--muted);
 }
 
 [data-tahti-ui='brand'] .ch-channel-backdrop {
@@ -1050,6 +1063,19 @@
   color: var(--muted);
   min-width: 8rem;
   text-align: center;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__scroll-hint {
+  display: none;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin: 0 0 0.4rem;
+}
+
+@media (max-width: 600px) {
+  [data-tahti-ui='brand'] .ch-radio-slots__scroll-hint {
+    display: block;
+  }
 }
 
 [data-tahti-ui='brand'] .ch-radio-slots__scroll {

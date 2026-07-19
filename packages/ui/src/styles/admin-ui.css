@@ -199,8 +199,11 @@
   box-shadow: var(--tahti-focus-ring);
 }
 
-.ui-input:invalid,
-.ui-textarea:invalid,
+/* :user-invalid (not bare :invalid) — only applies after the user has
+   interacted with the field, so empty required fields don't render as
+   errored the moment the page loads. */
+.ui-input:user-invalid,
+.ui-textarea:user-invalid,
 .ui-input[aria-invalid='true'],
 .ui-textarea[aria-invalid='true'] {
   border-color: var(--tahti-error);

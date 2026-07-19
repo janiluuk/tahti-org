@@ -5,6 +5,7 @@ import type { ChannelCard } from '@tahti/shared'
 import Link from 'next/link'
 import { BrandLogo, ButtonIcon, StatCard, StatCardStrip } from '@tahti/ui'
 import { getSessionUser } from '@/lib/session'
+import { isSignupOpen } from '@/lib/signup'
 
 interface PlatformStats {
   activeArtists: number
@@ -86,6 +87,11 @@ export default async function HomePage() {
             <ButtonIcon name="play" />
             Listen now
           </Link>
+          {!user && isSignupOpen() && (
+            <Link href="/signup" className="ui-btn ui-btn--secondary ui-btn--lg">
+              Join as an artist
+            </Link>
+          )}
           {!user && (
             <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
               Sign in

@@ -38,7 +38,7 @@ export function StudioShell({
         <StudioSidebar isBoard={isBoard} hasChannel={hasChannel} />
         <main className="db-main shell-app__content">{children}</main>
       </div>
-      <StudioMobileNav hasChannel={hasChannel} />
+      <StudioMobileNav hasChannel={hasChannel} isBoard={isBoard} />
     </div>
   )
 }

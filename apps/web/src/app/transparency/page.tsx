@@ -189,6 +189,14 @@ export default async function TransparencyPage() {
         />
       </KpiCardRow>
 
+      {ytd.monthsFinalized === 0 && ledgerEntries.length > 0 && (
+        <p className="transparency-callout">
+          The figures above only include board-approved months, and none are approved yet for{' '}
+          {ytd.year} — that&rsquo;s why they read €0,00 even though real transactions are already
+          posting. Every entry is visible in the live ledger below the moment it happens.
+        </p>
+      )}
+
       <div className="transparency-grid">
         <div>
           <p className="transparency-grid__label">Ledger — latest entries (append-only)</p>

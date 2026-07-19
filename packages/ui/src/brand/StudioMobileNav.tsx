@@ -5,6 +5,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { DASHBOARD_NAV } from './dashboard-nav'
+import { SidebarNavIconSvg } from './SidebarNav'
 
 function IconChannel() {
   return (
@@ -103,32 +106,111 @@ const MOBILE_NAV = [
   { href: '/dashboard/settings/account', label: 'Settings', Icon: IconSettings },
 ]
 
-/** Mobile bottom nav for the dashboard (hidden on desktop). */
-export function StudioMobileNav({ hasChannel = true }: { hasChannel?: boolean }) {
+function IconMore() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+      <circle cx="3" cy="8" r="1.4" />
+      <circle cx="8" cy="8" r="1.4" />
+      <circle cx="13" cy="8" r="1.4" />
+    </svg>
+  )
+}
+
+const PRIMARY_HREFS = new Set(MOBILE_NAV.map((item) => item.href))
+
+/** Mobile bottom nav for the dashboard (hidden on desktop). The bar itself only
+ * has room for a handful of items — everything else in DASHBOARD_NAV (the same
+ * list the desktop sidebar renders) surfaces behind "More" so nothing is
+ * reachable on desktop but stranded on mobile. */
+export function StudioMobileNav({
+  hasChannel = true,
+  isBoard = false,
+}: {
+  hasChannel?: boolean
+  isBoard?: boolean
+}) {
   const pathname = usePathname()
+  const [moreOpen, setMoreOpen] = useState(false)
+
+  useEffect(() => {
+    setMoreOpen(false)
+  }, [pathname])
+
+  const moreItems = DASHBOARD_NAV.filter((item) => {
+    if (item.adminOnly && !isBoard) return false
+    if (item.requiresChannel && !hasChannel) return false
+    if (PRIMARY_HREFS.has(item.href)) return false
+    // Mobile's "Settings" points at /settings/account; skip the sidebar's plain /settings row too.
+    if (item.href === '/dashboard/settings') return false
+    return true
+  })
 
   return (
-    <nav className="db-mobile-nav" aria-label="Mobile navigation">
-      {MOBILE_NAV.filter((item) => !item.requiresChannel || hasChannel).map(
-        ({ href, label, Icon }) => {
-          // `/dashboard` is a path prefix of every other dashboard route, so it can only
-          // ever match exactly — a startsWith check here would light up Channel everywhere.
-          const active =
-            href === '/dashboard'
-              ? pathname === '/dashboard'
-              : pathname === href || pathname.startsWith(`${href}/`)
-          return (
-            <Link
-              key={label}
-              href={href}
-              className={`db-mobile-nav-item${active ? ' active' : ''}`}
-            >
-              <Icon />
-              <span>{label}</span>
-            </Link>
-          )
-        },
+    <>
+      {moreOpen && (
+        <div
+          className="db-mobile-more-overlay"
+          role="presentation"
+          onClick={() => setMoreOpen(false)}
+        >
+          <div
+            className="db-mobile-more-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="More dashboard sections"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="db-mobile-more-sheet__handle" aria-hidden />
+            <div className="db-mobile-more-sheet__grid">
+              {moreItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="db-mobile-more-sheet__item"
+                  onClick={() => setMoreOpen(false)}
+                >
+                  <SidebarNavIconSvg name={item.icon} />
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
-    </nav>
+      <nav className="db-mobile-nav" aria-label="Mobile navigation">
+        {MOBILE_NAV.filter((item) => !item.requiresChannel || hasChannel).map(
+          ({ href, label, Icon }) => {
+            // `/dashboard` is a path prefix of every other dashboard route, so it can only
+            // ever match exactly — a startsWith check here would light up Channel everywhere.
+            const active =
+              href === '/dashboard'
+                ? pathname === '/dashboard'
+                : pathname === href || pathname.startsWith(`${href}/`)
+            return (
+              <Link
+                key={label}
+                href={href}
+                className={`db-mobile-nav-item${active ? ' active' : ''}`}
+              >
+                <Icon />
+                <span>{label}</span>
+              </Link>
+            )
+          },
+        )}
+        {moreItems.length > 0 && (
+          <button
+            type="button"
+            className={`db-mobile-nav-item db-mobile-nav-item--button${moreOpen ? ' active' : ''}`}
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            onClick={() => setMoreOpen((v) => !v)}
+          >
+            <IconMore />
+            <span>More</span>
+          </button>
+        )}
+      </nav>
+    </>
   )
 }
