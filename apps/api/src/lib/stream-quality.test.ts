@@ -24,4 +24,11 @@ describe('stream-quality', () => {
       'http://hls.example/hls-live/dj/stream-mp3-192.m3u8',
     )
   })
+
+  it('always uses the MP3 manifest for Tahti Radio, even at STUDIO tier', () => {
+    // FLAC-in-MPEGTS has no MediaSource Extensions support in mainstream
+    // browsers — silently unplayable, not just lower quality. Tahti Radio's
+    // STUDIO tier exists only to exempt it from the weekly live-hour cap.
+    expect(liveHlsManifestPath('tahti-radio', 'STUDIO')).toBe('tahti-radio/stream-mp3-192.m3u8')
+  })
 })
