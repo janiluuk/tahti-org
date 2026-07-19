@@ -126,7 +126,16 @@ interface ArtistPostItem {
   title: string | null
   body: string
   images: string[]
+  publishAt: string
   createdAt: string
+}
+
+function formatPostDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 interface ArtistEmbedItem {
@@ -216,6 +225,23 @@ export default async function ArtistProfilePage({ params }: { params: { username
           />
         }
       >
+        {posts.length > 0 && (
+          <section className="ch-featured-post">
+            <div className="ch-featured-post__label">Latest from {artist.displayName}</div>
+            {posts[0]!.title && <div className="ch-posts-list__title">{posts[0]!.title}</div>}
+            <div className="ch-posts-list__date">{formatPostDate(posts[0]!.publishAt)}</div>
+            <p className="ch-posts-list__body">{posts[0]!.body}</p>
+            {posts[0]!.images.length > 0 && (
+              <div className="ch-posts-list__images">
+                {posts[0]!.images.map((url) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={url} src={url} alt="" className="ch-posts-list__image" />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         <NewsletterSubscribeForm
           artistUsername={artist.username}
           artistDisplayName={artist.displayName}
@@ -314,20 +340,14 @@ export default async function ArtistProfilePage({ params }: { params: { username
           </section>
         )}
 
-        {posts.length > 0 && (
+        {posts.length > 1 && (
           <section className="prof-section">
             <div className="prof-sec-label">Updates</div>
             <ul className="ch-posts-list">
-              {posts.map((p) => (
+              {posts.slice(1).map((p) => (
                 <li key={p.id} className="ch-posts-list__item">
                   {p.title && <div className="ch-posts-list__title">{p.title}</div>}
-                  <div className="ch-posts-list__date">
-                    {new Date(p.createdAt).toLocaleDateString(undefined, {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </div>
+                  <div className="ch-posts-list__date">{formatPostDate(p.publishAt)}</div>
                   <p className="ch-posts-list__body">{p.body}</p>
                   {p.images.length > 0 && (
                     <div className="ch-posts-list__images">

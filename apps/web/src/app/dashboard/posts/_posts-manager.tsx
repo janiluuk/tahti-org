@@ -21,11 +21,27 @@ function fmtDate(iso: string) {
   })
 }
 
+// <input type="datetime-local"> has no timezone info; interpret it in the
+// browser's local timezone, same as the user picked it.
+function datetimeLocalToIso(value: string): string | undefined {
+  if (!value) return undefined
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? undefined : d.toISOString()
+}
+
+function minDatetimeLocal(): string {
+  const d = new Date(Date.now() + 60_000)
+  d.setSeconds(0, 0)
+  return d.toISOString().slice(0, 16)
+}
+
 export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] }) {
   const [posts, setPosts] = useState(initialPosts)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [files, setFiles] = useState<File[]>([])
+  const [scheduleEnabled, setScheduleEnabled] = useState(false)
+  const [scheduleAt, setScheduleAt] = useState('')
   const [pending, setPending] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -35,11 +51,27 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
       setError('Write something first.')
       return
     }
+    let publishAt: string | undefined
+    if (scheduleEnabled) {
+      publishAt = datetimeLocalToIso(scheduleAt)
+      if (!publishAt) {
+        setError('Pick a date and time to schedule for.')
+        return
+      }
+      if (new Date(publishAt).getTime() <= Date.now()) {
+        setError('Scheduled time must be in the future.')
+        return
+      }
+    }
     setPending(true)
     setError(null)
-    setStatus('Publishing…')
+    setStatus(publishAt ? 'Scheduling…' : 'Publishing…')
 
-    const created = await createPost({ title: title.trim() || undefined, body: body.trim() })
+    const created = await createPost({
+      title: title.trim() || undefined,
+      body: body.trim(),
+      publishAt,
+    })
     if (created.error || !created.post) {
       setPending(false)
       setError(created.error ?? 'Failed to publish post')
@@ -69,10 +101,12 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
       if (complete.post) finalPost = complete.post
     }
 
-    setPosts((prev) => [finalPost, ...prev])
+    setPosts((prev) => [finalPost, ...prev].sort((a, b) => (a.publishAt < b.publishAt ? 1 : -1)))
     setTitle('')
     setBody('')
     setFiles([])
+    setScheduleEnabled(false)
+    setScheduleAt('')
     setStatus(null)
     setPending(false)
   }
@@ -90,31 +124,42 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
         </p>
       ) : (
         <ul className="studio-list studio-mb-md">
-          {posts.map((p) => (
-            <li key={p.id} className="studio-post-row">
-              <div className="studio-flex-1">
-                {p.title && <div className="studio-text-sm">{p.title}</div>}
-                <div className="studio-text-muted-sm">{fmtDate(p.createdAt)}</div>
-                <p className="studio-text-sm studio-mt-xs">{p.body}</p>
-                {p.images.length > 0 && (
-                  <div className="studio-post-row__images">
-                    {p.images.map((url) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={url} src={url} alt="" className="studio-post-row__image" />
-                    ))}
+          {posts.map((p) => {
+            const isScheduled = new Date(p.publishAt).getTime() > Date.now()
+            return (
+              <li key={p.id} className="studio-post-row">
+                <div className="studio-flex-1">
+                  {p.title && <div className="studio-text-sm">{p.title}</div>}
+                  <div className="studio-text-muted-sm">
+                    {isScheduled ? (
+                      <span className="studio-badge studio-badge--pending">
+                        Scheduled for {fmtDate(p.publishAt)}
+                      </span>
+                    ) : (
+                      <>Published {fmtDate(p.publishAt)}</>
+                    )}
                   </div>
-                )}
-              </div>
-              <Button
-                onClick={() => remove(p.id)}
-                variant="ghost"
-                size="sm"
-                className="studio-text-error"
-              >
-                Remove
-              </Button>
-            </li>
-          ))}
+                  <p className="studio-text-sm studio-mt-xs">{p.body}</p>
+                  {p.images.length > 0 && (
+                    <div className="studio-post-row__images">
+                      {p.images.map((url) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={url} src={url} alt="" className="studio-post-row__image" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <Button
+                  onClick={() => remove(p.id)}
+                  variant="ghost"
+                  size="sm"
+                  className="studio-text-error"
+                >
+                  Remove
+                </Button>
+              </li>
+            )
+          })}
         </ul>
       )}
 
@@ -154,9 +199,32 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
         )}
       </label>
 
+      <label className="studio-label-row studio-mt-sm">
+        <input
+          type="checkbox"
+          checked={scheduleEnabled}
+          disabled={pending}
+          onChange={(e) => setScheduleEnabled(e.target.checked)}
+        />
+        Schedule for later
+      </label>
+      {scheduleEnabled && (
+        <label className="studio-field studio-mt-xs">
+          <span className="studio-label">Publish at</span>
+          <input
+            type="datetime-local"
+            value={scheduleAt}
+            min={minDatetimeLocal()}
+            disabled={pending}
+            onChange={(e) => setScheduleAt(e.target.value)}
+            className="studio-input"
+          />
+        </label>
+      )}
+
       <Button onClick={publish} disabled={pending} variant="primary" className="studio-mt-sm">
         <ButtonIcon name="send" />
-        {status ?? 'Publish'}
+        {status ?? (scheduleEnabled ? 'Schedule post' : 'Publish')}
       </Button>
       {error && <p className="studio-notice studio-notice--error studio-mt-sm">{error}</p>}
     </Panel>

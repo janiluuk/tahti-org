@@ -6,6 +6,8 @@ import { z } from 'zod'
 export const CreateArtistPostSchema = z.object({
   title: z.string().trim().max(160).optional(),
   body: z.string().trim().min(1, 'body is required').max(5000),
+  /** Omit (or set to now/past) to publish immediately; a future time schedules it. */
+  publishAt: z.string().datetime().optional(),
 })
 
 export type CreateArtistPostInput = z.infer<typeof CreateArtistPostSchema>
@@ -15,6 +17,7 @@ export const ArtistPostSchema = z.object({
   title: z.string().nullable(),
   body: z.string(),
   images: z.array(z.string()),
+  publishAt: z.string().datetime(),
   createdAt: z.string().datetime(),
 })
 

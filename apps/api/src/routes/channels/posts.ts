@@ -31,12 +31,18 @@ const channelPostsRoute: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       const posts = await fastify.prisma.artistPost.findMany({
-        where: { userId: channel.userId },
-        orderBy: { createdAt: 'desc' },
+        where: { userId: channel.userId, publishAt: { lte: new Date() } },
+        orderBy: { publishAt: 'desc' },
         take: 20,
       })
 
-      return reply.send(posts.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() })))
+      return reply.send(
+        posts.map((p) => ({
+          ...p,
+          publishAt: p.publishAt.toISOString(),
+          createdAt: p.createdAt.toISOString(),
+        })),
+      )
     },
   )
 }

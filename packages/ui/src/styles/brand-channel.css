@@ -1434,6 +1434,23 @@
   color: var(--amber);
 }
 
+[data-tahti-ui='brand'] .ch-featured-post {
+  padding: 1.25rem;
+  background: color-mix(in srgb, var(--amber) 8%, var(--card2));
+  border: 1px solid color-mix(in srgb, var(--amber) 25%, var(--border));
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-featured-post__label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--amber);
+  margin-bottom: 0.5rem;
+}
+
 [data-tahti-ui='brand'] .ch-posts-list {
   display: flex;
   flex-direction: column;

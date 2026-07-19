@@ -2011,6 +2011,13 @@
   color: var(--green);
 }
 
+[data-tahti-ui='studio'] .studio-badge--pending {
+  margin-left: 0;
+  background: color-mix(in srgb, var(--amber) 15%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
+  color: var(--amber);
+}
+
 [data-tahti-ui='studio'] .studio-actions {
   display: flex;
   gap: 0.5rem;
