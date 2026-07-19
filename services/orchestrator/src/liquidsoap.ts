@@ -108,6 +108,20 @@ export async function spawnLiquidsoapContainer(
     return
   }
 
+  // activeChannels is in-memory and lost on orchestrator restart. Without this
+  // check, a restarted orchestrator has no idea the container is already up and
+  // retries `docker run --name X` on every tick, which always fails with a name
+  // conflict against the still-running container — it can never recover on its
+  // own. Reconcile with actual Docker state before assuming nothing is running.
+  const containerName = `tahti-channel-${slug}`
+  const { stdout: runningId } = await execAsync(
+    `docker ps -q --filter "name=^/${containerName}$" --filter "status=running"`,
+  ).catch(() => ({ stdout: '' }))
+  if (runningId.trim()) {
+    activeChannels.set(channelId, containerName)
+    return
+  }
+
   const templatePath = templateKind === 'rotation' ? ROTATION_TEMPLATE_PATH : TEMPLATE_PATH
 
   const channel = await prisma.channel.findUnique({
@@ -187,8 +201,6 @@ export async function spawnLiquidsoapContainer(
     `docker volume inspect ${LIQUIDSOAP_CONFIG_VOLUME} --format '{{ .Mountpoint }}'`,
   )
   const hostConfigPath = `${volumeMountpoint.trim()}/${configFileName}`
-
-  const containerName = `tahti-channel-${slug}`
 
   const cmd = [
     'docker run -d',

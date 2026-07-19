@@ -3,50 +3,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { ActiveRadioPlayback } from '@tahti/shared'
 import HlsPlayer from '../c/[slug]/hls-player'
 import ReactionsOverlay from '../c/[slug]/reactions'
 
 interface RadioPlayerSectionProps {
-  playback: Exclude<ActiveRadioPlayback, { kind: 'none' }>
+  playback: { kind: 'audio'; audioUrl: string }
   slug: string
 }
 
-function RadioVideoPlayer({ embedUrl, slug }: { embedUrl: string; slug: string }) {
-  return (
-    <>
-      <div id="live-player" className="ch-player-wrap">
-        <div className="ch-player-inner ch-player-inner--video">
-          <iframe
-            title="Tahti Radio"
-            className="ch-youtube-player"
-            src={embedUrl}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          />
-        </div>
-        <ReactionsOverlay slug={slug} />
-      </div>
-    </>
-  )
-}
-
-function RadioAudioPlayer({ audioUrl, slug }: { audioUrl: string; slug: string }) {
-  return (
-    <>
-      <div id="live-player" className="ch-player-wrap">
-        <div className="ch-player-inner">
-          <HlsPlayer url={audioUrl} title="Tahti Radio" subtitle="24/7 live" href="/radio" />
-        </div>
-        <ReactionsOverlay slug={slug} />
-      </div>
-    </>
-  )
-}
-
 export function RadioPlayerSection({ playback, slug }: RadioPlayerSectionProps) {
-  if (playback.kind === 'video') {
-    return <RadioVideoPlayer embedUrl={playback.embedUrl} slug={slug} />
-  }
-  return <RadioAudioPlayer audioUrl={playback.audioUrl} slug={slug} />
+  return (
+    <div id="live-player" className="ch-player-wrap">
+      <div className="ch-player-inner">
+        <HlsPlayer url={playback.audioUrl} title="Tahti Radio" subtitle="24/7 live" href="/radio" />
+      </div>
+      <ReactionsOverlay slug={slug} />
+    </div>
+  )
 }

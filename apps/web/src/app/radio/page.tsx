@@ -3,11 +3,7 @@
 
 import type { Metadata } from 'next'
 import { AvatarTile, ChannelPageShell, Heading, Row, SafePlainText, Text } from '@tahti/ui'
-import {
-  resolveActiveRadioPlayback,
-  resolveTahtiRadioStream,
-  TAHTI_RADIO_SLUG,
-} from '@tahti/shared'
+import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { getSessionUser } from '@/lib/session'
 import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import ChatPanel from '../c/[slug]/chat-panel'
@@ -88,9 +84,10 @@ async function fetchUpcomingSlots(): Promise<PublicRadioSlot[]> {
   return slots
 }
 
-/** Real HLS output once Tahti Radio's own Liquidsoap process is running (spawned by
- * the radio-slot-switchover cron) — preferred over the static env-configured
- * placeholder when available, since it's the actual live-artist-or-rotation feed. */
+/** Real HLS output from Tahti Radio's own always-on Liquidsoap process (spawned
+ * and kept in sync by the radio-slot-switchover cron): the booked artist's live
+ * feed during their slot, the curated rotation otherwise. This is the only
+ * source the public page ever plays — no video/YouTube placeholder fallback. */
 async function fetchRealHlsUrl(): Promise<string | null> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   try {
@@ -102,16 +99,6 @@ async function fetchRealHlsUrl(): Promise<string | null> {
     return data.hlsUrl
   } catch {
     return null
-  }
-}
-
-function radioStreamEnv() {
-  return {
-    TAHTI_RADIO_STREAM_MODE: process.env.TAHTI_RADIO_STREAM_MODE,
-    TAHTI_RADIO_VIDEO_URL: process.env.TAHTI_RADIO_VIDEO_URL,
-    TAHTI_RADIO_YOUTUBE_URL: process.env.TAHTI_RADIO_YOUTUBE_URL,
-    TAHTI_RADIO_AUDIO_URL: process.env.TAHTI_RADIO_AUDIO_URL,
-    TAHTI_RADIO_HLS_URL: process.env.TAHTI_RADIO_HLS_URL,
   }
 }
 
@@ -129,7 +116,7 @@ export default async function RadioPage() {
 
   const playback = realHlsUrl
     ? ({ kind: 'audio', audioUrl: realHlsUrl } as const)
-    : resolveActiveRadioPlayback(resolveTahtiRadioStream(radioStreamEnv()))
+    : ({ kind: 'none' } as const)
 
   const now = Date.now()
   const liveSlot = upcomingSlots.find(
