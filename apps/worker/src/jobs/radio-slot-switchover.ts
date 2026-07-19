@@ -24,7 +24,7 @@ export async function processRadioSlotSwitchoverJob(
 ): Promise<RadioSlotSwitchoverResult> {
   const channel = await prisma.channel.findUnique({
     where: { slug: TAHTI_RADIO_SLUG },
-    select: { id: true, liveInputOverrideSlug: true },
+    select: { id: true, liveInputOverrideSlug: true, state: true },
   })
   if (!channel) return { liveArtistSlug: null, switched: false }
 
@@ -43,7 +43,24 @@ export async function processRadioSlotSwitchoverJob(
   // Cheap and idempotent — orchestrator no-ops if this channel is already
   // tracked, so this only ever does real work after an orchestrator restart,
   // and never causes an audio glitch on its own.
-  await spawnOrchestratorChannel(channel.id, TAHTI_RADIO_SLUG, broadcast.id, 'channel')
+  const running = await spawnOrchestratorChannel(
+    channel.id,
+    TAHTI_RADIO_SLUG,
+    broadcast.id,
+    'channel',
+  )
+
+  // Tahti Radio has no artist pushing to its own Icecast mount, so the usual
+  // on_connect webhook that flips regular channels to LIVE never fires here —
+  // without this, `state` stays OFFLINE forever even while Liquidsoap is
+  // genuinely streaming the rotation, and the public radio page never gets a
+  // real hlsUrl (falls back to the legacy placeholder instead). Mirror the
+  // failure case too — an honest "temporarily offline" beats a LIVE badge
+  // pointing at dead audio.
+  const desiredState = running ? 'LIVE' : 'OFFLINE'
+  if (channel.state !== desiredState) {
+    await prisma.channel.update({ where: { id: channel.id }, data: { state: desiredState } })
+  }
 
   const now = new Date()
   const active = await prisma.radioSlotBooking.findFirst({

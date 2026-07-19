@@ -11,7 +11,7 @@ async function orchestratorPost(
   path: string,
   body: Record<string, string>,
   opts?: { warnOnly?: boolean },
-): Promise<void> {
+): Promise<boolean> {
   try {
     const res = await fetch(`${ORCHESTRATOR_URL}${path}`, {
       method: 'POST',
@@ -25,14 +25,15 @@ async function orchestratorPost(
       const msg = `Orchestrator ${path} returned ${res.status}`
       if (opts?.warnOnly) {
         console.warn(`[worker] ${msg}`)
-        return
+        return false
       }
       throw new Error(msg)
     }
+    return true
   } catch (err) {
     if (opts?.warnOnly) {
       console.warn(`[worker] orchestrator ${path} failed:`, err)
-      return
+      return false
     }
     throw err
   }
@@ -53,12 +54,15 @@ export async function restartChannelLiquidsoap(
   await orchestratorPost('/restart', { channelId, slug, broadcastId, template })
 }
 
-/** Idempotent — orchestrator no-ops if this channel's container is already tracked. */
+/** Idempotent — orchestrator no-ops if this channel's container is already tracked
+ * (or already running under a different orchestrator process — see the Docker
+ * reconciliation check in spawnLiquidsoapContainer). Returns whether the channel
+ * is confirmed running, so callers can gate state on it. */
 export async function spawnOrchestratorChannel(
   channelId: string,
   slug: string,
   broadcastId: string,
   template: 'channel' | 'rotation' = 'channel',
-): Promise<void> {
-  await orchestratorPost('/spawn', { channelId, slug, broadcastId, template }, { warnOnly: true })
+): Promise<boolean> {
+  return orchestratorPost('/spawn', { channelId, slug, broadcastId, template }, { warnOnly: true })
 }

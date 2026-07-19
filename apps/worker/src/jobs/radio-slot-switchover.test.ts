@@ -6,7 +6,7 @@ import type { Job } from 'bullmq'
 
 vi.mock('../lib/orchestrator.js', () => ({
   restartChannelLiquidsoap: vi.fn().mockResolvedValue(undefined),
-  spawnOrchestratorChannel: vi.fn().mockResolvedValue(undefined),
+  spawnOrchestratorChannel: vi.fn().mockResolvedValue(true),
 }))
 
 import { processRadioSlotSwitchoverJob } from './radio-slot-switchover.js'
@@ -30,6 +30,7 @@ describe('processRadioSlotSwitchoverJob', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockFindFirstBroadcast.mockResolvedValue({ id: 'broadcast-1' })
+    vi.mocked(spawnOrchestratorChannel).mockResolvedValue(true)
   })
 
   it('no-ops when the tahti-radio channel does not exist', async () => {
@@ -42,7 +43,11 @@ describe('processRadioSlotSwitchoverJob', () => {
   })
 
   it('creates a persistent placeholder broadcast when none exists', async () => {
-    mockFindUniqueChannel.mockResolvedValue({ id: 'radio-ch', liveInputOverrideSlug: null })
+    mockFindUniqueChannel.mockResolvedValue({
+      id: 'radio-ch',
+      liveInputOverrideSlug: null,
+      state: 'LIVE',
+    })
     mockFindFirstBroadcast.mockResolvedValue(null)
     mockCreateBroadcast.mockResolvedValue({ id: 'new-broadcast' })
     mockFindFirstBooking.mockResolvedValue(null)
@@ -55,7 +60,11 @@ describe('processRadioSlotSwitchoverJob', () => {
   })
 
   it('always ensures the orchestrator has the channel spawned (idempotent)', async () => {
-    mockFindUniqueChannel.mockResolvedValue({ id: 'radio-ch', liveInputOverrideSlug: null })
+    mockFindUniqueChannel.mockResolvedValue({
+      id: 'radio-ch',
+      liveInputOverrideSlug: null,
+      state: 'LIVE',
+    })
     mockFindFirstBooking.mockResolvedValue(null)
 
     await processRadioSlotSwitchoverJob(fakePrisma(), {} as Job)
@@ -68,8 +77,12 @@ describe('processRadioSlotSwitchoverJob', () => {
     )
   })
 
-  it('does nothing when no booking is active and no override is set', async () => {
-    mockFindUniqueChannel.mockResolvedValue({ id: 'radio-ch', liveInputOverrideSlug: null })
+  it('does nothing else when no booking is active, no override is set, and already LIVE', async () => {
+    mockFindUniqueChannel.mockResolvedValue({
+      id: 'radio-ch',
+      liveInputOverrideSlug: null,
+      state: 'LIVE',
+    })
     mockFindFirstBooking.mockResolvedValue(null)
 
     const result = await processRadioSlotSwitchoverJob(fakePrisma(), {} as Job)
@@ -80,7 +93,11 @@ describe('processRadioSlotSwitchoverJob', () => {
   })
 
   it('switches to the booked artist when a slot becomes active', async () => {
-    mockFindUniqueChannel.mockResolvedValue({ id: 'radio-ch', liveInputOverrideSlug: null })
+    mockFindUniqueChannel.mockResolvedValue({
+      id: 'radio-ch',
+      liveInputOverrideSlug: null,
+      state: 'LIVE',
+    })
     mockFindFirstBooking.mockResolvedValue({ channel: { slug: 'some-artist' } })
 
     const result = await processRadioSlotSwitchoverJob(fakePrisma(), {} as Job)
@@ -102,6 +119,7 @@ describe('processRadioSlotSwitchoverJob', () => {
     mockFindUniqueChannel.mockResolvedValue({
       id: 'radio-ch',
       liveInputOverrideSlug: 'some-artist',
+      state: 'LIVE',
     })
     mockFindFirstBooking.mockResolvedValue(null)
 
@@ -119,6 +137,7 @@ describe('processRadioSlotSwitchoverJob', () => {
     mockFindUniqueChannel.mockResolvedValue({
       id: 'radio-ch',
       liveInputOverrideSlug: 'some-artist',
+      state: 'LIVE',
     })
     mockFindFirstBooking.mockResolvedValue({ channel: { slug: 'some-artist' } })
 
@@ -126,5 +145,39 @@ describe('processRadioSlotSwitchoverJob', () => {
 
     expect(result).toEqual({ liveArtistSlug: 'some-artist', switched: false })
     expect(restartChannelLiquidsoap).not.toHaveBeenCalled()
+  })
+
+  it('flips the channel to LIVE once the spawn is confirmed running', async () => {
+    mockFindUniqueChannel.mockResolvedValue({
+      id: 'radio-ch',
+      liveInputOverrideSlug: null,
+      state: 'OFFLINE',
+    })
+    mockFindFirstBooking.mockResolvedValue(null)
+    vi.mocked(spawnOrchestratorChannel).mockResolvedValue(true)
+
+    await processRadioSlotSwitchoverJob(fakePrisma(), {} as Job)
+
+    expect(mockUpdateChannel).toHaveBeenCalledWith({
+      where: { id: 'radio-ch' },
+      data: { state: 'LIVE' },
+    })
+  })
+
+  it('flips the channel back to OFFLINE when the spawn genuinely fails', async () => {
+    mockFindUniqueChannel.mockResolvedValue({
+      id: 'radio-ch',
+      liveInputOverrideSlug: null,
+      state: 'LIVE',
+    })
+    mockFindFirstBooking.mockResolvedValue(null)
+    vi.mocked(spawnOrchestratorChannel).mockResolvedValue(false)
+
+    await processRadioSlotSwitchoverJob(fakePrisma(), {} as Job)
+
+    expect(mockUpdateChannel).toHaveBeenCalledWith({
+      where: { id: 'radio-ch' },
+      data: { state: 'OFFLINE' },
+    })
   })
 })
