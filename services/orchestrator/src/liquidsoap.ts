@@ -244,29 +244,42 @@ export async function spawnChannel(
     await spawnEdgeEncoder(channelId, slug, broadcast?.channel.rtmpStreamKey)
   }
 
+  // The caller (and callers of /spawn) treat this function's success as "the
+  // channel is live" — that's true the moment Liquidsoap is up, above. The
+  // recorder and fingerprint-ingest sidecars are archival/supplementary, not
+  // on the playback path; letting either one's failure (e.g. a bad sidecar
+  // image) fail this whole call would wrongly report the channel as down.
   await spawnLiquidsoapContainer(channelId, slug, broadcastId, source, templateKind)
 
   // Rotation channels never publish to the Icecast /live/<slug> mount the recorder
   // and fingerprint-ingest read from (no live source ever connects) — skip both.
   if (templateKind === 'rotation') return
 
-  await spawnBroadcastRecorder(
-    channelId,
-    slug,
-    broadcastId,
-    source,
-    broadcast?.channel.rtmpStreamKey,
-  )
+  try {
+    await spawnBroadcastRecorder(
+      channelId,
+      slug,
+      broadcastId,
+      source,
+      broadcast?.channel.rtmpStreamKey,
+    )
+  } catch (err) {
+    console.warn(`[orchestrator] recorder sidecar failed for ${slug} (non-fatal):`, err)
+  }
 
-  await spawnFingerprintIngest({
-    channelId,
-    slug,
-    broadcastId,
-    source,
-    rtmpStreamKey: broadcast?.channel.rtmpStreamKey,
-    apiUrl: API_URL,
-    internalSecret: INTERNAL_SECRET,
-  })
+  try {
+    await spawnFingerprintIngest({
+      channelId,
+      slug,
+      broadcastId,
+      source,
+      rtmpStreamKey: broadcast?.channel.rtmpStreamKey,
+      apiUrl: API_URL,
+      internalSecret: INTERNAL_SECRET,
+    })
+  } catch (err) {
+    console.warn(`[orchestrator] fingerprint-ingest sidecar failed for ${slug} (non-fatal):`, err)
+  }
 }
 
 export async function stopLiquidsoapContainer(channelId: string): Promise<void> {
