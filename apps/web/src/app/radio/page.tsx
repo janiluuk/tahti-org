@@ -39,6 +39,7 @@ interface RadioRotationItem {
   id: string
   title: string
   artistName: string
+  artistUsername: string
 }
 
 async function fetchAnnouncements(): Promise<Announcement[]> {
