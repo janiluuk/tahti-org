@@ -25,6 +25,15 @@ export interface WaveformPlayerProps {
    * traveling-wave animation instead of the frozen idle bars, so it reads as "the
    * server is listening" rather than "nothing is happening". */
   waitingForSignal?: boolean
+  /** What's currently playing — shown as a small thumbnail + title/subtitle row.
+   * Omit entirely to skip rendering this row (existing callers unaffected). */
+  artworkUrl?: string | null
+  nowPlayingTitle?: string
+  nowPlayingSubtitle?: string
+  /** Wall-clock seconds since a live broadcast began — shown instead of the bare
+   * "LIVE" label when set. Continuous rotation playback should leave this unset,
+   * since there's no meaningful "elapsed" for a shuffled, unbounded stream. */
+  liveElapsedSec?: number
 }
 
 /** Custom HLS/archive player chrome — waveform, play/pause, seek bar. */
@@ -41,6 +50,10 @@ export function WaveformPlayer({
   embedded = false,
   className,
   waitingForSignal = false,
+  artworkUrl,
+  nowPlayingTitle,
+  nowPlayingSubtitle,
+  liveElapsedSec,
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
@@ -69,6 +82,22 @@ export function WaveformPlayer({
 
   return (
     <div className={cn('waveform-player', embedded && 'waveform-player--embedded', className)}>
+      {nowPlayingTitle && (
+        <div className="waveform-player__meta">
+          {artworkUrl ? (
+            <img src={artworkUrl} alt="" className="waveform-player__art" />
+          ) : (
+            <span className="waveform-player__art waveform-player__art--blank" aria-hidden />
+          )}
+          <div className="waveform-player__meta-text">
+            <span className="waveform-player__meta-title">{nowPlayingTitle}</span>
+            {nowPlayingSubtitle && (
+              <span className="waveform-player__meta-subtitle">{nowPlayingSubtitle}</span>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="waveform-player__status">
         <span
           className={cn(
@@ -126,7 +155,11 @@ export function WaveformPlayer({
 
         <div className="waveform-player__progress-wrap">
           <span className="waveform-player__time">
-            {isLive ? 'LIVE' : formatPlayerTime(currentTime)}
+            {isLive
+              ? liveElapsedSec != null
+                ? formatPlayerTime(liveElapsedSec)
+                : 'LIVE'
+              : formatPlayerTime(currentTime)}
           </span>
           <div
             className={cn('waveform-player__progress', isLive && 'waveform-player__progress--live')}
