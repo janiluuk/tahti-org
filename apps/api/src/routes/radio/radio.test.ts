@@ -122,9 +122,10 @@ describe('STREAM-011 — Tahti Selects rotation preview', () => {
   it('returns the curated rotation in admin-set position order', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/radio/rotation' })
     expect(res.statusCode).toBe(200)
-    const body = res.json() as Array<{ title: string; artistName: string }>
+    const body = res.json() as Array<{ title: string; artistName: string; artistUsername: string }>
     expect(body.map((b) => b.title)).toEqual(['Rotation Track One', 'Rotation Track Two'])
     expect(body.every((b) => b.artistName === 'Rotation Test Artist')).toBe(true)
+    expect(body.every((b) => b.artistUsername === `${PREFIX}track-artist`)).toBe(true)
   })
 })
 

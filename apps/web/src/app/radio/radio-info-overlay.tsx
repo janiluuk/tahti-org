@@ -11,6 +11,7 @@ interface RadioRotationItem {
   id: string
   title: string
   artistName: string
+  artistUsername: string
 }
 
 interface RadioMemberRelay {
@@ -87,8 +88,10 @@ export function RadioInfoOverlay({
                     <ul className="ch-radio-rotation__list">
                       {rotation.map((item) => (
                         <li key={item.id} className="ch-radio-rotation__item">
-                          <span className="ch-radio-rotation__title">{item.title}</span>
-                          <span className="ch-radio-rotation__artist">{item.artistName}</span>
+                          <a href={`/u/${item.artistUsername}`} className="ch-radio-rotation__link">
+                            <span className="ch-radio-rotation__title">{item.title}</span>
+                            <span className="ch-radio-rotation__artist">{item.artistName}</span>
+                          </a>
                         </li>
                       ))}
                     </ul>

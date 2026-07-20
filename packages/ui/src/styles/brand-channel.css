@@ -1002,16 +1002,25 @@
 }
 
 [data-tahti-ui='brand'] .ch-radio-rotation__item {
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .ch-radio-rotation__item:last-child .ch-radio-rotation__link {
+  border-bottom: none;
+}
+
+[data-tahti-ui='brand'] .ch-radio-rotation__link {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
   padding: 0.35rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
-  font-size: var(--text-sm);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
 }
 
-[data-tahti-ui='brand'] .ch-radio-rotation__item:last-child {
-  border-bottom: none;
+[data-tahti-ui='brand'] .ch-radio-rotation__link:hover {
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
 }
 
 [data-tahti-ui='brand'] .ch-radio-rotation__title {
