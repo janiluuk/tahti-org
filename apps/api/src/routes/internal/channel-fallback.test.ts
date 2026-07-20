@@ -55,6 +55,23 @@ describe('GET /internal/channels/:channelId/fallback.m3u', () => {
     expect(res.body).toContain('Fallback track')
   })
 
+  it('accepts auth via ?secret= query param (Liquidsoap playlist() can not send headers)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/internal/channels/${channelId}/fallback.m3u?secret=${config.internalSecret}`,
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('Fallback track')
+  })
+
+  it('rejects a wrong ?secret= query param', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/internal/channels/${channelId}/fallback.m3u?secret=wrong`,
+    })
+    expect(res.statusCode).toBe(401)
+  })
+
   it('returns 404 for unknown channel', async () => {
     const res = await app.inject({
       method: 'GET',

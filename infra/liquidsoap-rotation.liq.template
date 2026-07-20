@@ -10,7 +10,7 @@ settings.log.level := 3
 
 # --- Curated playlist (the entire program — no live() fallback needed) ---
 archive_local_path = "/archive-cache/{{CHANNEL_ID}}/fallback.m3u"
-archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u"
+archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u?secret={{INTERNAL_SECRET}}"
 archive = if file.exists(archive_local_path) then
   playlist(
     mode="{{FALLBACK_MODE}}",

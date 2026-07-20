@@ -33,8 +33,14 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(401).send('invalid path')
       const { channelId } = routeParams
 
+      // Liquidsoap's playlist() fetches a bare URL and can't attach an Authorization
+      // header, so it authenticates via a ?secret= query param instead. Every other
+      // internal caller keeps using the header.
       const auth = (request.headers['authorization'] as string | undefined) ?? ''
-      if (auth !== `Bearer ${config.internalSecret}`) {
+      const secretParam = (request.query as { secret?: string } | undefined)?.secret ?? ''
+      const authorized =
+        auth === `Bearer ${config.internalSecret}` || secretParam === config.internalSecret
+      if (!authorized) {
         return reply.status(401).send('unauthorized')
       }
 
