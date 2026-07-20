@@ -19,9 +19,10 @@ import { ensureCoverImage, coverImagePath } from './cover-cache.js'
 import { liveInputUrl } from './live-input.js'
 import {
   LIQUIDSOAP_FADE_SEC,
+  LIQUIDSOAP_GRACEFUL_SHUTDOWN_COMMAND,
   LIQUIDSOAP_TELNET_PORT,
-  liquidsoapGracefulShutdownShell,
   liquidsoapGracefulShutdownWaitMs,
+  sendLiquidsoapTelnetCommand,
 } from './liquidsoap-shutdown.js'
 
 const execAsync = promisify(exec)
@@ -306,7 +307,7 @@ export async function stopLiquidsoapContainer(channelId: string): Promise<void> 
 /** STREAM-010: telnet graceful_shutdown → fade → then docker stop. */
 export async function requestLiquidsoapGracefulShutdown(containerName: string): Promise<void> {
   try {
-    await execAsync(liquidsoapGracefulShutdownShell(containerName))
+    await sendLiquidsoapTelnetCommand(containerName, LIQUIDSOAP_GRACEFUL_SHUTDOWN_COMMAND)
     await new Promise((resolve) => setTimeout(resolve, liquidsoapGracefulShutdownWaitMs()))
   } catch (err) {
     console.warn(`[orchestrator] graceful shutdown skipped for ${containerName}:`, err)

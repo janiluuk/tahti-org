@@ -64,6 +64,10 @@ def start_graceful_shutdown(_) =
 end
 
 settings.server.telnet.set(true)
+# Default bind (127.0.0.1) only accepts connections from inside this same
+# container — the orchestrator reaches this port from its own container over
+# the docker network, not published to the host, so 0.0.0.0 stays internal-only.
+settings.server.telnet.bind_addr.set("0.0.0.0")
 settings.server.telnet.port.set({{LIQUIDSOAP_TELNET_PORT}})
 server.register(
   "graceful_shutdown",
