@@ -84,10 +84,6 @@ body {
   background: var(--card2);
 }
 
-.mini-player__art--blank {
-  border: 1px solid var(--border);
-}
-
 .mini-player__info {
   flex: 1 1 auto;
   min-width: 0;
@@ -279,11 +275,6 @@ body {
   height: 32px;
   border-radius: var(--radius-sm);
   object-fit: cover;
-}
-
-.mini-player-queue__art--blank {
-  background: var(--card);
-  border: 1px solid var(--border);
 }
 
 .mini-player-queue__meta {

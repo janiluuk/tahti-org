@@ -6,6 +6,7 @@
 import React, { useCallback } from 'react'
 import { cn } from '../lib/cn'
 import { formatPlayerTime, WAVEFORM_BAR_HEIGHTS } from '../lib/waveform-player'
+import { AvatarTile } from './AvatarTile'
 
 export interface WaveformPlayerProps {
   playing?: boolean
@@ -94,7 +95,7 @@ export function WaveformPlayer({
           {artworkUrl ? (
             <img src={artworkUrl} alt="" className="waveform-player__art" />
           ) : (
-            <span className="waveform-player__art waveform-player__art--blank" aria-hidden />
+            <AvatarTile size="xs" name={nowPlayingTitle} className="waveform-player__art" />
           )}
           <div className="waveform-player__meta-text">
             <span className="waveform-player__meta-title">{nowPlayingTitle}</span>
