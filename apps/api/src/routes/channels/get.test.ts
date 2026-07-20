@@ -113,4 +113,74 @@ describe('GET /api/channels/:slug', () => {
       data: { tier: 'FREE' },
     })
   })
+
+  it('nowPlaying is null when the poller has never synced', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/channels/channel-get-testuser',
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().nowPlaying).toBeNull()
+  })
+
+  it('exposes a fresh nowPlaying sync as a shaped object, not raw fields', async () => {
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: {
+        nowPlayingTitle: 'Monster Parade',
+        nowPlayingArtistName: 'Tahti Selects',
+        nowPlayingArtworkUrl: 'https://cdn.tahti.live/tahti/archive/x/banner.jpg',
+        nowPlayingUpdatedAt: new Date(),
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/channels/channel-get-testuser',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.nowPlaying).toEqual({
+      title: 'Monster Parade',
+      artistName: 'Tahti Selects',
+      artworkUrl: 'https://cdn.tahti.live/tahti/archive/x/banner.jpg',
+    })
+    expect(body.nowPlayingTitle).toBeUndefined()
+    expect(body.nowPlayingArtistName).toBeUndefined()
+    expect(body.nowPlayingArtworkUrl).toBeUndefined()
+    expect(body.nowPlayingUpdatedAt).toBeUndefined()
+
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: {
+        nowPlayingTitle: null,
+        nowPlayingArtistName: null,
+        nowPlayingArtworkUrl: null,
+        nowPlayingUpdatedAt: null,
+      },
+    })
+  })
+
+  it('nowPlaying is null once the sync goes stale', async () => {
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: {
+        nowPlayingTitle: 'Old Track',
+        nowPlayingArtistName: 'Tahti Selects',
+        nowPlayingUpdatedAt: new Date(Date.now() - 10 * 60 * 1000),
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/channels/channel-get-testuser',
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().nowPlaying).toBeNull()
+
+    await prisma.channel.update({
+      where: { slug: 'channel-get-testuser' },
+      data: { nowPlayingTitle: null, nowPlayingArtistName: null, nowPlayingUpdatedAt: null },
+    })
+  })
 })

@@ -84,35 +84,40 @@ async function fetchUpcomingSlots(): Promise<PublicRadioSlot[]> {
   return slots
 }
 
+interface RadioChannelPayload {
+  hlsUrl: string | null
+  nowPlaying: { title: string; artistName: string; artworkUrl: string | null } | null
+}
+
 /** Real HLS output from Tahti Radio's own always-on Liquidsoap process (spawned
  * and kept in sync by the radio-slot-switchover cron): the booked artist's live
  * feed during their slot, the curated rotation otherwise. This is the only
- * source the public page ever plays — no video/YouTube placeholder fallback. */
-async function fetchRealHlsUrl(): Promise<string | null> {
+ * source the public page ever plays — no video/YouTube placeholder fallback.
+ * Also carries the orchestrator's rotation now-playing sync (STREAM-012). */
+async function fetchRadioChannel(): Promise<RadioChannelPayload> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   try {
     const res = await fetch(`${apiUrl}/api/channels/${TAHTI_RADIO_SLUG}`, {
       next: { revalidate: 30 },
     })
-    if (!res.ok) return null
-    const data = (await res.json()) as { hlsUrl: string | null }
-    return data.hlsUrl
+    if (!res.ok) return { hlsUrl: null, nowPlaying: null }
+    return (await res.json()) as RadioChannelPayload
   } catch {
-    return null
+    return { hlsUrl: null, nowPlaying: null }
   }
 }
 
 export default async function RadioPage() {
-  const [announcements, memberRelay, rotation, upcomingSlots, realHlsUrl, user] = await Promise.all(
-    [
+  const [announcements, memberRelay, rotation, upcomingSlots, radioChannel, user] =
+    await Promise.all([
       fetchAnnouncements(),
       fetchMemberRelay(),
       fetchRotation(),
       fetchUpcomingSlots(),
-      fetchRealHlsUrl(),
+      fetchRadioChannel(),
       getSessionUser(),
-    ],
-  )
+    ])
+  const { hlsUrl: realHlsUrl, nowPlaying } = radioChannel
 
   const playback = realHlsUrl
     ? ({ kind: 'audio', audioUrl: realHlsUrl } as const)
@@ -194,6 +199,7 @@ export default async function RadioPage() {
                 rotation={rotation}
                 slots={upcomingSlots}
                 liveSlot={liveSlot ? { startAt: liveSlot.startAt, artist: liveSlot.artist } : null}
+                nowPlaying={nowPlaying}
                 memberRelay={
                   memberRelay.live && memberRelay.channel
                     ? { slug: memberRelay.channel.slug, artistName: memberRelay.channel.artistName }

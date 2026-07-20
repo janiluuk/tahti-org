@@ -46,6 +46,10 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
           slideshowIntervalSeconds: true,
           slideshowTransitionMs: true,
           slideshowAutoplay: true,
+          nowPlayingTitle: true,
+          nowPlayingArtistName: true,
+          nowPlayingArtworkUrl: true,
+          nowPlayingUpdatedAt: true,
           user: {
             select: {
               username: true,
@@ -74,6 +78,22 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
 
       const { showJoinDate, createdAt, ...userRest } = channel.user
 
+      // Stale poller data (orchestrator down, channel not actually running) is
+      // worse than none — a "now playing" that hasn't moved in minutes reads as
+      // broken, not just outdated.
+      const NOW_PLAYING_STALE_MS = 2 * 60 * 1000
+      const nowPlayingFresh =
+        channel.nowPlayingUpdatedAt != null &&
+        Date.now() - channel.nowPlayingUpdatedAt.getTime() < NOW_PLAYING_STALE_MS
+      const nowPlaying =
+        nowPlayingFresh && channel.nowPlayingTitle && channel.nowPlayingArtistName
+          ? {
+              title: channel.nowPlayingTitle,
+              artistName: channel.nowPlayingArtistName,
+              artworkUrl: channel.nowPlayingArtworkUrl,
+            }
+          : null
+
       return reply.send({
         ...channel,
         user: {
@@ -83,6 +103,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
         nextBroadcastAt: channel.nextBroadcastAt?.toISOString() ?? null,
         hlsUrl,
         colorScheme: resolveColorScheme(channel.colorSchemeJson, null),
+        nowPlaying,
       })
     },
   )

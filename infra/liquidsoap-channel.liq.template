@@ -32,6 +32,14 @@ else
     archive_remote_url
   )
 end
+
+# STREAM-012: rotation now-playing — captured before crossfade/normalize/delay so
+# "filename" is the least-mutated pointer back to the exact playing file. Read via
+# the "now_playing" telnet command below; the orchestrator resolves it to a real
+# ArchiveItem (title/artist/artwork) rather than trusting on-disk ID3 tags.
+archive_meta = ref([])
+archive = source.on_metadata(archive, fun (m) -> archive_meta := m)
+
 archive = crossfade(duration=3., archive)
 archive = normalize(target=-14., archive)
 # ARTIST-003: buffer archive before fallback switch so first listener does not hit an empty segment.
@@ -61,6 +69,14 @@ server.register(
   "graceful_shutdown",
   description="Fade out audio then exit (STREAM-010)",
   start_graceful_shutdown
+)
+server.register(
+  "now_playing",
+  description="Current rotation-source metadata filename (STREAM-012)",
+  fun (_) -> begin
+    m = archive_meta()
+    m["filename"] ?? ""
+  end
 )
 
 radio_out = switch(

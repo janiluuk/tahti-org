@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+import { exec } from 'node:child_process'
+import { promisify } from 'node:util'
+import { prisma } from '@tahti/db'
+import { getActiveChannelEntries } from './liquidsoap.js'
+import { liquidsoapNowPlayingShell, parseLiquidsoapTelnetResponse } from './liquidsoap-shutdown.js'
+
+const execAsync = promisify(exec)
+
+const NOW_PLAYING_POLL_INTERVAL_MS = parseInt(
+  process.env.NOW_PLAYING_POLL_INTERVAL_MS ?? '20000',
+  10,
+)
+const MINIO_PUBLIC_ENDPOINT = process.env.MINIO_PUBLIC_ENDPOINT ?? 'http://localhost:19000'
+const MINIO_BUCKET = process.env.MINIO_BUCKET ?? 'tahti'
+
+/** Extract the MinIO object key from a presigned CDN URL by stripping the known
+ * public-endpoint+bucket prefix and any query string (presigned auth params). */
+export function objectKeyFromUrl(url: string): string | null {
+  const prefix = `${MINIO_PUBLIC_ENDPOINT}/${MINIO_BUCKET}/`
+  if (!url.startsWith(prefix)) return null
+  const key = url.slice(prefix.length).split('?')[0]
+  return key || null
+}
+
+async function syncChannelNowPlaying(channelId: string, containerName: string): Promise<void> {
+  let stdout: string
+  try {
+    const result = await execAsync(liquidsoapNowPlayingShell(containerName), { timeout: 5000 })
+    stdout = result.stdout
+  } catch {
+    // Container not reachable this cycle (mid-restart, telnet not up yet, etc.) —
+    // leave the last-known value in place and try again on the next tick.
+    return
+  }
+
+  const filename = parseLiquidsoapTelnetResponse(stdout)
+  if (!filename) return
+
+  const key = objectKeyFromUrl(filename)
+  if (!key) return
+
+  const item = await prisma.archiveItem.findFirst({
+    where: { OR: [{ mp3Key: key }, { flacKey: key }] },
+    select: {
+      title: true,
+      bannerUrl: true,
+      channel: { select: { user: { select: { displayName: true } } } },
+    },
+  })
+  if (!item) return
+
+  await prisma.channel.update({
+    where: { id: channelId },
+    data: {
+      nowPlayingTitle: item.title,
+      nowPlayingArtistName: item.channel.user.displayName,
+      nowPlayingArtworkUrl: item.bannerUrl,
+      nowPlayingUpdatedAt: new Date(),
+    },
+  })
+}
+
+/** STREAM-012: periodically resolves each running channel's current rotation
+ * track (via Liquidsoap telnet metadata) to a real ArchiveItem, so the public
+ * radio page can show accurate title/artist/artwork instead of generic branding
+ * while nobody's actually live. A failure on any one channel never blocks the
+ * others — each sync call is independently caught. */
+export function startNowPlayingSync(): NodeJS.Timeout {
+  return setInterval(() => {
+    for (const [channelId, containerName] of getActiveChannelEntries()) {
+      void syncChannelNowPlaying(channelId, containerName)
+    }
+  }, NOW_PLAYING_POLL_INTERVAL_MS)
+}

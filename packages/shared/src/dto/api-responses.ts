@@ -421,6 +421,16 @@ export const PublicChannelViewSchema = z.object({
   slideshowTransitionMs: z.number().int(),
   slideshowAutoplay: z.boolean(),
   user: PublicChannelUserSchema,
+  // STREAM-012: current rotation track, resolved from Liquidsoap telnet metadata
+  // by the orchestrator poller. Null while nobody has synced yet, or while a
+  // live artist is on air (the booking is the source of truth there instead).
+  nowPlaying: z
+    .object({
+      title: z.string(),
+      artistName: z.string(),
+      artworkUrl: z.string().nullable(),
+    })
+    .nullable(),
 })
 
 export const GrantAnomalySchema = z.object({

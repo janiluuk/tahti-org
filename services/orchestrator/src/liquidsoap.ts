@@ -97,6 +97,11 @@ export function getActiveChannels(): string[] {
   return [...activeChannels.keys()]
 }
 
+/** channelId → containerName for every running Liquidsoap process (STREAM-012 poller). */
+export function getActiveChannelEntries(): [channelId: string, containerName: string][] {
+  return [...activeChannels.entries()]
+}
+
 export async function spawnLiquidsoapContainer(
   channelId: string,
   slug: string,

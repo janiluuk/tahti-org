@@ -13,6 +13,7 @@ import {
 } from './liquidsoap.js'
 import { getActiveRecorders } from './recorder.js'
 import { getActiveEdgeEncoders } from './edge-encoder.js'
+import { startNowPlayingSync } from './now-playing-sync.js'
 
 const PORT = parseInt(process.env.PORT ?? '3003', 10)
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
@@ -96,5 +97,7 @@ fastify.post('/restart', async (request, reply) => {
   )
   return reply.send({ ok: true, restarted: true })
 })
+
+startNowPlayingSync()
 
 await fastify.listen({ port: PORT, host: '0.0.0.0' })
