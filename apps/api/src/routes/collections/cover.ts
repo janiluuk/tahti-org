@@ -14,9 +14,10 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
-import { presignedPutUrl, putObjectBuffer } from '../../lib/minio.js'
-import { publicMediaUrl } from '../../lib/public-media-url.js'
+import { presignedGetUrl, presignedPutUrl, putObjectBuffer } from '../../lib/minio.js'
 import { extFromMime, fetchImageFromUrl } from '../../lib/fetch-image-url.js'
+
+const COVER_PRESIGN_SEC = 3600
 
 const PRESIGN_TTL_SEC = 900
 
@@ -84,8 +85,11 @@ const collectionCoverRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Upload does not belong to this collection' })
       }
 
-      const url = publicMediaUrl(parsed.data.uploadKey)
-      await fastify.prisma.collection.update({ where: { id: col.id }, data: { coverUrl: url } })
+      await fastify.prisma.collection.update({
+        where: { id: col.id },
+        data: { coverKey: parsed.data.uploadKey, coverUrl: null },
+      })
+      const url = await presignedGetUrl(parsed.data.uploadKey, COVER_PRESIGN_SEC)
       return reply.send({ url })
     },
   )
@@ -117,8 +121,11 @@ const collectionCoverRoutes: FastifyPluginAsync = async (fastify) => {
       const uploadKey = `collections/${col.user.username}/${col.slug}/cover-${nanoid(8)}.${extFromMime(fetched.contentType)}`
       await putObjectBuffer(uploadKey, fetched.bytes, fetched.contentType)
 
-      const url = publicMediaUrl(uploadKey)
-      await fastify.prisma.collection.update({ where: { id: col.id }, data: { coverUrl: url } })
+      await fastify.prisma.collection.update({
+        where: { id: col.id },
+        data: { coverKey: uploadKey, coverUrl: null },
+      })
+      const url = await presignedGetUrl(uploadKey, COVER_PRESIGN_SEC)
       return reply.send({ url })
     },
   )

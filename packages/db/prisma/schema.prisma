@@ -1794,6 +1794,12 @@ model Collection {
   isPublic    Boolean        @default(true)
   isFeatured  Boolean        @default(false) // M23: highlight on profile + smart links
   coverUrl    String?
+  // MinIO object key when the cover was uploaded through our own flow (cover.ts) —
+  // resolved to a presigned URL at read time (resolveCollectionCoverUrl) instead of
+  // relying on public bucket read, since covers aren't gated by isPublic at upload
+  // time and a private ("Vault") collection's cover must not be guessable by URL.
+  // Null for externally-linked cover images, which stay served from coverUrl as-is.
+  coverKey    String?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 

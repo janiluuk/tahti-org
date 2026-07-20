@@ -10,6 +10,7 @@ import {
 } from '@tahti/shared'
 import { config } from '../../config.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveColorScheme } from '@tahti/shared'
 
 // M14 (partial): public smart link resolves to artist profile + release anchor.
@@ -67,6 +68,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
                   type: true,
                   description: true,
                   coverUrl: true,
+                  coverKey: true,
                   _count: { select: { items: true } },
                 },
               },
@@ -99,15 +101,17 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
         ? `https://www.discogs.com/release/${release.discogsReleaseId}`
         : null
 
-      const featuredCollections = release.user.collections.map(({ _count, ...c }) => ({
-        slug: c.slug,
-        name: c.name,
-        type: c.type,
-        description: c.description,
-        coverUrl: c.coverUrl,
-        itemCount: _count.items,
-        url: `/u/${release.user.username}/c/${c.slug}`,
-      }))
+      const featuredCollections = await Promise.all(
+        release.user.collections.map(async ({ _count, ...c }) => ({
+          slug: c.slug,
+          name: c.name,
+          type: c.type,
+          description: c.description,
+          coverUrl: await resolveCollectionCoverUrl(c),
+          itemCount: _count.items,
+          url: `/u/${release.user.username}/c/${c.slug}`,
+        })),
+      )
 
       return reply.send({
         release: {
