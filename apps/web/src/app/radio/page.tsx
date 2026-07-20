@@ -193,6 +193,7 @@ export default async function RadioPage() {
                 slug={TAHTI_RADIO_SLUG}
                 rotation={rotation}
                 slots={upcomingSlots}
+                liveSlot={liveSlot ? { startAt: liveSlot.startAt, artist: liveSlot.artist } : null}
                 memberRelay={
                   memberRelay.live && memberRelay.channel
                     ? { slug: memberRelay.channel.slug, artistName: memberRelay.channel.artistName }

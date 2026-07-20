@@ -1413,6 +1413,49 @@
   gap: var(--space-3);
 }
 
+.waveform-player__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.waveform-player__art {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--card2);
+}
+
+.waveform-player__art--blank {
+  border: 1px solid var(--border);
+}
+
+.waveform-player__meta-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.waveform-player__meta-title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.waveform-player__meta-subtitle {
+  font-size: var(--text-xs);
+  color: var(--muted2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .waveform-player__status {
   display: flex;
   align-items: center;

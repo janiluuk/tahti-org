@@ -11,12 +11,18 @@ export default function HlsPlayer({
   title,
   subtitle,
   href,
+  artworkUrl,
+  liveElapsedSec,
   waitingForSignal = false,
 }: {
   url: string
   title?: string
   subtitle?: string
   href?: string
+  artworkUrl?: string | null
+  /** Wall-clock seconds since a live broadcast began — shown instead of "LIVE".
+   * Leave unset for continuous/rotation playback (no meaningful elapsed time). */
+  liveElapsedSec?: number
   /** No source connected yet (broadcast test-signal step) — shows a waiting animation. */
   waitingForSignal?: boolean
 }) {
@@ -58,6 +64,10 @@ export default function HlsPlayer({
         onTogglePlay={handleTogglePlay}
         onSeek={isLive ? undefined : handleSeek}
         waitingForSignal={waitingForSignal}
+        artworkUrl={artworkUrl}
+        nowPlayingTitle={title}
+        nowPlayingSubtitle={subtitle}
+        liveElapsedSec={isLive ? liveElapsedSec : undefined}
       />
     </div>
   )
