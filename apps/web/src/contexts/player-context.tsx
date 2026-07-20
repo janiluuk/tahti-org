@@ -49,6 +49,23 @@ interface PlayerState {
   buffering: boolean
   currentTime: number
   duration: number
+  volume: number
+  muted: boolean
+}
+
+const VOLUME_STORAGE_KEY = 'tahti-player-volume'
+const MUTED_STORAGE_KEY = 'tahti-player-muted'
+
+function readStoredVolume(): number {
+  if (typeof window === 'undefined') return 1
+  const raw = window.localStorage.getItem(VOLUME_STORAGE_KEY)
+  const parsed = raw != null ? Number(raw) : NaN
+  return Number.isFinite(parsed) ? Math.min(1, Math.max(0, parsed)) : 1
+}
+
+function readStoredMuted(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem(MUTED_STORAGE_KEY) === '1'
 }
 
 interface PlayerContextValue extends PlayerState {
@@ -72,6 +89,8 @@ interface PlayerContextValue extends PlayerState {
   /** Appends to the queue — starts one from the current track if none exists yet. */
   addToQueue: (track: PlayerTrack) => void
   removeFromQueue: (trackId: string) => void
+  setVolume: (v: number) => void
+  toggleMute: () => void
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null)
@@ -91,7 +110,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     buffering: false,
     currentTime: 0,
     duration: 0,
+    volume: 1,
+    muted: false,
   })
+
+  // Read persisted volume/mute after mount (SSR-safe: window isn't available server-side).
+  useEffect(() => {
+    setState((prev) => ({ ...prev, volume: readStoredVolume(), muted: readStoredMuted() }))
+  }, [])
   const [queue, setQueue] = useState<PlayerTrack[]>([])
   const [repeat, setRepeat] = useState(false)
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
@@ -159,7 +185,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
       currentTrackIdRef.current = track.id
 
-      setState({ track, playing: false, buffering: false, currentTime: 0, duration: 0 })
+      setState((prev) => ({
+        ...prev,
+        track,
+        playing: false,
+        buffering: false,
+        currentTime: 0,
+        duration: 0,
+      }))
 
       teardownHls()
 
@@ -244,12 +277,54 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     currentTrackIdRef.current = null
     queueRef.current = null
     setQueue([])
-    setState({ track: null, playing: false, buffering: false, currentTime: 0, duration: 0 })
+    setState((prev) => ({
+      ...prev,
+      track: null,
+      playing: false,
+      buffering: false,
+      currentTime: 0,
+      duration: 0,
+    }))
   }, [teardownHls])
 
   const toggleRepeat = useCallback(() => {
     setRepeat((prev) => !prev)
   }, [])
+
+  const setVolume = useCallback((v: number) => {
+    const clamped = Math.min(1, Math.max(0, v))
+    setState((prev) => ({ ...prev, volume: clamped, muted: clamped === 0 ? prev.muted : false }))
+  }, [])
+
+  const toggleMute = useCallback(() => {
+    setState((prev) => ({ ...prev, muted: !prev.muted }))
+  }, [])
+
+  // Keep the shared <audio> element's actual volume/muted in sync, and persist
+  // across page loads — a new track load doesn't reset the audio element, but
+  // the browser default volume (1) needs setting explicitly on first mount.
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.volume = state.volume
+    audio.muted = state.muted
+    window.localStorage.setItem(VOLUME_STORAGE_KEY, String(state.volume))
+    window.localStorage.setItem(MUTED_STORAGE_KEY, state.muted ? '1' : '0')
+  }, [state.volume, state.muted])
+
+  // Tab title reflects what's actually playing, so radio.tahti.live is
+  // identifiable from a background tab — restored once nothing is loaded.
+  useEffect(() => {
+    const original = document.title
+    if (state.track && state.playing) {
+      document.title = state.track.subtitle
+        ? `${state.track.title} — ${state.track.subtitle}`
+        : state.track.title
+    }
+    return () => {
+      document.title = original
+    }
+  }, [state.track, state.playing])
 
   // Kept in sync so onEnded's listener closure (registered once, below) always reads
   // the current value rather than the one captured when the listener was attached.
@@ -351,6 +426,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       toggleRepeat,
       addToQueue,
       removeFromQueue,
+      setVolume,
+      toggleMute,
     }),
     [
       state,
@@ -367,6 +444,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       toggleRepeat,
       addToQueue,
       removeFromQueue,
+      setVolume,
+      toggleMute,
     ],
   )
 
