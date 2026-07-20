@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { exec } from 'node:child_process'
-import { promisify } from 'node:util'
 import { prisma } from '@tahti/db'
 import { getActiveChannelEntries } from './liquidsoap.js'
-import { liquidsoapNowPlayingShell, parseLiquidsoapTelnetResponse } from './liquidsoap-shutdown.js'
-
-const execAsync = promisify(exec)
+import {
+  LIQUIDSOAP_NOW_PLAYING_COMMAND,
+  parseLiquidsoapTelnetResponse,
+  sendLiquidsoapTelnetCommand,
+} from './liquidsoap-shutdown.js'
 
 const NOW_PLAYING_POLL_INTERVAL_MS = parseInt(
   process.env.NOW_PLAYING_POLL_INTERVAL_MS ?? '20000',
@@ -26,17 +26,16 @@ export function objectKeyFromUrl(url: string): string | null {
 }
 
 async function syncChannelNowPlaying(channelId: string, containerName: string): Promise<void> {
-  let stdout: string
+  let raw: string
   try {
-    const result = await execAsync(liquidsoapNowPlayingShell(containerName), { timeout: 5000 })
-    stdout = result.stdout
+    raw = await sendLiquidsoapTelnetCommand(containerName, LIQUIDSOAP_NOW_PLAYING_COMMAND)
   } catch {
     // Container not reachable this cycle (mid-restart, telnet not up yet, etc.) —
     // leave the last-known value in place and try again on the next tick.
     return
   }
 
-  const filename = parseLiquidsoapTelnetResponse(stdout)
+  const filename = parseLiquidsoapTelnetResponse(raw)
   if (!filename) return
 
   const key = objectKeyFromUrl(filename)
