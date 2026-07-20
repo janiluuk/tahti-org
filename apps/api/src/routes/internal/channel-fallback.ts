@@ -10,11 +10,29 @@ import {
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
+import { presignedGetUrl } from '../../lib/minio.js'
 import { archivePlaybackKey, buildFallbackPlaybackRows, renderFallbackM3u } from '@tahti/shared'
-import type { FallbackPlaybackRow } from '@tahti/shared'
+import type { FallbackM3uEntry, FallbackPlaybackRow } from '@tahti/shared'
+
+// reload_mode="rounds" in the Liquidsoap template means the playlist can go a long
+// time between refetches for a small pool (300 rounds through a handful of tracks),
+// so the presigned URLs handed out here need to comfortably outlive that — a short
+// TTL would silently start 403ing again mid-rotation, exactly like the bug this
+// replaced (tahti/mp3 isn't publicly readable, unlike covers/avatars/archive banners).
+const FALLBACK_URL_TTL_SEC = 24 * 60 * 60
+
+async function toM3uEntries(rows: FallbackPlaybackRow[]): Promise<FallbackM3uEntry[]> {
+  return Promise.all(
+    rows.map(async (row) => ({
+      title: row.title,
+      durationSec: row.durationSec,
+      url: await presignedGetUrl(row.playbackKey, FALLBACK_URL_TTL_SEC),
+    })),
+  )
+}
 
 // Liquidsoap calls this to get the current fallback playlist for a channel.
-// Returns an extended M3U with HTTP URLs to archive playback files (MP3 or FLAC).
+// Returns an extended M3U with presigned HTTP URLs to archive playback files (MP3 or FLAC).
 const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/internal/channels/:channelId/fallback.m3u',
@@ -53,7 +71,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       if (!channel.fallbackEnabled) {
-        const body = renderFallbackM3u([], config.minio.publicEndpoint, config.minio.bucket)
+        const body = renderFallbackM3u([])
         return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
       }
 
@@ -82,7 +100,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
             durationSec: archiveItem.durationSec,
           })
         }
-        const body = renderFallbackM3u(rows, config.minio.publicEndpoint, config.minio.bucket)
+        const body = renderFallbackM3u(await toM3uEntries(rows))
         return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
       }
 
@@ -106,7 +124,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       })
 
       const rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
-      const body = renderFallbackM3u(rows, config.minio.publicEndpoint, config.minio.bucket)
+      const body = renderFallbackM3u(await toM3uEntries(rows))
 
       return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
     },
