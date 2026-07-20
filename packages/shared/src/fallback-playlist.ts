@@ -83,19 +83,24 @@ export function buildFallbackPlaybackRows(
   return rows
 }
 
-export function renderFallbackM3u(
-  rows: FallbackPlaybackRow[],
-  publicEndpoint: string,
-  bucket: string,
-): string {
-  if (rows.length === 0) {
+export type FallbackM3uEntry = {
+  title: string
+  durationSec: number | null
+  url: string
+}
+
+// The tahti/mp3 prefix is not publicly readable (unlike covers/avatars/archive
+// banners — mp3/flac audio may be gated catalog content), so each entry's URL is
+// caller-supplied (a presigned GET) rather than built from a public endpoint here.
+export function renderFallbackM3u(entries: FallbackM3uEntry[]): string {
+  if (entries.length === 0) {
     return '#EXTM3U\n# no items yet\n'
   }
   const lines: string[] = ['#EXTM3U']
-  for (const row of rows) {
-    const duration = row.durationSec ?? -1
-    lines.push(`#EXTINF:${duration},${row.title}`)
-    lines.push(`${publicEndpoint}/${bucket}/${row.playbackKey}`)
+  for (const entry of entries) {
+    const duration = entry.durationSec ?? -1
+    lines.push(`#EXTINF:${duration},${entry.title}`)
+    lines.push(entry.url)
   }
   return lines.join('\n') + '\n'
 }

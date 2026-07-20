@@ -177,14 +177,16 @@ describe('buildFallbackPlaybackRows', () => {
 })
 
 describe('renderFallbackM3u', () => {
-  it('builds MinIO URLs for remote Liquidsoap fallback', () => {
-    const body = renderFallbackM3u(
-      [{ id: '1', title: 'Set A', playbackKey: 'mp3/a.mp3', durationSec: 90 }],
-      'http://minio:9000',
-      'tahti',
-    )
+  it('emits the caller-supplied URL for remote Liquidsoap fallback', () => {
+    const body = renderFallbackM3u([
+      { title: 'Set A', durationSec: 90, url: 'https://cdn.tahti.live/tahti/mp3/a.mp3?sig=abc' },
+    ])
     expect(body).toContain('#EXTINF:90,Set A')
-    expect(body).toContain('http://minio:9000/tahti/mp3/a.mp3')
+    expect(body).toContain('https://cdn.tahti.live/tahti/mp3/a.mp3?sig=abc')
+  })
+
+  it('returns empty playlist marker when pool is empty', () => {
+    expect(renderFallbackM3u([])).toContain('# no items yet')
   })
 })
 
