@@ -13,6 +13,7 @@ export default function HlsPlayer({
   href,
   artworkUrl,
   liveElapsedSec,
+  isReplay = false,
   waitingForSignal = false,
 }: {
   url: string
@@ -23,6 +24,10 @@ export default function HlsPlayer({
   /** Wall-clock seconds since a live broadcast began — shown instead of "LIVE".
    * Leave unset for continuous/rotation playback (no meaningful elapsed time). */
   liveElapsedSec?: number
+  /** This is a continuous/unseekable stream but nobody is actually on air right
+   * now (e.g. Tahti Radio playing its rotation) — shows "REPLAY" instead of the
+   * misleading "LIVE NOW". Leave false for genuine live broadcasts. */
+  isReplay?: boolean
   /** No source connected yet (broadcast test-signal step) — shows a waiting animation. */
   waitingForSignal?: boolean
 }) {
@@ -32,7 +37,16 @@ export default function HlsPlayer({
   const handleTogglePlay = async () => {
     if (!isCurrent) {
       load(
-        { id: url, kind: 'live', url, title: title ?? 'Live stream', subtitle, href },
+        {
+          id: url,
+          kind: 'live',
+          url,
+          title: title ?? 'Live stream',
+          subtitle,
+          href,
+          artworkUrl,
+          isReplay,
+        },
         { autoplay: true },
       )
       return
@@ -68,6 +82,7 @@ export default function HlsPlayer({
         nowPlayingTitle={title}
         nowPlayingSubtitle={subtitle}
         liveElapsedSec={isLive ? liveElapsedSec : undefined}
+        isReplay={isReplay}
       />
     </div>
   )

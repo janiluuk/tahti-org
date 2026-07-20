@@ -70,7 +70,7 @@ export function RadioPlayerSection({
   const liveElapsedSec = useLiveElapsedSec(liveSlot?.startAt ?? null)
 
   const title = liveSlot ? liveSlot.artist.displayName : 'Tahti Radio'
-  const subtitle = liveSlot ? 'Live now on Tahti Radio' : '24/7 live'
+  const subtitle = liveSlot ? 'Live now on Tahti Radio' : '24/7 rotation'
   const artworkUrl = liveSlot ? liveSlot.artist.avatarUrl : null
 
   return (
@@ -82,6 +82,7 @@ export function RadioPlayerSection({
           subtitle={subtitle}
           artworkUrl={artworkUrl}
           liveElapsedSec={liveElapsedSec}
+          isReplay={!liveSlot}
           href="/radio"
         />
       </div>
