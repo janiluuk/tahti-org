@@ -293,6 +293,42 @@ describe('M23 — collections and RSS', () => {
     expect(pub.json().coverUrl).toBe(cover)
   })
 
+  it('serves an uploaded cover via a presigned URL, not a bare public link', async () => {
+    const uploadKey = `collections/${username}/${collectionSlug}/cover-test123.jpg`
+    const complete = await app.inject({
+      method: 'POST',
+      url: `/api/me/collections/${collectionSlug}/cover/complete`,
+      headers: { cookie },
+      payload: { uploadKey },
+    })
+    expect(complete.statusCode).toBe(200)
+    const { url: uploadedUrl } = complete.json()
+    expect(uploadedUrl).toContain(uploadKey)
+    // A presigned URL always carries AWS SigV4 query-string auth — a bare public
+    // link would not. This is the actual guarantee this fix depends on: nobody can
+    // fetch the object without this signature, unlike the old blanket bucket grant.
+    expect(uploadedUrl).toMatch(/X-Amz-Signature=/)
+
+    const owner = await app.inject({
+      method: 'GET',
+      url: `/api/me/collections/${collectionSlug}`,
+      headers: { cookie },
+    })
+    expect(owner.statusCode).toBe(200)
+    expect(owner.json().coverUrl).toMatch(/X-Amz-Signature=/)
+
+    const pub = await app.inject({
+      method: 'GET',
+      url: `/api/v1/collections/${collectionSlug}`,
+    })
+    expect(pub.statusCode).toBe(200)
+    expect(pub.json().coverUrl).toMatch(/X-Amz-Signature=/)
+    // coverKey itself is allowed through by CollectionPublicViewSchema's
+    // .passthrough() — harmless here: this route already 404s for any
+    // non-public collection, and a bare key with no valid signature can't
+    // fetch the object now that anonymous read is off.
+  })
+
   it('removes collection items and deletes the collection', async () => {
     const list = await app.inject({
       method: 'GET',

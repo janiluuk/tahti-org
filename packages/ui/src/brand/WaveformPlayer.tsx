@@ -6,6 +6,7 @@
 import React, { useCallback } from 'react'
 import { cn } from '../lib/cn'
 import { formatPlayerTime, WAVEFORM_BAR_HEIGHTS } from '../lib/waveform-player'
+import { AvatarTile } from './AvatarTile'
 
 export interface WaveformPlayerProps {
   playing?: boolean
@@ -34,6 +35,10 @@ export interface WaveformPlayerProps {
    * "LIVE" label when set. Continuous rotation playback should leave this unset,
    * since there's no meaningful "elapsed" for a shuffled, unbounded stream. */
   liveElapsedSec?: number
+  /** isLive is technically true for any unseekable continuous stream, even when
+   * it's actually playing a pre-recorded rotation with nobody on air — set this
+   * so the label reads "REPLAY" instead of the misleading "LIVE NOW". */
+  isReplay?: boolean
 }
 
 /** Custom HLS/archive player chrome — waveform, play/pause, seek bar. */
@@ -54,6 +59,7 @@ export function WaveformPlayer({
   nowPlayingTitle,
   nowPlayingSubtitle,
   liveElapsedSec,
+  isReplay = false,
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
@@ -62,7 +68,9 @@ export function WaveformPlayer({
       : buffering
         ? 'Buffering…'
         : isLive
-          ? 'LIVE NOW'
+          ? isReplay
+            ? 'REPLAY'
+            : 'LIVE NOW'
           : playing
             ? 'Now playing'
             : 'Ready to play')
@@ -87,7 +95,7 @@ export function WaveformPlayer({
           {artworkUrl ? (
             <img src={artworkUrl} alt="" className="waveform-player__art" />
           ) : (
-            <span className="waveform-player__art waveform-player__art--blank" aria-hidden />
+            <AvatarTile size="xs" name={nowPlayingTitle} className="waveform-player__art" />
           )}
           <div className="waveform-player__meta-text">
             <span className="waveform-player__meta-title">{nowPlayingTitle}</span>
@@ -158,30 +166,34 @@ export function WaveformPlayer({
             {isLive
               ? liveElapsedSec != null
                 ? formatPlayerTime(liveElapsedSec)
-                : 'LIVE'
+                : isReplay
+                  ? 'REPLAY'
+                  : 'LIVE'
               : formatPlayerTime(currentTime)}
           </span>
-          <div
-            className={cn('waveform-player__progress', isLive && 'waveform-player__progress--live')}
-            onClick={handleSeek}
-            role={isLive ? undefined : 'slider'}
-            aria-valuenow={isLive ? undefined : Math.round(progress * 100)}
-            aria-valuemin={isLive ? undefined : 0}
-            aria-valuemax={isLive ? undefined : 100}
-            tabIndex={isLive ? undefined : 0}
-          >
-            <div
-              className="waveform-player__progress-fill"
-              style={{ width: `${progress * 100}%` }}
-            />
-            {!isLive && (
+          {!isLive && (
+            <>
               <div
-                className="waveform-player__progress-thumb"
-                style={{ left: `${progress * 100}%` }}
-              />
-            )}
-          </div>
-          {!isLive && <span className="waveform-player__time">{formatPlayerTime(duration)}</span>}
+                className="waveform-player__progress"
+                onClick={handleSeek}
+                role="slider"
+                aria-valuenow={Math.round(progress * 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                tabIndex={0}
+              >
+                <div
+                  className="waveform-player__progress-fill"
+                  style={{ width: `${progress * 100}%` }}
+                />
+                <div
+                  className="waveform-player__progress-thumb"
+                  style={{ left: `${progress * 100}%` }}
+                />
+              </div>
+              <span className="waveform-player__time">{formatPlayerTime(duration)}</span>
+            </>
+          )}
         </div>
       </div>
     </div>

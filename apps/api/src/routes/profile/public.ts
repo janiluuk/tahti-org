@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 
@@ -96,6 +97,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           type: true,
           description: true,
           coverUrl: true,
+          coverKey: true,
           isFeatured: true,
           _count: { select: { items: true } },
         },
@@ -172,17 +174,19 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     channel: user.channel,
     releases,
     fanTiers: user.fanTiers,
-    collections: user.collections.map(({ _count, ...c }) => ({
-      slug: c.slug,
-      name: c.name,
-      type: c.type,
-      description: c.description,
-      coverUrl: c.coverUrl,
-      isFeatured: c.isFeatured,
-      itemCount: _count.items,
-      url: `/u/${user.username}/c/${c.slug}`,
-      rssUrl: `${config.apiUrl}/api/v1/collections/${c.slug}/rss.xml`,
-    })),
+    collections: await Promise.all(
+      user.collections.map(async ({ _count, ...c }) => ({
+        slug: c.slug,
+        name: c.name,
+        type: c.type,
+        description: c.description,
+        coverUrl: await resolveCollectionCoverUrl(c),
+        isFeatured: c.isFeatured,
+        itemCount: _count.items,
+        url: `/u/${user.username}/c/${c.slug}`,
+        rssUrl: `${config.apiUrl}/api/v1/collections/${c.slug}/rss.xml`,
+      })),
+    ),
     links: {
       channel: user.channel ? `/c/${user.channel.slug}` : null,
       subscribe: `/u/${user.username}/subscribe`,

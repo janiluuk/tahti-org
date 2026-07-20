@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { AvatarTile } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 
 function formatTime(sec: number): string {
@@ -35,7 +36,7 @@ function QueueItem({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.artworkUrl} alt="" className="mini-player-queue__art" />
         ) : (
-          <span className="mini-player-queue__art mini-player-queue__art--blank" aria-hidden />
+          <AvatarTile size="xs" name={item.title} className="mini-player-queue__art" />
         )}
         <span className="mini-player-queue__meta">
           <span className="mini-player-queue__title">{item.title}</span>
@@ -172,7 +173,7 @@ export function MiniPlayer() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={track.artworkUrl} alt="" className="mini-player__art" />
         ) : (
-          <span className="mini-player__art mini-player__art--blank" aria-hidden />
+          <AvatarTile size="xs" name={track.title} className="mini-player__art" />
         )}
         <div className="mini-player__info">
           {track.href ? (
@@ -185,7 +186,7 @@ export function MiniPlayer() {
           {track.subtitle && <span className="mini-player__subtitle">{track.subtitle}</span>}
         </div>
         {track.kind === 'live' ? (
-          <span className="mini-player__badge">LIVE</span>
+          <span className="mini-player__badge">{track.isReplay ? 'REPLAY' : 'LIVE'}</span>
         ) : (
           <span className="mini-player__time">
             {formatTime(currentTime)} / {formatTime(duration)}

@@ -94,6 +94,7 @@ export function RadioPlayerSection({
           subtitle={subtitle}
           artworkUrl={artworkUrl}
           liveElapsedSec={liveElapsedSec}
+          isReplay={!liveSlot}
           href="/radio"
         />
       </div>

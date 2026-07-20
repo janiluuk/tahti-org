@@ -41,6 +41,9 @@ export interface PlayerTrack {
   subtitle?: string
   href?: string
   artworkUrl?: string | null
+  /** A 'live'-kind stream that's actually playing pre-recorded rotation right
+   * now, nobody's on air — mini-player shows "REPLAY" instead of "LIVE". */
+  isReplay?: boolean
 }
 
 interface PlayerState {
@@ -459,7 +462,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   return (
     <PlayerContext.Provider value={value}>
       {children}
-      <audio ref={audioRef} className="tahti-shared-audio" data-testid={testId} />
+      <audio
+        ref={audioRef}
+        crossOrigin="anonymous"
+        className="tahti-shared-audio"
+        data-testid={testId}
+      />
     </PlayerContext.Provider>
   )
 }
