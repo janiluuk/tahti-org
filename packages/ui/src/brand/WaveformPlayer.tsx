@@ -171,27 +171,29 @@ export function WaveformPlayer({
                   : 'LIVE'
               : formatPlayerTime(currentTime)}
           </span>
-          <div
-            className={cn('waveform-player__progress', isLive && 'waveform-player__progress--live')}
-            onClick={handleSeek}
-            role={isLive ? undefined : 'slider'}
-            aria-valuenow={isLive ? undefined : Math.round(progress * 100)}
-            aria-valuemin={isLive ? undefined : 0}
-            aria-valuemax={isLive ? undefined : 100}
-            tabIndex={isLive ? undefined : 0}
-          >
-            <div
-              className="waveform-player__progress-fill"
-              style={{ width: `${progress * 100}%` }}
-            />
-            {!isLive && (
+          {!isLive && (
+            <>
               <div
-                className="waveform-player__progress-thumb"
-                style={{ left: `${progress * 100}%` }}
-              />
-            )}
-          </div>
-          {!isLive && <span className="waveform-player__time">{formatPlayerTime(duration)}</span>}
+                className="waveform-player__progress"
+                onClick={handleSeek}
+                role="slider"
+                aria-valuenow={Math.round(progress * 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                tabIndex={0}
+              >
+                <div
+                  className="waveform-player__progress-fill"
+                  style={{ width: `${progress * 100}%` }}
+                />
+                <div
+                  className="waveform-player__progress-thumb"
+                  style={{ left: `${progress * 100}%` }}
+                />
+              </div>
+              <span className="waveform-player__time">{formatPlayerTime(duration)}</span>
+            </>
+          )}
         </div>
       </div>
     </div>
