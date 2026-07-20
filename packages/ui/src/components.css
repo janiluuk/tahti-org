@@ -1428,10 +1428,6 @@
   background: var(--card2);
 }
 
-.waveform-player__art--blank {
-  border: 1px solid var(--border);
-}
-
 .waveform-player__meta-text {
   min-width: 0;
   display: flex;
