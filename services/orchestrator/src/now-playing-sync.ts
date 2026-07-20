@@ -25,6 +25,18 @@ export function objectKeyFromUrl(url: string): string | null {
   return key || null
 }
 
+/** Liquidsoap's on_metadata "filename" key is a local ffmpeg decode temp file
+ * for HTTP-sourced playlist entries — useless for identifying the track.
+ * "initial_uri" carries the real request, but wrapped in an
+ * `annotate:key="val",...:URL` prefix for entries with inline metadata (our
+ * fallback M3U sets title/duration this way) — confirmed by dumping every
+ * metadata key against a real production track rather than guessing. Extract
+ * just the http(s) URL portion. */
+export function trackUrlFromMetadata(initialUri: string): string | null {
+  const match = initialUri.match(/https?:\/\/\S+$/)
+  return match ? match[0] : null
+}
+
 async function syncChannelNowPlaying(channelId: string, containerName: string): Promise<void> {
   let raw: string
   try {
@@ -35,10 +47,13 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
     return
   }
 
-  const filename = parseLiquidsoapTelnetResponse(raw)
-  if (!filename) return
+  const initialUri = parseLiquidsoapTelnetResponse(raw)
+  if (!initialUri) return
 
-  const key = objectKeyFromUrl(filename)
+  const trackUrl = trackUrlFromMetadata(initialUri)
+  if (!trackUrl) return
+
+  const key = objectKeyFromUrl(trackUrl)
   if (!key) return
 
   const item = await prisma.archiveItem.findFirst({
