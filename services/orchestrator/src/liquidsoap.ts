@@ -173,6 +173,7 @@ export async function spawnLiquidsoapContainer(
     .replace(/\{\{HARBOR_NOWPLAYING_PORT\}\}/g, '8002')
     .replace(/\{\{FALLBACK_MODE\}\}/g, channel.fallbackMode)
     .replace(/\{\{API_URL\}\}/g, API_URL)
+    .replace(/\{\{INTERNAL_SECRET\}\}/g, INTERNAL_SECRET)
     .replace(/\{\{LIQUIDSOAP_TELNET_PORT\}\}/g, String(LIQUIDSOAP_TELNET_PORT))
     .replace(/\{\{LIQUIDSOAP_FADE_SEC\}\}/g, String(LIQUIDSOAP_FADE_SEC))
 

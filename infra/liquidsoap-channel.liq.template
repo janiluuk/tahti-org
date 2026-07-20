@@ -16,7 +16,7 @@ live_source = mksafe(live_icecast)
 # --- Archive playlist (the fallback) ---
 # STREAM-009: prefer local cache synced from MinIO; remote M3U until first warm completes.
 archive_local_path = "/archive-cache/{{CHANNEL_ID}}/fallback.m3u"
-archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u"
+archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u?secret={{INTERNAL_SECRET}}"
 archive = if file.exists(archive_local_path) then
   playlist(
     mode="{{FALLBACK_MODE}}",
