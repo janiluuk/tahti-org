@@ -29,6 +29,12 @@ interface RadioLiveSlot {
   }
 }
 
+interface RadioNowPlayingTrack {
+  title: string
+  artistName: string
+  artworkUrl: string | null
+}
+
 interface RadioPlayerSectionProps {
   playback: { kind: 'audio'; audioUrl: string }
   slug: string
@@ -38,6 +44,9 @@ interface RadioPlayerSectionProps {
   /** The currently-active booked slot, if any — gates elapsed time + real artist
    * artwork/title. Continuous rotation playback (no live artist) passes null. */
   liveSlot: RadioLiveSlot | null
+  /** STREAM-012: the orchestrator's synced rotation track, when fresh. Only used
+   * while there's no liveSlot — a real booking always takes precedence. */
+  nowPlaying: RadioNowPlayingTrack | null
 }
 
 /** Ticks once a second so the live-show elapsed time stays live without polling. */
@@ -66,12 +75,15 @@ export function RadioPlayerSection({
   slots,
   memberRelay,
   liveSlot,
+  nowPlaying,
 }: RadioPlayerSectionProps) {
   const liveElapsedSec = useLiveElapsedSec(liveSlot?.startAt ?? null)
 
-  const title = liveSlot ? liveSlot.artist.displayName : 'Tahti Radio'
-  const subtitle = liveSlot ? 'Live now on Tahti Radio' : '24/7 live'
-  const artworkUrl = liveSlot ? liveSlot.artist.avatarUrl : null
+  const title = liveSlot ? liveSlot.artist.displayName : (nowPlaying?.title ?? 'Tahti Radio')
+  const subtitle = liveSlot
+    ? 'Live now on Tahti Radio'
+    : (nowPlaying?.artistName ?? '24/7 rotation')
+  const artworkUrl = liveSlot ? liveSlot.artist.avatarUrl : (nowPlaying?.artworkUrl ?? null)
 
   return (
     <div id="live-player" className="ch-player-wrap">

@@ -909,6 +909,14 @@ model Channel {
   // booked artist's live source during their RadioSlotBooking window. Null for
   // every regular channel; only ever set on the tahti-radio row.
   liveInputOverrideSlug String?
+  // Rotation now-playing (STREAM-012): the orchestrator polls each running
+  // channel's Liquidsoap telnet metadata every ~20s and resolves the current
+  // track's ArchiveItem here — only meaningful while no live artist is on air,
+  // since a live show's identity/artwork comes from the booking instead.
+  nowPlayingTitle      String?
+  nowPlayingArtistName String?
+  nowPlayingArtworkUrl String?
+  nowPlayingUpdatedAt  DateTime?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 

@@ -26,6 +26,12 @@ else
     archive_remote_url
   )
 end
+
+# STREAM-012: rotation now-playing — see liquidsoap-channel.liq.template for the
+# full rationale. Read via the "now_playing" telnet command below.
+archive_meta = ref([])
+archive = source.on_metadata(archive, fun (m) -> archive_meta := m)
+
 archive = crossfade(duration=3., archive)
 archive = normalize(target=-14., archive)
 
@@ -48,6 +54,14 @@ server.register(
   "graceful_shutdown",
   description="Fade out audio then exit (STREAM-010)",
   start_graceful_shutdown
+)
+server.register(
+  "now_playing",
+  description="Current rotation-source metadata filename (STREAM-012)",
+  fun (_) -> begin
+    m = archive_meta()
+    m["filename"] ?? ""
+  end
 )
 
 radio_out = switch(
