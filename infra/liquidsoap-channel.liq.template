@@ -76,10 +76,14 @@ server.register(
 )
 server.register(
   "now_playing",
-  description="Current rotation-source metadata filename (STREAM-012)",
+  description="Current rotation-source metadata initial_uri (STREAM-012)",
   fun (_) -> begin
     m = archive_meta()
-    m["filename"] ?? ""
+    # "filename" is a local decode temp file for HTTP-sourced entries — useless
+    # for identifying the track. "initial_uri" carries the real request (wrapped
+    # in an annotate:...:URL prefix for playlist entries with inline metadata),
+    # confirmed by dumping every metadata key against a real production track.
+    m["initial_uri"] ?? ""
   end
 )
 
