@@ -54,6 +54,48 @@ function QueueItem({
   )
 }
 
+function VolumeIcon({ muted, volume }: { muted: boolean; volume: number }) {
+  if (muted || volume === 0) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path d="M2 6h2.5L8 3v10L4.5 10H2V6z" fill="currentColor" />
+        <path
+          d="M10.5 6.5l3 3m0-3l-3 3"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    )
+  }
+  if (volume < 0.5) {
+    return (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path d="M2 6h2.5L8 3v10L4.5 10H2V6z" fill="currentColor" />
+        <path
+          d="M10.8 6.3a2.6 2.6 0 0 1 0 3.4"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          fill="none"
+        />
+      </svg>
+    )
+  }
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path d="M2 6h2.5L8 3v10L4.5 10H2V6z" fill="currentColor" />
+      <path
+        d="M10.8 5.3a4.2 4.2 0 0 1 0 5.4M12.6 3.6a6.8 6.8 0 0 1 0 8.8"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        fill="none"
+      />
+    </svg>
+  )
+}
+
 export function MiniPlayer() {
   const {
     track,
@@ -61,6 +103,8 @@ export function MiniPlayer() {
     buffering,
     currentTime,
     duration,
+    volume,
+    muted,
     togglePlay,
     seek,
     close,
@@ -69,6 +113,8 @@ export function MiniPlayer() {
     toggleRepeat,
     removeFromQueue,
     load,
+    setVolume,
+    toggleMute,
   } = usePlayer()
   const [queueOpen, setQueueOpen] = useState(false)
 
@@ -122,6 +168,12 @@ export function MiniPlayer() {
         >
           {buffering ? '…' : playing ? '❚❚' : '▶'}
         </button>
+        {track.artworkUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={track.artworkUrl} alt="" className="mini-player__art" />
+        ) : (
+          <span className="mini-player__art mini-player__art--blank" aria-hidden />
+        )}
         <div className="mini-player__info">
           {track.href ? (
             <Link href={track.href} className="mini-player__title">
@@ -139,6 +191,27 @@ export function MiniPlayer() {
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
         )}
+        <div className="mini-player__volume">
+          <button
+            type="button"
+            className="mini-player__mute"
+            onClick={toggleMute}
+            aria-pressed={muted}
+            aria-label={muted ? 'Unmute' : 'Mute'}
+            title={muted ? 'Unmute' : 'Mute'}
+          >
+            <VolumeIcon muted={muted} volume={volume} />
+          </button>
+          <input
+            type="range"
+            className="mini-player__volume-slider"
+            min={0}
+            max={100}
+            value={Math.round((muted ? 0 : volume) * 100)}
+            onChange={(e) => setVolume(Number(e.target.value) / 100)}
+            aria-label="Volume"
+          />
+        </div>
         <button
           type="button"
           className={`mini-player__repeat${repeat ? ' mini-player__repeat--active' : ''}`}
