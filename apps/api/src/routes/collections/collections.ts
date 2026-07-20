@@ -23,6 +23,7 @@ import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
 import { presignedGetUrl } from '../../lib/minio.js'
+import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { isUniqueConstraintError } from '../../lib/prisma-errors.js'
 import { resolveArtistUrl } from '../../lib/artist-url.js'
 
@@ -108,7 +109,10 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
           ? { items: { orderBy: { position: 'asc' }, include: collectionItemInclude } }
           : { _count: { select: { items: true } } },
       })
-      return reply.send(cols)
+      const withCovers = await Promise.all(
+        cols.map(async (col) => ({ ...col, coverUrl: await resolveCollectionCoverUrl(col) })),
+      )
+      return reply.send(withCovers)
     },
   )
 
@@ -128,7 +132,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       },
     })
     if (!col) return reply.status(404).send({ error: 'Collection not found' })
-    return reply.send(col)
+    return reply.send({ ...col, coverUrl: await resolveCollectionCoverUrl(col) })
   })
 
   // PUT /api/me/collections/reorder — reorder profile grid by slug order
@@ -234,7 +238,13 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.trackSortMode !== undefined) data.trackSortMode = body.trackSortMode
       if (body.isPublic !== undefined) data.isPublic = body.isPublic
       if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
-      if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl?.trim() || null
+      if (body.coverUrl !== undefined) {
+        data.coverUrl = body.coverUrl?.trim() || null
+        // Switching to a directly-set (possibly external) URL invalidates any
+        // previously uploaded cover's object key — coverUrl becomes the source
+        // of truth again until the next upload sets coverKey.
+        data.coverKey = null
+      }
 
       const updated = await fastify.prisma.collection.update({ where: { id: col.id }, data })
       return reply.send(updated)
@@ -624,6 +634,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.send({
         ...col,
+        coverUrl: await resolveCollectionCoverUrl(col),
         items,
         links: {
           page: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
