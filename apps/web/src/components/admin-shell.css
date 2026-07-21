@@ -471,6 +471,137 @@
   color: var(--amber);
 }
 
+/* ── Striped playlist-style row list (e.g. Tahti Selects rotation) ────── */
+.admin-rotation-list {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-rotation-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-rotation-row:last-child {
+  border-bottom: none;
+}
+
+.admin-rotation-row:nth-child(even) {
+  background: color-mix(in srgb, var(--card2) 35%, transparent);
+}
+
+.admin-rotation-row:hover {
+  background: color-mix(in srgb, var(--card2) 55%, transparent);
+}
+
+.admin-rotation-row__index {
+  flex: none;
+  width: 1.5rem;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-rotation-row__art {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  background: var(--card2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.admin-rotation-row__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.admin-rotation-row__title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-rotation-row__meta {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-rotation-row__meta a {
+  color: inherit;
+}
+
+.admin-rotation-row__actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.admin-rotation-row__move {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.admin-rotation-row__move:hover:not(:disabled) {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.admin-rotation-row__move:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.admin-rotation-row__remove {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--coral) 40%, transparent);
+  background: color-mix(in srgb, var(--coral) 8%, transparent);
+  color: var(--coral);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.admin-rotation-row__remove:hover {
+  border-color: var(--coral);
+  background: color-mix(in srgb, var(--coral) 18%, transparent);
+}
+
 .admin-input {
   font-size: 0.875rem;
   padding: 0.3rem 0.6rem;
