@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, type DragEvent } from 'react'
 import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
@@ -19,13 +19,46 @@ function QueueItem({
   item,
   onPlay,
   onRemove,
+  draggable,
+  dragged,
+  dragOver,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   item: PlayerTrack
   onPlay: () => void
-  onRemove: () => void
+  onRemove?: () => void
+  draggable?: boolean
+  dragged?: boolean
+  dragOver?: boolean
+  onDragStart?: () => void
+  onDragOver?: (e: DragEvent) => void
+  onDrop?: () => void
+  onDragEnd?: () => void
 }) {
   return (
-    <li className="mini-player-queue__item">
+    <li
+      className={`mini-player-queue__item${dragged ? ' mini-player-queue__item--dragging' : ''}${dragOver ? ' mini-player-queue__item--drag-over' : ''}`}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+    >
+      {draggable && (
+        <span className="mini-player-queue__drag-handle" aria-hidden>
+          <svg width="10" height="16" viewBox="0 0 10 16" fill="currentColor">
+            <circle cx="2.5" cy="2.5" r="1.4" />
+            <circle cx="7.5" cy="2.5" r="1.4" />
+            <circle cx="2.5" cy="8" r="1.4" />
+            <circle cx="7.5" cy="8" r="1.4" />
+            <circle cx="2.5" cy="13.5" r="1.4" />
+            <circle cx="7.5" cy="13.5" r="1.4" />
+          </svg>
+        </span>
+      )}
       <button
         type="button"
         className="mini-player-queue__item-play"
@@ -43,14 +76,16 @@ function QueueItem({
           {item.subtitle && <span className="mini-player-queue__subtitle">{item.subtitle}</span>}
         </span>
       </button>
-      <button
-        type="button"
-        className="mini-player-queue__remove"
-        onClick={onRemove}
-        aria-label={`Remove ${item.title} from queue`}
-      >
-        ✕
-      </button>
+      {onRemove && (
+        <button
+          type="button"
+          className="mini-player-queue__remove"
+          onClick={onRemove}
+          aria-label={`Remove ${item.title} from queue`}
+        >
+          ✕
+        </button>
+      )}
     </li>
   )
 }
@@ -107,39 +142,154 @@ export function MiniPlayer() {
     volume,
     muted,
     togglePlay,
+    playNext,
+    playPrevious,
     seek,
     close,
+    queue,
     upNext,
+    history,
     repeat,
     toggleRepeat,
     removeFromQueue,
+    clearQueue,
+    reorderUpNext,
     load,
     setVolume,
     toggleMute,
   } = usePlayer()
   const [queueOpen, setQueueOpen] = useState(false)
+  const [queueTab, setQueueTab] = useState<'queue' | 'history'>('queue')
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   if (!track) return null
 
   const progress = duration > 0 ? currentTime / duration : 0
+  const canSkip = queue.length > 1
+
+  function handleDrop(targetIndex: number) {
+    if (dragIndex !== null && dragIndex !== targetIndex) {
+      const next = [...upNext]
+      const [moved] = next.splice(dragIndex, 1)
+      next.splice(targetIndex, 0, moved!)
+      reorderUpNext(next)
+    }
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
 
   return (
     <div className="mini-player" data-testid="mini-player" role="region" aria-label="Now playing">
       {queueOpen && (
         <div className="mini-player-queue" role="region" aria-label="Play queue">
           <div className="mini-player-queue__header">
-            <span className="mini-player-queue__label">Up next</span>
+            <div className="mini-player-queue__tabs" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={queueTab === 'queue'}
+                className={`mini-player-queue__tab${queueTab === 'queue' ? ' mini-player-queue__tab--active' : ''}`}
+                onClick={() => setQueueTab('queue')}
+              >
+                Queue{upNext.length > 0 ? ` · ${upNext.length}` : ''}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={queueTab === 'history'}
+                className={`mini-player-queue__tab${queueTab === 'history' ? ' mini-player-queue__tab--active' : ''}`}
+                onClick={() => setQueueTab('history')}
+              >
+                History
+              </button>
+            </div>
+            {queueTab === 'queue' && (
+              <div className="mini-player-queue__header-actions">
+                <button
+                  type="button"
+                  className={`mini-player-queue__repeat${repeat ? ' mini-player-queue__repeat--active' : ''}`}
+                  onClick={toggleRepeat}
+                  aria-pressed={repeat}
+                  title={repeat ? 'Repeat queue: on' : 'Repeat queue: off'}
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path
+                      d="M3 6a3 3 0 0 1 3-3h6M12 3l-2-2m2 2-2 2"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M13 10a3 3 0 0 1-3 3H4M4 13l2 2m-2-2 2-2"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Repeat
+                </button>
+                <button
+                  type="button"
+                  className="mini-player-queue__clear"
+                  onClick={clearQueue}
+                  disabled={upNext.length === 0}
+                  aria-label="Clear queue"
+                  title="Clear queue"
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <path
+                      d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M4 4.5l.6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
-          {upNext.length === 0 ? (
-            <p className="mini-player-queue__empty">Nothing queued — add tracks to play next.</p>
+
+          {queueTab === 'queue' ? (
+            upNext.length === 0 ? (
+              <p className="mini-player-queue__empty">Nothing queued — add tracks to play next.</p>
+            ) : (
+              <ul className="mini-player-queue__list">
+                {upNext.map((item, i) => (
+                  <QueueItem
+                    key={item.id}
+                    item={item}
+                    onPlay={() => load(item, { autoplay: true })}
+                    onRemove={() => removeFromQueue(item.id)}
+                    draggable
+                    dragged={dragIndex === i}
+                    dragOver={dragOverIndex === i}
+                    onDragStart={() => setDragIndex(i)}
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setDragOverIndex(i)
+                    }}
+                    onDrop={() => handleDrop(i)}
+                    onDragEnd={() => {
+                      setDragIndex(null)
+                      setDragOverIndex(null)
+                    }}
+                  />
+                ))}
+              </ul>
+            )
+          ) : history.length === 0 ? (
+            <p className="mini-player-queue__empty">Nothing played yet.</p>
           ) : (
             <ul className="mini-player-queue__list">
-              {upNext.map((item) => (
+              {history.map((item) => (
                 <QueueItem
                   key={item.id}
                   item={item}
                   onPlay={() => load(item, { autoplay: true })}
-                  onRemove={() => removeFromQueue(item.id)}
                 />
               ))}
             </ul>
@@ -160,15 +310,54 @@ export function MiniPlayer() {
         </button>
       )}
       <div className="mini-player__inner">
-        <button
-          type="button"
-          className="mini-player__play"
-          onClick={() => void togglePlay()}
-          aria-label={playing ? 'Pause' : 'Play'}
-          disabled={buffering}
-        >
-          {buffering ? '…' : playing ? '❚❚' : '▶'}
-        </button>
+        <div className="mini-player__transport">
+          <button
+            type="button"
+            className="mini-player__skip"
+            onClick={playPrevious}
+            disabled={!canSkip}
+            aria-label="Previous track"
+            title="Previous track"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+              <rect x="2.5" y="2" width="2" height="12" rx="0.5" />
+              <path d="M13 2.5v11l-8-5.5 8-5.5z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={`mini-player__play${buffering ? ' mini-player__play--buffering' : ''}`}
+            onClick={() => void togglePlay()}
+            aria-label={playing ? 'Pause' : 'Play'}
+            disabled={buffering}
+          >
+            {buffering ? (
+              <span className="mini-player__spinner" aria-hidden />
+            ) : playing ? (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
+                <rect x="3" y="2" width="4" height="14" rx="1" />
+                <rect x="11" y="2" width="4" height="14" rx="1" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
+                <path d="M5 3l11 6-11 6V3z" />
+              </svg>
+            )}
+          </button>
+          <button
+            type="button"
+            className="mini-player__skip"
+            onClick={playNext}
+            disabled={!canSkip}
+            aria-label="Next track"
+            title="Next track"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+              <path d="M3 2.5v11l8-5.5-8-5.5z" />
+              <rect x="11.5" y="2" width="2" height="12" rx="0.5" />
+            </svg>
+          </button>
+        </div>
         {track.artworkUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={track.artworkUrl} alt="" className="mini-player__art" />
@@ -213,16 +402,6 @@ export function MiniPlayer() {
             aria-label="Volume"
           />
         </div>
-        <button
-          type="button"
-          className={`mini-player__repeat${repeat ? ' mini-player__repeat--active' : ''}`}
-          onClick={toggleRepeat}
-          aria-pressed={repeat}
-          aria-label={repeat ? 'Repeat queue: on' : 'Repeat queue: off'}
-          title={repeat ? 'Repeat queue: on' : 'Repeat queue: off'}
-        >
-          ⟲
-        </button>
         <button
           type="button"
           className={`mini-player__queue-toggle${queueOpen ? ' mini-player__queue-toggle--active' : ''}`}

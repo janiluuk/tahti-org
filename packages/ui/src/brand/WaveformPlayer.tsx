@@ -157,12 +157,12 @@ export function WaveformPlayer({
           {buffering ? (
             <span className="waveform-player__spinner" aria-hidden />
           ) : playing ? (
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
+            <svg width="24" height="24" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
               <rect x="3" y="2" width="4" height="14" rx="1" />
               <rect x="11" y="2" width="4" height="14" rx="1" />
             </svg>
           ) : (
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
+            <svg width="24" height="24" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
               <path d="M5 3l11 6-11 6V3z" />
             </svg>
           )}

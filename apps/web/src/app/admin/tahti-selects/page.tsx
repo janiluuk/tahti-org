@@ -127,83 +127,106 @@ export default async function AdminTahtiSelectsPage({
           Nothing in rotation yet — add tracks below.
         </p>
       ) : (
-        <div className="admin-table-wrap" style={{ marginBottom: '2rem' }}>
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Title</th>
-                <th>Artist</th>
-                <th>Duration</th>
-                <th>License</th>
-                <th>Added by</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, index) => (
-                <tr key={item.id}>
-                  <td style={{ opacity: 0.6, fontSize: '0.85rem' }}>{index + 1}</td>
-                  <td>{item.title}</td>
-                  <td>
-                    <a
-                      href={`/c/${item.channelSlug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: 'inherit', opacity: 0.7 }}
-                    >
-                      {item.artistName} ↗
-                    </a>
-                  </td>
-                  <td style={{ opacity: 0.6, fontSize: '0.85rem' }}>
-                    {fmtDuration(item.durationSec)}
-                  </td>
-                  <td style={{ opacity: 0.6, fontSize: '0.85rem' }}>{fmtLicense(item.license)}</td>
-                  <td style={{ opacity: 0.6, fontSize: '0.85rem' }}>{item.addedBy}</td>
-                  <td style={{ display: 'flex', gap: '0.4rem' }}>
-                    <form
-                      action={async () => {
-                        'use server'
-                        if (index > 0) await reorderItem(item.id, index - 1)
-                      }}
-                    >
-                      <button
-                        type="submit"
-                        className="admin-btn admin-btn--sm"
-                        disabled={index === 0}
-                      >
-                        ↑
-                      </button>
-                    </form>
-                    <form
-                      action={async () => {
-                        'use server'
-                        if (index < items.length - 1) await reorderItem(item.id, index + 1)
-                      }}
-                    >
-                      <button
-                        type="submit"
-                        className="admin-btn admin-btn--sm"
-                        disabled={index === items.length - 1}
-                      >
-                        ↓
-                      </button>
-                    </form>
-                    <form
-                      action={async () => {
-                        'use server'
-                        await removeFromRotation(item.id)
-                      }}
-                    >
-                      <button type="submit" className="admin-btn admin-btn--danger admin-btn--sm">
-                        Remove
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="admin-rotation-list" style={{ marginBottom: '2rem' }}>
+          {items.map((item, index) => (
+            <div key={item.id} className="admin-rotation-row">
+              <span className="admin-rotation-row__index">{index + 1}</span>
+              <span className="admin-rotation-row__art" aria-hidden>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 12.5a1.75 1.75 0 1 1 0-3.5 1.75 1.75 0 0 1 0 3.5Z"
+                    stroke="currentColor"
+                    strokeWidth="1.3"
+                  />
+                  <path d="M7.75 11V3.5L13 2.5v7" stroke="currentColor" strokeWidth="1.3" />
+                </svg>
+              </span>
+              <span className="admin-rotation-row__body">
+                <span className="admin-rotation-row__title">{item.title}</span>
+                <span className="admin-rotation-row__meta">
+                  <a href={`/c/${item.channelSlug}`} target="_blank" rel="noopener noreferrer">
+                    {item.artistName} ↗
+                  </a>
+                  {' · '}
+                  {fmtDuration(item.durationSec)} · {fmtLicense(item.license)} · added by{' '}
+                  {item.addedBy}
+                </span>
+              </span>
+              <span className="admin-rotation-row__actions">
+                <form
+                  action={async () => {
+                    'use server'
+                    if (index > 0) await reorderItem(item.id, index - 1)
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="admin-rotation-row__move"
+                    disabled={index === 0}
+                    aria-label={`Move "${item.title}" up`}
+                    title="Move up"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                      <path
+                        d="M8 12V4M4 8l4-4 4 4"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </form>
+                <form
+                  action={async () => {
+                    'use server'
+                    if (index < items.length - 1) await reorderItem(item.id, index + 1)
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="admin-rotation-row__move"
+                    disabled={index === items.length - 1}
+                    aria-label={`Move "${item.title}" down`}
+                    title="Move down"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                      <path
+                        d="M8 4v8m4-4-4 4-4-4"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </form>
+                <form
+                  action={async () => {
+                    'use server'
+                    await removeFromRotation(item.id)
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="admin-rotation-row__remove"
+                    aria-label={`Remove "${item.title}" from rotation`}
+                    title="Remove from rotation"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                      <path
+                        d="M3 4.5h10M6.5 4.5V3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1.5M6 7.5v4M10 7.5v4M4 4.5l.6 8.1a1 1 0 0 0 1 .9h4.8a1 1 0 0 0 1-.9l.6-8.1"
+                        stroke="currentColor"
+                        strokeWidth="1.3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </form>
+              </span>
+            </div>
+          ))}
         </div>
       )}
 
