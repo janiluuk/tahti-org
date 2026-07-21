@@ -14,10 +14,17 @@ import {
   type ReactNode,
 } from 'react'
 
+interface HlsErrorData {
+  fatal: boolean
+  type: string
+  details: string
+}
+
 interface HlsInstance {
   loadSource(url: string): void
   attachMedia(el: HTMLAudioElement): void
   destroy(): void
+  on(event: 'hlsError', callback: (event: 'hlsError', data: HlsErrorData) => void): void
 }
 
 interface HlsConfig {
@@ -27,6 +34,7 @@ interface HlsConfig {
 interface HlsConstructor {
   new (config?: HlsConfig): HlsInstance
   isSupported(): boolean
+  Events: { ERROR: 'hlsError' }
 }
 
 declare global {
@@ -237,6 +245,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
             // for exactly this case, not a workaround.
             const hls = new Hls({ liveDurationInfinity: true })
             hlsRef.current = hls
+            hls.on(Hls.Events.ERROR, (_event, data) => {
+              console.error('[player] hls.js error', data.type, data.details, data)
+            })
             hls.loadSource(track.url)
             hls.attachMedia(audio)
             playWhenReady()
@@ -373,6 +384,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const audio = audioRef.current
     if (!audio) return
 
+    const onError = () => {
+      console.error('[player] audio element error', audio.error?.code, audio.error?.message)
+    }
     const onWaiting = () => setState((prev) => ({ ...prev, buffering: true }))
     const onPlaying = () => setState((prev) => ({ ...prev, buffering: false, playing: true }))
     const onPlay = () => setState((prev) => ({ ...prev, playing: true }))
@@ -405,6 +419,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     audio.addEventListener('timeupdate', onTimeUpdate)
     audio.addEventListener('durationchange', onDurationChange)
     audio.addEventListener('ended', onEnded)
+    audio.addEventListener('error', onError)
 
     return () => {
       audio.removeEventListener('waiting', onWaiting)
@@ -415,6 +430,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener('timeupdate', onTimeUpdate)
       audio.removeEventListener('durationchange', onDurationChange)
       audio.removeEventListener('ended', onEnded)
+      audio.removeEventListener('error', onError)
     }
   }, [load])
 
