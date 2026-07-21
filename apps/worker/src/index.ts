@@ -214,7 +214,8 @@ async function registerCrons() {
 
   for (const job of WORKER_CRON_JOBS) {
     if (job.name === 'hls-caddy-egress-sync' && !hasCaddyLog) continue
-    await queue.add(job.name, {}, { repeat: { pattern: job.pattern }, jobId: job.jobId })
+    const repeat = job.everyMs != null ? { every: job.everyMs } : { pattern: job.pattern! }
+    await queue.add(job.name, {}, { repeat, jobId: job.jobId })
   }
 
   await queue.close()

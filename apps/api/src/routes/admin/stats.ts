@@ -82,7 +82,7 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
           return {
             jobName: spec.name,
             description: spec.description,
-            pattern: spec.pattern,
+            pattern: spec.pattern ?? `every ${spec.everyMs}ms`,
             lastRun: run
               ? {
                   id: run.id.toString(),

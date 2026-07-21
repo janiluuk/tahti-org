@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-/** Repeatable BullMQ cron jobs — single manifest for worker, API admin, and runbooks. */
+/** Repeatable BullMQ cron jobs — single manifest for worker, API admin, and runbooks.
+ * Most jobs use a standard cron `pattern` (minute granularity at best). A job that
+ * genuinely needs sub-minute cadence sets `everyMs` instead — BullMQ's `repeat.every`
+ * accepts a millisecond interval directly, bypassing cron's one-minute floor. */
 export interface CronJobSpec {
   name: string
-  pattern: string
+  pattern?: string
+  everyMs?: number
   jobId: string
   description: string
 }
@@ -42,7 +46,14 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
   },
   {
     name: 'hls-minio-sync',
-    pattern: '* * * * *',
+    // A once-a-minute cadence left the public manifest (a ~16s sliding window —
+    // segments=4 × segment_duration=4s in the Liquidsoap template) fully stale
+    // and fully consumed for ~44 of every 60 seconds: confirmed live in
+    // production by polling the manifest's Last-Modified header, which only
+    // advanced exactly once per minute, causing every listener to hit dead air
+    // for the majority of each cycle. 4s matches the segment cadence so the
+    // manifest never runs dry between syncs.
+    everyMs: 4000,
     jobId: 'hls-minio-sync-cron',
     description: 'STREAM-001: mirror live HLS segments from volume to MinIO hls-live bucket',
   },
