@@ -497,15 +497,14 @@
 [data-tahti-ui='brand'] .ch-archive-controls {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.4rem 0;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
 }
 
 [data-tahti-ui='brand'] .ch-archive-controls__play {
   flex: none;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--card2);
@@ -514,22 +513,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-sm);
-}
-
-[data-tahti-ui='brand'] .ch-archive-controls__title {
-  font-size: var(--text-sm);
-  color: var(--muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1 1 auto;
+  font-size: var(--text-xs);
 }
 
 [data-tahti-ui='brand'] .ch-archive-controls__queue {
   flex: none;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: transparent;
@@ -538,7 +528,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--text-body);
+  font-size: var(--text-sm);
   line-height: 1;
 }
 
@@ -548,7 +538,7 @@
 }
 
 [data-tahti-ui='brand'] .ch-download {
-  margin-top: 0.5rem;
+  margin-top: 0.2rem;
   font-size: var(--text-sm);
 }
 
@@ -1652,7 +1642,7 @@
 }
 
 [data-tahti-ui='brand'] .ch-archive-item {
-  padding: 1rem 0;
+  padding: 0.6rem 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -2729,6 +2719,10 @@
 
 [data-tahti-ui='brand'] .ch-archive-playback {
   position: relative;
+  margin-top: 0.1rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-playback--current {
   margin-top: 0.5rem;
 }
 
@@ -2899,8 +2893,8 @@
 /* ── Archive item thumbnail (PLAT-032) ──────────────────────────────────── */
 
 [data-tahti-ui='brand'] .ch-archive-item-thumb {
-  width: 56px;
-  height: 56px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
@@ -2908,9 +2902,9 @@
 
 [data-tahti-ui='brand'] .ch-archive-item-header {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 8px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-meta {
