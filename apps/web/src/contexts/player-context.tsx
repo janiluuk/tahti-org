@@ -221,7 +221,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       const prevTrack = currentTrackRef.current
       if (prevTrack && prevTrack.id !== track.id) {
-        setHistory((h) => [prevTrack, ...h.filter((t) => t.id !== prevTrack.id)].slice(0, HISTORY_LIMIT))
+        setHistory((h) =>
+          [prevTrack, ...h.filter((t) => t.id !== prevTrack.id)].slice(0, HISTORY_LIMIT),
+        )
       }
       currentTrackIdRef.current = track.id
       currentTrackRef.current = track
@@ -353,7 +355,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     teardownHls()
     const prevTrack = currentTrackRef.current
     if (prevTrack) {
-      setHistory((h) => [prevTrack, ...h.filter((t) => t.id !== prevTrack.id)].slice(0, HISTORY_LIMIT))
+      setHistory((h) =>
+        [prevTrack, ...h.filter((t) => t.id !== prevTrack.id)].slice(0, HISTORY_LIMIT),
+      )
     }
     currentTrackIdRef.current = null
     currentTrackRef.current = null

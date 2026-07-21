@@ -286,7 +286,11 @@ export function MiniPlayer() {
           ) : (
             <ul className="mini-player-queue__list">
               {history.map((item) => (
-                <QueueItem key={item.id} item={item} onPlay={() => load(item, { autoplay: true })} />
+                <QueueItem
+                  key={item.id}
+                  item={item}
+                  onPlay={() => load(item, { autoplay: true })}
+                />
               ))}
             </ul>
           )}
