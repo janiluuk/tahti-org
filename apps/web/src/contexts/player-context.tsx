@@ -96,20 +96,32 @@ interface PlayerContextValue extends PlayerState {
   load: (track: PlayerTrack, opts?: { autoplay?: boolean; queue?: PlayerTrack[] }) => void
   togglePlay: () => void | Promise<void>
   seek: (ratio: number) => void
+  /** Jumps to the next track in queue — wraps to the start only if repeat is on. */
+  playNext: () => void
+  /** Jumps to the previous track in queue, wrapping to the end. */
+  playPrevious: () => void
   close: () => void
   /** The full ordered playlist the current track belongs to (includes the current track). */
   queue: PlayerTrack[]
   /** Tracks that will play after the current one, in order. */
   upNext: PlayerTrack[]
+  /** Previously played tracks, most recent first. */
+  history: PlayerTrack[]
   /** When the queue reaches its end: loop back to the start, instead of stopping. */
   repeat: boolean
   toggleRepeat: () => void
   /** Appends to the queue — starts one from the current track if none exists yet. */
   addToQueue: (track: PlayerTrack) => void
   removeFromQueue: (trackId: string) => void
+  /** Drops every not-yet-played track, keeping only the one currently loaded. */
+  clearQueue: () => void
+  /** Replaces the not-yet-played portion of the queue with a new order (drag-reorder). */
+  reorderUpNext: (newUpNext: PlayerTrack[]) => void
   setVolume: (v: number) => void
   toggleMute: () => void
 }
+
+const HISTORY_LIMIT = 50
 
 const PlayerContext = createContext<PlayerContextValue | null>(null)
 
@@ -117,6 +129,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const hlsRef = useRef<HlsInstance | null>(null)
   const currentTrackIdRef = useRef<string | null>(null)
+  /** Full previous track object (currentTrackIdRef only keeps the id) — needed to
+   * archive it into history the moment load() switches to a different track. */
+  const currentTrackRef = useRef<PlayerTrack | null>(null)
   /** The ordered list the current track belongs to, for auto-advance + loop on 'ended'.
    * Mirrored into `queue` state below for rendering — this ref is what `onEnded` reads,
    * since its listener closure would otherwise see a stale queue. */
@@ -138,6 +153,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, volume: readStoredVolume(), muted: readStoredMuted() }))
   }, [])
   const [queue, setQueue] = useState<PlayerTrack[]>([])
+  const [history, setHistory] = useState<PlayerTrack[]>([])
   const [repeat, setRepeat] = useState(false)
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
   const [analyserL, setAnalyserL] = useState<AnalyserNode | null>(null)
@@ -202,7 +218,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         if (opts?.autoplay !== false) void audio.play()
         return
       }
+
+      const prevTrack = currentTrackRef.current
+      if (prevTrack && prevTrack.id !== track.id) {
+        setHistory((h) => [prevTrack, ...h.filter((t) => t.id !== prevTrack.id)].slice(0, HISTORY_LIMIT))
+      }
       currentTrackIdRef.current = track.id
+      currentTrackRef.current = track
 
       setState((prev) => ({
         ...prev,
@@ -300,6 +322,27 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     audio.currentTime = ratio * audio.duration
   }, [])
 
+  const playNext = useCallback(() => {
+    const q = queueRef.current
+    const currentId = currentTrackIdRef.current
+    if (!q || q.length < 2 || !currentId) return
+    const idx = q.findIndex((t) => t.id === currentId)
+    if (idx === -1) return
+    const isLast = idx === q.length - 1
+    if (isLast && !repeatRef.current) return
+    load(q[(idx + 1) % q.length]!, { autoplay: true, queue: q })
+  }, [load])
+
+  const playPrevious = useCallback(() => {
+    const q = queueRef.current
+    const currentId = currentTrackIdRef.current
+    if (!q || q.length < 2 || !currentId) return
+    const idx = q.findIndex((t) => t.id === currentId)
+    if (idx === -1) return
+    const prevIdx = idx === 0 ? q.length - 1 : idx - 1
+    load(q[prevIdx]!, { autoplay: true, queue: q })
+  }, [load])
+
   const close = useCallback(() => {
     const audio = audioRef.current
     if (audio) {
@@ -308,7 +351,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.load()
     }
     teardownHls()
+    const prevTrack = currentTrackRef.current
+    if (prevTrack) {
+      setHistory((h) => [prevTrack, ...h.filter((t) => t.id !== prevTrack.id)].slice(0, HISTORY_LIMIT))
+    }
     currentTrackIdRef.current = null
+    currentTrackRef.current = null
     queueRef.current = null
     setQueue([])
     setState((prev) => ({
@@ -324,6 +372,23 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const toggleRepeat = useCallback(() => {
     setRepeat((prev) => !prev)
+  }, [])
+
+  const clearQueue = useCallback(() => {
+    const current = currentTrackRef.current
+    const next = current ? [current] : []
+    queueRef.current = next
+    setQueue(next)
+  }, [])
+
+  const reorderUpNext = useCallback((newUpNext: PlayerTrack[]) => {
+    const base = queueRef.current
+    if (!base) return
+    const currentIdx = base.findIndex((t) => t.id === currentTrackIdRef.current)
+    const head = currentIdx === -1 ? base : base.slice(0, currentIdx + 1)
+    const next = [...head, ...newUpNext]
+    queueRef.current = next
+    setQueue(next)
   }, [])
 
   const setVolume = useCallback((v: number) => {
@@ -409,15 +474,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }))
     const onEnded = () => {
       setState((prev) => ({ ...prev, playing: false, currentTime: 0 }))
-      const queue = queueRef.current
-      const currentId = currentTrackIdRef.current
-      if (!queue || queue.length < 2 || !currentId) return
-      const idx = queue.findIndex((t) => t.id === currentId)
-      if (idx === -1) return
-      const isLast = idx === queue.length - 1
-      // Past the last track: only wrap back to the start if repeat is on, else stop.
-      if (isLast && !repeatRef.current) return
-      load(queue[(idx + 1) % queue.length]!, { autoplay: true, queue })
+      playNext()
     }
 
     audio.addEventListener('waiting', onWaiting)
@@ -441,7 +498,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audio.removeEventListener('ended', onEnded)
       audio.removeEventListener('error', onError)
     }
-  }, [load])
+  }, [load, playNext])
 
   useEffect(() => () => teardownHls(), [teardownHls])
 
@@ -461,13 +518,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       load,
       togglePlay,
       seek,
+      playNext,
+      playPrevious,
       close,
       queue,
       upNext,
+      history,
       repeat,
       toggleRepeat,
       addToQueue,
       removeFromQueue,
+      clearQueue,
+      reorderUpNext,
       setVolume,
       toggleMute,
     }),
@@ -479,13 +541,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       load,
       togglePlay,
       seek,
+      playNext,
+      playPrevious,
       close,
       queue,
       upNext,
+      history,
       repeat,
       toggleRepeat,
       addToQueue,
       removeFromQueue,
+      clearQueue,
+      reorderUpNext,
       setVolume,
       toggleMute,
     ],
