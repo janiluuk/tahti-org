@@ -420,7 +420,9 @@ describe('Vital flows (E2E journeys)', () => {
     expect(res.statusCode).toBe(403)
   })
 
-  it('channel HLS manifest follows artist tier (MP3 vs FLAC)', async () => {
+  it('channel HLS manifest is MP3 for every artist tier', async () => {
+    // FLAC-in-MPEGTS has no MediaSource Extensions support in mainstream browsers —
+    // see apps/api/src/lib/stream-quality.ts. Every tier gets the working MP3 variant.
     const freeUser = await createTestArtist(prisma, {
       email: `${PREFIX}hls-free@example.com`,
       username: 'journey-hls-free',
@@ -447,7 +449,7 @@ describe('Vital flows (E2E journeys)', () => {
     expect(freeCh.json().hlsUrl).toContain('stream-mp3-192')
 
     const paidCh = await app.inject({ method: 'GET', url: '/api/channels/journey-hls-paid' })
-    expect(paidCh.json().hlsUrl).toContain('stream-flac')
+    expect(paidCh.json().hlsUrl).toContain('stream-mp3-192')
   })
 
   it('hot rotation: previous RTMP key accepted at ingest after live rotate (ARTIST-002)', async () => {
