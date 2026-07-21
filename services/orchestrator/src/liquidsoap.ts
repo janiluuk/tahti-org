@@ -136,7 +136,6 @@ export async function spawnLiquidsoapContainer(
       id: true,
       slug: true,
       liveSourcePass: true,
-      fallbackMode: true,
       liveInputOverrideSlug: true,
       rtmpTargets: {
         where: { enabled: true },
@@ -177,7 +176,6 @@ export async function spawnLiquidsoapContainer(
     .replace(/\{\{ICECAST_LIVE_URL\}\}/g, inputUrl)
     .replace(/\{\{LIVE_SOURCE_PASSWORD\}\}/g, channel.liveSourcePass)
     .replace(/\{\{HARBOR_NOWPLAYING_PORT\}\}/g, '8002')
-    .replace(/\{\{FALLBACK_MODE\}\}/g, channel.fallbackMode)
     .replace(/\{\{API_URL\}\}/g, API_URL)
     .replace(/\{\{INTERNAL_SECRET\}\}/g, INTERNAL_SECRET)
     .replace(/\{\{LIQUIDSOAP_TELNET_PORT\}\}/g, String(LIQUIDSOAP_TELNET_PORT))
