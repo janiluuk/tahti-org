@@ -39,7 +39,9 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
     const subtle = variant === 'subtle'
     const op = (v: number) => v * (subtle ? 0.28 : 1)
     const motion = subtle ? 0.18 : 1
-    const react = subtle ? 0.25 : 1
+    // Deliberately less dampened than motion/opacity — the point of the subtle variant
+    // is a quiet background at rest that still visibly comes alive with the music.
+    const react = subtle ? 0.45 : 1
 
     let renderer: THREE.WebGLRenderer
     try {
