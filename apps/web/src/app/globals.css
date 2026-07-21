@@ -185,19 +185,34 @@ body {
 
 .mini-player__mute {
   flex: none;
-  width: 24px;
-  height: 24px;
-  border: 0;
-  background: transparent;
-  color: var(--muted2);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--cyan) 35%, transparent);
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+  color: var(--cyan);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .mini-player__mute:hover {
-  color: var(--text);
+  background: color-mix(in srgb, var(--cyan) 20%, transparent);
+}
+
+.mini-player__mute[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--coral) 45%, transparent);
+  background: color-mix(in srgb, var(--coral) 14%, transparent);
+  color: var(--coral);
+}
+
+.mini-player__mute[aria-pressed='true']:hover {
+  background: color-mix(in srgb, var(--coral) 22%, transparent);
 }
 
 .mini-player__volume-slider {
