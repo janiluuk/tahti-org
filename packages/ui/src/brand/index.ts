@@ -81,6 +81,7 @@ export { chatHandleVariant, CHAT_HANDLE_VARIANTS, type ChatHandleVariant } from 
 export { WAVEFORM_BAR_HEIGHTS, formatPlayerTime } from '../lib/waveform-player'
 export { DashboardShell, type DashboardShellProps, type DashboardNavItem } from './DashboardShell'
 export { ChannelPageShell } from './ChannelPageShell'
+export { WatcherCount } from './WatcherCount'
 export { PublicShell, type PublicShellProps } from './PublicShell'
 export { AdminShell, type AdminShellProps } from './AdminShell'
 export { AdminShellHeader, type AdminShellHeaderProps } from './AdminShellHeader'

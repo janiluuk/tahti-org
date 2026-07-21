@@ -198,6 +198,7 @@ export default async function RadioPage() {
                 slug={TAHTI_RADIO_SLUG}
                 rotation={rotation}
                 slots={upcomingSlots}
+                isLoggedIn={!!user}
                 liveSlot={liveSlot ? { startAt: liveSlot.startAt, artist: liveSlot.artist } : null}
                 nowPlaying={nowPlaying}
                 memberRelay={

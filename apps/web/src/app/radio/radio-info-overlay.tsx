@@ -23,10 +23,12 @@ export function RadioInfoOverlay({
   rotation,
   slots,
   memberRelay,
+  isLoggedIn,
 }: {
   rotation: RadioRotationItem[]
   slots: PublicRadioSlot[]
   memberRelay: RadioMemberRelay | null
+  isLoggedIn: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<'schedule' | 'rotation'>('schedule')
@@ -81,7 +83,7 @@ export function RadioInfoOverlay({
 
             <div className="ch-radio-info-panel__body">
               {tab === 'schedule' ? (
-                <RadioSlotsCalendar initialSlots={slots} />
+                <RadioSlotsCalendar initialSlots={slots} isLoggedIn={isLoggedIn} />
               ) : (
                 <>
                   {rotation.length > 0 ? (

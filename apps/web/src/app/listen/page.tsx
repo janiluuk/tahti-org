@@ -4,10 +4,11 @@
 import type { ChannelCard } from '@tahti/shared'
 import { ListenChannels } from './_listen-channels'
 
+const API_URL = process.env.API_URL ?? 'http://localhost:3001'
+
 async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCard[] }> {
-  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   try {
-    const res = await fetch(`${apiUrl}/api/v1/channels`, {
+    const res = await fetch(`${API_URL}/api/v1/channels`, {
       next: { revalidate: 30, tags: ['channels-live'] },
     })
     if (!res.ok) return { live: [], recent: [] }
@@ -17,9 +18,24 @@ async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCa
   }
 }
 
+async function fetchListenerCount(slug: string): Promise<number> {
+  try {
+    const res = await fetch(`${API_URL}/api/channels/${slug}/presence`, { cache: 'no-store' })
+    if (!res.ok) return 0
+    const data = (await res.json()) as { numClients: number }
+    return data.numClients
+  } catch {
+    return 0
+  }
+}
+
 export default async function ListenPage() {
   const { live, recent } = await fetchChannels()
   const empty = live.length === 0 && recent.length === 0
+  const listenerCountEntries = await Promise.all(
+    live.map(async (ch) => [ch.slug, await fetchListenerCount(ch.slug)] as const),
+  )
+  const listenerCounts = Object.fromEntries(listenerCountEntries)
 
   return (
     <div className="listen-shell">
@@ -59,7 +75,7 @@ export default async function ListenPage() {
           </p>
         </div>
       ) : (
-        <ListenChannels live={live} recent={recent} />
+        <ListenChannels live={live} recent={recent} listenerCounts={listenerCounts} />
       )}
     </div>
   )

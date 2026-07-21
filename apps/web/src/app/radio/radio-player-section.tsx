@@ -47,6 +47,7 @@ interface RadioPlayerSectionProps {
   /** STREAM-012: the orchestrator's synced rotation track, when fresh. Only used
    * while there's no liveSlot — a real booking always takes precedence. */
   nowPlaying: RadioNowPlayingTrack | null
+  isLoggedIn: boolean
 }
 
 /** Ticks once a second so the live-show elapsed time stays live without polling. */
@@ -76,6 +77,7 @@ export function RadioPlayerSection({
   memberRelay,
   liveSlot,
   nowPlaying,
+  isLoggedIn,
 }: RadioPlayerSectionProps) {
   const liveElapsedSec = useLiveElapsedSec(liveSlot?.startAt ?? null)
 
@@ -98,7 +100,12 @@ export function RadioPlayerSection({
           href="/radio"
         />
       </div>
-      <RadioInfoOverlay rotation={rotation} slots={slots} memberRelay={memberRelay} />
+      <RadioInfoOverlay
+        rotation={rotation}
+        slots={slots}
+        memberRelay={memberRelay}
+        isLoggedIn={isLoggedIn}
+      />
       <ReactionsOverlay slug={slug} />
     </div>
   )

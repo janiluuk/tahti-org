@@ -5,8 +5,9 @@
 
 import { useMemo, useState } from 'react'
 import type { ChannelCard } from '@tahti/shared'
+import { WatcherCount } from '@tahti/ui'
 
-function LiveCard({ channel }: { channel: ChannelCard }) {
+function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCount?: number }) {
   return (
     <a href={`/c/${channel.slug}`} className="listen-live-card">
       <div className="listen-live-card__avatar">
@@ -21,9 +22,14 @@ function LiveCard({ channel }: { channel: ChannelCard }) {
         <span className="listen-live-card__pulse" aria-hidden />
       </div>
       <div className="listen-live-card__body">
-        <div className="listen-live-card__live-badge">
-          <span className="listen-live-dot" />
-          Live now
+        <div className="listen-live-card__top-row">
+          <div className="listen-live-card__live-badge">
+            <span className="listen-live-dot" />
+            Live now
+          </div>
+          {!!listenerCount && (
+            <WatcherCount count={listenerCount} className="listen-live-card__watchers" />
+          )}
         </div>
         <div className="listen-live-card__name">{channel.user.displayName}</div>
         <div className="listen-live-card__handle">@{channel.user.username}</div>
@@ -71,7 +77,15 @@ function ChannelCardItem({ channel }: { channel: ChannelCard }) {
   )
 }
 
-export function ListenChannels({ live, recent }: { live: ChannelCard[]; recent: ChannelCard[] }) {
+export function ListenChannels({
+  live,
+  recent,
+  listenerCounts,
+}: {
+  live: ChannelCard[]
+  recent: ChannelCard[]
+  listenerCounts?: Record<string, number>
+}) {
   const [genre, setGenre] = useState<string | null>(null)
 
   const genres = useMemo(() => {
@@ -130,7 +144,7 @@ export function ListenChannels({ live, recent }: { live: ChannelCard[]; recent: 
               </div>
               <div className="listen-live-grid">
                 {filteredLive.map((ch) => (
-                  <LiveCard key={ch.slug} channel={ch} />
+                  <LiveCard key={ch.slug} channel={ch} listenerCount={listenerCounts?.[ch.slug]} />
                 ))}
               </div>
             </section>
