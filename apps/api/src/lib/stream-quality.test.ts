@@ -10,13 +10,19 @@ import { liveHlsManifestPath, liveHlsUrl } from './stream-quality.js'
 // not an assumed structure. See infra/liquidsoap-channel.liq.template and
 // apps/worker/src/lib/hls-minio-sync.ts.
 describe('stream-quality', () => {
-  it('uses MP3 manifest for FREE tier', () => {
+  it('uses the MP3 manifest for FREE tier', () => {
     expect(liveHlsManifestPath('dj', 'FREE')).toBe('dj/stream-mp3-192.m3u8')
   })
 
-  it('uses FLAC manifest for member tiers', () => {
-    expect(liveHlsManifestPath('dj', 'ARTIST')).toBe('dj/stream-flac.m3u8')
-    expect(liveHlsManifestPath('dj', 'STUDIO')).toBe('dj/stream-flac.m3u8')
+  it('uses the MP3 manifest for unlimited-live tiers too', () => {
+    // FLAC-in-MPEGTS has no MediaSource Extensions support in mainstream
+    // browsers — silently unplayable, not just lower quality (confirmed via
+    // ffprobe: the muxed segments carry an unregistered MPEG-TS stream type).
+    // Previously only Tahti Radio was exempted from the FLAC variant; every
+    // other unlimited-tier artist's live audience got silent audio the moment
+    // they went live. Always MP3 until FLAC is re-muxed into fMP4/CMAF.
+    expect(liveHlsManifestPath('dj', 'ARTIST')).toBe('dj/stream-mp3-192.m3u8')
+    expect(liveHlsManifestPath('dj', 'STUDIO')).toBe('dj/stream-mp3-192.m3u8')
   })
 
   it('builds full HLS URL without double slashes', () => {
@@ -25,10 +31,7 @@ describe('stream-quality', () => {
     )
   })
 
-  it('always uses the MP3 manifest for Tahti Radio, even at STUDIO tier', () => {
-    // FLAC-in-MPEGTS has no MediaSource Extensions support in mainstream
-    // browsers — silently unplayable, not just lower quality. Tahti Radio's
-    // STUDIO tier exists only to exempt it from the weekly live-hour cap.
+  it('uses the MP3 manifest for Tahti Radio at STUDIO tier', () => {
     expect(liveHlsManifestPath('tahti-radio', 'STUDIO')).toBe('tahti-radio/stream-mp3-192.m3u8')
   })
 })
