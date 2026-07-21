@@ -87,7 +87,9 @@ describe('GET /api/channels/:slug', () => {
     })
   })
 
-  it('includes tier-based HLS URL when LIVE', async () => {
+  it('includes the MP3 HLS URL when LIVE, regardless of tier', async () => {
+    // FLAC-in-MPEGTS has no MediaSource Extensions support in mainstream browsers —
+    // see apps/api/src/lib/stream-quality.ts. Every tier gets the working MP3 variant.
     await prisma.user.update({
       where: { username: 'channel-get-testuser' },
       data: { tier: 'ARTIST' },
@@ -102,7 +104,7 @@ describe('GET /api/channels/:slug', () => {
       url: '/api/channels/channel-get-testuser',
     })
     expect(res.statusCode).toBe(200)
-    expect(res.json().hlsUrl).toContain('stream-flac')
+    expect(res.json().hlsUrl).toContain('stream-mp3-192')
 
     await prisma.channel.update({
       where: { slug: 'channel-get-testuser' },
