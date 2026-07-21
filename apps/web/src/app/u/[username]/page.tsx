@@ -222,6 +222,13 @@ export default async function ArtistProfilePage({ params }: { params: { username
             subscribeHref={links.subscribe}
             tipJarUrl={artist.tipJarUrl}
             joinDateLabel={formatJoinDateLabel(artist.joinDate)}
+            newsletterSlot={
+              <NewsletterSubscribeForm
+                artistUsername={artist.username}
+                artistDisplayName={artist.displayName}
+                isLoggedIn={Boolean(user)}
+              />
+            }
           />
         }
       >
@@ -241,12 +248,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
             )}
           </section>
         )}
-
-        <NewsletterSubscribeForm
-          artistUsername={artist.username}
-          artistDisplayName={artist.displayName}
-          isLoggedIn={Boolean(user)}
-        />
 
         {links.feeds?.archive && (
           <section className="prof-section">

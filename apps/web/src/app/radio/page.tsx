@@ -157,10 +157,9 @@ export default async function RadioPage() {
                   </Text>
                 </div>
               </Row>
-              <SafePlainText
-                text="24/7 community radio — always on while we grow the member meta-stream. Tune in and chat with listeners worldwide."
-                className="ch-artist-bio"
-              />
+              <div className="ch-radio-description">
+                <SafePlainText text="24/7 community radio — always on while we grow the member meta-stream. Tune in and chat with listeners worldwide." />
+              </div>
               <Text size="sm" tone="muted" className="studio-mt-xs">
                 Looking for a specific sound? <a href="/listen">Browse live channels by genre</a>.
               </Text>

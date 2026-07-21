@@ -22,7 +22,6 @@ import type {
   TracklistEntry,
 } from '@tahti/shared'
 import { AvatarTile, Heading, Row, Text, ChannelPageShell, SafePlainText } from '@tahti/ui'
-import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
 import { getSessionUser } from '@/lib/session'
 import { renderBio } from '@/lib/render-bio'
@@ -355,12 +354,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 )}
               </section>
             )}
-
-            <NewsletterSubscribeForm
-              artistUsername={channel.user.username}
-              artistDisplayName={channel.user.displayName}
-              isLoggedIn={Boolean(user)}
-            />
 
             <ChannelTextLayerView
               mode={channel.textLayerMode}

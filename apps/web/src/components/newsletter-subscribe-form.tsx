@@ -5,6 +5,20 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 
+function IconMail() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" fill="currentColor" opacity="0.15" />
+      <path
+        d="M1.5 4l6.5 4.5L14.5 4M1.5 12.5v-8a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 type Props = {
   artistUsername: string
   artistDisplayName: string
@@ -55,15 +69,14 @@ function LoggedInToggle({ artistUsername }: { artistUsername: string }) {
   return (
     <button
       type="button"
-      className={`nl-subscribe-toggle${subscribed ? ' nl-subscribe-toggle--active' : ''}`}
+      className={`prof-newsletter-btn${subscribed ? ' prof-newsletter-btn--active' : ''}`}
       onClick={() => void toggle()}
       disabled={subscribed === null || busy}
+      aria-pressed={subscribed ?? false}
+      title={subscribed ? 'Subscribed to email updates' : 'Get email updates'}
     >
-      {subscribed === null
-        ? 'Email updates'
-        : subscribed
-          ? '✓ Subscribed to email updates'
-          : 'Email updates'}
+      <IconMail />
+      {subscribed ? 'Subscribed' : 'Email updates'}
     </button>
   )
 }
@@ -108,7 +121,8 @@ function AnonymousForm({ artistUsername, artistDisplayName }: Omit<Props, 'isLog
 
   if (!open) {
     return (
-      <button type="button" className="nl-subscribe-toggle" onClick={() => setOpen(true)}>
+      <button type="button" className="prof-newsletter-btn" onClick={() => setOpen(true)}>
+        <IconMail />
         Email updates
       </button>
     )

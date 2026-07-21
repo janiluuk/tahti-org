@@ -908,6 +908,21 @@
   color: var(--muted);
 }
 
+[data-tahti-ui='brand'] .ch-radio-description {
+  margin: 0.6rem 0 0.9rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--cyan) 22%, var(--border));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--cyan) 8%, var(--card)),
+    color-mix(in srgb, var(--purple) 6%, var(--card))
+  );
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
 [data-tahti-ui='brand'] .ch-radio-live-now {
   margin: 0 0 0.75rem;
   padding: 0.5rem 0.75rem;
@@ -2000,6 +2015,38 @@
 
 [data-tahti-ui='brand'] .prof-tip-btn:hover {
   background: color-mix(in srgb, var(--amber) 16%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-newsletter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 7px 13px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+  color: var(--green);
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+[data-tahti-ui='brand'] .prof-newsletter-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--green) 18%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-newsletter-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+[data-tahti-ui='brand'] .prof-newsletter-btn--active {
+  background: var(--green);
+  color: var(--bg);
 }
 
 [data-tahti-ui='brand'] .prof-bio {
@@ -3525,34 +3572,6 @@
   background: color-mix(in srgb, var(--cyan) 7%, var(--card2));
 }
 
-[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 1.25rem 0 1.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--cyan) 40%, var(--border));
-  background: color-mix(in srgb, var(--cyan) 10%, var(--card2));
-  color: var(--cyan);
-  font-size: var(--text-body);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-}
-
-[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle:hover {
-  background: color-mix(in srgb, var(--cyan) 18%, var(--card2));
-}
-
-[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle--active {
-  background: var(--cyan);
-  color: var(--bg);
-}
 
 [data-tahti-ui='brand'].brand-channel .nl-subscribe-title {
   font-size: var(--text-body);

@@ -59,6 +59,11 @@ type ProfileHeroProps = {
   tipJarUrl?: string | null
   /** Pre-formatted, e.g. "Member since 2026" — resolved by the caller so this component stays locale-agnostic. */
   joinDateLabel?: string | null
+  /** The newsletter subscribe control (apps/web's NewsletterSubscribeForm) — a slot
+   * rather than a prop this component builds itself, since it needs client-side
+   * fetch/state that doesn't belong in a presentational packages/ui component.
+   * Rendered inline in the CTA row, next to Support. */
+  newsletterSlot?: ReactNode
 }
 
 /** PLAT-020: artist profile hero — info row, bio, CTAs. Cover is rendered separately via ProfileCover. */
@@ -76,6 +81,7 @@ export function ProfileHero({
   subscribeHref,
   tipJarUrl,
   joinDateLabel,
+  newsletterSlot,
 }: ProfileHeroProps) {
   return (
     <>
@@ -111,6 +117,7 @@ export function ProfileHero({
             <IconHeart />
             Support
           </Link>
+          {newsletterSlot}
           {tipJarUrl && (
             <a href={tipJarUrl} rel="noopener noreferrer" className="prof-tip-btn">
               Tip ↗
