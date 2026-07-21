@@ -461,6 +461,23 @@
   pointer-events: none;
 }
 
+/* Static stand-in for when WebGL context creation fails (GPU disabled, driver
+ * blocklist, exhausted context limit) — same palette as the Three.js scene, so
+ * the page still reads as branded instead of a flat, empty background.
+ * Compound selector (not just .bg-canvas--webgl-fallback) so this reliably
+ * outranks .bg-canvas--subtle's own `background: var(--bg)` regardless of
+ * which stylesheet happens to load second — same specificity would otherwise
+ * make it an import-order coin flip. */
+.bg-canvas.bg-canvas--webgl-fallback {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(240, 165, 0, 0.16), transparent 45%),
+    radial-gradient(circle at 85% 25%, rgba(0, 188, 212, 0.16), transparent 45%),
+    radial-gradient(circle at 50% 60%, rgba(124, 77, 255, 0.14), transparent 50%),
+    radial-gradient(circle at 20% 85%, rgba(0, 230, 118, 0.12), transparent 45%),
+    radial-gradient(circle at 80% 90%, rgba(255, 107, 107, 0.12), transparent 45%),
+    var(--bg);
+}
+
 .auth-shell {
   min-height: 100vh;
   display: flex;
