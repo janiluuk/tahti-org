@@ -50,7 +50,7 @@ export function ArchiveItemPlayback({ channelSlug, artistUsername, item, colorSc
   }
 
   return (
-    <div className="ch-archive-playback">
+    <div className={`ch-archive-playback${isCurrent ? ' ch-archive-playback--current' : ''}`}>
       {showViz && (
         <ChannelVisualizer
           preset={preset}
@@ -59,7 +59,10 @@ export function ArchiveItemPlayback({ channelSlug, artistUsername, item, colorSc
           className="ch-archive-item-viz"
         />
       )}
-      <ArchiveWaveform peaks={item.peaks} />
+      {/* Waveform only for the currently-loaded track — keeps every other row a
+       * single compact line instead of a tall card, closer to how a music-app
+       * playlist lists tracks (detail only on the one that's actually playing). */}
+      {isCurrent && <ArchiveWaveform peaks={item.peaks} />}
       <div className="ch-archive-controls">
         <button
           type="button"
@@ -70,7 +73,6 @@ export function ArchiveItemPlayback({ channelSlug, artistUsername, item, colorSc
         >
           {isCurrent && playing ? '❚❚' : '▶'}
         </button>
-        <span className="ch-archive-controls__title">{item.title}</span>
         <button
           type="button"
           className="ch-archive-controls__queue"
