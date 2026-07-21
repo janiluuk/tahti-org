@@ -46,7 +46,15 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
     let renderer: THREE.WebGLRenderer
     try {
       renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false })
-    } catch {
+    } catch (e) {
+      // WebGL context creation genuinely fails in the wild — GPU acceleration
+      // disabled (VMs, remote desktops, battery-saver, some corporate policy),
+      // driver blocklists, or exhausted per-page context limits. Previously
+      // silent: the canvas just sat on its flat --bg fill with zero indication
+      // anything was attempted. Log it and fall back to a static CSS gradient
+      // so the page still reads as branded rather than broken.
+      console.error('[bg-canvas] WebGL context creation failed, using static fallback', e)
+      canvas.classList.add('bg-canvas--webgl-fallback')
       return
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
