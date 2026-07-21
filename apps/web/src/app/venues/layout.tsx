@@ -4,11 +4,13 @@
 import type { ReactNode } from 'react'
 import { PublicBrandShell } from '@tahti/ui'
 import '@/lib/import-public-brand-css'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { getSessionUser } from '@/lib/session'
 import { statusPageUrl } from '@/lib/status-page'
 
-/** Venues directory — shell-public via PublicBrandShell. */
+/** Venues directory — shell-public via PublicBrandShell. The gateway background
+ * (<BgCanvas>) is NOT rendered here — it's a single persistent instance shared
+ * across all public-nav routes (see PublicNavBg in the root layout) so navigating
+ * between them doesn't reinitialize the WebGL scene. */
 export default async function VenuesLayout({ children }: { children: ReactNode }) {
   const user = await getSessionUser()
 
@@ -20,7 +22,6 @@ export default async function VenuesLayout({ children }: { children: ReactNode }
       activeNav="venues"
       user={user}
       statusUrl={statusPageUrl()}
-      background={<BgCanvas variant="subtle" />}
     >
       {children}
     </PublicBrandShell>
