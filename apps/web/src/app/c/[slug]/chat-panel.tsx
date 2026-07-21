@@ -108,7 +108,13 @@ export default function ChatPanel({
     if (!connectionToken) return
     const wsUrl =
       process.env.NEXT_PUBLIC_CENTRIFUGO_WS ?? 'ws://localhost:8000/connection/websocket'
-    const ws = new WebSocket(wsUrl)
+    let ws: WebSocket
+    try {
+      ws = new WebSocket(wsUrl)
+    } catch (e) {
+      console.warn('[chat] WebSocket connect failed', e)
+      return
+    }
     wsRef.current = ws
     setStatus('connecting')
 

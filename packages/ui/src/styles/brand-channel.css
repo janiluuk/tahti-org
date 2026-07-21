@@ -294,6 +294,9 @@
 }
 
 [data-tahti-ui='brand'] .ch-header__listeners {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: var(--text-label);
   color: var(--muted);
   font-weight: 500;
@@ -1160,6 +1163,17 @@
   color: var(--muted);
   min-width: 8rem;
   text-align: center;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__book-link {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__book-link:hover {
+  text-decoration: underline;
 }
 
 [data-tahti-ui='brand'] .ch-radio-slots__scroll-hint {

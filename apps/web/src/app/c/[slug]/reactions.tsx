@@ -45,7 +45,12 @@ export default function ReactionsOverlay({ slug }: { slug: string }) {
 
       const wsUrl =
         process.env.NEXT_PUBLIC_CENTRIFUGO_WS ?? 'ws://localhost:8000/connection/websocket'
-      ws = new WebSocket(wsUrl)
+      try {
+        ws = new WebSocket(wsUrl)
+      } catch (e) {
+        console.warn('[reactions] WebSocket connect failed', e)
+        return
+      }
       wsRef.current = ws
 
       ws.onopen = () => {

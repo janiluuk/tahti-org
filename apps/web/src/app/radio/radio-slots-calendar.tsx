@@ -28,7 +28,15 @@ function atHour(day: Date, hour: number): Date {
   return copy
 }
 
-export function RadioSlotsCalendar({ initialSlots }: { initialSlots: PublicRadioSlot[] }) {
+const BOOK_SLOT_PATH = '/dashboard/tahti-radio-slots'
+
+export function RadioSlotsCalendar({
+  initialSlots,
+  isLoggedIn,
+}: {
+  initialSlots: PublicRadioSlot[]
+  isLoggedIn: boolean
+}) {
   const [weekStart, setWeekStart] = useState(() => startOfLocalDay(new Date()))
   const [slots, setSlots] = useState(initialSlots)
   const [selected, setSelected] = useState<PublicRadioSlot | null>(null)
@@ -85,6 +93,12 @@ export function RadioSlotsCalendar({ initialSlots }: { initialSlots: PublicRadio
             →
           </button>
         </div>
+        <a
+          href={isLoggedIn ? BOOK_SLOT_PATH : `/login?next=${encodeURIComponent(BOOK_SLOT_PATH)}`}
+          className="ch-radio-slots__book-link"
+        >
+          {isLoggedIn ? 'Book a slot →' : 'Sign in to book a slot →'}
+        </a>
       </div>
 
       <p className="ch-radio-slots__scroll-hint">Swipe sideways to see all 7 days →</p>

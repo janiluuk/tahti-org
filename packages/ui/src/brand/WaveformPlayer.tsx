@@ -26,6 +26,9 @@ export interface WaveformPlayerProps {
    * traveling-wave animation instead of the frozen idle bars, so it reads as "the
    * server is listening" rather than "nothing is happening". */
   waitingForSignal?: boolean
+  /** A fatal playback error occurred for this stream — shows "Stream offline"
+   * instead of silently sitting on a frozen/buffering state. */
+  offline?: boolean
   /** What's currently playing — shown as a small thumbnail + title/subtitle row.
    * Omit entirely to skip rendering this row (existing callers unaffected). */
   artworkUrl?: string | null
@@ -55,6 +58,7 @@ export function WaveformPlayer({
   embedded = false,
   className,
   waitingForSignal = false,
+  offline = false,
   artworkUrl,
   nowPlayingTitle,
   nowPlayingSubtitle,
@@ -63,17 +67,19 @@ export function WaveformPlayer({
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
-    (waitingForSignal
-      ? 'Waiting for signal…'
-      : buffering
-        ? 'Buffering…'
-        : isLive
-          ? isReplay
-            ? 'REPLAY'
-            : 'LIVE NOW'
-          : playing
-            ? 'Now playing'
-            : 'Ready to play')
+    (offline
+      ? 'Stream offline'
+      : waitingForSignal
+        ? 'Waiting for signal…'
+        : buffering
+          ? 'Buffering…'
+          : isLive
+            ? isReplay
+              ? 'REPLAY'
+              : 'LIVE NOW'
+            : playing
+              ? 'Now playing'
+              : 'Ready to play')
 
   const progress = isLive || duration <= 0 ? 0 : Math.min(1, currentTime / duration)
 
@@ -112,6 +118,7 @@ export function WaveformPlayer({
             'waveform-player__dot',
             playing && 'waveform-player__dot--live',
             waitingForSignal && 'waveform-player__dot--waiting',
+            offline && 'waveform-player__dot--offline',
           )}
           aria-hidden
         />

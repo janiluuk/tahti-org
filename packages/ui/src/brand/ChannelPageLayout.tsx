@@ -3,6 +3,7 @@
 
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { WatcherCount } from './WatcherCount'
 
 export type SiteNavId = 'home' | 'discover' | 'radio' | 'venues'
 
@@ -76,9 +77,7 @@ export function ChannelHeader({
               LIVE
             </div>
             {channelLiveMode && listenerCount != null && listenerCount > 0 && (
-              <span className="ch-header__listeners">
-                {listenerCount.toLocaleString()} listening
-              </span>
+              <WatcherCount count={listenerCount} className="ch-header__listeners" />
             )}
           </>
         )}

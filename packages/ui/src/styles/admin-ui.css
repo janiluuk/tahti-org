@@ -1242,6 +1242,14 @@
   flex: 1;
 }
 
+.listen-live-card__top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tahti-space-2);
+  margin-bottom: 3px;
+}
+
 .listen-live-card__live-badge {
   display: inline-flex;
   align-items: center;
@@ -1251,7 +1259,15 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--legacy-live-bright);
-  margin-bottom: 3px;
+}
+
+.listen-live-card__watchers {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--tahti-text-xs);
+  color: var(--muted);
+  flex-shrink: 0;
 }
 
 .listen-live-card__name {
