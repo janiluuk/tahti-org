@@ -62,7 +62,15 @@ export default function HlsPlayer({
   const activeBuffering = isCurrent && buffering
   const activeCurrentTime = isCurrent ? currentTime : 0
   const activeDuration = isCurrent ? duration : 0
-  const isLive = !isCurrent || !Number.isFinite(activeDuration) || activeDuration === 0
+  // HlsPlayer is only ever used for continuous streams (every load() call above
+  // hardcodes kind: 'live') — never infer "is this live" from audio.duration,
+  // since that's genuinely browser-dependent for an open-ended HLS stream: Chromium
+  // reports Infinity/NaN as expected, but Firefox's MSE implementation reports a
+  // finite duration matching the currently buffered window (confirmed live against
+  // production — ~16s, matching the segment window size). Treating that as "this
+  // is a short, finite, seekable track" flipped the UI into archive-player mode
+  // and made playback appear to end once currentTime caught up to that number.
+  const isLive = true
   const formatBadge = url.toLowerCase().includes('flac') ? 'FLAC' : 'HLS'
 
   return (

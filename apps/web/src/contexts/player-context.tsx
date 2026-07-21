@@ -20,8 +20,12 @@ interface HlsInstance {
   destroy(): void
 }
 
+interface HlsConfig {
+  liveDurationInfinity?: boolean
+}
+
 interface HlsConstructor {
-  new (): HlsInstance
+  new (config?: HlsConfig): HlsInstance
   isSupported(): boolean
 }
 
@@ -221,7 +225,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         const init = () => {
           const Hls = window.Hls
           if (Hls?.isSupported()) {
-            const hls = new Hls()
+            // hls.js defaults liveDurationInfinity to false, which sets the
+            // MediaSource's actual duration to "end of the last fragment"
+            // instead of Infinity for a live stream — confirmed live in
+            // production: Firefox reported audio.duration as the buffered
+            // window size (~16s) instead of Infinity/NaN like Chromium,
+            // which made the UI think this open-ended stream was a short,
+            // finite, seekable track once currentTime caught up to it, and
+            // caused real MSE stalling/rebuffering as more segments arrived
+            // past that stale ceiling. This is hls.js's own documented flag
+            // for exactly this case, not a workaround.
+            const hls = new Hls({ liveDurationInfinity: true })
             hlsRef.current = hls
             hls.loadSource(track.url)
             hls.attachMedia(audio)
