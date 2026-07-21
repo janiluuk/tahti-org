@@ -31,6 +31,16 @@ const SITE_NAV: { id: SiteNavId; href: string; label: string }[] = [
   { id: 'venues', href: '/venues', label: 'Venues' },
 ]
 
+/** This header also renders on wildcard subdomains (radio.tahti.live, an artist's
+ * own slug.tahti.live) where middleware.ts rewrites a bare "/" straight back to
+ * the current page — a relative Home link there is a dead click, not a no-op by
+ * accident. app.tahti.live is never subdomain-rewritten, so resolve Home to that
+ * absolute origin always; it's a harmless same-page reload on app.tahti.live itself. */
+function resolveHomeHref(): string {
+  const raw = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.tahti.live'
+  return `${raw.replace(/\/$/, '')}/`
+}
+
 /** PLAT-020: sticky channel top bar — TAHTI logo + site nav or live channel context. */
 export function ChannelHeader({
   isLive,
@@ -42,10 +52,11 @@ export function ChannelHeader({
   user,
 }: ChannelHeaderProps) {
   const channelLiveMode = Boolean(isLive && artistHandle && !activeNav && !contextLink)
+  const homeHref = resolveHomeHref()
 
   return (
     <header className="ch-header">
-      <Link href="/" className="ch-logo">
+      <Link href={homeHref} className="ch-logo">
         <span className="ch-logo__bar" aria-hidden />
         TAHTI
       </Link>
@@ -60,7 +71,7 @@ export function ChannelHeader({
           {SITE_NAV.map((item) => (
             <Link
               key={item.id}
-              href={item.href}
+              href={item.id === 'home' ? homeHref : item.href}
               className={`ch-header__nav-link${activeNav === item.id ? ' ch-header__nav-link--active' : ''}`}
               aria-current={activeNav === item.id ? 'page' : undefined}
             >
