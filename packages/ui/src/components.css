@@ -1477,6 +1477,11 @@
   animation: waveform-player-pulse 2s ease-in-out infinite;
 }
 
+.waveform-player__dot--offline {
+  background: var(--coral);
+  animation: none;
+}
+
 @keyframes waveform-player-pulse {
   0%,
   100% {

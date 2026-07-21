@@ -62,6 +62,9 @@ interface PlayerState {
   track: PlayerTrack | null
   playing: boolean
   buffering: boolean
+  /** A fatal hls.js error or a native <audio> error fired for the current track —
+   * the stream genuinely isn't playable right now, as opposed to normal buffering. */
+  error: boolean
   currentTime: number
   duration: number
   volume: number
@@ -123,6 +126,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     track: null,
     playing: false,
     buffering: false,
+    error: false,
     currentTime: 0,
     duration: 0,
     volume: 1,
@@ -205,6 +209,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         track,
         playing: false,
         buffering: false,
+        error: false,
         currentTime: 0,
         duration: 0,
       }))
@@ -247,6 +252,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
             hlsRef.current = hls
             hls.on(Hls.Events.ERROR, (_event, data) => {
               console.error('[player] hls.js error', data.type, data.details, data)
+              if (data.fatal) setState((prev) => ({ ...prev, error: true, buffering: false }))
             })
             hls.loadSource(track.url)
             hls.attachMedia(audio)
@@ -310,6 +316,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       track: null,
       playing: false,
       buffering: false,
+      error: false,
       currentTime: 0,
       duration: 0,
     }))
@@ -386,9 +393,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
     const onError = () => {
       console.error('[player] audio element error', audio.error?.code, audio.error?.message)
+      setState((prev) => ({ ...prev, error: true, buffering: false }))
     }
     const onWaiting = () => setState((prev) => ({ ...prev, buffering: true }))
-    const onPlaying = () => setState((prev) => ({ ...prev, buffering: false, playing: true }))
+    const onPlaying = () =>
+      setState((prev) => ({ ...prev, buffering: false, playing: true, error: false }))
     const onPlay = () => setState((prev) => ({ ...prev, playing: true }))
     const onPause = () => setState((prev) => ({ ...prev, playing: false }))
     const onCanPlay = () => setState((prev) => ({ ...prev, buffering: false }))

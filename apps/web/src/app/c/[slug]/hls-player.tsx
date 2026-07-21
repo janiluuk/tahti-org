@@ -31,7 +31,8 @@ export default function HlsPlayer({
   /** No source connected yet (broadcast test-signal step) — shows a waiting animation. */
   waitingForSignal?: boolean
 }) {
-  const { track, playing, buffering, currentTime, duration, load, togglePlay, seek } = usePlayer()
+  const { track, playing, buffering, error, currentTime, duration, load, togglePlay, seek } =
+    usePlayer()
 
   const isCurrent = track?.id === url
   const handleTogglePlay = async () => {
@@ -60,6 +61,7 @@ export default function HlsPlayer({
 
   const activePlaying = isCurrent && playing
   const activeBuffering = isCurrent && buffering
+  const activeError = isCurrent && error
   const activeCurrentTime = isCurrent ? currentTime : 0
   const activeDuration = isCurrent ? duration : 0
   // HlsPlayer is only ever used for continuous streams (every load() call above
@@ -79,6 +81,7 @@ export default function HlsPlayer({
         embedded
         playing={activePlaying}
         buffering={activeBuffering}
+        offline={activeError}
         isLive={isLive}
         currentTime={activeCurrentTime}
         duration={activeDuration}
