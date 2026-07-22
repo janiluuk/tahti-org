@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import type { PrismaClient } from '@tahti/db'
 import {
   ChannelIdParamSchema,
   FallbackM3uBodySchema,
@@ -11,7 +12,13 @@ import {
 } from '@tahti/shared'
 import { config } from '../../config.js'
 import { presignedGetUrl } from '../../lib/minio.js'
-import { archivePlaybackKey, buildFallbackPlaybackRows, renderFallbackM3u } from '@tahti/shared'
+import {
+  archivePlaybackKey,
+  buildFallbackPlaybackRows,
+  renderFallbackM3u,
+  TAHTI_RADIO_SLUG,
+  TAHTI_SELECTS_SLUG,
+} from '@tahti/shared'
 import type { FallbackM3uEntry, FallbackPlaybackRow } from '@tahti/shared'
 
 // reload_mode="rounds" in the Liquidsoap template means the playlist can go a long
@@ -20,6 +27,34 @@ import type { FallbackM3uEntry, FallbackPlaybackRow } from '@tahti/shared'
 // TTL would silently start 403ing again mid-rotation, exactly like the bug this
 // replaced (tahti/mp3 isn't publicly readable, unlike covers/avatars/archive banners).
 const FALLBACK_URL_TTL_SEC = 24 * 60 * 60
+
+async function curatedRows(
+  prisma: PrismaClient,
+  channelId: string,
+): Promise<FallbackPlaybackRow[]> {
+  const curated = await prisma.curatedRotationItem.findMany({
+    where: { channelId },
+    orderBy: { position: 'asc' },
+    select: {
+      archiveItem: {
+        select: { id: true, title: true, mp3Key: true, flacKey: true, durationSec: true },
+      },
+    },
+  })
+
+  const rows: FallbackPlaybackRow[] = []
+  for (const { archiveItem } of curated) {
+    const playbackKey = archivePlaybackKey(archiveItem)
+    if (!playbackKey) continue
+    rows.push({
+      id: archiveItem.id,
+      title: archiveItem.title,
+      playbackKey,
+      durationSec: archiveItem.durationSec,
+    })
+  }
+  return rows
+}
 
 async function toM3uEntries(rows: FallbackPlaybackRow[]): Promise<FallbackM3uEntry[]> {
   return Promise.all(
@@ -64,7 +99,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { id: channelId },
-        select: { fallbackMode: true, fallbackEnabled: true },
+        select: { slug: true, fallbackMode: true, fallbackEnabled: true },
       })
       if (!channel) {
         return reply.status(404).send('channel not found')
@@ -78,29 +113,9 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       // Curated channels (e.g. Tahti Selects) have an explicit, ordered, cross-channel
       // playlist instead of the regular per-channel isFallback/fallbackOrder rotation.
       // Every other channel has zero CuratedRotationItem rows, so this is additive only.
-      const curated = await fastify.prisma.curatedRotationItem.findMany({
-        where: { channelId },
-        orderBy: { position: 'asc' },
-        select: {
-          archiveItem: {
-            select: { id: true, title: true, mp3Key: true, flacKey: true, durationSec: true },
-          },
-        },
-      })
-
+      const curated = await curatedRows(fastify.prisma, channelId)
       if (curated.length > 0) {
-        const rows: FallbackPlaybackRow[] = []
-        for (const { archiveItem } of curated) {
-          const playbackKey = archivePlaybackKey(archiveItem)
-          if (!playbackKey) continue
-          rows.push({
-            id: archiveItem.id,
-            title: archiveItem.title,
-            playbackKey,
-            durationSec: archiveItem.durationSec,
-          })
-        }
-        const body = renderFallbackM3u(await toM3uEntries(rows))
+        const body = renderFallbackM3u(await toM3uEntries(curated))
         return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
       }
 
@@ -123,7 +138,22 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
         },
       })
 
-      const rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
+      let rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
+
+      // Tahti Radio has no archive of its own — when nobody's booked a live slot and
+      // it has no fallback tracks either, relay the Tahti Selects rotation live (read
+      // fresh each request, not a static snapshot) instead of falling through to
+      // Liquidsoap's blank() and going silent while still reporting as LIVE.
+      if (rows.length === 0 && channel.slug === TAHTI_RADIO_SLUG) {
+        const selects = await fastify.prisma.channel.findUnique({
+          where: { slug: TAHTI_SELECTS_SLUG },
+          select: { id: true },
+        })
+        if (selects) {
+          rows = await curatedRows(fastify.prisma, selects.id)
+        }
+      }
+
       const body = renderFallbackM3u(await toM3uEntries(rows))
 
       return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
