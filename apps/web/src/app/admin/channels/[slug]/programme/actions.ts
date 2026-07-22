@@ -5,40 +5,13 @@
 
 import { cookies } from 'next/headers'
 import type { FallbackMode } from '@tahti/shared'
+import type { ProgrammeView } from '../../../../dashboard/programme-actions'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
 function sessionHeader() {
-  const cookieStore = cookies()
-  const sessionCookie = cookieStore.get('tahti_session')
+  const sessionCookie = cookies().get('tahti_session')
   return sessionCookie ? `tahti_session=${sessionCookie.value}` : ''
-}
-
-export type ProgrammeItemRow = {
-  id: string
-  title: string
-  status: string
-  durationSec: number | null
-  isFallback: boolean
-  fallbackOrder: number | null
-  lastFallbackPlayedAt: string | null
-  audioUrl: string | null
-}
-
-export type ProgrammeLibraryTrackRow = {
-  releaseTrackId: string
-  releaseId: string
-  releaseTitle: string
-  trackTitle: string
-  durationSec: number | null
-  archiveItemId: string | null
-}
-
-export type ProgrammeView = {
-  fallbackMode: FallbackMode
-  fallbackEnabled: boolean
-  items: ProgrammeItemRow[]
-  library: ProgrammeLibraryTrackRow[]
 }
 
 async function parseProgrammeResponse(
@@ -51,27 +24,27 @@ async function parseProgrammeResponse(
   return { data: (await res.json()) as ProgrammeView, error: null }
 }
 
-export async function fetchChannelProgramme(): Promise<{
-  data: ProgrammeView | null
-  error: string | null
-}> {
-  const res = await fetch(`${apiUrl}/api/me/channel/programme`, {
+/** Board-only equivalent of dashboard/programme-actions.ts, scoped by :slug
+ * instead of the session user — same three endpoints, admin-side. */
+export async function fetchAdminChannelProgramme(
+  slug: string,
+): Promise<{ data: ProgrammeView | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/channels/${slug}/programme`, {
     headers: { Cookie: sessionHeader() },
     cache: 'no-store',
   })
   return parseProgrammeResponse(res)
 }
 
-export async function updateChannelProgramme(payload: {
-  fallbackMode?: FallbackMode
-  fallbackEnabled?: boolean
-  items?: Array<{
-    archiveItemId: string
-    isFallback: boolean
-    fallbackOrder?: number
-  }>
-}): Promise<{ data: ProgrammeView | null; error: string | null }> {
-  const res = await fetch(`${apiUrl}/api/me/channel/programme`, {
+export async function updateAdminChannelProgramme(
+  slug: string,
+  payload: {
+    fallbackMode?: FallbackMode
+    fallbackEnabled?: boolean
+    items?: Array<{ archiveItemId: string; isFallback: boolean; fallbackOrder?: number }>
+  },
+): Promise<{ data: ProgrammeView | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/channels/${slug}/programme`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
     body: JSON.stringify(payload),
@@ -80,10 +53,11 @@ export async function updateChannelProgramme(payload: {
   return parseProgrammeResponse(res)
 }
 
-export async function addLibraryTrackToRotation(
+export async function addAdminLibraryTrack(
+  slug: string,
   releaseTrackId: string,
 ): Promise<{ data: ProgrammeView | null; error: string | null }> {
-  const res = await fetch(`${apiUrl}/api/me/channel/programme/library`, {
+  const res = await fetch(`${apiUrl}/api/admin/channels/${slug}/programme/library`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
     body: JSON.stringify({ releaseTrackId }),

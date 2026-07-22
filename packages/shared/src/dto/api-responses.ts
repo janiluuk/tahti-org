@@ -198,6 +198,10 @@ export const ChannelProgrammeItemViewSchema = z.object({
   fallbackOrder: z.number().int().nullable(),
   lastFallbackPlayedAt: z.coerce.date().nullable(),
   createdAt: z.coerce.date(),
+  /** Presigned playback URL for the editor's preview button — null when neither
+   * mp3Key nor flacKey is set (should not happen for a READY item, but the
+   * playback key resolver is intentionally defensive). */
+  audioUrl: z.string().nullable(),
 })
 
 export const ChannelProgrammeLibraryTrackViewSchema = z.object({
