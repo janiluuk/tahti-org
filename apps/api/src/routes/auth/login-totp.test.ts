@@ -230,10 +230,16 @@ describe('2FA (TOTP) login flow', () => {
   })
 
   it('disabling 2FA requires the account password', async () => {
+    // SEC-010: every real /api/auth/login(/totp) completion above this test
+    // revoked whatever session existed before it, including the module-level
+    // sessionCookie from beforeAll — get a fresh one rather than assume it's
+    // still valid this deep into the file.
+    const freshCookie = await sessionCookieFor(prisma, userId)
+
     const wrongPassword = await app.inject({
       method: 'POST',
       url: '/api/me/totp/disable',
-      headers: { cookie: sessionCookie },
+      headers: { cookie: freshCookie },
       payload: { password: 'not-the-real-password' },
     })
     expect(wrongPassword.statusCode).toBe(401)
@@ -241,7 +247,7 @@ describe('2FA (TOTP) login flow', () => {
     const correctPassword = await app.inject({
       method: 'POST',
       url: '/api/me/totp/disable',
-      headers: { cookie: sessionCookie },
+      headers: { cookie: freshCookie },
       payload: { password: 'testpassword' },
     })
     expect(correctPassword.statusCode).toBe(204)

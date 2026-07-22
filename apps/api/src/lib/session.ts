@@ -37,3 +37,11 @@ export async function validateSession(
 export async function deleteSession(prisma: PrismaClient, sessionId: string): Promise<void> {
   await prisma.session.deleteMany({ where: { id: sessionId } })
 }
+
+/** SEC-010: called right before a fresh login session is created, so a
+ * successful login (password, or the TOTP step that completes one) kicks out
+ * every other active session for the account — including an attacker's, if
+ * the credentials were compromised. */
+export async function revokeAllSessions(prisma: PrismaClient, userId: string): Promise<void> {
+  await prisma.session.deleteMany({ where: { userId } })
+}

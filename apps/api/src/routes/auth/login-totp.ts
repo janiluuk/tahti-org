@@ -3,7 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { AuthLoginResponseSchema, LoginTotpSchema, openApiResponse } from '@tahti/shared'
-import { createSession } from '../../lib/session.js'
+import { createSession, revokeAllSessions } from '../../lib/session.js'
 import { config } from '../../config.js'
 import { verifyTotpCode } from '../../lib/totp.js'
 import { decryptTotpSecret } from '../../lib/totp-secret-enc.js'
@@ -76,6 +76,7 @@ const loginTotpRoute: FastifyPluginAsync = async (fastify) => {
 
       await fastify.prisma.totpChallenge.delete({ where: { id: challenge.id } })
 
+      await revokeAllSessions(fastify.prisma, user.id)
       const session = await createSession(fastify.prisma, user.id)
       reply.setCookie(config.sessionCookieName, session.id, {
         httpOnly: true,
