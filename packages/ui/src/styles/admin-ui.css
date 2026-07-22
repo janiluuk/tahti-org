@@ -457,7 +457,9 @@
   z-index: -1;
   background: var(--bg);
   display: block;
-  filter: blur(12px);
+  /* Darkened a bit relative to the raw scene so foreground text/cards keep
+   * enough contrast against the animation instead of competing with it. */
+  filter: blur(12px) brightness(0.72);
   pointer-events: none;
 }
 

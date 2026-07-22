@@ -1102,7 +1102,7 @@
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-  padding: 0.35rem 0;
+  padding: 0.5rem 0.65rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
   text-decoration: none;
   border-radius: var(--radius-sm);
@@ -1576,6 +1576,10 @@
 
 [data-tahti-ui='brand'] .ch-archive-section {
   margin-top: 2rem;
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.25rem 1.4rem;
 }
 
 [data-tahti-ui='brand'] .ch-archive-section-head {
