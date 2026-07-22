@@ -15,6 +15,7 @@ interface LivePlayerSectionProps {
   subtitle?: string
   artworkUrl?: string | null
   isReplay?: boolean
+  nextUpLabel?: string
 }
 
 export function LivePlayerSection({
@@ -24,6 +25,7 @@ export function LivePlayerSection({
   subtitle,
   artworkUrl,
   isReplay,
+  nextUpLabel,
 }: LivePlayerSectionProps) {
   const { analyser } = usePlayer()
 
@@ -39,6 +41,7 @@ export function LivePlayerSection({
             href={`/c/${slug}`}
             artworkUrl={artworkUrl}
             isReplay={isReplay}
+            nextUpLabel={nextUpLabel}
           />
         </div>
         <ReactionsOverlay slug={slug} />

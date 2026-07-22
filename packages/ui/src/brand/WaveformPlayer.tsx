@@ -42,6 +42,10 @@ export interface WaveformPlayerProps {
    * it's actually playing a pre-recorded rotation with nobody on air — set this
    * so the label reads "REPLAY" instead of the misleading "LIVE NOW". */
   isReplay?: boolean
+  /** Curated-rotation channels only: "<title> — <artist>" for what plays after
+   * the current track. When set (and isReplay), replaces the bare "REPLAY"
+   * label next to the play button with "Next: ...". */
+  nextUpLabel?: string
 }
 
 /** Custom HLS/archive player chrome — waveform, play/pause, seek bar. */
@@ -64,6 +68,7 @@ export function WaveformPlayer({
   nowPlayingSubtitle,
   liveElapsedSec,
   isReplay = false,
+  nextUpLabel,
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
@@ -169,12 +174,14 @@ export function WaveformPlayer({
         </button>
 
         <div className="waveform-player__progress-wrap">
-          <span className="waveform-player__time">
+          <span className="waveform-player__time waveform-player__time--next-up">
             {isLive
               ? liveElapsedSec != null
                 ? formatPlayerTime(liveElapsedSec)
                 : isReplay
-                  ? 'REPLAY'
+                  ? nextUpLabel
+                    ? `Next: ${nextUpLabel}`
+                    : 'REPLAY'
                   : 'LIVE'
               : formatPlayerTime(currentTime)}
           </span>

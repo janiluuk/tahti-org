@@ -71,6 +71,7 @@ interface ChannelResponse {
     joinDate?: string | null
   }
   nowPlaying: { title: string; artistName: string; artworkUrl: string | null } | null
+  nowPlayingNext: { title: string; artistName: string } | null
 }
 
 interface ArchiveItem {
@@ -258,7 +259,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       <span className="prof-pronouns">{channel.user.pronouns}</span>
                     )}
                   </Heading>
-                  <Text size="sm" tone="muted">
+                  <Text size="sm" tone="muted" className="ch-artist-meta-row">
                     @{channel.user.username}
                     <span className="ch-artist-flag">
                       {channel.user.countryCode
@@ -331,10 +332,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               )}
               <div className="ch-artist-cta-row">
                 <Link href={`/u/${channel.user.username}/subscribe`} className="ch-artist-sub-btn">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+                    <path d="M8 13.8 2.6 8.7C1 7.2 1 4.7 2.6 3.3c1.5-1.3 3.7-1 5 .5L8 4.3l.4-.5c1.3-1.5 3.5-1.8 5-.5 1.6 1.4 1.6 3.9 0 5.4L8 13.8z" />
+                  </svg>
                   Support directly
                 </Link>
                 <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
-                  View profile →
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <circle cx="8" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+                    <path
+                      d="M3 13.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  View profile
                 </Link>
               </div>
             </header>
@@ -400,6 +413,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 }
                 artworkUrl={isRotationChannel ? channel.nowPlaying?.artworkUrl : undefined}
                 isReplay={isRotationChannel}
+                nextUpLabel={
+                  isRotationChannel && channel.nowPlayingNext
+                    ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
+                    : undefined
+                }
               />
             )}
 

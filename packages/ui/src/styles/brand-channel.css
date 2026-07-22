@@ -404,6 +404,19 @@
   margin-bottom: 0.15rem;
 }
 
+/* @handle / country / member-since row — smaller and set into a faint pill so
+ * it reads as secondary metadata rather than competing with the artist name. */
+[data-tahti-ui='brand'] .ch-artist-meta-row {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: var(--text-xs);
+  background: color-mix(in srgb, var(--card2) 60%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
 /* Country and join-date segments in the artist metadata line — was unstyled,
  * so "@handle", country, and join date ran together with no gap. */
 [data-tahti-ui='brand'] .ch-artist-flag {
@@ -1029,6 +1042,9 @@
 }
 
 [data-tahti-ui='brand'] .ch-artist-profile-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: var(--text-sm);
   color: var(--muted);
   text-decoration: none;

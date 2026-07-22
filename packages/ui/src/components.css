@@ -1642,6 +1642,17 @@
   min-width: 2.5rem;
 }
 
+/* The isLive "Next: <title> — <artist>" label can run much longer than a
+ * timestamp — let it size to the row and truncate instead of overflowing. */
+.waveform-player__time--next-up {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
 .waveform-player__progress {
   flex: 1;
   height: 4px;

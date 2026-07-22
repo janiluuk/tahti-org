@@ -15,6 +15,7 @@ export default function HlsPlayer({
   liveElapsedSec,
   isReplay = false,
   waitingForSignal = false,
+  nextUpLabel,
 }: {
   url: string
   title?: string
@@ -30,6 +31,8 @@ export default function HlsPlayer({
   isReplay?: boolean
   /** No source connected yet (broadcast test-signal step) — shows a waiting animation. */
   waitingForSignal?: boolean
+  /** Curated-rotation channels only: "<title> — <artist>" for the next track. */
+  nextUpLabel?: string
 }) {
   const { track, playing, buffering, error, currentTime, duration, load, togglePlay, seek } =
     usePlayer()
@@ -94,6 +97,7 @@ export default function HlsPlayer({
         nowPlayingSubtitle={subtitle}
         liveElapsedSec={isLive ? liveElapsedSec : undefined}
         isReplay={isReplay}
+        nextUpLabel={nextUpLabel}
       />
     </div>
   )
