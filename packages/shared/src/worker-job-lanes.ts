@@ -21,6 +21,7 @@ export const WORKER_JOB_LANES = {
     'backfill-editor-peaks',
     'sweep-editor-peaks-backfill',
     'cloud-import-google-drive',
+    'cloud-import-soundcloud',
     'finalize-broadcast-recording',
     'archive-broadcast',
     'warm-archive-fallback-cache',

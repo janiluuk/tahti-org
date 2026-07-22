@@ -475,6 +475,7 @@ enum CollectionTextLayerAlign {
 
 enum CloudImportSource {
   GOOGLE_DRIVE
+  SOUNDCLOUD
 
   @@schema("core")
 }

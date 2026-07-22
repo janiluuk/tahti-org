@@ -3,9 +3,15 @@
 
 import { randomBytes } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
+import {
+  SoundcloudImportRequestSchema,
+  SoundcloudImportResponseSchema,
+  openApiResponse,
+} from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { encryptStreamKey, decryptStreamKey } from '../../lib/stream-key-enc.js'
+import { enqueueCloudImportSoundcloud } from '../../lib/queue.js'
 
 const OAUTH_STATE_MAX_AGE_SEC = 600
 const SOUNDCLOUD_AUTHORIZE_URL = 'https://soundcloud.com/connect'
@@ -173,6 +179,54 @@ const soundcloudRoutes: FastifyPluginAsync = async (fastify) => {
 
     return reply.send({ tracks })
   })
+
+  // POST /api/me/soundcloud/import — queue selected tracks for server-side download + transcode
+  fastify.post(
+    '/api/me/soundcloud/import',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Queue SoundCloud tracks for server-side import to archive',
+        response: openApiResponse(SoundcloudImportResponseSchema, 'SoundcloudImportResponse'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = SoundcloudImportRequestSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: 'Validation error',
+          issues: parsed.error.issues.map((i) => ({ path: i.path, message: i.message })),
+        })
+      }
+
+      const user = request.sessionUser!
+      const row = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { soundcloudAccessTokenEnc: true },
+      })
+      if (!row?.soundcloudAccessTokenEnc) {
+        return reply.status(403).send({ error: 'SoundCloud account not connected' })
+      }
+
+      const imports = []
+      for (const track of parsed.data.tracks) {
+        const job = await fastify.prisma.cloudImportJob.create({
+          data: {
+            userId: user.id,
+            source: 'SOUNDCLOUD',
+            externalFileId: track.trackId,
+            fileName: track.title,
+            status: 'QUEUED',
+          },
+        })
+        await enqueueCloudImportSoundcloud(job.id)
+        imports.push({ cloudImportJobId: job.id, status: 'queued' as const })
+      }
+
+      return reply.status(202).send({ imports })
+    },
+  )
 }
 
 export default soundcloudRoutes
