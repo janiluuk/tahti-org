@@ -628,11 +628,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                             isLoggedIn={!!user}
                           />
                         ) : (
-                          <TrackCommentsToggle
-                            archiveItemId={item.id}
-                            isLoggedIn={!!user}
-                            commentCount={item.commentCount ?? 0}
-                          />
+                          <>
+                            <TrackCommentsToggle
+                              archiveItemId={item.id}
+                              isLoggedIn={!!user}
+                              commentCount={item.commentCount ?? 0}
+                            />
+                            <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} />
+                          </>
                         )}
                       </li>
                     )

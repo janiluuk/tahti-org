@@ -4,6 +4,7 @@
 'use client'
 
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
+import { ReportButton } from '@/components/report-button'
 
 type Props = {
   id: string
@@ -62,6 +63,7 @@ export function ArchiveTrackRow({
         <div className="prof-collection-title">{title}</div>
         {durationLabel && <span className="prof-list-meta">{durationLabel}</span>}
       </div>
+      <ReportButton targetType="ARCHIVE_ITEM" targetId={id} />
     </li>
   )
 }

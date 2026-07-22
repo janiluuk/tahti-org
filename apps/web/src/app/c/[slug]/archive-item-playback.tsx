@@ -7,6 +7,7 @@ import type { VisualPreset } from '@tahti/shared'
 import { ArchiveWaveform } from '@/components/archive-waveform'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
+import { ReportButton } from '@/components/report-button'
 import { usePlayer } from '@/contexts/player-context'
 import { ArchiveDownloadButton } from './archive-download'
 
@@ -117,6 +118,7 @@ export function ArchiveItemPlayback({
           isLoggedIn={isLoggedIn}
           commentCount={item.commentCount ?? 0}
         />
+        <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} />
       </div>
     </div>
   )
