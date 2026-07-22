@@ -1481,6 +1481,17 @@
   text-overflow: ellipsis;
 }
 
+.waveform-player__meta-subtitle--link {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.waveform-player__meta-subtitle--link:hover {
+  color: var(--cyan);
+  text-decoration: underline;
+}
+
 .waveform-player__status {
   display: flex;
   align-items: center;

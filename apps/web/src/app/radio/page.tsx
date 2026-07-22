@@ -87,7 +87,12 @@ async function fetchUpcomingSlots(): Promise<PublicRadioSlot[]> {
 
 interface RadioChannelPayload {
   hlsUrl: string | null
-  nowPlaying: { title: string; artistName: string; artworkUrl: string | null } | null
+  nowPlaying: {
+    title: string
+    artistName: string
+    artistUsername: string | null
+    artworkUrl: string | null
+  } | null
 }
 
 /** Real HLS output from Tahti Radio's own always-on Liquidsoap process (spawned

@@ -32,6 +32,7 @@ interface RadioLiveSlot {
 interface RadioNowPlayingTrack {
   title: string
   artistName: string
+  artistUsername: string | null
   artworkUrl: string | null
 }
 
@@ -85,6 +86,8 @@ export function RadioPlayerSection({
   const subtitle = liveSlot
     ? 'Live now on Tahti Radio'
     : (nowPlaying?.artistName ?? '24/7 rotation')
+  const subtitleHref =
+    !liveSlot && nowPlaying?.artistUsername ? `/u/${nowPlaying.artistUsername}` : undefined
   const artworkUrl = liveSlot ? liveSlot.artist.avatarUrl : (nowPlaying?.artworkUrl ?? null)
 
   return (
@@ -94,6 +97,7 @@ export function RadioPlayerSection({
           url={playback.audioUrl}
           title={title}
           subtitle={subtitle}
+          subtitleHref={subtitleHref}
           artworkUrl={artworkUrl}
           liveElapsedSec={liveElapsedSec}
           isReplay={!liveSlot}

@@ -914,10 +914,11 @@ model Channel {
   // channel's Liquidsoap telnet metadata every ~20s and resolves the current
   // track's ArchiveItem here — only meaningful while no live artist is on air,
   // since a live show's identity/artwork comes from the booking instead.
-  nowPlayingTitle      String?
-  nowPlayingArtistName String?
-  nowPlayingArtworkUrl String?
-  nowPlayingUpdatedAt  DateTime?
+  nowPlayingTitle          String?
+  nowPlayingArtistName     String?
+  nowPlayingArtistUsername String?
+  nowPlayingArtworkUrl     String?
+  nowPlayingUpdatedAt      DateTime?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 

@@ -16,11 +16,15 @@ export default function HlsPlayer({
   isReplay = false,
   waitingForSignal = false,
   nextUpLabel,
+  subtitleHref,
 }: {
   url: string
   title?: string
   subtitle?: string
   href?: string
+  /** When set, the subtitle (artist name) links here — e.g. a rotation
+   * channel's currently-playing track's real artist profile. */
+  subtitleHref?: string
   artworkUrl?: string | null
   /** Wall-clock seconds since a live broadcast began — shown instead of "LIVE".
    * Leave unset for continuous/rotation playback (no meaningful elapsed time). */
@@ -95,6 +99,7 @@ export default function HlsPlayer({
         artworkUrl={artworkUrl}
         nowPlayingTitle={title}
         nowPlayingSubtitle={subtitle}
+        nowPlayingSubtitleHref={subtitleHref}
         liveElapsedSec={isLive ? liveElapsedSec : undefined}
         isReplay={isReplay}
         nextUpLabel={nextUpLabel}

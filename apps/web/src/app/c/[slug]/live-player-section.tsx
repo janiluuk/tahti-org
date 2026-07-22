@@ -13,6 +13,7 @@ interface LivePlayerSectionProps {
   slug: string
   title?: string
   subtitle?: string
+  subtitleHref?: string
   artworkUrl?: string | null
   isReplay?: boolean
   nextUpLabel?: string
@@ -23,6 +24,7 @@ export function LivePlayerSection({
   slug,
   title,
   subtitle,
+  subtitleHref,
   artworkUrl,
   isReplay,
   nextUpLabel,
@@ -38,6 +40,7 @@ export function LivePlayerSection({
             url={url}
             title={title}
             subtitle={subtitle ?? `@${slug}`}
+            subtitleHref={subtitleHref}
             href={`/c/${slug}`}
             artworkUrl={artworkUrl}
             isReplay={isReplay}

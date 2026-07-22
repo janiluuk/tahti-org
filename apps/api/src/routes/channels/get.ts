@@ -49,6 +49,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
           slideshowAutoplay: true,
           nowPlayingTitle: true,
           nowPlayingArtistName: true,
+          nowPlayingArtistUsername: true,
           nowPlayingArtworkUrl: true,
           nowPlayingUpdatedAt: true,
           user: {
@@ -91,13 +92,15 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
           ? {
               title: channel.nowPlayingTitle,
               artistName: channel.nowPlayingArtistName,
+              artistUsername: channel.nowPlayingArtistUsername,
               artworkUrl: channel.nowPlayingArtworkUrl,
             }
           : null
 
       // Curated-rotation channels (Tahti Selects) play a fixed, ordered playlist —
       // find the currently-playing entry by title and report the one after it.
-      let nowPlayingNext: { title: string; artistName: string } | null = null
+      let nowPlayingNext: { title: string; artistName: string; artistUsername: string } | null =
+        null
       if (nowPlaying) {
         const curated = await fastify.prisma.curatedRotationItem.findMany({
           where: { channelId: channel.id },
@@ -106,7 +109,9 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
             archiveItem: {
               select: {
                 title: true,
-                channel: { select: { user: { select: { displayName: true } } } },
+                channel: {
+                  select: { user: { select: { displayName: true, username: true } } },
+                },
               },
             },
           },
@@ -115,7 +120,11 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
           const idx = curated.findIndex((c) => c.archiveItem.title === nowPlaying.title)
           if (idx !== -1) {
             const next = curated[(idx + 1) % curated.length]!.archiveItem
-            nowPlayingNext = { title: next.title, artistName: next.channel.user.displayName }
+            nowPlayingNext = {
+              title: next.title,
+              artistName: next.channel.user.displayName,
+              artistUsername: next.channel.user.username,
+            }
           }
         }
       }

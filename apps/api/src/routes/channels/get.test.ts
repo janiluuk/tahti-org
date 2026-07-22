@@ -145,6 +145,7 @@ describe('GET /api/channels/:slug', () => {
     expect(body.nowPlaying).toEqual({
       title: 'Monster Parade',
       artistName: 'Tahti Selects',
+      artistUsername: null,
       artworkUrl: 'https://cdn.tahti.live/tahti/archive/x/banner.jpg',
     })
     expect(body.nowPlayingTitle).toBeUndefined()

@@ -432,6 +432,7 @@ export const PublicChannelViewSchema = z.object({
     .object({
       title: z.string(),
       artistName: z.string(),
+      artistUsername: z.string().nullable(),
       artworkUrl: z.string().nullable(),
     })
     .nullable(),
@@ -442,6 +443,7 @@ export const PublicChannelViewSchema = z.object({
     .object({
       title: z.string(),
       artistName: z.string(),
+      artistUsername: z.string(),
     })
     .nullable(),
 })
