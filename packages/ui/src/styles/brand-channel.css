@@ -497,11 +497,18 @@
   width: 100%;
 }
 
+[data-tahti-ui='brand'] .ch-archive-controls-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.2rem 0;
+}
+
 [data-tahti-ui='brand'] .ch-archive-controls {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.2rem 0;
 }
 
 [data-tahti-ui='brand'] .ch-archive-controls__play {
@@ -541,7 +548,6 @@
 }
 
 [data-tahti-ui='brand'] .ch-download {
-  margin-top: 0.2rem;
   font-size: var(--text-sm);
 }
 
@@ -906,6 +912,21 @@
 [data-tahti-ui='brand'] .ch-artist-bio {
   margin-top: 0.35rem;
   color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-radio-description {
+  margin: 0.6rem 0 0.9rem;
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--cyan) 22%, var(--border));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--cyan) 8%, var(--card)),
+    color-mix(in srgb, var(--purple) 6%, var(--card))
+  );
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
 [data-tahti-ui='brand'] .ch-radio-live-now {
@@ -1419,7 +1440,7 @@
 }
 
 [data-tahti-ui='brand'] .track-comments-toggle {
-  margin-top: 0.5rem;
+  flex: none;
   padding: 4px 12px;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -1437,6 +1458,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  flex-basis: 100%;
 }
 
 [data-tahti-ui='brand'] .ch-player-wrap {
@@ -1662,17 +1684,36 @@
 
 [data-tahti-ui='brand'] .ch-archive-item-desc {
   color: var(--muted);
-  margin: 0 0 0.5rem;
-  font-size: var(--text-body);
+  margin: 0 0 0.4rem;
+  font-size: var(--text-xs);
+  /* Single-line ellipsis rather than -webkit-line-clamp — the source text can
+   * contain a hard line break (rendered as <br>), which line-clamp doesn't
+   * reliably truncate around across browsers. white-space:nowrap always does. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-desc br {
+  display: none;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-commentary {
-  color: var(--text);
-  margin: 0 0 0.75rem;
-  font-size: var(--text-body);
-  line-height: 1.5;
-  border-left: 3px solid var(--border-hover);
-  padding-left: 0.75rem;
+  color: var(--muted);
+  margin: 0 0 0.4rem;
+  font-size: var(--text-xs);
+  border-left: 2px solid var(--border-hover);
+  padding-left: 0.5rem;
+  /* Single-line ellipsis — the source text can contain a hard line break
+   * (rendered as <br>), which -webkit-line-clamp doesn't reliably truncate
+   * around across browsers. white-space:nowrap always does. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-commentary br {
+  display: none;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-duration {
@@ -2000,6 +2041,38 @@
 
 [data-tahti-ui='brand'] .prof-tip-btn:hover {
   background: color-mix(in srgb, var(--amber) 16%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-newsletter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 7px 13px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
+  background: color-mix(in srgb, var(--green) 10%, transparent);
+  color: var(--green);
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+[data-tahti-ui='brand'] .prof-newsletter-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--green) 18%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-newsletter-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+[data-tahti-ui='brand'] .prof-newsletter-btn--active {
+  background: var(--green);
+  color: var(--bg);
 }
 
 [data-tahti-ui='brand'] .prof-bio {
@@ -3525,34 +3598,6 @@
   background: color-mix(in srgb, var(--cyan) 7%, var(--card2));
 }
 
-[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 1.25rem 0 1.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--cyan) 40%, var(--border));
-  background: color-mix(in srgb, var(--cyan) 10%, var(--card2));
-  color: var(--cyan);
-  font-size: var(--text-body);
-  font-weight: var(--weight-medium);
-  cursor: pointer;
-}
-
-[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle:hover {
-  background: color-mix(in srgb, var(--cyan) 18%, var(--card2));
-}
-
-[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-[data-tahti-ui='brand'].brand-channel .nl-subscribe-toggle--active {
-  background: var(--cyan);
-  color: var(--bg);
-}
 
 [data-tahti-ui='brand'].brand-channel .nl-subscribe-title {
   font-size: var(--text-body);

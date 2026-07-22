@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { PlayerProvider } from '@/contexts/player-context'
 import { MiniPlayer } from '@/components/mini-player'
+import { PublicNavBg } from '@/components/public-nav-bg'
 import { ToastProvider } from '@/contexts/toast-context'
 import './globals.css'
 
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <ToastProvider>
           <PlayerProvider>
+            <PublicNavBg />
             <main>{children}</main>
             <MiniPlayer />
           </PlayerProvider>

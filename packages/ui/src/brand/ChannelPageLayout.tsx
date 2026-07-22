@@ -1,7 +1,10 @@
+'use client'
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { WatcherCount } from './WatcherCount'
 
@@ -41,7 +44,12 @@ function resolveHomeHref(): string {
   return `${raw.replace(/\/$/, '')}/`
 }
 
-/** PLAT-020: sticky channel top bar — TAHTI logo + site nav or live channel context. */
+/** PLAT-020: sticky channel top bar — TAHTI logo + site nav or live channel context.
+ * A single instance of this header, rendered from one shared layout, persists across
+ * client-side navigation between the public site-nav routes instead of remounting per
+ * page — so `activeNav` is optional and falls back to matching the current pathname,
+ * letting one <ChannelHeader> serve every route in that shared layout without each
+ * page having to pass its own id down through props it may not even receive. */
 export function ChannelHeader({
   isLive,
   artistHandle,
@@ -51,7 +59,9 @@ export function ChannelHeader({
   showLiveBadge,
   user,
 }: ChannelHeaderProps) {
-  const channelLiveMode = Boolean(isLive && artistHandle && !activeNav && !contextLink)
+  const pathname = usePathname()
+  const resolvedActiveNav = activeNav ?? SITE_NAV.find((item) => item.href === pathname)?.id
+  const channelLiveMode = Boolean(isLive && artistHandle && !resolvedActiveNav && !contextLink)
   const homeHref = resolveHomeHref()
 
   return (
@@ -72,8 +82,8 @@ export function ChannelHeader({
             <Link
               key={item.id}
               href={item.id === 'home' ? homeHref : item.href}
-              className={`ch-header__nav-link${activeNav === item.id ? ' ch-header__nav-link--active' : ''}`}
-              aria-current={activeNav === item.id ? 'page' : undefined}
+              className={`ch-header__nav-link${resolvedActiveNav === item.id ? ' ch-header__nav-link--active' : ''}`}
+              aria-current={resolvedActiveNav === item.id ? 'page' : undefined}
             >
               {item.label}
             </Link>

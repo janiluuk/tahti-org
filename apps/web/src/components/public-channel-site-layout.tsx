@@ -3,27 +3,26 @@
 
 import type { ReactNode } from 'react'
 import { ChannelHeader, PublicFooter, type SiteNavId } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { getSessionUser } from '@/lib/session'
 import { statusPageUrl } from '@/lib/status-page'
 
 type PublicChannelSiteLayoutProps = {
   children: ReactNode
   activeNav: SiteNavId
-  bgVariant?: 'default' | 'subtle'
 }
 
-/** shell-public with gateway background — Home, Discover, and similar brand routes. */
+/** shell-public — Home, Discover, and similar brand routes. The gateway background
+ * (<BgCanvas>) is NOT rendered here — it's a single persistent instance shared
+ * across all public-nav routes (see PublicNavBg in the root layout) so navigating
+ * between them doesn't reinitialize the WebGL scene. */
 export async function PublicChannelSiteLayout({
   children,
   activeNav,
-  bgVariant = 'subtle',
 }: PublicChannelSiteLayoutProps) {
   const user = await getSessionUser()
 
   return (
     <div data-tahti-ui="brand" className="brand-channel shell-public">
-      <BgCanvas variant={bgVariant} />
       <ChannelHeader activeNav={activeNav} user={user} />
       <div className="shell-public__inner">{children}</div>
       <PublicFooter statusUrl={statusPageUrl()} />

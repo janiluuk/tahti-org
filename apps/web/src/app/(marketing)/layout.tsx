@@ -10,9 +10,5 @@ import { PublicChannelSiteLayout } from '@/components/public-channel-site-layout
 
 /** Homepage — shell-public with gateway background. */
 export default function MarketingLayout({ children }: { children: ReactNode }) {
-  return (
-    <PublicChannelSiteLayout activeNav="home" bgVariant="subtle">
-      {children}
-    </PublicChannelSiteLayout>
-  )
+  return <PublicChannelSiteLayout activeNav="home">{children}</PublicChannelSiteLayout>
 }
