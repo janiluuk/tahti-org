@@ -5,6 +5,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
 import { prisma } from '@tahti/db'
 import { config } from '../../config.js'
+import { TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import { createReadyArchiveItem, createTestArtist } from '../../test/helpers.js'
 
 const PREFIX = 'channel-fallback-'
@@ -94,5 +95,65 @@ describe('GET /internal/channels/:channelId/fallback.m3u', () => {
     expect(res.body).toContain('no items yet')
 
     await prisma.channel.update({ where: { id: channelId }, data: { fallbackEnabled: true } })
+  })
+})
+
+describe('GET /internal/channels/:channelId/fallback.m3u — Tahti Radio relays Tahti Selects', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let radioChannelId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
+
+    const radio = await createTestArtist(prisma, {
+      email: `${PREFIX}radio@example.com`,
+      username: `${PREFIX}radio`,
+      tier: 'ARTIST',
+    })
+    radioChannelId = radio.channel!.id
+    await prisma.channel.update({
+      where: { id: radioChannelId },
+      data: { slug: TAHTI_RADIO_SLUG },
+    })
+
+    const selects = await createTestArtist(prisma, {
+      email: `${PREFIX}selects@example.com`,
+      username: `${PREFIX}selects`,
+      tier: 'ARTIST',
+    })
+    await prisma.channel.update({
+      where: { id: selects.channel!.id },
+      data: { slug: TAHTI_SELECTS_SLUG },
+    })
+    const rotationTrack = await createReadyArchiveItem(
+      prisma,
+      selects.channel!.id,
+      'Selects rotation track',
+    )
+    await prisma.curatedRotationItem.create({
+      data: {
+        channelId: selects.channel!.id,
+        archiveItemId: rotationTrack.id,
+        position: 0,
+        addedById: selects.id,
+      },
+    })
+  })
+
+  afterAll(async () => {
+    await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
+    await app.close()
+  })
+
+  it('relays the Tahti Selects rotation when Tahti Radio has no bookings or archive', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/internal/channels/${radioChannelId}/fallback.m3u`,
+      headers: { authorization: `Bearer ${config.internalSecret}` },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('Selects rotation track')
   })
 })
