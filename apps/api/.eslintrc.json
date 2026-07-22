@@ -2,7 +2,7 @@
   "extends": ["../../.eslintrc.json"],
   "overrides": [
     {
-      "files": ["src/lib/palette-extract.ts"],
+      "files": ["src/lib/palette-extract.ts", "src/lib/generate-cover-art.ts"],
       "rules": { "no-restricted-syntax": "off" }
     },
     {
