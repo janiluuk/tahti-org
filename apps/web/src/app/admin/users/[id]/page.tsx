@@ -86,6 +86,9 @@ export default async function AdminUserDetailPage({ params }: { params: { id: st
                   Edit 24/7 playlist →
                 </Link>
               </p>
+              <p className="admin-stat-sub">
+                <Link href={`/admin/channels/${user.channel.slug}/archive`}>Edit music →</Link>
+              </p>
             </>
           ) : (
             <p className="admin-stat-sub">No channel</p>
