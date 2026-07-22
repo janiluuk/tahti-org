@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { ChannelCard } from '@tahti/shared'
+import type { ChannelCard, ChannelDirectoryEntry, TahtiSelectsGalleryItem } from '@tahti/shared'
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
-import Link from 'next/link'
-import { ListenChannels } from './_listen-channels'
+import { DiscoverTabs } from './_discover-tabs'
 import { TahtiRadioCard } from './_tahti-radio-card'
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001'
@@ -18,6 +17,30 @@ async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCa
     return (await res.json()) as { live: ChannelCard[]; recent: ChannelCard[] }
   } catch {
     return { live: [], recent: [] }
+  }
+}
+
+async function fetchDirectory(): Promise<ChannelDirectoryEntry[]> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/channels/directory`, { next: { revalidate: 60 } })
+    if (!res.ok) return []
+    const data = (await res.json()) as { items: ChannelDirectoryEntry[] }
+    return data.items
+  } catch {
+    return []
+  }
+}
+
+async function fetchSelectsGallery(): Promise<TahtiSelectsGalleryItem[]> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/tahti-selects/gallery`, {
+      next: { revalidate: 60 },
+    })
+    if (!res.ok) return []
+    const data = (await res.json()) as { items: TahtiSelectsGalleryItem[] }
+    return data.items
+  } catch {
+    return []
   }
 }
 
@@ -61,11 +84,12 @@ async function fetchListenerCount(slug: string): Promise<number> {
 }
 
 export default async function ListenPage() {
-  const [{ live, recent }, radioPreview] = await Promise.all([
+  const [{ live, recent }, radioPreview, directory, gallery] = await Promise.all([
     fetchChannels(),
     fetchTahtiRadioPreview(),
+    fetchDirectory(),
+    fetchSelectsGallery(),
   ])
-  const empty = live.length === 0 && recent.length === 0
   const listenerCountEntries = await Promise.all(
     live.map(async (ch) => [ch.slug, await fetchListenerCount(ch.slug)] as const),
   )
@@ -85,17 +109,13 @@ export default async function ListenPage() {
         artworkUrl={radioPreview.artworkUrl}
       />
 
-      {empty ? (
-        <div className="public-empty-card">
-          <p className="public-empty-card__text">No channels live right now.</p>
-          <p className="public-empty-card__hint">
-            Check back later, or tune in to <Link href="/radio">Tahti Radio</Link> — archived sets
-            on fair rotation.
-          </p>
-        </div>
-      ) : (
-        <ListenChannels live={live} recent={recent} listenerCounts={listenerCounts} />
-      )}
+      <DiscoverTabs
+        live={live}
+        recent={recent}
+        listenerCounts={listenerCounts}
+        directory={directory}
+        gallery={gallery}
+      />
     </div>
   )
 }

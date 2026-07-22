@@ -34,6 +34,7 @@ export const WORKER_JOB_LANES = {
     'monthly-ledger-rollup',
     'broadcast-cap-tick',
     'weekly-broadcast-reset',
+    'tahti-selects-weekly-draw',
     'fan-sub-payout',
     'fan-sub-expire',
     'fan-subscriber-purge',

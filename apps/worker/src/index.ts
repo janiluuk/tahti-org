@@ -18,6 +18,7 @@ import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
 import { processFinalizeBroadcastRecordingJob } from './jobs/finalize-broadcast-recording.js'
 import { processMonthlyLedgerRollup } from './jobs/monthly-ledger-rollup.js'
 import { processBroadcastCapTick, processWeeklyBroadcastReset } from './jobs/broadcast-cap.js'
+import { processTahtiSelectsDrawJob } from './jobs/tahti-selects-draw.js'
 import { processFanSubPayoutsJob } from './jobs/fan-sub-payout.js'
 import { processFanSubExpire } from './jobs/fan-sub-expire.js'
 import { processFanSubscriberPurgeJob } from './jobs/fan-subscriber-purge.js'
@@ -143,6 +144,9 @@ const worker = new Worker(
       } else if (job.name === 'weekly-broadcast-reset') {
         const summary = await processWeeklyBroadcastReset(prisma)
         console.log('[worker] weekly-broadcast-reset:', JSON.stringify(summary))
+      } else if (job.name === 'tahti-selects-weekly-draw') {
+        const summary = await processTahtiSelectsDrawJob(prisma)
+        console.log('[worker] tahti-selects-weekly-draw:', JSON.stringify(summary))
       } else if (job.name === 'fan-sub-payout') {
         const summary = await processFanSubPayoutsJob(prisma)
         console.log('[worker] fan-sub-payout:', JSON.stringify(summary))

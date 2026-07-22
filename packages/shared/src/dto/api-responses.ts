@@ -501,6 +501,41 @@ export const ChannelListResponseSchema = z.object({
 export type ChannelCard = z.infer<typeof ChannelCardSchema>
 export type ChannelListResponse = z.infer<typeof ChannelListResponseSchema>
 
+/** Discover → "Artists" tab: every channel with a public archive item, not just
+ * currently live/recent ones. */
+export const ChannelDirectoryEntrySchema = z.object({
+  slug: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  genres: z.array(z.string()),
+})
+
+export const ChannelDirectoryResponseSchema = z.object({
+  items: z.array(ChannelDirectoryEntrySchema),
+})
+
+export type ChannelDirectoryEntry = z.infer<typeof ChannelDirectoryEntrySchema>
+
+/** Discover → Tahti Selects gallery: the channel's current curated-rotation
+ * tracks, for a browsable thumbnail grid (distinct from the raw fallback M3U
+ * the internal Liquidsoap route serves). */
+export const TahtiSelectsGalleryItemSchema = z.object({
+  archiveItemId: z.string(),
+  title: z.string(),
+  artistName: z.string(),
+  artistUsername: z.string(),
+  channelSlug: z.string(),
+  bannerUrl: z.string().nullable(),
+  durationSec: z.number().int().nullable(),
+  audioUrl: z.string().nullable(),
+})
+
+export const TahtiSelectsGalleryResponseSchema = z.object({
+  items: z.array(TahtiSelectsGalleryItemSchema),
+})
+
+export type TahtiSelectsGalleryItem = z.infer<typeof TahtiSelectsGalleryItemSchema>
+
 export const TransparencyMonthlyRollupSchema = z.object({
   yearMonth: z.string(),
   byCategory: z.record(z.unknown()),

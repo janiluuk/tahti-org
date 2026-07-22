@@ -1175,6 +1175,197 @@
   text-overflow: ellipsis;
 }
 
+/* ---- Discover tabs (Live / Tahti Selects / Artists) ---- */
+.discover-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: var(--tahti-space-6);
+  flex-wrap: wrap;
+}
+
+.discover-tab {
+  padding: 0.5rem 1rem;
+  border-radius: var(--tahti-radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: var(--tahti-text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.discover-tab:hover {
+  color: var(--text);
+}
+
+.discover-tab--active {
+  color: var(--tahti-bg, #0a0f1e);
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+
+/* ---- Artist directory ---- */
+.artist-directory__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--tahti-space-3);
+  margin-bottom: var(--tahti-space-6);
+}
+
+.artist-directory__search {
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--tahti-radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  font-size: var(--tahti-text-sm);
+  min-width: 220px;
+}
+
+.artist-directory__search:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
+
+.artist-directory__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--tahti-space-3);
+}
+
+.artist-directory__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: var(--tahti-space-4) var(--tahti-space-3);
+  border-radius: var(--tahti-radius-lg, 12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.artist-directory__card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.artist-directory__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.artist-directory__name {
+  font-size: var(--tahti-text-sm);
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.artist-directory__genre {
+  font-size: var(--tahti-text-xs, 12px);
+  color: var(--muted);
+}
+
+/* ---- Tahti Selects visual gallery ---- */
+.selects-gallery {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--tahti-space-3);
+}
+
+.selects-gallery__tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--tahti-radius-lg, 12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.selects-gallery__tile:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.selects-gallery__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selects-gallery__playhint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white, #fff);
+  background: rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.selects-gallery__tile:hover .selects-gallery__playhint {
+  opacity: 1;
+}
+
+.selects-gallery__meta {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0.5rem 0.6rem 0.55rem;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.85));
+  text-align: left;
+}
+
+.selects-gallery__title {
+  font-size: var(--tahti-text-sm);
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.selects-gallery__artist {
+  font-size: var(--tahti-text-xs, 12px);
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .listen-section {
   margin-bottom: var(--tahti-space-10);
 }
