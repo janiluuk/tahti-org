@@ -77,6 +77,7 @@ import adminStreamsRoutes from './routes/admin/streams.js'
 import adminRadioRoutes from './routes/admin/radio.js'
 import adminTahtiSelectsRoutes from './routes/admin/tahti-selects.js'
 import adminChannelsRoutes from './routes/admin/channels.js'
+import adminArchiveRoutes from './routes/admin/archive.js'
 import adminFanSubsRoutes from './routes/admin/fansubs.js'
 import adminUsersRoutes from './routes/admin/users.js'
 import adminEngagementRoutes from './routes/admin/engagement.js'
@@ -512,6 +513,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminRadioRoutes)
   await fastify.register(adminTahtiSelectsRoutes)
   await fastify.register(adminChannelsRoutes)
+  await fastify.register(adminArchiveRoutes)
   await fastify.register(adminFanSubsRoutes)
   await fastify.register(adminUsersRoutes)
   await fastify.register(adminEngagementRoutes)

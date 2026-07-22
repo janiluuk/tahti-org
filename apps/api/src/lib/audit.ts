@@ -39,6 +39,7 @@ interface AuditParams {
     | 'FEATURE_REQUEST_COMMENT_CREATE'
     | 'FEATURE_REQUEST_STATUS_UPDATE'
     | 'FEATURE_REQUEST_QUARTERLY_REPORT'
+    | 'ARCHIVE_METADATA_ADMIN_EDIT'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>
