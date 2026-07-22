@@ -43,9 +43,6 @@ export default function TierLimitsHelpPage() {
         <li>
           <strong>Unlimited live</strong> — no weekly hour cap
         </li>
-        <li>
-          Listeners hear <strong>lossless FLAC</strong> HLS (<code>stream-flac</code>)
-        </li>
         <li>Broadcast archives can be stored in FLAC for members</li>
         <li>
           Financial support for the cooperative — tax-deductible for registered professionals in
@@ -56,9 +53,9 @@ export default function TierLimitsHelpPage() {
 
       <Heading level={2}>What listeners see</Heading>
       <Text>
-        Stream quality follows <strong>your</strong> membership status, not the listener&apos;s
-        account. A free-tier artist&apos;s channel always serves MP3; a member&apos;s channel serves
-        FLAC when live.
+        Every channel streams live at <strong>MP3 192 kbps</strong> — the highest quality HLS
+        reliably supports in mainstream browsers today. Members&apos; archives can still store and
+        be downloaded in lossless FLAC.
       </Text>
 
       <Heading level={2}>When you hit the weekly cap</Heading>
