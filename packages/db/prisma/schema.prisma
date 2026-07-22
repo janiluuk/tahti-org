@@ -1071,6 +1071,11 @@ model ArchiveItem {
   sourceBitrateKbps  Int?         // detected source bitrate (lossy only); null for lossless
   peaks         Json?             // M27: per-set waveform visualisation — [0..255] amplitude buckets
   visualPreset  VisualPreset      @default(MINIMAL) // M31
+  // Per-track visual override (waveform/visualizer accent color) — same shape as
+  // Release/Collection: paletteJson would be auto-extracted from cover art if we
+  // ever add that for tracks, colorSchemeJson is the artist's explicit override.
+  paletteJson     String?
+  colorSchemeJson String?
   fileSizeBytes BigInt?           // null for *_EMBED sources
   source        ArchiveItemSource   @default(UPLOAD)
   qualityBadge  ArchiveQualityBadge @default(LOSSLESS)

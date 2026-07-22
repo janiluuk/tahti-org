@@ -94,6 +94,7 @@ interface ArchiveItem {
   slideshowUrls?: string[]
   commentCount?: number
   downloadCount?: number
+  accentColor?: string | null
 }
 
 interface Announcement {

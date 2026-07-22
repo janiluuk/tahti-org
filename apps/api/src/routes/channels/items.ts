@@ -7,6 +7,7 @@ import {
   SlugParamSchema,
   archivePlaybackKey,
   openApiResponse,
+  parseColorScheme,
   parseRouteParams,
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
@@ -72,6 +73,7 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             backgroundUrl: true,
             slideshowUrls: true,
             visualPreset: true,
+            colorSchemeJson: true,
             _count: { select: { comments: true } },
           },
         })
@@ -93,15 +95,17 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
 
         return Promise.all(
           items.map(async (item) => {
-            const { _count, ...rest } = item
+            const { _count, colorSchemeJson, ...rest } = item
             const playbackKey = archivePlaybackKey(item)
             const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
+            const accentColor = parseColorScheme(colorSchemeJson)?.accent ?? null
             return {
               ...serializeArchiveItem(rest),
               fileSizeBytes: Number(item.fileSizeBytes),
               audioUrl,
               commentCount: _count.comments,
               downloadCount: downloadCountById.get(item.id) ?? 0,
+              accentColor,
             }
           }),
         )

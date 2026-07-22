@@ -157,6 +157,7 @@ export type ReleaseVisualPatch = z.infer<typeof ReleaseVisualPatchSchema>
 
 export const ArchiveItemVisualPatchSchema = z.object({
   visualPreset: z.enum(VISUAL_PRESETS).optional(),
+  colorScheme: ColorSchemeSchema.nullable().optional(),
 })
 
 export type ArchiveItemVisualPatch = z.infer<typeof ArchiveItemVisualPatchSchema>

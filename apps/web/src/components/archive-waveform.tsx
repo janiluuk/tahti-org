@@ -11,11 +11,15 @@ export function ArchiveWaveform({
   peaks,
   progress = 0,
   onSeek,
+  accentColor,
 }: {
   peaks: number[] | null | undefined
   /** Played fraction, 0..1. Omit for a track that isn't currently loaded. */
   progress?: number
   onSeek?: (ratio: number) => void
+  /** Artist's per-track color override — falls back to the design system's
+   * default cyan when unset. */
+  accentColor?: string | null
 }) {
   if (!peaks || peaks.length === 0) return null
 
@@ -43,6 +47,7 @@ export function ArchiveWaveform({
       aria-valuenow={onSeek ? Math.round(progress * 100) : undefined}
       aria-valuemin={onSeek ? 0 : undefined}
       aria-valuemax={onSeek ? 100 : undefined}
+      style={accentColor ? { ['--ch-wf-accent' as string]: accentColor } : undefined}
     >
       <div className="ch-archive-wf-bars" aria-hidden="true">
         {bars}
