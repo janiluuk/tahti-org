@@ -683,7 +683,10 @@ export function CollectionEditor({
           ) : (
             <ol className="collection-tracklist">
               {displayItems.map((item, idx) => (
-                <li key={item.id} className="collection-tracklist__row collection-tracklist__row--static">
+                <li
+                  key={item.id}
+                  className="collection-tracklist__row collection-tracklist__row--static"
+                >
                   <span
                     className="collection-tracklist__drag"
                     aria-hidden

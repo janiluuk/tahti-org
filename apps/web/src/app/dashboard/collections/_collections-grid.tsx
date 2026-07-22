@@ -55,21 +55,24 @@ export function CollectionsGrid({ collections }: { collections: CollectionSummar
   const [items, setItems] = useState(collections)
   const [reorderError, setReorderError] = useState<string | null>(null)
 
-  const persistOrder = useCallback(async (previous: CollectionSummary[], ordered: CollectionSummary[]) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/me/collections/reorder`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ slugs: ordered.map((c) => c.slug) }),
-      })
-      if (!res.ok) throw new Error('reorder request failed')
-      setReorderError(null)
-    } catch {
-      setItems(previous)
-      setReorderError('Could not save the new order — please try again.')
-    }
-  }, [])
+  const persistOrder = useCallback(
+    async (previous: CollectionSummary[], ordered: CollectionSummary[]) => {
+      try {
+        const res = await fetch(`${API_BASE}/api/me/collections/reorder`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ slugs: ordered.map((c) => c.slug) }),
+        })
+        if (!res.ok) throw new Error('reorder request failed')
+        setReorderError(null)
+      } catch {
+        setItems(previous)
+        setReorderError('Could not save the new order — please try again.')
+      }
+    },
+    [],
+  )
 
   const handleReorder = useCallback(
     (next: CollectionSummary[]) => {

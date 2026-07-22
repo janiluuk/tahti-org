@@ -94,7 +94,9 @@ async function fetchMyReleases(): Promise<LibraryRelease[]> {
     cache: 'no-store',
   })
   if (!res.ok) return []
-  const data = (await res.json()) as { releases: Array<{ id: string; title: string; state: string }> }
+  const data = (await res.json()) as {
+    releases: Array<{ id: string; title: string; state: string }>
+  }
   return data.releases.map((r) => ({ id: r.id, title: r.title, state: r.state }))
 }
 
