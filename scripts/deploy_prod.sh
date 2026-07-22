@@ -40,6 +40,12 @@ if [[ -n "$DOWN" ]]; then
 fi
 
 # ── Sync ──────────────────────────────────────────────────────────────────────
+# infra/stack.env is excluded deliberately: it's gitignored, holds live secrets
+# (POSTGRES_PASSWORD etc.), and only the copy already on the remote host is
+# authoritative — a stale or different local copy overwriting it here caused a
+# full prod outage (Postgres/pgbouncer got recreated with a mismatched password
+# once their config-hash changed, well after the sync that had silently swapped
+# the secrets file).
 echo "==> Syncing code → ${HOST}:${REMOTE_PATH}"
 ssh_remote "mkdir -p '${REMOTE_PATH}'"
 rsync -az --delete \
@@ -49,6 +55,7 @@ rsync -az --delete \
   --exclude .next \
   --exclude dist \
   --exclude 'docs/e2e-screenshots/.seed-output.json' \
+  --exclude infra/stack.env \
   ./ "${HOST}:${REMOTE_PATH}/"
 
 # ── Build ─────────────────────────────────────────────────────────────────────
