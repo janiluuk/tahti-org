@@ -53,35 +53,47 @@ function CollectionCoverAuto({ slug, covers }: { slug: string; covers: string[] 
 
 export function CollectionsGrid({ collections }: { collections: CollectionSummary[] }) {
   const [items, setItems] = useState(collections)
+  const [reorderError, setReorderError] = useState<string | null>(null)
 
-  const persistOrder = useCallback(async (ordered: CollectionSummary[]) => {
-    await fetch(`${API_BASE}/api/me/collections/reorder`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ slugs: ordered.map((c) => c.slug) }),
-    })
+  const persistOrder = useCallback(async (previous: CollectionSummary[], ordered: CollectionSummary[]) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/me/collections/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ slugs: ordered.map((c) => c.slug) }),
+      })
+      if (!res.ok) throw new Error('reorder request failed')
+      setReorderError(null)
+    } catch {
+      setItems(previous)
+      setReorderError('Could not save the new order — please try again.')
+    }
   }, [])
 
   const handleReorder = useCallback(
     (next: CollectionSummary[]) => {
+      const previous = items
       const reindexed = next.map((c, i) => ({ ...c, publicProfileOrder: i }))
       setItems(reindexed)
-      void persistOrder(reindexed)
+      void persistOrder(previous, reindexed)
     },
-    [persistOrder],
+    [items, persistOrder],
   )
 
   return (
-    <SortableList
-      items={items}
-      itemId={(c) => c.slug}
-      onReorder={handleReorder}
-      className="collections-grid"
-      renderItem={(c, _idx, sortable) => (
-        <CollectionCard key={c.slug} collection={c} sortable={sortable} />
-      )}
-    />
+    <>
+      {reorderError && <p className="studio-text-error studio-text-sm">{reorderError}</p>}
+      <SortableList
+        items={items}
+        itemId={(c) => c.slug}
+        onReorder={handleReorder}
+        className="collections-grid"
+        renderItem={(c, _idx, sortable) => (
+          <CollectionCard key={c.slug} collection={c} sortable={sortable} />
+        )}
+      />
+    </>
   )
 }
 
@@ -103,6 +115,15 @@ function CollectionCard({
         sortable.isDragging ? ' collections-card--dragging' : ''
       }`}
     >
+      {/* Drag handle — scoped so grabbing it doesn't trigger navigation */}
+      <span
+        ref={sortable.handleRef}
+        className="collections-card__drag-handle"
+        onClick={(e) => e.preventDefault()}
+      >
+        ⠿
+      </span>
+
       {/* Cover */}
       {c.coverMode === 'CUSTOM' && c.coverUrl ? (
         // eslint-disable-next-line @next/next/no-img-element

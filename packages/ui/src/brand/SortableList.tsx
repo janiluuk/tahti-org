@@ -5,7 +5,7 @@
 
 import { useCallback, type ReactElement, type ReactNode } from 'react'
 import { DragDropProvider } from '@dnd-kit/react'
-import { useSortable } from '@dnd-kit/react/sortable'
+import { useSortable, isSortableOperation } from '@dnd-kit/react/sortable'
 import type { DragEndEvent } from '@dnd-kit/react'
 
 export interface SortableItemHandle {
@@ -48,17 +48,24 @@ export function SortableList<T>({
 }: SortableListProps<T>): ReactElement {
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
-      const { source, target } = event.operation
-      if (!source || !target || source.id === target.id) return
-      const fromIndex = items.findIndex((item) => itemId(item) === String(source.id))
-      const toIndex = items.findIndex((item) => itemId(item) === String(target.id))
-      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return
+      if (event.canceled) return
+      // @dnd-kit's OptimisticSortingPlugin already live-reorders each sortable's `.index`
+      // as the drag hovers over neighbors, so by drag-end the dragged item's `.index` IS
+      // its final position — the delta to apply is `.initialIndex` (captured at drag start)
+      // vs `.index`, not a source/target id comparison (source and target are the same
+      // item once the live reorder has settled).
+      if (!isSortableOperation(event.operation)) return
+      const { source } = event.operation
+      if (!source) return
+      const fromIndex = source.initialIndex
+      const toIndex = source.index
+      if (fromIndex === toIndex) return
       const next = [...items]
       const [moved] = next.splice(fromIndex, 1)
       next.splice(toIndex, 0, moved!)
       onReorder(next)
     },
-    [items, itemId, onReorder],
+    [items, onReorder],
   )
 
   return (

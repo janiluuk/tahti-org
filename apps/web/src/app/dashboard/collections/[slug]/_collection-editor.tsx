@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState, useCallback, useTransition } from 'react'
+import { useState, useCallback, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ButtonIcon, Button, SortableList } from '@tahti/ui'
@@ -59,6 +59,7 @@ interface CollectionItem {
     type: string
     smartLinkSlug: string
     artworkUrl: string | null
+    releaseDate?: string | null
   } | null
 }
 
@@ -146,6 +147,7 @@ export function CollectionEditor({
   // Tracklist state
   const [items, setItems] = useState(initial.items)
   const [reorderSaving, setReorderSaving] = useState(false)
+  const [reorderError, setReorderError] = useState<string | null>(null)
   const [spotifyModalOpen, setSpotifyModalOpen] = useState(false)
   const [mixcloudModalOpen, setMixcloudModalOpen] = useState(false)
   const [libraryPickerOpen, setLibraryPickerOpen] = useState(false)
@@ -183,25 +185,51 @@ export function CollectionEditor({
   }, [initial.slug, isPublic, isFeatured, style, trackSortMode, description, router])
 
   const persistItemOrder = useCallback(
-    async (ordered: CollectionItem[]) => {
+    async (previous: CollectionItem[], ordered: CollectionItem[]) => {
       setReorderSaving(true)
-      await reorderCollectionItems(
+      const { error } = await reorderCollectionItems(
         initial.slug,
         ordered.map((i) => i.id),
-      )
+      ).catch(() => ({ error: 'Could not save the new track order — please try again.' }))
       setReorderSaving(false)
+      if (error) {
+        setItems(previous)
+        setReorderError(error)
+      } else {
+        setReorderError(null)
+      }
     },
     [initial.slug],
   )
 
   const handleReorderItems = useCallback(
     (next: CollectionItem[]) => {
+      const previous = items
       const reindexed = next.map((item, i) => ({ ...item, position: i + 1 }))
       setItems(reindexed)
-      void persistItemOrder(reindexed)
+      void persistItemOrder(previous, reindexed)
     },
-    [persistItemOrder],
+    [items, persistItemOrder],
   )
+
+  // Manual drag-reorder only takes effect on the public page when the collection's
+  // saved sort mode is MANUAL — other modes recompute display order server-side, so
+  // dragging would silently do nothing (see docs/worklogs UX sweep, 2026-07-22).
+  const canManualReorder = initial.trackSortMode === 'MANUAL'
+  const displayItems = useMemo(() => {
+    if (canManualReorder) return items
+    if (initial.trackSortMode === 'NAME') {
+      return [...items].sort((a, b) => itemTitle(a).localeCompare(itemTitle(b)))
+    }
+    if (initial.trackSortMode === 'TIME') {
+      return [...items].sort((a, b) => {
+        const at = a.archiveItem?.createdAt ?? a.release?.releaseDate ?? ''
+        const bt = b.archiveItem?.createdAt ?? b.release?.releaseDate ?? ''
+        return at.localeCompare(bt)
+      })
+    }
+    return items
+  }, [items, canManualReorder, initial.trackSortMode])
 
   const addFromLibrary = useCallback(async () => {
     if (!libraryPick) return
@@ -228,6 +256,44 @@ export function CollectionEditor({
     (a) => a.status === 'READY' && !usedArchiveIds.has(a.id),
   )
   const availableReleases = myReleases.filter((r) => !usedReleaseIds.has(r.id))
+
+  const renderTrackRowBody = useCallback(
+    (item: CollectionItem, idx: number) => {
+      const thumb = itemThumb(item)
+      const title = itemTitle(item)
+      const dur = item.archiveItem?.durationSec
+      const source = item.archiveItem?.source
+      const quality = item.archiveItem?.qualityBadge
+      const badgeLabel =
+        (source ? SOURCE_BADGE_LABEL[source] : undefined) ??
+        (quality ? QUALITY_BADGE_LABEL[quality] : undefined)
+      const badgeClass =
+        (source ? SOURCE_BADGE_CLASS[source] : undefined) ??
+        (quality ? QUALITY_BADGE_CLASS[quality] : undefined)
+      return (
+        <>
+          <span className="collection-tracklist__pos">{idx + 1}</span>
+          {thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={thumb} alt="" className="collection-tracklist__thumb" />
+          ) : (
+            <div className="collection-tracklist__thumb collection-tracklist__thumb--ph" />
+          )}
+          <span className="collection-tracklist__title">{title}</span>
+          {badgeLabel ? (
+            <span className={`collection-tracklist__badge ${badgeClass ?? ''}`}>{badgeLabel}</span>
+          ) : null}
+          {dur != null && <span className="collection-tracklist__dur">{formatDuration(dur)}</span>}
+          {reorderSaving && (
+            <span className="collection-tracklist__saving" aria-hidden>
+              …
+            </span>
+          )}
+        </>
+      )
+    },
+    [reorderSaving],
+  )
 
   const handleDelete = useCallback(async () => {
     setDeleting(true)
@@ -568,6 +634,16 @@ export function CollectionEditor({
             />
           ) : null}
 
+          {!canManualReorder && (
+            <p className="studio-text-muted-sm collection-editor__sort-hint">
+              Track order is set to &ldquo;
+              {SORT_MODE_OPTIONS.find((o) => o.value === initial.trackSortMode)?.label ??
+                initial.trackSortMode}
+              &rdquo; — switch Track order to Manual to drag-reorder.
+            </p>
+          )}
+          {reorderError && <p className="studio-text-error studio-text-sm">{reorderError}</p>}
+
           {items.length === 0 ? (
             <div className="studio-empty-card collection-editor__empty">
               <p className="studio-empty-card__text">No items yet</p>
@@ -582,61 +658,43 @@ export function CollectionEditor({
                 Open archive →
               </Link>
             </div>
-          ) : (
+          ) : canManualReorder ? (
             <SortableList
               as="ol"
               className="collection-tracklist"
               items={items}
               itemId={(item) => item.id}
               onReorder={handleReorderItems}
-              renderItem={(item, idx, sortable) => {
-                const thumb = itemThumb(item)
-                const title = itemTitle(item)
-                const dur = item.archiveItem?.durationSec
-                const source = item.archiveItem?.source
-                const quality = item.archiveItem?.qualityBadge
-                const badgeLabel =
-                  (source ? SOURCE_BADGE_LABEL[source] : undefined) ??
-                  (quality ? QUALITY_BADGE_LABEL[quality] : undefined)
-                const badgeClass =
-                  (source ? SOURCE_BADGE_CLASS[source] : undefined) ??
-                  (quality ? QUALITY_BADGE_CLASS[quality] : undefined)
-                return (
-                  <li
-                    key={item.id}
-                    ref={sortable.ref}
-                    className={`collection-tracklist__row${
-                      sortable.isDragging ? ' collection-tracklist__row--dragging' : ''
-                    }`}
-                  >
-                    <span className="collection-tracklist__drag" aria-hidden>
-                      ⠿
-                    </span>
-                    <span className="collection-tracklist__pos">{idx + 1}</span>
-                    {thumb ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={thumb} alt="" className="collection-tracklist__thumb" />
-                    ) : (
-                      <div className="collection-tracklist__thumb collection-tracklist__thumb--ph" />
-                    )}
-                    <span className="collection-tracklist__title">{title}</span>
-                    {badgeLabel ? (
-                      <span className={`collection-tracklist__badge ${badgeClass ?? ''}`}>
-                        {badgeLabel}
-                      </span>
-                    ) : null}
-                    {dur != null && (
-                      <span className="collection-tracklist__dur">{formatDuration(dur)}</span>
-                    )}
-                    {reorderSaving && (
-                      <span className="collection-tracklist__saving" aria-hidden>
-                        …
-                      </span>
-                    )}
-                  </li>
-                )
-              }}
+              renderItem={(item, idx, sortable) => (
+                <li
+                  key={item.id}
+                  ref={sortable.ref}
+                  className={`collection-tracklist__row${
+                    sortable.isDragging ? ' collection-tracklist__row--dragging' : ''
+                  }`}
+                >
+                  <span ref={sortable.handleRef} className="collection-tracklist__drag">
+                    ⠿
+                  </span>
+                  {renderTrackRowBody(item, idx)}
+                </li>
+              )}
             />
+          ) : (
+            <ol className="collection-tracklist">
+              {displayItems.map((item, idx) => (
+                <li key={item.id} className="collection-tracklist__row collection-tracklist__row--static">
+                  <span
+                    className="collection-tracklist__drag"
+                    aria-hidden
+                    title="Set Track order to Manual to drag-reorder"
+                  >
+                    ⠿
+                  </span>
+                  {renderTrackRowBody(item, idx)}
+                </li>
+              ))}
+            </ol>
           )}
         </section>
       </div>
