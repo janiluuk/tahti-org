@@ -629,6 +629,7 @@ export const PublicProfileViewSchema = z.object({
     feeds: z.object({
       archive: z.string().nullable(),
     }),
+    presskit: z.string(),
   }),
 })
 

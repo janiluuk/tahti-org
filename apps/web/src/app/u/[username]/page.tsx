@@ -100,7 +100,12 @@ interface ProfileResponse {
       channelItemUrl?: string | null
     }>
   }>
-  links: { channel: string | null; subscribe: string; feeds?: { archive: string | null } }
+  links: {
+    channel: string | null
+    subscribe: string
+    feeds?: { archive: string | null }
+    presskit: string
+  }
   collections?: Array<{
     slug: string
     name: string
@@ -170,6 +175,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
 
   const { artist, channel, releases, links, collections = [] } = data
   const isLive = channel?.state === 'LIVE'
+  const isOwner = user?.username === artist.username
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
   const [{ events, posts, embeds }, pressKitImages] = await Promise.all([
     fetchChannelExtras(channel?.slug),
@@ -229,63 +235,49 @@ export default async function ArtistProfilePage({ params }: { params: { username
         <ProfileTabs
           overview={
             <>
-              {links.feeds?.archive && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Podcasts &amp; feeds</div>
-                  <p className="prof-rss-row">
-                    <a href={links.feeds.archive} rel="alternate">
-                      Archive RSS ↗
-                    </a>
-                  </p>
-                  <p className="prof-list-meta prof-list-meta--tight">
-                    Subscribe in Apple Podcasts, Overcast, or any RSS reader
-                  </p>
-                </section>
-              )}
-
               {collections.length > 0 && (
                 <section className="prof-section">
                   <div className="prof-sec-label">Collections</div>
                   <ul className="prof-list prof-collection-list">
                     {collections.map((c) => (
-                      <li key={c.slug} className="prof-collection-row">
-                        <div className="prof-collection-cover">
-                          {c.coverUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={c.coverUrl} alt="" width={56} height={56} />
-                          ) : (
-                            <span className="prof-collection-cover-ph" aria-hidden />
-                          )}
-                        </div>
-                        <div>
-                          <Link href={c.url}>{c.name}</Link>
-                          <div className="prof-list-meta">
-                            {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
-                            {c.isFeatured && ' · Featured'}
+                      <li key={c.slug}>
+                        <Link href={c.url} className="prof-collection-row">
+                          <div className="prof-collection-cover">
+                            {c.coverUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={c.coverUrl} alt="" width={76} height={76} />
+                            ) : (
+                              <span className="prof-collection-cover-ph" aria-hidden />
+                            )}
                           </div>
-                          {c.rssUrl && (
-                            <p className="prof-rss-row">
-                              <a href={c.rssUrl} rel="alternate">
-                                RSS ↗
-                              </a>
-                            </p>
-                          )}
-                          {c.description && (
-                            <p className="prof-list-meta prof-list-meta--tight">{c.description}</p>
-                          )}
-                        </div>
+                          <div>
+                            <div className="prof-collection-title">{c.name}</div>
+                            <div className="prof-list-meta prof-list-meta--strong">
+                              {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
+                              {c.isFeatured && ' · Featured'}
+                            </div>
+                            {c.description && (
+                              <p className="prof-list-meta prof-list-meta--tight">
+                                {c.description}
+                              </p>
+                            )}
+                          </div>
+                        </Link>
                       </li>
                     ))}
                   </ul>
                 </section>
               )}
 
-              {pressKitImages.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Gallery</div>
-                  <PressKitGallery images={pressKitImages} />
-                </section>
-              )}
+              <section className="prof-section">
+                <div className="prof-sec-label">Press kit</div>
+                <p className="prof-rss-row">
+                  <a href={links.presskit} rel="nofollow">
+                    Download press kit ↓
+                  </a>
+                </p>
+                {pressKitImages.length > 0 && <PressKitGallery images={pressKitImages} />}
+              </section>
 
               {events.length > 0 && (
                 <section className="prof-section">
@@ -360,29 +352,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 )
               })()}
 
-              <section className="prof-section">
-                <div className="prof-sec-label-row">
-                  <div className="prof-sec-label">Releases</div>
-                  {releases.length > 0 && (
-                    <div className="prof-sec-count">{releases.length} total</div>
-                  )}
-                </div>
-                {releases.length === 0 ? (
-                  <div className="public-empty-card">
-                    <p className="public-empty-card__text">No published releases yet.</p>
-                    <p className="public-empty-card__hint">
-                      {isLive && links.channel ? (
-                        <Link href={links.channel}>Tune in live</Link>
-                      ) : (
-                        'New releases appear here when the artist publishes.'
-                      )}
-                    </p>
-                  </div>
-                ) : (
-                  <ReleasesGrid releases={releases} />
-                )}
-              </section>
-
               {artist.socialLinks &&
                 (() => {
                   const STREAMING_LINK_LABELS: Record<string, string> = {
@@ -444,17 +413,75 @@ export default async function ArtistProfilePage({ params }: { params: { username
                   )
                 })()}
 
-              {channel?.slug ? (
+              {(links.feeds?.archive || channel?.slug) && (
                 <section className="prof-section">
-                  <ReportButton targetType="CHANNEL" targetId={channel.slug} />
+                  {links.feeds?.archive && (
+                    <>
+                      <div className="prof-sec-label">Podcasts &amp; feeds</div>
+                      <p className="prof-rss-row">
+                        <a href={links.feeds.archive} rel="alternate">
+                          Archive RSS ↗
+                        </a>
+                      </p>
+                      <p className="prof-list-meta prof-list-meta--tight">
+                        Subscribe in Apple Podcasts, Overcast, or any RSS reader
+                      </p>
+                    </>
+                  )}
+                  {channel?.slug && (
+                    <div className={links.feeds?.archive ? 'prof-report-row' : undefined}>
+                      <ReportButton targetType="CHANNEL" targetId={channel.slug} />
+                    </div>
+                  )}
                 </section>
-              ) : null}
+              )}
             </>
           }
           feed={
             <section className="prof-section">
               <div className="prof-sec-label">Feed</div>
               <ProfileFeed posts={posts} releases={releases} />
+            </section>
+          }
+          tracks={
+            <section className="prof-section">
+              <div className="prof-sec-label-row">
+                <div className="prof-sec-label">Releases</div>
+                <div className="prof-sec-label-row__actions">
+                  {releases.length > 0 && (
+                    <div className="prof-sec-count">{releases.length} total</div>
+                  )}
+                  {isOwner && (
+                    <Link
+                      href="/dashboard/releases"
+                      className="prof-sec-add-btn"
+                      aria-label="Create a new release"
+                      title="Create a new release"
+                    >
+                      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"
+                        />
+                      </svg>
+                    </Link>
+                  )}
+                </div>
+              </div>
+              {releases.length === 0 ? (
+                <div className="public-empty-card">
+                  <p className="public-empty-card__text">No published releases yet.</p>
+                  <p className="public-empty-card__hint">
+                    {isLive && links.channel ? (
+                      <Link href={links.channel}>Tune in live</Link>
+                    ) : (
+                      'New releases appear here when the artist publishes.'
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <ReleasesGrid releases={releases} />
+              )}
             </section>
           }
         />

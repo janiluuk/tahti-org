@@ -110,6 +110,7 @@ describe('api response schemas', () => {
         channel: '/c/dj1',
         subscribe: '/u/dj1/subscribe',
         feeds: { archive: 'https://api.example/u/dj1/rss.xml' },
+        presskit: 'https://api.example/u/dj1/press-kit.zip',
       },
     })
     expect(parsed.success).toBe(true)
