@@ -76,6 +76,13 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'M20: reset weekly broadcast counters (Monday 00:00 UTC)',
   },
   {
+    name: 'tahti-selects-weekly-draw',
+    pattern: '0 1 * * 1',
+    jobId: 'tahti-selects-weekly-draw-cron',
+    description:
+      'Re-draw the Tahti Selects rotation from opted-in tracks (max 3/artist, 50 total; Monday 01:00 UTC)',
+  },
+  {
     name: 'fan-sub-payout',
     pattern: '0 4 * * *',
     jobId: 'fan-sub-payout-cron',

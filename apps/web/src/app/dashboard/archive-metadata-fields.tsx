@@ -45,6 +45,7 @@ export type ArchiveMetadataFormState = {
   taggedNote: string
   isPublic: boolean
   commentsEnabled: boolean
+  selectsOptIn: boolean
   tracklist: TracklistEntry[] | null
 }
 
@@ -77,6 +78,7 @@ export function defaultMetadataFormState(): ArchiveMetadataFormState {
     taggedNote: '',
     isPublic: ARCHIVE_METADATA_DEFAULTS.isPublic,
     commentsEnabled: true,
+    selectsOptIn: ARCHIVE_METADATA_DEFAULTS.selectsOptIn,
     tracklist: null,
   }
 }
@@ -116,6 +118,7 @@ export function metadataFormToPayload(state: ArchiveMetadataFormState): Record<s
     taggedNote: state.taggedNote.trim() || undefined,
     isPublic: state.isPublic,
     commentsEnabled: state.commentsEnabled,
+    selectsOptIn: state.selectsOptIn,
     tracklist: state.tracklist,
   }
 }
@@ -152,6 +155,7 @@ export function metadataFromApi(item: Record<string, unknown>): ArchiveMetadataF
     taggedNote: (item.taggedNote as string) ?? '',
     isPublic: (item.isPublic as boolean) ?? true,
     commentsEnabled: (item.commentsEnabled as boolean) ?? true,
+    selectsOptIn: (item.selectsOptIn as boolean) ?? false,
     tracklist: Array.isArray(item.tracklist) ? (item.tracklist as TracklistEntry[]) : null,
   }
 }
@@ -466,6 +470,18 @@ export function ArchiveMetadataFields({
             onChange={(e) => set({ followToDownload: e.target.checked })}
           />
           Follow to download
+        </label>
+        <label
+          className="studio-label-row"
+          title="Enter the weekly Tahti Selects rotation draw — up to 3 of your opted-in tracks can be picked per week"
+        >
+          <input
+            type="checkbox"
+            checked={state.selectsOptIn}
+            disabled={disabled}
+            onChange={(e) => set({ selectsOptIn: e.target.checked })}
+          />
+          Eligible for Tahti Selects
         </label>
         {itemId && (
           <label className="studio-label-row">

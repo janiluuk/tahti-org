@@ -21,7 +21,9 @@ import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { prisma } from '@tahti/db'
 import { TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import { hashPassword } from '../src/lib/password.js'
-import { s3 } from '../src/lib/minio.js'
+import { s3, putObjectText } from '../src/lib/minio.js'
+import { publicMediaUrl } from '../src/lib/public-media-url.js'
+import { generateCoverArtSvg } from '../src/lib/generate-cover-art.js'
 import { config } from '../src/config.js'
 
 const execFileAsync = promisify(execFile)
@@ -228,9 +230,18 @@ async function main() {
             ContentType: 'audio/mpeg',
           }),
         )
+
+        const coverSvg = generateCoverArtSvg(track.title, track.artist)
+        const coverKey = `archive/${TAHTI_SELECTS_SLUG}/${archiveItem.id}/banner-cover.svg`
+        await putObjectText(coverKey, coverSvg, 'image/svg+xml')
+
         await prisma.archiveItem.update({
           where: { id: archiveItem.id },
-          data: { mp3Key, fileSizeBytes: BigInt(mp3Buf.length) },
+          data: {
+            mp3Key,
+            fileSizeBytes: BigInt(mp3Buf.length),
+            bannerUrl: publicMediaUrl(coverKey),
+          },
         })
 
         archiveItemId = archiveItem.id

@@ -19,9 +19,12 @@ export function PublicNavBg() {
 
   if (!pathname || !PUBLIC_NAV_PATHS.has(pathname)) return null
 
+  // The shared mini-player can be playing from any of these pages now (Tahti
+  // Radio card and Tahti Selects gallery both live on /listen) — react to
+  // whatever's actually playing rather than only ever on /radio.
   return (
     <div data-tahti-ui="brand" style={{ display: 'contents' }}>
-      <BgCanvas variant="subtle" analyser={pathname === '/radio' ? analyser : null} />
+      <BgCanvas variant="subtle" analyser={analyser} />
     </div>
   )
 }

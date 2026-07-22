@@ -1081,6 +1081,7 @@ model ArchiveItem {
   isFallback           Boolean           @default(false)
   fallbackOrder        Int?              // M27: position in ordered offline rotation
   lastFallbackPlayedAt DateTime?         // M27: fair shuffle — least recent first
+  selectsOptIn         Boolean           @default(false) // artist opted this track into the Tahti Selects weekly draw
   commentsEnabled      Boolean           @default(true) // initialized from User.defaultTrackCommentsEnabled
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt

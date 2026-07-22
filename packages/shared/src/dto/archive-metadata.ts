@@ -102,6 +102,7 @@ export const ArchiveMetadataFieldsSchema = z.object({
   isPublic: z.boolean().optional(),
   isFallback: z.boolean().optional(),
   commentsEnabled: z.boolean().optional(),
+  selectsOptIn: z.boolean().optional(),
 })
 
 export type ArchiveMetadataFields = z.infer<typeof ArchiveMetadataFieldsSchema>
@@ -127,6 +128,7 @@ export const ARCHIVE_METADATA_DEFAULTS = {
   followToDownload: false,
   isPublic: true,
   isFallback: false,
+  selectsOptIn: false,
   subGenres: [] as string[],
   slideshowUrls: [] as string[],
 }
