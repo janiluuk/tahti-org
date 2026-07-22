@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import { Prisma } from '@tahti/db'
 import {
   CreateRadioSlotBookingSchema,
   IdParamSchema,
@@ -17,6 +18,9 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 
 const MS_PER_HOUR = 60 * 60 * 1000
+
+/** Internal signal to abort the booking transaction — never leaves this file. */
+class SlotConflictError extends Error {}
 
 function isHourAligned(d: Date): boolean {
   return d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0
@@ -125,16 +129,36 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const overlap = await fastify.prisma.radioSlotBooking.findFirst({
-        where: { startAt: { lt: endAt }, endAt: { gt: startAt } },
-      })
-      if (overlap) {
-        return reply.status(409).send({ error: 'That slot is already booked' })
+      // Serializable so two near-simultaneous requests for overlapping windows can't
+      // both pass the overlap check and both insert — Postgres aborts one with a
+      // write-conflict (caught below) instead of silently double-booking the slot.
+      let row
+      try {
+        row = await fastify.prisma.$transaction(
+          async (tx) => {
+            const overlap = await tx.radioSlotBooking.findFirst({
+              where: { startAt: { lt: endAt }, endAt: { gt: startAt } },
+            })
+            if (overlap) {
+              throw new SlotConflictError()
+            }
+            return tx.radioSlotBooking.create({
+              data: { channelId: channel.id, startAt, endAt, note: parsed.data.note ?? null },
+            })
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        )
+      } catch (err) {
+        if (err instanceof SlotConflictError) {
+          return reply.status(409).send({ error: 'That slot is already booked' })
+        }
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2034') {
+          return reply
+            .status(409)
+            .send({ error: 'That slot was just booked by someone else — try another time' })
+        }
+        throw err
       }
-
-      const row = await fastify.prisma.radioSlotBooking.create({
-        data: { channelId: channel.id, startAt, endAt, note: parsed.data.note ?? null },
-      })
 
       return reply.status(201).send({
         id: row.id,
