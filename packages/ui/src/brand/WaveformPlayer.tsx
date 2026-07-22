@@ -100,13 +100,21 @@ export function WaveformPlayer({
   )
 
   return (
-    <div className={cn('waveform-player', embedded && 'waveform-player--embedded', className)}>
+    <div
+      className={cn('waveform-player', embedded && 'waveform-player--embedded', className)}
+      style={
+        artworkUrl
+          ? ({ '--waveform-player-art': `url(${artworkUrl})` } as React.CSSProperties)
+          : undefined
+      }
+    >
+      {artworkUrl && <div className="waveform-player__art-backdrop" aria-hidden />}
       {nowPlayingTitle && (
         <div className="waveform-player__meta">
           {artworkUrl ? (
             <img src={artworkUrl} alt="" className="waveform-player__art" />
           ) : (
-            <AvatarTile size="xs" name={nowPlayingTitle} className="waveform-player__art" />
+            <AvatarTile size="lg" name={nowPlayingTitle} className="waveform-player__art" />
           )}
           <div className="waveform-player__meta-text">
             <span className="waveform-player__meta-title">{nowPlayingTitle}</span>
