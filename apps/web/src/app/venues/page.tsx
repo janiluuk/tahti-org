@@ -62,7 +62,7 @@ export default async function VenuesDirectoryPage() {
           <ul className="listen-grid">
             {venues.map((venue) => (
               <li key={venue.id}>
-                <a href={`/v/${venue.slug}`} className="listen-card">
+                <Link href={`/v/${venue.slug}`} className="listen-card">
                   <div className="listen-card__avatar">
                     <span className="listen-card__avatar-fallback" aria-hidden>
                       {venue.name.charAt(0).toUpperCase()}
@@ -82,7 +82,7 @@ export default async function VenuesDirectoryPage() {
                       </p>
                     ) : null}
                   </div>
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

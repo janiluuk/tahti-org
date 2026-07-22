@@ -361,6 +361,7 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
       cosA: number
       sinA: number
       mat: THREE.LineBasicMaterial
+      baseColor: [number, number, number]
     }[] = []
     for (let i = 0; i < SPEC_N; i++) {
       const angle = (i / SPEC_N) * Math.PI * 2
@@ -400,7 +401,7 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
         opacity: op(0.7),
       })
       specGroup.add(new THREE.Line(g, m))
-      specBars.push({ geo: g, cosA, sinA, mat: m })
+      specBars.push({ geo: g, cosA, sinA, mat: m, baseColor: [r, gc, bc] })
     }
 
     // ── Bass-pulse spheres ───────────────────────────────────────────────────
@@ -589,16 +590,24 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
 
       // Radial spectrum analyzer
       specGroup.rotation.z += (0.004 + aBass * 0.012) * motion
-      baseRingMat.opacity = op(0.15) + aEnergy * op(0.4)
+      baseRingMat.opacity = op(0.22) + aEnergy * op(0.55)
       baseRing.scale.setScalar(1 + aBass * 0.08 * react)
-      specBars.forEach(({ geo, cosA, sinA, mat }, i) => {
+      specBars.forEach(({ geo, cosA, sinA, mat, baseColor }, i) => {
         const binVal = bin(Math.floor((i / SPEC_N) * 100))
-        const barLen = 8 + binVal * 90 * (1 + aBass * 0.6 * react) * react
+        // More vivid: bars reach further, sit brighter at rest, and the loudest
+        // bins bloom toward white instead of just fading up their base hue.
+        const barLen = 10 + binVal * 130 * (1 + aBass * 0.9 * react) * react
         const pa = geo.attributes.position.array as Float32Array
         pa[3] = cosA * (SPEC_R + barLen)
         pa[4] = sinA * (SPEC_R + barLen)
         geo.attributes.position.needsUpdate = true
-        mat.opacity = op(0.3) + binVal * op(0.7)
+        mat.opacity = op(0.45) + binVal * op(0.85)
+        const bloom = Math.min(1, binVal * 1.4)
+        mat.color.setRGB(
+          baseColor[0] + (1 - baseColor[0]) * bloom * 0.6,
+          baseColor[1] + (1 - baseColor[1]) * bloom * 0.6,
+          baseColor[2] + (1 - baseColor[2]) * bloom * 0.6,
+        )
       })
 
       // Bass-pulse spheres

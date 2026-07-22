@@ -30,6 +30,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
         select: {
+          id: true,
           slug: true,
           state: true,
           nextBroadcastAt: true,
@@ -94,6 +95,31 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
             }
           : null
 
+      // Curated-rotation channels (Tahti Selects) play a fixed, ordered playlist —
+      // find the currently-playing entry by title and report the one after it.
+      let nowPlayingNext: { title: string; artistName: string } | null = null
+      if (nowPlaying) {
+        const curated = await fastify.prisma.curatedRotationItem.findMany({
+          where: { channelId: channel.id },
+          orderBy: { position: 'asc' },
+          select: {
+            archiveItem: {
+              select: {
+                title: true,
+                channel: { select: { user: { select: { displayName: true } } } },
+              },
+            },
+          },
+        })
+        if (curated.length > 1) {
+          const idx = curated.findIndex((c) => c.archiveItem.title === nowPlaying.title)
+          if (idx !== -1) {
+            const next = curated[(idx + 1) % curated.length]!.archiveItem
+            nowPlayingNext = { title: next.title, artistName: next.channel.user.displayName }
+          }
+        }
+      }
+
       return reply.send({
         ...channel,
         user: {
@@ -104,6 +130,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
         hlsUrl,
         colorScheme: resolveColorScheme(channel.colorSchemeJson, null),
         nowPlaying,
+        nowPlayingNext,
       })
     },
   )

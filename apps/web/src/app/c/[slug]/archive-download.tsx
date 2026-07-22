@@ -8,6 +8,27 @@ import Link from 'next/link'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
+function IconDownload() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M8 1.5v8.5m0 0L4.5 6.5M8 10l3.5-3.5"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M2 11v2a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 14 13v-2"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 type GateStatus = {
   repostRequired: boolean
   followRequired: boolean
@@ -33,12 +54,14 @@ export function ArchiveDownloadButton({
   itemId,
   repostToDownload,
   followToDownload,
+  downloadCount = 0,
 }: {
   channelSlug: string
   artistUsername: string
   itemId: string
   repostToDownload: boolean
   followToDownload: boolean
+  downloadCount?: number
 }) {
   const [gates, setGates] = useState<GateStatus | null>(null)
   const [loading, setLoading] = useState(false)
@@ -145,11 +168,14 @@ export function ArchiveDownloadButton({
     return (
       <button
         type="button"
-        className="ch-download-btn ch-download"
+        className="ch-count-pill ch-download"
         onClick={() => void download()}
         disabled={loading}
+        aria-label={loading ? 'Preparing download' : `Download, ${downloadCount} downloads`}
+        title="Download"
       >
-        {loading ? 'Preparing…' : 'Download'}
+        {loading ? '…' : <IconDownload />}
+        {!loading && downloadCount}
       </button>
     )
   }
@@ -182,11 +208,14 @@ export function ArchiveDownloadButton({
       <div className="ch-download-actions">
         <button
           type="button"
-          className="ch-download-btn"
+          className="ch-count-pill"
           onClick={() => void download()}
           disabled={loading || !canDownload}
+          aria-label={loading ? 'Preparing download' : `Download, ${downloadCount} downloads`}
+          title="Download"
         >
-          {loading ? 'Preparing…' : 'Download'}
+          {loading ? '…' : <IconDownload />}
+          {!loading && downloadCount}
         </button>
       </div>
       {error && <p className="ch-download-error">{error}</p>}

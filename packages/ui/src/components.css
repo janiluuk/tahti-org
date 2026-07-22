@@ -1404,6 +1404,7 @@
    ═══════════════════════════════════════════════════════════════════════ */
 
 .waveform-player {
+  position: relative;
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -1411,6 +1412,33 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Blurred, dimmed wash of the current artwork behind the whole card — the art
+ * itself stays crisp in .waveform-player__art up front. */
+.waveform-player__art-backdrop {
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  background-image: var(--waveform-player-art);
+  background-size: cover;
+  background-position: center;
+  filter: blur(38px) saturate(1.3);
+  opacity: 0.35;
+  transform: scale(1.15);
+}
+
+.waveform-player__art-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--card) 55%, transparent) 0%,
+    color-mix(in srgb, var(--card) 88%, transparent) 100%
+  );
 }
 
 .waveform-player__meta {
@@ -1421,11 +1449,12 @@
 
 .waveform-player__art {
   flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
   object-fit: cover;
   background: var(--card2);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--black) 35%, transparent);
 }
 
 .waveform-player__meta-text {
@@ -1640,6 +1669,17 @@
   color: var(--muted);
   flex-shrink: 0;
   min-width: 2.5rem;
+}
+
+/* The isLive "Next: <title> — <artist>" label can run much longer than a
+ * timestamp — let it size to the row and truncate instead of overflowing. */
+.waveform-player__time--next-up {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
 }
 
 .waveform-player__progress {

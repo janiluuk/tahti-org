@@ -2,6 +2,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
 import { LivePlayerSection } from './live-player-section'
@@ -68,6 +70,8 @@ interface ChannelResponse {
     tier: string
     joinDate?: string | null
   }
+  nowPlaying: { title: string; artistName: string; artworkUrl: string | null } | null
+  nowPlayingNext: { title: string; artistName: string } | null
 }
 
 interface ArchiveItem {
@@ -88,6 +92,8 @@ interface ArchiveItem {
   bannerUrl?: string | null
   backgroundUrl?: string | null
   slideshowUrls?: string[]
+  commentCount?: number
+  downloadCount?: number
 }
 
 interface Announcement {
@@ -151,6 +157,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     : { comments: [], commentsEnabled: true }
 
   const hlsUrl = channel.hlsUrl
+  // Tahti Radio and Tahti Selects are always-on curated rotations, not a human
+  // actually broadcasting — channel.state is still 'LIVE' while they run, but
+  // "LIVE NOW" is misleading here; show the currently-rotating track instead.
+  const isRotationChannel = slug === TAHTI_RADIO_SLUG || slug === TAHTI_SELECTS_SLUG
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
   const socialLinks = (channel.user.socialLinks as Record<string, string> | null) ?? {}
@@ -249,7 +259,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       <span className="prof-pronouns">{channel.user.pronouns}</span>
                     )}
                   </Heading>
-                  <Text size="sm" tone="muted">
+                  <Text size="sm" tone="muted" className="ch-artist-meta-row">
                     @{channel.user.username}
                     <span className="ch-artist-flag">
                       {channel.user.countryCode
@@ -321,12 +331,24 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 </div>
               )}
               <div className="ch-artist-cta-row">
-                <a href={`/u/${channel.user.username}/subscribe`} className="ch-artist-sub-btn">
+                <Link href={`/u/${channel.user.username}/subscribe`} className="ch-artist-sub-btn">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+                    <path d="M8 13.8 2.6 8.7C1 7.2 1 4.7 2.6 3.3c1.5-1.3 3.7-1 5 .5L8 4.3l.4-.5c1.3-1.5 3.5-1.8 5-.5 1.6 1.4 1.6 3.9 0 5.4L8 13.8z" />
+                  </svg>
                   Support directly
-                </a>
-                <a href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
-                  View profile →
-                </a>
+                </Link>
+                <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                    <circle cx="8" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+                    <path
+                      d="M3 13.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  View profile
+                </Link>
               </div>
             </header>
 
@@ -376,7 +398,27 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             )}
 
             {hlsUrl && (
-              <LivePlayerSection url={hlsUrl} slug={slug} title={channel.user.displayName} />
+              <LivePlayerSection
+                url={hlsUrl}
+                slug={slug}
+                title={
+                  isRotationChannel
+                    ? (channel.nowPlaying?.title ?? channel.user.displayName)
+                    : channel.user.displayName
+                }
+                subtitle={
+                  isRotationChannel && channel.nowPlaying
+                    ? channel.nowPlaying.artistName
+                    : undefined
+                }
+                artworkUrl={isRotationChannel ? channel.nowPlaying?.artworkUrl : undefined}
+                isReplay={isRotationChannel}
+                nextUpLabel={
+                  isRotationChannel && channel.nowPlayingNext
+                    ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
+                    : undefined
+                }
+              />
             )}
 
             {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
@@ -585,7 +627,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                             isLoggedIn={!!user}
                           />
                         ) : (
-                          <TrackCommentsToggle archiveItemId={item.id} isLoggedIn={!!user} />
+                          <TrackCommentsToggle
+                            archiveItemId={item.id}
+                            isLoggedIn={!!user}
+                            commentCount={item.commentCount ?? 0}
+                          />
                         )}
                       </li>
                     )

@@ -435,6 +435,15 @@ export const PublicChannelViewSchema = z.object({
       artworkUrl: z.string().nullable(),
     })
     .nullable(),
+  // Curated-rotation channels only (Tahti Selects): the next track in the
+  // fixed playlist order, so the player can show "Next: ..." instead of a
+  // bare "LIVE"/"REPLAY" label next to the play button.
+  nowPlayingNext: z
+    .object({
+      title: z.string(),
+      artistName: z.string(),
+    })
+    .nullable(),
 })
 
 export const GrantAnomalySchema = z.object({

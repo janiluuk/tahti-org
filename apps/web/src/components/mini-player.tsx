@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 
-function formatTime(sec: number): string {
+export function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return '0:00'
   const m = Math.floor(sec / 60)
   const s = Math.floor(sec % 60)
@@ -132,6 +132,203 @@ function VolumeIcon({ muted, volume }: { muted: boolean; volume: number }) {
   )
 }
 
+/** Full-viewport "now playing" sheet — big artwork, big transport, an easily
+ * tappable seek bar. Opened from the mini-player's expand affordance; mainly
+ * for mobile, where the collapsed bar's controls are too small to use well. */
+function FullPlayerSheet({
+  track,
+  playing,
+  buffering,
+  currentTime,
+  duration,
+  volume,
+  muted,
+  togglePlay,
+  playNext,
+  playPrevious,
+  canSkip,
+  seek,
+  setVolume,
+  toggleMute,
+  onClose,
+}: {
+  track: PlayerTrack
+  playing: boolean
+  buffering: boolean
+  currentTime: number
+  duration: number
+  volume: number
+  muted: boolean
+  togglePlay: () => void | Promise<void>
+  playNext: () => void
+  playPrevious: () => void
+  canSkip: boolean
+  seek: (ratio: number) => void
+  setVolume: (v: number) => void
+  toggleMute: () => void
+  onClose: () => void
+}) {
+  const progress = duration > 0 ? currentTime / duration : 0
+  const seekable = track.kind === 'archive' && duration > 0
+
+  return (
+    <div className="full-player" role="dialog" aria-modal="true" aria-label="Now playing">
+      {track.artworkUrl && (
+        <div
+          className="full-player__backdrop"
+          style={{ backgroundImage: `url(${track.artworkUrl})` }}
+          aria-hidden
+        />
+      )}
+      <div className="full-player__topbar">
+        <button
+          type="button"
+          className="full-player__collapse"
+          onClick={onClose}
+          aria-label="Collapse player"
+        >
+          <svg width="14" height="14" viewBox="0 0 10 10" fill="none" aria-hidden>
+            <path
+              d="M2 3.5L5 6.5L8 3.5"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Now playing
+        </button>
+      </div>
+
+      <div className="full-player__art-wrap">
+        {track.artworkUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={track.artworkUrl} alt="" className="full-player__art" />
+        ) : (
+          <AvatarTile size="full" name={track.title} className="full-player__art" />
+        )}
+      </div>
+
+      <div className="full-player__meta">
+        {track.href ? (
+          <Link href={track.href} className="full-player__title" onClick={onClose}>
+            {track.title}
+          </Link>
+        ) : (
+          <span className="full-player__title">{track.title}</span>
+        )}
+        {track.subtitle && <span className="full-player__subtitle">{track.subtitle}</span>}
+        {track.kind === 'live' && (
+          <span className="mini-player__badge full-player__badge">
+            {track.isReplay ? 'REPLAY' : 'LIVE'}
+          </span>
+        )}
+      </div>
+
+      <div className="full-player__seek">
+        {seekable ? (
+          <>
+            <button
+              type="button"
+              className="full-player__progress"
+              aria-label="Seek"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect()
+                seek((e.clientX - rect.left) / rect.width)
+              }}
+            >
+              <span
+                className="full-player__progress-fill"
+                style={{ width: `${progress * 100}%` }}
+              />
+              <span
+                className="full-player__progress-thumb"
+                style={{ left: `${progress * 100}%` }}
+              />
+            </button>
+            <div className="full-player__times">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </>
+        ) : (
+          <div className="full-player__times full-player__times--live">
+            <span>{track.isReplay ? 'REPLAY' : 'LIVE'}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="full-player__transport">
+        <button
+          type="button"
+          className="full-player__skip"
+          onClick={playPrevious}
+          disabled={!canSkip}
+          aria-label="Previous track"
+        >
+          <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+            <rect x="2.5" y="2" width="2" height="12" rx="0.5" />
+            <path d="M13 2.5v11l-8-5.5 8-5.5z" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className={`full-player__play${buffering ? ' full-player__play--buffering' : ''}`}
+          onClick={() => void togglePlay()}
+          aria-label={playing ? 'Pause' : 'Play'}
+          disabled={buffering}
+        >
+          {buffering ? (
+            <span className="mini-player__spinner" aria-hidden />
+          ) : playing ? (
+            <svg width="30" height="30" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
+              <rect x="3" y="2" width="4" height="14" rx="1" />
+              <rect x="11" y="2" width="4" height="14" rx="1" />
+            </svg>
+          ) : (
+            <svg width="30" height="30" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
+              <path d="M5 3l11 6-11 6V3z" />
+            </svg>
+          )}
+        </button>
+        <button
+          type="button"
+          className="full-player__skip"
+          onClick={playNext}
+          disabled={!canSkip}
+          aria-label="Next track"
+        >
+          <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
+            <path d="M3 2.5v11l8-5.5-8-5.5z" />
+            <rect x="11.5" y="2" width="2" height="12" rx="0.5" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="full-player__volume">
+        <button
+          type="button"
+          className="mini-player__mute"
+          onClick={toggleMute}
+          aria-pressed={muted}
+          aria-label={muted ? 'Unmute' : 'Mute'}
+        >
+          <VolumeIcon muted={muted} volume={volume} />
+        </button>
+        <input
+          type="range"
+          className="full-player__volume-slider"
+          min={0}
+          max={100}
+          value={Math.round((muted ? 0 : volume) * 100)}
+          onChange={(e) => setVolume(Number(e.target.value) / 100)}
+          aria-label="Volume"
+        />
+      </div>
+    </div>
+  )
+}
+
 export function MiniPlayer() {
   const {
     track,
@@ -162,6 +359,7 @@ export function MiniPlayer() {
   const [queueTab, setQueueTab] = useState<'queue' | 'history'>('queue')
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [expanded, setExpanded] = useState(false)
 
   if (!track) return null
 
@@ -358,22 +556,23 @@ export function MiniPlayer() {
             </svg>
           </button>
         </div>
-        {track.artworkUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={track.artworkUrl} alt="" className="mini-player__art" />
-        ) : (
-          <AvatarTile size="xs" name={track.title} className="mini-player__art" />
-        )}
-        <div className="mini-player__info">
-          {track.href ? (
-            <Link href={track.href} className="mini-player__title">
-              {track.title}
-            </Link>
+        <button
+          type="button"
+          className="mini-player__now-playing"
+          onClick={() => setExpanded(true)}
+          aria-label="Open full player"
+        >
+          {track.artworkUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={track.artworkUrl} alt="" className="mini-player__art" />
           ) : (
-            <span className="mini-player__title">{track.title}</span>
+            <AvatarTile size="xs" name={track.title} className="mini-player__art" />
           )}
-          {track.subtitle && <span className="mini-player__subtitle">{track.subtitle}</span>}
-        </div>
+          <div className="mini-player__info">
+            <span className="mini-player__title">{track.title}</span>
+            {track.subtitle && <span className="mini-player__subtitle">{track.subtitle}</span>}
+          </div>
+        </button>
         {track.kind === 'live' ? (
           <span className="mini-player__badge">{track.isReplay ? 'REPLAY' : 'LIVE'}</span>
         ) : (
@@ -409,7 +608,53 @@ export function MiniPlayer() {
           aria-expanded={queueOpen}
           aria-label="Toggle play queue"
         >
-          {upNext.length > 0 ? `Queue · ${upNext.length}` : 'Queue'}
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path
+              d="M2 4.5h8M2 8h8M2 11.5h5"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </svg>
+          {upNext.length > 0 && <span>{upNext.length}</span>}
+          {queueOpen ? (
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+              <path
+                d="M2 3.5L5 6.5L8 3.5"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : (
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+              <path
+                d="M2 6.5L5 3.5L8 6.5"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
+        <button
+          type="button"
+          className="mini-player__expand"
+          onClick={() => setExpanded(true)}
+          aria-label="Open full player"
+          title="Open full player"
+        >
+          <svg width="12" height="12" viewBox="0 0 10 10" fill="none" aria-hidden>
+            <path
+              d="M2 6.5L5 3.5L8 6.5"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </button>
         <button
           type="button"
@@ -417,9 +662,35 @@ export function MiniPlayer() {
           onClick={close}
           aria-label="Close player"
         >
-          ✕
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path
+              d="M3.5 3.5l9 9m0-9l-9 9"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
       </div>
+      {expanded && (
+        <FullPlayerSheet
+          track={track}
+          playing={playing}
+          buffering={buffering}
+          currentTime={currentTime}
+          duration={duration}
+          volume={volume}
+          muted={muted}
+          togglePlay={togglePlay}
+          playNext={playNext}
+          playPrevious={playPrevious}
+          canSkip={canSkip}
+          seek={seek}
+          setVolume={setVolume}
+          toggleMute={toggleMute}
+          onClose={() => setExpanded(false)}
+        />
+      )}
     </div>
   )
 }
