@@ -7,6 +7,7 @@ import { useMemo, useState, useTransition } from 'react'
 import type { FallbackMode } from '@tahti/shared'
 import { Alert, Button, ButtonIcon, Field, Panel, Select, Text } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { usePlayer } from '@/contexts/player-context'
 import {
   addLibraryTrackToRotation,
   updateChannelProgramme,
@@ -22,12 +23,67 @@ function formatDuration(sec: number | null): string {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
+/** Compact preview-play button, shared by both the rotation list and the add-picker
+ * — auditions a track through the same global player used everywhere else, rather
+ * than a second one-off audio element just for this editor. */
+function PreviewPlayButton({
+  id,
+  title,
+  audioUrl,
+}: {
+  id: string
+  title: string
+  audioUrl: string | null
+}) {
+  const { track, playing, togglePlay, load } = usePlayer()
+  const isCurrent = track?.id === `programme-preview-${id}`
+
+  if (!audioUrl) return null
+
+  async function handleClick() {
+    if (!isCurrent) {
+      load(
+        { id: `programme-preview-${id}`, kind: 'archive', url: audioUrl!, title },
+        { autoplay: true },
+      )
+      return
+    }
+    await togglePlay()
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={() => void handleClick()}
+      aria-label={isCurrent && playing ? `Pause ${title}` : `Preview ${title}`}
+    >
+      <ButtonIcon name="play" />
+      {isCurrent && playing ? 'Pause' : 'Play'}
+    </Button>
+  )
+}
+
+type ProgrammeActionResult = { data: ProgrammeView | null; error: string | null }
+
 export function RotationEditor({
   initial,
   channelSlug,
+  updateProgramme = updateChannelProgramme,
+  addLibraryTrack = addLibraryTrackToRotation,
 }: {
   initial: ProgrammeView
   channelSlug: string
+  /** Defaults to the artist's own /api/me/channel/programme actions — the admin
+   * equivalent (edit-any-channel) passes slug-scoped /api/admin/... actions
+   * instead, reusing this whole component rather than a second copy of it. */
+  updateProgramme?: (payload: {
+    fallbackMode?: FallbackMode
+    fallbackEnabled?: boolean
+    items?: Array<{ archiveItemId: string; isFallback: boolean; fallbackOrder?: number }>
+  }) => Promise<ProgrammeActionResult>
+  addLibraryTrack?: (releaseTrackId: string) => Promise<ProgrammeActionResult>
 }) {
   const [fallbackMode, setFallbackMode] = useState<FallbackMode>(initial.fallbackMode)
   const [fallbackEnabled, setFallbackEnabled] = useState(initial.fallbackEnabled)
@@ -77,7 +133,7 @@ export function RotationEditor({
     setMessage(null)
     startTransition(async () => {
       const rotation = items.filter((r) => r.isFallback)
-      const res = await updateChannelProgramme({
+      const res = await updateProgramme({
         fallbackMode,
         fallbackEnabled,
         items: items.map((r) => ({
@@ -100,7 +156,7 @@ export function RotationEditor({
     setMessage(null)
     setPromotingId(releaseTrackId)
     startTransition(async () => {
-      const res = await addLibraryTrackToRotation(releaseTrackId)
+      const res = await addLibraryTrack(releaseTrackId)
       setPromotingId(null)
       if (res.error || !res.data) {
         setError(res.error ?? 'Could not add track')
@@ -226,6 +282,7 @@ export function RotationEditor({
                         </Text>
                       )}
                     </span>
+                    <PreviewPlayButton id={row.id} title={row.title} audioUrl={row.audioUrl} />
                     <Button
                       type="button"
                       variant="ghost"
@@ -280,6 +337,7 @@ export function RotationEditor({
                           </Text>
                         )}
                       </span>
+                      <PreviewPlayButton id={row.id} title={row.title} audioUrl={row.audioUrl} />
                       <Button
                         type="button"
                         variant="secondary"
