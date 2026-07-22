@@ -25,8 +25,9 @@ body {
   right: 0;
   bottom: 0;
   z-index: 38;
-  background: color-mix(in srgb, var(--card) 92%, transparent);
+  background: color-mix(in srgb, var(--card) 80%, transparent);
   border-top: 1px solid var(--border);
+  border-radius: 14px 14px 0 0;
   backdrop-filter: blur(8px);
 }
 
@@ -223,36 +224,48 @@ body {
 
 .mini-player__close {
   flex: none;
-  width: 24px;
-  height: 24px;
-  border: 0;
-  background: transparent;
-  color: var(--muted2);
+  width: 30px;
+  height: 30px;
+  margin-left: 6px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
   cursor: pointer;
-  font-size: var(--text-xs);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .mini-player__close:hover {
-  color: var(--text);
+  background: color-mix(in srgb, var(--coral) 16%, var(--card2));
+  border-color: color-mix(in srgb, var(--coral) 45%, transparent);
+  color: var(--coral);
 }
 
 .mini-player__queue-toggle {
   flex: none;
-  height: 24px;
-  padding: 0 8px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted2);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--card2);
+  color: var(--muted);
   cursor: pointer;
   font-size: var(--text-xs);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-weight: var(--weight-medium);
   white-space: nowrap;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .mini-player__queue-toggle:hover {
@@ -262,6 +275,7 @@ body {
 .mini-player__queue-toggle--active {
   color: var(--cyan);
   border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
 }
 
 /* ── Mini-player queue panel ─────────────────────────────────────────── */

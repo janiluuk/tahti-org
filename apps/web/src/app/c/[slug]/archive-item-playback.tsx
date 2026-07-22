@@ -36,8 +36,10 @@ export function ArchiveItemPlayback({
   colorSchemeJson,
   isLoggedIn,
 }: Props) {
-  const { track, playing, analyser, load, togglePlay, addToQueue } = usePlayer()
+  const { track, playing, analyser, load, togglePlay, addToQueue, currentTime, duration, seek } =
+    usePlayer()
   const isCurrent = track?.id === item.id
+  const progress = isCurrent && duration > 0 ? currentTime / duration : 0
   const preset = (item.visualPreset ?? 'MINIMAL') as VisualPreset
   const showViz = isCurrent && playing && preset !== 'MINIMAL'
 
@@ -72,7 +74,7 @@ export function ArchiveItemPlayback({
       {/* Waveform only for the currently-loaded track — keeps every other row a
        * single compact line instead of a tall card, closer to how a music-app
        * playlist lists tracks (detail only on the one that's actually playing). */}
-      {isCurrent && <ArchiveWaveform peaks={item.peaks} />}
+      {isCurrent && <ArchiveWaveform peaks={item.peaks} progress={progress} onSeek={seek} />}
       <div className="ch-archive-controls-row">
         <div className="ch-archive-controls">
           <button

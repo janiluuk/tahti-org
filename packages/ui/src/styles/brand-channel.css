@@ -97,13 +97,15 @@
 
 /* Channel page layout */
 [data-tahti-ui='brand'] .ch-header {
-  background: var(--card);
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  backdrop-filter: blur(10px);
   padding: 0 24px;
   height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
+  border-radius: 0 0 14px 14px;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -737,13 +739,22 @@
   }
 }
 
-/* Per-set waveform visualisation (static, server-extracted peaks) */
+/* Per-set waveform visualisation (static, server-extracted peaks) with a
+ * playback-progress overlay: a second, full-opacity copy of the bars is
+ * absolutely positioned and clipped to the played fraction of the track. */
 [data-tahti-ui='brand'] .ch-archive-waveform {
+  position: relative;
+  height: 56px;
+  margin: 0.5rem 0;
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-archive-wf-bars {
   display: flex;
   align-items: flex-end;
   gap: 1px;
-  height: 56px;
-  margin: 0.5rem 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -752,18 +763,28 @@
   min-width: 1px;
   height: var(--h, 4%);
   background: var(--cyan);
-  opacity: 0.45;
+  opacity: 0.35;
   border-radius: 1px;
   transition: opacity 0.1s;
-  cursor: default;
 }
 
-[data-tahti-ui='brand'] .ch-archive-waveform:hover .ch-archive-wf-bar {
-  opacity: 0.25;
+[data-tahti-ui='brand'] .ch-archive-wf-bars:hover .ch-archive-wf-bar {
+  opacity: 0.2;
 }
 
-[data-tahti-ui='brand'] .ch-archive-waveform:hover .ch-archive-wf-bar:hover {
-  opacity: 0.9;
+[data-tahti-ui='brand'] .ch-archive-wf-bars:hover .ch-archive-wf-bar:hover {
+  opacity: 0.85;
+}
+
+[data-tahti-ui='brand'] .ch-archive-wf-progress {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-wf-progress .ch-archive-wf-bar {
+  opacity: 1;
 }
 
 /* Controls */

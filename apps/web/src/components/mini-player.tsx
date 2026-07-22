@@ -409,7 +409,36 @@ export function MiniPlayer() {
           aria-expanded={queueOpen}
           aria-label="Toggle play queue"
         >
-          {upNext.length > 0 ? `Queue · ${upNext.length}` : 'Queue'}
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path
+              d="M2 4.5h8M2 8h8M2 11.5h5"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </svg>
+          {upNext.length > 0 && <span>{upNext.length}</span>}
+          {queueOpen ? (
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+              <path
+                d="M2 3.5L5 6.5L8 3.5"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : (
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+              <path
+                d="M2 6.5L5 3.5L8 6.5"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
         </button>
         <button
           type="button"
@@ -417,7 +446,14 @@ export function MiniPlayer() {
           onClick={close}
           aria-label="Close player"
         >
-          ✕
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path
+              d="M3.5 3.5l9 9m0-9l-9 9"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
       </div>
     </div>
