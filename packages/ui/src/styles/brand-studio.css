@@ -1971,7 +1971,123 @@
 }
 
 [data-tahti-ui='studio'] .studio-item-row--list {
-  padding: 0.75rem 0;
+  padding: 0.5rem 0.6rem;
+  margin: 0 -0.6rem;
+  border-radius: var(--radius-sm);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .studio-item-row--list:last-child {
+  border-bottom: none;
+}
+
+[data-tahti-ui='studio'] .studio-item-row--list--active {
+  background: color-mix(in srgb, var(--cyan) 8%, transparent);
+  border-color: color-mix(in srgb, var(--cyan) 35%, var(--border));
+}
+
+/* ── Music browser: left nav rail + panel ───────────────────────────────── */
+[data-tahti-ui='studio'] .music-browser {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+[data-tahti-ui='studio'] .music-browser__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  width: 160px;
+  position: sticky;
+  top: 1rem;
+}
+
+[data-tahti-ui='studio'] .music-browser__nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+[data-tahti-ui='studio'] .music-browser__nav-item--active {
+  background: var(--card2);
+  border-color: var(--border);
+  color: var(--text);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .music-browser__nav-count {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+[data-tahti-ui='studio'] .music-browser__panel {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .music-album-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .music-album-row__cover {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+[data-tahti-ui='studio'] .music-album-row__cover--ph {
+  background: linear-gradient(135deg, var(--surface-2), var(--surface-3));
+}
+
+[data-tahti-ui='studio'] .music-album-tracklist {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+[data-tahti-ui='studio'] .music-album-tracklist li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  [data-tahti-ui='studio'] .music-browser {
+    flex-direction: column;
+  }
+
+  [data-tahti-ui='studio'] .music-browser__nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    position: static;
+  }
 }
 
 [data-tahti-ui='studio'] .studio-post-row {
@@ -2320,7 +2436,11 @@
     linear-gradient(45deg, transparent 75%, var(--card) 75%),
     linear-gradient(-45deg, transparent 75%, var(--card) 75%);
   background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
   background-color: var(--bg);
 }
 
