@@ -12,7 +12,11 @@ type EmbedShellProps = {
 /** Minimal dark chrome for iframe embeds — import embed.css on the route layout. */
 export function EmbedShell({ children, transparent = false }: EmbedShellProps) {
   return (
-    <div data-tahti-ui="embed" className="tahti-embed" data-bg={transparent ? 'transparent' : undefined}>
+    <div
+      data-tahti-ui="embed"
+      className="tahti-embed"
+      data-bg={transparent ? 'transparent' : undefined}
+    >
       {children}
     </div>
   )
