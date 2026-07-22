@@ -4,6 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import React, { useCallback } from 'react'
+import Link from 'next/link'
 import { cn } from '../lib/cn'
 import { formatPlayerTime, WAVEFORM_BAR_HEIGHTS } from '../lib/waveform-player'
 import { AvatarTile } from './AvatarTile'
@@ -34,6 +35,9 @@ export interface WaveformPlayerProps {
   artworkUrl?: string | null
   nowPlayingTitle?: string
   nowPlayingSubtitle?: string
+  /** When set, the subtitle (artist name) becomes a link — e.g. to that
+   * artist's profile, for rotation channels playing another artist's track. */
+  nowPlayingSubtitleHref?: string
   /** Wall-clock seconds since a live broadcast began — shown instead of the bare
    * "LIVE" label when set. Continuous rotation playback should leave this unset,
    * since there's no meaningful "elapsed" for a shuffled, unbounded stream. */
@@ -66,6 +70,7 @@ export function WaveformPlayer({
   artworkUrl,
   nowPlayingTitle,
   nowPlayingSubtitle,
+  nowPlayingSubtitleHref,
   liveElapsedSec,
   isReplay = false,
   nextUpLabel,
@@ -118,9 +123,17 @@ export function WaveformPlayer({
           )}
           <div className="waveform-player__meta-text">
             <span className="waveform-player__meta-title">{nowPlayingTitle}</span>
-            {nowPlayingSubtitle && (
-              <span className="waveform-player__meta-subtitle">{nowPlayingSubtitle}</span>
-            )}
+            {nowPlayingSubtitle &&
+              (nowPlayingSubtitleHref ? (
+                <Link
+                  href={nowPlayingSubtitleHref}
+                  className="waveform-player__meta-subtitle waveform-player__meta-subtitle--link"
+                >
+                  {nowPlayingSubtitle}
+                </Link>
+              ) : (
+                <span className="waveform-player__meta-subtitle">{nowPlayingSubtitle}</span>
+              ))}
           </div>
         </div>
       )}

@@ -61,7 +61,7 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
     select: {
       title: true,
       bannerUrl: true,
-      channel: { select: { user: { select: { displayName: true } } } },
+      channel: { select: { user: { select: { displayName: true, username: true } } } },
     },
   })
   if (!item) return
@@ -71,6 +71,7 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
     data: {
       nowPlayingTitle: item.title,
       nowPlayingArtistName: item.channel.user.displayName,
+      nowPlayingArtistUsername: item.channel.user.username,
       nowPlayingArtworkUrl: item.bannerUrl,
       nowPlayingUpdatedAt: new Date(),
     },

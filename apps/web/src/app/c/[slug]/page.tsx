@@ -70,8 +70,13 @@ interface ChannelResponse {
     tier: string
     joinDate?: string | null
   }
-  nowPlaying: { title: string; artistName: string; artworkUrl: string | null } | null
-  nowPlayingNext: { title: string; artistName: string } | null
+  nowPlaying: {
+    title: string
+    artistName: string
+    artistUsername: string | null
+    artworkUrl: string | null
+  } | null
+  nowPlayingNext: { title: string; artistName: string; artistUsername: string } | null
 }
 
 interface ArchiveItem {
@@ -410,6 +415,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 subtitle={
                   isRotationChannel && channel.nowPlaying
                     ? channel.nowPlaying.artistName
+                    : undefined
+                }
+                subtitleHref={
+                  isRotationChannel && channel.nowPlaying?.artistUsername
+                    ? `/u/${channel.nowPlaying.artistUsername}`
                     : undefined
                 }
                 artworkUrl={isRotationChannel ? channel.nowPlaying?.artworkUrl : undefined}
