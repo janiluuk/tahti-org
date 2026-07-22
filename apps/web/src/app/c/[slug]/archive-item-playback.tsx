@@ -6,6 +6,7 @@
 import type { VisualPreset } from '@tahti/shared'
 import { ArchiveWaveform } from '@/components/archive-waveform'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
+import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { usePlayer } from '@/contexts/player-context'
 import { ArchiveDownloadButton } from './archive-download'
 
@@ -23,9 +24,16 @@ interface Props {
     followToDownload?: boolean
   }
   colorSchemeJson?: string | null
+  isLoggedIn: boolean
 }
 
-export function ArchiveItemPlayback({ channelSlug, artistUsername, item, colorSchemeJson }: Props) {
+export function ArchiveItemPlayback({
+  channelSlug,
+  artistUsername,
+  item,
+  colorSchemeJson,
+  isLoggedIn,
+}: Props) {
   const { track, playing, analyser, load, togglePlay, addToQueue } = usePlayer()
   const isCurrent = track?.id === item.id
   const preset = (item.visualPreset ?? 'MINIMAL') as VisualPreset
@@ -63,33 +71,36 @@ export function ArchiveItemPlayback({ channelSlug, artistUsername, item, colorSc
        * single compact line instead of a tall card, closer to how a music-app
        * playlist lists tracks (detail only on the one that's actually playing). */}
       {isCurrent && <ArchiveWaveform peaks={item.peaks} />}
-      <div className="ch-archive-controls">
-        <button
-          type="button"
-          className="ch-archive-controls__play"
-          onClick={() => void handleTogglePlay()}
-          aria-label={isCurrent && playing ? 'Pause' : 'Play'}
-          data-testid="channel-archive-play-toggle"
-        >
-          {isCurrent && playing ? '❚❚' : '▶'}
-        </button>
-        <button
-          type="button"
-          className="ch-archive-controls__queue"
-          onClick={() => addToQueue(playerTrack)}
-          aria-label={`Add ${item.title} to queue`}
-          title="Add to queue"
-        >
-          +
-        </button>
+      <div className="ch-archive-controls-row">
+        <div className="ch-archive-controls">
+          <button
+            type="button"
+            className="ch-archive-controls__play"
+            onClick={() => void handleTogglePlay()}
+            aria-label={isCurrent && playing ? 'Pause' : 'Play'}
+            data-testid="channel-archive-play-toggle"
+          >
+            {isCurrent && playing ? '❚❚' : '▶'}
+          </button>
+          <button
+            type="button"
+            className="ch-archive-controls__queue"
+            onClick={() => addToQueue(playerTrack)}
+            aria-label={`Add ${item.title} to queue`}
+            title="Add to queue"
+          >
+            +
+          </button>
+        </div>
+        <ArchiveDownloadButton
+          channelSlug={channelSlug}
+          artistUsername={artistUsername}
+          itemId={item.id}
+          repostToDownload={Boolean(item.repostToDownload)}
+          followToDownload={Boolean(item.followToDownload)}
+        />
+        <TrackCommentsToggle archiveItemId={item.id} isLoggedIn={isLoggedIn} />
       </div>
-      <ArchiveDownloadButton
-        channelSlug={channelSlug}
-        artistUsername={artistUsername}
-        itemId={item.id}
-        repostToDownload={Boolean(item.repostToDownload)}
-        followToDownload={Boolean(item.followToDownload)}
-      />
     </div>
   )
 }

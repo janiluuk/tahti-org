@@ -539,9 +539,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                       >
                         {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
                         <div className="ch-archive-item-header">
-                          {item.bannerUrl && (
+                          {item.bannerUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={item.bannerUrl} alt="" className="ch-archive-item-thumb" />
+                          ) : (
+                            <AvatarTile size="sm" name={item.title} />
                           )}
                           <div className="ch-archive-item-meta">
                             <div className="ch-archive-item-title">{item.title}</div>
@@ -574,15 +576,17 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                         {item.tracklist && item.tracklist.length > 0 && (
                           <TracklistView entries={item.tracklist} />
                         )}
-                        {item.audioUrl && (
+                        {item.audioUrl ? (
                           <ArchiveItemPlayback
                             channelSlug={slug}
                             artistUsername={channel.user.username}
                             item={{ ...item, audioUrl: item.audioUrl }}
                             colorSchemeJson={channel.colorSchemeJson}
+                            isLoggedIn={!!user}
                           />
+                        ) : (
+                          <TrackCommentsToggle archiveItemId={item.id} isLoggedIn={!!user} />
                         )}
-                        <TrackCommentsToggle archiveItemId={item.id} isLoggedIn={!!user} />
                       </li>
                     )
                   })}

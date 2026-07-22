@@ -497,11 +497,18 @@
   width: 100%;
 }
 
+[data-tahti-ui='brand'] .ch-archive-controls-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.2rem 0;
+}
+
 [data-tahti-ui='brand'] .ch-archive-controls {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.2rem 0;
 }
 
 [data-tahti-ui='brand'] .ch-archive-controls__play {
@@ -541,7 +548,6 @@
 }
 
 [data-tahti-ui='brand'] .ch-download {
-  margin-top: 0.2rem;
   font-size: var(--text-sm);
 }
 
@@ -1434,7 +1440,7 @@
 }
 
 [data-tahti-ui='brand'] .track-comments-toggle {
-  margin-top: 0.5rem;
+  flex: none;
   padding: 4px 12px;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -1452,6 +1458,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  flex-basis: 100%;
 }
 
 [data-tahti-ui='brand'] .ch-player-wrap {
@@ -1677,17 +1684,36 @@
 
 [data-tahti-ui='brand'] .ch-archive-item-desc {
   color: var(--muted);
-  margin: 0 0 0.5rem;
-  font-size: var(--text-body);
+  margin: 0 0 0.4rem;
+  font-size: var(--text-xs);
+  /* Single-line ellipsis rather than -webkit-line-clamp — the source text can
+   * contain a hard line break (rendered as <br>), which line-clamp doesn't
+   * reliably truncate around across browsers. white-space:nowrap always does. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-desc br {
+  display: none;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-commentary {
-  color: var(--text);
-  margin: 0 0 0.75rem;
-  font-size: var(--text-body);
-  line-height: 1.5;
-  border-left: 3px solid var(--border-hover);
-  padding-left: 0.75rem;
+  color: var(--muted);
+  margin: 0 0 0.4rem;
+  font-size: var(--text-xs);
+  border-left: 2px solid var(--border-hover);
+  padding-left: 0.5rem;
+  /* Single-line ellipsis — the source text can contain a hard line break
+   * (rendered as <br>), which -webkit-line-clamp doesn't reliably truncate
+   * around across browsers. white-space:nowrap always does. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-commentary br {
+  display: none;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-duration {
