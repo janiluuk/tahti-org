@@ -7559,6 +7559,11 @@
   opacity: 0.7;
 }
 
+[data-tahti-ui='studio'] .collections-card--dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
 [data-tahti-ui='studio'] .collections-card__cover-auto {
   aspect-ratio: 1;
   display: grid;
@@ -8034,6 +8039,11 @@
 
 [data-tahti-ui='studio'] .collection-tracklist__row:hover {
   background: color-mix(in srgb, var(--cyan) 6%, var(--card));
+}
+
+[data-tahti-ui='studio'] .collection-tracklist__row--dragging {
+  opacity: 0.5;
+  cursor: grabbing;
 }
 
 [data-tahti-ui='studio'] .collection-tracklist__drag {

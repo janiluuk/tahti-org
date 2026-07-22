@@ -6,7 +6,7 @@
 import { useState, useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ButtonIcon, Button } from '@tahti/ui'
+import { ButtonIcon, Button, SortableList } from '@tahti/ui'
 import type { ArchiveItemSource, ArchiveQualityBadge } from '@tahti/shared'
 import { QUALITY_BADGE_LABEL } from '@tahti/shared'
 import { CoverImageUpload } from '@/components/cover-image-upload'
@@ -145,7 +145,6 @@ export function CollectionEditor({
 
   // Tracklist state
   const [items, setItems] = useState(initial.items)
-  const [dragFrom, setDragFrom] = useState<number | null>(null)
   const [reorderSaving, setReorderSaving] = useState(false)
   const [spotifyModalOpen, setSpotifyModalOpen] = useState(false)
   const [mixcloudModalOpen, setMixcloudModalOpen] = useState(false)
@@ -183,24 +182,26 @@ export function CollectionEditor({
     }
   }, [initial.slug, isPublic, isFeatured, style, trackSortMode, description, router])
 
-  const moveItem = useCallback((fromIdx: number, toIdx: number) => {
-    setItems((prev) => {
-      const next = [...prev]
-      const [moved] = next.splice(fromIdx, 1)
-      next.splice(toIdx, 0, moved!)
-      return next.map((item, i) => ({ ...item, position: i + 1 }))
-    })
-  }, [])
+  const persistItemOrder = useCallback(
+    async (ordered: CollectionItem[]) => {
+      setReorderSaving(true)
+      await reorderCollectionItems(
+        initial.slug,
+        ordered.map((i) => i.id),
+      )
+      setReorderSaving(false)
+    },
+    [initial.slug],
+  )
 
-  const persistItemOrder = useCallback(async () => {
-    if (reorderSaving) return
-    setReorderSaving(true)
-    await reorderCollectionItems(
-      initial.slug,
-      items.map((i) => i.id),
-    )
-    setReorderSaving(false)
-  }, [initial.slug, items, reorderSaving])
+  const handleReorderItems = useCallback(
+    (next: CollectionItem[]) => {
+      const reindexed = next.map((item, i) => ({ ...item, position: i + 1 }))
+      setItems(reindexed)
+      void persistItemOrder(reindexed)
+    },
+    [persistItemOrder],
+  )
 
   const addFromLibrary = useCallback(async () => {
     if (!libraryPick) return
@@ -582,8 +583,13 @@ export function CollectionEditor({
               </Link>
             </div>
           ) : (
-            <ol className="collection-tracklist" onPointerUp={() => void persistItemOrder()}>
-              {items.map((item, idx) => {
+            <SortableList
+              as="ol"
+              className="collection-tracklist"
+              items={items}
+              itemId={(item) => item.id}
+              onReorder={handleReorderItems}
+              renderItem={(item, idx, sortable) => {
                 const thumb = itemThumb(item)
                 const title = itemTitle(item)
                 const dur = item.archiveItem?.durationSec
@@ -598,17 +604,10 @@ export function CollectionEditor({
                 return (
                   <li
                     key={item.id}
-                    className="collection-tracklist__row"
-                    draggable
-                    onDragStart={() => setDragFrom(idx)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault()
-                      if (dragFrom !== null && dragFrom !== idx) {
-                        moveItem(dragFrom, idx)
-                        setDragFrom(null)
-                      }
-                    }}
+                    ref={sortable.ref}
+                    className={`collection-tracklist__row${
+                      sortable.isDragging ? ' collection-tracklist__row--dragging' : ''
+                    }`}
                   >
                     <span className="collection-tracklist__drag" aria-hidden>
                       ⠿
@@ -636,8 +635,8 @@ export function CollectionEditor({
                     )}
                   </li>
                 )
-              })}
-            </ol>
+              }}
+            />
           )}
         </section>
       </div>
