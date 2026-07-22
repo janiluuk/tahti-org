@@ -124,7 +124,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   // My Library — the artist's own catalog and files.
   {
     href: '/dashboard/archive',
-    label: 'Archive',
+    label: 'Music',
     icon: 'archive',
     isRoute: true,
     requiresChannel: true,

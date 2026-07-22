@@ -131,7 +131,7 @@ async function main() {
     if (body.includes('Your channel')) ok('dashboard channel panel')
     else fail('dashboard missing channel panel')
     if (body.includes(FIXTURE.releaseTitle)) ok('dashboard lists demo release')
-    if (body.includes('Archive')) ok('dashboard archive section')
+    if (body.includes('Music')) ok('dashboard music section')
     const dashPlayer = dash.locator('[data-testid="dashboard-archive-player"]')
     if ((await dashPlayer.count()) > 0) {
       const src = await dashPlayer.first().getAttribute('src')

@@ -110,8 +110,8 @@ async function main() {
     if (body.includes(FIXTURE.releaseTitle)) ok('dashboard shows demo release')
     else fail('dashboard missing demo release')
 
-    if (body.includes('Archive')) ok('dashboard archive section')
-    else fail('dashboard missing archive section')
+    if (body.includes('Music')) ok('dashboard music section')
+    else fail('dashboard missing music section')
 
     const channelLink = dash.locator(`a[href="/c/${FIXTURE.artist}"]`).first()
     if ((await channelLink.count()) > 0) {
@@ -165,7 +165,10 @@ async function main() {
       .first()
       .evaluate((el) => {
         const a = /** @type {HTMLAudioElement} */ (el)
-        return a.play().then(() => true).catch(() => false)
+        return a
+          .play()
+          .then(() => true)
+          .catch(() => false)
       })
       .catch(() => false)
     if (await playPromise) ok('archive player accepts play()')

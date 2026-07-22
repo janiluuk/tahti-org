@@ -96,7 +96,7 @@ export default function ArchiveEditor({
   }
 
   return (
-    <div className="studio-item-row--list">
+    <div className={`studio-item-row--list${open ? ' studio-item-row--list--active' : ''}`}>
       <div className="studio-card-row">
         <div>
           <div className="studio-stat-box-title">{item.title}</div>
