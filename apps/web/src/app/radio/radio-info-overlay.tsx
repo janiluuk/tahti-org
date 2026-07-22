@@ -4,6 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { RadioSlotsCalendar } from './radio-slots-calendar'
 import type { PublicRadioSlot } from './actions'
 
@@ -90,10 +91,13 @@ export function RadioInfoOverlay({
                     <ul className="ch-radio-rotation__list">
                       {rotation.map((item) => (
                         <li key={item.id} className="ch-radio-rotation__item">
-                          <a href={`/u/${item.artistUsername}`} className="ch-radio-rotation__link">
+                          <Link
+                            href={`/u/${item.artistUsername}`}
+                            className="ch-radio-rotation__link"
+                          >
                             <span className="ch-radio-rotation__title">{item.title}</span>
                             <span className="ch-radio-rotation__artist">{item.artistName}</span>
-                          </a>
+                          </Link>
                         </li>
                       ))}
                     </ul>
@@ -103,7 +107,7 @@ export function RadioInfoOverlay({
                   {memberRelay && (
                     <p className="ch-radio-info-panel__note">
                       Member relay also live:{' '}
-                      <a href={`/c/${memberRelay.slug}`}>{memberRelay.artistName}</a>
+                      <Link href={`/c/${memberRelay.slug}`}>{memberRelay.artistName}</Link>
                     </p>
                   )}
                 </>

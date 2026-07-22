@@ -4,12 +4,13 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import type { ChannelCard } from '@tahti/shared'
 import { WatcherCount } from '@tahti/ui'
 
 function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCount?: number }) {
   return (
-    <a href={`/c/${channel.slug}`} className="listen-live-card">
+    <Link href={`/c/${channel.slug}`} className="listen-live-card">
       <div className="listen-live-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -35,7 +36,7 @@ function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCo
         <div className="listen-live-card__handle">@{channel.user.username}</div>
       </div>
       <div className="listen-live-card__cta">Listen →</div>
-    </a>
+    </Link>
   )
 }
 
@@ -43,7 +44,7 @@ function ChannelCardItem({ channel }: { channel: ChannelCard }) {
   const isLive = channel.state === 'LIVE'
 
   return (
-    <a href={`/c/${channel.slug}`} className="listen-card">
+    <Link href={`/c/${channel.slug}`} className="listen-card">
       <div className="listen-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -73,7 +74,7 @@ function ChannelCardItem({ channel }: { channel: ChannelCard }) {
           </div>
         ) : null}
       </div>
-    </a>
+    </Link>
   )
 }
 

@@ -4,6 +4,7 @@
 'use client'
 
 import { Fragment, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
 import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
 
@@ -178,9 +179,9 @@ export function RadioSlotsCalendar({
               })}
             </div>
             {selected.note && <p className="ch-radio-slots__popover-note">{selected.note}</p>}
-            <a href={`/u/${selected.artist.username}`} className="ch-radio-slots__popover-link">
+            <Link href={`/u/${selected.artist.username}`} className="ch-radio-slots__popover-link">
               View artist page →
-            </a>
+            </Link>
           </div>
         </div>
       )}

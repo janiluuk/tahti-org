@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ChannelCard } from '@tahti/shared'
+import Link from 'next/link'
 import { ListenChannels } from './_listen-channels'
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001'
@@ -43,7 +44,7 @@ export default async function ListenPage() {
         <h1 className="listen-page-title">Discover</h1>
         <p className="listen-page-sub">Independent artists broadcasting live and on-demand.</p>
         <div className="listen-header__meta">
-          <a href="/radio" className="listen-radio-link">
+          <Link href="/radio" className="listen-radio-link">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
               <path
                 d="M2 11 Q8 5 14 11"
@@ -60,7 +61,7 @@ export default async function ListenPage() {
               <circle cx="8" cy="7" r="1.5" fill="currentColor" />
             </svg>
             Tahti Radio
-          </a>
+          </Link>
           <span className="listen-header__meta-sep">·</span>
           <span>fair-rotation meta-stream</span>
         </div>

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { AvatarTile, ChannelPageShell, Heading, Row, SafePlainText, Text } from '@tahti/ui'
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { getSessionUser } from '@/lib/session'
@@ -161,7 +162,7 @@ export default async function RadioPage() {
                 <SafePlainText text="24/7 community radio — always on while we grow the member meta-stream. Tune in and chat with listeners worldwide." />
               </div>
               <Text size="sm" tone="muted" className="studio-mt-xs">
-                Looking for a specific sound? <a href="/listen">Browse live channels by genre</a>.
+                Looking for a specific sound? <Link href="/listen">Browse live channels by genre</Link>.
               </Text>
             </header>
 
@@ -171,7 +172,7 @@ export default async function RadioPage() {
                 {liveSlot.artist.channelSlug && (
                   <>
                     {' — '}
-                    <a href={`/u/${liveSlot.artist.username}`}>view artist page</a>
+                    <Link href={`/u/${liveSlot.artist.username}`}>view artist page</Link>
                   </>
                 )}
               </p>
@@ -188,7 +189,7 @@ export default async function RadioPage() {
               <div className="public-empty-card">
                 <p className="public-empty-card__text">Tahti Radio is temporarily offline.</p>
                 <p className="public-empty-card__hint">
-                  <a href="/listen">Browse live channels</a> or check back soon.
+                  <Link href="/listen">Browse live channels</Link> or check back soon.
                 </p>
               </div>
             ) : (

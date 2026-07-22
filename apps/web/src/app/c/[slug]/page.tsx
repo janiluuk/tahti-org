@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
 import { LivePlayerSection } from './live-player-section'
@@ -323,12 +324,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 </div>
               )}
               <div className="ch-artist-cta-row">
-                <a href={`/u/${channel.user.username}/subscribe`} className="ch-artist-sub-btn">
+                <Link href={`/u/${channel.user.username}/subscribe`} className="ch-artist-sub-btn">
                   Support directly
-                </a>
-                <a href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
+                </Link>
+                <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
                   View profile →
-                </a>
+                </Link>
               </div>
             </header>
 

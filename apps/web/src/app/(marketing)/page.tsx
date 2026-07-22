@@ -35,7 +35,7 @@ async function fetchData(): Promise<{
 
 function LiveTile({ channel }: { channel: ChannelCard }) {
   return (
-    <a href={`/c/${channel.slug}`} className="listen-live-card">
+    <Link href={`/c/${channel.slug}`} className="listen-live-card">
       <div className="listen-live-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -56,7 +56,7 @@ function LiveTile({ channel }: { channel: ChannelCard }) {
         <div className="listen-live-card__handle">@{channel.user.username}</div>
       </div>
       <div className="listen-live-card__cta">Listen →</div>
-    </a>
+    </Link>
   )
 }
 
