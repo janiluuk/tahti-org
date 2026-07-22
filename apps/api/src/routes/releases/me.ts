@@ -112,6 +112,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
                 status: true,
                 genre: true,
                 genreCustom: true,
+                durationSec: true,
               },
             },
             _count: { select: { tracks: true } },
