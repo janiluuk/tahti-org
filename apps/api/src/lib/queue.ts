@@ -92,6 +92,18 @@ export async function enqueueCloudImportGoogleDrive(cloudImportJobId: string): P
   )
 }
 
+export async function enqueueCloudImportSoundcloud(cloudImportJobId: string): Promise<void> {
+  await mediaQueue.add(
+    'cloud-import-soundcloud',
+    { cloudImportJobId },
+    {
+      jobId: `cloud-import-soundcloud-${cloudImportJobId}`,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 15_000 },
+    },
+  )
+}
+
 export async function enqueueWarmArchiveFallbackCache(channelId: string): Promise<void> {
   await mediaQueue.add(
     'warm-archive-fallback-cache',

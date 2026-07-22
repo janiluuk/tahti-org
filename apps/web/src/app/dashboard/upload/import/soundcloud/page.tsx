@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { Panel, Text } from '@tahti/ui'
 import { ImportPageLayout, ImportSteps } from '../_import-page-layout'
 import { SoundCloudConnectPanel } from './_soundcloud-connect'
+import { SoundCloudImportPanel } from './_soundcloud-import-panel'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -45,13 +46,6 @@ async function fetchTracks(connected: boolean): Promise<ScTrack[]> {
   if (!res.ok) return []
   const data = (await res.json()) as { tracks?: ScTrack[] }
   return data.tracks ?? []
-}
-
-function formatDuration(ms: number): string {
-  const s = Math.round(ms / 1000)
-  const m = Math.floor(s / 60)
-  const rem = s % 60
-  return `${m}:${String(rem).padStart(2, '0')}`
 }
 
 const HOW_IT_WORKS = [
@@ -98,20 +92,10 @@ export default async function SoundCloudImportPage({
       {tracks.length > 0 && (
         <Panel
           title={`Downloadable tracks (${tracks.length})`}
-          description="One-click import is coming soon. Download FLAC masters from SoundCloud and upload them via Add content in the meantime."
+          description="Tahti downloads each track server-side and queues transcoding — nothing passes through your browser disk."
           className="import-page__panel"
         >
-          <ol className="import-page__track-list">
-            {tracks.map((t) => (
-              <li key={t.id} className="import-page__track-row">
-                <div className="import-page__track-info">
-                  <span className="import-page__track-name">{t.title}</span>
-                  <span className="import-page__track-meta">{formatDuration(t.durationMs)}</span>
-                </div>
-                <span className="import-page__track-status">Import coming soon</span>
-              </li>
-            ))}
-          </ol>
+          <SoundCloudImportPanel tracks={tracks} />
         </Panel>
       )}
     </ImportPageLayout>

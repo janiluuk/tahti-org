@@ -34,6 +34,24 @@ export const GoogleDriveImportResponseSchema = z.object({
   imports: z.array(GoogleDriveImportQueuedItemSchema),
 })
 
+export const SoundcloudImportTrackSchema = z.object({
+  trackId: z.string().min(1),
+  title: z.string().min(1),
+})
+
+export const SoundcloudImportRequestSchema = z.object({
+  tracks: z.array(SoundcloudImportTrackSchema).min(1).max(20),
+})
+
+export const SoundcloudImportQueuedItemSchema = z.object({
+  cloudImportJobId: z.string(),
+  status: z.literal('queued'),
+})
+
+export const SoundcloudImportResponseSchema = z.object({
+  imports: z.array(SoundcloudImportQueuedItemSchema),
+})
+
 export const CloudImportJobStatusSchema = z.object({
   id: z.string(),
   source: z.string(),
