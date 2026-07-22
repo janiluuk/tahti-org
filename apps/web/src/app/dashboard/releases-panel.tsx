@@ -8,7 +8,12 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { ReleaseChecklistItem } from '@tahti/shared'
 import { ButtonIcon, Panel, Button } from '@tahti/ui'
-import { createRelease, importReleasesFromCsv, publishRelease } from './release-actions'
+import {
+  createRelease,
+  importReleasesFromCsv,
+  publishRelease,
+  updateReleasePinned,
+} from './release-actions'
 import { ReleaseBulkDrop } from './_release-bulk-drop'
 
 interface ReleaseSummary {
@@ -32,6 +37,7 @@ interface ReleaseSummary {
   credits?: unknown
   revelatorStatus?: string | null
   revelatorId?: string | null
+  pinnedAt?: string | null
   visualPreset?: string | null
   colorSchemeJson?: string | null
   paletteJson?: string | null
@@ -76,6 +82,13 @@ export default function ReleasesPanel({
   function publish(id: string) {
     startTransition(async () => {
       await publishRelease(id)
+      router.refresh()
+    })
+  }
+
+  function togglePin(id: string, pinned: boolean) {
+    startTransition(async () => {
+      await updateReleasePinned(id, pinned)
       router.refresh()
     })
   }
@@ -127,9 +140,20 @@ export default function ReleasesPanel({
                   <div className="studio-release-card__title">{r.title}</div>
                   <div className="studio-release-card__meta">
                     {r.state} · {r._count.tracks} track{r._count.tracks === 1 ? '' : 's'}
+                    {r.pinnedAt && ' · Pinned'}
                   </div>
                 </div>
                 <div className="studio-actions studio-actions--sm">
+                  {r.state === 'PUBLISHED' && (
+                    <Button
+                      onClick={() => togglePin(r.id, !r.pinnedAt)}
+                      disabled={isPending}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      {r.pinnedAt ? 'Unpin from Stage' : 'Pin to Stage'}
+                    </Button>
+                  )}
                   {r.state === 'PUBLISHED' && (
                     <Link
                       href={`/r/${r.smartLinkSlug}`}

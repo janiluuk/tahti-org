@@ -103,6 +103,9 @@ export const ArchiveMetadataFieldsSchema = z.object({
   isFallback: z.boolean().optional(),
   commentsEnabled: z.boolean().optional(),
   selectsOptIn: z.boolean().optional(),
+  /** Public "Stage" showcase (PLAT-Stage): pin/unpin this track at the top of the
+   * artist's profile Stage tab. Server converts to/from ArchiveItem.pinnedAt. */
+  pinned: z.boolean().optional(),
 })
 
 export type ArchiveMetadataFields = z.infer<typeof ArchiveMetadataFieldsSchema>
@@ -132,3 +135,10 @@ export const ARCHIVE_METADATA_DEFAULTS = {
   subGenres: [] as string[],
   slideshowUrls: [] as string[],
 }
+
+/** Manual-sort reorder for the public "Tracks" tab (all archive items for a channel). */
+export const ReorderArchiveItemsSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1, 'ids array is required'),
+})
+
+export type ReorderArchiveItemsInput = z.infer<typeof ReorderArchiveItemsSchema>

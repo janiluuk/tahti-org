@@ -101,6 +101,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
             visualPreset: true,
             colorSchemeJson: true,
             paletteJson: true,
+            pinnedAt: true,
             tracks: {
               orderBy: { position: 'asc' },
               select: {
@@ -230,6 +231,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         smartLinkTargets?: Record<string, string>
         description?: string | null
         releaseDate?: Date
+        pinnedAt?: Date | null
       } = {}
 
       if (body.smartLinkTargets !== undefined) {
@@ -240,6 +242,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       }
       if (body.releaseDate !== undefined) {
         data.releaseDate = body.releaseDate
+      }
+      if (body.pinned !== undefined) {
+        data.pinnedAt = body.pinned ? new Date() : null
       }
 
       if (body.state) {

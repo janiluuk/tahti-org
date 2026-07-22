@@ -12,6 +12,7 @@ import {
   ArchiveItemRecentSchema,
   ArchiveItemViewSchema,
   IdParamSchema,
+  ReorderArchiveItemsSchema,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -209,6 +210,38 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(204).send()
     },
   )
+
+  // PUT /api/me/archive/reorder — persist manual order for the public "Tracks" tab
+  fastify.put('/api/me/archive/reorder', { preHandler: requireAuth }, async (request, reply) => {
+    const user = request.sessionUser!
+    const parsed = ReorderArchiveItemsSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+    }
+    const { ids } = parsed.data
+
+    const channel = await fastify.prisma.channel.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    })
+    if (!channel) return reply.status(403).send({ error: 'You need a channel to do this' })
+
+    const owned = await fastify.prisma.archiveItem.findMany({
+      where: { id: { in: ids }, channelId: channel.id },
+      select: { id: true },
+    })
+    const ownedIds = new Set(owned.map((i) => i.id))
+
+    await fastify.prisma.$transaction(
+      ids
+        .filter((id) => ownedIds.has(id))
+        .map((id, order) =>
+          fastify.prisma.archiveItem.update({ where: { id }, data: { trackOrder: order } }),
+        ),
+    )
+
+    return reply.status(204).send()
+  })
 
   fastify.get('/api/me/channel/gallery', { preHandler: requireAuth }, async (request, reply) => {
     const user = request.sessionUser!
