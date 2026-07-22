@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { SortableList, type SortableItemHandle } from '@tahti/ui'
 import { STYLE_LABEL, STYLE_COLOR } from './collection-labels'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
@@ -52,72 +53,80 @@ function CollectionCoverAuto({ slug, covers }: { slug: string; covers: string[] 
 
 export function CollectionsGrid({ collections }: { collections: CollectionSummary[] }) {
   const [items, setItems] = useState(collections)
-  const [saving, setSaving] = useState(false)
+  const [reorderError, setReorderError] = useState<string | null>(null)
 
-  const moveCard = useCallback((fromIdx: number, toIdx: number) => {
-    setItems((prev) => {
-      const next = [...prev]
-      const [moved] = next.splice(fromIdx, 1)
-      next.splice(toIdx, 0, moved!)
-      return next.map((c, i) => ({ ...c, publicProfileOrder: i }))
-    })
-  }, [])
+  const persistOrder = useCallback(
+    async (previous: CollectionSummary[], ordered: CollectionSummary[]) => {
+      try {
+        const res = await fetch(`${API_BASE}/api/me/collections/reorder`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ slugs: ordered.map((c) => c.slug) }),
+        })
+        if (!res.ok) throw new Error('reorder request failed')
+        setReorderError(null)
+      } catch {
+        setItems(previous)
+        setReorderError('Could not save the new order — please try again.')
+      }
+    },
+    [],
+  )
 
-  // Persist reorder
-  const persistOrder = useCallback(async () => {
-    if (saving) return
-    setSaving(true)
-    try {
-      await fetch(`${API_BASE}/api/me/collections/reorder`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ slugs: items.map((c) => c.slug) }),
-      })
-    } finally {
-      setSaving(false)
-    }
-  }, [items, saving])
+  const handleReorder = useCallback(
+    (next: CollectionSummary[]) => {
+      const previous = items
+      const reindexed = next.map((c, i) => ({ ...c, publicProfileOrder: i }))
+      setItems(reindexed)
+      void persistOrder(previous, reindexed)
+    },
+    [items, persistOrder],
+  )
 
   return (
-    <div className="collections-grid" onPointerUp={() => void persistOrder()}>
-      {items.map((c, idx) => (
-        <CollectionCard key={c.slug} collection={c} index={idx} onMove={moveCard} />
-      ))}
-    </div>
+    <>
+      {reorderError && <p className="studio-text-error studio-text-sm">{reorderError}</p>}
+      <SortableList
+        items={items}
+        itemId={(c) => c.slug}
+        onReorder={handleReorder}
+        className="collections-grid"
+        renderItem={(c, _idx, sortable) => (
+          <CollectionCard key={c.slug} collection={c} sortable={sortable} />
+        )}
+      />
+    </>
   )
 }
 
 function CollectionCard({
   collection: c,
-  index,
-  onMove,
+  sortable,
 }: {
   collection: CollectionSummary
-  index: number
-  onMove: (from: number, to: number) => void
+  sortable: SortableItemHandle
 }) {
-  const [dragIdx, setDragIdx] = useState<number | null>(null)
   const isDraft = c.visibility === 'DRAFT'
   const isUnlisted = c.visibility === 'UNLISTED'
 
   return (
     <Link
+      ref={sortable.ref}
       href={`/dashboard/collections/${c.slug}`}
-      className={`collections-card${isDraft || isUnlisted ? ' collections-card--dim' : ''}`}
-      draggable
-      onDragStart={() => setDragIdx(index)}
-      onDragOver={(e) => {
-        e.preventDefault()
-      }}
-      onDrop={(e) => {
-        e.preventDefault()
-        if (dragIdx !== null && dragIdx !== index) {
-          onMove(dragIdx, index)
-          setDragIdx(null)
-        }
-      }}
+      className={`collections-card${isDraft || isUnlisted ? ' collections-card--dim' : ''}${
+        sortable.isDragging ? ' collections-card--dragging' : ''
+      }`}
     >
+      {/* Drag handle — scoped so grabbing it doesn't trigger navigation */}
+      <span
+        ref={sortable.handleRef}
+        className="collections-card__drag-handle"
+        onClick={(e) => e.preventDefault()}
+      >
+        ⠿
+      </span>
+
       {/* Cover */}
       {c.coverMode === 'CUSTOM' && c.coverUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
