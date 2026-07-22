@@ -12,9 +12,19 @@ interface LivePlayerSectionProps {
   url: string
   slug: string
   title?: string
+  subtitle?: string
+  artworkUrl?: string | null
+  isReplay?: boolean
 }
 
-export function LivePlayerSection({ url, slug, title }: LivePlayerSectionProps) {
+export function LivePlayerSection({
+  url,
+  slug,
+  title,
+  subtitle,
+  artworkUrl,
+  isReplay,
+}: LivePlayerSectionProps) {
   const { analyser } = usePlayer()
 
   return (
@@ -22,7 +32,14 @@ export function LivePlayerSection({ url, slug, title }: LivePlayerSectionProps) 
       <BgCanvas analyser={analyser} />
       <div id="live-player" className="ch-player-wrap">
         <div className="ch-player-inner">
-          <HlsPlayer url={url} title={title} subtitle={`@${slug}`} href={`/c/${slug}`} />
+          <HlsPlayer
+            url={url}
+            title={title}
+            subtitle={subtitle ?? `@${slug}`}
+            href={`/c/${slug}`}
+            artworkUrl={artworkUrl}
+            isReplay={isReplay}
+          />
         </div>
         <ReactionsOverlay slug={slug} />
       </div>

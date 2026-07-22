@@ -3,6 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
 import { LivePlayerSection } from './live-player-section'
@@ -69,6 +70,7 @@ interface ChannelResponse {
     tier: string
     joinDate?: string | null
   }
+  nowPlaying: { title: string; artistName: string; artworkUrl: string | null } | null
 }
 
 interface ArchiveItem {
@@ -154,6 +156,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     : { comments: [], commentsEnabled: true }
 
   const hlsUrl = channel.hlsUrl
+  // Tahti Radio and Tahti Selects are always-on curated rotations, not a human
+  // actually broadcasting — channel.state is still 'LIVE' while they run, but
+  // "LIVE NOW" is misleading here; show the currently-rotating track instead.
+  const isRotationChannel = slug === TAHTI_RADIO_SLUG || slug === TAHTI_SELECTS_SLUG
   const bioHtml = channel.user.bio ? await renderBio(channel.user.bio) : null
   const channelBackdrop = resolveArchiveBackground(channel.videoBackgroundUrl ?? null)
   const socialLinks = (channel.user.socialLinks as Record<string, string> | null) ?? {}
@@ -379,7 +385,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
             )}
 
             {hlsUrl && (
-              <LivePlayerSection url={hlsUrl} slug={slug} title={channel.user.displayName} />
+              <LivePlayerSection
+                url={hlsUrl}
+                slug={slug}
+                title={
+                  isRotationChannel
+                    ? (channel.nowPlaying?.title ?? channel.user.displayName)
+                    : channel.user.displayName
+                }
+                subtitle={
+                  isRotationChannel && channel.nowPlaying
+                    ? channel.nowPlaying.artistName
+                    : undefined
+                }
+                artworkUrl={isRotationChannel ? channel.nowPlaying?.artworkUrl : undefined}
+                isReplay={isRotationChannel}
+              />
             )}
 
             {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
