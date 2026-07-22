@@ -3,10 +3,11 @@
 
 'use client'
 
-import { useState, type DragEvent } from 'react'
+import { useState, useCallback, type DragEvent } from 'react'
 import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
+import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 
 export function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return '0:00'
@@ -143,6 +144,7 @@ function FullPlayerSheet({
   duration,
   volume,
   muted,
+  analyser,
   togglePlay,
   playNext,
   playPrevious,
@@ -151,6 +153,7 @@ function FullPlayerSheet({
   setVolume,
   toggleMute,
   onClose,
+  closing,
 }: {
   track: PlayerTrack
   playing: boolean
@@ -159,6 +162,7 @@ function FullPlayerSheet({
   duration: number
   volume: number
   muted: boolean
+  analyser: AnalyserNode | null
   togglePlay: () => void | Promise<void>
   playNext: () => void
   playPrevious: () => void
@@ -167,12 +171,19 @@ function FullPlayerSheet({
   setVolume: (v: number) => void
   toggleMute: () => void
   onClose: () => void
+  closing: boolean
 }) {
   const progress = duration > 0 ? currentTime / duration : 0
   const seekable = track.kind === 'archive' && duration > 0
 
   return (
-    <div className="full-player" role="dialog" aria-modal="true" aria-label="Now playing">
+    <div
+      className={`full-player${closing ? ' full-player--closing' : ''}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Now playing"
+    >
+      <ChannelVisualizer preset="PARTICLE_FIELD" analyser={analyser} className="full-player__viz" />
       {track.artworkUrl && (
         <div
           className="full-player__backdrop"
@@ -338,6 +349,7 @@ export function MiniPlayer() {
     duration,
     volume,
     muted,
+    analyser,
     togglePlay,
     playNext,
     playPrevious,
@@ -360,6 +372,15 @@ export function MiniPlayer() {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [expanded, setExpanded] = useState(false)
+  const [closingFullPlayer, setClosingFullPlayer] = useState(false)
+
+  const closeFullPlayer = useCallback(() => {
+    setClosingFullPlayer(true)
+    window.setTimeout(() => {
+      setExpanded(false)
+      setClosingFullPlayer(false)
+    }, 280)
+  }, [])
 
   if (!track) return null
 
@@ -681,6 +702,7 @@ export function MiniPlayer() {
           duration={duration}
           volume={volume}
           muted={muted}
+          analyser={analyser}
           togglePlay={togglePlay}
           playNext={playNext}
           playPrevious={playPrevious}
@@ -688,7 +710,8 @@ export function MiniPlayer() {
           seek={seek}
           setVolume={setVolume}
           toggleMute={toggleMute}
-          onClose={() => setExpanded(false)}
+          onClose={closeFullPlayer}
+          closing={closingFullPlayer}
         />
       )}
     </div>
