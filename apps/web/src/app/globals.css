@@ -571,6 +571,36 @@ body:has(.mini-player) {
     max(env(safe-area-inset-bottom), var(--space-5));
   background: var(--bg);
   overflow-y: auto;
+  animation: full-player-slide-up 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes full-player-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.full-player--closing {
+  animation: full-player-slide-down 0.28s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes full-player-slide-down {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .full-player,
+  .full-player--closing {
+    animation: none;
+  }
 }
 
 .full-player__backdrop {
