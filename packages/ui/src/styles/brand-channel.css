@@ -2468,8 +2468,17 @@
 }
 
 [data-tahti-ui='brand'] .prof-collection-title {
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-md);
   color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-list-meta--strong {
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-report-row {
+  margin-top: 0.75rem;
 }
 
 [data-tahti-ui='brand'] .prof-back-link {
@@ -3339,18 +3348,27 @@
 [data-tahti-ui='brand'] .prof-collection-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 0;
+  gap: 14px;
+  padding: 12px 8px;
+  margin: 0 -8px;
+  border-radius: var(--radius-md);
   border-bottom: 1px solid var(--border);
+  color: inherit;
+  text-decoration: none;
+  transition: background 0.15s;
 }
 
-[data-tahti-ui='brand'] .prof-collection-row:last-child {
+[data-tahti-ui='brand'] .prof-collection-row:hover {
+  background: var(--card2);
+}
+
+[data-tahti-ui='brand'] .prof-collection-list li:last-child .prof-collection-row {
   border-bottom: none;
 }
 
 [data-tahti-ui='brand'] .prof-collection-cover {
-  width: 56px;
-  height: 56px;
+  width: 76px;
+  height: 76px;
   border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;
@@ -3772,7 +3790,6 @@
   background: color-mix(in srgb, var(--cyan) 7%, var(--card2));
 }
 
-
 [data-tahti-ui='brand'].brand-channel .nl-subscribe-title {
   font-size: var(--text-body);
   font-weight: var(--weight-medium);
@@ -3862,6 +3879,33 @@
 [data-tahti-ui='brand'] .prof-sec-count {
   font-size: var(--text-xs);
   color: var(--muted2);
+}
+
+[data-tahti-ui='brand'] .prof-sec-label-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+[data-tahti-ui='brand'] .prof-sec-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, var(--card2));
+  border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+[data-tahti-ui='brand'] .prof-sec-add-btn:hover {
+  background: color-mix(in srgb, var(--amber) 22%, var(--card2));
+  border-color: color-mix(in srgb, var(--amber) 50%, transparent);
 }
 
 /* ── Press-kit photo gallery ─────────────────────────────────────────────── */

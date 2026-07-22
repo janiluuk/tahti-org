@@ -193,6 +193,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       feeds: {
         archive: user.channel ? `${config.apiUrl}/api/v1/u/${user.username}/rss.xml` : null,
       },
+      presskit: `${config.apiUrl}/api/v1/u/${user.username}/press-kit.zip`,
     },
   }
 }
