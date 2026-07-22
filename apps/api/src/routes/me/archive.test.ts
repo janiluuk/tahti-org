@@ -174,6 +174,69 @@ describe('M22/M24/M25 — archive metadata and slideshow', () => {
     expect(mention).toBeTruthy()
   })
 
+  it('pins and unpins an archive item via PATCH pinned', async () => {
+    const pin = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${archiveItemId}`,
+      headers: { cookie },
+      payload: { pinned: true },
+    })
+    expect(pin.statusCode).toBe(200)
+    expect(pin.json().pinnedAt).toBeTruthy()
+
+    const unpin = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${archiveItemId}`,
+      headers: { cookie },
+      payload: { pinned: false },
+    })
+    expect(unpin.statusCode).toBe(200)
+    expect(unpin.json().pinnedAt).toBeNull()
+  })
+
+  it('persists manual track order via PUT /api/me/archive/reorder, ignoring items not owned', async () => {
+    const artist = await prisma.user.findUniqueOrThrow({
+      where: { id: artistUserId },
+      select: { channel: { select: { id: true } } },
+    })
+    const second = await createReadyArchiveItem(prisma, artist.channel!.id, 'Second track')
+
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}other@example.com`,
+      username: 'archive-meta-other',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98512,
+    })
+    const otherItem = await createReadyArchiveItem(prisma, other.channel!.id, 'Not mine')
+
+    const reorder = await app.inject({
+      method: 'PUT',
+      url: '/api/me/archive/reorder',
+      headers: { cookie },
+      payload: { ids: [second.id, archiveItemId, otherItem.id] },
+    })
+    expect(reorder.statusCode).toBe(204)
+
+    const [firstRow, secondRow, otherRow] = await Promise.all([
+      prisma.archiveItem.findUniqueOrThrow({
+        where: { id: second.id },
+        select: { trackOrder: true },
+      }),
+      prisma.archiveItem.findUniqueOrThrow({
+        where: { id: archiveItemId },
+        select: { trackOrder: true },
+      }),
+      prisma.archiveItem.findUniqueOrThrow({
+        where: { id: otherItem.id },
+        select: { trackOrder: true },
+      }),
+    ])
+    expect(firstRow.trackOrder).toBe(0)
+    expect(secondRow.trackOrder).toBe(1)
+    expect(otherRow.trackOrder).toBe(0)
+  })
+
   it('sets cosmic neon text layer via PATCH /api/me/channel/text-layer', async () => {
     const patch = await app.inject({
       method: 'PATCH',

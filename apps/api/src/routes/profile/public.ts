@@ -56,7 +56,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       pronouns: true,
       showJoinDate: true,
       createdAt: true,
-      channel: { select: { slug: true, state: true } },
+      channel: { select: { id: true, slug: true, state: true } },
       releases: {
         where: { state: 'PUBLISHED' },
         orderBy: { releaseDate: 'desc' },
@@ -70,6 +70,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
           releaseDate: true,
           description: true,
           smartLinkSlug: true,
+          pinnedAt: true,
           tracks: {
             orderBy: { position: 'asc' },
             select: {
@@ -107,15 +108,39 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
 
   if (!user) return null
 
-  const archiveIds = user.releases.flatMap((r) =>
-    r.tracks.map((t) => t.archiveItemId).filter((id): id is string => Boolean(id)),
-  )
+  const channelSlug = user.channel?.slug ?? null
+
+  // All READY, public archive items for the "Tracks" tab — a flat list of every
+  // audio file the artist has, independent of whether it's part of a release.
+  const allArchiveItems = user.channel
+    ? await fastify.prisma.archiveItem.findMany({
+        where: { channelId: user.channel.id, status: 'READY', isPublic: true },
+        select: {
+          id: true,
+          title: true,
+          durationSec: true,
+          bannerUrl: true,
+          mp3Key: true,
+          flacKey: true,
+          pinnedAt: true,
+          trackOrder: true,
+          createdAt: true,
+        },
+      })
+    : []
+
+  const archiveIds = new Set<string>([
+    ...user.releases.flatMap((r) =>
+      r.tracks.map((t) => t.archiveItemId).filter((id): id is string => Boolean(id)),
+    ),
+    ...allArchiveItems.map((i) => i.id),
+  ])
 
   const playUrlByArchiveId = new Map<string, string | null>()
-  if (archiveIds.length > 0) {
+  if (archiveIds.size > 0) {
     const items = await fastify.prisma.archiveItem.findMany({
       where: {
-        id: { in: archiveIds },
+        id: { in: [...archiveIds] },
         status: 'READY',
         channel: { userId: user.id },
       },
@@ -129,10 +154,23 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     )
   }
 
-  const channelSlug = user.channel?.slug ?? null
+  const tracks = allArchiveItems.map((item) => ({
+    id: item.id,
+    title: item.title,
+    durationSec: item.durationSec,
+    bannerUrl: item.bannerUrl,
+    playUrl: playUrlByArchiveId.get(item.id) ?? null,
+    pinned: item.pinnedAt != null,
+    pinnedAt: item.pinnedAt?.toISOString() ?? null,
+    trackOrder: item.trackOrder,
+    createdAt: item.createdAt.toISOString(),
+    channelItemUrl: channelSlug ? `/c/${channelSlug}#archive-item-${item.id}` : null,
+  }))
+
   const releases = await Promise.all(
     user.releases.map(async (release) => ({
       ...release,
+      pinned: release.pinnedAt != null,
       artworkUrl: await resolveReleaseArtworkUrl(release),
       tracks: await Promise.all(
         release.tracks.map(async (track) => {
@@ -171,8 +209,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       pronouns: user.pronouns,
       joinDate: user.showJoinDate ? user.createdAt.toISOString() : null,
     },
-    channel: user.channel,
+    channel: user.channel ? { slug: user.channel.slug, state: user.channel.state } : null,
     releases,
+    tracks,
     fanTiers: user.fanTiers,
     collections: await Promise.all(
       user.collections.map(async ({ _count, ...c }) => ({

@@ -52,6 +52,8 @@ export const archiveItemMetadataSelect = {
   sourceFormat: true,
   sourceBitrateKbps: true,
   embedUri: true,
+  pinnedAt: true,
+  trackOrder: true,
   createdAt: true,
   updatedAt: true,
 } as const
@@ -125,6 +127,7 @@ function fieldsToPrismaData(fields: ArchiveMetadataFields): Record<string, unkno
   if (fields.isFallback !== undefined) data.isFallback = fields.isFallback
   if (fields.selectsOptIn !== undefined) data.selectsOptIn = fields.selectsOptIn
   if (fields.commentsEnabled !== undefined) data.commentsEnabled = fields.commentsEnabled
+  if (fields.pinned !== undefined) data.pinnedAt = fields.pinned ? new Date() : null
   return data
 }
 

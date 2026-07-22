@@ -81,6 +81,19 @@ export default function ArchiveEditor({
   const detectedKey = item.keyDetected as string | null | undefined
   const isPublic = (item.isPublic as boolean | undefined) ?? true
   const isReady = item.status === 'READY'
+  const [pinned, setPinned] = useState(Boolean(item.pinnedAt))
+  const [pinPending, setPinPending] = useState(false)
+
+  function togglePin() {
+    setPinPending(true)
+    const next = !pinned
+    startTransition(async () => {
+      const res = await updateArchiveMetadata(item.id, { pinned: next })
+      if (!res.error) setPinned(next)
+      setPinPending(false)
+      router.refresh()
+    })
+  }
 
   return (
     <div className="studio-item-row--list">
@@ -89,6 +102,7 @@ export default function ArchiveEditor({
           <div className="studio-stat-box-title">{item.title}</div>
           <div className="studio-text-muted-sm">
             {item.status as string}
+            {pinned && ' · Pinned'}
             {item.contentType != null && ` · ${String(item.contentType).replace(/_/g, ' ')}`}
             {item.genre != null && ` · ${String(item.genre)}`}
             {item.sourceFormat != null &&
@@ -114,6 +128,9 @@ export default function ArchiveEditor({
                 View on channel →
               </NextLink>
             )}
+            <Button onClick={togglePin} disabled={pinPending} variant="ghost" size="sm">
+              {pinned ? 'Unpin from Stage' : 'Pin to Stage'}
+            </Button>
             <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
               Re-edit
             </Button>

@@ -603,6 +603,7 @@ export const PublicProfileViewSchema = z.object({
     })
     .nullable(),
   releases: z.array(z.record(z.string(), z.unknown())),
+  tracks: z.array(z.record(z.string(), z.unknown())),
   fanTiers: z.array(
     z.object({
       id: z.string(),

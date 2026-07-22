@@ -3908,6 +3908,57 @@
   border-color: color-mix(in srgb, var(--amber) 50%, transparent);
 }
 
+/* ── Tracks tab: sort control + manual reorder ──────────────────────────── */
+[data-tahti-ui='brand'] .prof-tracks-sort {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 6px;
+}
+
+[data-tahti-ui='brand'] .prof-tracks-sort__btn {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+[data-tahti-ui='brand'] .prof-tracks-sort__btn--active {
+  background: color-mix(in srgb, var(--cyan) 16%, var(--card2));
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .prof-tracks-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: auto;
+}
+
+[data-tahti-ui='brand'] .prof-tracks-reorder button {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  line-height: 1;
+}
+
+[data-tahti-ui='brand'] .prof-tracks-reorder button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* ── Press-kit photo gallery ─────────────────────────────────────────────── */
 [data-tahti-ui='brand'] .prof-presskit-grid {
   display: grid;

@@ -104,6 +104,7 @@ describe('api response schemas', () => {
       },
       channel: { slug: 'dj1', state: 'OFFLINE' },
       releases: [],
+      tracks: [],
       fanTiers: [],
       collections: [],
       links: {

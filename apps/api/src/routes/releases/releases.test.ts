@@ -149,6 +149,36 @@ describe('M12 — releases and public profile', () => {
     expect(link.json().targets.tidal).toContain('tidal.com')
   })
 
+  it('pins a release and reflects it on the public profile, then unpins', async () => {
+    const release = await prisma.release.findFirst({
+      where: { user: { username }, state: 'PUBLISHED' },
+    })
+    const pin = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: { pinned: true },
+    })
+    expect(pin.statusCode).toBe(200)
+    expect(pin.json().pinnedAt).toBeTruthy()
+
+    const profile = await app.inject({
+      method: 'GET',
+      url: `/api/v1/u/${username}/profile`,
+    })
+    const pinnedRelease = profile.json().releases.find((r: { id: string }) => r.id === release!.id)
+    expect(pinnedRelease.pinned).toBe(true)
+
+    const unpin = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/releases/${release!.id}`,
+      headers: { cookie },
+      payload: { pinned: false },
+    })
+    expect(unpin.statusCode).toBe(200)
+    expect(unpin.json().pinnedAt).toBeNull()
+  })
+
   it('rejects publishing a release with no tracks', async () => {
     const create = await app.inject({
       method: 'POST',

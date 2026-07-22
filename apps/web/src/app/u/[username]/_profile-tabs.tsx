@@ -5,21 +5,21 @@
 
 import { useState, type ReactNode } from 'react'
 
-type Tab = 'overview' | 'feed' | 'tracks'
+type Tab = 'stage' | 'feed' | 'tracks'
 
 export function ProfileTabs({
-  overview,
+  stage,
   feed,
   tracks,
 }: {
-  overview: ReactNode
+  stage: ReactNode
   feed: ReactNode
   tracks: ReactNode
 }) {
-  const [active, setActive] = useState<Tab>('overview')
+  const [active, setActive] = useState<Tab>('stage')
 
   const tabs: Array<{ id: Tab; label: string }> = [
-    { id: 'overview', label: 'Overview' },
+    { id: 'stage', label: 'Stage' },
     { id: 'feed', label: 'Feed' },
     { id: 'tracks', label: 'Tracks' },
   ]
@@ -40,8 +40,8 @@ export function ProfileTabs({
           </button>
         ))}
       </div>
-      <div className="prof-tabs__panel" hidden={active !== 'overview'}>
-        {overview}
+      <div className="prof-tabs__panel" hidden={active !== 'stage'}>
+        {stage}
       </div>
       <div className="prof-tabs__panel" hidden={active !== 'feed'}>
         {feed}

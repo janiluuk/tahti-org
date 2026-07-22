@@ -1078,6 +1078,12 @@ model ArchiveItem {
   // ever add that for tracks, colorSchemeJson is the artist's explicit override.
   paletteJson     String?
   colorSchemeJson String?
+  // Artist's public "Stage" showcase (PLAT-Stage): pinned tracks/releases float to
+  // the top of the profile's Stage tab, most-recently-pinned first. trackOrder is
+  // the manual-sort position for the separate flat "Tracks" tab (all archive items,
+  // unrelated to pinning) — same publicProfileOrder-reorder pattern as Collection.
+  pinnedAt      DateTime?
+  trackOrder    Int               @default(0)
   fileSizeBytes BigInt?           // null for *_EMBED sources
   source        ArchiveItemSource   @default(UPLOAD)
   qualityBadge  ArchiveQualityBadge @default(LOSSLESS)
@@ -1555,6 +1561,9 @@ model Release {
   paletteJson      String?      // extracted from cover art: JSON {bg,accent,text,muted,highlight}
   colorSchemeJson  String?      // artist-override JSON {bg,accent,text,muted,highlight}
   visualPreset     VisualPreset @default(MINIMAL)
+  // Artist's public "Stage" showcase: pinned releases float to the top of the
+  // profile's Stage tab, most-recently-pinned first — same mechanism as ArchiveItem.pinnedAt.
+  pinnedAt         DateTime?
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 

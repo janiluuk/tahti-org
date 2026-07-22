@@ -17,6 +17,7 @@ import { resolveChannelUrl } from '@/lib/app-url'
 import type { PublicPressKitImage } from '@tahti/shared'
 import { ProfileTabs } from './_profile-tabs'
 import { ProfileFeed } from './_profile-feed'
+import { TracksTab } from './_tracks-tab'
 
 export const revalidate = 60
 
@@ -91,6 +92,8 @@ interface ProfileResponse {
     description: string | null
     artworkUrl: string | null
     smartLinkSlug: string
+    pinned?: boolean
+    pinnedAt?: string | null
     tracks: Array<{
       position: number
       title: string
@@ -99,6 +102,18 @@ interface ProfileResponse {
       playUrl?: string | null
       channelItemUrl?: string | null
     }>
+  }>
+  tracks: Array<{
+    id: string
+    title: string
+    durationSec: number | null
+    bannerUrl: string | null
+    playUrl: string | null
+    pinned: boolean
+    pinnedAt: string | null
+    trackOrder: number
+    createdAt: string
+    channelItemUrl: string | null
   }>
   links: {
     channel: string | null
@@ -173,7 +188,31 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const [data, user] = await Promise.all([fetchProfile(params.username), getSessionUser()])
   if (!data) notFound()
 
-  const { artist, channel, releases, links, collections = [] } = data
+  const { artist, channel, releases, tracks, links, collections = [] } = data
+  const pinnedItems = [
+    ...releases
+      .filter((r) => r.pinned)
+      .map((r) => ({
+        kind: 'release' as const,
+        id: r.id,
+        title: r.title,
+        subtitle: r.type,
+        coverUrl: r.artworkUrl,
+        href: `/r/${r.smartLinkSlug}`,
+        pinnedAt: r.pinnedAt ?? null,
+      })),
+    ...tracks
+      .filter((t) => t.pinned)
+      .map((t) => ({
+        kind: 'track' as const,
+        id: t.id,
+        title: t.title,
+        subtitle: 'Track',
+        coverUrl: t.bannerUrl,
+        href: t.channelItemUrl,
+        pinnedAt: t.pinnedAt,
+      })),
+  ].sort((a, b) => (b.pinnedAt ?? '').localeCompare(a.pinnedAt ?? ''))
   const isLive = channel?.state === 'LIVE'
   const isOwner = user?.username === artist.username
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
@@ -233,8 +272,55 @@ export default async function ArtistProfilePage({ params }: { params: { username
         }
       >
         <ProfileTabs
-          overview={
+          stage={
             <>
+              {pinnedItems.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label">Pinned</div>
+                  <ul className="prof-list prof-collection-list">
+                    {pinnedItems.map((p) => (
+                      <li key={`${p.kind}-${p.id}`}>
+                        {p.href ? (
+                          <Link href={p.href} className="prof-collection-row">
+                            <div className="prof-collection-cover">
+                              {p.coverUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={p.coverUrl} alt="" width={76} height={76} />
+                              ) : (
+                                <span className="prof-collection-cover-ph" aria-hidden />
+                              )}
+                            </div>
+                            <div>
+                              <div className="prof-collection-title">{p.title}</div>
+                              <div className="prof-list-meta prof-list-meta--strong">
+                                {p.subtitle}
+                              </div>
+                            </div>
+                          </Link>
+                        ) : (
+                          <div className="prof-collection-row">
+                            <div className="prof-collection-cover">
+                              {p.coverUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={p.coverUrl} alt="" width={76} height={76} />
+                              ) : (
+                                <span className="prof-collection-cover-ph" aria-hidden />
+                              )}
+                            </div>
+                            <div>
+                              <div className="prof-collection-title">{p.title}</div>
+                              <div className="prof-list-meta prof-list-meta--strong">
+                                {p.subtitle}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
               {collections.length > 0 && (
                 <section className="prof-section">
                   <div className="prof-sec-label">Collections</div>
@@ -277,6 +363,46 @@ export default async function ArtistProfilePage({ params }: { params: { username
                   </a>
                 </p>
                 {pressKitImages.length > 0 && <PressKitGallery images={pressKitImages} />}
+              </section>
+
+              <section className="prof-section">
+                <div className="prof-sec-label-row">
+                  <div className="prof-sec-label">Releases</div>
+                  <div className="prof-sec-label-row__actions">
+                    {releases.length > 0 && (
+                      <div className="prof-sec-count">{releases.length} total</div>
+                    )}
+                    {isOwner && (
+                      <Link
+                        href="/dashboard/releases"
+                        className="prof-sec-add-btn"
+                        aria-label="Create a new release"
+                        title="Create a new release"
+                      >
+                        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+                          <path
+                            fill="currentColor"
+                            d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"
+                          />
+                        </svg>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+                {releases.length === 0 ? (
+                  <div className="public-empty-card">
+                    <p className="public-empty-card__text">No published releases yet.</p>
+                    <p className="public-empty-card__hint">
+                      {isLive && links.channel ? (
+                        <Link href={links.channel}>Tune in live</Link>
+                      ) : (
+                        'New releases appear here when the artist publishes.'
+                      )}
+                    </p>
+                  </div>
+                ) : (
+                  <ReleasesGrid releases={releases} />
+                )}
               </section>
 
               {events.length > 0 && (
@@ -445,43 +571,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
           }
           tracks={
             <section className="prof-section">
-              <div className="prof-sec-label-row">
-                <div className="prof-sec-label">Releases</div>
-                <div className="prof-sec-label-row__actions">
-                  {releases.length > 0 && (
-                    <div className="prof-sec-count">{releases.length} total</div>
-                  )}
-                  {isOwner && (
-                    <Link
-                      href="/dashboard/releases"
-                      className="prof-sec-add-btn"
-                      aria-label="Create a new release"
-                      title="Create a new release"
-                    >
-                      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-                        <path
-                          fill="currentColor"
-                          d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"
-                        />
-                      </svg>
-                    </Link>
-                  )}
-                </div>
-              </div>
-              {releases.length === 0 ? (
-                <div className="public-empty-card">
-                  <p className="public-empty-card__text">No published releases yet.</p>
-                  <p className="public-empty-card__hint">
-                    {isLive && links.channel ? (
-                      <Link href={links.channel}>Tune in live</Link>
-                    ) : (
-                      'New releases appear here when the artist publishes.'
-                    )}
-                  </p>
-                </div>
-              ) : (
-                <ReleasesGrid releases={releases} />
-              )}
+              <TracksTab tracks={tracks} isOwner={isOwner} />
             </section>
           }
         />

@@ -33,6 +33,7 @@ interface ReleaseSummary {
   visualPreset?: string | null
   colorSchemeJson?: string | null
   paletteJson?: string | null
+  pinnedAt?: string | null
   tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
