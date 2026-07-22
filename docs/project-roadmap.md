@@ -697,7 +697,7 @@ Cross-cutting audit of auth, studio UX, and dashboard/API performance. Items mar
 | [x] | **SEC-007** | **Centrifugo publish proxy auth** — `/api/chat/message` now sits behind the same `isTrustedInternalRequest` check as `/internal/*` (private network or `Bearer $INTERNAL_SECRET`); Centrifugo always calls it over the internal Docker network. Fixed 2026-07-07. | P2 |
 | [x] | **SEC-008** | **Caddy HSTS + baseline CSP** — HSTS enforcing, CSP report-only (deliberately, given the wide set of embedded third-party origins — Stripe, Spotify, YouTube, Vimeo, Mixcloud, chat WebSocket — that can't be fully verified without production traffic) via a reusable `(security_headers)` snippet in `infra/Caddyfile`. Fixed 2026-07-07; also surfaced and fixed three independent pre-existing bugs that meant this Caddyfile could never actually start (duplicate `@ws` matcher, `tls` nested in a `handle` block, missing on-demand-TLS `ask` permission module) and a 5-occurrence `api:3000`→`api:3001` port mismatch across `Caddyfile`/`docker-stack.yml` — see `docs/worklogs/2026-07-07-gap-analysis-promises-vs-implementation.md` §7. | P2 |
 | [x] | **SEC-009** | **Restrict `/metrics`** to internal scrape network or token. | P2 |
-| [ ] | **SEC-010** | **Session revocation on login** — delete other sessions when password/login succeeds. | P3 |
+| [x] | **SEC-010** | **Session revocation on login** — `revokeAllSessions()` (`apps/api/src/lib/session.ts`) deletes every other session for the account right before a fresh one is created, wired into both `/api/auth/login` and the TOTP-completion step `/api/auth/login/totp` (the actual point a 2FA login succeeds). Fixed 2026-07-22. | P3 |
 
 #### UX (UX)
 

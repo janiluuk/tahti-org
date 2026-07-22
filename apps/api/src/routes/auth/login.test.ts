@@ -156,6 +156,51 @@ describe('POST /api/auth/login', () => {
     expect(response.statusCode).toBe(401)
   })
 
+  it('SEC-010: a second login revokes the first session', async () => {
+    const firstLogin = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: `${TEST_EMAIL_PREFIX}user@example.com`,
+        password: 'correctpassword',
+      },
+    })
+    const firstCookie = firstLogin.cookies.find((c) => c.name === 'tahti_session')!
+
+    // Confirm it's valid before the second login
+    const meBefore = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      cookies: { tahti_session: firstCookie.value },
+    })
+    expect(meBefore.statusCode).toBe(200)
+
+    const secondLogin = await app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: {
+        email: `${TEST_EMAIL_PREFIX}user@example.com`,
+        password: 'correctpassword',
+      },
+    })
+    const secondCookie = secondLogin.cookies.find((c) => c.name === 'tahti_session')!
+    expect(secondCookie.value).not.toBe(firstCookie.value)
+
+    const meAfterFirst = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      cookies: { tahti_session: firstCookie.value },
+    })
+    expect(meAfterFirst.statusCode).toBe(401)
+
+    const meAfterSecond = await app.inject({
+      method: 'GET',
+      url: '/api/auth/me',
+      cookies: { tahti_session: secondCookie.value },
+    })
+    expect(meAfterSecond.statusCode).toBe(200)
+  })
+
   it('POST /api/auth/logout clears the session', async () => {
     const loginResponse = await app.inject({
       method: 'POST',

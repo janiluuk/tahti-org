@@ -4,7 +4,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { AuthLoginResponseSchema, LoginSchema, openApiResponse } from '@tahti/shared'
 import { verifyPassword } from '../../lib/password.js'
-import { createSession } from '../../lib/session.js'
+import { createSession, revokeAllSessions } from '../../lib/session.js'
 import { generateTotpChallengeId, totpChallengeExpiresAt } from '../../lib/token.js'
 import { config } from '../../config.js'
 
@@ -75,6 +75,7 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
         return reply.send({ requiresTotp: true, challengeId: challenge.id })
       }
 
+      await revokeAllSessions(fastify.prisma, user.id)
       const session = await createSession(fastify.prisma, user.id)
 
       reply.setCookie(config.sessionCookieName, session.id, {
