@@ -166,49 +166,6 @@ export default function FanSubscriptionsPanel({
         className="import-page__panel studio-mt-md"
         flushTop
       >
-        {payoutStats && (
-          <div className="studio-text-muted-sm">
-            <p className="studio-m-0 studio-mb-sm">
-              {payoutStats.pending > 0 && `${payoutStats.pending} payout pending`}
-              {payoutStats.failed > 0 && (
-                <span className="studio-text-warn">
-                  {payoutStats.pending > 0 ? ' · ' : ''}
-                  {payoutStats.failed} failed (Stripe transfer retried daily)
-                </span>
-              )}
-              {payoutStats.paidLast30Days > 0 &&
-                `${payoutStats.pending > 0 || payoutStats.failed > 0 ? ' · ' : ''}${payoutStats.paidLast30Days} paid (30d)`}
-              {(payoutStats.pending > 0 ||
-                payoutStats.failed > 0 ||
-                payoutStats.paidLast30Days > 0) &&
-                ' · '}
-              <a href={`${apiUrl}/api/me/fan-subscribers/export.csv`} className="studio-link-cta">
-                Export subscribers (CSV)
-              </a>
-            </p>
-            {payoutStats.recent && payoutStats.recent.length > 0 && (
-              <table className="studio-table studio-table--sm">
-                <thead>
-                  <tr>
-                    <th>Tier</th>
-                    <th>Net</th>
-                    <th>State</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payoutStats.recent.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.tierName}</td>
-                      <td>{eur(p.netToArtistCents)}</td>
-                      <td>{p.state}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
-
         {needsStripe && (
           <div className="studio-stripe-banner">
             <p className="studio-m-0 studio-mb-md studio-text-sm">
@@ -225,97 +182,150 @@ export default function FanSubscriptionsPanel({
           </div>
         )}
 
-        {initial.length === 0 && <p className="studio-empty">No fan tiers yet.</p>}
-
-        {initial.length > 0 && (
-          <ul className="studio-list studio-mt-md">
-            {initial.map((t) => (
-              <li
-                key={t.id}
-                className={`studio-row--between studio-item-row${t.active ? '' : ' studio-tier-inactive'}`}
-              >
-                <span>
-                  <strong>{t.name}</strong> · {eur(t.amountCents)}/mo
-                  {t.description && (
-                    <span className="studio-text-muted-sm"> — {t.description}</span>
+        <div className="fan-subs-layout studio-mt-md">
+          <div className="fan-subs-layout__col">
+            {payoutStats && (
+              <div className="studio-text-muted-sm">
+                <p className="studio-m-0 studio-mb-sm">
+                  {payoutStats.pending > 0 && `${payoutStats.pending} payout pending`}
+                  {payoutStats.failed > 0 && (
+                    <span className="studio-text-warn">
+                      {payoutStats.pending > 0 ? ' · ' : ''}
+                      {payoutStats.failed} failed (Stripe transfer retried daily)
+                    </span>
                   )}
-                </span>
-                <Button
-                  onClick={() => toggle(t.id, !t.active)}
-                  disabled={isPending}
-                  variant="ghost"
-                  size="sm"
-                >
-                  {t.active ? 'Disable' : 'Enable'}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
+                  {payoutStats.paidLast30Days > 0 &&
+                    `${payoutStats.pending > 0 || payoutStats.failed > 0 ? ' · ' : ''}${payoutStats.paidLast30Days} paid (30d)`}
+                  {(payoutStats.pending > 0 ||
+                    payoutStats.failed > 0 ||
+                    payoutStats.paidLast30Days > 0) &&
+                    ' · '}
+                  <a
+                    href={`${apiUrl}/api/me/fan-subscribers/export.csv`}
+                    className="studio-link-cta"
+                  >
+                    Export subscribers (CSV)
+                  </a>
+                </p>
+                {payoutStats.recent && payoutStats.recent.length > 0 && (
+                  <table className="studio-table studio-table--sm">
+                    <thead>
+                      <tr>
+                        <th>Tier</th>
+                        <th>Net</th>
+                        <th>State</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payoutStats.recent.map((p) => (
+                        <tr key={p.id}>
+                          <td>{p.tierName}</td>
+                          <td>{eur(p.netToArtistCents)}</td>
+                          <td>{p.state}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
 
-        <div className="studio-grid studio-mt-md">
-          <label className="studio-field">
-            <span className="studio-label">Tier name</span>
-            <input
-              placeholder="e.g. Backer"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="studio-input"
-            />
-          </label>
+            {initial.length === 0 && <p className="studio-empty">No fan tiers yet.</p>}
 
-          <div className="fan-tier-price">
-            <span className="fan-tier-price__value">{eur(Math.round(amount * 100))}/mo</span>
-            <input
-              type="range"
-              min={1}
-              max={50}
-              step={1}
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              className="fan-tier-price__slider"
-              aria-label="Monthly price"
-            />
+            {initial.length > 0 && (
+              <ul className="studio-list studio-mt-md">
+                {initial.map((t) => (
+                  <li
+                    key={t.id}
+                    className={`studio-row--between studio-item-row${t.active ? '' : ' studio-tier-inactive'}`}
+                  >
+                    <span>
+                      <strong>{t.name}</strong> · {eur(t.amountCents)}/mo
+                      {t.description && (
+                        <span className="studio-text-muted-sm"> — {t.description}</span>
+                      )}
+                    </span>
+                    <Button
+                      onClick={() => toggle(t.id, !t.active)}
+                      disabled={isPending}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      {t.active ? 'Disable' : 'Enable'}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
-          <label className="studio-field">
-            <span className="studio-label">Description (optional)</span>
-            <input
-              placeholder="Short description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="studio-input"
-            />
-          </label>
+          <div className="fan-subs-layout__col">
+            <span className="studio-label">Add a new tier</span>
+            <div className="studio-grid studio-mt-sm">
+              <label className="studio-field">
+                <span className="studio-label">Tier name</span>
+                <input
+                  placeholder="e.g. Backer"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="studio-input"
+                />
+              </label>
 
-          <div className="fan-tier-perks">
-            {KNOWN_PERKS.map((perk) => (
-              <button
-                key={perk.key}
-                type="button"
-                className={`fan-tier-perk-card${togglablePerks.has(perk.key) ? ' fan-tier-perk-card--active' : ''}`}
-                onClick={() => togglePerk(perk.key)}
-              >
-                {perk.label}
-              </button>
-            ))}
+              <div className="fan-tier-price">
+                <span className="fan-tier-price__value">{eur(Math.round(amount * 100))}/mo</span>
+                <input
+                  type="range"
+                  min={1}
+                  max={50}
+                  step={1}
+                  value={amount}
+                  onChange={(e) => setAmount(Number(e.target.value))}
+                  className="fan-tier-price__slider"
+                  aria-label="Monthly price"
+                />
+              </div>
+
+              <label className="studio-field">
+                <span className="studio-label">Description (optional)</span>
+                <input
+                  placeholder="Short description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="studio-input"
+                />
+              </label>
+
+              <div className="fan-tier-perks">
+                {KNOWN_PERKS.map((perk) => (
+                  <button
+                    key={perk.key}
+                    type="button"
+                    className={`fan-tier-perk-card${togglablePerks.has(perk.key) ? ' fan-tier-perk-card--active' : ''}`}
+                    onClick={() => togglePerk(perk.key)}
+                  >
+                    {perk.label}
+                  </button>
+                ))}
+              </div>
+
+              <label className="studio-field">
+                <span className="studio-label">Additional perks (optional)</span>
+                <textarea
+                  placeholder="One per line"
+                  value={customPerks}
+                  onChange={(e) => setCustomPerks(e.target.value)}
+                  rows={2}
+                  className="studio-textarea"
+                />
+              </label>
+              {error && <p className="studio-text-error studio-m-0">{error}</p>}
+              <Button onClick={add} disabled={isPending} variant="primary">
+                <ButtonIcon name="plus" />
+                {isPending ? 'Saving…' : 'Add tier'}
+              </Button>
+            </div>
           </div>
-
-          <label className="studio-field">
-            <span className="studio-label">Additional perks (optional)</span>
-            <textarea
-              placeholder="One per line"
-              value={customPerks}
-              onChange={(e) => setCustomPerks(e.target.value)}
-              rows={2}
-              className="studio-textarea"
-            />
-          </label>
-          {error && <p className="studio-text-error studio-m-0">{error}</p>}
-          <Button onClick={add} disabled={isPending} variant="primary">
-            <ButtonIcon name="plus" />
-            {isPending ? 'Saving…' : 'Add tier'}
-          </Button>
         </div>
       </Panel>
     </>

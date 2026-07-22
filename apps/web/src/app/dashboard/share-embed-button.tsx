@@ -71,6 +71,14 @@ export function ShareEmbedButton({
   )
 }
 
+type EmbedSize = 'compact' | 'standard' | 'large'
+
+const EMBED_SIZES: Record<EmbedSize, { label: string; width: number; height: number }> = {
+  compact: { label: 'Compact', width: 300, height: 150 },
+  standard: { label: 'Standard', width: 400, height: 300 },
+  large: { label: 'Large', width: 700, height: 420 },
+}
+
 function ShareEmbedModal({
   channelSlug,
   displayName,
@@ -82,10 +90,18 @@ function ShareEmbedModal({
 }) {
   const [tab, setTab] = useState<'share' | 'embed'>('share')
   const [copied, setCopied] = useState<'link' | 'code' | null>(null)
+  const [size, setSize] = useState<EmbedSize>('standard')
+  const [showTracklist, setShowTracklist] = useState(true)
+  const [transparentBg, setTransparentBg] = useState(false)
 
   const publicUrl = resolveChannelUrl(channelSlug)
-  const embedSrc = `${resolveAppUrl()}/embed/c/${channelSlug}`
-  const embedCode = `<iframe src="${embedSrc}" width="400" height="300" style="border:0;border-radius:12px;overflow:hidden" allow="autoplay; encrypted-media" loading="lazy"></iframe>`
+  const { width, height } = EMBED_SIZES[size]
+  const embedParams = new URLSearchParams()
+  if (!showTracklist) embedParams.set('tracklist', '0')
+  if (transparentBg) embedParams.set('bg', 'transparent')
+  const embedQuery = embedParams.toString()
+  const embedSrc = `${resolveAppUrl()}/embed/c/${channelSlug}${embedQuery ? `?${embedQuery}` : ''}`
+  const embedCode = `<iframe src="${embedSrc}" width="${width}" height="${height}" style="border:0;border-radius:12px;overflow:hidden" allow="autoplay; encrypted-media" loading="lazy"></iframe>`
   const shareText = `Listen to ${displayName} on Tahti`
 
   async function copy(text: string, which: 'link' | 'code') {
@@ -164,7 +180,40 @@ function ShareEmbedModal({
           </div>
         ) : (
           <div className="share-embed-modal__body">
-            <label className="studio-field--block">
+            <label className="studio-label-row studio-text-sm">
+              Size
+              <select
+                value={size}
+                onChange={(e) => setSize(e.target.value as EmbedSize)}
+                className="studio-input studio-select-min"
+              >
+                {(Object.keys(EMBED_SIZES) as EmbedSize[]).map((key) => (
+                  <option key={key} value={key}>
+                    {EMBED_SIZES[key].label} ({EMBED_SIZES[key].width}×{EMBED_SIZES[key].height})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="studio-checkbox-row studio-mt-sm">
+              <input
+                type="checkbox"
+                checked={showTracklist}
+                onChange={(e) => setShowTracklist(e.target.checked)}
+              />
+              Show tracklist while live
+            </label>
+
+            <label className="studio-checkbox-row">
+              <input
+                type="checkbox"
+                checked={transparentBg}
+                onChange={(e) => setTransparentBg(e.target.checked)}
+              />
+              Transparent background
+            </label>
+
+            <label className="studio-field--block studio-mt-sm">
               <span className="studio-label">Embed code</span>
               <textarea
                 readOnly
@@ -183,8 +232,19 @@ function ShareEmbedModal({
               {copied === 'code' ? 'Copied!' : 'Copy embed code'}
             </Button>
             <p className="studio-text-muted-sm studio-mt-sm">
-              Paste this into any website. Adjust the width/height attributes as needed.
+              Paste this into any website. The preview below updates as you change the options
+              above.
             </p>
+            <div className="share-embed-modal__preview studio-mt-sm">
+              <iframe
+                key={embedSrc}
+                src={embedSrc}
+                width={width}
+                height={height}
+                style={{ border: 0, borderRadius: 12, overflow: 'hidden', maxWidth: '100%' }}
+                title="Embed preview"
+              />
+            </div>
           </div>
         )}
       </div>
