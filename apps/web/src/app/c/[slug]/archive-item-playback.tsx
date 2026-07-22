@@ -22,6 +22,8 @@ interface Props {
     visualPreset?: VisualPreset | string | null
     repostToDownload?: boolean
     followToDownload?: boolean
+    commentCount?: number
+    downloadCount?: number
   }
   colorSchemeJson?: string | null
   isLoggedIn: boolean
@@ -98,8 +100,13 @@ export function ArchiveItemPlayback({
           itemId={item.id}
           repostToDownload={Boolean(item.repostToDownload)}
           followToDownload={Boolean(item.followToDownload)}
+          downloadCount={item.downloadCount ?? 0}
         />
-        <TrackCommentsToggle archiveItemId={item.id} isLoggedIn={isLoggedIn} />
+        <TrackCommentsToggle
+          archiveItemId={item.id}
+          isLoggedIn={isLoggedIn}
+          commentCount={item.commentCount ?? 0}
+        />
       </div>
     </div>
   )

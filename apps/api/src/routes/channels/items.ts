@@ -72,17 +72,36 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             backgroundUrl: true,
             slideshowUrls: true,
             visualPreset: true,
+            _count: { select: { comments: true } },
           },
         })
 
+        const itemIds = items.map((item) => item.id)
+        const downloadCounts =
+          itemIds.length > 0
+            ? await fastify.prisma.download.groupBy({
+                by: ['archiveItemId'],
+                where: { archiveItemId: { in: itemIds }, countedAt: { not: null } },
+                _count: { _all: true },
+              })
+            : []
+        const downloadCountById = new Map(
+          downloadCounts
+            .filter((row) => row.archiveItemId != null)
+            .map((row) => [row.archiveItemId!, row._count._all]),
+        )
+
         return Promise.all(
           items.map(async (item) => {
+            const { _count, ...rest } = item
             const playbackKey = archivePlaybackKey(item)
             const audioUrl = playbackKey ? await presignedGetUrl(playbackKey, 3600) : null
             return {
-              ...serializeArchiveItem(item),
+              ...serializeArchiveItem(rest),
               fileSizeBytes: Number(item.fileSizeBytes),
               audioUrl,
+              commentCount: _count.comments,
+              downloadCount: downloadCountById.get(item.id) ?? 0,
             }
           }),
         )

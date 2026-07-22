@@ -88,6 +88,8 @@ interface ArchiveItem {
   bannerUrl?: string | null
   backgroundUrl?: string | null
   slideshowUrls?: string[]
+  commentCount?: number
+  downloadCount?: number
 }
 
 interface Announcement {
@@ -585,7 +587,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                             isLoggedIn={!!user}
                           />
                         ) : (
-                          <TrackCommentsToggle archiveItemId={item.id} isLoggedIn={!!user} />
+                          <TrackCommentsToggle
+                            archiveItemId={item.id}
+                            isLoggedIn={!!user}
+                            commentCount={item.commentCount ?? 0}
+                          />
                         )}
                       </li>
                     )
