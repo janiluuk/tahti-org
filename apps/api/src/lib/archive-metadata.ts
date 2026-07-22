@@ -45,6 +45,8 @@ export const archiveItemMetadataSelect = {
   fallbackOrder: true,
   lastFallbackPlayedAt: true,
   visualPreset: true,
+  colorSchemeJson: true,
+  paletteJson: true,
   status: true,
   durationSec: true,
   sourceFormat: true,

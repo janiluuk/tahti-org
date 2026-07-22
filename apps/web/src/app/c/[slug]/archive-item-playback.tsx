@@ -24,6 +24,7 @@ interface Props {
     followToDownload?: boolean
     commentCount?: number
     downloadCount?: number
+    accentColor?: string | null
   }
   colorSchemeJson?: string | null
   isLoggedIn: boolean
@@ -74,7 +75,14 @@ export function ArchiveItemPlayback({
       {/* Waveform only for the currently-loaded track — keeps every other row a
        * single compact line instead of a tall card, closer to how a music-app
        * playlist lists tracks (detail only on the one that's actually playing). */}
-      {isCurrent && <ArchiveWaveform peaks={item.peaks} progress={progress} onSeek={seek} />}
+      {isCurrent && (
+        <ArchiveWaveform
+          peaks={item.peaks}
+          progress={progress}
+          onSeek={seek}
+          accentColor={item.accentColor}
+        />
+      )}
       <div className="ch-archive-controls-row">
         <div className="ch-archive-controls">
           <button

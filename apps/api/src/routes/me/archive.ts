@@ -477,8 +477,15 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
           ...(parsed.data.visualPreset !== undefined
             ? { visualPreset: parsed.data.visualPreset }
             : {}),
+          ...(parsed.data.colorScheme !== undefined
+            ? {
+                colorSchemeJson: parsed.data.colorScheme
+                  ? JSON.stringify(parsed.data.colorScheme)
+                  : null,
+              }
+            : {}),
         },
-        select: { visualPreset: true },
+        select: { visualPreset: true, colorSchemeJson: true },
       })
       return reply.send(updated)
     },

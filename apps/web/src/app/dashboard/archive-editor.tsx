@@ -171,6 +171,8 @@ export default function ArchiveEditor({
             initial={{
               visualPreset: ((item.visualPreset as string | undefined) ??
                 'MINIMAL') as import('@tahti/shared').VisualPreset,
+              colorSchemeJson: (item.colorSchemeJson as string | null | undefined) ?? null,
+              paletteJson: (item.paletteJson as string | null | undefined) ?? null,
             }}
           />
 

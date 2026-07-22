@@ -775,7 +775,7 @@
   flex: 1;
   min-width: 1px;
   height: var(--h, 4%);
-  background: var(--cyan);
+  background: var(--ch-wf-accent, var(--cyan));
   opacity: 0.35;
   border-radius: 1px;
   transition: opacity 0.1s;
