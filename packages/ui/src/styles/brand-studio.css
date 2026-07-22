@@ -2308,6 +2308,26 @@
   gap: 0.5rem;
 }
 
+[data-tahti-ui='studio'] .share-embed-modal__preview {
+  overflow-x: auto;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  /* checker pattern so a transparent-background embed is visibly distinguishable from an opaque one */
+  background-image:
+    linear-gradient(45deg, var(--card) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--card) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--card) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--card) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-color: var(--bg);
+}
+
+[data-tahti-ui='studio'] .share-embed-modal__preview iframe {
+  display: block;
+}
+
 [data-tahti-ui='studio'] .avatar-crop-modal {
   display: flex;
   flex-direction: column;
@@ -3922,6 +3942,9 @@
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
+  max-height: min(640px, calc(100vh - 280px));
+  overflow-y: auto;
+  padding-right: var(--space-2);
 }
 
 [data-tahti-ui='studio'] .studio-channel-preview {
@@ -4375,6 +4398,23 @@
 
 [data-tahti-ui='studio'] .fan-subs-hero__link {
   margin-left: auto;
+}
+
+[data-tahti-ui='studio'] .fan-subs-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  [data-tahti-ui='studio'] .fan-subs-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+[data-tahti-ui='studio'] .fan-subs-layout__col {
+  min-width: 0;
 }
 
 [data-tahti-ui='studio'] .fan-tier-price {

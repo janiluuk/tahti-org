@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { notFound } from 'next/navigation'
-import { Link, LiveBadge, Text } from '@tahti/ui'
+import { EmbedShell, Link, LiveBadge, Text } from '@tahti/ui'
 import HlsPlayer from '../../../c/[slug]/hls-player'
 import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 
@@ -14,7 +14,13 @@ interface EmbedChannel {
   hlsUrl: string | null
 }
 
-export default async function ChannelEmbedPage({ params }: { params: { slug: string } }) {
+export default async function ChannelEmbedPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string }
+  searchParams: { tracklist?: string; bg?: string }
+}) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const res = await fetch(`${apiUrl}/api/v1/embed/c/${encodeURIComponent(params.slug)}`, {
     cache: 'no-store',
@@ -22,8 +28,11 @@ export default async function ChannelEmbedPage({ params }: { params: { slug: str
   if (!res.ok) notFound()
   const channel = (await res.json()) as EmbedChannel
 
+  const showTracklist = searchParams.tracklist !== '0'
+  const transparent = searchParams.bg === 'transparent'
+
   return (
-    <div>
+    <EmbedShell transparent={transparent}>
       <div className="embed-header">
         {channel.artist.avatarUrl && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -62,9 +71,9 @@ export default async function ChannelEmbedPage({ params }: { params: { slug: str
         </Text>
       )}
 
-      {channel.state === 'LIVE' && channel.hlsUrl && (
+      {showTracklist && channel.state === 'LIVE' && channel.hlsUrl && (
         <LiveTracklistPanel slug={channel.slug} className="embed-live-tracklist" />
       )}
-    </div>
+    </EmbedShell>
   )
 }
