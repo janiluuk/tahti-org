@@ -31,6 +31,7 @@ import {
   processMembershipRenewalJob,
 } from './jobs/membership-lifecycle.js'
 import { processMentionDigestJob } from './jobs/mention-digest.js'
+import { processPostPublishNotifyJob } from './jobs/post-publish-notify.js'
 import { processRevelatorDeliverJob } from './jobs/revelator-deliver.js'
 import { processRevelatorRoyaltySyncJob } from './jobs/revelator-royalty-sync.js'
 import { processChannelWatchdogJob } from './jobs/channel-watchdog.js'
@@ -174,6 +175,8 @@ const worker = new Worker(
         await processMembershipLapseJob(job)
       } else if (job.name === 'mention-digest') {
         await processMentionDigestJob(job)
+      } else if (job.name === 'post-publish-notify') {
+        await processPostPublishNotifyJob(job)
       } else if (job.name === 'revelator-deliver') {
         await processRevelatorDeliverJob(job)
       } else if (job.name === 'revelator-royalty-sync') {

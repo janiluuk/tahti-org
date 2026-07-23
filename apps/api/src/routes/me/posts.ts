@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import { nanoid } from 'nanoid'
+import { notifyFollowersOfNewPost } from '@tahti/db'
 import {
   ArtistPostImageCompleteSchema,
   ArtistPostImagePrepareResponseSchema,
@@ -27,6 +28,8 @@ function serialize(post: {
   title: string | null
   body: string
   images: string[]
+  linkUrl: string | null
+  linkLabel: string | null
   publishAt: Date
   createdAt: Date
 }) {
@@ -81,15 +84,28 @@ const mePostRoutes: FastifyPluginAsync = async (fastify) => {
           .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
       }
       const body = parsed.data
+      const publishAt = body.publishAt ? new Date(body.publishAt) : new Date()
+      const isImmediate = publishAt.getTime() <= Date.now()
 
       const post = await fastify.prisma.artistPost.create({
         data: {
           userId: user.id,
           title: body.title?.trim() || null,
           body: body.body,
-          ...(body.publishAt ? { publishAt: new Date(body.publishAt) } : {}),
+          linkUrl: body.linkUrl?.trim() || null,
+          linkLabel: body.linkLabel?.trim() || null,
+          publishAt,
+          ...(isImmediate ? { notifiedAt: new Date() } : {}),
         },
       })
+
+      if (isImmediate) {
+        await notifyFollowersOfNewPost(
+          fastify.prisma,
+          { id: user.id, username: user.username, displayName: user.displayName },
+          post,
+        )
+      }
 
       return reply.status(201).send(serialize(post))
     },

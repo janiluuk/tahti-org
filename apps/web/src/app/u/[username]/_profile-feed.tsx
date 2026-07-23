@@ -8,6 +8,8 @@ interface FeedPost {
   title: string | null
   body: string
   images: string[]
+  linkUrl: string | null
+  linkLabel: string | null
   publishAt: string
 }
 
@@ -61,6 +63,16 @@ export function ProfileFeed({ posts, releases }: { posts: FeedPost[]; releases: 
               {item.post.title && <div className="ch-posts-list__title">{item.post.title}</div>}
               <div className="ch-posts-list__date">{formatFeedDate(item.post.publishAt)}</div>
               <p className="ch-posts-list__body">{item.post.body}</p>
+              {item.post.linkUrl && (
+                <a
+                  href={item.post.linkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ch-posts-list__link"
+                >
+                  {item.post.linkLabel || item.post.linkUrl} ↗
+                </a>
+              )}
               {item.post.images.length > 0 && (
                 <div className="ch-posts-list__images">
                   {item.post.images.map((url) => (

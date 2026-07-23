@@ -44,6 +44,7 @@ export const WORKER_JOB_LANES = {
     'membership-renewal-reminder',
     'membership-lapse',
     'mention-digest',
+    'post-publish-notify',
     'annual-grant-calc',
   ],
   'edge-log': ['hls-caddy-egress-sync'],

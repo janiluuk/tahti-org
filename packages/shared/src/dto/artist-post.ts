@@ -6,6 +6,8 @@ import { z } from 'zod'
 export const CreateArtistPostSchema = z.object({
   title: z.string().trim().max(160).optional(),
   body: z.string().trim().min(1, 'body is required').max(5000),
+  linkUrl: z.string().trim().url().max(500).optional(),
+  linkLabel: z.string().trim().max(100).optional(),
   /** Omit (or set to now/past) to publish immediately; a future time schedules it. */
   publishAt: z.string().datetime().optional(),
 })
@@ -17,6 +19,8 @@ export const ArtistPostSchema = z.object({
   title: z.string().nullable(),
   body: z.string(),
   images: z.array(z.string()),
+  linkUrl: z.string().nullable(),
+  linkLabel: z.string().nullable(),
   publishAt: z.string().datetime(),
   createdAt: z.string().datetime(),
 })

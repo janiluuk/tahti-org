@@ -399,6 +399,12 @@ enum MentionSurface {
   @@schema("core")
 }
 
+enum NotificationType {
+  NEW_POST
+
+  @@schema("core")
+}
+
 enum CollectionType {
   MIX_SERIES
   ALBUM
@@ -588,6 +594,8 @@ model User {
   newsletterDrafts      NewsletterDraft[]
   mentionsSent          Mention[]                @relation("MentionerMentions")
   mentionsReceived      Mention[]                @relation("MentionTarget")
+  notificationsReceived Notification[]           @relation("NotificationRecipient")
+  notificationsActedOn  Notification[]           @relation("NotificationActor")
   mentionsMuted         MentionMute[]            @relation("MuterMutes")
   mentionsMutedBy       MentionMute[]            @relation("MuteTarget")
   collections           Collection[]
@@ -647,14 +655,21 @@ model ArtistPost {
   title     String?
   body      String
   images    String[] @default([])
+  linkUrl   String?
+  linkLabel String?
   // Defaults to createdAt (immediate publish). A future value schedules the
   // post — public routes filter on publishAt <= now, so "publishing" is a
   // pure query-time check, not a status flipped by a cron job.
   publishAt DateTime @default(now())
   createdAt DateTime @default(now())
+  // Set once follower notifications have gone out — immediately for a post
+  // published right away, or by post-publish-notify-cron once a scheduled
+  // post's publishAt passes. Prevents double-notifying scheduled posts.
+  notifiedAt DateTime?
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([userId, publishAt(sort: Desc)])
+  @@index([notifiedAt, publishAt])
   @@schema("core")
 }
 
@@ -1780,6 +1795,29 @@ model VenueBroadcast {
   @@index([venueId, startAt])
   @@index([artistUserId, startAt])
   @@schema("venue")
+}
+
+// ── In-app notifications ──────────────────────────────────────────────────────
+// Generic recipient inbox — currently only NEW_POST (follower notified when an
+// artist they follow publishes), designed to grow into other types (e.g. new
+// direct message) without a schema change.
+
+model Notification {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  type        NotificationType
+  actorUserId String?
+  actor       User?             @relation("NotificationActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  title       String
+  body        String?
+  url         String?
+  readAt      DateTime?
+  createdAt   DateTime          @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+  @@schema("core")
 }
 
 // ── Artist @-mentions (M15) ──────────────────────────────────────────────────
