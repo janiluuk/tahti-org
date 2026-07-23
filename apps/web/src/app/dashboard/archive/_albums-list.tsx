@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import type { AlbumSummary } from './_music-browser'
+import { AddToPlaylistButton } from '../_add-to-playlist-button'
 
 function formatDuration(sec: number | null): string {
   if (sec == null) return ''
@@ -62,8 +63,13 @@ export function AlbumsList({ albums }: { albums: AlbumSummary[] }) {
                     {album.tracks.map((track) => (
                       <li key={track.id}>
                         <span>{track.title}</span>
-                        <span className="studio-text-muted-sm">
-                          {formatDuration(track.durationSec)}
+                        <span className="music-album-tracklist__meta">
+                          <span className="studio-text-muted-sm">
+                            {formatDuration(track.durationSec)}
+                          </span>
+                          {track.archiveItemId && (
+                            <AddToPlaylistButton archiveItemId={track.archiveItemId} />
+                          )}
                         </span>
                       </li>
                     ))}

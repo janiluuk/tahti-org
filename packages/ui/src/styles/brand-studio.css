@@ -2077,6 +2077,13 @@
   gap: 0.75rem;
 }
 
+[data-tahti-ui='studio'] .music-album-tracklist__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 @media (max-width: 720px) {
   [data-tahti-ui='studio'] .music-browser {
     flex-direction: column;

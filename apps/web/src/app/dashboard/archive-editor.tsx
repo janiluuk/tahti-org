@@ -21,6 +21,7 @@ import { ArchiveVersionPanel } from './archive-version-panel'
 import { ArchiveGateStats } from './archive-gate-stats'
 import { ArchiveMixcloudUpload } from './archive-mixcloud'
 import ArchiveVisualPanel from './archive-visual-panel'
+import { AddToPlaylistButton } from './_add-to-playlist-button'
 
 export default function ArchiveEditor({
   item,
@@ -131,6 +132,7 @@ export default function ArchiveEditor({
             <Button onClick={togglePin} disabled={pinPending} variant="ghost" size="sm">
               {pinned ? 'Unpin from Stage' : 'Pin to Stage'}
             </Button>
+            <AddToPlaylistButton archiveItemId={item.id} />
             <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
               Re-edit
             </Button>
