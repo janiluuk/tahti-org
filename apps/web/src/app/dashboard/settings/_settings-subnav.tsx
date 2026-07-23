@@ -9,6 +9,7 @@ import { usePathname } from 'next/navigation'
 const ITEMS = [
   { href: '/dashboard/settings/account', label: 'Account' },
   { href: '/dashboard/settings/artist-info', label: 'Artist info' },
+  { href: '/dashboard/settings/members', label: 'Members' },
   { href: '/dashboard/settings/comments', label: 'Comments' },
   { href: '/dashboard/settings/connections', label: 'Connections' },
   { href: '/dashboard/settings/distribution', label: 'Radio & announcements' },

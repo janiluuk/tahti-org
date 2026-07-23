@@ -179,6 +179,13 @@ interface ArtistEmbedItem {
   title: string | null
 }
 
+interface ArtistMemberItem {
+  id: string
+  name: string
+  role: string
+  pictureUrl: string | null
+}
+
 async function fetchPressKitImages(username: string): Promise<PublicPressKitImage[]> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const res = await fetch(
@@ -192,17 +199,19 @@ async function fetchPressKitImages(username: string): Promise<PublicPressKitImag
 }
 
 async function fetchChannelExtras(slug: string | undefined) {
-  if (!slug) return { events: [], posts: [], embeds: [] }
+  if (!slug) return { events: [], posts: [], embeds: [], members: [] }
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const [eventsRes, postsRes, embedsRes] = await Promise.all([
+  const [eventsRes, postsRes, embedsRes, membersRes] = await Promise.all([
     fetch(`${apiUrl}/api/channels/${slug}/events`, { next: { revalidate: 60 } }),
     fetch(`${apiUrl}/api/channels/${slug}/posts`, { next: { revalidate: 60 } }),
     fetch(`${apiUrl}/api/channels/${slug}/embeds`, { next: { revalidate: 60 } }),
+    fetch(`${apiUrl}/api/channels/${slug}/members`, { next: { revalidate: 60 } }),
   ])
   const events: ArtistEventItem[] = eventsRes.ok ? await eventsRes.json() : []
   const posts: ArtistPostItem[] = postsRes.ok ? await postsRes.json() : []
   const embeds: ArtistEmbedItem[] = embedsRes.ok ? await embedsRes.json() : []
-  return { events, posts, embeds }
+  const members: ArtistMemberItem[] = membersRes.ok ? await membersRes.json() : []
+  return { events, posts, embeds, members }
 }
 
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
@@ -237,7 +246,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const isLive = channel?.state === 'LIVE'
   const isOwner = user?.username === artist.username
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
-  const [{ events, posts, embeds }, pressKitImages] = await Promise.all([
+  const [{ events, posts, embeds, members }, pressKitImages] = await Promise.all([
     fetchChannelExtras(channel?.slug),
     fetchPressKitImages(artist.username),
   ])
@@ -455,6 +464,31 @@ export default async function ArtistProfilePage({ params }: { params: { username
                             </a>
                           )}
                         </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {members.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label">Members & credits</div>
+                  <ul className="prof-members-list">
+                    {members.map((m) => (
+                      <li key={m.id} className="prof-members-list__item">
+                        {m.pictureUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={m.pictureUrl} alt="" className="prof-members-list__picture" />
+                        ) : (
+                          <div
+                            className="prof-members-list__picture prof-members-list__picture--ph"
+                            aria-hidden
+                          >
+                            {m.name.trim().charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div className="prof-members-list__name">{m.name}</div>
+                        <div className="prof-members-list__role">{m.role}</div>
                       </li>
                     ))}
                   </ul>

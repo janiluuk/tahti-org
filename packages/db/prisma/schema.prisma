@@ -956,8 +956,26 @@ model Channel {
   comments          Comment[]
   pressKitImages    PressKitImage[]
   radioSlotBookings RadioSlotBooking[]
+  members           ChannelMember[]
 
   @@index([state])
+  @@schema("channel")
+}
+
+// M36: band/project lineup shown on the artist page — a flat, freely-ordered
+// list where "role" covers both actual members (Vocals, Guitar) and ad-hoc
+// extra credits (Producer, Mixing House) artists want to acknowledge.
+model ChannelMember {
+  id         String   @id @default(cuid())
+  channelId  String
+  channel    Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  name       String
+  role       String
+  pictureUrl String?
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([channelId, position])
   @@schema("channel")
 }
 
