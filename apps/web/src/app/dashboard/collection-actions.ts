@@ -101,6 +101,28 @@ export async function fetchCollectionCoverFromUrl(
   return { ...(await res.json()), error: null }
 }
 
+export interface MyCollectionSummary {
+  slug: string
+  name: string
+  style: string
+}
+
+/** Lightweight list for "add to playlist" pickers — full detail lives at GET /api/me/collections. */
+export async function fetchMyCollections(): Promise<{
+  data: MyCollectionSummary[] | null
+  error: string | null
+}> {
+  const res = await fetch(`${apiUrl}/api/me/collections`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { data: null, error: (data as { error?: string }).error ?? 'Failed to load playlists' }
+  }
+  return { data: (await res.json()) as MyCollectionSummary[], error: null }
+}
+
 export async function addCollectionItem(
   slug: string,
   params: { archiveItemId?: string; releaseId?: string },

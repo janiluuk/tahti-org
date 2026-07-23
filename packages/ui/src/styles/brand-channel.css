@@ -3936,11 +3936,17 @@
   color: var(--cyan);
 }
 
+[data-tahti-ui='brand'] .prof-tracks-owner-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
 [data-tahti-ui='brand'] .prof-tracks-reorder {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-left: auto;
 }
 
 [data-tahti-ui='brand'] .prof-tracks-reorder button {
