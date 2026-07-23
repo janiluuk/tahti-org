@@ -7,12 +7,18 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { SidebarNavIconSvg } from './SidebarNav'
+import { NotificationBell, type NotificationBellItem } from './NotificationBell'
 
 type StudioTopNavProps = {
   displayName?: string
   isLive?: boolean
   isBoard?: boolean
   channelUrl?: string
+  fetchNotifications?: () => Promise<{
+    notifications: NotificationBellItem[]
+    unreadCount: number
+  }>
+  markNotificationsRead?: () => Promise<void>
 }
 
 function IconLogout() {
@@ -58,7 +64,14 @@ function IconSwitch() {
 }
 
 /** PLAT-020: dashboard top bar — TAHTI logo + user menu (settings, log out, admin switch). */
-export function StudioTopNav({ displayName, isLive, isBoard, channelUrl }: StudioTopNavProps) {
+export function StudioTopNav({
+  displayName,
+  isLive,
+  isBoard,
+  channelUrl,
+  fetchNotifications,
+  markNotificationsRead,
+}: StudioTopNavProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -90,11 +103,19 @@ export function StudioTopNav({ displayName, isLive, isBoard, channelUrl }: Studi
         TAHTI
       </Link>
       <div className="studio-top-nav__actions">
-        {isBoard && (
-          <Link href="/admin" className="studio-top-nav__link studio-top-nav__link--admin">
-            <IconSwitch />
-            Switch to admin
-          </Link>
+        <div className="studio-top-nav__scroll-links">
+          {isBoard && (
+            <Link href="/admin" className="studio-top-nav__link studio-top-nav__link--admin">
+              <IconSwitch />
+              Switch to admin
+            </Link>
+          )}
+        </div>
+        {displayName && fetchNotifications && markNotificationsRead && (
+          <NotificationBell
+            fetchNotifications={fetchNotifications}
+            markAllRead={markNotificationsRead}
+          />
         )}
         {displayName && (
           <div className="studio-top-nav__user-menu" ref={menuRef}>

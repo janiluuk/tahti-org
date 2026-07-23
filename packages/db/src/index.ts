@@ -21,3 +21,4 @@ export {
   ensureInitialReleaseTrackVersion,
   syncActiveVersionToTrack,
 } from './release-track-versions.js'
+export { notifyFollowersOfNewPost, processScheduledPostNotifications } from './notifications.js'

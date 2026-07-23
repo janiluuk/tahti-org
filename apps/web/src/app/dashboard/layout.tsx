@@ -9,6 +9,7 @@ import '@tahti/ui/src/styles/brand-studio.css'
 import '@tahti/ui/src/styles/shells.css'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { fetchMyNotifications, markAllNotificationsRead } from './notification-actions'
 
 /** Dashboard uses StudioShell from @tahti/ui (import brand-studio.css once here). */
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -26,6 +27,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       isBoard={isBoard}
       hasChannel={hasChannel}
       channelUrl={channelUrl}
+      fetchNotifications={fetchMyNotifications}
+      markNotificationsRead={markAllNotificationsRead}
     >
       {children}
     </StudioShell>

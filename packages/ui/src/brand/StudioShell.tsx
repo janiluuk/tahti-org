@@ -6,6 +6,7 @@ import { StudioSidebar } from './StudioSidebar'
 import { StudioTopNav } from './StudioTopNav'
 import { StudioMobileNav } from './StudioMobileNav'
 import { StudioAmbientClock } from './StudioAmbientClock'
+import type { NotificationBellItem } from './NotificationBell'
 
 type StudioShellProps = {
   children: ReactNode
@@ -14,6 +15,11 @@ type StudioShellProps = {
   isBoard?: boolean
   hasChannel?: boolean
   channelUrl?: string
+  fetchNotifications?: () => Promise<{
+    notifications: NotificationBellItem[]
+    unreadCount: number
+  }>
+  markNotificationsRead?: () => Promise<void>
 }
 
 /** Production v8 dashboard layout (studio surface). Playground preview: DashboardShell. */
@@ -24,6 +30,8 @@ export function StudioShell({
   isBoard,
   hasChannel = true,
   channelUrl,
+  fetchNotifications,
+  markNotificationsRead,
 }: StudioShellProps) {
   return (
     <div data-tahti-ui="studio" className="tahti-studio studio-ambient">
@@ -33,6 +41,8 @@ export function StudioShell({
         isLive={isLive}
         isBoard={isBoard}
         channelUrl={channelUrl}
+        fetchNotifications={fetchNotifications}
+        markNotificationsRead={markNotificationsRead}
       />
       <div className="db-layout shell-app">
         <StudioSidebar isBoard={isBoard} hasChannel={hasChannel} />

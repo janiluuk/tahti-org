@@ -39,6 +39,8 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
   const [posts, setPosts] = useState(initialPosts)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
+  const [linkUrl, setLinkUrl] = useState('')
+  const [linkLabel, setLinkLabel] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [scheduleEnabled, setScheduleEnabled] = useState(false)
   const [scheduleAt, setScheduleAt] = useState('')
@@ -50,6 +52,15 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
     if (!body.trim()) {
       setError('Write something first.')
       return
+    }
+    const trimmedLink = linkUrl.trim()
+    if (trimmedLink) {
+      try {
+        new URL(trimmedLink)
+      } catch {
+        setError('Link must be a valid URL (e.g. https://example.com).')
+        return
+      }
     }
     let publishAt: string | undefined
     if (scheduleEnabled) {
@@ -70,6 +81,8 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
     const created = await createPost({
       title: title.trim() || undefined,
       body: body.trim(),
+      linkUrl: trimmedLink || undefined,
+      linkLabel: linkLabel.trim() || undefined,
       publishAt,
     })
     if (created.error || !created.post) {
@@ -104,6 +117,8 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
     setPosts((prev) => [finalPost, ...prev].sort((a, b) => (a.publishAt < b.publishAt ? 1 : -1)))
     setTitle('')
     setBody('')
+    setLinkUrl('')
+    setLinkLabel('')
     setFiles([])
     setScheduleEnabled(false)
     setScheduleAt('')
@@ -140,6 +155,16 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
                     )}
                   </div>
                   <p className="studio-text-sm studio-mt-xs">{p.body}</p>
+                  {p.linkUrl && (
+                    <a
+                      href={p.linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="studio-text-sm studio-post-row__link"
+                    >
+                      {p.linkLabel || p.linkUrl}
+                    </a>
+                  )}
                   {p.images.length > 0 && (
                     <div className="studio-post-row__images">
                       {p.images.map((url) => (
@@ -198,6 +223,30 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
           <p className="studio-text-muted-sm studio-mt-xs">{files.length} image(s) selected</p>
         )}
       </label>
+      <label className="studio-field studio-mt-sm">
+        <span className="studio-label">Link (optional)</span>
+        <input
+          type="url"
+          value={linkUrl}
+          onChange={(e) => setLinkUrl(e.target.value)}
+          className="studio-input"
+          disabled={pending}
+          placeholder="https://…"
+        />
+      </label>
+      {linkUrl.trim() && (
+        <label className="studio-field studio-mt-sm">
+          <span className="studio-label">Link label (optional)</span>
+          <input
+            type="text"
+            value={linkLabel}
+            onChange={(e) => setLinkLabel(e.target.value)}
+            className="studio-input"
+            disabled={pending}
+            placeholder="e.g. Get tickets"
+          />
+        </label>
+      )}
 
       <label className="studio-label-row studio-mt-sm">
         <input

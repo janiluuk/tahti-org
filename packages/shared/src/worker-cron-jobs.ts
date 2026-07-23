@@ -125,6 +125,12 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description: 'M15: daily @-mention notification digest (18:00 UTC)',
   },
   {
+    name: 'post-publish-notify',
+    pattern: '* * * * *',
+    jobId: 'post-publish-notify-cron',
+    description: 'M34: notify followers when a scheduled post crosses its publishAt',
+  },
+  {
     name: 'membership-lapse',
     pattern: '0 8 * * *',
     jobId: 'membership-lapse-cron',

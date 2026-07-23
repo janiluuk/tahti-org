@@ -17,6 +17,8 @@ function sessionHeader() {
 export async function createPost(params: {
   title?: string
   body: string
+  linkUrl?: string
+  linkLabel?: string
   publishAt?: string
 }): Promise<{ error: string | null; post?: ArtistPostView }> {
   const res = await fetch(`${apiUrl}/api/me/posts`, {

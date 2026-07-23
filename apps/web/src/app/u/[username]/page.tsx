@@ -167,6 +167,8 @@ interface ArtistPostItem {
   title: string | null
   body: string
   images: string[]
+  linkUrl: string | null
+  linkLabel: string | null
   publishAt: string
   createdAt: string
 }

@@ -3,7 +3,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { buildApp } from '../../server.js'
-import { prisma } from '@tahti/db'
+import { prisma, processScheduledPostNotifications } from '@tahti/db'
 import {
   cleanupUsersByEmailPrefix,
   createTestArtist,
@@ -92,5 +92,116 @@ describe('Artist posts: scheduling and publish-time filtering', () => {
       payload: { body: 'Bad schedule value', publishAt: 'not-a-date' },
     })
     expect(res.statusCode).toBe(400)
+  })
+
+  it('saves an optional link and rejects a malformed one', async () => {
+    const good = await app.inject({
+      method: 'POST',
+      url: '/api/me/posts',
+      headers: { cookie: artistCookie },
+      payload: { body: 'Check this out', linkUrl: 'https://example.com/x', linkLabel: 'Tickets' },
+    })
+    expect(good.statusCode).toBe(201)
+    const post = good.json() as { linkUrl: string; linkLabel: string }
+    expect(post.linkUrl).toBe('https://example.com/x')
+    expect(post.linkLabel).toBe('Tickets')
+
+    const bad = await app.inject({
+      method: 'POST',
+      url: '/api/me/posts',
+      headers: { cookie: artistCookie },
+      payload: { body: 'Bad link', linkUrl: 'not-a-url' },
+    })
+    expect(bad.statusCode).toBe(400)
+  })
+
+  it('notifies followers immediately when a post publishes right away, not for a scheduled one', async () => {
+    const follower = await createTestArtist(prisma, {
+      email: `${PREFIX}follower@example.com`,
+      username: 'artist-posts-follower',
+    })
+    const artist = await prisma.user.findFirstOrThrow({
+      where: { channel: { slug: artistSlug } },
+    })
+    await prisma.artistFollow.create({
+      data: { followerUserId: follower.id, artistUserId: artist.id },
+    })
+
+    const immediate = await app.inject({
+      method: 'POST',
+      url: '/api/me/posts',
+      headers: { cookie: artistCookie },
+      payload: { body: 'Notify my followers now' },
+    })
+    expect(immediate.statusCode).toBe(201)
+
+    const notif = await prisma.notification.findFirst({
+      where: { userId: follower.id, type: 'NEW_POST', title: { contains: 'posted an update' } },
+    })
+    expect(notif).toBeTruthy()
+    expect(notif?.readAt).toBeNull()
+
+    const future = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+    const scheduled = await app.inject({
+      method: 'POST',
+      url: '/api/me/posts',
+      headers: { cookie: artistCookie },
+      payload: { body: 'Not yet — scheduled', publishAt: future },
+    })
+    expect(scheduled.statusCode).toBe(201)
+    const scheduledPost = await prisma.artistPost.findUniqueOrThrow({
+      where: { id: scheduled.json().id },
+    })
+    expect(scheduledPost.notifiedAt).toBeNull()
+
+    const notifCountAfterSchedule = await prisma.notification.count({
+      where: { userId: follower.id, type: 'NEW_POST' },
+    })
+    // Still just the one from the immediate post — nothing for the scheduled one yet.
+    expect(notifCountAfterSchedule).toBe(1)
+  })
+
+  it('processScheduledPostNotifications notifies followers once a scheduled post crosses publishAt', async () => {
+    const follower = await createTestArtist(prisma, {
+      email: `${PREFIX}cron-follower@example.com`,
+      username: 'artist-posts-cron-follower',
+    })
+    const artist = await prisma.user.findFirstOrThrow({
+      where: { channel: { slug: artistSlug } },
+    })
+    await prisma.artistFollow.upsert({
+      where: {
+        followerUserId_artistUserId: { followerUserId: follower.id, artistUserId: artist.id },
+      },
+      create: { followerUserId: follower.id, artistUserId: artist.id },
+      update: {},
+    })
+
+    const duePost = await prisma.artistPost.create({
+      data: {
+        userId: artist.id,
+        body: 'This one just crossed publishAt',
+        publishAt: new Date(Date.now() - 1000),
+      },
+    })
+
+    const summary = await processScheduledPostNotifications(prisma)
+    expect(summary.notified).toBeGreaterThanOrEqual(1)
+
+    const updated = await prisma.artistPost.findUniqueOrThrow({ where: { id: duePost.id } })
+    expect(updated.notifiedAt).not.toBeNull()
+
+    const notif = await prisma.notification.findFirst({
+      where: { userId: follower.id, type: 'NEW_POST', body: { contains: 'crossed publishAt' } },
+    })
+    expect(notif).toBeTruthy()
+
+    // Running it again must not double-notify (notifiedAt already set excludes it).
+    const secondSummary = await processScheduledPostNotifications(prisma)
+    const notifCount = await prisma.notification.count({
+      where: { userId: follower.id, body: { contains: 'crossed publishAt' } },
+    })
+    expect(notifCount).toBe(1)
+    void secondSummary
   })
 })
