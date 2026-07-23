@@ -12,6 +12,7 @@ import {
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
+import { resolveChannelUrl } from '../../lib/channel-url.js'
 import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 
@@ -164,7 +165,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     pinnedAt: item.pinnedAt?.toISOString() ?? null,
     trackOrder: item.trackOrder,
     createdAt: item.createdAt.toISOString(),
-    channelItemUrl: channelSlug ? `/c/${channelSlug}#archive-item-${item.id}` : null,
+    channelItemUrl: channelSlug
+      ? resolveChannelUrl(channelSlug, { hash: `archive-item-${item.id}` })
+      : null,
   }))
 
   const releases = await Promise.all(
@@ -188,7 +191,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
             playUrl,
             channelItemUrl:
               track.archiveItemId && channelSlug
-                ? `/c/${channelSlug}#archive-item-${track.archiveItemId}`
+                ? resolveChannelUrl(channelSlug, { hash: `archive-item-${track.archiveItemId}` })
                 : null,
           }
         }),
@@ -227,7 +230,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       })),
     ),
     links: {
-      channel: user.channel ? `/c/${user.channel.slug}` : null,
+      channel: user.channel ? resolveChannelUrl(user.channel.slug) : null,
       subscribe: `/u/${user.username}/subscribe`,
       feeds: {
         archive: user.channel ? `${config.apiUrl}/api/v1/u/${user.username}/rss.xml` : null,
