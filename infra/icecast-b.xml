@@ -14,10 +14,17 @@
     </limits>
 
     <authentication>
-        <source-password>REPLACE_VIA_ENV_OR_API</source-password>
-        <relay-password>REPLACE_VIA_ENV</relay-password>
+        <!-- SEC-011: this file is excluded from deploy_prod.sh's rsync (see
+             scripts/deploy_prod.sh) — the real secrets live only in the copy on
+             the server and are never overwritten by a deploy. The values below
+             are repo-committed placeholders and must never be the live values;
+             per-artist stream auth is enforced by /internal/icecast/on_connect,
+             not by this shared source-password, so treat any static match here
+             as a bug, not a working credential. -->
+        <source-password>rotate-me-not-a-real-secret-c9f27718aa</source-password>
+        <relay-password>rotate-me-not-a-real-secret-d33dcafe11</relay-password>
         <admin-user>admin</admin-user>
-        <admin-password>REPLACE_VIA_ENV</admin-password>
+        <admin-password>rotate-me-not-a-real-secret-e77bad0022</admin-password>
     </authentication>
 
     <hostname>ingest-icecast-b.tahti.live</hostname>
