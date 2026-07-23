@@ -37,6 +37,7 @@ export type ProgrammeLibraryTrackRow = {
 export type ProgrammeView = {
   fallbackMode: FallbackMode
   fallbackEnabled: boolean
+  fallbackAutoEnroll: boolean
   items: ProgrammeItemRow[]
   library: ProgrammeLibraryTrackRow[]
 }
@@ -65,6 +66,7 @@ export async function fetchChannelProgramme(): Promise<{
 export async function updateChannelProgramme(payload: {
   fallbackMode?: FallbackMode
   fallbackEnabled?: boolean
+  fallbackAutoEnroll?: boolean
   items?: Array<{
     archiveItemId: string
     isFallback: boolean

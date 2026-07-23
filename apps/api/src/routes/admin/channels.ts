@@ -112,9 +112,12 @@ const adminChannelsRoutes: FastifyPluginAsync = async (fastify) => {
       if (
         parsed.data.fallbackMode === undefined &&
         parsed.data.fallbackEnabled === undefined &&
+        parsed.data.fallbackAutoEnroll === undefined &&
         parsed.data.items === undefined
       ) {
-        return reply.status(400).send({ error: 'fallbackMode, fallbackEnabled, or items required' })
+        return reply.status(400).send({
+          error: 'fallbackMode, fallbackEnabled, fallbackAutoEnroll, or items required',
+        })
       }
 
       const channel = await fastify.prisma.channel.findUnique({

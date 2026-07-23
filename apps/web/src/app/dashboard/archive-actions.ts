@@ -80,7 +80,10 @@ export async function deleteArchiveItem(id: string): Promise<{ error: string | n
 export async function updateArchiveMetadata(
   id: string,
   payload: Record<string, unknown>,
-): Promise<{ error: string | null }> {
+): Promise<{
+  error: string | null
+  oldestFallbackItem?: { id: string; title: string } | null
+}> {
   const res = await fetch(`${apiUrl}/api/me/archive/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
@@ -89,7 +92,11 @@ export async function updateArchiveMetadata(
   })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
-    return { error: (data as { error?: string }).error ?? 'Failed to save metadata' }
+    const body = data as { error?: string; oldestItem?: { id: string; title: string } | null }
+    return {
+      error: body.error ?? 'Failed to save metadata',
+      oldestFallbackItem: body.oldestItem,
+    }
   }
   return { error: null }
 }

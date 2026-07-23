@@ -261,4 +261,52 @@ describe('M22/M24/M25 — archive metadata and slideshow', () => {
     expect(publicChannel.json().textLayerText).toBe('Live on Tahti')
     expect(publicChannel.json().textLayerAlign).toBe('LEFT')
   })
+
+  it('enforces the rotation cap with a 409 + oldest item, then swaps on confirm', async () => {
+    const artist = await prisma.user.findUniqueOrThrow({
+      where: { id: artistUserId },
+      select: { channel: { select: { id: true } } },
+    })
+    // Earlier tests in this file may have left the original item in rotation —
+    // start from a clean, deterministic baseline.
+    await prisma.archiveItem.updateMany({
+      where: { channelId: artist.channel!.id },
+      data: { isFallback: false },
+    })
+    // Fill the rotation to capacity (5), oldest first.
+    const filler = []
+    for (let i = 0; i < 5; i++) {
+      const track = await createReadyArchiveItem(prisma, artist.channel!.id, `Rotation ${i}`)
+      await prisma.archiveItem.update({ where: { id: track.id }, data: { isFallback: true } })
+      filler.push(track)
+    }
+
+    const sixth = await createReadyArchiveItem(prisma, artist.channel!.id, 'Sixth track')
+
+    const blocked = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${sixth.id}`,
+      headers: { cookie },
+      payload: { isFallback: true },
+    })
+    expect(blocked.statusCode).toBe(409)
+    expect(blocked.json().oldestItem?.id).toBe(filler[0]!.id)
+
+    const swapped = await app.inject({
+      method: 'PATCH',
+      url: `/api/me/archive/${sixth.id}`,
+      headers: { cookie },
+      payload: { isFallback: true, replaceFallbackItemId: filler[0]!.id },
+    })
+    expect(swapped.statusCode).toBe(200)
+    expect(swapped.json().isFallback).toBe(true)
+
+    const evicted = await prisma.archiveItem.findUniqueOrThrow({ where: { id: filler[0]!.id } })
+    expect(evicted.isFallback).toBe(false)
+
+    const stillCount = await prisma.archiveItem.count({
+      where: { channelId: artist.channel!.id, isFallback: true },
+    })
+    expect(stillCount).toBe(5)
+  })
 })

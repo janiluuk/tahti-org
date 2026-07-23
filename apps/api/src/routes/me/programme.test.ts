@@ -145,4 +145,46 @@ describe('M27 — channel fallback programme', () => {
     expect(m3u.body).toContain('Set B')
     expect(m3u.body).not.toContain('Set A')
   })
+
+  it('PATCH programme toggles fallbackAutoEnroll', async () => {
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/programme',
+      headers: { cookie },
+      payload: { fallbackAutoEnroll: false },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json().fallbackAutoEnroll).toBe(false)
+
+    const restore = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/programme',
+      headers: { cookie },
+      payload: { fallbackAutoEnroll: true },
+    })
+    expect(restore.json().fallbackAutoEnroll).toBe(true)
+  })
+
+  it('rejects a bulk PATCH that would exceed the rotation cap', async () => {
+    // itemA/itemB already exist; create enough extra READY items to reach the cap.
+    const extra = await Promise.all(
+      Array.from({ length: 4 }, (_, i) =>
+        createReadyArchiveItem(prisma, channelId, `Cap filler ${i}`),
+      ),
+    )
+    const capPatch = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/programme',
+      headers: { cookie },
+      payload: {
+        items: [
+          { archiveItemId: itemA, isFallback: true },
+          { archiveItemId: itemB, isFallback: true },
+          ...extra.map((i) => ({ archiveItemId: i.id, isFallback: true })),
+        ],
+      },
+    })
+    expect(capPatch.statusCode).toBe(400)
+    expect(capPatch.json().error).toMatch(/limited to 5 tracks/)
+  })
 })
