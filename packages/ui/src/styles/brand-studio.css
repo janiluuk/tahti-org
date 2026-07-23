@@ -9671,3 +9671,76 @@
   text-transform: uppercase;
   color: var(--muted);
 }
+
+/* M36: band member / credits roster (dashboard settings) */
+[data-tahti-ui='studio'] .member-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+[data-tahti-ui='studio'] .member-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+}
+
+[data-tahti-ui='studio'] .member-row__handle {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+[data-tahti-ui='studio'] .member-row__handle:active {
+  cursor: grabbing;
+}
+
+[data-tahti-ui='studio'] .member-row__picture {
+  flex-shrink: 0;
+  width: 64px;
+}
+
+[data-tahti-ui='studio'] .member-row__picture .cover-upload__zone {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+[data-tahti-ui='studio'] .member-row__picture .cover-upload__copy {
+  display: none;
+}
+
+[data-tahti-ui='studio'] .member-row__fields {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .member-row__error {
+  flex-basis: 100%;
+  margin: var(--space-1) 0 0;
+}
+
+[data-tahti-ui='studio'] .member-add-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+}

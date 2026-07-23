@@ -1679,6 +1679,48 @@
   color: var(--amber);
 }
 
+[data-tahti-ui='brand'] .prof-members-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+[data-tahti-ui='brand'] .prof-members-list__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 96px;
+  text-align: center;
+}
+
+[data-tahti-ui='brand'] .prof-members-list__picture {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .prof-members-list__picture--ph {
+  display: grid;
+  place-items: center;
+  background: var(--card2);
+  color: var(--muted);
+  font-size: var(--text-lg);
+  font-family: var(--font-head);
+}
+
+[data-tahti-ui='brand'] .prof-members-list__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='brand'] .prof-members-list__role {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
 [data-tahti-ui='brand'] .ch-featured-post {
   padding: 1.25rem;
   background: color-mix(in srgb, var(--amber) 8%, var(--card2));

@@ -123,6 +123,8 @@ import channelEventsRoute from './routes/channels/events.js'
 import mePostRoutes from './routes/me/posts.js'
 import channelPostsRoute from './routes/channels/posts.js'
 import meNotificationRoutes from './routes/me/notifications.js'
+import meChannelMemberRoutes from './routes/me/channel-members.js'
+import channelMembersRoute from './routes/channels/members.js'
 import meEmbedRoutes from './routes/me/embeds.js'
 import channelEmbedsRoute from './routes/channels/embeds.js'
 import radioRoutes from './routes/radio/index.js'
@@ -589,6 +591,8 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(mePostRoutes)
   await fastify.register(channelPostsRoute)
   await fastify.register(meNotificationRoutes)
+  await fastify.register(meChannelMemberRoutes)
+  await fastify.register(channelMembersRoute)
   await fastify.register(meEmbedRoutes)
   await fastify.register(channelEmbedsRoute)
 
