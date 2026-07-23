@@ -10,7 +10,7 @@ run_listener_journey() {
   profile=$(curl -sf "$API_URL/api/v1/u/${E2E_DEMO_ARTIST_USER}/profile" 2>/dev/null || echo '{}')
   if echo "$profile" | grep -q '"releases"'; then
     e2e_green "public profile lists releases"
-    e2e_check_json "profile links channel" '"/c/' "$profile"
+    e2e_check_json "profile links channel" '/c/' "$profile"
   else
     e2e_yellow "public profile skipped (no demo artist)"
   fi
