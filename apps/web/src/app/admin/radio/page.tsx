@@ -4,6 +4,7 @@
 import { cookies } from 'next/headers'
 import { Pill } from '@tahti/ui'
 import { optOutChannel, removeOptOut, resetRotation } from './actions'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 interface NowPlaying {
   live: boolean
@@ -89,7 +90,7 @@ export default async function AdminRadioPage() {
             <span className="signal-dot" aria-hidden />
             <strong>{nowPlaying.channel.artistName}</strong>
             <a
-              href={`/c/${nowPlaying.channel.slug}`}
+              href={resolveChannelUrl(nowPlaying.channel.slug)}
               target="_blank"
               rel="noopener noreferrer"
               style={{ fontSize: '0.8rem', opacity: 0.7 }}
@@ -130,7 +131,7 @@ export default async function AdminRadioPage() {
                   <td>{ch.artistName}</td>
                   <td>
                     <a
-                      href={`/c/${ch.slug}`}
+                      href={resolveChannelUrl(ch.slug)}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ color: 'inherit', opacity: 0.7 }}
@@ -193,7 +194,7 @@ export default async function AdminRadioPage() {
                     <td>{ch.artistName}</td>
                     <td>
                       <a
-                        href={`/c/${ch.slug}`}
+                        href={resolveChannelUrl(ch.slug)}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ color: 'inherit', opacity: 0.7 }}
@@ -250,7 +251,7 @@ export default async function AdminRadioPage() {
                   <td>{item.artistName}</td>
                   <td>
                     <a
-                      href={`/c/${item.slug}`}
+                      href={resolveChannelUrl(item.slug)}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ color: 'inherit', opacity: 0.7 }}

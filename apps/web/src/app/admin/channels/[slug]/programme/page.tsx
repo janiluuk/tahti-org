@@ -9,6 +9,7 @@ import {
   fetchAdminChannelProgramme,
   updateAdminChannelProgramme,
 } from './actions'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 export default async function AdminChannelProgrammePage({ params }: { params: { slug: string } }) {
   const { slug } = params
@@ -17,7 +18,7 @@ export default async function AdminChannelProgrammePage({ params }: { params: { 
   return (
     <>
       <p className="admin-stat-sub" style={{ marginBottom: '0.5rem' }}>
-        <Link href={`/c/${slug}`} target="_blank" rel="noopener noreferrer">
+        <Link href={resolveChannelUrl(slug)} target="_blank" rel="noopener noreferrer">
           View channel ↗
         </Link>
       </p>

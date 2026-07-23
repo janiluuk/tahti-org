@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { SuspendUserForm, UserAdminActions } from './user-admin-panel'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 async function fetchUser(id: string) {
   const sessionCookie = cookies().get('tahti_session')
@@ -77,7 +78,7 @@ export default async function AdminUserDetailPage({ params }: { params: { id: st
           {user.channel ? (
             <>
               <p>
-                <Link href={`/c/${user.channel.slug}`}>{user.channel.slug}</Link> ·{' '}
+                <Link href={resolveChannelUrl(user.channel.slug)}>{user.channel.slug}</Link> ·{' '}
                 {user.channel.state}
               </p>
               <p className="admin-stat-sub">{user.channel.totalLiveHours.toFixed(1)} live hours</p>

@@ -34,4 +34,17 @@ describe('resolveChannelUrl', () => {
     process.env.NEXT_PUBLIC_APP_URL = 'https://app.staging.tahti.live'
     expect(resolveChannelUrl('someartist')).toBe('https://someartist.staging.tahti.live')
   })
+
+  it('appends a hash fragment on the subdomain form', () => {
+    expect(resolveChannelUrl('someartist', { hash: 'archive-item-123' })).toBe(
+      'https://someartist.tahti.live#archive-item-123',
+    )
+  })
+
+  it('appends a hash fragment on the path fallback form', () => {
+    process.env.APP_URL = 'http://localhost:17777'
+    expect(resolveChannelUrl('someartist', { hash: 'archive-item-123' })).toBe(
+      'http://localhost:17777/c/someartist#archive-item-123',
+    )
+  })
 })

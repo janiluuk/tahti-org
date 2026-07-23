@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { BrandLogo, ButtonIcon, StatCard, StatCardStrip } from '@tahti/ui'
 import { getSessionUser } from '@/lib/session'
 import { isSignupOpen } from '@/lib/signup'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 interface PlatformStats {
   activeArtists: number
@@ -35,7 +36,7 @@ async function fetchData(): Promise<{
 
 function LiveTile({ channel }: { channel: ChannelCard }) {
   return (
-    <Link href={`/c/${channel.slug}`} className="listen-live-card">
+    <Link href={resolveChannelUrl(channel.slug)} className="listen-live-card">
       <div className="listen-live-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

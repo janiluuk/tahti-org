@@ -5,6 +5,7 @@ import Link from 'next/link'
 import '@tahti/ui/src/styles/brand-studio.css'
 import { fetchAdminChannelArchive } from './actions'
 import { AdminArchiveEditor } from './_admin-archive-editor'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 export default async function AdminChannelArchivePage({ params }: { params: { slug: string } }) {
   const { slug } = params
@@ -13,7 +14,7 @@ export default async function AdminChannelArchivePage({ params }: { params: { sl
   return (
     <>
       <p className="admin-stat-sub" style={{ marginBottom: '0.5rem' }}>
-        <Link href={`/c/${slug}`} target="_blank" rel="noopener noreferrer">
+        <Link href={resolveChannelUrl(slug)} target="_blank" rel="noopener noreferrer">
           View channel ↗
         </Link>
       </p>

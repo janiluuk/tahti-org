@@ -9,6 +9,7 @@ import {
   startRotationStream,
   stopRotationStream,
 } from './actions'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 interface RotationItem {
   id: string
@@ -144,7 +145,11 @@ export default async function AdminTahtiSelectsPage({
               <span className="admin-rotation-row__body">
                 <span className="admin-rotation-row__title">{item.title}</span>
                 <span className="admin-rotation-row__meta">
-                  <a href={`/c/${item.channelSlug}`} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={resolveChannelUrl(item.channelSlug)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     {item.artistName} ↗
                   </a>
                   {' · '}
@@ -274,7 +279,7 @@ export default async function AdminTahtiSelectsPage({
                       <td>{item.title}</td>
                       <td>
                         <a
-                          href={`/c/${item.channelSlug}`}
+                          href={resolveChannelUrl(item.channelSlug)}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{ color: 'inherit', opacity: 0.7 }}

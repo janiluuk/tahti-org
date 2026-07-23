@@ -6,6 +6,7 @@
 import type { TahtiSelectsGalleryItem } from '@tahti/shared'
 import { AvatarTile } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 function toTrack(item: TahtiSelectsGalleryItem): PlayerTrack {
   return {
@@ -14,7 +15,7 @@ function toTrack(item: TahtiSelectsGalleryItem): PlayerTrack {
     url: item.audioUrl ?? '',
     title: item.title,
     subtitle: item.artistName,
-    href: `/c/${item.channelSlug}`,
+    href: resolveChannelUrl(item.channelSlug),
     artworkUrl: item.bannerUrl,
   }
 }

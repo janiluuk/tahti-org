@@ -4,6 +4,7 @@
 import Link from 'next/link'
 import { cookies } from 'next/headers'
 import { ForceOfflineButton } from './force-offline-button'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 function boardFetch(path: string) {
   const sessionCookie = cookies().get('tahti_session')
@@ -66,7 +67,7 @@ export default async function AdminStreamsPage() {
                     <Link href={`/u/${s.username}`}>{s.artistName}</Link>
                   </td>
                   <td>
-                    <Link href={`/c/${s.slug}`}>{s.slug}</Link>
+                    <Link href={resolveChannelUrl(s.slug)}>{s.slug}</Link>
                   </td>
                   <td>
                     {s.goneLiveAt

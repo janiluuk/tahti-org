@@ -7,6 +7,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { RadioSlotsCalendar } from './radio-slots-calendar'
 import type { PublicRadioSlot } from './actions'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 interface RadioRotationItem {
   id: string
@@ -107,7 +108,9 @@ export function RadioInfoOverlay({
                   {memberRelay && (
                     <p className="ch-radio-info-panel__note">
                       Member relay also live:{' '}
-                      <Link href={`/c/${memberRelay.slug}`}>{memberRelay.artistName}</Link>
+                      <Link href={resolveChannelUrl(memberRelay.slug)}>
+                        {memberRelay.artistName}
+                      </Link>
                     </p>
                   )}
                 </>

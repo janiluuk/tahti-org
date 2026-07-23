@@ -7,6 +7,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { ChannelDirectoryEntry } from '@tahti/shared'
 import { AvatarTile } from '@tahti/ui'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
   const [query, setQuery] = useState('')
@@ -66,7 +67,7 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
         <ul className="artist-directory__grid">
           {filtered.map((item) => (
             <li key={item.slug}>
-              <Link href={`/c/${item.slug}`} className="artist-directory__card">
+              <Link href={resolveChannelUrl(item.slug)} className="artist-directory__card">
                 {item.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={item.avatarUrl} alt="" className="artist-directory__avatar" />

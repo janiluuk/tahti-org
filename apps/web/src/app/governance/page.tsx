@@ -8,6 +8,7 @@ import { type MotionComment, type MotionSummary } from './motion-card'
 import MotionsList from './motions-list'
 import NewMotionForm from './new-motion-form'
 import GrantPreviewPanel from './grant-preview-panel'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 interface MeResponse {
   displayName: string
@@ -160,7 +161,7 @@ export default async function GovernancePage() {
                   </td>
                   <td>
                     {m.channelSlug ? (
-                      <Link href={`/c/${m.channelSlug}`}>{m.channelSlug}</Link>
+                      <Link href={resolveChannelUrl(m.channelSlug)}>{m.channelSlug}</Link>
                     ) : (
                       <span className="brand-empty">—</span>
                     )}

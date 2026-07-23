@@ -12,6 +12,7 @@ import {
   KpiCardRow,
   StatusPill,
 } from '@tahti/ui'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 function boardFetch(path: string) {
   const sessionCookie = cookies().get('tahti_session')
@@ -332,7 +333,8 @@ export default async function AdminDashboardPage() {
           <div style={{ marginTop: '0.75rem' }}>
             {streams.streams.slice(0, 3).map((s) => (
               <p key={s.slug} className="admin-stat-sub">
-                <Link href={`/c/${s.slug}`}>{s.artistName}</Link> · {formatDuration(s.elapsedSec)}
+                <Link href={resolveChannelUrl(s.slug)}>{s.artistName}</Link> ·{' '}
+                {formatDuration(s.elapsedSec)}
               </p>
             ))}
             <p className="admin-stat-sub">
