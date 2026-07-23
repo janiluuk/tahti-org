@@ -57,8 +57,10 @@ type ProfileHeroProps = {
   channelHref?: string | null
   subscribeHref: string
   tipJarUrl?: string | null
-  /** Pre-formatted, e.g. "Member since 2026" — resolved by the caller so this component stays locale-agnostic. */
+  /** Pre-formatted, e.g. "Member since 8 months" — resolved by the caller so this component stays locale-agnostic. */
   joinDateLabel?: string | null
+  /** Precise form shown on hover, e.g. "Member since November 2025". */
+  joinDateTitle?: string
   /** The newsletter subscribe control (apps/web's NewsletterSubscribeForm) — a slot
    * rather than a prop this component builds itself, since it needs client-side
    * fetch/state that doesn't belong in a presentational packages/ui component.
@@ -81,6 +83,7 @@ export function ProfileHero({
   subscribeHref,
   tipJarUrl,
   joinDateLabel,
+  joinDateTitle,
   newsletterSlot,
 }: ProfileHeroProps) {
   return (
@@ -103,7 +106,11 @@ export function ProfileHero({
                 ON AIR NOW
               </span>
             )}
-            {joinDateLabel && <span className="prof-join-date">{joinDateLabel}</span>}
+            {joinDateLabel && (
+              <span className="prof-join-date" title={joinDateTitle}>
+                {joinDateLabel}
+              </span>
+            )}
           </div>
         </div>
         <div className="prof-cta-row">
