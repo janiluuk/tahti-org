@@ -6,6 +6,7 @@ import { PageShell, Text } from '@tahti/ui'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../_studio-header-actions'
 import { BroadcastStudio } from './_broadcast-studio'
+import { fetchAutoRecordEnabled } from './recording-actions'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -41,17 +42,20 @@ export default async function BroadcastStudioPage() {
 
   let streamSettings: StreamSettings | null = null
   let broadcastUsage: BroadcastUsageInfo | null = null
+  let autoRecordEnabled = true
 
   try {
-    const [streamSettingsRes, broadcastUsageRes] = await Promise.all([
+    const [streamSettingsRes, broadcastUsageRes, autoRecord] = await Promise.all([
       get('/api/me/stream-settings'),
       get('/api/me/broadcast-usage'),
+      fetchAutoRecordEnabled(),
     ])
 
     if (streamSettingsRes.ok) streamSettings = (await streamSettingsRes.json()) as StreamSettings
     if (broadcastUsageRes.ok) {
       broadcastUsage = (await broadcastUsageRes.json()) as BroadcastUsageInfo
     }
+    autoRecordEnabled = autoRecord
   } catch {
     // render with partial data
   }
@@ -84,6 +88,7 @@ export default async function BroadcastStudioPage() {
             channelState={user.channel.state}
             streamSettings={streamSettings}
             broadcastUsage={broadcastUsage}
+            autoRecordEnabled={autoRecordEnabled}
           />
         ) : (
           <Text tone="muted">Could not load stream credentials. Refresh or contact support.</Text>

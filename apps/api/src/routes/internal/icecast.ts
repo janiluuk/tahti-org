@@ -115,7 +115,7 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true },
+        select: { id: true, autoRecordEnabled: true },
       })
 
       if (!channel) return reply.status(200).send('ok')
@@ -131,7 +131,8 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
           data: { endedAt: new Date() },
         })
         // A session that never went LIVE (preview-only) has no public archive to finalize.
-        if (broadcast.wentLiveAt) {
+        // M35: artist can opt out of auto-recording per channel.
+        if (broadcast.wentLiveAt && channel.autoRecordEnabled) {
           enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>
             fastify.log.error(
               {

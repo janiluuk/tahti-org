@@ -17,6 +17,7 @@ import { GoLiveBtn } from '../go-live-btn'
 import { Step3Preflight } from './_step3-preflight'
 import { Step4GoLive } from './_step4-go-live'
 import { SignalMeters } from './_signal-meters'
+import { RecordingToggle } from './_recording-toggle'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -52,11 +53,13 @@ export function BroadcastStudio({
   channelState: initialState,
   streamSettings,
   broadcastUsage,
+  autoRecordEnabled,
 }: {
   channelSlug: string
   channelState: string
   streamSettings: StreamSettings
   broadcastUsage: BroadcastUsage | null
+  autoRecordEnabled: boolean
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -274,6 +277,7 @@ export function BroadcastStudio({
 
       {activeStep === 3 && (
         <Panel title="Go live" headerTight>
+          {!isLive && <RecordingToggle initialEnabled={autoRecordEnabled} />}
           {isLive ? (
             <Text as="p" tone="muted" size="sm">
               You are on air — this is exactly what listeners hear.

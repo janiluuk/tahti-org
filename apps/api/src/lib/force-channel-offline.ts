@@ -17,10 +17,13 @@ export async function forceChannelOffline(
 
   await stopOrchestratorChannel(channelId)
 
-  const broadcast = await prisma.broadcast.findFirst({
-    where: { channelId, endedAt: null },
-    orderBy: { startedAt: 'desc' },
-  })
+  const [broadcast, channel] = await Promise.all([
+    prisma.broadcast.findFirst({
+      where: { channelId, endedAt: null },
+      orderBy: { startedAt: 'desc' },
+    }),
+    prisma.channel.findUnique({ where: { id: channelId }, select: { autoRecordEnabled: true } }),
+  ])
 
   if (broadcast) {
     await prisma.broadcast.update({
@@ -28,7 +31,8 @@ export async function forceChannelOffline(
       data: { endedAt: new Date() },
     })
     // A session that never went LIVE (preview-only) has no public archive to finalize.
-    if (broadcast.wentLiveAt) {
+    // M35: artist can opt out of auto-recording per channel.
+    if (broadcast.wentLiveAt && channel?.autoRecordEnabled) {
       enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>
         log.error(
           {
