@@ -29,7 +29,7 @@ export default async function DistributionSettingsPage() {
   return (
     <div className="studio-settings-stack">
       <div className="studio-page-header">
-        <h1 className="studio-page-title">Distribution</h1>
+        <h1 className="studio-page-title">Radio &amp; announcements</h1>
         <p className="studio-text-muted-sm studio-mt-xs">
           How your broadcast and archive reach listeners beyond your own channel page.
         </p>

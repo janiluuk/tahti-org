@@ -11,7 +11,7 @@ const ITEMS = [
   { href: '/dashboard/settings/artist-info', label: 'Artist info' },
   { href: '/dashboard/settings/comments', label: 'Comments' },
   { href: '/dashboard/settings/connections', label: 'Connections' },
-  { href: '/dashboard/settings/distribution', label: 'Distribution' },
+  { href: '/dashboard/settings/distribution', label: 'Radio & announcements' },
   { href: '/dashboard/settings/mentions', label: 'Mentions' },
   { href: '/dashboard/settings/moderators', label: 'Moderators' },
   { href: '/dashboard/settings/notifications', label: 'Notifications' },
