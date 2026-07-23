@@ -346,6 +346,37 @@ describe('internal ingest (RTMP + Icecast)', () => {
     expect(enqueueFinalizeBroadcastRecording).not.toHaveBeenCalled()
   })
 
+  it('M35: does not enqueue archive finalize when the channel has auto-record turned off', async () => {
+    enqueueFinalizeBroadcastRecording.mockClear()
+    await prisma.channel.update({ where: { id: channelId }, data: { autoRecordEnabled: false } })
+
+    await app.inject({
+      method: 'POST',
+      url: '/internal/rtmp/on_publish',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `name=${encodeURIComponent(STREAM_KEY)}`,
+    })
+    await app.inject({
+      method: 'POST',
+      url: '/api/me/channel/go-live',
+      headers: { cookie: sessionCookie },
+    })
+
+    const done = await app.inject({
+      method: 'POST',
+      url: '/internal/rtmp/on_done',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      payload: `name=${encodeURIComponent(STREAM_KEY)}`,
+    })
+    expect(done.statusCode).toBe(200)
+
+    const channel = await prisma.channel.findUnique({ where: { id: channelId } })
+    expect(channel?.state).toBe('OFFLINE')
+    expect(enqueueFinalizeBroadcastRecording).not.toHaveBeenCalled()
+
+    await prisma.channel.update({ where: { id: channelId }, data: { autoRecordEnabled: true } })
+  })
+
   it('allows Icecast on_connect with urlencoded mount and pass, entering private preview', async () => {
     enqueueWarmArchiveFallbackCache.mockClear()
 

@@ -900,6 +900,9 @@ model Channel {
   // long as MAX_FALLBACK_ITEMS isn't already reached — artist has to opt out
   // per-channel if they'd rather curate rotation manually.
   fallbackAutoEnroll Boolean      @default(true)
+  // M35: whether a finished broadcast is auto-recorded to the archive. Defaults
+  // to true (today's unconditional behavior) — artists opt out per-channel.
+  autoRecordEnabled  Boolean      @default(true)
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
   goneLiveAt         DateTime?

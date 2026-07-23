@@ -120,7 +120,7 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findFirst({
         where: { slug: streamName.split('__')[0] },
-        select: { id: true, slug: true },
+        select: { id: true, slug: true, autoRecordEnabled: true },
       })
 
       if (!channel) return reply.status(200).send('ok')
@@ -136,7 +136,8 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
           data: { endedAt: new Date() },
         })
         // A session that never went LIVE (preview-only) has no public archive to finalize.
-        if (broadcast.wentLiveAt) {
+        // M35: artist can opt out of auto-recording per channel.
+        if (broadcast.wentLiveAt && channel.autoRecordEnabled) {
           enqueueFinalizeBroadcastRecording(broadcast.id).catch((err: unknown) =>
             fastify.log.error(
               {
