@@ -4,6 +4,7 @@
 import type { PrismaClient } from '@tahti/db'
 import { archivePlaybackKey, type ChannelProgrammePatch } from '@tahti/shared'
 import { presignedGetUrl } from './minio.js'
+import { MAX_FALLBACK_ITEMS, fallbackCount } from './fallback-rotation.js'
 
 /** Shared by the artist's own rotation editor (routes/me/programme.ts) and the
  * board's per-channel equivalent (routes/admin/channels.ts) — same business
@@ -40,7 +41,7 @@ export async function fetchProgrammeView(prisma: PrismaClient, channelId: string
   const [channel, items, tracks] = await Promise.all([
     prisma.channel.findUnique({
       where: { id: channelId },
-      select: { fallbackMode: true, fallbackEnabled: true },
+      select: { fallbackMode: true, fallbackEnabled: true, fallbackAutoEnroll: true },
     }),
     prisma.archiveItem.findMany({
       where: { channelId, status: 'READY' },
@@ -77,6 +78,7 @@ export async function fetchProgrammeView(prisma: PrismaClient, channelId: string
   return {
     fallbackMode: channel?.fallbackMode ?? 'shuffle',
     fallbackEnabled: channel?.fallbackEnabled ?? true,
+    fallbackAutoEnroll: channel?.fallbackAutoEnroll ?? true,
     items: itemsWithAudio,
     library: tracks.map((t) => ({
       releaseTrackId: t.id,
@@ -98,12 +100,19 @@ export async function applyProgrammePatch(
   channelId: string,
   patch: ChannelProgrammePatch,
 ): Promise<{ error: string | null }> {
-  if (patch.fallbackMode !== undefined || patch.fallbackEnabled !== undefined) {
+  if (
+    patch.fallbackMode !== undefined ||
+    patch.fallbackEnabled !== undefined ||
+    patch.fallbackAutoEnroll !== undefined
+  ) {
     await prisma.channel.update({
       where: { id: channelId },
       data: {
         ...(patch.fallbackMode !== undefined ? { fallbackMode: patch.fallbackMode } : {}),
         ...(patch.fallbackEnabled !== undefined ? { fallbackEnabled: patch.fallbackEnabled } : {}),
+        ...(patch.fallbackAutoEnroll !== undefined
+          ? { fallbackAutoEnroll: patch.fallbackAutoEnroll }
+          : {}),
       },
     })
   }
@@ -112,12 +121,25 @@ export async function applyProgrammePatch(
     const ids = patch.items.map((i) => i.archiveItemId)
     const owned = await prisma.archiveItem.findMany({
       where: { channelId, id: { in: ids } },
-      select: { id: true },
+      select: { id: true, isFallback: true },
     })
-    const ownedIds = new Set(owned.map((o) => o.id))
+    const ownedState = new Map(owned.map((o) => [o.id, o.isFallback]))
     for (const row of patch.items) {
-      if (!ownedIds.has(row.archiveItemId)) {
+      if (!ownedState.has(row.archiveItemId)) {
         return { error: `Unknown archive item ${row.archiveItemId}` }
+      }
+    }
+
+    const currentTotal = await fallbackCount(prisma, channelId)
+    let delta = 0
+    for (const row of patch.items) {
+      const was = ownedState.get(row.archiveItemId)!
+      if (was && !row.isFallback) delta -= 1
+      if (!was && row.isFallback) delta += 1
+    }
+    if (currentTotal + delta > MAX_FALLBACK_ITEMS) {
+      return {
+        error: `Rotation is limited to ${MAX_FALLBACK_ITEMS} tracks — remove some before adding more.`,
       }
     }
 
@@ -159,6 +181,11 @@ export async function promoteReleaseTrackToProgramme(
     },
   })
   if (!track) return { error: 'Release track not found' }
+
+  const currentTotal = await fallbackCount(prisma, channel.id)
+  if (currentTotal >= MAX_FALLBACK_ITEMS) {
+    return { error: `Rotation is limited to ${MAX_FALLBACK_ITEMS} tracks — remove one first.` }
+  }
 
   if (track.archiveItemId) {
     await prisma.archiveItem.update({

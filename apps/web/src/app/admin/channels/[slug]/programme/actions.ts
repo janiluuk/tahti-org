@@ -41,6 +41,7 @@ export async function updateAdminChannelProgramme(
   payload: {
     fallbackMode?: FallbackMode
     fallbackEnabled?: boolean
+    fallbackAutoEnroll?: boolean
     items?: Array<{ archiveItemId: string; isFallback: boolean; fallbackOrder?: number }>
   },
 ): Promise<{ data: ProgrammeView | null; error: string | null }> {

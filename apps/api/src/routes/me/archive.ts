@@ -23,6 +23,11 @@ import {
   serializeArchiveItem,
 } from '../../lib/archive-metadata.js'
 import { normalizeTracklist, recordTracklistMentions } from '../../lib/tracklist.js'
+import {
+  MAX_FALLBACK_ITEMS,
+  fallbackCount,
+  oldestFallbackItem,
+} from '../../lib/fallback-rotation.js'
 import type { TracklistEntry } from '@tahti/shared'
 
 const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
@@ -126,7 +131,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
 
       const item = await fastify.prisma.archiveItem.findFirst({
         where: { id, channel: { userId: user.id } },
-        select: { id: true },
+        select: { id: true, channelId: true, isFallback: true },
       })
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
@@ -137,6 +142,35 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         const t = patch.title.trim()
         if (!t) return reply.status(400).send({ error: 'title cannot be empty' })
         patch.data.title = t.slice(0, 200)
+      }
+
+      // Joining the 24/7 rotation is capped — past MAX_FALLBACK_ITEMS the caller
+      // must confirm which existing track to evict (replaceFallbackItemId), since
+      // there's no list UI at this call site to pick from directly.
+      if (patch.data.isFallback === true && !item.isFallback) {
+        const count = await fallbackCount(fastify.prisma, item.channelId)
+        if (count >= MAX_FALLBACK_ITEMS) {
+          const body = request.body as { replaceFallbackItemId?: string }
+          const replaceId = body.replaceFallbackItemId
+          if (!replaceId) {
+            const oldest = await oldestFallbackItem(fastify.prisma, item.channelId)
+            return reply.status(409).send({
+              error: `Rotation is full (max ${MAX_FALLBACK_ITEMS}) — choose a track to replace`,
+              oldestItem: oldest,
+            })
+          }
+          const replaceTarget = await fastify.prisma.archiveItem.findFirst({
+            where: { id: replaceId, channelId: item.channelId, isFallback: true },
+            select: { id: true },
+          })
+          if (!replaceTarget) {
+            return reply.status(400).send({ error: 'replaceFallbackItemId is not in rotation' })
+          }
+          await fastify.prisma.archiveItem.update({
+            where: { id: replaceTarget.id },
+            data: { isFallback: false },
+          })
+        }
       }
 
       if (patch.data.tracklist !== undefined && patch.data.tracklist !== null) {

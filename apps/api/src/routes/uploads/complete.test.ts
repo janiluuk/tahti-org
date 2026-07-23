@@ -118,6 +118,79 @@ describe('POST /api/uploads/complete', () => {
     // Ground-truth size from storage (headObjectSize), never trusted from the client.
     expect(item!.fileSizeBytes).toBe(BigInt(123456))
     expect(item!.isPublic).toBe(true)
+    // fallbackAutoEnroll defaults to true and the rotation starts empty.
+    expect(item!.isFallback).toBe(true)
+  })
+
+  it('respects an explicit metadata.isFallback over the auto-enroll default', async () => {
+    const uploadId = `raw/${channelSlug}/explicit-fallback.mp3`
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/uploads/complete',
+      cookies: { tahti_session: sessionCookie },
+      payload: {
+        uploadId,
+        etag: 'etag789',
+        title: 'Opted out track',
+        metadata: { isFallback: false },
+      },
+    })
+    expect(res.statusCode).toBe(201)
+    const item = await prisma.archiveItem.findUnique({ where: { id: res.json().itemId } })
+    expect(item!.isFallback).toBe(false)
+  })
+
+  it('does not auto-enroll when fallbackAutoEnroll is off', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug: channelSlug } })
+    await prisma.channel.update({
+      where: { id: channel.id },
+      data: { fallbackAutoEnroll: false },
+    })
+
+    const uploadId = `raw/${channelSlug}/no-auto-enroll.mp3`
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/uploads/complete',
+      cookies: { tahti_session: sessionCookie },
+      payload: { uploadId, etag: 'etagabc', title: 'Manual only' },
+    })
+    expect(res.statusCode).toBe(201)
+    const item = await prisma.archiveItem.findUnique({ where: { id: res.json().itemId } })
+    expect(item!.isFallback).toBe(false)
+
+    await prisma.channel.update({
+      where: { id: channel.id },
+      data: { fallbackAutoEnroll: true },
+    })
+  })
+
+  it('skips auto-enroll once the rotation is already at capacity', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug: channelSlug } })
+    await prisma.archiveItem.updateMany({
+      where: { channelId: channel.id },
+      data: { isFallback: false },
+    })
+    for (let i = 0; i < 5; i++) {
+      await prisma.archiveItem.create({
+        data: {
+          channelId: channel.id,
+          title: `Cap filler ${i}`,
+          status: 'READY',
+          isFallback: true,
+        },
+      })
+    }
+
+    const uploadId = `raw/${channelSlug}/over-cap.mp3`
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/uploads/complete',
+      cookies: { tahti_session: sessionCookie },
+      payload: { uploadId, etag: 'etagdef', title: 'Sixth upload' },
+    })
+    expect(res.statusCode).toBe(201)
+    const item = await prisma.archiveItem.findUnique({ where: { id: res.json().itemId } })
+    expect(item!.isFallback).toBe(false)
   })
 
   it('applies upload metadata with sensible defaults', async () => {

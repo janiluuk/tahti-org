@@ -96,6 +96,63 @@ export default function ArchiveEditor({
     })
   }
 
+  const [inRotation, setInRotation] = useState(Boolean(item.isFallback))
+  const [rotationPending, setRotationPending] = useState(false)
+  const [swapCandidate, setSwapCandidate] = useState<{ id: string; title: string } | null>(null)
+  const [rotationError, setRotationError] = useState<string | null>(null)
+
+  function toggleRotation() {
+    if (inRotation) {
+      setRotationPending(true)
+      setRotationError(null)
+      startTransition(async () => {
+        await updateArchiveMetadata(item.id, { isFallback: false })
+        setInRotation(false)
+        setRotationPending(false)
+        router.refresh()
+      })
+      return
+    }
+    setRotationPending(true)
+    setRotationError(null)
+    startTransition(async () => {
+      const res = await updateArchiveMetadata(item.id, { isFallback: true })
+      if (res.oldestFallbackItem) {
+        setSwapCandidate(res.oldestFallbackItem)
+        setRotationPending(false)
+        return
+      }
+      if (res.error) {
+        setRotationError(res.error)
+        setRotationPending(false)
+        return
+      }
+      setInRotation(true)
+      setRotationPending(false)
+      router.refresh()
+    })
+  }
+
+  function confirmSwap() {
+    if (!swapCandidate) return
+    setRotationPending(true)
+    startTransition(async () => {
+      const res = await updateArchiveMetadata(item.id, {
+        isFallback: true,
+        replaceFallbackItemId: swapCandidate.id,
+      })
+      if (res.error) {
+        setRotationError(res.error)
+        setRotationPending(false)
+        return
+      }
+      setInRotation(true)
+      setSwapCandidate(null)
+      setRotationPending(false)
+      router.refresh()
+    })
+  }
+
   return (
     <div className={`studio-item-row--list${open ? ' studio-item-row--list--active' : ''}`}>
       <div className="studio-card-row">
@@ -104,6 +161,7 @@ export default function ArchiveEditor({
           <div className="studio-text-muted-sm">
             {item.status as string}
             {pinned && ' · Pinned'}
+            {inRotation && ' · In rotation'}
             {item.contentType != null && ` · ${String(item.contentType).replace(/_/g, ' ')}`}
             {item.genre != null && ` · ${String(item.genre)}`}
             {item.sourceFormat != null &&
@@ -132,6 +190,9 @@ export default function ArchiveEditor({
             <Button onClick={togglePin} disabled={pinPending} variant="ghost" size="sm">
               {pinned ? 'Unpin from Stage' : 'Pin to Stage'}
             </Button>
+            <Button onClick={toggleRotation} disabled={rotationPending} variant="ghost" size="sm">
+              {inRotation ? 'Remove from rotation' : 'Add to rotation'}
+            </Button>
             <AddToPlaylistButton archiveItemId={item.id} />
             <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
               Re-edit
@@ -148,6 +209,29 @@ export default function ArchiveEditor({
           </Button>
         )}
       </div>
+
+      {swapCandidate && (
+        <div className="studio-row studio-row--wrap studio-gap-xs studio-mt-sm">
+          <span className="studio-text-sm">
+            Rotation is full — remove &ldquo;{swapCandidate.title}&rdquo; to add &ldquo;
+            {item.title}&rdquo;?
+          </span>
+          <Button
+            onClick={() => setSwapCandidate(null)}
+            disabled={rotationPending}
+            variant="ghost"
+            size="sm"
+          >
+            Cancel
+          </Button>
+          <Button onClick={confirmSwap} disabled={rotationPending} variant="primary" size="sm">
+            {rotationPending ? 'Swapping…' : 'Confirm swap'}
+          </Button>
+        </div>
+      )}
+      {rotationError && !swapCandidate && (
+        <p className="studio-notice studio-notice--error studio-mt-sm">{rotationError}</p>
+      )}
 
       {open && (
         <div className="studio-editor-panel">

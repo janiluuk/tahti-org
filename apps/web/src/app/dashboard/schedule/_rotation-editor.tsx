@@ -4,7 +4,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import type { FallbackMode } from '@tahti/shared'
+import { MAX_FALLBACK_ITEMS, type FallbackMode } from '@tahti/shared'
 import { Alert, Button, ButtonIcon, Field, Panel, Select, Text } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { usePlayer } from '@/contexts/player-context'
@@ -81,12 +81,14 @@ export function RotationEditor({
   updateProgramme?: (payload: {
     fallbackMode?: FallbackMode
     fallbackEnabled?: boolean
+    fallbackAutoEnroll?: boolean
     items?: Array<{ archiveItemId: string; isFallback: boolean; fallbackOrder?: number }>
   }) => Promise<ProgrammeActionResult>
   addLibraryTrack?: (releaseTrackId: string) => Promise<ProgrammeActionResult>
 }) {
   const [fallbackMode, setFallbackMode] = useState<FallbackMode>(initial.fallbackMode)
   const [fallbackEnabled, setFallbackEnabled] = useState(initial.fallbackEnabled)
+  const [fallbackAutoEnroll, setFallbackAutoEnroll] = useState(initial.fallbackAutoEnroll)
   const [items, setItems] = useState<ProgrammeItemRow[]>(initial.items)
   const [library, setLibrary] = useState<ProgrammeLibraryTrackRow[]>(initial.library)
   const [error, setError] = useState<string | null>(null)
@@ -97,6 +99,7 @@ export function RotationEditor({
   const [isPending, startTransition] = useTransition()
 
   const inRotation = useMemo(() => items.filter((r) => r.isFallback), [items])
+  const atCap = inRotation.length >= MAX_FALLBACK_ITEMS
   const availableArchive = useMemo(
     () => items.filter((r) => r.status === 'READY' && !r.isFallback),
     [items],
@@ -105,6 +108,7 @@ export function RotationEditor({
   function applyView(view: ProgrammeView) {
     setFallbackMode(view.fallbackMode)
     setFallbackEnabled(view.fallbackEnabled)
+    setFallbackAutoEnroll(view.fallbackAutoEnroll)
     setItems(view.items)
     setLibrary(view.library)
   }
@@ -136,6 +140,7 @@ export function RotationEditor({
       const res = await updateProgramme({
         fallbackMode,
         fallbackEnabled,
+        fallbackAutoEnroll,
         items: items.map((r) => ({
           archiveItemId: r.id,
           isFallback: r.isFallback,
@@ -206,6 +211,19 @@ export function RotationEditor({
               <option value="name">By name</option>
             </Select>
           </Field>
+
+          <label className="studio-toggle-row">
+            <input
+              type="checkbox"
+              className="studio-toggle-checkbox"
+              checked={fallbackAutoEnroll}
+              disabled={isPending}
+              onChange={(e) => setFallbackAutoEnroll(e.target.checked)}
+            />
+            <span className="studio-toggle-label">
+              Auto-add new uploads to rotation (up to {MAX_FALLBACK_ITEMS})
+            </span>
+          </label>
         </div>
 
         {error && (
@@ -234,7 +252,7 @@ export function RotationEditor({
       <div className="studio-channel-editor__layout">
         <div className="studio-channel-editor__preview-col">
           <Panel
-            title={`In rotation — ${inRotation.length} item${inRotation.length === 1 ? '' : 's'}`}
+            title={`In rotation — ${inRotation.length}/${MAX_FALLBACK_ITEMS}`}
             headerTight
             description={
               fallbackMode === 'ordered' ? (
@@ -342,7 +360,8 @@ export function RotationEditor({
                         type="button"
                         variant="secondary"
                         size="sm"
-                        disabled={isPending}
+                        disabled={isPending || atCap}
+                        title={atCap ? `Rotation is full (max ${MAX_FALLBACK_ITEMS})` : undefined}
                         onClick={() => addArchiveItem(row.id)}
                       >
                         + Add
@@ -389,7 +408,8 @@ export function RotationEditor({
                           type="button"
                           variant="secondary"
                           size="sm"
-                          disabled={isPending}
+                          disabled={isPending || atCap}
+                          title={atCap ? `Rotation is full (max ${MAX_FALLBACK_ITEMS})` : undefined}
                           onClick={() => promoteLibraryTrack(track.releaseTrackId)}
                         >
                           {promotingId === track.releaseTrackId ? 'Adding…' : '+ Add'}
