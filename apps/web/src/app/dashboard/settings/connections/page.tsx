@@ -9,8 +9,6 @@ import { ImportConnectionsPanel } from '../../_import-connections-panel'
 import type { SocialSettings } from '../../social-actions'
 import { fetchMixcloudStatus } from '../../mixcloud-actions'
 import { MixcloudConnect } from '../../mixcloud-connect'
-import { fetchSpotifyProfile } from '../../spotify-profile-actions'
-import { SpotifyProfilePanel } from '../../spotify-profile-panel'
 
 interface ImportConnectStatus {
   connected: boolean
@@ -38,21 +36,14 @@ export default async function ConnectionsSettingsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [
-    socialSettings,
-    googleDriveImport,
-    bandcampImport,
-    soundcloudImport,
-    mixcloudStatus,
-    spotifyProfile,
-  ] = await Promise.all([
-    apiFetch<SocialSettings>(apiUrl, cookie, '/api/me/social'),
-    apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/google-drive'),
-    apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/bandcamp'),
-    apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/soundcloud'),
-    fetchMixcloudStatus(),
-    fetchSpotifyProfile(),
-  ])
+  const [socialSettings, googleDriveImport, bandcampImport, soundcloudImport, mixcloudStatus] =
+    await Promise.all([
+      apiFetch<SocialSettings>(apiUrl, cookie, '/api/me/social'),
+      apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/google-drive'),
+      apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/bandcamp'),
+      apiFetch<ImportConnectStatus>(apiUrl, cookie, '/api/me/soundcloud'),
+      fetchMixcloudStatus(),
+    ])
 
   return (
     <div className="studio-settings-stack">
@@ -105,11 +96,6 @@ export default async function ConnectionsSettingsPage() {
           apiUrl={apiUrl}
         />
       </Suspense>
-
-      <SpotifyProfilePanel
-        initial={spotifyProfile.profile}
-        configured={spotifyProfile.configured}
-      />
     </div>
   )
 }

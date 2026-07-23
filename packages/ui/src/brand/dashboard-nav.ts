@@ -10,6 +10,7 @@ export type DashboardSectionKey =
   | 'archive'
   | 'releases'
   | 'collections'
+  | 'distribution'
   | 'newsletter'
   | 'broadcast'
   | 'account'
@@ -36,6 +37,7 @@ export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabI
   archive: 'overview',
   releases: 'overview',
   collections: 'overview',
+  distribution: 'overview',
   newsletter: 'audience',
   broadcast: 'broadcast',
   // Account settings moved to /dashboard/settings/account — old in-page anchor falls back to overview.
@@ -135,6 +137,13 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
   {
     href: '/dashboard/releases',
     label: 'Smart Links',
+    icon: 'links',
+    isRoute: true,
+    requiresChannel: true,
+  },
+  {
+    href: '/dashboard/distribution',
+    label: 'Distribution',
     icon: 'links',
     isRoute: true,
     requiresChannel: true,
