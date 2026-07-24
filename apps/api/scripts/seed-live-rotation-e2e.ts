@@ -21,9 +21,20 @@ import { hashPassword } from '../src/lib/password.js'
 const SLOT_DURATION_MS = 90_000
 const GAP_MS = 5_000
 // Fixed (not random) so the e2e script can log in as each seeded artist to
-// call /api/me/channel/go-live — only the Icecast source password needs to
-// stay unique per run, since that's what a real listener could sniff.
+// call /api/me/channel/go-live.
 const LOGIN_PASSWORD = process.env.E2E_LIVE_TEST_PASSWORD ?? 'e2e-live-rotation-test-password'
+// Icecast 2.4.4 hard-requires one shared global <source-password> to accept
+// ANY source connection — its per-mount url-auth (on_connect) is not a real
+// access-control gate on its own (confirmed: Icecast still accepts a stream
+// even when on_connect returns 403). So the per-channel liveSourcePass here
+// is deliberately set to the SAME shared secret Icecast is configured with
+// (infra/stack/icecast.xml's <source-password>, "dev_source" by default) —
+// that's the only way for a pushed stream to satisfy both Icecast's real gate
+// and on_connect's per-channel hash check at once, letting this e2e test
+// exercise the real app-level flow (Broadcast creation, state transitions,
+// relay, recording) rather than just raw bytes hitting a mount Icecast
+// happens to accept regardless of the app's opinion.
+const ICECAST_SHARED_SOURCE_PASSWORD = process.env.ICECAST_SOURCE_PASSWORD ?? 'dev_source'
 
 interface SeededArtist {
   slug: string
@@ -38,7 +49,7 @@ async function seedArtist(opts: {
   autoRecordEnabled: boolean
 }): Promise<SeededArtist> {
   const passwordHash = await hashPassword(LOGIN_PASSWORD)
-  const streamPass = randomBytes(16).toString('hex')
+  const streamPass = ICECAST_SHARED_SOURCE_PASSWORD
   const streamPassHash = await hashPassword(streamPass)
   const streamKey = `${opts.username}__${randomBytes(8).toString('hex')}`
 
