@@ -177,6 +177,51 @@ export async function buildArtistPlaysStats(
   }
 }
 
+/** Dashboard overview KPI counters — "plays"/"downloads", today + all-time. "Plays"
+ * mirrors buildArtistPlaysStats' definition (downloads + smart-link clicks); unlike
+ * that function's range-bounded totals (capped to a 2-year window for the daily
+ * chart), these totals are genuinely unbounded — just four cheap counts. */
+export async function buildDashboardPlayDownloadCounters(prisma: PrismaClient, userId: string) {
+  const channel = await prisma.channel.findUnique({ where: { userId }, select: { id: true } })
+  const releaseIds = channel
+    ? (await prisma.release.findMany({ where: { userId }, select: { id: true } })).map((r) => r.id)
+    : []
+
+  const todayStart = new Date(
+    Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()),
+  )
+
+  const [downloadsToday, downloadsTotal, clicksToday, clicksTotal] = await Promise.all([
+    channel
+      ? prisma.download.count({
+          where: {
+            channelId: channel.id,
+            countedAt: { not: null },
+            createdAt: { gte: todayStart },
+          },
+        })
+      : 0,
+    channel
+      ? prisma.download.count({ where: { channelId: channel.id, countedAt: { not: null } } })
+      : 0,
+    releaseIds.length > 0
+      ? prisma.smartLinkClick.count({
+          where: { releaseId: { in: releaseIds }, createdAt: { gte: todayStart } },
+        })
+      : 0,
+    releaseIds.length > 0
+      ? prisma.smartLinkClick.count({ where: { releaseId: { in: releaseIds } } })
+      : 0,
+  ])
+
+  return {
+    playsToday: downloadsToday + clicksToday,
+    playsTotal: downloadsTotal + clicksTotal,
+    downloadsToday,
+    downloadsTotal,
+  }
+}
+
 export async function buildTopTracksStats(
   prisma: PrismaClient,
   userId: string,

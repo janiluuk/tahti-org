@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   StatsPlaysResponseSchema,
   StatsRangeQuerySchema,
+  StatsSummaryResponseSchema,
   StatsTopCountriesResponseSchema,
   StatsTopTracksResponseSchema,
   openApiResponse,
@@ -12,12 +13,29 @@ import {
 import { requireAuth } from '../../plugins/auth.js'
 import {
   buildArtistPlaysStats,
+  buildDashboardPlayDownloadCounters,
   buildTopCountriesStats,
   buildTopTracksStats,
 } from '../../lib/artist-stats.js'
 
 /** PLAT-030: artist dashboard stats (plays, top tracks, referer countries). */
 const meStatsRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get(
+    '/api/me/stats/summary',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Dashboard KPI counters: plays/downloads today + all-time',
+        response: openApiResponse(StatsSummaryResponseSchema, 'StatsSummary'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      return reply.send(await buildDashboardPlayDownloadCounters(fastify.prisma, user.id))
+    },
+  )
+
   fastify.get(
     '/api/me/stats/plays',
     {

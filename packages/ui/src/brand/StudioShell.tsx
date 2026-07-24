@@ -40,6 +40,7 @@ export function StudioShell({
         displayName={displayName}
         isLive={isLive}
         isBoard={isBoard}
+        hasChannel={hasChannel}
         channelUrl={channelUrl}
         fetchNotifications={fetchNotifications}
         markNotificationsRead={markNotificationsRead}

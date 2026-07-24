@@ -13,6 +13,7 @@ type StudioTopNavProps = {
   displayName?: string
   isLive?: boolean
   isBoard?: boolean
+  hasChannel?: boolean
   channelUrl?: string
   fetchNotifications?: () => Promise<{
     notifications: NotificationBellItem[]
@@ -33,6 +34,41 @@ function IconLogout() {
       />
       <path
         d="M10.5 11 14 8l-3.5-3M14 8H6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function IconGoLive() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="8" cy="8" r="3" fill="currentColor" />
+      <path
+        d="M4.2 4.2a5.4 5.4 0 0 0 0 7.6M11.8 4.2a5.4 5.4 0 0 1 0 7.6M2.3 2.3a8.2 8.2 0 0 0 0 11.4M13.7 2.3a8.2 8.2 0 0 1 0 11.4"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function IconUpload() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M8 10.5V2.5M8 2.5 4.8 5.7M8 2.5l3.2 3.2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M2.5 10.5v1.8A1.7 1.7 0 0 0 4.2 14h7.6a1.7 1.7 0 0 0 1.7-1.7v-1.8"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
@@ -68,6 +104,7 @@ export function StudioTopNav({
   displayName,
   isLive,
   isBoard,
+  hasChannel,
   channelUrl,
   fetchNotifications,
   markNotificationsRead,
@@ -111,6 +148,26 @@ export function StudioTopNav({
             </Link>
           )}
         </div>
+        {displayName && hasChannel && (
+          <Link
+            href="/dashboard/broadcast"
+            className="studio-top-nav__icon-btn"
+            aria-label="Go live"
+            title="Go live"
+          >
+            <IconGoLive />
+          </Link>
+        )}
+        {displayName && hasChannel && (
+          <Link
+            href="/dashboard/upload"
+            className="studio-top-nav__icon-btn"
+            aria-label="Upload"
+            title="Upload"
+          >
+            <IconUpload />
+          </Link>
+        )}
         {displayName && fetchNotifications && markNotificationsRead && (
           <NotificationBell
             fetchNotifications={fetchNotifications}
