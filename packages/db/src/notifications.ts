@@ -33,6 +33,26 @@ export async function notifyFollowersOfNewPost(
   })
 }
 
+/** M38: notify a conversation participant that a new direct message arrived. */
+export async function notifyUserOfNewMessage(
+  prisma: PrismaClient,
+  recipientUserId: string,
+  sender: { id: string; username: string; displayName: string },
+  conversationId: string,
+  messageBody: string,
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: recipientUserId,
+      type: 'NEW_MESSAGE',
+      actorUserId: sender.id,
+      title: `${sender.displayName} sent you a message`,
+      body: messageBody.slice(0, 140),
+      url: `/dashboard/messages/${conversationId}`,
+    },
+  })
+}
+
 export async function processScheduledPostNotifications(
   prisma: PrismaClient,
 ): Promise<{ notified: number }> {

@@ -401,6 +401,7 @@ enum MentionSurface {
 
 enum NotificationType {
   NEW_POST
+  NEW_MESSAGE
 
   @@schema("core")
 }
@@ -601,6 +602,8 @@ model User {
   collections           Collection[]
   artistFollowers       ArtistFollow[]       @relation("ArtistFollowers")
   artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
+  conversationParticipations ConversationParticipant[]
+  messagesSent          Message[]
   supportTickets        SupportTicket[]      @relation("SupportTicketArtist")
   supportTicketsAssigned SupportTicket[]     @relation("SupportAssignee")
   supportTicketNotes    SupportTicketNote[]
@@ -1460,6 +1463,48 @@ model ArtistFollow {
 
   @@id([followerUserId, artistUserId])
   @@index([artistUserId])
+  @@schema("engagement")
+}
+
+// ── Private messaging (M38) ───────────────────────────────────────────────────
+// 1:1 conversations only (participants is a join table so group DMs could be
+// added later without a redesign, but nothing today creates a Conversation
+// with more than 2 participants).
+
+model Conversation {
+  id           String                     @id @default(cuid())
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@schema("engagement")
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@schema("engagement")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  body           String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
   @@schema("engagement")
 }
 
