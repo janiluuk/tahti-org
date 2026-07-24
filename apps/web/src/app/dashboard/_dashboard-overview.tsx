@@ -31,6 +31,12 @@ export type DashboardOverviewProps = {
   weeklyListeners: number
   statDlCount: number
   revenueCents: number
+  statsSummary: {
+    playsToday: number
+    playsTotal: number
+    downloadsToday: number
+    downloadsTotal: number
+  }
   archiveItems: ArchiveItem[]
   downloadGateSummary: ComponentProps<typeof DownloadGateSummaryPanel>['summary']
   channelLiveStats: ComponentProps<typeof ChannelLiveStatsPanel>['stats']
@@ -70,6 +76,7 @@ export function DashboardOverview({
   weeklyListeners,
   statDlCount,
   revenueCents,
+  statsSummary,
   archiveItems,
   downloadGateSummary,
   channelLiveStats,
@@ -145,6 +152,29 @@ export function DashboardOverview({
           variant="revenue"
           value={`€${(revenueCents / 100).toFixed(0)}`}
           label="Fan-sub revenue"
+        />
+      </StatCardGrid>
+
+      <StatCardGrid cols={4} aria-label="Plays and downloads">
+        <StatCard
+          variant="plays"
+          value={statsSummary.playsToday.toLocaleString()}
+          label="Plays today"
+        />
+        <StatCard
+          variant="plays"
+          value={statsSummary.playsTotal.toLocaleString()}
+          label="Plays total"
+        />
+        <StatCard
+          variant="downloads"
+          value={statsSummary.downloadsToday.toLocaleString()}
+          label="Downloads today"
+        />
+        <StatCard
+          variant="downloads"
+          value={statsSummary.downloadsTotal.toLocaleString()}
+          label="Downloads total"
         />
       </StatCardGrid>
 

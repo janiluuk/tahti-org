@@ -84,6 +84,7 @@ export default async function DashboardPage() {
     daily: Array<{ date: string; liveSeconds: number; broadcastCount: number; listeners: number }>
   } | null = null
   let fanPayoutStats = { thisMonthNetCents: 0 }
+  let statsSummary = { playsToday: 0, playsTotal: 0, downloadsToday: 0, downloadsTotal: 0 }
   let recentArchiveItems: Array<{
     id: string
     title: string
@@ -101,6 +102,7 @@ export default async function DashboardPage() {
       fanPayoutsSummaryRes,
       recentArchiveRes,
       preflightRes,
+      statsSummaryRes,
     ] = await Promise.all([
       get('/api/me/moderate'),
       get('/api/me/membership'),
@@ -109,6 +111,7 @@ export default async function DashboardPage() {
       slug ? get('/api/me/fan-sub-payouts/summary') : null,
       slug ? get('/api/me/archive/recent') : null,
       slug && isOnAir ? get('/api/me/channel/preflight') : null,
+      slug ? get('/api/me/stats/summary') : null,
     ])
 
     if (moderatedRes.ok) moderatedChannels = (await moderatedRes.json()) as ModeratedChannel[]
@@ -133,6 +136,9 @@ export default async function DashboardPage() {
     if (preflightRes?.ok) {
       const preflight = (await preflightRes.json()) as { title: string | null }
       liveBroadcastTitle = preflight.title
+    }
+    if (statsSummaryRes?.ok) {
+      statsSummary = (await statsSummaryRes.json()) as typeof statsSummary
     }
   } catch {
     // ignore — dashboard renders with partial data
@@ -277,6 +283,7 @@ export default async function DashboardPage() {
         weeklyListeners={weeklyListeners}
         statDlCount={statDlCount}
         revenueCents={fanPayoutStats.thisMonthNetCents}
+        statsSummary={statsSummary}
         archiveItems={recentArchiveItems}
         downloadGateSummary={downloadGateSummary}
         channelLiveStats={channelLiveStats}

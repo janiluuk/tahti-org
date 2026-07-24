@@ -479,6 +479,29 @@
   display: contents;
 }
 
+[data-tahti-ui='studio'] .studio-top-nav__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  text-decoration: none;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+[data-tahti-ui='studio'] .studio-top-nav__icon-btn:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+}
+
 [data-tahti-ui='studio'] .studio-top-nav__notif {
   position: relative;
 }

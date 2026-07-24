@@ -94,6 +94,30 @@ describe('PLAT-030 — artist stats API', () => {
     await app.close()
   })
 
+  it('GET /api/me/stats/summary returns today + all-time counters', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/me/stats/summary',
+      headers: { cookie },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      playsToday: number
+      playsTotal: number
+      downloadsToday: number
+      downloadsTotal: number
+    }
+    expect(body.downloadsToday).toBeGreaterThanOrEqual(1)
+    expect(body.downloadsTotal).toBeGreaterThanOrEqual(1)
+    expect(body.playsToday).toBeGreaterThanOrEqual(1)
+    expect(body.playsTotal).toBe(body.downloadsTotal + 1) // + the seeded smart-link click
+  })
+
+  it('GET /api/me/stats/summary requires auth', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/me/stats/summary' })
+    expect(res.statusCode).toBe(401)
+  })
+
   it('GET /api/me/stats/plays returns daily series', async () => {
     const res = await app.inject({
       method: 'GET',
