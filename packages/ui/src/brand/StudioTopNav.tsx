@@ -78,6 +78,19 @@ function IconUpload() {
   )
 }
 
+function IconMessages() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M2 4.5A1.5 1.5 0 0 1 3.5 3h9A1.5 1.5 0 0 1 14 4.5v5A1.5 1.5 0 0 1 12.5 11H6.8L3.6 13.4A.5.5 0 0 1 3 13v-2H3.5A1.5 1.5 0 0 1 2 9.5v-5Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function IconSwitch() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
@@ -166,6 +179,16 @@ export function StudioTopNav({
             title="Upload"
           >
             <IconUpload />
+          </Link>
+        )}
+        {displayName && (
+          <Link
+            href="/dashboard/messages"
+            className="studio-top-nav__icon-btn"
+            aria-label="Messages"
+            title="Messages"
+          >
+            <IconMessages />
           </Link>
         )}
         {displayName && fetchNotifications && markNotificationsRead && (

@@ -3,7 +3,7 @@
 
 import { z } from 'zod'
 
-export const NotificationTypeSchema = z.enum(['NEW_POST'])
+export const NotificationTypeSchema = z.enum(['NEW_POST', 'NEW_MESSAGE'])
 
 export const NotificationSchema = z.object({
   id: z.string(),
