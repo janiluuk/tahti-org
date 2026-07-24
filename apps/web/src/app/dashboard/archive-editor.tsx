@@ -194,6 +194,12 @@ export default function ArchiveEditor({
               {inRotation ? 'Remove from rotation' : 'Add to rotation'}
             </Button>
             <AddToPlaylistButton archiveItemId={item.id} />
+            <NextLink
+              href={`/dashboard/insights/archive/${item.id}`}
+              className="ui-btn ui-btn--sm ui-btn--ghost"
+            >
+              Show insights
+            </NextLink>
             <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
               Re-edit
             </Button>

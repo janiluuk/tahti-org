@@ -138,6 +138,12 @@ export function TracksTab({ tracks, isOwner }: { tracks: TrackTabItem[]; isOwner
                     Edit
                   </Link>
                   <AddToPlaylistButton archiveItemId={t.id} />
+                  <Link
+                    href={`/dashboard/insights/archive/${t.id}`}
+                    className="ui-btn ui-btn--sm ui-btn--ghost"
+                  >
+                    Show insights
+                  </Link>
                   {mode === 'manual' && (
                     <div className="prof-tracks-reorder">
                       <button

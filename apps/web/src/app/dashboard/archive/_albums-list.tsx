@@ -70,6 +70,12 @@ export function AlbumsList({ albums }: { albums: AlbumSummary[] }) {
                           {track.archiveItemId && (
                             <AddToPlaylistButton archiveItemId={track.archiveItemId} />
                           )}
+                          <Link
+                            href={`/dashboard/insights/release-track/${track.id}`}
+                            className="ui-btn ui-btn--sm ui-btn--ghost"
+                          >
+                            Show insights
+                          </Link>
                         </span>
                       </li>
                     ))}
