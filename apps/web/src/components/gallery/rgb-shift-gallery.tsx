@@ -9,6 +9,7 @@ import * as THREE from 'three'
 import type { GalleryImagesProps } from './types'
 import {
   GALLERY_BG,
+  createAudioLevelSampler,
   createGalleryRenderer,
   disposeScene,
   loadGalleryTextures,
@@ -38,7 +39,7 @@ const FRAGMENT = `
   }
 `
 
-export function RgbShiftGallery({ images }: GalleryImagesProps) {
+export function RgbShiftGallery({ images, analyser }: GalleryImagesProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
 
@@ -103,14 +104,17 @@ export function RgbShiftGallery({ images }: GalleryImagesProps) {
     ro.observe(host)
     resizeGalleryRenderer(renderer, camera, host)
 
+    const sampleAudio = analyser ? createAudioLevelSampler(analyser) : null
     let frameId = 0
     const animate = () => {
       frameId = requestAnimationFrame(animate)
       raycaster.setFromCamera(pointer, camera)
       const hit = raycaster.intersectObjects(meshes, false)[0]?.object
+      const audioLevel = sampleAudio ? sampleAudio() : 0
       for (const mat of materials) {
         const isHover = hit && (hit as THREE.Mesh).material === mat
-        mat.uniforms.uHover.value += ((isHover ? 1 : 0) - mat.uniforms.uHover.value) * 0.15
+        mat.uniforms.uHover.value +=
+          (Math.max(isHover ? 1 : 0, audioLevel) - mat.uniforms.uHover.value) * 0.15
       }
       renderer.render(scene, camera)
     }
@@ -123,7 +127,7 @@ export function RgbShiftGallery({ images }: GalleryImagesProps) {
       disposeTex()
       disposeScene(renderer, host, [...meshes.map((m) => m.geometry), ...materials])
     }
-  }, [images])
+  }, [images, analyser])
 
   return (
     <div

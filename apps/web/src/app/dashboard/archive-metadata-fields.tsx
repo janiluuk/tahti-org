@@ -3,7 +3,7 @@
 
 'use client'
 
-import type { TracklistEntry } from '@tahti/shared'
+import type { TracklistEntry, ChannelGalleryMode } from '@tahti/shared'
 import {
   ARCHIVE_GENRES,
   ARCHIVE_CONTENT_TYPES,
@@ -12,6 +12,12 @@ import {
   ARCHIVE_METADATA_DEFAULTS,
   CONTENT_TYPE_LABELS,
 } from '../../lib/archive-metadata-options'
+import {
+  CHANNEL_GALLERY_MODES,
+  CHANNEL_GALLERY_MODE_HINTS,
+  CHANNEL_GALLERY_MODE_LABELS,
+  isWebGLGalleryMode,
+} from '@tahti/shared'
 import { TracklistEditor } from './tracklist-editor'
 import { CoverImageUpload } from '@/components/cover-image-upload'
 import { VenuePicker } from './venue-picker'
@@ -41,6 +47,8 @@ export type ArchiveMetadataFormState = {
   bannerUrl: string
   backgroundUrl: string
   slideshowUrls: string
+  galleryMode: ChannelGalleryMode
+  galleryAudioReactive: boolean
   commentary: string
   taggedNote: string
   isPublic: boolean
@@ -74,6 +82,8 @@ export function defaultMetadataFormState(): ArchiveMetadataFormState {
     bannerUrl: '',
     backgroundUrl: '',
     slideshowUrls: '',
+    galleryMode: 'NONE',
+    galleryAudioReactive: false,
     commentary: '',
     taggedNote: '',
     isPublic: ARCHIVE_METADATA_DEFAULTS.isPublic,
@@ -114,6 +124,8 @@ export function metadataFormToPayload(state: ArchiveMetadataFormState): Record<s
       .map((s) => s.trim())
       .filter(Boolean)
       .slice(0, 10),
+    galleryMode: state.galleryMode,
+    galleryAudioReactive: state.galleryAudioReactive,
     commentary: state.commentary.trim() || undefined,
     taggedNote: state.taggedNote.trim() || undefined,
     isPublic: state.isPublic,
@@ -151,6 +163,8 @@ export function metadataFromApi(item: Record<string, unknown>): ArchiveMetadataF
     slideshowUrls: Array.isArray(item.slideshowUrls)
       ? (item.slideshowUrls as string[]).join('\n')
       : '',
+    galleryMode: (item.galleryMode as ChannelGalleryMode) ?? 'NONE',
+    galleryAudioReactive: (item.galleryAudioReactive as boolean) ?? false,
     commentary: (item.commentary as string) ?? '',
     taggedNote: (item.taggedNote as string) ?? '',
     isPublic: (item.isPublic as boolean) ?? true,
@@ -436,6 +450,43 @@ export function ArchiveMetadataFields({
           className="studio-textarea"
         />
       </label>
+
+      {state.slideshowUrls.trim() && (
+        <>
+          <label className="studio-field">
+            <span className="studio-label">Slideshow transition</span>
+            <select
+              value={state.galleryMode}
+              disabled={disabled}
+              onChange={(e) => set({ galleryMode: e.target.value as ChannelGalleryMode })}
+              className="studio-input"
+            >
+              {CHANNEL_GALLERY_MODES.filter((m) => m !== 'STATIC_SLIDESHOW').map((mode) => (
+                <option key={mode} value={mode}>
+                  {CHANNEL_GALLERY_MODE_LABELS[mode]}
+                </option>
+              ))}
+            </select>
+            {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode] && (
+              <span className="studio-text-muted-sm">
+                {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode]}
+              </span>
+            )}
+          </label>
+
+          {isWebGLGalleryMode(state.galleryMode) && (
+            <label className="studio-label-row studio-text-sm studio-mb-sm">
+              <input
+                type="checkbox"
+                checked={state.galleryAudioReactive}
+                disabled={disabled}
+                onChange={(e) => set({ galleryAudioReactive: e.target.checked })}
+              />
+              Audio-reactive — images pulse with this track&apos;s playback
+            </label>
+          )}
+        </>
+      )}
 
       <TracklistEditor
         value={state.tracklist}

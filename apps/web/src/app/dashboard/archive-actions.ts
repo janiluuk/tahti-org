@@ -410,8 +410,8 @@ export async function fetchReleasesForPublish(): Promise<{
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to load releases' }
   }
-  const releases = (await res.json()) as Array<{ id: string; title: string }>
-  return { releases: releases.map((r) => ({ id: r.id, title: r.title })), error: null }
+  const data = (await res.json()) as { releases: Array<{ id: string; title: string }> }
+  return { releases: data.releases.map((r) => ({ id: r.id, title: r.title })), error: null }
 }
 
 export async function publishArchiveToRelease(

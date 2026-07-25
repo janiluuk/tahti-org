@@ -9,6 +9,7 @@ import * as THREE from 'three'
 import type { GalleryImagesProps } from './types'
 import {
   GALLERY_BG,
+  createAudioLevelSampler,
   createGalleryRenderer,
   disposeScene,
   loadGalleryTextures,
@@ -43,7 +44,7 @@ const FRAGMENT = `
   }
 `
 
-export function TwistedWaveGallery({ images }: GalleryImagesProps) {
+export function TwistedWaveGallery({ images, analyser }: GalleryImagesProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const hostRef = useRef<HTMLDivElement>(null)
 
@@ -122,20 +123,23 @@ export function TwistedWaveGallery({ images }: GalleryImagesProps) {
     ro.observe(host)
     resizeGalleryRenderer(renderer, camera, host)
 
+    const sampleAudio = analyser ? createAudioLevelSampler(analyser) : null
     const clock = new THREE.Clock()
     let frameId = 0
     const animate = () => {
       frameId = requestAnimationFrame(animate)
       scrollPower *= 0.92
+      const audioLevel = sampleAudio ? sampleAudio() : 0
       const t = clock.getElapsedTime()
       raycaster.setFromCamera(pointer, camera)
       const hit = raycaster.intersectObjects(meshes, false)[0]?.object
       camera.position.x = root.scrollLeft / 120 + host.clientWidth / 240
       for (const mat of materials) {
         const isHover = hit && (hit as THREE.Mesh).material === mat
-        mat.uniforms.uHover.value += ((isHover ? 1 : 0) - mat.uniforms.uHover.value) * 0.12
+        mat.uniforms.uHover.value +=
+          (Math.max(isHover ? 1 : 0, audioLevel) - mat.uniforms.uHover.value) * 0.12
         mat.uniforms.uTime.value = t
-        mat.uniforms.uScrollPower.value = scrollPower
+        mat.uniforms.uScrollPower.value = Math.max(scrollPower, audioLevel * 0.6)
       }
       renderer.render(scene, camera)
     }
@@ -151,7 +155,7 @@ export function TwistedWaveGallery({ images }: GalleryImagesProps) {
       disposeTex()
       disposeScene(renderer, host, [...meshes.map((m) => m.geometry), ...materials])
     }
-  }, [images])
+  }, [images, analyser])
 
   return (
     <div

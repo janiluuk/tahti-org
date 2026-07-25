@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
-import type { ReleaseChecklistItem } from '@tahti/shared'
+import type { ReleaseChecklistItem, ChannelGalleryMode } from '@tahti/shared'
 import { Heading, PageShell } from '@tahti/ui'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { StudioHeaderActions } from '../../_studio-header-actions'
@@ -33,6 +33,9 @@ interface ReleaseSummary {
   visualPreset?: string | null
   colorSchemeJson?: string | null
   paletteJson?: string | null
+  slideshowImages?: string[]
+  galleryMode?: ChannelGalleryMode
+  galleryAudioReactive?: boolean
   tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }

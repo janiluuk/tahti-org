@@ -6,7 +6,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import type { ReleaseChecklistItem } from '@tahti/shared'
+import type { ReleaseChecklistItem, ChannelGalleryMode } from '@tahti/shared'
 import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { publishRelease, updateReleaseDate, updateReleaseSmartLinks } from '../../release-actions'
 import ReleaseOpsPanel, { parseCredits } from '../../release-ops-panel'
@@ -47,6 +47,9 @@ interface ReleaseSummary {
   visualPreset?: string | null
   colorSchemeJson?: string | null
   paletteJson?: string | null
+  slideshowImages?: string[]
+  galleryMode?: ChannelGalleryMode
+  galleryAudioReactive?: boolean
   tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
@@ -218,6 +221,9 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
           visualPreset: (r.visualPreset ?? 'MINIMAL') as import('@tahti/shared').VisualPreset,
           colorSchemeJson: r.colorSchemeJson ?? null,
           paletteJson: r.paletteJson ?? null,
+          slideshowImages: r.slideshowImages ?? [],
+          galleryMode: r.galleryMode ?? 'NONE',
+          galleryAudioReactive: r.galleryAudioReactive ?? false,
         }}
       />
     </div>
