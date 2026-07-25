@@ -17,13 +17,30 @@ const REASONS: { value: string; label: string }[] = [
   { value: 'OTHER', label: 'Other' },
 ]
 
+function IconFlag() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M3 1.5v13M3 2.5h9l-2.2 2.75L12 8H3"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 /** No account required to report, matching the platform's anonymous-by-default listener model. */
 export function ReportButton({
   targetType,
   targetId,
+  variant = 'text',
 }: {
   targetType: TargetType
   targetId: string
+  /** 'icon' renders a compact icon-only trigger (e.g. inside a per-track row). */
+  variant?: 'text' | 'icon'
 }) {
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('COPYRIGHT')
@@ -62,6 +79,19 @@ export function ReportButton({
   }
 
   if (!open) {
+    if (variant === 'icon') {
+      return (
+        <button
+          type="button"
+          className="report-button__trigger report-button__trigger--icon"
+          onClick={() => setOpen(true)}
+          aria-label="Report"
+          title="Report"
+        >
+          <IconFlag />
+        </button>
+      )
+    }
     return (
       <button type="button" className="report-button__trigger" onClick={() => setOpen(true)}>
         Report

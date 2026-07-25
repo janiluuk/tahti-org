@@ -520,12 +520,17 @@ export function MiniPlayer() {
           type="button"
           className="mini-player__progress"
           aria-label="Seek"
+          aria-valuenow={Math.round(progress * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          role="slider"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect()
             seek((e.clientX - rect.left) / rect.width)
           }}
         >
           <span className="mini-player__progress-fill" style={{ width: `${progress * 100}%` }} />
+          <span className="mini-player__progress-thumb" style={{ left: `${progress * 100}%` }} />
         </button>
       )}
       <div className="mini-player__inner">

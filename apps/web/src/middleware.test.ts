@@ -86,4 +86,24 @@ describe('PLAT-050/051 — subdomain + custom domain routing middleware', () => 
     const res = await middleware(req('https://app.tahti.live/dashboard'))
     expect(res.headers.get('x-middleware-rewrite')).toBeNull()
   })
+
+  it('fast path: skips the rewrite for an explicit "Home" nav click (?home=1)', async () => {
+    const res = await middleware(
+      req('https://someartist.tahti.live/?home=1', {
+        'x-tahti-channel-slug': 'someartist',
+      }),
+    )
+    expect(res.headers.get('x-middleware-rewrite')).toBeNull()
+  })
+
+  it('slow path: skips the rewrite for an explicit "Home" nav click (?home=1)', async () => {
+    global.fetch = vi.fn()
+    const res = await middleware(
+      req('https://artist-example.com/?home=1', {
+        'x-tahti-custom-host': 'artist-example.com',
+      }),
+    )
+    expect(global.fetch).not.toHaveBeenCalled()
+    expect(res.headers.get('x-middleware-rewrite')).toBeNull()
+  })
 })

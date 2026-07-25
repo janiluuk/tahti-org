@@ -63,7 +63,7 @@ export function ArchiveTrackRow({
         <div className="prof-collection-title">{title}</div>
         {durationLabel && <span className="prof-list-meta">{durationLabel}</span>}
       </div>
-      <ReportButton targetType="ARCHIVE_ITEM" targetId={id} />
+      {isCurrent && <ReportButton targetType="ARCHIVE_ITEM" targetId={id} variant="icon" />}
     </li>
   )
 }
