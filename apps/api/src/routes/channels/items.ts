@@ -72,6 +72,8 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
             followToDownload: true,
             backgroundUrl: true,
             slideshowUrls: true,
+            galleryMode: true,
+            galleryAudioReactive: true,
             visualPreset: true,
             colorSchemeJson: true,
             _count: { select: { comments: true } },

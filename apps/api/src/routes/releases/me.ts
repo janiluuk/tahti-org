@@ -101,6 +101,9 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
             visualPreset: true,
             colorSchemeJson: true,
             paletteJson: true,
+            slideshowImages: true,
+            galleryMode: true,
+            galleryAudioReactive: true,
             pinnedAt: true,
             tracks: {
               orderBy: { position: 'asc' },
@@ -468,8 +471,24 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
                   : null,
               }
             : {}),
+          ...(parsed.data.slideshowImages !== undefined
+            ? { slideshowImages: parsed.data.slideshowImages }
+            : {}),
+          ...(parsed.data.galleryMode !== undefined
+            ? { galleryMode: parsed.data.galleryMode }
+            : {}),
+          ...(parsed.data.galleryAudioReactive !== undefined
+            ? { galleryAudioReactive: parsed.data.galleryAudioReactive }
+            : {}),
         },
-        select: { visualPreset: true, colorSchemeJson: true, paletteJson: true },
+        select: {
+          visualPreset: true,
+          colorSchemeJson: true,
+          paletteJson: true,
+          slideshowImages: true,
+          galleryMode: true,
+          galleryAudioReactive: true,
+        },
       })
       return reply.send(updated)
     },

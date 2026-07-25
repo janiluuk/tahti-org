@@ -16,6 +16,8 @@ export const archiveItemMetadataSelect = {
   bannerUrl: true,
   backgroundUrl: true,
   slideshowUrls: true,
+  galleryMode: true,
+  galleryAudioReactive: true,
   commentary: true,
   taggedNote: true,
   genre: true,
@@ -105,6 +107,9 @@ function fieldsToPrismaData(fields: ArchiveMetadataFields): Record<string, unkno
   if (fields.backgroundUrl !== undefined)
     data.backgroundUrl = parseOptionalUrl(fields.backgroundUrl)
   if (fields.slideshowUrls !== undefined) data.slideshowUrls = fields.slideshowUrls
+  if (fields.galleryMode !== undefined) data.galleryMode = fields.galleryMode
+  if (fields.galleryAudioReactive !== undefined)
+    data.galleryAudioReactive = fields.galleryAudioReactive
   if (fields.commentary !== undefined) data.commentary = fields.commentary || null
   if (fields.taggedNote !== undefined) data.taggedNote = fields.taggedNote || null
   if (fields.genre !== undefined) data.genre = fields.genre || null

@@ -9,13 +9,14 @@ import * as THREE from 'three'
 import type { GalleryImagesProps } from './types'
 import {
   GALLERY_BG,
+  createAudioLevelSampler,
   createGalleryRenderer,
   disposeScene,
   loadGalleryTextures,
   resizeGalleryRenderer,
 } from './shared'
 
-export function PosterWallGallery({ images }: GalleryImagesProps) {
+export function PosterWallGallery({ images, analyser }: GalleryImagesProps) {
   const hostRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -78,10 +79,12 @@ export function PosterWallGallery({ images }: GalleryImagesProps) {
     ro.observe(host)
     resizeGalleryRenderer(renderer, camera, host)
 
+    const sampleAudio = analyser ? createAudioLevelSampler(analyser) : null
     let frameId = 0
     const animate = () => {
       frameId = requestAnimationFrame(animate)
-      group.position.y += 0.008
+      const audioLevel = sampleAudio ? sampleAudio() : 0
+      group.position.y += 0.008 * (1 + audioLevel * 2)
       if (group.position.y > 4) group.position.y = 0
       renderer.render(scene, camera)
     }
@@ -97,7 +100,7 @@ export function PosterWallGallery({ images }: GalleryImagesProps) {
         ...meshes.map((m) => m.material as THREE.Material),
       ])
     }
-  }, [images])
+  }, [images, analyser])
 
   return (
     <div className="ch-gallery-fixed" aria-label="Poster scroll wall gallery">

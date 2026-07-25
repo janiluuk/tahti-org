@@ -8,8 +8,14 @@ import { useRouter } from 'next/navigation'
 import {
   ColorSchemeSchema,
   DEFAULT_COLOR_SCHEME,
+  CHANNEL_GALLERY_MODES,
+  CHANNEL_GALLERY_MODE_HINTS,
+  CHANNEL_GALLERY_MODE_LABELS,
+  isWebGLGalleryMode,
+  parseGalleryImageLines,
   type VisualPreset,
   type ColorScheme,
+  type ChannelGalleryMode,
 } from '@tahti/shared'
 import { ButtonIcon, Panel, Button } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
@@ -21,6 +27,9 @@ interface Props {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
     paletteJson: string | null
+    slideshowImages?: string[]
+    galleryMode?: ChannelGalleryMode
+    galleryAudioReactive?: boolean
   }
 }
 
@@ -41,6 +50,11 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
   const override = parseOrNull(initial.colorSchemeJson)
   const [scheme, setScheme] = useState<ColorScheme>(override ?? extracted ?? DEFAULT_COLOR_SCHEME)
   const [useOverride, setUseOverride] = useState(!!override)
+  const [imageLines, setImageLines] = useState((initial.slideshowImages ?? []).join('\n'))
+  const [galleryMode, setGalleryMode] = useState<ChannelGalleryMode>(initial.galleryMode ?? 'NONE')
+  const [galleryAudioReactive, setGalleryAudioReactive] = useState(
+    initial.galleryAudioReactive ?? false,
+  )
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -53,9 +67,17 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
     setError(null)
     setMessage(null)
     startTransition(async () => {
+      const slideshowImages = parseGalleryImageLines(imageLines)
+      if (galleryMode !== 'NONE' && slideshowImages.length === 0) {
+        setError('Add at least one HTTPS image URL for the gallery.')
+        return
+      }
       const res = await updateReleaseVisual(releaseId, {
         visualPreset: preset,
         colorScheme: useOverride ? scheme : null,
+        slideshowImages,
+        galleryMode,
+        galleryAudioReactive,
       })
       if (res.error) {
         setError(res.error)
@@ -127,6 +149,58 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
             </div>
           ))}
         </div>
+      )}
+
+      <label className="studio-field">
+        <span className="studio-label">Slideshow image URLs (one per line, max 10)</span>
+        <span className="studio-text-muted-sm studio-mb-sm">
+          Shown on this release&apos;s smart link page.
+        </span>
+        <textarea
+          rows={3}
+          placeholder={'https://cdn.example/photo1.jpg\nhttps://cdn.example/photo2.jpg'}
+          value={imageLines}
+          disabled={isPending}
+          onChange={(e) => setImageLines(e.target.value)}
+          className="studio-textarea"
+        />
+      </label>
+
+      {imageLines.trim() && (
+        <>
+          <label className="studio-field">
+            <span className="studio-label">Slideshow transition</span>
+            <select
+              value={galleryMode}
+              disabled={isPending}
+              onChange={(e) => setGalleryMode(e.target.value as ChannelGalleryMode)}
+              className="studio-input"
+            >
+              {CHANNEL_GALLERY_MODES.filter((m) => m !== 'STATIC_SLIDESHOW').map((mode) => (
+                <option key={mode} value={mode}>
+                  {CHANNEL_GALLERY_MODE_LABELS[mode]}
+                </option>
+              ))}
+            </select>
+            {CHANNEL_GALLERY_MODE_HINTS[galleryMode] && (
+              <span className="studio-text-muted-sm">
+                {CHANNEL_GALLERY_MODE_HINTS[galleryMode]}
+              </span>
+            )}
+          </label>
+
+          {isWebGLGalleryMode(galleryMode) && (
+            <label className="studio-label-row studio-text-sm studio-mb-sm">
+              <input
+                type="checkbox"
+                checked={galleryAudioReactive}
+                disabled={isPending}
+                onChange={(e) => setGalleryAudioReactive(e.target.checked)}
+              />
+              Audio-reactive — images pulse with this release&apos;s playback
+            </label>
+          )}
+        </>
       )}
 
       {error && <p className="studio-notice studio-notice--error">{error}</p>}

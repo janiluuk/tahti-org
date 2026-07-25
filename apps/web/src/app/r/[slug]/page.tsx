@@ -3,11 +3,13 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import type { ChannelGalleryMode } from '@tahti/shared'
 import { ReleaseSmartLink, SafePlainText, SmartLinkPageLayout } from '@tahti/ui'
 import { SmartLinkDspButtons } from '@/components/smart-link-dsp-buttons'
 import { SmartLinkReleaseDetails } from '@/components/smart-link-release-details'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
+import { ChannelGalleryView } from '@/components/gallery'
 import { ReportButton } from '@/components/report-button'
 
 interface SmartLinkTrack {
@@ -42,6 +44,8 @@ interface SmartLinkResponse {
     colorSchemeJson?: string | null
     paletteJson?: string | null
     visualPreset?: string
+    slideshowImages?: string[]
+    galleryMode?: ChannelGalleryMode
   }
   artist: { username: string; displayName: string; avatarUrl: string | null }
   featuredCollections?: FeaturedCollection[]
@@ -79,6 +83,12 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
           paletteJson={data.release.paletteJson}
         />
       ) : null}
+      {data.release.slideshowImages && data.release.slideshowImages.length > 0 && (
+        <ChannelGalleryView
+          mode={data.release.galleryMode ?? 'NONE'}
+          images={data.release.slideshowImages}
+        />
+      )}
 
       <ReleaseSmartLink
         releaseId={data.release.id}

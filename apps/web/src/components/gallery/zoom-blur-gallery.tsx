@@ -10,6 +10,7 @@ import { GalleryNavButton, GalleryShell } from './gallery-shell'
 import type { GalleryImagesProps } from './types'
 import {
   GALLERY_BG,
+  createAudioLevelSampler,
   createGalleryRenderer,
   disposeScene,
   loadGalleryTextures,
@@ -21,12 +22,13 @@ const FRAGMENT = `
   uniform sampler2D uTexB;
   uniform float uProgress;
   uniform vec2 uMouse;
+  uniform float uAudioLevel;
   varying vec2 vUv;
   void main() {
     vec2 uv = vUv;
     vec2 c = vec2(0.5) + uMouse * 0.05;
     float dist = distance(uv, c);
-    float blur = uProgress * (1.0 - uProgress) * 6.0;
+    float blur = uProgress * (1.0 - uProgress) * 6.0 + uAudioLevel * 0.5;
     vec2 dir = normalize(uv - c + 0.0001);
     vec2 o = dir * blur * dist * 0.15;
     vec4 a = texture2D(uTexA, uv + o);
@@ -36,7 +38,7 @@ const FRAGMENT = `
   }
 `
 
-export function ZoomBlurGallery({ images }: GalleryImagesProps) {
+export function ZoomBlurGallery({ images, analyser }: GalleryImagesProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const [index, setIndex] = useState(0)
   const indexRef = useRef(0)
@@ -71,6 +73,7 @@ export function ZoomBlurGallery({ images }: GalleryImagesProps) {
       uTexB: { value: null as THREE.Texture | null },
       uProgress: { value: 0 },
       uMouse: { value: new THREE.Vector2(0, 0) },
+      uAudioLevel: { value: 0 },
     }
     const material = new THREE.ShaderMaterial({
       uniforms,
@@ -123,9 +126,11 @@ export function ZoomBlurGallery({ images }: GalleryImagesProps) {
     ro.observe(host)
     resizeGalleryRenderer(renderer, camera, host)
 
+    const sampleAudio = analyser ? createAudioLevelSampler(analyser) : null
     let frameId = 0
     const animate = () => {
       frameId = requestAnimationFrame(animate)
+      uniforms.uAudioLevel.value = sampleAudio ? sampleAudio() : 0
       if (animating) {
         progress += 0.025
         uniforms.uProgress.value = progress
@@ -157,7 +162,7 @@ export function ZoomBlurGallery({ images }: GalleryImagesProps) {
       disposeTex()
       disposeScene(renderer, host, [mesh.geometry, material])
     }
-  }, [images])
+  }, [images, analyser])
 
   return (
     <GalleryShell

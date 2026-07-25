@@ -97,6 +97,26 @@ export function bindPointerUniforms(
   }
 }
 
+/** Returns a per-frame sampler closure reading the analyser's time-domain
+ * waveform into a persistent buffer (no per-frame allocation) and reducing it
+ * to a single normalized 0..1 energy level — the common "how loud right now"
+ * signal every audio-reactive gallery preset blends into its existing
+ * hover/scroll energy uniform. */
+export function createAudioLevelSampler(analyser: AnalyserNode): () => number {
+  const data = new Uint8Array(analyser.frequencyBinCount)
+  return () => {
+    analyser.getByteTimeDomainData(data)
+    let sum = 0
+    for (let i = 0; i < data.length; i++) {
+      const v = (data[i]! - 128) / 128
+      sum += v * v
+    }
+    // Headroom scaling — typical music RMS sits well under 1.0, so scale up
+    // for a visually meaningful pulse rather than a barely-perceptible one.
+    return Math.min(1, Math.sqrt(sum / data.length) * 4)
+  }
+}
+
 export function disposeScene(
   renderer: THREE.WebGLRenderer,
   host: HTMLElement,

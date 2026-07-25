@@ -9,6 +9,7 @@ import FanChatPanel from './fan-chat-panel'
 import { LivePlayerSection } from './live-player-section'
 import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import { ChannelGalleryView } from './channel-gallery'
+import { ArchiveItemGallery } from './archive-item-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
@@ -96,6 +97,8 @@ interface ArchiveItem {
   bannerUrl?: string | null
   backgroundUrl?: string | null
   slideshowUrls?: string[]
+  galleryMode?: ChannelGalleryMode
+  galleryAudioReactive?: boolean
   commentCount?: number
   downloadCount?: number
   accentColor?: string | null
@@ -604,12 +607,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                           </div>
                         </div>
                         {item.slideshowUrls && item.slideshowUrls.length > 0 && (
-                          <div className="ch-archive-slideshow">
-                            {item.slideshowUrls.map((url) => (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img key={url} src={url} alt="" />
-                            ))}
-                          </div>
+                          <ArchiveItemGallery
+                            itemId={item.id}
+                            images={item.slideshowUrls}
+                            galleryMode={item.galleryMode ?? 'NONE'}
+                            audioReactive={Boolean(item.galleryAudioReactive)}
+                          />
                         )}
                         {item.description && (
                           <SafePlainText text={item.description} className="ch-archive-item-desc" />

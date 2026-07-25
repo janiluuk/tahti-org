@@ -10,6 +10,7 @@ import { GalleryNavButton, GalleryShell } from './gallery-shell'
 import type { GalleryImagesProps } from './types'
 import {
   GALLERY_BG,
+  createAudioLevelSampler,
   createGalleryRenderer,
   disposeScene,
   loadGalleryTextures,
@@ -42,7 +43,7 @@ const FRAGMENT = `
   }
 `
 
-export function ShatterCarouselGallery({ images }: GalleryImagesProps) {
+export function ShatterCarouselGallery({ images, analyser }: GalleryImagesProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const [index, setIndex] = useState(0)
   const indexRef = useRef(0)
@@ -103,6 +104,7 @@ export function ShatterCarouselGallery({ images }: GalleryImagesProps) {
     ro.observe(host)
     resizeGalleryRenderer(renderer, camera, host)
 
+    const sampleAudio = analyser ? createAudioLevelSampler(analyser) : null
     let frameId = 0
     const animate = () => {
       frameId = requestAnimationFrame(animate)
@@ -121,6 +123,9 @@ export function ShatterCarouselGallery({ images }: GalleryImagesProps) {
           shatter -= 0.04
           material.uniforms.uShatter.value = Math.max(0, shatter)
           if (shatter <= 0) phase = 'idle'
+        } else if (phase === 'idle') {
+          const audioLevel = sampleAudio ? sampleAudio() : 0
+          material.uniforms.uShatter.value = audioLevel * 0.15
         }
       }
       renderer.render(scene, camera)
@@ -141,7 +146,7 @@ export function ShatterCarouselGallery({ images }: GalleryImagesProps) {
       if (mesh) disposables.push(mesh.geometry, mesh.material as THREE.Material)
       disposeScene(renderer, host, disposables)
     }
-  }, [images])
+  }, [images, analyser])
 
   return (
     <GalleryShell

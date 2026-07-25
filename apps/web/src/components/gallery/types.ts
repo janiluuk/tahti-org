@@ -49,4 +49,10 @@ export const GALLERY_MODE_META: Record<
   },
 }
 
-export type GalleryImagesProps = { images: string[] }
+export type GalleryImagesProps = {
+  images: string[]
+  /** When provided (and the gallery's audio-reactive setting is on), each
+   * preset samples this every frame and blends the level into whatever
+   * hover/scroll "energy" uniform it already has. */
+  analyser?: AnalyserNode | null
+}

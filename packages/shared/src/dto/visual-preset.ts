@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { CHANNEL_GALLERY_MODES } from './channel-gallery.js'
 
 // M31: Three.js ambient visualizer presets
 
@@ -151,6 +152,9 @@ export type ChannelVisualPatch = z.infer<typeof ChannelVisualPatchSchema>
 export const ReleaseVisualPatchSchema = z.object({
   visualPreset: z.enum(VISUAL_PRESETS).optional(),
   colorScheme: ColorSchemeSchema.nullable().optional(),
+  slideshowImages: z.array(z.string().url().max(2048)).max(10).optional(),
+  galleryMode: z.enum(CHANNEL_GALLERY_MODES).optional(),
+  galleryAudioReactive: z.boolean().optional(),
 })
 
 export type ReleaseVisualPatch = z.infer<typeof ReleaseVisualPatchSchema>

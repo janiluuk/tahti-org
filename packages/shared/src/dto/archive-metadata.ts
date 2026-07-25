@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { CHANNEL_GALLERY_MODES } from './channel-gallery.js'
 
 export const ARCHIVE_CONTENT_TYPES = [
   'STUDIO',
@@ -82,6 +83,10 @@ export const ArchiveMetadataFieldsSchema = z.object({
   bannerUrl: z.string().max(2048).nullable().optional(),
   backgroundUrl: z.string().max(2048).nullable().optional(),
   slideshowUrls: z.array(z.string().max(2048)).max(10).optional(),
+  /** WebGL/static transition preset used to switch between slideshowUrls images. */
+  galleryMode: z.enum(CHANNEL_GALLERY_MODES).optional(),
+  /** When true, the gallery preset reacts to this track's own playback audio. */
+  galleryAudioReactive: z.boolean().optional(),
   commentary: z.string().max(5000).nullable().optional(),
   taggedNote: z.string().max(500).nullable().optional(),
   genre: z.string().max(80).nullable().optional(),

@@ -49,6 +49,8 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           colorSchemeJson: true,
           paletteJson: true,
           visualPreset: true,
+          slideshowImages: true,
+          galleryMode: true,
           tracks: {
             orderBy: { position: 'asc' },
             select: { title: true, isrc: true, position: true },
@@ -132,6 +134,8 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           colorSchemeJson: release.colorSchemeJson,
           paletteJson: release.paletteJson,
           visualPreset: release.visualPreset,
+          slideshowImages: release.slideshowImages,
+          galleryMode: release.galleryMode,
           colorScheme: resolveColorScheme(release.colorSchemeJson, release.paletteJson),
         },
         artist: {
