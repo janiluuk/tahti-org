@@ -41,7 +41,7 @@ Tahti's mission is to be the _best_ broadcasting platform for independent artist
 - No feature ships unless an artist would actually use it. We do not build vanity features to mark roadmap completion.
 - The product roadmap is published. Members vote on priority at AGM. The director's discretion is bounded by what members have approved.
 - No vendor lock-in for artists. Export of all data (releases, archive, analytics, fan-sub records) must work and is tested quarterly. Forks of Tahti are explicitly welcome under AGPL.
-- **The music never stops unless the listener stops it.** Navigating the site — switching pages, moving between an artist's own subdomain and the main app, opening a menu — must never interrupt audio someone is listening to. Playback continuity is a product-quality bar on the same level as audio quality itself: a broadcasting platform that silently drops a listener's stream on a routine click has failed at the one job it exists to do.
+- **No DJ ever walks off stage because someone in the crowd checked their phone — so no page on this site gets to hit the record scratch on a listener either.** Click Home, click Discover, open a menu, whatever: the audio keeps going. It's a little absurd that this needs to be written down next to things like FLAC bitrates and distribution APIs, but here we are — we said we're a radio station, and the one law radio has never broken since the invention of radio is that the music doesn't stop because you touched the dial. We're only half-joking about the "constitutional" part.
 
 **Community-driven:**
 
