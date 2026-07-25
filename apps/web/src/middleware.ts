@@ -10,17 +10,27 @@
 // untouched, so the full app works identically on <user>.tahti.live as on app.tahti.live.
 // A user visiting their own subdomain while logged in should be able to use the whole app,
 // not just see their own channel page.
+//
+// The site nav's "Home" link deliberately sends "/?home=1" instead of a bare "/" — see
+// resolveHomeHref() in ChannelPageLayout.tsx. That marker means "the user explicitly clicked
+// Home," so we skip the subdomain rewrite below and let the real homepage render on whatever
+// origin they're already on. This keeps Home a same-origin relative link (so Next's <Link>
+// can do a client-side transition) instead of forcing a cross-origin hard reload, which used
+// to blow away the shared <audio> element and stop playback on every "go Home" click from a
+// subdomain — never acceptable per the platform's "the music never stops" constitution value.
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   const isRoot = request.nextUrl.pathname === '/'
+  const isExplicitHomeNav = request.nextUrl.searchParams.get('home') === '1'
+  const isRewritableRoot = isRoot && !isExplicitHomeNav
 
   // Fast path: reverse-proxy subdomain routing (slug.tahti.live → /c/slug)
   const channelSlug = request.headers.get('x-tahti-channel-slug')
   if (channelSlug) {
-    if (isRoot) {
+    if (isRewritableRoot) {
       const url = request.nextUrl.clone()
       // radio.tahti.live is the 24/7 Tahti Radio station, not an artist channel
       // (whose slug is 'tahti-radio', not 'radio') — send it to /radio instead.
@@ -32,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
   // Slow path: custom domain (artist.example.com → /c/slug via API lookup)
   const customHost = request.headers.get('x-tahti-custom-host')
-  if (customHost && isRoot) {
+  if (customHost && isRewritableRoot) {
     const apiUrl = process.env.API_URL ?? 'http://api:3001'
     try {
       const res = await fetch(

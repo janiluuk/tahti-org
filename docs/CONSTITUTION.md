@@ -10,7 +10,7 @@ Tahti exists to put money, audience, and infrastructure in the hands of independ
 
 **What this looks like in practice:**
 
-- The legal form is *yhdistys* (Finnish nonprofit association). It cannot be converted to a for-profit entity without dissolving the membership.
+- The legal form is _yhdistys_ (Finnish nonprofit association). It cannot be converted to a for-profit entity without dissolving the membership.
 - 90% of operating surplus is distributed annually to artists as grants. The remaining 10% builds an operating reserve, capped at 6 months of average monthly costs. Above that cap, additional retention requires AGM vote.
 - The org does not raise venture capital, take equity investment, or accept any funding instrument that requires future financial returns to the funder. Grants, donations, and member subscriptions only.
 - Surplus from the 2% operational fee on fan-subscriptions rolls into the next year's grant pool. It is not org profit.
@@ -23,12 +23,12 @@ Tahti exists to put money, audience, and infrastructure in the hands of independ
 - Selling user data, listener data, or aggregated analytics to third parties. Ever.
 - Advertising of any kind in the listener-facing product. Ever. (Transparency-report sponsorship acknowledgment is allowed; logos in players are not.)
 - "Premium features" gated by artist tier in ways that punish free users. The free tier is a complete product (see Rule 3).
-- Pivots toward listener subscriptions as the org's main revenue line. Direct fan-to-artist subscriptions are a feature *for artists*; converting them into "Tahti Premium" subscriptions to the org is forbidden by this rule.
+- Pivots toward listener subscriptions as the org's main revenue line. Direct fan-to-artist subscriptions are a feature _for artists_; converting them into "Tahti Premium" subscriptions to the org is forbidden by this rule.
 - Board members or director receiving any non-salary compensation from the org's operations (no bonuses tied to revenue, no equity-like instruments, no profit-share).
 
 ## Rule 2. The most high-quality, useful, and community-driven platform — by design, not aspiration
 
-Tahti's mission is to be the *best* broadcasting platform for independent artists, not a cheap alternative or a "ethical option." Quality is constitutional. This means concrete, verifiable commitments.
+Tahti's mission is to be the _best_ broadcasting platform for independent artists, not a cheap alternative or a "ethical option." Quality is constitutional. This means concrete, verifiable commitments.
 
 **Audio quality:**
 
@@ -41,6 +41,7 @@ Tahti's mission is to be the *best* broadcasting platform for independent artist
 - No feature ships unless an artist would actually use it. We do not build vanity features to mark roadmap completion.
 - The product roadmap is published. Members vote on priority at AGM. The director's discretion is bounded by what members have approved.
 - No vendor lock-in for artists. Export of all data (releases, archive, analytics, fan-sub records) must work and is tested quarterly. Forks of Tahti are explicitly welcome under AGPL.
+- **The music never stops unless the listener stops it.** Navigating the site — switching pages, moving between an artist's own subdomain and the main app, opening a menu — must never interrupt audio someone is listening to. Playback continuity is a product-quality bar on the same level as audio quality itself: a broadcasting platform that silently drops a listener's stream on a routine click has failed at the one job it exists to do.
 
 **Community-driven:**
 
@@ -107,7 +108,7 @@ Three concrete financial expressions of the rules:
 
 1. The Year-3 grant pool is forecasted at ~€130k. Of that, ~€260 per top-decile member, ~€19 per mid-decile, ~€4 per active-rest. Bottom-decile (<5 engagement units) are ineligible. This is the implementation of "the artist shines brightest" — but it's also the implementation of "we don't reward passive consumption."
 
-2. The 2% operational fee on fan-subscriptions is *bounded by costs*. If it ever generates surplus, the surplus rolls into the next year's grant pool. The fee is reviewable annually by AGM; if Stripe + processing costs drop, the fee drops.
+2. The 2% operational fee on fan-subscriptions is _bounded by costs_. If it ever generates surplus, the surplus rolls into the next year's grant pool. The fee is reviewable annually by AGM; if Stripe + processing costs drop, the fee drops.
 
 3. Director compensation is capped at 30% of revenue. At Year 1 (€35k revenue, modeled), the cap is €10.5k — so the modeled €30k Y1 salary actually requires either deficit financing (the founding grant) or a board waiver. The bylaws permit a board waiver up to €40k for Y1 if revenue is insufficient to fund a competitive director wage. This is explicit, voted on, public.
 

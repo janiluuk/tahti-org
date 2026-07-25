@@ -36,12 +36,15 @@ const SITE_NAV: { id: SiteNavId; href: string; label: string }[] = [
 
 /** This header also renders on wildcard subdomains (radio.tahti.live, an artist's
  * own slug.tahti.live) where middleware.ts rewrites a bare "/" straight back to
- * the current page — a relative Home link there is a dead click, not a no-op by
- * accident. app.tahti.live is never subdomain-rewritten, so resolve Home to that
- * absolute origin always; it's a harmless same-page reload on app.tahti.live itself. */
+ * the current page — a plain relative "/" there would be a dead click, not a
+ * no-op by accident. The `?home=1` marker tells middleware.ts to skip that
+ * rewrite and render the real homepage instead, on whatever origin/subdomain
+ * we're already on. This MUST stay a same-origin relative href — an absolute
+ * cross-origin URL forces Next's <Link> into a full browser navigation, which
+ * tears down the shared <audio> element and stops playback (the one thing this
+ * platform's "always plays" promise cannot allow the nav bar itself to break). */
 function resolveHomeHref(): string {
-  const raw = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.tahti.live'
-  return `${raw.replace(/\/$/, '')}/`
+  return '/?home=1'
 }
 
 /** PLAT-020: sticky channel top bar — TAHTI logo + site nav or live channel context.

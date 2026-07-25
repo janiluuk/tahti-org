@@ -4266,6 +4266,16 @@
   border-color: var(--border-hover);
 }
 
+[data-tahti-ui='brand'].brand-channel .report-button__trigger--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 999px;
+}
+
 [data-tahti-ui='brand'].brand-channel .report-button__form {
   display: flex;
   flex-direction: column;

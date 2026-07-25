@@ -118,7 +118,7 @@ export function ArchiveItemPlayback({
           isLoggedIn={isLoggedIn}
           commentCount={item.commentCount ?? 0}
         />
-        <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} />
+        {isCurrent && <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} variant="icon" />}
       </div>
     </div>
   )
