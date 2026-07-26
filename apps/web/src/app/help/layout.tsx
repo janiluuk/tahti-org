@@ -4,7 +4,6 @@
 import type { ReactNode } from 'react'
 import { PublicBrandShell } from '@tahti/ui'
 import '@/lib/import-public-brand-css'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { getSessionUser } from '@/lib/session'
 import { statusPageUrl } from '@/lib/status-page'
 
@@ -12,14 +11,7 @@ export default async function HelpLayout({ children }: { children: ReactNode }) 
   const user = await getSessionUser()
 
   return (
-    <PublicBrandShell
-      wide
-      showHeader
-      showFooter
-      user={user}
-      statusUrl={statusPageUrl()}
-      background={<BgCanvas variant="subtle" />}
-    >
+    <PublicBrandShell wide showHeader showFooter user={user} statusUrl={statusPageUrl()}>
       {children}
     </PublicBrandShell>
   )

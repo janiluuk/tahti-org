@@ -22,10 +22,14 @@ export function isSignupOpen(): boolean {
   return process.env.NODE_ENV !== 'production'
 }
 
+/** Any same-origin relative path is a safe redirect target — signing in should
+ * return the listener to wherever they were (a channel page, a profile, a
+ * release) rather than always bouncing to /dashboard, which only really makes
+ * sense as a fallback for an artist who wasn't looking at anything specific.
+ * Still rejects protocol-relative ("//evil.com") and absolute URLs, and skips
+ * bouncing back into the auth flow itself. */
 export function safeSignupRedirect(path: string | null | undefined, fallback: string): string {
   if (!path || !path.startsWith('/') || path.startsWith('//')) return fallback
-  if (path.startsWith('/signup') || path.startsWith('/dashboard') || path.startsWith('/admin')) {
-    return path
-  }
-  return fallback
+  if (path.startsWith('/login') || path.startsWith('/api/')) return fallback
+  return path
 }

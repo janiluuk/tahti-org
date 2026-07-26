@@ -7,7 +7,6 @@ import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Alert, BrandLogo, Button, ButtonIcon, Heading, Stack, Text } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { SIGNUP_TIER_KEY, type SignupTier } from '@/lib/signup'
 import { startSignupMembershipCheckout } from '../actions'
 import { SignupWizard } from '../signup-wizard'
@@ -69,7 +68,6 @@ export function SignupPaymentPanel({
 
   return (
     <>
-      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark auth-card--wide">
           <BrandLogo />

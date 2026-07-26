@@ -5,7 +5,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WatcherCount } from './WatcherCount'
 
 export type SiteNavId = 'home' | 'discover' | 'radio' | 'venues'
@@ -66,6 +66,32 @@ export function ChannelHeader({
   const resolvedActiveNav = activeNav ?? SITE_NAV.find((item) => item.href === pathname)?.id
   const channelLiveMode = Boolean(isLive && artistHandle && !resolvedActiveNav && !contextLink)
   const homeHref = resolveHomeHref()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function onPointerDown(e: PointerEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [menuOpen])
+
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [pathname])
+
+  // Signing in returns the listener to whatever page they were on — /login only
+  // falls back to /dashboard when there's genuinely nowhere else to send them.
+  const signInHref = `/login?next=${encodeURIComponent(pathname || '/dashboard')}`
 
   return (
     <header className="ch-header">
@@ -107,14 +133,72 @@ export function ChannelHeader({
         )}
         {!channelLiveMode &&
           (user ? (
-            <Link href="/dashboard" className="ch-header__user">
-              <span className="ch-header__user-avatar" aria-hidden>
-                {user.displayName.charAt(0).toUpperCase()}
-              </span>
-              {user.displayName}
-            </Link>
+            <div className="ch-header__user-menu" ref={menuRef}>
+              <button
+                type="button"
+                className="ch-header__user"
+                aria-label={`Signed in as ${user.displayName}`}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                <span className="ch-header__user-avatar" aria-hidden>
+                  {user.displayName.charAt(0).toUpperCase()}
+                </span>
+                {user.displayName}
+                <span className="ch-header__user-caret" aria-hidden>
+                  {menuOpen ? '▴' : '▾'}
+                </span>
+              </button>
+              {menuOpen && (
+                <div className="ch-header__menu" role="menu">
+                  <Link
+                    href="/dashboard"
+                    className="ch-header__menu-item"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Artist panel
+                  </Link>
+                  <Link
+                    href={`/u/${user.username}`}
+                    className="ch-header__menu-item"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    View profile
+                  </Link>
+                  <Link
+                    href="/dashboard/settings/account"
+                    className="ch-header__menu-item"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Edit profile
+                  </Link>
+                  <Link
+                    href="/dashboard/messages"
+                    className="ch-header__menu-item"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Messages
+                  </Link>
+                  <div className="ch-header__menu-divider" role="separator" />
+                  <form action="/api/auth/logout" method="POST" className="ch-header__menu-form">
+                    <button
+                      type="submit"
+                      className="ch-header__menu-item ch-header__menu-item--danger"
+                      role="menuitem"
+                    >
+                      Log out
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
           ) : (
-            <Link href="/login" className="ch-header__signin">
+            <Link href={signInHref} className="ch-header__signin">
               Sign in
             </Link>
           ))}

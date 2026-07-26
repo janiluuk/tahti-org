@@ -3,8 +3,6 @@
 
 @import '@tahti/ui/src/styles/brand-studio.css';
 
-/* Admin panel chrome — ambient background lives in brand-studio.css (.studio-ambient--admin) */
-
 .admin-view-strip {
   position: sticky;
   top: 0;

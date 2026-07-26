@@ -3,7 +3,7 @@
 
 [data-tahti-ui='brand'].brand-channel {
   min-height: 100vh;
-  background: var(--bg);
+  background: transparent;
   color: var(--text);
   font-family: var(--font-body);
   --tahti-bg: var(--bg);
@@ -24,101 +24,33 @@
   isolation: isolate;
 }
 
-/* Ambient background wash — same drifting radial-gradient technique as the dashboard
-   (see .studio-ambient in brand-studio.css), at a calmer opacity than the dashboard's.
-   Gives channel/profile pages the same "alive" visual language as the artist panel
-   instead of a flat, static background, while the fainter wash here (vs. dashboard's)
-   is itself the "which mode am I in" cue: public pages are quietest, the artist panel
-   a little more present, admin distinct again — see brand-studio.css. Skipped entirely
-   when a page opts into the heavier WebGL BgCanvas instead (:has(.bg-canvas) below). */
-@keyframes channel-ambient-drift {
-  from {
-    transform: translate3d(-1.2%, -0.8%, 0) scale(1);
-  }
-  to {
-    transform: translate3d(1.2%, 0.8%, 0) scale(1.035);
-  }
-}
-
-@keyframes channel-ambient-drift-alt {
-  from {
-    transform: translate3d(1%, 0.6%, 0) scale(1.02);
-  }
-  to {
-    transform: translate3d(-1%, -0.6%, 0) scale(1);
-  }
-}
-
-[data-tahti-ui='brand'].brand-channel:not(:has(.bg-canvas))::before,
-[data-tahti-ui='brand'].brand-channel:not(:has(.bg-canvas))::after {
-  content: '';
-  position: fixed;
-  inset: -14%;
-  z-index: 0;
-  pointer-events: none;
-}
-
-[data-tahti-ui='brand'].brand-channel:not(:has(.bg-canvas))::before {
-  background:
-    radial-gradient(
-      ellipse 74% 60% at 14% 22%,
-      color-mix(in srgb, var(--cyan) 5%, transparent),
-      transparent 74%
-    ),
-    radial-gradient(
-      ellipse 70% 54% at 86% 78%,
-      color-mix(in srgb, var(--purple) 4%, transparent),
-      transparent 72%
-    );
-  animation: channel-ambient-drift 60s ease-in-out infinite alternate;
-  will-change: transform;
-}
-
-[data-tahti-ui='brand'].brand-channel:not(:has(.bg-canvas))::after {
-  background: radial-gradient(
-    ellipse 60% 50% at 50% 50%,
-    color-mix(in srgb, var(--amber) 3%, transparent),
-    transparent 70%
-  );
-  animation: channel-ambient-drift-alt 80s ease-in-out infinite alternate-reverse;
-  will-change: transform;
-}
-
-/* Everything else in the page must sit above the fixed ambient layer. */
-[data-tahti-ui='brand'].brand-channel > * {
+/* Everything else in the page must sit above the fixed global background. */
+[data-tahti-ui='brand'].brand-channel > *,
+[data-tahti-ui='brand'].brand-public-shell > * {
   position: relative;
   z-index: 1;
 }
 
-/* Three.js gateway background (BgCanvas) — same treatment on every public page: calm,
-   dark gateway bg + thin dark veil, so the animation never fights with page content. */
-[data-tahti-ui='brand'].brand-channel:has(.bg-canvas),
-[data-tahti-ui='brand'].brand-channel.brand-channel--canvas,
-[data-tahti-ui='brand'].brand-public-shell:has(.bg-canvas) {
+[data-tahti-ui='brand'].brand-public-shell {
   background: transparent;
 }
 
-[data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .listen-shell,
-[data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .home-shell,
-[data-tahti-ui='brand'].brand-channel:has(.bg-canvas) .radio-shell,
-[data-tahti-ui='brand'].brand-public-shell:has(.bg-canvas) > *:not(.bg-canvas) {
-  position: relative;
-  z-index: 1;
-}
-
+/* Three.js gateway background (BgCanvas, mounted once in the root layout — see
+   PublicNavBg) — same calm, dark treatment everywhere, plus a thin dark veil so
+   the animation never fights with page content, one shared look across every
+   section instead of a per-page CSS wash. */
 .bg-canvas--subtle {
   background: var(--bg);
-  filter: blur(32px) brightness(0.42) saturate(0.35);
+  filter: blur(32px) brightness(0.32) saturate(0.4);
 }
 
-[data-tahti-ui='brand'].brand-channel:has(.bg-canvas)::before,
-[data-tahti-ui='brand'].brand-public-shell:has(.bg-canvas)::before {
+.app-bg-veil {
   content: '';
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
-  background: rgba(5, 8, 16, 0.48);
+  background: rgba(5, 8, 16, 0.4);
 }
 
 [data-tahti-ui='brand'].brand-channel--radio .radio-shell {
@@ -312,6 +244,10 @@
   border-color: color-mix(in srgb, var(--muted) 50%, transparent);
 }
 
+[data-tahti-ui='brand'] .ch-header__user-menu {
+  position: relative;
+}
+
 [data-tahti-ui='brand'] .ch-header__user {
   display: flex;
   align-items: center;
@@ -319,16 +255,20 @@
   font-size: var(--text-xs);
   color: var(--text);
   font-weight: var(--weight-medium);
+  font-family: var(--font-body);
   text-decoration: none;
   padding: 4px 12px 4px 4px;
   border-radius: 999px;
   border: 1px solid var(--border-strong);
+  background: transparent;
+  cursor: pointer;
   transition:
     border-color 0.12s,
     background 0.12s;
 }
 
-[data-tahti-ui='brand'] .ch-header__user:hover {
+[data-tahti-ui='brand'] .ch-header__user:hover,
+[data-tahti-ui='brand'] .ch-header__user[aria-expanded='true'] {
   background: var(--card2);
   border-color: color-mix(in srgb, var(--muted) 50%, transparent);
 }
@@ -344,6 +284,64 @@
   color: var(--bg);
   font-weight: var(--weight-medium);
   font-size: var(--text-label);
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-header__user-caret {
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-header__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 40;
+}
+
+[data-tahti-ui='brand'] .ch-header__menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+[data-tahti-ui='brand'] .ch-header__menu-item:hover {
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-header__menu-item--danger:hover {
+  color: var(--coral);
+  background: color-mix(in srgb, var(--coral) 10%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-header__menu-divider {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-header__menu-form {
+  display: contents;
 }
 
 [data-tahti-ui='brand'] .ch-header__back {

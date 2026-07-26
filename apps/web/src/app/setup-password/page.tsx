@@ -4,7 +4,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BrandLogo, Heading, Text } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { SetupPasswordForm } from './setup-password-form'
 
 export const metadata: Metadata = {
@@ -21,7 +20,6 @@ export default async function SetupPasswordPage({
   if (!token) {
     return (
       <>
-        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark">
             <BrandLogo />
@@ -47,7 +45,6 @@ export default async function SetupPasswordPage({
   if (!res.ok || !data.email || !data.username || !data.displayName) {
     return (
       <>
-        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark">
             <BrandLogo />

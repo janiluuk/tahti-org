@@ -5,7 +5,6 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { BrandLogo, Heading, SidebarNavIconSvg, Text } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { SignupWizard } from '../signup-wizard'
 
@@ -39,7 +38,6 @@ export default async function SignupBroadcastPage() {
 
   return (
     <>
-      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark auth-card--wide">
           <BrandLogo />

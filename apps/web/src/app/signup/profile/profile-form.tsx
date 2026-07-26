@@ -19,7 +19,6 @@ import {
   Text,
   Textarea,
 } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { COUNTRY_OPTIONS } from '@/lib/country-options'
 import { flagEmoji } from '@/lib/flag-emoji'
 import { updateSignupProfile } from '../actions'
@@ -69,7 +68,6 @@ export function SignupProfileForm({ displayName }: { displayName: string }) {
 
   return (
     <>
-      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark auth-card--wide">
           <BrandLogo />

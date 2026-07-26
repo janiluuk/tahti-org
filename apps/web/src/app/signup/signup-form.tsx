@@ -17,7 +17,6 @@ import {
   StatusPill,
   Text,
 } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { SIGNUP_TIER_KEY, type SignupTier } from '@/lib/signup'
 import { register } from '@/app/auth/actions'
@@ -104,7 +103,6 @@ export function SignupForm() {
   if (done) {
     return (
       <>
-        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark">
             <BrandLogo />
@@ -126,7 +124,6 @@ export function SignupForm() {
 
   return (
     <>
-      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark signup-card">
           <BrandLogo />

@@ -3,28 +3,26 @@
 
 'use client'
 
-import { usePathname } from 'next/navigation'
 import { BgCanvas } from './ui/bg-canvas'
 import { usePlayer } from '@/contexts/player-context'
 
-/** Every top-level public route that renders the shared gateway background —
- * kept in one place, one persistent <BgCanvas>, instead of each route's own
- * layout mounting/unmounting (and reinitializing WebGL) on every navigation
- * between them, which is what actually caused the visible "flick". */
-const PUBLIC_NAV_PATHS = new Set(['/', '/listen', '/radio', '/venues'])
-
+/** Single persistent gateway background — mounted once here, unconditionally, so
+ * every route (public marketing pages, auth, channel/profile, the artist panel,
+ * admin) shares the exact same animated canvas instead of each section either
+ * mounting its own local <BgCanvas> (which reinitializes WebGL and reshuffles
+ * particle positions on every navigation — the visible "different per section"
+ * flicker) or falling back to an unrelated CSS-only gradient wash. Never remounts
+ * across client-side navigation, including through login, so both this animation
+ * and (via the shared PlayerProvider) playback stay uninterrupted while moving
+ * between sections. Reacts to the shared analyser whenever something is playing,
+ * from whichever section started it. */
 export function PublicNavBg() {
-  const pathname = usePathname()
   const { analyser } = usePlayer()
 
-  if (!pathname || !PUBLIC_NAV_PATHS.has(pathname)) return null
-
-  // The shared mini-player can be playing from any of these pages now (Tahti
-  // Radio card and Tahti Selects gallery both live on /listen) — react to
-  // whatever's actually playing rather than only ever on /radio.
   return (
     <div data-tahti-ui="brand" style={{ display: 'contents' }}>
       <BgCanvas variant="subtle" analyser={analyser} />
+      <div className="app-bg-veil" aria-hidden />
     </div>
   )
 }
