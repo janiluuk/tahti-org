@@ -10,8 +10,8 @@ import {
 } from './edge-encoder.js'
 
 describe('rtmpIngestUrl', () => {
-  it('builds nginx-rtmp stream name with slug__key', () => {
-    expect(rtmpIngestUrl('artist-one', 'secret')).toBe(
+  it('uses Channel.rtmpStreamKey as-is — it already includes the slug__ prefix', () => {
+    expect(rtmpIngestUrl('artist-one', 'artist-one__secret')).toBe(
       'rtmp://rtmp-ingest:1935/live/artist-one__secret',
     )
   })
@@ -37,7 +37,7 @@ describe('buildEdgeEncoderDockerCommand', () => {
   it('normalizes RTMP to MP3 HTTP relay', () => {
     const cmd = buildEdgeEncoderDockerCommand({
       containerName: edgeEncoderContainerName('artist-one'),
-      rtmpInputUrl: rtmpIngestUrl('artist-one', 'key'),
+      rtmpInputUrl: rtmpIngestUrl('artist-one', 'artist-one__key'),
     })
     expect(cmd).toContain('tahti-edge-artist-one')
     expect(cmd).toContain('libmp3lame')
