@@ -3531,12 +3531,20 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
+  padding: 10px 12px;
+  margin: 0 -12px;
+  border-radius: var(--radius-sm);
   border-bottom: 1px solid var(--border);
 }
 
 [data-tahti-ui='brand'] .prof-collection-item-row:last-child {
   border-bottom: none;
+}
+
+/* Tiger-striped rows — same alternating-tint pattern as the channel archive
+   list, so a long album/EP tracklist is just as easy to scan. */
+[data-tahti-ui='brand'] .prof-collection-item-row:nth-child(even) {
+  background: color-mix(in srgb, var(--card) 55%, transparent);
 }
 
 [data-tahti-ui='brand'] .prof-collection-cover--item {

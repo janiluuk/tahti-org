@@ -704,6 +704,13 @@
   border-bottom: none;
 }
 
+/* Tiger-striped rows — same alternating-tint pattern as the artist-side library
+   list and the public archive list, so a long channel's archive is just as easy
+   to scan here. */
+.admin-archive-row:nth-child(even):not(.admin-archive-row--active) {
+  background: color-mix(in srgb, var(--card2, #1a1a24) 35%, transparent);
+}
+
 .admin-archive-row--active {
   background: rgba(56, 189, 248, 0.06);
 }

@@ -1840,6 +1840,18 @@
   border-bottom: none;
 }
 
+/* Tiger-striped rows — same alternating-tint pattern as the public archive list
+   and admin rotation list, so a long library is just as easy to scan here.
+   Second selector covers ArchiveEditor's usage, where .studio-item-row--list is
+   the sole child of its own wrapper (so it's never itself :nth-child(even)) —
+   stripe off the real list-item ancestor's position instead. */
+[data-tahti-ui='studio'] .studio-item-row--list:nth-child(even):not(.studio-item-row--list--active),
+[data-tahti-ui='studio']
+  .archive-list__row:nth-child(even)
+  .studio-item-row--list:not(.studio-item-row--list--active) {
+  background: color-mix(in srgb, var(--card2) 35%, transparent);
+}
+
 [data-tahti-ui='studio'] .studio-item-row--list--active {
   background: color-mix(in srgb, var(--cyan) 8%, transparent);
   border-color: color-mix(in srgb, var(--cyan) 35%, var(--border));
@@ -2126,8 +2138,16 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0;
+  padding: 0.5rem 0.6rem;
+  margin: 0 -0.6rem;
+  border-radius: var(--radius-sm);
   border-bottom: 1px solid var(--border);
+}
+
+/* Tiger-striped rows — same alternating-tint pattern as the rest of the app's
+   track lists, so a long rotation or library is easier to scan. */
+[data-tahti-ui='studio'] .studio-programme-row:nth-child(even) {
+  background: color-mix(in srgb, var(--card2) 35%, transparent);
 }
 
 [data-tahti-ui='studio'] .studio-programme-label {
