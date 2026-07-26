@@ -1,0 +1,102 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { cookies } from 'next/headers'
+import type { FeedItem } from '@tahti/shared'
+import { Heading, Text, AvatarTile } from '@tahti/ui'
+import { getSessionUser } from '@/lib/session'
+import { LoveButton } from '@/components/love-button'
+
+export const metadata = { title: 'Your feed — Tahti' }
+
+async function fetchFeed(): Promise<{ items: FeedItem[]; followingCount: number }> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  const sessionCookie = cookies().get('tahti_session')
+  const res = await fetch(`${apiUrl}/api/me/feed`, {
+    headers: sessionCookie ? { Cookie: `tahti_session=${sessionCookie.value}` } : undefined,
+    cache: 'no-store',
+  })
+  if (!res.ok) return { items: [], followingCount: 0 }
+  return (await res.json()) as { items: FeedItem[]; followingCount: number }
+}
+
+function formatFeedDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+}
+
+export default async function FeedPage() {
+  const user = await getSessionUser()
+  if (!user) redirect('/login?next=/feed')
+
+  const { items, followingCount } = await fetchFeed()
+
+  return (
+    <div className="feed-page">
+      <Heading level={1}>Your feed</Heading>
+      <Text tone="muted">
+        New posts and tracks from the {followingCount} artist{followingCount === 1 ? '' : 's'} you
+        follow.
+      </Text>
+
+      {items.length === 0 ? (
+        <div className="public-empty-card">
+          <p className="public-empty-card__text">
+            {followingCount === 0 ? "You're not following any artists yet." : 'All quiet here.'}
+          </p>
+          <p className="public-empty-card__hint">
+            {followingCount === 0
+              ? 'Follow an artist from their channel or profile page to see their updates here.'
+              : 'New posts and tracks from artists you follow will show up here.'}
+          </p>
+        </div>
+      ) : (
+        <ul className="feed-list">
+          {items.map((item) => (
+            <li key={`${item.kind}-${item.id}`} className="feed-item">
+              <Link href={`/u/${item.artist.username}`} className="feed-item__avatar">
+                <AvatarTile size="sm" name={item.artist.displayName} src={item.artist.avatarUrl} />
+              </Link>
+              <div className="feed-item__body">
+                <div className="feed-item__byline">
+                  <Link href={`/u/${item.artist.username}`} className="feed-item__artist">
+                    {item.artist.displayName}
+                  </Link>
+                  <span className="feed-item__badge">
+                    {item.kind === 'post' ? 'posted' : 'shared a track'}
+                  </span>
+                  <span className="feed-item__date">{formatFeedDate(item.date)}</span>
+                </div>
+                {item.kind === 'post' ? (
+                  <Link href={item.url} className="feed-item__content">
+                    {item.title && <div className="feed-item__title">{item.title}</div>}
+                    <p className="feed-item__text">{item.body}</p>
+                  </Link>
+                ) : (
+                  <div className="feed-item__track">
+                    <Link href={item.url} className="feed-item__content feed-item__content--track">
+                      {item.bannerUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.bannerUrl} alt="" className="feed-item__art" />
+                      ) : (
+                        <span className="feed-item__art feed-item__art--ph" aria-hidden />
+                      )}
+                      <div className="feed-item__title">{item.title}</div>
+                    </Link>
+                    <LoveButton
+                      channelSlug={item.channelSlug}
+                      itemId={item.id}
+                      initialLiked={item.liked}
+                      initialLikeCount={item.likeCount}
+                    />
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}

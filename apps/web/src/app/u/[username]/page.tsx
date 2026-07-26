@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
+import { FollowButton } from '@/components/follow-button'
 import { renderBio } from '@/lib/render-bio'
 import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
 import { countryName } from '@/lib/country-options'
@@ -292,6 +293,11 @@ export default async function ArtistProfilePage({ params }: { params: { username
             tipJarUrl={artist.tipJarUrl}
             joinDateLabel={formatJoinDateLabel(artist.joinDate)}
             joinDateTitle={formatJoinDateTitle(artist.joinDate)}
+            followSlot={
+              user?.username !== artist.username ? (
+                <FollowButton artistUsername={artist.username} />
+              ) : null
+            }
             newsletterSlot={
               <NewsletterSubscribeForm
                 artistUsername={artist.username}

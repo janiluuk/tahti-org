@@ -56,6 +56,7 @@ interface CollectionResponse {
       source: ArchiveItemSource
       embedUri: string | null
       audioUrl: string | null
+      channel: { slug: string } | null
     } | null
     release: {
       id: string
@@ -202,6 +203,7 @@ export default async function CollectionPage({
                     title={item.archiveItem.title}
                     audioUrl={item.archiveItem.audioUrl}
                     artistUsername={data.user.username}
+                    channelSlug={item.archiveItem.channel?.slug ?? null}
                     thumbUrl={thumbUrl}
                     durationLabel={
                       item.archiveItem.durationSec != null

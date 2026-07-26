@@ -7,6 +7,31 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WatcherCount } from './WatcherCount'
+import { NotificationBell, type NotificationBellItem } from './NotificationBell'
+
+// ChannelHeader is mounted from many different public-page layouts across
+// apps/web (marketing pages, channel, profile, smart links) — reading the API
+// origin directly here, the same way apps/web's own client components do
+// (FollowButton, LoveButton), is far simpler than threading fetch/mark-read
+// functions as props through every one of those layouts down to this one
+// shared header.
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+
+async function fetchNotifications(): Promise<{
+  notifications: NotificationBellItem[]
+  unreadCount: number
+}> {
+  const res = await fetch(`${API_URL}/api/me/notifications`, { credentials: 'include' })
+  if (!res.ok) return { notifications: [], unreadCount: 0 }
+  return (await res.json()) as { notifications: NotificationBellItem[]; unreadCount: number }
+}
+
+async function markNotificationsRead(): Promise<void> {
+  await fetch(`${API_URL}/api/me/notifications/read-all`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+}
 
 export type SiteNavId = 'home' | 'discover' | 'radio' | 'venues'
 
@@ -131,6 +156,12 @@ export function ChannelHeader({
             )}
           </>
         )}
+        {!channelLiveMode && user && (
+          <NotificationBell
+            fetchNotifications={fetchNotifications}
+            markAllRead={markNotificationsRead}
+          />
+        )}
         {!channelLiveMode &&
           (user ? (
             <div className="ch-header__user-menu" ref={menuRef}>
@@ -183,6 +214,14 @@ export function ChannelHeader({
                     onClick={() => setMenuOpen(false)}
                   >
                     Messages
+                  </Link>
+                  <Link
+                    href="/feed"
+                    className="ch-header__menu-item"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Feed
                   </Link>
                   <div className="ch-header__menu-divider" role="separator" />
                   <form action="/api/auth/logout" method="POST" className="ch-header__menu-form">

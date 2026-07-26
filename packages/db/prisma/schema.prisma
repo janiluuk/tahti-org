@@ -402,6 +402,9 @@ enum MentionSurface {
 enum NotificationType {
   NEW_POST
   NEW_MESSAGE
+  NEW_TRACK
+  NEW_FOLLOWER
+  NEW_LIKE
 
   @@schema("core")
 }
@@ -602,6 +605,7 @@ model User {
   collections           Collection[]
   artistFollowers       ArtistFollow[]       @relation("ArtistFollowers")
   artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
+  archiveItemLikes      ArchiveItemLike[]
   conversationParticipations ConversationParticipant[]
   messagesSent          Message[]
   supportTickets        SupportTicket[]      @relation("SupportTicketArtist")
@@ -1151,6 +1155,7 @@ model ArchiveItem {
   versions        ArchiveItemVersion[]
   curatedRotationItems CuratedRotationItem[]
   comments        Comment[]
+  likes           ArchiveItemLike[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
@@ -1455,7 +1460,9 @@ model Download {
   @@schema("engagement")
 }
 
-// M22: lightweight artist follow (unlock follow-gated downloads; not a social graph).
+// M22: artist follow/subscribe — also unlocks follow-gated downloads, drives the
+// NEW_TRACK/NEW_POST notification fan-out, and (M40) is a real subscribe button
+// on the channel/profile page, not just a download-gate side effect anymore.
 model ArtistFollow {
   followerUserId String
   artistUserId   String
@@ -1465,6 +1472,20 @@ model ArtistFollow {
 
   @@id([followerUserId, artistUserId])
   @@index([artistUserId])
+  @@schema("engagement")
+}
+
+// M40: a listener "loving" a track — powers the heart/like button on track rows
+// and the NEW_LIKE notification to the artist.
+model ArchiveItemLike {
+  userId        String
+  archiveItemId String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  archiveItem   ArchiveItem @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+
+  @@id([userId, archiveItemId])
+  @@index([archiveItemId])
   @@schema("engagement")
 }
 

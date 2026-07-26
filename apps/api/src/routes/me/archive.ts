@@ -16,6 +16,7 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
+import { notifyFollowersOfNewTrack } from '@tahti/db'
 import { requireAuth } from '../../plugins/auth.js'
 import {
   archiveItemMetadataSelect,
@@ -131,7 +132,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
 
       const item = await fastify.prisma.archiveItem.findFirst({
         where: { id, channel: { userId: user.id } },
-        select: { id: true, channelId: true, isFallback: true },
+        select: { id: true, channelId: true, isFallback: true, isPublic: true },
       })
       if (!item) return reply.status(404).send({ error: 'Archive item not found' })
 
@@ -191,6 +192,14 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         data: patch.data,
         select: archiveItemMetadataSelect,
       })
+
+      // Fan out to followers exactly once, the moment a track first goes public —
+      // not on every subsequent metadata edit.
+      if (patch.data.isPublic === true && !item.isPublic) {
+        await notifyFollowersOfNewTrack(fastify.prisma, user, updated).catch((e) =>
+          fastify.log.warn(e, 'new-track notification failed'),
+        )
+      }
 
       if (patch.data.tracklist !== undefined && Array.isArray(updated.tracklist)) {
         try {

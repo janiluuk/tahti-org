@@ -484,6 +484,12 @@ export const GrantRunResponseSchema = GrantPreviewResponseSchema.omit({ artists:
 
 export const ArtistFollowResponseSchema = z.object({
   following: z.boolean(),
+  followerCount: z.number().int(),
+})
+
+export const ArchiveItemLikeResponseSchema = z.object({
+  liked: z.boolean(),
+  likeCount: z.number().int(),
 })
 
 export const ChannelCardSchema = z.object({

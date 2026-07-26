@@ -3,7 +3,13 @@
 
 import { z } from 'zod'
 
-export const NotificationTypeSchema = z.enum(['NEW_POST', 'NEW_MESSAGE'])
+export const NotificationTypeSchema = z.enum([
+  'NEW_POST',
+  'NEW_MESSAGE',
+  'NEW_TRACK',
+  'NEW_FOLLOWER',
+  'NEW_LIKE',
+])
 
 export const NotificationSchema = z.object({
   id: z.string(),
@@ -27,4 +33,42 @@ export type NotificationView = z.infer<typeof NotificationSchema>
 export const NotificationListSchema = z.object({
   notifications: z.array(NotificationSchema),
   unreadCount: z.number().int(),
+})
+
+// M40: /feed — recent activity from artists the current user follows.
+const FeedArtistSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+})
+
+export const FeedItemSchema = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('post'),
+    id: z.string(),
+    date: z.string().datetime(),
+    artist: FeedArtistSchema,
+    title: z.string().nullable(),
+    body: z.string(),
+    url: z.string(),
+  }),
+  z.object({
+    kind: z.literal('track'),
+    id: z.string(),
+    date: z.string().datetime(),
+    artist: FeedArtistSchema,
+    title: z.string(),
+    bannerUrl: z.string().nullable(),
+    channelSlug: z.string(),
+    liked: z.boolean(),
+    likeCount: z.number().int(),
+    url: z.string(),
+  }),
+])
+
+export type FeedItem = z.infer<typeof FeedItemSchema>
+
+export const MyFeedResponseSchema = z.object({
+  items: z.array(FeedItemSchema),
+  followingCount: z.number().int(),
 })

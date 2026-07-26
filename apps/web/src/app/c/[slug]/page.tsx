@@ -33,6 +33,7 @@ import { countryName } from '@/lib/country-options'
 import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
 import { ReportButton } from '@/components/report-button'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
+import { FollowButton } from '@/components/follow-button'
 
 function formatJoinDateLabel(joinDate: string | null | undefined): string | null {
   if (!joinDate) return null
@@ -334,6 +335,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 </div>
               )}
               <div className="ch-artist-cta-row">
+                {user?.username !== channel.user.username && (
+                  <FollowButton artistUsername={channel.user.username} />
+                )}
                 <Link href={`/u/${channel.user.username}/subscribe`} className="ch-artist-sub-btn">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
                     <path d="M8 13.8 2.6 8.7C1 7.2 1 4.7 2.6 3.3c1.5-1.3 3.7-1 5 .5L8 4.3l.4-.5c1.3-1.5 3.5-1.8 5-.5 1.6 1.4 1.6 3.9 0 5.4L8 13.8z" />

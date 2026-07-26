@@ -8,6 +8,7 @@ import { ArchiveWaveform } from '@/components/archive-waveform'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { ReportButton } from '@/components/report-button'
+import { LoveButton } from '@/components/love-button'
 import { usePlayer } from '@/contexts/player-context'
 import { ArchiveDownloadButton } from './archive-download'
 
@@ -113,6 +114,7 @@ export function ArchiveItemPlayback({
           followToDownload={Boolean(item.followToDownload)}
           downloadCount={item.downloadCount ?? 0}
         />
+        <LoveButton channelSlug={channelSlug} itemId={item.id} />
         <TrackCommentsToggle
           archiveItemId={item.id}
           isLoggedIn={isLoggedIn}
