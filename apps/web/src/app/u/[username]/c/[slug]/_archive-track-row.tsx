@@ -5,12 +5,16 @@
 
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { ReportButton } from '@/components/report-button'
+import { LoveButton } from '@/components/love-button'
 
 type Props = {
   id: string
   title: string
   audioUrl: string
   artistUsername: string
+  /** Owning channel's slug — needed for the love-button API, which is scoped to
+   * a channel. Null only for the (rare) archive item with no channel at all. */
+  channelSlug: string | null
   thumbUrl: string | null
   durationLabel: string | null
   /** Sibling playable tracks in display order — enables auto-advance + loop on 'ended'. */
@@ -23,6 +27,7 @@ export function ArchiveTrackRow({
   title,
   audioUrl,
   artistUsername,
+  channelSlug,
   thumbUrl,
   durationLabel,
   queue,
@@ -63,6 +68,7 @@ export function ArchiveTrackRow({
         <div className="prof-collection-title">{title}</div>
         {durationLabel && <span className="prof-list-meta">{durationLabel}</span>}
       </div>
+      {channelSlug && <LoveButton channelSlug={channelSlug} itemId={id} />}
       {isCurrent && <ReportButton targetType="ARCHIVE_ITEM" targetId={id} variant="icon" />}
     </li>
   )

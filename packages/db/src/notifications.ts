@@ -33,6 +33,69 @@ export async function notifyFollowersOfNewPost(
   })
 }
 
+/** Fan out a NEW_TRACK notification to everyone following the artist, when a
+ * track/set goes public (ArchiveItem.isPublic flips false -> true). */
+export async function notifyFollowersOfNewTrack(
+  prisma: PrismaClient,
+  artist: { id: string; username: string; displayName: string },
+  item: { id: string; title: string },
+): Promise<void> {
+  const followers = await prisma.artistFollow.findMany({
+    where: { artistUserId: artist.id },
+    select: { followerUserId: true },
+  })
+  if (followers.length === 0) return
+
+  await prisma.notification.createMany({
+    data: followers.map((f) => ({
+      userId: f.followerUserId,
+      type: 'NEW_TRACK' as const,
+      actorUserId: artist.id,
+      title: `${artist.displayName} shared a new track`,
+      body: item.title,
+      url: `/u/${artist.username}`,
+    })),
+  })
+}
+
+/** M40: notify an artist that someone followed them. */
+export async function notifyArtistOfNewFollower(
+  prisma: PrismaClient,
+  artistUserId: string,
+  follower: { id: string; username: string; displayName: string },
+): Promise<void> {
+  await prisma.notification.create({
+    data: {
+      userId: artistUserId,
+      type: 'NEW_FOLLOWER',
+      actorUserId: follower.id,
+      title: `${follower.displayName} followed you`,
+      body: `@${follower.username}`,
+      url: `/u/${follower.username}`,
+    },
+  })
+}
+
+/** M40: notify an artist that someone loved one of their tracks. */
+export async function notifyArtistOfNewLike(
+  prisma: PrismaClient,
+  artistUserId: string,
+  liker: { id: string; username: string; displayName: string },
+  item: { id: string; title: string; channelSlug: string },
+): Promise<void> {
+  if (artistUserId === liker.id) return
+  await prisma.notification.create({
+    data: {
+      userId: artistUserId,
+      type: 'NEW_LIKE',
+      actorUserId: liker.id,
+      title: `${liker.displayName} loved "${item.title}"`,
+      body: null,
+      url: `/c/${item.channelSlug}`,
+    },
+  })
+}
+
 /** M38: notify a conversation participant that a new direct message arrived. */
 export async function notifyUserOfNewMessage(
   prisma: PrismaClient,

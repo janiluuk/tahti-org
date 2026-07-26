@@ -23,6 +23,9 @@ export {
 } from './release-track-versions.js'
 export {
   notifyFollowersOfNewPost,
+  notifyFollowersOfNewTrack,
+  notifyArtistOfNewFollower,
+  notifyArtistOfNewLike,
   notifyUserOfNewMessage,
   processScheduledPostNotifications,
 } from './notifications.js'

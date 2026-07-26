@@ -62,6 +62,7 @@ import featureRequestsRoutes from './routes/governance/feature-requests.js'
 import downloadRoutes from './routes/downloads/archive.js'
 import artistFollowRoutes from './routes/engagement/artist-follows.js'
 import archiveRepostRoutes from './routes/engagement/archive-repost.js'
+import archiveLikeRoutes from './routes/engagement/archive-likes.js'
 import meGrantsRoutes from './routes/me/grants.js'
 import adminGrantsRoutes from './routes/admin/grants.js'
 import fanTierRoutes from './routes/fansubs/tiers.js'
@@ -123,6 +124,7 @@ import channelEventsRoute from './routes/channels/events.js'
 import mePostRoutes from './routes/me/posts.js'
 import channelPostsRoute from './routes/channels/posts.js'
 import meNotificationRoutes from './routes/me/notifications.js'
+import meFeedRoutes from './routes/me/feed.js'
 import meChannelMemberRoutes from './routes/me/channel-members.js'
 import channelMembersRoute from './routes/channels/members.js'
 import meTrackInsightsRoutes from './routes/me/track-insights.js'
@@ -499,6 +501,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(downloadRoutes)
   await fastify.register(artistFollowRoutes)
   await fastify.register(archiveRepostRoutes)
+  await fastify.register(archiveLikeRoutes)
 
   // M9: annual grant disbursements
   await fastify.register(meGrantsRoutes)
@@ -593,6 +596,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(mePostRoutes)
   await fastify.register(channelPostsRoute)
   await fastify.register(meNotificationRoutes)
+  await fastify.register(meFeedRoutes)
   await fastify.register(meChannelMemberRoutes)
   await fastify.register(channelMembersRoute)
   await fastify.register(meTrackInsightsRoutes)

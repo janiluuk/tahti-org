@@ -49,6 +49,7 @@ const collectionItemInclude = {
       qualityBadge: true,
       embedUri: true,
       embedProvider: true,
+      channel: { select: { slug: true } },
     },
   },
   release: {

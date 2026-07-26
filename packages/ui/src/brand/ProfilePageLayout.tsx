@@ -66,6 +66,10 @@ type ProfileHeroProps = {
    * fetch/state that doesn't belong in a presentational packages/ui component.
    * Rendered inline in the CTA row, next to Support. */
   newsletterSlot?: ReactNode
+  /** The free follow/subscribe control (apps/web's FollowButton) — same slot
+   * pattern as newsletterSlot, for the same reason. Rendered first in the CTA
+   * row, ahead of Support. */
+  followSlot?: ReactNode
 }
 
 /** PLAT-020: artist profile hero — info row, bio, CTAs. Cover is rendered separately via ProfileCover. */
@@ -85,6 +89,7 @@ export function ProfileHero({
   joinDateLabel,
   joinDateTitle,
   newsletterSlot,
+  followSlot,
 }: ProfileHeroProps) {
   return (
     <>
@@ -120,6 +125,7 @@ export function ProfileHero({
               Tune in live
             </Link>
           )}
+          {followSlot}
           <Link href={subscribeHref} className="prof-sub-btn">
             <IconHeart />
             Support
