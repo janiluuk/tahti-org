@@ -87,8 +87,16 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0;
+  padding: 0.35rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: 6px;
   border-top: 1px solid var(--border);
+}
+
+/* Tiger-striped rows — same alternating-tint pattern as every other track list
+   in the app, so a long release is easier to scan even in the small embed. */
+[data-tahti-ui='embed'] .embed-track-item:nth-child(even) {
+  background: color-mix(in srgb, var(--card2) 35%, transparent);
 }
 
 [data-tahti-ui='embed'] .embed-track-play {
