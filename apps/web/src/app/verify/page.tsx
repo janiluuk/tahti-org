@@ -2,7 +2,6 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { Alert, BrandLogo, Heading, Link, Stack, Text } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 
 interface Props {
   searchParams: { token?: string }
@@ -14,7 +13,6 @@ export default async function VerifyPage({ searchParams }: Props) {
   if (!token) {
     return (
       <>
-        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark">
             <BrandLogo />
@@ -52,7 +50,6 @@ export default async function VerifyPage({ searchParams }: Props) {
 
   return (
     <>
-      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
           <BrandLogo />

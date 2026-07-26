@@ -5,7 +5,6 @@ import type { ReactNode } from 'react'
 import { StudioSidebar } from './StudioSidebar'
 import { StudioTopNav } from './StudioTopNav'
 import { StudioMobileNav } from './StudioMobileNav'
-import { StudioAmbientClock } from './StudioAmbientClock'
 import type { NotificationBellItem } from './NotificationBell'
 
 type StudioShellProps = {
@@ -34,8 +33,7 @@ export function StudioShell({
   markNotificationsRead,
 }: StudioShellProps) {
   return (
-    <div data-tahti-ui="studio" className="tahti-studio studio-ambient">
-      <StudioAmbientClock />
+    <div data-tahti-ui="studio" className="tahti-studio">
       <StudioTopNav
         displayName={displayName}
         isLive={isLive}

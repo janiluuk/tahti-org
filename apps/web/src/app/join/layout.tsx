@@ -4,12 +4,7 @@
 import type { ReactNode } from 'react'
 import { PublicBrandShell } from '@tahti/ui'
 import '@/lib/import-public-brand-css'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 
 export default function JoinLayout({ children }: { children: ReactNode }) {
-  return (
-    <PublicBrandShell center background={<BgCanvas variant="subtle" />}>
-      {children}
-    </PublicBrandShell>
-  )
+  return <PublicBrandShell center>{children}</PublicBrandShell>
 }

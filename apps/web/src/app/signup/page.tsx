@@ -4,7 +4,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BrandLogo, Heading, Text } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { isSignupOpen } from '@/lib/signup'
 import { SignupForm } from './signup-form'
 
@@ -18,7 +17,6 @@ export const metadata: Metadata = {
 function SignupClosed() {
   return (
     <>
-      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
           <BrandLogo />

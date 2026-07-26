@@ -21,8 +21,6 @@ export type PublicBrandShellProps = {
   user?: { username: string; displayName: string } | null
   /** Status page URL, forwarded to PublicFooter when showFooter is set. */
   statusUrl?: string
-  /** The animated gateway canvas (<BgCanvas variant="subtle" />) — same dark treatment on every public page. */
-  background?: ReactNode
 }
 
 /** Light public pages using brand-public.css — import that stylesheet on the route. */
@@ -35,7 +33,6 @@ export function PublicBrandShell({
   activeNav,
   user,
   statusUrl,
-  background,
 }: PublicBrandShellProps) {
   const layoutClass = [
     'brand-public',
@@ -49,7 +46,6 @@ export function PublicBrandShell({
       data-tahti-ui="brand"
       className={['brand-public-shell', wide && 'shell-public'].filter(Boolean).join(' ')}
     >
-      {background}
       {showHeader && <ChannelHeader activeNav={activeNav} user={user} />}
       <div className={layoutClass}>{children}</div>
       {showFooter && <PublicFooter statusUrl={statusUrl} />}

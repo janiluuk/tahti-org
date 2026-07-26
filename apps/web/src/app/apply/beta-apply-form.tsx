@@ -18,7 +18,6 @@ import {
   Text,
   Textarea,
 } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { submitBetaApplication } from './actions'
 
 export function BetaApplyForm() {
@@ -51,7 +50,6 @@ export function BetaApplyForm() {
   if (sent) {
     return (
       <>
-        <BgCanvas variant="subtle" />
         <div className="auth-shell">
           <div className="auth-card auth-card--dark auth-card--wide">
             <BrandLogo />
@@ -68,7 +66,6 @@ export function BetaApplyForm() {
 
   return (
     <>
-      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark auth-card--wide">
           <BrandLogo />

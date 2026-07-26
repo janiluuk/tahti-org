@@ -3,7 +3,8 @@
 
 import type { ReactNode } from 'react'
 
-/** Apply uses full-viewport auth-shell + BgCanvas — same as login. */
+/** Apply uses the full-viewport auth-shell. The gateway background is the shared
+ * global <BgCanvas> mounted once in the root layout (see PublicNavBg). */
 export default function ApplyLayout({ children }: { children: ReactNode }) {
   return children
 }

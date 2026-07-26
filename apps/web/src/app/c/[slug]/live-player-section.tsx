@@ -3,8 +3,6 @@
 
 'use client'
 
-import { BgCanvas } from '@/components/ui/bg-canvas'
-import { usePlayer } from '@/contexts/player-context'
 import HlsPlayer from './hls-player'
 import ReactionsOverlay from './reactions'
 
@@ -29,26 +27,21 @@ export function LivePlayerSection({
   isReplay,
   nextUpLabel,
 }: LivePlayerSectionProps) {
-  const { analyser } = usePlayer()
-
   return (
-    <>
-      <BgCanvas analyser={analyser} />
-      <div id="live-player" className="ch-player-wrap">
-        <div className="ch-player-inner">
-          <HlsPlayer
-            url={url}
-            title={title}
-            subtitle={subtitle ?? `@${slug}`}
-            subtitleHref={subtitleHref}
-            href={`/c/${slug}`}
-            artworkUrl={artworkUrl}
-            isReplay={isReplay}
-            nextUpLabel={nextUpLabel}
-          />
-        </div>
-        <ReactionsOverlay slug={slug} />
+    <div id="live-player" className="ch-player-wrap">
+      <div className="ch-player-inner">
+        <HlsPlayer
+          url={url}
+          title={title}
+          subtitle={subtitle ?? `@${slug}`}
+          subtitleHref={subtitleHref}
+          href={`/c/${slug}`}
+          artworkUrl={artworkUrl}
+          isReplay={isReplay}
+          nextUpLabel={nextUpLabel}
+        />
       </div>
-    </>
+      <ReactionsOverlay slug={slug} />
+    </div>
   )
 }

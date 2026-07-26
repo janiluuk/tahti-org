@@ -4,8 +4,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Alert, BrandLogo, Button, ButtonIcon, Field, Heading, Input, Stack, Text } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { safeSignupRedirect } from '@/lib/signup'
 import { login, register, verifyTotp } from '../auth/actions'
@@ -19,6 +19,7 @@ function initialMode(): AuthMode {
 }
 
 export default function LoginPage() {
+  const router = useRouter()
   const [mode, setMode] = useState<AuthMode>('login')
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -44,6 +45,16 @@ export default function LoginPage() {
     setRegisterSuccess(false)
   }
 
+  // Client-side navigation (not window.location.href) so the shared PlayerProvider
+  // — and whatever's playing through it — survives logging in instead of the hard
+  // reload tearing the whole app down. router.refresh() re-fetches the destination
+  // route's server data so it reflects the just-established session even if that
+  // route was already visited (and cached) while signed out.
+  function completeLogin() {
+    router.push(nextPath)
+    router.refresh()
+  }
+
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setPending(true)
@@ -63,7 +74,7 @@ export default function LoginPage() {
       setMode('totp')
       setPending(false)
     } else {
-      window.location.href = nextPath
+      completeLogin()
     }
   }
 
@@ -83,7 +94,7 @@ export default function LoginPage() {
       setError(result.error)
       setPending(false)
     } else {
-      window.location.href = nextPath
+      completeLogin()
     }
   }
 
@@ -119,197 +130,179 @@ export default function LoginPage() {
 
   if (mode === 'totp') {
     return (
-      <>
-        <BgCanvas variant="subtle" />
-        <div className="auth-shell">
-          <div className="auth-card auth-card--dark">
-            <BrandLogo />
-            <Heading level={1}>Enter your 2FA code</Heading>
-            <Text tone="muted">
-              Open your authenticator app and enter the 6-digit code, or use one of your backup
-              codes.
-            </Text>
+      <div className="auth-shell">
+        <div className="auth-card auth-card--dark">
+          <BrandLogo />
+          <Heading level={1}>Enter your 2FA code</Heading>
+          <Text tone="muted">
+            Open your authenticator app and enter the 6-digit code, or use one of your backup codes.
+          </Text>
 
-            <form onSubmit={handleTotpSubmit}>
-              <Stack gap={4}>
-                {error && <Alert variant="error">{error}</Alert>}
+          <form onSubmit={handleTotpSubmit}>
+            <Stack gap={4}>
+              {error && <Alert variant="error">{error}</Alert>}
 
-                <Field label="Code">
-                  <Input
-                    name="code"
-                    type="text"
-                    required
-                    autoComplete="one-time-code"
-                    autoFocus
-                    maxLength={9}
-                  />
-                </Field>
+              <Field label="Code">
+                <Input
+                  name="code"
+                  type="text"
+                  required
+                  autoComplete="one-time-code"
+                  autoFocus
+                  maxLength={9}
+                />
+              </Field>
 
-                <Button variant="primary" size="lg" type="submit" disabled={pending}>
-                  <ButtonIcon name="check" />
-                  {pending ? 'Verifying…' : 'Verify'}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  type="button"
-                  onClick={() => {
-                    setTotpChallengeId(null)
-                    switchMode('login')
-                  }}
-                >
-                  Back to log in
-                </Button>
-              </Stack>
-            </form>
-          </div>
+              <Button variant="primary" size="lg" type="submit" disabled={pending}>
+                <ButtonIcon name="check" />
+                {pending ? 'Verifying…' : 'Verify'}
+              </Button>
+              <Button
+                variant="secondary"
+                size="lg"
+                type="button"
+                onClick={() => {
+                  setTotpChallengeId(null)
+                  switchMode('login')
+                }}
+              >
+                Back to log in
+              </Button>
+            </Stack>
+          </form>
         </div>
-      </>
+      </div>
     )
   }
 
   if (registerSuccess) {
     return (
-      <>
-        <BgCanvas variant="subtle" />
-        <div className="auth-shell">
-          <div className="auth-card auth-card--dark">
-            <BrandLogo />
-            <Heading level={1}>Check your email</Heading>
-            <Text tone="muted">
-              We&apos;ve sent a verification link to your email address. Click it to activate your
-              account, then log in here.
-            </Text>
-            <Button
-              variant="secondary"
-              size="lg"
-              className="auth-tab-switch"
-              onClick={() => switchMode('login')}
-            >
-              Back to log in
-            </Button>
-          </div>
+      <div className="auth-shell">
+        <div className="auth-card auth-card--dark">
+          <BrandLogo />
+          <Heading level={1}>Check your email</Heading>
+          <Text tone="muted">
+            We&apos;ve sent a verification link to your email address. Click it to activate your
+            account, then log in here.
+          </Text>
+          <Button
+            variant="secondary"
+            size="lg"
+            className="auth-tab-switch"
+            onClick={() => switchMode('login')}
+          >
+            Back to log in
+          </Button>
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <BgCanvas variant="subtle" />
-      <div className="auth-shell">
-        <div className="auth-card auth-card--dark">
-          <BrandLogo />
+    <div className="auth-shell">
+      <div className="auth-card auth-card--dark">
+        <BrandLogo />
 
-          <div className="auth-tabs" role="tablist" aria-label="Account access">
-            <button
-              type="button"
-              role="tab"
-              id="auth-tab-login"
-              aria-selected={mode === 'login'}
-              aria-controls="auth-panel-login"
-              className={`auth-tabs__tab${mode === 'login' ? ' auth-tabs__tab--active' : ''}`}
-              onClick={() => switchMode('login')}
-            >
-              Log in
-            </button>
-            <button
-              type="button"
-              role="tab"
-              id="auth-tab-register"
-              aria-selected={mode === 'register'}
-              aria-controls="auth-panel-register"
-              className={`auth-tabs__tab${mode === 'register' ? ' auth-tabs__tab--active' : ''}`}
-              onClick={() => switchMode('register')}
-            >
-              Create account
-            </button>
-          </div>
-
-          {mode === 'login' ? (
-            <div id="auth-panel-login" role="tabpanel" aria-labelledby="auth-tab-login">
-              <Heading level={1}>Log in</Heading>
-              <Text tone="muted">Enter your email and password to access your dashboard.</Text>
-
-              <form onSubmit={handleLogin}>
-                <Stack gap={4}>
-                  {error && <Alert variant="error">{error}</Alert>}
-
-                  <Field label="Email">
-                    <Input name="email" type="email" required autoComplete="email" />
-                  </Field>
-
-                  <Field label="Password">
-                    <Input
-                      name="password"
-                      type="password"
-                      required
-                      autoComplete="current-password"
-                    />
-                  </Field>
-
-                  <Button variant="primary" size="lg" type="submit" disabled={pending}>
-                    <ButtonIcon name="check" />
-                    {pending ? 'Logging in…' : 'Log in'}
-                  </Button>
-                </Stack>
-              </form>
-            </div>
-          ) : (
-            <div id="auth-panel-register" role="tabpanel" aria-labelledby="auth-tab-register">
-              <Heading level={1}>Create an artist account</Heading>
-              <Text tone="muted">
-                Your channel URL will be yourname.tahti.live. We&apos;ll email you a verification
-                link.
-              </Text>
-
-              <form onSubmit={handleRegister}>
-                <Stack gap={4}>
-                  {error && <Alert variant="error">{error}</Alert>}
-
-                  <Field label="Email">
-                    <Input name="email" type="email" required autoComplete="email" />
-                  </Field>
-
-                  <Field label="Artist name">
-                    <Input name="displayName" type="text" required autoComplete="name" />
-                  </Field>
-
-                  <Field
-                    label="Username"
-                    hint="Lowercase letters, numbers, underscores and hyphens"
-                  >
-                    <Input
-                      name="username"
-                      type="text"
-                      required
-                      pattern="[a-z0-9_-]+"
-                      autoComplete="username"
-                    />
-                  </Field>
-
-                  <Field label="Password" hint="At least 8 characters">
-                    <Input
-                      name="password"
-                      type="password"
-                      required
-                      minLength={8}
-                      autoComplete="new-password"
-                    />
-                  </Field>
-
-                  {captchaRequired && <div ref={captchaRef} />}
-
-                  <Button variant="primary" size="lg" type="submit" disabled={pending}>
-                    <ButtonIcon name="plus" />
-                    {pending ? 'Creating account…' : 'Create account'}
-                  </Button>
-                </Stack>
-              </form>
-            </div>
-          )}
+        <div className="auth-tabs" role="tablist" aria-label="Account access">
+          <button
+            type="button"
+            role="tab"
+            id="auth-tab-login"
+            aria-selected={mode === 'login'}
+            aria-controls="auth-panel-login"
+            className={`auth-tabs__tab${mode === 'login' ? ' auth-tabs__tab--active' : ''}`}
+            onClick={() => switchMode('login')}
+          >
+            Log in
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="auth-tab-register"
+            aria-selected={mode === 'register'}
+            aria-controls="auth-panel-register"
+            className={`auth-tabs__tab${mode === 'register' ? ' auth-tabs__tab--active' : ''}`}
+            onClick={() => switchMode('register')}
+          >
+            Create account
+          </button>
         </div>
+
+        {mode === 'login' ? (
+          <div id="auth-panel-login" role="tabpanel" aria-labelledby="auth-tab-login">
+            <Heading level={1}>Log in</Heading>
+            <Text tone="muted">Enter your email and password to access your dashboard.</Text>
+
+            <form onSubmit={handleLogin}>
+              <Stack gap={4}>
+                {error && <Alert variant="error">{error}</Alert>}
+
+                <Field label="Email">
+                  <Input name="email" type="email" required autoComplete="email" />
+                </Field>
+
+                <Field label="Password">
+                  <Input name="password" type="password" required autoComplete="current-password" />
+                </Field>
+
+                <Button variant="primary" size="lg" type="submit" disabled={pending}>
+                  <ButtonIcon name="check" />
+                  {pending ? 'Logging in…' : 'Log in'}
+                </Button>
+              </Stack>
+            </form>
+          </div>
+        ) : (
+          <div id="auth-panel-register" role="tabpanel" aria-labelledby="auth-tab-register">
+            <Heading level={1}>Create an artist account</Heading>
+            <Text tone="muted">
+              Your channel URL will be yourname.tahti.live. We&apos;ll email you a verification
+              link.
+            </Text>
+
+            <form onSubmit={handleRegister}>
+              <Stack gap={4}>
+                {error && <Alert variant="error">{error}</Alert>}
+
+                <Field label="Email">
+                  <Input name="email" type="email" required autoComplete="email" />
+                </Field>
+
+                <Field label="Artist name">
+                  <Input name="displayName" type="text" required autoComplete="name" />
+                </Field>
+
+                <Field label="Username" hint="Lowercase letters, numbers, underscores and hyphens">
+                  <Input
+                    name="username"
+                    type="text"
+                    required
+                    pattern="[a-z0-9_-]+"
+                    autoComplete="username"
+                  />
+                </Field>
+
+                <Field label="Password" hint="At least 8 characters">
+                  <Input
+                    name="password"
+                    type="password"
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                  />
+                </Field>
+
+                {captchaRequired && <div ref={captchaRef} />}
+
+                <Button variant="primary" size="lg" type="submit" disabled={pending}>
+                  <ButtonIcon name="plus" />
+                  {pending ? 'Creating account…' : 'Create account'}
+                </Button>
+              </Stack>
+            </form>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   )
 }

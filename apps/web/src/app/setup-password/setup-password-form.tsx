@@ -6,7 +6,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Alert, BrandLogo, Button, ButtonIcon, Field, Heading, Input, Stack, Text } from '@tahti/ui'
-import { BgCanvas } from '@/components/ui/bg-canvas'
 import { setupPassword } from './actions'
 
 type SetupInfo = {
@@ -42,7 +41,6 @@ export function SetupPasswordForm({ token, info }: { token: string; info: SetupI
 
   return (
     <>
-      <BgCanvas variant="subtle" />
       <div className="auth-shell">
         <div className="auth-card auth-card--dark">
           <BrandLogo />
