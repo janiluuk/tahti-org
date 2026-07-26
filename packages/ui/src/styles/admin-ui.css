@@ -476,8 +476,7 @@
     radial-gradient(circle at 85% 25%, rgba(0, 188, 212, 0.16), transparent 45%),
     radial-gradient(circle at 50% 60%, rgba(124, 77, 255, 0.14), transparent 50%),
     radial-gradient(circle at 20% 85%, rgba(0, 230, 118, 0.12), transparent 45%),
-    radial-gradient(circle at 80% 90%, rgba(255, 107, 107, 0.12), transparent 45%),
-    var(--bg);
+    radial-gradient(circle at 80% 90%, rgba(255, 107, 107, 0.12), transparent 45%), var(--bg);
 }
 
 .auth-shell {
@@ -1281,6 +1280,33 @@
 
 .artist-directory__genre {
   font-size: var(--tahti-text-xs, 12px);
+  color: var(--muted);
+}
+
+/* ---- Artists preview section (always visible on /listen, distinct from the
+   searchable "Artists & genres" tab above — see ArtistsSection) ---- */
+.listen-artists-section {
+  margin-top: var(--tahti-space-8);
+}
+
+.listen-artists-section__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--tahti-space-3);
+  margin-bottom: var(--tahti-space-4);
+}
+
+.listen-artists-section__title {
+  font-family: var(--tahti-font-display);
+  font-size: 1.375rem;
+  font-weight: 500;
+  color: var(--text);
+  margin: 0;
+}
+
+.listen-artists-section__count {
+  font-size: var(--tahti-text-sm);
   color: var(--muted);
 }
 

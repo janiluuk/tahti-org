@@ -13,6 +13,8 @@ type ArchiveListItem = Record<string, unknown> & {
   title: string
   status: string
   isPublic?: boolean
+  pinnedAt?: string | null
+  createdAt?: string
 }
 
 interface PlayableItem {
@@ -22,9 +24,42 @@ interface PlayableItem {
 
 type StatusFilter = 'all' | 'unpublished' | 'drafts' | 'published'
 
+type SortKey = 'newest' | 'oldest' | 'title-asc' | 'title-desc'
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'title-asc', label: 'Title A–Z' },
+  { value: 'title-desc', label: 'Title Z–A' },
+]
+
 function itemFilter(item: ArchiveListItem): StatusFilter {
   if (item.status !== 'READY') return 'drafts'
   return item.isPublic === false ? 'unpublished' : 'published'
+}
+
+function sortItems(items: ArchiveListItem[], sort: SortKey): ArchiveListItem[] {
+  const sorted = [...items].sort((a, b) => {
+    switch (sort) {
+      case 'title-asc':
+        return a.title.localeCompare(b.title)
+      case 'title-desc':
+        return b.title.localeCompare(a.title)
+      case 'oldest':
+        return new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime()
+      case 'newest':
+      default:
+        return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+    }
+  })
+  // Pinned tracks float to the top regardless of sort, most-recently-pinned
+  // first — same rule as the public Stage tab (ArchiveItem.pinnedAt).
+  return sorted.sort((a, b) => {
+    const aPinned = a.pinnedAt ? new Date(a.pinnedAt).getTime() : 0
+    const bPinned = b.pinnedAt ? new Date(b.pinnedAt).getTime() : 0
+    if (aPinned === 0 && bPinned === 0) return 0
+    return bPinned - aPinned
+  })
 }
 
 /** Small deterministic decorative color per item — not a meaning-bound brand
@@ -53,6 +88,7 @@ export function ArchiveList({
 }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<StatusFilter>('all')
+  const [sort, setSort] = useState<SortKey>('newest')
 
   const counts = useMemo(() => {
     const c: Record<StatusFilter, number> = {
@@ -67,12 +103,13 @@ export function ArchiveList({
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return items.filter((item) => {
+    const matched = items.filter((item) => {
       if (filter !== 'all' && itemFilter(item) !== filter) return false
       if (q && !item.title.toLowerCase().includes(q)) return false
       return true
     })
-  }, [items, search, filter])
+    return sortItems(matched, sort)
+  }, [items, search, filter, sort])
 
   return (
     <div>
@@ -89,13 +126,27 @@ export function ArchiveList({
             </button>
           ))}
         </div>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search archive…"
-          className="studio-input archive-list__search"
-        />
+        <div className="archive-list__toolbar-right">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="studio-input archive-list__sort"
+            aria-label="Sort archive"
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search archive…"
+            className="studio-input archive-list__search"
+          />
+        </div>
       </div>
 
       {visible.length === 0 ? (
