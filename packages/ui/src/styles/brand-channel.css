@@ -1874,10 +1874,21 @@
 }
 
 [data-tahti-ui='brand'] .ch-archive-item {
-  padding: 0.75rem 0.85rem;
+  padding: 0.45rem 0.75rem;
   border-bottom: 1px solid var(--border);
   border-radius: var(--radius-sm);
   transition: background 0.15s;
+}
+
+/* Tiger-striped rows — alternating tint makes a long archive easier to scan
+ * at a glance than a wall of identical rows. Skipped on whichever row is
+ * currently expanded (has the waveform/backdrop) so the stripe doesn't fight
+ * with that row's own background treatment. */
+[data-tahti-ui='brand']
+  .ch-archive-item:nth-child(even):not(.ch-archive-item--bg):not(
+    :has(.ch-archive-playback--current)
+  ) {
+  background: color-mix(in srgb, var(--card) 55%, transparent);
 }
 
 [data-tahti-ui='brand'] .ch-archive-item:hover {
@@ -3273,8 +3284,8 @@
 /* ── Archive item thumbnail (PLAT-032) ──────────────────────────────────── */
 
 [data-tahti-ui='brand'] .ch-archive-item-thumb {
-  width: 40px;
-  height: 40px;
+  width: 24px;
+  height: 24px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
@@ -3283,19 +3294,23 @@
 [data-tahti-ui='brand'] .ch-archive-item-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
+  gap: 8px;
+  margin-bottom: 0;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-meta {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-title {
+  flex: 1;
+  min-width: 0;
   font-weight: var(--weight-medium);
-  font-size: var(--text-body);
-  margin-bottom: 2px;
+  font-size: var(--text-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3304,7 +3319,8 @@
 [data-tahti-ui='brand'] .ch-archive-item-date {
   font-size: var(--text-xs);
   color: var(--muted);
-  margin-top: 2px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ── Profile tag chips + release rows (PLAT-032) ────────────────────────── */
