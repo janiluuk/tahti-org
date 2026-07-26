@@ -16,7 +16,13 @@ export function edgeEncoderContainerName(slug: string): string {
 }
 
 export function rtmpIngestUrl(slug: string, rtmpStreamKey?: string | null): string {
-  const streamName = rtmpStreamKey ? `${slug}__${rtmpStreamKey}` : slug
+  // Channel.rtmpStreamKey is already stored as the full "<slug>__<random>" stream
+  // name (see channel-provision.ts) — nginx-rtmp's on_publish handler validates
+  // against that same combined value, so it must be used as-is here. Prepending
+  // slug again produced "<slug>__<slug>__<random>", which nginx-rtmp would always
+  // reject on PLAY (denied by rule, or simply never matching the published name),
+  // meaning the edge encoder could never actually pull a live RTMP broadcast.
+  const streamName = rtmpStreamKey ?? slug
   return `${RTMP_INGEST_URL}/live/${streamName}`
 }
 

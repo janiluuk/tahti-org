@@ -13,7 +13,7 @@ import {
   stopChannelFingerprintIngest,
   stopFingerprintIngest,
 } from './fingerprint-ingest.js'
-import { ARCHIVE_CACHE_VOLUME, COVER_CACHE_VOLUME } from './docker-streaming.js'
+import { ARCHIVE_CACHE_VOLUME, COVER_CACHE_VOLUME, FFMPEG_IMAGE } from './docker-streaming.js'
 import { spawnEdgeEncoder, stopChannelEdgeEncoders } from './edge-encoder.js'
 import { ensureCoverImage, coverImagePath } from './cover-cache.js'
 import { liveInputUrl } from './live-input.js'
@@ -206,6 +206,18 @@ export async function spawnLiquidsoapContainer(
     `docker volume inspect ${LIQUIDSOAP_CONFIG_VOLUME} --format '{{ .Mountpoint }}'`,
   )
   const hostConfigPath = `${volumeMountpoint.trim()}/${configFileName}`
+
+  // The HLS named volume is created root:root 0755 by Docker on first use, but
+  // Liquidsoap's image runs as a non-root "liquidsoap" user with no write access
+  // there — its output.file.hls directive doesn't create missing directories
+  // either, so every channel failed with "Could not create or open output
+  // directory!" and crash-looped, and no listener could ever actually hear a
+  // live broadcast. Pre-create and open up this one per-channel subdirectory
+  // (reusing the already-pulled ffmpeg image as a root-capable helper, rather
+  // than adding a new image dependency) before Liquidsoap ever touches it.
+  await execAsync(
+    `docker run --rm --entrypoint sh -v ${HLS_VOLUME}:/hls ${FFMPEG_IMAGE} -c "mkdir -p /hls/${channelId} && chmod -R 0777 /hls/${channelId}"`,
+  )
 
   const cmd = [
     'docker run -d',
