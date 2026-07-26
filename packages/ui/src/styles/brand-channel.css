@@ -20,6 +20,74 @@
   --tahti-warning-bg: color-mix(in srgb, var(--amber) 12%, var(--card));
   --tahti-error-bg: color-mix(in srgb, var(--coral) 12%, var(--card));
   --tahti-info-bg: color-mix(in srgb, var(--cyan) 12%, var(--card));
+  position: relative;
+  isolation: isolate;
+}
+
+/* Ambient background wash — same drifting radial-gradient technique as the dashboard
+   (see .studio-ambient in brand-studio.css), at a calmer opacity than the dashboard's.
+   Gives channel/profile pages the same "alive" visual language as the artist panel
+   instead of a flat, static background, while the fainter wash here (vs. dashboard's)
+   is itself the "which mode am I in" cue: public pages are quietest, the artist panel
+   a little more present, admin distinct again — see brand-studio.css. Skipped entirely
+   when a page opts into the heavier WebGL BgCanvas instead (:has(.bg-canvas) below). */
+@keyframes channel-ambient-drift {
+  from {
+    transform: translate3d(-1.2%, -0.8%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(1.2%, 0.8%, 0) scale(1.035);
+  }
+}
+
+@keyframes channel-ambient-drift-alt {
+  from {
+    transform: translate3d(1%, 0.6%, 0) scale(1.02);
+  }
+  to {
+    transform: translate3d(-1%, -0.6%, 0) scale(1);
+  }
+}
+
+[data-tahti-ui='brand'].brand-channel:not(:has(.bg-canvas))::before,
+[data-tahti-ui='brand'].brand-channel:not(:has(.bg-canvas))::after {
+  content: '';
+  position: fixed;
+  inset: -14%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'].brand-channel:not(:has(.bg-canvas))::before {
+  background:
+    radial-gradient(
+      ellipse 74% 60% at 14% 22%,
+      color-mix(in srgb, var(--cyan) 5%, transparent),
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 70% 54% at 86% 78%,
+      color-mix(in srgb, var(--purple) 4%, transparent),
+      transparent 72%
+    );
+  animation: channel-ambient-drift 60s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+[data-tahti-ui='brand'].brand-channel:not(:has(.bg-canvas))::after {
+  background: radial-gradient(
+    ellipse 60% 50% at 50% 50%,
+    color-mix(in srgb, var(--amber) 3%, transparent),
+    transparent 70%
+  );
+  animation: channel-ambient-drift-alt 80s ease-in-out infinite alternate-reverse;
+  will-change: transform;
+}
+
+/* Everything else in the page must sit above the fixed ambient layer. */
+[data-tahti-ui='brand'].brand-channel > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Three.js gateway background (BgCanvas) — same treatment on every public page: calm,
