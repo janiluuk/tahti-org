@@ -1774,8 +1774,20 @@
   background: color-mix(in srgb, var(--cyan) 12%, var(--card2));
 }
 
+[data-tahti-ui='studio'] .archive-list__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
 [data-tahti-ui='studio'] .archive-list__search {
   max-width: 220px;
+}
+
+[data-tahti-ui='studio'] .archive-list__sort {
+  width: auto;
+  max-width: 160px;
 }
 
 [data-tahti-ui='studio'] .archive-list__row {

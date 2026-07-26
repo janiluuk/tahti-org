@@ -5,6 +5,7 @@ import type { ChannelCard, ChannelDirectoryEntry, TahtiSelectsGalleryItem } from
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { DiscoverTabs } from './_discover-tabs'
 import { TahtiRadioCard } from './_tahti-radio-card'
+import { ArtistsSection } from './_artists-section'
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -116,6 +117,8 @@ export default async function ListenPage() {
         directory={directory}
         gallery={gallery}
       />
+
+      <ArtistsSection items={directory} />
     </div>
   )
 }

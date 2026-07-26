@@ -29,6 +29,7 @@ export interface AlbumSummary {
   releaseDate: string
   artworkUrl?: string | null
   smartLinkSlug: string
+  pinnedAt?: string | null
   tracks?: Array<{
     id: string
     title: string
