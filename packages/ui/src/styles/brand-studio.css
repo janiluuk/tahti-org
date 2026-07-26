@@ -66,22 +66,25 @@
   pointer-events: none;
 }
 
-/* Color washes — artist default slightly livelier than admin */
+/* Color washes — three-tier "which mode am I in" signal via opacity + color balance:
+   public channel/profile pages are quietest (brand-channel.css), the artist workspace
+   is the most present/warm of the three (this block), admin is cooler and more
+   restrained (.studio-ambient--admin below, amber dropped entirely). */
 [data-tahti-ui='studio'].studio-ambient::before {
   background:
     radial-gradient(
       ellipse 74% 60% at 14% 22%,
-      color-mix(in srgb, var(--cyan) 9%, transparent),
+      color-mix(in srgb, var(--cyan) 11%, transparent),
       transparent 74%
     ),
     radial-gradient(
       ellipse 70% 54% at 86% 78%,
-      color-mix(in srgb, var(--purple) 8%, transparent),
+      color-mix(in srgb, var(--purple) 10%, transparent),
       transparent 72%
     ),
     radial-gradient(
       ellipse 60% 50% at 50% 50%,
-      color-mix(in srgb, var(--amber) 5%, transparent),
+      color-mix(in srgb, var(--amber) 7%, transparent),
       transparent 70%
     );
   animation:
@@ -253,18 +256,13 @@
   background:
     radial-gradient(
       ellipse 72% 58% at 16% 24%,
-      color-mix(in srgb, var(--cyan) 7%, transparent),
+      color-mix(in srgb, var(--cyan) 6%, transparent),
       transparent 74%
     ),
     radial-gradient(
       ellipse 68% 52% at 84% 76%,
       color-mix(in srgb, var(--purple) 6%, transparent),
       transparent 72%
-    ),
-    radial-gradient(
-      ellipse 58% 48% at 50% 48%,
-      color-mix(in srgb, var(--amber) 4%, transparent),
-      transparent 70%
     );
   animation: studio-ambient-drift 64s ease-in-out infinite alternate;
 }
