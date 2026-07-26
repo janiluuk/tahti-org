@@ -137,6 +137,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
    * since its listener closure would otherwise see a stale queue. */
   const queueRef = useRef<PlayerTrack[] | null>(null)
   const repeatRef = useRef(false)
+  /** The live stream that was playing right before the listener diverted to play a
+   * one-off track (e.g. a single archive track while Radio was on) — so playback
+   * can hand back to it once that track ends, instead of just going silent. Cleared
+   * once consumed, when the listener explicitly starts a different live stream, or
+   * on close(). */
+  const radioResumeRef = useRef<PlayerTrack | null>(null)
   const [state, setState] = useState<PlayerState>({
     track: null,
     playing: false,
@@ -224,6 +230,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         setHistory((h) =>
           [prevTrack, ...h.filter((t) => t.id !== prevTrack.id)].slice(0, HISTORY_LIMIT),
         )
+      }
+      // Diverting from a live stream to a one-off track — remember the stream so
+      // onEnded can hand playback back to it. Starting a live stream directly (the
+      // listener picked a new one on purpose) clears any stale resume target.
+      if (prevTrack && prevTrack.kind === 'live' && track.kind !== 'live') {
+        radioResumeRef.current = prevTrack
+      } else if (track.kind === 'live') {
+        radioResumeRef.current = null
       }
       currentTrackIdRef.current = track.id
       currentTrackRef.current = track
@@ -324,15 +338,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     audio.currentTime = ratio * audio.duration
   }, [])
 
-  const playNext = useCallback(() => {
+  /** Returns whether it actually advanced to another track — onEnded uses this to
+   * know whether to fall back to radioResumeRef instead of just going silent. */
+  const playNext = useCallback((): boolean => {
     const q = queueRef.current
     const currentId = currentTrackIdRef.current
-    if (!q || q.length < 2 || !currentId) return
+    if (!q || q.length < 2 || !currentId) return false
     const idx = q.findIndex((t) => t.id === currentId)
-    if (idx === -1) return
+    if (idx === -1) return false
     const isLast = idx === q.length - 1
-    if (isLast && !repeatRef.current) return
+    if (isLast && !repeatRef.current) return false
     load(q[(idx + 1) % q.length]!, { autoplay: true, queue: q })
+    return true
   }, [load])
 
   const playPrevious = useCallback(() => {
@@ -362,6 +379,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     currentTrackIdRef.current = null
     currentTrackRef.current = null
     queueRef.current = null
+    radioResumeRef.current = null
     setQueue([])
     setState((prev) => ({
       ...prev,
@@ -478,7 +496,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }))
     const onEnded = () => {
       setState((prev) => ({ ...prev, playing: false, currentTime: 0 }))
-      playNext()
+      const advanced = playNext()
+      if (!advanced && radioResumeRef.current) {
+        const resumeTrack = radioResumeRef.current
+        radioResumeRef.current = null
+        load(resumeTrack, { autoplay: true })
+      }
     }
 
     audio.addEventListener('waiting', onWaiting)

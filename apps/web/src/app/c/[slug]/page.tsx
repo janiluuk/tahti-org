@@ -593,7 +593,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={item.bannerUrl} alt="" className="ch-archive-item-thumb" />
                           ) : (
-                            <AvatarTile size="sm" name={item.title} />
+                            <AvatarTile size="xs" name={item.title} />
                           )}
                           <div className="ch-archive-item-meta">
                             <div className="ch-archive-item-title">{item.title}</div>
