@@ -1,0 +1,123 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Tahti ry <https://tahti.live>
+
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { Panel, Button } from '@tahti/ui'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ''
+const CHECK_DEBOUNCE_MS = 400
+
+type Availability = { available: boolean; reason?: 'taken' | 'reserved' } | null
+
+export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
+  const [slug, setSlug] = useState(initialSlug)
+  const [input, setInput] = useState(initialSlug)
+  const [checking, setChecking] = useState(false)
+  const [availability, setAvailability] = useState<Availability>(null)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [newRtmpKey, setNewRtmpKey] = useState<string | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+
+  useEffect(() => {
+    const trimmed = input.trim().toLowerCase()
+    setAvailability(null)
+    if (trimmed === slug || trimmed.length < 2) return
+    if (!/^[a-z0-9-]+$/.test(trimmed)) return
+
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setChecking(true)
+      fetch(`${API_BASE}/api/me/channel/slug-available?slug=${encodeURIComponent(trimmed)}`, {
+        credentials: 'include',
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data: Availability) => setAvailability(data))
+        .catch(() => setAvailability(null))
+        .finally(() => setChecking(false))
+    }, CHECK_DEBOUNCE_MS)
+    return () => clearTimeout(debounceRef.current)
+  }, [input, slug])
+
+  async function save() {
+    const trimmed = input.trim().toLowerCase()
+    if (trimmed === slug || !availability?.available) return
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch(`${API_BASE}/api/me/channel/slug`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: trimmed }),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        slug?: string
+        rtmpStreamKey?: string
+        error?: string
+      }
+      if (!res.ok || !data.slug) {
+        setError(data.error ?? 'Could not change your channel address')
+        return
+      }
+      setSlug(data.slug)
+      setInput(data.slug)
+      setAvailability(null)
+      if (data.rtmpStreamKey) setNewRtmpKey(data.rtmpStreamKey)
+    } catch {
+      setError('Network error — please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const trimmed = input.trim().toLowerCase()
+  const changed = trimmed !== slug && trimmed.length >= 2
+  const canSave = changed && availability?.available === true && !saving
+
+  return (
+    <Panel title="Channel address" headerTight>
+      <p className="studio-text-muted-sm studio-mt-xs studio-mb-sm">
+        Your public address, as long as it&apos;s free. Changing it issues a new RTMP stream key —
+        your broadcast software will need updating afterward.
+      </p>
+      <div className="studio-inline-form">
+        <span className="studio-text-muted-sm">https://</span>
+        <input
+          type="text"
+          className="studio-input studio-input-sm"
+          value={input}
+          onChange={(e) => setInput(e.target.value.toLowerCase())}
+          maxLength={48}
+          aria-label="Channel address"
+        />
+        <span className="studio-text-muted-sm">.tahti.live</span>
+        <Button onClick={() => void save()} disabled={!canSave} variant="secondary" size="sm">
+          {saving ? 'Saving…' : 'Save'}
+        </Button>
+      </div>
+      {changed && (
+        <p className="studio-text-sm studio-mt-xs">
+          {checking
+            ? 'Checking availability…'
+            : availability?.available === true
+              ? '✓ Available'
+              : availability?.reason === 'reserved'
+                ? '✗ That address is reserved'
+                : availability?.reason === 'taken'
+                  ? '✗ That address is already taken'
+                  : null}
+        </p>
+      )}
+      {error && <p className="studio-notice studio-notice--error studio-mt-xs">{error}</p>}
+      {newRtmpKey && (
+        <p className="studio-notice studio-notice--success studio-mt-xs">
+          Address changed. Your new RTMP stream key is <code>{newRtmpKey}</code> — update your
+          broadcast software before you next go live.
+        </p>
+      )}
+    </Panel>
+  )
+}

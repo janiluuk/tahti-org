@@ -40,6 +40,7 @@ import tlsAskRoute from './routes/internal/tls-ask.js'
 import broadcastFingerprintInternalRoutes from './routes/internal/broadcast-fingerprint.js'
 import internalRadioRoutes from './routes/internal/radio.js'
 import streamSettingsRoutes from './routes/me/stream-settings.js'
+import channelSlugRoutes from './routes/me/channel-slug.js'
 import chatTokenRoute from './routes/chat/token.js'
 import chatViewerTokenRoute from './routes/chat/viewer-token.js'
 import chatFanTokenRoute from './routes/chat/fan-token.js'
@@ -470,6 +471,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(broadcastFingerprintInternalRoutes)
   await fastify.register(internalRadioRoutes)
   await fastify.register(streamSettingsRoutes)
+  await fastify.register(channelSlugRoutes)
 
   // M5: chat
   await fastify.register(chatTokenRoute)
