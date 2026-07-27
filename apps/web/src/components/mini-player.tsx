@@ -262,11 +262,7 @@ function FullPlayerSheet({
               <span>{formatTime(duration)}</span>
             </div>
           </>
-        ) : (
-          <div className="full-player__times full-player__times--live">
-            <span>{track.isReplay ? 'REPLAY' : 'LIVE'}</span>
-          </div>
-        )}
+        ) : null}
       </div>
 
       <div className="full-player__transport">
