@@ -59,12 +59,21 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
   const item = await prisma.archiveItem.findFirst({
     where: { OR: [{ mp3Key: key }, { flacKey: key }] },
     select: {
+      id: true,
       title: true,
       bannerUrl: true,
       channel: { select: { user: { select: { displayName: true, username: true } } } },
     },
   })
   if (!item) return
+
+  const current = await prisma.channel.findUnique({
+    where: { id: channelId },
+    select: { nowPlayingTitle: true, nowPlayingArtistUsername: true },
+  })
+  const trackChanged =
+    current?.nowPlayingTitle !== item.title ||
+    current?.nowPlayingArtistUsername !== item.channel.user.username
 
   await prisma.channel.update({
     where: { id: channelId },
@@ -76,6 +85,21 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
       nowPlayingUpdatedAt: new Date(),
     },
   })
+
+  // "Recently played" history — one row per actual track change, not one per
+  // 20s poll of the same still-playing track.
+  if (trackChanged) {
+    await prisma.radioPlayLog.create({
+      data: {
+        channelId,
+        archiveItemId: item.id,
+        title: item.title,
+        artistName: item.channel.user.displayName,
+        artistUsername: item.channel.user.username,
+        artworkUrl: item.bannerUrl,
+      },
+    })
+  }
 }
 
 /** STREAM-012: periodically resolves each running channel's current rotation

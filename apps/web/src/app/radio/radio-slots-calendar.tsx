@@ -94,12 +94,12 @@ export function RadioSlotsCalendar({
             →
           </button>
         </div>
-        <a
+        <Link
           href={isLoggedIn ? BOOK_SLOT_PATH : `/login?next=${encodeURIComponent(BOOK_SLOT_PATH)}`}
           className="ch-radio-slots__book-link"
         >
           {isLoggedIn ? 'Book a slot →' : 'Sign in to book a slot →'}
-        </a>
+        </Link>
       </div>
 
       <p className="ch-radio-slots__scroll-hint">Swipe sideways to see all 7 days →</p>

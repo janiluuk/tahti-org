@@ -8,6 +8,8 @@ import HlsPlayer from '../c/[slug]/hls-player'
 import ReactionsOverlay from '../c/[slug]/reactions'
 import { RadioInfoOverlay } from './radio-info-overlay'
 import type { PublicRadioSlot } from './actions'
+import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
+import { usePlayer } from '@/contexts/player-context'
 
 interface RadioRotationItem {
   id: string
@@ -80,6 +82,7 @@ export function RadioPlayerSection({
   nowPlaying,
   isLoggedIn,
 }: RadioPlayerSectionProps) {
+  const { analyser } = usePlayer()
   const liveElapsedSec = useLiveElapsedSec(liveSlot?.startAt ?? null)
 
   const title = liveSlot ? liveSlot.artist.displayName : (nowPlaying?.title ?? 'Tahti Radio')
@@ -92,6 +95,7 @@ export function RadioPlayerSection({
 
   return (
     <div id="live-player" className="ch-player-wrap">
+      <ChannelVisualizer preset="AURORA" analyser={analyser} className="ch-radio-player-viz" />
       <div className="ch-player-inner">
         <HlsPlayer
           url={playback.audioUrl}

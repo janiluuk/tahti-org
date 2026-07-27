@@ -10,6 +10,8 @@ import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import ChatPanel from '../c/[slug]/chat-panel'
 import { RadioPlayerSection } from './radio-player-section'
 import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
+import { UpcomingShows } from './upcoming-shows'
+import { RecentlyPlayed, type RecentlyPlayedItem } from './recently-played'
 
 const NEXT_LIVE_ANNOUNCE_WINDOW_MS = 2 * 60 * 60 * 1000
 
@@ -85,6 +87,17 @@ async function fetchUpcomingSlots(): Promise<PublicRadioSlot[]> {
   return slots
 }
 
+async function fetchRecentlyPlayed(): Promise<RecentlyPlayedItem[]> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/radio/recently-played`, { next: { revalidate: 30 } })
+    if (!res.ok) return []
+    return (await res.json()) as RecentlyPlayedItem[]
+  } catch {
+    return []
+  }
+}
+
 interface RadioChannelPayload {
   hlsUrl: string | null
   nowPlaying: {
@@ -114,12 +127,13 @@ async function fetchRadioChannel(): Promise<RadioChannelPayload> {
 }
 
 export default async function RadioPage() {
-  const [announcements, memberRelay, rotation, upcomingSlots, radioChannel, user] =
+  const [announcements, memberRelay, rotation, upcomingSlots, recentlyPlayed, radioChannel, user] =
     await Promise.all([
       fetchAnnouncements(),
       fetchMemberRelay(),
       fetchRotation(),
       fetchUpcomingSlots(),
+      fetchRecentlyPlayed(),
       fetchRadioChannel(),
       getSessionUser(),
     ])
@@ -214,6 +228,9 @@ export default async function RadioPage() {
                 }
               />
             )}
+
+            <UpcomingShows slots={upcomingSlots} />
+            <RecentlyPlayed items={recentlyPlayed} />
           </div>
         </div>
       }

@@ -959,6 +959,7 @@ model Channel {
   moderators        ChannelModerator[]
   rtmpTargets       RtmpTarget[]
   radioFeatureLogs  RadioFeatureLog[]
+  radioPlayLogs     RadioPlayLog[]
   curatedRotationItems CuratedRotationItem[]
   comments          Comment[]
   pressKitImages    PressKitImage[]
@@ -1028,6 +1029,27 @@ model RadioFeatureLog {
   featuredAt DateTime @default(now())
 
   @@index([featuredAt(sort: Desc)])
+  @@schema("channel")
+}
+
+// STREAM-012 follow-up: "recently played" history — one row per distinct
+// rotation-track change on a channel (not one row per now-playing-sync poll;
+// the orchestrator only inserts when the resolved track actually differs from
+// the last logged one). Denormalized title/artist/artwork so history still
+// displays correctly even if the source ArchiveItem is later deleted.
+model RadioPlayLog {
+  id             String       @id @default(cuid())
+  channelId      String
+  channel        Channel      @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  archiveItemId  String?
+  archiveItem    ArchiveItem? @relation(fields: [archiveItemId], references: [id], onDelete: SetNull)
+  title          String
+  artistName     String
+  artistUsername String
+  artworkUrl     String?
+  playedAt       DateTime     @default(now())
+
+  @@index([channelId, playedAt(sort: Desc)])
   @@schema("channel")
 }
 
@@ -1156,6 +1178,7 @@ model ArchiveItem {
   curatedRotationItems CuratedRotationItem[]
   comments        Comment[]
   likes           ArchiveItemLike[]
+  radioPlayLogs   RadioPlayLog[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])

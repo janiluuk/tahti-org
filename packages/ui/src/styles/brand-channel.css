@@ -1189,6 +1189,110 @@
   color: var(--cyan);
 }
 
+[data-tahti-ui='brand'] .ch-radio-upcoming,
+[data-tahti-ui='brand'] .ch-radio-recent {
+  margin-top: 1.25rem;
+  padding: 0.9rem 1rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__title,
+[data-tahti-ui='brand'] .ch-radio-recent__title {
+  margin: 0 0 0.6rem;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--muted2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__list,
+[data-tahti-ui='brand'] .ch-radio-recent__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__item,
+[data-tahti-ui='brand'] .ch-radio-recent__item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.35rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__item:last-child,
+[data-tahti-ui='brand'] .ch-radio-recent__item:last-child {
+  border-bottom: none;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__avatar {
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__body,
+[data-tahti-ui='brand'] .ch-radio-recent__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__artist,
+[data-tahti-ui='brand'] .ch-radio-recent__artist {
+  color: var(--cyan);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__artist:hover,
+[data-tahti-ui='brand'] .ch-radio-recent__artist:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__note {
+  color: var(--muted2);
+  font-size: var(--text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__time,
+[data-tahti-ui='brand'] .ch-radio-recent__time {
+  flex-shrink: 0;
+  color: var(--muted2);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent__art {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='brand'] .ch-radio-recent__song {
+  color: var(--text);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 [data-tahti-ui='brand'] .ch-artist-cta-row {
   display: flex;
   align-items: center;
@@ -1391,6 +1495,8 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
 
 [data-tahti-ui='brand'] .ch-radio-info-toggle:hover {
@@ -1810,6 +1916,12 @@
 
 [data-tahti-ui='brand'] .ch-player-inner {
   padding: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+[data-tahti-ui='brand'] .ch-radio-player-viz {
+  opacity: 0.55;
 }
 
 [data-tahti-ui='brand'] .ch-player-inner--video {
