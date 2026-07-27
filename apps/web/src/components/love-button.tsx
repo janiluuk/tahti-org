@@ -4,7 +4,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -41,6 +41,7 @@ export function LoveButton({
   initialLikeCount?: number
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [liked, setLiked] = useState(initialLiked)
   const [likeCount, setLikeCount] = useState(initialLikeCount)
   const [pending, setPending] = useState(false)
@@ -72,7 +73,10 @@ export function LoveButton({
         { method: liked ? 'DELETE' : 'POST', credentials: 'include' },
       )
       if (res.status === 401) {
-        window.location.href = `/login?next=${encodeURIComponent(pathname || '/')}`
+        // Client-side nav, not a hard reload — a hard reload here tears down
+        // the shared PlayerProvider, stopping whatever's playing. Playback
+        // must never stop except when the listener stops it themselves.
+        router.push(`/login?next=${encodeURIComponent(pathname || '/')}`)
         return
       }
       if (!res.ok) return

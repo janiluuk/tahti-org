@@ -174,6 +174,19 @@ export const RadioRotationItemSchema = z.object({
 })
 export const RadioRotationSchema = z.array(RadioRotationItemSchema)
 
+/** Public "recently played" history — distinct from RadioRotationSchema (the
+ * curated rotation's set order) and RadioFeatureHistorySchema (which artists'
+ * live streams were relayed) — this is what actually played, most recent first. */
+export const RadioRecentlyPlayedItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  artistName: z.string(),
+  artistUsername: z.string(),
+  artworkUrl: z.string().nullable(),
+  playedAt: z.string(),
+})
+export const RadioRecentlyPlayedSchema = z.array(RadioRecentlyPlayedItemSchema)
+
 /** Public, read-only view of booked live-artist slots on Tahti Radio. */
 export const PublicRadioSlotSchema = z.object({
   id: z.string(),

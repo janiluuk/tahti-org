@@ -6,14 +6,17 @@ import {
   PublicRadioSlotListSchema,
   RadioFeatureHistorySchema,
   RadioNowPlayingSchema,
+  RadioRecentlyPlayedSchema,
   RadioRotationSchema,
   RadioSlotBookingListQuerySchema,
+  TAHTI_RADIO_SLUG,
   TAHTI_SELECTS_SLUG,
   openApiResponse,
 } from '@tahti/shared'
 import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
 
 const RADIO_URL = process.env.RADIO_SERVICE_URL ?? 'http://tahti-radio:3004'
+const RECENTLY_PLAYED_LIMIT = 10
 
 // M16 — public Tahti Radio now-playing endpoint
 const radioRoutes: FastifyPluginAsync = async (fastify) => {
@@ -50,6 +53,43 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
     async (_request, reply) => {
       const history = await getRadioFeatureHistory(fastify.prisma, 10)
       return reply.send(history)
+    },
+  )
+
+  // "Recently played" — actual track history (services/orchestrator/src/now-playing-sync.ts
+  // logs one row per real track change), not the curated rotation's set order
+  // (/rotation) or which artists' live streams got relayed (/history).
+  fastify.get(
+    '/api/v1/radio/recently-played',
+    {
+      schema: {
+        tags: ['radio'],
+        description: 'What actually played on Tahti Radio recently, most recent first',
+        response: openApiResponse(RadioRecentlyPlayedSchema, 'RadioRecentlyPlayed'),
+      },
+    },
+    async (_request, reply) => {
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { slug: TAHTI_RADIO_SLUG },
+        select: { id: true },
+      })
+      if (!channel) return reply.send([])
+
+      const rows = await fastify.prisma.radioPlayLog.findMany({
+        where: { channelId: channel.id },
+        orderBy: { playedAt: 'desc' },
+        take: RECENTLY_PLAYED_LIMIT,
+        select: {
+          id: true,
+          title: true,
+          artistName: true,
+          artistUsername: true,
+          artworkUrl: true,
+          playedAt: true,
+        },
+      })
+
+      return reply.send(rows.map((r) => ({ ...r, playedAt: r.playedAt.toISOString() })))
     },
   )
 
