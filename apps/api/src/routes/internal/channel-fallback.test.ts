@@ -156,4 +156,24 @@ describe('GET /internal/channels/:channelId/fallback.m3u — Tahti Radio relays 
     expect(res.statusCode).toBe(200)
     expect(res.body).toContain('Selects rotation track')
   })
+
+  it('still relays Tahti Selects even when Tahti Radio has fallbackEnabled off — the platform station must never go silent regardless of that per-artist toggle', async () => {
+    await prisma.channel.update({
+      where: { id: radioChannelId },
+      data: { fallbackEnabled: false },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/internal/channels/${radioChannelId}/fallback.m3u`,
+      headers: { authorization: `Bearer ${config.internalSecret}` },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('Selects rotation track')
+
+    await prisma.channel.update({
+      where: { id: radioChannelId },
+      data: { fallbackEnabled: true },
+    })
+  })
 })
