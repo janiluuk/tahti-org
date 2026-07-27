@@ -57,7 +57,14 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(429).send({ error: 'Too many requests' })
       }
 
-      const captchaOk = await verifyHcaptcha(hcaptchaToken)
+      // hCaptcha guards the anonymous join path from bot spam — a signed-in
+      // session is already a stronger anti-abuse signal than a captcha, and
+      // the chat UI never renders a captcha widget for this endpoint (only
+      // /signup does), so requiring one unconditionally left every signed-in
+      // member unable to join a channel's chat wherever HCAPTCHA_SECRET is a
+      // real, non-dev value — i.e. everywhere assertProductionSecrets()
+      // requires it to be, so this endpoint was broken for everyone.
+      const captchaOk = request.sessionUser?.id ? true : await verifyHcaptcha(hcaptchaToken)
       if (!captchaOk) {
         return reply.status(400).send({ error: 'hCaptcha verification failed' })
       }
