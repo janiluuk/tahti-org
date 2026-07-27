@@ -156,7 +156,7 @@ export default async function RadioPage() {
   return (
     <ChannelPageShell
       activeNav="radio"
-      showLiveBadge
+      showLiveBadge={!!liveSlot}
       user={user}
       main={
         <div className="ch-page-content">

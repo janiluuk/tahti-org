@@ -38,8 +38,18 @@ export default function HlsPlayer({
   /** Curated-rotation channels only: "<title> — <artist>" for the next track. */
   nextUpLabel?: string
 }) {
-  const { track, playing, buffering, error, currentTime, duration, load, togglePlay, seek } =
-    usePlayer()
+  const {
+    track,
+    playing,
+    buffering,
+    error,
+    currentTime,
+    duration,
+    streamQuality,
+    load,
+    togglePlay,
+    seek,
+  } = usePlayer()
 
   const isCurrent = track?.id === url
   const handleTogglePlay = async () => {
@@ -80,7 +90,13 @@ export default function HlsPlayer({
   // is a short, finite, seekable track" flipped the UI into archive-player mode
   // and made playback appear to end once currentTime caught up to that number.
   const isLive = true
-  const formatBadge = url.toLowerCase().includes('flac') ? 'FLAC' : 'HLS'
+  // Real quality once hls.js reports it (see player-context.tsx); every listener
+  // gets at least the 192kbps MP3 rendition, so that's the honest default before
+  // then — "HLS" is the streaming protocol, not a quality, and means nothing to
+  // a listener.
+  const isDirectFlacFile = url.toLowerCase().split(/[#?]/)[0]!.endsWith('.flac')
+  const formatBadge =
+    isCurrent && streamQuality ? streamQuality : isDirectFlacFile ? 'FLAC' : '192 kbps'
 
   return (
     <div className="ch-player-card">

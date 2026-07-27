@@ -93,6 +93,19 @@ export function WaveformPlayer({
 
   const progress = isLive || duration <= 0 ? 0 : Math.min(1, currentTime / duration)
 
+  // The status pill above already says REPLAY once when isReplay && !nextUpLabel —
+  // repeating the bare word here read as a glitch, so that specific case renders
+  // nothing instead. Every other case still shows real, non-redundant info.
+  const nextUpTimeLabel = isLive
+    ? liveElapsedSec != null
+      ? formatPlayerTime(liveElapsedSec)
+      : isReplay
+        ? nextUpLabel
+          ? `Next: ${nextUpLabel}`
+          : null
+        : 'LIVE'
+    : formatPlayerTime(currentTime)
+
   const handleSeek = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (isLive || !onSeek) return
@@ -195,17 +208,11 @@ export function WaveformPlayer({
         </button>
 
         <div className="waveform-player__progress-wrap">
-          <span className="waveform-player__time waveform-player__time--next-up">
-            {isLive
-              ? liveElapsedSec != null
-                ? formatPlayerTime(liveElapsedSec)
-                : isReplay
-                  ? nextUpLabel
-                    ? `Next: ${nextUpLabel}`
-                    : 'REPLAY'
-                  : 'LIVE'
-              : formatPlayerTime(currentTime)}
-          </span>
+          {nextUpTimeLabel && (
+            <span className="waveform-player__time waveform-player__time--next-up">
+              {nextUpTimeLabel}
+            </span>
+          )}
           {!isLive && (
             <>
               <div
