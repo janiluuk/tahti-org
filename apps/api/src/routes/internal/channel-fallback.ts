@@ -56,6 +56,39 @@ async function curatedRows(
   return rows
 }
 
+// Manage panel playlist switch: a Collection's archive-item-backed entries, in
+// position order. Release-backed entries have no single playback file of their
+// own (a release is itself a multi-track grouping) so they're skipped here —
+// same limitation as any other single-file rotation source.
+async function collectionRows(
+  prisma: PrismaClient,
+  collectionId: string,
+): Promise<FallbackPlaybackRow[]> {
+  const items = await prisma.collectionItem.findMany({
+    where: { collectionId, archiveItemId: { not: null } },
+    orderBy: { position: 'asc' },
+    select: {
+      archiveItem: {
+        select: { id: true, title: true, mp3Key: true, flacKey: true, durationSec: true },
+      },
+    },
+  })
+
+  const rows: FallbackPlaybackRow[] = []
+  for (const { archiveItem } of items) {
+    if (!archiveItem) continue
+    const playbackKey = archivePlaybackKey(archiveItem)
+    if (!playbackKey) continue
+    rows.push({
+      id: archiveItem.id,
+      title: archiveItem.title,
+      playbackKey,
+      durationSec: archiveItem.durationSec,
+    })
+  }
+  return rows
+}
+
 async function toM3uEntries(rows: FallbackPlaybackRow[]): Promise<FallbackM3uEntry[]> {
   return Promise.all(
     rows.map(async (row) => ({
@@ -99,7 +132,12 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { id: channelId },
-        select: { slug: true, fallbackMode: true, fallbackEnabled: true },
+        select: {
+          slug: true,
+          fallbackMode: true,
+          fallbackEnabled: true,
+          activeFallbackCollectionId: true,
+        },
       })
       if (!channel) {
         return reply.status(404).send('channel not found')
@@ -125,6 +163,18 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       if (curated.length > 0) {
         const body = renderFallbackM3u(await toM3uEntries(curated))
         return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
+      }
+
+      // Manage panel playlist switch: repoints the rotation at a chosen Collection
+      // instead of the default isFallback set. An empty collection (or one with no
+      // playable archive-item entries) falls through to the default rotation below
+      // rather than going silent.
+      if (channel.activeFallbackCollectionId) {
+        const chosen = await collectionRows(fastify.prisma, channel.activeFallbackCollectionId)
+        if (chosen.length > 0) {
+          const body = renderFallbackM3u(await toM3uEntries(chosen))
+          return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
+        }
       }
 
       const items = channel.fallbackEnabled

@@ -912,6 +912,12 @@ model Channel {
   // M35: whether a finished broadcast is auto-recorded to the archive. Defaults
   // to true (today's unconditional behavior) — artists opt out per-channel.
   autoRecordEnabled  Boolean      @default(true)
+  // Manage panel playlist switch: when set, the fallback rotation plays this
+  // Collection's tracks (in position order) instead of the regular
+  // isFallback-flagged ArchiveItem set. Null = default rotation. SetNull so
+  // deleting the collection just reverts to the default rather than erroring.
+  activeFallbackCollectionId String?
+  activeFallbackCollection   Collection? @relation("ChannelActiveFallbackCollection", fields: [activeFallbackCollectionId], references: [id], onDelete: SetNull)
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
   // Manage panel stats: highest concurrent-listener count ever observed, and a
@@ -2040,6 +2046,7 @@ model Collection {
   visualPreset    VisualPreset @default(MINIMAL)
 
   items CollectionItem[]
+  channelsUsingAsFallback Channel[] @relation("ChannelActiveFallbackCollection")
 
   @@index([userId, isPublic])
   @@index([userId, publicProfileOrder])

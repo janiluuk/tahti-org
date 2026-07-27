@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 export interface ManageStats {
   audioBitrateKbps: number | null
@@ -69,9 +69,139 @@ const TRANSPORT_BUTTONS: Array<{ action: TransportAction; label: string; icon: J
   },
 ]
 
+interface FallbackCollectionOption {
+  id: string
+  name: string
+  trackCount: number
+  active: boolean
+}
+
+/** Searchable dropdown for repointing the channel's 24/7 fallback rotation at
+ * a chosen Collection (or back to the default isFallback set). Collections
+ * only load once the dropdown is opened — most Manage tab visits won't touch
+ * this, so there's no reason to fetch it on every panel mount. */
+function PlaylistSwitchDropdown({ slug }: { slug: string }) {
+  const [open, setOpen] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+  const [options, setOptions] = useState<FallbackCollectionOption[]>([])
+  const [query, setQuery] = useState('')
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [open])
+
+  const loadOptions = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/channels/${slug}/fallback-collections`, {
+        credentials: 'include',
+      })
+      if (res.ok) setOptions((await res.json()) as FallbackCollectionOption[])
+      setLoaded(true)
+    } catch {
+      setError('Could not load playlists')
+      setLoaded(true)
+    }
+  }
+
+  const activeOption = options.find((o) => o.active)
+  const filtered = useMemo(
+    () => options.filter((o) => o.name.toLowerCase().includes(query.trim().toLowerCase())),
+    [options, query],
+  )
+
+  const choose = async (collectionId: string | null) => {
+    setPending(true)
+    setError(null)
+    try {
+      const res = await fetch(`${API_URL}/api/channels/${slug}/fallback-collection`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collectionId }),
+      })
+      if (res.ok) {
+        setOptions((prev) => prev.map((o) => ({ ...o, active: o.id === collectionId })))
+        setOpen(false)
+        setQuery('')
+      } else {
+        setError('Could not switch playlist — try again')
+      }
+    } catch {
+      setError('Could not switch playlist — try again')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <div className="ch-manage-playlist-switch" ref={containerRef}>
+      <label className="ch-manage-stats__label" htmlFor="ch-manage-playlist-switch-input">
+        Playlist source
+      </label>
+      <div className="ch-manage-playlist-switch__combo">
+        <input
+          id="ch-manage-playlist-switch-input"
+          type="text"
+          className="ch-manage-playlist-switch__input"
+          placeholder={activeOption ? activeOption.name : 'Default rotation'}
+          value={query}
+          disabled={pending}
+          onFocus={() => {
+            setOpen(true)
+            if (!loaded) void loadOptions()
+          }}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setOpen(true)
+          }}
+        />
+        {open && (
+          <ul className="ch-manage-playlist-switch__list" role="listbox">
+            <li>
+              <button
+                type="button"
+                className="ch-manage-playlist-switch__option"
+                disabled={pending}
+                onClick={() => void choose(null)}
+              >
+                Default rotation{!activeOption ? ' (current)' : ''}
+              </button>
+            </li>
+            {loaded && filtered.length === 0 && (
+              <li className="ch-manage-playlist-switch__empty">No playlists match</li>
+            )}
+            {filtered.map((o) => (
+              <li key={o.id}>
+                <button
+                  type="button"
+                  className="ch-manage-playlist-switch__option"
+                  disabled={pending}
+                  onClick={() => void choose(o.id)}
+                >
+                  {o.name} ({o.trackCount} track{o.trackCount === 1 ? '' : 's'})
+                  {o.active ? ' (current)' : ''}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      {error && <p className="ch-manage-transport__error">{error}</p>}
+    </div>
+  )
+}
+
 /** Owner/board-only tab on the channel page — live stats snapshot, refreshed
- * periodically while the tab is open, plus transport controls for the archive
- * rotation. Playlist switching, multistream status, and editable external
+ * periodically while the tab is open, plus transport controls and a playlist
+ * switch for the archive rotation. Multistream status and editable external
  * metadata land in follow-up passes. */
 export function ManagePanel({ slug, initialStats }: { slug: string; initialStats: ManageStats }) {
   const [stats, setStats] = useState(initialStats)
@@ -157,6 +287,7 @@ export function ManagePanel({ slug, initialStats }: { slug: string; initialStats
         ))}
       </div>
       {transportError && <p className="ch-manage-transport__error">{transportError}</p>}
+      <PlaylistSwitchDropdown slug={slug} />
     </section>
   )
 }
