@@ -20,11 +20,24 @@ interface HlsErrorData {
   details: string
 }
 
+interface HlsLevel {
+  bitrate: number
+}
+
+interface HlsLevelSwitchedData {
+  level: number
+}
+
 interface HlsInstance {
   loadSource(url: string): void
   attachMedia(el: HTMLAudioElement): void
   destroy(): void
+  levels: HlsLevel[]
   on(event: 'hlsError', callback: (event: 'hlsError', data: HlsErrorData) => void): void
+  on(
+    event: 'hlsLevelSwitched',
+    callback: (event: 'hlsLevelSwitched', data: HlsLevelSwitchedData) => void,
+  ): void
 }
 
 interface HlsConfig {
@@ -34,7 +47,14 @@ interface HlsConfig {
 interface HlsConstructor {
   new (config?: HlsConfig): HlsInstance
   isSupported(): boolean
-  Events: { ERROR: 'hlsError' }
+  Events: { ERROR: 'hlsError'; LEVEL_SWITCHED: 'hlsLevelSwitched' }
+}
+
+/** The dual-bitrate HLS output (infra/liquidsoap-channel.liq.template) only ever
+ * offers two renditions — 192kbps MP3 or lossless FLAC — so a bitrate well above
+ * the MP3 rendition reliably means the FLAC one is playing. */
+function qualityLabelForBitrate(bitrateBps: number): string {
+  return bitrateBps >= 400_000 ? 'FLAC' : `${Math.round(bitrateBps / 1000)} kbps`
 }
 
 declare global {
@@ -69,6 +89,9 @@ interface PlayerState {
   duration: number
   volume: number
   muted: boolean
+  /** Real quality of the currently-playing HLS rendition (e.g. "FLAC", "192 kbps"),
+   * reported by hls.js once it picks a level — null until then or for non-HLS tracks. */
+  streamQuality: string | null
 }
 
 const VOLUME_STORAGE_KEY = 'tahti-player-volume'
@@ -152,6 +175,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     duration: 0,
     volume: 1,
     muted: false,
+    streamQuality: null,
   })
 
   // Read persisted volume/mute after mount (SSR-safe: window isn't available server-side).
@@ -250,6 +274,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         error: false,
         currentTime: 0,
         duration: 0,
+        streamQuality: null,
       }))
 
       teardownHls()
@@ -291,6 +316,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
             hls.on(Hls.Events.ERROR, (_event, data) => {
               console.error('[player] hls.js error', data.type, data.details, data)
               if (data.fatal) setState((prev) => ({ ...prev, error: true, buffering: false }))
+            })
+            hls.on(Hls.Events.LEVEL_SWITCHED, (_event, data) => {
+              const bitrate = hls.levels[data.level]?.bitrate
+              if (bitrate == null) return
+              setState((prev) => ({ ...prev, streamQuality: qualityLabelForBitrate(bitrate) }))
             })
             hls.loadSource(track.url)
             hls.attachMedia(audio)
@@ -389,6 +419,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       error: false,
       currentTime: 0,
       duration: 0,
+      streamQuality: null,
     }))
   }, [teardownHls])
 

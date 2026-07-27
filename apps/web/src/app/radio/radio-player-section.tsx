@@ -95,7 +95,11 @@ export function RadioPlayerSection({
 
   return (
     <div id="live-player" className="ch-player-wrap">
-      <ChannelVisualizer preset="AURORA" analyser={analyser} className="ch-radio-player-viz" />
+      <ChannelVisualizer
+        preset="REACTIVE_GRID"
+        analyser={analyser}
+        className="ch-radio-player-viz"
+      />
       <div className="ch-player-inner">
         <HlsPlayer
           url={playback.audioUrl}
