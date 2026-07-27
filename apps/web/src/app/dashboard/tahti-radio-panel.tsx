@@ -37,8 +37,12 @@ export function TahtiRadioPanel() {
         body: JSON.stringify({ optOut: newVal }),
       })
       if (!res.ok) {
-        const err = (await res.json().catch(() => ({}))) as { error?: string }
-        setMsg(err.error ?? 'Save failed')
+        if (res.status === 401) {
+          setMsg('Your session has expired — reload the page and sign in again.')
+        } else {
+          const err = (await res.json().catch(() => ({}))) as { error?: string }
+          setMsg(err.error ?? 'Save failed')
+        }
         setOptOut(!newVal)
       } else {
         setMsg(newVal ? 'Opted out of Tahti Radio.' : 'Your channel is included in Tahti Radio.')
@@ -84,12 +88,14 @@ export function TahtiRadioPanel() {
           disabled={saving}
         />
         <span className="studio-toggle-label">
-          {optOut ? 'Opted out — not included in Tahti Radio' : 'Included in Tahti Radio'}
+          {optOut
+            ? 'Opted out — not included in Tahti Radio'
+            : 'Include my production in Tahti Radio'}
         </span>
       </label>
       {msg && (
         <p
-          className={`studio-text-sm studio-mt-xs ${msg.includes('failed') || msg.includes('error') ? 'studio-text-error' : 'studio-text-success'}`}
+          className={`studio-text-sm studio-mt-xs ${msg.includes('failed') || msg.includes('error') || msg.includes('expired') ? 'studio-text-error' : 'studio-text-success'}`}
         >
           {msg}
         </p>
