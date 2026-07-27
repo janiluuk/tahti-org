@@ -21,6 +21,7 @@ interface Settings {
 
 export function MentionsPanel() {
   const [settings, setSettings] = useState<Settings | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [muteInput, setMuteInput] = useState('')
   const [muteError, setMuteError] = useState<string | null>(null)
   const [muteMessage, setMuteMessage] = useState<string | null>(null)
@@ -28,14 +29,24 @@ export function MentionsPanel() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  useEffect(() => {
+  function loadSettings() {
+    setLoadError(null)
     fetch(`${API_BASE}/api/me/mentions/settings`, { credentials: 'include' })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: Settings | null) => {
-        if (data) setSettings(data)
+      .then((r) => {
+        if (r.ok) return r.json()
+        throw new Error(r.status === 401 ? 'session-expired' : `status ${r.status}`)
       })
-      .catch(() => {})
-  }, [])
+      .then((data: Settings) => setSettings(data))
+      .catch((err) =>
+        setLoadError(
+          err instanceof Error && err.message === 'session-expired'
+            ? 'Your session has expired — reload the page and sign in again.'
+            : 'Could not load mention settings.',
+        ),
+      )
+  }
+
+  useEffect(loadSettings, [])
 
   async function patchSettings(
     patch: Partial<Pick<Settings, 'mentionsEnabled' | 'publicMentionsEnabled'>>,
@@ -124,7 +135,16 @@ export function MentionsPanel() {
         headerTight
         description="Control who can @mention you and manage your mute list."
       >
-        <p className="studio-text-muted-sm">Loading…</p>
+        {loadError ? (
+          <>
+            <p className="studio-notice studio-notice--error">{loadError}</p>
+            <Button onClick={loadSettings} variant="ghost" size="sm">
+              Retry
+            </Button>
+          </>
+        ) : (
+          <p className="studio-text-muted-sm">Loading…</p>
+        )}
       </Panel>
     )
   }
