@@ -206,6 +206,11 @@ export const ChannelManageStatsSchema = z.object({
   liveDurationSec: z.number().int().nullable(),
 })
 
+/** Channel page "Manage" tab — transport control acknowledgement (skip/previous/pause/resume). */
+export const ChannelTransportOkResponseSchema = z.object({
+  ok: z.literal(true),
+})
+
 /** Public, read-only view of booked live-artist slots on Tahti Radio. */
 export const PublicRadioSlotSchema = z.object({
   id: z.string(),

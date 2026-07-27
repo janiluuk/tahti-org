@@ -10,10 +10,18 @@ import {
   stopLiquidsoapContainer,
   spawnLiquidsoapContainer,
   getActiveChannels,
+  getContainerNameForChannel,
 } from './liquidsoap.js'
 import { getActiveRecorders } from './recorder.js'
 import { getActiveEdgeEncoders } from './edge-encoder.js'
 import { startNowPlayingSync } from './now-playing-sync.js'
+import {
+  LIQUIDSOAP_SKIP_COMMAND,
+  LIQUIDSOAP_PAUSE_COMMAND,
+  LIQUIDSOAP_RESUME_COMMAND,
+  liquidsoapJumpQueuePushCommand,
+  sendLiquidsoapTelnetCommand,
+} from './liquidsoap-shutdown.js'
 
 const PORT = parseInt(process.env.PORT ?? '3003', 10)
 const INTERNAL_SECRET = process.env.INTERNAL_SECRET ?? 'dev-internal-secret-change-in-prod'
@@ -96,6 +104,65 @@ fastify.post('/restart', async (request, reply) => {
     'liquidsoap restarted (edge encoder + recorder sidecars kept running)',
   )
   return reply.send({ ok: true, restarted: true })
+})
+
+// Manage panel transport controls — all no-op with a 404 when the channel
+// has no running Liquidsoap process (offline channels have nothing to control).
+async function withChannelContainer(
+  channelId: string,
+  reply: { status: (code: number) => { send: (body: unknown) => unknown } },
+  fn: (containerName: string) => Promise<void>,
+): Promise<unknown> {
+  const containerName = getContainerNameForChannel(channelId)
+  if (!containerName) {
+    return reply.status(404).send({ error: 'Channel is not currently running' })
+  }
+  await fn(containerName)
+  return undefined
+}
+
+fastify.post('/skip', async (request, reply) => {
+  const { channelId } = request.body as { channelId: string }
+  if (!channelId) return reply.status(400).send({ error: 'channelId required' })
+
+  const early = await withChannelContainer(channelId, reply, async (containerName) => {
+    await sendLiquidsoapTelnetCommand(containerName, LIQUIDSOAP_SKIP_COMMAND)
+  })
+  if (early !== undefined) return early
+  return reply.send({ ok: true })
+})
+
+fastify.post('/previous', async (request, reply) => {
+  const { channelId, url } = request.body as { channelId: string; url: string }
+  if (!channelId || !url) return reply.status(400).send({ error: 'channelId and url required' })
+
+  const early = await withChannelContainer(channelId, reply, async (containerName) => {
+    await sendLiquidsoapTelnetCommand(containerName, liquidsoapJumpQueuePushCommand(url))
+  })
+  if (early !== undefined) return early
+  return reply.send({ ok: true })
+})
+
+fastify.post('/pause', async (request, reply) => {
+  const { channelId } = request.body as { channelId: string }
+  if (!channelId) return reply.status(400).send({ error: 'channelId required' })
+
+  const early = await withChannelContainer(channelId, reply, async (containerName) => {
+    await sendLiquidsoapTelnetCommand(containerName, LIQUIDSOAP_PAUSE_COMMAND)
+  })
+  if (early !== undefined) return early
+  return reply.send({ ok: true })
+})
+
+fastify.post('/resume', async (request, reply) => {
+  const { channelId } = request.body as { channelId: string }
+  if (!channelId) return reply.status(400).send({ error: 'channelId required' })
+
+  const early = await withChannelContainer(channelId, reply, async (containerName) => {
+    await sendLiquidsoapTelnetCommand(containerName, LIQUIDSOAP_RESUME_COMMAND)
+  })
+  if (early !== undefined) return early
+  return reply.send({ ok: true })
 })
 
 startNowPlayingSync()

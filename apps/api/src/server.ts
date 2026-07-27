@@ -30,6 +30,7 @@ import channelDirectoryRoute from './routes/channels/directory.js'
 import tahtiSelectsGalleryRoute from './routes/channels/tahti-selects-gallery.js'
 import channelStatsRoute from './routes/channels/stats.js'
 import channelManageStatsRoute from './routes/channels/manage-stats.js'
+import channelTransportRoutes from './routes/channels/transport.js'
 import customDomainRoutes from './routes/channels/custom-domain.js'
 import liveFingerprintsRoute from './routes/channels/live-fingerprints.js'
 import itemReadyRoute from './routes/internal/item-ready.js'
@@ -459,6 +460,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(tahtiSelectsGalleryRoute)
   await fastify.register(channelStatsRoute)
   await fastify.register(channelManageStatsRoute)
+  await fastify.register(channelTransportRoutes)
   await fastify.register(customDomainRoutes)
   await fastify.register(channelItemsRoute)
   await fastify.register(liveFingerprintsRoute)

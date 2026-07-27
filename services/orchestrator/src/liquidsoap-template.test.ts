@@ -21,7 +21,7 @@ describe('liquidsoap channel template', () => {
 
   it('buffers archive fallback before live-or-archive switch (ARTIST-003)', async () => {
     const template = await readFile(templatePath, 'utf8')
-    expect(template).toContain('delay(3., archive)')
+    expect(template).toContain('delay(3., rotation)')
   })
 
   it('registers telnet graceful shutdown fade (STREAM-010)', async () => {
@@ -30,5 +30,18 @@ describe('liquidsoap channel template', () => {
     expect(template).toContain('radio_out')
     expect(template).toContain('settings.server.telnet.set(true)')
     expect(template).toContain('fade.out')
+  })
+
+  it('exposes Manage panel transport controls (skip/previous/pause/resume)', async () => {
+    const template = await readFile(templatePath, 'utf8')
+    // archive.skip is auto-registered by playlist(id="archive"); jump_queue.push
+    // by request.queue(id="jump_queue") — neither needs its own server.register.
+    expect(template).toContain('playlist(')
+    expect(template).toContain('id="archive"')
+    expect(template).toContain('request.queue(id="jump_queue")')
+    expect(template).toContain('server.register(\n  "pause"')
+    expect(template).toContain('server.register(\n  "resume"')
+    // Pausing must never block a real live broadcast.
+    expect(template).toContain('paused() and not source.is_ready(live_source)')
   })
 })

@@ -44,6 +44,42 @@ export async function restartChannelLiquidsoap(
   }
 }
 
+/** Manage panel transport controls — thin POST wrappers around the
+ * orchestrator's telnet-backed endpoints. Throws on a non-2xx response
+ * (including 404 when the channel isn't currently running) so the route
+ * handler can translate it into the right HTTP status for the caller. */
+async function postOrchestratorTransport(path: string, body: Record<string, unknown>) {
+  const res = await fetch(`${config.orchestratorUrl}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${config.internalSecret}`,
+    },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const err = new Error(`Orchestrator ${path} returned ${res.status}`)
+    ;(err as Error & { status?: number }).status = res.status
+    throw err
+  }
+}
+
+export async function skipChannelTrack(channelId: string): Promise<void> {
+  await postOrchestratorTransport('/skip', { channelId })
+}
+
+export async function playPreviousChannelTrack(channelId: string, url: string): Promise<void> {
+  await postOrchestratorTransport('/previous', { channelId, url })
+}
+
+export async function pauseChannelRotation(channelId: string): Promise<void> {
+  await postOrchestratorTransport('/pause', { channelId })
+}
+
+export async function resumeChannelRotation(channelId: string): Promise<void> {
+  await postOrchestratorTransport('/resume', { channelId })
+}
+
 /** M20/M21: stop per-channel Liquidsoap (warn-only — channel may already be offline). */
 export async function stopOrchestratorChannel(channelId: string): Promise<void> {
   try {

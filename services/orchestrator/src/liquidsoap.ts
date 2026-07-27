@@ -103,6 +103,12 @@ export function getActiveChannelEntries(): [channelId: string, containerName: st
   return [...activeChannels.entries()]
 }
 
+/** Manage panel transport controls need the container for a single channel —
+ * undefined when that channel has no running Liquidsoap process right now. */
+export function getContainerNameForChannel(channelId: string): string | undefined {
+  return activeChannels.get(channelId)
+}
+
 export async function spawnLiquidsoapContainer(
   channelId: string,
   slug: string,
