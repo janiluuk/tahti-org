@@ -4,6 +4,7 @@
 import { redirect } from 'next/navigation'
 import { getDashboardUser } from '@/lib/dashboard-session'
 import { CustomDomainPanel } from '../../custom-domain-panel'
+import { ChannelSlugPanel } from '../../channel-slug-panel'
 
 export default async function DomainSettingsPage() {
   const user = await getDashboardUser()
@@ -19,6 +20,8 @@ export default async function DomainSettingsPage() {
           </p>
         </div>
       </div>
+
+      {user.channel && <ChannelSlugPanel initialSlug={user.channel.slug} />}
 
       <CustomDomainPanel
         initialDomain={user.channel?.customDomain ?? null}
