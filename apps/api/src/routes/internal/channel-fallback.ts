@@ -105,7 +105,15 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(404).send('channel not found')
       }
 
-      if (!channel.fallbackEnabled) {
+      // Tahti Radio is the platform's flagship always-on station, not a regular
+      // artist channel — it must never go silent, so its relay to Tahti Selects
+      // below is unconditional. fallbackEnabled is a per-artist "opt into 24/7
+      // rotation" toggle that has no equivalent meaning for Tahti Radio itself,
+      // so it must not be able to suppress that relay the way it's meant to
+      // suppress a regular channel's own fallback rotation.
+      const isTahtiRadio = channel.slug === TAHTI_RADIO_SLUG
+
+      if (!channel.fallbackEnabled && !isTahtiRadio) {
         const body = renderFallbackM3u([])
         return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
       }
@@ -119,24 +127,26 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
         return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
       }
 
-      const items = await fastify.prisma.archiveItem.findMany({
-        where: {
-          channelId,
-          status: 'READY',
-          OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
-        },
-        select: {
-          id: true,
-          title: true,
-          mp3Key: true,
-          flacKey: true,
-          durationSec: true,
-          isFallback: true,
-          fallbackOrder: true,
-          lastFallbackPlayedAt: true,
-          createdAt: true,
-        },
-      })
+      const items = channel.fallbackEnabled
+        ? await fastify.prisma.archiveItem.findMany({
+            where: {
+              channelId,
+              status: 'READY',
+              OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
+            },
+            select: {
+              id: true,
+              title: true,
+              mp3Key: true,
+              flacKey: true,
+              durationSec: true,
+              isFallback: true,
+              fallbackOrder: true,
+              lastFallbackPlayedAt: true,
+              createdAt: true,
+            },
+          })
+        : []
 
       let rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
 
@@ -144,7 +154,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       // it has no fallback tracks either, relay the Tahti Selects rotation live (read
       // fresh each request, not a static snapshot) instead of falling through to
       // Liquidsoap's blank() and going silent while still reporting as LIVE.
-      if (rows.length === 0 && channel.slug === TAHTI_RADIO_SLUG) {
+      if (rows.length === 0 && isTahtiRadio) {
         const selects = await fastify.prisma.channel.findUnique({
           where: { slug: TAHTI_SELECTS_SLUG },
           select: { id: true },
