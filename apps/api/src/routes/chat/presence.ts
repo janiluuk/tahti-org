@@ -28,14 +28,16 @@ const chatPresenceRoute: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
-        select: { id: true },
+        select: { id: true, listenerPeak: true },
       })
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       // Every listener's browser tab polls this every 30s (sticky-live-bar.tsx) — a
       // short cache collapses concurrent pollers on a popular channel into one
-      // upstream Centrifugo call instead of one per client.
+      // upstream Centrifugo call instead of one per client. The cache callback
+      // only runs on a miss (at most once per 5s per slug), so bumping the
+      // Manage panel's all-time listener-peak counter here stays cheap.
       const result = await getCachedJson(`presence:${slug}`, 5, async () => {
         try {
           const res = await fetch(`${config.centrifugo.apiUrl}`, {
@@ -54,7 +56,14 @@ const chatPresenceRoute: FastifyPluginAsync = async (fastify) => {
           if (!res.ok) return { numClients: 0 }
 
           const data = (await res.json()) as { result?: { num_clients?: number } }
-          return { numClients: data.result?.num_clients ?? 0 }
+          const numClients = data.result?.num_clients ?? 0
+          if (numClients > channel.listenerPeak) {
+            await fastify.prisma.channel.update({
+              where: { id: channel.id },
+              data: { listenerPeak: numClients },
+            })
+          }
+          return { numClients }
         } catch {
           return { numClients: 0 }
         }

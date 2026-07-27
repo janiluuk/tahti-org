@@ -190,6 +190,23 @@ export const RadioRecentlyPlayedItemSchema = z.object({
 })
 export const RadioRecentlyPlayedSchema = z.array(RadioRecentlyPlayedItemSchema)
 
+/** Channel page "Manage" tab — owner/board-only stats snapshot. */
+export const ChannelManageStatsSchema = z.object({
+  /** Live encoder bitrate, from Icecast — null whenever not currently broadcasting. */
+  audioBitrateKbps: z.number().int().nullable(),
+  /** Current listeners (Centrifugo presence — same count shown publicly). */
+  listeners: z.number().int(),
+  /** All-time highest concurrent-listener count observed. */
+  listenerPeak: z.number().int(),
+  /** All-time rotation/archive play-start count. */
+  plays: z.number().int(),
+  likes: z.number().int(),
+  /** Pending a dedicated repost/share feature — always 0 today. */
+  reposts: z.number().int(),
+  /** Seconds since the current live broadcast started; null when not live. */
+  liveDurationSec: z.number().int().nullable(),
+})
+
 /** Public, read-only view of booked live-artist slots on Tahti Radio. */
 export const PublicRadioSlotSchema = z.object({
   id: z.string(),

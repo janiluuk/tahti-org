@@ -6,6 +6,7 @@ import { cookies } from 'next/headers'
 export interface SessionUser {
   username: string
   displayName: string
+  isBoard: boolean
 }
 
 /** Best-effort lookup of the current session user for server components.
@@ -22,8 +23,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       cache: 'no-store',
     })
     if (!res.ok) return null
-    const data = (await res.json()) as { username: string; displayName: string }
-    return { username: data.username, displayName: data.displayName }
+    const data = (await res.json()) as { username: string; displayName: string; isBoard: boolean }
+    return { username: data.username, displayName: data.displayName, isBoard: data.isBoard }
   } catch {
     return null
   }
