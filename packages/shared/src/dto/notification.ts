@@ -9,6 +9,7 @@ export const NotificationTypeSchema = z.enum([
   'NEW_TRACK',
   'NEW_FOLLOWER',
   'NEW_LIKE',
+  'NEW_REPOST',
 ])
 
 export const NotificationSchema = z.object({

@@ -50,7 +50,7 @@ const channelManageStatsRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'Not authorized to manage this channel' })
       }
 
-      const [signal, presenceRes, likes] = await Promise.all([
+      const [signal, presenceRes, likes, reposts] = await Promise.all([
         channel.state === 'LIVE'
           ? fetchMountSignalStatus(config.icecastBaseUrl, channel.liveSourceMount)
           : Promise.resolve(null),
@@ -58,6 +58,9 @@ const channelManageStatsRoute: FastifyPluginAsync = async (fastify) => {
           .then((r) => (r.ok ? r.json() : { numClients: 0 }))
           .catch(() => ({ numClients: 0 })),
         fastify.prisma.archiveItemLike.count({ where: { archiveItem: { channelId: channel.id } } }),
+        fastify.prisma.archiveItemRepost.count({
+          where: { archiveItem: { channelId: channel.id } },
+        }),
       ])
 
       const liveDurationSec =
@@ -71,7 +74,7 @@ const channelManageStatsRoute: FastifyPluginAsync = async (fastify) => {
         listenerPeak: channel.listenerPeak,
         plays: channel.totalPlays,
         likes,
-        reposts: 0,
+        reposts,
         liveDurationSec,
       })
     },

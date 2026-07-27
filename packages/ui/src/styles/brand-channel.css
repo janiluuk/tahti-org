@@ -1493,6 +1493,40 @@
   font-variant-numeric: tabular-nums;
 }
 
+[data-tahti-ui='brand'] .ch-repost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+[data-tahti-ui='brand'] .ch-repost-btn:hover {
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-repost-btn--active {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .ch-repost-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+[data-tahti-ui='brand'] .ch-repost-btn__count {
+  font-variant-numeric: tabular-nums;
+}
+
 [data-tahti-ui='brand'] .ch-next-broadcast {
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
