@@ -912,6 +912,11 @@ model Channel {
   autoRecordEnabled  Boolean      @default(true)
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
+  // Manage panel stats: highest concurrent-listener count ever observed, and a
+  // running count of playback-start events (both bumped opportunistically —
+  // see apps/api/src/routes/channels/manage-stats.ts and play-event.ts).
+  listenerPeak       Int          @default(0)
+  totalPlays         Int          @default(0)
   goneLiveAt         DateTime?
   metaStreamOptOut   Boolean              @default(false)
   chatSubscribersOnly Boolean             @default(false) // only active fan-subscribers can post in chat; everyone can still read

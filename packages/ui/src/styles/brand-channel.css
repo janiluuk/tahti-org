@@ -565,6 +565,75 @@
   margin-bottom: 1.5rem;
 }
 
+/* Owner/board-only Overview/Manage tab bar on the channel page. */
+[data-tahti-ui='brand'] .ch-owner-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-owner-tabs__tab {
+  padding: 0.6rem 0.9rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-owner-tabs__tab:hover {
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .ch-owner-tabs__tab--active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .ch-manage-panel {
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+[data-tahti-ui='brand'] .ch-manage-panel__title {
+  margin: 0 0 1rem;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+[data-tahti-ui='brand'] .ch-manage-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .ch-manage-stats__cell {
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background: var(--card2);
+}
+
+[data-tahti-ui='brand'] .ch-manage-stats__label {
+  margin: 0 0 0.3rem;
+  color: var(--muted2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-tahti-ui='brand'] .ch-manage-stats__value {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
 [data-tahti-ui='brand'] .ch-artist-header-row {
   margin-bottom: 0.5rem;
 }

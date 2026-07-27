@@ -93,7 +93,9 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
   })
 
   // "Recently played" history — one row per actual track change, not one per
-  // 20s poll of the same still-playing track.
+  // 20s poll of the same still-playing track. Also counts as a "play" for the
+  // Manage panel's stats (STREAM-012 rotation plays only — a live broadcast's
+  // own listen count is tracked separately via presence, not a "play").
   if (trackChanged) {
     await prisma.radioPlayLog.create({
       data: {
@@ -104,6 +106,10 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
         artistUsername,
         artworkUrl: item.bannerUrl,
       },
+    })
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { totalPlays: { increment: 1 } },
     })
   }
 }
