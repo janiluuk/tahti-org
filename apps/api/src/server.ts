@@ -65,6 +65,7 @@ import downloadRoutes from './routes/downloads/archive.js'
 import artistFollowRoutes from './routes/engagement/artist-follows.js'
 import archiveRepostRoutes from './routes/engagement/archive-repost.js'
 import archiveLikeRoutes from './routes/engagement/archive-likes.js'
+import archiveItemRepostRoutes from './routes/engagement/archive-item-repost.js'
 import meGrantsRoutes from './routes/me/grants.js'
 import adminGrantsRoutes from './routes/admin/grants.js'
 import fanTierRoutes from './routes/fansubs/tiers.js'
@@ -506,6 +507,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(artistFollowRoutes)
   await fastify.register(archiveRepostRoutes)
   await fastify.register(archiveLikeRoutes)
+  await fastify.register(archiveItemRepostRoutes)
 
   // M9: annual grant disbursements
   await fastify.register(meGrantsRoutes)

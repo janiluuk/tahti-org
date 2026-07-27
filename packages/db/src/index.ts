@@ -26,6 +26,7 @@ export {
   notifyFollowersOfNewTrack,
   notifyArtistOfNewFollower,
   notifyArtistOfNewLike,
+  notifyArtistOfNewRepost,
   notifyUserOfNewMessage,
   processScheduledPostNotifications,
 } from './notifications.js'

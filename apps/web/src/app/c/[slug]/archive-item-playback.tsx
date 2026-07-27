@@ -9,6 +9,7 @@ import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { ReportButton } from '@/components/report-button'
 import { LoveButton } from '@/components/love-button'
+import { RepostButton } from '@/components/repost-button'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { ArchiveDownloadButton } from './archive-download'
 
@@ -119,6 +120,7 @@ export function ArchiveItemPlayback({
           downloadCount={item.downloadCount ?? 0}
         />
         <LoveButton channelSlug={channelSlug} itemId={item.id} />
+        <RepostButton channelSlug={channelSlug} itemId={item.id} />
         <TrackCommentsToggle
           archiveItemId={item.id}
           isLoggedIn={isLoggedIn}

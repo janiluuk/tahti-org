@@ -405,6 +405,7 @@ enum NotificationType {
   NEW_TRACK
   NEW_FOLLOWER
   NEW_LIKE
+  NEW_REPOST
 
   @@schema("core")
 }
@@ -606,6 +607,7 @@ model User {
   artistFollowers       ArtistFollow[]       @relation("ArtistFollowers")
   artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
   archiveItemLikes      ArchiveItemLike[]
+  archiveItemReposts    ArchiveItemRepost[]
   conversationParticipations ConversationParticipant[]
   messagesSent          Message[]
   supportTickets        SupportTicket[]      @relation("SupportTicketArtist")
@@ -1188,6 +1190,7 @@ model ArchiveItem {
   curatedRotationItems CuratedRotationItem[]
   comments        Comment[]
   likes           ArchiveItemLike[]
+  reposts         ArchiveItemRepost[]
   radioPlayLogs   RadioPlayLog[]
 
   @@index([channelId, createdAt(sort: Desc)])
@@ -1511,6 +1514,22 @@ model ArtistFollow {
 // M40: a listener "loving" a track — powers the heart/like button on track rows
 // and the NEW_LIKE notification to the artist.
 model ArchiveItemLike {
+  userId        String
+  archiveItemId String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  archiveItem   ArchiveItem @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+
+  @@id([userId, archiveItemId])
+  @@index([archiveItemId])
+  @@schema("engagement")
+}
+
+// A listener reposting/sharing a track — distinct from ArchiveRepostAck (an
+// acknowledgment gating a download, unrelated to sharing). Powers the repost
+// button on track rows, the Manage panel's Reposts stat, and the NEW_REPOST
+// notification to the artist.
+model ArchiveItemRepost {
   userId        String
   archiveItemId String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)

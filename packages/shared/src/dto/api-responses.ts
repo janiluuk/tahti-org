@@ -201,7 +201,6 @@ export const ChannelManageStatsSchema = z.object({
   /** All-time rotation/archive play-start count. */
   plays: z.number().int(),
   likes: z.number().int(),
-  /** Pending a dedicated repost/share feature — always 0 today. */
   reposts: z.number().int(),
   /** Seconds since the current live broadcast started; null when not live. */
   liveDurationSec: z.number().int().nullable(),
@@ -523,6 +522,11 @@ export const ArtistFollowResponseSchema = z.object({
 export const ArchiveItemLikeResponseSchema = z.object({
   liked: z.boolean(),
   likeCount: z.number().int(),
+})
+
+export const ArchiveItemRepostResponseSchema = z.object({
+  reposted: z.boolean(),
+  repostCount: z.number().int(),
 })
 
 export const ChannelCardSchema = z.object({

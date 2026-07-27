@@ -96,6 +96,26 @@ export async function notifyArtistOfNewLike(
   })
 }
 
+/** Notify an artist that someone reposted/shared one of their tracks. */
+export async function notifyArtistOfNewRepost(
+  prisma: PrismaClient,
+  artistUserId: string,
+  reposter: { id: string; username: string; displayName: string },
+  item: { id: string; title: string; channelSlug: string },
+): Promise<void> {
+  if (artistUserId === reposter.id) return
+  await prisma.notification.create({
+    data: {
+      userId: artistUserId,
+      type: 'NEW_REPOST',
+      actorUserId: reposter.id,
+      title: `${reposter.displayName} reposted "${item.title}"`,
+      body: null,
+      url: `/c/${item.channelSlug}`,
+    },
+  })
+}
+
 /** M38: notify a conversation participant that a new direct message arrived. */
 export async function notifyUserOfNewMessage(
   prisma: PrismaClient,
