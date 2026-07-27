@@ -191,6 +191,13 @@ async function main() {
       let archiveItemId: string
       if (existing) {
         archiveItemId = existing.id
+        // Backfill: the original artist name used to be discoverable only by
+        // parsing the freeform commentary field — now shown directly wherever
+        // this track plays (rotation, now-playing, recently-played history).
+        await prisma.archiveItem.update({
+          where: { id: existing.id },
+          data: { artistName: track.artist },
+        })
       } else {
         const oggPath = path.join(tmpDir, `${position}.ogg`)
         const mp3Path = path.join(tmpDir, `${position}.mp3`)
@@ -211,6 +218,7 @@ async function main() {
           data: {
             channelId: channel.id,
             title: track.title,
+            artistName: track.artist,
             status: 'READY',
             isPublic: true,
             license: 'CC0',

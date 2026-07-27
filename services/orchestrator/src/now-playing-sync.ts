@@ -61,26 +61,32 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
     select: {
       id: true,
       title: true,
+      artistName: true,
       bannerUrl: true,
       channel: { select: { user: { select: { displayName: true, username: true } } } },
     },
   })
   if (!item) return
 
+  // Curated/compilation tracks (e.g. Tahti Selects' CC0 rotation) carry their
+  // own artistName override — the channel that hosts them isn't who made them,
+  // so there's no real profile to link the name to either.
+  const artistName = item.artistName ?? item.channel.user.displayName
+  const artistUsername = item.artistName ? null : item.channel.user.username
+
   const current = await prisma.channel.findUnique({
     where: { id: channelId },
     select: { nowPlayingTitle: true, nowPlayingArtistUsername: true },
   })
   const trackChanged =
-    current?.nowPlayingTitle !== item.title ||
-    current?.nowPlayingArtistUsername !== item.channel.user.username
+    current?.nowPlayingTitle !== item.title || current?.nowPlayingArtistUsername !== artistUsername
 
   await prisma.channel.update({
     where: { id: channelId },
     data: {
       nowPlayingTitle: item.title,
-      nowPlayingArtistName: item.channel.user.displayName,
-      nowPlayingArtistUsername: item.channel.user.username,
+      nowPlayingArtistName: artistName,
+      nowPlayingArtistUsername: artistUsername,
       nowPlayingArtworkUrl: item.bannerUrl,
       nowPlayingUpdatedAt: new Date(),
     },
@@ -94,8 +100,8 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
         channelId,
         archiveItemId: item.id,
         title: item.title,
-        artistName: item.channel.user.displayName,
-        artistUsername: item.channel.user.username,
+        artistName,
+        artistUsername,
         artworkUrl: item.bannerUrl,
       },
     })

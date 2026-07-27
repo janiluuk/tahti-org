@@ -1045,7 +1045,7 @@ model RadioPlayLog {
   archiveItem    ArchiveItem? @relation(fields: [archiveItemId], references: [id], onDelete: SetNull)
   title          String
   artistName     String
-  artistUsername String
+  artistUsername String?
   artworkUrl     String?
   playedAt       DateTime     @default(now())
 
@@ -1108,6 +1108,11 @@ model ArchiveItem {
   channelId     String
   channel       Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
   title         String
+  // Overrides the displayed artist name away from channel.user.displayName —
+  // for curated/compilation tracks not uploaded under the original artist's
+  // own account (e.g. Tahti Selects' CC0 rotation). Null (the common case)
+  // means "use the owning channel's own artist name" as before.
+  artistName    String?
   description   String?
   tracklist     Json?             // M22: [{startSec, title, artist?, artistUsername?}]
   editList      Json?             // Pro editor v3 draft (@tahti/audio-edit EditList v1)

@@ -13,7 +13,9 @@ interface RadioRotationItem {
   id: string
   title: string
   artistName: string
-  artistUsername: string
+  /** Null for curated/compilation tracks (e.g. Tahti Selects' CC0 rotation)
+   * with no real Tahti profile to link the artist name to. */
+  artistUsername: string | null
 }
 
 interface RadioMemberRelay {
@@ -90,17 +92,26 @@ export function RadioInfoOverlay({
                 <>
                   {rotation.length > 0 ? (
                     <ul className="ch-radio-rotation__list">
-                      {rotation.map((item) => (
-                        <li key={item.id} className="ch-radio-rotation__item">
-                          <Link
-                            href={`/u/${item.artistUsername}`}
-                            className="ch-radio-rotation__link"
-                          >
-                            <span className="ch-radio-rotation__title">{item.title}</span>
-                            <span className="ch-radio-rotation__artist">{item.artistName}</span>
-                          </Link>
-                        </li>
-                      ))}
+                      {rotation.map((item) =>
+                        item.artistUsername ? (
+                          <li key={item.id} className="ch-radio-rotation__item">
+                            <Link
+                              href={`/u/${item.artistUsername}`}
+                              className="ch-radio-rotation__link"
+                            >
+                              <span className="ch-radio-rotation__title">{item.title}</span>
+                              <span className="ch-radio-rotation__artist">{item.artistName}</span>
+                            </Link>
+                          </li>
+                        ) : (
+                          <li key={item.id} className="ch-radio-rotation__item">
+                            <div className="ch-radio-rotation__link">
+                              <span className="ch-radio-rotation__title">{item.title}</span>
+                              <span className="ch-radio-rotation__artist">{item.artistName}</span>
+                            </div>
+                          </li>
+                        ),
+                      )}
                     </ul>
                   ) : (
                     <p className="ch-radio-info-panel__empty">Nothing in rotation right now.</p>

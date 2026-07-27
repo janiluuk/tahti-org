@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { PageShell, SidebarNavIconSvg } from '@tahti/ui'
 import NextLink from 'next/link'
 import { DashboardOverview } from './_dashboard-overview'
+import { HeaderGoLiveAction } from './_header-go-live-action'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { resolveChannelUrl } from '@/lib/app-url'
 
@@ -190,11 +191,7 @@ export default async function DashboardPage() {
         ? 'db-preview-dot'
         : 'db-offline-dot'
   const goLiveBtnLabel =
-    headerState === 'LIVE'
-      ? 'On air'
-      : headerState === 'PREVIEW'
-        ? 'Continue to go live →'
-        : 'Go live →'
+    headerState === 'LIVE' ? 'On air' : headerState === 'PREVIEW' ? '● Go live now' : 'Go live →'
   const goLiveBtnClass =
     headerState === 'LIVE'
       ? ' db-go-live-btn--live'
@@ -255,10 +252,12 @@ export default async function DashboardPage() {
         </div>
         {user.channel ? (
           <div className="studio-page-header__actions">
-            <NextLink href="/dashboard/broadcast" className={`db-go-live-btn${goLiveBtnClass}`}>
-              <span className={headerDotClass} aria-hidden style={{ width: 6, height: 6 }} />
-              {goLiveBtnLabel}
-            </NextLink>
+            <HeaderGoLiveAction
+              state={headerState}
+              className={`db-go-live-btn${goLiveBtnClass}`}
+              dotClassName={headerDotClass}
+              label={goLiveBtnLabel}
+            />
           </div>
         ) : (
           <div className="studio-page-header__actions">

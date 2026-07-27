@@ -41,7 +41,7 @@
    section instead of a per-page CSS wash. */
 .bg-canvas--subtle {
   background: var(--bg);
-  filter: blur(32px) brightness(0.55) saturate(0.6);
+  filter: blur(32px) brightness(0.8) saturate(0.85);
 }
 
 .app-bg-veil {
@@ -50,7 +50,7 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: rgba(5, 8, 16, 0.25);
+  background: rgba(5, 8, 16, 0.15);
 }
 
 [data-tahti-ui='brand'].brand-channel--radio .radio-shell {
@@ -1230,6 +1230,14 @@
 [data-tahti-ui='brand'] .ch-radio-upcoming__item:last-child,
 [data-tahti-ui='brand'] .ch-radio-recent__item:last-child {
   border-bottom: none;
+}
+
+/* Tiger-striped rows (same alternating-tint pattern as the channel archive
+ * list) — the section itself already sits on --card, so the stripe needs the
+ * next surface up (--card2) to actually read as a stripe rather than a no-op. */
+[data-tahti-ui='brand'] .ch-radio-recent__item:nth-child(even) {
+  background: color-mix(in srgb, var(--card2) 70%, transparent);
+  border-radius: var(--radius-sm);
 }
 
 [data-tahti-ui='brand'] .ch-radio-upcoming__avatar {
