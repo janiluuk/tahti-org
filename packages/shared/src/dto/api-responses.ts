@@ -165,12 +165,15 @@ export const RadioNowPlayingSchema = z
   })
   .passthrough()
 
-/** Public, read-only view of the Tahti Selects curated rotation order (STREAM-011). */
+/** Public, read-only view of the Tahti Selects curated rotation order (STREAM-011).
+ * artistUsername is null for curated/compilation tracks with an artistName
+ * override (e.g. Tahti Selects' CC0 rotation) — there's no real Tahti profile
+ * to link the name to. */
 export const RadioRotationItemSchema = z.object({
   id: z.string(),
   title: z.string(),
   artistName: z.string(),
-  artistUsername: z.string(),
+  artistUsername: z.string().nullable(),
 })
 export const RadioRotationSchema = z.array(RadioRotationItemSchema)
 
@@ -181,7 +184,7 @@ export const RadioRecentlyPlayedItemSchema = z.object({
   id: z.string(),
   title: z.string(),
   artistName: z.string(),
-  artistUsername: z.string(),
+  artistUsername: z.string().nullable(),
   artworkUrl: z.string().nullable(),
   playedAt: z.string(),
 })
@@ -457,7 +460,7 @@ export const PublicChannelViewSchema = z.object({
     .object({
       title: z.string(),
       artistName: z.string(),
-      artistUsername: z.string(),
+      artistUsername: z.string().nullable(),
     })
     .nullable(),
 })

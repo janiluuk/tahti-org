@@ -121,6 +121,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           archiveItem: {
             select: {
               title: true,
+              artistName: true,
               channel: { select: { user: { select: { displayName: true, username: true } } } },
             },
           },
@@ -131,8 +132,10 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         items.map((item) => ({
           id: item.id,
           title: item.archiveItem.title,
-          artistName: item.archiveItem.channel.user.displayName,
-          artistUsername: item.archiveItem.channel.user.username,
+          artistName: item.archiveItem.artistName ?? item.archiveItem.channel.user.displayName,
+          artistUsername: item.archiveItem.artistName
+            ? null
+            : item.archiveItem.channel.user.username,
         })),
       )
     },

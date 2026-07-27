@@ -10,7 +10,9 @@ export interface RecentlyPlayedItem {
   id: string
   title: string
   artistName: string
-  artistUsername: string
+  /** Null for curated/compilation tracks (e.g. Tahti Selects' CC0 rotation)
+   * with no real Tahti profile to link the artist name to. */
+  artistUsername: string | null
   artworkUrl: string | null
   playedAt: string
 }
@@ -44,9 +46,13 @@ export function RecentlyPlayed({ items }: { items: RecentlyPlayedItem[] }) {
             )}
             <div className="ch-radio-recent__body">
               <span className="ch-radio-recent__song">{item.title}</span>
-              <Link href={`/u/${item.artistUsername}`} className="ch-radio-recent__artist">
-                {item.artistName}
-              </Link>
+              {item.artistUsername ? (
+                <Link href={`/u/${item.artistUsername}`} className="ch-radio-recent__artist">
+                  {item.artistName}
+                </Link>
+              ) : (
+                <span className="ch-radio-recent__artist">{item.artistName}</span>
+              )}
             </div>
             <span className="ch-radio-recent__time">{formatAgo(item.playedAt)}</span>
           </li>
