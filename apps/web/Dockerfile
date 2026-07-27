@@ -72,8 +72,11 @@ RUN pnpm install --frozen-lockfile --prod
 COPY packages/shared/src ./packages/shared/src
 COPY packages/ui/src     ./packages/ui/src
 
-# Compiled Next.js output + static assets
-COPY --from=builder /app/apps/web/.next ./apps/web/.next
+# Compiled Next.js output + static assets — chowned to the runtime user
+# (USER nextjs below), otherwise the server can render pages fine but every
+# fetch-cache write under .next/cache/ silently fails with EACCES, since
+# COPY defaults to root:root and nothing re-chowns it afterward.
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next ./apps/web/.next
 COPY apps/web/public         ./apps/web/public
 COPY apps/web/next.config.mjs ./apps/web/
 
