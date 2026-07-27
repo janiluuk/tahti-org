@@ -5,6 +5,7 @@ import { createServer, type Server } from 'node:net'
 import { describe, it, expect, afterEach } from 'vitest'
 import {
   liquidsoapGracefulShutdownWaitMs,
+  liquidsoapJumpQueuePushCommand,
   parseLiquidsoapTelnetResponse,
   sendLiquidsoapTelnetCommand,
 } from './liquidsoap-shutdown.js'
@@ -12,6 +13,20 @@ import {
 describe('liquidsoapGracefulShutdownWaitMs', () => {
   it('waits fade duration plus buffer before docker stop', () => {
     expect(liquidsoapGracefulShutdownWaitMs(4)).toBe(6000)
+  })
+})
+
+describe('liquidsoapJumpQueuePushCommand', () => {
+  it('quotes the URL for the request.queue.push telnet command', () => {
+    expect(liquidsoapJumpQueuePushCommand('https://cdn.tahti.live/tahti/mp3/a.mp3')).toBe(
+      'jump_queue.push "https://cdn.tahti.live/tahti/mp3/a.mp3"',
+    )
+  })
+
+  it('escapes embedded quotes so a malformed URL cannot break out of the command', () => {
+    expect(liquidsoapJumpQueuePushCommand('https://evil/"; shutdown; "')).toBe(
+      'jump_queue.push "https://evil/\\"; shutdown; \\""',
+    )
   })
 })
 

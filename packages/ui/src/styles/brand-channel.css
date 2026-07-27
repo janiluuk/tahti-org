@@ -634,6 +634,44 @@
   font-weight: var(--weight-semibold);
 }
 
+[data-tahti-ui='brand'] .ch-manage-transport {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+[data-tahti-ui='brand'] .ch-manage-transport__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+[data-tahti-ui='brand'] .ch-manage-transport__btn:hover:not(:disabled) {
+  background: var(--cyan);
+  color: var(--bg);
+}
+
+[data-tahti-ui='brand'] .ch-manage-transport__btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+[data-tahti-ui='brand'] .ch-manage-transport__error {
+  margin: 0.5rem 0 0;
+  color: var(--coral);
+  font-size: var(--text-sm);
+}
+
 [data-tahti-ui='brand'] .ch-artist-header-row {
   margin-bottom: 0.5rem;
 }

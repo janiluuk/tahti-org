@@ -28,6 +28,7 @@ archive = if file.exists(archive_local_path) then
     # blank() — every channel not currently live was silently playing
     # silence instead of its archive. "normal" respects the order already
     # computed server-side.
+    id="archive",
     mode="normal",
     reload=300,
     reload_mode="rounds",
@@ -44,6 +45,7 @@ else
     # blank() — every channel not currently live was silently playing
     # silence instead of its archive. "normal" respects the order already
     # computed server-side.
+    id="archive",
     mode="normal",
     reload=300,
     reload_mode="rounds",
@@ -51,25 +53,45 @@ else
   )
 end
 
+# Manage panel transport controls (skip / previous): playlist(id="archive")
+# above auto-registers "archive.skip" — that alone gives us forward-skip.
+# "Previous" has no native Liquidsoap primitive on a playlist source, so a
+# small request.queue sits ahead of archive; pushing a specific track's URL
+# into it (jump_queue.push, sent by the orchestrator) plays that one track
+# next, then falls back through to the normal archive rotation once it
+# finishes. request.queue also auto-registers under its id, so no extra
+# server.register is needed for the push itself.
+jump_queue = request.queue(id="jump_queue")
+rotation = fallback(track_sensitive=false, [jump_queue, archive])
+
 # STREAM-012: rotation now-playing — captured before crossfade/normalize/delay so
 # "filename" is the least-mutated pointer back to the exact playing file. Read via
 # the "now_playing" telnet command below; the orchestrator resolves it to a real
-# ArchiveItem (title/artist/artwork) rather than trusting on-disk ID3 tags.
-archive_meta = ref([])
-archive = source.on_metadata(archive, fun (m) -> archive_meta := m)
+# ArchiveItem (title/artist/artwork) rather than trusting on-disk ID3 tags. Bound
+# to the combined jump_queue+archive source so a "previous"-jumped track's title
+# updates now-playing too, not just the normal archive rotation.
+rotation_meta = ref([])
+rotation = source.on_metadata(rotation, fun (m) -> rotation_meta := m)
 
-archive = crossfade(duration=3., archive)
-archive = normalize(target=-14., archive)
+rotation = crossfade(duration=3., rotation)
+rotation = normalize(target=-14., rotation)
 # ARTIST-003: buffer archive before fallback switch so first listener does not hit an empty segment.
-archive = delay(3., archive)
+rotation = delay(3., rotation)
 
 # --- THE MAGIC: live-or-archive fallback ---
 # track_sensitive=false means: switch immediately when live ends, not at the next track boundary.
 # The third source (blank) is a safety net so the chain never dies if both fail.
 radio = fallback(
   track_sensitive=false,
-  [live_source, archive, blank()]
+  [live_source, rotation, blank()]
 )
+
+# Manage panel "stop" — pauses the rotation without ending the live broadcast
+# or killing the container (graceful_shutdown does that, and is a much bigger
+# hammer: it tears the whole process down). "resume" undoes it. Live input
+# still takes priority over the paused state, matching the normal fallback —
+# an artist going live isn't blocked by a listener having paused the rotation.
+paused = ref(false)
 
 # --- STREAM-010: graceful shutdown fade (orchestrator sends telnet graceful_shutdown) ---
 shutting_down = ref(false)
@@ -96,7 +118,7 @@ server.register(
   "now_playing",
   description="Current rotation-source metadata initial_uri (STREAM-012)",
   fun (_) -> begin
-    m = archive_meta()
+    m = rotation_meta()
     # "filename" is a local decode temp file for HTTP-sourced entries — useless
     # for identifying the track. "initial_uri" carries the real request (wrapped
     # in an annotate:...:URL prefix for playlist entries with inline metadata),
@@ -104,11 +126,22 @@ server.register(
     m["initial_uri"] ?? ""
   end
 )
+server.register(
+  "pause",
+  description="Manage panel: pause the rotation (live input still takes priority)",
+  fun (_) -> begin paused := true "ok" end
+)
+server.register(
+  "resume",
+  description="Manage panel: resume the rotation after pause",
+  fun (_) -> begin paused := false "ok" end
+)
 
 radio_out = switch(
   track_sensitive=false,
   [
     ({ shutting_down() }, fade.out(type="log", duration={{LIQUIDSOAP_FADE_SEC}}., radio)),
+    ({ paused() and not source.is_ready(live_source) }, blank()),
     ({ true }, radio)
   ]
 )

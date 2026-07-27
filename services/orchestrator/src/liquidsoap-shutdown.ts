@@ -10,6 +10,21 @@ export const LIQUIDSOAP_GRACEFUL_SHUTDOWN_COMMAND = 'graceful_shutdown'
  * current rotation-source metadata's "filename" (a presigned CDN URL), or "". */
 export const LIQUIDSOAP_NOW_PLAYING_COMMAND = 'now_playing'
 
+/** Manage panel transport controls — telnet commands registered in
+ * liquidsoap-channel.liq.template. archive.skip is auto-registered by
+ * playlist(id="archive"); jump_queue.push by request.queue(id="jump_queue"). */
+export const LIQUIDSOAP_SKIP_COMMAND = 'archive.skip'
+export const LIQUIDSOAP_PAUSE_COMMAND = 'pause'
+export const LIQUIDSOAP_RESUME_COMMAND = 'resume'
+
+/** Queues a specific track URL to play next via the jump_queue ahead of the
+ * normal archive rotation — used for "previous" (Liquidsoap playlists have no
+ * native rewind). The URL must be quoted for Liquidsoap's request.queue.push
+ * command syntax. */
+export function liquidsoapJumpQueuePushCommand(url: string): string {
+  return `jump_queue.push ${JSON.stringify(url)}`
+}
+
 export const LIQUIDSOAP_TELNET_PORT = parseInt(process.env.LIQUIDSOAP_TELNET_PORT ?? '19000', 10)
 
 /** Fade duration in liquidsoap template + buffer before docker stop. */
