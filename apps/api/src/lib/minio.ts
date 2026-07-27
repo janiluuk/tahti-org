@@ -51,10 +51,20 @@ export async function presignedPutUrl(
   return getSignedUrl(presigningS3, command, { expiresIn: expiresInSec })
 }
 
-export async function presignedGetUrl(key: string, expiresInSec = 3600): Promise<string> {
+export async function presignedGetUrl(
+  key: string,
+  expiresInSec = 3600,
+  /** Forces the browser to save the file instead of playing/rendering it inline —
+   * only pass this for an actual "Download" action, never for a playback/preview
+   * URL (the default, no Content-Disposition override, is correct there). */
+  downloadFilename?: string,
+): Promise<string> {
   const command = new GetObjectCommand({
     Bucket: config.minio.bucket,
     Key: key,
+    ...(downloadFilename != null
+      ? { ResponseContentDisposition: `attachment; filename="${downloadFilename}"` }
+      : {}),
   })
   return getSignedUrl(presigningS3, command, { expiresIn: expiresInSec })
 }

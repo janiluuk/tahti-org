@@ -158,7 +158,17 @@ export function ArchiveDownloadButton({
         await refreshGates()
         return
       }
-      if (data.url) window.open(data.url, '_blank', 'noopener,noreferrer')
+      // The presigned URL now sends Content-Disposition: attachment, so the browser
+      // saves the file rather than playing it — an off-screen <a download> avoids the
+      // blank-tab flash window.open(..., '_blank') would otherwise leave behind.
+      if (data.url) {
+        const link = document.createElement('a')
+        link.href = data.url
+        link.rel = 'noopener noreferrer'
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+      }
     } finally {
       setLoading(false)
     }

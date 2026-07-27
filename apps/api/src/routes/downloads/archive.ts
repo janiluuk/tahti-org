@@ -20,6 +20,7 @@ import { config } from '../../config.js'
 import { getDownloadNoCountCidrs } from '../../lib/download-no-count-cidrs.js'
 import { downloadRateLimits } from '../../lib/download-limits.js'
 import { countryFromIp } from '../../lib/geoip.js'
+import { downloadFilename } from '../../lib/download-filename.js'
 
 // M18 — downloads as a first-class action with engagement-unit accounting.
 //
@@ -80,6 +81,7 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: itemId, channelId: channel.id, status: 'READY' },
         select: {
           id: true,
+          title: true,
           mp3Key: true,
           flacKey: true,
           fileSizeBytes: true,
@@ -248,7 +250,8 @@ const downloadRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
-      const url = await presignedGetUrl(objectKey, 300)
+      const extension = objectKey.split('.').pop() || 'mp3'
+      const url = await presignedGetUrl(objectKey, 300, downloadFilename(item.title, extension))
       return reply.send({ url, counted: countedAt !== null })
     },
   )
