@@ -18,6 +18,7 @@ import { TracklistView } from '@/components/tracklist/tracklist-view'
 import { ArchiveItemPlayback } from './archive-item-playback'
 import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import { ArchiveVideoBackdrop, resolveArchiveBackground } from './archive-item-backdrop'
+import type { PlayerTrack } from '@/contexts/player-context'
 import type {
   ChannelGalleryMode,
   ChannelTextLayerAlignment,
@@ -137,6 +138,19 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   ])
 
   const items: ArchiveItem[] = itemsRes.ok ? ((await itemsRes.json()) as ArchiveItem[]) : []
+  // Shared play queue for every playable archive item, in list order — lets
+  // playback auto-advance to the next track on 'ended' instead of just stopping.
+  const archiveQueue: PlayerTrack[] = items
+    .filter((i) => i.audioUrl)
+    .map((i) => ({
+      id: i.id,
+      kind: 'archive',
+      url: i.audioUrl!,
+      title: i.title,
+      subtitle: `@${channel.user.username}`,
+      href: `/c/${slug}#archive-item-${i.id}`,
+      artworkUrl: i.bannerUrl,
+    }))
   const announcements: Announcement[] = announcementsRes.ok
     ? ((await announcementsRes.json()) as Announcement[])
     : []
@@ -637,6 +651,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                             item={{ ...item, audioUrl: item.audioUrl }}
                             colorSchemeJson={channel.colorSchemeJson}
                             isLoggedIn={!!user}
+                            queue={archiveQueue}
                           />
                         ) : (
                           <>

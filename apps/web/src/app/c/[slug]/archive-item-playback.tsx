@@ -9,7 +9,7 @@ import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { ReportButton } from '@/components/report-button'
 import { LoveButton } from '@/components/love-button'
-import { usePlayer } from '@/contexts/player-context'
+import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { ArchiveDownloadButton } from './archive-download'
 
 interface Props {
@@ -30,6 +30,9 @@ interface Props {
   }
   colorSchemeJson?: string | null
   isLoggedIn: boolean
+  /** Every playable track on the page, in display order — passed to load() so
+   * 'ended' auto-advances to the next track instead of just stopping. */
+  queue?: PlayerTrack[]
 }
 
 export function ArchiveItemPlayback({
@@ -38,6 +41,7 @@ export function ArchiveItemPlayback({
   item,
   colorSchemeJson,
   isLoggedIn,
+  queue,
 }: Props) {
   const { track, playing, analyser, load, togglePlay, addToQueue, currentTime, duration, seek } =
     usePlayer()
@@ -58,7 +62,7 @@ export function ArchiveItemPlayback({
 
   async function handleTogglePlay() {
     if (!isCurrent) {
-      load(playerTrack, { autoplay: true })
+      load(playerTrack, { autoplay: true, queue })
       return
     }
     await togglePlay()
