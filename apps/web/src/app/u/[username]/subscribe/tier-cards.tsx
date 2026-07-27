@@ -6,6 +6,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { fanSubBreakdownLines, MoneyBreakdown, TierCard, TierCardGrid } from '@tahti/ui'
+import { humanizeFanTierPerk } from '@tahti/shared'
 import { subscribe } from './actions'
 
 interface Tier {
@@ -69,7 +70,7 @@ export default function TierCards({
               name={tier.name}
               priceLabel={eur(tier.amountCents)}
               description={tier.description ?? undefined}
-              perks={tier.perks}
+              perks={tier.perks.map(humanizeFanTierPerk)}
               featured={isFeatured}
               onSubscribe={() => onSubscribe(tier.id)}
               subscribeLabel={

@@ -7,6 +7,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ButtonIcon, Panel, Button } from '@tahti/ui'
+import { KNOWN_FAN_TIER_PERKS } from '@tahti/shared'
 import { createFanTier, setFanTierActive, startFanSubConnectOnboarding } from './actions'
 
 interface FanTier {
@@ -28,12 +29,6 @@ interface ConnectStatus {
 function eur(cents: number): string {
   return `€${(cents / 100).toFixed(2)}`
 }
-
-const KNOWN_PERKS = [
-  { key: 'FAN_CHAT', label: 'Fan-only chat' },
-  { key: 'FAN_NEWSLETTER', label: 'Newsletter' },
-  { key: 'FLAC', label: 'Lossless downloads' },
-] as const
 
 export default function FanSubscriptionsPanel({
   initial,
@@ -297,7 +292,7 @@ export default function FanSubscriptionsPanel({
               </label>
 
               <div className="fan-tier-perks">
-                {KNOWN_PERKS.map((perk) => (
+                {KNOWN_FAN_TIER_PERKS.map((perk) => (
                   <button
                     key={perk.key}
                     type="button"
