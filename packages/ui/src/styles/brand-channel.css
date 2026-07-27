@@ -672,6 +672,70 @@
   font-size: var(--text-sm);
 }
 
+[data-tahti-ui='brand'] .ch-manage-playlist-switch {
+  margin-top: 1.25rem;
+  max-width: 22rem;
+}
+
+[data-tahti-ui='brand'] .ch-manage-playlist-switch__combo {
+  position: relative;
+  margin-top: 0.3rem;
+}
+
+[data-tahti-ui='brand'] .ch-manage-playlist-switch__input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .ch-manage-playlist-switch__input:disabled {
+  opacity: 0.6;
+}
+
+[data-tahti-ui='brand'] .ch-manage-playlist-switch__list {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  max-height: 14rem;
+  overflow-y: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+[data-tahti-ui='brand'] .ch-manage-playlist-switch__option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-manage-playlist-switch__option:hover:not(:disabled) {
+  background: var(--card2);
+}
+
+[data-tahti-ui='brand'] .ch-manage-playlist-switch__empty {
+  padding: 0.5rem 0.6rem;
+  color: var(--muted2);
+  font-size: var(--text-sm);
+}
+
 [data-tahti-ui='brand'] .ch-artist-header-row {
   margin-bottom: 0.5rem;
 }

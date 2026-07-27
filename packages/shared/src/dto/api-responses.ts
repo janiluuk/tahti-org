@@ -211,6 +211,17 @@ export const ChannelTransportOkResponseSchema = z.object({
   ok: z.literal(true),
 })
 
+/** Channel page "Manage" tab — one entry in the searchable playlist-switch dropdown. */
+export const ChannelFallbackCollectionOptionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  trackCount: z.number().int(),
+  active: z.boolean(),
+})
+export const ChannelFallbackCollectionsResponseSchema = z.array(
+  ChannelFallbackCollectionOptionSchema,
+)
+
 /** Public, read-only view of booked live-artist slots on Tahti Radio. */
 export const PublicRadioSlotSchema = z.object({
   id: z.string(),

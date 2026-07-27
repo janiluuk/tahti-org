@@ -96,6 +96,65 @@ describe('GET /internal/channels/:channelId/fallback.m3u', () => {
 
     await prisma.channel.update({ where: { id: channelId }, data: { fallbackEnabled: true } })
   })
+
+  it('Manage tab playlist switch: plays the chosen Collection instead of the default isFallback set', async () => {
+    const collectionItem = await createReadyArchiveItem(prisma, channelId, 'Collection-only track')
+    const artist = await prisma.channel.findUniqueOrThrow({
+      where: { id: channelId },
+      select: { userId: true },
+    })
+    const collection = await prisma.collection.create({
+      data: { userId: artist.userId, slug: `${PREFIX}collection`, name: 'Switched playlist' },
+    })
+    await prisma.collectionItem.create({
+      data: { collectionId: collection.id, archiveItemId: collectionItem.id, position: 0 },
+    })
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { activeFallbackCollectionId: collection.id },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/internal/channels/${channelId}/fallback.m3u`,
+      headers: { authorization: `Bearer ${config.internalSecret}` },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('Collection-only track')
+    expect(res.body).not.toContain('Fallback track')
+
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { activeFallbackCollectionId: null },
+    })
+  })
+
+  it('falls through to the default rotation when the chosen Collection has no playable tracks', async () => {
+    const artist = await prisma.channel.findUniqueOrThrow({
+      where: { id: channelId },
+      select: { userId: true },
+    })
+    const emptyCollection = await prisma.collection.create({
+      data: { userId: artist.userId, slug: `${PREFIX}empty-collection`, name: 'Empty playlist' },
+    })
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { activeFallbackCollectionId: emptyCollection.id },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/internal/channels/${channelId}/fallback.m3u`,
+      headers: { authorization: `Bearer ${config.internalSecret}` },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toContain('Fallback track')
+
+    await prisma.channel.update({
+      where: { id: channelId },
+      data: { activeFallbackCollectionId: null },
+    })
+  })
 })
 
 describe('GET /internal/channels/:channelId/fallback.m3u — Tahti Radio relays Tahti Selects', () => {
