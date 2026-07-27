@@ -41,7 +41,7 @@
    section instead of a per-page CSS wash. */
 .bg-canvas--subtle {
   background: var(--bg);
-  filter: blur(32px) brightness(0.32) saturate(0.4);
+  filter: blur(32px) brightness(0.55) saturate(0.6);
 }
 
 .app-bg-veil {
@@ -50,7 +50,7 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: rgba(5, 8, 16, 0.4);
+  background: rgba(5, 8, 16, 0.25);
 }
 
 [data-tahti-ui='brand'].brand-channel--radio .radio-shell {

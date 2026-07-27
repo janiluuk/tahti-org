@@ -50,6 +50,10 @@ export interface WaveformPlayerProps {
    * the current track. When set (and isReplay), replaces the bare "REPLAY"
    * label next to the play button with "Next: ...". */
   nextUpLabel?: string
+  /** Skip the static CSS waveform bars — for callers that already render their
+   * own audio-reactive backdrop (e.g. a ChannelVisualizer) behind this player,
+   * where the static bars would be a redundant, non-reactive second animation. */
+  hideWaveform?: boolean
 }
 
 /** Custom HLS/archive player chrome — waveform, play/pause, seek bar. */
@@ -74,6 +78,7 @@ export function WaveformPlayer({
   liveElapsedSec,
   isReplay = false,
   nextUpLabel,
+  hideWaveform = false,
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
@@ -165,25 +170,27 @@ export function WaveformPlayer({
         {formatBadge ? <span className="waveform-player__badge">{formatBadge}</span> : null}
       </div>
 
-      <div className="waveform-player__waveform" aria-hidden="true">
-        {WAVEFORM_BAR_HEIGHTS.map((h, i) => (
-          <div
-            key={i}
-            className={cn(
-              'waveform-player__bar',
-              playing && 'waveform-player__bar--active',
-              waitingForSignal && 'waveform-player__bar--waiting',
-            )}
-            style={
-              {
-                '--h': `${h}px`,
-                '--delay': `${(i * 0.05).toFixed(2)}s`,
-                '--dur': `${0.6 + (i % 7) * 0.1}s`,
-              } as React.CSSProperties
-            }
-          />
-        ))}
-      </div>
+      {!hideWaveform && (
+        <div className="waveform-player__waveform" aria-hidden="true">
+          {WAVEFORM_BAR_HEIGHTS.map((h, i) => (
+            <div
+              key={i}
+              className={cn(
+                'waveform-player__bar',
+                playing && 'waveform-player__bar--active',
+                waitingForSignal && 'waveform-player__bar--waiting',
+              )}
+              style={
+                {
+                  '--h': `${h}px`,
+                  '--delay': `${(i * 0.05).toFixed(2)}s`,
+                  '--dur': `${0.6 + (i % 7) * 0.1}s`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
+      )}
 
       <div className="waveform-player__controls">
         <button

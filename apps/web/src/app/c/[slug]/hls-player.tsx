@@ -17,6 +17,7 @@ export default function HlsPlayer({
   waitingForSignal = false,
   nextUpLabel,
   subtitleHref,
+  hideWaveform = false,
 }: {
   url: string
   title?: string
@@ -37,6 +38,9 @@ export default function HlsPlayer({
   waitingForSignal?: boolean
   /** Curated-rotation channels only: "<title> — <artist>" for the next track. */
   nextUpLabel?: string
+  /** Caller already renders its own audio-reactive backdrop (e.g. a
+   * ChannelVisualizer) behind this player — skip the static CSS bars. */
+  hideWaveform?: boolean
 }) {
   const {
     track,
@@ -119,6 +123,7 @@ export default function HlsPlayer({
         liveElapsedSec={isLive ? liveElapsedSec : undefined}
         isReplay={isReplay}
         nextUpLabel={nextUpLabel}
+        hideWaveform={hideWaveform}
       />
     </div>
   )

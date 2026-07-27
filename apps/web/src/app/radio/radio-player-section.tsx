@@ -110,6 +110,7 @@ export function RadioPlayerSection({
           liveElapsedSec={liveElapsedSec}
           isReplay={!liveSlot}
           href="/radio"
+          hideWaveform
         />
       </div>
       <RadioInfoOverlay
