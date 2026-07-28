@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
+import { AddToCollectionPanel } from '@/components/add-to-collection-panel'
 
 export function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return '0:00'
@@ -364,6 +365,7 @@ export function MiniPlayer() {
     toggleMute,
   } = usePlayer()
   const [queueOpen, setQueueOpen] = useState(false)
+  const [addToOpen, setAddToOpen] = useState(false)
   const [queueTab, setQueueTab] = useState<'queue' | 'history'>('queue')
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
@@ -397,6 +399,13 @@ export function MiniPlayer() {
   return (
     <>
       <div className="mini-player" data-testid="mini-player" role="region" aria-label="Now playing">
+        {addToOpen && track.kind === 'archive' && (
+          <AddToCollectionPanel
+            archiveItemId={track.id}
+            trackTitle={track.title}
+            onClose={() => setAddToOpen(false)}
+          />
+        )}
         {queueOpen && (
           <div className="mini-player-queue" role="region" aria-label="Play queue">
             <div className="mini-player-queue__header">
@@ -626,10 +635,41 @@ export function MiniPlayer() {
               aria-label="Volume"
             />
           </div>
+          {track.kind === 'archive' && (
+            <button
+              type="button"
+              className={`mini-player__add-to${addToOpen ? ' mini-player__add-to--active' : ''}`}
+              onClick={() => {
+                setQueueOpen(false)
+                setAddToOpen((v) => !v)
+              }}
+              aria-expanded={addToOpen}
+              aria-label="Add to playlist"
+              title="Add to playlist"
+            >
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+                <path
+                  d="M2 4.5h8M2 8h6M2 11.5h4"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M12.5 7v6M9.5 10h6"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          )}
           <button
             type="button"
             className={`mini-player__queue-toggle${queueOpen ? ' mini-player__queue-toggle--active' : ''}`}
-            onClick={() => setQueueOpen((v) => !v)}
+            onClick={() => {
+              setAddToOpen(false)
+              setQueueOpen((v) => !v)
+            }}
             aria-expanded={queueOpen}
             aria-label="Toggle play queue"
           >
