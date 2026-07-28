@@ -5046,3 +5046,144 @@
 [data-tahti-ui='brand'].brand-channel .report-button__error {
   color: var(--coral);
 }
+
+/* Profile followers/following summary + modal */
+[data-tahti-ui='brand'] .prof-follow-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0 1.25rem;
+}
+
+[data-tahti-ui='brand'] .prof-follow-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-follow-summary__avatars {
+  display: flex;
+}
+
+[data-tahti-ui='brand'] .prof-follow-summary__avatar {
+  margin-left: -8px;
+}
+
+[data-tahti-ui='brand'] .prof-follow-summary__avatar:first-child {
+  margin-left: 0;
+}
+
+[data-tahti-ui='brand'] .prof-follow-summary__count {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold, 600);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.15s;
+}
+
+[data-tahti-ui='brand'] .prof-follow-summary:hover .prof-follow-summary__count {
+  text-decoration-color: currentColor;
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 1rem;
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal {
+  width: 100%;
+  max-width: 26rem;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold, 600);
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__list {
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__row:hover {
+  background: var(--card2);
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold, 600);
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__handle {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__more {
+  margin: 0.5rem 0.75rem 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card2);
+  color: var(--text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-follow-modal__more:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

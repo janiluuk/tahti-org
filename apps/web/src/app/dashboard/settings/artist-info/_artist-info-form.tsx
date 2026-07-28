@@ -34,6 +34,8 @@ export interface ArtistInfoFormData {
   countryCode: string | null
   pronouns: string | null
   showJoinDate: boolean
+  showFollowers: boolean
+  showFollowing: boolean
   defaultLocation: string | null
   genres: string[]
   bio: string
@@ -54,6 +56,8 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
   const [links, setLinks] = useState<ChannelLink[]>(initial.links)
   const [streamingLinks, setStreamingLinks] = useState<StreamingLinksDraft>(initial.streamingLinks)
   const [showJoinDate, setShowJoinDate] = useState(initial.showJoinDate)
+  const [showFollowers, setShowFollowers] = useState(initial.showFollowers)
+  const [showFollowing, setShowFollowing] = useState(initial.showFollowing)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -69,6 +73,8 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
         countryCode: identity.countryCode,
         pronouns: identity.pronouns,
         showJoinDate,
+        showFollowers,
+        showFollowing,
         defaultLocation: identity.defaultLocation,
         socialLinks: {
           genres: identity.genres.join(', '),
@@ -106,7 +112,13 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
         description="Who you are — shown at the top of your channel page."
       >
         <ChannelIdentityPanel initial={identity} onDraftChange={setIdentity} />
-        <label className="studio-toggle-row studio-mt-sm">
+      </Panel>
+
+      <Panel
+        title="Visibility"
+        description="What shows on your public profile — everything defaults to visible."
+      >
+        <label className="studio-toggle-row">
           <input
             type="checkbox"
             className="studio-toggle-checkbox"
@@ -117,8 +129,26 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
         </label>
         <p className="studio-text-muted-sm studio-mt-xs">
           Displays &ldquo;Member since {new Date().getFullYear()}&rdquo; on your public profile and
-          channel page. Recommended setting: on.
+          channel page.
         </p>
+        <label className="studio-toggle-row studio-mt-sm">
+          <input
+            type="checkbox"
+            className="studio-toggle-checkbox"
+            checked={showFollowers}
+            onChange={(e) => setShowFollowers(e.target.checked)}
+          />
+          <span className="studio-toggle-label">Show my followers on my profile</span>
+        </label>
+        <label className="studio-toggle-row studio-mt-sm">
+          <input
+            type="checkbox"
+            className="studio-toggle-checkbox"
+            checked={showFollowing}
+            onChange={(e) => setShowFollowing(e.target.checked)}
+          />
+          <span className="studio-toggle-label">Show who I follow on my profile</span>
+        </label>
       </Panel>
 
       <Panel title="Bio">

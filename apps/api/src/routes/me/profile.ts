@@ -32,6 +32,8 @@ const profileSelect = {
   socialLinks: true,
   publicAttribution: true,
   showJoinDate: true,
+  showFollowers: true,
+  showFollowing: true,
   createdAt: true,
 } as const
 
@@ -87,6 +89,8 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.socialLinks !== undefined) data.socialLinks = body.socialLinks
       if (body.publicAttribution !== undefined) data.publicAttribution = body.publicAttribution
       if (body.showJoinDate !== undefined) data.showJoinDate = body.showJoinDate
+      if (body.showFollowers !== undefined) data.showFollowers = body.showFollowers
+      if (body.showFollowing !== undefined) data.showFollowing = body.showFollowing
 
       const updated = await fastify.prisma.user.update({
         where: { id: user.id },

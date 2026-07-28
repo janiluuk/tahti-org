@@ -651,6 +651,17 @@ export const ArchiveItemRecentSchema = z.array(
 /** Public channel archive list (includes presigned audioUrl and full metadata). */
 export const ChannelArchiveItemsResponseSchema = z.array(z.record(z.string(), z.unknown()))
 
+/** One row in a profile's followers/following list modal. */
+export const ArtistFollowUserSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+})
+export const ArtistFollowListResponseSchema = z.object({
+  users: z.array(ArtistFollowUserSchema),
+  hasMore: z.boolean(),
+})
+
 export const PublicProfileArtistSchema = z.object({
   username: z.string(),
   displayName: z.string(),
@@ -662,6 +673,9 @@ export const PublicProfileArtistSchema = z.object({
   countryCode: z.string().nullable().optional(),
   pronouns: z.string().nullable().optional(),
   joinDate: z.string().datetime().nullable().optional(),
+  /** Null when the artist has hidden their followers/following list from their profile. */
+  followerCount: z.number().int().nullable().optional(),
+  followingCount: z.number().int().nullable().optional(),
 })
 
 export const PublicProfileViewSchema = z.object({
@@ -877,6 +891,8 @@ export const ProfileFieldsSchema = z.object({
   socialLinks: z.unknown(),
   publicAttribution: z.boolean(),
   showJoinDate: z.boolean(),
+  showFollowers: z.boolean(),
+  showFollowing: z.boolean(),
   createdAt: z.string().datetime(),
 })
 
