@@ -23,6 +23,7 @@ import { SpotifyEmbedRow } from './_spotify-embed-row'
 import { MixcloudEmbedRow } from './_mixcloud-embed-row'
 import { ArchiveTrackRow } from './_archive-track-row'
 import { ReportButton } from '@/components/report-button'
+import { CollectionEmbedButton } from './_embed-button'
 
 async function fetchCollection(slug: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -137,9 +138,12 @@ export default async function CollectionPage({
               style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
             />
           )}
-          <Link href={`/u/${data.user.username}`} className="prof-back-link">
-            ← {data.user.displayName}
-          </Link>
+          <div className="prof-collection-top-row">
+            <Link href={`/u/${data.user.username}`} className="prof-back-link">
+              ← {data.user.displayName}
+            </Link>
+            <CollectionEmbedButton slug={params.slug} />
+          </div>
           {data.coverUrl && (
             <div className="prof-collection-hero-cover">
               {/* eslint-disable-next-line @next/next/no-img-element */}

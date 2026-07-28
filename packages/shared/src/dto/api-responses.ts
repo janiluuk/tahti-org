@@ -1259,6 +1259,26 @@ export const EmbedTrackPlaySchema = z.object({
   expiresInSec: z.number().int(),
 })
 
+export const CollectionEmbedViewSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  coverUrl: z.string().nullable(),
+  embedUrl: z.string().url(),
+  profileUrl: z.string().url(),
+  artist: z.object({
+    username: z.string(),
+    displayName: z.string(),
+  }),
+  tracks: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      durationSec: z.number().int().nullable(),
+      hasStream: z.boolean(),
+    }),
+  ),
+})
+
 export const AdminVenueBoardSchema = z.object({
   id: z.string(),
   slug: z.string(),

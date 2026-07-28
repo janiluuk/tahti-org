@@ -5,18 +5,22 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   IdParamSchema,
   ChannelEmbedViewSchema,
+  CollectionEmbedViewSchema,
   EmbedTrackPlaySchema,
   OEmbedQuerySchema,
   OEmbedResponseSchema,
   ReleaseEmbedViewSchema,
   ReleaseTrackParamsSchema,
   SlugParamSchema,
+  SlugTrackIdParamsSchema,
+  archivePlaybackKey,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
 import { config } from '../../config.js'
 import { presignedGetUrl } from '../../lib/minio.js'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
+import { resolveCollectionCoverUrl } from '../../lib/collection-cover.js'
 import { resolveArtistUrl } from '../../lib/artist-url.js'
 
 // M14 — oEmbed discovery endpoint + embed metadata
@@ -192,6 +196,102 @@ const embedRoutes: FastifyPluginAsync = async (fastify) => {
         profileUrl: resolveArtistUrl(channel.user.username),
         hlsUrl: channel.state === 'LIVE' ? `${config.hlsBaseUrl}/${slug}/index.m3u8` : null,
       })
+    },
+  )
+
+  // GET /api/v1/embed/col/:slug — collection/playlist embed metadata (public only)
+  fastify.get(
+    '/api/v1/embed/col/:slug',
+    {
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(CollectionEmbedViewSchema, 'CollectionEmbed'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
+
+      const collection = await fastify.prisma.collection.findFirst({
+        where: { slug, isPublic: true },
+        select: {
+          slug: true,
+          name: true,
+          coverUrl: true,
+          coverKey: true,
+          user: { select: { username: true, displayName: true } },
+          items: {
+            orderBy: { position: 'asc' },
+            select: {
+              archiveItem: {
+                select: { id: true, title: true, durationSec: true, mp3Key: true, flacKey: true },
+              },
+            },
+          },
+        },
+      })
+      if (!collection) return reply.status(404).send({ error: 'Collection not found' })
+
+      return reply.send({
+        slug: collection.slug,
+        name: collection.name,
+        coverUrl: await resolveCollectionCoverUrl(collection),
+        embedUrl: `${config.appUrl}/embed/col/${collection.slug}`,
+        profileUrl: resolveArtistUrl(collection.user.username),
+        artist: collection.user,
+        // Only archive-item-backed entries have a single playable file (a release
+        // is itself a multi-track grouping) — same limitation as the Manage panel
+        // playlist-switch feature (apps/api/src/routes/internal/channel-fallback.ts).
+        tracks: collection.items
+          .filter((i) => i.archiveItem)
+          .map((i) => ({
+            id: i.archiveItem!.id,
+            title: i.archiveItem!.title,
+            durationSec: i.archiveItem!.durationSec,
+            hasStream: !!archivePlaybackKey(i.archiveItem!),
+          })),
+      })
+    },
+  )
+
+  // GET /api/v1/embed/col/:slug/tracks/:trackId/play — short-lived stream URL for embed player
+  fastify.get(
+    '/api/v1/embed/col/:slug/tracks/:trackId/play',
+    {
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(EmbedTrackPlaySchema, 'EmbedTrackPlay'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugTrackIdParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug, trackId } = routeParams
+
+      const collection = await fastify.prisma.collection.findFirst({
+        where: { slug, isPublic: true },
+        select: { id: true },
+      })
+      if (!collection) return reply.status(404).send({ error: 'Collection not found' })
+
+      const item = await fastify.prisma.collectionItem.findFirst({
+        where: { collectionId: collection.id, archiveItemId: trackId },
+        select: {
+          archiveItem: {
+            select: { title: true, mp3Key: true, flacKey: true, status: true },
+          },
+        },
+      })
+      if (!item?.archiveItem || item.archiveItem.status !== 'READY') {
+        return reply.status(404).send({ error: 'Track not found or not ready' })
+      }
+
+      const key = archivePlaybackKey(item.archiveItem)
+      if (!key) return reply.status(409).send({ error: 'Track file not available yet' })
+
+      const url = await presignedGetUrl(key, 300)
+      return reply.send({ url, title: item.archiveItem.title, expiresInSec: 300 })
     },
   )
 
