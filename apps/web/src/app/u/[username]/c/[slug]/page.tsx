@@ -24,6 +24,7 @@ import { MixcloudEmbedRow } from './_mixcloud-embed-row'
 import { ArchiveTrackRow } from './_archive-track-row'
 import { ReportButton } from '@/components/report-button'
 import { CollectionEmbedButton } from './_embed-button'
+import { AddTrackButton } from './_add-track-button'
 
 async function fetchCollection(slug: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -39,6 +40,7 @@ interface CollectionResponse {
   description: string | null
   type: string
   coverUrl?: string | null
+  collaborative?: boolean
   galleryMode?: CollectionGalleryMode
   slideshowImages?: string[]
   videoBackgroundUrl?: string | null
@@ -142,8 +144,16 @@ export default async function CollectionPage({
             <Link href={`/u/${data.user.username}`} className="prof-back-link">
               ← {data.user.displayName}
             </Link>
-            <CollectionEmbedButton slug={params.slug} />
+            <div className="prof-collection-top-row__actions">
+              {data.collaborative && <AddTrackButton slug={params.slug} />}
+              <CollectionEmbedButton slug={params.slug} />
+            </div>
           </div>
+          {data.collaborative && (
+            <p className="prof-list-meta prof-collaborative-hint">
+              🤝 Collaborative playlist — anyone can add a track
+            </p>
+          )}
           {data.coverUrl && (
             <div className="prof-collection-hero-cover">
               {/* eslint-disable-next-line @next/next/no-img-element */}

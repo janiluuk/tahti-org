@@ -115,6 +115,19 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
       return
     }
 
+    if (/^\/api\/v1\/collections\/[^/]+\/items$/.test(request.url) && request.method === 'POST') {
+      const limit = { max: 20, windowSec: 3600, keyPrefix: 'collab-add-track' }
+      const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>
+        rateLimitWhenRedisUnavailable(config.rateLimit.redisFailOpen, limit.windowSec),
+      )
+      reply.header('X-RateLimit-Remaining', remaining)
+      reply.header('X-RateLimit-Reset', resetSec)
+      if (!ok) {
+        return reply.status(429).send({ error: 'Too many tracks added', retryAfterSec: resetSec })
+      }
+      return
+    }
+
     if (isBulkImportRoute(request.url, request.method)) {
       const limit = { max: 5, windowSec: 3600, keyPrefix: 'bulk-import' }
       const { ok, remaining, resetSec } = await checkLimit(ip, request.url, limit).catch(() =>

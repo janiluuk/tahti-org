@@ -5423,3 +5423,100 @@
     8px -8px,
     -8px 0px;
 }
+
+/* Collaborative playlist — "Add track" button + picker modal */
+[data-tahti-ui='brand'] .prof-collection-top-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .prof-add-track-btn {
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 35%, transparent);
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+  color: var(--cyan);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-add-track-btn:hover {
+  background: color-mix(in srgb, var(--cyan) 20%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-collaborative-hint {
+  margin: 0 0 0.75rem;
+}
+
+[data-tahti-ui='brand'] .prof-add-track-search {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .prof-add-track-error {
+  color: var(--coral);
+}
+
+[data-tahti-ui='brand'] .prof-add-track-results {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+[data-tahti-ui='brand'] .prof-add-track-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius);
+  background: var(--card2);
+}
+
+[data-tahti-ui='brand'] .prof-add-track-row__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .prof-add-track-row__title {
+  font-size: var(--text-sm);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .prof-add-track-row__meta {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .prof-add-track-row__add {
+  flex-shrink: 0;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--cyan);
+  color: var(--bg);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-add-track-row__add:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

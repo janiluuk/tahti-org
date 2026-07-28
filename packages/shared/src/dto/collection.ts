@@ -38,6 +38,7 @@ export const PatchCollectionSchema = z
     trackSortMode: z.enum(COLLECTION_TRACK_SORT_MODES).optional(),
     isPublic: z.boolean().optional(),
     isFeatured: z.boolean().optional(),
+    collaborative: z.boolean().optional(),
     coverUrl: z.string().max(500).nullable().optional(),
   })
   .refine((body) => Object.keys(body).length > 0, { message: 'No fields to update' })
@@ -55,6 +56,21 @@ export const AddCollectionItemSchema = z
   })
 
 export type AddCollectionItemInput = z.infer<typeof AddCollectionItemSchema>
+
+/** Body for a non-owner adding a track to a collaborative playlist — archive
+ * items only (any public, READY track in the catalog), always appended at
+ * the end. Distinct from AddCollectionItemSchema (the owner's own route,
+ * which also accepts releases and an explicit insert position). */
+export const AddCollaborativeTrackSchema = z.object({
+  archiveItemId: z.string().min(1),
+})
+
+export type AddCollaborativeTrackInput = z.infer<typeof AddCollaborativeTrackSchema>
+
+export const CatalogTrackSearchQuerySchema = z.object({
+  q: z.string().trim().min(1).max(100).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+})
 
 export const ReorderCollectionSchema = z.object({
   itemIds: z.array(z.string().min(1)).min(1, 'itemIds array is required'),
