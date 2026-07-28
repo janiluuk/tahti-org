@@ -14,6 +14,7 @@ import { getSessionUser } from '@/lib/session'
 import { ReportButton } from '@/components/report-button'
 import { ReleasesGrid } from '@/components/releases-grid'
 import { PressKitGallery } from '@/components/press-kit-gallery'
+import { FollowersSection } from '@/components/followers-section'
 import { resolveChannelUrl } from '@/lib/app-url'
 import type { PublicPressKitImage } from '@tahti/shared'
 import { ProfileTabs } from './_profile-tabs'
@@ -102,6 +103,8 @@ interface ProfileResponse {
     tier: string
     socialLinks: Record<string, string> | null
     joinDate?: string | null
+    followerCount?: number | null
+    followingCount?: number | null
   }
   channel: { slug: string; state: string } | null
   releases: Array<{
@@ -308,6 +311,18 @@ export default async function ArtistProfilePage({ params }: { params: { username
           />
         }
       >
+        <div className="prof-follow-row">
+          <FollowersSection
+            username={artist.username}
+            direction="followers"
+            count={artist.followerCount ?? null}
+          />
+          <FollowersSection
+            username={artist.username}
+            direction="following"
+            count={artist.followingCount ?? null}
+          />
+        </div>
         <ProfileTabs
           stage={
             <>

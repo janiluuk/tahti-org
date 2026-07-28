@@ -15,6 +15,8 @@ export const ProfilePatchSchema = z
     socialLinks: z.record(z.string()).optional(),
     publicAttribution: z.boolean().optional(),
     showJoinDate: z.boolean().optional(),
+    showFollowers: z.boolean().optional(),
+    showFollowing: z.boolean().optional(),
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
 

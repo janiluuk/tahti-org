@@ -37,6 +37,8 @@ export type ChannelEditorFetchResult = {
   countryCode: string | null
   pronouns: string | null
   showJoinDate: boolean
+  showFollowers: boolean
+  showFollowing: boolean
   defaultLocation: string | null
   genres: string[]
   links: Array<{ label: string; url: string }>
@@ -70,6 +72,8 @@ export async function fetchChannelEditorData(
   let countryCode: string | null = null
   let pronouns: string | null = null
   let showJoinDate = true
+  let showFollowers = true
+  let showFollowing = true
   let defaultLocation: string | null = null
   let genres: string[] = []
   let links: Array<{ label: string; url: string }> = []
@@ -95,9 +99,13 @@ export async function fetchChannelEditorData(
     if (profileRes.ok) {
       const profile = (await profileRes.json()) as {
         showJoinDate: boolean
+        showFollowers: boolean
+        showFollowing: boolean
         defaultLocation: string | null
       }
       showJoinDate = profile.showJoinDate
+      showFollowers = profile.showFollowers
+      showFollowing = profile.showFollowing
       defaultLocation = profile.defaultLocation
     }
     if (channelRes.ok) {
@@ -156,6 +164,8 @@ export async function fetchChannelEditorData(
     countryCode,
     pronouns,
     showJoinDate,
+    showFollowers,
+    showFollowing,
     defaultLocation,
     genres,
     links,
