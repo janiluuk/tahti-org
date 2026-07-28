@@ -91,10 +91,15 @@ export function buildRtmpMirrorOutput(
   target: RtmpMirrorTarget,
   coverPath: string,
   titleText: string,
+  subtitleText?: string,
 ): string {
   const audioSource = target.alwaysMirror ? 'radio' : 'live_source'
   const escapedTitle = escapeLiquidsoapString(titleText)
-  const videoSource = `video.add_text(color=0xffffff, size=28, x=20, y=628, "${escapedTitle}", video.add_image(file="${coverPath}", width=1280, height=720, blank()))`
+  const base = `video.add_image(file="${coverPath}", width=1280, height=720, blank())`
+  const withSubtitle = subtitleText
+    ? `video.add_text(color=0xcbd5e1, size=18, x=20, y=662, "${escapeLiquidsoapString(subtitleText)}", ${base})`
+    : base
+  const videoSource = `video.add_text(color=0xffffff, size=28, x=20, y=628, "${escapedTitle}", ${withSubtitle})`
   const outputId = rtmpMirrorOutputId(target.id)
   return `output.url(\n  id="${outputId}",\n  url="${target.rtmpUrl}/${target.streamKey}",\n  fallible=true,\n  %ffmpeg(\n    format="flv",\n    %audio(codec="aac", b="128k", ar=44100, ac=2),\n    %video(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)\n  ),\n  source.mux.video(video=${videoSource}, ${audioSource})\n)`
 }
@@ -196,6 +201,9 @@ export async function spawnLiquidsoapContainer(
         where: { enabled: true },
         select: { id: true, provider: true, rtmpUrl: true, streamKeyEnc: true, alwaysMirror: true },
       },
+      streamOverlayTitle: true,
+      streamOverlaySubtitle: true,
+      streamOverlayCoverUrl: true,
       user: { select: { displayName: true, avatarUrl: true } },
     },
   })
@@ -219,9 +227,15 @@ export async function spawnLiquidsoapContainer(
 
   // Multistream mirrors need a video track (YouTube/Twitch reject/flag audio-only
   // RTMP) — bake the channel's cover art + title into a static video frame. Only
-  // populate the cache when there's actually a mirror target enabled.
+  // populate the cache when there's actually a mirror target enabled. The artist
+  // can override both via Dashboard → Multistream → stream overlay; falls back
+  // to their avatar/display name when unset.
   if (targets.length > 0) {
-    await ensureCoverImage(channelId, channel.user.avatarUrl, COVER_CACHE_VOLUME)
+    await ensureCoverImage(
+      channelId,
+      channel.streamOverlayCoverUrl ?? channel.user.avatarUrl,
+      COVER_CACHE_VOLUME,
+    )
   }
 
   // Render Liquidsoap config from template
@@ -246,8 +260,16 @@ export async function spawnLiquidsoapContainer(
     // decoded-once image, see cover-cache.ts) with the channel's display name
     // overlaid. See buildRtmpMirrorOutput for the Liquidsoap API details.
     const coverPath = coverImagePath(channelId)
+    const overlayTitle = channel.streamOverlayTitle || channel.user.displayName
     const rtmpBlock = targets
-      .map((t) => buildRtmpMirrorOutput(t, coverPath, channel.user.displayName))
+      .map((t) =>
+        buildRtmpMirrorOutput(
+          t,
+          coverPath,
+          overlayTitle,
+          channel.streamOverlaySubtitle ?? undefined,
+        ),
+      )
       .join('\n\n')
     config = config.replace(/\{\{#RTMP_TARGETS\}\}[\s\S]*?\{\{\/RTMP_TARGETS\}\}/g, rtmpBlock)
   }

@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import NextLink from 'next/link'
 import { ButtonIcon, StatusPill } from '@tahti/ui'
 import { MultistreamTargetsPanel } from './multistream-targets-panel'
+import { StreamOverlayPanel } from './stream-overlay-panel'
 
 interface RtmpTarget {
   id: string
@@ -20,6 +21,12 @@ interface RtmpTarget {
 interface MeResponse {
   tier: string
   channel: { state: string } | null
+}
+
+interface StreamOverlay {
+  streamOverlayTitle: string | null
+  streamOverlaySubtitle: string | null
+  streamOverlayCoverUrl: string | null
 }
 
 async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
@@ -43,9 +50,10 @@ export default async function MultistreamSettingsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [me, targets] = await Promise.all([
+  const [me, targets, overlay] = await Promise.all([
     apiFetch<MeResponse>(apiUrl, cookie, '/api/auth/me'),
     apiFetch<RtmpTarget[]>(apiUrl, cookie, '/api/me/rtmp-targets'),
+    apiFetch<StreamOverlay>(apiUrl, cookie, '/api/me/channel/stream-overlay'),
   ])
 
   const isPaid = me?.tier === 'STUDIO'
@@ -69,7 +77,18 @@ export default async function MultistreamSettingsPage() {
       </div>
 
       {isPaid ? (
-        <MultistreamTargetsPanel initial={targets ?? []} channelLive={channelLive} />
+        <>
+          <MultistreamTargetsPanel initial={targets ?? []} channelLive={channelLive} />
+          <StreamOverlayPanel
+            initial={
+              overlay ?? {
+                streamOverlayTitle: null,
+                streamOverlaySubtitle: null,
+                streamOverlayCoverUrl: null,
+              }
+            }
+          />
+        </>
       ) : (
         <div className="studio-empty-card studio-mt-xl">
           <p className="studio-empty-card__text">Multistream is a Tahti membership feature.</p>

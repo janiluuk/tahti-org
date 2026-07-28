@@ -81,4 +81,25 @@ describe('buildRtmpMirrorOutput', () => {
     )
     expect(out).toContain('id="rtmp_cms3abc123"')
   })
+
+  it('omits the subtitle text.add_text call when no subtitle is set', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'target5', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+      'My Show',
+    )
+    expect(out.match(/video\.add_text\(/g)).toHaveLength(1)
+  })
+
+  it('bakes an artist-editable subtitle as a second, smaller text layer', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'target6', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+      'My Show',
+      'Every Friday, 8pm CET',
+    )
+    expect(out.match(/video\.add_text\(/g)).toHaveLength(2)
+    expect(out).toContain('"Every Friday, 8pm CET"')
+    expect(out).toContain('size=18')
+  })
 })

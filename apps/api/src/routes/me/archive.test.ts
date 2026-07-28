@@ -141,6 +141,63 @@ describe('M22/M24/M25 — archive metadata and slideshow', () => {
     expect(publicChannel.json().slideshowImages).toHaveLength(2)
   })
 
+  it('sets and clears the multistream video overlay title/subtitle/cover', async () => {
+    const getInitial = await app.inject({
+      method: 'GET',
+      url: '/api/me/channel/stream-overlay',
+      headers: { cookie },
+    })
+    expect(getInitial.statusCode).toBe(200)
+    expect(getInitial.json().streamOverlayTitle).toBeNull()
+
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/stream-overlay',
+      headers: { cookie },
+      payload: {
+        streamOverlayTitle: 'Late Night Sessions',
+        streamOverlaySubtitle: 'Every Friday, 8pm CET',
+        streamOverlayCoverUrl: 'https://cdn.example/overlay-cover.jpg',
+      },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json().streamOverlayTitle).toBe('Late Night Sessions')
+    expect(patch.json().streamOverlaySubtitle).toBe('Every Friday, 8pm CET')
+    expect(patch.json().streamOverlayCoverUrl).toBe('https://cdn.example/overlay-cover.jpg')
+
+    const clear = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/stream-overlay',
+      headers: { cookie },
+      payload: { streamOverlayTitle: '', streamOverlaySubtitle: '', streamOverlayCoverUrl: '' },
+    })
+    expect(clear.statusCode).toBe(200)
+    expect(clear.json().streamOverlayTitle).toBeNull()
+    expect(clear.json().streamOverlaySubtitle).toBeNull()
+    expect(clear.json().streamOverlayCoverUrl).toBeNull()
+  })
+
+  it('rejects a non-URL streamOverlayCoverUrl', async () => {
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/stream-overlay',
+      headers: { cookie },
+      payload: { streamOverlayCoverUrl: 'not-a-url' },
+    })
+    expect(patch.statusCode).toBe(400)
+  })
+
+  it('requires auth for the stream overlay routes', async () => {
+    const get = await app.inject({ method: 'GET', url: '/api/me/channel/stream-overlay' })
+    expect(get.statusCode).toBe(401)
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/stream-overlay',
+      payload: { streamOverlayTitle: 'x' },
+    })
+    expect(patch.statusCode).toBe(401)
+  })
+
   it('tags a Tahti artist in tracklist and records TRACKLIST mention', async () => {
     const tagged = await createTestArtist(prisma, {
       email: `${PREFIX}tagged@example.com`,

@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { Prisma } from '@tahti/db'
 import {
   ChannelGalleryPatchSchema,
+  ChannelStreamOverlayPatchSchema,
   ChannelTextLayerPatchSchema,
   ChannelVisualPatchSchema,
   ArchiveItemVisualPatchSchema,
@@ -526,6 +527,67 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     })
     return reply.send(updated)
   })
+
+  // Multistream video overlay — title/subtitle/cover baked into the RTMP
+  // mirror pushes' video track (see buildRtmpMirrorOutput). Shared across all
+  // of a channel's targets; falls back to display name + avatar when unset.
+  fastify.get(
+    '/api/me/channel/stream-overlay',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: {
+          streamOverlayTitle: true,
+          streamOverlaySubtitle: true,
+          streamOverlayCoverUrl: true,
+        },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      return reply.send(channel)
+    },
+  )
+
+  fastify.patch(
+    '/api/me/channel/stream-overlay',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const parsed = ChannelStreamOverlayPatchSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const { streamOverlayTitle, streamOverlaySubtitle, streamOverlayCoverUrl } = parsed.data
+
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      const updated = await fastify.prisma.channel.update({
+        where: { id: channel.id },
+        data: {
+          ...(streamOverlayTitle !== undefined
+            ? { streamOverlayTitle: streamOverlayTitle || null }
+            : {}),
+          ...(streamOverlaySubtitle !== undefined
+            ? { streamOverlaySubtitle: streamOverlaySubtitle || null }
+            : {}),
+          ...(streamOverlayCoverUrl !== undefined
+            ? { streamOverlayCoverUrl: streamOverlayCoverUrl || null }
+            : {}),
+        },
+        select: {
+          streamOverlayTitle: true,
+          streamOverlaySubtitle: true,
+          streamOverlayCoverUrl: true,
+        },
+      })
+      return reply.send(updated)
+    },
+  )
 
   // M31: PLAT-074 — archive item visual preset
   fastify.patch(
