@@ -706,6 +706,7 @@ export const PublicProfileViewSchema = z.object({
       slug: z.string(),
       name: z.string(),
       type: z.string(),
+      style: z.string(),
       description: z.string().nullable(),
       coverUrl: z.string().nullable(),
       isFeatured: z.boolean(),

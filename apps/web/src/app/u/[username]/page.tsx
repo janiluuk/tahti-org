@@ -149,6 +149,7 @@ interface ProfileResponse {
     slug: string
     name: string
     type: string
+    style: string
     description: string | null
     coverUrl?: string | null
     isFeatured?: boolean
@@ -191,6 +192,40 @@ interface ArtistMemberItem {
   pictureUrl: string | null
 }
 
+/** Shared row-list rendering for every Collection sub-group inside the
+ * Releases tab (DJ mixes / Playlists / Collections) — same markup the flat
+ * "Collections" section used before it was split into these sub-groups. */
+function CollectionRowList({ items }: { items: NonNullable<ProfileResponse['collections']> }) {
+  return (
+    <ul className="prof-list prof-collection-list">
+      {items.map((c) => (
+        <li key={c.slug}>
+          <Link href={c.url} className="prof-collection-row">
+            <div className="prof-collection-cover">
+              {c.coverUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={c.coverUrl} alt="" width={76} height={76} />
+              ) : (
+                <span className="prof-collection-cover-ph" aria-hidden />
+              )}
+            </div>
+            <div>
+              <div className="prof-collection-title">{c.name}</div>
+              <div className="prof-list-meta prof-list-meta--strong">
+                {c.itemCount} item{c.itemCount === 1 ? '' : 's'}
+                {c.isFeatured && ' · Featured'}
+              </div>
+              {c.description && (
+                <p className="prof-list-meta prof-list-meta--tight">{c.description}</p>
+              )}
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 async function fetchPressKitImages(username: string): Promise<PublicPressKitImage[]> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const res = await fetch(
@@ -224,6 +259,14 @@ export default async function ArtistProfilePage({ params }: { params: { username
   if (!data) notFound()
 
   const { artist, channel, releases, tracks, links, collections = [] } = data
+  // Sub-grouped inside the "Releases" tab (see ProfileTabs) rather than
+  // separate top-level tabs — keeps the tab bar from growing one tab per
+  // content type.
+  const djMixCollections = collections.filter((c) => c.style === 'DJ_SET_SERIES')
+  const playlistCollections = collections.filter((c) => c.style === 'PLAYLIST')
+  const otherCollections = collections.filter(
+    (c) => c.style !== 'DJ_SET_SERIES' && c.style !== 'PLAYLIST',
+  )
   const pinnedItems = [
     ...releases
       .filter((r) => r.pinned)
@@ -373,40 +416,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                             </div>
                           </div>
                         )}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {collections.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label">Collections</div>
-                  <ul className="prof-list prof-collection-list">
-                    {collections.map((c) => (
-                      <li key={c.slug}>
-                        <Link href={c.url} className="prof-collection-row">
-                          <div className="prof-collection-cover">
-                            {c.coverUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={c.coverUrl} alt="" width={76} height={76} />
-                            ) : (
-                              <span className="prof-collection-cover-ph" aria-hidden />
-                            )}
-                          </div>
-                          <div>
-                            <div className="prof-collection-title">{c.name}</div>
-                            <div className="prof-list-meta prof-list-meta--strong">
-                              {c.type.replace(/_/g, ' ')} · {c.itemCount} item(s)
-                              {c.isFeatured && ' · Featured'}
-                            </div>
-                            {c.description && (
-                              <p className="prof-list-meta prof-list-meta--tight">
-                                {c.description}
-                              </p>
-                            )}
-                          </div>
-                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -653,6 +662,33 @@ export default async function ArtistProfilePage({ params }: { params: { username
                   <ReleasesGrid releases={releases} />
                 )}
               </section>
+              {djMixCollections.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">DJ mixes</div>
+                    <div className="prof-sec-count">{djMixCollections.length} total</div>
+                  </div>
+                  <CollectionRowList items={djMixCollections} />
+                </section>
+              )}
+              {playlistCollections.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">Playlists</div>
+                    <div className="prof-sec-count">{playlistCollections.length} total</div>
+                  </div>
+                  <CollectionRowList items={playlistCollections} />
+                </section>
+              )}
+              {otherCollections.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">Collections</div>
+                    <div className="prof-sec-count">{otherCollections.length} total</div>
+                  </div>
+                  <CollectionRowList items={otherCollections} />
+                </section>
+              )}
               <section className="prof-section">
                 <TracksTab tracks={tracks} isOwner={isOwner} />
               </section>

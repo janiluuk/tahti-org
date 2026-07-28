@@ -46,6 +46,33 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(body.artist.pronouns).toBe('she/her')
   })
 
+  it('includes collection style so the profile page can group DJ mixes/playlists/collections', async () => {
+    await prisma.collection.create({
+      data: {
+        userId: (
+          await prisma.user.findUniqueOrThrow({
+            where: { username: 'public-profile-artist' },
+            select: { id: true },
+          })
+        ).id,
+        slug: `${PREFIX}dj-mix`,
+        name: 'Test DJ Mix',
+        style: 'DJ_SET_SERIES',
+        isPublic: true,
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/public-profile-artist/profile',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { collections: Array<{ slug: string; style: string }> }
+    const collection = body.collections.find((c) => c.slug === `${PREFIX}dj-mix`)
+    expect(collection).toBeTruthy()
+    expect(collection!.style).toBe('DJ_SET_SERIES')
+  })
+
   it('lists all ready archive items under tracks, flagging pinned ones', async () => {
     const artist = await prisma.user.findUniqueOrThrow({
       where: { username: 'public-profile-artist' },
