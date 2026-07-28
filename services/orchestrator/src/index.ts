@@ -11,6 +11,7 @@ import {
   spawnLiquidsoapContainer,
   getActiveChannels,
   getContainerNameForChannel,
+  getRtmpTargetStatuses,
 } from './liquidsoap.js'
 import { getActiveRecorders } from './recorder.js'
 import { getActiveEdgeEncoders } from './edge-encoder.js'
@@ -163,6 +164,16 @@ fastify.post('/resume', async (request, reply) => {
   })
   if (early !== undefined) return early
   return reply.send({ ok: true })
+})
+
+// Manage panel multistream status — log-scan based, see getRtmpTargetStatuses.
+fastify.post('/rtmp-status', async (request, reply) => {
+  const { channelId, targetIds } = request.body as { channelId: string; targetIds: string[] }
+  if (!channelId || !Array.isArray(targetIds)) {
+    return reply.status(400).send({ error: 'channelId and targetIds required' })
+  }
+  const statuses = await getRtmpTargetStatuses(channelId, targetIds)
+  return reply.send({ statuses })
 })
 
 startNowPlayingSync()

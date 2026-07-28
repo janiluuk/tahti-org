@@ -4,6 +4,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { StatusPill } from '@tahti/ui'
+import { RTMP_PROVIDERS } from '@/lib/rtmp-provider-help'
 
 export interface ManageStats {
   audioBitrateKbps: number | null
@@ -199,10 +201,100 @@ function PlaylistSwitchDropdown({ slug }: { slug: string }) {
   )
 }
 
+interface RtmpTargetStatus {
+  id: string
+  provider: string
+  label: string
+  enabled: boolean
+  status: 'connected' | 'error' | 'offline' | 'disabled'
+  lastError?: string
+}
+
+function rtmpProviderLabel(provider: string): string {
+  return RTMP_PROVIDERS.find((p) => p.value === provider)?.label ?? provider
+}
+
+function rtmpStatusPill(status: RtmpTargetStatus['status']) {
+  switch (status) {
+    case 'connected':
+      return (
+        <StatusPill tone="green" className="ch-manage-multistream__pill">
+          LIVE
+        </StatusPill>
+      )
+    case 'error':
+      return (
+        <StatusPill tone="coral" className="ch-manage-multistream__pill">
+          ERROR
+        </StatusPill>
+      )
+    case 'disabled':
+      return (
+        <StatusPill tone="amber" className="ch-manage-multistream__pill">
+          OFF
+        </StatusPill>
+      )
+    default:
+      return (
+        <StatusPill tone="purple" className="ch-manage-multistream__pill">
+          NOT LIVE
+        </StatusPill>
+      )
+  }
+}
+
+/** Push status for the channel's configured YouTube/Twitch/etc. mirror
+ * targets (see /dashboard/settings/multistream). Only renders once targets
+ * exist — most channels have none, and the fetch is skippable in that case. */
+function MultistreamStatus({ slug }: { slug: string }) {
+  const [targets, setTargets] = useState<RtmpTargetStatus[] | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    const tick = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/channels/${slug}/rtmp-status`, {
+          credentials: 'include',
+        })
+        if (res.ok && !cancelled) setTargets((await res.json()) as RtmpTargetStatus[])
+      } catch {
+        // keep showing the last-known values
+      }
+    }
+    void tick()
+    const id = setInterval(tick, REFRESH_MS)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [slug])
+
+  if (!targets || targets.length === 0) return null
+
+  return (
+    <div className="ch-manage-multistream">
+      <span className="ch-manage-stats__label">Multistream</span>
+      <ul className="ch-manage-multistream__list">
+        {targets.map((t) => (
+          <li key={t.id} className="ch-manage-multistream__row">
+            <span className="ch-manage-multistream__name">
+              {t.label} · {rtmpProviderLabel(t.provider)}
+            </span>
+            {rtmpStatusPill(t.status)}
+            {t.status === 'error' && t.lastError && (
+              <span className="ch-manage-multistream__error">{t.lastError}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 /** Owner/board-only tab on the channel page — live stats snapshot, refreshed
- * periodically while the tab is open, plus transport controls and a playlist
- * switch for the archive rotation. Multistream status and editable external
- * metadata land in follow-up passes. */
+ * periodically while the tab is open, plus transport controls, a playlist
+ * switch for the archive rotation, and multistream push status. Editable
+ * external metadata lands in a follow-up pass. */
 export function ManagePanel({ slug, initialStats }: { slug: string; initialStats: ManageStats }) {
   const [stats, setStats] = useState(initialStats)
   const [pendingAction, setPendingAction] = useState<TransportAction | null>(null)
@@ -288,6 +380,7 @@ export function ManagePanel({ slug, initialStats }: { slug: string; initialStats
       </div>
       {transportError && <p className="ch-manage-transport__error">{transportError}</p>}
       <PlaylistSwitchDropdown slug={slug} />
+      <MultistreamStatus slug={slug} />
     </section>
   )
 }

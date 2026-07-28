@@ -19,7 +19,12 @@ describe('buildRtmpMirrorOutput', () => {
 
   it('mixes archive-eligible mirrors onto the full radio source', () => {
     const out = buildRtmpMirrorOutput(
-      { rtmpUrl: 'rtmp://a.rtmp.youtube.com/live2', streamKey: 'key1', alwaysMirror: true },
+      {
+        id: 'target1',
+        rtmpUrl: 'rtmp://a.rtmp.youtube.com/live2',
+        streamKey: 'key1',
+        alwaysMirror: true,
+      },
       coverPath,
       'My Show',
     )
@@ -30,7 +35,12 @@ describe('buildRtmpMirrorOutput', () => {
 
   it('restricts non-alwaysMirror targets to the live source only', () => {
     const out = buildRtmpMirrorOutput(
-      { rtmpUrl: 'rtmp://live.twitch.tv/app', streamKey: 'key2', alwaysMirror: false },
+      {
+        id: 'target2',
+        rtmpUrl: 'rtmp://live.twitch.tv/app',
+        streamKey: 'key2',
+        alwaysMirror: false,
+      },
       coverPath,
       'My Show',
     )
@@ -40,7 +50,7 @@ describe('buildRtmpMirrorOutput', () => {
 
   it('bakes in a video track using the confirmed-working Liquidsoap 2.2.5 API', () => {
     const out = buildRtmpMirrorOutput(
-      { rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      { id: 'target3', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
       coverPath,
       'My Show',
     )
@@ -56,10 +66,19 @@ describe('buildRtmpMirrorOutput', () => {
 
   it('escapes a title containing quotes so it stays a valid Liquidsoap string', () => {
     const out = buildRtmpMirrorOutput(
-      { rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      { id: 'target4', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
       coverPath,
       'DJ "Test"',
     )
     expect(out).toContain('"DJ \\"Test\\""')
+  })
+
+  it('tags the output with a telnet-safe id derived from the target id — status polling scans docker logs for this exact prefix', () => {
+    const out = buildRtmpMirrorOutput(
+      { id: 'cms3abc123', rtmpUrl: 'rtmp://x', streamKey: 'k', alwaysMirror: false },
+      coverPath,
+      'My Show',
+    )
+    expect(out).toContain('id="rtmp_cms3abc123"')
   })
 })

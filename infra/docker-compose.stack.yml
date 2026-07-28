@@ -39,6 +39,12 @@ x-app-env: &app-env
   CENTRIFUGO_API_URL: http://chat:8000/api
   CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-dev}
   CENTRIFUGO_JWT_SECRET: ${CENTRIFUGO_JWT_SECRET:-dev_secret_do_not_use_in_prod}
+  # RtmpTarget.streamKeyEnc at-rest encryption key (AES-256-GCM, 32 bytes/64 hex
+  # chars) — api encrypts, orchestrator decrypts, both must agree. There's no
+  # working built-in dev fallback for this one (the embedded default in
+  # stream-key-enc.ts/liquidsoap.ts starts with "dev", which isn't valid hex and
+  # always throws), so unlike the secrets above this needs an explicit value here.
+  RTMP_KEY_ENC_KEY: ${RTMP_KEY_ENC_KEY:-abababababababababababababababababababababababababababababababab}
   ORCHESTRATOR_URL: http://orchestrator:3003
   ICECAST_HOST: icecast:8000
   ICECAST_BASE_URL: http://icecast:8000

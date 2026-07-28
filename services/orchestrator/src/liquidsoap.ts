@@ -67,9 +67,16 @@ export function escapeLiquidsoapString(s: string): string {
 }
 
 interface RtmpMirrorTarget {
+  id: string
   rtmpUrl: string
   streamKey: string
   alwaysMirror: boolean
+}
+
+/** Telnet log tag for a target's output.url — also the prefix scanned by
+ * getRtmpTargetStatuses to detect connection errors in `docker logs`. */
+export function rtmpMirrorOutputId(targetId: string): string {
+  return `rtmp_${targetId}`
 }
 
 /**
@@ -88,7 +95,8 @@ export function buildRtmpMirrorOutput(
   const audioSource = target.alwaysMirror ? 'radio' : 'live_source'
   const escapedTitle = escapeLiquidsoapString(titleText)
   const videoSource = `video.add_text(color=0xffffff, size=28, x=20, y=628, "${escapedTitle}", video.add_image(file="${coverPath}", width=1280, height=720, blank()))`
-  return `output.url(\n  url="${target.rtmpUrl}/${target.streamKey}",\n  fallible=true,\n  %ffmpeg(\n    format="flv",\n    %audio(codec="aac", b="128k", ar=44100, ac=2),\n    %video(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)\n  ),\n  source.mux.video(video=${videoSource}, ${audioSource})\n)`
+  const outputId = rtmpMirrorOutputId(target.id)
+  return `output.url(\n  id="${outputId}",\n  url="${target.rtmpUrl}/${target.streamKey}",\n  fallible=true,\n  %ffmpeg(\n    format="flv",\n    %audio(codec="aac", b="128k", ar=44100, ac=2),\n    %video(codec="libx264", b="2500k", preset="veryfast", pixel_format="yuv420p", framerate=30)\n  ),\n  source.mux.video(video=${videoSource}, ${audioSource})\n)`
 }
 
 // Track running containers: channelId → containerName
@@ -107,6 +115,47 @@ export function getActiveChannelEntries(): [channelId: string, containerName: st
  * undefined when that channel has no running Liquidsoap process right now. */
 export function getContainerNameForChannel(channelId: string): string | undefined {
   return activeChannels.get(channelId)
+}
+
+export type RtmpTargetLiveStatus = 'connected' | 'error' | 'offline'
+
+const RTMP_STATUS_LOG_WINDOW = '90s'
+
+/**
+ * Liquidsoap's output.url has no telnet status query (confirmed against the
+ * real v2.2.5 image — `help <id>` only exposes `.metadata`/`.remaining`/`.skip`,
+ * no connection state). A failed RTMP push instead logs a repeating pair of
+ * lines tagged with the output's id: "[<id>:N] Error while connecting: ..."
+ * followed by "[<id>:N] Will try again in ...". A healthy push logs neither —
+ * so scanning recent `docker logs` for that id's error lines is the only real
+ * (non-inferred) signal available for this operator.
+ */
+export async function getRtmpTargetStatuses(
+  channelId: string,
+  targetIds: string[],
+): Promise<Record<string, { status: RtmpTargetLiveStatus; lastError?: string }>> {
+  const containerName = activeChannels.get(channelId)
+  if (!containerName || targetIds.length === 0) {
+    return Object.fromEntries(targetIds.map((id) => [id, { status: 'offline' as const }]))
+  }
+
+  const { stdout } = await execAsync(
+    `docker logs --since ${RTMP_STATUS_LOG_WINDOW} ${containerName}`,
+  ).catch(() => ({ stdout: '' }))
+  const lines = stdout.split('\n')
+
+  const result: Record<string, { status: RtmpTargetLiveStatus; lastError?: string }> = {}
+  for (const targetId of targetIds) {
+    const outputId = rtmpMirrorOutputId(targetId)
+    const tagPrefix = `[${outputId}:`
+    const errorLine = [...lines]
+      .reverse()
+      .find((line) => line.includes(tagPrefix) && line.includes('Error while connecting'))
+    result[targetId] = errorLine
+      ? { status: 'error', lastError: errorLine.split(tagPrefix)[1]?.split(']')[1]?.trim() }
+      : { status: 'connected' }
+  }
+  return result
 }
 
 export async function spawnLiquidsoapContainer(
@@ -145,7 +194,7 @@ export async function spawnLiquidsoapContainer(
       liveInputOverrideSlug: true,
       rtmpTargets: {
         where: { enabled: true },
-        select: { provider: true, rtmpUrl: true, streamKeyEnc: true, alwaysMirror: true },
+        select: { id: true, provider: true, rtmpUrl: true, streamKeyEnc: true, alwaysMirror: true },
       },
       user: { select: { displayName: true, avatarUrl: true } },
     },
@@ -161,6 +210,7 @@ export async function spawnLiquidsoapContainer(
 
   // Decrypt RTMP stream keys
   const targets = channel.rtmpTargets.map((t) => ({
+    id: t.id,
     provider: t.provider,
     rtmpUrl: t.rtmpUrl,
     streamKey: decryptKey(t.streamKeyEnc),

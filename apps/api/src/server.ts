@@ -31,6 +31,7 @@ import tahtiSelectsGalleryRoute from './routes/channels/tahti-selects-gallery.js
 import channelStatsRoute from './routes/channels/stats.js'
 import newsPublicRoute from './routes/news/public.js'
 import channelManageStatsRoute from './routes/channels/manage-stats.js'
+import channelRtmpStatusRoute from './routes/channels/rtmp-status.js'
 import channelTransportRoutes from './routes/channels/transport.js'
 import channelFallbackCollectionRoutes from './routes/channels/fallback-collection.js'
 import customDomainRoutes from './routes/channels/custom-domain.js'
@@ -464,6 +465,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(channelStatsRoute)
   await fastify.register(newsPublicRoute)
   await fastify.register(channelManageStatsRoute)
+  await fastify.register(channelRtmpStatusRoute)
   await fastify.register(channelTransportRoutes)
   await fastify.register(channelFallbackCollectionRoutes)
   await fastify.register(customDomainRoutes)
