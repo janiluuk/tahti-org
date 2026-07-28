@@ -14,24 +14,43 @@ interface PlatformStats {
   totalHours: number
 }
 
+interface NewsPost {
+  id: string
+  headline: string
+  summary: string
+  authorName: string
+  publishedAt: string
+}
+
 async function fetchData(): Promise<{
   live: ChannelCard[]
   stats: PlatformStats | null
+  news: NewsPost[]
 }> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   try {
-    const [channelsRes, statsRes] = await Promise.all([
+    const [channelsRes, statsRes, newsRes] = await Promise.all([
       fetch(`${apiUrl}/api/v1/channels`, { next: { revalidate: 30, tags: ['channels-live'] } }),
       fetch(`${apiUrl}/api/v1/stats`, { next: { revalidate: 300 } }),
+      fetch(`${apiUrl}/api/v1/news`, { next: { revalidate: 60, tags: ['news-feed'] } }),
     ])
     const channels = channelsRes.ok
       ? ((await channelsRes.json()) as { live: ChannelCard[]; recent: ChannelCard[] })
       : { live: [], recent: [] }
     const stats = statsRes.ok ? ((await statsRes.json()) as PlatformStats) : null
-    return { live: channels.live, stats }
+    const news = newsRes.ok ? ((await newsRes.json()) as NewsPost[]) : []
+    return { live: channels.live, stats, news }
   } catch {
-    return { live: [], stats: null }
+    return { live: [], stats: null, news: [] }
   }
+}
+
+function formatNewsDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 function LiveTile({ channel }: { channel: ChannelCard }) {
@@ -71,7 +90,7 @@ function hasMeaningfulPlatformStats(stats: PlatformStats): boolean {
 }
 
 export default async function HomePage() {
-  const [{ live, stats }, user] = await Promise.all([fetchData(), getSessionUser()])
+  const [{ live, stats, news }, user] = await Promise.all([fetchData(), getSessionUser()])
 
   return (
     <div className="home-shell">
@@ -130,6 +149,24 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      {news.length > 0 && (
+        <section className="home-news-section" aria-labelledby="home-news-heading">
+          <div className="home-section-label" id="home-news-heading">
+            News
+          </div>
+          <ul className="home-news-list">
+            {news.map((post) => (
+              <li key={post.id} className="home-news-item">
+                <p className="home-news-item__date">{formatNewsDate(post.publishedAt)}</p>
+                <h3 className="home-news-item__headline">{post.headline}</h3>
+                <p className="home-news-item__summary">{post.summary}</p>
+                <p className="home-news-item__byline">By {post.authorName}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {stats && hasMeaningfulPlatformStats(stats) && (
         <StatCardStrip aria-label="Platform stats">

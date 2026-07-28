@@ -222,6 +222,16 @@ export const ChannelFallbackCollectionsResponseSchema = z.array(
   ChannelFallbackCollectionOptionSchema,
 )
 
+/** Public homepage news feed entry — always carries a byline. */
+export const NewsPostSchema = z.object({
+  id: z.string(),
+  headline: z.string(),
+  summary: z.string(),
+  authorName: z.string(),
+  publishedAt: z.string(),
+})
+export const NewsFeedResponseSchema = z.array(NewsPostSchema)
+
 /** Public, read-only view of booked live-artist slots on Tahti Radio. */
 export const PublicRadioSlotSchema = z.object({
   id: z.string(),
