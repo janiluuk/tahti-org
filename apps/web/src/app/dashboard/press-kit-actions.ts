@@ -45,13 +45,13 @@ export async function completePressKitImageUpload(
   if (!res.ok) {
     return { error: (data as { error?: string }).error ?? 'Failed to save image' }
   }
-  revalidatePath('/dashboard/settings/account')
+  revalidatePath('/dashboard/settings/presskit')
   return { error: null, image: data as PressKitImageItem }
 }
 
 export async function updatePressKitImage(
   id: string,
-  params: { title?: string | null; includeInZip?: boolean },
+  params: { title?: string | null; includeInZip?: boolean; position?: number },
 ): Promise<{ error: string | null; image?: PressKitImageItem }> {
   const res = await fetch(`${apiUrl}/api/me/press-kit/images/${id}`, {
     method: 'PATCH',
@@ -63,7 +63,7 @@ export async function updatePressKitImage(
   if (!res.ok) {
     return { error: (data as { error?: string }).error ?? 'Failed to update image' }
   }
-  revalidatePath('/dashboard/settings/account')
+  revalidatePath('/dashboard/settings/presskit')
   return { error: null, image: data as PressKitImageItem }
 }
 
@@ -77,7 +77,7 @@ export async function deletePressKitImage(id: string): Promise<{ error: string |
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to delete image' }
   }
-  revalidatePath('/dashboard/settings/account')
+  revalidatePath('/dashboard/settings/presskit')
   return { error: null }
 }
 
@@ -94,6 +94,6 @@ export async function updatePressKitGallerySettings(
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to update gallery setting' }
   }
-  revalidatePath('/dashboard/settings/account')
+  revalidatePath('/dashboard/settings/presskit')
   return { error: null }
 }
