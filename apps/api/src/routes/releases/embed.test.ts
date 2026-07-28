@@ -9,6 +9,7 @@ import {
   cleanupUsersByEmailPrefix,
   createTestArtist,
   createPublishedReleaseWithTrack,
+  createReadyArchiveItem,
 } from '../../test/helpers.js'
 
 vi.mock('../../lib/minio.js', () => ({
@@ -152,5 +153,68 @@ describe('M14 — embed and oEmbed', () => {
       url: `/api/v1/embed/r/${draft.id}/tracks/${draft.tracks[0].id}/play`,
     })
     expect(res.statusCode).toBe(404)
+  })
+
+  describe('collection/playlist embed', () => {
+    let collectionSlug: string
+    let collectionArchiveItemId: string
+
+    beforeAll(async () => {
+      const artist = await prisma.user.findUniqueOrThrow({
+        where: { username },
+        include: { channel: true },
+      })
+      const item = await createReadyArchiveItem(prisma, artist.channel!.id, 'Embed test track')
+      collectionArchiveItemId = item.id
+
+      collectionSlug = `${PREFIX}collection`
+      const collection = await prisma.collection.create({
+        data: { userId: artist.id, slug: collectionSlug, name: 'Embed test playlist' },
+      })
+      await prisma.collectionItem.create({
+        data: { collectionId: collection.id, archiveItemId: item.id, position: 0 },
+      })
+    })
+
+    it('GET /api/v1/embed/col/:slug returns playlist metadata', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/embed/col/${collectionSlug}`,
+      })
+      expect(res.statusCode).toBe(200)
+      const body = res.json() as { name: string; tracks: Array<{ title: string }> }
+      expect(body.name).toBe('Embed test playlist')
+      expect(body.tracks.map((t) => t.title)).toContain('Embed test track')
+    })
+
+    it('GET play endpoint returns a signed stream URL for a track in the collection', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/embed/col/${collectionSlug}/tracks/${collectionArchiveItemId}/play`,
+      })
+      expect(res.statusCode).toBe(200)
+      expect(res.json()).toMatchObject({ url: 'https://minio.test/signed-stream' })
+    })
+
+    it('404s for a track that is not in the collection', async () => {
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/embed/col/${collectionSlug}/tracks/not-a-real-track/play`,
+      })
+      expect(res.statusCode).toBe(404)
+    })
+
+    it('404s for a non-public collection', async () => {
+      const artist = await prisma.user.findUniqueOrThrow({ where: { username } })
+      const privateSlug = `${PREFIX}private-collection`
+      await prisma.collection.create({
+        data: { userId: artist.id, slug: privateSlug, name: 'Private', isPublic: false },
+      })
+      const res = await app.inject({
+        method: 'GET',
+        url: `/api/v1/embed/col/${privateSlug}`,
+      })
+      expect(res.statusCode).toBe(404)
+    })
   })
 })

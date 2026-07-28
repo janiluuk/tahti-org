@@ -81,6 +81,11 @@ export const ChannelIdParamSchema = z.object({
   channelId: IdParamSchema.shape.id,
 })
 
+export const SlugTrackIdParamsSchema = z.object({
+  slug: SlugParamSchema.shape.slug,
+  trackId: IdParamSchema.shape.id,
+})
+
 export function parseRouteParams<T extends z.ZodTypeAny>(
   schema: T,
   params: unknown,

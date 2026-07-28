@@ -5263,3 +5263,163 @@
   opacity: 0.6;
   cursor: default;
 }
+
+/* Collection/playlist embed button + modal */
+[data-tahti-ui='brand'] .prof-collection-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .prof-embed-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-embed-btn:hover {
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card2));
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 1rem;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal {
+  width: 100%;
+  max-width: 26rem;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold, 600);
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__body {
+  display: flex;
+  flex-direction: column;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.75rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__field:first-child {
+  margin-top: 0;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__select,
+[data-tahti-ui='brand'] .prof-embed-modal__code {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__code {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-xs);
+  resize: vertical;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__copy-btn {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  align-self: flex-start;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--cyan);
+  color: var(--bg);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__hint {
+  margin: 0.5rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .prof-embed-modal__preview {
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-image:
+    linear-gradient(45deg, var(--card2) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--card2) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--card2) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--card2) 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0px;
+}
