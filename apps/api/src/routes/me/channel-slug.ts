@@ -100,7 +100,11 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       if (slug === channel.slug) {
-        return reply.send({ slug: channel.slug, rtmpStreamKey: '', previousSlugRedirectExpiresAt: null })
+        return reply.send({
+          slug: channel.slug,
+          rtmpStreamKey: '',
+          previousSlugRedirectExpiresAt: null,
+        })
       }
 
       const clash = await fastify.prisma.channel.findUnique({
@@ -114,7 +118,9 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
         select: { id: true },
       })
       if (redirectClash) {
-        return reply.status(409).send({ error: 'That address was recently released and is not available yet' })
+        return reply
+          .status(409)
+          .send({ error: 'That address was recently released and is not available yet' })
       }
 
       const newRtmpKey = `${slug}__${nanoid(32)}`

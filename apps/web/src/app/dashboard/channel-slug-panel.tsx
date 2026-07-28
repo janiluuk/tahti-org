@@ -139,10 +139,7 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
           Address changed. Your new RTMP stream key is <code>{newRtmpKey}</code> — update your
           broadcast software before you next go live.
           {redirectExpiresAt && (
-            <>
-              {' '}
-              Your old address redirects here until {formatExpiry(redirectExpiresAt)}.
-            </>
+            <> Your old address redirects here until {formatExpiry(redirectExpiresAt)}.</>
           )}
         </p>
       )}

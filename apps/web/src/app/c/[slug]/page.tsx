@@ -378,215 +378,226 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               <PublicChannelTabs
                 live={
                   <>
-              <ChannelTextLayerView
-                mode={channel.textLayerMode}
-                text={channel.textLayerText}
-                align={channel.textLayerAlign}
-              />
-
-              {channel.galleryMode === 'STATIC_SLIDESHOW' && channel.slideshowImages.length > 0 ? (
-                <ChannelSlideshow
-                  images={channel.slideshowImages}
-                  preset={
-                    (channel.slideshowPreset ?? 'FADE') as import('@tahti/shared').SlideshowPreset
-                  }
-                  intervalSeconds={channel.slideshowIntervalSeconds ?? 8}
-                  transitionMs={channel.slideshowTransitionMs ?? 600}
-                  autoplay={channel.slideshowAutoplay ?? true}
-                />
-              ) : (
-                <ChannelGalleryView mode={channel.galleryMode} images={channel.slideshowImages} />
-              )}
-
-              {hlsUrl && (
-                <LivePlayerSection
-                  url={hlsUrl}
-                  slug={slug}
-                  title={
-                    isRotationChannel
-                      ? (channel.nowPlaying?.title ?? channel.user.displayName)
-                      : channel.user.displayName
-                  }
-                  subtitle={
-                    isRotationChannel && channel.nowPlaying
-                      ? channel.nowPlaying.artistName
-                      : undefined
-                  }
-                  subtitleHref={
-                    isRotationChannel && channel.nowPlaying?.artistUsername
-                      ? `/u/${channel.nowPlaying.artistUsername}`
-                      : undefined
-                  }
-                  artworkUrl={isRotationChannel ? channel.nowPlaying?.artworkUrl : undefined}
-                  isReplay={isRotationChannel}
-                  nextUpLabel={
-                    isRotationChannel && channel.nowPlayingNext
-                      ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
-                      : undefined
-                  }
-                />
-              )}
-
-              {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
-
-              {embeds.length > 0 && (
-                <section className="ch-archive-section">
-                  <div className="ch-archive-section-head">
-                    <h2 className="ch-section-label">Listen on SoundCloud</h2>
-                  </div>
-                  <div className="ch-embeds-list">
-                    {embeds.map((e) => (
-                      <iframe
-                        key={e.id}
-                        title={e.title ?? 'SoundCloud track'}
-                        className="ch-embeds-list__frame"
-                        scrolling="no"
-                        frameBorder="no"
-                        allow="autoplay"
-                        src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(e.url)}&color=%23ff5500&auto_play=false&show_comments=false&show_user=true&show_reposts=false&visual=false`}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {kickUsername && (
-                <section className="ch-archive-section">
-                  <div className="ch-archive-section-head">
-                    <h2 className="ch-section-label">Live on Kick</h2>
-                  </div>
-                  <div className="ch-embeds-list">
-                    <iframe
-                      title="Kick channel"
-                      className="ch-embeds-list__frame ch-embeds-list__frame--kick"
-                      frameBorder="no"
-                      allowFullScreen
-                      src={`https://player.kick.com/${kickUsername}`}
+                    <ChannelTextLayerView
+                      mode={channel.textLayerMode}
+                      text={channel.textLayerText}
+                      align={channel.textLayerAlign}
                     />
-                  </div>
-                </section>
-              )}
 
-              <section className="ch-archive-section">
-                <div className="ch-archive-section-head">
-                  <h2 className="ch-section-label">Archive</h2>
-                  <a
-                    href={channelArchiveRssUrl(apiUrl, slug)}
-                    className="ch-rss-link"
-                    rel="alternate"
-                  >
-                    RSS ↗
-                  </a>
-                </div>
-
-                {channel.state !== 'LIVE' && channel.nextBroadcastAt && (
-                  <BroadcastCountdown
-                    targetIso={channel.nextBroadcastAt}
-                    note={channel.nextBroadcastNote}
-                  />
-                )}
-                {channel.state !== 'LIVE' &&
-                  !channel.nextBroadcastAt &&
-                  channel.nextBroadcastNote && (
-                    <div className="ch-next-broadcast" role="status">
-                      <SafePlainText
-                        text={channel.nextBroadcastNote}
-                        className="ch-next-broadcast-note"
+                    {channel.galleryMode === 'STATIC_SLIDESHOW' &&
+                    channel.slideshowImages.length > 0 ? (
+                      <ChannelSlideshow
+                        images={channel.slideshowImages}
+                        preset={
+                          (channel.slideshowPreset ??
+                            'FADE') as import('@tahti/shared').SlideshowPreset
+                        }
+                        intervalSeconds={channel.slideshowIntervalSeconds ?? 8}
+                        transitionMs={channel.slideshowTransitionMs ?? 600}
+                        autoplay={channel.slideshowAutoplay ?? true}
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <ChannelGalleryView
+                        mode={channel.galleryMode}
+                        images={channel.slideshowImages}
+                      />
+                    )}
 
-                {items.length === 0 ? (
-                  <div className="public-empty-card">
-                    <p className="public-empty-card__text">No archive items yet.</p>
-                    <p className="public-empty-card__hint">
-                      Past broadcasts appear here once published from the studio.
-                    </p>
-                  </div>
-                ) : (
-                  <ul className="ch-archive-list">
-                    {items.map((item) => {
-                      const { cssImageUrl, videoEmbedUrl } = resolveArchiveBackground(
-                        item.backgroundUrl,
-                      )
-                      return (
-                        <li
-                          key={item.id}
-                          id={`archive-item-${item.id}`}
-                          className={`ch-archive-item${cssImageUrl ? ' ch-archive-item--bg' : ''}`}
-                          style={
-                            cssImageUrl ? { ['--ch-item-bg' as string]: cssImageUrl } : undefined
-                          }
+                    {hlsUrl && (
+                      <LivePlayerSection
+                        url={hlsUrl}
+                        slug={slug}
+                        title={
+                          isRotationChannel
+                            ? (channel.nowPlaying?.title ?? channel.user.displayName)
+                            : channel.user.displayName
+                        }
+                        subtitle={
+                          isRotationChannel && channel.nowPlaying
+                            ? channel.nowPlaying.artistName
+                            : undefined
+                        }
+                        subtitleHref={
+                          isRotationChannel && channel.nowPlaying?.artistUsername
+                            ? `/u/${channel.nowPlaying.artistUsername}`
+                            : undefined
+                        }
+                        artworkUrl={isRotationChannel ? channel.nowPlaying?.artworkUrl : undefined}
+                        isReplay={isRotationChannel}
+                        nextUpLabel={
+                          isRotationChannel && channel.nowPlayingNext
+                            ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
+                            : undefined
+                        }
+                      />
+                    )}
+
+                    {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
+
+                    {embeds.length > 0 && (
+                      <section className="ch-archive-section">
+                        <div className="ch-archive-section-head">
+                          <h2 className="ch-section-label">Listen on SoundCloud</h2>
+                        </div>
+                        <div className="ch-embeds-list">
+                          {embeds.map((e) => (
+                            <iframe
+                              key={e.id}
+                              title={e.title ?? 'SoundCloud track'}
+                              className="ch-embeds-list__frame"
+                              scrolling="no"
+                              frameBorder="no"
+                              allow="autoplay"
+                              src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(e.url)}&color=%23ff5500&auto_play=false&show_comments=false&show_user=true&show_reposts=false&visual=false`}
+                            />
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    {kickUsername && (
+                      <section className="ch-archive-section">
+                        <div className="ch-archive-section-head">
+                          <h2 className="ch-section-label">Live on Kick</h2>
+                        </div>
+                        <div className="ch-embeds-list">
+                          <iframe
+                            title="Kick channel"
+                            className="ch-embeds-list__frame ch-embeds-list__frame--kick"
+                            frameBorder="no"
+                            allowFullScreen
+                            src={`https://player.kick.com/${kickUsername}`}
+                          />
+                        </div>
+                      </section>
+                    )}
+
+                    <section className="ch-archive-section">
+                      <div className="ch-archive-section-head">
+                        <h2 className="ch-section-label">Archive</h2>
+                        <a
+                          href={channelArchiveRssUrl(apiUrl, slug)}
+                          className="ch-rss-link"
+                          rel="alternate"
                         >
-                          {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
-                          <div className="ch-archive-item-header">
-                            {item.bannerUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={item.bannerUrl} alt="" className="ch-archive-item-thumb" />
-                            ) : (
-                              <AvatarTile size="xs" name={item.title} />
-                            )}
-                            <div className="ch-archive-item-meta">
-                              <div className="ch-archive-item-title">{item.title}</div>
-                              <div className="ch-archive-item-date">
-                                {new Date(item.createdAt).toLocaleDateString(undefined, {
-                                  year: 'numeric',
-                                  month: 'short',
-                                })}
-                                {item.durationSec != null && (
-                                  <> · {fmtDuration(item.durationSec)}</>
-                                )}
-                              </div>
-                            </div>
+                          RSS ↗
+                        </a>
+                      </div>
+
+                      {channel.state !== 'LIVE' && channel.nextBroadcastAt && (
+                        <BroadcastCountdown
+                          targetIso={channel.nextBroadcastAt}
+                          note={channel.nextBroadcastNote}
+                        />
+                      )}
+                      {channel.state !== 'LIVE' &&
+                        !channel.nextBroadcastAt &&
+                        channel.nextBroadcastNote && (
+                          <div className="ch-next-broadcast" role="status">
+                            <SafePlainText
+                              text={channel.nextBroadcastNote}
+                              className="ch-next-broadcast-note"
+                            />
                           </div>
-                          {item.slideshowUrls && item.slideshowUrls.length > 0 && (
-                            <ArchiveItemGallery
-                              itemId={item.id}
-                              images={item.slideshowUrls}
-                              galleryMode={item.galleryMode ?? 'NONE'}
-                              audioReactive={Boolean(item.galleryAudioReactive)}
-                            />
-                          )}
-                          {item.description && (
-                            <SafePlainText
-                              text={item.description}
-                              className="ch-archive-item-desc"
-                            />
-                          )}
-                          {item.commentary && (
-                            <SafePlainText
-                              text={item.commentary}
-                              className="ch-archive-item-commentary"
-                            />
-                          )}
-                          {item.tracklist && item.tracklist.length > 0 && (
-                            <TracklistView entries={item.tracklist} />
-                          )}
-                          {item.audioUrl ? (
-                            <ArchiveItemPlayback
-                              channelSlug={slug}
-                              artistUsername={channel.user.username}
-                              item={{ ...item, audioUrl: item.audioUrl }}
-                              colorSchemeJson={channel.colorSchemeJson}
-                              isLoggedIn={!!user}
-                              queue={archiveQueue}
-                            />
-                          ) : (
-                            <>
-                              <TrackCommentsToggle
-                                archiveItemId={item.id}
-                                isLoggedIn={!!user}
-                                commentCount={item.commentCount ?? 0}
-                              />
-                              <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} />
-                            </>
-                          )}
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-              </section>
+                        )}
+
+                      {items.length === 0 ? (
+                        <div className="public-empty-card">
+                          <p className="public-empty-card__text">No archive items yet.</p>
+                          <p className="public-empty-card__hint">
+                            Past broadcasts appear here once published from the studio.
+                          </p>
+                        </div>
+                      ) : (
+                        <ul className="ch-archive-list">
+                          {items.map((item) => {
+                            const { cssImageUrl, videoEmbedUrl } = resolveArchiveBackground(
+                              item.backgroundUrl,
+                            )
+                            return (
+                              <li
+                                key={item.id}
+                                id={`archive-item-${item.id}`}
+                                className={`ch-archive-item${cssImageUrl ? ' ch-archive-item--bg' : ''}`}
+                                style={
+                                  cssImageUrl
+                                    ? { ['--ch-item-bg' as string]: cssImageUrl }
+                                    : undefined
+                                }
+                              >
+                                {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
+                                <div className="ch-archive-item-header">
+                                  {item.bannerUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={item.bannerUrl}
+                                      alt=""
+                                      className="ch-archive-item-thumb"
+                                    />
+                                  ) : (
+                                    <AvatarTile size="xs" name={item.title} />
+                                  )}
+                                  <div className="ch-archive-item-meta">
+                                    <div className="ch-archive-item-title">{item.title}</div>
+                                    <div className="ch-archive-item-date">
+                                      {new Date(item.createdAt).toLocaleDateString(undefined, {
+                                        year: 'numeric',
+                                        month: 'short',
+                                      })}
+                                      {item.durationSec != null && (
+                                        <> · {fmtDuration(item.durationSec)}</>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                {item.slideshowUrls && item.slideshowUrls.length > 0 && (
+                                  <ArchiveItemGallery
+                                    itemId={item.id}
+                                    images={item.slideshowUrls}
+                                    galleryMode={item.galleryMode ?? 'NONE'}
+                                    audioReactive={Boolean(item.galleryAudioReactive)}
+                                  />
+                                )}
+                                {item.description && (
+                                  <SafePlainText
+                                    text={item.description}
+                                    className="ch-archive-item-desc"
+                                  />
+                                )}
+                                {item.commentary && (
+                                  <SafePlainText
+                                    text={item.commentary}
+                                    className="ch-archive-item-commentary"
+                                  />
+                                )}
+                                {item.tracklist && item.tracklist.length > 0 && (
+                                  <TracklistView entries={item.tracklist} />
+                                )}
+                                {item.audioUrl ? (
+                                  <ArchiveItemPlayback
+                                    channelSlug={slug}
+                                    artistUsername={channel.user.username}
+                                    item={{ ...item, audioUrl: item.audioUrl }}
+                                    colorSchemeJson={channel.colorSchemeJson}
+                                    isLoggedIn={!!user}
+                                    queue={archiveQueue}
+                                  />
+                                ) : (
+                                  <>
+                                    <TrackCommentsToggle
+                                      archiveItemId={item.id}
+                                      isLoggedIn={!!user}
+                                      commentCount={item.commentCount ?? 0}
+                                    />
+                                    <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} />
+                                  </>
+                                )}
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      )}
+                    </section>
                   </>
                 }
                 releases={
@@ -687,7 +698,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                                 <div className="ch-posts-list__images">
                                   {p.images.map((url) => (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img key={url} src={url} alt="" className="ch-posts-list__image" />
+                                    <img
+                                      key={url}
+                                      src={url}
+                                      alt=""
+                                      className="ch-posts-list__image"
+                                    />
                                   ))}
                                 </div>
                               )}
