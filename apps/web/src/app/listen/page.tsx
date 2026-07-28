@@ -9,15 +9,23 @@ import { ArtistsSection } from './_artists-section'
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001'
 
-async function fetchChannels(): Promise<{ live: ChannelCard[]; recent: ChannelCard[] }> {
+async function fetchChannels(): Promise<{
+  live: ChannelCard[]
+  replaying: ChannelCard[]
+  recent: ChannelCard[]
+}> {
   try {
     const res = await fetch(`${API_URL}/api/v1/channels`, {
       next: { revalidate: 30, tags: ['channels-live'] },
     })
-    if (!res.ok) return { live: [], recent: [] }
-    return (await res.json()) as { live: ChannelCard[]; recent: ChannelCard[] }
+    if (!res.ok) return { live: [], replaying: [], recent: [] }
+    return (await res.json()) as {
+      live: ChannelCard[]
+      replaying: ChannelCard[]
+      recent: ChannelCard[]
+    }
   } catch {
-    return { live: [], recent: [] }
+    return { live: [], replaying: [], recent: [] }
   }
 }
 
@@ -85,7 +93,7 @@ async function fetchListenerCount(slug: string): Promise<number> {
 }
 
 export default async function ListenPage() {
-  const [{ live, recent }, radioPreview, directory, gallery] = await Promise.all([
+  const [{ live, replaying, recent }, radioPreview, directory, gallery] = await Promise.all([
     fetchChannels(),
     fetchTahtiRadioPreview(),
     fetchDirectory(),
@@ -112,6 +120,7 @@ export default async function ListenPage() {
 
       <DiscoverTabs
         live={live}
+        replaying={replaying}
         recent={recent}
         listenerCounts={listenerCounts}
         directory={directory}

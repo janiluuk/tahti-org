@@ -1526,6 +1526,15 @@
   opacity: 0.7;
 }
 
+.listen-section__label--replay {
+  color: var(--purple);
+}
+
+.listen-section__label--replay::before {
+  background: var(--purple);
+  opacity: 0.7;
+}
+
 /* ---- Live feature cards ---- */
 .listen-live-grid {
   display: grid;
@@ -1783,6 +1792,12 @@
 
 .listen-card__status--muted {
   color: var(--muted);
+}
+
+.listen-card__status--replay {
+  color: var(--purple);
+  font-weight: 500;
+  letter-spacing: 0.06em;
 }
 
 .listen-empty {

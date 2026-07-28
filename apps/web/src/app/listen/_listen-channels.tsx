@@ -79,12 +79,40 @@ function ChannelCardItem({ channel }: { channel: ChannelCard }) {
   )
 }
 
+/** Not live, but airing its 24/7 archive rotation right now — same REPLAY
+ * convention as Tahti Radio's own badge (see _tahti-radio-card.tsx /
+ * mini-player.tsx), just applied to any channel with fallbackEnabled. */
+function ReplayCard({ channel }: { channel: ChannelCard }) {
+  return (
+    <Link href={resolveChannelUrl(channel.slug)} className="listen-card">
+      <div className="listen-card__avatar">
+        {channel.user.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={channel.user.avatarUrl} alt={channel.user.displayName} />
+        ) : (
+          <span className="listen-card__avatar-fallback">
+            {channel.user.displayName.charAt(0).toUpperCase()}
+          </span>
+        )}
+      </div>
+
+      <div className="listen-card__body">
+        <div className="listen-card__name">{channel.user.displayName}</div>
+        <div className="listen-card__handle">@{channel.user.username}</div>
+        <div className="listen-card__status listen-card__status--replay">REPLAY</div>
+      </div>
+    </Link>
+  )
+}
+
 export function ListenChannels({
   live,
+  replaying,
   recent,
   listenerCounts,
 }: {
   live: ChannelCard[]
+  replaying: ChannelCard[]
   recent: ChannelCard[]
   listenerCounts?: Record<string, number>
 }) {
@@ -92,15 +120,17 @@ export function ListenChannels({
 
   const genres = useMemo(() => {
     const set = new Set<string>()
-    for (const ch of [...live, ...recent]) {
+    for (const ch of [...live, ...replaying, ...recent]) {
       for (const g of ch.genres) set.add(g)
     }
     return [...set].sort((a, b) => a.localeCompare(b))
-  }, [live, recent])
+  }, [live, replaying, recent])
 
   const filteredLive = genre ? live.filter((ch) => ch.genres.includes(genre)) : live
+  const filteredReplaying = genre ? replaying.filter((ch) => ch.genres.includes(genre)) : replaying
   const filteredRecent = genre ? recent.filter((ch) => ch.genres.includes(genre)) : recent
-  const empty = filteredLive.length === 0 && filteredRecent.length === 0
+  const empty =
+    filteredLive.length === 0 && filteredReplaying.length === 0 && filteredRecent.length === 0
 
   return (
     <>
@@ -147,6 +177,17 @@ export function ListenChannels({
               <div className="listen-live-grid">
                 {filteredLive.map((ch) => (
                   <LiveCard key={ch.slug} channel={ch} listenerCount={listenerCounts?.[ch.slug]} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {filteredReplaying.length > 0 && (
+            <section className="listen-section">
+              <div className="listen-section__label listen-section__label--replay">Replay</div>
+              <div className="listen-grid">
+                {filteredReplaying.map((ch) => (
+                  <ReplayCard key={ch.slug} channel={ch} />
                 ))}
               </div>
             </section>
