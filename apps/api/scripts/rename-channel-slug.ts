@@ -13,7 +13,10 @@
 import { nanoid } from 'nanoid'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../src/lib/password.js'
-import { hotRotatePreviousFields, clearHotRotatePreviousFields } from '../src/lib/ingest-credentials.js'
+import {
+  hotRotatePreviousFields,
+  clearHotRotatePreviousFields,
+} from '../src/lib/ingest-credentials.js'
 
 const SLUG_REDIRECT_GRACE_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -36,7 +39,8 @@ async function main() {
   const redirectClash = await prisma.channelSlugRedirect.findFirst({
     where: { oldSlug: newSlug, expiresAt: { gt: new Date() }, channelId: { not: channel.id } },
   })
-  if (redirectClash) throw new Error(`Slug "${newSlug}" was recently released and isn't available yet`)
+  if (redirectClash)
+    throw new Error(`Slug "${newSlug}" was recently released and isn't available yet`)
 
   const newRtmpKey = `${newSlug}__${nanoid(32)}`
   const newRtmpHash = await hashPassword(newRtmpKey)
@@ -66,7 +70,9 @@ async function main() {
 
   console.log(`Renamed channel ${oldSlug} -> ${newSlug}`)
   console.log(`New RTMP stream key: ${newRtmpKey}`)
-  console.log(`${oldSlug}.tahti.live redirects to ${newSlug}.tahti.live until ${redirectExpiresAt.toISOString()}`)
+  console.log(
+    `${oldSlug}.tahti.live redirects to ${newSlug}.tahti.live until ${redirectExpiresAt.toISOString()}`,
+  )
 }
 
 main()
