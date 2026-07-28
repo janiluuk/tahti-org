@@ -8,6 +8,61 @@
 
 settings.log.level := 3
 
+# STREAM-013: see liquidsoap-channel.liq.template for the full rationale — the
+# stdlib's default http(s) protocol resolver (normalize_url=true) corrupts AWS
+# SigV4 presigned URLs used by playlist() to fetch archive/rotation entries.
+# Can't override "http"/"https" directly (protocol.add refuses to re-register
+# an existing name), so this is a distinct "s3get:" scheme that the API
+# prefixes onto every presigned URL in the fallback.m3u it generates.
+def protocol.s3get(~rlog, ~maxtime, arg) =
+  uri = arg
+
+  def log(~level, s) =
+    rlog(s)
+    log(label="procol.external", level=level, s)
+  end
+
+  # AWS SigV4 presigned URLs are method-specific — one signed for GetObject (GET)
+  # is rejected by MinIO for a HEAD request (confirmed: consistently 403), so
+  # stdlib's HEAD-then-sniff-content-type approach can never find an extension
+  # here and always falls back to the generic ".osb", which ffmpeg's decoder
+  # doesn't recognize — the download itself succeeds (confirmed via direct
+  # testing) but decoding then fails on the unrecognized extension, producing
+  # silence. Read the extension straight off the URL path instead (before the
+  # `?`), which every archive/rotation entry actually has (see
+  # apps/api/src/routes/internal/channel-fallback.ts).
+  path_only = list.hd(default="", string.split(separator="\\?", uri))
+  extname = file.extension(leading_dot=true, dir_sep="/", path_only)
+  extname = extname == "" ? ".osb" : extname
+
+  output = file.temp("liq-process", extname)
+  file_writer = file.write.stream(output)
+  timeout = maxtime - time()
+
+  try
+    response =
+      http.get.stream(normalize_url=false, on_body_data=file_writer, timeout=timeout, uri)
+
+    if response.status_code < 400 then
+      [output]
+    else
+      log(level=3, "Error while fetching http data: #{response.status_code} - #{response.status_message}")
+      []
+    end
+  catch err do
+    log(level=3, "Error while fetching http data: #{err}")
+    []
+  end
+end
+
+protocol.add(
+  temporary=true,
+  syntax="s3get:<https-url>",
+  doc="Download a presigned S3/MinIO URL without Liquidsoap's URL-normalizing http(s) resolver (STREAM-013)",
+  "s3get",
+  protocol.s3get
+)
+
 # --- Curated playlist (the entire program — no live() fallback needed) ---
 archive_local_path = "/archive-cache/{{CHANNEL_ID}}/fallback.m3u"
 archive_remote_url = "{{API_URL}}/internal/channels/{{CHANNEL_ID}}/fallback.m3u?secret={{INTERNAL_SECRET}}"

@@ -9,6 +9,74 @@
 
 settings.log.level := 3
 
+# STREAM-013: custom "s3get:" protocol for archive/rotation playlist entries —
+# the stdlib's http(s) protocol resolver (used whenever playlist() sees a plain
+# http(s) URL) calls http.head/http.get.stream with the default
+# normalize_url=true, which decodes %2F back to a literal `/` inside AWS
+# SigV4's X-Amz-Credential query parameter — corrupting the exact byte sequence
+# the signature was computed over, so MinIO rejects the request. Confirmed via
+# direct testing: curl/wget/ffprobe fetch the identical presigned URL
+# successfully; only Liquidsoap's own http.head/http.get.stream calls (used
+# internally by libs/protocols.liq's protocol.http) failed, reproducibly, on a
+# real production track (repeated "HTTP error 404 File Not Found" from
+# input.http, traced back to protocol.http's http.get.stream call).
+# protocol.add refuses to re-register an existing name ("Plugin already
+# registered in protocols: http"), so this can't simply override "http"/"https"
+# — instead it's a new scheme, "s3get:", that the API prefixes onto every
+# presigned URL in the fallback.m3u it generates (see
+# apps/api/src/routes/internal/channel-fallback.ts). Body is a straight copy of
+# stdlib's protocol.http, minus the proto-prefixing (arg here is already the
+# complete "https://..." URL) and with normalize_url=false added to both HTTP
+# calls — Liquidsoap's own warning message names this exact parameter as the fix.
+def protocol.s3get(~rlog, ~maxtime, arg) =
+  uri = arg
+
+  def log(~level, s) =
+    rlog(s)
+    log(label="procol.external", level=level, s)
+  end
+
+  # AWS SigV4 presigned URLs are method-specific — one signed for GetObject (GET)
+  # is rejected by MinIO for a HEAD request (confirmed: consistently 403), so
+  # stdlib's HEAD-then-sniff-content-type approach can never find an extension
+  # here and always falls back to the generic ".osb", which ffmpeg's decoder
+  # doesn't recognize — the download itself succeeds (confirmed via direct
+  # testing) but decoding then fails on the unrecognized extension, producing
+  # silence. Read the extension straight off the URL path instead (before the
+  # `?`), which every archive/rotation entry actually has (see
+  # apps/api/src/routes/internal/channel-fallback.ts).
+  path_only = list.hd(default="", string.split(separator="\\?", uri))
+  extname = file.extension(leading_dot=true, dir_sep="/", path_only)
+  extname = extname == "" ? ".osb" : extname
+
+  output = file.temp("liq-process", extname)
+  file_writer = file.write.stream(output)
+  timeout = maxtime - time()
+
+  try
+    response =
+      http.get.stream(normalize_url=false, on_body_data=file_writer, timeout=timeout, uri)
+
+    if response.status_code < 400 then
+      [output]
+    else
+      log(level=3, "Error while fetching http data: #{response.status_code} - #{response.status_message}")
+      []
+    end
+  catch err do
+    log(level=3, "Error while fetching http data: #{err}")
+    []
+  end
+end
+
+protocol.add(
+  temporary=true,
+  syntax="s3get:<https-url>",
+  doc="Download a presigned S3/MinIO URL without Liquidsoap's URL-normalizing http(s) resolver (STREAM-013)",
+  "s3get",
+  protocol.s3get
+)
+
 # --- Live input: HTTP pull (Icecast mount or RTMP edge-encoder relay — STREAM-002) ---
 live_icecast = input.http("{{LIVE_INPUT_URL}}")
 live_source = mksafe(live_icecast)
