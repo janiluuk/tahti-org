@@ -789,6 +789,41 @@
   font-size: var(--text-sm);
 }
 
+[data-tahti-ui='brand'] .ch-manage-multistream {
+  margin-top: 1.25rem;
+}
+
+[data-tahti-ui='brand'] .ch-manage-multistream__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-tahti-ui='brand'] .ch-manage-multistream__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius);
+  background: var(--card2);
+}
+
+[data-tahti-ui='brand'] .ch-manage-multistream__name {
+  color: var(--text);
+  font-size: var(--text-sm);
+  margin-right: auto;
+}
+
+[data-tahti-ui='brand'] .ch-manage-multistream__error {
+  flex-basis: 100%;
+  color: var(--coral);
+  font-size: var(--text-xs);
+}
+
 [data-tahti-ui='brand'] .ch-artist-header-row {
   margin-bottom: 0.5rem;
 }

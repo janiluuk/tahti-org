@@ -1161,6 +1161,23 @@ export const RtmpStreamKeyRevealSchema = z.object({
   streamKey: z.string(),
 })
 
+/** Manage tab multistream status row — 'disabled' means the target exists but
+ * is toggled off; 'offline' means enabled but the channel isn't currently
+ * running Liquidsoap at all; 'connected'/'error' come from a live docker-logs
+ * scan (see getRtmpTargetStatuses in the orchestrator). */
+export const RtmpTargetStatusSchema = z.enum(['connected', 'error', 'offline', 'disabled'])
+
+export const RtmpTargetStatusViewSchema = z.object({
+  id: z.string(),
+  provider: z.string(),
+  label: z.string(),
+  enabled: z.boolean(),
+  status: RtmpTargetStatusSchema,
+  lastError: z.string().optional(),
+})
+
+export const RtmpTargetStatusListSchema = z.array(RtmpTargetStatusViewSchema)
+
 export const FanSubPayoutsDashboardSchema = z.object({
   pending: z.number().int(),
   failed: z.number().int(),
