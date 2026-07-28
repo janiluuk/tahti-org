@@ -33,6 +33,7 @@ export type ChannelEditorFetchResult = {
     slideshowAutoplay: boolean
   }
   avatarUrl: string | null
+  avatarPosterUrl: string | null
   bio: string
   countryCode: string | null
   pronouns: string | null
@@ -68,6 +69,7 @@ export async function fetchChannelEditorData(
   let channelVisual: ChannelEditorFetchResult['channelVisual'] | null = null
 
   let avatarUrl: string | null = null
+  let avatarPosterUrl: string | null = null
   let bio = ''
   let countryCode: string | null = null
   let pronouns: string | null = null
@@ -112,6 +114,7 @@ export async function fetchChannelEditorData(
       const channelData = (await channelRes.json()) as {
         user: {
           avatarUrl: string | null
+          avatarPosterUrl: string | null
           bio: string | null
           countryCode: string | null
           pronouns: string | null
@@ -119,6 +122,7 @@ export async function fetchChannelEditorData(
         }
       }
       avatarUrl = channelData.user.avatarUrl
+      avatarPosterUrl = channelData.user.avatarPosterUrl
       bio = channelData.user.bio ?? ''
       countryCode = channelData.user.countryCode
       pronouns = channelData.user.pronouns
@@ -160,6 +164,7 @@ export async function fetchChannelEditorData(
       slideshowAutoplay: true,
     },
     avatarUrl,
+    avatarPosterUrl,
     bio,
     countryCode,
     pronouns,

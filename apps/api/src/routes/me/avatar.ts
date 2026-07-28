@@ -110,14 +110,22 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
       if (!parsed.data.uploadKey.startsWith(prefix)) {
         return reply.status(403).send({ error: 'Upload does not belong to this account' })
       }
+      if (parsed.data.posterUploadKey && !parsed.data.posterUploadKey.startsWith(prefix)) {
+        return reply.status(403).send({ error: 'Upload does not belong to this account' })
+      }
 
       const avatarUrl = publicMediaUrl(parsed.data.uploadKey)
+      // Always set alongside avatarUrl (to null when absent) so switching from
+      // an animated GIF back to a static avatar clears the stale poster frame.
+      const avatarPosterUrl = parsed.data.posterUploadKey
+        ? publicMediaUrl(parsed.data.posterUploadKey)
+        : null
       await fastify.prisma.user.update({
         where: { id: user.id },
-        data: { avatarUrl },
+        data: { avatarUrl, avatarPosterUrl },
       })
 
-      return reply.send({ avatarUrl })
+      return reply.send({ avatarUrl, avatarPosterUrl })
     },
   )
 

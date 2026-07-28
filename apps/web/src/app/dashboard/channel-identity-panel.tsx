@@ -12,16 +12,66 @@ import { completeAvatarUpload, prepareAvatarUpload } from './channel-identity-ac
 import { Button } from '@tahti/ui'
 
 const MAX_GENRES = 6
-const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp']
+const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const POSTER_SIZE = 512
 
 export type ChannelIdentityDraft = {
   displayName: string
   avatarUrl: string | null
+  avatarPosterUrl: string | null
   countryCode: string | null
   pronouns: string | null
   defaultLocation: string | null
   genres: string[]
+}
+
+/** Draws a GIF's first frame onto a canvas and exports it as a JPEG blob —
+ * the static poster shown at rest, since cropping a GIF through the normal
+ * pan/zoom tool would flatten its animation (same canvas limitation
+ * AvatarCropModal already has for the non-GIF path). */
+function extractPosterFrame(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = POSTER_SIZE
+      canvas.height = POSTER_SIZE
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return reject(new Error('Could not create canvas context'))
+      const scale = Math.max(POSTER_SIZE / img.naturalWidth, POSTER_SIZE / img.naturalHeight)
+      const w = img.naturalWidth * scale
+      const h = img.naturalHeight * scale
+      ctx.drawImage(img, (POSTER_SIZE - w) / 2, (POSTER_SIZE - h) / 2, w, h)
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('Could not export poster frame'))),
+        'image/jpeg',
+        0.92,
+      )
+    }
+    img.onerror = () => reject(new Error('Could not load that GIF'))
+    img.src = URL.createObjectURL(file)
+  })
+}
+
+async function uploadBlob(
+  blob: Blob,
+  filename: string,
+  contentType: string,
+): Promise<{ uploadKey?: string; error?: string }> {
+  const prep = await prepareAvatarUpload({ filename, contentType })
+  if (prep.error || !prep.uploadUrl || !prep.uploadKey) {
+    return { error: prep.error ?? 'Prepare failed' }
+  }
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', prep.uploadUrl!)
+    xhr.setRequestHeader('Content-Type', contentType)
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject())
+    xhr.onerror = () => reject(new Error('Upload failed'))
+    xhr.send(blob)
+  })
+  return { uploadKey: prep.uploadKey }
 }
 
 interface Props {
@@ -32,6 +82,7 @@ interface Props {
 export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) {
   const [displayName, setDisplayName] = useState(initial.displayName)
   const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl ?? '')
+  const [avatarPosterUrl, setAvatarPosterUrl] = useState(initial.avatarPosterUrl ?? '')
   const [countryCode, setCountryCode] = useState(initial.countryCode ?? '')
   const [pronouns, setPronouns] = useState(initial.pronouns ?? '')
   const [defaultLocation, setDefaultLocation] = useState(initial.defaultLocation ?? '')
@@ -45,19 +96,56 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
     onDraftChange?.({
       displayName,
       avatarUrl: avatarUrl || null,
+      avatarPosterUrl: avatarPosterUrl || null,
       countryCode: countryCode || null,
       pronouns: pronouns || null,
       defaultLocation: defaultLocation || null,
       genres,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayName, avatarUrl, countryCode, pronouns, defaultLocation, genres])
+  }, [displayName, avatarUrl, avatarPosterUrl, countryCode, pronouns, defaultLocation, genres])
+
+  async function onGifFile(file: File) {
+    setAvatarBusy(true)
+    setAvatarError(null)
+    try {
+      const poster = await extractPosterFrame(file)
+      const posterUp = await uploadBlob(poster, 'avatar-poster.jpg', 'image/jpeg')
+      if (posterUp.error || !posterUp.uploadKey) {
+        setAvatarError(posterUp.error ?? 'Prepare failed')
+        return
+      }
+      const gifUp = await uploadBlob(file, file.name || 'avatar.gif', 'image/gif')
+      if (gifUp.error || !gifUp.uploadKey) {
+        setAvatarError(gifUp.error ?? 'Upload failed')
+        return
+      }
+      const done = await completeAvatarUpload(gifUp.uploadKey, posterUp.uploadKey)
+      if (done.error) {
+        setAvatarError(done.error)
+        return
+      }
+      setAvatarUrl(done.avatarUrl ?? '')
+      setAvatarPosterUrl(done.avatarPosterUrl ?? '')
+      setAvatarUrlInput('')
+    } catch {
+      setAvatarError('Upload failed')
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
 
   function onFile(file: File) {
     setAvatarError(null)
     const type = file.type || 'image/jpeg'
     if (!ALLOWED_AVATAR_MIME.includes(type)) {
-      setAvatarError('Use JPEG, PNG, or WebP')
+      setAvatarError('Use JPEG, PNG, WebP, or GIF')
+      return
+    }
+    // GIFs skip the pan/zoom crop tool entirely — cropping via canvas would
+    // flatten the animation to a single frame, defeating the point.
+    if (type === 'image/gif') {
+      void onGifFile(file)
       return
     }
     setCropSrc(URL.createObjectURL(file))
@@ -88,12 +176,15 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
         xhr.onerror = () => reject(new Error('Upload failed'))
         xhr.send(blob)
       })
+      // No posterUploadKey — a freshly cropped static avatar clears any
+      // stale poster left over from a previous animated GIF.
       const done = await completeAvatarUpload(prep.uploadKey)
       if (done.error) {
         setAvatarError(done.error)
         return
       }
       setAvatarUrl(done.avatarUrl ?? '')
+      setAvatarPosterUrl('')
       setAvatarUrlInput('')
     } catch {
       setAvatarError('Upload failed')
@@ -135,7 +226,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           )}
           <input
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             disabled={avatarBusy}
             onChange={(e) => {
               const f = e.target.files?.[0]
@@ -145,6 +236,9 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
             className="studio-file-input"
           />
         </div>
+        <p className="studio-help studio-mt-xs">
+          GIF avatars play on hover on your profile page — otherwise they show a still frame.
+        </p>
         <div className="studio-row studio-row--wrap studio-gap-lg studio-mt-sm">
           <input
             type="url"

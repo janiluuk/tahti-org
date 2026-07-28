@@ -25,6 +25,7 @@ const profileSelect = {
   displayName: true,
   bio: true,
   avatarUrl: true,
+  avatarPosterUrl: true,
   tipJarUrl: true,
   countryCode: true,
   pronouns: true,
@@ -81,6 +82,8 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.displayName !== undefined) data.displayName = body.displayName
       if (body.bio !== undefined) data.bio = body.bio.trim() || null
       if (body.avatarUrl !== undefined) data.avatarUrl = body.avatarUrl.trim() || null
+      if (body.avatarPosterUrl !== undefined)
+        data.avatarPosterUrl = body.avatarPosterUrl?.trim() || null
       if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl.trim() || null
       if (body.countryCode !== undefined) data.countryCode = body.countryCode?.toUpperCase() ?? null
       if (body.pronouns !== undefined) data.pronouns = body.pronouns?.trim() || null

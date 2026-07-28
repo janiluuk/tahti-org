@@ -17,6 +17,7 @@ export async function updateChannelProfile(patch: {
   displayName?: string
   bio?: string
   avatarUrl?: string
+  avatarPosterUrl?: string | null
   countryCode?: string | null
   pronouns?: string | null
   defaultLocation?: string | null
@@ -57,11 +58,12 @@ export async function prepareAvatarUpload(body: {
 
 export async function completeAvatarUpload(
   uploadKey: string,
-): Promise<{ avatarUrl?: string | null; error: string | null }> {
+  posterUploadKey?: string,
+): Promise<{ avatarUrl?: string | null; avatarPosterUrl?: string | null; error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/profile/avatar/complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
-    body: JSON.stringify({ uploadKey }),
+    body: JSON.stringify({ uploadKey, posterUploadKey }),
     cache: 'no-store',
   })
   if (!res.ok) {
