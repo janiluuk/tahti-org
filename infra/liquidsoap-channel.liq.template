@@ -79,6 +79,12 @@ protocol.add(
 
 # --- Live input: HTTP pull (Icecast mount or RTMP edge-encoder relay — STREAM-002) ---
 live_icecast = input.http("{{LIVE_INPUT_URL}}")
+# Infallible copy — needed only by the RTMP-mirror mux below (source.mux.video
+# requires a source that always produces frames). The main station output
+# (the "radio" fallback further down) deliberately uses the raw live_icecast
+# instead, since mksafe's infallibility would make is_ready() always report
+# true and defeat that fallback's live-vs-rotation switch (see the comment
+# there for the full story).
 live_source = mksafe(live_icecast)
 
 # --- Archive playlist (the fallback) ---
@@ -149,9 +155,21 @@ rotation = delay(3., rotation)
 # --- THE MAGIC: live-or-archive fallback ---
 # track_sensitive=false means: switch immediately when live ends, not at the next track boundary.
 # The third source (blank) is a safety net so the chain never dies if both fail.
+# BUG FIX (verified against the real v2.2.5 binary): this used to feed
+# live_source (the mksafe-wrapped copy) into the fallback instead of the raw
+# live_icecast. mksafe makes a source report is_ready()=true unconditionally
+# (it silently substitutes its own internal blank() when the wrapped source
+# isn't ready, rather than reporting not-ready) — so this outer fallback
+# always selected live_source's slot and NEVER fell through to rotation, even
+# with a fully-ready rotation source sitting right behind it. Every channel
+# not currently live played silence (confirmed: -91dB) instead of its
+# archive. live_source (still mksafe-wrapped) remains defined below for the
+# RTMP-mirror mux, which genuinely needs an infallible source; only this
+# top-level station output needs the real, fallible live_icecast so is_ready
+# reflects actual connection state.
 radio = fallback(
   track_sensitive=false,
-  [live_source, rotation, blank()]
+  [live_icecast, rotation, blank()]
 )
 
 # Manage panel "stop" — pauses the rotation without ending the live broadcast
@@ -209,7 +227,7 @@ radio_out = switch(
   track_sensitive=false,
   [
     ({ shutting_down() }, fade.out(type="log", duration={{LIQUIDSOAP_FADE_SEC}}., radio)),
-    ({ paused() and not source.is_ready(live_source) }, blank()),
+    ({ paused() and not source.is_ready(live_icecast) }, blank()),
     ({ true }, radio)
   ]
 )
