@@ -27,7 +27,7 @@ export async function createCollection(params: {
   style?: string
   description?: string
   isPublic?: boolean
-}): Promise<{ error: string | null }> {
+}): Promise<{ error: string | null; slug?: string }> {
   const res = await fetch(`${apiUrl}/api/me/collections`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
@@ -38,7 +38,8 @@ export async function createCollection(params: {
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to create collection' }
   }
-  return { error: null }
+  const data = (await res.json()) as { slug: string }
+  return { error: null, slug: data.slug }
 }
 
 export async function prepareCollectionCoverUpload(

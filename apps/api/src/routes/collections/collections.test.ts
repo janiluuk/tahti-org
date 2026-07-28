@@ -485,3 +485,82 @@ describe('collaborative playlists', () => {
     expect(res.statusCode).toBe(400)
   })
 })
+
+// Player "Add to..." lets a listener save ANY public track (not just their own
+// uploads) to one of their own collections via the owner-only items route.
+describe('owner route accepts any public track (player "Add to...")', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let listenerCookie: string
+  let listenerSlug: string
+  let otherArtistPublicItemId: string
+  let otherArtistPrivateItemId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+
+    const listener = await createTestArtist(prisma, {
+      email: `${PREFIX}addto-listener@example.com`,
+      username: `${PREFIX}addto-listener`,
+      tier: 'ARTIST',
+    })
+    listenerCookie = await sessionCookieFor(prisma, listener.id)
+
+    const otherArtist = await createTestArtist(prisma, {
+      email: `${PREFIX}addto-other@example.com`,
+      username: `${PREFIX}addto-other`,
+      tier: 'ARTIST',
+    })
+    const publicItem = await createReadyArchiveItem(prisma, otherArtist.channel!.id, 'Public track')
+    otherArtistPublicItemId = publicItem.id
+
+    const privateItem = await createReadyArchiveItem(
+      prisma,
+      otherArtist.channel!.id,
+      'Private track',
+    )
+    await prisma.archiveItem.update({ where: { id: privateItem.id }, data: { isPublic: false } })
+    otherArtistPrivateItemId = privateItem.id
+
+    listenerSlug = `${PREFIX}addto-my-playlist`
+    await prisma.collection.create({
+      data: { userId: listener.id, slug: listenerSlug, name: 'My playlist', style: 'PLAYLIST' },
+    })
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    await app.close()
+  })
+
+  it("lets the owner add another artist's public track to their own playlist", async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/collections/${listenerSlug}/items`,
+      headers: { cookie: listenerCookie },
+      payload: { archiveItemId: otherArtistPublicItemId },
+    })
+    expect(res.statusCode).toBe(201)
+  })
+
+  it('rejects adding the same track twice', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/collections/${listenerSlug}/items`,
+      headers: { cookie: listenerCookie },
+      payload: { archiveItemId: otherArtistPublicItemId },
+    })
+    expect(res.statusCode).toBe(409)
+  })
+
+  it("rejects another artist's private track", async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/collections/${listenerSlug}/items`,
+      headers: { cookie: listenerCookie },
+      payload: { archiveItemId: otherArtistPrivateItemId },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+})

@@ -294,11 +294,14 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
       if (body.archiveItemId) {
+        // Own tracks (any visibility) or anyone's public track — this is the
+        // "save a track I'm listening to" path, not just the uploader managing
+        // their own archive.
         const archive = await fastify.prisma.archiveItem.findFirst({
           where: {
             id: body.archiveItemId,
             status: 'READY',
-            channel: { userId: user.id },
+            OR: [{ channel: { userId: user.id } }, { isPublic: true }],
           },
         })
         if (!archive) return reply.status(400).send({ error: 'Archive item not found' })
@@ -309,6 +312,19 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
           where: { id: body.releaseId, userId: user.id, state: 'PUBLISHED' },
         })
         if (!release) return reply.status(400).send({ error: 'Published release not found' })
+      }
+
+      if (body.archiveItemId || body.releaseId) {
+        const existing = await fastify.prisma.collectionItem.findFirst({
+          where: {
+            collectionId: col.id,
+            ...(body.archiveItemId
+              ? { archiveItemId: body.archiveItemId }
+              : { releaseId: body.releaseId }),
+          },
+          select: { id: true },
+        })
+        if (existing) return reply.status(409).send({ error: 'Already in this playlist' })
       }
 
       const position = body.position ?? col._count.items + 1
