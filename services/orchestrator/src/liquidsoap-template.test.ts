@@ -10,6 +10,10 @@ const templatePath = join(
   dirname(fileURLToPath(import.meta.url)),
   '../../../infra/liquidsoap-channel.liq.template',
 )
+const rotationTemplatePath = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../infra/liquidsoap-rotation.liq.template',
+)
 
 describe('liquidsoap channel template', () => {
   it('exposes M20 dual-bitrate HLS paths expected by stream-quality.ts', async () => {
@@ -43,5 +47,27 @@ describe('liquidsoap channel template', () => {
     expect(template).toContain('server.register(\n  "resume"')
     // Pausing must never block a real live broadcast.
     expect(template).toContain('paused() and not source.is_ready(live_source)')
+  })
+
+  it('STREAM-013: registers the s3get protocol and reads extname from the URL path, not a HEAD probe', async () => {
+    const template = await readFile(templatePath, 'utf8')
+    // AWS SigV4 presigned URLs are GET-only — a HEAD probe against one always
+    // 403s, so extname can never come from a content-type sniff here.
+    expect(template).not.toContain('http.head(')
+    expect(template).toContain('protocol.add(')
+    expect(template).toContain('"s3get"')
+    expect(template).toContain('normalize_url=false')
+    expect(template).toContain('file.extension(leading_dot=true, dir_sep="/", path_only)')
+  })
+})
+
+describe('liquidsoap rotation template', () => {
+  it('STREAM-013: registers the same s3get protocol fix as the channel template', async () => {
+    const template = await readFile(rotationTemplatePath, 'utf8')
+    expect(template).not.toContain('http.head(')
+    expect(template).toContain('protocol.add(')
+    expect(template).toContain('"s3get"')
+    expect(template).toContain('normalize_url=false')
+    expect(template).toContain('file.extension(leading_dot=true, dir_sep="/", path_only)')
   })
 })

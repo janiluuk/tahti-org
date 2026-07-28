@@ -94,7 +94,12 @@ async function toM3uEntries(rows: FallbackPlaybackRow[]): Promise<FallbackM3uEnt
     rows.map(async (row) => ({
       title: row.title,
       durationSec: row.durationSec,
-      url: await presignedGetUrl(row.playbackKey, FALLBACK_URL_TTL_SEC),
+      // STREAM-013: "s3get:" prefix routes through the custom protocol resolver
+      // registered in the .liq templates — Liquidsoap's stdlib http(s) resolver
+      // corrupts these presigned URLs' query strings (see the template for the
+      // full writeup). This M3U is only ever fetched by Liquidsoap, never a
+      // browser, so the non-standard scheme is safe to hand out here.
+      url: `s3get:${await presignedGetUrl(row.playbackKey, FALLBACK_URL_TTL_SEC)}`,
     })),
   )
 }
