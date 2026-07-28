@@ -65,6 +65,21 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/news',
+    label: 'News',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+        <path
+          d="M4.5 6h4M4.5 8.2h7M4.5 10.4h7"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/tahti-selects',
     label: 'Selects',
     icon: (

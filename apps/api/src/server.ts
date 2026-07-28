@@ -29,6 +29,7 @@ import channelListRoute from './routes/channels/list.js'
 import channelDirectoryRoute from './routes/channels/directory.js'
 import tahtiSelectsGalleryRoute from './routes/channels/tahti-selects-gallery.js'
 import channelStatsRoute from './routes/channels/stats.js'
+import newsPublicRoute from './routes/news/public.js'
 import channelManageStatsRoute from './routes/channels/manage-stats.js'
 import channelTransportRoutes from './routes/channels/transport.js'
 import channelFallbackCollectionRoutes from './routes/channels/fallback-collection.js'
@@ -83,6 +84,7 @@ import adminStatsRoutes from './routes/admin/stats.js'
 import adminStreamsRoutes from './routes/admin/streams.js'
 import adminRadioRoutes from './routes/admin/radio.js'
 import adminTahtiSelectsRoutes from './routes/admin/tahti-selects.js'
+import adminNewsRoutes from './routes/admin/news.js'
 import adminChannelsRoutes from './routes/admin/channels.js'
 import adminArchiveRoutes from './routes/admin/archive.js'
 import adminFanSubsRoutes from './routes/admin/fansubs.js'
@@ -460,6 +462,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(channelDirectoryRoute)
   await fastify.register(tahtiSelectsGalleryRoute)
   await fastify.register(channelStatsRoute)
+  await fastify.register(newsPublicRoute)
   await fastify.register(channelManageStatsRoute)
   await fastify.register(channelTransportRoutes)
   await fastify.register(channelFallbackCollectionRoutes)
@@ -532,6 +535,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminStreamsRoutes)
   await fastify.register(adminRadioRoutes)
   await fastify.register(adminTahtiSelectsRoutes)
+  await fastify.register(adminNewsRoutes)
   await fastify.register(adminChannelsRoutes)
   await fastify.register(adminArchiveRoutes)
   await fastify.register(adminFanSubsRoutes)

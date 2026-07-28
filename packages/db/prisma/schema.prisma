@@ -634,6 +634,7 @@ model User {
   featureRequestVotes     FeatureRequestVote[]
   featureRequestComments  FeatureRequestComment[] @relation("FeatureRequestCommentAuthor")
   featureRequestReportsGenerated FeatureRequestQuarterlyReport[]
+  newsPostsAuthored              NewsPost[]
 
   @@schema("core")
 }
@@ -2242,5 +2243,23 @@ model FeatureRequestQuarterlyReport {
   generatedBy   User     @relation(fields: [generatedById], references: [id], onDelete: Cascade)
 
   @@unique([year, quarter])
+  @@schema("admin")
+}
+
+// Homepage news feed — board-authored platform announcements. authorName is a
+// display-name snapshot at time of writing (not just a relation) so the byline
+// survives even if the author's account is later renamed or removed.
+model NewsPost {
+  id          String    @id @default(cuid())
+  headline    String
+  summary     String
+  authorId    String?
+  author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName  String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([publishedAt])
   @@schema("admin")
 }
