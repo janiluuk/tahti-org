@@ -45,8 +45,28 @@ describe('liquidsoap channel template', () => {
     expect(template).toContain('request.queue(id="jump_queue")')
     expect(template).toContain('server.register(\n  "pause"')
     expect(template).toContain('server.register(\n  "resume"')
-    // Pausing must never block a real live broadcast.
-    expect(template).toContain('paused() and not source.is_ready(live_source)')
+    // Pausing must never block a real live broadcast. Must check the raw
+    // live_icecast, not the mksafe-wrapped live_source — mksafe makes
+    // is_ready() always report true, which would make this predicate
+    // permanently unreachable (see the fallback test below for the sibling
+    // bug this exact mistake caused).
+    expect(template).toContain('paused() and not source.is_ready(live_icecast)')
+  })
+
+  it('the live-or-rotation fallback checks the raw live_icecast, not the mksafe-wrapped live_source', async () => {
+    const template = await readFile(templatePath, 'utf8')
+    // Verified against the real savonet/liquidsoap:v2.2.5 binary: mksafe(s)
+    // makes is_ready() unconditionally true (it silently substitutes its own
+    // blank() when the wrapped source isn't ready, rather than reporting
+    // not-ready). Feeding that into this fallback meant it always selected
+    // live_source's slot and never fell through to rotation, even with a
+    // fully-ready rotation source sitting right behind it — every channel
+    // not currently live played silence (confirmed: -91dB) instead of its
+    // archive. live_source (mksafe-wrapped) is still defined for the
+    // RTMP-mirror mux, which genuinely needs an infallible source — just not
+    // fed into this station-output fallback.
+    expect(template).toContain('[live_icecast, rotation, blank()]')
+    expect(template).not.toContain('[live_source, rotation, blank()]')
   })
 
   it('STREAM-013: registers the s3get protocol and reads extname from the URL path, not a HEAD probe', async () => {
