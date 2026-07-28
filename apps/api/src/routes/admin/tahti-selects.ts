@@ -39,6 +39,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
               title: true,
               durationSec: true,
               license: true,
+              artistName: true,
               channel: { select: { slug: true, user: { select: { displayName: true } } } },
             },
           },
@@ -55,7 +56,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           title: item.archiveItem.title,
           durationSec: item.archiveItem.durationSec,
           license: item.archiveItem.license,
-          artistName: item.archiveItem.channel.user.displayName,
+          artistName: item.archiveItem.artistName ?? item.archiveItem.channel.user.displayName,
           channelSlug: item.archiveItem.channel.slug,
         })),
       })
@@ -81,6 +82,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           title: true,
           durationSec: true,
           license: true,
+          artistName: true,
           channel: { select: { slug: true, user: { select: { displayName: true } } } },
         },
       })
@@ -91,7 +93,7 @@ const adminTahtiSelectsRoutes: FastifyPluginAsync = async (fastify) => {
           title: item.title,
           durationSec: item.durationSec,
           license: item.license,
-          artistName: item.channel.user.displayName,
+          artistName: item.artistName ?? item.channel.user.displayName,
           channelSlug: item.channel.slug,
         })),
       })

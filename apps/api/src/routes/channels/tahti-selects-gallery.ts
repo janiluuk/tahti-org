@@ -37,6 +37,7 @@ const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
               select: {
                 id: true,
                 title: true,
+                artistName: true,
                 bannerUrl: true,
                 durationSec: true,
                 mp3Key: true,
@@ -56,8 +57,8 @@ const tahtiSelectsGalleryRoute: FastifyPluginAsync = async (fastify) => {
             return {
               archiveItemId: item.id,
               title: item.title,
-              artistName: item.channel.user.displayName,
-              artistUsername: item.channel.user.username,
+              artistName: item.artistName ?? item.channel.user.displayName,
+              artistUsername: item.artistName ? null : item.channel.user.username,
               channelSlug: item.channel.slug,
               bannerUrl: item.bannerUrl,
               durationSec: item.durationSec,
