@@ -12,6 +12,7 @@ import { RadioPlayerSection } from './radio-player-section'
 import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
 import { UpcomingShows } from './upcoming-shows'
 import { RecentlyPlayed, type RecentlyPlayedItem } from './recently-played'
+import { RadioTabs } from './_radio-tabs'
 
 const NEXT_LIVE_ANNOUNCE_WINDOW_MS = 2 * 60 * 60 * 1000
 
@@ -42,7 +43,7 @@ interface RadioRotationItem {
   id: string
   title: string
   artistName: string
-  artistUsername: string
+  artistUsername: string | null
 }
 
 async function fetchAnnouncements(): Promise<Announcement[]> {
@@ -229,8 +230,10 @@ export default async function RadioPage() {
               />
             )}
 
-            <UpcomingShows slots={upcomingSlots} />
-            <RecentlyPlayed items={recentlyPlayed} />
+            <RadioTabs
+              recent={<RecentlyPlayed items={recentlyPlayed} />}
+              upcoming={<UpcomingShows slots={upcomingSlots} rotation={rotation} />}
+            />
           </div>
         </div>
       }

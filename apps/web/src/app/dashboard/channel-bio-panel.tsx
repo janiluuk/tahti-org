@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react'
 
-const BIO_MAX = 280
+const BIO_MAX = 5000
 
 interface Props {
   initial: { bio: string }
@@ -23,7 +23,7 @@ export default function ChannelBioPanel({ initial, onDraftChange }: Props) {
   return (
     <div className="studio-field--block">
       <label className="studio-label" htmlFor="identity-bio">
-        Short bio
+        Bio
         <span className="studio-text-muted-sm">
           {' '}
           · {BIO_MAX} chars · {bio.length} used
@@ -31,12 +31,12 @@ export default function ChannelBioPanel({ initial, onDraftChange }: Props) {
       </label>
       <textarea
         id="identity-bio"
-        rows={4}
+        rows={10}
         maxLength={BIO_MAX}
         value={bio}
         onChange={(e) => setBio(e.target.value)}
         className="studio-input"
-        placeholder="Tell listeners about your sound, shows, and releases…"
+        placeholder="Tell listeners about your sound, your story, shows, and releases…"
       />
     </div>
   )

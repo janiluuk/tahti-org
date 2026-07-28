@@ -1543,6 +1543,41 @@
   white-space: nowrap;
 }
 
+[data-tahti-ui='brand'] .ch-radio-upcoming__item--live {
+  background: color-mix(in srgb, var(--coral) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--coral) 35%, transparent);
+  border-radius: var(--radius-sm);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__live-badge {
+  flex-shrink: 0;
+  color: var(--coral);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__rotation {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__rotation-label {
+  margin: 0 0 0.35rem;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--muted2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__artist--sub {
+  color: var(--muted2);
+}
+
 [data-tahti-ui='brand'] .ch-radio-recent__art {
   width: 32px;
   height: 32px;

@@ -15,7 +15,7 @@ interface RadioRotationItem {
   id: string
   title: string
   artistName: string
-  artistUsername: string
+  artistUsername: string | null
 }
 
 interface RadioMemberRelay {
