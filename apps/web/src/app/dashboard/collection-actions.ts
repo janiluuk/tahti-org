@@ -162,6 +162,7 @@ export async function updateCollection(
   params: {
     isFeatured?: boolean
     isPublic?: boolean
+    collaborative?: boolean
     coverUrl?: string | null
     description?: string | null
     style?: string

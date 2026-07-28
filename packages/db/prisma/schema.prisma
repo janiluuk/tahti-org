@@ -2014,6 +2014,11 @@ model Collection {
   type        CollectionType @default(CUSTOM)
   isPublic    Boolean        @default(true)
   isFeatured  Boolean        @default(false) // M23: highlight on profile + smart links
+  // When true (and isPublic), any logged-in user can add an archive item to this
+  // playlist — a collaborative-playlist toggle. Only meaningful for style=PLAYLIST;
+  // adding archive items only, never releases (a release isn't "an artist's own
+  // track" to contribute the way a single archive item is).
+  collaborative Boolean      @default(false)
   coverUrl    String?
   // MinIO object key when the cover was uploaded through our own flow (cover.ts) —
   // resolved to a presigned URL at read time (resolveCollectionCoverUrl) instead of

@@ -822,6 +822,7 @@ export const CollectionPublicViewSchema = z
     slug: z.string(),
     name: z.string(),
     isPublic: z.boolean(),
+    collaborative: z.boolean(),
     user: z.object({
       username: z.string(),
       displayName: z.string(),
@@ -832,6 +833,20 @@ export const CollectionPublicViewSchema = z
     }),
   })
   .passthrough()
+
+/** One result row in the public catalog track search (used by the
+ * collaborative-playlist "Add track" picker). */
+export const CatalogTrackSearchResultSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  durationSec: z.number().int().nullable(),
+  artistName: z.string(),
+  channelSlug: z.string(),
+})
+export const CatalogTrackSearchResponseSchema = z.object({
+  tracks: z.array(CatalogTrackSearchResultSchema),
+  hasMore: z.boolean(),
+})
 
 export const PrepareUploadResponseSchema = z.object({
   uploadId: z.string(),

@@ -357,3 +357,131 @@ describe('M23 — collections and RSS', () => {
     expect(delCol.statusCode).toBe(204)
   })
 })
+
+describe('collaborative playlists', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let ownerCookie: string
+  let contributorCookie: string
+  let contributorArchiveItemId: string
+  let collaborativeSlug: string
+  let nonCollaborativeSlug: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+
+    const owner = await createTestArtist(prisma, {
+      email: `${PREFIX}collab-owner@example.com`,
+      username: `${PREFIX}collab-owner`,
+      tier: 'ARTIST',
+    })
+    ownerCookie = await sessionCookieFor(prisma, owner.id)
+
+    const contributor = await createTestArtist(prisma, {
+      email: `${PREFIX}collab-contributor@example.com`,
+      username: `${PREFIX}collab-contributor`,
+      tier: 'ARTIST',
+    })
+    contributorCookie = await sessionCookieFor(prisma, contributor.id)
+    const contributorItem = await createReadyArchiveItem(
+      prisma,
+      contributor.channel!.id,
+      'Contributor track',
+    )
+    contributorArchiveItemId = contributorItem.id
+
+    collaborativeSlug = `${PREFIX}collab-playlist`
+    await prisma.collection.create({
+      data: {
+        userId: owner.id,
+        slug: collaborativeSlug,
+        name: 'Open playlist',
+        style: 'PLAYLIST',
+        isPublic: true,
+        collaborative: true,
+      },
+    })
+
+    nonCollaborativeSlug = `${PREFIX}closed-playlist`
+    await prisma.collection.create({
+      data: {
+        userId: owner.id,
+        slug: nonCollaborativeSlug,
+        name: 'Closed playlist',
+        style: 'PLAYLIST',
+        isPublic: true,
+        collaborative: false,
+      },
+    })
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    await app.close()
+  })
+
+  it('GET /api/v1/search/tracks finds a public catalog track by title', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/search/tracks?q=Contributor',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { tracks: Array<{ id: string; title: string }> }
+    expect(body.tracks.map((t) => t.id)).toContain(contributorArchiveItemId)
+  })
+
+  it('lets another logged-in user add a track to a collaborative playlist', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${collaborativeSlug}/items`,
+      headers: { cookie: contributorCookie },
+      payload: { archiveItemId: contributorArchiveItemId },
+    })
+    expect(res.statusCode).toBe(201)
+
+    const item = await prisma.collectionItem.findFirst({
+      where: { collection: { slug: collaborativeSlug }, archiveItemId: contributorArchiveItemId },
+    })
+    expect(item).toBeTruthy()
+  })
+
+  it('rejects adding the same track twice', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${collaborativeSlug}/items`,
+      headers: { cookie: contributorCookie },
+      payload: { archiveItemId: contributorArchiveItemId },
+    })
+    expect(res.statusCode).toBe(409)
+  })
+
+  it('requires auth', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${collaborativeSlug}/items`,
+      payload: { archiveItemId: contributorArchiveItemId },
+    })
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('rejects adding to a non-collaborative playlist', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${nonCollaborativeSlug}/items`,
+      headers: { cookie: contributorCookie },
+      payload: { archiveItemId: contributorArchiveItemId },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+
+  it('rejects a track that does not exist', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${collaborativeSlug}/items`,
+      headers: { cookie: ownerCookie },
+      payload: { archiveItemId: 'not-a-real-track' },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+})

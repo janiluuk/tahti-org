@@ -76,6 +76,7 @@ interface CollectionDetail {
   coverUrl: string | null
   isPublic: boolean
   isFeatured: boolean
+  collaborative: boolean
   items: CollectionItem[]
 }
 
@@ -137,6 +138,7 @@ export function CollectionEditor({
   const [trackSortMode, setTrackSortMode] = useState(initial.trackSortMode)
   const [isPublic, setIsPublic] = useState(initial.isPublic)
   const [isFeatured, setIsFeatured] = useState(initial.isFeatured)
+  const [collaborative, setCollaborative] = useState(initial.collaborative)
   const [description, setDescription] = useState(initial.description ?? '')
   const [coverUrl, setCoverUrl] = useState(initial.coverUrl)
   const [settingsDirty, setSettingsDirty] = useState(false)
@@ -170,6 +172,7 @@ export function CollectionEditor({
     const { error } = await updateCollection(initial.slug, {
       isPublic,
       isFeatured,
+      collaborative: isPublic && style === 'PLAYLIST' ? collaborative : false,
       style,
       trackSortMode,
       description: description.trim() || null,
@@ -182,7 +185,7 @@ export function CollectionEditor({
       setSettingsSaved(true)
       startTransition(() => router.refresh())
     }
-  }, [initial.slug, isPublic, isFeatured, style, trackSortMode, description, router])
+  }, [initial.slug, isPublic, isFeatured, collaborative, style, trackSortMode, description, router])
 
   const persistItemOrder = useCallback(
     async (previous: CollectionItem[], ordered: CollectionItem[]) => {
@@ -442,6 +445,28 @@ export function CollectionEditor({
             />
             <span className="collection-form__vis-label">Featured on profile</span>
           </label>
+
+          {style === 'PLAYLIST' && (
+            <label className="collection-form__vis-option collection-form__featured-row">
+              <input
+                type="checkbox"
+                checked={collaborative}
+                disabled={!isPublic}
+                onChange={(e) => {
+                  setCollaborative(e.target.checked)
+                  markDirty()
+                }}
+              />
+              <span className="collection-form__vis-copy">
+                <span className="collection-form__vis-label">Collaborative playlist</span>
+                <span className="collection-form__vis-desc">
+                  {isPublic
+                    ? 'Any logged-in listener can add tracks from the Tahti catalog'
+                    : 'Only public playlists can be collaborative'}
+                </span>
+              </span>
+            </label>
+          )}
 
           <div className="studio-field">
             <label className="studio-label" htmlFor={`collection-desc-${initial.id}`}>

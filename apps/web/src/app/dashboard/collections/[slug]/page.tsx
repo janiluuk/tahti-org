@@ -43,6 +43,7 @@ interface CollectionDetail {
   coverUrl: string | null
   isPublic: boolean
   isFeatured: boolean
+  collaborative: boolean
   publicProfileOrder: number
   scheduledPublishAt: string | null
   smartLinksJson: unknown

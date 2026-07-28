@@ -3,7 +3,10 @@
 
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
 import {
+  AddCollaborativeTrackSchema,
   AddCollectionItemSchema,
+  CatalogTrackSearchQuerySchema,
+  CatalogTrackSearchResponseSchema,
   ChannelArchiveParamsSchema,
   CollectionGalleryPatchSchema,
   CollectionListQuerySchema,
@@ -239,6 +242,7 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.trackSortMode !== undefined) data.trackSortMode = body.trackSortMode
       if (body.isPublic !== undefined) data.isPublic = body.isPublic
       if (body.isFeatured !== undefined) data.isFeatured = body.isFeatured
+      if (body.collaborative !== undefined) data.collaborative = body.collaborative
       if (body.coverUrl !== undefined) {
         data.coverUrl = body.coverUrl?.trim() || null
         // Switching to a directly-set (possibly external) URL invalidates any
@@ -641,6 +645,111 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
           page: `${config.appUrl}/u/${col.user.username}/c/${col.slug}`,
           rss: `${config.apiUrl}/api/v1/collections/${col.slug}/rss.xml`,
         },
+      })
+    },
+  )
+
+  // POST /api/v1/collections/:slug/items — any logged-in user adds a track to a
+  // collaborative public playlist. Distinct from the owner-only
+  // /api/me/collections/:slug/items above: no ownership check on the archive
+  // item (any public, READY track in the catalog), always appended at the end,
+  // and gated on collection.collaborative rather than collection.userId.
+  fastify.post(
+    '/api/v1/collections/:slug/items',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
+      const parsed = AddCollaborativeTrackSchema.safeParse(request.body)
+      if (!parsed.success) return zodError(reply, parsed.error)
+      const { archiveItemId } = parsed.data
+
+      const col = await fastify.prisma.collection.findFirst({
+        where: { slug, isPublic: true, collaborative: true },
+        include: { _count: { select: { items: true } } },
+      })
+      if (!col) return reply.status(404).send({ error: 'Collection not found' })
+
+      const archive = await fastify.prisma.archiveItem.findFirst({
+        where: { id: archiveItemId, status: 'READY', isPublic: true },
+        select: { id: true },
+      })
+      if (!archive) return reply.status(400).send({ error: 'Track not found' })
+
+      const existing = await fastify.prisma.collectionItem.findFirst({
+        where: { collectionId: col.id, archiveItemId },
+        select: { id: true },
+      })
+      if (existing) return reply.status(409).send({ error: 'Already in this playlist' })
+
+      try {
+        const item = await fastify.prisma.collectionItem.create({
+          data: { collectionId: col.id, archiveItemId, position: col._count.items + 1 },
+        })
+        return reply.status(201).send(item)
+      } catch (err) {
+        if (isUniqueConstraintError(err)) {
+          return reply
+            .status(409)
+            .send({ error: 'Another track was added at the same time — please retry' })
+        }
+        throw err
+      }
+    },
+  )
+
+  // GET /api/v1/search/tracks?q= — public catalog search, powers the "Add track"
+  // picker on a collaborative playlist. Same isPublic+READY filter as every
+  // other public track listing in the app.
+  fastify.get(
+    '/api/v1/search/tracks',
+    {
+      schema: {
+        tags: ['releases'],
+        response: openApiResponse(CatalogTrackSearchResponseSchema, 'CatalogTrackSearch'),
+      },
+    },
+    async (request, reply) => {
+      const parsedQuery = CatalogTrackSearchQuerySchema.safeParse(request.query)
+      if (!parsedQuery.success) {
+        return reply
+          .status(400)
+          .send({ error: parsedQuery.error.issues[0]?.message ?? 'Invalid query' })
+      }
+      const { q, offset = 0 } = parsedQuery.data
+      const PAGE_SIZE = 20
+
+      const items = await fastify.prisma.archiveItem.findMany({
+        where: {
+          isPublic: true,
+          status: 'READY',
+          ...(q ? { title: { contains: q, mode: 'insensitive' } } : {}),
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: offset,
+        take: PAGE_SIZE + 1,
+        select: {
+          id: true,
+          title: true,
+          durationSec: true,
+          artistName: true,
+          channel: { select: { slug: true, user: { select: { displayName: true } } } },
+        },
+      })
+
+      const hasMore = items.length > PAGE_SIZE
+      const page = items.slice(0, PAGE_SIZE)
+
+      return reply.send({
+        tracks: page.map((item) => ({
+          id: item.id,
+          title: item.title,
+          durationSec: item.durationSec,
+          artistName: item.artistName ?? item.channel.user.displayName,
+          channelSlug: item.channel.slug,
+        })),
+        hasMore,
       })
     },
   )
