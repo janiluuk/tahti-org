@@ -73,6 +73,62 @@ describe('avatar upload routes', () => {
     expect(res.json().avatarUrl).toContain(`avatars/${username}/avatar-abc12345.jpg`)
   })
 
+  it('POST prepare accepts image/gif', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/profile/avatar/prepare',
+      headers: { cookie },
+      payload: { filename: 'me.gif', contentType: 'image/gif' },
+    })
+    expect(res.statusCode).toBe(200)
+  })
+
+  it('POST complete with a posterUploadKey persists both avatarUrl and avatarPosterUrl', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/profile/avatar/complete',
+      headers: { cookie },
+      payload: {
+        uploadKey: `avatars/${username}/avatar-gif12345.gif`,
+        posterUploadKey: `avatars/${username}/avatar-poster1234.jpg`,
+      },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { avatarUrl: string; avatarPosterUrl: string }
+    expect(body.avatarUrl).toContain('avatar-gif12345.gif')
+    expect(body.avatarPosterUrl).toContain('avatar-poster1234.jpg')
+  })
+
+  it('POST complete without a posterUploadKey clears any previous avatarPosterUrl', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/profile/avatar/complete',
+      headers: { cookie },
+      payload: { uploadKey: `avatars/${username}/avatar-static123.jpg` },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().avatarPosterUrl).toBeNull()
+
+    const user = await prisma.user.findUnique({
+      where: { username },
+      select: { avatarPosterUrl: true },
+    })
+    expect(user?.avatarPosterUrl).toBeNull()
+  })
+
+  it('POST complete rejects a posterUploadKey belonging to a different account', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/me/profile/avatar/complete',
+      headers: { cookie },
+      payload: {
+        uploadKey: `avatars/${username}/avatar-abc.gif`,
+        posterUploadKey: 'avatars/someone-else/avatar-poster.jpg',
+      },
+    })
+    expect(res.statusCode).toBe(403)
+  })
+
   it('GET proxy rejects a non-image content-type', async () => {
     vi.stubGlobal(
       'fetch',

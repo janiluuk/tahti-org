@@ -531,6 +531,11 @@ model User {
   displayName           String
   bio                   String?
   avatarUrl             String?
+  // Static first-frame extracted client-side when avatarUrl is an animated
+  // GIF — shown at rest on the profile hero, swapped for avatarUrl on hover
+  // so the animation only plays while hovering. Null for a non-animated
+  // avatar (the plain avatarUrl renders directly with no hover behavior).
+  avatarPosterUrl       String?
   socialLinks           Json?
   tipJarUrl             String?
   countryCode           String?

@@ -98,6 +98,7 @@ interface ProfileResponse {
     displayName: string
     bio: string | null
     avatarUrl: string | null
+    avatarPosterUrl?: string | null
     tipJarUrl: string | null
     countryCode?: string | null
     pronouns?: string | null
@@ -323,7 +324,13 @@ export default async function ArtistProfilePage({ params }: { params: { username
       <ProfilePageLayout
         isLive={isLive}
         user={user}
-        cover={<ProfileCover displayName={artist.displayName} avatarUrl={artist.avatarUrl} />}
+        cover={
+          <ProfileCover
+            displayName={artist.displayName}
+            avatarUrl={artist.avatarUrl}
+            avatarPosterUrl={artist.avatarPosterUrl}
+          />
+        }
         hero={
           <ProfileHero
             displayName={artist.displayName}

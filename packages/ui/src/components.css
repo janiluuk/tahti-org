@@ -770,6 +770,33 @@
   user-select: none;
 }
 
+/* Hover-to-animate (e.g. GIF avatar): both layers always loaded, only
+ * opacity toggles — no JS, no pausing/resuming a GIF's own animation. */
+.avatar-tile--hover-animate {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.avatar-tile--hover-animate .avatar-tile__poster,
+.avatar-tile--hover-animate .avatar-tile__live {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-tile--hover-animate .avatar-tile__live {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.avatar-tile--hover-animate:hover .avatar-tile__live,
+.avatar-tile--hover-animate:focus-visible .avatar-tile__live {
+  opacity: 1;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    PINNED ANNOUNCEMENT (v8 — PinnedAnnouncement.tsx)
    ═══════════════════════════════════════════════════════════════════════ */

@@ -17,6 +17,7 @@ export default async function ArtistInfoSettingsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const {
     avatarUrl,
+    avatarPosterUrl,
     bio,
     countryCode,
     pronouns,
@@ -49,6 +50,7 @@ export default async function ArtistInfoSettingsPage() {
         initial={{
           displayName: user.displayName,
           avatarUrl,
+          avatarPosterUrl,
           countryCode,
           pronouns,
           showJoinDate,

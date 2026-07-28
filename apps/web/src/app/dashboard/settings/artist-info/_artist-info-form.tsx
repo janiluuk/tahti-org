@@ -31,6 +31,7 @@ function linksToSocialLinks(links: ChannelLink[]): Record<string, string> {
 export interface ArtistInfoFormData {
   displayName: string
   avatarUrl: string | null
+  avatarPosterUrl: string | null
   countryCode: string | null
   pronouns: string | null
   showJoinDate: boolean
@@ -47,6 +48,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
   const [identity, setIdentity] = useState<ChannelIdentityDraft>({
     displayName: initial.displayName,
     avatarUrl: initial.avatarUrl,
+    avatarPosterUrl: initial.avatarPosterUrl,
     countryCode: initial.countryCode,
     pronouns: initial.pronouns,
     defaultLocation: initial.defaultLocation,
@@ -70,6 +72,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
         displayName: identity.displayName,
         bio,
         avatarUrl: identity.avatarUrl ?? undefined,
+        avatarPosterUrl: identity.avatarPosterUrl,
         countryCode: identity.countryCode,
         pronouns: identity.pronouns,
         showJoinDate,

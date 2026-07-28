@@ -31,14 +31,24 @@ function IconHeart() {
 type ProfileCoverProps = {
   displayName: string
   avatarUrl: string | null
+  /** Static poster frame — present only when avatarUrl is an animated GIF,
+   * so the avatar shows a still frame at rest and plays on hover. */
+  avatarPosterUrl?: string | null
 }
 
 /** Full-viewport-width cover banner with avatar. Rendered OUTSIDE the max-width container. */
-export function ProfileCover({ displayName, avatarUrl }: ProfileCoverProps) {
+export function ProfileCover({ displayName, avatarUrl, avatarPosterUrl }: ProfileCoverProps) {
   return (
     <div className="prof-cover">
       <div className="prof-cover-overlay" aria-hidden />
-      <AvatarTile size="md" name={displayName} src={avatarUrl} bordered className="prof-avatar" />
+      <AvatarTile
+        size="md"
+        name={displayName}
+        src={avatarUrl}
+        posterUrl={avatarPosterUrl}
+        bordered
+        className="prof-avatar"
+      />
     </div>
   )
 }

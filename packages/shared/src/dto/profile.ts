@@ -8,6 +8,7 @@ export const ProfilePatchSchema = z
     displayName: z.string().trim().min(1, 'displayName cannot be empty').max(100).optional(),
     bio: z.string().max(5000).optional(),
     avatarUrl: z.string().trim().max(2000).optional(),
+    avatarPosterUrl: z.string().trim().max(2000).nullable().optional(),
     tipJarUrl: z.string().trim().max(2000).optional(),
     countryCode: z.string().length(2).toUpperCase().nullable().optional(),
     pronouns: z.string().trim().max(40).nullable().optional(),

@@ -12,6 +12,11 @@ export interface AvatarTileProps {
   /** Display name — used for initials when `src` is absent. */
   name: string
   src?: string | null
+  /** Static poster frame — when set alongside `src`, the tile shows this at
+   * rest and swaps to `src` (the live/animated image) on hover. Pure CSS
+   * opacity-crossfade, no JS: both images always load, only visibility
+   * toggles. Ignored if `src` is absent. */
+  posterUrl?: string | null
   alt?: string
   gradient?: CoverGradient
   /** Profile-style ring against page background. */
@@ -19,11 +24,14 @@ export interface AvatarTileProps {
   className?: string
 }
 
-/** Circular avatar — photo or initials on a canonical gradient. */
+/** Circular avatar — photo or initials on a canonical gradient. Pass
+ * `posterUrl` alongside an animated `src` (e.g. a GIF) for hover-to-animate:
+ * static at rest, plays while hovered. */
 export function AvatarTile({
   size,
   name,
   src,
+  posterUrl,
   alt,
   gradient = 'aurora',
   bordered = false,
@@ -37,6 +45,21 @@ export function AvatarTile({
     bordered && 'avatar-tile--bordered',
     className,
   )
+
+  if (src && posterUrl) {
+    return (
+      <span className={cn(classes, 'avatar-tile--hover-animate')} role="img" aria-label={label}>
+        <img
+          src={posterUrl}
+          alt=""
+          className="avatar-tile__poster"
+          loading="lazy"
+          decoding="async"
+        />
+        <img src={src} alt="" className="avatar-tile__live" loading="lazy" decoding="async" />
+      </span>
+    )
+  }
 
   if (src) {
     return <img src={src} alt={label} className={classes} loading="lazy" decoding="async" />
