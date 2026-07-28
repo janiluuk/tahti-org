@@ -44,7 +44,11 @@ describe('Public channel directory and platform stats', () => {
       where: { id: recentArtist.channel!.id },
       // fallbackEnabled: false — otherwise this channel (default true) lands in
       // the "replaying" tier, not "recent" (see list.test.ts for that tier).
-      data: { state: 'OFFLINE', goneLiveAt: new Date(Date.now() - 3600_000), fallbackEnabled: false },
+      data: {
+        state: 'OFFLINE',
+        goneLiveAt: new Date(Date.now() - 3600_000),
+        fallbackEnabled: false,
+      },
     })
 
     await prisma.broadcast.create({
