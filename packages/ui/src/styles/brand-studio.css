@@ -4713,6 +4713,134 @@
   background: color-mix(in srgb, var(--card) 60%, var(--border));
 }
 
+[data-tahti-ui='studio'] .studio-presskit-item--dragging {
+  opacity: 0.5;
+}
+
+/* ── Press kit builder (settings/presskit) ───────────────────────────── */
+[data-tahti-ui='studio'] .presskit-builder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+}
+
+[data-tahti-ui='studio'] .presskit-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1.5px dashed var(--cyan);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  cursor: pointer;
+  color: var(--muted);
+  text-align: center;
+  transition: background 0.15s;
+  margin-bottom: 0.9rem;
+}
+
+[data-tahti-ui='studio'] .presskit-dropzone:hover,
+[data-tahti-ui='studio'] .presskit-dropzone:focus-visible {
+  background: rgba(0, 240, 255, 0.05);
+  outline: none;
+}
+
+[data-tahti-ui='studio'] .presskit-dropzone--active {
+  background: rgba(0, 240, 255, 0.12);
+}
+
+[data-tahti-ui='studio'] .presskit-dropzone__hint {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .presskit-pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.9rem;
+}
+
+[data-tahti-ui='studio'] .presskit-pending-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--card2);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='studio'] .presskit-pending-item--error {
+  background: color-mix(in srgb, var(--error, #f87171) 12%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .presskit-pending-item__status {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+[data-tahti-ui='studio'] .presskit-pending-item--error .presskit-pending-item__status {
+  color: var(--error, #f87171);
+}
+
+[data-tahti-ui='studio'] .presskit-preview {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  background: var(--card2);
+  max-width: 26rem;
+}
+
+[data-tahti-ui='studio'] .presskit-preview__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+[data-tahti-ui='studio'] .presskit-preview__hero {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .presskit-preview__name {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+[data-tahti-ui='studio'] .presskit-preview__bio {
+  margin: 0 0 0.6rem;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  white-space: pre-wrap;
+}
+
+[data-tahti-ui='studio'] .presskit-preview__bio--empty {
+  color: var(--muted);
+  font-style: italic;
+}
+
+[data-tahti-ui='studio'] .presskit-preview__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+}
+
+[data-tahti-ui='studio'] .presskit-preview__grid img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
 /* ── Tahti Radio slot booking calendar ───────────────────────────────────── */
 [data-tahti-ui='studio'] .studio-radio-calendar__nav {
   display: flex;
