@@ -598,8 +598,8 @@ export function MiniPlayer() {
               {track.subtitle && <span className="mini-player__subtitle">{track.subtitle}</span>}
             </div>
           </button>
-          {track.kind === 'live' ? (
-            <span className="mini-player__badge">{track.isReplay ? 'REPLAY' : 'LIVE'}</span>
+          {track.kind === 'live' && !track.isReplay ? (
+            <span className="mini-player__badge">LIVE</span>
           ) : (
             <span className="mini-player__time">
               {formatTime(currentTime)} / {formatTime(duration)}
