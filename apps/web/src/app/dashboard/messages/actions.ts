@@ -79,7 +79,7 @@ export async function sendMessage(
 
 export async function startConversation(
   username: string,
-): Promise<{ error: string | null; conversationId?: string }> {
+): Promise<{ error: string | null; unauthorized?: boolean; conversationId?: string }> {
   const res = await fetch(`${apiUrl}/api/me/messages/conversations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
@@ -87,8 +87,12 @@ export async function startConversation(
     cache: 'no-store',
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok)
-    return { error: (data as { error?: string }).error ?? 'Failed to start conversation' }
+  if (!res.ok) {
+    return {
+      error: (data as { error?: string }).error ?? 'Failed to start conversation',
+      unauthorized: res.status === 401,
+    }
+  }
   return { error: null, conversationId: (data as { conversationId: string }).conversationId }
 }
 

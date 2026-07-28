@@ -70,6 +70,10 @@ type ProfileHeroProps = {
    * pattern as newsletterSlot, for the same reason. Rendered first in the CTA
    * row, ahead of Support. */
   followSlot?: ReactNode
+  /** The direct-message control (apps/web's SendMessageButton) — same slot
+   * pattern as followSlot. Rendered right after Support, per spec ("grouped
+   * with the support artist button"). */
+  messageSlot?: ReactNode
 }
 
 /** PLAT-020: artist profile hero — info row, bio, CTAs. Cover is rendered separately via ProfileCover. */
@@ -90,6 +94,7 @@ export function ProfileHero({
   joinDateTitle,
   newsletterSlot,
   followSlot,
+  messageSlot,
 }: ProfileHeroProps) {
   return (
     <>
@@ -130,6 +135,7 @@ export function ProfileHero({
             <IconHeart />
             Support
           </Link>
+          {messageSlot}
           {newsletterSlot}
           {tipJarUrl && (
             <a href={tipJarUrl} rel="noopener noreferrer" className="prof-tip-btn">

@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { WatcherCount } from './WatcherCount'
 import { NotificationBell, type NotificationBellItem } from './NotificationBell'
+import { MessagesBell, type MessagesBellConversation } from './MessagesBell'
 
 // ChannelHeader is mounted from many different public-page layouts across
 // apps/web (marketing pages, channel, profile, smart links) — reading the API
@@ -31,6 +32,12 @@ async function markNotificationsRead(): Promise<void> {
     method: 'POST',
     credentials: 'include',
   })
+}
+
+async function fetchConversations(): Promise<MessagesBellConversation[]> {
+  const res = await fetch(`${API_URL}/api/me/messages/conversations`, { credentials: 'include' })
+  if (!res.ok) return []
+  return (await res.json()) as MessagesBellConversation[]
 }
 
 export type SiteNavId = 'home' | 'discover' | 'radio' | 'venues'
@@ -156,6 +163,7 @@ export function ChannelHeader({
             )}
           </>
         )}
+        {!channelLiveMode && user && <MessagesBell fetchConversations={fetchConversations} />}
         {!channelLiveMode && user && (
           <NotificationBell
             fetchNotifications={fetchNotifications}
