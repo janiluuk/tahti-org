@@ -37,3 +37,15 @@ export const PatchRtmpTargetSchema = z.object({
 })
 
 export type PatchRtmpTargetInput = z.infer<typeof PatchRtmpTargetSchema>
+
+/** The video overlay baked into every multistream mirror push (see
+ * buildRtmpMirrorOutput) — shared across all of a channel's RTMP targets,
+ * not per-target. Empty string clears back to the display-name/avatar
+ * fallback. */
+export const ChannelStreamOverlayPatchSchema = z.object({
+  streamOverlayTitle: z.string().trim().max(80).optional(),
+  streamOverlaySubtitle: z.string().trim().max(120).optional(),
+  streamOverlayCoverUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
+})
+
+export type ChannelStreamOverlayPatchInput = z.infer<typeof ChannelStreamOverlayPatchSchema>

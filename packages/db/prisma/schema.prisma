@@ -965,6 +965,14 @@ model Channel {
   nowPlayingArtistUsername String?
   nowPlayingArtworkUrl     String?
   nowPlayingUpdatedAt      DateTime?
+  // Multistream video overlay (see buildRtmpMirrorOutput): what's baked into
+  // the static video frame pushed alongside audio to YouTube/Twitch/etc.
+  // mirror targets — distinct from nowPlaying* above (in-app metadata, not
+  // rendered into video). Falls back to the artist's display name + avatar
+  // when unset.
+  streamOverlayTitle    String?
+  streamOverlaySubtitle String?
+  streamOverlayCoverUrl String?
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
 
