@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { FollowButton } from '@/components/follow-button'
+import { SendMessageButton } from '@/components/send-message-button'
 import { renderBio } from '@/lib/render-bio'
 import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-icon'
 import { countryName } from '@/lib/country-options'
@@ -299,6 +300,11 @@ export default async function ArtistProfilePage({ params }: { params: { username
             followSlot={
               user?.username !== artist.username ? (
                 <FollowButton artistUsername={artist.username} />
+              ) : null
+            }
+            messageSlot={
+              user?.username !== artist.username ? (
+                <SendMessageButton artistUsername={artist.username} />
               ) : null
             }
             newsletterSlot={
