@@ -21,7 +21,7 @@ export function ProfileTabs({
   const tabs: Array<{ id: Tab; label: string }> = [
     { id: 'stage', label: 'Stage' },
     { id: 'feed', label: 'Feed' },
-    { id: 'tracks', label: 'Tracks' },
+    { id: 'tracks', label: 'Releases' },
   ]
 
   return (

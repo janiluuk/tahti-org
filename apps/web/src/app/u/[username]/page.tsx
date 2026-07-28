@@ -423,46 +423,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 {pressKitImages.length > 0 && <PressKitGallery images={pressKitImages} />}
               </section>
 
-              <section className="prof-section">
-                <div className="prof-sec-label-row">
-                  <div className="prof-sec-label">Releases</div>
-                  <div className="prof-sec-label-row__actions">
-                    {releases.length > 0 && (
-                      <div className="prof-sec-count">{releases.length} total</div>
-                    )}
-                    {isOwner && (
-                      <Link
-                        href="/dashboard/releases"
-                        className="prof-sec-add-btn"
-                        aria-label="Create a new release"
-                        title="Create a new release"
-                      >
-                        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-                          <path
-                            fill="currentColor"
-                            d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"
-                          />
-                        </svg>
-                      </Link>
-                    )}
-                  </div>
-                </div>
-                {releases.length === 0 ? (
-                  <div className="public-empty-card">
-                    <p className="public-empty-card__text">No published releases yet.</p>
-                    <p className="public-empty-card__hint">
-                      {isLive && links.channel ? (
-                        <Link href={links.channel}>Tune in live</Link>
-                      ) : (
-                        'New releases appear here when the artist publishes.'
-                      )}
-                    </p>
-                  </div>
-                ) : (
-                  <ReleasesGrid releases={releases} />
-                )}
-              </section>
-
               {events.length > 0 && (
                 <section className="prof-section">
                   <div className="prof-sec-label">Events</div>
@@ -653,9 +613,50 @@ export default async function ArtistProfilePage({ params }: { params: { username
             </section>
           }
           tracks={
-            <section className="prof-section">
-              <TracksTab tracks={tracks} isOwner={isOwner} />
-            </section>
+            <>
+              <section className="prof-section">
+                <div className="prof-sec-label-row">
+                  <div className="prof-sec-label">Releases</div>
+                  <div className="prof-sec-label-row__actions">
+                    {releases.length > 0 && (
+                      <div className="prof-sec-count">{releases.length} total</div>
+                    )}
+                    {isOwner && (
+                      <Link
+                        href="/dashboard/releases"
+                        className="prof-sec-add-btn"
+                        aria-label="Create a new release"
+                        title="Create a new release"
+                      >
+                        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+                          <path
+                            fill="currentColor"
+                            d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"
+                          />
+                        </svg>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+                {releases.length === 0 ? (
+                  <div className="public-empty-card">
+                    <p className="public-empty-card__text">No published releases yet.</p>
+                    <p className="public-empty-card__hint">
+                      {isLive && links.channel ? (
+                        <Link href={links.channel}>Tune in live</Link>
+                      ) : (
+                        'New releases appear here when the artist publishes.'
+                      )}
+                    </p>
+                  </div>
+                ) : (
+                  <ReleasesGrid releases={releases} />
+                )}
+              </section>
+              <section className="prof-section">
+                <TracksTab tracks={tracks} isOwner={isOwner} />
+              </section>
+            </>
           }
         />
       </ProfilePageLayout>

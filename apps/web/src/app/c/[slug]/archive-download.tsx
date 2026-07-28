@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { LoginPromptModal } from '@/components/login-prompt-modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -67,6 +68,7 @@ export function ArchiveDownloadButton({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [following, setFollowing] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
 
   const needsGate = repostToDownload || followToDownload
 
@@ -152,6 +154,10 @@ export function ArchiveDownloadButton({
         `${API_URL}/api/v1/c/${encodeURIComponent(channelSlug)}/archive/${itemId}/download?fp=${encodeURIComponent(fp)}`,
         { credentials: 'include' },
       )
+      if (res.status === 401) {
+        setShowLogin(true)
+        return
+      }
       const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string }
       if (!res.ok) {
         setError(data.error ?? 'Download unavailable')
@@ -176,17 +182,25 @@ export function ArchiveDownloadButton({
 
   if (!needsGate) {
     return (
-      <button
-        type="button"
-        className="ch-count-pill ch-download"
-        onClick={() => void download()}
-        disabled={loading}
-        aria-label={loading ? 'Preparing download' : `Download, ${downloadCount} downloads`}
-        title="Download"
-      >
-        {loading ? '…' : <IconDownload />}
-        {!loading && downloadCount}
-      </button>
+      <>
+        <button
+          type="button"
+          className="ch-count-pill ch-download"
+          onClick={() => void download()}
+          disabled={loading}
+          aria-label={loading ? 'Preparing download' : `Download, ${downloadCount} downloads`}
+          title="Download"
+        >
+          {loading ? '…' : <IconDownload />}
+          {!loading && downloadCount}
+        </button>
+        {showLogin && (
+          <LoginPromptModal
+            message="Sign in to download this track."
+            onClose={() => setShowLogin(false)}
+          />
+        )}
+      </>
     )
   }
 
@@ -229,6 +243,12 @@ export function ArchiveDownloadButton({
         </button>
       </div>
       {error && <p className="ch-download-error">{error}</p>}
+      {showLogin && (
+        <LoginPromptModal
+          message="Sign in to download this track."
+          onClose={() => setShowLogin(false)}
+        />
+      )}
     </div>
   )
 }

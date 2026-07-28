@@ -989,8 +989,25 @@ model Channel {
   pressKitImages    PressKitImage[]
   radioSlotBookings RadioSlotBooking[]
   members           ChannelMember[]
+  slugRedirects     ChannelSlugRedirect[]
 
   @@index([state])
+  @@schema("channel")
+}
+
+// A channel's previous <slug>.tahti.live address, kept reserved and
+// redirecting to the channel's current slug for 30 days after a rename —
+// see apps/api/src/routes/me/channel-slug.ts (write) and
+// apps/api/src/routes/channels/get.ts (read/redirect resolution).
+model ChannelSlugRedirect {
+  id        String   @id @default(cuid())
+  oldSlug   String   @unique
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([channelId])
   @@schema("channel")
 }
 

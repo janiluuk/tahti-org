@@ -4,7 +4,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { LoginPromptModal } from './login-prompt-modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -40,11 +40,10 @@ export function LoveButton({
   initialLiked?: boolean
   initialLikeCount?: number
 }) {
-  const pathname = usePathname()
-  const router = useRouter()
   const [liked, setLiked] = useState(initialLiked)
   const [likeCount, setLikeCount] = useState(initialLikeCount)
   const [pending, setPending] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -73,10 +72,7 @@ export function LoveButton({
         { method: liked ? 'DELETE' : 'POST', credentials: 'include' },
       )
       if (res.status === 401) {
-        // Client-side nav, not a hard reload — a hard reload here tears down
-        // the shared PlayerProvider, stopping whatever's playing. Playback
-        // must never stop except when the listener stops it themselves.
-        router.push(`/login?next=${encodeURIComponent(pathname || '/')}`)
+        setShowLogin(true)
         return
       }
       if (!res.ok) return
@@ -89,17 +85,25 @@ export function LoveButton({
   }
 
   return (
-    <button
-      type="button"
-      className={`ch-love-btn${liked ? ' ch-love-btn--active' : ''}`}
-      onClick={(e) => void toggle(e)}
-      disabled={pending}
-      aria-pressed={liked}
-      aria-label={liked ? 'Unlove this track' : 'Love this track'}
-      title={liked ? 'Unlove' : 'Love'}
-    >
-      <IconHeart filled={liked} />
-      {likeCount > 0 && <span className="ch-love-btn__count">{likeCount}</span>}
-    </button>
+    <>
+      <button
+        type="button"
+        className={`ch-love-btn${liked ? ' ch-love-btn--active' : ''}`}
+        onClick={(e) => void toggle(e)}
+        disabled={pending}
+        aria-pressed={liked}
+        aria-label={liked ? 'Unlove this track' : 'Love this track'}
+        title={liked ? 'Unlove' : 'Love'}
+      >
+        <IconHeart filled={liked} />
+        {likeCount > 0 && <span className="ch-love-btn__count">{likeCount}</span>}
+      </button>
+      {showLogin && (
+        <LoginPromptModal
+          message="Sign in to love this track."
+          onClose={() => setShowLogin(false)}
+        />
+      )}
+    </>
   )
 }

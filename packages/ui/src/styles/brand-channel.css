@@ -5440,6 +5440,17 @@
   color: var(--muted);
 }
 
+[data-tahti-ui='brand'] .prof-login-modal__text {
+  margin: 0 0 0.9rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .prof-login-modal__cta {
+  justify-content: center;
+  width: 100%;
+}
+
 [data-tahti-ui='brand'] .prof-embed-modal__preview {
   margin-top: 0.5rem;
   overflow-x: auto;

@@ -4,7 +4,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { LoginPromptModal } from './login-prompt-modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -44,11 +44,10 @@ export function RepostButton({
   initialReposted?: boolean
   initialRepostCount?: number
 }) {
-  const pathname = usePathname()
-  const router = useRouter()
   const [reposted, setReposted] = useState(initialReposted)
   const [repostCount, setRepostCount] = useState(initialRepostCount)
   const [pending, setPending] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -77,10 +76,7 @@ export function RepostButton({
         { method: reposted ? 'DELETE' : 'POST', credentials: 'include' },
       )
       if (res.status === 401) {
-        // Client-side nav, not a hard reload — a hard reload here tears down
-        // the shared PlayerProvider, stopping whatever's playing. Playback
-        // must never stop except when the listener stops it themselves.
-        router.push(`/login?next=${encodeURIComponent(pathname || '/')}`)
+        setShowLogin(true)
         return
       }
       if (!res.ok) return
@@ -93,17 +89,25 @@ export function RepostButton({
   }
 
   return (
-    <button
-      type="button"
-      className={`ch-repost-btn${reposted ? ' ch-repost-btn--active' : ''}`}
-      onClick={(e) => void toggle(e)}
-      disabled={pending}
-      aria-pressed={reposted}
-      aria-label={reposted ? 'Remove repost' : 'Repost this track'}
-      title={reposted ? 'Reposted' : 'Repost'}
-    >
-      <IconRepost />
-      {repostCount > 0 && <span className="ch-repost-btn__count">{repostCount}</span>}
-    </button>
+    <>
+      <button
+        type="button"
+        className={`ch-repost-btn${reposted ? ' ch-repost-btn--active' : ''}`}
+        onClick={(e) => void toggle(e)}
+        disabled={pending}
+        aria-pressed={reposted}
+        aria-label={reposted ? 'Remove repost' : 'Repost this track'}
+        title={reposted ? 'Reposted' : 'Repost'}
+      >
+        <IconRepost />
+        {repostCount > 0 && <span className="ch-repost-btn__count">{repostCount}</span>}
+      </button>
+      {showLogin && (
+        <LoginPromptModal
+          message="Sign in to repost this track."
+          onClose={() => setShowLogin(false)}
+        />
+      )}
+    </>
   )
 }

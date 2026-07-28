@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
 import ChatPanel from './chat-panel'
@@ -27,6 +27,7 @@ import type {
 } from '@tahti/shared'
 import { AvatarTile, Heading, Row, Text, ChannelPageShell, SafePlainText } from '@tahti/ui'
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
+import { resolveChannelUrl } from '@/lib/app-url'
 import { getSessionUser } from '@/lib/session'
 import { renderBio } from '@/lib/render-bio'
 import { flagEmoji as countryCodeToFlag } from '@/lib/flag-emoji'
@@ -35,7 +36,10 @@ import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-ic
 import { ReportButton } from '@/components/report-button'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { FollowButton } from '@/components/follow-button'
+import { SendMessageButton } from '@/components/send-message-button'
+import { ReleasesGrid, type ReleaseGridItem } from '@/components/releases-grid'
 import { ChannelTabs } from './_channel-tabs'
+import { PublicChannelTabs } from './_public-tabs'
 import { ManagePanel, type ManageStats } from './_manage-panel'
 import { cookies } from 'next/headers'
 
@@ -122,6 +126,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
   const channelRes = await fetch(`${apiUrl}/api/channels/${slug}`, { cache: 'no-store' })
 
   if (channelRes.status === 404) {
+    // The artist may have renamed away from this slug — routes/me/channel-slug.ts
+    // keeps a 30-day redirect to their current address before it's freed up.
+    const redirectRes = await fetch(`${apiUrl}/api/channels/${slug}/redirect`, {
+      cache: 'no-store',
+    })
+    if (redirectRes.ok) {
+      const { slug: newSlug } = (await redirectRes.json()) as { slug: string }
+      redirect(resolveChannelUrl(newSlug))
+    }
     notFound()
   }
 
@@ -131,14 +144,21 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const channel = (await channelRes.json()) as ChannelResponse
 
-  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, user] = await Promise.all([
-    fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/api/channels/${slug}/events`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/api/channels/${slug}/posts`, { cache: 'no-store' }),
-    fetch(`${apiUrl}/api/channels/${slug}/embeds`, { cache: 'no-store' }),
-    getSessionUser(),
-  ])
+  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, profileRes, user] =
+    await Promise.all([
+      fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/channels/${slug}/events`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/channels/${slug}/posts`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/channels/${slug}/embeds`, { cache: 'no-store' }),
+      fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/profile`, {
+        cache: 'no-store',
+      }),
+      getSessionUser(),
+    ])
+  const releases: ReleaseGridItem[] = profileRes.ok
+    ? ((await profileRes.json()) as { releases: ReleaseGridItem[] }).releases
+    : []
 
   const items: ArchiveItem[] = itemsRes.ok ? ((await itemsRes.json()) as ArchiveItem[]) : []
   // Shared play queue for every playable archive item, in list order — lets
@@ -293,9 +313,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               <header className="ch-artist-header">
                 <Row className="ui-row--gap-3 ch-artist-header-row">
                   <AvatarTile
-                    size="sm"
+                    size="md"
                     name={channel.user.displayName}
                     src={channel.user.avatarUrl}
+                    bordered
                     className="ch-artist-avatar"
                   />
                   <div>
@@ -323,62 +344,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     </Text>
                   </div>
                 </Row>
-                {bioHtml ? (
-                  <div
-                    className="ch-artist-bio ch-artist-bio--rich"
-                    dangerouslySetInnerHTML={{ __html: bioHtml }}
-                  />
-                ) : (
-                  channel.user.bio && (
-                    <SafePlainText text={channel.user.bio} className="ch-artist-bio" linkMentions />
-                  )
-                )}
-                {tags.length > 0 && (
-                  <div className="prof-tags">
-                    {tags.map((tag) => (
-                      <span key={tag} className="prof-tag-chip">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {streamingLinkEntries.length > 0 && (
-                  <div className="prof-streaming-links">
-                    {streamingLinkEntries.map(([label, url]) => (
-                      <a
-                        key={label}
-                        href={url}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                        className="prof-social-link"
-                      >
-                        <SocialLinkIcon label={label} url={url} /> {label} ↗
-                      </a>
-                    ))}
-                  </div>
-                )}
-                {socialLinkEntries.length > 0 && (
-                  <div className="prof-social-links">
-                    {socialLinkEntries.map(([key, url]) => {
-                      const label = key.charAt(0).toUpperCase() + key.slice(1)
-                      const isEmail = url.startsWith('mailto:')
-                      return (
-                        <a
-                          key={key}
-                          href={url}
-                          rel="noopener noreferrer"
-                          target={isEmail ? undefined : '_blank'}
-                          className="prof-social-link"
-                        >
-                          <SocialLinkIcon label={label} url={url} /> {label} ↗
-                        </a>
-                      )
-                    })}
-                  </div>
-                )}
                 <div className="ch-artist-cta-row">
                   {user?.username !== channel.user.username && (
-                    <FollowButton artistUsername={channel.user.username} />
+                    <>
+                      <FollowButton artistUsername={channel.user.username} />
+                      <SendMessageButton artistUsername={channel.user.username} />
+                    </>
                   )}
                   <Link
                     href={`/u/${channel.user.username}/subscribe`}
@@ -404,31 +375,9 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 </div>
               </header>
 
-              {posts.length > 0 && (
-                <section className="ch-featured-post">
-                  <div className="ch-featured-post__label">
-                    Latest from {channel.user.displayName}
-                  </div>
-                  {posts[0]!.title && <div className="ch-posts-list__title">{posts[0]!.title}</div>}
-                  <div className="ch-posts-list__date">
-                    {new Date(posts[0]!.publishAt).toLocaleDateString(undefined, {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </div>
-                  <p className="ch-posts-list__body">{posts[0]!.body}</p>
-                  {posts[0]!.images.length > 0 && (
-                    <div className="ch-posts-list__images">
-                      {posts[0]!.images.map((url) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img key={url} src={url} alt="" className="ch-posts-list__image" />
-                      ))}
-                    </div>
-                  )}
-                </section>
-              )}
-
+              <PublicChannelTabs
+                live={
+                  <>
               <ChannelTextLayerView
                 mode={channel.textLayerMode}
                 text={channel.textLayerText}
@@ -479,73 +428,6 @@ export default async function ChannelPage({ params }: { params: { slug: string }
               )}
 
               {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
-
-              {events.length > 0 && (
-                <section className="ch-archive-section">
-                  <div className="ch-archive-section-head">
-                    <h2 className="ch-section-label">Events</h2>
-                  </div>
-                  <ul className="ch-events-list">
-                    {events.map((ev) => (
-                      <li key={ev.id} className="ch-events-list__item">
-                        <div className="ch-events-list__date">
-                          {new Date(ev.startAt).toLocaleDateString(undefined, {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </div>
-                        <div className="ch-events-list__body">
-                          <div className="ch-events-list__title">
-                            {ev.title} — {ev.place}, {ev.location}
-                          </div>
-                          {ev.eventUrl && (
-                            <a
-                              href={ev.eventUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="ch-events-list__link"
-                            >
-                              Tickets / event link ↗
-                            </a>
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {posts.length > 1 && (
-                <section className="ch-archive-section">
-                  <div className="ch-archive-section-head">
-                    <h2 className="ch-section-label">Updates</h2>
-                  </div>
-                  <ul className="ch-posts-list">
-                    {posts.slice(1).map((p) => (
-                      <li key={p.id} className="ch-posts-list__item">
-                        {p.title && <div className="ch-posts-list__title">{p.title}</div>}
-                        <div className="ch-posts-list__date">
-                          {new Date(p.publishAt).toLocaleDateString(undefined, {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </div>
-                        <p className="ch-posts-list__body">{p.body}</p>
-                        {p.images.length > 0 && (
-                          <div className="ch-posts-list__images">
-                            {p.images.map((url) => (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img key={url} src={url} alt="" className="ch-posts-list__image" />
-                            ))}
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
 
               {embeds.length > 0 && (
                 <section className="ch-archive-section">
@@ -705,6 +587,187 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                   </ul>
                 )}
               </section>
+                  </>
+                }
+                releases={
+                  releases.length === 0 ? (
+                    <div className="public-empty-card">
+                      <p className="public-empty-card__text">No published releases yet.</p>
+                      <p className="public-empty-card__hint">
+                        New releases appear here when the artist publishes.
+                      </p>
+                    </div>
+                  ) : (
+                    <ReleasesGrid releases={releases} />
+                  )
+                }
+                feed={
+                  <>
+                    {posts.length > 0 && (
+                      <section className="ch-featured-post">
+                        <div className="ch-featured-post__label">
+                          Latest from {channel.user.displayName}
+                        </div>
+                        {posts[0]!.title && (
+                          <div className="ch-posts-list__title">{posts[0]!.title}</div>
+                        )}
+                        <div className="ch-posts-list__date">
+                          {new Date(posts[0]!.publishAt).toLocaleDateString(undefined, {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </div>
+                        <p className="ch-posts-list__body">{posts[0]!.body}</p>
+                        {posts[0]!.images.length > 0 && (
+                          <div className="ch-posts-list__images">
+                            {posts[0]!.images.map((url) => (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img key={url} src={url} alt="" className="ch-posts-list__image" />
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    )}
+
+                    {events.length > 0 && (
+                      <section className="ch-archive-section">
+                        <div className="ch-archive-section-head">
+                          <h2 className="ch-section-label">Events</h2>
+                        </div>
+                        <ul className="ch-events-list">
+                          {events.map((ev) => (
+                            <li key={ev.id} className="ch-events-list__item">
+                              <div className="ch-events-list__date">
+                                {new Date(ev.startAt).toLocaleDateString(undefined, {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </div>
+                              <div className="ch-events-list__body">
+                                <div className="ch-events-list__title">
+                                  {ev.title} — {ev.place}, {ev.location}
+                                </div>
+                                {ev.eventUrl && (
+                                  <a
+                                    href={ev.eventUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ch-events-list__link"
+                                  >
+                                    Tickets / event link ↗
+                                  </a>
+                                )}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+
+                    {posts.length > 1 && (
+                      <section className="ch-archive-section">
+                        <div className="ch-archive-section-head">
+                          <h2 className="ch-section-label">Updates</h2>
+                        </div>
+                        <ul className="ch-posts-list">
+                          {posts.slice(1).map((p) => (
+                            <li key={p.id} className="ch-posts-list__item">
+                              {p.title && <div className="ch-posts-list__title">{p.title}</div>}
+                              <div className="ch-posts-list__date">
+                                {new Date(p.publishAt).toLocaleDateString(undefined, {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </div>
+                              <p className="ch-posts-list__body">{p.body}</p>
+                              {p.images.length > 0 && (
+                                <div className="ch-posts-list__images">
+                                  {p.images.map((url) => (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img key={url} src={url} alt="" className="ch-posts-list__image" />
+                                  ))}
+                                </div>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+
+                    {posts.length === 0 && events.length === 0 && (
+                      <div className="public-empty-card">
+                        <p className="public-empty-card__text">No updates yet.</p>
+                      </div>
+                    )}
+                  </>
+                }
+                bio={
+                  <>
+                    {bioHtml ? (
+                      <div
+                        className="ch-artist-bio ch-artist-bio--rich"
+                        dangerouslySetInnerHTML={{ __html: bioHtml }}
+                      />
+                    ) : channel.user.bio ? (
+                      <SafePlainText
+                        text={channel.user.bio}
+                        className="ch-artist-bio"
+                        linkMentions
+                      />
+                    ) : (
+                      <div className="public-empty-card">
+                        <p className="public-empty-card__text">No bio yet.</p>
+                      </div>
+                    )}
+                    {tags.length > 0 && (
+                      <div className="prof-tags">
+                        {tags.map((tag) => (
+                          <span key={tag} className="prof-tag-chip">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {streamingLinkEntries.length > 0 && (
+                      <div className="prof-streaming-links">
+                        {streamingLinkEntries.map(([label, url]) => (
+                          <a
+                            key={label}
+                            href={url}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                            className="prof-social-link"
+                          >
+                            <SocialLinkIcon label={label} url={url} /> {label} ↗
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {socialLinkEntries.length > 0 && (
+                      <div className="prof-social-links">
+                        {socialLinkEntries.map(([key, url]) => {
+                          const label = key.charAt(0).toUpperCase() + key.slice(1)
+                          const isEmail = url.startsWith('mailto:')
+                          return (
+                            <a
+                              key={key}
+                              href={url}
+                              rel="noopener noreferrer"
+                              target={isEmail ? undefined : '_blank'}
+                              className="prof-social-link"
+                            >
+                              <SocialLinkIcon label={label} url={url} /> {label} ↗
+                            </a>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </>
+                }
+              />
             </div>
           </div>
         </ChannelTabs>

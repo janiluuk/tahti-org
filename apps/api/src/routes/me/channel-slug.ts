@@ -19,6 +19,7 @@ import {
 } from '../../lib/ingest-credentials.js'
 
 const RESERVED_SET = new Set<string>(RESERVED_CHANNEL_SLUGS)
+const SLUG_REDIRECT_GRACE_MS = 30 * 24 * 60 * 60 * 1000
 
 /** Self-service channel address (<slug>.tahti.live) rename. The RTMP stream key
  * embeds the slug (`<slug>__<random>`, see routes/internal/rtmp.ts's on_publish
@@ -56,6 +57,17 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
       if (existing && existing.userId !== user.id) {
         return reply.send({ available: false, reason: 'taken' })
       }
+
+      // Slugs stay reserved to the channel that just moved off them for 30
+      // days — blocks a squatter grabbing an artist's old address while
+      // their redirect is still live, but the artist can reclaim their own.
+      const redirect = await fastify.prisma.channelSlugRedirect.findFirst({
+        where: { oldSlug: slug, expiresAt: { gt: new Date() } },
+        select: { channel: { select: { userId: true } } },
+      })
+      if (redirect && redirect.channel.userId !== user.id) {
+        return reply.send({ available: false, reason: 'recently_released' })
+      }
       return reply.send({ available: true })
     },
   )
@@ -88,7 +100,7 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       if (slug === channel.slug) {
-        return reply.send({ slug: channel.slug, rtmpStreamKey: '' })
+        return reply.send({ slug: channel.slug, rtmpStreamKey: '', previousSlugRedirectExpiresAt: null })
       }
 
       const clash = await fastify.prisma.channel.findUnique({
@@ -97,6 +109,14 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (clash) return reply.status(409).send({ error: 'That address is already taken' })
 
+      const redirectClash = await fastify.prisma.channelSlugRedirect.findFirst({
+        where: { oldSlug: slug, expiresAt: { gt: new Date() }, channelId: { not: channel.id } },
+        select: { id: true },
+      })
+      if (redirectClash) {
+        return reply.status(409).send({ error: 'That address was recently released and is not available yet' })
+      }
+
       const newRtmpKey = `${slug}__${nanoid(32)}`
       const newRtmpHash = await hashPassword(newRtmpKey)
       const hotPrevious =
@@ -104,19 +124,33 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
           ? hotRotatePreviousFields(channel.rtmpStreamKeyHash)
           : clearHotRotatePreviousFields()
 
-      await fastify.prisma.channel.update({
-        where: { id: channel.id },
-        data: {
-          slug,
-          liveSourceMount: `/live/${slug}`,
-          rtmpStreamKey: newRtmpKey,
-          rtmpStreamKeyHash: newRtmpHash,
-          rtmpStreamKeyPreviousHash: hotPrevious.previousHash,
-          rtmpStreamKeyPreviousExpiresAt: hotPrevious.previousExpiresAt,
-        },
-      })
+      const redirectExpiresAt = new Date(Date.now() + SLUG_REDIRECT_GRACE_MS)
 
-      return reply.send({ slug, rtmpStreamKey: newRtmpKey })
+      await fastify.prisma.$transaction([
+        fastify.prisma.channel.update({
+          where: { id: channel.id },
+          data: {
+            slug,
+            liveSourceMount: `/live/${slug}`,
+            rtmpStreamKey: newRtmpKey,
+            rtmpStreamKeyHash: newRtmpHash,
+            rtmpStreamKeyPreviousHash: hotPrevious.previousHash,
+            rtmpStreamKeyPreviousExpiresAt: hotPrevious.previousExpiresAt,
+          },
+        }),
+        // Reclaiming a not-yet-expired old address of this same channel — drop
+        // the now-meaningless self-redirect instead of leaving slug -> itself.
+        fastify.prisma.channelSlugRedirect.deleteMany({ where: { oldSlug: slug } }),
+        fastify.prisma.channelSlugRedirect.create({
+          data: { oldSlug: channel.slug, channelId: channel.id, expiresAt: redirectExpiresAt },
+        }),
+      ])
+
+      return reply.send({
+        slug,
+        rtmpStreamKey: newRtmpKey,
+        previousSlugRedirectExpiresAt: redirectExpiresAt.toISOString(),
+      })
     },
   )
 }

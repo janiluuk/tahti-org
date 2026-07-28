@@ -9,7 +9,18 @@ import { Panel, Button } from '@tahti/ui'
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? ''
 const CHECK_DEBOUNCE_MS = 400
 
-type Availability = { available: boolean; reason?: 'taken' | 'reserved' } | null
+type Availability = {
+  available: boolean
+  reason?: 'taken' | 'reserved' | 'recently_released'
+} | null
+
+function formatExpiry(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
 
 export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
   const [slug, setSlug] = useState(initialSlug)
@@ -19,6 +30,7 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newRtmpKey, setNewRtmpKey] = useState<string | null>(null)
+  const [redirectExpiresAt, setRedirectExpiresAt] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
   useEffect(() => {
@@ -56,6 +68,7 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
       const data = (await res.json().catch(() => ({}))) as {
         slug?: string
         rtmpStreamKey?: string
+        previousSlugRedirectExpiresAt?: string | null
         error?: string
       }
       if (!res.ok || !data.slug) {
@@ -66,6 +79,7 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
       setInput(data.slug)
       setAvailability(null)
       if (data.rtmpStreamKey) setNewRtmpKey(data.rtmpStreamKey)
+      setRedirectExpiresAt(data.previousSlugRedirectExpiresAt ?? null)
     } catch {
       setError('Network error — please try again.')
     } finally {
@@ -108,7 +122,15 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
                 ? '✗ That address is reserved'
                 : availability?.reason === 'taken'
                   ? '✗ That address is already taken'
-                  : null}
+                  : availability?.reason === 'recently_released'
+                    ? '✗ That address was recently released by another artist and isn’t available yet'
+                    : null}
+        </p>
+      )}
+      {changed && availability?.available === true && (
+        <p className="studio-text-muted-sm studio-mt-xs">
+          Your current address, <strong>{slug}.tahti.live</strong>, will keep working and redirect
+          here for 30 days, then become available to other artists.
         </p>
       )}
       {error && <p className="studio-notice studio-notice--error studio-mt-xs">{error}</p>}
@@ -116,6 +138,12 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
         <p className="studio-notice studio-notice--success studio-mt-xs">
           Address changed. Your new RTMP stream key is <code>{newRtmpKey}</code> — update your
           broadcast software before you next go live.
+          {redirectExpiresAt && (
+            <>
+              {' '}
+              Your old address redirects here until {formatExpiry(redirectExpiresAt)}.
+            </>
+          )}
         </p>
       )}
     </Panel>

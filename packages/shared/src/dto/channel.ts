@@ -54,7 +54,7 @@ export const ChannelSlugAvailabilityQuerySchema = z.object({
 
 export const ChannelSlugAvailabilityResponseSchema = z.object({
   available: z.boolean(),
-  reason: z.enum(['taken', 'reserved']).optional(),
+  reason: z.enum(['taken', 'reserved', 'recently_released']).optional(),
 })
 
 export const ChannelSlugUpdateSchema = z.object({
@@ -64,4 +64,13 @@ export const ChannelSlugUpdateSchema = z.object({
 export const ChannelSlugUpdateResponseSchema = z.object({
   slug: z.string(),
   rtmpStreamKey: z.string(),
+  /** The previous address now redirects here until this date — see
+   * ChannelSlugRedirect. Null on a channel's very first slug set. */
+  previousSlugRedirectExpiresAt: z.string().nullable(),
+})
+
+/** GET /api/channels/:slug/redirect — resolves an old, renamed-away slug to
+ * its channel's current slug, while the 30-day grace redirect is still active. */
+export const ChannelSlugRedirectResponseSchema = z.object({
+  slug: z.string(),
 })
