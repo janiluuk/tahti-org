@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { ChannelSlugRedirectResponseSchema, SlugParamSchema, openApiResponse, parseRouteParams } from '@tahti/shared'
+import {
+  ChannelSlugRedirectResponseSchema,
+  SlugParamSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 
 /** Resolves a channel's previous, renamed-away slug to its current one, while
  * the 30-day grace redirect from routes/me/channel-slug.ts is still active —
