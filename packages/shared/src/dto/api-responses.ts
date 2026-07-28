@@ -562,11 +562,17 @@ export const ChannelCardSchema = z.object({
   nextBroadcastAt: z.string().datetime().nullable(),
   nextBroadcastNote: z.string().nullable(),
   genres: z.array(z.string()),
+  /** Channel is actively airing its 24/7 archive rotation right now (not
+   * live) — shown as "REPLAY" on the Discover page, same convention as the
+   * mini-player's REPLAY badge for Tahti Radio's own rotation. */
+  fallbackEnabled: z.boolean(),
   user: PublicChannelUserSchema,
 })
 
 export const ChannelListResponseSchema = z.object({
   live: z.array(ChannelCardSchema),
+  /** Not live, but currently airing their archive rotation (fallbackEnabled) — REPLAY. */
+  replaying: z.array(ChannelCardSchema),
   recent: z.array(ChannelCardSchema),
 })
 

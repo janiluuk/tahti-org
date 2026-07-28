@@ -13,19 +13,21 @@ type Tab = 'live' | 'selects' | 'artists'
 
 export function DiscoverTabs({
   live,
+  replaying,
   recent,
   listenerCounts,
   directory,
   gallery,
 }: {
   live: ChannelCard[]
+  replaying: ChannelCard[]
   recent: ChannelCard[]
   listenerCounts: Record<string, number>
   directory: ChannelDirectoryEntry[]
   gallery: TahtiSelectsGalleryItem[]
 }) {
   const [tab, setTab] = useState<Tab>('live')
-  const empty = live.length === 0 && recent.length === 0
+  const empty = live.length === 0 && replaying.length === 0 && recent.length === 0
 
   return (
     <>
@@ -68,7 +70,12 @@ export function DiscoverTabs({
             </p>
           </div>
         ) : (
-          <ListenChannels live={live} recent={recent} listenerCounts={listenerCounts} />
+          <ListenChannels
+            live={live}
+            replaying={replaying}
+            recent={recent}
+            listenerCounts={listenerCounts}
+          />
         ))}
 
       {tab === 'selects' && <SelectsGallery items={gallery} />}
