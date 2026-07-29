@@ -75,17 +75,84 @@ function StaticPresetThumbnail({ preset, scheme }: { preset: VisualPreset; schem
       />
     )
   }
-  // REACTIVE_GRID
+  if (preset === 'REACTIVE_GRID') {
+    return (
+      <div
+        className="visual-preset-picker__thumb"
+        aria-hidden
+        style={{
+          backgroundImage: [
+            `linear-gradient(${scheme.accent}55 1px, transparent 1px)`,
+            `linear-gradient(90deg, ${scheme.accent}55 1px, transparent 1px)`,
+          ].join(', '),
+          backgroundSize: '20% 20%',
+        }}
+      />
+    )
+  }
+  if (preset === 'CLOUDSCAPE') {
+    return (
+      <div
+        className="visual-preset-picker__thumb"
+        aria-hidden
+        style={{
+          background: `linear-gradient(180deg, ${scheme.muted}, ${scheme.accent})`,
+          backgroundImage: [
+            `radial-gradient(circle at 30% 30%, ${scheme.highlight}aa 0 12%, transparent 13%)`,
+            `radial-gradient(ellipse 30% 12% at 60% 40%, #fff5 0 100%, transparent 100%)`,
+            `radial-gradient(ellipse 24% 10% at 25% 55%, #fff4 0 100%, transparent 100%)`,
+            `linear-gradient(180deg, ${scheme.muted}, ${scheme.accent})`,
+          ].join(', '),
+        }}
+      />
+    )
+  }
+  if (preset === 'LINE_TANGLE') {
+    return (
+      <div
+        className="visual-preset-picker__thumb"
+        aria-hidden
+        style={{
+          backgroundImage: [
+            `linear-gradient(35deg, transparent 48%, ${scheme.accent}88 49%, transparent 51%)`,
+            `linear-gradient(-25deg, transparent 48%, ${scheme.highlight}88 49%, transparent 51%)`,
+            `linear-gradient(70deg, transparent 48%, ${scheme.muted}88 49%, transparent 51%)`,
+          ].join(', '),
+          backgroundSize: '30% 30%, 22% 22%, 26% 26%',
+        }}
+      />
+    )
+  }
+  if (preset === 'BACKDROP_BOX') {
+    return (
+      <div
+        className="visual-preset-picker__thumb"
+        aria-hidden
+        style={{
+          background: scheme.muted,
+          backgroundImage: [
+            `linear-gradient(135deg, ${scheme.accent}33, transparent 60%)`,
+            `linear-gradient(-8deg, transparent 30%, ${scheme.highlight}55 31%, transparent 33%, transparent 66%, ${scheme.highlight}55 67%, transparent 69%)`,
+          ].join(', '),
+          backgroundSize: '100% 100%, 46% 46%',
+          backgroundPosition: 'center, center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+    )
+  }
+  // LENS_FLARES
   return (
     <div
       className="visual-preset-picker__thumb"
       aria-hidden
       style={{
+        background: '#000',
         backgroundImage: [
-          `linear-gradient(${scheme.accent}55 1px, transparent 1px)`,
-          `linear-gradient(90deg, ${scheme.accent}55 1px, transparent 1px)`,
+          `radial-gradient(circle at 30% 35%, ${scheme.accent} 0 8%, transparent 20%)`,
+          `radial-gradient(circle at 65% 60%, ${scheme.highlight} 0 5%, transparent 14%)`,
+          `radial-gradient(circle at 50% 48%, ${scheme.muted} 0 3%, transparent 10%)`,
         ].join(', '),
-        backgroundSize: '20% 20%',
       }}
     />
   )
