@@ -488,7 +488,6 @@ describe('collaborative playlists', () => {
 
 describe('collection subscriptions', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
-  let ownerCookie: string
   let subscriberCookie: string
   let otherCookie: string
   let publicSlug: string
@@ -504,7 +503,6 @@ describe('collection subscriptions', () => {
       username: `${PREFIX}sub-owner`,
       tier: 'ARTIST',
     })
-    ownerCookie = await sessionCookieFor(prisma, owner.id)
 
     const subscriber = await createTestArtist(prisma, {
       email: `${PREFIX}sub-listener@example.com`,
