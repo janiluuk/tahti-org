@@ -410,6 +410,7 @@ enum NotificationType {
   NEW_FOLLOWER
   NEW_LIKE
   NEW_REPOST
+  PLAYLIST_TRACK_ADDED
 
   @@schema("core")
 }
@@ -632,6 +633,7 @@ model User {
   artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
   archiveItemLikes      ArchiveItemLike[]
   collectionSubscriptions CollectionSubscription[]
+  collectionItemsAdded  CollectionItem[]         @relation("CollectionItemAddedBy")
   archiveItemReposts    ArchiveItemRepost[]
   trackReactions        TrackReaction[]
   conversationParticipations ConversationParticipant[]
@@ -2163,6 +2165,13 @@ model CollectionItem {
   release       Release?    @relation(fields: [releaseId], references: [id], onDelete: SetNull)
   position      Int
   createdAt     DateTime    @default(now())
+  // Who contributed this item — set for collaborative-playlist adds (and the
+  // owner's own adds); null for pre-existing rows from before this field
+  // existed. Powers the "participants" notification fan-out and the optional
+  // note shown alongside the track.
+  addedByUserId String?
+  addedBy       User?       @relation("CollectionItemAddedBy", fields: [addedByUserId], references: [id], onDelete: SetNull)
+  addNote       String?
 
   @@unique([collectionId, position])
   @@index([collectionId, position])

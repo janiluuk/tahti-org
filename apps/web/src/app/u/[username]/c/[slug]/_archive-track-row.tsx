@@ -19,6 +19,10 @@ type Props = {
   durationLabel: string | null
   /** Sibling playable tracks in display order — enables auto-advance + loop on 'ended'. */
   queue?: PlayerTrack[]
+  /** Set when a contributor other than the playlist owner added this track
+   * (collaborative playlists) — shown as a small "added by" + optional note. */
+  addedByDisplayName?: string | null
+  addNote?: string | null
 }
 
 /** Public collection page — play button for a regular Tahti-hosted track, driving the shared mini-player. */
@@ -31,6 +35,8 @@ export function ArchiveTrackRow({
   thumbUrl,
   durationLabel,
   queue,
+  addedByDisplayName,
+  addNote,
 }: Props) {
   const { track, playing, load, togglePlay } = usePlayer()
   const isCurrent = track?.id === id
@@ -67,6 +73,14 @@ export function ArchiveTrackRow({
       <div className="prof-collection-item-body">
         <div className="prof-collection-title">{title}</div>
         {durationLabel && <span className="prof-list-meta">{durationLabel}</span>}
+        {addedByDisplayName && (
+          <span className="prof-list-meta prof-collection-item-added-by">
+            added by {addedByDisplayName}
+            {addNote && (
+              <span className="prof-collection-item-note"> — &ldquo;{addNote}&rdquo;</span>
+            )}
+          </span>
+        )}
       </div>
       {channelSlug && <LoveButton channelSlug={channelSlug} itemId={id} />}
       {isCurrent && <ReportButton targetType="ARCHIVE_ITEM" targetId={id} variant="icon" />}

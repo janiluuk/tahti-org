@@ -484,6 +484,82 @@ describe('collaborative playlists', () => {
     })
     expect(res.statusCode).toBe(400)
   })
+
+  it('stores an optional note and who added the track, and notifies the owner', async () => {
+    const owner = await prisma.user.findFirstOrThrow({
+      where: { username: `${PREFIX}collab-owner` },
+      include: { channel: true },
+    })
+    const item = await createReadyArchiveItem(prisma, owner.channel!.id, 'Noted track')
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${collaborativeSlug}/items`,
+      headers: { cookie: contributorCookie },
+      payload: { archiveItemId: item.id, note: 'This one slaps' },
+    })
+    expect(res.statusCode).toBe(201)
+
+    const stored = await prisma.collectionItem.findFirst({
+      where: { collection: { slug: collaborativeSlug }, archiveItemId: item.id },
+    })
+    expect(stored?.addNote).toBe('This one slaps')
+    const contributor = await prisma.user.findFirstOrThrow({
+      where: { username: `${PREFIX}collab-contributor` },
+    })
+    expect(stored?.addedByUserId).toBe(contributor.id)
+
+    const notification = await prisma.notification.findFirst({
+      where: {
+        userId: owner.id,
+        type: 'PLAYLIST_TRACK_ADDED',
+        actorUserId: contributor.id,
+        title: { contains: 'Noted track' },
+      },
+    })
+    expect(notification).toBeTruthy()
+  })
+
+  it('notifies prior participants too, but never the person who just added', async () => {
+    const owner = await prisma.user.findFirstOrThrow({
+      where: { username: `${PREFIX}collab-owner` },
+      include: { channel: true },
+    })
+    const secondItem = await createReadyArchiveItem(
+      prisma,
+      owner.channel!.id,
+      'Second contributor track',
+    )
+    const second = await createTestArtist(prisma, {
+      email: `${PREFIX}collab-second@example.com`,
+      username: `${PREFIX}collab-second`,
+      tier: 'ARTIST',
+    })
+    const secondCookie = await sessionCookieFor(prisma, second.id)
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${collaborativeSlug}/items`,
+      headers: { cookie: secondCookie },
+      payload: { archiveItemId: secondItem.id },
+    })
+    expect(res.statusCode).toBe(201)
+
+    const contributor = await prisma.user.findFirstOrThrow({
+      where: { username: `${PREFIX}collab-contributor` },
+    })
+    // the first contributor (from earlier tests) is a prior participant — notified
+    const notifiedContributor = await prisma.notification.findFirst({
+      where: { userId: contributor.id, type: 'PLAYLIST_TRACK_ADDED', actorUserId: second.id },
+    })
+    expect(notifiedContributor).toBeTruthy()
+
+    // the second contributor never gets notified about their own add
+    const selfNotified = await prisma.notification.findFirst({
+      where: { userId: second.id, type: 'PLAYLIST_TRACK_ADDED', actorUserId: second.id },
+    })
+    expect(selfNotified).toBeNull()
+  })
 })
 
 describe('collection subscriptions', () => {

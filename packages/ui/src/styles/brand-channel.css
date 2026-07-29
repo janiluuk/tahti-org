@@ -4557,6 +4557,17 @@
   min-width: 0;
 }
 
+[data-tahti-ui='brand'] .prof-collection-item-added-by {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-note {
+  font-style: italic;
+}
+
 [data-tahti-ui='brand'] .prof-collection-play {
   display: flex;
   align-items: center;
@@ -5806,6 +5817,17 @@
   font-size: var(--text-sm);
 }
 
+[data-tahti-ui='brand'] .prof-add-track-note {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: var(--text-xs);
+}
+
 [data-tahti-ui='brand'] .prof-add-track-error {
   color: var(--coral);
 }
@@ -5929,7 +5951,9 @@
 [data-tahti-ui='brand'] .help-spotlight-ring {
   position: fixed;
   border-radius: var(--radius-lg);
-  box-shadow: 0 0 0 3px var(--cyan), 0 0 40px 8px color-mix(in srgb, var(--cyan) 55%, transparent);
+  box-shadow:
+    0 0 0 3px var(--cyan),
+    0 0 40px 8px color-mix(in srgb, var(--cyan) 55%, transparent);
   opacity: 0;
   transform: scale(0.97);
   transition:
@@ -6049,7 +6073,9 @@
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 [data-tahti-ui='brand'] .help-spotlight-nav:hover {

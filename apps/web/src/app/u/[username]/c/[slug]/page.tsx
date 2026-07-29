@@ -84,6 +84,8 @@ interface CollectionResponse {
       releaseDate: string
       artworkUrl: string | null
     } | null
+    addedBy?: { username: string; displayName: string } | null
+    addNote?: string | null
   }>
   links?: { page?: string; rss?: string }
 }
@@ -254,6 +256,12 @@ export default async function CollectionPage({
                         ? formatDuration(item.archiveItem.durationSec)
                         : null
                     }
+                    addedByDisplayName={
+                      item.addedBy && item.addedBy.username !== data.user.username
+                        ? item.addedBy.displayName
+                        : null
+                    }
+                    addNote={item.addNote}
                     queue={queue}
                   />
                 )

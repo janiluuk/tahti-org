@@ -53,6 +53,7 @@ function AddTrackModal({ slug, onClose }: { slug: string; onClose: () => void })
   const [loading, setLoading] = useState(false)
   const [addingId, setAddingId] = useState<string | null>(null)
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set())
+  const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
 
@@ -88,7 +89,7 @@ function AddTrackModal({ slug, onClose }: { slug: string; onClose: () => void })
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ archiveItemId: track.id }),
+        body: JSON.stringify({ archiveItemId: track.id, note: note.trim() || undefined }),
       })
       if (res.status === 401) {
         router.push(`/login?next=${encodeURIComponent(pathname || '/')}`)
@@ -100,6 +101,7 @@ function AddTrackModal({ slug, onClose }: { slug: string; onClose: () => void })
         return
       }
       setAddedIds((prev) => new Set(prev).add(track.id))
+      setNote('')
       router.refresh()
     } finally {
       setAddingId(null)
@@ -129,6 +131,14 @@ function AddTrackModal({ slug, onClose }: { slug: string; onClose: () => void })
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="prof-add-track-search"
+          />
+          <input
+            type="text"
+            placeholder="Optional note — why this track? (shown with your add)"
+            value={note}
+            onChange={(e) => setNote(e.target.value.slice(0, 200))}
+            className="prof-add-track-note"
+            maxLength={200}
           />
           {error && <p className="prof-embed-modal__hint prof-add-track-error">{error}</p>}
           <ul className="prof-add-track-results">

@@ -116,6 +116,50 @@ export async function notifyArtistOfNewRepost(
   })
 }
 
+/** Notify a playlist's owner and everyone who has previously contributed a
+ * track to it ("participants") when someone adds a new one — never notifies
+ * the person who just did the adding, and de-dupes owner/participants so
+ * nobody gets pinged twice. */
+export async function notifyPlaylistOfNewTrack(
+  prisma: PrismaClient,
+  collection: {
+    id: string
+    slug: string
+    name: string
+    ownerUsername: string
+    ownerUserId: string
+  },
+  adder: { id: string; displayName: string },
+  item: { title: string },
+): Promise<void> {
+  const priorContributors = await prisma.collectionItem.findMany({
+    where: { collectionId: collection.id, addedByUserId: { not: null } },
+    select: { addedByUserId: true },
+    distinct: ['addedByUserId'],
+  })
+
+  const recipients = new Set<string>()
+  if (collection.ownerUserId !== adder.id) recipients.add(collection.ownerUserId)
+  for (const c of priorContributors) {
+    if (c.addedByUserId && c.addedByUserId !== adder.id) recipients.add(c.addedByUserId)
+  }
+  if (recipients.size === 0) return
+
+  const title = `${adder.displayName} added "${item.title}" to ${collection.name}`
+  const url = `/u/${collection.ownerUsername}/c/${collection.slug}`
+
+  await prisma.notification.createMany({
+    data: [...recipients].map((userId) => ({
+      userId,
+      type: 'PLAYLIST_TRACK_ADDED' as const,
+      actorUserId: adder.id,
+      title,
+      body: null,
+      url,
+    })),
+  })
+}
+
 /** M38: notify a conversation participant that a new direct message arrived. */
 export async function notifyUserOfNewMessage(
   prisma: PrismaClient,
