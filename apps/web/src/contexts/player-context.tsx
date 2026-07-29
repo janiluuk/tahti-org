@@ -254,11 +254,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
 
       const prevTrack = currentTrackRef.current
-      if (prevTrack && prevTrack.id !== track.id) {
-        setHistory((h) =>
-          [prevTrack, ...h.filter((t) => t.id !== prevTrack.id)].slice(0, HISTORY_LIMIT),
-        )
-      }
+      // Recorded the moment a track STARTS, not when it's superseded — otherwise a
+      // session that only ever plays one track (e.g. tunes into radio and leaves it
+      // running) never gets an entry, since nothing ever displaces it to trigger the
+      // old "archive prevTrack on switch" write. Later re-loads of the same track just
+      // dedupe back to the top instead of piling up duplicates.
+      setHistory((h) => [track, ...h.filter((t) => t.id !== track.id)].slice(0, HISTORY_LIMIT))
       // Diverting from a live stream to a one-off track — remember the stream so
       // onEnded can hand playback back to it. Starting a live stream directly (the
       // listener picked a new one on purpose) clears any stale resume target.

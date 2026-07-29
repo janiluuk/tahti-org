@@ -23,6 +23,8 @@ export type {
 } from './StudioTabs'
 export { StudioCollapse } from './StudioCollapse'
 export type { StudioCollapseProps } from './StudioCollapse'
+export { HelpSpotlight } from './HelpSpotlight'
+export type { HelpSpotlightProps, HelpSpotlightStep } from './HelpSpotlight'
 export { BrandLogo } from './BrandLogo'
 export { BrowserFrame } from './BrowserFrame'
 export { EmbedShell } from './EmbedShell'

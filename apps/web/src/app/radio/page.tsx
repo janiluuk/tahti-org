@@ -13,6 +13,7 @@ import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
 import { UpcomingShows } from './upcoming-shows'
 import { RecentlyPlayed, type RecentlyPlayedItem } from './recently-played'
 import { RadioTabs } from './_radio-tabs'
+import { RadioInfoOverlay } from './radio-info-overlay'
 
 const NEXT_LIVE_ANNOUNCE_WINDOW_MS = 2 * 60 * 60 * 1000
 
@@ -177,6 +178,20 @@ export default async function RadioPage() {
                     @{TAHTI_RADIO_SLUG}
                   </Text>
                 </div>
+                <RadioInfoOverlay
+                  rotation={rotation}
+                  slots={upcomingSlots}
+                  memberRelay={
+                    memberRelay.live && memberRelay.channel
+                      ? {
+                          slug: memberRelay.channel.slug,
+                          artistName: memberRelay.channel.artistName,
+                        }
+                      : null
+                  }
+                  isLoggedIn={!!user}
+                  iconOnly
+                />
               </Row>
               <div className="ch-radio-description">
                 <SafePlainText text="24/7 community radio — always on while we grow the member meta-stream. Tune in and chat with listeners worldwide." />
@@ -217,16 +232,8 @@ export default async function RadioPage() {
               <RadioPlayerSection
                 playback={playback}
                 slug={TAHTI_RADIO_SLUG}
-                rotation={rotation}
-                slots={upcomingSlots}
-                isLoggedIn={!!user}
                 liveSlot={liveSlot ? { startAt: liveSlot.startAt, artist: liveSlot.artist } : null}
                 nowPlaying={nowPlaying}
-                memberRelay={
-                  memberRelay.live && memberRelay.channel
-                    ? { slug: memberRelay.channel.slug, artistName: memberRelay.channel.artistName }
-                    : null
-                }
               />
             )}
 

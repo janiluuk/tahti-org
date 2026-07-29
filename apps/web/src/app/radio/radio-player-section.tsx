@@ -6,22 +6,8 @@
 import { useEffect, useState } from 'react'
 import HlsPlayer from '../c/[slug]/hls-player'
 import ReactionsOverlay from '../c/[slug]/reactions'
-import { RadioInfoOverlay } from './radio-info-overlay'
-import type { PublicRadioSlot } from './actions'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { usePlayer } from '@/contexts/player-context'
-
-interface RadioRotationItem {
-  id: string
-  title: string
-  artistName: string
-  artistUsername: string | null
-}
-
-interface RadioMemberRelay {
-  slug: string
-  artistName: string
-}
 
 interface RadioLiveSlot {
   startAt: string
@@ -41,16 +27,12 @@ interface RadioNowPlayingTrack {
 interface RadioPlayerSectionProps {
   playback: { kind: 'audio'; audioUrl: string }
   slug: string
-  rotation: RadioRotationItem[]
-  slots: PublicRadioSlot[]
-  memberRelay: RadioMemberRelay | null
   /** The currently-active booked slot, if any — gates elapsed time + real artist
    * artwork/title. Continuous rotation playback (no live artist) passes null. */
   liveSlot: RadioLiveSlot | null
   /** STREAM-012: the orchestrator's synced rotation track, when fresh. Only used
    * while there's no liveSlot — a real booking always takes precedence. */
   nowPlaying: RadioNowPlayingTrack | null
-  isLoggedIn: boolean
 }
 
 /** Ticks once a second so the live-show elapsed time stays live without polling. */
@@ -75,26 +57,27 @@ function useLiveElapsedSec(startAt: string | null): number | undefined {
 export function RadioPlayerSection({
   playback,
   slug,
-  rotation,
-  slots,
-  memberRelay,
   liveSlot,
   nowPlaying,
-  isLoggedIn,
 }: RadioPlayerSectionProps) {
   const { analyser } = usePlayer()
   const liveElapsedSec = useLiveElapsedSec(liveSlot?.startAt ?? null)
 
   const title = liveSlot ? liveSlot.artist.displayName : (nowPlaying?.title ?? 'Tahti Radio')
+  // Always name the channel in the subtitle — live and rotation/replay alike —
+  // so a listener glancing at the mini-player elsewhere on the site can tell
+  // it's Tahti Radio playing, not just some artist's name in isolation.
   const subtitle = liveSlot
     ? 'Live now on Tahti Radio'
-    : (nowPlaying?.artistName ?? '24/7 rotation')
+    : nowPlaying?.artistName
+      ? `${nowPlaying.artistName} on Tahti Radio`
+      : 'Tahti Radio · 24/7 rotation'
   const subtitleHref =
     !liveSlot && nowPlaying?.artistUsername ? `/u/${nowPlaying.artistUsername}` : undefined
   const artworkUrl = liveSlot ? liveSlot.artist.avatarUrl : (nowPlaying?.artworkUrl ?? null)
 
   return (
-    <div id="live-player" className="ch-player-wrap">
+    <div id="live-player" className="ch-player-wrap ch-radio-player-wrap">
       <div className="ch-player-inner">
         <ChannelVisualizer
           preset="REACTIVE_GRID"
@@ -113,12 +96,6 @@ export function RadioPlayerSection({
           hideWaveform
         />
       </div>
-      <RadioInfoOverlay
-        rotation={rotation}
-        slots={slots}
-        memberRelay={memberRelay}
-        isLoggedIn={isLoggedIn}
-      />
       <ReactionsOverlay slug={slug} />
     </div>
   )

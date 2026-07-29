@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 /**
- * Books a handful of upcoming RadioSlotBooking rows on Tahti Radio so the
- * "Upcoming shows" section has real data to show. Uses dedicated placeholder
+ * Books 10 upcoming RadioSlotBooking rows, spread over the next ~9 days, on
+ * Tahti Radio so the "Upcoming shows" calendar has plenty of varied entries
+ * to show. Uses dedicated placeholder
  * DJ artist accounts (created if missing) rather than real members' channels,
  * since this schedules public "live now" slots and we don't want to put a
  * real artist on the air without them actually booking it themselves.
@@ -51,6 +52,62 @@ const DJS: DjSpec[] = [
     note: 'Finnish folktronica showcase',
     startInHours: 52,
     durationHours: 2,
+  },
+  {
+    email: 'dj-kaiku@tahti.live',
+    username: 'dj-kaiku',
+    displayName: 'DJ Kaiku',
+    note: 'Dub & echo chamber session',
+    startInHours: 76,
+    durationHours: 1.5,
+  },
+  {
+    email: 'dj-revontuli@tahti.live',
+    username: 'dj-revontuli',
+    displayName: 'DJ Revontuli',
+    note: 'Northern lights ambient live jam',
+    startInHours: 100,
+    durationHours: 2.5,
+  },
+  {
+    email: 'dj-murha@tahti.live',
+    username: 'dj-murha',
+    displayName: 'DJ Murha',
+    note: 'Industrial & EBM night',
+    startInHours: 124,
+    durationHours: 2,
+  },
+  {
+    email: 'dj-kesayo@tahti.live',
+    username: 'dj-kesayo',
+    displayName: 'DJ Kesäyö',
+    note: 'Summer-night house selections',
+    startInHours: 148,
+    durationHours: 2,
+  },
+  {
+    email: 'dj-metsa@tahti.live',
+    username: 'dj-metsa',
+    displayName: 'DJ Metsä',
+    note: 'Forest-core field-recording set',
+    startInHours: 172,
+    durationHours: 1.5,
+  },
+  {
+    email: 'dj-taika@tahti.live',
+    username: 'dj-taika',
+    displayName: 'DJ Taika',
+    note: 'Melodic trance & breaks',
+    startInHours: 196,
+    durationHours: 2,
+  },
+  {
+    email: 'dj-sumu@tahti.live',
+    username: 'dj-sumu',
+    displayName: 'DJ Sumu',
+    note: 'Foggy drone & experimental noise',
+    startInHours: 220,
+    durationHours: 1.5,
   },
 ]
 
