@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { cookies } from 'next/headers'
+import Link from 'next/link'
 import { brandTokens } from '@tahti/ui'
 
 interface StorageUserRow {
@@ -87,12 +88,13 @@ export default async function AdminStoragePage() {
                   <th>Used</th>
                   <th>Quota</th>
                   <th>%</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {overview.users.length === 0 ? (
                   <tr>
-                    <td colSpan={4} style={{ opacity: 0.55 }}>
+                    <td colSpan={5} style={{ opacity: 0.55 }}>
                       No usage recorded yet.
                     </td>
                   </tr>
@@ -113,6 +115,14 @@ export default async function AdminStoragePage() {
                           }}
                         >
                           {Math.round(pct)}%
+                        </td>
+                        <td>
+                          <Link
+                            href={`/admin/storage/${row.userId}`}
+                            className="admin-btn admin-btn--sm"
+                          >
+                            Browse files
+                          </Link>
                         </td>
                       </tr>
                     )

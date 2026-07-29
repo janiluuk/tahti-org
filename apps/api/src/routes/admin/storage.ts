@@ -2,8 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { AdminStorageOverviewSchema, openApiResponse } from '@tahti/shared'
+import {
+  AdminStorageOverviewSchema,
+  AdminUserFilesResponseSchema,
+  IdParamSchema,
+  openApiResponse,
+  parseRouteParams,
+} from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { presignedGetUrl } from '../../lib/minio.js'
 
 const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
   // Overall R2 usage across the platform + a per-user breakdown. R2 doesn't
@@ -50,6 +57,59 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
         userCount: users.length,
         users,
       })
+    },
+  )
+
+  // Per-user file browser — scoped to release tracks, the only content type
+  // that writes through to R2 so far. Preview URL always points at the
+  // (local MinIO) streaming copy, regardless of R2 status, since that's
+  // always present once a track is READY.
+  fastify.get(
+    '/api/admin/storage/users/:id/files',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(AdminUserFilesResponseSchema, 'AdminUserFiles'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const user = await fastify.prisma.user.findUnique({
+        where: { id: routeParams.id },
+        select: { username: true, displayName: true },
+      })
+      if (!user) return reply.status(404).send({ error: 'User not found' })
+
+      const tracks = await fastify.prisma.releaseTrack.findMany({
+        where: { release: { userId: routeParams.id } },
+        select: {
+          id: true,
+          title: true,
+          durationSec: true,
+          r2Key: true,
+          r2SizeBytes: true,
+          streamKey: true,
+          release: { select: { title: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+
+      const files = await Promise.all(
+        tracks.map(async (track) => ({
+          trackId: track.id,
+          title: track.title,
+          releaseTitle: track.release.title,
+          durationSec: track.durationSec,
+          inR2: track.r2Key != null,
+          sizeBytes: track.r2SizeBytes,
+          previewUrl: track.streamKey ? await presignedGetUrl(track.streamKey, 3600) : null,
+        })),
+      )
+
+      return reply.send({ username: user.username, displayName: user.displayName, files })
     },
   )
 }

@@ -22,3 +22,22 @@ export const AdminStorageOverviewSchema = z.object({
   userCount: z.number().int(),
   users: z.array(AdminStorageUsageRowSchema),
 })
+
+// Only release tracks write through to R2 so far (see task tracking in
+// [[project-tahti]]) — the file browser is scoped to that content type until
+// archive items/announcements/avatars get the same treatment.
+export const AdminUserFileSchema = z.object({
+  trackId: z.string(),
+  title: z.string(),
+  releaseTitle: z.string(),
+  durationSec: z.number().int().nullable(),
+  inR2: z.boolean(),
+  sizeBytes: z.number().nullable(),
+  previewUrl: z.string().url().nullable(),
+})
+
+export const AdminUserFilesResponseSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  files: z.array(AdminUserFileSchema),
+})
