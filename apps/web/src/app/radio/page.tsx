@@ -183,7 +183,10 @@ export default async function RadioPage() {
                   slots={upcomingSlots}
                   memberRelay={
                     memberRelay.live && memberRelay.channel
-                      ? { slug: memberRelay.channel.slug, artistName: memberRelay.channel.artistName }
+                      ? {
+                          slug: memberRelay.channel.slug,
+                          artistName: memberRelay.channel.artistName,
+                        }
                       : null
                   }
                   isLoggedIn={!!user}

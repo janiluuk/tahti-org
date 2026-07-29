@@ -101,7 +101,10 @@ export function HelpSpotlight({
             className="help-spotlight-veil help-spotlight-veil--top"
             style={{ height: Math.max(0, rect.top) }}
           />
-          <div className="help-spotlight-veil help-spotlight-veil--bottom" style={{ top: rect.bottom }} />
+          <div
+            className="help-spotlight-veil help-spotlight-veil--bottom"
+            style={{ top: rect.bottom }}
+          />
           <div
             className="help-spotlight-veil help-spotlight-veil--left"
             style={{ top: rect.top, height: rect.height, width: Math.max(0, rect.left) }}
@@ -116,7 +119,12 @@ export function HelpSpotlight({
             aria-hidden
           />
 
-          <button type="button" className="help-spotlight-close" onClick={close} aria-label="Close help">
+          <button
+            type="button"
+            className="help-spotlight-close"
+            onClick={close}
+            aria-label="Close help"
+          >
             ✕
           </button>
 

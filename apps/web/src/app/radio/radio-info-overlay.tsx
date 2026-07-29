@@ -35,7 +35,12 @@ function IconCalendar() {
         stroke="currentColor"
         strokeWidth="1.4"
       />
-      <path d="M2 6.5h12M5 2v3M11 2v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path
+        d="M2 6.5h12M5 2v3M11 2v3"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -62,7 +67,9 @@ export function RadioInfoOverlay({
     <>
       <button
         type="button"
-        className={iconOnly ? 'ch-radio-info-toggle ch-radio-info-toggle--icon' : 'ch-radio-info-toggle'}
+        className={
+          iconOnly ? 'ch-radio-info-toggle ch-radio-info-toggle--icon' : 'ch-radio-info-toggle'
+        }
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={open}

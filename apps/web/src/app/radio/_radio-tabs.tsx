@@ -12,7 +12,8 @@ const HELP_STEPS: HelpSpotlightStep[] = [
   {
     id: 'recent',
     label: 'Recently played',
-    description: 'The tracks Tahti Radio has played most recently, in order — missed a track? It’s here.',
+    description:
+      'The tracks Tahti Radio has played most recently, in order — missed a track? It’s here.',
   },
   {
     id: 'upcoming',
