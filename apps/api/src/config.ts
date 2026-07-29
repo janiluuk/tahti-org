@@ -59,6 +59,7 @@ const hcaptchaSecret = process.env.HCAPTCHA_SECRET ?? 'dev'
 const metricsToken = process.env.METRICS_TOKEN?.trim() ?? ''
 
 const minioSecretKey = readSecret('MINIO_SECRET_KEY', 'MINIO_SECRET_KEY_FILE', 'tahti_dev_secret')
+const r2SecretAccessKey = readSecret('R2_SECRET_ACCESS_KEY', 'R2_SECRET_ACCESS_KEY_FILE', '')
 
 /** SEC-005: refuse boot in production when critical secrets retain dev defaults. */
 function assertProductionSecrets(): void {
@@ -106,6 +107,20 @@ export const config = {
     backupsBucket: process.env.MINIO_BACKUPS_BUCKET ?? 'backups',
     backupsPgPrefix: process.env.MINIO_BACKUPS_PG_PREFIX ?? 'pg/',
     publicEndpoint: process.env.MINIO_PUBLIC_ENDPOINT ?? 'http://localhost:9000',
+  },
+  // Cloudflare R2 — long-term per-user quota'd storage (see [[hosting-decisions]]:
+  // approved 2026-07-29 as an exception to the no-Cloudflare policy, specifically
+  // for storage). Not required to boot — `enabled` is false until credentials are
+  // set, and the quota feature falls back to MinIO-only behavior until then.
+  r2: {
+    accountId: process.env.R2_ACCOUNT_ID ?? '',
+    endpoint: process.env.R2_ENDPOINT ?? '',
+    accessKeyId: process.env.R2_ACCESS_KEY_ID ?? '',
+    secretAccessKey: r2SecretAccessKey,
+    bucket: process.env.R2_BUCKET ?? 'tahti-user-storage',
+    get enabled() {
+      return Boolean(this.endpoint && this.accessKeyId && this.secretAccessKey)
+    },
   },
   internalSecret,
   centrifugo: {
