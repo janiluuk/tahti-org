@@ -7,7 +7,11 @@ import {
   AnnouncementTrimEditor,
   type AnnouncementEditorClipSummary,
 } from '@/components/announcement-trim-editor'
-import { fetchAnnouncementEditorSource, fetchMyAnnouncements, renderAnnouncementTrim } from '../../actions'
+import {
+  fetchAnnouncementEditorSource,
+  fetchMyAnnouncements,
+  renderAnnouncementTrim,
+} from '../../actions'
 
 export default async function AnnouncementEditorPage({ params }: { params: { id: string } }) {
   const sessionValue = dashboardSessionCookie()

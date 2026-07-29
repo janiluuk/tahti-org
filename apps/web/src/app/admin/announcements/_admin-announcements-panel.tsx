@@ -137,8 +137,8 @@ export function AdminAnnouncementsPanel({
       >
         <div>
           <p className="admin-stat-sub" style={{ margin: 0 }}>
-            System announcements are interleaved into every channel&apos;s rotation (subject to
-            each clip&apos;s own on/off + schedule below). Turning this off stops all system
+            System announcements are interleaved into every channel&apos;s rotation (subject to each
+            clip&apos;s own on/off + schedule below). Turning this off stops all system
             announcements everywhere, instantly.
           </p>
         </div>
@@ -202,7 +202,8 @@ export function AdminAnnouncementsPanel({
                       <select
                         value={clip.scheduleMode}
                         onChange={(e) => {
-                          const scheduleMode = e.target.value as AdminAnnouncementClipRow['scheduleMode']
+                          const scheduleMode = e.target
+                            .value as AdminAnnouncementClipRow['scheduleMode']
                           void onPatch(clip.id, {
                             scheduleMode,
                             everyNth: scheduleMode === 'EVERY_NTH' ? (clip.everyNth ?? 4) : null,
@@ -221,7 +222,9 @@ export function AdminAnnouncementsPanel({
                           min={2}
                           max={100}
                           value={clip.everyNth ?? 4}
-                          onChange={(e) => void onPatch(clip.id, { everyNth: Number(e.target.value) })}
+                          onChange={(e) =>
+                            void onPatch(clip.id, { everyNth: Number(e.target.value) })
+                          }
                           className="admin-search-input"
                           style={{ width: '60px', fontSize: '0.85rem', padding: '0.25rem 0.4rem' }}
                         />

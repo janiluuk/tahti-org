@@ -258,11 +258,7 @@ export function AnnouncementTrimEditor({
                   Original (unedited) — for comparison
                 </span>
                 {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                <audio
-                  src={source.originalUrl}
-                  controls
-                  className="ann-editor-original-audio"
-                />
+                <audio src={source.originalUrl} controls className="ann-editor-original-audio" />
               </div>
 
               <div className="ann-editor-controls">
@@ -295,7 +291,11 @@ export function AnnouncementTrimEditor({
                     <ButtonIcon name="play" />
                     Preview selection
                   </Button>
-                  <Button onClick={save} disabled={isPending || durationSec === 0} variant="primary">
+                  <Button
+                    onClick={save}
+                    disabled={isPending || durationSec === 0}
+                    variant="primary"
+                  >
                     <ButtonIcon name="save" />
                     {isPending ? 'Saving…' : 'Apply'}
                   </Button>

@@ -114,7 +114,9 @@ export interface RenderAnnouncementTrimJob {
   fadeOutSec: number
 }
 
-export async function enqueueRenderAnnouncementTrim(payload: RenderAnnouncementTrimJob): Promise<void> {
+export async function enqueueRenderAnnouncementTrim(
+  payload: RenderAnnouncementTrimJob,
+): Promise<void> {
   await mediaQueue.add('render-announcement-trim', payload, {
     jobId: `render-announcement-trim-${payload.clipId}`,
     attempts: 3,

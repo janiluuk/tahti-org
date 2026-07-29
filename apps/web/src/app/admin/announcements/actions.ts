@@ -91,7 +91,10 @@ export async function completeSystemAnnouncementUpload(
   })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
-    return { clip: null, error: (data as { error?: string }).error ?? 'Could not save announcement' }
+    return {
+      clip: null,
+      error: (data as { error?: string }).error ?? 'Could not save announcement',
+    }
   }
   return { clip: (await res.json()) as AdminAnnouncementClipRow, error: null }
 }

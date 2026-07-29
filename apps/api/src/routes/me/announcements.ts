@@ -43,13 +43,18 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        response: openApiResponse(PrepareAnnouncementUploadResponseSchema, 'PrepareAnnouncementUpload'),
+        response: openApiResponse(
+          PrepareAnnouncementUploadResponseSchema,
+          'PrepareAnnouncementUpload',
+        ),
       },
     },
     async (request, reply) => {
       const parsed = PrepareAnnouncementUploadSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
       const { filename, contentType, fileSizeBytes } = parsed.data
 
@@ -81,7 +86,9 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const parsed = CompleteAnnouncementUploadSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
       const { uploadId, title, durationSec } = parsed.data
 
@@ -145,7 +152,9 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const parsed = PatchAnnouncementClipSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
 
       const channel = await fastify.prisma.channel.findUnique({
@@ -251,7 +260,10 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireAuth,
       schema: {
         tags: ['channel'],
-        response: openApiResponse(AnnouncementEditorRenderResponseSchema, 'AnnouncementEditorRender'),
+        response: openApiResponse(
+          AnnouncementEditorRenderResponseSchema,
+          'AnnouncementEditorRender',
+        ),
       },
     },
     async (request, reply) => {
@@ -259,7 +271,9 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const parsed = AnnouncementEditorRenderSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
 
       const channel = await fastify.prisma.channel.findUnique({

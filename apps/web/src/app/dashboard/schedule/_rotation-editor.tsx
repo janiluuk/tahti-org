@@ -237,9 +237,7 @@ export function RotationEditor({
               disabled={isPending}
               onChange={(e) => setAnnouncementsEnabled(e.target.checked)}
             />
-            <span className="studio-toggle-label">
-              Play my announcements in rotation
-            </span>
+            <span className="studio-toggle-label">Play my announcements in rotation</span>
           </label>
         </div>
         <Text size="sm" tone="muted" className="studio-mt-xs">

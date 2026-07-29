@@ -44,13 +44,18 @@ const adminAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        response: openApiResponse(PrepareAnnouncementUploadResponseSchema, 'PrepareAnnouncementUpload'),
+        response: openApiResponse(
+          PrepareAnnouncementUploadResponseSchema,
+          'PrepareAnnouncementUpload',
+        ),
       },
     },
     async (request, reply) => {
       const parsed = PrepareAnnouncementUploadSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
       const { filename, contentType, fileSizeBytes } = parsed.data
 
@@ -76,7 +81,9 @@ const adminAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const parsed = CompleteAnnouncementUploadSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
       const { uploadId, title, durationSec } = parsed.data
       if (!uploadId.startsWith('announcements/system/')) {
@@ -126,7 +133,9 @@ const adminAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const parsed = PatchAnnouncementClipSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
       if (parsed.data.scheduleMode === 'EVERY_NTH' && parsed.data.everyNth == null) {
         return reply.status(400).send({ error: 'everyNth is required for EVERY_NTH scheduling' })
@@ -143,7 +152,9 @@ const adminAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
         data: {
           ...(parsed.data.title !== undefined ? { title: parsed.data.title } : {}),
           ...(parsed.data.isEnabled !== undefined ? { isEnabled: parsed.data.isEnabled } : {}),
-          ...(parsed.data.scheduleMode !== undefined ? { scheduleMode: parsed.data.scheduleMode } : {}),
+          ...(parsed.data.scheduleMode !== undefined
+            ? { scheduleMode: parsed.data.scheduleMode }
+            : {}),
           ...(parsed.data.everyNth !== undefined ? { everyNth: parsed.data.everyNth } : {}),
           ...(parsed.data.position !== undefined ? { position: parsed.data.position } : {}),
         },
@@ -199,7 +210,9 @@ const adminAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const parsed = AnnouncementSettingsSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
       const settings = await fastify.prisma.announcementSettings.upsert({
         where: { id: 'global' },
@@ -258,7 +271,10 @@ const adminAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: requireBoard,
       schema: {
         tags: ['admin'],
-        response: openApiResponse(AnnouncementEditorRenderResponseSchema, 'AnnouncementEditorRender'),
+        response: openApiResponse(
+          AnnouncementEditorRenderResponseSchema,
+          'AnnouncementEditorRender',
+        ),
       },
     },
     async (request, reply) => {
@@ -266,7 +282,9 @@ const adminAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
       const parsed = AnnouncementEditorRenderSchema.safeParse(request.body)
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
       }
 
       const clip = await fastify.prisma.announcementClip.findFirst({
