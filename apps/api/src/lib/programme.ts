@@ -41,7 +41,12 @@ export async function fetchProgrammeView(prisma: PrismaClient, channelId: string
   const [channel, items, tracks] = await Promise.all([
     prisma.channel.findUnique({
       where: { id: channelId },
-      select: { fallbackMode: true, fallbackEnabled: true, fallbackAutoEnroll: true },
+      select: {
+        fallbackMode: true,
+        fallbackEnabled: true,
+        fallbackAutoEnroll: true,
+        announcementsEnabled: true,
+      },
     }),
     prisma.archiveItem.findMany({
       where: { channelId, status: 'READY' },
@@ -79,6 +84,7 @@ export async function fetchProgrammeView(prisma: PrismaClient, channelId: string
     fallbackMode: channel?.fallbackMode ?? 'shuffle',
     fallbackEnabled: channel?.fallbackEnabled ?? true,
     fallbackAutoEnroll: channel?.fallbackAutoEnroll ?? true,
+    announcementsEnabled: channel?.announcementsEnabled ?? true,
     items: itemsWithAudio,
     library: tracks.map((t) => ({
       releaseTrackId: t.id,
@@ -103,7 +109,8 @@ export async function applyProgrammePatch(
   if (
     patch.fallbackMode !== undefined ||
     patch.fallbackEnabled !== undefined ||
-    patch.fallbackAutoEnroll !== undefined
+    patch.fallbackAutoEnroll !== undefined ||
+    patch.announcementsEnabled !== undefined
   ) {
     await prisma.channel.update({
       where: { id: channelId },
@@ -112,6 +119,9 @@ export async function applyProgrammePatch(
         ...(patch.fallbackEnabled !== undefined ? { fallbackEnabled: patch.fallbackEnabled } : {}),
         ...(patch.fallbackAutoEnroll !== undefined
           ? { fallbackAutoEnroll: patch.fallbackAutoEnroll }
+          : {}),
+        ...(patch.announcementsEnabled !== undefined
+          ? { announcementsEnabled: patch.announcementsEnabled }
           : {}),
       },
     })

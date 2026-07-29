@@ -82,6 +82,7 @@ export function RotationEditor({
     fallbackMode?: FallbackMode
     fallbackEnabled?: boolean
     fallbackAutoEnroll?: boolean
+    announcementsEnabled?: boolean
     items?: Array<{ archiveItemId: string; isFallback: boolean; fallbackOrder?: number }>
   }) => Promise<ProgrammeActionResult>
   addLibraryTrack?: (releaseTrackId: string) => Promise<ProgrammeActionResult>
@@ -89,6 +90,7 @@ export function RotationEditor({
   const [fallbackMode, setFallbackMode] = useState<FallbackMode>(initial.fallbackMode)
   const [fallbackEnabled, setFallbackEnabled] = useState(initial.fallbackEnabled)
   const [fallbackAutoEnroll, setFallbackAutoEnroll] = useState(initial.fallbackAutoEnroll)
+  const [announcementsEnabled, setAnnouncementsEnabled] = useState(initial.announcementsEnabled)
   const [items, setItems] = useState<ProgrammeItemRow[]>(initial.items)
   const [library, setLibrary] = useState<ProgrammeLibraryTrackRow[]>(initial.library)
   const [error, setError] = useState<string | null>(null)
@@ -109,6 +111,7 @@ export function RotationEditor({
     setFallbackMode(view.fallbackMode)
     setFallbackEnabled(view.fallbackEnabled)
     setFallbackAutoEnroll(view.fallbackAutoEnroll)
+    setAnnouncementsEnabled(view.announcementsEnabled)
     setItems(view.items)
     setLibrary(view.library)
   }
@@ -141,6 +144,7 @@ export function RotationEditor({
         fallbackMode,
         fallbackEnabled,
         fallbackAutoEnroll,
+        announcementsEnabled,
         items: items.map((r) => ({
           archiveItemId: r.id,
           isFallback: r.isFallback,
@@ -224,7 +228,25 @@ export function RotationEditor({
               Auto-add new uploads to rotation (up to {MAX_FALLBACK_ITEMS})
             </span>
           </label>
+
+          <label className="studio-toggle-row">
+            <input
+              type="checkbox"
+              className="studio-toggle-checkbox"
+              checked={announcementsEnabled}
+              disabled={isPending}
+              onChange={(e) => setAnnouncementsEnabled(e.target.checked)}
+            />
+            <span className="studio-toggle-label">Play my announcements in rotation</span>
+          </label>
         </div>
+        <Text size="sm" tone="muted" className="studio-mt-xs">
+          Manage your announcement clips from{' '}
+          <a href="/dashboard/settings/announcements" className="studio-link">
+            Settings → Announcements
+          </a>
+          . Tahti&apos;s own system announcements (if any) always play regardless of this toggle.
+        </Text>
 
         {error && (
           <Alert variant="error" className="studio-mt-md">

@@ -277,6 +277,7 @@ export const ChannelProgrammeViewSchema = z.object({
   fallbackMode: z.enum(['shuffle', 'ordered']),
   fallbackEnabled: z.boolean(),
   fallbackAutoEnroll: z.boolean(),
+  announcementsEnabled: z.boolean(),
   items: z.array(ChannelProgrammeItemViewSchema),
   library: z.array(ChannelProgrammeLibraryTrackViewSchema),
 })

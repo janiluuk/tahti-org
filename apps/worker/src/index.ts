@@ -7,6 +7,7 @@ import { runAnnualGrantCalc } from '@tahti/ledger'
 import { processTranscodeJob } from './jobs/transcode.js'
 import { processTranscodeVersionJob } from './jobs/transcode-version.js'
 import { processRenderArchiveEditJob } from './jobs/render-archive-edit.js'
+import { processRenderAnnouncementTrimJob } from './jobs/render-announcement-trim.js'
 import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
 import { processSweepEditorPeaksBackfillJob } from './jobs/sweep-editor-peaks-backfill.js'
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
@@ -92,6 +93,8 @@ const worker = new Worker(
         await processTranscodeVersionJob(job)
       } else if (job.name === 'render-archive-edit') {
         await processRenderArchiveEditJob(job)
+      } else if (job.name === 'render-announcement-trim') {
+        await processRenderAnnouncementTrimJob(job)
       } else if (job.name === 'backfill-editor-peaks') {
         await processBackfillEditorPeaksJob(job)
       } else if (job.name === 'sweep-editor-peaks-backfill') {

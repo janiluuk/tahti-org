@@ -57,10 +57,12 @@ const meProgrammeRoutes: FastifyPluginAsync = async (fastify) => {
         parsed.data.fallbackMode === undefined &&
         parsed.data.fallbackEnabled === undefined &&
         parsed.data.fallbackAutoEnroll === undefined &&
+        parsed.data.announcementsEnabled === undefined &&
         parsed.data.items === undefined
       ) {
         return reply.status(400).send({
-          error: 'fallbackMode, fallbackEnabled, fallbackAutoEnroll, or items required',
+          error:
+            'fallbackMode, fallbackEnabled, fallbackAutoEnroll, announcementsEnabled, or items required',
         })
       }
 

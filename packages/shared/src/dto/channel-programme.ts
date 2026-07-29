@@ -22,6 +22,9 @@ export const ChannelProgrammePatchSchema = z.object({
   fallbackEnabled: z.boolean().optional(),
   /** Whether new uploads auto-join the rotation (subject to MAX_FALLBACK_ITEMS). */
   fallbackAutoEnroll: z.boolean().optional(),
+  /** Whether this channel's own announcement clips play in its rotation.
+   * System-wide announcements are unaffected by this toggle. */
+  announcementsEnabled: z.boolean().optional(),
   items: z.array(ChannelProgrammeItemPatchSchema).max(200).optional(),
 })
 

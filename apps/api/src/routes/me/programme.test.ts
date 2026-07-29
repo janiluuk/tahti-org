@@ -165,6 +165,32 @@ describe('M27 — channel fallback programme', () => {
     expect(restore.json().fallbackAutoEnroll).toBe(true)
   })
 
+  it('PATCH programme toggles announcementsEnabled, default true', async () => {
+    const get = await app.inject({
+      method: 'GET',
+      url: '/api/me/channel/programme',
+      headers: { cookie },
+    })
+    expect(get.json().announcementsEnabled).toBe(true)
+
+    const patch = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/programme',
+      headers: { cookie },
+      payload: { announcementsEnabled: false },
+    })
+    expect(patch.statusCode).toBe(200)
+    expect(patch.json().announcementsEnabled).toBe(false)
+
+    const restore = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/programme',
+      headers: { cookie },
+      payload: { announcementsEnabled: true },
+    })
+    expect(restore.json().announcementsEnabled).toBe(true)
+  })
+
   it('rejects a bulk PATCH that would exceed the rotation cap', async () => {
     // itemA/itemB already exist; create enough extra READY items to reach the cap.
     const extra = await Promise.all(

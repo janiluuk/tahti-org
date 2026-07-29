@@ -15,11 +15,12 @@ import { presignedGetUrl } from '../../lib/minio.js'
 import {
   archivePlaybackKey,
   buildFallbackPlaybackRows,
+  interleaveAnnouncements,
   renderFallbackM3u,
   TAHTI_RADIO_SLUG,
   TAHTI_SELECTS_SLUG,
 } from '@tahti/shared'
-import type { FallbackM3uEntry, FallbackPlaybackRow } from '@tahti/shared'
+import type { AnnouncementPlaybackRow, FallbackM3uEntry, FallbackPlaybackRow } from '@tahti/shared'
 
 // reload_mode="rounds" in the Liquidsoap template means the playlist can go a long
 // time between refetches for a small pool (300 rounds through a handful of tracks),
@@ -89,6 +90,51 @@ async function collectionRows(
   return rows
 }
 
+// System (admin-managed) announcement clips, gated on the global kill-switch
+// (AnnouncementSettings singleton — absent row means "on", matching its
+// schema default) as well as each clip's own isEnabled.
+async function systemAnnouncementRows(prisma: PrismaClient): Promise<AnnouncementPlaybackRow[]> {
+  const settings = await prisma.announcementSettings.findUnique({ where: { id: 'global' } })
+  if (settings && !settings.systemEnabled) return []
+
+  const clips = await prisma.announcementClip.findMany({
+    where: { channelId: null, isEnabled: true },
+    select: {
+      id: true,
+      title: true,
+      audioKey: true,
+      durationSec: true,
+      scheduleMode: true,
+      everyNth: true,
+    },
+  })
+  return clips.map((c) => ({
+    id: c.id,
+    title: c.title,
+    playbackKey: c.audioKey,
+    durationSec: c.durationSec,
+    scheduleMode: c.scheduleMode,
+    everyNth: c.everyNth,
+  }))
+}
+
+// A channel's own announcement library — caller checks Channel.announcementsEnabled first.
+async function ownAnnouncementRows(
+  prisma: PrismaClient,
+  channelId: string,
+): Promise<FallbackPlaybackRow[]> {
+  const clips = await prisma.announcementClip.findMany({
+    where: { channelId, isEnabled: true },
+    select: { id: true, title: true, audioKey: true, durationSec: true },
+  })
+  return clips.map((c) => ({
+    id: c.id,
+    title: c.title,
+    playbackKey: c.audioKey,
+    durationSec: c.durationSec,
+  }))
+}
+
 async function toM3uEntries(rows: FallbackPlaybackRow[]): Promise<FallbackM3uEntry[]> {
   return Promise.all(
     rows.map(async (row) => ({
@@ -142,6 +188,7 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
           fallbackMode: true,
           fallbackEnabled: true,
           activeFallbackCollectionId: true,
+          announcementsEnabled: true,
         },
       })
       if (!channel) {
@@ -156,7 +203,10 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       // suppress a regular channel's own fallback rotation.
       const isTahtiRadio = channel.slug === TAHTI_RADIO_SLUG
 
+      let rows: FallbackPlaybackRow[] = []
+
       if (!channel.fallbackEnabled && !isTahtiRadio) {
+        // No rotation at all — nothing to interleave announcements into either.
         const body = renderFallbackM3u([])
         return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
       }
@@ -166,44 +216,39 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
       // Every other channel has zero CuratedRotationItem rows, so this is additive only.
       const curated = await curatedRows(fastify.prisma, channelId)
       if (curated.length > 0) {
-        const body = renderFallbackM3u(await toM3uEntries(curated))
-        return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
-      }
-
-      // Manage panel playlist switch: repoints the rotation at a chosen Collection
-      // instead of the default isFallback set. An empty collection (or one with no
-      // playable archive-item entries) falls through to the default rotation below
-      // rather than going silent.
-      if (channel.activeFallbackCollectionId) {
+        rows = curated
+      } else if (channel.activeFallbackCollectionId) {
+        // Manage panel playlist switch: repoints the rotation at a chosen Collection
+        // instead of the default isFallback set. An empty collection (or one with no
+        // playable archive-item entries) falls through to the default rotation below
+        // rather than going silent.
         const chosen = await collectionRows(fastify.prisma, channel.activeFallbackCollectionId)
-        if (chosen.length > 0) {
-          const body = renderFallbackM3u(await toM3uEntries(chosen))
-          return reply.header('Content-Type', 'audio/x-mpegurl').send(body)
-        }
+        rows = chosen
       }
 
-      const items = channel.fallbackEnabled
-        ? await fastify.prisma.archiveItem.findMany({
-            where: {
-              channelId,
-              status: 'READY',
-              OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
-            },
-            select: {
-              id: true,
-              title: true,
-              mp3Key: true,
-              flacKey: true,
-              durationSec: true,
-              isFallback: true,
-              fallbackOrder: true,
-              lastFallbackPlayedAt: true,
-              createdAt: true,
-            },
-          })
-        : []
-
-      let rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
+      if (rows.length === 0) {
+        const items = channel.fallbackEnabled
+          ? await fastify.prisma.archiveItem.findMany({
+              where: {
+                channelId,
+                status: 'READY',
+                OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
+              },
+              select: {
+                id: true,
+                title: true,
+                mp3Key: true,
+                flacKey: true,
+                durationSec: true,
+                isFallback: true,
+                fallbackOrder: true,
+                lastFallbackPlayedAt: true,
+                createdAt: true,
+              },
+            })
+          : []
+        rows = buildFallbackPlaybackRows(items, channel.fallbackMode)
+      }
 
       // Tahti Radio has no archive of its own — when nobody's booked a live slot and
       // it has no fallback tracks either, relay the Tahti Selects rotation live (read
@@ -218,6 +263,12 @@ const channelFallbackRoute: FastifyPluginAsync = async (fastify) => {
           rows = await curatedRows(fastify.prisma, selects.id)
         }
       }
+
+      const [systemAnnouncements, ownAnnouncements] = await Promise.all([
+        systemAnnouncementRows(fastify.prisma),
+        channel.announcementsEnabled ? ownAnnouncementRows(fastify.prisma, channelId) : [],
+      ])
+      rows = interleaveAnnouncements(rows, systemAnnouncements, ownAnnouncements)
 
       const body = renderFallbackM3u(await toM3uEntries(rows))
 

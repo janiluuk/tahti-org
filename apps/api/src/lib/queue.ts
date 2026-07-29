@@ -104,6 +104,26 @@ export async function enqueueCloudImportSoundcloud(cloudImportJobId: string): Pr
   )
 }
 
+export interface RenderAnnouncementTrimJob {
+  clipId: string
+  sourceKey: string
+  outputKeyPrefix: string
+  startSec: number
+  endSec: number
+  fadeInSec: number
+  fadeOutSec: number
+}
+
+export async function enqueueRenderAnnouncementTrim(
+  payload: RenderAnnouncementTrimJob,
+): Promise<void> {
+  await mediaQueue.add('render-announcement-trim', payload, {
+    jobId: `render-announcement-trim-${payload.clipId}`,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 10_000 },
+  })
+}
+
 export async function enqueueWarmArchiveFallbackCache(channelId: string): Promise<void> {
   await mediaQueue.add(
     'warm-archive-fallback-cache',
