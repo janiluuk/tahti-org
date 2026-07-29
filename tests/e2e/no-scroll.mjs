@@ -38,6 +38,7 @@ const ARTIST_ROUTES = [
   '/dashboard/broadcast?step=1',
   '/dashboard/broadcast?step=2',
   '/dashboard/broadcast?step=3',
+  '/dashboard/broadcast?step=4',
   '/dashboard/channel/edit',
   '/dashboard/channel/gallery',
   '/dashboard/channel/text',

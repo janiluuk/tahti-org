@@ -3912,7 +3912,7 @@
 
 /* ── Channel design editor (full page) ──────────────────────────────────── */
 [data-tahti-ui='studio'] .studio-channel-editor-page__header {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 
 [data-tahti-ui='studio'] .studio-channel-editor {
@@ -3967,9 +3967,20 @@
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
-  max-height: min(640px, calc(100vh - 280px));
+  max-height: min(600px, calc(100vh - 320px));
   overflow-y: auto;
   padding-right: var(--space-2);
+}
+
+[data-tahti-ui='studio'] .studio-channel-editor__preview-col .studio-channel-preview.brand-channel {
+  /* .brand-channel (brand-channel.css) sets min-height:100vh for real full-page
+   * routes — ChannelLivePreview reuses that class to mirror the public page's
+   * styling exactly, but here it's a boxed widget, not a page, so the 100vh
+   * floor left a few hundred px of empty space and pushed the editor past
+   * Rule 1's 900px budget. Selector specificity here is deliberately padded
+   * (col > preview > .brand-channel) to beat brand-channel.css regardless of
+   * CSS import order. */
+  min-height: 0;
 }
 
 [data-tahti-ui='studio'] .studio-channel-preview {
@@ -3981,6 +3992,15 @@
 
 [data-tahti-ui='studio'] .studio-channel-preview__inner {
   min-height: 22rem;
+  /* Renders the real channel-page header stack (visualizer, artist header,
+   * gallery/slideshow) at full fidelity — on some presets that's naturally
+   * taller than the studio viewport budget. Scrolls internally rather than
+   * pushing the whole editor page past Rule 1's 900px, same treatment as
+   * the controls column; the public channel page itself is allowed to
+   * scroll (ground-rules.md exception list), so this preview matching that
+   * isn't a fidelity loss. */
+  max-height: min(600px, calc(100vh - 320px));
+  overflow-y: auto;
   padding: var(--space-5);
 }
 
@@ -4440,6 +4460,19 @@
 
 [data-tahti-ui='studio'] .fan-subs-layout__col {
   min-width: 0;
+}
+
+[data-tahti-ui='studio'] .fan-subs-layout__col:last-child {
+  /* The new-tier form (name, price slider, description, perk toggles,
+   * additional-perks textarea) is naturally taller than the existing-tiers
+   * column and was pushing the whole settings page past Rule 1's 900px
+   * budget. Scrolls internally rather than the page — same treatment as
+   * the channel editor's controls column. Rule 3 (this view being form-heavy
+   * rather than instrument-pattern direct manipulation) is a separate,
+   * larger redesign tracked in docs/design-audit-2026-07.md, not fixed here. */
+  max-height: min(330px, calc(100vh - 570px));
+  overflow-y: auto;
+  padding-right: var(--space-2);
 }
 
 [data-tahti-ui='studio'] .fan-tier-price {
