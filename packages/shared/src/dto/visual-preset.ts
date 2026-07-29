@@ -16,6 +16,7 @@ export const VISUAL_PRESETS = [
   'LINE_TANGLE',
   'BACKDROP_BOX',
   'LENS_FLARES',
+  'IES_SPOTLIGHT',
 ] as const
 
 export type VisualPreset = (typeof VISUAL_PRESETS)[number]
@@ -30,6 +31,7 @@ export const VISUAL_PRESET_LABELS: Record<VisualPreset, string> = {
   LINE_TANGLE: 'Line tangle',
   BACKDROP_BOX: 'Backdrop box',
   LENS_FLARES: 'Lens flares',
+  IES_SPOTLIGHT: 'Spotlight',
 }
 
 export const VISUAL_PRESET_DESCRIPTIONS: Record<VisualPreset, string> = {
@@ -42,6 +44,8 @@ export const VISUAL_PRESET_DESCRIPTIONS: Record<VisualPreset, string> = {
   LINE_TANGLE: 'A tangled 3D web of colored lines, slowly rotating.',
   BACKDROP_BOX: 'A translucent glass box whose zoom, angle, and size breathe subtly.',
   LENS_FLARES: 'Drifting bursts of light that swiftly change direction.',
+  IES_SPOTLIGHT:
+    'Spotlights hover near center with a subtle zoom, glowing brighter with the music.',
 }
 
 export const CHANNEL_HEADER_STYLES = ['GRADIENT', 'SOLID', 'VIDEO_LOOP'] as const

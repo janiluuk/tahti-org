@@ -145,7 +145,23 @@ function StaticPresetThumbnail({ preset, scheme }: { preset: VisualPreset; schem
       />
     )
   }
-  // LENS_FLARES
+  if (preset === 'LENS_FLARES') {
+    return (
+      <div
+        className="visual-preset-picker__thumb"
+        aria-hidden
+        style={{
+          background: BLACK,
+          backgroundImage: [
+            `radial-gradient(circle at 30% 35%, ${scheme.accent} 0 8%, transparent 20%)`,
+            `radial-gradient(circle at 65% 60%, ${scheme.highlight} 0 5%, transparent 14%)`,
+            `radial-gradient(circle at 50% 48%, ${scheme.muted} 0 3%, transparent 10%)`,
+          ].join(', '),
+        }}
+      />
+    )
+  }
+  // IES_SPOTLIGHT
   return (
     <div
       className="visual-preset-picker__thumb"
@@ -153,9 +169,9 @@ function StaticPresetThumbnail({ preset, scheme }: { preset: VisualPreset; schem
       style={{
         background: BLACK,
         backgroundImage: [
-          `radial-gradient(circle at 30% 35%, ${scheme.accent} 0 8%, transparent 20%)`,
-          `radial-gradient(circle at 65% 60%, ${scheme.highlight} 0 5%, transparent 14%)`,
-          `radial-gradient(circle at 50% 48%, ${scheme.muted} 0 3%, transparent 10%)`,
+          `radial-gradient(ellipse 20% 30% at 35% 20%, ${scheme.accent}dd 0 30%, transparent 70%)`,
+          `radial-gradient(ellipse 16% 26% at 65% 15%, ${scheme.highlight}cc 0 30%, transparent 70%)`,
+          `radial-gradient(ellipse 45% 20% at 45% 78%, ${scheme.muted}55 0 100%, transparent 100%)`,
         ].join(', '),
       }}
     />
