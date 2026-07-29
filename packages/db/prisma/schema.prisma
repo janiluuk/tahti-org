@@ -101,6 +101,7 @@ enum VisualPreset {
   LINE_TANGLE
   BACKDROP_BOX
   LENS_FLARES
+  IES_SPOTLIGHT
 
   @@schema("channel")
 }

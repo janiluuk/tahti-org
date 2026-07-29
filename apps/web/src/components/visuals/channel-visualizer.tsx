@@ -41,6 +41,10 @@ const LensFlares = dynamic(
   () => import('./lens-flares-preset').then((m) => ({ default: m.LensFlaresPreset })),
   { ssr: false },
 )
+const IesSpotlight = dynamic(
+  () => import('./ies-spotlight-preset').then((m) => ({ default: m.IesSpotlightPreset })),
+  { ssr: false },
+)
 
 interface Props {
   preset: VisualPreset
@@ -103,6 +107,7 @@ export function ChannelVisualizer({
       {preset === 'LINE_TANGLE' && <LineTangle {...props} />}
       {preset === 'BACKDROP_BOX' && <BackdropBox {...props} />}
       {preset === 'LENS_FLARES' && <LensFlares {...props} />}
+      {preset === 'IES_SPOTLIGHT' && <IesSpotlight {...props} />}
     </div>
   )
 }
