@@ -6,6 +6,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { LiveChatPanel, PinnedAnnouncement, type LiveChatMessage } from '@tahti/ui'
 import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
+import { usePlayer } from '@/contexts/player-context'
+import { LoginPromptModal } from '@/components/login-prompt-modal'
 
 interface Announcement {
   id: string
@@ -20,9 +22,60 @@ interface ChatMessage {
   ts: number
   supporter?: boolean
   countryCode?: string | null
+  system?: boolean
+  href?: string
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+
+/** Heart button in the chat header — loves whatever archive track is currently
+ * playing (from the shared player), posting a reaction pinned to the current
+ * timestamp, same as the full player's love icon. The API fans this out as a
+ * "{you} loved {track}" system message back into this same chat feed. */
+function ChatLoveButton() {
+  const { track, currentTime } = usePlayer()
+  const [pending, setPending] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
+
+  if (!track || track.kind !== 'archive') return null
+
+  async function love() {
+    if (pending) return
+    setPending(true)
+    try {
+      const res = await fetch(`${API_BASE}/api/reactions/track/${track!.id}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'LOVE', positionSec: currentTime }),
+      })
+      if (res.status === 401) setShowLogin(true)
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="ch-chat-love-btn"
+        onClick={() => void love()}
+        disabled={pending}
+        aria-label={`Love ${track.title}`}
+        title={`Love ${track.title}`}
+      >
+        ❤️
+      </button>
+      {showLogin && (
+        <LoginPromptModal
+          message="Sign in to love this track."
+          onClose={() => setShowLogin(false)}
+        />
+      )}
+    </>
+  )
+}
 
 export default function ChatPanel({
   slug,
@@ -146,6 +199,8 @@ export default function ChatPanel({
               ts?: number
               supporter?: boolean
               countryCode?: string | null
+              system?: boolean
+              href?: string
             }
             if (msg.text) {
               setMessages((prev) =>
@@ -158,6 +213,8 @@ export default function ChatPanel({
                     ts: msg.ts ?? Date.now(),
                     supporter: msg.supporter,
                     countryCode: msg.countryCode ?? null,
+                    system: msg.system,
+                    href: msg.href,
                   },
                 ].slice(-100),
               )
@@ -241,8 +298,9 @@ export default function ChatPanel({
     id: m.id,
     handle: m.handle,
     text: m.text,
-    tone: m.supporter ? 'supporter' : 'default',
+    tone: m.system ? 'system' : m.supporter ? 'supporter' : 'default',
     countryCode: m.countryCode,
+    href: m.href,
   }))
 
   const displayError =
@@ -258,6 +316,7 @@ export default function ChatPanel({
       listenerCount={listenerCount}
       messages={liveMessages}
       messagesRef={scrollRef}
+      headerExtra={<ChatLoveButton />}
       emptyMessage="channel is quiet right now — say hi"
       pinned={
         announcements.length > 0

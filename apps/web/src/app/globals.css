@@ -856,8 +856,26 @@ body:has(.mini-player) {
   width: 100%;
   max-width: 420px;
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: var(--space-4);
+}
+
+.full-player__fullscreen-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: color var(--ease);
+}
+
+.full-player__fullscreen-toggle:hover {
+  color: var(--text);
 }
 
 .full-player__collapse {
@@ -990,6 +1008,129 @@ body:has(.mini-player) {
   justify-content: center;
   color: var(--cyan);
   font-weight: var(--weight-medium);
+}
+
+.full-player__reactions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.full-player__reaction-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition:
+    transform var(--ease),
+    background var(--ease);
+}
+
+.full-player__reaction-btn:hover:not(:disabled) {
+  transform: scale(1.1);
+  background: var(--card);
+}
+
+.full-player__reaction-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.full-player__reaction-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Cinema mode (fullscreen): show name / identity / current DJ-set cue,
+ * each re-animated in whenever the displayed text changes (React remounts
+ * the element via `key`, this keyframe runs on that mount). */
+.full-player__cinema-meta {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.full-player__cinema-show-name {
+  font-size: var(--text-h1, 2rem);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  animation: full-player-cinema-in 0.5s ease-out;
+}
+
+.full-player__cinema-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-body);
+  color: var(--muted2);
+  animation: full-player-cinema-in 0.5s ease-out;
+}
+
+.full-player__cinema-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.full-player__cinema-cue {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--cyan) 10%, var(--card));
+  border: 1px solid color-mix(in srgb, var(--cyan) 25%, transparent);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  animation: full-player-cinema-in 0.5s ease-out;
+}
+
+.full-player__cinema-cue-title {
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.full-player__cinema-cue-artist {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+@keyframes full-player-cinema-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .full-player__cinema-show-name,
+  .full-player__cinema-identity,
+  .full-player__cinema-cue {
+    animation: none;
+  }
+}
+
+.full-player--fullscreen .full-player__art-wrap {
+  width: min(50vh, 46vw, 420px);
+}
+
+.full-player--fullscreen .full-player__seek {
+  max-width: 640px;
 }
 
 .full-player__transport {

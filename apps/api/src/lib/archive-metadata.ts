@@ -44,6 +44,7 @@ export const archiveItemMetadataSelect = {
   isFallback: true,
   selectsOptIn: true,
   commentsEnabled: true,
+  topListsEligible: true,
   fallbackOrder: true,
   lastFallbackPlayedAt: true,
   visualPreset: true,
@@ -132,6 +133,7 @@ function fieldsToPrismaData(fields: ArchiveMetadataFields): Record<string, unkno
   if (fields.isFallback !== undefined) data.isFallback = fields.isFallback
   if (fields.selectsOptIn !== undefined) data.selectsOptIn = fields.selectsOptIn
   if (fields.commentsEnabled !== undefined) data.commentsEnabled = fields.commentsEnabled
+  if (fields.topListsEligible !== undefined) data.topListsEligible = fields.topListsEligible
   if (fields.pinned !== undefined) data.pinnedAt = fields.pinned ? new Date() : null
   return data
 }

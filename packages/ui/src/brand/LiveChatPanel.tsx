@@ -15,8 +15,10 @@ export interface LiveChatMessage {
   id: string
   handle: string
   text: string
-  tone?: 'artist' | 'self' | 'supporter' | 'default'
+  tone?: 'artist' | 'self' | 'supporter' | 'default' | 'system'
   countryCode?: string | null
+  /** Present on 'system' messages (e.g. "X loved Y") — links to the track. */
+  href?: string
 }
 
 export interface LiveChatPanelProps {
@@ -32,6 +34,8 @@ export interface LiveChatPanelProps {
   live?: boolean
   listeners?: number
   listenerCount?: number | null
+  /** Extra control rendered in the channel-surface header, e.g. a "love this track" button. */
+  headerExtra?: React.ReactNode
   pinned?: React.ReactNode
   messages: LiveChatMessage[]
   messagesRef?: RefObject<HTMLDivElement>
@@ -76,6 +80,7 @@ export function LiveChatPanel({
   live = true,
   listeners,
   listenerCount,
+  headerExtra,
   pinned,
   messages,
   messagesRef,
@@ -186,6 +191,7 @@ export function LiveChatPanel({
               {count} {count === 1 ? 'listener' : 'listeners'}
             </span>
           ) : null}
+          {headerExtra ? <span className="ch-chat-panel__head-extra">{headerExtra}</span> : null}
         </div>
       ) : (
         <header className="live-chat-panel__head">
@@ -215,31 +221,43 @@ export function LiveChatPanel({
         {messages.length === 0 ? (
           <p className={isChannel ? 'ch-chat-empty' : 'live-chat-panel__empty'}>{emptyMessage}</p>
         ) : isChannel ? (
-          messages.map((message) => (
-            <div key={message.id} className="chat-msg">
-              {message.countryCode ? (
-                <span
-                  className="chat-flag"
-                  aria-label={message.countryCode}
-                  title={message.countryCode}
-                >
-                  {flagEmoji(message.countryCode)}
-                </span>
-              ) : null}
-              <span
-                className={cn(
-                  'handle',
-                  (message.tone === 'supporter' || message.tone === 'artist') && 'supporter',
+          messages.map((message) =>
+            message.tone === 'system' ? (
+              <div key={message.id} className="chat-msg chat-msg--system">
+                {message.href ? (
+                  <a href={message.href} className="chat-msg__system-text">
+                    {message.text}
+                  </a>
+                ) : (
+                  <span className="chat-msg__system-text">{message.text}</span>
                 )}
-              >
-                {message.handle}
-              </span>
-              {message.tone === 'supporter' ? (
-                <span className="chat-supporter-badge">supporter</span>
-              ) : null}
-              <span className="text">{message.text}</span>
-            </div>
-          ))
+              </div>
+            ) : (
+              <div key={message.id} className="chat-msg">
+                {message.countryCode ? (
+                  <span
+                    className="chat-flag"
+                    aria-label={message.countryCode}
+                    title={message.countryCode}
+                  >
+                    {flagEmoji(message.countryCode)}
+                  </span>
+                ) : null}
+                <span
+                  className={cn(
+                    'handle',
+                    (message.tone === 'supporter' || message.tone === 'artist') && 'supporter',
+                  )}
+                >
+                  {message.handle}
+                </span>
+                {message.tone === 'supporter' ? (
+                  <span className="chat-supporter-badge">supporter</span>
+                ) : null}
+                <span className="text">{message.text}</span>
+              </div>
+            ),
+          )
         ) : (
           messages.map((message) => {
             const suffix = playgroundHandleSuffix(message)

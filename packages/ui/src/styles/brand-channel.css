@@ -1234,6 +1234,46 @@
   opacity: 1;
 }
 
+[data-tahti-ui='brand'] .ch-archive-waveform--large {
+  height: 96px;
+  margin: var(--space-3) 0;
+}
+
+/* Reaction markers pinned to where listeners reacted — always subtly
+ * animated (not just on hover) so activity on the track reads at a glance. */
+[data-tahti-ui='brand'] .ch-archive-wf-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-wf-marker {
+  position: absolute;
+  bottom: 100%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  line-height: 1;
+  animation: ch-wf-marker-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes ch-wf-marker-pulse {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateX(-50%) translateY(-3px) scale(1.15);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='brand'] .ch-archive-wf-marker {
+    animation: none;
+  }
+}
+
 /* Controls */
 [data-tahti-ui='brand'] .ch-player-controls {
   display: flex;
@@ -2665,6 +2705,34 @@
   font-weight: 400;
 }
 
+[data-tahti-ui='brand'] .ch-chat-panel__head-extra {
+  margin-left: auto;
+}
+
+[data-tahti-ui='brand'] .ch-chat-listeners + .ch-chat-panel__head-extra {
+  margin-left: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-chat-love-btn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0.2rem;
+  opacity: 0.75;
+  transition: opacity var(--ease);
+}
+
+[data-tahti-ui='brand'] .ch-chat-love-btn:hover:not(:disabled) {
+  opacity: 1;
+}
+
+[data-tahti-ui='brand'] .ch-chat-love-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 [data-tahti-ui='brand'] .pinned-msg {
   background: color-mix(in srgb, var(--amber) 10%, var(--card));
   border: 1px solid color-mix(in srgb, var(--amber) 30%, transparent);
@@ -2712,6 +2780,24 @@
 
 [data-tahti-ui='brand'] .chat-msg .text {
   color: var(--text);
+}
+
+[data-tahti-ui='brand'] .chat-msg--system {
+  font-style: italic;
+}
+
+[data-tahti-ui='brand'] .chat-msg__system-text {
+  color: var(--muted2);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] a.chat-msg__system-text {
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] a.chat-msg__system-text:hover {
+  color: var(--cyan);
+  text-decoration: underline;
 }
 
 [data-tahti-ui='brand'] .chat-supporter-badge {

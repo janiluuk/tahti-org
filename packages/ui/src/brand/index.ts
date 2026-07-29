@@ -54,6 +54,7 @@ export { Pill, type PillProps, type PillVariant } from './Pill'
 export { BrandInput, BrandField, type BrandInputProps, type BrandFieldProps } from './Input'
 export { CoverArt, type CoverArtProps, type CoverArtSize } from './CoverArt'
 export { AvatarTile, type AvatarTileProps } from './AvatarTile'
+export { RankBadge } from './RankBadge'
 export { PinnedAnnouncement, type PinnedAnnouncementProps } from './PinnedAnnouncement'
 export { WaveformPlayer, type WaveformPlayerProps } from './WaveformPlayer'
 export {

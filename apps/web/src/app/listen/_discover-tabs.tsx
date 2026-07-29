@@ -8,8 +8,9 @@ import type { ChannelCard, ChannelDirectoryEntry, TahtiSelectsGalleryItem } from
 import { ListenChannels } from './_listen-channels'
 import { ArtistDirectory } from './_artist-directory'
 import { SelectsGallery } from './_selects-gallery'
+import { TopListsTab } from './_top-lists-tab'
 
-type Tab = 'live' | 'selects' | 'artists'
+type Tab = 'live' | 'selects' | 'artists' | 'top-lists'
 
 export function DiscoverTabs({
   live,
@@ -18,6 +19,7 @@ export function DiscoverTabs({
   listenerCounts,
   directory,
   gallery,
+  galleryRanks,
 }: {
   live: ChannelCard[]
   replaying: ChannelCard[]
@@ -25,6 +27,7 @@ export function DiscoverTabs({
   listenerCounts: Record<string, number>
   directory: ChannelDirectoryEntry[]
   gallery: TahtiSelectsGalleryItem[]
+  galleryRanks: Record<string, number>
 }) {
   const [tab, setTab] = useState<Tab>('live')
   const empty = live.length === 0 && replaying.length === 0 && recent.length === 0
@@ -59,6 +62,15 @@ export function DiscoverTabs({
         >
           Artists &amp; genres
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'top-lists'}
+          className={`discover-tab${tab === 'top-lists' ? ' discover-tab--active' : ''}`}
+          onClick={() => setTab('top-lists')}
+        >
+          Top lists
+        </button>
       </div>
 
       {tab === 'live' &&
@@ -78,9 +90,11 @@ export function DiscoverTabs({
           />
         ))}
 
-      {tab === 'selects' && <SelectsGallery items={gallery} />}
+      {tab === 'selects' && <SelectsGallery items={gallery} ranks={galleryRanks} />}
 
       {tab === 'artists' && <ArtistDirectory items={directory} />}
+
+      {tab === 'top-lists' && <TopListsTab />}
     </>
   )
 }

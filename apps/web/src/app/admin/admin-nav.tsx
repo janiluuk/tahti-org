@@ -133,6 +133,20 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/top-lists',
+    label: 'Top lists',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path
+          d="M3 13V9M8 13V3M13 13V6"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/content-reports',
     label: 'Reports',
     icon: (
