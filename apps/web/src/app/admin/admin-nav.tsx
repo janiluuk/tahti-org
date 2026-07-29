@@ -167,6 +167,21 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/storage',
+    label: 'Storage',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <ellipse cx="8" cy="4" rx="6" ry="2" stroke="currentColor" strokeWidth="1.4" />
+        <path
+          d="M2 4v4c0 1.1 2.7 2 6 2s6-.9 6-2V4M2 8v4c0 1.1 2.7 2 6 2s6-.9 6-2V8"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/content-reports',
     label: 'Reports',
     icon: (

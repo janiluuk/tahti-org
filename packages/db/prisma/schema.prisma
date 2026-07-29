@@ -1990,6 +1990,9 @@ model ReleaseTrack {
   explicit         Boolean     @default(false)
   status           TrackStatus @default(PENDING)
   createdAt        DateTime    @default(now())
+  // Mirrors the active ReleaseTrackVersion's R2 fields (see syncActiveVersionToTrack).
+  r2Key            String?
+  r2SizeBytes      Int?
 
   versions         ReleaseTrackVersion[]
 
@@ -2014,6 +2017,12 @@ model ReleaseTrackVersion {
   status           TrackStatus @default(PENDING)
   isActive         Boolean     @default(false)
   createdAt        DateTime    @default(now())
+  // R2 long-term mirror of the original (lossless) upload — null until the
+  // transcode worker writes it through, and null again once retention GC
+  // purges it (see storage-quota.ts / [[hosting-decisions]]: only the most
+  // recent 4 versions per track keep an R2 copy).
+  r2Key            String?
+  r2SizeBytes      Int?
 
   @@unique([releaseTrackId, versionNumber])
   @@index([releaseTrackId, createdAt(sort: Desc)])
