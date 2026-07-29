@@ -44,7 +44,8 @@ export const VISUAL_PRESET_DESCRIPTIONS: Record<VisualPreset, string> = {
   LINE_TANGLE: 'A tangled 3D web of colored lines, slowly rotating.',
   BACKDROP_BOX: 'A translucent glass box whose zoom, angle, and size breathe subtly.',
   LENS_FLARES: 'Drifting bursts of light that swiftly change direction.',
-  IES_SPOTLIGHT: 'Spotlights hover near center with a subtle zoom, glowing brighter with the music.',
+  IES_SPOTLIGHT:
+    'Spotlights hover near center with a subtle zoom, glowing brighter with the music.',
 }
 
 export const CHANNEL_HEADER_STYLES = ['GRADIENT', 'SOLID', 'VIDEO_LOOP'] as const
