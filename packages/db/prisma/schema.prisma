@@ -627,6 +627,7 @@ model User {
   artistFollowers       ArtistFollow[]       @relation("ArtistFollowers")
   artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
   archiveItemLikes      ArchiveItemLike[]
+  collectionSubscriptions CollectionSubscription[]
   archiveItemReposts    ArchiveItemRepost[]
   trackReactions        TrackReaction[]
   conversationParticipations ConversationParticipant[]
@@ -2140,6 +2141,7 @@ model Collection {
   visualPreset    VisualPreset @default(MINIMAL)
 
   items CollectionItem[]
+  subscribers CollectionSubscription[]
   channelsUsingAsFallback Channel[] @relation("ChannelActiveFallbackCollection")
 
   @@index([userId, isPublic])
@@ -2160,6 +2162,22 @@ model CollectionItem {
 
   @@unique([collectionId, position])
   @@index([collectionId, position])
+  @@schema("media")
+}
+
+// A listener subscribing to a public playlist — surfaces it in their library
+// and (future work) notifies them when the owner or a collaborator adds a
+// track. Distinct from ArtistFollow: this follows one specific playlist, not
+// everything an artist does.
+model CollectionSubscription {
+  userId       String
+  collectionId String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@id([userId, collectionId])
+  @@index([collectionId])
   @@schema("media")
 }
 

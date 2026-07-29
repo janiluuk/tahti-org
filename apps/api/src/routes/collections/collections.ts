@@ -10,6 +10,7 @@ import {
   ChannelArchiveParamsSchema,
   CollectionGalleryPatchSchema,
   CollectionListQuerySchema,
+  CollectionSubscriptionResponseSchema,
   CollectionTextLayerPatchSchema,
   CreateCollectionSchema,
   PatchCollectionSchema,
@@ -712,6 +713,92 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
         }
         throw err
       }
+    },
+  )
+
+  // GET /api/v1/collections/:slug/subscribe — public: reports subscribed: false
+  // when there's no session instead of 401ing, same as the archive-item like route.
+  fastify.get(
+    '/api/v1/collections/:slug/subscribe',
+    {
+      schema: {
+        response: openApiResponse(CollectionSubscriptionResponseSchema, 'CollectionSubscription'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const col = await fastify.prisma.collection.findFirst({
+        where: { slug: routeParams.slug, isPublic: true },
+        select: { id: true, _count: { select: { subscribers: true } } },
+      })
+      if (!col) return reply.status(404).send({ error: 'Collection not found' })
+
+      const subscribed = request.sessionUser
+        ? !!(await fastify.prisma.collectionSubscription.findUnique({
+            where: {
+              userId_collectionId: { userId: request.sessionUser.id, collectionId: col.id },
+            },
+            select: { userId: true },
+          }))
+        : false
+
+      return reply.send({ subscribed, subscriberCount: col._count.subscribers })
+    },
+  )
+
+  // POST /api/v1/collections/:slug/subscribe
+  fastify.post(
+    '/api/v1/collections/:slug/subscribe',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const col = await fastify.prisma.collection.findFirst({
+        where: { slug: routeParams.slug, isPublic: true },
+        select: { id: true },
+      })
+      if (!col) return reply.status(404).send({ error: 'Collection not found' })
+
+      await fastify.prisma.collectionSubscription.upsert({
+        where: {
+          userId_collectionId: { userId: request.sessionUser!.id, collectionId: col.id },
+        },
+        create: { userId: request.sessionUser!.id, collectionId: col.id },
+        update: {},
+      })
+
+      const subscriberCount = await fastify.prisma.collectionSubscription.count({
+        where: { collectionId: col.id },
+      })
+      return reply.send({ subscribed: true, subscriberCount })
+    },
+  )
+
+  // DELETE /api/v1/collections/:slug/subscribe
+  fastify.delete(
+    '/api/v1/collections/:slug/subscribe',
+    { preHandler: requireAuth },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+
+      const col = await fastify.prisma.collection.findFirst({
+        where: { slug: routeParams.slug },
+        select: { id: true },
+      })
+      if (!col) return reply.status(404).send({ error: 'Collection not found' })
+
+      await fastify.prisma.collectionSubscription.deleteMany({
+        where: { userId: request.sessionUser!.id, collectionId: col.id },
+      })
+
+      const subscriberCount = await fastify.prisma.collectionSubscription.count({
+        where: { collectionId: col.id },
+      })
+      return reply.send({ subscribed: false, subscriberCount })
     },
   )
 

@@ -25,6 +25,7 @@ import { ArchiveTrackRow } from './_archive-track-row'
 import { ReportButton } from '@/components/report-button'
 import { CollectionEmbedButton } from './_embed-button'
 import { AddTrackButton } from './_add-track-button'
+import { SubscribeButton } from './_subscribe-button'
 
 async function fetchCollection(slug: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
@@ -145,6 +146,7 @@ export default async function CollectionPage({
               ← {data.user.displayName}
             </Link>
             <div className="prof-collection-top-row__actions">
+              <SubscribeButton slug={params.slug} />
               {data.collaborative && <AddTrackButton slug={params.slug} />}
               <CollectionEmbedButton slug={params.slug} />
             </div>
