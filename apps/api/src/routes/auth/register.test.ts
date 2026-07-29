@@ -142,4 +142,40 @@ describe('POST /api/auth/register', () => {
     })
     expect(response.statusCode).toBe(400)
   })
+
+  it('persists optional gender and countryCode when provided', async () => {
+    await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        email: `${TEST_EMAIL_PREFIX}6@example.com`,
+        password: 'strongpassword123',
+        username: 'testartist6',
+        displayName: 'Test Artist',
+        gender: 'Non-binary',
+        countryCode: 'fi',
+      },
+    })
+
+    const user = await prisma.user.findUnique({ where: { username: 'testartist6' } })
+    expect(user!.gender).toBe('Non-binary')
+    expect(user!.countryCode).toBe('FI')
+  })
+
+  it('leaves gender and countryCode null when omitted ("prefer not to say")', async () => {
+    await app.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        email: `${TEST_EMAIL_PREFIX}7@example.com`,
+        password: 'strongpassword123',
+        username: 'testartist7',
+        displayName: 'Test Artist',
+      },
+    })
+
+    const user = await prisma.user.findUnique({ where: { username: 'testartist7' } })
+    expect(user!.gender).toBeNull()
+    expect(user!.countryCode).toBeNull()
+  })
 })

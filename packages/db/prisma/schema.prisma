@@ -575,6 +575,7 @@ model User {
   tipJarUrl             String?
   countryCode           String?
   pronouns              String?
+  gender                String?    // free text, e.g. "Woman"/"Man"/"Non-binary" — null means declined to say
   defaultLocation       String?    // freeform "City, Country" — prefills venue creation, live-set tagging
   tier                  ArtistTier @default(FREE)
   isMember              Boolean    @default(false)

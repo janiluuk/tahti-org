@@ -16,6 +16,8 @@ interface RegisterInput {
   password: string
   username: string
   displayName: string
+  gender?: string | null
+  countryCode?: string | null
   hcaptchaToken?: string
 }
 
