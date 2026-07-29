@@ -149,4 +149,10 @@ export const WORKER_CRON_JOBS: CronJobSpec[] = [
     description:
       'PERF-04: backfill editorPeaks for READY archives missing pyramid data (03:00 UTC)',
   },
+  {
+    name: 'sweep-expired-stems',
+    pattern: '30 3 * * *',
+    jobId: 'sweep-expired-stems-cron',
+    description: 'Delete stem-separation output past its 7-day retention window (03:30 UTC)',
+  },
 ]

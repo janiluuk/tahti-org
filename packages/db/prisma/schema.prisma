@@ -1300,9 +1300,54 @@ model ArchiveItem {
   reactions       TrackReaction[]
   listenEvents    ListenEvent[]
   radioPlayLogs   RadioPlayLog[]
+  stemJobs        ArchiveItemStemJob[]
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
+  @@schema("channel")
+}
+
+enum StemSet {
+  TWO_STEM // vocals + instrumental
+  FOUR_STEM // vocals + drums + bass + other
+
+  @@schema("channel")
+}
+
+enum StemJobStatus {
+  PENDING
+  PROCESSING
+  READY
+  ERROR
+
+  @@schema("channel")
+}
+
+// Vocal/instrument separation (UVR5-family models via the stem-separator
+// service) for a library track's "Download stems" option. Rendered
+// on-demand from the archive item's own rawKey/flacKey (never re-derived
+// from a lossy mp3Key when a better source exists) and auto-expired ~7
+// days after READY — see sweep-expired-stems cron — rather than kept
+// forever, since there's no per-user quota headroom carved out for this.
+model ArchiveItemStemJob {
+  id            String         @id @default(cuid())
+  archiveItemId String
+  archiveItem   ArchiveItem    @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  requestedById String
+  stemSet       StemSet
+  status        StemJobStatus  @default(PENDING)
+  vocalsKey       String?
+  instrumentalKey String? // TWO_STEM only
+  drumsKey        String? // FOUR_STEM only
+  bassKey         String? // FOUR_STEM only
+  otherKey        String? // FOUR_STEM only
+  errorMessage  String?
+  expiresAt     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@unique([archiveItemId, stemSet])
+  @@index([expiresAt])
   @@schema("channel")
 }
 

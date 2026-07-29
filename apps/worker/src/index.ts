@@ -8,6 +8,8 @@ import { processTranscodeJob } from './jobs/transcode.js'
 import { processTranscodeVersionJob } from './jobs/transcode-version.js'
 import { processRenderArchiveEditJob } from './jobs/render-archive-edit.js'
 import { processRenderAnnouncementTrimJob } from './jobs/render-announcement-trim.js'
+import { processSeparateStemsJob } from './jobs/separate-stems.js'
+import { processSweepExpiredStemsJob } from './jobs/sweep-expired-stems.js'
 import { processBackfillEditorPeaksJob } from './jobs/backfill-editor-peaks.js'
 import { processSweepEditorPeaksBackfillJob } from './jobs/sweep-editor-peaks-backfill.js'
 import { processTranscodeReleaseTrackJob } from './jobs/transcode-release-track.js'
@@ -95,6 +97,13 @@ const worker = new Worker(
         await processRenderArchiveEditJob(job)
       } else if (job.name === 'render-announcement-trim') {
         await processRenderAnnouncementTrimJob(job)
+      } else if (job.name === 'separate-stems') {
+        await processSeparateStemsJob(job)
+      } else if (job.name === 'sweep-expired-stems') {
+        const summary = await processSweepExpiredStemsJob()
+        if (summary.deleted > 0) {
+          console.log('[worker] sweep-expired-stems:', JSON.stringify(summary))
+        }
       } else if (job.name === 'backfill-editor-peaks') {
         await processBackfillEditorPeaksJob(job)
       } else if (job.name === 'sweep-editor-peaks-backfill') {

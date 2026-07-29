@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { S3Client, GetObjectCommand, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
+import {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+  HeadObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3'
 import { createWriteStream, createReadStream } from 'node:fs'
 import { pipeline } from 'node:stream/promises'
 import type { Readable } from 'node:stream'
@@ -55,6 +61,10 @@ export async function uploadStream(
     ...(contentLength !== undefined ? { ContentLength: contentLength } : {}),
   })
   await s3.send(command)
+}
+
+export async function deleteObject(key: string): Promise<void> {
+  await s3.send(new DeleteObjectCommand({ Bucket: MINIO_BUCKET, Key: key }))
 }
 
 export async function objectByteSize(key: string): Promise<number | null> {
