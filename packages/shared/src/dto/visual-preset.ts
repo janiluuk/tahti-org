@@ -89,14 +89,49 @@ export const BRAND_ACCENT_PRESETS: BrandAccentPreset[] = [
   },
 ]
 
-export const SLIDESHOW_PRESETS = ['FADE', 'ZOOM', 'PAN', 'BLUR_CROSS'] as const
+export const SLIDESHOW_PRESETS = [
+  'FADE',
+  'ZOOM',
+  'PAN',
+  'BLUR_CROSS',
+  // WebGL (Three.js) presets — richer tier alongside the CSS ones above.
+  'PARTICLE_DISSOLVE',
+  'GLITCH_WIPE',
+  'CUBE_FLIP',
+  'LIQUID_DISTORTION',
+] as const
 export type SlideshowPreset = (typeof SLIDESHOW_PRESETS)[number]
+
+/** Presets rendered via WebGL (Three.js) rather than plain CSS keyframes — used by
+ * ChannelSlideshow to decide whether to mount the (heavier, lazy-loaded) Three.js
+ * transition overlay instead of the CSS crossfade. */
+export const WEBGL_SLIDESHOW_PRESETS = new Set<SlideshowPreset>([
+  'PARTICLE_DISSOLVE',
+  'GLITCH_WIPE',
+  'CUBE_FLIP',
+  'LIQUID_DISTORTION',
+])
 
 export const SLIDESHOW_PRESET_LABELS: Record<SlideshowPreset, string> = {
   FADE: 'Fade',
   ZOOM: 'Zoom',
   PAN: 'Pan',
   BLUR_CROSS: 'Blur crossfade',
+  PARTICLE_DISSOLVE: 'Particle dissolve',
+  GLITCH_WIPE: 'Glitch wipe',
+  CUBE_FLIP: 'Cube flip',
+  LIQUID_DISTORTION: 'Liquid distortion',
+}
+
+export const SLIDESHOW_PRESET_DESCRIPTIONS: Record<SlideshowPreset, string> = {
+  FADE: 'Simple crossfade.',
+  ZOOM: 'Slow zoom while crossfading.',
+  PAN: 'Slides sideways while crossfading.',
+  BLUR_CROSS: 'Crossfades through a soft blur.',
+  PARTICLE_DISSOLVE: 'The image breaks apart into drifting particles as the next one resolves.',
+  GLITCH_WIPE: 'A digital glitch band sweeps across, revealing the next image.',
+  CUBE_FLIP: 'The banner rotates in 3D like a turning cube face.',
+  LIQUID_DISTORTION: 'A rippling liquid distortion washes the next image into view.',
 }
 
 /** A 5-color palette extracted from cover art or set by the artist. */

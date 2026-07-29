@@ -107,6 +107,11 @@ enum SlideshowPreset {
   ZOOM
   PAN
   BLUR_CROSS
+  // WebGL (Three.js) presets — richer tier alongside the CSS ones above.
+  PARTICLE_DISSOLVE
+  GLITCH_WIPE
+  CUBE_FLIP
+  LIQUID_DISTORTION
 
   @@schema("channel")
 }
