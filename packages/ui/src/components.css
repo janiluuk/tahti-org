@@ -614,6 +614,28 @@
   overflow: hidden;
 }
 
+/* Overlaid on artwork when a track currently places in a top list — the
+ * artwork's wrapper needs position:relative for this to anchor correctly. */
+.rank-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--radius-full, 999px);
+  background: var(--coral, #ef4444);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
 .cover-art {
   border-radius: var(--radius-md);
   object-fit: cover;

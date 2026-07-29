@@ -38,7 +38,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
           id: true,
           slug: true,
           fallbackAutoEnroll: true,
-          user: { select: { defaultTrackCommentsEnabled: true } },
+          user: { select: { defaultTrackCommentsEnabled: true, topListsOptOut: true } },
         },
       })
 
@@ -78,6 +78,7 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
           // Always the account default at creation time — commentsEnabled isn't
           // client-settable until the track exists (PATCH /api/me/archive/:id).
           commentsEnabled: channel.user.defaultTrackCommentsEnabled,
+          topListsEligible: !channel.user.topListsOptOut,
         },
         select: { id: true, status: true },
       })

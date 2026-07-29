@@ -92,6 +92,20 @@ async function fetchListenerCount(slug: string): Promise<number> {
   }
 }
 
+async function fetchRanks(archiveItemIds: string[]): Promise<Record<string, number>> {
+  if (archiveItemIds.length === 0) return {}
+  try {
+    const res = await fetch(`${API_URL}/api/top-lists/ranks?ids=${archiveItemIds.join(',')}`, {
+      next: { revalidate: 60 },
+    })
+    if (!res.ok) return {}
+    const data = (await res.json()) as { ranks: Record<string, number> }
+    return data.ranks
+  } catch {
+    return {}
+  }
+}
+
 export default async function ListenPage() {
   const [{ live, replaying, recent }, radioPreview, directory, gallery] = await Promise.all([
     fetchChannels(),
@@ -103,6 +117,7 @@ export default async function ListenPage() {
     live.map(async (ch) => [ch.slug, await fetchListenerCount(ch.slug)] as const),
   )
   const listenerCounts = Object.fromEntries(listenerCountEntries)
+  const galleryRanks = await fetchRanks(gallery.map((g) => g.archiveItemId))
 
   return (
     <div className="listen-shell">
@@ -125,6 +140,7 @@ export default async function ListenPage() {
         listenerCounts={listenerCounts}
         directory={directory}
         gallery={gallery}
+        galleryRanks={galleryRanks}
       />
 
       <ArtistsSection items={directory} />

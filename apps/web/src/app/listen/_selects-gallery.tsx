@@ -4,7 +4,7 @@
 'use client'
 
 import type { TahtiSelectsGalleryItem } from '@tahti/shared'
-import { AvatarTile } from '@tahti/ui'
+import { AvatarTile, RankBadge } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { resolveChannelUrl } from '@/lib/app-url'
 
@@ -23,9 +23,11 @@ function toTrack(item: TahtiSelectsGalleryItem): PlayerTrack {
 function GalleryTile({
   item,
   queue,
+  rank,
 }: {
   item: TahtiSelectsGalleryItem
   queue: TahtiSelectsGalleryItem[]
+  rank?: number
 }) {
   const { track, playing, load, togglePlay } = usePlayer()
   const isCurrent = track?.id === item.archiveItemId
@@ -56,6 +58,7 @@ function GalleryTile({
       ) : (
         <AvatarTile size="full" name={item.title} className="selects-gallery__art" />
       )}
+      {rank && <RankBadge rank={rank} />}
       <span className="selects-gallery__playhint" aria-hidden>
         {isCurrent && playing ? (
           <svg width="22" height="22" viewBox="0 0 18 18" fill="currentColor">
@@ -76,7 +79,13 @@ function GalleryTile({
   )
 }
 
-export function SelectsGallery({ items }: { items: TahtiSelectsGalleryItem[] }) {
+export function SelectsGallery({
+  items,
+  ranks = {},
+}: {
+  items: TahtiSelectsGalleryItem[]
+  ranks?: Record<string, number>
+}) {
   if (items.length === 0) {
     return (
       <div className="public-empty-card">
@@ -92,7 +101,7 @@ export function SelectsGallery({ items }: { items: TahtiSelectsGalleryItem[] }) 
     <ul className="selects-gallery">
       {items.map((item) => (
         <li key={item.archiveItemId}>
-          <GalleryTile item={item} queue={items} />
+          <GalleryTile item={item} queue={items} rank={ranks[item.archiveItemId]} />
         </li>
       ))}
     </ul>

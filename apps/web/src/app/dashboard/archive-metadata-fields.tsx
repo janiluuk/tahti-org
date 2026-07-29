@@ -54,6 +54,7 @@ export type ArchiveMetadataFormState = {
   isPublic: boolean
   commentsEnabled: boolean
   selectsOptIn: boolean
+  topListsEligible: boolean
   tracklist: TracklistEntry[] | null
 }
 
@@ -89,6 +90,7 @@ export function defaultMetadataFormState(): ArchiveMetadataFormState {
     isPublic: ARCHIVE_METADATA_DEFAULTS.isPublic,
     commentsEnabled: true,
     selectsOptIn: ARCHIVE_METADATA_DEFAULTS.selectsOptIn,
+    topListsEligible: true,
     tracklist: null,
   }
 }
@@ -131,6 +133,7 @@ export function metadataFormToPayload(state: ArchiveMetadataFormState): Record<s
     isPublic: state.isPublic,
     commentsEnabled: state.commentsEnabled,
     selectsOptIn: state.selectsOptIn,
+    topListsEligible: state.topListsEligible,
     tracklist: state.tracklist,
   }
 }
@@ -170,6 +173,7 @@ export function metadataFromApi(item: Record<string, unknown>): ArchiveMetadataF
     isPublic: (item.isPublic as boolean) ?? true,
     commentsEnabled: (item.commentsEnabled as boolean) ?? true,
     selectsOptIn: (item.selectsOptIn as boolean) ?? false,
+    topListsEligible: (item.topListsEligible as boolean) ?? true,
     tracklist: Array.isArray(item.tracklist) ? (item.tracklist as TracklistEntry[]) : null,
   }
 }
@@ -543,6 +547,17 @@ export function ArchiveMetadataFields({
               onChange={(e) => set({ commentsEnabled: e.target.checked })}
             />
             Allow comments on this track
+          </label>
+        )}
+        {itemId && (
+          <label className="studio-label-row">
+            <input
+              type="checkbox"
+              checked={state.topListsEligible}
+              disabled={disabled}
+              onChange={(e) => set({ topListsEligible: e.target.checked })}
+            />
+            Include in top lists
           </label>
         )}
       </div>
