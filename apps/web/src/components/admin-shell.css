@@ -335,6 +335,28 @@
   font-weight: 600;
 }
 
+.top-lists-buckets {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.top-lists-bucket {
+  background: color-mix(in srgb, var(--card2) 60%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.top-lists-bucket__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .admin-beta-table td {
   vertical-align: top;
 }

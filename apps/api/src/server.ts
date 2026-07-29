@@ -56,6 +56,7 @@ import chatReactRoute from './routes/chat/react.js'
 import chatPresenceRoute from './routes/chat/presence.js'
 import meChat from './routes/me/chat.js'
 import meCommentSettings from './routes/me/comment-settings.js'
+import meTopListsSettings from './routes/me/top-lists-settings.js'
 import meRecordingSettings from './routes/me/recording-settings.js'
 import commentsRoutes from './routes/comments/index.js'
 import trackReactionsRoutes from './routes/reactions/track.js'
@@ -72,6 +73,7 @@ import artistFollowRoutes from './routes/engagement/artist-follows.js'
 import archiveRepostRoutes from './routes/engagement/archive-repost.js'
 import archiveLikeRoutes from './routes/engagement/archive-likes.js'
 import archiveItemRepostRoutes from './routes/engagement/archive-item-repost.js'
+import listenEventsRoutes from './routes/engagement/listen-events.js'
 import meGrantsRoutes from './routes/me/grants.js'
 import adminGrantsRoutes from './routes/admin/grants.js'
 import fanTierRoutes from './routes/fansubs/tiers.js'
@@ -93,6 +95,8 @@ import adminArchiveRoutes from './routes/admin/archive.js'
 import adminFanSubsRoutes from './routes/admin/fansubs.js'
 import adminUsersRoutes from './routes/admin/users.js'
 import adminEngagementRoutes from './routes/admin/engagement.js'
+import adminTopListsRoutes from './routes/admin/top-lists.js'
+import topListsRoutes from './routes/top-lists/index.js'
 import adminSupportRoutes from './routes/admin/support.js'
 import adminResolutionsRoutes from './routes/admin/resolutions.js'
 import adminReportsRoutes from './routes/admin/reports.js'
@@ -116,6 +120,7 @@ import publicProfileRoutes from './routes/profile/public.js'
 import publicMentionRoutes from './routes/profile/mentions.js'
 import smartlinkRoutes from './routes/releases/smartlink.js'
 import smartlinkClickRoutes from './routes/releases/smartlink-click.js'
+import latestReleasesRoutes from './routes/releases/latest.js'
 import releaseAnalyticsRoutes from './routes/releases/analytics.js'
 import sitemapRoutes from './routes/sitemap.js'
 import mixcloudRoutes from './routes/me/mixcloud.js'
@@ -497,6 +502,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(chatPresenceRoute)
   await fastify.register(meChat)
   await fastify.register(meCommentSettings)
+  await fastify.register(meTopListsSettings)
   await fastify.register(meRecordingSettings)
   await fastify.register(commentsRoutes)
   await fastify.register(trackReactionsRoutes)
@@ -520,6 +526,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(artistFollowRoutes)
   await fastify.register(archiveRepostRoutes)
   await fastify.register(archiveLikeRoutes)
+  await fastify.register(listenEventsRoutes)
   await fastify.register(archiveItemRepostRoutes)
 
   // M9: annual grant disbursements
@@ -547,6 +554,8 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminFanSubsRoutes)
   await fastify.register(adminUsersRoutes)
   await fastify.register(adminEngagementRoutes)
+  await fastify.register(adminTopListsRoutes)
+  await fastify.register(topListsRoutes)
   await fastify.register(adminSupportRoutes)
   await fastify.register(adminResolutionsRoutes)
   await fastify.register(adminReportsRoutes)
@@ -574,6 +583,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(publicMentionRoutes)
   await fastify.register(smartlinkRoutes)
   await fastify.register(smartlinkClickRoutes)
+  await fastify.register(latestReleasesRoutes)
   await fastify.register(releaseAnalyticsRoutes)
   await fastify.register(sitemapRoutes)
 

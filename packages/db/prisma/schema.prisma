@@ -574,6 +574,10 @@ model User {
   // overridden individually afterward (ArchiveItem.commentsEnabled / Channel.commentsEnabled).
   defaultTrackCommentsEnabled   Boolean @default(true)
   defaultChannelCommentsEnabled Boolean @default(true)
+  // Default for new tracks' ArchiveItem.topListsEligible — inverted polarity
+  // (opt OUT), so an artist who's opted out can still flip a specific track
+  // back in via the per-track override.
+  topListsOptOut                Boolean @default(false)
   // ground-rules.md /dashboard/settings/notifications instrument-pattern worked example
   notifyMoneyMovesEmail       Boolean @default(true)
   notifyMoneyMovesInApp       Boolean @default(true)
@@ -1229,6 +1233,7 @@ model ArchiveItem {
   lastFallbackPlayedAt DateTime?         // M27: fair shuffle — least recent first
   selectsOptIn         Boolean           @default(false) // artist opted this track into the Tahti Selects weekly draw
   commentsEnabled      Boolean           @default(true) // initialized from User.defaultTrackCommentsEnabled
+  topListsEligible     Boolean           @default(true) // initialized from !User.topListsOptOut
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
@@ -1241,6 +1246,7 @@ model ArchiveItem {
   likes           ArchiveItemLike[]
   reposts         ArchiveItemRepost[]
   reactions       TrackReaction[]
+  listenEvents    ListenEvent[]
   radioPlayLogs   RadioPlayLog[]
 
   @@index([channelId, createdAt(sort: Desc)])
@@ -1608,6 +1614,25 @@ model TrackReaction {
   createdAt     DateTime          @default(now())
 
   @@index([archiveItemId, positionSec])
+  @@schema("engagement")
+}
+
+// A countable listen, powering top-lists ranking. One row per (track,
+// listener, calendar day) — dedupeKey is the userId when logged in, else a
+// server-side hash of IP+UA, so the unique constraint below stops a single
+// listener from inflating a track's count by replaying/refreshing.
+// archiveItem-only for now: releases aren't tracked here since they aren't
+// played through a mechanism that reports playback progress yet.
+model ListenEvent {
+  id            String      @id @default(cuid())
+  archiveItemId String
+  archiveItem   ArchiveItem @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  dedupeKey     String
+  dayBucket     String
+  playedAt      DateTime    @default(now())
+
+  @@unique([archiveItemId, dedupeKey, dayBucket])
+  @@index([archiveItemId, playedAt])
   @@schema("engagement")
 }
 

@@ -108,6 +108,7 @@ export const ArchiveMetadataFieldsSchema = z.object({
   isFallback: z.boolean().optional(),
   commentsEnabled: z.boolean().optional(),
   selectsOptIn: z.boolean().optional(),
+  topListsEligible: z.boolean().optional(),
   /** Public "Stage" showcase (PLAT-Stage): pin/unpin this track at the top of the
    * artist's profile Stage tab. Server converts to/from ArchiveItem.pinnedAt. */
   pinned: z.boolean().optional(),

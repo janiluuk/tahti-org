@@ -25,7 +25,15 @@ import type {
   ChannelTextLayerMode,
   TracklistEntry,
 } from '@tahti/shared'
-import { AvatarTile, Heading, Row, Text, ChannelPageShell, SafePlainText } from '@tahti/ui'
+import {
+  AvatarTile,
+  Heading,
+  Row,
+  Text,
+  ChannelPageShell,
+  SafePlainText,
+  RankBadge,
+} from '@tahti/ui'
 import { channelArchiveRssUrl } from '@/lib/rss-feeds'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { getSessionUser } from '@/lib/session'
@@ -161,6 +169,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
     : []
 
   const items: ArchiveItem[] = itemsRes.ok ? ((await itemsRes.json()) as ArchiveItem[]) : []
+  const ranks: Record<string, number> =
+    items.length > 0
+      ? await fetch(`${apiUrl}/api/top-lists/ranks?ids=${items.map((i) => i.id).join(',')}`, {
+          next: { revalidate: 60 },
+        })
+          .then((res) => (res.ok ? res.json() : { ranks: {} }))
+          .then((data: { ranks: Record<string, number> }) => data.ranks)
+          .catch(() => ({}))
+      : {}
   // Shared play queue for every playable archive item, in list order — lets
   // playback auto-advance to the next track on 'ended' instead of just stopping.
   const archiveQueue: PlayerTrack[] = items
@@ -527,16 +544,19 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                               >
                                 {videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={videoEmbedUrl} />}
                                 <div className="ch-archive-item-header">
-                                  {item.bannerUrl ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                      src={item.bannerUrl}
-                                      alt=""
-                                      className="ch-archive-item-thumb"
-                                    />
-                                  ) : (
-                                    <AvatarTile size="xs" name={item.title} />
-                                  )}
+                                  <span style={{ position: 'relative', display: 'inline-flex' }}>
+                                    {item.bannerUrl ? (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img
+                                        src={item.bannerUrl}
+                                        alt=""
+                                        className="ch-archive-item-thumb"
+                                      />
+                                    ) : (
+                                      <AvatarTile size="xs" name={item.title} />
+                                    )}
+                                    {ranks[item.id] && <RankBadge rank={ranks[item.id]!} />}
+                                  </span>
                                   <div className="ch-archive-item-meta">
                                     <div className="ch-archive-item-title">{item.title}</div>
                                     <div className="ch-archive-item-date">

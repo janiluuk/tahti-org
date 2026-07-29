@@ -96,6 +96,7 @@ interface PlayerState {
 
 const VOLUME_STORAGE_KEY = 'tahti-player-volume'
 const MUTED_STORAGE_KEY = 'tahti-player-muted'
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
 function readStoredVolume(): number {
   if (typeof window === 'undefined') return 1
@@ -166,6 +167,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
    * once consumed, when the listener explicitly starts a different live stream, or
    * on close(). */
   const radioResumeRef = useRef<PlayerTrack | null>(null)
+  /** Archive track ids a listen-event has already been recorded for this
+   * session, so the threshold check below only ever fires once per track. */
+  const recordedListenRef = useRef<Set<string>>(new Set())
   const [state, setState] = useState<PlayerState>({
     track: null,
     playing: false,
@@ -484,6 +488,24 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     repeatRef.current = repeat
   }, [repeat])
+
+  // Counts a "listen" toward top-lists once a track has played long enough
+  // to be a real listen (30s, or halfway through a shorter track) — fires
+  // at most once per track per session; the API dedupes per listener/day too.
+  useEffect(() => {
+    const track = state.track
+    if (!track || track.kind !== 'archive') return
+    if (recordedListenRef.current.has(track.id)) return
+    const threshold = state.duration > 0 ? Math.min(30, state.duration * 0.5) : 30
+    if (state.currentTime < threshold) return
+    recordedListenRef.current.add(track.id)
+    fetch(`${API_URL}/api/listen-events`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archiveItemId: track.id }),
+    }).catch(() => undefined)
+  }, [state.track, state.currentTime, state.duration])
 
   /** Appends to the queue — starts one from the current track if none exists yet. */
   const addToQueue = useCallback(

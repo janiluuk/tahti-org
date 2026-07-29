@@ -1259,6 +1259,178 @@
   border-color: var(--cyan);
 }
 
+/* ---- Top lists tab ---- */
+.top-lists-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tahti-space-4);
+}
+
+.top-lists-latest-release {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--tahti-space-3);
+  padding: var(--tahti-space-3);
+  border-radius: var(--tahti-radius-lg, 12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.top-lists-latest-release:hover {
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+
+.top-lists-latest-release__label {
+  position: absolute;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.top-lists-latest-release__art {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.top-lists-latest-release__art--fallback {
+  background: color-mix(in srgb, var(--cyan) 12%, var(--card2, #151b2c));
+}
+
+.top-lists-latest-release__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.top-lists-latest-release__title {
+  color: var(--text);
+  font-weight: 600;
+  font-size: var(--tahti-text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-lists-latest-release__artist {
+  color: var(--muted);
+  font-size: var(--tahti-text-xs, 0.75rem);
+}
+
+.top-lists-period-toggle,
+.top-lists-kind-tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.top-lists-period-btn,
+.top-lists-kind-tab {
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--tahti-radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: var(--tahti-text-xs, 0.75rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.top-lists-period-btn:hover,
+.top-lists-kind-tab:hover {
+  color: var(--text);
+}
+
+.top-lists-period-btn--active,
+.top-lists-kind-tab--active {
+  color: var(--tahti-bg, #0a0f1e);
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.top-lists-ranked-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.top-lists-ranked-item {
+  display: flex;
+  align-items: center;
+  gap: var(--tahti-space-3);
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.top-lists-ranked-item__rank {
+  width: 1.75rem;
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--muted);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.top-lists-ranked-item__art {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.top-lists-ranked-item__art--fallback {
+  background: color-mix(in srgb, var(--cyan) 12%, var(--card2, #151b2c));
+}
+
+.top-lists-ranked-item__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  text-decoration: none;
+  flex: 1;
+}
+
+.top-lists-ranked-item__title {
+  color: var(--text);
+  font-size: var(--tahti-text-sm);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-lists-ranked-item__artist {
+  color: var(--muted);
+  font-size: var(--tahti-text-xs, 0.75rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-lists-ranked-item__count {
+  color: var(--muted);
+  font-size: var(--tahti-text-xs, 0.75rem);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 /* ---- Artist directory ---- */
 .artist-directory__controls {
   display: flex;
