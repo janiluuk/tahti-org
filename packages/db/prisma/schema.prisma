@@ -501,6 +501,15 @@ enum CloudImportStatus {
   @@schema("core")
 }
 
+enum TrackReactionType {
+  LOVE
+  LAUGH
+  SURPRISE
+  HANDS_UP
+
+  @@schema("engagement")
+}
+
 // ── Core schema ───────────────────────────────────────────────────────────────
 
 model CloudImportJob {
@@ -615,6 +624,7 @@ model User {
   artistFollowing       ArtistFollow[]       @relation("ArtistFollowing")
   archiveItemLikes      ArchiveItemLike[]
   archiveItemReposts    ArchiveItemRepost[]
+  trackReactions        TrackReaction[]
   conversationParticipations ConversationParticipant[]
   messagesSent          Message[]
   supportTickets        SupportTicket[]      @relation("SupportTicketArtist")
@@ -1230,6 +1240,7 @@ model ArchiveItem {
   comments        Comment[]
   likes           ArchiveItemLike[]
   reposts         ArchiveItemRepost[]
+  reactions       TrackReaction[]
   radioPlayLogs   RadioPlayLog[]
 
   @@index([channelId, createdAt(sort: Desc)])
@@ -1577,6 +1588,26 @@ model ArchiveItemRepost {
 
   @@id([userId, archiveItemId])
   @@index([archiveItemId])
+  @@schema("engagement")
+}
+
+// A listener reacting to a specific moment in a track — pinned to the waveform
+// position it was left at (positionSec), shown to every listener as a subtly
+// animated marker. Distinct from ArchiveItemLike: a user may leave many of
+// these on the same track (different types, different timestamps), and a
+// LOVE reaction additionally posts a "{user} loved {track}" chat message
+// (see routes/reactions/track.ts).
+model TrackReaction {
+  id            String            @id @default(cuid())
+  archiveItemId String
+  archiveItem   ArchiveItem       @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          TrackReactionType
+  positionSec   Float
+  createdAt     DateTime          @default(now())
+
+  @@index([archiveItemId, positionSec])
   @@schema("engagement")
 }
 

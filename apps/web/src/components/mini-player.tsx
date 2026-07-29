@@ -3,12 +3,82 @@
 
 'use client'
 
-import { useState, useCallback, type DragEvent } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef, type DragEvent } from 'react'
 import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { AddToCollectionPanel } from '@/components/add-to-collection-panel'
+import { ArchiveWaveform, type WaveformMarker } from '@/components/archive-waveform'
+import { LoginPromptModal } from '@/components/login-prompt-modal'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+
+type TrackReactionType = 'LOVE' | 'LAUGH' | 'SURPRISE' | 'HANDS_UP'
+
+interface TrackReactionItem {
+  id: string
+  type: TrackReactionType
+  positionSec: number
+  createdAt: string
+}
+
+interface TracklistCue {
+  startSec: number
+  title: string
+  artist?: string | null
+}
+
+interface TrackPlaybackDetails {
+  title: string
+  artistName: string
+  artistAvatarUrl: string | null
+  channelSlug: string
+  tracklist: TracklistCue[] | null
+  peaks: number[] | null
+  reactions: TrackReactionItem[]
+}
+
+const REACTION_TYPES: { type: TrackReactionType; emoji: string; label: string }[] = [
+  { type: 'LOVE', emoji: '❤️', label: 'Love' },
+  { type: 'LAUGH', emoji: '😂', label: 'Laugh' },
+  { type: 'SURPRISE', emoji: '😮', label: 'Surprise' },
+  { type: 'HANDS_UP', emoji: '🙌', label: 'Hands up' },
+]
+
+/** Waveform peaks + reaction markers + show identity for the currently-loaded archive
+ * track — a visual extra, so any fetch failure just leaves details null (the plain
+ * progress bar and meta block still work fine without it). Polls while the sheet is
+ * open so other listeners' reactions show up without a manual refresh. */
+function useTrackPlaybackDetails(trackId: string | null) {
+  const [details, setDetails] = useState<TrackPlaybackDetails | null>(null)
+
+  useEffect(() => {
+    setDetails(null)
+    if (!trackId) return
+    let cancelled = false
+
+    async function fetchDetails() {
+      try {
+        const res = await fetch(`${API_URL}/api/reactions/track/${trackId}`)
+        if (!res.ok || cancelled) return
+        const data = (await res.json()) as TrackPlaybackDetails
+        if (!cancelled) setDetails(data)
+      } catch {
+        // waveform/reactions are a visual extra, not required for playback
+      }
+    }
+
+    void fetchDetails()
+    const interval = window.setInterval(() => void fetchDetails(), 15_000)
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
+  }, [trackId])
+
+  return [details, setDetails] as const
+}
 
 export function formatTime(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) return '0:00'
@@ -176,10 +246,73 @@ function FullPlayerSheet({
 }) {
   const progress = duration > 0 ? currentTime / duration : 0
   const seekable = track.kind === 'archive' && duration > 0
+  const [details, setDetails] = useTrackPlaybackDetails(track.kind === 'archive' ? track.id : null)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [postingReaction, setPostingReaction] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', onChange)
+    return () => document.removeEventListener('fullscreenchange', onChange)
+  }, [])
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen()
+    } else {
+      void rootRef.current?.requestFullscreen()
+    }
+  }
+
+  async function postReaction(type: TrackReactionType) {
+    if (track.kind !== 'archive' || postingReaction) return
+    setPostingReaction(true)
+    try {
+      const res = await fetch(`${API_URL}/api/reactions/track/${track.id}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, positionSec: currentTime }),
+      })
+      if (res.status === 401) {
+        setShowLoginPrompt(true)
+        return
+      }
+      if (!res.ok) return
+      const created = (await res.json()) as TrackReactionItem
+      setDetails((prev) => (prev ? { ...prev, reactions: [...prev.reactions, created] } : prev))
+    } finally {
+      setPostingReaction(false)
+    }
+  }
+
+  const markers: WaveformMarker[] = useMemo(() => {
+    if (!details || duration <= 0) return []
+    return details.reactions.map((r) => ({
+      id: r.id,
+      ratio: Math.min(1, Math.max(0, r.positionSec / duration)),
+      emoji: REACTION_TYPES.find((t) => t.type === r.type)?.emoji ?? '❤️',
+    }))
+  }, [details, duration])
+
+  const currentCue = useMemo(() => {
+    if (!details?.tracklist || details.tracklist.length === 0) return null
+    const sorted = [...details.tracklist].sort((a, b) => a.startSec - b.startSec)
+    let cue = sorted[0]!
+    for (const entry of sorted) {
+      if (entry.startSec <= currentTime) cue = entry
+      else break
+    }
+    return cue
+  }, [details?.tracklist, currentTime])
 
   return (
     <div
-      className={`full-player${closing ? ' full-player--closing' : ''}`}
+      ref={rootRef}
+      data-tahti-ui="brand"
+      className={`full-player${closing ? ' full-player--closing' : ''}${isFullscreen ? ' full-player--fullscreen' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label="Now playing"
@@ -210,6 +343,36 @@ function FullPlayerSheet({
           </svg>
           Now playing
         </button>
+        <button
+          type="button"
+          className="full-player__fullscreen-toggle"
+          onClick={toggleFullscreen}
+          aria-pressed={isFullscreen}
+          aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+          title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+        >
+          {isFullscreen ? (
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path
+                d="M6 2v3a1 1 0 0 1-1 1H2M10 2v3a1 1 0 0 0 1 1h3M6 14v-3a1 1 0 0 0-1-1H2M10 14v-3a1 1 0 0 1 1-1h3"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path
+                d="M2 5V2h3M11 2h3v3M14 11v3h-3M5 14H2v-3"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
       </div>
 
       <div className="full-player__art-wrap">
@@ -221,50 +384,111 @@ function FullPlayerSheet({
         )}
       </div>
 
-      <div className="full-player__meta">
-        {track.href ? (
-          <Link href={track.href} className="full-player__title" onClick={onClose}>
-            {track.title}
-          </Link>
-        ) : (
-          <span className="full-player__title">{track.title}</span>
-        )}
-        {track.subtitle && <span className="full-player__subtitle">{track.subtitle}</span>}
-        {track.kind === 'live' && (
-          <span className="mini-player__badge full-player__badge">
-            {track.isReplay ? 'REPLAY' : 'LIVE'}
-          </span>
-        )}
-      </div>
+      {isFullscreen && details ? (
+        <div className="full-player__cinema-meta">
+          <div key={details.title} className="full-player__cinema-show-name">
+            {details.title}
+          </div>
+          <div key={details.artistName} className="full-player__cinema-identity">
+            {details.artistAvatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={details.artistAvatarUrl} alt="" className="full-player__cinema-avatar" />
+            ) : (
+              <AvatarTile size="sm" name={details.artistName} />
+            )}
+            <span>{details.artistName}</span>
+          </div>
+          {currentCue && (
+            <div
+              key={`${currentCue.startSec}-${currentCue.title}`}
+              className="full-player__cinema-cue"
+            >
+              <span className="full-player__cinema-cue-title">{currentCue.title}</span>
+              {currentCue.artist && (
+                <span className="full-player__cinema-cue-artist">{currentCue.artist}</span>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="full-player__meta">
+          {track.href ? (
+            <Link href={track.href} className="full-player__title" onClick={onClose}>
+              {track.title}
+            </Link>
+          ) : (
+            <span className="full-player__title">{track.title}</span>
+          )}
+          {track.subtitle && <span className="full-player__subtitle">{track.subtitle}</span>}
+          {track.kind === 'live' && (
+            <span className="mini-player__badge full-player__badge">
+              {track.isReplay ? 'REPLAY' : 'LIVE'}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="full-player__seek">
         {seekable ? (
           <>
-            <button
-              type="button"
-              className="full-player__progress"
-              aria-label="Seek"
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect()
-                seek((e.clientX - rect.left) / rect.width)
-              }}
-            >
-              <span
-                className="full-player__progress-fill"
-                style={{ width: `${progress * 100}%` }}
+            {details?.peaks && details.peaks.length > 0 ? (
+              <ArchiveWaveform
+                peaks={details.peaks}
+                progress={progress}
+                onSeek={seek}
+                markers={markers}
+                size={isFullscreen ? 'large' : 'default'}
               />
-              <span
-                className="full-player__progress-thumb"
-                style={{ left: `${progress * 100}%` }}
-              />
-            </button>
+            ) : (
+              <button
+                type="button"
+                className="full-player__progress"
+                aria-label="Seek"
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect()
+                  seek((e.clientX - rect.left) / rect.width)
+                }}
+              >
+                <span
+                  className="full-player__progress-fill"
+                  style={{ width: `${progress * 100}%` }}
+                />
+                <span
+                  className="full-player__progress-thumb"
+                  style={{ left: `${progress * 100}%` }}
+                />
+              </button>
+            )}
             <div className="full-player__times">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
+            {track.kind === 'archive' && (
+              <div className="full-player__reactions" role="group" aria-label="React to this track">
+                {REACTION_TYPES.map((r) => (
+                  <button
+                    key={r.type}
+                    type="button"
+                    className="full-player__reaction-btn"
+                    onClick={() => void postReaction(r.type)}
+                    disabled={postingReaction}
+                    aria-label={r.label}
+                    title={r.label}
+                  >
+                    {r.emoji}
+                  </button>
+                ))}
+              </div>
+            )}
           </>
         ) : null}
       </div>
+      {showLoginPrompt && (
+        <LoginPromptModal
+          message="Sign in to react to this track."
+          onClose={() => setShowLoginPrompt(false)}
+        />
+      )}
 
       <div className="full-player__transport">
         <button
