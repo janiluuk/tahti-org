@@ -29,7 +29,8 @@ const registerRoute: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const { email, password, username, displayName, hcaptchaToken } = parsed.data
+      const { email, password, username, displayName, gender, countryCode, hcaptchaToken } =
+        parsed.data
       if (!(await verifyHcaptcha(hcaptchaToken))) {
         return reply.status(400).send({ error: 'hCaptcha verification failed' })
       }
@@ -63,6 +64,8 @@ const registerRoute: FastifyPluginAsync = async (fastify) => {
             passwordHash,
             username,
             displayName,
+            gender: gender || null,
+            countryCode: countryCode || null,
             membership: { create: {} },
             channel: {
               create: {

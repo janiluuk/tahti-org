@@ -19,6 +19,11 @@ export const RegisterSchema = z.object({
     .min(1, 'Display name is required')
     .max(64, 'Display name too long')
     .trim(),
+  // Both optional and independently nullable — the signup form's single
+  // "prefer not to say" toggle clears both together, but the API doesn't
+  // require them to travel as a pair.
+  gender: z.string().trim().max(40).nullable().optional(),
+  countryCode: z.string().length(2).toUpperCase().nullable().optional(),
   hcaptchaToken: z.string().optional(),
 })
 

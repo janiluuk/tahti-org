@@ -2341,6 +2341,17 @@ a.signup-wizard__link:hover {
   color: var(--text);
 }
 
+.signup-decline-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+
 .signup-genre-grid {
   display: flex;
   flex-wrap: wrap;

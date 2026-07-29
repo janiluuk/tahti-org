@@ -19,11 +19,14 @@ import {
 } from '@tahti/ui'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { SIGNUP_TIER_KEY, type SignupTier } from '@/lib/signup'
+import { COUNTRY_OPTIONS } from '@/lib/country-options'
+import { flagEmoji } from '@/lib/flag-emoji'
 import { register } from '@/app/auth/actions'
 import { SignupWizard } from './signup-wizard'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 const HANDLE_PATTERN = /^[a-z0-9_-]{2,32}$/
+const GENDER_OPTIONS = ['Woman', 'Man', 'Non-binary', 'Other']
 
 type HandleStatus = 'idle' | 'checking' | 'available' | 'taken'
 
@@ -35,6 +38,9 @@ export function SignupForm() {
   const [handle, setHandle] = useState('')
   const [handleStatus, setHandleStatus] = useState<HandleStatus>('idle')
   const [handleSuggestions, setHandleSuggestions] = useState<string[]>([])
+  const [gender, setGender] = useState('')
+  const [countryCode, setCountryCode] = useState('')
+  const [declineDemographics, setDeclineDemographics] = useState(false)
   const { captchaRef, required: captchaRequired, getToken, reset } = useHcaptcha(!done)
 
   useEffect(() => {
@@ -86,6 +92,8 @@ export function SignupForm() {
       username: (form.get('username') as string).toLowerCase().trim(),
       displayName: form.get('displayName') as string,
       password,
+      gender: declineDemographics ? null : gender || null,
+      countryCode: declineDemographics ? null : countryCode || null,
       hcaptchaToken,
     })
 
@@ -282,6 +290,54 @@ export function SignupForm() {
                     </span>
                   </label>
                 </div>
+              </fieldset>
+
+              <fieldset className="signup-fieldset">
+                <legend className="signup-fieldset__legend">About you (optional)</legend>
+                <div className="signup-password-row">
+                  <Field label="Gender" htmlFor="signup-gender">
+                    <select
+                      id="signup-gender"
+                      className="ui-input"
+                      value={gender}
+                      disabled={declineDemographics}
+                      onChange={(e) => setGender(e.target.value)}
+                    >
+                      <option value="">Select (optional)</option>
+                      {GENDER_OPTIONS.map((g) => (
+                        <option key={g} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+
+                  <Field label="Country" htmlFor="signup-country">
+                    <select
+                      id="signup-country"
+                      className="ui-input"
+                      value={countryCode}
+                      disabled={declineDemographics}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                    >
+                      <option value="">Select (optional)</option>
+                      {COUNTRY_OPTIONS.map(({ code, label }) => (
+                        <option key={code} value={code}>
+                          {flagEmoji(code)} {label}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <label className="signup-decline-toggle">
+                  <input
+                    type="checkbox"
+                    checked={declineDemographics}
+                    onChange={(e) => setDeclineDemographics(e.target.checked)}
+                  />
+                  <span>Prefer not to say</span>
+                </label>
               </fieldset>
 
               {captchaRequired && <div ref={captchaRef} />}
