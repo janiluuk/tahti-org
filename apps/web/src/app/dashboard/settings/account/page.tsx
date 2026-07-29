@@ -9,6 +9,7 @@ import { getDashboardUser } from '@/lib/dashboard-session'
 import MembershipPanel from '../../membership-panel'
 import PrivacyPanel from '../../privacy-panel'
 import { TwoFactorPanel } from '../../two-factor-panel'
+import StoragePanel from '../../storage-panel'
 
 interface MembershipInfo {
   status: string
@@ -19,6 +20,11 @@ interface MembershipInfo {
   renewalDueAt?: string | null
   hasStripeSubscription?: boolean
   subscriptionMigrationRequired?: boolean
+}
+
+interface StorageInfo {
+  quotaBytes: number
+  usedBytes: number
 }
 
 async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
@@ -42,9 +48,10 @@ export default async function AccountSettingsPage() {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [user, membershipInfo] = await Promise.all([
+  const [user, membershipInfo, storageInfo] = await Promise.all([
     getDashboardUser(),
     apiFetch<MembershipInfo>(apiUrl, cookie, '/api/me/membership'),
+    apiFetch<StorageInfo>(apiUrl, cookie, '/api/me/storage'),
   ])
   if (!user) redirect('/login')
 
@@ -81,6 +88,10 @@ export default async function AccountSettingsPage() {
       )}
 
       <TwoFactorPanel />
+
+      {storageInfo && (
+        <StoragePanel quotaBytes={storageInfo.quotaBytes} usedBytes={storageInfo.usedBytes} />
+      )}
 
       <PrivacyPanel username={user.username} apiUrl={apiUrl} />
     </div>

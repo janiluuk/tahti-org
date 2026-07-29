@@ -23,6 +23,8 @@ export async function syncActiveVersionToTrack(
       streamKey: active.streamKey,
       flacKey: active.flacKey,
       durationSec: active.durationSec,
+      r2Key: active.r2Key,
+      r2SizeBytes: active.r2SizeBytes,
       status: 'READY',
     },
   })

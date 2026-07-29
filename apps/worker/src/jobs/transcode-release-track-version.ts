@@ -8,6 +8,7 @@ import { join, extname } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
 import { prisma, syncActiveVersionToTrack } from '@tahti/db'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { pruneOldR2VersionsForTrack, writeThroughToR2 } from '../lib/release-r2-sync.js'
 
 function ffprobeMetadata(
   filePath: string,
@@ -113,11 +114,15 @@ export async function processTranscodeReleaseTrackVersionJob(job: Job): Promise<
       await uploadFile(flacKey, flacPath, 'audio/flac')
     }
 
+    const r2 = await writeThroughToR2(srcPath, `${base}/original.${ext}`, `audio/${ext}`, userId)
+
     await prisma.releaseTrackVersion.update({
       where: { id: versionId },
       data: {
         streamKey,
         flacKey: flacKey ?? null,
+        r2Key: r2?.r2Key ?? null,
+        r2SizeBytes: r2?.sizeBytes ?? null,
         status: 'READY',
       },
     })
@@ -125,6 +130,8 @@ export async function processTranscodeReleaseTrackVersionJob(job: Job): Promise<
     if (version.isActive) {
       await syncActiveVersionToTrack(prisma, trackId)
     }
+
+    await pruneOldR2VersionsForTrack(trackId, userId)
   } catch (err) {
     await prisma.releaseTrackVersion.update({
       where: { id: versionId },

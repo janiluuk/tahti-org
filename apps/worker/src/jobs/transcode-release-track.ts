@@ -8,6 +8,7 @@ import { join, extname } from 'node:path'
 import ffmpeg from 'fluent-ffmpeg'
 import { prisma } from '@tahti/db'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
+import { writeThroughToR2 } from '../lib/release-r2-sync.js'
 
 function ffprobeMetadata(
   filePath: string,
@@ -110,11 +111,22 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
       await uploadFile(flacKey, flacPath, 'audio/flac')
     }
 
+    // Long-term lossless mirror — the original upload, bit-for-bit, not the
+    // (possibly re-encoded) FLAC derivative above.
+    const r2 = await writeThroughToR2(
+      srcPath,
+      `${base}/original.${ext}`,
+      `audio/${ext}`,
+      track.release.userId,
+    )
+
     await prisma.releaseTrack.update({
       where: { id: trackId },
       data: {
         streamKey,
         flacKey: flacKey ?? null,
+        r2Key: r2?.r2Key ?? null,
+        r2SizeBytes: r2?.sizeBytes ?? null,
         status: 'READY',
       },
     })
