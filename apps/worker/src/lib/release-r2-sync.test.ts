@@ -60,7 +60,9 @@ describe('writeThroughToR2', () => {
 })
 
 describe('pruneOldR2VersionsForTrack', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('keeps the 4 most recent R2-backed versions and purges the rest', async () => {
     prismaMock.releaseTrackVersion.findMany.mockResolvedValue([
