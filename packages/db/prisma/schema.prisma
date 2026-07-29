@@ -631,6 +631,7 @@ model User {
   totpChallenges        TotpChallenge[]
   membership            Membership?
   channel               Channel?
+  storageQuota          UserStorageQuota?
   motionsProposed       Motion[]
   votes                 Vote[]
   motionComments        MotionComment[]
@@ -704,6 +705,22 @@ model ArtistEvent {
   createdAt DateTime @default(now())
 
   @@index([userId, startAt])
+  @@schema("core")
+}
+
+// Per-user storage quota for the R2-backed long-term store. One row per user,
+// created lazily on first check (default 500MB free-tier allowance). usedBytes
+// only counts objects that have actually been written through to R2 — local
+// MinIO cache usage isn't quota'd, since it's transient (see [[hosting-decisions]]
+// for the "R2 long-term, local disk hot cache only" split).
+model UserStorageQuota {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quotaBytes BigInt   @default(524288000)
+  usedBytes  BigInt   @default(0)
+  updatedAt  DateTime @updatedAt
+
   @@schema("core")
 }
 
