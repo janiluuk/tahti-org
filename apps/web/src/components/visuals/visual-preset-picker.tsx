@@ -12,7 +12,11 @@ import {
   type VisualPreset,
   type ColorScheme,
 } from '@tahti/shared'
+import { brandTokens } from '@tahti/ui'
 import { ChannelVisualizer } from './channel-visualizer'
+
+const WHITE = brandTokens.color.base.white
+const BLACK = brandTokens.color.base.black
 
 interface Props {
   value: VisualPreset
@@ -99,8 +103,8 @@ function StaticPresetThumbnail({ preset, scheme }: { preset: VisualPreset; schem
           background: `linear-gradient(180deg, ${scheme.muted}, ${scheme.accent})`,
           backgroundImage: [
             `radial-gradient(circle at 30% 30%, ${scheme.highlight}aa 0 12%, transparent 13%)`,
-            `radial-gradient(ellipse 30% 12% at 60% 40%, #fff5 0 100%, transparent 100%)`,
-            `radial-gradient(ellipse 24% 10% at 25% 55%, #fff4 0 100%, transparent 100%)`,
+            `radial-gradient(ellipse 30% 12% at 60% 40%, ${WHITE}55 0 100%, transparent 100%)`,
+            `radial-gradient(ellipse 24% 10% at 25% 55%, ${WHITE}44 0 100%, transparent 100%)`,
             `linear-gradient(180deg, ${scheme.muted}, ${scheme.accent})`,
           ].join(', '),
         }}
@@ -147,7 +151,7 @@ function StaticPresetThumbnail({ preset, scheme }: { preset: VisualPreset; schem
       className="visual-preset-picker__thumb"
       aria-hidden
       style={{
-        background: '#000',
+        background: BLACK,
         backgroundImage: [
           `radial-gradient(circle at 30% 35%, ${scheme.accent} 0 8%, transparent 20%)`,
           `radial-gradient(circle at 65% 60%, ${scheme.highlight} 0 5%, transparent 14%)`,
