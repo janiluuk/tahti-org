@@ -1,0 +1,199 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Copyright (C) 2026 Tahti ry <https://tahti.live> */
+
+/* Full-viewport trim editor — breaks out of dashboard/admin chrome so the
+   waveform gets as much space as possible, per explicit user request. */
+.ann-editor-fullpage {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body, inherit);
+}
+
+.ann-editor-rail {
+  flex: 0 0 auto;
+  width: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  border-right: 1px solid var(--border);
+  background: var(--card2, var(--bg));
+  overflow-y: auto;
+  transition: width 0.15s ease;
+}
+
+.ann-editor-rail--open {
+  width: 280px;
+  align-items: stretch;
+}
+
+.ann-editor-rail__toggle {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.ann-editor-rail--open .ann-editor-rail__toggle {
+  align-self: flex-end;
+}
+
+.ann-editor-rail__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.ann-editor-rail__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.ann-editor-rail__item:hover {
+  background: color-mix(in srgb, var(--cyan, #22d3ee) 8%, transparent);
+}
+
+.ann-editor-rail__item--active {
+  border-color: color-mix(in srgb, var(--cyan, #22d3ee) 50%, transparent);
+  background: color-mix(in srgb, var(--cyan, #22d3ee) 10%, transparent);
+}
+
+.ann-editor-rail__item-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ann-editor-rail__item-meta {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.ann-editor-main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.ann-editor-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.ann-editor-topbar__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.ann-editor-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.ann-editor-waveform-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ann-editor-waveform-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.ann-editor-waveform {
+  flex: 1 1 auto;
+  min-height: 160px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 75%, black);
+  padding: 8px 12px;
+}
+
+.ann-editor-original-audio {
+  width: 100%;
+  height: 34px;
+}
+
+.ann-editor-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.ann-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.ann-editor-field input {
+  width: 100px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.ann-editor-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.ann-editor-status {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.ann-editor-status--error {
+  color: #f87171;
+}
+
+.ann-editor-status--processing {
+  color: #fbbf24;
+}

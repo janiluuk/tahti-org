@@ -38,6 +38,7 @@ export type ProgrammeView = {
   fallbackMode: FallbackMode
   fallbackEnabled: boolean
   fallbackAutoEnroll: boolean
+  announcementsEnabled: boolean
   items: ProgrammeItemRow[]
   library: ProgrammeLibraryTrackRow[]
 }
@@ -67,6 +68,7 @@ export async function updateChannelProgramme(payload: {
   fallbackMode?: FallbackMode
   fallbackEnabled?: boolean
   fallbackAutoEnroll?: boolean
+  announcementsEnabled?: boolean
   items?: Array<{
     archiveItemId: string
     isFallback: boolean

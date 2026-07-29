@@ -10,6 +10,9 @@ import {
   buildFallbackPlaybackRows,
   renderFallbackM3u,
   channelArchiveCacheDir,
+  interleaveAnnouncements,
+  type AnnouncementPlaybackRow,
+  type FallbackPlaybackRow,
 } from './fallback-playlist.js'
 
 const base = {
@@ -193,5 +196,64 @@ describe('renderFallbackM3u', () => {
 describe('channelArchiveCacheDir', () => {
   it('joins root and channel id without trailing slash on root', () => {
     expect(channelArchiveCacheDir('/archive-cache/', 'ch-1')).toBe('/archive-cache/ch-1')
+  })
+})
+
+describe('interleaveAnnouncements', () => {
+  const track = (id: string): FallbackPlaybackRow => ({
+    id,
+    title: id,
+    playbackKey: `mp3/${id}.mp3`,
+    durationSec: 100,
+  })
+  const announcement = (
+    id: string,
+    scheduleMode: AnnouncementPlaybackRow['scheduleMode'],
+    everyNth: number | null = null,
+  ): AnnouncementPlaybackRow => ({
+    id,
+    title: id,
+    playbackKey: `mp3/${id}.mp3`,
+    durationSec: 10,
+    scheduleMode,
+    everyNth,
+  })
+
+  it('is a no-op with no announcements at all', () => {
+    const rows = [track('a'), track('b')]
+    expect(interleaveAnnouncements(rows, [], [])).toEqual(rows)
+  })
+
+  it('is a no-op on an empty track list even with announcements configured', () => {
+    expect(interleaveAnnouncements([], [announcement('sys1', 'AFTER_EVERY')], [])).toEqual([])
+  })
+
+  it('does nothing for the system half when there are no system announcements, even with own clips', () => {
+    const rows = [track('a'), track('b'), track('c')]
+    const result = interleaveAnnouncements(rows, [], [track('own1')])
+    // own clips are probabilistic, but no 'sys' ids should ever appear
+    expect(result.some((r) => r.id.startsWith('sys'))).toBe(false)
+  })
+
+  it('inserts an AFTER_EVERY clip after every single track', () => {
+    const rows = [track('a'), track('b'), track('c')]
+    const result = interleaveAnnouncements(rows, [announcement('sys1', 'AFTER_EVERY')], [])
+    expect(result.map((r) => r.id)).toEqual(['a', 'sys1', 'b', 'sys1', 'c', 'sys1'])
+  })
+
+  it('inserts an EVERY_NTH clip only at multiples of N', () => {
+    const rows = [track('a'), track('b'), track('c'), track('d')]
+    const result = interleaveAnnouncements(rows, [announcement('sys1', 'EVERY_NTH', 2)], [])
+    expect(result.map((r) => r.id)).toEqual(['a', 'b', 'sys1', 'c', 'd', 'sys1'])
+  })
+
+  it('combines multiple system schedules at the same boundary', () => {
+    const rows = [track('a'), track('b')]
+    const result = interleaveAnnouncements(
+      rows,
+      [announcement('always', 'AFTER_EVERY'), announcement('every2', 'EVERY_NTH', 2)],
+      [],
+    )
+    expect(result.map((r) => r.id)).toEqual(['a', 'always', 'b', 'always', 'every2'])
   })
 })

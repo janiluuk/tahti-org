@@ -105,6 +105,69 @@ export function renderFallbackM3u(entries: FallbackM3uEntry[]): string {
   return lines.join('\n') + '\n'
 }
 
+export type AnnouncementScheduleMode = 'AFTER_EVERY' | 'EVERY_NTH' | 'RANDOM'
+
+export type AnnouncementPlaybackRow = FallbackPlaybackRow & {
+  scheduleMode: AnnouncementScheduleMode
+  everyNth: number | null
+}
+
+/** Roughly 1 in this many track boundaries gets a RANDOM-mode clip — a fixed
+ * probability rather than a fixed count, so short and long rotations both get
+ * a reasonable, unobtrusive sprinkling instead of none or too many. */
+const RANDOM_ANNOUNCEMENT_CHANCE = 1 / 15
+
+/** Splices announcement clips into an already-ordered track list. System
+ * clips (with a configured schedule) and a channel's own clips (always
+ * RANDOM-spaced, no configurable schedule) are independent — both can fire
+ * at the same boundary. No system clips at all is a no-op for that half,
+ * regardless of whether the channel has its own clips enabled. */
+export function interleaveAnnouncements(
+  rows: FallbackPlaybackRow[],
+  systemAnnouncements: AnnouncementPlaybackRow[],
+  ownAnnouncements: FallbackPlaybackRow[],
+): FallbackPlaybackRow[] {
+  if (rows.length === 0) return rows
+  if (systemAnnouncements.length === 0 && ownAnnouncements.length === 0) return rows
+
+  const afterEvery = systemAnnouncements.filter((a) => a.scheduleMode === 'AFTER_EVERY')
+  const everyNth = systemAnnouncements.filter(
+    (a) => a.scheduleMode === 'EVERY_NTH' && a.everyNth != null && a.everyNth > 0,
+  )
+  const random = systemAnnouncements.filter((a) => a.scheduleMode === 'RANDOM')
+
+  let afterEveryIdx = 0
+  let randomIdx = 0
+  let ownIdx = 0
+  const out: FallbackPlaybackRow[] = []
+
+  for (let i = 0; i < rows.length; i++) {
+    out.push(rows[i]!)
+    const position = i + 1 // 1-based count of tracks played so far, for "every Nth"
+
+    if (afterEvery.length > 0) {
+      out.push(afterEvery[afterEveryIdx % afterEvery.length]!)
+      afterEveryIdx++
+    }
+
+    for (const clip of everyNth) {
+      if (position % clip.everyNth! === 0) out.push(clip)
+    }
+
+    if (random.length > 0 && Math.random() < RANDOM_ANNOUNCEMENT_CHANCE) {
+      out.push(random[randomIdx % random.length]!)
+      randomIdx++
+    }
+
+    if (ownAnnouncements.length > 0 && Math.random() < RANDOM_ANNOUNCEMENT_CHANCE) {
+      out.push(ownAnnouncements[ownIdx % ownAnnouncements.length]!)
+      ownIdx++
+    }
+  }
+
+  return out
+}
+
 /** Safe filename for a MinIO playback key under a channel cache directory (STREAM-009). */
 export function localCacheBasename(playbackKey: string): string {
   return playbackKey.replace(/\//g, '__')

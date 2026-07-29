@@ -23,6 +23,7 @@ export default async function SchedulePage() {
     fallbackMode: 'shuffle' as const,
     fallbackEnabled: true,
     fallbackAutoEnroll: true,
+    announcementsEnabled: true,
     items: [],
     library: [],
   }

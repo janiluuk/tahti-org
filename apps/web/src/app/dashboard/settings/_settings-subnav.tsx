@@ -13,6 +13,7 @@ const ITEMS = [
   { href: '/dashboard/settings/members', label: 'Members' },
   { href: '/dashboard/settings/comments', label: 'Comments' },
   { href: '/dashboard/settings/discovery', label: 'Discovery' },
+  { href: '/dashboard/settings/announcements', label: 'Announcements' },
   { href: '/dashboard/settings/connections', label: 'Connections' },
   { href: '/dashboard/settings/distribution', label: 'Radio & announcements' },
   { href: '/dashboard/settings/mentions', label: 'Mentions' },

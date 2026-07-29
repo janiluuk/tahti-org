@@ -157,6 +157,8 @@ import meRadioSlotBookings from './routes/me/radio-slot-bookings.js'
 import meArchiveRoutes from './routes/me/archive.js'
 import meArchiveBannerRoutes from './routes/me/archive-banner.js'
 import meProgrammeRoutes from './routes/me/programme.js'
+import meAnnouncementsRoutes from './routes/me/announcements.js'
+import adminAnnouncementsRoutes from './routes/admin/announcements.js'
 import meSocialRoutes from './routes/me/social.js'
 import socialTwitterRoutes from './routes/me/social-twitter.js'
 import socialInstagramRoutes from './routes/me/social-instagram.js'
@@ -641,6 +643,8 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meArchiveRoutes)
   await fastify.register(meArchiveBannerRoutes)
   await fastify.register(meProgrammeRoutes)
+  await fastify.register(meAnnouncementsRoutes)
+  await fastify.register(adminAnnouncementsRoutes)
   await fastify.register(meSocialRoutes)
   await fastify.register(socialTwitterRoutes)
   await fastify.register(socialInstagramRoutes)

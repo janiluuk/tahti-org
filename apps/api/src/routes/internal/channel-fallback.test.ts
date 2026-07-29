@@ -236,3 +236,128 @@ describe('GET /internal/channels/:channelId/fallback.m3u — Tahti Radio relays 
     })
   })
 })
+
+describe('GET /internal/channels/:channelId/fallback.m3u — announcements', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let channelId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
+    await prisma.announcementSettings.deleteMany({})
+
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}announce-artist@example.com`,
+      username: `${PREFIX}announce-artist`,
+      tier: 'ARTIST',
+    })
+    channelId = artist.channel!.id
+    await createReadyArchiveItem(prisma, channelId, 'Announce track one')
+    await createReadyArchiveItem(prisma, channelId, 'Announce track two')
+  })
+
+  afterAll(async () => {
+    await prisma.user.deleteMany({ where: { email: { startsWith: PREFIX } } })
+    await prisma.announcementSettings.deleteMany({})
+    await app.close()
+  })
+
+  async function fetchM3u() {
+    return app.inject({
+      method: 'GET',
+      url: `/internal/channels/${channelId}/fallback.m3u`,
+      headers: { authorization: `Bearer ${config.internalSecret}` },
+    })
+  }
+
+  it('does not affect the M3U when there are no announcement clips at all', async () => {
+    const res = await fetchM3u()
+    expect(res.body).toContain('Announce track one')
+    expect(res.body).toContain('Announce track two')
+    // exactly 2 tracks worth of #EXTINF lines, nothing extra
+    expect((res.body.match(/#EXTINF/g) ?? []).length).toBe(2)
+  })
+
+  it('interleaves an AFTER_EVERY system clip after every track', async () => {
+    const clip = await prisma.announcementClip.create({
+      data: {
+        channelId: null,
+        title: 'System ID',
+        audioKey: 'announcements/system/id.mp3',
+        originalAudioKey: 'announcements/system/id.mp3',
+        scheduleMode: 'AFTER_EVERY',
+      },
+    })
+
+    const res = await fetchM3u()
+    expect((res.body.match(/System ID/g) ?? []).length).toBe(2)
+
+    await prisma.announcementClip.delete({ where: { id: clip.id } })
+  })
+
+  it('a disabled system clip never appears', async () => {
+    const clip = await prisma.announcementClip.create({
+      data: {
+        channelId: null,
+        title: 'Disabled Announcement',
+        audioKey: 'announcements/system/off.mp3',
+        originalAudioKey: 'announcements/system/off.mp3',
+        scheduleMode: 'AFTER_EVERY',
+        isEnabled: false,
+      },
+    })
+
+    const res = await fetchM3u()
+    expect(res.body).not.toContain('Disabled Announcement')
+
+    await prisma.announcementClip.delete({ where: { id: clip.id } })
+  })
+
+  it('the global system-announcements kill-switch suppresses even an enabled clip', async () => {
+    const clip = await prisma.announcementClip.create({
+      data: {
+        channelId: null,
+        title: 'Killswitched Announcement',
+        audioKey: 'announcements/system/kill.mp3',
+        originalAudioKey: 'announcements/system/kill.mp3',
+        scheduleMode: 'AFTER_EVERY',
+      },
+    })
+    await prisma.announcementSettings.upsert({
+      where: { id: 'global' },
+      create: { id: 'global', systemEnabled: false },
+      update: { systemEnabled: false },
+    })
+
+    const res = await fetchM3u()
+    expect(res.body).not.toContain('Killswitched Announcement')
+
+    await prisma.announcementSettings.update({
+      where: { id: 'global' },
+      data: { systemEnabled: true },
+    })
+    await prisma.announcementClip.delete({ where: { id: clip.id } })
+  })
+
+  it("a channel's own announcement is suppressed when the channel disables announcements", async () => {
+    const clip = await prisma.announcementClip.create({
+      data: {
+        channelId,
+        title: 'My Own Jingle',
+        audioKey: 'announcements/own/jingle.mp3',
+        originalAudioKey: 'announcements/own/jingle.mp3',
+      },
+    })
+    await prisma.channel.update({ where: { id: channelId }, data: { announcementsEnabled: false } })
+
+    // RANDOM spacing is probabilistic — run several times to be confident it never appears
+    for (let i = 0; i < 20; i++) {
+      const res = await fetchM3u()
+      expect(res.body).not.toContain('My Own Jingle')
+    }
+
+    await prisma.channel.update({ where: { id: channelId }, data: { announcementsEnabled: true } })
+    await prisma.announcementClip.delete({ where: { id: clip.id } })
+  })
+})

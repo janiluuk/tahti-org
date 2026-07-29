@@ -124,6 +124,26 @@ enum ArchiveItemStatus {
   @@schema("channel")
 }
 
+// Scheduling for a system-wide (admin-managed) announcement clip within the
+// rotation. Only meaningful when AnnouncementClip.channelId is null — a
+// channel's own clips don't have a configurable schedule (see
+// interleaveAnnouncements in packages/shared/src/fallback-playlist.ts).
+enum AnnouncementScheduleMode {
+  AFTER_EVERY
+  EVERY_NTH
+  RANDOM
+
+  @@schema("channel")
+}
+
+enum AnnouncementRenderStatus {
+  READY
+  PROCESSING
+  ERROR
+
+  @@schema("channel")
+}
+
 enum ArchiveContentType {
   LIVE
   STUDIO
@@ -947,6 +967,12 @@ model Channel {
   // deleting the collection just reverts to the default rather than erroring.
   activeFallbackCollectionId String?
   activeFallbackCollection   Collection? @relation("ChannelActiveFallbackCollection", fields: [activeFallbackCollectionId], references: [id], onDelete: SetNull)
+  // Whether this channel's OWN uploaded announcement clips (station-ID style)
+  // get interleaved into its rotation. Default on. System-wide announcements
+  // (admin-managed) are unaffected by this — they play regardless, gated only
+  // by AnnouncementSettings.systemEnabled.
+  announcementsEnabled Boolean @default(true)
+  announcementClips    AnnouncementClip[]
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
   // Manage panel stats: highest concurrent-listener count ever observed, and a
@@ -1258,6 +1284,52 @@ model ArchiveItem {
 
   @@index([channelId, createdAt(sort: Desc)])
   @@index([channelId, isPublic, status])
+  @@schema("channel")
+}
+
+// A short pre-mixed audio clip (station-ID / announcement) interleaved into a
+// channel's rotation. channelId null = system-wide, admin-managed, played
+// into every channel's rotation subject to AnnouncementSettings.systemEnabled
+// and this clip's own isEnabled + scheduleMode. channelId set = one artist's
+// own library, played subject to Channel.announcementsEnabled — always
+// RANDOM-ish spacing, no configurable schedule (scheduleMode/everyNth are
+// ignored for these). No mp3Key/flacKey pair like ArchiveItem — a single
+// audioKey is enough, since Liquidsoap only ever needs one resolvable file
+// per playlist row (see packages/shared/src/archive-playback.ts).
+model AnnouncementClip {
+  id           String                   @id @default(cuid())
+  channelId    String?
+  channel      Channel?                 @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  title        String
+  audioKey     String
+  // Never overwritten after upload — the trim editor always re-renders from
+  // this file (not from a previous trim), so edits stay non-destructive and
+  // the editor can always offer an "original" preview to A/B against.
+  originalAudioKey String
+  durationSec  Int?
+  isEnabled    Boolean                  @default(true)
+  scheduleMode AnnouncementScheduleMode @default(RANDOM)
+  everyNth     Int?
+  position     Int                      @default(0)
+  // Trim-editor render state — READY means audioKey points at a playable
+  // file right now; PROCESSING means a worker job is baking a trim/fade
+  // edit and audioKey still points at the last-good file until it flips
+  // back to READY (or ERROR, on failure — audioKey is left untouched).
+  renderStatus AnnouncementRenderStatus @default(READY)
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+
+  @@index([channelId])
+  @@schema("channel")
+}
+
+// Singleton row (id always "global") — the admin kill-switch for the entire
+// system-announcements feature, independent of individual clips' isEnabled.
+model AnnouncementSettings {
+  id            String   @id @default("global")
+  systemEnabled Boolean  @default(true)
+  updatedAt     DateTime @updatedAt
+
   @@schema("channel")
 }
 

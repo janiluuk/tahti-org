@@ -7,10 +7,57 @@ import type { PrismaClient } from '@tahti/db'
 import {
   buildFallbackPlaybackRows,
   channelArchiveCacheDir,
+  interleaveAnnouncements,
   localCacheBasename,
   renderLocalFallbackM3u,
 } from '@tahti/shared'
+import type { AnnouncementPlaybackRow, FallbackPlaybackRow } from '@tahti/shared'
 import { downloadToFile, objectByteSize } from './minio.js'
+
+// System (admin-managed) announcement clips, gated on the global kill-switch —
+// mirrors apps/api/src/routes/internal/channel-fallback.ts's helper exactly,
+// since both paths need identical announcement behavior regardless of
+// whether Liquidsoap ends up reading the local cache or the remote M3U.
+async function systemAnnouncementRows(prisma: PrismaClient): Promise<AnnouncementPlaybackRow[]> {
+  const settings = await prisma.announcementSettings.findUnique({ where: { id: 'global' } })
+  if (settings && !settings.systemEnabled) return []
+
+  const clips = await prisma.announcementClip.findMany({
+    where: { channelId: null, isEnabled: true },
+    select: {
+      id: true,
+      title: true,
+      audioKey: true,
+      durationSec: true,
+      scheduleMode: true,
+      everyNth: true,
+    },
+  })
+  return clips.map((c) => ({
+    id: c.id,
+    title: c.title,
+    playbackKey: c.audioKey,
+    durationSec: c.durationSec,
+    scheduleMode: c.scheduleMode,
+    everyNth: c.everyNth,
+  }))
+}
+
+async function ownAnnouncementRows(
+  prisma: PrismaClient,
+  channelId: string,
+): Promise<FallbackPlaybackRow[]> {
+  const clips = await prisma.announcementClip.findMany({
+    where: { channelId, isEnabled: true },
+    select: { id: true, title: true, audioKey: true, durationSec: true },
+  })
+  return clips.map((c) => ({
+    id: c.id,
+    title: c.title,
+    playbackKey: c.audioKey,
+    durationSec: c.durationSec,
+  }))
+}
 
 export type ArchiveFallbackCacheSummary = {
   downloaded: number
@@ -29,7 +76,7 @@ export async function syncChannelArchiveFallbackCache(
 
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
-    select: { fallbackMode: true, fallbackEnabled: true },
+    select: { fallbackMode: true, fallbackEnabled: true, announcementsEnabled: true },
   })
   if (!channel) return summary
 
@@ -54,7 +101,12 @@ export async function syncChannelArchiveFallbackCache(
       })
     : []
 
-  const rows = buildFallbackPlaybackRows(items, channel.fallbackMode).slice(0, maxItems)
+  const baseRows = buildFallbackPlaybackRows(items, channel.fallbackMode).slice(0, maxItems)
+  const [systemAnnouncements, ownAnnouncements] = await Promise.all([
+    systemAnnouncementRows(prisma),
+    channel.announcementsEnabled ? ownAnnouncementRows(prisma, channelId) : [],
+  ])
+  const rows = interleaveAnnouncements(baseRows, systemAnnouncements, ownAnnouncements)
   const channelDir = channelArchiveCacheDir(cacheRoot, channelId)
   await mkdir(channelDir, { recursive: true })
 

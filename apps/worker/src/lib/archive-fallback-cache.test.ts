@@ -18,6 +18,8 @@ import { syncChannelArchiveFallbackCache } from './archive-fallback-cache.js'
 const prismaMock = {
   channel: { findUnique: vi.fn() },
   archiveItem: { findMany: vi.fn() },
+  announcementSettings: { findUnique: vi.fn() },
+  announcementClip: { findMany: vi.fn() },
 }
 
 describe('syncChannelArchiveFallbackCache', () => {
@@ -30,7 +32,10 @@ describe('syncChannelArchiveFallbackCache', () => {
     prismaMock.channel.findUnique.mockResolvedValue({
       fallbackMode: 'shuffle',
       fallbackEnabled: true,
+      announcementsEnabled: true,
     })
+    prismaMock.announcementSettings.findUnique.mockResolvedValue(null)
+    prismaMock.announcementClip.findMany.mockResolvedValue([])
     prismaMock.archiveItem.findMany.mockResolvedValue([
       {
         id: 'item-1',
@@ -148,5 +153,28 @@ describe('syncChannelArchiveFallbackCache', () => {
     expect(downloadToFile).not.toHaveBeenCalled()
     const m3u = await readFile(join(root, channelId, 'fallback.m3u'), 'utf8')
     expect(m3u).toContain('no items yet')
+  })
+
+  it('downloads and interleaves an AFTER_EVERY system announcement clip into the local cache', async () => {
+    prismaMock.announcementClip.findMany.mockResolvedValue([
+      {
+        id: 'ann-1',
+        title: 'System ID',
+        audioKey: 'announcements/system/id.mp3',
+        durationSec: 5,
+        scheduleMode: 'AFTER_EVERY',
+        everyNth: null,
+      },
+    ])
+
+    const summary = await syncChannelArchiveFallbackCache(prismaMock as never, channelId, root, 24)
+
+    expect(summary.downloaded).toBe(2)
+    expect(downloadToFile).toHaveBeenCalledWith(
+      'announcements/system/id.mp3',
+      join(root, channelId, 'announcements__system__id.mp3'),
+    )
+    const m3u = await readFile(join(root, channelId, 'fallback.m3u'), 'utf8')
+    expect(m3u).toContain('#EXTINF:5,System ID')
   })
 })

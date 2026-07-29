@@ -147,6 +147,26 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/announcements',
+    label: 'Announcements',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path
+          d="M2 6.5v3a1 1 0 0 0 1 1h1.8L9 13V3L4.8 5.5H3a1 1 0 0 0-1 1Z"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M11.5 6c.8.5.8 3.5 0 4M13.3 4.5c1.6 1.3 1.6 5.7 0 7"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/content-reports',
     label: 'Reports',
     icon: (
