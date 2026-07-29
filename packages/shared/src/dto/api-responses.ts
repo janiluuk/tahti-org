@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { ColorSchemeSchema } from './visual-preset.js'
+import { TrackReactionTypeSchema } from './track-reactions.js'
 
 export const EgressDailyPointSchema = z.object({
   date: z.string(),
@@ -554,6 +555,33 @@ export const ArchiveItemLikeResponseSchema = z.object({
 export const ArchiveItemRepostResponseSchema = z.object({
   reposted: z.boolean(),
   repostCount: z.number().int(),
+})
+
+export const TrackReactionItemSchema = z.object({
+  id: z.string(),
+  type: TrackReactionTypeSchema,
+  positionSec: z.number(),
+  createdAt: z.coerce.date(),
+})
+
+/** M22 tracklist entry — mirrors the shape already stored in ArchiveItem.tracklist. */
+export const TrackTracklistEntrySchema = z.object({
+  startSec: z.number(),
+  title: z.string(),
+  artist: z.string().nullable().optional(),
+})
+
+/** GET /api/reactions/track/:id — the full player's single fetch for "now playing"
+ * detail: waveform peaks, reaction markers, and the identity/tracklist info shown
+ * in fullscreen cinema mode (show name = title, identity = artist + avatar). */
+export const TrackPlaybackDetailsSchema = z.object({
+  title: z.string(),
+  artistName: z.string(),
+  artistAvatarUrl: z.string().nullable(),
+  channelSlug: z.string(),
+  tracklist: z.array(TrackTracklistEntrySchema).nullable(),
+  peaks: z.array(z.number()).nullable(),
+  reactions: z.array(TrackReactionItemSchema),
 })
 
 export const ChannelCardSchema = z.object({

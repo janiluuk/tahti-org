@@ -3,15 +3,30 @@
 
 'use client'
 
-import type { MouseEvent } from 'react'
+import { useState, type MouseEvent as ReactMouseEvent } from 'react'
+
+export interface WaveformMarker {
+  id: string
+  /** Position along the track, 0..1. */
+  ratio: number
+  /** Reaction emoji rendered on the marker (❤️ 😂 😮 🙌). */
+  emoji: string
+}
+
+function ratioFromClientX(clientX: number, rect: DOMRectReadOnly): number {
+  return Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
+}
 
 /** Static per-set waveform overview rendered from server-extracted [0..255] amplitude buckets,
- * with an overlaid progress fill for the currently-loaded track and click-to-seek. */
+ * with an overlaid progress fill for the currently-loaded track, click/drag-to-seek, and an
+ * optional layer of subtly-animated reaction markers pinned to where listeners reacted. */
 export function ArchiveWaveform({
   peaks,
   progress = 0,
   onSeek,
   accentColor,
+  markers,
+  size = 'default',
 }: {
   peaks: number[] | null | undefined
   /** Played fraction, 0..1. Omit for a track that isn't currently loaded. */
@@ -20,8 +35,14 @@ export function ArchiveWaveform({
   /** Artist's per-track color override — falls back to the design system's
    * default cyan when unset. */
   accentColor?: string | null
+  markers?: WaveformMarker[]
+  size?: 'default' | 'large'
 }) {
+  const [dragRatio, setDragRatio] = useState<number | null>(null)
+
   if (!peaks || peaks.length === 0) return null
+
+  const displayProgress = dragRatio ?? progress
 
   const bars = peaks.map((peak, i) => (
     <span
@@ -31,20 +52,30 @@ export function ArchiveWaveform({
     />
   ))
 
-  function handleClick(e: MouseEvent<HTMLDivElement>) {
+  function handlePointerDown(e: ReactMouseEvent<HTMLDivElement>) {
     if (!onSeek) return
     const rect = e.currentTarget.getBoundingClientRect()
-    const ratio = (e.clientX - rect.left) / rect.width
-    onSeek(Math.min(1, Math.max(0, ratio)))
+    setDragRatio(ratioFromClientX(e.clientX, rect))
+
+    const handleMove = (ev: globalThis.MouseEvent) =>
+      setDragRatio(ratioFromClientX(ev.clientX, rect))
+    const handleUp = (ev: globalThis.MouseEvent) => {
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('mouseup', handleUp)
+      setDragRatio(null)
+      onSeek(ratioFromClientX(ev.clientX, rect))
+    }
+    window.addEventListener('mousemove', handleMove)
+    window.addEventListener('mouseup', handleUp)
   }
 
   return (
     <div
-      className="ch-archive-waveform"
-      onClick={onSeek ? handleClick : undefined}
+      className={`ch-archive-waveform${size === 'large' ? ' ch-archive-waveform--large' : ''}`}
+      onMouseDown={onSeek ? handlePointerDown : undefined}
       role={onSeek ? 'slider' : undefined}
       aria-label={onSeek ? 'Seek' : undefined}
-      aria-valuenow={onSeek ? Math.round(progress * 100) : undefined}
+      aria-valuenow={onSeek ? Math.round(displayProgress * 100) : undefined}
       aria-valuemin={onSeek ? 0 : undefined}
       aria-valuemax={onSeek ? 100 : undefined}
       style={accentColor ? { ['--ch-wf-accent' as string]: accentColor } : undefined}
@@ -55,10 +86,23 @@ export function ArchiveWaveform({
       <div
         className="ch-archive-wf-progress"
         aria-hidden="true"
-        style={{ width: `${Math.min(100, Math.max(0, progress * 100))}%` }}
+        style={{ width: `${Math.min(100, Math.max(0, displayProgress * 100))}%` }}
       >
         <div className="ch-archive-wf-bars">{bars}</div>
       </div>
+      {markers && markers.length > 0 && (
+        <div className="ch-archive-wf-markers" aria-hidden="true">
+          {markers.map((m) => (
+            <span
+              key={m.id}
+              className="ch-archive-wf-marker"
+              style={{ left: `${Math.min(100, Math.max(0, m.ratio * 100))}%` }}
+            >
+              {m.emoji}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
