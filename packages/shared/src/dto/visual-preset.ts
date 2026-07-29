@@ -12,6 +12,10 @@ export const VISUAL_PRESETS = [
   'PARTICLE_FIELD',
   'AURORA',
   'REACTIVE_GRID',
+  'CLOUDSCAPE',
+  'LINE_TANGLE',
+  'BACKDROP_BOX',
+  'LENS_FLARES',
 ] as const
 
 export type VisualPreset = (typeof VISUAL_PRESETS)[number]
@@ -22,6 +26,10 @@ export const VISUAL_PRESET_LABELS: Record<VisualPreset, string> = {
   PARTICLE_FIELD: 'Particle field',
   AURORA: 'Aurora',
   REACTIVE_GRID: 'Reactive grid',
+  CLOUDSCAPE: 'Cloudscape',
+  LINE_TANGLE: 'Line tangle',
+  BACKDROP_BOX: 'Backdrop box',
+  LENS_FLARES: 'Lens flares',
 }
 
 export const VISUAL_PRESET_DESCRIPTIONS: Record<VisualPreset, string> = {
@@ -30,6 +38,10 @@ export const VISUAL_PRESET_DESCRIPTIONS: Record<VisualPreset, string> = {
   PARTICLE_FIELD: 'Drifting particle cloud in your color palette.',
   AURORA: 'Slow aurora-borealis color wash.',
   REACTIVE_GRID: 'Pulsing grid that reacts to your palette.',
+  CLOUDSCAPE: 'Slow-drifting clouds over water, with a subtle audio-reactive glow.',
+  LINE_TANGLE: 'A tangled 3D web of colored lines, slowly rotating.',
+  BACKDROP_BOX: 'A translucent glass box whose zoom, angle, and size breathe subtly.',
+  LENS_FLARES: 'Drifting bursts of light that swiftly change direction.',
 }
 
 export const CHANNEL_HEADER_STYLES = ['GRADIENT', 'SOLID', 'VIDEO_LOOP'] as const

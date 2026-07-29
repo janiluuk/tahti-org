@@ -25,6 +25,22 @@ const ReactiveGrid = dynamic(
   () => import('./reactive-grid-preset').then((m) => ({ default: m.ReactiveGridPreset })),
   { ssr: false },
 )
+const Cloudscape = dynamic(
+  () => import('./cloudscape-preset').then((m) => ({ default: m.CloudscapePreset })),
+  { ssr: false },
+)
+const LineTangle = dynamic(
+  () => import('./line-tangle-preset').then((m) => ({ default: m.LineTanglePreset })),
+  { ssr: false },
+)
+const BackdropBox = dynamic(
+  () => import('./backdrop-box-preset').then((m) => ({ default: m.BackdropBoxPreset })),
+  { ssr: false },
+)
+const LensFlares = dynamic(
+  () => import('./lens-flares-preset').then((m) => ({ default: m.LensFlaresPreset })),
+  { ssr: false },
+)
 
 interface Props {
   preset: VisualPreset
@@ -83,6 +99,10 @@ export function ChannelVisualizer({
       {preset === 'PARTICLE_FIELD' && <ParticleField {...props} />}
       {preset === 'AURORA' && <Aurora {...props} />}
       {preset === 'REACTIVE_GRID' && <ReactiveGrid {...props} />}
+      {preset === 'CLOUDSCAPE' && <Cloudscape {...props} />}
+      {preset === 'LINE_TANGLE' && <LineTangle {...props} />}
+      {preset === 'BACKDROP_BOX' && <BackdropBox {...props} />}
+      {preset === 'LENS_FLARES' && <LensFlares {...props} />}
     </div>
   )
 }

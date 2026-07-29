@@ -97,6 +97,10 @@ enum VisualPreset {
   PARTICLE_FIELD
   AURORA
   REACTIVE_GRID
+  CLOUDSCAPE
+  LINE_TANGLE
+  BACKDROP_BOX
+  LENS_FLARES
 
   @@schema("channel")
 }
