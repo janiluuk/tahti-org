@@ -67,6 +67,11 @@ export const AddCollaborativeTrackSchema = z.object({
 
 export type AddCollaborativeTrackInput = z.infer<typeof AddCollaborativeTrackSchema>
 
+export const CollectionSubscriptionResponseSchema = z.object({
+  subscribed: z.boolean(),
+  subscriberCount: z.number().int(),
+})
+
 export const CatalogTrackSearchQuerySchema = z.object({
   q: z.string().trim().min(1).max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),

@@ -5762,6 +5762,40 @@
   margin: 0 0 0.75rem;
 }
 
+[data-tahti-ui='brand'] .prof-subscribe-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border-hover);
+  background: var(--card2);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-subscribe-btn:hover {
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-subscribe-btn--active {
+  border-color: color-mix(in srgb, var(--cyan) 45%, transparent);
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .prof-subscribe-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='brand'] .prof-subscribe-btn__count {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
 [data-tahti-ui='brand'] .prof-add-track-search {
   width: 100%;
   padding: 0.55rem 0.75rem;

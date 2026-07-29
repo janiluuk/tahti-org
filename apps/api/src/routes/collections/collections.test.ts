@@ -486,6 +486,128 @@ describe('collaborative playlists', () => {
   })
 })
 
+describe('collection subscriptions', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let subscriberCookie: string
+  let otherCookie: string
+  let publicSlug: string
+  let privateSlug: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+
+    const owner = await createTestArtist(prisma, {
+      email: `${PREFIX}sub-owner@example.com`,
+      username: `${PREFIX}sub-owner`,
+      tier: 'ARTIST',
+    })
+
+    const subscriber = await createTestArtist(prisma, {
+      email: `${PREFIX}sub-listener@example.com`,
+      username: `${PREFIX}sub-listener`,
+      tier: 'ARTIST',
+    })
+    subscriberCookie = await sessionCookieFor(prisma, subscriber.id)
+
+    const other = await createTestArtist(prisma, {
+      email: `${PREFIX}sub-other@example.com`,
+      username: `${PREFIX}sub-other`,
+      tier: 'ARTIST',
+    })
+    otherCookie = await sessionCookieFor(prisma, other.id)
+
+    publicSlug = `${PREFIX}sub-public-playlist`
+    await prisma.collection.create({
+      data: { userId: owner.id, slug: publicSlug, name: 'Public playlist', isPublic: true },
+    })
+
+    privateSlug = `${PREFIX}sub-private-playlist`
+    await prisma.collection.create({
+      data: { userId: owner.id, slug: privateSlug, name: 'Private playlist', isPublic: false },
+    })
+  })
+
+  afterAll(async () => {
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+    await app.close()
+  })
+
+  it('reports subscribed: false with no session, no 401', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/collections/${publicSlug}/subscribe`,
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ subscribed: false, subscriberCount: 0 })
+  })
+
+  it('requires auth to subscribe', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${publicSlug}/subscribe`,
+    })
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('subscribes, reports subscribed: true, and is idempotent', async () => {
+    const first = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${publicSlug}/subscribe`,
+      headers: { cookie: subscriberCookie },
+    })
+    expect(first.statusCode).toBe(200)
+    expect(first.json()).toEqual({ subscribed: true, subscriberCount: 1 })
+
+    const second = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${publicSlug}/subscribe`,
+      headers: { cookie: subscriberCookie },
+    })
+    expect(second.json()).toEqual({ subscribed: true, subscriberCount: 1 })
+
+    const check = await app.inject({
+      method: 'GET',
+      url: `/api/v1/collections/${publicSlug}/subscribe`,
+      headers: { cookie: subscriberCookie },
+    })
+    expect(check.json()).toEqual({ subscribed: true, subscriberCount: 1 })
+  })
+
+  it('counts multiple subscribers', async () => {
+    await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${publicSlug}/subscribe`,
+      headers: { cookie: otherCookie },
+    })
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/v1/collections/${publicSlug}/subscribe`,
+    })
+    expect(res.json().subscriberCount).toBe(2)
+  })
+
+  it('unsubscribes', async () => {
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/collections/${publicSlug}/subscribe`,
+      headers: { cookie: subscriberCookie },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ subscribed: false, subscriberCount: 1 })
+  })
+
+  it('404s subscribing to a private collection', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/v1/collections/${privateSlug}/subscribe`,
+      headers: { cookie: subscriberCookie },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+})
+
 // Player "Add to..." lets a listener save ANY public track (not just their own
 // uploads) to one of their own collections via the owner-only items route.
 describe('owner route accepts any public track (player "Add to...")', () => {
