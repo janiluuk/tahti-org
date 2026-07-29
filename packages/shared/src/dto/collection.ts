@@ -63,6 +63,8 @@ export type AddCollectionItemInput = z.infer<typeof AddCollectionItemSchema>
  * which also accepts releases and an explicit insert position). */
 export const AddCollaborativeTrackSchema = z.object({
   archiveItemId: z.string().min(1),
+  /** Optional short note from the contributor about why they added this track. */
+  note: z.string().trim().max(200).optional(),
 })
 
 export type AddCollaborativeTrackInput = z.infer<typeof AddCollaborativeTrackSchema>

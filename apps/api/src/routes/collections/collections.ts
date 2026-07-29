@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify'
+import { notifyPlaylistOfNewTrack } from '@tahti/db'
 import {
   AddCollaborativeTrackSchema,
   AddCollectionItemSchema,
@@ -66,6 +67,9 @@ const collectionItemInclude = {
       artworkUrl: true,
       description: true,
     },
+  },
+  addedBy: {
+    select: { username: true, displayName: true },
   },
 } as const
 
@@ -680,17 +684,21 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug } = routeParams
       const parsed = AddCollaborativeTrackSchema.safeParse(request.body)
       if (!parsed.success) return zodError(reply, parsed.error)
-      const { archiveItemId } = parsed.data
+      const { archiveItemId, note } = parsed.data
+      const user = request.sessionUser!
 
       const col = await fastify.prisma.collection.findFirst({
         where: { slug, isPublic: true, collaborative: true },
-        include: { _count: { select: { items: true } } },
+        include: {
+          _count: { select: { items: true } },
+          user: { select: { id: true, username: true } },
+        },
       })
       if (!col) return reply.status(404).send({ error: 'Collection not found' })
 
       const archive = await fastify.prisma.archiveItem.findFirst({
         where: { id: archiveItemId, status: 'READY', isPublic: true },
-        select: { id: true },
+        select: { id: true, title: true },
       })
       if (!archive) return reply.status(400).send({ error: 'Track not found' })
 
@@ -702,8 +710,26 @@ const collectionRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const item = await fastify.prisma.collectionItem.create({
-          data: { collectionId: col.id, archiveItemId, position: col._count.items + 1 },
+          data: {
+            collectionId: col.id,
+            archiveItemId,
+            position: col._count.items + 1,
+            addedByUserId: user.id,
+            addNote: note || null,
+          },
         })
+        await notifyPlaylistOfNewTrack(
+          fastify.prisma,
+          {
+            id: col.id,
+            slug: col.slug,
+            name: col.name,
+            ownerUsername: col.user.username,
+            ownerUserId: col.user.id,
+          },
+          user,
+          { title: archive.title },
+        ).catch((err: unknown) => fastify.log.warn({ err }, 'playlist-add notification failed'))
         return reply.status(201).send(item)
       } catch (err) {
         if (isUniqueConstraintError(err)) {
