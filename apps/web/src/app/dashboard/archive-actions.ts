@@ -451,3 +451,53 @@ export async function fetchDownloadGateStats(itemId: string): Promise<{
   }
   return { stats: await res.json(), error: null }
 }
+
+export async function fetchArchiveDownloadUrl(
+  itemId: string,
+): Promise<{ url: string; filename: string } | { error: string }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/download`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Download not available yet' }
+  }
+  return (await res.json()) as { url: string; filename: string }
+}
+
+export interface StemJobRow {
+  stemSet: 'TWO_STEM' | 'FOUR_STEM'
+  status: 'PENDING' | 'PROCESSING' | 'READY' | 'ERROR'
+  errorMessage: string | null
+  files: { label: string; url: string }[]
+}
+
+export async function fetchArchiveStems(
+  itemId: string,
+): Promise<{ jobs: StemJobRow[] } | { error: string }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/stems`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return { error: 'Failed to load stem status' }
+  return (await res.json()) as { jobs: StemJobRow[] }
+}
+
+export async function requestArchiveStems(
+  itemId: string,
+  stemSet: 'TWO_STEM' | 'FOUR_STEM',
+): Promise<{ status?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/stems/render`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ stemSet }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Could not start stem separation' }
+  }
+  const data = (await res.json()) as { status: string }
+  return { status: data.status, error: null }
+}

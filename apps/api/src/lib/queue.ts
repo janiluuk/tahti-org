@@ -124,6 +124,21 @@ export async function enqueueRenderAnnouncementTrim(
   })
 }
 
+export interface SeparateStemsJob {
+  stemJobId: string
+  archiveItemId: string
+  sourceKey: string
+  stemSet: 'TWO_STEM' | 'FOUR_STEM'
+}
+
+export async function enqueueSeparateStems(payload: SeparateStemsJob): Promise<void> {
+  await mediaQueue.add('separate-stems', payload, {
+    jobId: `separate-stems-${payload.stemJobId}`,
+    attempts: 2,
+    backoff: { type: 'exponential', delay: 15_000 },
+  })
+}
+
 export async function enqueueWarmArchiveFallbackCache(channelId: string): Promise<void> {
   await mediaQueue.add(
     'warm-archive-fallback-cache',

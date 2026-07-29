@@ -19,6 +19,8 @@ export const WORKER_JOB_LANES = {
     'transcode-release-track-version',
     'render-archive-edit',
     'render-announcement-trim',
+    'separate-stems',
+    'sweep-expired-stems',
     'backfill-editor-peaks',
     'sweep-editor-peaks-backfill',
     'cloud-import-google-drive',

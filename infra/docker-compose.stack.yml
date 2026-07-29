@@ -46,6 +46,10 @@ x-app-env: &app-env
   # always throws), so unlike the secrets above this needs an explicit value here.
   RTMP_KEY_ENC_KEY: ${RTMP_KEY_ENC_KEY:-abababababababababababababababababababababababababababababababab}
   ORCHESTRATOR_URL: http://orchestrator:3003
+  # UVR5-family stem separation — CPU-only Python service (see
+  # services/stem-separator). Not required to boot; the worker's
+  # separate-stems job just fails that one job if unreachable.
+  STEM_SEPARATOR_URL: http://stem-separator:8090
   ICECAST_HOST: icecast:8000
   ICECAST_BASE_URL: http://icecast:8000
   ICECAST_PUBLIC_URL: ${ICECAST_PUBLIC_URL:-http://localhost:${ICECAST_PORT:-18100}}
@@ -338,6 +342,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  # UVR5-family vocal/instrument separation (see services/stem-separator).
+  # CPU-only, no GPU in colo/Hetzner. Image is large and slow to build the
+  # first time (torch + two baked-in model checkpoints) — build it once on
+  # the deploy host before relying on "Download stems" in the library.
+  stem-separator:
+    build:
+      context: ..
+      dockerfile: services/stem-separator/Dockerfile
+    restart: unless-stopped
 
   orchestrator:
     build:

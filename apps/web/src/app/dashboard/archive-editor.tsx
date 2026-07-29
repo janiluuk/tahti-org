@@ -18,6 +18,7 @@ import {
 } from './archive-metadata-fields'
 import { TracklistEditor } from './tracklist-editor'
 import { ArchiveVersionPanel } from './archive-version-panel'
+import { ArchiveDownloadPanel } from './archive-download-panel'
 import { ArchiveGateStats } from './archive-gate-stats'
 import { ArchiveMixcloudUpload } from './archive-mixcloud'
 import ArchiveVisualPanel from './archive-visual-panel'
@@ -274,6 +275,8 @@ export default function ArchiveEditor({
             itemStatus={item.status}
             embedUri={item.embedUri as string | null | undefined}
           />
+
+          <ArchiveDownloadPanel itemId={item.id} />
 
           <ArchiveVisualPanel
             itemId={item.id}
