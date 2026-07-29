@@ -3,9 +3,42 @@
 
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
+import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 
 type Tab = 'stage' | 'feed' | 'tracks'
+
+const TABS: Array<{ id: Tab; label: string }> = [
+  { id: 'stage', label: 'Stage' },
+  { id: 'feed', label: 'Feed' },
+  { id: 'tracks', label: 'Releases' },
+]
+
+const HELP_STEPS: HelpSpotlightStep[] = [
+  {
+    id: 'stage',
+    label: 'Stage',
+    description:
+      'The artist’s pinned highlights, press kit, upcoming events, band members, and links to other platforms — everything that introduces who they are, in one scroll.',
+  },
+  {
+    id: 'feed',
+    label: 'Feed',
+    description:
+      'Posts and updates from the artist, newest first — news, behind-the-scenes updates, and announcements about new music or shows.',
+  },
+  {
+    id: 'tracks',
+    label: 'Releases',
+    description:
+      'Every release, DJ mix, playlist, and individual track the artist has published on Tahti — this is where you go to actually listen.',
+  },
+]
+
+function isTab(value: string | null): value is Tab {
+  return value === 'stage' || value === 'feed' || value === 'tracks'
+}
 
 export function ProfileTabs({
   stage,
@@ -16,18 +49,43 @@ export function ProfileTabs({
   feed: ReactNode
   tracks: ReactNode
 }) {
-  const [active, setActive] = useState<Tab>('stage')
+  const pathname = usePathname()
+  const storageKey = `tahti:profile-tab:${pathname}`
+  // Kept in sessionStorage (read on mount, not from a URL param) so switching
+  // tabs stays a free client-side toggle — this page is dynamic (session
+  // cookie-gated), so encoding the tab in the URL would force a real server
+  // round-trip per click. sessionStorage still survives the fresh mount that
+  // happens when the browser back button returns here.
+  const [active, setActiveState] = useState<Tab>('stage')
 
-  const tabs: Array<{ id: Tab; label: string }> = [
-    { id: 'stage', label: 'Stage' },
-    { id: 'feed', label: 'Feed' },
-    { id: 'tracks', label: 'Releases' },
-  ]
+  useEffect(() => {
+    const saved = sessionStorage.getItem(storageKey)
+    if (isTab(saved)) setActiveState(saved)
+    // Only ever read once, right after this pathname's instance mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey])
+
+  function setActive(tab: Tab) {
+    setActiveState(tab)
+    sessionStorage.setItem(storageKey, tab)
+  }
+
+  const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({
+    stage: null,
+    feed: null,
+    tracks: null,
+  })
 
   return (
     <div className="prof-tabs">
+      <HelpSpotlight
+        steps={HELP_STEPS}
+        activeId={active}
+        onNavigate={(id) => setActive(id as Tab)}
+        targetEl={panelRefs.current[active]}
+      />
       <div className="prof-tabs__bar" role="tablist" aria-label="Profile sections">
-        {tabs.map((tab) => (
+        {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -40,13 +98,31 @@ export function ProfileTabs({
           </button>
         ))}
       </div>
-      <div className="prof-tabs__panel" hidden={active !== 'stage'}>
+      <div
+        className="prof-tabs__panel"
+        hidden={active !== 'stage'}
+        ref={(el) => {
+          panelRefs.current.stage = el
+        }}
+      >
         {stage}
       </div>
-      <div className="prof-tabs__panel" hidden={active !== 'feed'}>
+      <div
+        className="prof-tabs__panel"
+        hidden={active !== 'feed'}
+        ref={(el) => {
+          panelRefs.current.feed = el
+        }}
+      >
         {feed}
       </div>
-      <div className="prof-tabs__panel" hidden={active !== 'tracks'}>
+      <div
+        className="prof-tabs__panel"
+        hidden={active !== 'tracks'}
+        ref={(el) => {
+          panelRefs.current.tracks = el
+        }}
+      >
         {tracks}
       </div>
     </div>

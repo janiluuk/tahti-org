@@ -4,7 +4,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { AvatarTile } from './AvatarTile'
-import { ChannelHeader } from './ChannelPageLayout'
+import { ChannelHeader, type SiteNavId } from './ChannelPageLayout'
 import { PublicFooter } from './PublicFooter'
 import { SafePlainText } from '../lib/safe-plain-text'
 import { flagEmoji as countryCodeToFlag } from '../lib/flag-emoji'
@@ -23,6 +23,34 @@ function IconHeart() {
       <path
         d="M8 13.5S2 9.5 2 5.5A3.5 3.5 0 0 1 8 3.9a3.5 3.5 0 0 1 6 1.6c0 4-6 8-6 8z"
         fill="currentColor"
+      />
+    </svg>
+  )
+}
+
+function IconRss() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="3.2" cy="12.8" r="1.6" fill="currentColor" />
+      <path
+        d="M2 6.5c4.7 0 7.5 2.8 7.5 7.5M2 2c7.2 0 12 4.8 12 12"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function IconDownload() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <path
+        d="M8 2v8m0 0 3-3m-3 3-3-3M3 12.5h10"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   )
@@ -84,6 +112,11 @@ type ProfileHeroProps = {
    * pattern as followSlot. Rendered right after Support, per spec ("grouped
    * with the support artist button"). */
   messageSlot?: ReactNode
+  /** Press kit ZIP download — compact icon button up in the CTA row rather than
+   * buried in the Stage tab, so it's reachable without digging. */
+  presskitUrl?: string | null
+  /** Archive RSS feed — same top-row treatment as presskitUrl. */
+  rssUrl?: string | null
 }
 
 /** PLAT-020: artist profile hero — info row, bio, CTAs. Cover is rendered separately via ProfileCover. */
@@ -105,6 +138,8 @@ export function ProfileHero({
   newsletterSlot,
   followSlot,
   messageSlot,
+  presskitUrl,
+  rssUrl,
 }: ProfileHeroProps) {
   return (
     <>
@@ -147,6 +182,28 @@ export function ProfileHero({
           </Link>
           {messageSlot}
           {newsletterSlot}
+          {rssUrl && (
+            <a
+              href={rssUrl}
+              rel="alternate"
+              className="prof-icon-btn"
+              title="RSS feed"
+              aria-label="RSS feed"
+            >
+              <IconRss />
+            </a>
+          )}
+          {presskitUrl && (
+            <a
+              href={presskitUrl}
+              rel="nofollow"
+              className="prof-icon-btn"
+              title="Download press kit"
+              aria-label="Download press kit"
+            >
+              <IconDownload />
+            </a>
+          )}
           {tipJarUrl && (
             <a href={tipJarUrl} rel="noopener noreferrer" className="prof-tip-btn">
               Tip ↗
@@ -189,6 +246,12 @@ type ProfilePageLayoutProps = {
   isLive?: boolean
   /** Smart link / subscribe — back link in header centre */
   contextLink?: { href: string; label: string }
+  /** Highlights the current top-nav item. Artist profiles and their sub-pages
+   * (collections, etc.) live under Discover, so callers should pass
+   * activeNav="discover" — without it, ChannelHeader's pathname fallback can
+   * never match a dynamic /u/[username] route and no nav item lights up,
+   * leaving the visitor with no sense of where they are in the site. */
+  activeNav?: SiteNavId
   cover?: ReactNode
   hero: ReactNode
   children: ReactNode
@@ -202,6 +265,7 @@ type ProfilePageLayoutProps = {
 export function ProfilePageLayout({
   isLive,
   contextLink,
+  activeNav,
   cover,
   hero,
   children,
@@ -210,7 +274,7 @@ export function ProfilePageLayout({
 }: ProfilePageLayoutProps) {
   return (
     <>
-      <ChannelHeader isLive={isLive} contextLink={contextLink} user={user} />
+      <ChannelHeader isLive={isLive} contextLink={contextLink} activeNav={activeNav} user={user} />
       {cover}
       <div className={`prof-page${narrow ? ' prof-page--narrow shell-narrow' : ''}`}>
         {hero}

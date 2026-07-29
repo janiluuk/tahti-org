@@ -231,7 +231,9 @@ function FullPlayerSheet({
         )}
         {track.subtitle && <span className="full-player__subtitle">{track.subtitle}</span>}
         {track.kind === 'live' && (
-          <span className="mini-player__badge full-player__badge">
+          <span
+            className={`mini-player__badge full-player__badge${track.isReplay ? ' mini-player__badge--replay' : ''}`}
+          >
             {track.isReplay ? 'REPLAY' : 'LIVE'}
           </span>
         )}
@@ -607,8 +609,12 @@ export function MiniPlayer() {
               {track.subtitle && <span className="mini-player__subtitle">{track.subtitle}</span>}
             </div>
           </button>
-          {track.kind === 'live' && !track.isReplay ? (
-            <span className="mini-player__badge">LIVE</span>
+          {track.kind === 'live' ? (
+            <span
+              className={`mini-player__badge${track.isReplay ? ' mini-player__badge--replay' : ''}`}
+            >
+              {track.isReplay ? 'REPLAY' : 'LIVE'}
+            </span>
           ) : (
             <span className="mini-player__time">
               {formatTime(currentTime)} / {formatTime(duration)}

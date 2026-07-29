@@ -1839,6 +1839,18 @@
   border-color: color-mix(in srgb, var(--cyan) 45%, var(--border));
 }
 
+/* Compact circular variant for the channel-banner header row — no label,
+   sized to match the other icon buttons next to it (avatar row, RSS/presskit). */
+[data-tahti-ui='brand'] .ch-radio-info-toggle--icon {
+  margin: 0;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+  align-self: center;
+}
+
 [data-tahti-ui='brand'] .ch-radio-info-overlay {
   position: fixed;
   inset: 0;
@@ -2258,6 +2270,42 @@
 
 [data-tahti-ui='brand'] .ch-radio-player-viz {
   opacity: 0.9;
+}
+
+/* Radio page only — much bigger now-playing title/artist, with a slow subtle
+   breathing animation so the "always on" station feels alive even when the
+   audio-reactive visualizer behind it is barely moving (quiet passages). */
+[data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__meta-title {
+  font-family: var(--font-head);
+  font-size: clamp(22px, 3.6vw, 40px);
+  font-weight: var(--weight-semibold);
+  line-height: 1.1;
+  animation: ch-radio-title-breathe 4s ease-in-out infinite;
+}
+
+[data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__meta-subtitle {
+  font-size: clamp(14px, 1.6vw, 18px);
+}
+
+[data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__art {
+  width: 96px;
+  height: 96px;
+}
+
+@keyframes ch-radio-title-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__meta-title {
+    animation: none;
+  }
 }
 
 [data-tahti-ui='brand'] .ch-player-inner--video {
@@ -2749,8 +2797,8 @@
   max-width: 720px;
   margin: 0 auto;
   padding-bottom: 3rem;
-  /* leave space for the avatar (64px) that hangs 28px below prof-cover */
-  padding-top: 36px;
+  /* leave space for the avatar (140px) that hangs 64px below prof-cover */
+  padding-top: 72px;
 }
 
 [data-tahti-ui='brand'] .prof-page--narrow {
@@ -2777,12 +2825,20 @@
 
 [data-tahti-ui='brand'] .prof-avatar {
   position: absolute;
-  bottom: -28px;
+  bottom: -64px;
   left: max(22px, calc((100% - 720px) / 2 + 22px));
-  width: 64px;
-  height: 64px;
+  width: 140px;
+  height: 140px;
   z-index: 2;
-  font-size: var(--text-h2);
+  font-size: var(--text-display);
+}
+
+@media (max-width: 540px) {
+  [data-tahti-ui='brand'] .prof-avatar {
+    width: 104px;
+    height: 104px;
+    bottom: -48px;
+  }
 }
 
 [data-tahti-ui='brand'] .prof-info-row {
@@ -2915,6 +2971,33 @@
   background: color-mix(in srgb, var(--amber) 16%, transparent);
 }
 
+/* Compact icon-only utility buttons (RSS, press kit) in the profile CTA row —
+   deliberately smaller/quieter than the primary CTAs since they're secondary
+   actions, but still reachable at the top instead of buried in a tab. */
+[data-tahti-ui='brand'] .prof-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+[data-tahti-ui='brand'] .prof-icon-btn:hover {
+  background: color-mix(in srgb, var(--cyan) 12%, var(--card2));
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  color: var(--cyan);
+}
+
 [data-tahti-ui='brand'] .prof-newsletter-btn {
   display: inline-flex;
   align-items: center;
@@ -3039,12 +3122,14 @@
 }
 
 [data-tahti-ui='brand'] .prof-sec-label {
-  font-size: var(--text-micro);
-  letter-spacing: 2px;
-  color: color-mix(in srgb, var(--amber) 70%, var(--muted));
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  padding-left: 9px;
+  font-family: var(--font-head);
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.2px;
+  color: var(--text);
+  margin-bottom: 12px;
+  text-transform: none;
+  padding-left: 12px;
   position: relative;
 }
 
@@ -3052,12 +3137,12 @@
   content: '';
   position: absolute;
   left: 0;
-  top: 1px;
-  bottom: 1px;
-  width: 2px;
+  top: 3px;
+  bottom: 3px;
+  width: 3px;
   background: var(--amber);
   border-radius: 2px;
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 [data-tahti-ui='brand'] .prof-section {
@@ -3385,6 +3470,12 @@
   font-family: var(--font-head);
   font-size: var(--text-h2);
   margin: 0.5rem 0 0.25rem;
+}
+
+[data-tahti-ui='brand'] .prof-page-title--collection {
+  font-size: clamp(28px, 5vw, 48px);
+  line-height: 1.05;
+  margin: 0 0 0.35rem;
 }
 
 /* Fan subscription tier cards */
@@ -4280,20 +4371,74 @@
   background: linear-gradient(135deg, var(--card2), var(--border));
 }
 
+[data-tahti-ui='brand'] .prof-collection-hero-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+[data-tahti-ui='brand'] .prof-collection-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
 [data-tahti-ui='brand'] .prof-collection-hero-cover {
-  width: 140px;
-  height: 140px;
+  width: clamp(160px, 22vw, 280px);
+  height: clamp(160px, 22vw, 280px);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  margin: 0 0 1rem;
+  flex-shrink: 0;
   border: 1px solid var(--border);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--bg) 60%, transparent);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--bg) 70%, transparent);
 }
 
 [data-tahti-ui='brand'] .prof-collection-hero-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Full-page ambient wash tinted with the playlist's own cover art — a heavily
+   blurred, darkened blow-up of the cover sitting behind the whole page (fixed,
+   z-index -1) so the surrounding content reads as "colored by" the artwork. */
+[data-tahti-ui='brand'] .prof-collection-ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: center/cover no-repeat var(--ambient-cover-image);
+  filter: blur(70px) saturate(1.5) brightness(0.5);
+  transform: scale(1.25);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Brief scrim that fades out on mount, so opening a playlist feels like a soft
+   reveal rather than a hard pop-in. Pure CSS (page is server-rendered). */
+[data-tahti-ui='brand'] .prof-collection-open-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  animation: prof-collection-open-fade 0.5s ease-out;
+}
+
+@keyframes prof-collection-open-fade {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  [data-tahti-ui='brand'] .prof-collection-hero-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 [data-tahti-ui='brand'] .prof-collection-item-row {
@@ -5600,4 +5745,202 @@
 [data-tahti-ui='brand'] .prof-add-track-row__add:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* ── Help spotlight ("?" tour) ──────────────────────────────────────────────
+   Desktop-only affordance that dims the page and walks the visitor through
+   whatever tabs the host component owns, one panel at a time. */
+[data-tahti-ui='brand'] .help-spotlight-trigger {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 220;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
+  font-family: var(--font-head);
+  font-size: 16px;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-trigger:hover {
+  background: color-mix(in srgb, var(--cyan) 14%, var(--card2));
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  color: var(--cyan);
+}
+
+@media (max-width: 900px) {
+  [data-tahti-ui='brand'] .help-spotlight-trigger {
+    display: none;
+  }
+}
+
+[data-tahti-ui='brand'] .help-spotlight-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-veil {
+  position: fixed;
+  left: 0;
+  right: 0;
+  background: rgba(4, 6, 12, 0.86);
+  opacity: 0;
+  transition: opacity 0.32s ease;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-veil--top {
+  top: 0;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-veil--bottom {
+  bottom: 0;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-ring {
+  position: fixed;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 3px var(--cyan), 0 0 40px 8px color-mix(in srgb, var(--cyan) 55%, transparent);
+  opacity: 0;
+  transform: scale(0.97);
+  transition:
+    opacity 0.32s ease,
+    transform 0.32s ease;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-overlay--visible .help-spotlight-veil,
+[data-tahti-ui='brand'] .help-spotlight-overlay--visible .help-spotlight-ring {
+  opacity: 1;
+  transform: scale(1);
+}
+
+[data-tahti-ui='brand'] .help-spotlight-close {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 302;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--text) 20%, transparent);
+  background: var(--card);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s ease,
+    background 0.15s;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-overlay--visible .help-spotlight-close {
+  opacity: 1;
+  transform: scale(1);
+}
+
+[data-tahti-ui='brand'] .help-spotlight-close:hover {
+  background: color-mix(in srgb, var(--coral) 16%, var(--card));
+}
+
+[data-tahti-ui='brand'] .help-spotlight-card {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translate(-50%, 12px);
+  z-index: 302;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(560px, calc(100vw - 48px));
+  padding: 1.1rem 1.25rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition:
+    opacity 0.32s ease,
+    transform 0.32s ease;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-overlay--visible .help-spotlight-card {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+[data-tahti-ui='brand'] .help-spotlight-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-card__label {
+  font-family: var(--font-head);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+  color: var(--cyan);
+  margin-bottom: 4px;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-card__desc {
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-card__dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-card__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+[data-tahti-ui='brand'] .help-spotlight-card__dot--active {
+  background: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .help-spotlight-nav {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+[data-tahti-ui='brand'] .help-spotlight-nav:hover {
+  background: color-mix(in srgb, var(--cyan) 14%, var(--card2));
+  border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='brand'] .help-spotlight-card {
+    flex-direction: column;
+    text-align: center;
+    bottom: 20px;
+  }
 }

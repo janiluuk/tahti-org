@@ -23,16 +23,37 @@ interface RadioMemberRelay {
   artistName: string
 }
 
+function IconCalendar() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect
+        x="2"
+        y="3.5"
+        width="12"
+        height="10.5"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+      />
+      <path d="M2 6.5h12M5 2v3M11 2v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function RadioInfoOverlay({
   rotation,
   slots,
   memberRelay,
   isLoggedIn,
+  iconOnly = false,
 }: {
   rotation: RadioRotationItem[]
   slots: PublicRadioSlot[]
   memberRelay: RadioMemberRelay | null
   isLoggedIn: boolean
+  /** Compact icon-only trigger (calendar glyph, no label) — used next to the
+   * channel banner, where a full text button would crowd the header row. */
+  iconOnly?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<'schedule' | 'rotation'>('schedule')
@@ -41,12 +62,15 @@ export function RadioInfoOverlay({
     <>
       <button
         type="button"
-        className="ch-radio-info-toggle"
+        className={iconOnly ? 'ch-radio-info-toggle ch-radio-info-toggle--icon' : 'ch-radio-info-toggle'}
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label="Schedule & rotation"
+        title="Schedule & rotation"
       >
-        Schedule &amp; rotation
+        <IconCalendar />
+        {!iconOnly && <span>Schedule &amp; rotation</span>}
       </button>
 
       {open && (

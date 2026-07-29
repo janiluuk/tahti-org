@@ -323,6 +323,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
       />
       <ProfilePageLayout
         isLive={isLive}
+        activeNav="discover"
         user={user}
         cover={
           <ProfileCover
@@ -347,6 +348,8 @@ export default async function ArtistProfilePage({ params }: { params: { username
             tipJarUrl={artist.tipJarUrl}
             joinDateLabel={formatJoinDateLabel(artist.joinDate)}
             joinDateTitle={formatJoinDateTitle(artist.joinDate)}
+            presskitUrl={links.presskit}
+            rssUrl={links.feeds?.archive ?? null}
             followSlot={
               user?.username !== artist.username ? (
                 <FollowButton artistUsername={artist.username} />
@@ -429,15 +432,12 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 </section>
               )}
 
-              <section className="prof-section">
-                <div className="prof-sec-label">Press kit</div>
-                <p className="prof-rss-row">
-                  <a href={links.presskit} rel="nofollow">
-                    Download press kit ↓
-                  </a>
-                </p>
-                {pressKitImages.length > 0 && <PressKitGallery images={pressKitImages} />}
-              </section>
+              {pressKitImages.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label">Press kit</div>
+                  <PressKitGallery images={pressKitImages} />
+                </section>
+              )}
 
               {events.length > 0 && (
                 <section className="prof-section">
@@ -598,26 +598,9 @@ export default async function ArtistProfilePage({ params }: { params: { username
                   )
                 })()}
 
-              {(links.feeds?.archive || channel?.slug) && (
+              {channel?.slug && (
                 <section className="prof-section">
-                  {links.feeds?.archive && (
-                    <>
-                      <div className="prof-sec-label">Podcasts &amp; feeds</div>
-                      <p className="prof-rss-row">
-                        <a href={links.feeds.archive} rel="alternate">
-                          Archive RSS ↗
-                        </a>
-                      </p>
-                      <p className="prof-list-meta prof-list-meta--tight">
-                        Subscribe in Apple Podcasts, Overcast, or any RSS reader
-                      </p>
-                    </>
-                  )}
-                  {channel?.slug && (
-                    <div className={links.feeds?.archive ? 'prof-report-row' : undefined}>
-                      <ReportButton targetType="CHANNEL" targetId={channel.slug} />
-                    </div>
-                  )}
+                  <ReportButton targetType="CHANNEL" targetId={channel.slug} />
                 </section>
               )}
             </>
@@ -630,9 +613,39 @@ export default async function ArtistProfilePage({ params }: { params: { username
           }
           tracks={
             <>
+              {djMixCollections.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">DJ mixes</div>
+                    <div className="prof-sec-count">{djMixCollections.length} total</div>
+                  </div>
+                  <CollectionRowList items={djMixCollections} />
+                </section>
+              )}
+              {playlistCollections.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">Playlists</div>
+                    <div className="prof-sec-count">{playlistCollections.length} total</div>
+                  </div>
+                  <CollectionRowList items={playlistCollections} />
+                </section>
+              )}
+              {otherCollections.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">Collections</div>
+                    <div className="prof-sec-count">{otherCollections.length} total</div>
+                  </div>
+                  <CollectionRowList items={otherCollections} />
+                </section>
+              )}
+              <section className="prof-section">
+                <TracksTab tracks={tracks} isOwner={isOwner} />
+              </section>
               <section className="prof-section">
                 <div className="prof-sec-label-row">
-                  <div className="prof-sec-label">Releases</div>
+                  <div className="prof-sec-label">Tahti Releases</div>
                   <div className="prof-sec-label-row__actions">
                     {releases.length > 0 && (
                       <div className="prof-sec-count">{releases.length} total</div>
@@ -668,36 +681,6 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 ) : (
                   <ReleasesGrid releases={releases} />
                 )}
-              </section>
-              {djMixCollections.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">DJ mixes</div>
-                    <div className="prof-sec-count">{djMixCollections.length} total</div>
-                  </div>
-                  <CollectionRowList items={djMixCollections} />
-                </section>
-              )}
-              {playlistCollections.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">Playlists</div>
-                    <div className="prof-sec-count">{playlistCollections.length} total</div>
-                  </div>
-                  <CollectionRowList items={playlistCollections} />
-                </section>
-              )}
-              {otherCollections.length > 0 && (
-                <section className="prof-section">
-                  <div className="prof-sec-label-row">
-                    <div className="prof-sec-label">Collections</div>
-                    <div className="prof-sec-count">{otherCollections.length} total</div>
-                  </div>
-                  <CollectionRowList items={otherCollections} />
-                </section>
-              )}
-              <section className="prof-section">
-                <TracksTab tracks={tracks} isOwner={isOwner} />
               </section>
             </>
           }

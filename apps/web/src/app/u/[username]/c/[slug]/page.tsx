@@ -26,6 +26,20 @@ import { ReportButton } from '@/components/report-button'
 import { CollectionEmbedButton } from './_embed-button'
 import { AddTrackButton } from './_add-track-button'
 
+function IconRss() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="3.2" cy="12.8" r="1.6" fill="currentColor" />
+      <path
+        d="M2 6.5c4.7 0 7.5 2.8 7.5 7.5M2 2c7.2 0 12 4.8 12 12"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 async function fetchCollection(slug: string) {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const res = await fetch(`${apiUrl}/api/v1/collections/${encodeURIComponent(slug)}`, {
@@ -131,8 +145,17 @@ export default async function CollectionPage({
 
   return (
     <ProfilePageLayout
+      activeNav="discover"
       hero={
         <>
+          {data.coverUrl && (
+            <div
+              className="prof-collection-ambient-bg"
+              style={{ ['--ambient-cover-image' as string]: `url(${data.coverUrl})` }}
+              aria-hidden
+            />
+          )}
+          <div className="prof-collection-open-veil" aria-hidden />
           {backdrop.videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
           {backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
             <div
@@ -147,6 +170,10 @@ export default async function CollectionPage({
             <div className="prof-collection-top-row__actions">
               {data.collaborative && <AddTrackButton slug={params.slug} />}
               <CollectionEmbedButton slug={params.slug} />
+              <a href={rssUrl} className="prof-embed-btn" title="RSS feed" aria-label="RSS feed">
+                <IconRss />
+                RSS
+              </a>
             </div>
           </div>
           {data.collaborative && (
@@ -154,22 +181,23 @@ export default async function CollectionPage({
               🤝 Collaborative playlist — anyone can add a track
             </p>
           )}
-          {data.coverUrl && (
-            <div className="prof-collection-hero-cover">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={data.coverUrl} alt="" />
+          <div className="prof-collection-hero-row">
+            {data.coverUrl && (
+              <div className="prof-collection-hero-cover">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={data.coverUrl} alt="" />
+              </div>
+            )}
+            <div className="prof-collection-hero-info">
+              <h1 className="prof-page-title prof-page-title--collection">{data.name}</h1>
+              <p className="prof-list-meta">
+                {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
+              </p>
+              {data.description && (
+                <SafePlainText text={data.description} className="prof-list-meta--spaced" />
+              )}
             </div>
-          )}
-          <h1 className="prof-page-title">{data.name}</h1>
-          <p className="prof-list-meta">
-            {data.type.replace(/_/g, ' ')} · {data.items.length} item(s)
-          </p>
-          {data.description && (
-            <SafePlainText text={data.description} className="prof-list-meta--spaced" />
-          )}
-          <p className="prof-rss-row">
-            <a href={rssUrl}>RSS feed ↗</a>
-          </p>
+          </div>
         </>
       }
     >
