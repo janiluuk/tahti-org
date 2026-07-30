@@ -148,3 +148,91 @@ describe('GET /api/admin/storage/users/:id/files', () => {
     expect(res.statusCode).toBe(404)
   })
 })
+
+describe('PATCH /api/admin/storage/users/:id/quota', () => {
+  let app: Awaited<ReturnType<typeof buildApp>>
+  let boardCookie: string
+  let artistId: string
+
+  beforeAll(async () => {
+    app = await buildApp({ logger: false })
+    await app.ready()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+
+    const board = await createTestArtist(prisma, {
+      email: `${PREFIX}quota-board@example.com`,
+      username: `${PREFIX}quota-board`,
+      isBoard: true,
+    })
+    boardCookie = await sessionCookieFor(prisma, board.id)
+
+    const artist = await createTestArtist(prisma, {
+      email: `${PREFIX}quota-artist@example.com`,
+      username: `${PREFIX}quota-artist`,
+    })
+    artistId = artist.id
+  })
+
+  afterAll(async () => {
+    await app.close()
+    await cleanupUsersByEmailPrefix(prisma, PREFIX)
+  })
+
+  it('requires board auth', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/storage/users/${artistId}/quota`,
+      payload: { quotaBytes: 1_000_000 },
+    })
+    expect(res.statusCode).toBe(401)
+  })
+
+  it('sets a quota override for a user with no existing quota row', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/storage/users/${artistId}/quota`,
+      headers: { cookie: boardCookie },
+      payload: { quotaBytes: 2_000_000_000 },
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ quotaBytes: 2_000_000_000, usedBytes: 0 })
+
+    const row = await prisma.userStorageQuota.findUnique({ where: { userId: artistId } })
+    expect(row?.quotaBytes).toBe(2_000_000_000n)
+  })
+
+  it('overwrites an existing quota without touching usedBytes', async () => {
+    await recordUsageDelta(prisma, artistId, 500)
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/storage/users/${artistId}/quota`,
+      headers: { cookie: boardCookie },
+      payload: { quotaBytes: 3_000_000_000 },
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json()
+    expect(body.quotaBytes).toBe(3_000_000_000)
+    expect(body.usedBytes).toBe(500)
+  })
+
+  it('rejects a non-positive quota', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/admin/storage/users/${artistId}/quota`,
+      headers: { cookie: boardCookie },
+      payload: { quotaBytes: 0 },
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('404s for an unknown user', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/admin/storage/users/does-not-exist/quota',
+      headers: { cookie: boardCookie },
+      payload: { quotaBytes: 1_000_000 },
+    })
+    expect(res.statusCode).toBe(404)
+  })
+})

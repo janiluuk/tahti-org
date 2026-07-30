@@ -41,3 +41,16 @@ export const AdminUserFilesResponseSchema = z.object({
   displayName: z.string(),
   files: z.array(AdminUserFileSchema),
 })
+
+// Admin per-user quota override — min 1 byte (not 0, which would just block
+// every future upload rather than express "no extra allowance"), max 1TB as
+// a sanity ceiling against fat-fingering a value in bytes.
+export const AdminSetUserQuotaSchema = z.object({
+  quotaBytes: z
+    .number()
+    .int()
+    .min(1)
+    .max(1024 * 1024 * 1024 * 1024),
+})
+
+export type AdminSetUserQuota = z.infer<typeof AdminSetUserQuotaSchema>

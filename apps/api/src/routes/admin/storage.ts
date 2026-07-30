@@ -3,9 +3,11 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  AdminSetUserQuotaSchema,
   AdminStorageOverviewSchema,
   AdminUserFilesResponseSchema,
   IdParamSchema,
+  StorageQuotaViewSchema,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -110,6 +112,50 @@ const adminStorageRoutes: FastifyPluginAsync = async (fastify) => {
       )
 
       return reply.send({ username: user.username, displayName: user.displayName, files })
+    },
+  )
+
+  // Admin override for a single user's quota — e.g. granting a supporter or
+  // problem case extra room without changing the platform-wide default.
+  // Upserts since a user may not have used any storage yet (quota row is
+  // otherwise lazily created on first upload, see getOrCreateQuota).
+  fastify.patch(
+    '/api/admin/storage/users/:id/quota',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        response: openApiResponse(StorageQuotaViewSchema, 'StorageQuotaView'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const parsedBody = AdminSetUserQuotaSchema.safeParse(request.body)
+      if (!parsedBody.success) {
+        return reply
+          .status(400)
+          .send({ error: parsedBody.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const { quotaBytes } = parsedBody.data
+
+      const user = await fastify.prisma.user.findUnique({
+        where: { id: routeParams.id },
+        select: { id: true },
+      })
+      if (!user) return reply.status(404).send({ error: 'User not found' })
+
+      const quota = await fastify.prisma.userStorageQuota.upsert({
+        where: { userId: routeParams.id },
+        create: { userId: routeParams.id, quotaBytes: BigInt(quotaBytes) },
+        update: { quotaBytes: BigInt(quotaBytes) },
+        select: { quotaBytes: true, usedBytes: true },
+      })
+
+      return reply.send({
+        quotaBytes: Number(quota.quotaBytes),
+        usedBytes: Number(quota.usedBytes),
+      })
     },
   )
 }

@@ -4,6 +4,7 @@
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { brandTokens } from '@tahti/ui'
+import { QuotaEditor } from './_quota-editor'
 
 interface StorageUserRow {
   userId: string
@@ -107,7 +108,12 @@ export default async function AdminStoragePage() {
                           {row.displayName} <span style={{ opacity: 0.55 }}>@{row.username}</span>
                         </td>
                         <td>{formatBytes(row.usedBytes)}</td>
-                        <td style={{ opacity: 0.6 }}>{formatBytes(row.quotaBytes)}</td>
+                        <td style={{ opacity: 0.6 }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                            <span>{formatBytes(row.quotaBytes)}</span>
+                            <QuotaEditor userId={row.userId} quotaBytes={row.quotaBytes} />
+                          </div>
+                        </td>
                         <td
                           style={{
                             opacity: pct > 100 ? 1 : 0.6,
