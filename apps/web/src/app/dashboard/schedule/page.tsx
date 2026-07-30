@@ -48,8 +48,8 @@ export default async function SchedulePage() {
         <div>
           <h1 className="studio-page-title">Schedule</h1>
           <Text tone="muted" size="sm">
-            The 24/7 rotation that plays when you&apos;re offline — mix in archive sets and
-            release tracks.
+            The 24/7 rotation that plays when you&apos;re offline — mix in archive sets and release
+            tracks.
           </Text>
         </div>
         <div className="studio-page-header__actions">
