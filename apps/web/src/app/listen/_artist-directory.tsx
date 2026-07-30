@@ -3,15 +3,22 @@
 
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import type { ChannelDirectoryEntry } from '@tahti/shared'
 import { AvatarTile } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 
+function cardBgStyle(avatarUrl: string | null | undefined): CSSProperties | undefined {
+  return avatarUrl ? ({ '--card-bg-image': `url(${avatarUrl})` } as CSSProperties) : undefined
+}
+
+const PAGE_SIZE = 24
+
 export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
   const [query, setQuery] = useState('')
   const [genre, setGenre] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
 
   const genres = useMemo(() => {
     const set = new Set<string>()
@@ -27,6 +34,20 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
       .sort((a, b) => a.displayName.localeCompare(b.displayName))
   }, [items, query, genre])
 
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount)
+  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
+  function updateQuery(next: string) {
+    setQuery(next)
+    setPage(1)
+  }
+
+  function updateGenre(next: string | null) {
+    setGenre(next)
+    setPage(1)
+  }
+
   return (
     <div className="artist-directory">
       <div className="artist-directory__controls">
@@ -35,7 +56,7 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
           className="artist-directory__search"
           placeholder="Search artists…"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => updateQuery(e.target.value)}
           aria-label="Search artists"
         />
         {genres.length > 0 && (
@@ -43,7 +64,7 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
             <button
               type="button"
               className={`listen-genre-filter__chip${genre === null ? ' listen-genre-filter__chip--active' : ''}`}
-              onClick={() => setGenre(null)}
+              onClick={() => updateGenre(null)}
             >
               All genres
             </button>
@@ -52,7 +73,7 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
                 key={g}
                 type="button"
                 className={`listen-genre-filter__chip${genre === g ? ' listen-genre-filter__chip--active' : ''}`}
-                onClick={() => setGenre(genre === g ? null : g)}
+                onClick={() => updateGenre(genre === g ? null : g)}
               >
                 {g}
               </button>
@@ -64,28 +85,58 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
       {filtered.length === 0 ? (
         <p className="public-empty-card__hint">No artists match that search.</p>
       ) : (
-        <ul className="artist-directory__grid">
-          {filtered.map((item) => (
-            <li key={item.slug}>
-              <Link href={resolveChannelUrl(item.slug)} className="artist-directory__card">
-                {item.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.avatarUrl} alt="" className="artist-directory__avatar" />
-                ) : (
-                  <AvatarTile
-                    size="sm"
-                    name={item.displayName}
-                    className="artist-directory__avatar"
-                  />
-                )}
-                <span className="artist-directory__name">{item.displayName}</span>
-                {item.genres.length > 0 && (
-                  <span className="artist-directory__genre">{item.genres[0]}</span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="artist-directory__grid">
+            {paged.map((item) => (
+              <li key={item.slug}>
+                <Link
+                  href={resolveChannelUrl(item.slug)}
+                  className="artist-directory__card"
+                  style={cardBgStyle(item.avatarUrl)}
+                >
+                  {item.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.avatarUrl} alt="" className="artist-directory__avatar" />
+                  ) : (
+                    <AvatarTile
+                      size="sm"
+                      name={item.displayName}
+                      className="artist-directory__avatar"
+                    />
+                  )}
+                  <span className="artist-directory__name">{item.displayName}</span>
+                  {item.genres.length > 0 && (
+                    <span className="artist-directory__genre">{item.genres[0]}</span>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {pageCount > 1 && (
+            <div className="artist-directory__pagination" role="navigation" aria-label="Pagination">
+              <button
+                type="button"
+                className="artist-directory__page-btn"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+              >
+                ← Prev
+              </button>
+              <span className="artist-directory__page-status">
+                Page {safePage} of {pageCount}
+              </span>
+              <button
+                type="button"
+                className="artist-directory__page-btn"
+                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                disabled={safePage >= pageCount}
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

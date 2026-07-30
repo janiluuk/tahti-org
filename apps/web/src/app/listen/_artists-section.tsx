@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
+import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import type { ChannelDirectoryEntry } from '@tahti/shared'
 import { AvatarTile } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
+
+function cardBgStyle(avatarUrl: string | null | undefined): CSSProperties | undefined {
+  return avatarUrl ? ({ '--card-bg-image': `url(${avatarUrl})` } as CSSProperties) : undefined
+}
 
 const PREVIEW_COUNT = 12
 
@@ -30,7 +35,11 @@ export function ArtistsSection({ items }: { items: ChannelDirectoryEntry[] }) {
       <ul className="artist-directory__grid">
         {preview.map((item) => (
           <li key={item.slug}>
-            <Link href={resolveChannelUrl(item.slug)} className="artist-directory__card">
+            <Link
+              href={resolveChannelUrl(item.slug)}
+              className="artist-directory__card"
+              style={cardBgStyle(item.avatarUrl)}
+            >
               {item.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={item.avatarUrl} alt="" className="artist-directory__avatar" />
