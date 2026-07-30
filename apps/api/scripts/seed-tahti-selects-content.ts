@@ -199,6 +199,25 @@ async function main() {
           data: { artistName: track.artist },
         })
       } else {
+        const archiveItem = await prisma.archiveItem.create({
+          data: {
+            channelId: channel.id,
+            title: track.title,
+            artistName: track.artist,
+            status: 'READY',
+            isPublic: true,
+            license: 'CC0',
+            qualityBadge: 'TRANSCODED',
+            commentary: `CC0 1.0 Universal (Public Domain Dedication) — ${track.artist}. Source: ${track.sourcePage}`,
+          },
+        })
+        archiveItemId = archiveItem.id
+      }
+
+      // (Re)upload audio when missing — existing rows used to skip this path and
+      // leave READY items with null mp3Key after a MinIO wipe / partial seed.
+      const needsAudio = !existing?.mp3Key
+      if (needsAudio) {
         const oggPath = path.join(tmpDir, `${position}.ogg`)
         const mp3Path = path.join(tmpDir, `${position}.mp3`)
 
@@ -214,21 +233,7 @@ async function main() {
         await transcodeToMp3(oggPath, mp3Path)
         const durationSec = await ffprobeDurationSec(mp3Path)
 
-        const archiveItem = await prisma.archiveItem.create({
-          data: {
-            channelId: channel.id,
-            title: track.title,
-            artistName: track.artist,
-            status: 'READY',
-            isPublic: true,
-            license: 'CC0',
-            qualityBadge: 'TRANSCODED',
-            durationSec,
-            commentary: `CC0 1.0 Universal (Public Domain Dedication) — ${track.artist}. Source: ${track.sourcePage}`,
-          },
-        })
-
-        const mp3Key = `mp3/${TAHTI_SELECTS_SLUG}/${archiveItem.id}.mp3`
+        const mp3Key = `mp3/${TAHTI_SELECTS_SLUG}/${archiveItemId}.mp3`
         const mp3Buf = await readFile(mp3Path)
         await s3.send(
           new PutObjectCommand({
@@ -240,19 +245,19 @@ async function main() {
         )
 
         const coverSvg = generateCoverArtSvg(track.title, track.artist)
-        const coverKey = `archive/${TAHTI_SELECTS_SLUG}/${archiveItem.id}/banner-cover.svg`
+        const coverKey = `archive/${TAHTI_SELECTS_SLUG}/${archiveItemId}/banner-cover.svg`
         await putObjectText(coverKey, coverSvg, 'image/svg+xml')
 
         await prisma.archiveItem.update({
-          where: { id: archiveItem.id },
+          where: { id: archiveItemId },
           data: {
             mp3Key,
+            durationSec,
             fileSizeBytes: BigInt(mp3Buf.length),
             bannerUrl: publicMediaUrl(coverKey),
+            commentary: `CC0 1.0 Universal (Public Domain Dedication) — ${track.artist}. Source: ${track.sourcePage}`,
           },
         })
-
-        archiveItemId = archiveItem.id
       }
 
       await prisma.curatedRotationItem.upsert({
