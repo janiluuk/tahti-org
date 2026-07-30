@@ -13,6 +13,18 @@ export interface TimeLeft {
   past: boolean
 }
 
+const broadcastTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+export function formatBroadcastTime(target: Date): string {
+  return broadcastTimeFormatter.format(target)
+}
+
 export function calcTimeLeft(target: Date, now = Date.now()): TimeLeft {
   const diff = target.getTime() - now
   if (diff <= 0) return { days: 0, hrs: 0, min: 0, sec: 0, past: true }
@@ -46,6 +58,7 @@ export function BroadcastCountdown({
   const isStudio = variant === 'studio-compact'
   const rootClass = isStudio ? 'studio-countdown-preview' : 'ch-countdown'
   const labelClass = isStudio ? 'studio-countdown-preview__label' : 'ch-countdown-label'
+  const timeClass = isStudio ? 'studio-countdown-preview__time' : 'ch-countdown-time'
   const noteClass = isStudio ? 'studio-countdown-preview__note' : 'ch-countdown-note'
   const tilesClass = isStudio ? 'studio-countdown-preview__tiles' : 'ch-countdown-tiles'
   const tileClass = isStudio ? 'studio-countdown-preview__tile' : 'ch-countdown-tile'
@@ -55,6 +68,7 @@ export function BroadcastCountdown({
   return (
     <div className={rootClass} role="timer" aria-live="polite">
       <p className={labelClass}>Next live broadcast</p>
+      <p className={timeClass}>{formatBroadcastTime(target)}</p>
       {note && <p className={noteClass}>{note}</p>}
       <div className={tilesClass}>
         <div className={tileClass}>

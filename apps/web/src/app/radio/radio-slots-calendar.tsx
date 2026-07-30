@@ -3,13 +3,24 @@
 
 'use client'
 
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import { AvatarTile } from '@tahti/ui'
 import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
 
 const DAYS_VISIBLE = 7
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
+
+// A fixed hue per artist (hashed from their handle) so the same DJ/show always
+// reads as the same color across weeks, instead of every booked slot sharing
+// one generic "booked" tint.
+const SHOW_COLOR_VARS = ['--cyan', '--amber', '--green', '--purple', '--coral', '--cyan-200']
+
+function showColorVar(key: string): string {
+  let hash = 0
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0
+  return SHOW_COLOR_VARS[hash % SHOW_COLOR_VARS.length]!
+}
 
 function startOfLocalDay(d: Date): Date {
   const copy = new Date(d)
@@ -120,6 +131,9 @@ export function RadioSlotsCalendar({
               <div className="ch-radio-slots__hour-label">{String(hour).padStart(2, '0')}:00</div>
               {days.map((day) => {
                 const slot = slotAt(day, hour)
+                const colorVar = slot
+                  ? showColorVar(slot.artist.channelSlug ?? slot.artist.username)
+                  : null
                 return (
                   <button
                     key={`${day.toISOString()}-${hour}`}
@@ -128,6 +142,11 @@ export function RadioSlotsCalendar({
                     disabled={!slot}
                     onClick={() => slot && setSelected(slot)}
                     title={slot ? slot.artist.displayName : undefined}
+                    style={
+                      colorVar
+                        ? ({ '--show-color': `var(${colorVar})` } as CSSProperties)
+                        : undefined
+                    }
                   >
                     {slot && (
                       <span className="ch-radio-slots__cell-label">{slot.artist.displayName}</span>

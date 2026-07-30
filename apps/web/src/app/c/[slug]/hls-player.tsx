@@ -18,6 +18,7 @@ export default function HlsPlayer({
   nextUpLabel,
   subtitleHref,
   hideWaveform = false,
+  artOverlayPlay = false,
 }: {
   url: string
   title?: string
@@ -41,6 +42,8 @@ export default function HlsPlayer({
   /** Caller already renders its own audio-reactive backdrop (e.g. a
    * ChannelVisualizer) behind this player — skip the static CSS bars. */
   hideWaveform?: boolean
+  /** Tahti Radio only: centered fade-in play/pause overlay on the artwork. */
+  artOverlayPlay?: boolean
 }) {
   const {
     track,
@@ -124,6 +127,7 @@ export default function HlsPlayer({
         isReplay={isReplay}
         nextUpLabel={nextUpLabel}
         hideWaveform={hideWaveform}
+        artOverlayPlay={artOverlayPlay}
       />
     </div>
   )
