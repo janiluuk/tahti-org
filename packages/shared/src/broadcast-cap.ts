@@ -2,8 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { ArtistTier, PrismaClient } from '@tahti/db'
+import { TAHTI_RADIO_SLUG } from './tahti-radio.js'
+import { TAHTI_SELECTS_SLUG } from './tahti-selects.js'
 
 // M20: free-tier artists get 1 hour of live broadcasting per UTC calendar week.
+
+/** Always-on system channels — never tick or disconnect via the free-tier weekly cap. */
+const SYSTEM_ALWAYS_ON_SLUGS = new Set([TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG])
 
 export const FREE_WEEKLY_LIVE_CAP_SEC = 3600
 /** M20: live continues this many seconds after the weekly cap before disconnect. */
@@ -118,11 +123,16 @@ export function canAcceptSourceConnect(cap: BroadcastCapResult, channelState: st
 export async function tickWeeklyLiveSeconds(prisma: PrismaClient): Promise<number> {
   const liveChannels = await prisma.channel.findMany({
     where: { state: 'LIVE' },
-    select: { userId: true, user: { select: { tier: true, weeklyLiveResetAt: true } } },
+    select: {
+      slug: true,
+      userId: true,
+      user: { select: { tier: true, weeklyLiveResetAt: true } },
+    },
   })
 
   let updated = 0
   for (const ch of liveChannels) {
+    if (SYSTEM_ALWAYS_ON_SLUGS.has(ch.slug)) continue
     if (isUnlimitedLiveTier(ch.user.tier)) continue
     await ensureWeeklyReset(prisma, ch.userId, ch.user.weeklyLiveResetAt)
     await prisma.user.update({
@@ -147,12 +157,13 @@ export async function resetFreeWeeklyLiveCounters(prisma: PrismaClient): Promise
 export async function enforceWeeklyCapDisconnects(prisma: PrismaClient): Promise<string[]> {
   const overCap = await prisma.user.findMany({
     where: { tier: 'FREE', weeklyLiveSecondsUsed: { gte: FREE_WEEKLY_HARD_CAP_SEC } },
-    select: { id: true, channel: { select: { id: true, state: true } } },
+    select: { id: true, channel: { select: { id: true, slug: true, state: true } } },
   })
 
   const stoppedChannelIds: string[] = []
   for (const u of overCap) {
     if (!u.channel || u.channel.state !== 'LIVE') continue
+    if (SYSTEM_ALWAYS_ON_SLUGS.has(u.channel.slug)) continue
     const broadcast = await prisma.broadcast.findFirst({
       where: { channelId: u.channel.id, endedAt: null },
       orderBy: { startedAt: 'desc' },

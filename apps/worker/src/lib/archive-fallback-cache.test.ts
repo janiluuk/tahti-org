@@ -18,6 +18,7 @@ import { syncChannelArchiveFallbackCache } from './archive-fallback-cache.js'
 const prismaMock = {
   channel: { findUnique: vi.fn() },
   archiveItem: { findMany: vi.fn() },
+  curatedRotationItem: { findMany: vi.fn() },
   announcementSettings: { findUnique: vi.fn() },
   announcementClip: { findMany: vi.fn() },
 }
@@ -30,12 +31,14 @@ describe('syncChannelArchiveFallbackCache', () => {
     vi.clearAllMocks()
     await mkdir(root, { recursive: true })
     prismaMock.channel.findUnique.mockResolvedValue({
+      slug: 'some-artist',
       fallbackMode: 'shuffle',
       fallbackEnabled: true,
       announcementsEnabled: true,
     })
     prismaMock.announcementSettings.findUnique.mockResolvedValue(null)
     prismaMock.announcementClip.findMany.mockResolvedValue([])
+    prismaMock.curatedRotationItem.findMany.mockResolvedValue([])
     prismaMock.archiveItem.findMany.mockResolvedValue([
       {
         id: 'item-1',
@@ -143,9 +146,12 @@ describe('syncChannelArchiveFallbackCache', () => {
 
   it('M33: skips the pool entirely and writes an empty m3u when fallbackEnabled is false', async () => {
     prismaMock.channel.findUnique.mockResolvedValue({
+      slug: 'some-artist',
       fallbackMode: 'shuffle',
       fallbackEnabled: false,
+      announcementsEnabled: false,
     })
+    prismaMock.curatedRotationItem.findMany.mockResolvedValue([])
 
     const summary = await syncChannelArchiveFallbackCache(prismaMock as never, channelId, root, 24)
 
