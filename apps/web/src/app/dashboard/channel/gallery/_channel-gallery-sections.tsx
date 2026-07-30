@@ -18,8 +18,7 @@ export type ChannelGalleryEditorData = ChannelEditorFetchResult & {
   displayName: string
 }
 
-/** Gallery & backdrop + its slideshow transition — split off /dashboard/channel per
- * literal-reference-method.md Rule B (neither appears in 08-channel-designer.html). */
+/** Gallery & backdrop + slideshow transition — lives under Settings → Media & Presskit. */
 export function ChannelGallerySections({
   channelSlug,
   displayName,

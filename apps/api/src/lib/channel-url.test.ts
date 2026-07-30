@@ -19,6 +19,15 @@ describe('resolveChannelUrl', () => {
   })
 })
 
+describe('resolveChannelUrl — apex app URL', () => {
+  it('uses the artist wildcard subdomain when APP_URL is the apex', async () => {
+    vi.doMock('../config.js', () => ({ config: { appUrl: 'https://tahti.live' } }))
+    vi.resetModules()
+    const { resolveChannelUrl } = await import('./channel-url.js')
+    expect(resolveChannelUrl('yaniho')).toBe('https://yaniho.tahti.live')
+  })
+})
+
 describe('resolveChannelUrl — no app. host', () => {
   it('falls back to the in-app /c/[slug] path (local/dev)', async () => {
     vi.doMock('../config.js', () => ({ config: { appUrl: 'http://localhost:3000' } }))

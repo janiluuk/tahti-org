@@ -27,6 +27,12 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
+  // Listeners (no channel) don't get the artist studio overview — send them to
+  // the feed. Account/messages under /dashboard/* stay reachable from their menu.
+  if (!user.channel) {
+    redirect('/feed')
+  }
+
   const authHeaders = { Cookie: `tahti_session=${sessionValue}` }
   const get = (path: string) =>
     fetch(`${apiUrl}${path}`, { headers: authHeaders, cache: 'no-store' as const })

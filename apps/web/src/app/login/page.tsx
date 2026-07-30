@@ -50,8 +50,25 @@ export default function LoginPage() {
   // reload tearing the whole app down. router.refresh() re-fetches the destination
   // route's server data so it reflects the just-established session even if that
   // route was already visited (and cached) while signed out.
-  function completeLogin() {
-    router.push(nextPath)
+  // Artists who signed in from a top-level browse page land in the Artist panel
+  // (dashboard); deep links (channel, profile, release, …) still honour `next`.
+  async function completeLogin() {
+    let dest = nextPath
+    const browseRoots = new Set(['/', '/listen', '/radio', '/venues'])
+    const pathOnly = nextPath.split('?')[0] ?? nextPath
+    if (browseRoots.has(pathOnly)) {
+      try {
+        const api = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+        const me = await fetch(`${api}/api/auth/me`, { credentials: 'include' })
+        if (me.ok) {
+          const data = (await me.json()) as { channel?: { slug?: string } | null }
+          if (data.channel?.slug) dest = '/dashboard'
+        }
+      } catch {
+        // Keep nextPath if /me is unreachable
+      }
+    }
+    router.push(dest)
     router.refresh()
   }
 

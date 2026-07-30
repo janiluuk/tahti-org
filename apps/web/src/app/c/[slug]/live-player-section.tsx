@@ -5,6 +5,7 @@
 
 import HlsPlayer from './hls-player'
 import ReactionsOverlay from './reactions'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 interface LivePlayerSectionProps {
   url: string
@@ -35,7 +36,7 @@ export function LivePlayerSection({
           title={title}
           subtitle={subtitle ?? `@${slug}`}
           subtitleHref={subtitleHref}
-          href={`/c/${slug}`}
+          href={resolveChannelUrl(slug)}
           artworkUrl={artworkUrl}
           isReplay={isReplay}
           nextUpLabel={nextUpLabel}

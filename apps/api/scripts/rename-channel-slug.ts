@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 /**
- * One-off admin rename of a channel's <slug>.tahti.live address — mirrors the
- * self-service PATCH /api/me/channel/slug transaction in
- * routes/me/channel-slug.ts exactly (RTMP key rotation, 30-day
+ * One-off admin rename of a channel's @username + <slug>.tahti.live address —
+ * mirrors the self-service PATCH /api/me/channel/slug transaction in
+ * routes/me/channel-slug.ts exactly (username sync, RTMP key rotation, 30-day
  * ChannelSlugRedirect), for use when the artist can't drive the settings UI
  * themselves (e.g. a board-assisted rename).
  *
@@ -29,12 +29,25 @@ async function main() {
 
   const channel = await prisma.channel.findUnique({
     where: { slug: oldSlug },
-    select: { id: true, slug: true, state: true, rtmpStreamKeyHash: true },
+    select: { id: true, slug: true, state: true, rtmpStreamKeyHash: true, userId: true },
   })
   if (!channel) throw new Error(`No channel with slug "${oldSlug}"`)
 
-  const clash = await prisma.channel.findUnique({ where: { slug: newSlug }, select: { id: true } })
-  if (clash) throw new Error(`Slug "${newSlug}" is already taken`)
+  const clashChannel = await prisma.channel.findUnique({
+    where: { slug: newSlug },
+    select: { id: true, userId: true },
+  })
+  if (clashChannel && clashChannel.userId !== channel.userId) {
+    throw new Error(`Slug "${newSlug}" is already taken`)
+  }
+
+  const clashUser = await prisma.user.findUnique({
+    where: { username: newSlug },
+    select: { id: true },
+  })
+  if (clashUser && clashUser.id !== channel.userId) {
+    throw new Error(`Username "${newSlug}" is already taken`)
+  }
 
   const redirectClash = await prisma.channelSlugRedirect.findFirst({
     where: { oldSlug: newSlug, expiresAt: { gt: new Date() }, channelId: { not: channel.id } },
@@ -51,6 +64,10 @@ async function main() {
   const redirectExpiresAt = new Date(Date.now() + SLUG_REDIRECT_GRACE_MS)
 
   await prisma.$transaction([
+    prisma.user.update({
+      where: { id: channel.userId },
+      data: { username: newSlug },
+    }),
     prisma.channel.update({
       where: { id: channel.id },
       data: {
@@ -68,10 +85,10 @@ async function main() {
     }),
   ])
 
-  console.log(`Renamed channel ${oldSlug} -> ${newSlug}`)
+  console.log(`Renamed @${oldSlug} / ${oldSlug}.tahti.live -> @${newSlug} / ${newSlug}.tahti.live`)
   console.log(`New RTMP stream key: ${newRtmpKey}`)
   console.log(
-    `${oldSlug}.tahti.live redirects to ${newSlug}.tahti.live until ${redirectExpiresAt.toISOString()}`,
+    `${oldSlug}.tahti.live and /u/${oldSlug} redirect until ${redirectExpiresAt.toISOString()}`,
   )
 }
 

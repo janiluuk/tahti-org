@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 /** Production app origin — never localhost in user-facing fallbacks. */
-export const DEFAULT_APP_URL = 'https://app.tahti.live'
+export const DEFAULT_APP_URL = 'https://tahti.live'
 
 export function resolveAppUrl(): string {
   const raw = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? DEFAULT_APP_URL
@@ -11,9 +11,11 @@ export function resolveAppUrl(): string {
 
 /**
  * An artist's default public URL is their wildcard subdomain (slug.tahti.live),
- * proxied by Caddy and rewritten to /c/[slug] by middleware.ts. Only derivable
- * when the app origin follows the app.<root> convention (production) — local/dev
- * hosts (localhost, IPs) have no wildcard DNS, so fall back to the in-app path.
+ * proxied at the edge and rewritten to /c/[slug] by middleware.ts. Derivable when
+ * the app origin is the apex (`tahti.live` / `www.tahti.live`) or the legacy
+ * `app.<root>` host — local/dev hosts (localhost, IPs) have no wildcard DNS, so
+ * fall back to the in-app path. Production never exposes /c/[slug] as a public
+ * URL: Caddy + middleware 308 to the subdomain form.
  *
  * Pass `hash` to link to a specific element on the channel page (e.g. a track),
  * e.g. resolveChannelUrl('nova-drift', { hash: 'archive-item-123' }).
@@ -25,6 +27,9 @@ export function resolveChannelUrl(slug: string, opts?: { hash?: string }): strin
     const { protocol, hostname } = new URL(appUrl)
     if (hostname.startsWith('app.')) {
       return `${protocol}//${slug}.${hostname.slice('app.'.length)}${suffix}`
+    }
+    if (hostname === 'tahti.live' || hostname === 'www.tahti.live') {
+      return `${protocol}//${slug}.tahti.live${suffix}`
     }
   } catch {
     // fall through to path-based URL

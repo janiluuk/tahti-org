@@ -7,7 +7,7 @@ import { SettingsSubnav } from './_settings-subnav'
 
 export default function SettingsLayout({ children }: { children: ReactNode }) {
   return (
-    <PageShell size="md">
+    <PageShell size="lg">
       <SettingsSubnav />
       {children}
     </PageShell>

@@ -33,10 +33,16 @@ ARG NEXT_PUBLIC_API_BASE=http://localhost:3001
 ARG NEXT_PUBLIC_API_URL=http://localhost:3001
 ARG NEXT_PUBLIC_CENTRIFUGO_WS=ws://localhost:8000/connection/websocket
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
+ARG NEXT_PUBLIC_HCAPTCHA_SITE_KEY=
+# Also available at runtime via compose; listed here so a bake with SIGNUP_OPEN=true
+# works even if Next inlines process.env.SIGNUP_OPEN during `next build`.
+ARG SIGNUP_OPEN=false
 ENV NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE} \
     NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
     NEXT_PUBLIC_CENTRIFUGO_WS=${NEXT_PUBLIC_CENTRIFUGO_WS} \
-    NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+    NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
+    NEXT_PUBLIC_HCAPTCHA_SITE_KEY=${NEXT_PUBLIC_HCAPTCHA_SITE_KEY} \
+    SIGNUP_OPEN=${SIGNUP_OPEN}
 
 COPY tsconfig.base.json ./tsconfig.base.json
 COPY packages/shared/tsconfig.json ./packages/shared/tsconfig.json

@@ -57,7 +57,15 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
         select: profileSelect,
       })
       if (!profile) return reply.status(404).send({ error: 'User not found' })
-      return reply.send({ ...profile, createdAt: profile.createdAt.toISOString() })
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { artistKind: true },
+      })
+      return reply.send({
+        ...profile,
+        createdAt: profile.createdAt.toISOString(),
+        artistKind: channel?.artistKind ?? 'SINGLE',
+      })
     },
   )
 
@@ -95,11 +103,35 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.showFollowers !== undefined) data.showFollowers = body.showFollowers
       if (body.showFollowing !== undefined) data.showFollowing = body.showFollowing
 
-      const updated = await fastify.prisma.user.update({
-        where: { id: user.id },
-        data,
-        select: profileSelect,
-      })
+      const updated =
+        Object.keys(data).length > 0
+          ? await fastify.prisma.user.update({
+              where: { id: user.id },
+              data,
+              select: profileSelect,
+            })
+          : await fastify.prisma.user.findUniqueOrThrow({
+              where: { id: user.id },
+              select: profileSelect,
+            })
+
+      let artistKind: 'SINGLE' | 'COLLECTIVE' = 'SINGLE'
+      if (body.artistKind !== undefined) {
+        const channel = await fastify.prisma.channel.updateMany({
+          where: { userId: user.id },
+          data: { artistKind: body.artistKind },
+        })
+        if (channel.count === 0) {
+          return reply.status(404).send({ error: 'Channel not found' })
+        }
+        artistKind = body.artistKind
+      } else {
+        const channel = await fastify.prisma.channel.findUnique({
+          where: { userId: user.id },
+          select: { artistKind: true },
+        })
+        artistKind = channel?.artistKind ?? 'SINGLE'
+      }
 
       if (body.bio) {
         recordMentions(fastify.prisma, user.id, body.bio, 'BIO', user.id).catch((e) =>
@@ -107,7 +139,11 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
         )
       }
 
-      return reply.send({ ...updated, createdAt: updated.createdAt.toISOString() })
+      return reply.send({
+        ...updated,
+        createdAt: updated.createdAt.toISOString(),
+        artistKind,
+      })
     },
   )
 

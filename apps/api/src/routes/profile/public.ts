@@ -61,7 +61,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       showFollowing: true,
       createdAt: true,
       _count: { select: { artistFollowers: true, artistFollowing: true } },
-      channel: { select: { id: true, slug: true, state: true } },
+      channel: { select: { id: true, slug: true, state: true, artistKind: true } },
       releases: {
         where: { state: 'PUBLISHED' },
         orderBy: { releaseDate: 'desc' },
@@ -220,7 +220,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       followerCount: user.showFollowers ? user._count.artistFollowers : null,
       followingCount: user.showFollowing ? user._count.artistFollowing : null,
     },
-    channel: user.channel ? { slug: user.channel.slug, state: user.channel.state } : null,
+    channel: user.channel
+      ? { slug: user.channel.slug, state: user.channel.state, artistKind: user.channel.artistKind }
+      : null,
     releases,
     tracks,
     fanTiers: user.fanTiers,

@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import type { FeedItem } from '@tahti/shared'
 import { MyFeedResponseSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
+import { resolveChannelUrl } from '../../lib/channel-url.js'
 
 const FEED_LIMIT = 40
 
@@ -100,7 +101,7 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
             channelSlug: t.channel.slug,
             liked: likedIds.has(t.id),
             likeCount: likeCountById.get(t.id) ?? 0,
-            url: `/c/${t.channel.slug}#archive-item-${t.id}`,
+            url: resolveChannelUrl(t.channel.slug, { hash: `archive-item-${t.id}` }),
           }),
         ),
       ]

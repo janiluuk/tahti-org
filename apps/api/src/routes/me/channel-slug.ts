@@ -21,13 +21,14 @@ import {
 const RESERVED_SET = new Set<string>(RESERVED_CHANNEL_SLUGS)
 const SLUG_REDIRECT_GRACE_MS = 30 * 24 * 60 * 60 * 1000
 
-/** Self-service channel address (<slug>.tahti.live) rename. The RTMP stream key
- * embeds the slug (`<slug>__<random>`, see routes/internal/rtmp.ts's on_publish
- * lookup) — renaming issues a new one so a channel never silently loses its
- * publish credential. Icecast's on_connect derives the slug directly from the
- * mount path pattern rather than trusting the stored liveSourceMount value, so
- * that field just gets kept in sync for display — it isn't independently
- * authoritative and needs no credential rotation of its own. */
+/** Self-service username + channel address (<slug>.tahti.live) rename.
+ * User.username and Channel.slug stay locked together so @handle, /u/@handle,
+ * and slug.tahti.live never diverge. The RTMP stream key embeds the slug
+ * (`<slug>__<random>`, see routes/internal/rtmp.ts's on_publish lookup) —
+ * renaming issues a new one so a channel never silently loses its publish
+ * credential. Icecast's on_connect derives the slug from the mount path
+ * pattern rather than trusting liveSourceMount, so that field is kept in sync
+ * for display only. */
 const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/channel/slug-available',
@@ -50,11 +51,20 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const user = request.sessionUser!
-      const existing = await fastify.prisma.channel.findUnique({
-        where: { slug },
-        select: { userId: true },
-      })
-      if (existing && existing.userId !== user.id) {
+      const [existingChannel, existingUser] = await Promise.all([
+        fastify.prisma.channel.findUnique({
+          where: { slug },
+          select: { userId: true },
+        }),
+        fastify.prisma.user.findUnique({
+          where: { username: slug },
+          select: { id: true },
+        }),
+      ])
+      if (existingChannel && existingChannel.userId !== user.id) {
+        return reply.send({ available: false, reason: 'taken' })
+      }
+      if (existingUser && existingUser.id !== user.id) {
         return reply.send({ available: false, reason: 'taken' })
       }
 
@@ -89,7 +99,7 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug } = parsed.data
 
       if (RESERVED_SET.has(slug)) {
-        return reply.status(409).send({ error: 'That address is reserved' })
+        return reply.status(409).send({ error: 'That username is reserved' })
       }
 
       const user = request.sessionUser!
@@ -99,7 +109,13 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
-      if (slug === channel.slug) {
+      const me = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { username: true },
+      })
+      if (!me) return reply.status(404).send({ error: 'User not found' })
+
+      if (slug === channel.slug && slug === me.username) {
         return reply.send({
           slug: channel.slug,
           rtmpStreamKey: '',
@@ -107,11 +123,22 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
         })
       }
 
-      const clash = await fastify.prisma.channel.findUnique({
-        where: { slug },
-        select: { id: true },
-      })
-      if (clash) return reply.status(409).send({ error: 'That address is already taken' })
+      const [clashChannel, clashUser] = await Promise.all([
+        fastify.prisma.channel.findUnique({
+          where: { slug },
+          select: { id: true, userId: true },
+        }),
+        fastify.prisma.user.findUnique({
+          where: { username: slug },
+          select: { id: true },
+        }),
+      ])
+      if (clashChannel && clashChannel.userId !== user.id) {
+        return reply.status(409).send({ error: 'That username is already taken' })
+      }
+      if (clashUser && clashUser.id !== user.id) {
+        return reply.status(409).send({ error: 'That username is already taken' })
+      }
 
       const redirectClash = await fastify.prisma.channelSlugRedirect.findFirst({
         where: { oldSlug: slug, expiresAt: { gt: new Date() }, channelId: { not: channel.id } },
@@ -120,7 +147,7 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
       if (redirectClash) {
         return reply
           .status(409)
-          .send({ error: 'That address was recently released and is not available yet' })
+          .send({ error: 'That username was recently released and is not available yet' })
       }
 
       const newRtmpKey = `${slug}__${nanoid(32)}`
@@ -131,9 +158,14 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
           : clearHotRotatePreviousFields()
 
       const redirectExpiresAt = new Date(Date.now() + SLUG_REDIRECT_GRACE_MS)
+      const previousSlug = channel.slug
 
-      await fastify.prisma.$transaction([
-        fastify.prisma.channel.update({
+      await fastify.prisma.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { username: slug },
+        })
+        await tx.channel.update({
           where: { id: channel.id },
           data: {
             slug,
@@ -143,19 +175,26 @@ const channelSlugRoutes: FastifyPluginAsync = async (fastify) => {
             rtmpStreamKeyPreviousHash: hotPrevious.previousHash,
             rtmpStreamKeyPreviousExpiresAt: hotPrevious.previousExpiresAt,
           },
-        }),
+        })
         // Reclaiming a not-yet-expired old address of this same channel — drop
         // the now-meaningless self-redirect instead of leaving slug -> itself.
-        fastify.prisma.channelSlugRedirect.deleteMany({ where: { oldSlug: slug } }),
-        fastify.prisma.channelSlugRedirect.create({
-          data: { oldSlug: channel.slug, channelId: channel.id, expiresAt: redirectExpiresAt },
-        }),
-      ])
+        await tx.channelSlugRedirect.deleteMany({ where: { oldSlug: slug } })
+        if (previousSlug !== slug) {
+          await tx.channelSlugRedirect.create({
+            data: {
+              oldSlug: previousSlug,
+              channelId: channel.id,
+              expiresAt: redirectExpiresAt,
+            },
+          })
+        }
+      })
 
       return reply.send({
         slug,
         rtmpStreamKey: newRtmpKey,
-        previousSlugRedirectExpiresAt: redirectExpiresAt.toISOString(),
+        previousSlugRedirectExpiresAt:
+          previousSlug !== slug ? redirectExpiresAt.toISOString() : null,
       })
     },
   )

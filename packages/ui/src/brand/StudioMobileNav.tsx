@@ -97,13 +97,24 @@ function IconCollections() {
 }
 
 const MOBILE_NAV = [
-  { href: '/dashboard', label: 'Channel', Icon: IconChannel },
-  { href: '/dashboard/stats', label: 'Stats', Icon: IconStats },
+  { href: '/dashboard', label: 'Channel', Icon: IconChannel, requiresChannel: true },
+  { href: '/dashboard/stats', label: 'Stats', Icon: IconStats, requiresChannel: true },
   { href: '/dashboard/archive', label: 'Archive', Icon: IconArchive, requiresChannel: true },
-  { href: '/dashboard/upload', label: 'Upload', Icon: IconUpload },
-  { href: '/dashboard/collections', label: 'Collections', Icon: IconCollections },
-  { href: '/dashboard/revenue', label: 'Revenue', Icon: IconRevenue },
+  { href: '/dashboard/upload', label: 'Upload', Icon: IconUpload, requiresChannel: true },
+  {
+    href: '/dashboard/collections',
+    label: 'Collections',
+    Icon: IconCollections,
+    requiresChannel: true,
+  },
+  { href: '/dashboard/revenue', label: 'Revenue', Icon: IconRevenue, requiresChannel: true },
   { href: '/dashboard/settings/account', label: 'Settings', Icon: IconSettings },
+]
+
+const LISTENER_MOBILE_NAV = [
+  { href: '/feed', label: 'Feed', Icon: IconArchive },
+  { href: '/dashboard/messages', label: 'Messages', Icon: IconCollections },
+  { href: '/dashboard/settings/account', label: 'Account', Icon: IconSettings },
 ]
 
 function IconMore() {
@@ -136,14 +147,20 @@ export function StudioMobileNav({
     setMoreOpen(false)
   }, [pathname])
 
-  const moreItems = DASHBOARD_NAV.filter((item) => {
-    if (item.adminOnly && !isBoard) return false
-    if (item.requiresChannel && !hasChannel) return false
-    if (PRIMARY_HREFS.has(item.href)) return false
-    // Mobile's "Settings" points at /settings/account; skip the sidebar's plain /settings row too.
-    if (item.href === '/dashboard/settings') return false
-    return true
-  })
+  const moreItems = hasChannel
+    ? DASHBOARD_NAV.filter((item) => {
+        if (item.adminOnly && !isBoard) return false
+        if (item.requiresChannel && !hasChannel) return false
+        if (PRIMARY_HREFS.has(item.href)) return false
+        // Mobile's "Settings" points at /settings/account; skip the sidebar's plain /settings row too.
+        if (item.href === '/dashboard/settings') return false
+        return true
+      })
+    : []
+
+  const primaryNav = hasChannel
+    ? MOBILE_NAV.filter((item) => !item.requiresChannel || hasChannel)
+    : LISTENER_MOBILE_NAV
 
   return (
     <>
@@ -178,26 +195,24 @@ export function StudioMobileNav({
         </div>
       )}
       <nav className="db-mobile-nav" aria-label="Mobile navigation">
-        {MOBILE_NAV.filter((item) => !item.requiresChannel || hasChannel).map(
-          ({ href, label, Icon }) => {
-            // `/dashboard` is a path prefix of every other dashboard route, so it can only
-            // ever match exactly — a startsWith check here would light up Channel everywhere.
-            const active =
-              href === '/dashboard'
-                ? pathname === '/dashboard'
-                : pathname === href || pathname.startsWith(`${href}/`)
-            return (
-              <Link
-                key={label}
-                href={href}
-                className={`db-mobile-nav-item${active ? ' active' : ''}`}
-              >
-                <Icon />
-                <span>{label}</span>
-              </Link>
-            )
-          },
-        )}
+        {primaryNav.map(({ href, label, Icon }) => {
+          // `/dashboard` is a path prefix of every other dashboard route, so it can only
+          // ever match exactly — a startsWith check here would light up Channel everywhere.
+          const active =
+            href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname === href || pathname.startsWith(`${href}/`)
+          return (
+            <Link
+              key={label}
+              href={href}
+              className={`db-mobile-nav-item${active ? ' active' : ''}`}
+            >
+              <Icon />
+              <span>{label}</span>
+            </Link>
+          )
+        })}
         {moreItems.length > 0 && (
           <button
             type="button"

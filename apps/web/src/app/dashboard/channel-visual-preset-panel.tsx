@@ -76,7 +76,8 @@ export default function ChannelVisualPresetPanel({
 
   const canUseVideoLoop = tier !== 'FREE'
 
-  // Slideshow-transition fields live on /dashboard/channel/gallery (ChannelSlideshowPanel) now —
+  // Slideshow-transition fields live on Media & Presskit (ChannelSlideshowPanel) now —
+  // see /dashboard/settings/media#gallery.
   // pass them through unchanged so this panel's save doesn't clobber them.
   useEffect(() => {
     onDraftChange?.({
@@ -149,7 +150,9 @@ export default function ChannelVisualPresetPanel({
         {headerStyle === 'VIDEO_LOOP' && !hasVideoBackground ? (
           <p className="studio-text-muted-sm studio-mt-sm">
             No backdrop video set yet —{' '}
-            <Link href="/dashboard/channel/gallery">configure it in Gallery &amp; backdrop →</Link>
+            <Link href="/dashboard/settings/media#gallery">
+              configure it in Media &amp; Presskit →
+            </Link>
           </p>
         ) : null}
       </div>

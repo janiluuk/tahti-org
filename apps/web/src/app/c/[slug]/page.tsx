@@ -188,7 +188,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       url: i.audioUrl!,
       title: i.title,
       subtitle: `@${channel.user.username}`,
-      href: `/c/${slug}#archive-item-${i.id}`,
+      href: `${resolveChannelUrl(slug)}#archive-item-${i.id}`,
       artworkUrl: i.bannerUrl,
     }))
   const announcements: Announcement[] = announcementsRes.ok

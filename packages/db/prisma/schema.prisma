@@ -49,6 +49,14 @@ enum ChannelState {
   @@schema("channel")
 }
 
+// Solo DJ/artist vs collective/band — drives Members UI + public profile label.
+enum ArtistKind {
+  SINGLE
+  COLLECTIVE
+
+  @@schema("channel")
+}
+
 enum ChannelGalleryMode {
   NONE
   STATIC_SLIDESHOW
@@ -571,6 +579,9 @@ model User {
   // so the animation only plays while hovering. Null for a non-animated
   // avatar (the plain avatarUrl renders directly with no hover behavior).
   avatarPosterUrl       String?
+  // Dominant palette extracted from avatarUrl (node-vibrant) — drives radio
+  // calendar tint and other surfaces that want "colors from the profile pic".
+  avatarPaletteJson     String?
   socialLinks           Json?
   tipJarUrl             String?
   countryCode           String?
@@ -959,6 +970,8 @@ model Channel {
   slug               String       @unique
   customDomain         String?
   customDomainVerified Boolean  @default(false)
+  // Solo DJ/artist vs collective/band — drives Members UI + public profile label.
+  artistKind         ArtistKind   @default(SINGLE)
   state              ChannelState @default(OFFLINE)
   containerId        String?
   liveSourceMount    String

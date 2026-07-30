@@ -63,6 +63,13 @@ export default async function AccountSettingsPage() {
           <h1 className="account-hero__name">{user.displayName}</h1>
           <p className="account-hero__handle">@{user.username}</p>
           <p className="studio-text-muted-sm studio-mt-xs">{user.email}</p>
+          {user.channel && (
+            <p className="studio-text-muted-sm studio-mt-xs">
+              <Link href="/dashboard/settings/domain" className="studio-link">
+                Change username / address →
+              </Link>
+            </p>
+          )}
         </div>
         {user.channel && (
           <Link

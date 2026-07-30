@@ -13,11 +13,44 @@ import {
   TAHTI_RADIO_SLUG,
   TAHTI_SELECTS_SLUG,
   openApiResponse,
+  resolveColorScheme,
+  type ColorScheme,
 } from '@tahti/shared'
 import { getRadioFeatureHistory } from '../../lib/radio-feature.js'
 
 const RADIO_URL = process.env.RADIO_SERVICE_URL ?? 'http://tahti-radio:3004'
 const RECENTLY_PLAYED_LIMIT = 10
+
+function slotColorScheme(
+  colorSchemeJson: string | null | undefined,
+  avatarPaletteJson: string | null | undefined,
+): ColorScheme | null {
+  // Prefer profile-pic palette; fall back to the channel's manual brand scheme.
+  const fromAvatar = resolveColorScheme(null, avatarPaletteJson ?? null)
+  const fromChannel = resolveColorScheme(colorSchemeJson ?? null, null)
+  if (avatarPaletteJson) return fromAvatar
+  if (colorSchemeJson) return fromChannel
+  return null
+}
+
+function nextAndLastShow(
+  bookings: Array<{ channelId: string; startAt: Date; endAt: Date }>,
+  now: Date,
+): Map<string, { nextShowAt: string | null; lastShowAt: string | null }> {
+  const map = new Map<string, { nextShowAt: string | null; lastShowAt: string | null }>()
+  for (const b of bookings) {
+    const cur = map.get(b.channelId) ?? { nextShowAt: null, lastShowAt: null }
+    if (b.endAt > now) {
+      if (!cur.nextShowAt || b.startAt.toISOString() < cur.nextShowAt) {
+        cur.nextShowAt = b.startAt.toISOString()
+      }
+    } else if (!cur.lastShowAt || b.startAt.toISOString() > cur.lastShowAt) {
+      cur.lastShowAt = b.startAt.toISOString()
+    }
+    map.set(b.channelId, cur)
+  }
+  return map
+}
 
 // M16 — public Tahti Radio now-playing endpoint
 const radioRoutes: FastifyPluginAsync = async (fastify) => {
@@ -168,26 +201,61 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
         include: {
           channel: {
             select: {
+              id: true,
               slug: true,
-              user: { select: { displayName: true, username: true, avatarUrl: true } },
+              colorSchemeJson: true,
+              streamOverlayCoverUrl: true,
+              user: {
+                select: {
+                  displayName: true,
+                  username: true,
+                  avatarUrl: true,
+                  avatarPaletteJson: true,
+                },
+              },
             },
           },
         },
       })
 
+      const channelIds = [...new Set(rows.map((r) => r.channel.id))]
+      const now = new Date()
+      const scheduleRows =
+        channelIds.length === 0
+          ? []
+          : await fastify.prisma.radioSlotBooking.findMany({
+              where: { channelId: { in: channelIds } },
+              select: { channelId: true, startAt: true, endAt: true },
+              orderBy: { startAt: 'asc' },
+            })
+      const scheduleByChannel = nextAndLastShow(scheduleRows, now)
+
       return reply.send(
-        rows.map((r) => ({
-          id: r.id,
-          startAt: r.startAt.toISOString(),
-          endAt: r.endAt.toISOString(),
-          note: r.note,
-          artist: {
-            displayName: r.channel.user.displayName,
-            username: r.channel.user.username,
-            avatarUrl: r.channel.user.avatarUrl,
-            channelSlug: r.channel.slug,
-          },
-        })),
+        rows.map((r) => {
+          const schedule = scheduleByChannel.get(r.channel.id) ?? {
+            nextShowAt: null,
+            lastShowAt: null,
+          }
+          return {
+            id: r.id,
+            startAt: r.startAt.toISOString(),
+            endAt: r.endAt.toISOString(),
+            note: r.note,
+            coverUrl: r.channel.streamOverlayCoverUrl,
+            colorScheme: slotColorScheme(
+              r.channel.colorSchemeJson,
+              r.channel.user.avatarPaletteJson,
+            ),
+            nextShowAt: schedule.nextShowAt,
+            lastShowAt: schedule.lastShowAt,
+            artist: {
+              displayName: r.channel.user.displayName,
+              username: r.channel.user.username,
+              avatarUrl: r.channel.user.avatarUrl,
+              channelSlug: r.channel.slug,
+            },
+          }
+        }),
       )
     },
   )
@@ -208,8 +276,19 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug: request.params.channelSlug },
         select: {
+          id: true,
           slug: true,
-          user: { select: { displayName: true, username: true, avatarUrl: true, bio: true } },
+          colorSchemeJson: true,
+          streamOverlayCoverUrl: true,
+          user: {
+            select: {
+              displayName: true,
+              username: true,
+              avatarUrl: true,
+              avatarPaletteJson: true,
+              bio: true,
+            },
+          },
         },
       })
       if (!channel) return reply.status(404).send({ error: 'Show not found' })
@@ -217,13 +296,13 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
       const now = new Date()
       const [pastRows, upcomingRows] = await Promise.all([
         fastify.prisma.radioSlotBooking.findMany({
-          where: { channel: { slug: channel.slug }, endAt: { lte: now } },
+          where: { channelId: channel.id, endAt: { lte: now } },
           orderBy: { startAt: 'desc' },
           take: 50,
           select: { id: true, startAt: true, endAt: true, note: true },
         }),
         fastify.prisma.radioSlotBooking.findMany({
-          where: { channel: { slug: channel.slug }, endAt: { gt: now } },
+          where: { channelId: channel.id, endAt: { gt: now } },
           orderBy: { startAt: 'asc' },
           select: { id: true, startAt: true, endAt: true, note: true },
         }),
@@ -243,9 +322,13 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           avatarUrl: channel.user.avatarUrl,
           channelSlug: channel.slug,
           bio: channel.user.bio,
+          coverUrl: channel.streamOverlayCoverUrl,
+          colorScheme: slotColorScheme(channel.colorSchemeJson, channel.user.avatarPaletteJson),
         },
         pastEpisodes: pastRows.map(toEpisode),
         upcomingEpisodes: upcomingRows.map(toEpisode),
+        nextShowAt: upcomingRows[0]?.startAt.toISOString() ?? null,
+        lastShowAt: pastRows[0]?.startAt.toISOString() ?? null,
       })
     },
   )

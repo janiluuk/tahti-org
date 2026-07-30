@@ -11,6 +11,11 @@
 // A user visiting their own subdomain while logged in should be able to use the whole app,
 // not just see their own channel page.
 //
+// Public channel links must always use https://<slug>.tahti.live — never
+// app.tahti.live/c/<slug> or tahti.live/c/<slug> (apex is the marketing site).
+// This middleware 308-redirects bare /c/<slug> paths on public hosts to the
+// subdomain form so old path links and in-app relative /c/… URLs canonicalize.
+//
 // The site nav's "Home" link deliberately sends "/?home=1" instead of a bare "/" — see
 // resolveHomeHref() in ChannelPageLayout.tsx. That marker means "the user explicitly clicked
 // Home," so we skip the subdomain rewrite below and let the real homepage render on whatever
@@ -22,8 +27,46 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+/** Root domain for artist subdomains (tahti.live / staging.tahti.live). Null on local/dev. */
+function artistRootDomain(hostname: string): string | null {
+  if (
+    hostname === 'localhost' ||
+    hostname.endsWith('.localhost') ||
+    /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname)
+  ) {
+    return null
+  }
+  if (hostname.startsWith('app.')) return hostname.slice('app.'.length)
+  if (hostname === 'tahti.live' || hostname === 'www.tahti.live') return 'tahti.live'
+  if (hostname === 'staging.tahti.live' || hostname === 'www.staging.tahti.live') {
+    return 'staging.tahti.live'
+  }
+  // <slug>.tahti.live or <slug>.staging.tahti.live
+  const parts = hostname.split('.')
+  if (parts.length >= 3) return parts.slice(1).join('.')
+  return null
+}
+
+/** /c/<slug> or /c/<slug>/ — not /c/<slug>/… nested routes and not /embed/c/…. */
+function channelPathSlug(pathname: string): string | null {
+  const match = pathname.match(/^\/c\/([a-z0-9-]+)\/?$/)
+  return match?.[1] ?? null
+}
+
 export async function middleware(request: NextRequest) {
-  const isRoot = request.nextUrl.pathname === '/'
+  const { pathname, search } = request.nextUrl
+  const hostname = request.headers.get('host')?.split(':')[0]?.toLowerCase() ?? ''
+  const pathSlug = channelPathSlug(pathname)
+  const root = artistRootDomain(hostname)
+
+  // Canonicalize public channel URLs to https://<slug>.<root>/…
+  if (pathSlug && root) {
+    const target = new URL(`https://${pathSlug}.${root}/`)
+    target.search = search
+    return NextResponse.redirect(target, 308)
+  }
+
+  const isRoot = pathname === '/'
   const isExplicitHomeNav = request.nextUrl.searchParams.get('home') === '1'
   const isRewritableRoot = isRoot && !isExplicitHomeNav
 

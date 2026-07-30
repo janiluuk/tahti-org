@@ -77,6 +77,13 @@ export default async function RadioShowPage({
                       {' · '}
                       <Link href={`/u/${show.artist.username}`}>view artist profile</Link>
                     </Text>
+                    {(show.nextShowAt || show.lastShowAt) && (
+                      <Text size="sm" tone="muted" className="studio-mt-xs">
+                        {show.nextShowAt ? `Next ${formatShowTime(show.nextShowAt)}` : null}
+                        {show.nextShowAt && show.lastShowAt ? ' · ' : null}
+                        {show.lastShowAt ? `Last ${formatShowTime(show.lastShowAt)}` : null}
+                      </Text>
+                    )}
                   </div>
                 </Row>
                 {bioHtml ? (

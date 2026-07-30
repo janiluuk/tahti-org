@@ -20,8 +20,13 @@ describe('resolveChannelUrl', () => {
     else process.env.APP_URL = originalApp
   })
 
-  it('uses the artist wildcard subdomain when the app origin is app.<root>', () => {
-    expect(resolveAppUrl()).toBe('https://app.tahti.live')
+  it('uses the artist wildcard subdomain when the app origin is the apex', () => {
+    expect(resolveAppUrl()).toBe('https://tahti.live')
+    expect(resolveChannelUrl('someartist')).toBe('https://someartist.tahti.live')
+  })
+
+  it('uses the artist wildcard subdomain for the legacy app.<root> origin', () => {
+    process.env.APP_URL = 'https://app.tahti.live'
     expect(resolveChannelUrl('someartist')).toBe('https://someartist.tahti.live')
   })
 

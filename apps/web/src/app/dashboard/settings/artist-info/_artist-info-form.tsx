@@ -3,13 +3,15 @@
 
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, type ReactNode } from 'react'
 import { ButtonIcon, Button, Panel } from '@tahti/ui'
+import type { ArtistKind, ChannelMemberView } from '@tahti/shared'
 import { updateChannelProfile } from '../../channel-identity-actions'
 import ChannelIdentityPanel, { type ChannelIdentityDraft } from '../../channel-identity-panel'
 import ChannelBioPanel from '../../channel-bio-panel'
 import ChannelLinksPanel, { type ChannelLink } from '../../channel-links-panel'
 import { SocialLinkIcon } from '@/components/social-link-icon'
+import { MembersPanel } from '../members/_members-panel'
 
 export interface StreamingLinksDraft {
   youtube: string
@@ -42,9 +44,18 @@ export interface ArtistInfoFormData {
   bio: string
   links: ChannelLink[]
   streamingLinks: StreamingLinksDraft
+  artistKind: ArtistKind
 }
 
-export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
+export function ArtistInfoForm({
+  initial,
+  initialMembers,
+  children,
+}: {
+  initial: ArtistInfoFormData
+  initialMembers: ChannelMemberView[]
+  children?: ReactNode
+}) {
   const [identity, setIdentity] = useState<ChannelIdentityDraft>({
     displayName: initial.displayName,
     avatarUrl: initial.avatarUrl,
@@ -60,6 +71,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
   const [showJoinDate, setShowJoinDate] = useState(initial.showJoinDate)
   const [showFollowers, setShowFollowers] = useState(initial.showFollowers)
   const [showFollowing, setShowFollowing] = useState(initial.showFollowing)
+  const [artistKind, setArtistKind] = useState<ArtistKind>(initial.artistKind)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -79,6 +91,7 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
         showFollowers,
         showFollowing,
         defaultLocation: identity.defaultLocation,
+        artistKind,
         socialLinks: {
           genres: identity.genres.join(', '),
           youtube: streamingLinks.youtube.trim(),
@@ -116,6 +129,41 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
       >
         <ChannelIdentityPanel initial={identity} onDraftChange={setIdentity} />
       </Panel>
+
+      <Panel title="Act type" description="Are you a solo artist (e.g. DJ) or a collective / band?">
+        <div className="studio-kind-toggle" role="radiogroup" aria-label="Act type">
+          <label
+            className={`studio-kind-toggle__option${artistKind === 'SINGLE' ? ' studio-kind-toggle__option--active' : ''}`}
+          >
+            <input
+              type="radio"
+              name="artistKind"
+              value="SINGLE"
+              checked={artistKind === 'SINGLE'}
+              onChange={() => setArtistKind('SINGLE')}
+            />
+            <span className="studio-kind-toggle__title">Single artist</span>
+            <span className="studio-kind-toggle__hint">Solo DJ, producer, or performer</span>
+          </label>
+          <label
+            className={`studio-kind-toggle__option${artistKind === 'COLLECTIVE' ? ' studio-kind-toggle__option--active' : ''}`}
+          >
+            <input
+              type="radio"
+              name="artistKind"
+              value="COLLECTIVE"
+              checked={artistKind === 'COLLECTIVE'}
+              onChange={() => setArtistKind('COLLECTIVE')}
+            />
+            <span className="studio-kind-toggle__title">Collective</span>
+            <span className="studio-kind-toggle__hint">Band, duo, label, or crew</span>
+          </label>
+        </div>
+      </Panel>
+
+      <div id="members">
+        <MembersPanel initialMembers={initialMembers} artistKind={artistKind} />
+      </div>
 
       <Panel
         title="Visibility"
@@ -241,6 +289,8 @@ export function ArtistInfoForm({ initial }: { initial: ArtistInfoFormData }) {
       >
         <ChannelLinksPanel initial={links} onDraftChange={setLinks} />
       </Panel>
+
+      {children}
     </div>
   )
 }
