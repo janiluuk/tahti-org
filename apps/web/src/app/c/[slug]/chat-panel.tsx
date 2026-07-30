@@ -103,12 +103,19 @@ export default function ChatPanel({
   const msgIdRef = useRef(1)
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  // A returning visitor already has a handle saved from a previous visit —
+  // silently rejoin with it to get a fresh publish token. Previously this just
+  // set `handle` directly, which flips the panel into "chat" phase (hiding the
+  // join prompt) without ever fetching a token — publishToken stayed null
+  // forever, so sendDisabled/inputDisabled (which gate on !publishToken)
+  // stayed true forever and returning visitors could never actually send.
   useEffect(() => {
     const saved = loadStoredChatHandle()
     if (saved) {
-      setHandle(saved)
       setPendingHandle(saved)
+      void joinChat(saved)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

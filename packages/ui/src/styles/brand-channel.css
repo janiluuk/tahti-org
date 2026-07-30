@@ -1539,6 +1539,12 @@
   border-radius: var(--radius-sm);
 }
 
+[data-tahti-ui='brand']
+  .ch-radio-upcoming__item:nth-child(even):not(.ch-radio-upcoming__item--live) {
+  background: color-mix(in srgb, var(--card2) 70%, transparent);
+  border-radius: var(--radius-sm);
+}
+
 [data-tahti-ui='brand'] .ch-radio-upcoming__avatar {
   flex-shrink: 0;
 }
@@ -2665,7 +2671,8 @@
   flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--cyan) 25%, var(--border));
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--cyan) 5%, var(--card));
+  background: color-mix(in srgb, var(--cyan) 5%, color-mix(in srgb, var(--card) 88%, transparent));
+  backdrop-filter: blur(6px);
   height: calc(100vh - 6rem);
   position: sticky;
   top: 68px;
