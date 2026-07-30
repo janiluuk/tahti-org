@@ -54,6 +54,11 @@ export interface WaveformPlayerProps {
    * own audio-reactive backdrop (e.g. a ChannelVisualizer) behind this player,
    * where the static bars would be a redundant, non-reactive second animation. */
   hideWaveform?: boolean
+  /** Tahti Radio only: render play/pause as a centered overlay on the artwork
+   * (faded out until hovered on desktop) instead of the inline controls-row
+   * button, which stays in the DOM but is visually hidden by the radio-scoped
+   * CSS — kept for focus/keyboard access rather than duplicated. */
+  artOverlayPlay?: boolean
 }
 
 /** Custom HLS/archive player chrome — waveform, play/pause, seek bar. */
@@ -79,6 +84,7 @@ export function WaveformPlayer({
   isReplay = false,
   nextUpLabel,
   hideWaveform = false,
+  artOverlayPlay = false,
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
@@ -134,11 +140,38 @@ export function WaveformPlayer({
       {artworkUrl && <div className="waveform-player__art-backdrop" aria-hidden />}
       {nowPlayingTitle && (
         <div className="waveform-player__meta">
-          {artworkUrl ? (
-            <img src={artworkUrl} alt="" className="waveform-player__art" />
-          ) : (
-            <AvatarTile size="lg" name={nowPlayingTitle} className="waveform-player__art" />
-          )}
+          <div className="waveform-player__art-wrap">
+            {artworkUrl ? (
+              <img src={artworkUrl} alt="" className="waveform-player__art" />
+            ) : (
+              <AvatarTile size="lg" name={nowPlayingTitle} className="waveform-player__art" />
+            )}
+            {artOverlayPlay && (
+              <button
+                type="button"
+                className={cn(
+                  'waveform-player__art-play',
+                  buffering && 'waveform-player__art-play--buffering',
+                )}
+                onClick={onTogglePlay}
+                disabled={!onTogglePlay}
+                aria-label={playing ? 'Pause' : 'Play'}
+              >
+                {buffering ? (
+                  <span className="waveform-player__spinner" aria-hidden />
+                ) : playing ? (
+                  <svg width="32" height="32" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
+                    <rect x="3" y="2" width="4" height="14" rx="1" />
+                    <rect x="11" y="2" width="4" height="14" rx="1" />
+                  </svg>
+                ) : (
+                  <svg width="32" height="32" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
+                    <path d="M5 3l11 6-11 6V3z" />
+                  </svg>
+                )}
+              </button>
+            )}
+          </div>
           <div className="waveform-player__meta-text">
             <span className="waveform-player__meta-title">{nowPlayingTitle}</span>
             {nowPlayingSubtitle &&
@@ -195,7 +228,11 @@ export function WaveformPlayer({
       <div className="waveform-player__controls">
         <button
           type="button"
-          className={cn('waveform-player__play', buffering && 'waveform-player__play--buffering')}
+          className={cn(
+            'waveform-player__play',
+            buffering && 'waveform-player__play--buffering',
+            artOverlayPlay && 'waveform-player__play--hidden',
+          )}
           onClick={onTogglePlay}
           disabled={!onTogglePlay}
           aria-label={playing ? 'Pause' : 'Play'}

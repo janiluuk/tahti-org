@@ -57,6 +57,16 @@ function qualityLabelForBitrate(bitrateBps: number): string {
   return bitrateBps >= 400_000 ? 'FLAC' : `${Math.round(bitrateBps / 1000)} kbps`
 }
 
+/** liveHlsManifestPath() always points hls.js straight at a single-rendition
+ * MEDIA playlist (stream-mp3-192.m3u8) — there's no master playlist with
+ * per-variant #EXT-X-STREAM-INF/BANDWIDTH tags for hls.js to read a real
+ * bitrate from, so hls.levels[].bitrate is hls.js's own unmeasured guess and
+ * reads as 0 right after a level switch. The manifest is always the 192kbps
+ * MP3 rendition, so that's the honest default the instant playback starts;
+ * a later LEVEL_SWITCHED with a genuinely-measured positive bitrate (e.g. if
+ * a real multi-bitrate master playlist is ever introduced) can still refine it. */
+const DEFAULT_LIVE_STREAM_QUALITY = '192 kbps'
+
 declare global {
   interface Window {
     Hls?: HlsConstructor
@@ -324,9 +334,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
             })
             hls.on(Hls.Events.LEVEL_SWITCHED, (_event, data) => {
               const bitrate = hls.levels[data.level]?.bitrate
-              if (bitrate == null) return
+              if (!bitrate) return
               setState((prev) => ({ ...prev, streamQuality: qualityLabelForBitrate(bitrate) }))
             })
+            setState((prev) => ({ ...prev, streamQuality: DEFAULT_LIVE_STREAM_QUALITY }))
             hls.loadSource(track.url)
             hls.attachMedia(audio)
             playWhenReady()
@@ -349,6 +360,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           }, 50)
         }
       } else {
+        // Safari plays the .m3u8 natively (no hls.js, so no LEVEL_SWITCHED to
+        // report a measured bitrate) — same fixed 192kbps rendition applies.
+        if (track.kind === 'live' && isHlsUrl) {
+          setState((prev) => ({ ...prev, streamQuality: DEFAULT_LIVE_STREAM_QUALITY }))
+        }
         audio.src = track.url
         audio.load()
         playWhenReady()

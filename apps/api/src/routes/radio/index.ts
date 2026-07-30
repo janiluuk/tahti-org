@@ -8,6 +8,7 @@ import {
   RadioNowPlayingSchema,
   RadioRecentlyPlayedSchema,
   RadioRotationSchema,
+  RadioShowDetailSchema,
   RadioSlotBookingListQuerySchema,
   TAHTI_RADIO_SLUG,
   TAHTI_SELECTS_SLUG,
@@ -188,6 +189,64 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           },
         })),
       )
+    },
+  )
+
+  // Radio "show" detail page — there's no separate Show entity, so this is an
+  // artist's full Tahti Radio booking history: past episodes (aired) plus
+  // whatever's still scheduled. Public/no-auth, same as /slots.
+  fastify.get<{ Params: { channelSlug: string } }>(
+    '/api/v1/radio/show/:channelSlug',
+    {
+      schema: {
+        tags: ['radio'],
+        description: "An artist's Tahti Radio show: past + upcoming booked slots",
+        response: openApiResponse(RadioShowDetailSchema, 'RadioShowDetail'),
+      },
+    },
+    async (request, reply) => {
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { slug: request.params.channelSlug },
+        select: {
+          slug: true,
+          user: { select: { displayName: true, username: true, avatarUrl: true, bio: true } },
+        },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Show not found' })
+
+      const now = new Date()
+      const [pastRows, upcomingRows] = await Promise.all([
+        fastify.prisma.radioSlotBooking.findMany({
+          where: { channel: { slug: channel.slug }, endAt: { lte: now } },
+          orderBy: { startAt: 'desc' },
+          take: 50,
+          select: { id: true, startAt: true, endAt: true, note: true },
+        }),
+        fastify.prisma.radioSlotBooking.findMany({
+          where: { channel: { slug: channel.slug }, endAt: { gt: now } },
+          orderBy: { startAt: 'asc' },
+          select: { id: true, startAt: true, endAt: true, note: true },
+        }),
+      ])
+
+      const toEpisode = (r: { id: string; startAt: Date; endAt: Date; note: string | null }) => ({
+        id: r.id,
+        startAt: r.startAt.toISOString(),
+        endAt: r.endAt.toISOString(),
+        note: r.note,
+      })
+
+      return reply.send({
+        artist: {
+          displayName: channel.user.displayName,
+          username: channel.user.username,
+          avatarUrl: channel.user.avatarUrl,
+          channelSlug: channel.slug,
+          bio: channel.user.bio,
+        },
+        pastEpisodes: pastRows.map(toEpisode),
+        upcomingEpisodes: upcomingRows.map(toEpisode),
+      })
     },
   )
 }

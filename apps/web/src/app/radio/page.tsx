@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { AvatarTile, ChannelPageShell, Heading, Row, SafePlainText, Text } from '@tahti/ui'
 import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { getSessionUser } from '@/lib/session'
-import { BroadcastCountdown } from '@/components/broadcast-countdown'
 import ChatPanel from '../c/[slug]/chat-panel'
 import { RadioPlayerSection } from './radio-player-section'
 import { listPublicRadioSlots, type PublicRadioSlot } from './actions'
@@ -196,10 +195,6 @@ export default async function RadioPage() {
               <div className="ch-radio-description">
                 <SafePlainText text="24/7 community radio — always on while we grow the member meta-stream. Tune in and chat with listeners worldwide." />
               </div>
-              <Text size="sm" tone="muted" className="studio-mt-xs">
-                Looking for a specific sound?{' '}
-                <Link href="/listen">Browse live channels by genre</Link>.
-              </Text>
             </header>
 
             {liveSlot && (
@@ -212,13 +207,6 @@ export default async function RadioPage() {
                   </>
                 )}
               </p>
-            )}
-
-            {showNextLiveAnnouncement && nextSlot && (
-              <BroadcastCountdown
-                targetIso={nextSlot.startAt}
-                note={`${nextSlot.artist.displayName}${nextSlot.note ? ` — ${nextSlot.note}` : ''}`}
-              />
             )}
 
             {playback.kind === 'none' ? (
@@ -238,8 +226,22 @@ export default async function RadioPage() {
             )}
 
             <RadioTabs
-              recent={<RecentlyPlayed items={recentlyPlayed} />}
-              upcoming={<UpcomingShows slots={upcomingSlots} rotation={rotation} />}
+              recent={<RecentlyPlayed items={recentlyPlayed} embedded />}
+              upcoming={
+                <UpcomingShows
+                  slots={upcomingSlots}
+                  rotation={rotation}
+                  nextLiveCountdown={
+                    showNextLiveAnnouncement && nextSlot
+                      ? {
+                          targetIso: nextSlot.startAt,
+                          note: `${nextSlot.artist.displayName}${nextSlot.note ? ` — ${nextSlot.note}` : ''}`,
+                        }
+                      : null
+                  }
+                  embedded
+                />
+              }
             />
           </div>
         </div>

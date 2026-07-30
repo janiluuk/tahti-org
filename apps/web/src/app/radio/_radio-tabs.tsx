@@ -36,7 +36,7 @@ export function RadioTabs({ recent, upcoming }: { recent: ReactNode; upcoming: R
   ]
 
   return (
-    <div className="prof-tabs">
+    <div className="ch-radio-tabbed prof-tabs">
       <HelpSpotlight
         steps={HELP_STEPS}
         activeId={active}

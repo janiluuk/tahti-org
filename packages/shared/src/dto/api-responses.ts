@@ -248,6 +248,28 @@ export const PublicRadioSlotSchema = z.object({
 })
 export const PublicRadioSlotListSchema = z.array(PublicRadioSlotSchema)
 
+/** Radio "show" detail page — an artist's Tahti Radio booking history + what's
+ * still ahead. There's no separate Show entity; a "show" is just the set of
+ * RadioSlotBooking rows for one artist's channel. */
+export const RadioShowEpisodeSchema = z.object({
+  id: z.string(),
+  startAt: z.string(),
+  endAt: z.string(),
+  note: z.string().nullable(),
+})
+export const RadioShowDetailSchema = z.object({
+  artist: z.object({
+    displayName: z.string(),
+    username: z.string(),
+    avatarUrl: z.string().nullable(),
+    channelSlug: z.string(),
+    bio: z.string().nullable(),
+  }),
+  pastEpisodes: z.array(RadioShowEpisodeSchema),
+  upcomingEpisodes: z.array(RadioShowEpisodeSchema),
+})
+export type RadioShowDetail = z.infer<typeof RadioShowDetailSchema>
+
 export const ChannelProgrammeItemViewSchema = z.object({
   id: z.string(),
   title: z.string(),

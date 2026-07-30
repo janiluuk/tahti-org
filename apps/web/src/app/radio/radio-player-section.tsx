@@ -94,6 +94,7 @@ export function RadioPlayerSection({
           isReplay={!liveSlot}
           href="/radio"
           hideWaveform
+          artOverlayPlay
         />
       </div>
       <ReactionsOverlay slug={slug} />

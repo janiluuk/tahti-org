@@ -1489,12 +1489,22 @@
 }
 
 [data-tahti-ui='brand'] .ch-radio-upcoming,
-[data-tahti-ui='brand'] .ch-radio-recent {
+[data-tahti-ui='brand'] .ch-radio-recent,
+[data-tahti-ui='brand'] .ch-radio-tabbed {
   margin-top: 1.25rem;
   padding: 0.9rem 1rem 1rem;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: var(--card);
+}
+
+/* Recently played / Upcoming live inside this one card (embedded mode drops
+ * their own outer card chrome) — the tab bar becomes the card's internal
+ * header instead of a separate floating pill above a second card. */
+[data-tahti-ui='brand'] .ch-radio-tabbed .prof-tabs__bar {
+  border: none;
+  background: var(--card2);
+  margin-bottom: 0.85rem;
 }
 
 [data-tahti-ui='brand'] .ch-radio-upcoming__title,
@@ -1541,6 +1551,20 @@
 
 [data-tahti-ui='brand'] .ch-radio-upcoming__avatar {
   flex-shrink: 0;
+}
+
+/* The whole row is the click target to the show page — display:contents keeps
+ * the avatar/body as direct flex children of .ch-radio-upcoming__item so the
+ * existing row layout is unaffected, while the <a> itself still covers their
+ * combined hit area. */
+[data-tahti-ui='brand'] .ch-radio-upcoming__row-link {
+  display: contents;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .ch-radio-upcoming__row-link:hover .ch-radio-upcoming__artist {
+  text-decoration: underline;
 }
 
 [data-tahti-ui='brand'] .ch-radio-upcoming__body,
@@ -1909,9 +1933,10 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
-  width: 32rem;
+  width: min(96vw, 1400px);
   max-width: 100%;
-  max-height: 85vh;
+  height: 92vh;
+  max-height: 92vh;
   overflow-y: auto;
   cursor: default;
 }
@@ -2043,7 +2068,7 @@
 
 [data-tahti-ui='brand'] .ch-radio-slots__grid {
   display: grid;
-  grid-template-columns: 3.5rem repeat(7, minmax(3.5rem, 1fr));
+  grid-template-columns: 3.5rem repeat(7, minmax(7rem, 1fr));
   min-width: 32rem;
 }
 
@@ -2077,36 +2102,41 @@
   align-items: center;
   justify-content: flex-end;
   padding: 0 0.35rem;
-  font-size: var(--text-micro);
+  font-size: var(--text-xs);
   color: var(--muted);
   background: var(--card);
   border-top: 1px solid var(--border);
-  height: 1.35rem;
+  height: 2.4rem;
 }
 
 [data-tahti-ui='brand'] .ch-radio-slots__cell {
-  height: 1.35rem;
+  height: 2.4rem;
   border-top: 1px solid var(--border);
   border-left: 1px solid var(--border);
   background: transparent;
-  padding: 0 0.2rem;
+  padding: 0 0.35rem;
   cursor: default;
   display: flex;
   align-items: center;
   overflow: hidden;
 }
 
+/* --show-color is set inline per booked cell (hashed from the artist handle),
+ * so each DJ/show reads as a consistent color across the whole calendar
+ * instead of every booking sharing one generic "booked" tint. */
 [data-tahti-ui='brand'] .ch-radio-slots__cell--booked {
-  background: color-mix(in srgb, var(--cyan) 25%, var(--card2));
+  background: color-mix(in srgb, var(--show-color, var(--cyan)) 30%, var(--card2));
+  border-left: 2px solid var(--show-color, var(--cyan));
   cursor: pointer;
 }
 
 [data-tahti-ui='brand'] .ch-radio-slots__cell--booked:hover {
-  background: color-mix(in srgb, var(--cyan) 40%, var(--card2));
+  background: color-mix(in srgb, var(--show-color, var(--cyan)) 48%, var(--card2));
 }
 
 [data-tahti-ui='brand'] .ch-radio-slots__cell-label {
-  font-size: var(--text-micro);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2328,8 +2358,8 @@
 }
 
 [data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__art {
-  width: 96px;
-  height: 96px;
+  width: clamp(96px, 16vw, 220px);
+  height: clamp(96px, 16vw, 220px);
 }
 
 @keyframes ch-radio-title-breathe {
@@ -4116,6 +4146,13 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--amber);
+  margin: 0 0 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-countdown-time {
+  font-size: var(--text-body);
+  font-weight: 700;
+  color: var(--text);
   margin: 0 0 0.5rem;
 }
 
