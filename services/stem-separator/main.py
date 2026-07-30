@@ -63,10 +63,22 @@ async def separate(file: UploadFile = File(...), stem_set: str = Form(...)):
         if not output_files:
             raise HTTPException(500, "separation produced no output files")
 
+        # separator.separate() returns bare filenames, not paths — the actual
+        # files live in output_dir (confirmed against a real run: the ZipFile
+        # write below raised FileNotFoundError on the bare name otherwise).
+        resolved_paths = []
+        for output_file in output_files:
+            candidate = Path(output_file)
+            if not candidate.is_absolute():
+                candidate = output_dir / candidate.name
+            if not candidate.exists():
+                raise HTTPException(500, f"separator reported output file not found: {output_file}")
+            resolved_paths.append(candidate)
+
         zip_path = Path(tempfile.mkdtemp(prefix="tahti-stems-zip-")) / "stems.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_STORED) as zf:
-            for output_file in output_files:
-                zf.write(output_file, arcname=Path(output_file).name)
+            for resolved_path in resolved_paths:
+                zf.write(resolved_path, arcname=resolved_path.name)
 
         return FileResponse(
             str(zip_path),
