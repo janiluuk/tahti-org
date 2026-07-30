@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import type { ChannelCard } from '@tahti/shared'
 import { WatcherCount } from '@tahti/ui'
@@ -41,11 +41,19 @@ function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCo
   )
 }
 
+function cardBgStyle(avatarUrl: string | null | undefined): CSSProperties | undefined {
+  return avatarUrl ? ({ '--card-bg-image': `url(${avatarUrl})` } as CSSProperties) : undefined
+}
+
 function ChannelCardItem({ channel }: { channel: ChannelCard }) {
   const isLive = channel.state === 'LIVE'
 
   return (
-    <Link href={resolveChannelUrl(channel.slug)} className="listen-card">
+    <Link
+      href={resolveChannelUrl(channel.slug)}
+      className="listen-card"
+      style={cardBgStyle(channel.user.avatarUrl)}
+    >
       <div className="listen-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -84,7 +92,11 @@ function ChannelCardItem({ channel }: { channel: ChannelCard }) {
  * mini-player.tsx), just applied to any channel with fallbackEnabled. */
 function ReplayCard({ channel }: { channel: ChannelCard }) {
   return (
-    <Link href={resolveChannelUrl(channel.slug)} className="listen-card">
+    <Link
+      href={resolveChannelUrl(channel.slug)}
+      className="listen-card"
+      style={cardBgStyle(channel.user.avatarUrl)}
+    >
       <div className="listen-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
