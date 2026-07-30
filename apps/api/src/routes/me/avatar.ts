@@ -135,6 +135,9 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const avatarUrl = publicMediaUrl(parsed.data.uploadKey)
+      if (!avatarUrl) {
+        return reply.status(500).send({ error: 'Failed to resolve avatar URL' })
+      }
       // Always set alongside avatarUrl (to null when absent) so switching from
       // an animated GIF back to a static avatar clears the stale poster frame.
       const avatarPosterUrl = parsed.data.posterUploadKey
@@ -176,6 +179,9 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
       await putObjectBuffer(uploadKey, fetched.bytes, fetched.contentType)
 
       const avatarUrl = publicMediaUrl(uploadKey)
+      if (!avatarUrl) {
+        return reply.status(500).send({ error: 'Failed to resolve avatar URL' })
+      }
       await fastify.prisma.user.update({
         where: { id: user.id },
         data: { avatarUrl, avatarPosterUrl: null },
