@@ -26,6 +26,9 @@ async function main() {
       displayName: 'Tahti Radio',
       emailVerifiedAt: new Date(),
       isMember: true,
+      // Perpetual system stream — must not hit the free-tier weekly live cap
+      // (otherwise broadcast-cap-tick ↔ radio-slot-switchover fight every minute).
+      tier: 'STUDIO',
       channel: {
         create: {
           slug: TAHTI_RADIO_SLUG,
@@ -41,6 +44,7 @@ async function main() {
     },
     update: {
       displayName: 'Tahti Radio',
+      tier: 'STUDIO',
     },
     include: { channel: true },
   })

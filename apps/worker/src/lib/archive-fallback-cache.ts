@@ -5,11 +5,14 @@ import { mkdir, readdir, stat, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { PrismaClient } from '@tahti/db'
 import {
+  archivePlaybackKey,
   buildFallbackPlaybackRows,
   channelArchiveCacheDir,
   interleaveAnnouncements,
   localCacheBasename,
   renderLocalFallbackM3u,
+  TAHTI_RADIO_SLUG,
+  TAHTI_SELECTS_SLUG,
 } from '@tahti/shared'
 import type { AnnouncementPlaybackRow, FallbackPlaybackRow } from '@tahti/shared'
 import { downloadToFile, objectByteSize } from './minio.js'
@@ -65,6 +68,33 @@ export type ArchiveFallbackCacheSummary = {
   pruned: number
 }
 
+async function curatedPlaybackRows(
+  prisma: PrismaClient,
+  channelId: string,
+): Promise<FallbackPlaybackRow[]> {
+  const curated = await prisma.curatedRotationItem.findMany({
+    where: { channelId },
+    orderBy: { position: 'asc' },
+    select: {
+      archiveItem: {
+        select: { id: true, title: true, mp3Key: true, flacKey: true, durationSec: true },
+      },
+    },
+  })
+  const rows: FallbackPlaybackRow[] = []
+  for (const { archiveItem } of curated) {
+    const playbackKey = archivePlaybackKey(archiveItem)
+    if (!playbackKey) continue
+    rows.push({
+      id: archiveItem.id,
+      title: archiveItem.title,
+      playbackKey,
+      durationSec: archiveItem.durationSec,
+    })
+  }
+  return rows
+}
+
 /** STREAM-009: mirror fallback rotation pool from MinIO to local disk for Liquidsoap. */
 export async function syncChannelArchiveFallbackCache(
   prisma: PrismaClient,
@@ -76,32 +106,61 @@ export async function syncChannelArchiveFallbackCache(
 
   const channel = await prisma.channel.findUnique({
     where: { id: channelId },
-    select: { fallbackMode: true, fallbackEnabled: true, announcementsEnabled: true },
+    select: {
+      slug: true,
+      fallbackMode: true,
+      fallbackEnabled: true,
+      announcementsEnabled: true,
+    },
   })
   if (!channel) return summary
 
-  const items = channel.fallbackEnabled
-    ? await prisma.archiveItem.findMany({
-        where: {
-          channelId,
-          status: 'READY',
-          OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
-        },
-        select: {
-          id: true,
-          title: true,
-          mp3Key: true,
-          flacKey: true,
-          durationSec: true,
-          isFallback: true,
-          fallbackOrder: true,
-          lastFallbackPlayedAt: true,
-          createdAt: true,
-        },
-      })
-    : []
+  const isTahtiRadio = channel.slug === TAHTI_RADIO_SLUG
+  let baseRows: FallbackPlaybackRow[] = []
 
-  const baseRows = buildFallbackPlaybackRows(items, channel.fallbackMode).slice(0, maxItems)
+  if (channel.fallbackEnabled || isTahtiRadio) {
+    // Prefer curated rotation (Tahti Selects / Radio) — same order as the remote
+    // fallback.m3u endpoint. Without this, always-on system channels stay silent
+    // because they have CuratedRotationItem rows but zero isFallback archive items.
+    const curated = await curatedPlaybackRows(prisma, channelId)
+    if (curated.length > 0) {
+      baseRows = curated
+    } else {
+      const items = channel.fallbackEnabled
+        ? await prisma.archiveItem.findMany({
+            where: {
+              channelId,
+              status: 'READY',
+              OR: [{ mp3Key: { not: null } }, { flacKey: { not: null } }],
+            },
+            select: {
+              id: true,
+              title: true,
+              mp3Key: true,
+              flacKey: true,
+              durationSec: true,
+              isFallback: true,
+              fallbackOrder: true,
+              lastFallbackPlayedAt: true,
+              createdAt: true,
+            },
+          })
+        : []
+      baseRows = buildFallbackPlaybackRows(items, channel.fallbackMode)
+    }
+
+    if (baseRows.length === 0 && isTahtiRadio) {
+      const selects = await prisma.channel.findUnique({
+        where: { slug: TAHTI_SELECTS_SLUG },
+        select: { id: true },
+      })
+      if (selects) {
+        baseRows = await curatedPlaybackRows(prisma, selects.id)
+      }
+    }
+  }
+
+  baseRows = baseRows.slice(0, maxItems)
   const [systemAnnouncements, ownAnnouncements] = await Promise.all([
     systemAnnouncementRows(prisma),
     channel.announcementsEnabled ? ownAnnouncementRows(prisma, channelId) : [],

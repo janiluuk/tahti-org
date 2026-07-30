@@ -74,6 +74,8 @@ x-app-env: &app-env
   HLS_STALE_SECONDS: '20'
   ARCHIVE_CACHE_ROOT: /archive-cache
   APP_URL: ${APP_URL:-http://localhost:${WEB_PORT:-17777}}
+  # Self-serve /signup — closed in production unless SIGNUP_OPEN=true in stack.env
+  SIGNUP_OPEN: ${SIGNUP_OPEN:-false}
   API_URL: ${API_URL:-http://localhost:${API_PORT:-15011}}
   # PLAT-056: Revelator DSP distribution — obtain key at https://revelator.com; leave blank in dev
   REVELATOR_API_KEY: ${REVELATOR_API_KEY:-}
@@ -310,6 +312,8 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:${API_PORT:-15011}}
         NEXT_PUBLIC_CENTRIFUGO_WS: ${NEXT_PUBLIC_CENTRIFUGO_WS:-ws://localhost:${CHAT_PORT:-18000}/connection/websocket}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:${WEB_PORT:-17777}}
+        NEXT_PUBLIC_HCAPTCHA_SITE_KEY: ${NEXT_PUBLIC_HCAPTCHA_SITE_KEY:-}
+        SIGNUP_OPEN: ${SIGNUP_OPEN:-false}
     environment:
       <<: *app-env
       API_URL: http://api:3001
@@ -360,6 +364,9 @@ services:
     environment:
       <<: *app-env
       PORT: '3003'
+      # Liquidsoap containers pull fallback.m3u from this URL — must be the
+      # docker-network address, not the host-mapped / public API_URL from stack.env.
+      API_URL: http://api:3001
       FFMPEG_IMAGE: jrottenberg/ffmpeg:6-alpine
       ICECAST_BASE_URL: http://icecast:8000
       RTMP_INGEST_URL: rtmp://rtmp-ingest:1935
