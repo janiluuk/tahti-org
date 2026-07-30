@@ -12,6 +12,7 @@ import { LoveButton } from '@/components/love-button'
 import { RepostButton } from '@/components/repost-button'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { ArchiveDownloadButton } from './archive-download'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 interface Props {
   channelSlug: string
@@ -57,7 +58,7 @@ export function ArchiveItemPlayback({
     url: item.audioUrl,
     title: item.title,
     subtitle: `@${artistUsername}`,
-    href: `/c/${channelSlug}#archive-item-${item.id}`,
+    href: `${resolveChannelUrl(channelSlug)}#archive-item-${item.id}`,
     artworkUrl: item.bannerUrl,
   }
 

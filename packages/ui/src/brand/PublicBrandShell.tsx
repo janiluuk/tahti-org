@@ -18,7 +18,7 @@ export type PublicBrandShellProps = {
   /** Highlights active top-nav item when showHeader is set. */
   activeNav?: SiteNavId
   /** Signed-in user, forwarded to ChannelHeader when showHeader is set. */
-  user?: { username: string; displayName: string } | null
+  user?: { username: string; displayName: string; hasChannel?: boolean } | null
   /** Status page URL, forwarded to PublicFooter when showFooter is set. */
   statusUrl?: string
 }

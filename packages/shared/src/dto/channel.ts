@@ -3,10 +3,11 @@
 
 import { z } from 'zod'
 
+/** Shared with User.username on rename — keep ≤32 so @handle and slug.tahti.live stay aligned. */
 export const ChannelSlugSchema = z
   .string()
   .min(2, 'Channel slug must be at least 2 characters')
-  .max(48, 'Channel slug too long')
+  .max(32, 'Channel slug too long')
   .regex(/^[a-z0-9-]+$/, 'Slug may only contain lowercase letters, numbers, and hyphens')
 
 export const UpdateChannelSchema = z.object({
@@ -15,28 +16,42 @@ export const UpdateChannelSchema = z.object({
 
 export type UpdateChannelInput = z.infer<typeof UpdateChannelSchema>
 
-/** Top-level Next.js route segments under apps/web/src/app, plus the two
- * platform-curated channels — none of these can become someone's <slug>.tahti.live. */
+/** Top-level Next.js route segments under apps/web/src/app, plus platform
+ * infra hostnames (Caddy / tls-ask) and curated channels — none of these can
+ * become someone's <slug>.tahti.live. */
 export const RESERVED_CHANNEL_SLUGS = [
   'admin',
   'api',
+  'app',
   'apply',
   'auth',
   'c',
+  'cdn',
+  'chat',
   'dashboard',
   'dev',
   'embed',
   'feed',
   'governance',
+  'grafana',
   'help',
+  'ingest',
+  'ingest-b',
+  'ingest-icecast',
+  'ingest-icecast-b',
   'join',
   'listen',
   'login',
+  'mail',
+  'minio',
   'r',
   'radio',
+  'registry',
   'setup-password',
   'signup',
   'status',
+  'stream',
+  'support',
   'tahti',
   'tahti-radio',
   'tahti-selects',

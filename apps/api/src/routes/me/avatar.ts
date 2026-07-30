@@ -17,11 +17,31 @@ import { requireAuth } from '../../plugins/auth.js'
 import { presignedPutUrl, putObjectBuffer } from '../../lib/minio.js'
 import { publicMediaUrl } from '../../lib/public-media-url.js'
 import { extFromMime, fetchImageFromUrl } from '../../lib/fetch-image-url.js'
+import { extractPalette } from '../../lib/palette-extract.js'
 
 const PRESIGN_TTL_SEC = 900
 const PROXY_FETCH_TIMEOUT_MS = 8000
 const PROXY_MAX_BYTES = 12 * 1024 * 1024
 const ALLOWED_PROXY_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+
+/** Fire-and-forget: extract a palette from the new avatar and persist it. */
+function refreshAvatarPalette(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  prisma: { user: { update: (args: any) => Promise<unknown> } },
+  userId: string,
+  imageUrl: string,
+  log: { warn: (err: unknown, msg: string) => void },
+) {
+  extractPalette(imageUrl)
+    .then((palette) => {
+      if (!palette) return
+      return prisma.user.update({
+        where: { id: userId },
+        data: { avatarPaletteJson: JSON.stringify(palette) },
+      })
+    })
+    .catch((err) => log.warn(err, 'avatar palette extract failed'))
+}
 
 const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /api/me/profile/avatar/proxy — fetch an arbitrary pasted image URL server-side
@@ -115,6 +135,9 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const avatarUrl = publicMediaUrl(parsed.data.uploadKey)
+      if (!avatarUrl) {
+        return reply.status(500).send({ error: 'Failed to resolve avatar URL' })
+      }
       // Always set alongside avatarUrl (to null when absent) so switching from
       // an animated GIF back to a static avatar clears the stale poster frame.
       const avatarPosterUrl = parsed.data.posterUploadKey
@@ -124,6 +147,10 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: user.id },
         data: { avatarUrl, avatarPosterUrl },
       })
+
+      // Prefer the static poster for palette extraction when the avatar is an
+      // animated GIF — Vibrant reads a single frame more reliably that way.
+      refreshAvatarPalette(fastify.prisma, user.id, avatarPosterUrl ?? avatarUrl, fastify.log)
 
       return reply.send({ avatarUrl, avatarPosterUrl })
     },
@@ -152,12 +179,17 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
       await putObjectBuffer(uploadKey, fetched.bytes, fetched.contentType)
 
       const avatarUrl = publicMediaUrl(uploadKey)
+      if (!avatarUrl) {
+        return reply.status(500).send({ error: 'Failed to resolve avatar URL' })
+      }
       await fastify.prisma.user.update({
         where: { id: user.id },
-        data: { avatarUrl },
+        data: { avatarUrl, avatarPosterUrl: null },
       })
 
-      return reply.send({ avatarUrl })
+      refreshAvatarPalette(fastify.prisma, user.id, avatarUrl, fastify.log)
+
+      return reply.send({ avatarUrl, avatarPosterUrl: null })
     },
   )
 }

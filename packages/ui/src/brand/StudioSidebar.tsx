@@ -6,12 +6,19 @@
 import { usePathname } from 'next/navigation'
 import { Fragment, useEffect, useState, type MouseEvent } from 'react'
 import { DASHBOARD_NAV, isDashboardNavItemActive, navigateDashboardHash } from './dashboard-nav'
+import type { DashboardNavDefinition } from './dashboard-nav'
 import { SidebarNavLink } from './SidebarNavLink'
 
 type Props = {
   isBoard?: boolean
   hasChannel?: boolean
 }
+
+const LISTENER_NAV: DashboardNavDefinition[] = [
+  { href: '/feed', label: 'Feed', icon: 'posts', isRoute: true },
+  { href: '/dashboard/messages', label: 'Messages', icon: 'newsletter', isRoute: true },
+  { href: '/dashboard/settings/account', label: 'Account', icon: 'settings', isRoute: true },
+]
 
 /** Production dashboard sidebar — v8 nav items via SidebarNavLink. */
 export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
@@ -26,6 +33,11 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
   }, [pathname])
 
   const onDashboard = pathname === '/dashboard' || pathname === '/dashboard/'
+  const navItems = hasChannel
+    ? DASHBOARD_NAV.filter(
+        (item) => (!item.adminOnly || isBoard) && (!item.requiresChannel || hasChannel),
+      )
+    : LISTENER_NAV
 
   function onHashNavClick(e: MouseEvent<HTMLAnchorElement>, itemHash: string | undefined) {
     if (!itemHash || !onDashboard) return
@@ -35,10 +47,8 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
 
   return (
     <aside className="db-sidebar">
-      <nav aria-label="Dashboard sections">
-        {DASHBOARD_NAV.filter(
-          (item) => (!item.adminOnly || isBoard) && (!item.requiresChannel || hasChannel),
-        ).map(({ href, label, icon, isRoute, hash: itemHash, sectionKey, group }) => {
+      <nav aria-label={hasChannel ? 'Dashboard sections' : 'Account'}>
+        {navItems.map(({ href, label, icon, isRoute, hash: itemHash, sectionKey, group }) => {
           let active: boolean
           if (isRoute) {
             // `/dashboard` is a path prefix of every other dashboard route, so it can only

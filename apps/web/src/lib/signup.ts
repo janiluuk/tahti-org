@@ -16,7 +16,9 @@ export type SignupStepId = (typeof SIGNUP_STEPS)[number]['id']
 
 /** When true, `/signup` shows the self-serve wizard instead of the closed-beta card. */
 export function isSignupOpen(): boolean {
-  const flag = process.env.SIGNUP_OPEN
+  // Dynamic lookup so Next.js does not inline this at build time — production
+  // toggles registration via SIGNUP_OPEN in stack.env without a rebuild.
+  const flag = process.env['SIGNUP_OPEN']
   if (flag === '1' || flag === 'true') return true
   if (flag === '0' || flag === 'false') return false
   return process.env.NODE_ENV !== 'production'

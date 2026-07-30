@@ -16,7 +16,8 @@ export default async function DomainSettingsPage() {
         <div>
           <h1 className="studio-page-title">Domain</h1>
           <p className="studio-text-muted-sm studio-mt-xs">
-            Point a custom domain at your channel instead of username.tahti.live.
+            Change your @username (and matching username.tahti.live address), or point a custom
+            domain at your channel.
           </p>
         </div>
       </div>

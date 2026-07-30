@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import { Panel, Button, ButtonIcon, SortableList, type SortableItemHandle } from '@tahti/ui'
-import type { ChannelMemberView } from '@tahti/shared'
+import type { ChannelMemberView, ArtistKind } from '@tahti/shared'
 import { CoverImageUpload } from '@/components/cover-image-upload'
 import {
   completeMemberPicture,
@@ -103,7 +103,13 @@ function MemberRow({
   )
 }
 
-export function MembersPanel({ initialMembers }: { initialMembers: ChannelMemberView[] }) {
+export function MembersPanel({
+  initialMembers,
+  artistKind = 'SINGLE',
+}: {
+  initialMembers: ChannelMemberView[]
+  artistKind?: ArtistKind
+}) {
   const [members, setMembers] = useState(initialMembers)
   const [name, setName] = useState('')
   const [role, setRole] = useState('')
@@ -144,9 +150,13 @@ export function MembersPanel({ initialMembers }: { initialMembers: ChannelMember
 
   return (
     <Panel
-      title="Members & credits"
+      title={artistKind === 'COLLECTIVE' ? 'Members' : 'Credits'}
       headerTight
-      description="Show your lineup and give credit to producers, mixing engineers, or anyone else who worked on your music."
+      description={
+        artistKind === 'COLLECTIVE'
+          ? 'List the people in your collective — shown on your public profile.'
+          : 'Optional credits for producers, engineers, or collaborators on your music.'
+      }
     >
       {members.length === 0 ? (
         <p className="studio-text-muted-sm studio-mb-md">Nothing added yet — add one below.</p>

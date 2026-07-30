@@ -72,7 +72,7 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
         error?: string
       }
       if (!res.ok || !data.slug) {
-        setError(data.error ?? 'Could not change your channel address')
+        setError(data.error ?? 'Could not change your username')
         return
       }
       setSlug(data.slug)
@@ -92,22 +92,23 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
   const canSave = changed && availability?.available === true && !saving
 
   return (
-    <Panel title="Channel address" headerTight>
+    <Panel title="Username & address" headerTight>
       <p className="studio-text-muted-sm studio-mt-xs studio-mb-sm">
-        Your public address, as long as it&apos;s free. Changing it issues a new RTMP stream key —
-        your broadcast software will need updating afterward.
+        Your <strong>@{slug}</strong> handle and <strong>{slug}.tahti.live</strong> address stay
+        linked. Changing them issues a new RTMP stream key — update your broadcast software
+        afterward.
       </p>
       <div className="studio-inline-form">
-        <span className="studio-text-muted-sm">https://</span>
+        <span className="studio-text-muted-sm">@</span>
         <input
           type="text"
           className="studio-input studio-input-sm"
           value={input}
-          onChange={(e) => setInput(e.target.value.toLowerCase())}
-          maxLength={48}
-          aria-label="Channel address"
+          onChange={(e) => setInput(e.target.value.toLowerCase().replace(/_/g, '-'))}
+          maxLength={32}
+          aria-label="Username"
         />
-        <span className="studio-text-muted-sm">.tahti.live</span>
+        <span className="studio-text-muted-sm">→ https://{trimmed || '…'}.tahti.live</span>
         <Button onClick={() => void save()} disabled={!canSave} variant="secondary" size="sm">
           {saving ? 'Saving…' : 'Save'}
         </Button>
@@ -119,25 +120,26 @@ export function ChannelSlugPanel({ initialSlug }: { initialSlug: string }) {
             : availability?.available === true
               ? '✓ Available'
               : availability?.reason === 'reserved'
-                ? '✗ That address is reserved'
+                ? '✗ That username is reserved'
                 : availability?.reason === 'taken'
-                  ? '✗ That address is already taken'
+                  ? '✗ That username is already taken'
                   : availability?.reason === 'recently_released'
-                    ? '✗ That address was recently released by another artist and isn’t available yet'
+                    ? '✗ That username was recently released by another artist and isn’t available yet'
                     : null}
         </p>
       )}
       {changed && availability?.available === true && (
         <p className="studio-text-muted-sm studio-mt-xs">
-          Your current address, <strong>{slug}.tahti.live</strong>, will keep working and redirect
-          here for 30 days, then become available to other artists.
+          Your current address, <strong>{slug}.tahti.live</strong>, and profile{' '}
+          <strong>/u/{slug}</strong> will redirect here for 30 days, then become available to other
+          artists.
         </p>
       )}
       {error && <p className="studio-notice studio-notice--error studio-mt-xs">{error}</p>}
       {newRtmpKey && (
         <p className="studio-notice studio-notice--success studio-mt-xs">
-          Address changed. Your new RTMP stream key is <code>{newRtmpKey}</code> — update your
-          broadcast software before you next go live.
+          Username changed to <strong>@{slug}</strong>. Your new RTMP stream key is{' '}
+          <code>{newRtmpKey}</code> — update your broadcast software before you next go live.
           {redirectExpiresAt && (
             <> Your old address redirects here until {formatExpiry(redirectExpiresAt)}.</>
           )}

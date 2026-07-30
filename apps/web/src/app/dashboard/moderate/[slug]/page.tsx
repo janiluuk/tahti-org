@@ -6,6 +6,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Heading, PageShell, Text } from '@tahti/ui'
 import { ChatModerationPanel, type ChatBanRow } from './chat-moderation-panel'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 export default async function ModerateChannelPage({ params }: { params: { slug: string } }) {
   const cookieStore = cookies()
@@ -41,7 +42,7 @@ export default async function ModerateChannelPage({ params }: { params: { slug: 
         <div>
           <Heading level={1}>Chat moderation</Heading>
           <Text tone="secondary" className="studio-mt-sm">
-            Moderating <Link href={`/c/${params.slug}`}>{params.slug}.tahti.live</Link>
+            Moderating <Link href={resolveChannelUrl(params.slug)}>{params.slug}.tahti.live</Link>
           </Text>
         </div>
         <Link href="/dashboard" className="ui-btn ui-btn--ghost ui-btn--sm">

@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   UsernameAvailabilityQuerySchema,
   UsernameAvailabilityResponseSchema,
+  RESERVED_CHANNEL_SLUGS,
   openApiResponse,
 } from '@tahti/shared'
 
@@ -13,6 +14,8 @@ function suggestHandles(username: string): string[] {
   const suffixes = ['live', 'music']
   return suffixes.map((suffix) => `${username}-${suffix}`)
 }
+
+const RESERVED = new Set<string>(RESERVED_CHANNEL_SLUGS)
 
 const usernameAvailableRoute: FastifyPluginAsync = async (fastify) => {
   fastify.get(
@@ -29,6 +32,10 @@ const usernameAvailableRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: 'Invalid username' })
       }
       const { username } = parsed.data
+
+      if (RESERVED.has(username)) {
+        return reply.send({ available: false, suggestions: suggestHandles(username) })
+      }
 
       const existing = await fastify.prisma.user.findUnique({
         where: { username },

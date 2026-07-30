@@ -111,9 +111,13 @@ function PlatformSection({
 export default function SocialPromoPanel({
   initial,
   apiUrl,
+  title = 'Social connections',
+  description = 'Connect platforms to announce releases and live sessions automatically.',
 }: {
   initial: SocialSettings
   apiUrl: string
+  title?: string
+  description?: string
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -209,11 +213,7 @@ export default function SocialPromoPanel({
   }
 
   return (
-    <Panel
-      title="Social auto-post"
-      headerTight
-      description="Connect platforms to announce releases and live sessions automatically."
-    >
+    <Panel title={title} headerTight description={description}>
       <p className="studio-help">
         Placeholders: <code>{'{artist}'}</code>, <code>{'{release}'}</code>,{' '}
         <code>{'{smart_link}'}</code>, <code>{'{channel_url}'}</code>.

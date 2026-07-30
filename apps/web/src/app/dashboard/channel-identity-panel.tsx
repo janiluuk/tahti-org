@@ -3,18 +3,23 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ARCHIVE_GENRES } from '@tahti/shared'
 import { COUNTRY_OPTIONS } from '@/lib/country-options'
 import { flagEmoji } from '@/lib/flag-emoji'
 import { AvatarCropModal } from '@/components/avatar-crop-modal'
-import { completeAvatarUpload, prepareAvatarUpload } from './channel-identity-actions'
-import { Button } from '@tahti/ui'
+import {
+  avatarFromUrl,
+  completeAvatarUpload,
+  prepareAvatarUpload,
+} from './channel-identity-actions'
+import { ButtonIcon, brandTokens } from '@tahti/ui'
 
 const MAX_GENRES = 6
 const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 const POSTER_SIZE = 512
+const DEFAULT_AVATAR_COLOR = brandTokens.color.accent.cyan
 
 export type ChannelIdentityDraft = {
   displayName: string
@@ -24,6 +29,13 @@ export type ChannelIdentityDraft = {
   pronouns: string | null
   defaultLocation: string | null
   genres: string[]
+}
+
+function initialsFromName(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
+  return `${parts[0]![0] ?? ''}${parts[1]![0] ?? ''}`.toUpperCase()
 }
 
 /** Draws a GIF's first frame onto a canvas and exports it as a JPEG blob —
@@ -51,6 +63,28 @@ function extractPosterFrame(file: File): Promise<Blob> {
     }
     img.onerror = () => reject(new Error('Could not load that GIF'))
     img.src = URL.createObjectURL(file)
+  })
+}
+
+function solidColorAvatar(hex: string, initials: string): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas')
+    canvas.width = POSTER_SIZE
+    canvas.height = POSTER_SIZE
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return reject(new Error('Could not create canvas context'))
+    ctx.fillStyle = hex
+    ctx.fillRect(0, 0, POSTER_SIZE, POSTER_SIZE)
+    ctx.fillStyle = 'rgba(255,255,255,0.92)'
+    ctx.font = `600 ${Math.round(POSTER_SIZE * 0.34)}px system-ui, sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(initials.slice(0, 2), POSTER_SIZE / 2, POSTER_SIZE / 2 + 8)
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Could not export color avatar'))),
+      'image/jpeg',
+      0.92,
+    )
   })
 }
 
@@ -87,10 +121,14 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
   const [pronouns, setPronouns] = useState(initial.pronouns ?? '')
   const [defaultLocation, setDefaultLocation] = useState(initial.defaultLocation ?? '')
   const [genres, setGenres] = useState<string[]>(initial.genres)
+  const [avatarColor, setAvatarColor] = useState<string>(DEFAULT_AVATAR_COLOR)
+  const [urlMode, setUrlMode] = useState(false)
   const [avatarUrlInput, setAvatarUrlInput] = useState('')
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const [avatarBusy, setAvatarBusy] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     onDraftChange?.({
@@ -128,6 +166,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       setAvatarUrl(done.avatarUrl ?? '')
       setAvatarPosterUrl(done.avatarPosterUrl ?? '')
       setAvatarUrlInput('')
+      setUrlMode(false)
     } catch {
       setAvatarError('Upload failed')
     } finally {
@@ -151,10 +190,55 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
     setCropSrc(URL.createObjectURL(file))
   }
 
-  function onLoadUrl() {
+  async function onColorPick(hex: string) {
+    setAvatarColor(hex)
+    setAvatarBusy(true)
+    setAvatarError(null)
+    try {
+      const blob = await solidColorAvatar(hex, initialsFromName(displayName))
+      const up = await uploadBlob(blob, 'avatar-color.jpg', 'image/jpeg')
+      if (up.error || !up.uploadKey) {
+        setAvatarError(up.error ?? 'Prepare failed')
+        return
+      }
+      const done = await completeAvatarUpload(up.uploadKey)
+      if (done.error) {
+        setAvatarError(done.error)
+        return
+      }
+      setAvatarUrl(done.avatarUrl ?? '')
+      setAvatarPosterUrl('')
+    } catch {
+      setAvatarError('Could not apply that color')
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
+
+  async function onLoadUrl() {
     const url = avatarUrlInput.trim()
     if (!url) return
     setAvatarError(null)
+    // Prefer crop for still images via same-origin proxy; GIFs go straight to rehost.
+    if (/\.gif(\?|$)/i.test(url)) {
+      setAvatarBusy(true)
+      try {
+        const done = await avatarFromUrl(url)
+        if (done.error) {
+          setAvatarError(done.error)
+          return
+        }
+        setAvatarUrl(done.avatarUrl ?? '')
+        setAvatarPosterUrl('')
+        setAvatarUrlInput('')
+        setUrlMode(false)
+      } catch {
+        setAvatarError('Could not fetch that URL')
+      } finally {
+        setAvatarBusy(false)
+      }
+      return
+    }
     setCropSrc(`${API_BASE}/api/me/profile/avatar/proxy?url=${encodeURIComponent(url)}`)
   }
 
@@ -186,6 +270,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       setAvatarUrl(done.avatarUrl ?? '')
       setAvatarPosterUrl('')
       setAvatarUrlInput('')
+      setUrlMode(false)
     } catch {
       setAvatarError('Upload failed')
     } finally {
@@ -200,6 +285,8 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
         : [...prev, genre].slice(0, MAX_GENRES),
     )
   }
+
+  const previewSrc = avatarPosterUrl || avatarUrl
 
   return (
     <>
@@ -219,45 +306,115 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
 
       <div className="studio-field--block">
         <span className="studio-label">Avatar</span>
-        <div className="studio-row studio-row--wrap studio-gap-lg">
-          {avatarUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={avatarUrl} alt="" width={56} height={56} className="studio-artwork-preview" />
-          )}
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            disabled={avatarBusy}
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) onFile(f)
-              e.target.value = ''
+        <div className="studio-avatar-picker">
+          <div
+            className={`studio-avatar-picker__drop${dragOver ? ' studio-avatar-picker__drop--drag' : ''}${avatarBusy ? ' studio-avatar-picker__drop--busy' : ''}`}
+            style={{ ['--avatar-pick-color' as string]: avatarColor }}
+            onDragOver={(e) => {
+              e.preventDefault()
+              if (!avatarBusy) setDragOver(true)
             }}
-            className="studio-file-input"
-          />
-        </div>
-        <p className="studio-help studio-mt-xs">
-          GIF avatars play on hover on your profile page — otherwise they show a still frame.
-        </p>
-        <div className="studio-row studio-row--wrap studio-gap-lg studio-mt-sm">
-          <input
-            type="url"
-            placeholder="…or paste an image URL"
-            value={avatarUrlInput}
-            disabled={avatarBusy}
-            onChange={(e) => setAvatarUrlInput(e.target.value)}
-            className="studio-input studio-input--grow"
-          />
-          <Button
-            disabled={avatarBusy || !avatarUrlInput.trim()}
-            onClick={onLoadUrl}
-            variant="ghost"
-            size="sm"
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault()
+              setDragOver(false)
+              if (avatarBusy) return
+              const f = e.dataTransfer.files?.[0]
+              if (f) onFile(f)
+            }}
+            onClick={() => !avatarBusy && fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            aria-label="Upload avatar — drop an image or click to browse"
+            onKeyDown={(e) => {
+              if (!avatarBusy && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault()
+                fileInputRef.current?.click()
+              }
+            }}
           >
-            Use URL
-          </Button>
+            {previewSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={previewSrc} alt="" className="studio-avatar-picker__img" />
+            ) : (
+              <span className="studio-avatar-picker__initials" aria-hidden>
+                {initialsFromName(displayName)}
+              </span>
+            )}
+            <span className="studio-avatar-picker__hint">
+              {avatarBusy ? '…' : dragOver ? 'Drop' : 'Drop / click'}
+            </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              disabled={avatarBusy}
+              className="studio-avatar-picker__file"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) onFile(f)
+                e.target.value = ''
+              }}
+            />
+          </div>
+
+          <div className="studio-avatar-picker__tools">
+            <label
+              className="studio-avatar-picker__color"
+              title="Pick a color avatar"
+              aria-label="Pick a color avatar"
+            >
+              <input
+                type="color"
+                value={avatarColor}
+                disabled={avatarBusy}
+                onChange={(e) => void onColorPick(e.target.value)}
+              />
+            </label>
+            <button
+              type="button"
+              className={`studio-avatar-picker__url-btn${urlMode ? ' studio-avatar-picker__url-btn--active' : ''}`}
+              title="Use image URL"
+              aria-label="Use image URL"
+              aria-pressed={urlMode}
+              disabled={avatarBusy}
+              onClick={() => {
+                setUrlMode((v) => !v)
+                setAvatarError(null)
+              }}
+            >
+              <ButtonIcon name="link" />
+            </button>
+          </div>
         </div>
-        {avatarBusy && <p className="studio-text-muted-sm studio-mt-sm">Uploading…</p>}
+
+        {urlMode && (
+          <div className="studio-avatar-picker__url-row">
+            <input
+              type="url"
+              placeholder="https://… image URL"
+              value={avatarUrlInput}
+              disabled={avatarBusy}
+              onChange={(e) => setAvatarUrlInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void onLoadUrl()
+              }}
+              className="studio-input studio-input--grow"
+            />
+            <button
+              type="button"
+              className="ui-btn ui-btn--sm ui-btn--primary"
+              disabled={avatarBusy || !avatarUrlInput.trim()}
+              onClick={() => void onLoadUrl()}
+            >
+              {avatarBusy ? '…' : 'Fetch'}
+            </button>
+          </div>
+        )}
+
+        <p className="studio-help studio-mt-xs">
+          Color fills a solid avatar, or drop a photo / paste a URL. GIFs animate on hover.
+        </p>
         {avatarError && (
           <p className="studio-notice studio-notice--error studio-mt-sm">{avatarError}</p>
         )}

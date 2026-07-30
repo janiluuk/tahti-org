@@ -35,6 +35,7 @@ export async function createMember(
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) return { error: (data as { error?: string }).error ?? 'Failed to add member' }
+  revalidatePath('/dashboard/settings/artist-info')
   revalidatePath('/dashboard/settings/members')
   return { error: null, member: data as ChannelMemberView }
 }
@@ -53,6 +54,7 @@ export async function updateMember(
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to update member' }
   }
+  revalidatePath('/dashboard/settings/artist-info')
   revalidatePath('/dashboard/settings/members')
   return { error: null }
 }
@@ -67,6 +69,7 @@ export async function deleteMember(id: string): Promise<{ error: string | null }
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to remove member' }
   }
+  revalidatePath('/dashboard/settings/artist-info')
   revalidatePath('/dashboard/settings/members')
   return { error: null }
 }
@@ -82,6 +85,7 @@ export async function reorderMembers(ids: string[]): Promise<{ error: string | n
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Failed to reorder' }
   }
+  revalidatePath('/dashboard/settings/artist-info')
   revalidatePath('/dashboard/settings/members')
   return { error: null }
 }
@@ -117,6 +121,7 @@ export async function completeMemberPicture(
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) return { error: (data as { error?: string }).error ?? 'Failed to attach picture' }
+  revalidatePath('/dashboard/settings/artist-info')
   revalidatePath('/dashboard/settings/members')
   return { error: null, url: (data as { url: string | null }).url }
 }
@@ -133,6 +138,7 @@ export async function memberPictureFromUrl(
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) return { error: (data as { error?: string }).error ?? 'Failed to fetch image' }
+  revalidatePath('/dashboard/settings/artist-info')
   revalidatePath('/dashboard/settings/members')
   return { error: null, url: (data as { url: string | null }).url }
 }

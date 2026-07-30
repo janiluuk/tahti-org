@@ -239,6 +239,14 @@ export const PublicRadioSlotSchema = z.object({
   startAt: z.string(),
   endAt: z.string(),
   note: z.string().nullable(),
+  /** Stream-overlay cover when the artist set one; otherwise null (UI falls back to avatar). */
+  coverUrl: z.string().nullable(),
+  /** Accent/bg from the artist's profile-pic palette (or channel brand scheme). */
+  colorScheme: ColorSchemeSchema.nullable(),
+  /** Artist's next upcoming booking start (may be this slot). */
+  nextShowAt: z.string().nullable(),
+  /** Artist's most recent past booking start. */
+  lastShowAt: z.string().nullable(),
   artist: z.object({
     displayName: z.string(),
     username: z.string(),
@@ -264,9 +272,13 @@ export const RadioShowDetailSchema = z.object({
     avatarUrl: z.string().nullable(),
     channelSlug: z.string(),
     bio: z.string().nullable(),
+    coverUrl: z.string().nullable(),
+    colorScheme: ColorSchemeSchema.nullable(),
   }),
   pastEpisodes: z.array(RadioShowEpisodeSchema),
   upcomingEpisodes: z.array(RadioShowEpisodeSchema),
+  nextShowAt: z.string().nullable(),
+  lastShowAt: z.string().nullable(),
 })
 export type RadioShowDetail = z.infer<typeof RadioShowDetailSchema>
 
@@ -744,6 +756,7 @@ export const PublicProfileViewSchema = z.object({
     .object({
       slug: z.string(),
       state: z.string(),
+      artistKind: z.enum(['SINGLE', 'COLLECTIVE']).optional(),
     })
     .nullable(),
   releases: z.array(z.record(z.string(), z.unknown())),
@@ -971,6 +984,8 @@ export const ProfileFieldsSchema = z.object({
   showFollowers: z.boolean(),
   showFollowing: z.boolean(),
   createdAt: z.string().datetime(),
+  /** Solo DJ/artist vs collective/band. Defaults to SINGLE when no channel. */
+  artistKind: z.enum(['SINGLE', 'COLLECTIVE']),
 })
 
 export const MetaStreamOptResponseSchema = z.object({

@@ -12,6 +12,9 @@
 
 # ── Staging: marketing site ───────────────────────────────────────────────────
 staging.tahti.live {
+	# Artist channels live on <slug>.staging.tahti.live — never staging.tahti.live/c/<slug>.
+	@artist_channel path_regexp artist_channel ^/c/([a-z0-9-]+)/?$
+	redir @artist_channel https://{re.artist_channel.1}.staging.tahti.live/ 308
 	encode zstd gzip
 	reverse_proxy website:80
 }

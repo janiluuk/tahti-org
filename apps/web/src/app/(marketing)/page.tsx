@@ -3,6 +3,7 @@
 
 import type { ChannelCard } from '@tahti/shared'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { BrandLogo, ButtonIcon, StatCard, StatCardStrip } from '@tahti/ui'
 import { getSessionUser } from '@/lib/session'
 import { isSignupOpen } from '@/lib/signup'
@@ -89,8 +90,14 @@ function hasMeaningfulPlatformStats(stats: PlatformStats): boolean {
   return stats.activeArtists > 0 || stats.broadcastsThisMonth > 0 || stats.totalHours > 0
 }
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams?: { home?: string } }) {
   const [{ live, stats, news }, user] = await Promise.all([fetchData(), getSessionUser()])
+
+  // Logged-in artists land in the studio (Artist panel) by default. Explicit
+  // Home nav uses ?home=1 so they can still reach the marketing page.
+  if (user?.hasChannel && searchParams?.home !== '1') {
+    redirect('/dashboard')
+  }
 
   return (
     <div className="home-shell">
@@ -115,6 +122,11 @@ export default async function HomePage() {
           {!user && (
             <Link href="/login" className="ui-btn ui-btn--secondary ui-btn--lg">
               Sign in
+            </Link>
+          )}
+          {user?.hasChannel && (
+            <Link href="/dashboard" className="ui-btn ui-btn--primary ui-btn--lg">
+              Artist panel
             </Link>
           )}
         </div>

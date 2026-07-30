@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
@@ -59,19 +59,35 @@ async function fetchProfile(username: string) {
   return (await res.json()) as ProfileResponse
 }
 
+async function resolveUsernameRedirect(username: string): Promise<string | null> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  const res = await fetch(`${apiUrl}/api/channels/${encodeURIComponent(username)}/redirect`, {
+    next: { revalidate: 60 },
+  })
+  if (!res.ok) return null
+  const data = (await res.json()) as { slug?: string }
+  return data.slug && data.slug !== username ? data.slug : null
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: { username: string }
 }): Promise<Metadata> {
   const data = await fetchProfile(params.username)
-  if (!data) return { title: 'Artist not found' }
+  if (!data) {
+    const nextUsername = await resolveUsernameRedirect(params.username)
+    if (nextUsername) {
+      return { alternates: { canonical: `/u/${nextUsername}` } }
+    }
+    return { title: 'Artist not found' }
+  }
 
-  const { artist } = data
+  const { artist, channel } = data
   const description =
     artist.bio?.slice(0, 160) ??
     `Listen to ${artist.displayName} on Tahti — nonprofit broadcasting for independent artists.`
-  const canonicalUrl = resolveChannelUrl(artist.username)
+  const canonicalUrl = resolveChannelUrl(channel?.slug ?? artist.username)
 
   return {
     title: `${artist.displayName} (@${artist.username})`,
@@ -108,7 +124,7 @@ interface ProfileResponse {
     followerCount?: number | null
     followingCount?: number | null
   }
-  channel: { slug: string; state: string } | null
+  channel: { slug: string; state: string; artistKind?: 'SINGLE' | 'COLLECTIVE' } | null
   releases: Array<{
     id: string
     title: string
@@ -270,7 +286,11 @@ async function fetchChannelExtras(slug: string | undefined) {
 
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
   const [data, user] = await Promise.all([fetchProfile(params.username), getSessionUser()])
-  if (!data) notFound()
+  if (!data) {
+    const nextUsername = await resolveUsernameRedirect(params.username)
+    if (nextUsername) redirect(`/u/${nextUsername}`)
+    notFound()
+  }
 
   const { artist, channel, releases, tracks, links, collections = [] } = data
   // Sub-grouped inside the "Releases" tab (see ProfileTabs) rather than
@@ -527,7 +547,9 @@ export default async function ArtistProfilePage({ params }: { params: { username
 
               {members.length > 0 && (
                 <section className="prof-section">
-                  <div className="prof-sec-label">Members & credits</div>
+                  <div className="prof-sec-label">
+                    {channel?.artistKind === 'COLLECTIVE' ? 'Members' : 'Credits'}
+                  </div>
                   <ul className="prof-members-list">
                     {members.map((m) => (
                       <li key={m.id} className="prof-members-list__item">

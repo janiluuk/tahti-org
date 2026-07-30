@@ -5,11 +5,23 @@
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
+export interface RadioColorScheme {
+  bg: string
+  accent: string
+  text: string
+  muted: string
+  highlight: string
+}
+
 export interface PublicRadioSlot {
   id: string
   startAt: string
   endAt: string
   note: string | null
+  coverUrl: string | null
+  colorScheme: RadioColorScheme | null
+  nextShowAt: string | null
+  lastShowAt: string | null
   artist: {
     displayName: string
     username: string
@@ -48,9 +60,13 @@ export interface RadioShowDetail {
     avatarUrl: string | null
     channelSlug: string
     bio: string | null
+    coverUrl: string | null
+    colorScheme: RadioColorScheme | null
   }
   pastEpisodes: RadioShowEpisode[]
   upcomingEpisodes: RadioShowEpisode[]
+  nextShowAt: string | null
+  lastShowAt: string | null
 }
 
 export async function fetchRadioShow(channelSlug: string): Promise<RadioShowDetail | null> {

@@ -1526,37 +1526,10 @@
   color: var(--muted);
 }
 
-.artist-directory__pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--tahti-space-4);
+.artist-directory__scroll-status {
+  min-height: 1.5rem;
   margin-top: var(--tahti-space-6);
-}
-
-.artist-directory__page-btn {
-  padding: 0.4rem 0.9rem;
-  border-radius: var(--tahti-radius-full);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text);
-  font-size: var(--tahti-text-sm);
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
-}
-
-.artist-directory__page-btn:hover:not(:disabled) {
-  border-color: var(--cyan);
-}
-
-.artist-directory__page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.artist-directory__page-status {
+  text-align: center;
   font-size: var(--tahti-text-sm);
   color: var(--muted);
 }

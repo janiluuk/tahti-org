@@ -33,7 +33,7 @@ export default async function AnnouncementEditorPage({ params }: { params: { id:
     <AnnouncementTrimEditor
       clips={summaries}
       initialClipId={params.id}
-      backHref="/dashboard/settings/announcements"
+      backHref="/dashboard/settings/notifications#announcements"
       editHrefFor={(id) => `/dashboard/settings/announcements/editor/${id}`}
       fetchSource={fetchAnnouncementEditorSource}
       submitRender={renderAnnouncementTrim}

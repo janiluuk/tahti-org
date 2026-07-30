@@ -44,6 +44,13 @@ export type SiteNavId = 'home' | 'discover' | 'radio' | 'venues'
 
 type HeaderContextLink = { href: string; label: string }
 
+type HeaderUser = {
+  username: string
+  displayName: string
+  /** When true, show Artist panel / studio entry points. Listeners omit these. */
+  hasChannel?: boolean
+}
+
 type ChannelHeaderProps = {
   /** Live member channel — hides site nav, shows @handle in header centre */
   isLive?: boolean
@@ -56,7 +63,7 @@ type ChannelHeaderProps = {
   activeNav?: SiteNavId
   /** LIVE pill on the right without hiding site nav (e.g. Tahti Radio) */
   showLiveBadge?: boolean
-  user?: { username: string; displayName: string } | null
+  user?: HeaderUser | null
 }
 
 const SITE_NAV: { id: SiteNavId; href: string; label: string }[] = [
@@ -173,6 +180,11 @@ export function ChannelHeader({
         {!channelLiveMode &&
           (user ? (
             <div className="ch-header__user-menu" ref={menuRef}>
+              {user.hasChannel && (
+                <Link href="/dashboard" className="ch-header__artist-panel">
+                  Artist panel
+                </Link>
+              )}
               <button
                 type="button"
                 className="ch-header__user"
@@ -191,46 +203,85 @@ export function ChannelHeader({
               </button>
               {menuOpen && (
                 <div className="ch-header__menu" role="menu">
-                  <Link
-                    href="/dashboard"
-                    className="ch-header__menu-item"
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Artist panel
-                  </Link>
-                  <Link
-                    href={`/u/${user.username}`}
-                    className="ch-header__menu-item"
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    View profile
-                  </Link>
-                  <Link
-                    href="/dashboard/settings/account"
-                    className="ch-header__menu-item"
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Edit profile
-                  </Link>
-                  <Link
-                    href="/dashboard/messages"
-                    className="ch-header__menu-item"
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Messages
-                  </Link>
-                  <Link
-                    href="/feed"
-                    className="ch-header__menu-item"
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Feed
-                  </Link>
+                  {user.hasChannel ? (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        className="ch-header__menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Artist panel
+                      </Link>
+                      <Link
+                        href={`/u/${user.username}`}
+                        className="ch-header__menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        View profile
+                      </Link>
+                      <Link
+                        href="/dashboard/settings/account"
+                        className="ch-header__menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Edit profile
+                      </Link>
+                      <Link
+                        href="/dashboard/messages"
+                        className="ch-header__menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Messages
+                      </Link>
+                      <Link
+                        href="/feed"
+                        className="ch-header__menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Feed
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/feed"
+                        className="ch-header__menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Feed
+                      </Link>
+                      <Link
+                        href="/dashboard/messages"
+                        className="ch-header__menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Messages
+                      </Link>
+                      <Link
+                        href={`/u/${user.username}`}
+                        className="ch-header__menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        View profile
+                      </Link>
+                      <Link
+                        href="/dashboard/settings/account"
+                        className="ch-header__menu-item"
+                        role="menuitem"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Account
+                      </Link>
+                    </>
+                  )}
                   <div className="ch-header__menu-divider" role="separator" />
                   <form action="/api/auth/logout" method="POST" className="ch-header__menu-form">
                     <button
@@ -260,7 +311,7 @@ type ChannelPageLayoutProps = {
   listenerCount?: number | null
   activeNav?: SiteNavId
   showLiveBadge?: boolean
-  user?: { username: string; displayName: string } | null
+  user?: HeaderUser | null
   main: ReactNode
   sidebar: ReactNode
 }

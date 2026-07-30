@@ -258,7 +258,7 @@ type ProfilePageLayoutProps = {
   /** Subscribe flow — max-width var(--narrow-max) */
   narrow?: boolean
   /** Logged-in viewer — shows their name/avatar instead of "Sign in" in the header. */
-  user?: { username: string; displayName: string } | null
+  user?: { username: string; displayName: string; hasChannel?: boolean } | null
 }
 
 /** PLAT-020: profile / subscribe page shell. `cover` renders full-width outside the max-width container. */

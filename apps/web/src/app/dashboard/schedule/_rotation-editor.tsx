@@ -242,7 +242,7 @@ export function RotationEditor({
         </div>
         <Text size="sm" tone="muted" className="studio-mt-xs">
           Manage your announcement clips from{' '}
-          <a href="/dashboard/settings/announcements" className="studio-link">
+          <a href="/dashboard/settings/notifications#announcements" className="studio-link">
             Settings → Announcements
           </a>
           . Tahti&apos;s own system announcements (if any) always play regardless of this toggle.

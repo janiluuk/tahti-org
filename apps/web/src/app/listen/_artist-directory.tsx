@@ -8,6 +8,7 @@ import Link from 'next/link'
 import type { ChannelDirectoryEntry } from '@tahti/shared'
 import { AvatarTile } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
+import { useInfiniteSlice } from './_use-infinite-slice'
 
 function cardBgStyle(avatarUrl: string | null | undefined): CSSProperties | undefined {
   return avatarUrl ? ({ '--card-bg-image': `url(${avatarUrl})` } as CSSProperties) : undefined
@@ -18,7 +19,6 @@ const PAGE_SIZE = 24
 export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
   const [query, setQuery] = useState('')
   const [genre, setGenre] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
 
   const genres = useMemo(() => {
     const set = new Set<string>()
@@ -34,19 +34,12 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
       .sort((a, b) => a.displayName.localeCompare(b.displayName))
   }, [items, query, genre])
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const safePage = Math.min(page, pageCount)
-  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
-
-  function updateQuery(next: string) {
-    setQuery(next)
-    setPage(1)
-  }
-
-  function updateGenre(next: string | null) {
-    setGenre(next)
-    setPage(1)
-  }
+  const resetKey = `${genre ?? ''}|${query}|${filtered.length}`
+  const { shown, hasMore, sentinelRef, total, visibleCount } = useInfiniteSlice(
+    filtered,
+    PAGE_SIZE,
+    resetKey,
+  )
 
   return (
     <div className="artist-directory">
@@ -56,7 +49,7 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
           className="artist-directory__search"
           placeholder="Search artists…"
           value={query}
-          onChange={(e) => updateQuery(e.target.value)}
+          onChange={(e) => setQuery(e.target.value)}
           aria-label="Search artists"
         />
         {genres.length > 0 && (
@@ -64,7 +57,7 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
             <button
               type="button"
               className={`listen-genre-filter__chip${genre === null ? ' listen-genre-filter__chip--active' : ''}`}
-              onClick={() => updateGenre(null)}
+              onClick={() => setGenre(null)}
             >
               All genres
             </button>
@@ -73,7 +66,7 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
                 key={g}
                 type="button"
                 className={`listen-genre-filter__chip${genre === g ? ' listen-genre-filter__chip--active' : ''}`}
-                onClick={() => updateGenre(genre === g ? null : g)}
+                onClick={() => setGenre(genre === g ? null : g)}
               >
                 {g}
               </button>
@@ -87,7 +80,7 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
       ) : (
         <>
           <ul className="artist-directory__grid">
-            {paged.map((item) => (
+            {shown.map((item) => (
               <li key={item.slug}>
                 <Link
                   href={resolveChannelUrl(item.slug)}
@@ -113,29 +106,13 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
             ))}
           </ul>
 
-          {pageCount > 1 && (
-            <div className="artist-directory__pagination" role="navigation" aria-label="Pagination">
-              <button
-                type="button"
-                className="artist-directory__page-btn"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={safePage <= 1}
-              >
-                ← Prev
-              </button>
-              <span className="artist-directory__page-status">
-                Page {safePage} of {pageCount}
-              </span>
-              <button
-                type="button"
-                className="artist-directory__page-btn"
-                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                disabled={safePage >= pageCount}
-              >
-                Next →
-              </button>
-            </div>
-          )}
+          <div ref={sentinelRef} className="artist-directory__scroll-status" aria-live="polite">
+            {hasMore
+              ? `Showing ${visibleCount} of ${total} — scroll for more`
+              : total > PAGE_SIZE
+                ? `All ${total} artists`
+                : null}
+          </div>
         </>
       )}
     </div>

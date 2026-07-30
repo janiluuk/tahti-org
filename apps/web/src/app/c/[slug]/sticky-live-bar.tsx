@@ -5,6 +5,7 @@
 
 import { StickyLiveBar as StickyLiveBarUi } from '@tahti/ui'
 import { useEffect, useState } from 'react'
+import { resolveChannelUrl } from '@/lib/app-url'
 
 type Props = {
   slug: string
@@ -39,7 +40,7 @@ export function StickyLiveBar({ slug, artistName, isFlac }: Props) {
   return (
     <StickyLiveBarUi
       artistName={artistName}
-      channelHref={`/c/${slug}#live-player`}
+      channelHref={`${resolveChannelUrl(slug)}#live-player`}
       listeners={listeners}
       isFlac={isFlac}
     />

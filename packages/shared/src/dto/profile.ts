@@ -3,6 +3,9 @@
 
 import { z } from 'zod'
 
+export const ARTIST_KINDS = ['SINGLE', 'COLLECTIVE'] as const
+export type ArtistKind = (typeof ARTIST_KINDS)[number]
+
 export const ProfilePatchSchema = z
   .object({
     displayName: z.string().trim().min(1, 'displayName cannot be empty').max(100).optional(),
@@ -18,6 +21,8 @@ export const ProfilePatchSchema = z
     showJoinDate: z.boolean().optional(),
     showFollowers: z.boolean().optional(),
     showFollowing: z.boolean().optional(),
+    /** Solo DJ/artist vs collective/band. */
+    artistKind: z.enum(ARTIST_KINDS).optional(),
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'No fields to update' })
 

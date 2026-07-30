@@ -11,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { config } from '../../config.js'
+import { resolveChannelUrl } from '../../lib/channel-url.js'
 
 interface TracklistEntry {
   startSec: number
@@ -75,7 +76,7 @@ async function publishLovedMessage(params: {
           handle: 'Tahti',
           text: `${actorDisplayName} loved ${trackTitle}`,
           system: true,
-          href: `/c/${slug}#archive-item-${trackId}`,
+          href: resolveChannelUrl(slug, { hash: `archive-item-${trackId}` }),
           ts: Date.now(),
         },
       },

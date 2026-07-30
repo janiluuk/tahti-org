@@ -218,6 +218,11 @@
     padding: 5px 9px;
     font-size: var(--text-label);
   }
+
+  [data-tahti-ui='brand'] .ch-header__artist-panel {
+    padding: 5px 9px;
+    font-size: var(--text-label);
+  }
 }
 
 [data-tahti-ui='brand'] .ch-header__right {
@@ -244,8 +249,30 @@
   border-color: color-mix(in srgb, var(--muted) 50%, transparent);
 }
 
+[data-tahti-ui='brand'] .ch-header__artist-panel {
+  font-size: var(--text-xs);
+  color: var(--bg);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--cyan);
+  background: var(--cyan);
+  transition:
+    filter 0.12s,
+    background 0.12s;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-header__artist-panel:hover {
+  filter: brightness(1.08);
+}
+
 [data-tahti-ui='brand'] .ch-header__user-menu {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 [data-tahti-ui='brand'] .ch-header__user {
@@ -1924,11 +1951,12 @@
 [data-tahti-ui='brand'] .ch-radio-info-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  /* Above sticky chat rail (sidebar paints after main) and help spotlight (300). */
+  z-index: 400;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.72);
   cursor: pointer;
   padding: 1rem;
 }
@@ -2127,9 +2155,8 @@
   overflow: hidden;
 }
 
-/* --show-color is set inline per booked cell (hashed from the artist handle),
- * so each DJ/show reads as a consistent color across the whole calendar
- * instead of every booking sharing one generic "booked" tint. */
+/* --show-color is set inline from the artist's avatar palette accent when
+ * available, otherwise a hashed design-token fallback. */
 [data-tahti-ui='brand'] .ch-radio-slots__cell--booked {
   background: color-mix(in srgb, var(--show-color, var(--cyan)) 30%, var(--card2));
   border-left: 2px solid var(--show-color, var(--cyan));
@@ -2140,74 +2167,281 @@
   background: color-mix(in srgb, var(--show-color, var(--cyan)) 48%, var(--card2));
 }
 
+[data-tahti-ui='brand'] .ch-radio-slots__cell--selected {
+  outline: 2px solid var(--show-color, var(--cyan));
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--show-color, var(--cyan)) 55%, var(--card2));
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__cell-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  width: 100%;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__cell-avatar {
+  flex-shrink: 0;
+  width: 1.35rem !important;
+  height: 1.35rem !important;
+}
+
 [data-tahti-ui='brand'] .ch-radio-slots__cell-label {
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 [data-tahti-ui='brand'] .ch-radio-slots__popover-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  /* Above the schedule dialog (400) so the show card is always on top of chat. */
+  z-index: 410;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.78);
   cursor: pointer;
+  padding: 1rem;
 }
 
-[data-tahti-ui='brand'] .ch-radio-slots__popover {
+[data-tahti-ui='brand'] .ch-radio-slots__show-card {
   position: relative;
-  background: var(--card);
-  border: 1px solid var(--border);
+  width: min(92vw, 36rem);
+  max-height: min(90vh, 40rem);
+  overflow: auto;
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  width: 20rem;
-  max-width: 90vw;
+  border: 1px solid color-mix(in srgb, var(--show-color, var(--cyan)) 45%, var(--border));
+  background: var(--card);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.55),
+    0 0 0 1px color-mix(in srgb, var(--show-color, var(--cyan)) 18%, transparent);
   cursor: default;
-  text-align: center;
+  text-align: left;
 }
 
-[data-tahti-ui='brand'] .ch-radio-slots__popover-close {
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-close {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: none;
-  border: none;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 85%, transparent);
   color: var(--muted);
   cursor: pointer;
   font-size: var(--text-body);
+  line-height: 1;
 }
 
-[data-tahti-ui='brand'] .ch-radio-slots__popover-name {
-  font-weight: var(--weight-medium);
-  font-size: var(--text-base);
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-close:hover {
   color: var(--text);
-  margin-top: 0.35rem;
+  border-color: color-mix(in srgb, var(--cyan) 40%, var(--border));
 }
 
-[data-tahti-ui='brand'] .ch-radio-slots__popover-time {
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-hero {
+  position: relative;
+  height: 7.5rem;
+  overflow: hidden;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--show-color, var(--cyan)) 55%, var(--bg)) 0%,
+    color-mix(in srgb, var(--show-color, var(--cyan)) 18%, var(--card2)) 55%,
+    var(--card) 100%
+  );
+  background-size: cover;
+  background-position: center;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-hero--image {
+  background-color: var(--show-bg, var(--card));
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-hero--image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--card) 92%, transparent) 0%,
+    color-mix(in srgb, var(--show-color, var(--cyan)) 25%, transparent) 55%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-glow {
+  position: absolute;
+  inset: -40% -20% auto;
+  height: 140%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--show-color, var(--cyan)) 40%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-body {
+  display: flex;
+  gap: 1.25rem;
+  padding: 0 1.5rem 1.5rem;
+  margin-top: -2.75rem;
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-avatar {
+  flex-shrink: 0;
+  width: 6.5rem !important;
+  height: 6.5rem !important;
+  border: 3px solid var(--card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-meta {
+  min-width: 0;
+  flex: 1;
+  padding-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--green) 22%, var(--card2));
+  color: var(--green);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-badge--soon {
+  background: color-mix(in srgb, var(--show-color, var(--cyan)) 20%, var(--card2));
+  color: var(--show-color, var(--cyan));
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-badge--past {
+  background: var(--card2);
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-name {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-head);
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  line-height: 1.15;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-handle {
+  margin: 0;
   font-size: var(--text-sm);
   color: var(--muted);
 }
 
-[data-tahti-ui='brand'] .ch-radio-slots__popover-note {
-  font-size: var(--text-sm);
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-when {
+  margin: 0.65rem 0 0;
+  font-size: var(--text-body);
   color: var(--text);
-  margin: 0.25rem 0;
+  font-weight: var(--weight-medium);
 }
 
-[data-tahti-ui='brand'] .ch-radio-slots__popover-link {
-  color: var(--cyan);
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-duration {
+  margin: 0;
   font-size: var(--text-sm);
-  margin-top: 0.35rem;
+  color: var(--muted2);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-schedule {
+  margin: 0.35rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--show-muted, var(--muted2));
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-note {
+  margin: 0.75rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--show-color, var(--cyan)) 10%, var(--card2));
+  border: 1px solid color-mix(in srgb, var(--show-color, var(--cyan)) 22%, var(--border));
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: 1.45;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-note--muted {
+  color: var(--muted);
+  font-style: italic;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-btn:hover {
+  border-color: color-mix(in srgb, var(--show-color, var(--cyan)) 45%, var(--border));
+  background: color-mix(in srgb, var(--show-color, var(--cyan)) 12%, var(--card2));
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-btn--primary {
+  background: var(--show-color, var(--cyan));
+  border-color: var(--show-color, var(--cyan));
+  color: var(--bg);
+}
+
+[data-tahti-ui='brand'] .ch-radio-slots__show-card-btn--primary:hover {
+  filter: brightness(1.08);
+  background: var(--show-color, var(--cyan));
+}
+
+@media (max-width: 540px) {
+  [data-tahti-ui='brand'] .ch-radio-slots__show-card-body {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: -3.25rem;
+  }
+
+  [data-tahti-ui='brand'] .ch-radio-slots__show-card-meta {
+    padding-top: 0.5rem;
+    align-items: center;
+  }
+
+  [data-tahti-ui='brand'] .ch-radio-slots__show-card-actions {
+    justify-content: center;
+  }
 }
 
 /* ── Comments ─────────────────────────────────────────────────────────────── */

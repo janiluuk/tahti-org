@@ -175,7 +175,10 @@ jobs:
             NEXT_PUBLIC_API_BASE=https://api.tahti.live
             NEXT_PUBLIC_API_URL=https://api.tahti.live
             NEXT_PUBLIC_CENTRIFUGO_WS=wss://chat.tahti.live/connection/websocket
-            NEXT_PUBLIC_APP_URL=https://app.tahti.live
+            NEXT_PUBLIC_APP_URL=https://tahti.live
+            NEXT_PUBLIC_HCAPTCHA_SITE_KEY=${{ secrets.HCAPTCHA_SITE_KEY }}
+            APP_URL=https://tahti.live
+            SIGNUP_OPEN=true
           tags: |
             ${{ env.REGISTRY }}/tahti/web:${{ needs.resolve.outputs.image_tag }}
             ${{ env.REGISTRY }}/tahti/web:${{ needs.resolve.outputs.deploy_sha }}

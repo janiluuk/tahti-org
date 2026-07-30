@@ -2,12 +2,19 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { AuthRegisterResponseSchema, RegisterSchema, openApiResponses } from '@tahti/shared'
+import {
+  AuthRegisterResponseSchema,
+  RegisterSchema,
+  RESERVED_CHANNEL_SLUGS,
+  openApiResponses,
+} from '@tahti/shared'
 import { hashPassword } from '../../lib/password.js'
 import { generateVerificationToken, verificationExpiresAt } from '../../lib/token.js'
 import { sendVerificationEmail } from '../../lib/email.js'
 import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 import { nanoid } from 'nanoid'
+
+const RESERVED = new Set<string>(RESERVED_CHANNEL_SLUGS)
 
 const registerRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -33,6 +40,10 @@ const registerRoute: FastifyPluginAsync = async (fastify) => {
         parsed.data
       if (!(await verifyHcaptcha(hcaptchaToken))) {
         return reply.status(400).send({ error: 'hCaptcha verification failed' })
+      }
+
+      if (RESERVED.has(username)) {
+        return reply.status(409).send({ error: 'username is reserved' })
       }
 
       // Check uniqueness

@@ -7,6 +7,8 @@ export interface SessionUser {
   username: string
   displayName: string
   isBoard: boolean
+  /** True when the account has a channel — i.e. an artist who can open the studio. */
+  hasChannel: boolean
 }
 
 /** Best-effort lookup of the current session user for server components.
@@ -23,8 +25,18 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       cache: 'no-store',
     })
     if (!res.ok) return null
-    const data = (await res.json()) as { username: string; displayName: string; isBoard: boolean }
-    return { username: data.username, displayName: data.displayName, isBoard: data.isBoard }
+    const data = (await res.json()) as {
+      username: string
+      displayName: string
+      isBoard: boolean
+      channel?: { slug: string } | null
+    }
+    return {
+      username: data.username,
+      displayName: data.displayName,
+      isBoard: data.isBoard,
+      hasChannel: Boolean(data.channel?.slug),
+    }
   } catch {
     return null
   }

@@ -33,6 +33,9 @@
 # ── Marketing site ────────────────────────────────────────────────────────────
 tahti.live, www.tahti.live {
 	import security_headers
+	# Artist channels live on <slug>.tahti.live — never tahti.live/c/<slug>.
+	@artist_channel path_regexp artist_channel ^/c/([a-z0-9-]+)/?$
+	redir @artist_channel https://{re.artist_channel.1}.tahti.live/ 308
 	encode zstd gzip
 	reverse_proxy website:80
 }
@@ -48,7 +51,7 @@ app.tahti.live {
 *.tahti.live {
 	import security_headers
 	@app host app.tahti.live
-	@valid expression {labels.0} != "www" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream" && {labels.0} != "cdn" && {labels.0} != "ingest-icecast" && {labels.0} != "ingest-icecast-b" && {labels.0} != "minio" && {labels.0} != "grafana"
+	@valid expression {labels.0} != "www" && {labels.0} != "app" && {labels.0} != "api" && {labels.0} != "chat" && {labels.0} != "stream" && {labels.0} != "cdn" && {labels.0} != "grafana" && {labels.0} != "minio" && {labels.0} != "mail" && {labels.0} != "registry" && {labels.0} != "support" && {labels.0} != "ingest" && {labels.0} != "ingest-b" && {labels.0} != "ingest-icecast" && {labels.0} != "ingest-icecast-b"
 	encode zstd gzip
 	reverse_proxy @valid web:3000 {
 		header_up X-Tahti-Channel-Slug {labels.0}

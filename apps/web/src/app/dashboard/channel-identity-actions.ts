@@ -25,6 +25,7 @@ export async function updateChannelProfile(patch: {
   showJoinDate?: boolean
   showFollowers?: boolean
   showFollowing?: boolean
+  artistKind?: 'SINGLE' | 'COLLECTIVE'
 }): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/profile`, {
     method: 'PATCH',
@@ -69,6 +70,22 @@ export async function completeAvatarUpload(
   if (!res.ok) {
     const data = (await res.json().catch(() => ({}))) as { error?: string }
     return { error: data.error ?? 'Upload failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function avatarFromUrl(
+  sourceUrl: string,
+): Promise<{ avatarUrl?: string | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/profile/avatar/from-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ sourceUrl }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: data.error ?? 'Could not fetch that URL' }
   }
   return { ...(await res.json()), error: null }
 }

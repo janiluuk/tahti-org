@@ -146,7 +146,9 @@ describe('/api/reactions/track/:id', () => {
     const body = JSON.parse(init!.body as string)
     expect(body.params.channel).toBe(`channel:${channelSlug}`)
     expect(body.params.data.text).toBe('Reaction Test Other loved Reaction Test Track')
-    expect(body.params.data.href).toBe(`/c/${channelSlug}#archive-item-${archiveItemId}`)
+    expect(body.params.data.href).toBe(
+      `http://localhost:3000/c/${channelSlug}#archive-item-${archiveItemId}`,
+    )
     expect(body.params.data.system).toBe(true)
   })
 

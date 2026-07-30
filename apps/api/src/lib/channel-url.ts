@@ -6,7 +6,7 @@ import { config } from '../config.js'
 /**
  * A channel's default public URL is its wildcard subdomain (slug.tahti.live),
  * proxied by Caddy and rewritten to /c/[slug] by apps/web/src/middleware.ts. Only
- * derivable when the app origin follows the app.<root> convention (production) —
+ * derivable when the app origin is the apex or follows the app.<root> convention —
  * local/dev hosts (localhost, IPs) have no wildcard DNS, so fall back to the
  * in-app path. Mirrors apps/web/src/lib/app-url.ts's resolveChannelUrl — kept as
  * a separate copy since the API and web app don't share a runtime package for this.
@@ -20,6 +20,12 @@ export function resolveChannelUrl(slug: string, opts?: { hash?: string }): strin
     const { protocol, hostname } = new URL(appUrl)
     if (hostname.startsWith('app.')) {
       return `${protocol}//${slug}.${hostname.slice('app.'.length)}${suffix}`
+    }
+    if (hostname === 'tahti.live' || hostname === 'www.tahti.live') {
+      return `${protocol}//${slug}.tahti.live${suffix}`
+    }
+    if (hostname === 'staging.tahti.live' || hostname === 'www.staging.tahti.live') {
+      return `${protocol}//${slug}.staging.tahti.live${suffix}`
     }
   } catch {
     // fall through to path-based URL
