@@ -665,7 +665,7 @@ export const TahtiSelectsGalleryItemSchema = z.object({
   archiveItemId: z.string(),
   title: z.string(),
   artistName: z.string(),
-  artistUsername: z.string(),
+  artistUsername: z.string().nullable(),
   channelSlug: z.string(),
   bannerUrl: z.string().nullable(),
   durationSec: z.number().int().nullable(),
@@ -677,6 +677,17 @@ export const TahtiSelectsGalleryResponseSchema = z.object({
 })
 
 export type TahtiSelectsGalleryItem = z.infer<typeof TahtiSelectsGalleryItemSchema>
+
+/** Discover → New to you: unheard public tracks filtered by the listener's
+ * own follow + listen genre signals (transparent preference match, not a
+ * collaborative "for you" ranker). */
+export const NewToYouResponseSchema = z.object({
+  authenticated: z.boolean(),
+  preferenceGenres: z.array(z.string()),
+  items: z.array(TahtiSelectsGalleryItemSchema),
+})
+
+export type NewToYouResponse = z.infer<typeof NewToYouResponseSchema>
 
 export const TransparencyMonthlyRollupSchema = z.object({
   yearMonth: z.string(),
