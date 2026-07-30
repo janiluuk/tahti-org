@@ -6,6 +6,7 @@ import {
   orderFallbackPool,
   selectFallbackPool,
   localCacheBasename,
+  playbackKeyFromLocalCacheBasename,
   renderLocalFallbackM3u,
   buildFallbackPlaybackRows,
   renderFallbackM3u,
@@ -138,6 +139,11 @@ describe('renderLocalFallbackM3u', () => {
 
   it('sanitizes nested playback keys', () => {
     expect(localCacheBasename('flac/slug/item.flac')).toBe('flac__slug__item.flac')
+    expect(playbackKeyFromLocalCacheBasename('flac__slug__item.flac')).toBe('flac/slug/item.flac')
+    expect(playbackKeyFromLocalCacheBasename('mp3__tahti-selects__abc.mp3')).toBe(
+      'mp3/tahti-selects/abc.mp3',
+    )
+    expect(playbackKeyFromLocalCacheBasename('liq-process.tmp')).toBeNull()
   })
 
   it('returns empty playlist marker when pool is empty', () => {

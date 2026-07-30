@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { prisma } from '@tahti/db'
+import { playbackKeyFromLocalCacheBasename } from '@tahti/shared'
 import { getActiveChannelEntries } from './liquidsoap.js'
 import {
   LIQUIDSOAP_NOW_PLAYING_COMMAND,
@@ -28,13 +29,45 @@ export function objectKeyFromUrl(url: string): string | null {
 /** Liquidsoap's on_metadata "filename" key is a local ffmpeg decode temp file
  * for HTTP-sourced playlist entries — useless for identifying the track.
  * "initial_uri" carries the real request, but wrapped in an
- * `annotate:key="val",...:URL` prefix for entries with inline metadata (our
+ * `annotate:key="val",...:SOURCE` prefix for entries with inline metadata (our
  * fallback M3U sets title/duration this way) — confirmed by dumping every
- * metadata key against a real production track rather than guessing. Extract
- * just the http(s) URL portion. */
+ * metadata key against a real production track rather than guessing.
+ *
+ * SOURCE is either a presigned http(s) URL (remote M3U) or an absolute
+ * `/archive-cache/...` path (STREAM-009 local cache). */
+export function trackSourceFromMetadata(initialUri: string): string | null {
+  const trimmed = initialUri.trim()
+  if (!trimmed) return null
+
+  const http = trimmed.match(/https?:\/\/\S+$/)
+  if (http) return http[0]
+
+  // Local cache playlist entry, e.g.
+  // annotate:extinf_duration="96",song="A Ghost Waltz":/archive-cache/ch/mp3__a__b.mp3
+  const local = trimmed.match(/:(\/archive-cache\/\S+)$/)
+  if (local) return local[1]
+
+  if (trimmed.startsWith('/archive-cache/')) return trimmed
+  return null
+}
+
+/** @deprecated Use {@link trackSourceFromMetadata} — kept for call sites/tests that
+ * only care about the remote-URL case. */
 export function trackUrlFromMetadata(initialUri: string): string | null {
-  const match = initialUri.match(/https?:\/\/\S+$/)
-  return match ? match[0] : null
+  const source = trackSourceFromMetadata(initialUri)
+  return source && /^https?:\/\//.test(source) ? source : null
+}
+
+/** Resolve a Liquidsoap initial_uri (annotate-wrapped or bare) to a MinIO object key. */
+export function playbackKeyFromMetadata(initialUri: string): string | null {
+  const source = trackSourceFromMetadata(initialUri)
+  if (!source) return null
+
+  if (/^https?:\/\//.test(source)) return objectKeyFromUrl(source)
+
+  const basename = source.split('/').pop()
+  if (!basename) return null
+  return playbackKeyFromLocalCacheBasename(basename)
 }
 
 async function syncChannelNowPlaying(channelId: string, containerName: string): Promise<void> {
@@ -50,10 +83,7 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
   const initialUri = parseLiquidsoapTelnetResponse(raw)
   if (!initialUri) return
 
-  const trackUrl = trackUrlFromMetadata(initialUri)
-  if (!trackUrl) return
-
-  const key = objectKeyFromUrl(trackUrl)
+  const key = playbackKeyFromMetadata(initialUri)
   if (!key) return
 
   const item = await prisma.archiveItem.findFirst({
@@ -122,7 +152,12 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
 export function startNowPlayingSync(): NodeJS.Timeout {
   return setInterval(() => {
     for (const [channelId, containerName] of getActiveChannelEntries()) {
-      void syncChannelNowPlaying(channelId, containerName)
+      void syncChannelNowPlaying(channelId, containerName).catch((err) => {
+        console.warn(
+          `[orchestrator] now-playing sync failed for ${containerName}:`,
+          err instanceof Error ? err.message : err,
+        )
+      })
     }
   }, NOW_PLAYING_POLL_INTERVAL_MS)
 }
