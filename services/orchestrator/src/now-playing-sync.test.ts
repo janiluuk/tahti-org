@@ -2,7 +2,12 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { describe, it, expect } from 'vitest'
-import { objectKeyFromUrl, trackUrlFromMetadata } from './now-playing-sync.js'
+import {
+  objectKeyFromUrl,
+  trackUrlFromMetadata,
+  trackSourceFromMetadata,
+  playbackKeyFromMetadata,
+} from './now-playing-sync.js'
 
 describe('objectKeyFromUrl', () => {
   it('strips the public endpoint, bucket, and presigned query string', () => {
@@ -51,5 +56,27 @@ describe('trackUrlFromMetadata', () => {
 
   it('returns null for an empty string', () => {
     expect(trackUrlFromMetadata('')).toBeNull()
+  })
+})
+
+describe('trackSourceFromMetadata / playbackKeyFromMetadata', () => {
+  it('resolves STREAM-009 local archive-cache paths to MinIO keys', () => {
+    const raw =
+      'annotate:extinf_duration="96",song="A Ghost Waltz":/archive-cache/cmr98ivcq000110xviim6vp9t/mp3__tahti-selects__cms3jggex00056a71ntkrsdvf.mp3'
+    expect(trackSourceFromMetadata(raw)).toBe(
+      '/archive-cache/cmr98ivcq000110xviim6vp9t/mp3__tahti-selects__cms3jggex00056a71ntkrsdvf.mp3',
+    )
+    expect(playbackKeyFromMetadata(raw)).toBe('mp3/tahti-selects/cms3jggex00056a71ntkrsdvf.mp3')
+  })
+
+  it('still resolves remote presigned URLs to object keys', () => {
+    const raw =
+      'annotate:extinf_duration="270",song="Lag":http://localhost:19000/tahti/mp3/tahti-selects/abc.mp3?X-Amz-Signature=abc'
+    expect(playbackKeyFromMetadata(raw)).toBe('mp3/tahti-selects/abc.mp3')
+  })
+
+  it('ignores liquidsoap decode temp files', () => {
+    expect(trackSourceFromMetadata('/tmp/liq-processdcf67a.osb')).toBeNull()
+    expect(playbackKeyFromMetadata('/tmp/liq-processdcf67a.osb')).toBeNull()
   })
 })

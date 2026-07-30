@@ -173,6 +173,15 @@ export function localCacheBasename(playbackKey: string): string {
   return playbackKey.replace(/\//g, '__')
 }
 
+/** Inverse of {@link localCacheBasename} — recover the MinIO key from a cached file name. */
+export function playbackKeyFromLocalCacheBasename(basename: string): string | null {
+  if (!basename || !basename.includes('__')) return null
+  const key = basename.replace(/__/g, '/')
+  // Guard against accidental temp files that happen to contain "__".
+  if (!/^(mp3|flac)\//.test(key)) return null
+  return key
+}
+
 export function channelArchiveCacheDir(cacheRoot: string, channelId: string): string {
   return `${cacheRoot.replace(/\/$/, '')}/${channelId}`
 }
