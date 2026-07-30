@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { AvatarThemeSchema, LogoPlacementSchema } from './avatar-theme.js'
 
 export const ARTIST_KINDS = ['SINGLE', 'COLLECTIVE'] as const
 export type ArtistKind = (typeof ARTIST_KINDS)[number]
@@ -12,6 +13,11 @@ export const ProfilePatchSchema = z
     bio: z.string().max(5000).optional(),
     avatarUrl: z.string().trim().max(2000).optional(),
     avatarPosterUrl: z.string().trim().max(2000).nullable().optional(),
+    /** Solid / gradient avatar fill. Null clears a stored theme (falls back to seeded default). */
+    avatarTheme: AvatarThemeSchema.nullable().optional(),
+    /** Alpha PNG/WebP logo URL. Null clears the logo. */
+    logoUrl: z.string().trim().max(2000).nullable().optional(),
+    logoPlacement: LogoPlacementSchema.nullable().optional(),
     tipJarUrl: z.string().trim().max(2000).optional(),
     countryCode: z.string().length(2).toUpperCase().nullable().optional(),
     pronouns: z.string().trim().max(40).nullable().optional(),

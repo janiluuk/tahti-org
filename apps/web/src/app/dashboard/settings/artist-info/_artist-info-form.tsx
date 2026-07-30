@@ -5,7 +5,7 @@
 
 import { useState, useTransition, type ReactNode } from 'react'
 import { ButtonIcon, Button, Panel } from '@tahti/ui'
-import type { ArtistKind, ChannelMemberView } from '@tahti/shared'
+import type { ArtistKind, AvatarTheme, ChannelMemberView, LogoPlacement } from '@tahti/shared'
 import { updateChannelProfile } from '../../channel-identity-actions'
 import ChannelIdentityPanel, { type ChannelIdentityDraft } from '../../channel-identity-panel'
 import ChannelBioPanel from '../../channel-bio-panel'
@@ -34,6 +34,9 @@ export interface ArtistInfoFormData {
   displayName: string
   avatarUrl: string | null
   avatarPosterUrl: string | null
+  avatarTheme: AvatarTheme | null
+  logoUrl: string | null
+  logoPlacement: LogoPlacement | null
   countryCode: string | null
   pronouns: string | null
   showJoinDate: boolean
@@ -60,6 +63,9 @@ export function ArtistInfoForm({
     displayName: initial.displayName,
     avatarUrl: initial.avatarUrl,
     avatarPosterUrl: initial.avatarPosterUrl,
+    avatarTheme: initial.avatarTheme,
+    logoUrl: initial.logoUrl,
+    logoPlacement: initial.logoPlacement,
     countryCode: initial.countryCode,
     pronouns: initial.pronouns,
     defaultLocation: initial.defaultLocation,
@@ -83,8 +89,11 @@ export function ArtistInfoForm({
       const res = await updateChannelProfile({
         displayName: identity.displayName,
         bio,
-        avatarUrl: identity.avatarUrl ?? undefined,
+        avatarUrl: identity.avatarUrl,
         avatarPosterUrl: identity.avatarPosterUrl,
+        avatarTheme: identity.avatarTheme,
+        logoUrl: identity.logoUrl,
+        logoPlacement: identity.logoPlacement,
         countryCode: identity.countryCode,
         pronouns: identity.pronouns,
         showJoinDate,

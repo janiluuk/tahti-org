@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { ColorSchemeSchema } from './visual-preset.js'
+import { AvatarThemeSchema, LogoPlacementSchema } from './avatar-theme.js'
 import { TrackReactionTypeSchema } from './track-reactions.js'
 
 export const EgressDailyPointSchema = z.object({
@@ -750,6 +751,11 @@ export const PublicProfileArtistSchema = z.object({
   avatarUrl: z.string().nullable(),
   /** Static poster frame — present only when avatarUrl is an animated GIF. */
   avatarPosterUrl: z.string().nullable().optional(),
+  /** Solid / gradient fill for avatar + cover. */
+  avatarTheme: AvatarThemeSchema.nullable().optional(),
+  /** Alpha logo URL — placement controls where it prints. */
+  logoUrl: z.string().nullable().optional(),
+  logoPlacement: LogoPlacementSchema.nullable().optional(),
   socialLinks: z.unknown(),
   tipJarUrl: z.string().nullable(),
   tier: z.string(),
@@ -985,6 +991,9 @@ export const ProfileFieldsSchema = z.object({
   bio: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   avatarPosterUrl: z.string().nullable(),
+  avatarTheme: AvatarThemeSchema.nullable(),
+  logoUrl: z.string().nullable(),
+  logoPlacement: LogoPlacementSchema.nullable(),
   tipJarUrl: z.string().nullable(),
   countryCode: z.string().nullable(),
   pronouns: z.string().nullable(),

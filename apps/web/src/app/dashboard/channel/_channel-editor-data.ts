@@ -8,6 +8,8 @@ import type {
   ChannelTextLayerMode,
   SlideshowPreset,
   VisualPreset,
+  AvatarTheme,
+  LogoPlacement,
 } from '@tahti/shared'
 import { parseSocialLinksGenres } from '@tahti/shared'
 
@@ -34,6 +36,9 @@ export type ChannelEditorFetchResult = {
   }
   avatarUrl: string | null
   avatarPosterUrl: string | null
+  avatarTheme: AvatarTheme | null
+  logoUrl: string | null
+  logoPlacement: LogoPlacement | null
   bio: string
   countryCode: string | null
   pronouns: string | null
@@ -70,6 +75,9 @@ export async function fetchChannelEditorData(
 
   let avatarUrl: string | null = null
   let avatarPosterUrl: string | null = null
+  let avatarTheme: AvatarTheme | null = null
+  let logoUrl: string | null = null
+  let logoPlacement: LogoPlacement | null = null
   let bio = ''
   let countryCode: string | null = null
   let pronouns: string | null = null
@@ -104,11 +112,21 @@ export async function fetchChannelEditorData(
         showFollowers: boolean
         showFollowing: boolean
         defaultLocation: string | null
+        avatarUrl: string | null
+        avatarPosterUrl: string | null
+        avatarTheme: AvatarTheme | null
+        logoUrl: string | null
+        logoPlacement: LogoPlacement | null
       }
       showJoinDate = profile.showJoinDate
       showFollowers = profile.showFollowers
       showFollowing = profile.showFollowing
       defaultLocation = profile.defaultLocation
+      avatarUrl = profile.avatarUrl
+      avatarPosterUrl = profile.avatarPosterUrl
+      avatarTheme = profile.avatarTheme
+      logoUrl = profile.logoUrl
+      logoPlacement = profile.logoPlacement
     }
     if (channelRes.ok) {
       const channelData = (await channelRes.json()) as {
@@ -121,8 +139,9 @@ export async function fetchChannelEditorData(
           socialLinks: Record<string, string> | null
         }
       }
-      avatarUrl = channelData.user.avatarUrl
-      avatarPosterUrl = channelData.user.avatarPosterUrl
+      // Prefer /api/me/profile for avatar/theme/logo; fall back to channel payload.
+      if (!avatarUrl) avatarUrl = channelData.user.avatarUrl
+      if (!avatarPosterUrl) avatarPosterUrl = channelData.user.avatarPosterUrl
       bio = channelData.user.bio ?? ''
       countryCode = channelData.user.countryCode
       pronouns = channelData.user.pronouns
@@ -165,6 +184,9 @@ export async function fetchChannelEditorData(
     },
     avatarUrl,
     avatarPosterUrl,
+    avatarTheme,
+    logoUrl,
+    logoPlacement,
     bio,
     countryCode,
     pronouns,

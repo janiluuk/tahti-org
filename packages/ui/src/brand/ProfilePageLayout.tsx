@@ -2,12 +2,13 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 import { AvatarTile } from './AvatarTile'
 import { ChannelHeader, type SiteNavId } from './ChannelPageLayout'
 import { PublicFooter } from './PublicFooter'
 import { SafePlainText } from '../lib/safe-plain-text'
 import { flagEmoji as countryCodeToFlag } from '../lib/flag-emoji'
+import { cn } from '../lib/cn'
 
 function IconPlay() {
   return (
@@ -62,18 +63,44 @@ type ProfileCoverProps = {
   /** Static poster frame — present only when avatarUrl is an animated GIF,
    * so the avatar shows a still frame at rest and plays on hover. */
   avatarPosterUrl?: string | null
+  /** CSS background for the cover banner (and avatar fill when no photo). */
+  themeBackground?: string | null
+  /** Alpha logo URL. */
+  logoUrl?: string | null
+  /** Print logo on the cover banner. */
+  logoOnCover?: boolean
+  /** Print logo on the hanging avatar. */
+  logoOnAvatar?: boolean
 }
 
 /** Full-viewport-width cover banner with avatar. Rendered OUTSIDE the max-width container. */
-export function ProfileCover({ displayName, avatarUrl, avatarPosterUrl }: ProfileCoverProps) {
+export function ProfileCover({
+  displayName,
+  avatarUrl,
+  avatarPosterUrl,
+  themeBackground,
+  logoUrl,
+  logoOnCover = false,
+  logoOnAvatar = false,
+}: ProfileCoverProps) {
+  const coverStyle = themeBackground
+    ? ({ ['--prof-cover-theme' as string]: themeBackground } as React.CSSProperties)
+    : undefined
+
   return (
-    <div className="prof-cover">
+    <div className={cn('prof-cover', themeBackground && 'prof-cover--themed')} style={coverStyle}>
       <div className="prof-cover-overlay" aria-hidden />
+      {logoOnCover && logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logoUrl} alt="" className="prof-cover-logo" loading="lazy" decoding="async" />
+      ) : null}
       <AvatarTile
         size="md"
         name={displayName}
         src={avatarUrl}
         posterUrl={avatarPosterUrl}
+        themeBackground={themeBackground}
+        logoUrl={logoOnAvatar ? logoUrl : null}
         bordered
         className="prof-avatar"
       />

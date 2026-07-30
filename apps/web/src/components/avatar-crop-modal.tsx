@@ -13,10 +13,17 @@ interface Props {
   imageSrc: string
   onCancel: () => void
   onCropped: (blob: Blob) => void
+  /** Prefer PNG so alpha survives (logos / transparent avatars). Default JPEG. */
+  outputMime?: 'image/jpeg' | 'image/png'
 }
 
 /** Pan/zoom crop tool for avatar images — works on both uploaded files and proxied URLs. */
-export function AvatarCropModal({ imageSrc, onCancel, onCropped }: Props) {
+export function AvatarCropModal({
+  imageSrc,
+  onCancel,
+  onCropped,
+  outputMime = 'image/jpeg',
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imgRef = useRef<HTMLImageElement | null>(null)
   const dragRef = useRef<{ x: number; y: number; offsetX: number; offsetY: number } | null>(null)
@@ -112,6 +119,8 @@ export function AvatarCropModal({ imageSrc, onCancel, onCropped }: Props) {
     }
     const ratio = OUTPUT_SIZE / VIEWPORT_SIZE
     const scale = baseScale(img) * zoom * ratio
+    // Clear first so PNG/WebP exports keep transparency outside the drawn pixels.
+    ctx.clearRect(0, 0, OUTPUT_SIZE, OUTPUT_SIZE)
     ctx.drawImage(
       img,
       offset.x * ratio,
@@ -119,14 +128,15 @@ export function AvatarCropModal({ imageSrc, onCancel, onCropped }: Props) {
       img.naturalWidth * scale,
       img.naturalHeight * scale,
     )
+    const mime = outputMime
     out.toBlob(
       (blob) => {
         setSaving(false)
         if (blob) onCropped(blob)
         else setError('Could not export image')
       },
-      'image/jpeg',
-      0.92,
+      mime,
+      mime === 'image/jpeg' ? 0.92 : undefined,
     )
   }
 

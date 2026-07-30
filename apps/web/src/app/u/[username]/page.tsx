@@ -5,6 +5,14 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ProfileCover, ProfileHero, ProfilePageLayout } from '@tahti/ui'
+import {
+  avatarThemeCss,
+  logoShowsOnAvatar,
+  logoShowsOnCover,
+  resolveAvatarTheme,
+  type AvatarTheme,
+  type LogoPlacement,
+} from '@tahti/shared'
 import { NewsletterSubscribeForm } from '@/components/newsletter-subscribe-form'
 import { FollowButton } from '@/components/follow-button'
 import { SendMessageButton } from '@/components/send-message-button'
@@ -115,6 +123,9 @@ interface ProfileResponse {
     bio: string | null
     avatarUrl: string | null
     avatarPosterUrl?: string | null
+    avatarTheme?: AvatarTheme | null
+    logoUrl?: string | null
+    logoPlacement?: LogoPlacement | null
     tipJarUrl: string | null
     countryCode?: string | null
     pronouns?: string | null
@@ -333,6 +344,13 @@ export default async function ArtistProfilePage({ params }: { params: { username
     fetchPressKitImages(artist.username),
   ])
   const profileUrl = resolveChannelUrl(artist.username)
+  const theme = resolveAvatarTheme(JSON.stringify(artist.avatarTheme ?? null), artist.username)
+  // resolveAvatarTheme expects JSON string of stored theme; when artist.avatarTheme
+  // is already parsed, prefer it directly to avoid a null→seed round-trip.
+  const resolvedTheme = artist.avatarTheme ?? theme
+  const themeBackground = avatarThemeCss(resolvedTheme)
+  const logoUrl = artist.logoUrl ?? null
+  const logoPlacement = artist.logoPlacement ?? null
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -363,6 +381,10 @@ export default async function ArtistProfilePage({ params }: { params: { username
             displayName={artist.displayName}
             avatarUrl={artist.avatarUrl}
             avatarPosterUrl={artist.avatarPosterUrl}
+            themeBackground={themeBackground}
+            logoUrl={logoUrl}
+            logoOnCover={logoShowsOnCover(logoPlacement)}
+            logoOnAvatar={logoShowsOnAvatar(logoPlacement)}
           />
         }
         hero={

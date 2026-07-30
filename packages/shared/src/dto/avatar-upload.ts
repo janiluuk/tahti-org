@@ -30,3 +30,17 @@ export const AvatarUploadCompleteResponseSchema = z.object({
 export const AvatarProxyQuerySchema = z.object({
   url: z.string().url(),
 })
+
+/** Logo upload — PNG/WebP preferred so alpha is preserved for overlays. */
+export const LogoUploadPrepareSchema = z.object({
+  filename: z.string().min(1).max(255),
+  contentType: z.enum(['image/png', 'image/webp']),
+})
+
+export const LogoUploadCompleteSchema = z.object({
+  uploadKey: z.string().min(1).max(512),
+})
+
+export const LogoUploadCompleteResponseSchema = z.object({
+  logoUrl: z.string().nullable(),
+})

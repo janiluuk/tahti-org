@@ -3,20 +3,32 @@
 
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { ARCHIVE_GENRES } from '@tahti/shared'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import {
+  ARCHIVE_GENRES,
+  AVATAR_THEME_PRESETS,
+  avatarThemeCss,
+  randomAvatarTheme,
+  type AvatarTheme,
+  type LogoPlacement,
+  LOGO_PLACEMENT_LABELS,
+  LOGO_PLACEMENTS,
+} from '@tahti/shared'
 import { COUNTRY_OPTIONS } from '@/lib/country-options'
 import { flagEmoji } from '@/lib/flag-emoji'
 import { AvatarCropModal } from '@/components/avatar-crop-modal'
 import {
   avatarFromUrl,
   completeAvatarUpload,
+  completeLogoUpload,
   prepareAvatarUpload,
+  prepareLogoUpload,
 } from './channel-identity-actions'
 import { ButtonIcon, brandTokens } from '@tahti/ui'
 
 const MAX_GENRES = 6
 const ALLOWED_AVATAR_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+const ALLOWED_LOGO_MIME = ['image/png', 'image/webp']
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 const POSTER_SIZE = 512
 const DEFAULT_AVATAR_COLOR = brandTokens.color.accent.cyan
@@ -25,6 +37,9 @@ export type ChannelIdentityDraft = {
   displayName: string
   avatarUrl: string | null
   avatarPosterUrl: string | null
+  avatarTheme: AvatarTheme | null
+  logoUrl: string | null
+  logoPlacement: LogoPlacement | null
   countryCode: string | null
   pronouns: string | null
   defaultLocation: string | null
@@ -66,28 +81,6 @@ function extractPosterFrame(file: File): Promise<Blob> {
   })
 }
 
-function solidColorAvatar(hex: string, initials: string): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas')
-    canvas.width = POSTER_SIZE
-    canvas.height = POSTER_SIZE
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return reject(new Error('Could not create canvas context'))
-    ctx.fillStyle = hex
-    ctx.fillRect(0, 0, POSTER_SIZE, POSTER_SIZE)
-    ctx.fillStyle = 'rgba(255,255,255,0.92)'
-    ctx.font = `600 ${Math.round(POSTER_SIZE * 0.34)}px system-ui, sans-serif`
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(initials.slice(0, 2), POSTER_SIZE / 2, POSTER_SIZE / 2 + 8)
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Could not export color avatar'))),
-      'image/jpeg',
-      0.92,
-    )
-  })
-}
-
 async function uploadBlob(
   blob: Blob,
   filename: string,
@@ -117,31 +110,55 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
   const [displayName, setDisplayName] = useState(initial.displayName)
   const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl ?? '')
   const [avatarPosterUrl, setAvatarPosterUrl] = useState(initial.avatarPosterUrl ?? '')
+  const [avatarTheme, setAvatarTheme] = useState<AvatarTheme | null>(initial.avatarTheme)
+  const [logoUrl, setLogoUrl] = useState(initial.logoUrl ?? '')
+  const [logoPlacement, setLogoPlacement] = useState<LogoPlacement | null>(
+    initial.logoPlacement ?? (initial.logoUrl ? 'AVATAR' : null),
+  )
   const [countryCode, setCountryCode] = useState(initial.countryCode ?? '')
   const [pronouns, setPronouns] = useState(initial.pronouns ?? '')
   const [defaultLocation, setDefaultLocation] = useState(initial.defaultLocation ?? '')
   const [genres, setGenres] = useState<string[]>(initial.genres)
-  const [avatarColor, setAvatarColor] = useState<string>(DEFAULT_AVATAR_COLOR)
+  const [avatarColor, setAvatarColor] = useState<string>(
+    initial.avatarTheme?.colors[0] ?? DEFAULT_AVATAR_COLOR,
+  )
   const [urlMode, setUrlMode] = useState(false)
   const [avatarUrlInput, setAvatarUrlInput] = useState('')
   const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [cropMime, setCropMime] = useState<'image/jpeg' | 'image/png'>('image/jpeg')
+  const [cropKind, setCropKind] = useState<'avatar' | 'logo'>('avatar')
   const [avatarBusy, setAvatarBusy] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     onDraftChange?.({
       displayName,
       avatarUrl: avatarUrl || null,
       avatarPosterUrl: avatarPosterUrl || null,
+      avatarTheme,
+      logoUrl: logoUrl || null,
+      logoPlacement: logoUrl ? (logoPlacement ?? 'AVATAR') : null,
       countryCode: countryCode || null,
       pronouns: pronouns || null,
       defaultLocation: defaultLocation || null,
       genres,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayName, avatarUrl, avatarPosterUrl, countryCode, pronouns, defaultLocation, genres])
+  }, [
+    displayName,
+    avatarUrl,
+    avatarPosterUrl,
+    avatarTheme,
+    logoUrl,
+    logoPlacement,
+    countryCode,
+    pronouns,
+    defaultLocation,
+    genres,
+  ])
 
   async function onGifFile(file: File) {
     setAvatarBusy(true)
@@ -187,32 +204,38 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       void onGifFile(file)
       return
     }
+    setCropKind('avatar')
+    setCropMime(type === 'image/png' || type === 'image/webp' ? 'image/png' : 'image/jpeg')
     setCropSrc(URL.createObjectURL(file))
   }
 
-  async function onColorPick(hex: string) {
-    setAvatarColor(hex)
-    setAvatarBusy(true)
+  function onLogoFile(file: File) {
     setAvatarError(null)
-    try {
-      const blob = await solidColorAvatar(hex, initialsFromName(displayName))
-      const up = await uploadBlob(blob, 'avatar-color.jpg', 'image/jpeg')
-      if (up.error || !up.uploadKey) {
-        setAvatarError(up.error ?? 'Prepare failed')
-        return
-      }
-      const done = await completeAvatarUpload(up.uploadKey)
-      if (done.error) {
-        setAvatarError(done.error)
-        return
-      }
-      setAvatarUrl(done.avatarUrl ?? '')
-      setAvatarPosterUrl('')
-    } catch {
-      setAvatarError('Could not apply that color')
-    } finally {
-      setAvatarBusy(false)
+    const type = file.type || ''
+    if (!ALLOWED_LOGO_MIME.includes(type)) {
+      setAvatarError('Logo must be PNG or WebP (with transparency)')
+      return
     }
+    setCropKind('logo')
+    setCropMime('image/png')
+    setCropSrc(URL.createObjectURL(file))
+  }
+
+  function applyTheme(theme: AvatarTheme) {
+    setAvatarTheme(theme)
+    setAvatarColor(theme.colors[0] ?? DEFAULT_AVATAR_COLOR)
+    // Theme fill replaces a baked photo avatar so the CSS theme shows through.
+    setAvatarUrl('')
+    setAvatarPosterUrl('')
+  }
+
+  function onColorPick(hex: string) {
+    setAvatarColor(hex)
+    applyTheme({ kind: 'solid', colors: [hex] })
+  }
+
+  function onShuffleTheme() {
+    applyTheme(randomAvatarTheme(avatarTheme))
   }
 
   async function onLoadUrl() {
@@ -239,6 +262,8 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       }
       return
     }
+    setCropKind('avatar')
+    setCropMime(/\.(png|webp)(\?|$)/i.test(url) ? 'image/png' : 'image/jpeg')
     setCropSrc(`${API_BASE}/api/me/profile/avatar/proxy?url=${encodeURIComponent(url)}`)
   }
 
@@ -247,7 +272,33 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
     setAvatarBusy(true)
     setAvatarError(null)
     try {
-      const prep = await prepareAvatarUpload({ filename: 'avatar.jpg', contentType: 'image/jpeg' })
+      if (cropKind === 'logo') {
+        const prep = await prepareLogoUpload({ filename: 'logo.png', contentType: 'image/png' })
+        if (prep.error || !prep.uploadUrl || !prep.uploadKey) {
+          setAvatarError(prep.error ?? 'Prepare failed')
+          return
+        }
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open('PUT', prep.uploadUrl!)
+          xhr.setRequestHeader('Content-Type', 'image/png')
+          xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject())
+          xhr.onerror = () => reject(new Error('Upload failed'))
+          xhr.send(blob)
+        })
+        const done = await completeLogoUpload(prep.uploadKey)
+        if (done.error) {
+          setAvatarError(done.error)
+          return
+        }
+        setLogoUrl(done.logoUrl ?? '')
+        if (!logoPlacement) setLogoPlacement('AVATAR')
+        return
+      }
+
+      const contentType = cropMime
+      const filename = contentType === 'image/png' ? 'avatar.png' : 'avatar.jpg'
+      const prep = await prepareAvatarUpload({ filename, contentType })
       if (prep.error || !prep.uploadUrl || !prep.uploadKey) {
         setAvatarError(prep.error ?? 'Prepare failed')
         return
@@ -255,7 +306,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.open('PUT', prep.uploadUrl!)
-        xhr.setRequestHeader('Content-Type', 'image/jpeg')
+        xhr.setRequestHeader('Content-Type', contentType)
         xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject())
         xhr.onerror = () => reject(new Error('Upload failed'))
         xhr.send(blob)
@@ -278,6 +329,11 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
     }
   }
 
+  function clearLogo() {
+    setLogoUrl('')
+    setLogoPlacement(null)
+  }
+
   function toggleGenre(genre: string) {
     setGenres((prev) =>
       prev.includes(genre)
@@ -287,6 +343,8 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
   }
 
   const previewSrc = avatarPosterUrl || avatarUrl
+  const themeCss = avatarTheme ? avatarThemeCss(avatarTheme) : undefined
+  const swatches = AVATAR_THEME_PRESETS.filter((p) => p.kind === 'gradient').slice(0, 8)
 
   return (
     <>
@@ -309,7 +367,12 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
         <div className="studio-avatar-picker">
           <div
             className={`studio-avatar-picker__drop${dragOver ? ' studio-avatar-picker__drop--drag' : ''}${avatarBusy ? ' studio-avatar-picker__drop--busy' : ''}`}
-            style={{ ['--avatar-pick-color' as string]: avatarColor }}
+            style={
+              {
+                ['--avatar-pick-color' as string]: avatarColor,
+                ...(themeCss && !previewSrc ? { background: themeCss } : {}),
+              } as CSSProperties
+            }
             onDragOver={(e) => {
               e.preventDefault()
               if (!avatarBusy) setDragOver(true)
@@ -341,6 +404,10 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
                 {initialsFromName(displayName)}
               </span>
             )}
+            {logoUrl && (logoPlacement === 'AVATAR' || logoPlacement === 'BOTH') ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className="studio-avatar-picker__logo" />
+            ) : null}
             <span className="studio-avatar-picker__hint">
               {avatarBusy ? '…' : dragOver ? 'Drop' : 'Drop / click'}
             </span>
@@ -361,16 +428,26 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           <div className="studio-avatar-picker__tools">
             <label
               className="studio-avatar-picker__color"
-              title="Pick a color avatar"
-              aria-label="Pick a color avatar"
+              title="Solid color avatar"
+              aria-label="Solid color avatar"
             >
               <input
                 type="color"
                 value={avatarColor}
                 disabled={avatarBusy}
-                onChange={(e) => void onColorPick(e.target.value)}
+                onChange={(e) => onColorPick(e.target.value)}
               />
             </label>
+            <button
+              type="button"
+              className="studio-avatar-picker__url-btn"
+              title="Shuffle gradient"
+              aria-label="Shuffle gradient"
+              disabled={avatarBusy}
+              onClick={onShuffleTheme}
+            >
+              <ButtonIcon name="refresh" />
+            </button>
             <button
               type="button"
               className={`studio-avatar-picker__url-btn${urlMode ? ' studio-avatar-picker__url-btn--active' : ''}`}
@@ -386,6 +463,27 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
               <ButtonIcon name="link" />
             </button>
           </div>
+        </div>
+
+        <div className="studio-avatar-theme-swatches" role="list" aria-label="Gradient presets">
+          {swatches.map((preset) => {
+            const css = avatarThemeCss(preset)
+            const active = avatarTheme != null && avatarThemeCss(avatarTheme) === css
+            return (
+              <button
+                key={css}
+                type="button"
+                role="listitem"
+                className={`studio-avatar-theme-swatch${active ? ' studio-avatar-theme-swatch--active' : ''}`}
+                style={{ background: css }}
+                title="Apply gradient"
+                aria-label="Apply gradient"
+                aria-pressed={active}
+                disabled={avatarBusy}
+                onClick={() => applyTheme(preset)}
+              />
+            )
+          })}
         </div>
 
         {urlMode && (
@@ -413,7 +511,73 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
         )}
 
         <p className="studio-help studio-mt-xs">
-          Color fills a solid avatar, or drop a photo / paste a URL. GIFs animate on hover.
+          Pick a solid color or gradient (defaults are harmonious pairs), or drop a photo / paste a
+          URL. PNG keeps transparency. GIFs animate on hover.
+        </p>
+      </div>
+
+      <div className="studio-field--block">
+        <span className="studio-label">Logo</span>
+        <div className="studio-logo-picker">
+          <button
+            type="button"
+            className="studio-logo-picker__drop"
+            disabled={avatarBusy}
+            onClick={() => logoInputRef.current?.click()}
+            aria-label="Upload logo PNG or WebP"
+          >
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="" className="studio-logo-picker__img" />
+            ) : (
+              <span className="studio-logo-picker__placeholder">PNG / WebP</span>
+            )}
+          </button>
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/png,image/webp"
+            disabled={avatarBusy}
+            className="studio-avatar-picker__file"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) onLogoFile(f)
+              e.target.value = ''
+            }}
+          />
+          <div className="studio-logo-picker__meta">
+            <div className="studio-logo-picker__placements" role="radiogroup" aria-label="Logo placement">
+              {LOGO_PLACEMENTS.map((placement) => (
+                <label
+                  key={placement}
+                  className={`studio-logo-picker__place${logoPlacement === placement ? ' studio-logo-picker__place--active' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="logo-placement"
+                    value={placement}
+                    checked={logoPlacement === placement}
+                    disabled={avatarBusy || !logoUrl}
+                    onChange={() => setLogoPlacement(placement)}
+                  />
+                  {LOGO_PLACEMENT_LABELS[placement]}
+                </label>
+              ))}
+            </div>
+            {logoUrl ? (
+              <button
+                type="button"
+                className="ui-btn ui-btn--sm ui-btn--ghost"
+                disabled={avatarBusy}
+                onClick={clearLogo}
+              >
+                Remove logo
+              </button>
+            ) : null}
+          </div>
+        </div>
+        <p className="studio-help studio-mt-xs">
+          Transparent PNG/WebP sits on top of your avatar, profile cover, or both.
         </p>
         {avatarError && (
           <p className="studio-notice studio-notice--error studio-mt-sm">{avatarError}</p>
@@ -423,6 +587,7 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
       {cropSrc && (
         <AvatarCropModal
           imageSrc={cropSrc}
+          outputMime={cropMime}
           onCancel={() => setCropSrc(null)}
           onCropped={(blob) => void onCropped(blob)}
         />
