@@ -193,6 +193,13 @@ interface ArtistMemberItem {
   pictureUrl: string | null
 }
 
+interface ArtistUpcomingShow {
+  id: string
+  startAt: string
+  endAt: string
+  note: string | null
+}
+
 /** Shared row-list rendering for every Collection sub-group inside the
  * Releases tab (DJ mixes / Playlists / Collections) — same markup the flat
  * "Collections" section used before it was split into these sub-groups. */
@@ -240,19 +247,25 @@ async function fetchPressKitImages(username: string): Promise<PublicPressKitImag
 }
 
 async function fetchChannelExtras(slug: string | undefined) {
-  if (!slug) return { events: [], posts: [], embeds: [], members: [] }
+  if (!slug) return { events: [], posts: [], embeds: [], members: [], upcomingShows: [] }
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const [eventsRes, postsRes, embedsRes, membersRes] = await Promise.all([
+  const [eventsRes, postsRes, embedsRes, membersRes, showRes] = await Promise.all([
     fetch(`${apiUrl}/api/channels/${slug}/events`, { next: { revalidate: 60 } }),
     fetch(`${apiUrl}/api/channels/${slug}/posts`, { next: { revalidate: 60 } }),
     fetch(`${apiUrl}/api/channels/${slug}/embeds`, { next: { revalidate: 60 } }),
     fetch(`${apiUrl}/api/channels/${slug}/members`, { next: { revalidate: 60 } }),
+    // Upcoming Tahti Radio guest slots this artist has booked — same "show"
+    // concept as the radio page's calendar (RadioSlotBooking), not a venue event.
+    fetch(`${apiUrl}/api/v1/radio/show/${slug}`, { next: { revalidate: 60 } }),
   ])
   const events: ArtistEventItem[] = eventsRes.ok ? await eventsRes.json() : []
   const posts: ArtistPostItem[] = postsRes.ok ? await postsRes.json() : []
   const embeds: ArtistEmbedItem[] = embedsRes.ok ? await embedsRes.json() : []
   const members: ArtistMemberItem[] = membersRes.ok ? await membersRes.json() : []
-  return { events, posts, embeds, members }
+  const upcomingShows: ArtistUpcomingShow[] = showRes.ok
+    ? ((await showRes.json()) as { upcomingEpisodes: ArtistUpcomingShow[] }).upcomingEpisodes
+    : []
+  return { events, posts, embeds, members, upcomingShows }
 }
 
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
@@ -295,7 +308,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
   const isLive = channel?.state === 'LIVE'
   const isOwner = user?.username === artist.username
   const bioHtml = artist.bio ? await renderBio(artist.bio) : null
-  const [{ events, posts, embeds, members }, pressKitImages] = await Promise.all([
+  const [{ events, posts, embeds, members, upcomingShows }, pressKitImages] = await Promise.all([
     fetchChannelExtras(channel?.slug),
     fetchPressKitImages(artist.username),
   ])
@@ -385,6 +398,45 @@ export default async function ArtistProfilePage({ params }: { params: { username
         <ProfileTabs
           stage={
             <>
+              {upcomingShows.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label">Live — upcoming shows</div>
+                  <ul className="ch-events-list">
+                    {upcomingShows.map((show) => (
+                      <li key={show.id} className="ch-events-list__item">
+                        <div className="ch-events-list__date">
+                          {new Date(show.startAt).toLocaleDateString(undefined, {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                          {' · '}
+                          {new Date(show.startAt).toLocaleTimeString(undefined, {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                        <div className="ch-events-list__body">
+                          <div className="ch-events-list__title">
+                            Live on Tahti Radio{show.note ? ` — ${show.note}` : ''}
+                          </div>
+                          <Link href="/radio" className="ch-events-list__link">
+                            Tune in →
+                          </Link>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {releases.length > 0 && (
+                <section className="prof-section">
+                  <div className="prof-sec-label">Latest releases</div>
+                  <ReleasesGrid releases={releases.slice(0, 3)} />
+                </section>
+              )}
+
               {pinnedItems.length > 0 && (
                 <section className="prof-section">
                   <div className="prof-sec-label">Pinned</div>
@@ -643,45 +695,56 @@ export default async function ArtistProfilePage({ params }: { params: { username
               <section className="prof-section">
                 <TracksTab tracks={tracks} isOwner={isOwner} />
               </section>
-              <section className="prof-section">
-                <div className="prof-sec-label-row">
-                  <div className="prof-sec-label">Tahti Releases</div>
-                  <div className="prof-sec-label-row__actions">
-                    {releases.length > 0 && (
-                      <div className="prof-sec-count">{releases.length} total</div>
-                    )}
-                    {isOwner && (
-                      <Link
-                        href="/dashboard/releases"
-                        className="prof-sec-add-btn"
-                        aria-label="Create a new release"
-                        title="Create a new release"
-                      >
-                        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
-                          <path
-                            fill="currentColor"
-                            d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"
-                          />
-                        </svg>
-                      </Link>
-                    )}
-                  </div>
-                </div>
-                {releases.length === 0 ? (
-                  <div className="public-empty-card">
-                    <p className="public-empty-card__text">No published releases yet.</p>
-                    <p className="public-empty-card__hint">
-                      {isLive && links.channel ? (
-                        <Link href={links.channel}>Tune in live</Link>
-                      ) : (
-                        'New releases appear here when the artist publishes.'
+              {/* Only formal multi-track Release albums/EPs belong here — an artist
+                  with individual uploaded tracks (shown in TracksTab above) but no
+                  formal Release isn't "missing" anything, so skip the discouraging
+                  "No published releases yet" card once there's already content on
+                  this tab. It only appears when the tab would otherwise be empty. */}
+              {(releases.length > 0 ||
+                (tracks.length === 0 &&
+                  djMixCollections.length === 0 &&
+                  playlistCollections.length === 0 &&
+                  otherCollections.length === 0)) && (
+                <section className="prof-section">
+                  <div className="prof-sec-label-row">
+                    <div className="prof-sec-label">Tahti Releases</div>
+                    <div className="prof-sec-label-row__actions">
+                      {releases.length > 0 && (
+                        <div className="prof-sec-count">{releases.length} total</div>
                       )}
-                    </p>
+                      {isOwner && (
+                        <Link
+                          href="/dashboard/releases"
+                          className="prof-sec-add-btn"
+                          aria-label="Create a new release"
+                          title="Create a new release"
+                        >
+                          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+                            <path
+                              fill="currentColor"
+                              d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1z"
+                            />
+                          </svg>
+                        </Link>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <ReleasesGrid releases={releases} />
-                )}
-              </section>
+                  {releases.length === 0 ? (
+                    <div className="public-empty-card">
+                      <p className="public-empty-card__text">No published releases yet.</p>
+                      <p className="public-empty-card__hint">
+                        {isLive && links.channel ? (
+                          <Link href={links.channel}>Tune in live</Link>
+                        ) : (
+                          'New releases appear here when the artist publishes.'
+                        )}
+                      </p>
+                    </div>
+                  ) : (
+                    <ReleasesGrid releases={releases} />
+                  )}
+                </section>
+              )}
             </>
           }
         />
