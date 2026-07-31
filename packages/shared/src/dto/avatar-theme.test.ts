@@ -32,9 +32,9 @@ describe('avatar-theme', () => {
 
   it('builds css for solid and gradient', () => {
     expect(avatarThemeCss({ kind: 'solid', colors: ['#22D3EE'] })).toBe('#22D3EE')
-    expect(
-      avatarThemeCss({ kind: 'gradient', colors: ['#A78BFA', '#22D3EE'], angle: 135 }),
-    ).toBe('linear-gradient(135deg, #A78BFA, #22D3EE)')
+    expect(avatarThemeCss({ kind: 'gradient', colors: ['#A78BFA', '#22D3EE'], angle: 135 })).toBe(
+      'linear-gradient(135deg, #A78BFA, #22D3EE)',
+    )
   })
 
   it('is deterministic from id', () => {

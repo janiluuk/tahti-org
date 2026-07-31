@@ -546,7 +546,11 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
             }}
           />
           <div className="studio-logo-picker__meta">
-            <div className="studio-logo-picker__placements" role="radiogroup" aria-label="Logo placement">
+            <div
+              className="studio-logo-picker__placements"
+              role="radiogroup"
+              aria-label="Logo placement"
+            >
               {LOGO_PLACEMENTS.map((placement) => (
                 <label
                   key={placement}

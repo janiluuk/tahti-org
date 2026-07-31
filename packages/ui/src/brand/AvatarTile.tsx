@@ -84,7 +84,12 @@ export function AvatarTile({
 
   if (src) {
     return (
-      <span className={cn(classes, 'avatar-tile--photo')} style={style} role="img" aria-label={label}>
+      <span
+        className={cn(classes, 'avatar-tile--photo')}
+        style={style}
+        role="img"
+        aria-label={label}
+      >
         <img src={src} alt="" className="avatar-tile__photo" loading="lazy" decoding="async" />
         {logo}
       </span>
