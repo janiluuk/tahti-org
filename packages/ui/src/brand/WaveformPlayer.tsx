@@ -229,13 +229,7 @@ export function WaveformPlayer({
     animTimers.current.push(outTimer)
 
     return () => clearAnimTimers()
-  }, [
-    animateTrackChange,
-    incomingTitle,
-    incomingSubtitle,
-    incomingSubtitleHref,
-    incomingArtwork,
-  ])
+  }, [animateTrackChange, incomingTitle, incomingSubtitle, incomingSubtitleHref, incomingArtwork])
 
   const shown = animateTrackChange
     ? displayed
