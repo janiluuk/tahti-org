@@ -3197,10 +3197,29 @@
   width: 100%;
 }
 
+[data-tahti-ui='brand'] .prof-cover--themed {
+  background: var(--prof-cover-theme);
+}
+
 [data-tahti-ui='brand'] .prof-cover-overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(transparent 40%, color-mix(in srgb, var(--bg) 90%, transparent));
+}
+
+[data-tahti-ui='brand'] .prof-cover-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  max-height: 72%;
+  max-width: min(280px, 42%);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+  filter: drop-shadow(0 2px 12px rgb(0 0 0 / 0.35));
 }
 
 [data-tahti-ui='brand'] .prof-avatar {

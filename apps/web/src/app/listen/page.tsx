@@ -6,6 +6,7 @@ import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { DiscoverTabs } from './_discover-tabs'
 import { TahtiRadioCard } from './_tahti-radio-card'
 import { ArtistsSection } from './_artists-section'
+import { NewToYouSection } from './_new-to-you-section'
 
 const API_URL = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -132,6 +133,8 @@ export default async function ListenPage() {
         artistName={radioPreview.artistName}
         artworkUrl={radioPreview.artworkUrl}
       />
+
+      <NewToYouSection />
 
       <DiscoverTabs
         live={live}

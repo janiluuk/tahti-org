@@ -19,14 +19,16 @@ export interface AvatarTileProps {
   posterUrl?: string | null
   alt?: string
   gradient?: CoverGradient
+  /** CSS background (solid or gradient) — overrides the named `gradient` when set. */
+  themeBackground?: string | null
+  /** Alpha PNG/WebP logo printed on top of the fill / photo. */
+  logoUrl?: string | null
   /** Profile-style ring against page background. */
   bordered?: boolean
   className?: string
 }
 
-/** Circular avatar — photo or initials on a canonical gradient. Pass
- * `posterUrl` alongside an animated `src` (e.g. a GIF) for hover-to-animate:
- * static at rest, plays while hovered. */
+/** Circular avatar — photo, themed fill + initials, and optional alpha logo. */
 export function AvatarTile({
   size,
   name,
@@ -34,21 +36,38 @@ export function AvatarTile({
   posterUrl,
   alt,
   gradient = 'aurora',
+  themeBackground,
+  logoUrl,
   bordered = false,
   className,
 }: AvatarTileProps) {
   const label = alt ?? name
+  const themed = Boolean(themeBackground)
   const classes = cn(
     'avatar-tile',
     `avatar-tile--${size}`,
-    !src && `avatar-tile--${gradient}`,
+    !src && !themed && `avatar-tile--${gradient}`,
+    themed && 'avatar-tile--themed',
+    logoUrl && 'avatar-tile--has-logo',
     bordered && 'avatar-tile--bordered',
     className,
   )
+  const style = themeBackground
+    ? ({ ['--avatar-theme-bg' as string]: themeBackground } as React.CSSProperties)
+    : undefined
+
+  const logo = logoUrl ? (
+    <img src={logoUrl} alt="" className="avatar-tile__logo" loading="lazy" decoding="async" />
+  ) : null
 
   if (src && posterUrl) {
     return (
-      <span className={cn(classes, 'avatar-tile--hover-animate')} role="img" aria-label={label}>
+      <span
+        className={cn(classes, 'avatar-tile--hover-animate')}
+        style={style}
+        role="img"
+        aria-label={label}
+      >
         <img
           src={posterUrl}
           alt=""
@@ -57,19 +76,33 @@ export function AvatarTile({
           decoding="async"
         />
         <img src={src} alt="" className="avatar-tile__live" loading="lazy" decoding="async" />
+        {logo}
       </span>
     )
   }
 
   if (src) {
-    return <img src={src} alt={label} className={classes} loading="lazy" decoding="async" />
+    return (
+      <span
+        className={cn(classes, 'avatar-tile--photo')}
+        style={style}
+        role="img"
+        aria-label={label}
+      >
+        <img src={src} alt="" className="avatar-tile__photo" loading="lazy" decoding="async" />
+        {logo}
+      </span>
+    )
   }
 
   return (
-    <div className={classes} role="img" aria-label={label}>
-      <span className="avatar-tile__initials" aria-hidden>
-        {initialsFromName(name)}
-      </span>
+    <div className={classes} style={style} role="img" aria-label={label}>
+      {!logo && (
+        <span className="avatar-tile__initials" aria-hidden>
+          {initialsFromName(name)}
+        </span>
+      )}
+      {logo}
     </div>
   )
 }

@@ -7,6 +7,8 @@ import {
   UsernameParamSchema,
   archivePlaybackKey,
   openApiResponse,
+  parseAvatarTheme,
+  parseLogoPlacement,
   parseRouteParams,
 } from '@tahti/shared'
 import { presignedGetUrl } from '../../lib/minio.js'
@@ -51,6 +53,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       bio: true,
       avatarUrl: true,
       avatarPosterUrl: true,
+      avatarThemeJson: true,
+      logoUrl: true,
+      logoPlacement: true,
       socialLinks: true,
       tipJarUrl: true,
       tier: true,
@@ -211,6 +216,9 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       bio: user.bio,
       avatarUrl: user.avatarUrl,
       avatarPosterUrl: user.avatarPosterUrl,
+      avatarTheme: parseAvatarTheme(user.avatarThemeJson),
+      logoUrl: user.logoUrl,
+      logoPlacement: parseLogoPlacement(user.logoPlacement),
       socialLinks: user.socialLinks,
       tipJarUrl: user.tipJarUrl,
       tier: user.tier,

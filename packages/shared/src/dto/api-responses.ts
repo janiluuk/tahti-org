@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { ColorSchemeSchema } from './visual-preset.js'
+import { AvatarThemeSchema, LogoPlacementSchema } from './avatar-theme.js'
 import { TrackReactionTypeSchema } from './track-reactions.js'
 
 export const EgressDailyPointSchema = z.object({
@@ -665,7 +666,7 @@ export const TahtiSelectsGalleryItemSchema = z.object({
   archiveItemId: z.string(),
   title: z.string(),
   artistName: z.string(),
-  artistUsername: z.string(),
+  artistUsername: z.string().nullable(),
   channelSlug: z.string(),
   bannerUrl: z.string().nullable(),
   durationSec: z.number().int().nullable(),
@@ -677,6 +678,17 @@ export const TahtiSelectsGalleryResponseSchema = z.object({
 })
 
 export type TahtiSelectsGalleryItem = z.infer<typeof TahtiSelectsGalleryItemSchema>
+
+/** Discover → New to you: unheard public tracks filtered by the listener's
+ * own follow + listen genre signals (transparent preference match, not a
+ * collaborative "for you" ranker). */
+export const NewToYouResponseSchema = z.object({
+  authenticated: z.boolean(),
+  preferenceGenres: z.array(z.string()),
+  items: z.array(TahtiSelectsGalleryItemSchema),
+})
+
+export type NewToYouResponse = z.infer<typeof NewToYouResponseSchema>
 
 export const TransparencyMonthlyRollupSchema = z.object({
   yearMonth: z.string(),
@@ -739,6 +751,11 @@ export const PublicProfileArtistSchema = z.object({
   avatarUrl: z.string().nullable(),
   /** Static poster frame — present only when avatarUrl is an animated GIF. */
   avatarPosterUrl: z.string().nullable().optional(),
+  /** Solid / gradient fill for avatar + cover. */
+  avatarTheme: AvatarThemeSchema.nullable().optional(),
+  /** Alpha logo URL — placement controls where it prints. */
+  logoUrl: z.string().nullable().optional(),
+  logoPlacement: LogoPlacementSchema.nullable().optional(),
   socialLinks: z.unknown(),
   tipJarUrl: z.string().nullable(),
   tier: z.string(),
@@ -974,6 +991,9 @@ export const ProfileFieldsSchema = z.object({
   bio: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   avatarPosterUrl: z.string().nullable(),
+  avatarTheme: AvatarThemeSchema.nullable(),
+  logoUrl: z.string().nullable(),
+  logoPlacement: LogoPlacementSchema.nullable(),
   tipJarUrl: z.string().nullable(),
   countryCode: z.string().nullable(),
   pronouns: z.string().nullable(),

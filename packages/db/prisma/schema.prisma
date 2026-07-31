@@ -587,6 +587,13 @@ model User {
   // Dominant palette extracted from avatarUrl (node-vibrant) — drives radio
   // calendar tint and other surfaces that want "colors from the profile pic".
   avatarPaletteJson     String?
+  // Solid / gradient fill for avatar + profile cover when no photo (or under a logo).
+  // JSON matching AvatarThemeSchema — defaults are resolved client/server from username.
+  avatarThemeJson       String?
+  // Optional PNG/WebP logo with alpha — overlaid on avatar and/or profile cover.
+  logoUrl               String?
+  // AVATAR | COVER | BOTH — where logoUrl is printed. Null when no logo.
+  logoPlacement         String?
   socialLinks           Json?
   tipJarUrl             String?
   countryCode           String?

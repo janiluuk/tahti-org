@@ -11,6 +11,10 @@ import {
   AvatarUploadPrepareResponseSchema,
   AvatarUploadPrepareSchema,
   ImageFromUrlSchema,
+  ImageUploadPrepareResponseSchema,
+  LogoUploadCompleteResponseSchema,
+  LogoUploadCompleteSchema,
+  LogoUploadPrepareSchema,
   openApiResponse,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
@@ -190,6 +194,74 @@ const meAvatarRoutes: FastifyPluginAsync = async (fastify) => {
       refreshAvatarPalette(fastify.prisma, user.id, avatarUrl, fastify.log)
 
       return reply.send({ avatarUrl, avatarPosterUrl: null })
+    },
+  )
+
+  // Logo upload — PNG/WebP only so alpha is preserved for overlays on avatar/cover.
+  fastify.post(
+    '/api/me/profile/logo/prepare',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(ImageUploadPrepareResponseSchema, 'LogoUploadPrepare'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = LogoUploadPrepareSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const user = request.sessionUser!
+
+      const ext = parsed.data.contentType === 'image/webp' ? 'webp' : 'png'
+      const uploadKey = `avatars/${user.username}/logo-${nanoid(8)}.${ext}`
+      const uploadUrl = await presignedPutUrl(uploadKey, parsed.data.contentType, PRESIGN_TTL_SEC)
+      const expiresAt = new Date(Date.now() + PRESIGN_TTL_SEC * 1000).toISOString()
+
+      return reply.send({ uploadKey, uploadUrl, expiresAt })
+    },
+  )
+
+  fastify.post(
+    '/api/me/profile/logo/complete',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        response: openApiResponse(LogoUploadCompleteResponseSchema, 'LogoUploadComplete'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = LogoUploadCompleteSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({ error: parsed.error.issues[0]?.message ?? 'Invalid body' })
+      }
+      const user = request.sessionUser!
+
+      const prefix = `avatars/${user.username}/`
+      if (!parsed.data.uploadKey.startsWith(prefix)) {
+        return reply.status(403).send({ error: 'Upload does not belong to this account' })
+      }
+
+      const logoUrl = publicMediaUrl(parsed.data.uploadKey)
+      if (!logoUrl) {
+        return reply.status(500).send({ error: 'Failed to resolve logo URL' })
+      }
+      // Default placement to AVATAR when first setting a logo with no prior placement.
+      const existing = await fastify.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { logoPlacement: true },
+      })
+      await fastify.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          logoUrl,
+          logoPlacement: existing?.logoPlacement ?? 'AVATAR',
+        },
+      })
+
+      return reply.send({ logoUrl })
     },
   )
 }

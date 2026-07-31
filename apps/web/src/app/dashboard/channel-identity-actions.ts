@@ -16,8 +16,15 @@ function sessionHeader() {
 export async function updateChannelProfile(patch: {
   displayName?: string
   bio?: string
-  avatarUrl?: string
+  avatarUrl?: string | null
   avatarPosterUrl?: string | null
+  avatarTheme?: {
+    kind: 'solid' | 'gradient'
+    colors: string[]
+    angle?: number
+  } | null
+  logoUrl?: string | null
+  logoPlacement?: 'AVATAR' | 'COVER' | 'BOTH' | null
   countryCode?: string | null
   pronouns?: string | null
   defaultLocation?: string | null
@@ -86,6 +93,39 @@ export async function avatarFromUrl(
   if (!res.ok) {
     const data = (await res.json().catch(() => ({}))) as { error?: string }
     return { error: data.error ?? 'Could not fetch that URL' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function prepareLogoUpload(body: {
+  filename: string
+  contentType: string
+}): Promise<{ uploadKey?: string; uploadUrl?: string; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/profile/logo/prepare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: data.error ?? 'Prepare failed' }
+  }
+  return { ...(await res.json()), error: null }
+}
+
+export async function completeLogoUpload(
+  uploadKey: string,
+): Promise<{ logoUrl?: string | null; error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/profile/logo/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ uploadKey }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    return { error: data.error ?? 'Upload failed' }
   }
   return { ...(await res.json()), error: null }
 }

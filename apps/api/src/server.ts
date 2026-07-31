@@ -29,6 +29,7 @@ import channelItemsRoute from './routes/channels/items.js'
 import channelListRoute from './routes/channels/list.js'
 import channelDirectoryRoute from './routes/channels/directory.js'
 import tahtiSelectsGalleryRoute from './routes/channels/tahti-selects-gallery.js'
+import newToYouRoute from './routes/discover/new-to-you.js'
 import channelStatsRoute from './routes/channels/stats.js'
 import newsPublicRoute from './routes/news/public.js'
 import channelManageStatsRoute from './routes/channels/manage-stats.js'
@@ -476,6 +477,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(channelListRoute)
   await fastify.register(channelDirectoryRoute)
   await fastify.register(tahtiSelectsGalleryRoute)
+  await fastify.register(newToYouRoute)
   await fastify.register(channelStatsRoute)
   await fastify.register(newsPublicRoute)
   await fastify.register(channelManageStatsRoute)

@@ -8,6 +8,8 @@ import {
   ProfileFieldsSchema,
   ProfilePatchSchema,
   openApiResponse,
+  parseAvatarTheme,
+  parseLogoPlacement,
 } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { recordMentions } from '../../lib/mentions.js'
@@ -26,6 +28,9 @@ const profileSelect = {
   bio: true,
   avatarUrl: true,
   avatarPosterUrl: true,
+  avatarThemeJson: true,
+  logoUrl: true,
+  logoPlacement: true,
   tipJarUrl: true,
   countryCode: true,
   pronouns: true,
@@ -37,6 +42,54 @@ const profileSelect = {
   showFollowing: true,
   createdAt: true,
 } as const
+
+function serializeProfile(
+  profile: {
+    id: string
+    username: string
+    displayName: string
+    bio: string | null
+    avatarUrl: string | null
+    avatarPosterUrl: string | null
+    avatarThemeJson: string | null
+    logoUrl: string | null
+    logoPlacement: string | null
+    tipJarUrl: string | null
+    countryCode: string | null
+    pronouns: string | null
+    defaultLocation: string | null
+    socialLinks: unknown
+    publicAttribution: boolean
+    showJoinDate: boolean
+    showFollowers: boolean
+    showFollowing: boolean
+    createdAt: Date
+  },
+  artistKind: 'SINGLE' | 'COLLECTIVE',
+) {
+  return {
+    id: profile.id,
+    username: profile.username,
+    displayName: profile.displayName,
+    bio: profile.bio,
+    avatarUrl: profile.avatarUrl,
+    avatarPosterUrl: profile.avatarPosterUrl,
+    avatarTheme: parseAvatarTheme(profile.avatarThemeJson),
+    logoUrl: profile.logoUrl,
+    logoPlacement: parseLogoPlacement(profile.logoPlacement),
+    tipJarUrl: profile.tipJarUrl,
+    countryCode: profile.countryCode,
+    pronouns: profile.pronouns,
+    defaultLocation: profile.defaultLocation,
+    socialLinks: profile.socialLinks,
+    publicAttribution: profile.publicAttribution,
+    showJoinDate: profile.showJoinDate,
+    showFollowers: profile.showFollowers,
+    showFollowing: profile.showFollowing,
+    createdAt: profile.createdAt.toISOString(),
+    artistKind,
+  }
+}
 
 // PATCH /api/me/profile — update bio, display name, social links, tip jar, meta-stream opt-out
 const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
@@ -61,11 +114,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
         where: { userId: user.id },
         select: { artistKind: true },
       })
-      return reply.send({
-        ...profile,
-        createdAt: profile.createdAt.toISOString(),
-        artistKind: channel?.artistKind ?? 'SINGLE',
-      })
+      return reply.send(serializeProfile(profile, channel?.artistKind ?? 'SINGLE'))
     },
   )
 
@@ -92,6 +141,11 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.avatarUrl !== undefined) data.avatarUrl = body.avatarUrl.trim() || null
       if (body.avatarPosterUrl !== undefined)
         data.avatarPosterUrl = body.avatarPosterUrl?.trim() || null
+      if (body.avatarTheme !== undefined) {
+        data.avatarThemeJson = body.avatarTheme ? JSON.stringify(body.avatarTheme) : null
+      }
+      if (body.logoUrl !== undefined) data.logoUrl = body.logoUrl?.trim() || null
+      if (body.logoPlacement !== undefined) data.logoPlacement = body.logoPlacement
       if (body.tipJarUrl !== undefined) data.tipJarUrl = body.tipJarUrl.trim() || null
       if (body.countryCode !== undefined) data.countryCode = body.countryCode?.toUpperCase() ?? null
       if (body.pronouns !== undefined) data.pronouns = body.pronouns?.trim() || null
@@ -139,11 +193,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
         )
       }
 
-      return reply.send({
-        ...updated,
-        createdAt: updated.createdAt.toISOString(),
-        artistKind,
-      })
+      return reply.send(serializeProfile(updated, artistKind))
     },
   )
 
