@@ -49,8 +49,8 @@ export default async function SchedulePage() {
         <div>
           <h1 className="studio-page-title">Schedule</h1>
           <Text tone="muted" size="sm">
-            Build the 24/7 rotation that plays on your channel whenever you are offline — mix in
-            sets from your archive and tracks from your release library.
+            The 24/7 rotation that plays when you&apos;re offline — mix in archive sets and release
+            tracks.
           </Text>
         </div>
         <div className="studio-page-header__actions">
