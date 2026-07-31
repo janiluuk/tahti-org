@@ -3,7 +3,7 @@
 
 import { prisma } from '@tahti/db'
 import { playbackKeyFromLocalCacheBasename } from '@tahti/shared'
-import { getActiveChannelEntries } from './liquidsoap.js'
+import { getActiveChannelEntries, reconcileActiveChannels } from './liquidsoap.js'
 import {
   LIQUIDSOAP_NOW_PLAYING_COMMAND,
   parseLiquidsoapTelnetResponse,
@@ -101,8 +101,9 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
   // Curated/compilation tracks (e.g. Tahti Selects' CC0 rotation) carry their
   // own artistName override — the channel that hosts them isn't who made them,
   // so there's no real profile to link the name to either.
-  const artistName = item.artistName ?? item.channel.user.displayName
-  const artistUsername = item.artistName ? null : item.channel.user.username
+  const override = item.artistName?.trim() || null
+  const artistName = override ?? item.channel.user.displayName
+  const artistUsername = override ? null : item.channel.user.username
 
   const current = await prisma.channel.findUnique({
     where: { id: channelId },
@@ -144,20 +145,42 @@ async function syncChannelNowPlaying(channelId: string, containerName: string): 
   }
 }
 
+async function pollNowPlaying(): Promise<void> {
+  // Re-adopt containers Docker still has running after an orchestrator restart —
+  // otherwise always-on rotations (Tahti Selects) stream forever with a blank
+  // "now playing" because they never get re-registered in activeChannels.
+  try {
+    const adopted = await reconcileActiveChannels()
+    if (adopted > 0) {
+      console.info(
+        `[orchestrator] re-adopted ${adopted} Liquidsoap container(s) for now-playing sync`,
+      )
+    }
+  } catch (err) {
+    console.warn(
+      '[orchestrator] active-channel reconcile failed:',
+      err instanceof Error ? err.message : err,
+    )
+  }
+
+  for (const [channelId, containerName] of getActiveChannelEntries()) {
+    void syncChannelNowPlaying(channelId, containerName).catch((err) => {
+      console.warn(
+        `[orchestrator] now-playing sync failed for ${containerName}:`,
+        err instanceof Error ? err.message : err,
+      )
+    })
+  }
+}
+
 /** STREAM-012: periodically resolves each running channel's current rotation
  * track (via Liquidsoap telnet metadata) to a real ArchiveItem, so the public
  * radio page can show accurate title/artist/artwork instead of generic branding
  * while nobody's actually live. A failure on any one channel never blocks the
  * others — each sync call is independently caught. */
 export function startNowPlayingSync(): NodeJS.Timeout {
+  void pollNowPlaying()
   return setInterval(() => {
-    for (const [channelId, containerName] of getActiveChannelEntries()) {
-      void syncChannelNowPlaying(channelId, containerName).catch((err) => {
-        console.warn(
-          `[orchestrator] now-playing sync failed for ${containerName}:`,
-          err instanceof Error ? err.message : err,
-        )
-      })
-    }
+    void pollNowPlaying()
   }, NOW_PLAYING_POLL_INTERVAL_MS)
 }

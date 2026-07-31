@@ -116,6 +116,51 @@ export function getActiveChannelEntries(): [channelId: string, containerName: st
   return [...activeChannels.entries()]
 }
 
+const CHANNEL_CONTAINER_PREFIX = 'tahti-channel-'
+
+/** Parse `tahti-channel-<slug>` → slug (null if the name doesn't match). */
+export function channelSlugFromContainerName(containerName: string): string | null {
+  if (!containerName.startsWith(CHANNEL_CONTAINER_PREFIX)) return null
+  const slug = containerName.slice(CHANNEL_CONTAINER_PREFIX.length)
+  return slug || null
+}
+
+/**
+ * Re-adopt Liquidsoap containers that Docker still has running but this process
+ * lost track of (orchestrator restart). Without this, always-on channels like
+ * Tahti Selects keep streaming while STREAM-012 never polls them — public
+ * now-playing stays null until something re-calls /spawn.
+ */
+export async function reconcileActiveChannels(): Promise<number> {
+  const { stdout } = await execAsync(
+    `docker ps --filter "name=^/${CHANNEL_CONTAINER_PREFIX}" --filter "status=running" --format "{{.Names}}"`,
+  ).catch(() => ({ stdout: '' }))
+
+  const names = stdout
+    .split('\n')
+    .map((n) => n.trim())
+    .filter(Boolean)
+
+  let adopted = 0
+  for (const containerName of names) {
+    if ([...activeChannels.values()].includes(containerName)) continue
+
+    const slug = channelSlugFromContainerName(containerName)
+    if (!slug) continue
+
+    const channel = await prisma.channel.findUnique({
+      where: { slug },
+      select: { id: true },
+    })
+    if (!channel) continue
+    if (activeChannels.has(channel.id)) continue
+
+    activeChannels.set(channel.id, containerName)
+    adopted++
+  }
+  return adopted
+}
+
 /** Manage panel transport controls need the container for a single channel —
  * undefined when that channel has no running Liquidsoap process right now. */
 export function getContainerNameForChannel(channelId: string): string | undefined {
