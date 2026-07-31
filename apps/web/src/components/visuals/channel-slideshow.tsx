@@ -4,7 +4,18 @@
 'use client'
 
 import { useEffect, useReducer, useRef, useState } from 'react'
-import type { SlideshowPreset } from '@tahti/shared'
+import { WEBGL_SLIDESHOW_PRESETS, type SlideshowPreset } from '@tahti/shared'
+import { WebglSlideshowTransition } from './slideshow-transitions/webgl-slideshow-transition'
+
+function supportsWebGL(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(canvas.getContext('webgl2') ?? canvas.getContext('webgl'))
+  } catch {
+    return false
+  }
+}
 
 interface Props {
   images: string[]
@@ -24,8 +35,10 @@ function reducer(state: State, action: Action): State {
   return state
 }
 
+type CssPreset = 'FADE' | 'ZOOM' | 'PAN' | 'BLUR_CROSS'
+
 // CSS keyframes injected once per preset
-const KEYFRAMES: Record<SlideshowPreset, string> = {
+const KEYFRAMES: Record<CssPreset, string> = {
   FADE: `
     @keyframes ch-slide-fade-in  { from { opacity: 0 } to { opacity: 1 } }
     @keyframes ch-slide-fade-out { from { opacity: 1 } to { opacity: 0 } }
@@ -44,20 +57,20 @@ const KEYFRAMES: Record<SlideshowPreset, string> = {
   `,
 }
 
-const ANIM_IN: Record<SlideshowPreset, string> = {
+const ANIM_IN: Record<CssPreset, string> = {
   FADE: 'ch-slide-fade-in',
   ZOOM: 'ch-slide-zoom-in',
   PAN: 'ch-slide-pan-in',
   BLUR_CROSS: 'ch-slide-blur-in',
 }
-const ANIM_OUT: Record<SlideshowPreset, string> = {
+const ANIM_OUT: Record<CssPreset, string> = {
   FADE: 'ch-slide-fade-out',
   ZOOM: 'ch-slide-zoom-out',
   PAN: 'ch-slide-pan-out',
   BLUR_CROSS: 'ch-slide-blur-out',
 }
 
-function useInjectKeyframes(preset: SlideshowPreset) {
+function useInjectKeyframes(preset: CssPreset) {
   useEffect(() => {
     const id = `ch-slide-kf-${preset}`
     if (document.getElementById(id)) return
@@ -77,18 +90,26 @@ export function ChannelSlideshow({
 }: Props) {
   const [state, dispatch] = useReducer(reducer, { current: 0, next: null, transitioning: false })
   const [reduceMotion, setReduceMotion] = useState(false)
+  const [webglReady, setWebglReady] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const transitionRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const currentRef = useRef(state.current)
   currentRef.current = state.current
 
-  useInjectKeyframes(preset)
+  const isWebglPreset = WEBGL_SLIDESHOW_PRESETS.has(preset)
+  // Falls back to a plain CSS fade when WebGL isn't available (checked client-side
+  // below) or the visitor prefers reduced motion — never a hard, jarring cut.
+  const cssPreset: CssPreset = isWebglPreset ? 'FADE' : (preset as CssPreset)
+  const useWebgl = isWebglPreset && webglReady && !reduceMotion
+
+  useInjectKeyframes(cssPreset)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     setReduceMotion(mq.matches)
     const onChange = () => setReduceMotion(mq.matches)
     mq.addEventListener('change', onChange)
+    setWebglReady(supportsWebGL())
     return () => mq.removeEventListener('change', onChange)
   }, [])
 
@@ -128,7 +149,10 @@ export function ChannelSlideshow({
         aspectRatio: '16/7',
       }}
     >
-      {/* Current image — animates out during transition */}
+      {/* Current image — the static base. During a WebGL transition it stays put,
+          unanimated, underneath the WebGL overlay, which loads both images itself
+          and drives the whole visual transition; during a CSS transition it animates
+          out per the preset's keyframes, same as before. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         key={`cur-${state.current}`}
@@ -142,14 +166,16 @@ export function ChannelSlideshow({
           height: '100%',
           objectFit: 'cover',
           animation:
-            state.transitioning && !reduceMotion
-              ? `${ANIM_OUT[preset]} ${dur} ${ease} forwards`
+            state.transitioning && !reduceMotion && !useWebgl
+              ? `${ANIM_OUT[cssPreset]} ${dur} ${ease} forwards`
               : undefined,
         }}
       />
 
-      {/* Next image — animates in during transition */}
-      {state.transitioning && state.next !== null && !reduceMotion && (
+      {/* Next image — CSS presets animate it in as an overlay; WebGL presets skip
+          this entirely (the WebGL overlay below renders both images itself) to
+          avoid it popping in before the WebGL canvas has loaded its textures. */}
+      {state.transitioning && state.next !== null && !reduceMotion && !useWebgl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           key={`next-${state.next}`}
@@ -162,7 +188,23 @@ export function ChannelSlideshow({
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            animation: `${ANIM_IN[preset]} ${dur} ${ease} forwards`,
+            animation: `${ANIM_IN[cssPreset]} ${dur} ${ease} forwards`,
+          }}
+        />
+      )}
+
+      {useWebgl && state.transitioning && state.next !== null && (
+        <WebglSlideshowTransition
+          key={`webgl-${state.current}-${state.next}`}
+          preset={preset}
+          fromUrl={images[state.current]!}
+          toUrl={images[state.next]!}
+          durationMs={effectiveTransitionMs}
+          onComplete={() => {
+            // The existing setTimeout in the advance effect above already dispatches
+            // END at the same effectiveTransitionMs — this is a no-op in the normal
+            // case, just a safety net if this callback ever fires first.
+            dispatch({ type: 'END' })
           }}
         />
       )}
