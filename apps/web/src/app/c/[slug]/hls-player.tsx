@@ -19,6 +19,7 @@ export default function HlsPlayer({
   subtitleHref,
   hideWaveform = false,
   artOverlayPlay = false,
+  animateTrackChange = false,
 }: {
   url: string
   title?: string
@@ -44,6 +45,8 @@ export default function HlsPlayer({
   hideWaveform?: boolean
   /** Tahti Radio only: centered fade-in play/pause overlay on the artwork. */
   artOverlayPlay?: boolean
+  /** Animate now-playing identity changes (title/art handoff). */
+  animateTrackChange?: boolean
 }) {
   const {
     track,
@@ -128,6 +131,7 @@ export default function HlsPlayer({
         nextUpLabel={nextUpLabel}
         hideWaveform={hideWaveform}
         artOverlayPlay={artOverlayPlay}
+        animateTrackChange={animateTrackChange}
       />
     </div>
   )
