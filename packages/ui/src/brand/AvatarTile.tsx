@@ -57,7 +57,6 @@ export function AvatarTile({
     : undefined
 
   const logo = logoUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element
     <img src={logoUrl} alt="" className="avatar-tile__logo" loading="lazy" decoding="async" />
   ) : null
 

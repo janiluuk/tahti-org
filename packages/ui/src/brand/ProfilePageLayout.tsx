@@ -91,7 +91,6 @@ export function ProfileCover({
     <div className={cn('prof-cover', themeBackground && 'prof-cover--themed')} style={coverStyle}>
       <div className="prof-cover-overlay" aria-hidden />
       {logoOnCover && logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img src={logoUrl} alt="" className="prof-cover-logo" loading="lazy" decoding="async" />
       ) : null}
       <AvatarTile
