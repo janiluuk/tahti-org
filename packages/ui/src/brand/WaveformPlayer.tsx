@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { cn } from '../lib/cn'
 import { formatPlayerTime, WAVEFORM_BAR_HEIGHTS } from '../lib/waveform-player'
@@ -59,6 +59,26 @@ export interface WaveformPlayerProps {
    * button, which stays in the DOM but is visually hidden by the radio-scoped
    * CSS — kept for focus/keyboard access rather than duplicated. */
   artOverlayPlay?: boolean
+  /** Animate title/artist out, backdrop fade, then fly new art + text in when
+   * the now-playing identity changes (Tahti Radio track handoff). */
+  animateTrackChange?: boolean
+}
+
+type TrackPhase = 'idle' | 'out' | 'in'
+
+interface DisplayedMeta {
+  title: string
+  subtitle?: string
+  subtitleHref?: string
+  artworkUrl?: string | null
+}
+
+const OUT_MS = 380
+const IN_MS = 560
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 /** Custom HLS/archive player chrome — waveform, play/pause, seek bar. */
@@ -85,6 +105,7 @@ export function WaveformPlayer({
   nextUpLabel,
   hideWaveform = false,
   artOverlayPlay = false,
+  animateTrackChange = false,
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
@@ -128,23 +149,138 @@ export function WaveformPlayer({
     [isLive, onSeek],
   )
 
+  const incomingTitle = nowPlayingTitle
+  const incomingSubtitle = nowPlayingSubtitle
+  const incomingSubtitleHref = nowPlayingSubtitleHref
+  const incomingArtwork = artworkUrl ?? null
+
+  const [displayed, setDisplayed] = useState<DisplayedMeta | null>(() =>
+    incomingTitle
+      ? {
+          title: incomingTitle,
+          subtitle: incomingSubtitle,
+          subtitleHref: incomingSubtitleHref,
+          artworkUrl: incomingArtwork,
+        }
+      : null,
+  )
+  const [phase, setPhase] = useState<TrackPhase>('idle')
+  const [outgoingArt, setOutgoingArt] = useState<string | null>(null)
+  const bootstrapped = useRef(false)
+  const animTimers = useRef<number[]>([])
+  const displayedRef = useRef(displayed)
+  displayedRef.current = displayed
+
+  function clearAnimTimers() {
+    for (const id of animTimers.current) window.clearTimeout(id)
+    animTimers.current = []
+  }
+
+  useEffect(() => {
+    const incoming: DisplayedMeta | null = incomingTitle
+      ? {
+          title: incomingTitle,
+          subtitle: incomingSubtitle,
+          subtitleHref: incomingSubtitleHref,
+          artworkUrl: incomingArtwork,
+        }
+      : null
+
+    if (!animateTrackChange || !incoming) {
+      setDisplayed(incoming)
+      setPhase('idle')
+      setOutgoingArt(null)
+      return
+    }
+
+    if (!bootstrapped.current) {
+      bootstrapped.current = true
+      setDisplayed(incoming)
+      return
+    }
+
+    const current = displayedRef.current
+    const same =
+      current?.title === incoming.title &&
+      current?.subtitle === incoming.subtitle &&
+      current?.artworkUrl === incoming.artworkUrl
+    if (same) return
+
+    if (prefersReducedMotion()) {
+      setDisplayed(incoming)
+      setPhase('idle')
+      setOutgoingArt(null)
+      return
+    }
+
+    clearAnimTimers()
+    setOutgoingArt(current?.artworkUrl ?? null)
+    setPhase('out')
+
+    const outTimer = window.setTimeout(() => {
+      setDisplayed(incoming)
+      setPhase('in')
+      const inTimer = window.setTimeout(() => {
+        setPhase('idle')
+        setOutgoingArt(null)
+      }, IN_MS)
+      animTimers.current.push(inTimer)
+    }, OUT_MS)
+    animTimers.current.push(outTimer)
+
+    return () => clearAnimTimers()
+  }, [animateTrackChange, incomingTitle, incomingSubtitle, incomingSubtitleHref, incomingArtwork])
+
+  const shown = animateTrackChange
+    ? displayed
+    : incomingTitle
+      ? {
+          title: incomingTitle,
+          subtitle: incomingSubtitle,
+          subtitleHref: incomingSubtitleHref,
+          artworkUrl: incomingArtwork,
+        }
+      : null
+  const artUrl = shown?.artworkUrl ?? null
+  const backdropUrl = phase === 'out' && outgoingArt ? outgoingArt : artUrl
+
   return (
     <div
-      className={cn('waveform-player', embedded && 'waveform-player--embedded', className)}
+      className={cn(
+        'waveform-player',
+        embedded && 'waveform-player--embedded',
+        animateTrackChange && phase !== 'idle' && `waveform-player--track-${phase}`,
+        className,
+      )}
       style={
-        artworkUrl
-          ? ({ '--waveform-player-art': `url(${artworkUrl})` } as React.CSSProperties)
+        backdropUrl
+          ? ({ '--waveform-player-art': `url(${backdropUrl})` } as React.CSSProperties)
           : undefined
       }
     >
-      {artworkUrl && <div className="waveform-player__art-backdrop" aria-hidden />}
-      {nowPlayingTitle && (
+      {backdropUrl && (
+        <div
+          className={cn(
+            'waveform-player__art-backdrop',
+            phase === 'out' && 'waveform-player__art-backdrop--out',
+            phase === 'in' && 'waveform-player__art-backdrop--in',
+          )}
+          aria-hidden
+        />
+      )}
+      {shown?.title && (
         <div className="waveform-player__meta">
-          <div className="waveform-player__art-wrap">
-            {artworkUrl ? (
-              <img src={artworkUrl} alt="" className="waveform-player__art" />
+          <div
+            className={cn(
+              'waveform-player__art-wrap',
+              phase === 'out' && 'waveform-player__art-wrap--out',
+              phase === 'in' && 'waveform-player__art-wrap--in',
+            )}
+          >
+            {artUrl ? (
+              <img src={artUrl} alt="" className="waveform-player__art" />
             ) : (
-              <AvatarTile size="lg" name={nowPlayingTitle} className="waveform-player__art" />
+              <AvatarTile size="lg" name={shown.title} className="waveform-player__art" />
             )}
             {artOverlayPlay && (
               <button
@@ -172,18 +308,24 @@ export function WaveformPlayer({
               </button>
             )}
           </div>
-          <div className="waveform-player__meta-text">
-            <span className="waveform-player__meta-title">{nowPlayingTitle}</span>
-            {nowPlayingSubtitle &&
-              (nowPlayingSubtitleHref ? (
+          <div
+            className={cn(
+              'waveform-player__meta-text',
+              phase === 'out' && 'waveform-player__meta-text--out',
+              phase === 'in' && 'waveform-player__meta-text--in',
+            )}
+          >
+            <span className="waveform-player__meta-title">{shown.title}</span>
+            {shown.subtitle &&
+              (shown.subtitleHref ? (
                 <Link
-                  href={nowPlayingSubtitleHref}
+                  href={shown.subtitleHref}
                   className="waveform-player__meta-subtitle waveform-player__meta-subtitle--link"
                 >
-                  {nowPlayingSubtitle}
+                  {shown.subtitle}
                 </Link>
               ) : (
-                <span className="waveform-player__meta-subtitle">{nowPlayingSubtitle}</span>
+                <span className="waveform-player__meta-subtitle">{shown.subtitle}</span>
               ))}
           </div>
         </div>

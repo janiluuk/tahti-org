@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { LiveChatPanel, PinnedAnnouncement, type LiveChatMessage } from '@tahti/ui'
 import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
+import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { usePlayer } from '@/contexts/player-context'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
 
@@ -102,6 +103,7 @@ export default function ChatPanel({
   const wsRef = useRef<WebSocket | null>(null)
   const msgIdRef = useRef(1)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const { captchaRef, required: captchaRequired, getToken, reset: resetCaptcha } = useHcaptcha(true)
 
   // A returning visitor already has a handle saved from a previous visit —
   // silently rejoin with it to get a fresh publish token. Previously this just
@@ -109,14 +111,16 @@ export default function ChatPanel({
   // join prompt) without ever fetching a token — publishToken stayed null
   // forever, so sendDisabled/inputDisabled (which gate on !publishToken)
   // stayed true forever and returning visitors could never actually send.
+  // When hCaptcha is enforced, skip auto-rejoin — the widget must be solved
+  // on an explicit Join click.
   useEffect(() => {
     const saved = loadStoredChatHandle()
     if (saved) {
       setPendingHandle(saved)
-      void joinChat(saved)
+      if (!captchaRequired) void joinChat(saved)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [captchaRequired])
 
   useEffect(() => {
     let cancelled = false
@@ -246,11 +250,15 @@ export default function ChatPanel({
 
   async function joinChat(h: string) {
     try {
+      if (captchaRequired && !getToken()) {
+        setError('Complete the captcha to join chat.')
+        return
+      }
       const res = await fetch(`${API_BASE}/api/chat/${slug}/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ handle: h }),
+        body: JSON.stringify({ handle: h, hcaptchaToken: getToken() }),
       })
       if (res.status === 403) {
         const body = (await res.json().catch(() => ({}))) as { error?: string }
@@ -261,7 +269,16 @@ export default function ChatPanel({
         )
         return
       }
-      if (!res.ok) throw new Error('Failed to get token')
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string }
+        resetCaptcha()
+        setError(
+          body.error === 'hCaptcha verification failed'
+            ? 'Captcha failed — try again.'
+            : 'Could not join chat. Try again.',
+        )
+        return
+      }
       const data = (await res.json()) as {
         token: string
         handle: string
@@ -273,7 +290,10 @@ export default function ChatPanel({
       setPublishToken(data.token)
       setSupporter(!!data.supporter)
       setMyCountryCode(data.countryCode ?? null)
+      setError(null)
+      resetCaptcha()
     } catch {
+      resetCaptcha()
       setError('Could not join chat. Try again.')
     }
   }
@@ -334,6 +354,7 @@ export default function ChatPanel({
       joinHandle={pendingHandle}
       onJoinHandleChange={setPendingHandle}
       onJoin={() => void joinChat(pendingHandle)}
+      captchaSlot={captchaRequired ? <div ref={captchaRef} /> : undefined}
       inputValue={input}
       onInputChange={setInput}
       onSend={sendMessage}

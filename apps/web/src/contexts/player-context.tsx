@@ -153,6 +153,11 @@ interface PlayerContextValue extends PlayerState {
   reorderUpNext: (newUpNext: PlayerTrack[]) => void
   setVolume: (v: number) => void
   toggleMute: () => void
+  /** Patch title/subtitle/artwork on the currently loaded track without reload
+   * (e.g. Tahti Radio rotation handoff keeps the same HLS URL). */
+  updateTrackMeta: (
+    patch: Partial<Pick<PlayerTrack, 'title' | 'subtitle' | 'artworkUrl' | 'href'>>,
+  ) => void
 }
 
 const HISTORY_LIMIT = 50
@@ -474,6 +479,25 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, muted: !prev.muted }))
   }, [])
 
+  const updateTrackMeta = useCallback(
+    (patch: Partial<Pick<PlayerTrack, 'title' | 'subtitle' | 'artworkUrl' | 'href'>>) => {
+      const current = currentTrackRef.current
+      if (!current) return
+      const next = { ...current, ...patch }
+      if (
+        next.title === current.title &&
+        next.subtitle === current.subtitle &&
+        next.artworkUrl === current.artworkUrl &&
+        next.href === current.href
+      ) {
+        return
+      }
+      currentTrackRef.current = next
+      setState((prev) => (prev.track ? { ...prev, track: next } : prev))
+    },
+    [],
+  )
+
   // Keep the shared <audio> element's actual volume/muted in sync, and persist
   // across page loads — a new track load doesn't reset the audio element, but
   // the browser default volume (1) needs setting explicitly on first mount.
@@ -629,6 +653,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       reorderUpNext,
       setVolume,
       toggleMute,
+      updateTrackMeta,
     }),
     [
       state,
@@ -652,6 +677,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       reorderUpNext,
       setVolume,
       toggleMute,
+      updateTrackMeta,
     ],
   )
 

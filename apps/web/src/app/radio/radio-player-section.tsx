@@ -4,10 +4,14 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useEffect, useState } from 'react'
+import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import HlsPlayer from '../c/[slug]/hls-player'
 import ReactionsOverlay from '../c/[slug]/reactions'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { usePlayer } from '@/contexts/player-context'
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+const NOW_PLAYING_POLL_MS = 8_000
 
 interface RadioLiveSlot {
   startAt: string
@@ -58,10 +62,41 @@ export function RadioPlayerSection({
   playback,
   slug,
   liveSlot,
-  nowPlaying,
+  nowPlaying: initialNowPlaying,
 }: RadioPlayerSectionProps) {
-  const { analyser } = usePlayer()
+  const { analyser, track, updateTrackMeta } = usePlayer()
   const liveElapsedSec = useLiveElapsedSec(liveSlot?.startAt ?? null)
+  const [nowPlaying, setNowPlaying] = useState(initialNowPlaying)
+
+  useEffect(() => {
+    setNowPlaying(initialNowPlaying)
+  }, [initialNowPlaying])
+
+  // Poll rotation now-playing so track handoffs animate without a full page refresh.
+  useEffect(() => {
+    if (liveSlot) return
+    let cancelled = false
+
+    async function refresh() {
+      try {
+        const res = await fetch(`${API_BASE}/api/channels/${TAHTI_RADIO_SLUG}`, {
+          credentials: 'include',
+          cache: 'no-store',
+        })
+        if (!res.ok || cancelled) return
+        const data = (await res.json()) as { nowPlaying: RadioNowPlayingTrack | null }
+        if (!cancelled) setNowPlaying(data.nowPlaying)
+      } catch {
+        /* keep last known */
+      }
+    }
+
+    const id = window.setInterval(() => void refresh(), NOW_PLAYING_POLL_MS)
+    return () => {
+      cancelled = true
+      window.clearInterval(id)
+    }
+  }, [liveSlot])
 
   const title = liveSlot ? liveSlot.artist.displayName : (nowPlaying?.title ?? 'Tahti Radio')
   // Always name the channel in the subtitle — live and rotation/replay alike —
@@ -75,6 +110,18 @@ export function RadioPlayerSection({
   const subtitleHref =
     !liveSlot && nowPlaying?.artistUsername ? `/u/${nowPlaying.artistUsername}` : undefined
   const artworkUrl = liveSlot ? liveSlot.artist.avatarUrl : (nowPlaying?.artworkUrl ?? null)
+
+  // Keep the shared mini-player in sync when the rotation track changes (same HLS URL).
+  useEffect(() => {
+    if (liveSlot) return
+    if (!track || track.id !== playback.audioUrl) return
+    updateTrackMeta({
+      title,
+      subtitle,
+      artworkUrl,
+      href: '/radio',
+    })
+  }, [liveSlot, track, playback.audioUrl, title, subtitle, artworkUrl, updateTrackMeta])
 
   return (
     <div id="live-player" className="ch-player-wrap ch-radio-player-wrap">
@@ -95,6 +142,7 @@ export function RadioPlayerSection({
           href="/radio"
           hideWaveform
           artOverlayPlay
+          animateTrackChange
         />
       </div>
       <ReactionsOverlay slug={slug} />

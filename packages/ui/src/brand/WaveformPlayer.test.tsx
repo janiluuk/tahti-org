@@ -27,4 +27,16 @@ describe('WaveformPlayer', () => {
     expect(screen.getByText('Connecting…')).toBeTruthy()
     expect(screen.queryByText('Waiting for signal…')).toBeNull()
   })
+
+  it('renders now-playing title when provided', () => {
+    render(
+      <WaveformPlayer
+        nowPlayingTitle="Night Drive"
+        nowPlayingSubtitle="Nova on Tahti Radio"
+        artworkUrl="https://example.com/art.jpg"
+      />,
+    )
+    expect(screen.getByText('Night Drive')).toBeTruthy()
+    expect(screen.getByText('Nova on Tahti Radio')).toBeTruthy()
+  })
 })

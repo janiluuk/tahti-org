@@ -182,6 +182,21 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/files',
+    label: 'Files',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path
+          d="M4 2.5h5.5L13 6v7.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-10a1 1 0 0 1 1-1Z"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+        <path d="M9.5 2.5V6H13" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/content-reports',
     label: 'Reports',
     icon: (

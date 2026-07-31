@@ -1490,6 +1490,116 @@
   );
 }
 
+/* Track-change choreography (Tahti Radio / animateTrackChange):
+ * 1) title & artist slide away, backdrop fades
+ * 2) new art flies in, backdrop fades up
+ * 3) title & artist slide back into view */
+.waveform-player__art-backdrop--out {
+  animation: waveform-backdrop-out 0.38s ease forwards;
+}
+
+.waveform-player__art-backdrop--in,
+.waveform-player__art-backdrop--incoming {
+  animation: waveform-backdrop-in 0.56s ease forwards;
+}
+
+.waveform-player__art-backdrop--incoming {
+  z-index: -1;
+  opacity: 0;
+}
+
+.waveform-player__meta-text--out {
+  animation: waveform-meta-out 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.waveform-player__meta-text--in {
+  animation: waveform-meta-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.waveform-player__art-wrap--out {
+  animation: waveform-art-out 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.waveform-player__art-wrap--in {
+  animation: waveform-art-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes waveform-meta-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-1.75rem);
+  }
+}
+
+@keyframes waveform-meta-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes waveform-art-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.88) translateY(0.6rem);
+  }
+}
+
+@keyframes waveform-art-in {
+  from {
+    opacity: 0;
+    transform: scale(1.18) translateY(1.5rem) rotate(-3deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes waveform-backdrop-out {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes waveform-backdrop-in {
+  from {
+    opacity: 0;
+    transform: scale(1.28);
+  }
+  to {
+    opacity: 0.35;
+    transform: scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waveform-player__art-backdrop--out,
+  .waveform-player__art-backdrop--in,
+  .waveform-player__art-backdrop--incoming,
+  .waveform-player__meta-text--out,
+  .waveform-player__meta-text--in,
+  .waveform-player__art-wrap--out,
+  .waveform-player__art-wrap--in {
+    animation: none !important;
+  }
+}
+
 .waveform-player__meta {
   display: flex;
   align-items: center;

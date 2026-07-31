@@ -56,6 +56,7 @@ export interface LiveChatPanelProps {
   error?: string | null
   emptyMessage?: string
   readOnly?: boolean
+  captchaSlot?: React.ReactNode
   className?: string
 }
 
@@ -100,6 +101,7 @@ export function LiveChatPanel({
   error,
   emptyMessage = 'Be the first to say hi.',
   readOnly = false,
+  captchaSlot,
   className,
 }: LiveChatPanelProps) {
   const [internalInput, setInternalInput] = useState('')
@@ -128,34 +130,39 @@ export function LiveChatPanel({
   const inputBlock =
     !readOnly && (authPhase === 'join' || authPhase === 'chat') ? (
       isChannel ? (
-        <div className="ch-chat-input-row">
-          <input
-            type="text"
-            value={authPhase === 'join' ? joinHandle : chatValue}
-            onChange={(e) =>
-              authPhase === 'join'
-                ? onJoinHandleChange?.(e.target.value)
-                : setChatValue(e.target.value)
-            }
-            onKeyDown={(e) => {
-              if (e.key !== 'Enter') return
-              if (authPhase === 'join') handleJoin()
-              else handleSend()
-            }}
-            placeholder={authPhase === 'join' ? joinPlaceholder : inputPlaceholder}
-            maxLength={authPhase === 'join' ? 32 : 500}
-            disabled={authPhase === 'chat' ? inputDisabled : false}
-            aria-label={authPhase === 'join' ? 'Chat handle' : 'Chat message'}
-          />
-          <button
-            type="button"
-            className="ch-chat-send"
-            onClick={authPhase === 'join' ? handleJoin : handleSend}
-            disabled={authPhase === 'chat' ? sendDisabled : false}
-          >
-            {authPhase === 'join' ? joinLabel : sendLabel}
-          </button>
-        </div>
+        <>
+          <div className="ch-chat-input-row">
+            <input
+              type="text"
+              value={authPhase === 'join' ? joinHandle : chatValue}
+              onChange={(e) =>
+                authPhase === 'join'
+                  ? onJoinHandleChange?.(e.target.value)
+                  : setChatValue(e.target.value)
+              }
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                if (authPhase === 'join') handleJoin()
+                else handleSend()
+              }}
+              placeholder={authPhase === 'join' ? joinPlaceholder : inputPlaceholder}
+              maxLength={authPhase === 'join' ? 32 : 500}
+              disabled={authPhase === 'chat' ? inputDisabled : false}
+              aria-label={authPhase === 'join' ? 'Chat handle' : 'Chat message'}
+            />
+            <button
+              type="button"
+              className="ch-chat-send"
+              onClick={authPhase === 'join' ? handleJoin : handleSend}
+              disabled={authPhase === 'chat' ? sendDisabled : false}
+            >
+              {authPhase === 'join' ? joinLabel : sendLabel}
+            </button>
+          </div>
+          {authPhase === 'join' && captchaSlot ? (
+            <div className="ch-chat-captcha">{captchaSlot}</div>
+          ) : null}
+        </>
       ) : (
         <div className="live-chat-panel__input-row">
           <input
