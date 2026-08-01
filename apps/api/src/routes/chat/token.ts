@@ -121,12 +121,18 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'subscribers_only' })
       }
 
-      // sub encodes handle + fingerprint; info carries badges + country for Centrifugo
+      const sessionUserId = request.sessionUser?.id ?? null
+      // sub encodes handle + fingerprint; info carries badges + country for Centrifugo;
+      // meta.userId is backend-only so the publish proxy can notify @mentions.
       const sub = `${cleanHandle}#${fingerprint}`
       // Connection JWTs can't carry a `channel` claim in Centrifugo v5 (only
       // subscription JWTs can) — the client subscribes explicitly after connect.
       const token = signCentrifugoToken(
-        { sub, info: { supporter, countryCode, channelRole } },
+        {
+          sub,
+          info: { supporter, countryCode, channelRole },
+          ...(sessionUserId ? { meta: { userId: sessionUserId } } : {}),
+        },
         3600,
       )
 

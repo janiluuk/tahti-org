@@ -205,6 +205,27 @@ export async function notifyUserOfNewMessage(
   })
 }
 
+/** Channel live chat @mention — in-app bell + deep link to the channel. */
+export async function notifyUsersOfChatMention(
+  prisma: PrismaClient,
+  recipientUserIds: string[],
+  mentioner: { id: string; username: string; displayName: string },
+  channelSlug: string,
+  messageBody: string,
+): Promise<void> {
+  if (recipientUserIds.length === 0) return
+  await prisma.notification.createMany({
+    data: recipientUserIds.map((userId) => ({
+      userId,
+      type: 'CHAT_MENTION' as const,
+      actorUserId: mentioner.id,
+      title: `${mentioner.displayName} mentioned you in chat`,
+      body: messageBody.slice(0, 140),
+      url: `/c/${channelSlug}`,
+    })),
+  })
+}
+
 export async function processScheduledPostNotifications(
   prisma: PrismaClient,
 ): Promise<{ notified: number }> {

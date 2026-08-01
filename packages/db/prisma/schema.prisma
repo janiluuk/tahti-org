@@ -433,6 +433,7 @@ enum MentionSurface {
   RELEASE
   NEWSLETTER
   TRACKLIST
+  CHAT
 
   @@schema("core")
 }
@@ -447,6 +448,8 @@ enum NotificationType {
   PLAYLIST_TRACK_ADDED
   /// Fan-out when a Tahti Radio–opted-in artist publishes a release.
   NEW_RELEASE
+  /// Someone @mentioned you in a channel live chat.
+  CHAT_MENTION
 
   @@schema("core")
 }

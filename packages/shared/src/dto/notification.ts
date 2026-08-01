@@ -12,6 +12,7 @@ export const NotificationTypeSchema = z.enum([
   'NEW_REPOST',
   'PLAYLIST_TRACK_ADDED',
   'NEW_RELEASE',
+  'CHAT_MENTION',
 ])
 
 export const NotificationSchema = z.object({
