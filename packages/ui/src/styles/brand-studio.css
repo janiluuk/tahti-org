@@ -7197,6 +7197,40 @@
   gap: 8px;
 }
 
+.pro-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pro-editor-field__label {
+  font-size: var(--text-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted2);
+}
+
+.pro-editor-field__input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+.pro-editor-field__input:disabled {
+  opacity: 0.6;
+}
+
+.pro-editor-field-row {
+  display: flex;
+  gap: 10px;
+}
+
 /* ---- Knob primitive ---- */
 .ui-knob {
   display: flex;
@@ -10513,7 +10547,6 @@
   flex-wrap: wrap;
 }
 
-
 [data-tahti-ui='studio'] .dm-message__bubble {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
@@ -10637,4 +10670,56 @@
 
 [data-tahti-ui='studio'] .emoji-picker__item:hover {
   background: color-mix(in srgb, var(--muted) 12%, transparent);
+}
+
+/* Green room — pre-live backstage panel (Broadcasting Setup step 3) */
+[data-tahti-ui='studio'] .green-room-panel {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-md);
+}
+
+[data-tahti-ui='studio'] .green-room-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+[data-tahti-ui='studio'] .green-room-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+[data-tahti-ui='studio'] .green-room-panel__guest-link {
+  margin-left: auto;
+}
+
+[data-tahti-ui='studio'] .green-room-panel__invite-list,
+[data-tahti-ui='studio'] .green-room-panel__candidate-list {
+  list-style: none;
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+}
+
+[data-tahti-ui='studio'] .green-room-panel__invite-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+[data-tahti-ui='studio'] .green-room-panel__invite-meta {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+[data-tahti-ui='studio'] .green-room-panel__candidate-list li {
+  padding: 4px 0;
+  font-size: var(--text-sm);
 }

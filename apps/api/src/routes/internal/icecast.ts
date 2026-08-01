@@ -15,6 +15,7 @@ import {
   openApiResponses,
 } from '@tahti/shared'
 import { enqueueFinalizeBroadcastRecording } from '../../lib/queue.js'
+import { initGreenRoomForBroadcast } from '../../lib/green-room.js'
 
 // Icecast URL auth callbacks.
 // Icecast sends: mount, user, pass (plus optional ip, agent) as form-encoded body.
@@ -84,6 +85,10 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: channel.id },
         data: { state: 'PREVIEW' },
       })
+
+      initGreenRoomForBroadcast(fastify.prisma, channel.id, broadcast.id).catch((err: unknown) =>
+        fastify.log.warn({ err, broadcastId: broadcast.id }, 'green room init failed'),
+      )
 
       spawnChannelLiquidsoap(channel.id, slug, broadcast.id).catch((err: unknown) =>
         fastify.log.error({ err }, 'orchestrator spawn failed (icecast)'),

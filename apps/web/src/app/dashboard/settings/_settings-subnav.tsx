@@ -26,6 +26,7 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
     label: 'Broadcast',
     items: [
       { href: '/dashboard/settings/distribution', label: 'Radio & announcements' },
+      { href: '/dashboard/settings/green-room', label: 'Green room' },
       { href: '/dashboard/settings/moderators', label: 'Moderators' },
       { href: '/dashboard/settings/multistream', label: 'Multistream' },
     ],

@@ -15,6 +15,7 @@ import BroadcastUsageBanner, { type BroadcastUsage } from '../broadcast-usage'
 import { EndBroadcastBtn } from '../end-broadcast-btn'
 import { GoLiveBtn } from '../go-live-btn'
 import { Step3Preflight } from './_step3-preflight'
+import { GreenRoomPanel } from './_green-room-panel'
 import { Step4GoLive } from './_step4-go-live'
 import { SignalMeters } from './_signal-meters'
 import { RecordingToggle } from './_recording-toggle'
@@ -51,12 +52,14 @@ const WIZARD_STEPS = [
 
 export function BroadcastStudio({
   channelSlug,
+  artistUsername,
   channelState: initialState,
   streamSettings,
   broadcastUsage,
   autoRecordEnabled,
 }: {
   channelSlug: string
+  artistUsername: string
   channelState: string
   streamSettings: StreamSettings
   broadcastUsage: BroadcastUsage | null
@@ -272,6 +275,7 @@ export function BroadcastStudio({
             <HlsPlayer url={streamSettings.hlsUrl} title="Studio preview (full quality)" />
           </div>
           <Step3Preflight />
+          <GreenRoomPanel artistUsername={artistUsername} />
           <div className="studio-actions">
             <Button onClick={() => setActiveStep(2)} variant="ghost">
               ← Back to test signal

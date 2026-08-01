@@ -231,6 +231,24 @@ enum BroadcastVisibility {
   @@schema("channel")
 }
 
+/// Who the artist auto-invites when green room is enabled for a broadcast.
+enum GreenRoomInvitePool {
+  /// Channel moderators (trusted collaborators with Tahti accounts) + active fan subs.
+  MODERATORS_AND_SUBS
+  SUBS_ONLY
+  MANUAL_ONLY
+
+  @@schema("channel")
+}
+
+enum GreenRoomInviteSource {
+  MODERATOR
+  FAN_SUB
+  MANUAL
+
+  @@schema("channel")
+}
+
 enum RtmpTargetProvider {
   YOUTUBE
   TWITCH
@@ -703,6 +721,7 @@ model User {
   passwordSetups          PasswordSetup[]
   editorProjects          EditorProject[]
   moderatorOf             ChannelModerator[]
+  greenRoomInvites        BroadcastGreenRoomInvite[]
   curatedRotationItemsAdded CuratedRotationItem[]
   events                  ArtistEvent[]
   posts                   ArtistPost[]
@@ -1021,7 +1040,12 @@ model Channel {
   // (admin-managed) are unaffected by this — they play regardless, gated only
   // by AnnouncementSettings.systemEnabled.
   announcementsEnabled Boolean @default(true)
-  announcementClips    AnnouncementClip[]
+  announcementClips    AnnouncementClip[] @relation("ChannelAnnouncementClips")
+  // Optional ≤60s clip used as looping ambient music on the public artist page
+  // (/u/:username). Independent of rotation `isEnabled` — SetNull if the clip
+  // is deleted so the page simply goes quiet.
+  profileBackgroundClipId String?          @unique
+  profileBackgroundClip   AnnouncementClip? @relation("ChannelProfileBackgroundClip", fields: [profileBackgroundClipId], references: [id], onDelete: SetNull)
   totalLiveHours     Float        @default(0)
   totalListenerHours BigInt       @default(0)
   // Manage panel stats: highest concurrent-listener count ever observed, and a
@@ -1032,6 +1056,9 @@ model Channel {
   goneLiveAt         DateTime?
   metaStreamOptOut   Boolean              @default(false)
   chatSubscribersOnly Boolean             @default(false) // only active fan-subscribers can post in chat; everyone can still read
+  /// Default green-room toggle for new broadcast sessions (pre-live backstage).
+  greenRoomDefaultEnabled    Boolean             @default(false)
+  greenRoomDefaultInvitePool GreenRoomInvitePool @default(MODERATORS_AND_SUBS)
   galleryMode        ChannelGalleryMode   @default(NONE)
   slideshowImages    String[]             // M24: ordered image URLs for channel gallery
   textLayerMode      ChannelTextLayerMode @default(NONE)
@@ -1212,8 +1239,28 @@ model Broadcast {
   title         String?
   visibility    BroadcastVisibility @default(PUBLIC)
   autoArchive   Boolean             @default(true)
+  /// Pre-live backstage: invite moderators/subscribers to hear the preview stream.
+  greenRoomEnabled Boolean @default(false)
+  greenRoomInvites BroadcastGreenRoomInvite[]
 
   @@index([channelId, startedAt(sort: Desc)])
+  @@schema("channel")
+}
+
+/// Per-broadcast green room invite — access to the artist's PREVIEW stream before go-live.
+model BroadcastGreenRoomInvite {
+  id          String                @id @default(cuid())
+  broadcastId String
+  broadcast   Broadcast             @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source      GreenRoomInviteSource
+  invitedAt   DateTime              @default(now())
+  joinedAt    DateTime?
+
+  @@unique([broadcastId, userId])
+  @@index([broadcastId])
+  @@index([userId])
   @@schema("channel")
 }
 
@@ -1398,7 +1445,7 @@ model ArchiveItemStemJob {
 model AnnouncementClip {
   id           String                   @id @default(cuid())
   channelId    String?
-  channel      Channel?                 @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channel      Channel?                 @relation("ChannelAnnouncementClips", fields: [channelId], references: [id], onDelete: Cascade)
   title        String
   audioKey     String
   // Never overwritten after upload — the trim editor always re-renders from
@@ -1417,6 +1464,8 @@ model AnnouncementClip {
   renderStatus AnnouncementRenderStatus @default(READY)
   createdAt    DateTime                 @default(now())
   updatedAt    DateTime                 @updatedAt
+  // Inverse of Channel.profileBackgroundClip — at most one channel can point here.
+  profileBackgroundFor Channel?         @relation("ChannelProfileBackgroundClip")
 
   @@index([channelId])
   @@schema("channel")

@@ -16,6 +16,7 @@ import {
   openApiResponses,
 } from '@tahti/shared'
 import { enqueueFinalizeBroadcastRecording } from '../../lib/queue.js'
+import { initGreenRoomForBroadcast } from '../../lib/green-room.js'
 
 // nginx-rtmp sends form-encoded bodies to on_publish / on_done / on_update
 const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
@@ -90,6 +91,10 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
         where: { id: channel.id },
         data: { state: 'PREVIEW' },
       })
+
+      initGreenRoomForBroadcast(fastify.prisma, channel.id, broadcast.id).catch((err: unknown) =>
+        fastify.log.warn({ err, broadcastId: broadcast.id }, 'green room init failed'),
+      )
 
       spawnChannelLiquidsoap(channel.id, channel.slug, broadcast.id).catch((err: unknown) =>
         fastify.log.error({ err }, 'orchestrator spawn failed'),
