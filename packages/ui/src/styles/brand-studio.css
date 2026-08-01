@@ -6122,7 +6122,9 @@
 @media (prefers-reduced-motion: reduce) {
   [data-tahti-ui='studio'] .signal-dot,
   [data-tahti-ui='studio'] .db-live-dot,
-  [data-tahti-ui='studio'] .db-hero__pulse-dot--preview {
+  [data-tahti-ui='studio'] .db-hero__pulse-dot--preview,
+  [data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed,
+  [data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed .broadcast-studio__record-btn__dot {
     animation: none !important;
   }
 }
@@ -9765,6 +9767,20 @@
   gap: var(--space-3);
 }
 
+[data-tahti-ui='studio'] .studio-kind-toggle--compact {
+  grid-template-columns: auto auto;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .studio-kind-toggle--compact .studio-kind-toggle__option {
+  padding: 0.35rem 0.7rem;
+}
+
+[data-tahti-ui='studio'] .studio-kind-toggle--compact .studio-kind-toggle__title {
+  font-size: var(--text-xs);
+}
+
 [data-tahti-ui='studio'] .studio-kind-toggle__option {
   display: flex;
   flex-direction: column;
@@ -10085,6 +10101,124 @@
 
 [data-tahti-ui='studio'] .broadcast-studio__pin-row .studio-input {
   flex: 1;
+}
+
+/* Pre-flight — planned Tahti Radio episode autofill. */
+
+[data-tahti-ui='studio'] .broadcast-studio__planned-show {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--cyan) 35%, var(--border));
+  background: color-mix(in srgb, var(--cyan) 8%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__planned-show-label {
+  margin: 0 0 0.2rem;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__planned-show-episode {
+  margin: 0;
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* Pre-live / go-live — Record arm (persists Channel.autoRecordEnabled). */
+
+[data-tahti-ui='studio'] .broadcast-studio__record {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 var(--space-4);
+  text-align: center;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-width: 11rem;
+  min-height: 3.25rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--coral) 35%, var(--border));
+  background: color-mix(in srgb, var(--card2) 80%, transparent);
+  color: var(--text);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--coral) 55%, var(--border));
+  background: color-mix(in srgb, var(--coral) 10%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn__dot {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--coral) 55%, var(--muted2));
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--coral) 80%, var(--border));
+  background: color-mix(in srgb, var(--coral) 28%, var(--card));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--coral) 45%, transparent),
+    0 0 22px color-mix(in srgb, var(--coral) 45%, transparent),
+    0 0 48px color-mix(in srgb, var(--coral) 22%, transparent);
+  animation: broadcast-record-shine 1.8s ease-in-out infinite;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed .broadcast-studio__record-btn__dot {
+  background: var(--coral);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--coral) 80%, transparent);
+  animation: studio-pulse 1.2s ease-in-out infinite;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-hint {
+  margin: 0;
+  max-width: 26rem;
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+@keyframes broadcast-record-shine {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--coral) 40%, transparent),
+      0 0 18px color-mix(in srgb, var(--coral) 38%, transparent),
+      0 0 40px color-mix(in srgb, var(--coral) 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--coral) 70%, transparent),
+      0 0 28px color-mix(in srgb, var(--coral) 55%, transparent),
+      0 0 56px color-mix(in srgb, var(--coral) 28%, transparent);
+  }
 }
 
 /* Step 4 — go live (docs/reference-html/06-broadcasting-step-4-go-live.html) */

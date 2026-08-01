@@ -240,6 +240,7 @@ export const PublicRadioSlotSchema = z.object({
   startAt: z.string(),
   endAt: z.string(),
   note: z.string().nullable(),
+  showType: z.enum(['LIVE_SET', 'TALK']),
   /** Stream-overlay cover when the artist set one; otherwise null (UI falls back to avatar). */
   coverUrl: z.string().nullable(),
   /** Accent/bg from the artist's profile-pic palette (or channel brand scheme). */
@@ -265,6 +266,7 @@ export const RadioShowEpisodeSchema = z.object({
   startAt: z.string(),
   endAt: z.string(),
   note: z.string().nullable(),
+  showType: z.enum(['LIVE_SET', 'TALK']),
 })
 export const RadioShowDetailSchema = z.object({
   artist: z.object({

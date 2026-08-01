@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { z } from 'zod'
+import { BroadcastShowTypeSchema } from './broadcast-preflight.js'
 
 /** Bookings snap to the hour; a single reservation covers at most this many hours. */
 export const RADIO_SLOT_MAX_HOURS = 2
@@ -14,6 +15,7 @@ export const CreateRadioSlotBookingSchema = z.object({
   startAt: z.string().datetime(),
   endAt: z.string().datetime(),
   note: z.string().trim().max(200).optional(),
+  showType: BroadcastShowTypeSchema.optional().default('LIVE_SET'),
 })
 export type CreateRadioSlotBookingInput = z.infer<typeof CreateRadioSlotBookingSchema>
 
@@ -28,6 +30,7 @@ export const RadioSlotBookingItemSchema = z.object({
   startAt: z.string(),
   endAt: z.string(),
   note: z.string().nullable(),
+  showType: BroadcastShowTypeSchema,
   channelSlug: z.string(),
   displayName: z.string(),
   isMine: z.boolean(),

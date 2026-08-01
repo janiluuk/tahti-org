@@ -34,7 +34,10 @@ function EpisodeList({ episodes, emptyText }: { episodes: RadioShowEpisode[]; em
       {episodes.map((ep) => (
         <li key={ep.id} className="ch-radio-upcoming__item">
           <div className="ch-radio-upcoming__body">
-            <span className="ch-radio-upcoming__artist">{formatShowTime(ep.startAt)}</span>
+            <span className="ch-radio-upcoming__artist">
+              {formatShowTime(ep.startAt)}
+              {ep.showType === 'TALK' ? ' · Talk' : ''}
+            </span>
             {ep.note && <span className="ch-radio-upcoming__note">{ep.note}</span>}
           </div>
         </li>

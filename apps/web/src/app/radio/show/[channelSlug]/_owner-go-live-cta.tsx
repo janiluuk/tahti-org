@@ -6,11 +6,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
+import { RADIO_SHOW_GO_LIVE_EARLY_MS } from '@tahti/shared'
 import { goLive } from '@/app/dashboard/actions'
-
-/** Artists may open the broadcast studio / promote PREVIEW→LIVE from their
- *  show page starting 30 minutes before a booked slot through the slot end. */
-const GO_LIVE_EARLY_MS = 30 * 60 * 1000
 
 type EpisodeWindow = { startAt: string; endAt: string }
 
@@ -19,7 +16,7 @@ function findOpenWindow(episodes: EpisodeWindow[], nowMs: number): EpisodeWindow
     const start = new Date(ep.startAt).getTime()
     const end = new Date(ep.endAt).getTime()
     if (Number.isNaN(start) || Number.isNaN(end)) continue
-    if (nowMs >= start - GO_LIVE_EARLY_MS && nowMs < end) return ep
+    if (nowMs >= start - RADIO_SHOW_GO_LIVE_EARLY_MS && nowMs < end) return ep
   }
   return null
 }

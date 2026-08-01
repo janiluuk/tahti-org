@@ -276,6 +276,7 @@ export function BroadcastStudio({
           </div>
           <Step3Preflight />
           <GreenRoomPanel artistUsername={artistUsername} />
+          {!isLive && <RecordingToggle initialEnabled={autoRecordEnabled} />}
           <div className="studio-actions">
             <Button onClick={() => setActiveStep(2)} variant="ghost">
               ← Back to test signal

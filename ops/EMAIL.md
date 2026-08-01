@@ -116,6 +116,45 @@ Per artist tier (see `/help/tier-limits`): weekly send caps enforced in
 `POST /api/me/newsletter/send/:draftId`. Worker sends in batches of 50 with
 `List-Unsubscribe` headers.
 
+## Inbound `@tahti.live` on vimage6
+
+Public contact addresses on the marketing site (`hello@tahti.live`) are **not** handled by the Tahti app — they land on **docker-mailserver** on **vimage6** (`192.168.2.105`, compose project `vimage6`, deploy tree `~/infra/mail` on that host). Stack source of truth: `sparkki/infra/mail` in the monorepo workspace.
+
+| DNS | Value |
+|-----|--------|
+| `tahti.live` MX | `10` → A record `91.154.165.175` (home gateway; must reach vimage6 `:25`) |
+| `mail.tahti.live` | Used for **SMTP submission** (`:587`, TLS cert); often proxied — prefer hostname over LAN IP for relay from vimage |
+| SPF | `v=spf1 mx a:mail.tahti.live ~all` |
+| DKIM | selector `mail`, domain `tahti.live` (OpenDKIM on vimage6) |
+
+### Mailboxes and aliases
+
+Manage on vimage6 (SSH via `vimage` → `jani@192.168.2.105`):
+
+```bash
+docker exec vimage6-mailserver setup email list
+docker exec vimage6-mailserver setup alias list
+```
+
+| Address | Role |
+|---------|------|
+| `jani@tahti.live` | Primary mailbox (IMAP) |
+| `hello@tahti.live` | Alias → `jani@tahti.live` (public contact) |
+| `support@tahti.live` | Alias → `jani@tahti.live` |
+| `hi@tahti.live` | Alias → `jani@tahti.live` |
+| `noreply@tahti.live` | SMTP auth user for lab stack relay from vimage |
+
+Add or refresh a public alias:
+
+```bash
+docker exec vimage6-mailserver setup alias add hello@tahti.live jani@tahti.live
+```
+
+Persisted lines live in `~/infra/mail/config/postfix-virtual.cf` on vimage6 (also mirrored in [`ops/mail/tahti-aliases.example`](mail/tahti-aliases.example)).
+
+Beta application mail from the lab API uses **`support@tahti.live`** (hardcoded); ensure that alias exists.
+
+
 ## Related
 
 - [`RUNBOOK.md`](RUNBOOK.md) — monitoring section

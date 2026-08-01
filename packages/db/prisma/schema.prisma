@@ -231,6 +231,14 @@ enum BroadcastVisibility {
   @@schema("channel")
 }
 
+/// What kind of live session this is — music set vs spoken talk show.
+enum BroadcastShowType {
+  LIVE_SET
+  TALK
+
+  @@schema("channel")
+}
+
 /// Who the artist auto-invites when green room is enabled for a broadcast.
 enum GreenRoomInvitePool {
   /// Channel moderators (trusted collaborators with Tahti accounts) + active fan subs.
@@ -1180,13 +1188,16 @@ model PressKitImage {
 // tracked here (so double-booking is prevented and the calendar shows what's
 // taken); the actual broadcast switch-over/fallback mechanics are separate.
 model RadioSlotBooking {
-  id        String   @id @default(cuid())
+  id        String            @id @default(cuid())
   channelId String
-  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  channel   Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
   startAt   DateTime
   endAt     DateTime
   note      String?
-  createdAt DateTime @default(now())
+  /// Live set vs talk show — chosen when booking; seeds Broadcast.showType.
+  showType  BroadcastShowType @default(LIVE_SET)
+  createdAt DateTime          @default(now())
+  broadcasts Broadcast[]
 
   @@index([startAt, endAt])
   @@index([channelId, startAt])
@@ -1237,6 +1248,15 @@ model Broadcast {
   archiveItemId String?             @unique
   /// Show name set in Broadcasting Setup step 3 (pre-flight). Falls back to a generated title if unset.
   title         String?
+  /// Live set vs talk show (solo or with guests).
+  showType      BroadcastShowType   @default(LIVE_SET)
+  /// Chronological Tahti Radio episode index when this session is for a booked slot.
+  episodeNumber Int?
+  /// Short editable line under the episode (seeded from RadioSlotBooking.note).
+  tagline       String?
+  /// Booked slot this session is linked to (set when going live in the T−30m window).
+  radioSlotBookingId String?
+  radioSlotBooking   RadioSlotBooking? @relation(fields: [radioSlotBookingId], references: [id], onDelete: SetNull)
   visibility    BroadcastVisibility @default(PUBLIC)
   autoArchive   Boolean             @default(true)
   /// Pre-live backstage: invite moderators/subscribers to hear the preview stream.
@@ -1244,6 +1264,7 @@ model Broadcast {
   greenRoomInvites BroadcastGreenRoomInvite[]
 
   @@index([channelId, startedAt(sort: Desc)])
+  @@index([radioSlotBookingId])
   @@schema("channel")
 }
 

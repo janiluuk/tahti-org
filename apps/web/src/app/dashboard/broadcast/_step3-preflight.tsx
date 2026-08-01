@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@tahti/ui'
+import type { BroadcastShowType } from '@tahti/shared'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 
@@ -15,15 +16,29 @@ interface RtmpTarget {
   enabled: boolean
 }
 
+interface PlannedRadioShow {
+  bookingId: string
+  startAt: string
+  endAt: string
+  episodeNumber: number
+  tagline: string | null
+  showType: BroadcastShowType
+}
+
 interface Preflight {
   title: string | null
   visibility: 'PUBLIC' | 'FAN_ONLY'
   autoArchive: boolean
+  showType: BroadcastShowType
+  episodeNumber: number | null
+  tagline: string | null
+  plannedRadioShow: PlannedRadioShow | null
 }
 
 export function Step3Preflight() {
   const [preflight, setPreflight] = useState<Preflight | null>(null)
   const [title, setTitle] = useState('')
+  const [tagline, setTagline] = useState('')
   const [targets, setTargets] = useState<RtmpTarget[] | null>(null)
   const [pinText, setPinText] = useState('')
   const [pinning, setPinning] = useState(false)
@@ -41,6 +56,7 @@ export function Step3Preflight() {
           const data = (await preflightRes.json()) as Preflight
           setPreflight(data)
           setTitle(data.title ?? '')
+          setTagline(data.tagline ?? data.plannedRadioShow?.tagline ?? '')
         }
         if (!cancelled && targetsRes.ok) {
           setTargets((await targetsRes.json()) as RtmpTarget[])
@@ -55,14 +71,19 @@ export function Step3Preflight() {
     }
   }, [])
 
-  async function patchPreflight(body: Partial<Preflight>) {
+  async function patchPreflight(body: Partial<Preflight> & { tagline?: string | null }) {
     const res = await fetch(`${API_BASE}/api/me/channel/preflight`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(body),
     })
-    if (res.ok) setPreflight((await res.json()) as Preflight)
+    if (res.ok) {
+      const data = (await res.json()) as Preflight
+      setPreflight(data)
+      setTitle(data.title ?? '')
+      setTagline(data.tagline ?? '')
+    }
   }
 
   async function toggleTarget(id: string, enabled: boolean) {
@@ -97,9 +118,80 @@ export function Step3Preflight() {
 
   if (!preflight) return null
 
+  const planned = preflight.plannedRadioShow
+  const episodeNumber = preflight.episodeNumber ?? planned?.episodeNumber ?? null
+
+  const showType = preflight.showType ?? 'LIVE_SET'
+
   return (
     <div className="studio-card studio-mb-md">
       <h4 className="broadcast-studio__card-title">Set up your broadcast</h4>
+
+      <div className="studio-field studio-mb-md">
+        <span className="studio-label studio-text-muted-sm">Show type</span>
+        <div className="studio-kind-toggle studio-mt-sm" role="radiogroup" aria-label="Show type">
+          <label
+            className={`studio-kind-toggle__option${showType === 'LIVE_SET' ? ' studio-kind-toggle__option--active' : ''}`}
+          >
+            <input
+              type="radio"
+              name="broadcast-show-type"
+              checked={showType === 'LIVE_SET'}
+              onChange={() => void patchPreflight({ showType: 'LIVE_SET' })}
+            />
+            <span className="studio-kind-toggle__title">Live set</span>
+            <span className="studio-kind-toggle__hint">DJ / performance / music hour</span>
+          </label>
+          <label
+            className={`studio-kind-toggle__option${showType === 'TALK' ? ' studio-kind-toggle__option--active' : ''}`}
+          >
+            <input
+              type="radio"
+              name="broadcast-show-type"
+              checked={showType === 'TALK'}
+              onChange={() => void patchPreflight({ showType: 'TALK' })}
+            />
+            <span className="studio-kind-toggle__title">Talk</span>
+            <span className="studio-kind-toggle__hint">Solo chat or guests on mic</span>
+          </label>
+        </div>
+      </div>
+
+      {planned && episodeNumber != null ? (
+        <div className="broadcast-studio__planned-show studio-mb-md">
+          <p className="broadcast-studio__planned-show-label">Planned Tahti Radio show</p>
+          <p className="broadcast-studio__planned-show-episode">
+            {showType === 'TALK' ? 'Talk' : 'Episode'} {episodeNumber}
+          </p>
+          <div className="studio-field studio-mt-sm">
+            <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-tagline">
+              Tagline
+            </label>
+            <input
+              id="broadcast-tagline"
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              onBlur={() => {
+                const next = tagline.trim() || null
+                if (next !== (preflight.tagline ?? null)) {
+                  void patchPreflight({ tagline: next })
+                }
+              }}
+              placeholder={
+                showType === 'TALK'
+                  ? 'e.g. studio chat with guests, open requests'
+                  : 'e.g. late-night deep cuts, requests open'
+              }
+              className="studio-input studio-mt-sm"
+              maxLength={200}
+            />
+            <p className="studio-text-muted-sm studio-mt-xs">
+              Filled from your slot note — edit freely. Show name updates to match unless you
+              customize it below.
+            </p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="studio-field studio-mb-md">
         <label className="studio-label studio-text-muted-sm" htmlFor="broadcast-show-name">
@@ -112,7 +204,15 @@ export function Step3Preflight() {
           onBlur={() => {
             if (title.trim()) void patchPreflight({ title: title.trim() })
           }}
-          placeholder="Moonrise Sessions — Live"
+          placeholder={
+            episodeNumber != null
+              ? showType === 'TALK'
+                ? `Talk #${episodeNumber}`
+                : `Show #${episodeNumber}`
+              : showType === 'TALK'
+                ? 'Studio talk — Live'
+                : 'Moonrise Sessions — Live'
+          }
           className="studio-input studio-mt-sm"
         />
       </div>
