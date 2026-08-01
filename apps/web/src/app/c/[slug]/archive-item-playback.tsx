@@ -4,8 +4,7 @@
 'use client'
 
 import type { VisualPreset } from '@tahti/shared'
-import { ArchiveWaveform } from '@/components/archive-waveform'
-import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
+import { ActiveTrackStage } from '@/components/active-track-stage'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { ReportButton } from '@/components/report-button'
 import { LoveButton } from '@/components/love-button'
@@ -52,8 +51,6 @@ export function ArchiveItemPlayback({
     usePlayer()
   const isCurrent = track?.id === item.id
   const progress = isCurrent && duration > 0 ? currentTime / duration : 0
-  const preset = (item.visualPreset ?? 'MINIMAL') as VisualPreset
-  const showViz = isCurrent && playing && preset !== 'MINIMAL'
 
   const playerTrack = {
     id: item.id,
@@ -74,24 +71,21 @@ export function ArchiveItemPlayback({
   }
 
   return (
-    <div className={`ch-archive-playback${isCurrent ? ' ch-archive-playback--current' : ''}`}>
-      {showViz && (
-        <ChannelVisualizer
-          preset={preset}
+    <div
+      className={`ch-archive-playback${isCurrent ? ' ch-archive-playback--current' : ''}${isCurrent && playing ? ' ch-archive-playback--playing' : ''}`}
+    >
+      {isCurrent && (
+        <ActiveTrackStage
+          playing={playing}
+          preset={item.visualPreset}
           colorSchemeJson={colorSchemeJson}
           analyser={analyser}
-          className="ch-archive-item-viz"
-        />
-      )}
-      {/* Waveform only for the currently-loaded track — keeps every other row a
-       * single compact line instead of a tall card, closer to how a music-app
-       * playlist lists tracks (detail only on the one that's actually playing). */}
-      {isCurrent && (
-        <ArchiveWaveform
           peaks={item.peaks}
           progress={progress}
           onSeek={seek}
           accentColor={item.accentColor}
+          size="large"
+          className="ch-archive-playback__stage"
         />
       )}
       <div className="ch-archive-controls-row">

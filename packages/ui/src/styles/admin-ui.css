@@ -1620,6 +1620,23 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
+.selects-gallery__tile--current {
+  border-color: color-mix(in srgb, var(--cyan) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cyan) 30%, transparent);
+}
+
+.selects-gallery__tile--playing .selects-gallery__playhint {
+  opacity: 1;
+}
+
+.selects-gallery__viz {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .selects-gallery__tile:disabled {
   cursor: default;
   opacity: 0.5;

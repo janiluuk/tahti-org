@@ -3162,7 +3162,6 @@
   vertical-align: middle;
 }
 
-
 [data-tahti-ui='brand'] .chat-role-badge {
   margin-left: 0.25rem;
   font-size: var(--text-micro);
@@ -3191,7 +3190,6 @@
 [data-tahti-ui='brand'] .handle.handle--moderator {
   color: var(--amber);
 }
-
 
 [data-tahti-ui='brand'] .ch-chat-error {
   padding: 0.5rem 1rem;
@@ -4693,11 +4691,106 @@
   pointer-events: none;
   overflow: hidden;
   opacity: 0.55;
+  transition: opacity 0.35s ease;
+}
+
+[data-tahti-ui='brand'] .ch-page-visualizer--live {
+  opacity: 0.78;
 }
 
 [data-tahti-ui='brand'] .ch-page-foreground {
   position: relative;
   z-index: 1;
+}
+
+/* Shared active-track stage — Three.js + waveform for the loaded row */
+[data-tahti-ui='brand'] .active-track-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 28%, var(--border));
+  background: color-mix(in srgb, var(--card2) 72%, transparent);
+  margin: 0.35rem 0 0.55rem;
+  min-height: 88px;
+  animation: active-track-stage-in 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-tahti-ui='brand'] .active-track-stage--large {
+  min-height: 128px;
+}
+
+[data-tahti-ui='brand'] .active-track-stage--playing {
+  border-color: color-mix(in srgb, var(--cyan) 48%, var(--border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--cyan) 18%, transparent),
+    0 12px 36px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .active-track-stage__viz {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .active-track-stage--playing .active-track-stage__viz {
+  opacity: 0.9;
+}
+
+[data-tahti-ui='brand'] .active-track-stage__foreground {
+  position: relative;
+  z-index: 1;
+  padding: 0.65rem 0.75rem 0.45rem;
+}
+
+[data-tahti-ui='brand'] .active-track-stage__foreground .ch-archive-waveform {
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .active-track-stage__progress {
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--border) 80%, transparent);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .active-track-stage__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cyan);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--cyan) 55%, transparent);
+}
+
+@keyframes active-track-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='brand'] .active-track-stage {
+    animation: none;
+  }
+}
+
+@media (min-width: 641px) {
+  [data-tahti-ui='brand'] .active-track-stage--large {
+    min-height: 152px;
+  }
+
+  [data-tahti-ui='brand'] .active-track-stage--large .ch-archive-waveform {
+    height: 104px;
+  }
 }
 
 [data-tahti-ui='brand'] .ch-archive-playback {
@@ -4706,7 +4799,15 @@
 }
 
 [data-tahti-ui='brand'] .ch-archive-playback--current {
-  margin-top: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-playback--playing {
+  padding-bottom: 0.15rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-playback__stage {
+  margin-top: 0.45rem;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-viz {
@@ -4944,7 +5045,6 @@
 [data-tahti-ui='brand'] .ch-archive-item-credit__link:hover {
   text-decoration: underline;
 }
-
 
 [data-tahti-ui='brand'] .ch-archive-item-details {
   margin: 0.65rem 0 0.35rem;
@@ -5255,12 +5355,34 @@
 
 [data-tahti-ui='brand'] .prof-collection-item-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
   padding: 10px 12px;
   margin: 0 -12px;
   border-radius: var(--radius-sm);
   border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row--current {
+  background: color-mix(in srgb, var(--cyan) 8%, var(--card));
+  border-color: color-mix(in srgb, var(--cyan) 28%, var(--border));
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row--playing {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cyan) 22%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row__stage {
+  width: 100%;
+  margin: 0.55rem 0 0.15rem;
 }
 
 [data-tahti-ui='brand'] .prof-collection-item-row:last-child {
@@ -5269,7 +5391,7 @@
 
 /* Tiger-striped rows — same alternating-tint pattern as the channel archive
    list, so a long album/EP tracklist is just as easy to scan. */
-[data-tahti-ui='brand'] .prof-collection-item-row:nth-child(even) {
+[data-tahti-ui='brand'] .prof-collection-item-row:nth-child(even):not(.prof-collection-item-row--current) {
   background: color-mix(in srgb, var(--card) 55%, transparent);
 }
 
@@ -5324,15 +5446,14 @@
 [data-tahti-ui='brand'] .prof-playlist-controls__btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   background: var(--card2);
   color: var(--muted2);
-  font-size: var(--text-micro);
-  font-weight: 600;
   cursor: pointer;
 }
 
@@ -6863,5 +6984,72 @@
     flex-direction: column;
     text-align: center;
     bottom: 20px;
+  }
+}
+
+/* Artist page ambient clip — Mute / Unmute (ducks when the mini-player plays). */
+[data-tahti-ui='brand'] .prof-bg-music-btn {
+  position: fixed;
+  bottom: 88px;
+  right: 20px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 40%, transparent);
+  background: color-mix(in srgb, var(--card2) 92%, transparent);
+  backdrop-filter: blur(12px);
+  color: var(--text);
+  font-family: var(--font-head, inherit);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+[data-tahti-ui='brand'] .prof-bg-music-btn:hover {
+  background: color-mix(in srgb, var(--cyan) 14%, var(--card2));
+  border-color: color-mix(in srgb, var(--cyan) 55%, transparent);
+  transform: scale(1.03);
+}
+
+[data-tahti-ui='brand'] .prof-bg-music-btn__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: prof-bg-music-pulse 1.5s ease-in-out infinite;
+}
+
+[data-tahti-ui='brand'] .prof-bg-music-btn--muted .prof-bg-music-btn__pulse {
+  background: var(--coral, #f87171);
+  animation: none;
+}
+
+@keyframes prof-bg-music-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='brand'] .prof-bg-music-btn {
+    bottom: 76px;
+    right: 12px;
+    padding: 8px 12px;
+    font-size: 11px;
   }
 }

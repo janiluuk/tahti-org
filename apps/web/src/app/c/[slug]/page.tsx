@@ -17,7 +17,7 @@ import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import { ChannelGalleryView } from './channel-gallery'
 import { ArchiveItemGallery } from './archive-item-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
-import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
+import { ChannelPageVisualizer } from './_channel-page-visualizer'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
@@ -328,17 +328,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           <div className="ch-page-content">
             <ChannelColorScheme colorSchemeJson={channel.colorSchemeJson} />
 
-            {channel.visualPreset && channel.visualPreset !== 'MINIMAL' && (
-              <ChannelVisualizer
-                preset={channel.visualPreset as VisualPreset}
-                colorSchemeJson={channel.colorSchemeJson}
-                settings={resolveVisualPresetSettings(
-                  parseVisualSettingsMap(channel.visualSettingsJson),
-                  channel.visualPreset as VisualPreset,
-                )}
-                className="ch-page-visualizer"
-              />
-            )}
+            <ChannelPageVisualizer
+              preset={(channel.visualPreset ?? 'MINIMAL') as VisualPreset}
+              colorSchemeJson={channel.colorSchemeJson}
+              settings={resolveVisualPresetSettings(
+                parseVisualSettingsMap(channel.visualSettingsJson),
+                (channel.visualPreset ?? 'MINIMAL') as VisualPreset,
+              )}
+            />
 
             <div className="ch-page-foreground">
               {channelBackdrop.videoEmbedUrl && (

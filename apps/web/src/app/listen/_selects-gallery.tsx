@@ -6,6 +6,7 @@
 import type { TahtiSelectsGalleryItem } from '@tahti/shared'
 import { AvatarTile, RankBadge } from '@tahti/ui'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
+import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { resolveChannelUrl } from '@/lib/app-url'
 
 function toTrack(item: TahtiSelectsGalleryItem): PlayerTrack {
@@ -29,7 +30,7 @@ function GalleryTile({
   queue: TahtiSelectsGalleryItem[]
   rank?: number
 }) {
-  const { track, playing, load, togglePlay } = usePlayer()
+  const { track, playing, analyser, load, togglePlay } = usePlayer()
   const isCurrent = track?.id === item.archiveItemId
 
   function handleClick() {
@@ -47,7 +48,7 @@ function GalleryTile({
   return (
     <button
       type="button"
-      className="selects-gallery__tile"
+      className={`selects-gallery__tile${isCurrent ? ' selects-gallery__tile--current' : ''}${isCurrent && playing ? ' selects-gallery__tile--playing' : ''}`}
       onClick={handleClick}
       disabled={!item.audioUrl}
       aria-label={`Play ${item.title} by ${item.artistName}`}
@@ -57,6 +58,13 @@ function GalleryTile({
         <img src={item.bannerUrl} alt="" className="selects-gallery__art" />
       ) : (
         <AvatarTile size="full" name={item.title} className="selects-gallery__art" />
+      )}
+      {isCurrent && (
+        <ChannelVisualizer
+          preset="PARTICLE_FIELD"
+          analyser={playing ? analyser : null}
+          className="selects-gallery__viz"
+        />
       )}
       {rank && <RankBadge rank={rank} />}
       <span className="selects-gallery__playhint" aria-hidden>
