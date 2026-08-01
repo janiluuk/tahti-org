@@ -124,7 +124,7 @@ export function ChannelEditorSections({
       </div>
       <div className="studio-channel-editor__layout">
         <div className="studio-channel-editor__preview-col" data-hero>
-          <ChannelLivePreview draft={draft} />
+          <ChannelLivePreview draft={draft} mode="visual" />
           <div className="studio-row studio-gap-md studio-mt-sm">
             <Link
               href={resolveChannelUrl(channelSlug)}
@@ -133,6 +133,9 @@ export function ChannelEditorSections({
               rel="noopener noreferrer"
             >
               Open full channel page →
+            </Link>
+            <Link href="/dashboard/settings/media" className="ui-btn ui-btn--ghost ui-btn--sm">
+              Edit gallery &amp; backdrop →
             </Link>
             <Link
               href="/dashboard/settings/artist-info"

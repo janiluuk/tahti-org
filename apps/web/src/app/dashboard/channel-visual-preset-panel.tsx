@@ -176,7 +176,7 @@ export default function ChannelVisualPresetPanel({
           showPreview
         />
         <p className="studio-help studio-mt-xs">
-          Quick picks above — open Gallery for full-size previews and per-visualizer settings.
+          Quick picks above — browse all presets for full-size previews and per-visualizer settings.
         </p>
       </div>
 

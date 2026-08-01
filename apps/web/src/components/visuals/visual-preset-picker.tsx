@@ -328,11 +328,11 @@ export function VisualPresetPicker({
           disabled={disabled}
           aria-haspopup="dialog"
           aria-expanded={galleryOpen}
-          title="Browse all visualizers"
+          title="Browse all visualizer presets"
           onClick={() => setGalleryOpen(true)}
         >
           <GalleryIcon />
-          <span>Gallery</span>
+          <span>Presets</span>
         </button>
       </div>
 
@@ -353,7 +353,7 @@ export function VisualPresetPicker({
             <header className="visual-preset-gallery__header">
               <div>
                 <h3 id={titleId} className="visual-preset-gallery__title">
-                  Visualizer gallery
+                  Visualizer presets
                 </h3>
                 <p className="visual-preset-gallery__sub">
                   Preview each background visualizer at full size and tune its settings.
@@ -362,7 +362,7 @@ export function VisualPresetPicker({
               <button
                 type="button"
                 className="visual-preset-gallery__close"
-                aria-label="Close gallery"
+                aria-label="Close presets"
                 onClick={() => setGalleryOpen(false)}
               >
                 ×

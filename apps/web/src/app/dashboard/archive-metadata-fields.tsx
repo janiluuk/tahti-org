@@ -125,7 +125,6 @@ export function metadataFormToPayload(state: ArchiveMetadataFormState): Record<s
     .map((c) => ({
       role: c.role,
       name: c.name.trim(),
-      ...(c.artistUsername?.trim() ? { artistUsername: c.artistUsername.trim() } : {}),
     }))
     .filter((c) => c.name.length > 0)
 

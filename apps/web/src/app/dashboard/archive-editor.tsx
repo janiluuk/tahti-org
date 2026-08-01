@@ -182,22 +182,33 @@ export default function ArchiveEditor({
                 View on channel →
               </NextLink>
             )}
-            <Button onClick={togglePin} disabled={pinPending} variant="ghost" size="sm">
-              {pinned ? 'Unpin from Stage' : 'Pin to Stage'}
-            </Button>
-            <Button onClick={toggleRotation} disabled={rotationPending} variant="ghost" size="sm">
-              {inRotation ? 'Remove from rotation' : 'Add to rotation'}
-            </Button>
-            <AddToPlaylistButton archiveItemId={item.id} />
-            <NextLink
-              href={`/dashboard/insights/archive/${item.id}`}
-              className="ui-btn ui-btn--sm ui-btn--ghost"
-            >
-              Show insights
-            </NextLink>
             <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
-              Re-edit
+              <ButtonIcon name="edit" />
+              Edit
             </Button>
+            <details className="studio-row-more">
+              <summary className="studio-row-more__summary">More</summary>
+              <div className="studio-row-more__menu">
+                <Button onClick={togglePin} disabled={pinPending} variant="ghost" size="sm">
+                  {pinned ? 'Unpin from Stage' : 'Pin to Stage'}
+                </Button>
+                <Button
+                  onClick={toggleRotation}
+                  disabled={rotationPending}
+                  variant="ghost"
+                  size="sm"
+                >
+                  {inRotation ? 'Remove from rotation' : 'Add to rotation'}
+                </Button>
+                <AddToPlaylistButton archiveItemId={item.id} />
+                <NextLink
+                  href={`/dashboard/insights/archive/${item.id}`}
+                  className="ui-btn ui-btn--sm ui-btn--ghost"
+                >
+                  Show insights
+                </NextLink>
+              </div>
+            </details>
           </div>
         ) : isReady ? (
           <Button onClick={() => setOpen(true)} variant="primary" size="sm">
