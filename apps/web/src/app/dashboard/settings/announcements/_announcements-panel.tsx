@@ -11,6 +11,7 @@ import {
   deleteAnnouncement,
   fetchAnnouncementEditorSource,
   prepareAnnouncementUpload,
+  setProfileBackgroundClip,
   toggleAnnouncementEnabled,
   type AnnouncementClipRow,
 } from './actions'
@@ -98,6 +99,23 @@ export function AnnouncementsPanel({ initialClips }: { initialClips: Announcemen
     }
   }
 
+  async function onSetBackground(clip: AnnouncementClipRow) {
+    setError(null)
+    const nextId = clip.isProfileBackground ? null : clip.id
+    const prev = clips
+    setClips((list) =>
+      list.map((c) => ({
+        ...c,
+        isProfileBackground: nextId != null && c.id === nextId,
+      })),
+    )
+    const { error: bgError } = await setProfileBackgroundClip(nextId)
+    if (bgError) {
+      setClips(prev)
+      setError(bgError)
+    }
+  }
+
   return (
     <Panel title="Announcements" headerTight>
       <p className="studio-text-muted-sm">
@@ -106,7 +124,8 @@ export function AnnouncementsPanel({ initialClips }: { initialClips: Announcemen
         <a href="/dashboard/schedule" className="studio-link">
           Schedule → 24/7 rotation
         </a>
-        .
+        . Ready clips can also loop as ambient music on your public artist page (muted while
+        something else is playing).
       </p>
 
       <input
@@ -161,6 +180,20 @@ export function AnnouncementsPanel({ initialClips }: { initialClips: Announcemen
               >
                 <ButtonIcon name="edit" />
               </Link>
+              <button
+                type="button"
+                className="ui-btn ui-btn--sm ui-btn--ghost"
+                title={clip.isProfileBackground ? 'Clear page music' : 'Use as artist page music'}
+                aria-label={
+                  clip.isProfileBackground
+                    ? `Clear "${clip.title}" as page music`
+                    : `Use "${clip.title}" as page music`
+                }
+                disabled={clip.renderStatus !== 'READY'}
+                onClick={() => void onSetBackground(clip)}
+              >
+                {clip.isProfileBackground ? 'Page music ✓' : 'Page music'}
+              </button>
               <button
                 type="button"
                 className="studio-link studio-text-error"

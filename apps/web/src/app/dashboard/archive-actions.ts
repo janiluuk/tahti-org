@@ -329,6 +329,42 @@ export async function renderArchiveEditList(
   return { versionId: data.versionId, versionNumber: data.versionNumber, error: null }
 }
 
+/** Cut a ≤60s announcement/station-ID clip from an archive track selection. */
+export async function createArchiveClip(
+  itemId: string,
+  body: {
+    startSec: number
+    endSec: number
+    title?: string
+    fadeInSec?: number
+    fadeOutSec?: number
+  },
+): Promise<{
+  clipId?: string
+  title?: string
+  durationSec?: number
+  renderStatus?: string
+  error: string | null
+}> {
+  const res = await fetch(`${apiUrl}/api/me/archive/${itemId}/editor/create-clip`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to create clip' }
+  }
+  const data = (await res.json()) as {
+    clipId: string
+    title: string
+    durationSec: number
+    renderStatus: string
+  }
+  return { ...data, error: null }
+}
+
 export async function fetchArchiveVersionDownloadUrl(
   itemId: string,
   versionId: string,

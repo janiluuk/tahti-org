@@ -43,10 +43,11 @@ import { EqPanel } from '@/lib/audio-editor/panels/EqPanel'
 import { CompPanel } from '@/lib/audio-editor/panels/CompPanel'
 import { LimiterPanel } from '@/lib/audio-editor/panels/LimiterPanel'
 import { FilterPanel } from '@/lib/audio-editor/panels/FilterPanel'
-import type { TracklistEntry } from '@tahti/shared'
+import { ARCHIVE_CLIP_MAX_DURATION_SEC, type TracklistEntry } from '@tahti/shared'
 import type { FFmpeg } from '@ffmpeg/ffmpeg'
 import {
   completeArchiveVersionUpload,
+  createArchiveClip,
   prepareArchiveVersionUpload,
   renderArchiveEditList,
   fetchArchiveVersionDownloadUrl,
@@ -277,6 +278,13 @@ export function ProAudioEditor({
   const [exportError, setExportError] = useState<string | null>(null)
   const [exportFormat, setExportFormat] = useState<OutputFormat>('flac')
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [clipDialogOpen, setClipDialogOpen] = useState(false)
+  const [clipTitle, setClipTitle] = useState('')
+  const [clipStartSec, setClipStartSec] = useState(0)
+  const [clipEndSec, setClipEndSec] = useState(Math.min(ARCHIVE_CLIP_MAX_DURATION_SEC, 30))
+  const [clipBusy, setClipBusy] = useState(false)
+  const [clipError, setClipError] = useState<string | null>(null)
+  const [clipSuccess, setClipSuccess] = useState<{ clipId: string; title: string } | null>(null)
   const [exportSuccess, setExportSuccess] = useState<{
     versionNumber: number
     versionLabel: string
@@ -670,6 +678,58 @@ export function ProAudioEditor({
     }
     return selection
   }, [selection, snapEnabled, peaks?.zeroCrossingsSec])
+
+  function openClipDialog() {
+    const sel = snappedSelection()
+    const sourceDur = editList.sourceDuration || 0
+    let start = sel?.start ?? 0
+    let end = sel?.end ?? Math.min(ARCHIVE_CLIP_MAX_DURATION_SEC, sourceDur || 30)
+    if (end - start > ARCHIVE_CLIP_MAX_DURATION_SEC) {
+      end = start + ARCHIVE_CLIP_MAX_DURATION_SEC
+    }
+    if (sourceDur > 0 && end > sourceDur) end = sourceDur
+    if (end <= start) {
+      start = 0
+      end = Math.min(ARCHIVE_CLIP_MAX_DURATION_SEC, sourceDur || 30)
+    }
+    setClipStartSec(Math.round(start * 10) / 10)
+    setClipEndSec(Math.round(end * 10) / 10)
+    setClipTitle(`${title.slice(0, 100)}${title.length > 100 ? '…' : ''} (clip)`)
+    setClipError(null)
+    setClipSuccess(null)
+    setClipDialogOpen(true)
+  }
+
+  async function handleCreateClip() {
+    setClipError(null)
+    setClipSuccess(null)
+    const start = clipStartSec
+    const end = clipEndSec
+    if (!(end > start)) {
+      setClipError('End must be after start')
+      return
+    }
+    if (end - start > ARCHIVE_CLIP_MAX_DURATION_SEC) {
+      setClipError(`Clip must be ${ARCHIVE_CLIP_MAX_DURATION_SEC} seconds or less`)
+      return
+    }
+    setClipBusy(true)
+    try {
+      const result = await createArchiveClip(archiveId, {
+        startSec: start,
+        endSec: end,
+        title: clipTitle.trim() || undefined,
+      })
+      if (result.error || !result.clipId) {
+        setClipError(result.error ?? 'Failed to create clip')
+        return
+      }
+      setClipSuccess({ clipId: result.clipId, title: result.title ?? clipTitle })
+      setSelection({ start, end })
+    } finally {
+      setClipBusy(false)
+    }
+  }
 
   const remappedTracklist = useMemo(
     () => (tracklist?.length ? remapTracklistTimestamps(tracklist, editListV1) : []),
@@ -1081,6 +1141,9 @@ export function ProAudioEditor({
           >
             ⊙ {renderModePill}
           </span>
+          <Button onClick={openClipDialog} variant="ghost">
+            Create clip
+          </Button>
           <Button onClick={() => setExportDialogOpen(true)} variant="primary">
             <ButtonIcon name="download" />
             Export →
@@ -1241,6 +1304,10 @@ export function ProAudioEditor({
             </div>
 
             <div className="pro-editor-toolbar-spacer" />
+
+            <Button onClick={openClipDialog} variant="ghost" size="sm" title="Create a ≤60s clip">
+              Create clip
+            </Button>
 
             <div className="pro-editor-shortcut-hints">
               <span>space play/pause</span>
@@ -1591,6 +1658,108 @@ export function ProAudioEditor({
             </div>
           </div>
         </>
+      )}
+
+      {/* ---- Create clip dialog ---- */}
+      {clipDialogOpen && (
+        <div
+          className="pro-editor-dialog-backdrop"
+          onClick={() => !clipBusy && setClipDialogOpen(false)}
+        >
+          <div
+            className="pro-editor-dialog"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-labelledby="create-clip-title"
+          >
+            <h2 id="create-clip-title" className="pro-editor-dialog__title">
+              Create clip
+            </h2>
+            <p className="pro-editor-panel__hint" style={{ margin: 0 }}>
+              Cut up to {ARCHIVE_CLIP_MAX_DURATION_SEC} seconds from this track for radio station
+              IDs / announcements. Drag a selection on the waveform first, or set begin and end
+              below.
+            </p>
+            <label className="pro-editor-field">
+              <span className="pro-editor-field__label">Title</span>
+              <input
+                type="text"
+                className="pro-editor-field__input"
+                value={clipTitle}
+                maxLength={120}
+                onChange={(e) => setClipTitle(e.target.value)}
+                disabled={clipBusy || !!clipSuccess}
+              />
+            </label>
+            <div className="pro-editor-field-row">
+              <label className="pro-editor-field">
+                <span className="pro-editor-field__label">Beginning (sec)</span>
+                <input
+                  type="number"
+                  className="pro-editor-field__input"
+                  min={0}
+                  step={0.1}
+                  value={clipStartSec}
+                  onChange={(e) => setClipStartSec(Number(e.target.value))}
+                  disabled={clipBusy || !!clipSuccess}
+                />
+              </label>
+              <label className="pro-editor-field">
+                <span className="pro-editor-field__label">Ending (sec)</span>
+                <input
+                  type="number"
+                  className="pro-editor-field__input"
+                  min={0}
+                  step={0.1}
+                  value={clipEndSec}
+                  onChange={(e) => setClipEndSec(Number(e.target.value))}
+                  disabled={clipBusy || !!clipSuccess}
+                />
+              </label>
+            </div>
+            <p className="pro-editor-panel__hint" style={{ margin: 0 }}>
+              Length:{' '}
+              <strong>{formatDurationDecimal(Math.max(0, clipEndSec - clipStartSec))}</strong>
+              {clipEndSec - clipStartSec > ARCHIVE_CLIP_MAX_DURATION_SEC
+                ? ` — max ${ARCHIVE_CLIP_MAX_DURATION_SEC}s`
+                : ''}
+            </p>
+            {clipError && <p className="studio-text-error">{clipError}</p>}
+            {clipSuccess && (
+              <p className="pro-editor-export-success">
+                Clip &ldquo;{clipSuccess.title}&rdquo; is rendering —{' '}
+                <Link href={`/dashboard/settings/announcements/editor/${clipSuccess.clipId}`}>
+                  open clip editor
+                </Link>
+                {' · '}
+                <Link href="/dashboard/settings/notifications#announcements">announcements</Link>
+              </p>
+            )}
+            <div className="pro-editor-dialog__actions">
+              <Button
+                onClick={() => setClipDialogOpen(false)}
+                variant="ghost"
+                size="sm"
+                disabled={clipBusy}
+              >
+                {clipSuccess ? 'Close' : 'Cancel'}
+              </Button>
+              {!clipSuccess && (
+                <Button
+                  onClick={() => void handleCreateClip()}
+                  variant="primary"
+                  disabled={
+                    clipBusy ||
+                    !(clipEndSec > clipStartSec) ||
+                    clipEndSec - clipStartSec > ARCHIVE_CLIP_MAX_DURATION_SEC
+                  }
+                >
+                  {clipBusy ? 'Creating…' : 'Create clip'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ---- Export dialog ---- */}

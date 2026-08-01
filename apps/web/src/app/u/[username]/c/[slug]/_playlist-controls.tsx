@@ -6,7 +6,7 @@
 import type { PlayerTrack } from '@/contexts/player-context'
 import { usePlayer } from '@/contexts/player-context'
 
-/** Shuffle / Repeat mode toggles for a public collection playlist. */
+/** Shuffle / loop mode toggles for a public collection playlist (icons only). */
 export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
   const { shuffle, toggleShuffle, repeat, toggleRepeat } = usePlayer()
   const canMode = queue.length >= 2
@@ -21,9 +21,10 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
         onClick={toggleShuffle}
         disabled={!canMode}
         aria-pressed={shuffle}
+        aria-label={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
         title={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
       >
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path
             d="M2 4h3.2l6 8H14M14 4h-2.8L9.5 6.3M2 12h3.2l1.7-2.3M12.5 2.5 14 4l-1.5 1.5M12.5 10.5 14 12l-1.5 1.5"
             stroke="currentColor"
@@ -32,7 +33,6 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
             strokeLinejoin="round"
           />
         </svg>
-        Shuffle
       </button>
       <button
         type="button"
@@ -40,9 +40,10 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
         onClick={toggleRepeat}
         disabled={!canMode}
         aria-pressed={repeat}
-        title={repeat ? 'Repeat: on' : 'Repeat: off'}
+        aria-label={repeat ? 'Loop: on' : 'Loop: off'}
+        title={repeat ? 'Loop: on' : 'Loop: off'}
       >
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path
             d="M3 6a3 3 0 0 1 3-3h6M12 3l-2-2m2 2-2 2"
             stroke="currentColor"
@@ -58,7 +59,6 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
             strokeLinejoin="round"
           />
         </svg>
-        Repeat
       </button>
     </div>
   )

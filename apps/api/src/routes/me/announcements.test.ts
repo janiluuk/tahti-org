@@ -113,6 +113,51 @@ describe('/api/me/announcements', () => {
     expect(listAfter.json().clips.map((c: { id: string }) => c.id)).not.toContain(clipId)
   })
 
+  it('assigns and clears a clip as profile background music', async () => {
+    const uploadId = `announcements/own/${channelSlug}/bg.mp3`
+    const complete = await app.inject({
+      method: 'POST',
+      url: '/api/me/announcements/complete',
+      headers: { cookie, 'content-type': 'application/json' },
+      payload: { uploadId, title: 'Page loop', durationSec: 30 },
+    })
+    expect(complete.statusCode).toBe(201)
+    const clipId = complete.json().id as string
+    expect(complete.json().isProfileBackground).toBe(false)
+
+    const assign = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/profile-background',
+      headers: { cookie, 'content-type': 'application/json' },
+      payload: { clipId },
+    })
+    expect(assign.statusCode).toBe(200)
+    expect(assign.json()).toEqual({ clipId })
+
+    const list = await app.inject({
+      method: 'GET',
+      url: '/api/me/announcements',
+      headers: { cookie },
+    })
+    const row = list.json().clips.find((c: { id: string }) => c.id === clipId)
+    expect(row?.isProfileBackground).toBe(true)
+
+    const clear = await app.inject({
+      method: 'PATCH',
+      url: '/api/me/channel/profile-background',
+      headers: { cookie, 'content-type': 'application/json' },
+      payload: { clipId: null },
+    })
+    expect(clear.statusCode).toBe(200)
+    expect(clear.json()).toEqual({ clipId: null })
+
+    await app.inject({
+      method: 'DELETE',
+      url: `/api/me/announcements/${clipId}`,
+      headers: { cookie },
+    })
+  })
+
   it('404s patching/deleting another channel’s announcement', async () => {
     const other = await createTestArtist(prisma, {
       email: `${PREFIX}other@example.com`,

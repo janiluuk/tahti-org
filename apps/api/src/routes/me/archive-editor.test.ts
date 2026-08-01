@@ -17,6 +17,7 @@ const PREFIX = 'archive-editor-test-'
 vi.mock('../../lib/queue.js', () => ({
   enqueueVersionTranscode: vi.fn().mockResolvedValue(undefined),
   enqueueRenderArchiveEdit: vi.fn().mockResolvedValue(undefined),
+  enqueueRenderAnnouncementTrim: vi.fn().mockResolvedValue(undefined),
   enqueueBackfillEditorPeaks: vi.fn().mockResolvedValue(undefined),
   mediaQueue: { add: vi.fn() },
 }))
@@ -454,5 +455,54 @@ describe('M21 v0 — archive trim editor', () => {
     })
     expect(stale.statusCode).toBe(409)
     expect(stale.json()).toMatchObject({ error: expect.stringContaining('elsewhere') })
+  })
+
+  it('POST /api/me/archive/:id/editor/create-clip enqueues announcement trim', async () => {
+    const { enqueueRenderAnnouncementTrim } = await import('../../lib/queue.js')
+    vi.mocked(enqueueRenderAnnouncementTrim).mockClear()
+
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/create-clip`,
+      headers: { cookie },
+      payload: {
+        startSec: 12,
+        endSec: 42,
+        title: 'Radio sting',
+      },
+    })
+    expect(res.statusCode).toBe(202)
+    const body = res.json() as {
+      clipId: string
+      title: string
+      durationSec: number
+      renderStatus: string
+    }
+    expect(body.clipId).toBeTruthy()
+    expect(body.title).toBe('Radio sting')
+    expect(body.durationSec).toBe(30)
+    expect(body.renderStatus).toBe('PROCESSING')
+    expect(enqueueRenderAnnouncementTrim).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clipId: body.clipId,
+        startSec: 12,
+        endSec: 42,
+      }),
+    )
+
+    const clip = await prisma.announcementClip.findUnique({ where: { id: body.clipId } })
+    expect(clip?.isEnabled).toBe(false)
+    expect(clip?.renderStatus).toBe('PROCESSING')
+  })
+
+  it('POST /api/me/archive/:id/editor/create-clip rejects clips longer than 60s', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/api/me/archive/${archiveItemId}/editor/create-clip`,
+      headers: { cookie },
+      payload: { startSec: 0, endSec: 61 },
+    })
+    expect(res.statusCode).toBe(400)
+    expect(res.json()).toMatchObject({ error: expect.stringContaining('60') })
   })
 })

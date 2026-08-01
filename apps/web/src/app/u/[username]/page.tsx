@@ -29,6 +29,7 @@ import type { PublicPressKitImage } from '@tahti/shared'
 import { ProfileTabs } from './_profile-tabs'
 import { ProfileFeed } from './_profile-feed'
 import { TracksTab } from './_tracks-tab'
+import { ProfileBackgroundMusic } from './_profile-background-music'
 
 export const revalidate = 60
 
@@ -185,6 +186,7 @@ interface ProfileResponse {
     url: string
     rssUrl?: string
   }>
+  backgroundMusicUrl?: string | null
 }
 
 interface ArtistEventItem {
@@ -321,7 +323,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
     notFound()
   }
 
-  const { artist, channel, releases, tracks, links, collections = [] } = data
+  const { artist, channel, releases, tracks, links, collections = [], backgroundMusicUrl } = data
   // Sub-grouped inside the "Releases" tab (see ProfileTabs) rather than
   // separate top-level tabs — keeps the tab bar from growing one tab per
   // content type.
@@ -390,6 +392,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {backgroundMusicUrl ? <ProfileBackgroundMusic src={backgroundMusicUrl} /> : null}
       <ProfilePageLayout
         isLive={isLive}
         activeNav="discover"
