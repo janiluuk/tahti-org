@@ -56,7 +56,12 @@ export { CoverArt, type CoverArtProps, type CoverArtSize } from './CoverArt'
 export { AvatarTile, type AvatarTileProps } from './AvatarTile'
 export { RankBadge } from './RankBadge'
 export { PinnedAnnouncement, type PinnedAnnouncementProps } from './PinnedAnnouncement'
-export { WaveformPlayer, type WaveformPlayerProps } from './WaveformPlayer'
+export {
+  WaveformPlayer,
+  WAVEFORM_TRACK_IN_MS,
+  WAVEFORM_TRACK_OUT_MS,
+  type WaveformPlayerProps,
+} from './WaveformPlayer'
 export {
   BroadcastStatusBar,
   type BroadcastStatusBarProps,
@@ -64,9 +69,11 @@ export {
 } from './BroadcastStatusBar'
 export {
   LiveChatPanel,
+  renderChatMessageText,
   type LiveChatPanelProps,
   type LiveChatMessage,
   type LiveChatSurface,
+  type ChatMentionSuggestion,
 } from './LiveChatPanel'
 export { StickyLiveBar, type StickyLiveBarProps } from './StickyLiveBar'
 export { flagEmoji } from '../lib/flag-emoji'

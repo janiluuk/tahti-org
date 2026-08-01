@@ -455,13 +455,23 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                             ? `/u/${channel.nowPlaying.artistUsername}`
                             : undefined
                         }
-                        artworkUrl={isRotationChannel ? channel.nowPlaying?.artworkUrl : undefined}
+                        artworkUrl={
+                          isRotationChannel
+                            ? channel.nowPlaying?.artworkUrl
+                            : channel.user.avatarUrl
+                        }
                         isReplay={isRotationChannel}
                         nextUpLabel={
                           isRotationChannel && channel.nowPlayingNext
                             ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
                             : undefined
                         }
+                        isRotationChannel={isRotationChannel}
+                        colorSchemeJson={channel.colorSchemeJson}
+                        visualPreset={(channel.visualPreset ?? 'MINIMAL') as VisualPreset}
+                        visualSettingsJson={channel.visualSettingsJson}
+                        initialNowPlaying={channel.nowPlaying}
+                        initialNowPlayingNext={channel.nowPlayingNext}
                       />
                     )}
 

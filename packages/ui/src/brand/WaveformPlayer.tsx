@@ -62,6 +62,9 @@ export interface WaveformPlayerProps {
   /** Animate title/artist out, backdrop fade, then fly new art + text in when
    * the now-playing identity changes (Tahti Radio track handoff). */
   animateTrackChange?: boolean
+  /** Parent renders a full-bleed backdrop (e.g. on `.ch-player-wrap`) — skip the
+   * in-card art wash so padding on player chrome doesn't clip the overlay. */
+  hideArtBackdrop?: boolean
 }
 
 type TrackPhase = 'idle' | 'out' | 'in'
@@ -73,8 +76,11 @@ interface DisplayedMeta {
   artworkUrl?: string | null
 }
 
-const OUT_MS = 380
-const IN_MS = 560
+export const WAVEFORM_TRACK_OUT_MS = 380
+export const WAVEFORM_TRACK_IN_MS = 560
+
+const OUT_MS = WAVEFORM_TRACK_OUT_MS
+const IN_MS = WAVEFORM_TRACK_IN_MS
 
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false
@@ -106,6 +112,7 @@ export function WaveformPlayer({
   hideWaveform = false,
   artOverlayPlay = false,
   animateTrackChange = false,
+  hideArtBackdrop = false,
 }: WaveformPlayerProps) {
   const label =
     statusLabel ??
@@ -258,7 +265,7 @@ export function WaveformPlayer({
           : undefined
       }
     >
-      {backdropUrl && (
+      {backdropUrl && !hideArtBackdrop && (
         <div
           className={cn(
             'waveform-player__art-backdrop',
@@ -315,7 +322,15 @@ export function WaveformPlayer({
               phase === 'in' && 'waveform-player__meta-text--in',
             )}
           >
-            <span className="waveform-player__meta-title">{shown.title}</span>
+            <span
+              className={cn(
+                'waveform-player__meta-title',
+                phase === 'out' && 'waveform-player__meta-title--out',
+                phase === 'in' && 'waveform-player__meta-title--in',
+              )}
+            >
+              {shown.title}
+            </span>
             {shown.subtitle &&
               (shown.subtitleHref ? (
                 <Link

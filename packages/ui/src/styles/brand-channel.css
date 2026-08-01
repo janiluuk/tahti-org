@@ -2638,12 +2638,148 @@
   overflow: hidden;
   min-height: 80px;
   border: 1px solid var(--border);
+  isolation: isolate;
+}
+
+/* Full-bleed art wash — lives on the wrap so nested player padding doesn't clip it. */
+[data-tahti-ui='brand'] .ch-player-art-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--ch-player-art);
+  background-size: cover;
+  background-position: center;
+  filter: blur(42px) saturate(1.35);
+  opacity: 0.22;
+  transform: scale(1.12);
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-player-art-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    color-mix(
+        in srgb,
+        var(--ch-player-overlay-tint, var(--channel-bg, var(--card))) 32%,
+        transparent
+      )
+      0%,
+    color-mix(
+        in srgb,
+        var(--ch-player-overlay-accent, var(--channel-accent, var(--cyan))) 16%,
+        var(--ch-player-overlay-tint, var(--channel-bg, var(--card))) 38%
+      )
+      48%,
+    color-mix(
+        in srgb,
+        var(--ch-player-overlay-tint, var(--channel-bg, var(--card))) 48%,
+        transparent
+      )
+      100%
+  );
+}
+
+[data-tahti-ui='brand'] .ch-player-art-backdrop--out {
+  animation: ch-player-backdrop-out 0.38s ease forwards;
+}
+
+[data-tahti-ui='brand'] .ch-player-art-backdrop--in {
+  animation: ch-player-backdrop-in 0.56s ease forwards;
+}
+
+@keyframes ch-player-backdrop-out {
+  from {
+    opacity: 0.22;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ch-player-backdrop-in {
+  from {
+    opacity: 0;
+    transform: scale(1.26);
+  }
+  to {
+    opacity: 0.22;
+    transform: scale(1.12);
+  }
+}
+
+[data-tahti-ui='brand'] .ch-player-wrap--has-art .ch-player-card {
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 [data-tahti-ui='brand'] .ch-player-inner {
   padding: 0.75rem;
   position: relative;
   z-index: 1;
+}
+
+[data-tahti-ui='brand'] .ch-channel-player-viz {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  opacity: 0.82;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-channel-player-wrap .waveform-player__meta-title {
+  font-family: var(--font-head);
+  font-size: clamp(18px, 2.8vw, 30px);
+  font-weight: var(--weight-semibold);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  animation: ch-channel-title-breathe 5s ease-in-out infinite;
+}
+
+[data-tahti-ui='brand'] .ch-channel-player-wrap .waveform-player__meta-subtitle {
+  font-size: clamp(13px, 1.4vw, 16px);
+}
+
+[data-tahti-ui='brand'] .ch-channel-player-wrap .waveform-player__art {
+  width: clamp(72px, 12vw, 120px);
+  height: clamp(72px, 12vw, 120px);
+}
+
+@keyframes ch-channel-title-breathe {
+  0%,
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  50% {
+    opacity: 0.88;
+    filter: blur(0.3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='brand'] .ch-channel-player-wrap .waveform-player__meta-title {
+    animation: none;
+  }
+
+  [data-tahti-ui='brand'] .ch-player-art-backdrop--out,
+  [data-tahti-ui='brand'] .ch-player-art-backdrop--in {
+    animation: none !important;
+  }
+}
+
+[data-tahti-ui='brand']
+  .ch-channel-player-wrap
+  .waveform-player--track-out
+  .waveform-player__meta-title,
+[data-tahti-ui='brand']
+  .ch-channel-player-wrap
+  .waveform-player--track-in
+  .waveform-player__meta-title {
+  animation: none;
 }
 
 [data-tahti-ui='brand'] .ch-radio-player-viz {
@@ -3153,6 +3289,68 @@
 
 [data-tahti-ui='brand'] .chat-msg .text {
   color: var(--text);
+}
+
+[data-tahti-ui='brand'] .chat-mention {
+  color: var(--cyan);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .chat-mention:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .ch-chat-composer,
+[data-tahti-ui='brand'] .live-chat-panel__composer {
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: calc(100% - 0.15rem);
+  z-index: 5;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  max-height: 11rem;
+  overflow-y: auto;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu__item:hover,
+[data-tahti-ui='brand'] .ch-chat-mention-menu__item--active {
+  background: color-mix(in srgb, var(--cyan) 12%, var(--card2));
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu__handle {
+  font-size: var(--text-xs);
+  color: var(--muted2);
 }
 
 [data-tahti-ui='brand'] .chat-msg--system {
@@ -5412,7 +5610,8 @@
 
 /* Tiger-striped rows — same alternating-tint pattern as the channel archive
    list, so a long album/EP tracklist is just as easy to scan. */
-[data-tahti-ui='brand'] .prof-collection-item-row:nth-child(even):not(.prof-collection-item-row--current) {
+[data-tahti-ui='brand']
+  .prof-collection-item-row:nth-child(even):not(.prof-collection-item-row--current) {
   background: color-mix(in srgb, var(--card) 55%, transparent);
 }
 
@@ -7073,4 +7272,21 @@
     padding: 8px 12px;
     font-size: 11px;
   }
+}
+
+/* Green room guest page (/u/:username/green-room) */
+[data-tahti-ui='brand'] .green-room-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-md) var(--space-2xl);
+}
+
+[data-tahti-ui='brand'] .green-room-page__title {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: var(--weight-medium);
+  margin: 0 0 var(--space-md);
+}
+
+[data-tahti-ui='brand'] .green-room-guest__lead {
+  margin-bottom: var(--space-md);
 }
