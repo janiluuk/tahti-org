@@ -101,8 +101,9 @@ export function TahtiRadioPanel() {
         </p>
       )}
       <p className="studio-text-muted-sm studio-mt-sm">
-        Opting out removes all your archive items from the meta-stream rotation. Individual items
-        can also be excluded in the Archive editor.
+        While included, your published releases are announced on followers&apos; feeds. Opting out
+        removes your channel from the meta-stream rotation. Individual archive items can also be
+        excluded in the Archive editor.
       </p>
     </Panel>
   )

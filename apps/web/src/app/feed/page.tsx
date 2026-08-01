@@ -26,6 +26,13 @@ function formatFeedDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
 }
 
+function feedBadge(item: FeedItem): string {
+  if (item.kind === 'post') return 'posted'
+  if (item.kind === 'track') return 'shared a track'
+  const type = item.releaseType.replace(/_/g, ' ').toLowerCase()
+  return `released a ${type}`
+}
+
 export default async function FeedPage() {
   const user = await getSessionUser()
   if (!user) redirect('/login?next=/feed')
@@ -36,8 +43,8 @@ export default async function FeedPage() {
     <div className="feed-page">
       <Heading level={1}>Your feed</Heading>
       <Text tone="muted">
-        New posts and tracks from the {followingCount} artist{followingCount === 1 ? '' : 's'} you
-        follow.
+        New posts, tracks, and releases from the {followingCount} artist
+        {followingCount === 1 ? '' : 's'} you follow.
       </Text>
 
       {items.length === 0 ? (
@@ -48,7 +55,7 @@ export default async function FeedPage() {
           <p className="public-empty-card__hint">
             {followingCount === 0
               ? 'Follow an artist from their channel or profile page to see their updates here.'
-              : 'New posts and tracks from artists you follow will show up here.'}
+              : 'New posts, tracks, and releases from artists you follow will show up here.'}
           </p>
         </div>
       ) : (
@@ -63,9 +70,7 @@ export default async function FeedPage() {
                   <Link href={`/u/${item.artist.username}`} className="feed-item__artist">
                     {item.artist.displayName}
                   </Link>
-                  <span className="feed-item__badge">
-                    {item.kind === 'post' ? 'posted' : 'shared a track'}
-                  </span>
+                  <span className="feed-item__badge">{feedBadge(item)}</span>
                   <span className="feed-item__date">{formatFeedDate(item.date)}</span>
                 </div>
                 {item.kind === 'post' ? (
@@ -73,7 +78,7 @@ export default async function FeedPage() {
                     {item.title && <div className="feed-item__title">{item.title}</div>}
                     <p className="feed-item__text">{item.body}</p>
                   </Link>
-                ) : (
+                ) : item.kind === 'track' ? (
                   <div className="feed-item__track">
                     <Link href={item.url} className="feed-item__content feed-item__content--track">
                       {item.bannerUrl ? (
@@ -91,6 +96,16 @@ export default async function FeedPage() {
                       initialLikeCount={item.likeCount}
                     />
                   </div>
+                ) : (
+                  <Link href={item.url} className="feed-item__content feed-item__content--track">
+                    {item.artworkUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.artworkUrl} alt="" className="feed-item__art" />
+                    ) : (
+                      <span className="feed-item__art feed-item__art--ph" aria-hidden />
+                    )}
+                    <div className="feed-item__title">{item.title}</div>
+                  </Link>
                 )}
               </div>
             </li>

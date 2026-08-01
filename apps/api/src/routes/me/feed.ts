@@ -6,11 +6,12 @@ import type { FeedItem } from '@tahti/shared'
 import { MyFeedResponseSchema, openApiResponse } from '@tahti/shared'
 import { requireAuth } from '../../plugins/auth.js'
 import { resolveChannelUrl } from '../../lib/channel-url.js'
+import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 
 const FEED_LIMIT = 40
 
-// GET /api/me/feed — recent posts + new public tracks from artists the current
-// user follows, merged and sorted newest-first.
+// GET /api/me/feed — recent posts, public tracks, and (for Tahti Radio–opted-in
+// artists) published releases from artists the current user follows.
 const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/api/me/feed',
@@ -35,7 +36,7 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.send({ items: [], followingCount: 0 })
       }
 
-      const [posts, tracks] = await Promise.all([
+      const [posts, tracks, releases] = await Promise.all([
         fastify.prisma.artistPost.findMany({
           where: { userId: { in: artistIds }, publishAt: { lte: new Date() } },
           orderBy: { publishAt: 'desc' },
@@ -59,6 +60,28 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
             },
           },
         }),
+        // Releases only surface when the artist is opted into Tahti Radio
+        // (`metaStreamOptOut = false` — included by default).
+        fastify.prisma.release.findMany({
+          where: {
+            userId: { in: artistIds },
+            state: 'PUBLISHED',
+            publishedAt: { not: null },
+            user: { channel: { metaStreamOptOut: false } },
+          },
+          orderBy: { publishedAt: 'desc' },
+          take: FEED_LIMIT,
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            artworkUrl: true,
+            artworkKey: true,
+            publishedAt: true,
+            smartLinkSlug: true,
+            user: { select: { username: true, displayName: true, avatarUrl: true } },
+          },
+        }),
       ])
 
       const trackIds = tracks.map((t) => t.id)
@@ -77,6 +100,21 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
           })
         : []
       const likeCountById = new Map(likeCounts.map((l) => [l.archiveItemId, l._count]))
+
+      const releaseItems: FeedItem[] = await Promise.all(
+        releases.map(
+          async (r): Promise<FeedItem> => ({
+            kind: 'release',
+            id: r.id,
+            date: (r.publishedAt ?? new Date()).toISOString(),
+            artist: r.user,
+            title: r.title,
+            releaseType: r.type,
+            artworkUrl: await resolveReleaseArtworkUrl(r),
+            url: `/r/${r.smartLinkSlug}`,
+          }),
+        ),
+      )
 
       const items: FeedItem[] = [
         ...posts.map(
@@ -104,6 +142,7 @@ const meFeedRoutes: FastifyPluginAsync = async (fastify) => {
             url: resolveChannelUrl(t.channel.slug, { hash: `archive-item-${t.id}` }),
           }),
         ),
+        ...releaseItems,
       ]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, FEED_LIMIT)

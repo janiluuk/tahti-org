@@ -220,6 +220,10 @@ function FullPlayerSheet({
   playNext,
   playPrevious,
   canSkip,
+  shuffle,
+  toggleShuffle,
+  repeat,
+  toggleRepeat,
   seek,
   setVolume,
   toggleMute,
@@ -238,6 +242,10 @@ function FullPlayerSheet({
   playNext: () => void
   playPrevious: () => void
   canSkip: boolean
+  shuffle: boolean
+  toggleShuffle: () => void
+  repeat: boolean
+  toggleRepeat: () => void
   seek: (ratio: number) => void
   setVolume: (v: number) => void
   toggleMute: () => void
@@ -495,6 +503,25 @@ function FullPlayerSheet({
       <div className="full-player__transport">
         <button
           type="button"
+          className={`full-player__mode${shuffle ? ' full-player__mode--active' : ''}`}
+          onClick={toggleShuffle}
+          disabled={!canSkip}
+          aria-pressed={shuffle}
+          aria-label={shuffle ? 'Random: on' : 'Random: off'}
+          title={shuffle ? 'Random: on' : 'Random: off'}
+        >
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path
+              d="M2 4h3.2l6 8H14M14 4h-2.8L9.5 6.3M2 12h3.2l1.7-2.3M12.5 2.5 14 4l-1.5 1.5M12.5 10.5 14 12l-1.5 1.5"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
           className="full-player__skip"
           onClick={playPrevious}
           disabled={!canSkip}
@@ -535,6 +562,32 @@ function FullPlayerSheet({
           <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
             <path d="M3 2.5v11l8-5.5-8-5.5z" />
             <rect x="11.5" y="2" width="2" height="12" rx="0.5" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className={`full-player__mode${repeat ? ' full-player__mode--active' : ''}`}
+          onClick={toggleRepeat}
+          disabled={!canSkip}
+          aria-pressed={repeat}
+          aria-label={repeat ? 'Repeat: on' : 'Repeat: off'}
+          title={repeat ? 'Repeat: on' : 'Repeat: off'}
+        >
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path
+              d="M3 6a3 3 0 0 1 3-3h6M12 3l-2-2m2 2-2 2"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M13 10a3 3 0 0 1-3 3H4M4 13l2 2m-2-2 2-2"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
       </div>
@@ -583,6 +636,8 @@ export function MiniPlayer() {
     history,
     repeat,
     toggleRepeat,
+    shuffle,
+    toggleShuffle,
     removeFromQueue,
     clearQueue,
     reorderUpNext,
@@ -659,10 +714,30 @@ export function MiniPlayer() {
                 <div className="mini-player-queue__header-actions">
                   <button
                     type="button"
-                    className={`mini-player-queue__repeat${repeat ? ' mini-player-queue__repeat--active' : ''}`}
+                    className={`mini-player-queue__mode${shuffle ? ' mini-player-queue__mode--active' : ''}`}
+                    onClick={toggleShuffle}
+                    disabled={queue.length < 2}
+                    aria-pressed={shuffle}
+                    title={shuffle ? 'Random: on' : 'Random: off'}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                      <path
+                        d="M2 4h3.2l6 8H14M14 4h-2.8L9.5 6.3M2 12h3.2l1.7-2.3M12.5 2.5 14 4l-1.5 1.5M12.5 10.5 14 12l-1.5 1.5"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    Random
+                  </button>
+                  <button
+                    type="button"
+                    className={`mini-player-queue__mode${repeat ? ' mini-player-queue__mode--active' : ''}`}
                     onClick={toggleRepeat}
+                    disabled={queue.length < 2}
                     aria-pressed={repeat}
-                    title={repeat ? 'Repeat queue: on' : 'Repeat queue: off'}
+                    title={repeat ? 'Repeat: on' : 'Repeat: off'}
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
                       <path
@@ -982,6 +1057,10 @@ export function MiniPlayer() {
           playNext={playNext}
           playPrevious={playPrevious}
           canSkip={canSkip}
+          shuffle={shuffle}
+          toggleShuffle={toggleShuffle}
+          repeat={repeat}
+          toggleRepeat={toggleRepeat}
           seek={seek}
           setVolume={setVolume}
           toggleMute={toggleMute}
