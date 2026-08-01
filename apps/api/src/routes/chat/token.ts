@@ -3,6 +3,7 @@
 
 import { createHash } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
+import type { PrismaClient } from '@tahti/db'
 import {
   ChatTokenResponseSchema,
   ChatTokenSchema,
@@ -95,7 +96,7 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
 
       if (ban) return reply.status(403).send({ error: 'banned' })
 
-      const [supporter, sessionUserCountry] = await Promise.all([
+      const [supporter, sessionUserCountry, channelRole] = await Promise.all([
         request.sessionUser?.id
           ? isActiveFanSubscriber(fastify.prisma, channel.userId, request.sessionUser.id)
           : Promise.resolve(false),
@@ -103,6 +104,14 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
           ? fastify.prisma.user
               .findUnique({ where: { id: request.sessionUser.id }, select: { countryCode: true } })
               .then((u) => u?.countryCode ?? null)
+          : Promise.resolve(null),
+        request.sessionUser?.id
+          ? resolveChatChannelRole(
+              fastify.prisma,
+              channel.id,
+              channel.userId,
+              request.sessionUser.id,
+            )
           : Promise.resolve(null),
       ])
 
@@ -112,11 +121,14 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(403).send({ error: 'subscribers_only' })
       }
 
-      // sub encodes handle + fingerprint; info carries supporter badge + country for Centrifugo
+      // sub encodes handle + fingerprint; info carries badges + country for Centrifugo
       const sub = `${cleanHandle}#${fingerprint}`
       // Connection JWTs can't carry a `channel` claim in Centrifugo v5 (only
       // subscription JWTs can) — the client subscribes explicitly after connect.
-      const token = signCentrifugoToken({ sub, info: { supporter, countryCode } }, 3600)
+      const token = signCentrifugoToken(
+        { sub, info: { supporter, countryCode, channelRole } },
+        3600,
+      )
 
       await markChatCaptchaVerified(channel.id, fingerprint)
 
@@ -128,9 +140,30 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
         httpOnly: false,
       })
 
-      return reply.send({ token, handle: cleanHandle, fingerprint, supporter, countryCode })
+      return reply.send({
+        token,
+        handle: cleanHandle,
+        fingerprint,
+        supporter,
+        countryCode,
+        channelRole,
+      })
     },
   )
+}
+
+async function resolveChatChannelRole(
+  prisma: PrismaClient,
+  channelId: string,
+  ownerUserId: string,
+  userId: string,
+): Promise<'owner' | 'moderator' | null> {
+  if (userId === ownerUserId) return 'owner'
+  const mod = await prisma.channelModerator.findUnique({
+    where: { channelId_userId: { channelId, userId } },
+    select: { id: true },
+  })
+  return mod ? 'moderator' : null
 }
 
 export default chatTokenRoute

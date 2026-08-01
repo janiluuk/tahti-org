@@ -14,6 +14,8 @@ export const ConversationParticipantSchema = z.object({
   username: z.string(),
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
+  /** Channel owner or assigned moderator — used to highlight staff in DMs. */
+  channelRole: z.enum(['owner', 'moderator']).nullable().optional(),
 })
 
 export const ConversationSummarySchema = z.object({
@@ -39,6 +41,7 @@ export const MessageSchema = z.object({
   body: z.string(),
   createdAt: z.string().datetime(),
   isMine: z.boolean(),
+  senderChannelRole: z.enum(['owner', 'moderator']).nullable().optional(),
 })
 
 export const ConversationDetailSchema = z.object({

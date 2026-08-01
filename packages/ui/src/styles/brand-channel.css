@@ -865,6 +865,11 @@
   margin-bottom: 0.15rem;
 }
 
+[data-tahti-ui='brand'] .ch-radio-show-meta {
+  display: block;
+  margin-top: 0.35rem;
+}
+
 /* @handle / country / member-since row — smaller and set into a faint pill so
  * it reads as secondary metadata rather than competing with the artist name. */
 [data-tahti-ui='brand'] .ch-artist-meta-row {
@@ -3157,6 +3162,37 @@
   vertical-align: middle;
 }
 
+
+[data-tahti-ui='brand'] .chat-role-badge {
+  margin-left: 0.25rem;
+  font-size: var(--text-micro);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  vertical-align: middle;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+[data-tahti-ui='brand'] .chat-role-badge--owner {
+  background: color-mix(in srgb, var(--cyan) 22%, var(--card));
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .chat-role-badge--moderator {
+  background: color-mix(in srgb, var(--amber) 20%, var(--card));
+  color: var(--amber);
+}
+
+[data-tahti-ui='brand'] .handle.handle--artist {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .handle.handle--moderator {
+  color: var(--amber);
+}
+
+
 [data-tahti-ui='brand'] .ch-chat-error {
   padding: 0.5rem 1rem;
   background: color-mix(in srgb, var(--coral) 12%, var(--card));
@@ -3443,6 +3479,134 @@
   padding: 1.5rem;
   background: color-mix(in srgb, var(--bg) 72%, transparent);
   backdrop-filter: blur(6px);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+@media (min-width: 640px) {
+  [data-tahti-ui='brand'] .prof-message-sheet {
+    align-items: center;
+  }
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__card {
+  width: min(28rem, 100%);
+  padding: 1.15rem 1.25rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-hover);
+  background: var(--card);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__sub {
+  margin: 0.25rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted2);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__input {
+  width: 100%;
+  resize: vertical;
+  min-height: 7rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 55%, var(--card));
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__input:focus {
+  outline: 2px solid color-mix(in srgb, var(--cyan) 45%, transparent);
+  outline-offset: 1px;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__success {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__success p {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__secondary,
+[data-tahti-ui='brand'] .prof-message-sheet__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.15rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--muted2);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__primary {
+  background: var(--cyan);
+  color: var(--bg);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__primary:disabled,
+[data-tahti-ui='brand'] .prof-message-sheet__secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 [data-tahti-ui='brand'] .prof-message-interstitial__card {
@@ -4771,6 +4935,16 @@
 [data-tahti-ui='brand'] .ch-archive-item-credit__roles {
   color: var(--muted);
 }
+
+[data-tahti-ui='brand'] .ch-archive-item-credit__link {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-credit__link:hover {
+  text-decoration: underline;
+}
+
 
 [data-tahti-ui='brand'] .ch-archive-item-details {
   margin: 0.65rem 0 0.35rem;

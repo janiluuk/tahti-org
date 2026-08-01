@@ -807,6 +807,8 @@ export const PublicProfileViewSchema = z.object({
     }),
     presskit: z.string(),
   }),
+  /** Short-lived URL for looping page ambient music (from an assigned clip). */
+  backgroundMusicUrl: z.string().url().nullable().optional(),
 })
 
 export const SmartLinkViewSchema = z.object({
@@ -1128,6 +1130,7 @@ export const ChatTokenResponseSchema = z.object({
   fingerprint: z.string(),
   supporter: z.boolean(),
   countryCode: z.string().nullable(),
+  channelRole: z.enum(['owner', 'moderator']).nullable(),
 })
 
 export const ChatTokenOnlyResponseSchema = z.object({

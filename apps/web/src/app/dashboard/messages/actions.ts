@@ -10,6 +10,7 @@ export interface ConversationParticipant {
   username: string
   displayName: string
   avatarUrl: string | null
+  channelRole?: 'owner' | 'moderator' | null
 }
 
 export interface MessageView {
@@ -20,6 +21,7 @@ export interface MessageView {
   body: string
   createdAt: string
   isMine: boolean
+  senderChannelRole?: 'owner' | 'moderator' | null
 }
 
 export interface ConversationSummary {

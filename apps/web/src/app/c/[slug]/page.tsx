@@ -626,9 +626,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                                       <div className="ch-archive-item-details__body">
                                         {hasCredits ? (
                                           <div className="ch-archive-item-credit ch-archive-item-credit--roles">
-                                            {item
-                                              .credits!.map((c) => `${c.role}: ${c.name}`)
-                                              .join(' · ')}
+                                            {item.credits!.map((c, i) => (
+                                              <span key={`${c.role}-${c.name}-${i}`}>
+                                                {i > 0 ? ' · ' : null}
+                                                {c.role}:{' '}
+                                                {c.artistUsername ? (
+                                                  <a
+                                                    href={`/u/${c.artistUsername}`}
+                                                    className="ch-archive-item-credit__link"
+                                                  >
+                                                    {c.name}
+                                                  </a>
+                                                ) : (
+                                                  c.name
+                                                )}
+                                              </span>
+                                            ))}
                                           </div>
                                         ) : null}
                                         {hasGallery ? (

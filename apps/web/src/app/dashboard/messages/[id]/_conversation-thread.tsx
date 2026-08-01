@@ -34,6 +34,12 @@ function renderBody(body: string) {
   })
 }
 
+function channelRoleLabel(role: 'owner' | 'moderator' | null | undefined): string | null {
+  if (role === 'owner') return 'Owner'
+  if (role === 'moderator') return 'Mod'
+  return null
+}
+
 export function ConversationThread({
   conversationId,
   initial,
@@ -72,12 +78,27 @@ export function ConversationThread({
             No messages yet — say hi to {initial.otherUser.displayName}.
           </p>
         ) : (
-          messages.map((m) => (
-            <div key={m.id} className={`dm-message${m.isMine ? ' dm-message--mine' : ''}`}>
-              <div className="dm-message__bubble">{renderBody(m.body)}</div>
-              <div className="dm-message__meta">{fmtTime(m.createdAt)}</div>
-            </div>
-          ))
+          messages.map((m) => {
+            const role = channelRoleLabel(m.senderChannelRole)
+            return (
+              <div key={m.id} className={`dm-message${m.isMine ? ' dm-message--mine' : ''}`}>
+                <div className="dm-message__who">
+                  <span className="dm-message__who-name">
+                    {m.isMine ? 'You' : m.senderDisplayName}
+                  </span>
+                  {role ? (
+                    <span
+                      className={`dm-role-badge dm-role-badge--${m.senderChannelRole === 'owner' ? 'owner' : 'moderator'}`}
+                    >
+                      {role}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="dm-message__bubble">{renderBody(m.body)}</div>
+                <div className="dm-message__meta">{fmtTime(m.createdAt)}</div>
+              </div>
+            )
+          })
         )}
         <div ref={bottomRef} />
       </div>

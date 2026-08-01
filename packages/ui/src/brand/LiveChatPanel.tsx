@@ -15,7 +15,7 @@ export interface LiveChatMessage {
   id: string
   handle: string
   text: string
-  tone?: 'artist' | 'self' | 'supporter' | 'default' | 'system'
+  tone?: 'artist' | 'moderator' | 'self' | 'supporter' | 'default' | 'system'
   countryCode?: string | null
   /** Present on 'system' messages (e.g. "X loved Y") — links to the track. */
   href?: string
@@ -253,12 +253,21 @@ export function LiveChatPanel({
                 <span
                   className={cn(
                     'handle',
-                    (message.tone === 'supporter' || message.tone === 'artist') && 'supporter',
+                    (message.tone === 'supporter' ||
+                      message.tone === 'artist' ||
+                      message.tone === 'moderator') &&
+                      'supporter',
+                    message.tone === 'artist' && 'handle--artist',
+                    message.tone === 'moderator' && 'handle--moderator',
                   )}
                 >
                   {message.handle}
                 </span>
-                {message.tone === 'supporter' ? (
+                {message.tone === 'artist' ? (
+                  <span className="chat-role-badge chat-role-badge--owner">owner</span>
+                ) : message.tone === 'moderator' ? (
+                  <span className="chat-role-badge chat-role-badge--moderator">mod</span>
+                ) : message.tone === 'supporter' ? (
                   <span className="chat-supporter-badge">supporter</span>
                 ) : null}
                 <span className="text">{message.text}</span>

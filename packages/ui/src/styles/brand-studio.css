@@ -1193,9 +1193,19 @@
 }
 
 [data-tahti-ui='studio'] .studio-grid--credits {
-  grid-template-columns: 120px 1fr auto;
+  grid-template-columns: 110px minmax(6rem, 1fr) minmax(5.5rem, 0.85fr) auto;
   gap: 0.35rem;
   align-items: center;
+}
+
+@media (max-width: 720px) {
+  [data-tahti-ui='studio'] .studio-grid--credits {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  [data-tahti-ui='studio'] .studio-grid--credits > :last-child {
+    grid-column: 1 / -1;
+  }
 }
 
 [data-tahti-ui='studio'] .studio-max-w-sm {
@@ -10459,6 +10469,50 @@
   align-items: flex-end;
   align-self: flex-end;
 }
+
+[data-tahti-ui='studio'] .dm-message__who {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.15rem;
+  font-size: var(--text-xs);
+  color: var(--muted2);
+}
+
+[data-tahti-ui='studio'] .dm-message__who-name {
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .dm-role-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+[data-tahti-ui='studio'] .dm-role-badge--owner {
+  background: color-mix(in srgb, var(--cyan) 18%, var(--card2));
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .dm-role-badge--moderator {
+  background: color-mix(in srgb, var(--amber) 18%, var(--card2));
+  color: var(--amber);
+}
+
+[data-tahti-ui='studio'] .dm-conversation-row__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
 
 [data-tahti-ui='studio'] .dm-message__bubble {
   padding: var(--space-2) var(--space-3);

@@ -142,11 +142,14 @@ export default function ReleaseOpsPanel({
   function save() {
     setError(null)
     const trimmedCredits = credits
-      .map((c) => ({
-        role: c.role,
-        name: c.name.trim(),
-        ...(c.artistUsername?.trim() ? { artistUsername: c.artistUsername.trim() } : {}),
-      }))
+      .map((c) => {
+        const handle = c.artistUsername?.trim().replace(/^@/, '').toLowerCase()
+        return {
+          role: c.role,
+          name: c.name.trim(),
+          ...(handle && /^[a-z0-9_-]{2,32}$/.test(handle) ? { artistUsername: handle } : {}),
+        }
+      })
       .filter((c) => c.name.length > 0)
 
     startTransition(async () => {
@@ -235,6 +238,7 @@ export default function ReleaseOpsPanel({
                       setCredits(next)
                     }}
                     className="studio-input"
+                    aria-label="Credit role"
                   >
                     {RELEASE_CREDIT_ROLES.map((role) => (
                       <option key={role} value={role}>
@@ -252,12 +256,31 @@ export default function ReleaseOpsPanel({
                       setCredits(next)
                     }}
                     className="studio-input"
+                    aria-label="Credit name"
+                  />
+                  <input
+                    value={credit.artistUsername ? `@${credit.artistUsername}` : ''}
+                    placeholder="@username"
+                    disabled={isPending}
+                    maxLength={33}
+                    onChange={(e) => {
+                      const raw = e.target.value.trim().replace(/^@/, '').toLowerCase()
+                      const next = [...credits]
+                      next[index] = {
+                        ...credit,
+                        artistUsername: raw.length > 0 ? raw : undefined,
+                      }
+                      setCredits(next)
+                    }}
+                    className="studio-input"
+                    aria-label="Tahti username"
                   />
                   <Button
                     disabled={isPending}
                     onClick={() => setCredits(credits.filter((_, i) => i !== index))}
                     variant="ghost"
                   >
+                    <ButtonIcon name="trash" />
                     Remove
                   </Button>
                 </li>
@@ -268,6 +291,7 @@ export default function ReleaseOpsPanel({
               onClick={() => setCredits([...credits, { ...EMPTY_CREDIT }])}
               variant="ghost"
             >
+              <ButtonIcon name="plus" />
               Add credit
             </Button>
           </div>

@@ -23,7 +23,14 @@ export default async function ConversationPage({ params }: { params: { id: strin
             ← Messages
           </Link>
           <Heading level={1}>{conversation.otherUser.displayName}</Heading>
-          <p className="studio-text-muted-sm">@{conversation.otherUser.username}</p>
+          <p className="studio-text-muted-sm">
+            @{conversation.otherUser.username}
+            {conversation.otherUser.channelRole === 'owner' ? (
+              <span className="dm-role-badge dm-role-badge--owner">Owner</span>
+            ) : conversation.otherUser.channelRole === 'moderator' ? (
+              <span className="dm-role-badge dm-role-badge--moderator">Mod</span>
+            ) : null}
+          </p>
         </div>
       </div>
 

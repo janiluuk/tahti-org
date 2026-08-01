@@ -122,10 +122,14 @@ export function metadataFormToPayload(state: ArchiveMetadataFormState): Record<s
     .slice(0, 12)
 
   const credits = state.credits
-    .map((c) => ({
-      role: c.role,
-      name: c.name.trim(),
-    }))
+    .map((c) => {
+      const handle = c.artistUsername?.trim().replace(/^@/, '').toLowerCase()
+      return {
+        role: c.role,
+        name: c.name.trim(),
+        ...(handle && /^[a-z0-9_-]{2,32}$/.test(handle) ? { artistUsername: handle } : {}),
+      }
+    })
     .filter((c) => c.name.length > 0)
 
   return {
@@ -265,152 +269,156 @@ export function ArchiveMetadataFields({
       />
 
       <label className="studio-field">
-        <span className="studio-label">Recording location notes (optional)</span>
+        <span className="studio-label">Release date</span>
         <input
-          type="text"
-          placeholder="e.g. backstage, second stage — extra detail beyond the venue"
-          value={state.recordingLocation}
+          type="datetime-local"
+          value={state.releasedAt}
           disabled={disabled}
-          onChange={(e) => set({ recordingLocation: e.target.value })}
+          onChange={(e) => set({ releasedAt: e.target.value })}
           className="studio-input"
         />
       </label>
 
-      <label className="studio-field">
-        <span className="studio-label">Sub-genres (comma-separated)</span>
-        <input
-          type="text"
-          value={state.subGenres}
-          disabled={disabled}
-          onChange={(e) => set({ subGenres: e.target.value })}
-          className="studio-input"
-        />
-      </label>
-
-      <div className="studio-grid studio-grid--3">
-        <label className="studio-field">
-          <span className="studio-label">Type</span>
-          <select
-            value={state.contentType}
-            disabled={disabled}
-            onChange={(e) => set({ contentType: e.target.value })}
-            className="studio-input"
-          >
-            {ARCHIVE_CONTENT_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {CONTENT_TYPE_LABELS[t] ?? t}
-              </option>
-            ))}
-          </select>
-          {state.contentType !== 'DJ_MIX' && (
-            <p className="studio-field-note studio-field-note--warning">
-              You must own the rights to this music, or have permission from the rights holder, to
-              publish it here.
-            </p>
-          )}
-        </label>
-        <label className="studio-field">
-          <span className="studio-label">Version</span>
-          <input
-            type="text"
-            placeholder="Original Mix"
-            value={state.mixVersion}
-            disabled={disabled}
-            onChange={(e) => set({ mixVersion: e.target.value })}
-            className="studio-input"
-          />
-        </label>
-        <label className="studio-field">
-          <span className="studio-label">Release date</span>
-          <input
-            type="datetime-local"
-            value={state.releasedAt}
-            disabled={disabled}
-            onChange={(e) => set({ releasedAt: e.target.value })}
-            className="studio-input"
-          />
-        </label>
-      </div>
-
-      <div className="studio-grid studio-grid--3">
-        <label className="studio-field">
-          <span className="studio-label">BPM</span>
-          <input
-            type="number"
-            min={40}
-            max={300}
-            placeholder="118"
-            value={state.bpm}
-            disabled={disabled || state.useDetectedBpmKey}
-            onChange={(e) => set({ bpm: e.target.value })}
-            className="studio-input"
-          />
-        </label>
-        <label className="studio-field">
-          <span className="studio-label">Key</span>
-          <input
-            type="text"
-            placeholder="Em"
-            value={state.musicalKey}
-            disabled={disabled || state.useDetectedBpmKey}
-            onChange={(e) => set({ musicalKey: e.target.value })}
-            className="studio-input"
-          />
-        </label>
-        <label className="studio-field">
-          <span className="studio-label">License</span>
-          <select
-            value={state.license}
-            disabled={disabled}
-            onChange={(e) => set({ license: e.target.value })}
-            className="studio-input"
-          >
-            {ARCHIVE_LICENSES.map((l) => (
-              <option key={l} value={l}>
-                {ARCHIVE_LICENSE_LABELS[l]}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <label className="studio-label-row">
-        <input
-          type="checkbox"
-          checked={state.useDetectedBpmKey}
-          disabled={disabled}
-          onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
-        />
-        <span>
-          Use auto-detected BPM &amp; key
-          {(detectedBpm != null || detectedKey) && (
-            <span className="studio-text-muted-sm">
-              {' '}
-              —{' '}
-              {[detectedBpm != null ? `${detectedBpm} BPM` : null, detectedKey ?? null]
-                .filter(Boolean)
-                .join(', ')}
-            </span>
-          )}
-        </span>
-      </label>
       <details className="studio-details-block">
-        <summary className="studio-details-block__summary">About auto-detect</summary>
-        <p className="studio-help studio-mt-xs">
-          Uses embedded file tags when present; otherwise BPM and key are analyzed from the audio
-          (first ~2 minutes for long files).
-        </p>
-      </details>
+        <summary className="studio-details-block__summary">More details</summary>
+        <div className="studio-details-block__body">
+          <label className="studio-field">
+            <span className="studio-label">Recording location notes (optional)</span>
+            <input
+              type="text"
+              placeholder="e.g. backstage, second stage — extra detail beyond the venue"
+              value={state.recordingLocation}
+              disabled={disabled}
+              onChange={(e) => set({ recordingLocation: e.target.value })}
+              className="studio-input"
+            />
+          </label>
 
-      <label className="studio-label-row">
-        <input
-          type="checkbox"
-          checked={state.isAiGenerated}
-          disabled={disabled}
-          onChange={(e) => set({ isAiGenerated: e.target.checked })}
-        />
-        Produced using AI technology
-      </label>
+          <label className="studio-field">
+            <span className="studio-label">Sub-genres (comma-separated)</span>
+            <input
+              type="text"
+              value={state.subGenres}
+              disabled={disabled}
+              onChange={(e) => set({ subGenres: e.target.value })}
+              className="studio-input"
+            />
+          </label>
+
+          <div className="studio-grid studio-grid--3">
+            <label className="studio-field">
+              <span className="studio-label">Type</span>
+              <select
+                value={state.contentType}
+                disabled={disabled}
+                onChange={(e) => set({ contentType: e.target.value })}
+                className="studio-input"
+              >
+                {ARCHIVE_CONTENT_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {CONTENT_TYPE_LABELS[t] ?? t}
+                  </option>
+                ))}
+              </select>
+              {state.contentType !== 'DJ_MIX' && (
+                <p className="studio-field-note studio-field-note--warning">
+                  You must own the rights to this music, or have permission from the rights holder,
+                  to publish it here.
+                </p>
+              )}
+            </label>
+            <label className="studio-field">
+              <span className="studio-label">Version</span>
+              <input
+                type="text"
+                placeholder="Original Mix"
+                value={state.mixVersion}
+                disabled={disabled}
+                onChange={(e) => set({ mixVersion: e.target.value })}
+                className="studio-input"
+              />
+            </label>
+            <label className="studio-field">
+              <span className="studio-label">License</span>
+              <select
+                value={state.license}
+                disabled={disabled}
+                onChange={(e) => set({ license: e.target.value })}
+                className="studio-input"
+              >
+                {ARCHIVE_LICENSES.map((l) => (
+                  <option key={l} value={l}>
+                    {ARCHIVE_LICENSE_LABELS[l]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="studio-grid studio-grid--3">
+            <label className="studio-field">
+              <span className="studio-label">BPM</span>
+              <input
+                type="number"
+                min={40}
+                max={300}
+                placeholder="118"
+                value={state.bpm}
+                disabled={disabled || state.useDetectedBpmKey}
+                onChange={(e) => set({ bpm: e.target.value })}
+                className="studio-input"
+              />
+            </label>
+            <label className="studio-field">
+              <span className="studio-label">Key</span>
+              <input
+                type="text"
+                placeholder="Em"
+                value={state.musicalKey}
+                disabled={disabled || state.useDetectedBpmKey}
+                onChange={(e) => set({ musicalKey: e.target.value })}
+                className="studio-input"
+              />
+            </label>
+            <div />
+          </div>
+
+          <label className="studio-label-row">
+            <input
+              type="checkbox"
+              checked={state.useDetectedBpmKey}
+              disabled={disabled}
+              onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
+            />
+            <span>
+              Use auto-detected BPM &amp; key
+              {(detectedBpm != null || detectedKey) && (
+                <span className="studio-text-muted-sm">
+                  {' '}
+                  —{' '}
+                  {[detectedBpm != null ? `${detectedBpm} BPM` : null, detectedKey ?? null]
+                    .filter(Boolean)
+                    .join(', ')}
+                </span>
+              )}
+            </span>
+          </label>
+          <p className="studio-help studio-mt-xs">
+            Uses embedded file tags when present; otherwise BPM and key are analyzed from the audio
+            (first ~2 minutes for long files).
+          </p>
+
+          <label className="studio-label-row studio-mt-sm">
+            <input
+              type="checkbox"
+              checked={state.isAiGenerated}
+              disabled={disabled}
+              onChange={(e) => set({ isAiGenerated: e.target.checked })}
+            />
+            Produced using AI technology
+          </label>
+        </div>
+      </details>
 
       <div className="studio-field--block">
         <span className="studio-label">Track credit</span>
@@ -453,6 +461,7 @@ export function ArchiveMetadataFields({
                       set({ credits: next })
                     }}
                     className="studio-input"
+                    aria-label="Credit role"
                   >
                     {RELEASE_CREDIT_ROLES.map((role) => (
                       <option key={role} value={role}>
@@ -471,6 +480,24 @@ export function ArchiveMetadataFields({
                       set({ credits: next })
                     }}
                     className="studio-input"
+                    aria-label="Credit name"
+                  />
+                  <input
+                    value={credit.artistUsername ? `@${credit.artistUsername}` : ''}
+                    placeholder="@username"
+                    disabled={disabled}
+                    maxLength={33}
+                    onChange={(e) => {
+                      const raw = e.target.value.trim().replace(/^@/, '').toLowerCase()
+                      const next = [...state.credits]
+                      next[index] = {
+                        ...credit,
+                        artistUsername: raw.length > 0 ? raw : undefined,
+                      }
+                      set({ credits: next })
+                    }}
+                    className="studio-input"
+                    aria-label="Tahti username"
                   />
                   <Button
                     disabled={disabled}

@@ -4,18 +4,55 @@
 import type { PrismaClient } from '@tahti/db'
 import { notifyUserOfNewMessage } from '@tahti/db'
 
+export type ChannelStaffRole = 'owner' | 'moderator'
+
 const participantSelect = {
+  id: true,
   username: true,
   displayName: true,
   avatarUrl: true,
 } as const
 
-function serializeParticipant(user: {
-  username: string
-  displayName: string
-  avatarUrl: string | null
-}) {
-  return { username: user.username, displayName: user.displayName, avatarUrl: user.avatarUrl }
+function serializeParticipant(
+  user: {
+    username: string
+    displayName: string
+    avatarUrl: string | null
+  },
+  channelRole: ChannelStaffRole | null = null,
+) {
+  return {
+    username: user.username,
+    displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
+    channelRole,
+  }
+}
+
+/** Resolve channel-owner / moderator badges for a set of user ids. Owner wins. */
+export async function resolveChannelStaffRoles(
+  prisma: PrismaClient,
+  userIds: string[],
+): Promise<Map<string, ChannelStaffRole | null>> {
+  const roles = new Map<string, ChannelStaffRole | null>()
+  for (const id of userIds) roles.set(id, null)
+  if (userIds.length === 0) return roles
+
+  const [owners, mods] = await Promise.all([
+    prisma.channel.findMany({
+      where: { userId: { in: userIds } },
+      select: { userId: true },
+    }),
+    prisma.channelModerator.findMany({
+      where: { userId: { in: userIds } },
+      select: { userId: true },
+      distinct: ['userId'],
+    }),
+  ])
+
+  for (const m of mods) roles.set(m.userId, 'moderator')
+  for (const o of owners) roles.set(o.userId, 'owner')
+  return roles
 }
 
 /** @-mention / "start a conversation" autocomplete — matches username or display
@@ -35,7 +72,7 @@ export async function searchUsers(prisma: PrismaClient, query: string, excludeUs
     orderBy: { username: 'asc' },
     take: 10,
   })
-  return users.map(serializeParticipant)
+  return users.map((u) => serializeParticipant(u))
 }
 
 /** All conversations the user is part of, newest activity first, with an unread
@@ -82,6 +119,11 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
     ),
   )
 
+  const otherIds = memberships
+    .map((m) => m.conversation.participants[0]?.user.id)
+    .filter((id): id is string => Boolean(id))
+  const roles = await resolveChannelStaffRoles(prisma, otherIds)
+
   return memberships
     .map((m, i) => {
       const other = m.conversation.participants[0]?.user
@@ -89,7 +131,7 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
       const last = m.conversation.messages[0]
       return {
         id: m.conversation.id,
-        otherUser: serializeParticipant(other),
+        otherUser: serializeParticipant(other, roles.get(other.id) ?? null),
         lastMessage: last
           ? {
               body: last.body,
@@ -170,6 +212,9 @@ export async function getConversationDetail(
   const other = conversation.participants[0]?.user
   if (!other) return null
 
+  const roleUserIds = Array.from(new Set([other.id, ...messages.map((m) => m.senderId)]))
+  const roles = await resolveChannelStaffRoles(prisma, roleUserIds)
+
   await prisma.conversationParticipant.update({
     where: { conversationId_userId: { conversationId, userId } },
     data: { lastReadAt: new Date() },
@@ -177,7 +222,7 @@ export async function getConversationDetail(
 
   return {
     id: conversation.id,
-    otherUser: serializeParticipant(other),
+    otherUser: serializeParticipant(other, roles.get(other.id) ?? null),
     messages: messages.map((m) => ({
       id: m.id,
       senderUsername: m.sender.username,
@@ -186,6 +231,7 @@ export async function getConversationDetail(
       body: m.body,
       createdAt: m.createdAt.toISOString(),
       isMine: m.senderId === userId,
+      senderChannelRole: roles.get(m.senderId) ?? null,
     })),
   }
 }
@@ -222,6 +268,8 @@ export async function sendMessage(
     others.map((p) => notifyUserOfNewMessage(prisma, p.userId, sender, conversationId, body)),
   )
 
+  const roles = await resolveChannelStaffRoles(prisma, [sender.id])
+
   return {
     id: message.id,
     senderUsername: sender.username,
@@ -230,5 +278,6 @@ export async function sendMessage(
     body: message.body,
     createdAt: message.createdAt.toISOString(),
     isMine: true,
+    senderChannelRole: roles.get(sender.id) ?? null,
   }
 }
