@@ -253,12 +253,11 @@ export function LiveChatPanel({
                 <span
                   className={cn(
                     'handle',
-                    (message.tone === 'supporter' ||
-                      message.tone === 'artist' ||
-                      message.tone === 'moderator') &&
-                      'supporter',
-                    message.tone === 'artist' && 'handle--artist',
-                    message.tone === 'moderator' && 'handle--moderator',
+                    message.tone === 'artist'
+                      ? 'handle--artist'
+                      : message.tone === 'moderator'
+                        ? 'handle--moderator'
+                        : `handle--${chatHandleVariant(message.handle)}`,
                   )}
                 >
                   {message.handle}

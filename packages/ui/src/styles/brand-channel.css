@@ -3126,8 +3126,29 @@
   color: var(--cyan);
 }
 
-[data-tahti-ui='brand'] .chat-msg .handle.supporter {
-  color: var(--lavender);
+[data-tahti-ui='brand'] .chat-msg .handle.handle--cyan {
+  color: var(--cyan);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--amber {
+  color: var(--amber);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--purple {
+  color: var(--purple);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--green {
+  color: var(--green);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--pink {
+  color: var(--chat-pink);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--orange {
+  color: var(--chat-orange);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--blue {
+  color: var(--chat-blue);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--light-purple {
+  color: var(--chat-light-purple);
 }
 
 [data-tahti-ui='brand'] .chat-msg .text {
