@@ -5,7 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { VisualPresetProps } from './types'
+import { readSettings, type VisualPresetProps } from './types'
 
 // Adapted from the three.js "webgpu_lensflares" example's look (bright glow
 // + a chain of smaller rings toward frame center, additive-blended) using
@@ -57,7 +57,7 @@ interface FlareRig {
   glowBaseScale: number
 }
 
-export function LensFlaresPreset({ colorScheme, analyser }: VisualPresetProps) {
+export function LensFlaresPreset({ colorScheme, analyser, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -146,7 +146,8 @@ export function LensFlaresPreset({ colorScheme, analyser }: VisualPresetProps) {
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
-      t += 0.016
+      const { speed, intensity } = readSettings(settingsRef)
+      t += 0.016 * speed
 
       let level = 0
       if (analyser && freqData) {
@@ -158,11 +159,11 @@ export function LensFlaresPreset({ colorScheme, analyser }: VisualPresetProps) {
       smoothedLevel += (level - smoothedLevel) * 0.08
 
       for (const rig of rigs) {
-        const x = Math.sin(t * rig.freqX + rig.phaseX) * rig.ampX
-        const y = Math.cos(t * rig.freqY + rig.phaseY) * rig.ampY
+        const x = Math.sin(t * rig.freqX + rig.phaseX) * rig.ampX * intensity
+        const y = Math.cos(t * rig.freqY + rig.phaseY) * rig.ampY * intensity
         rig.group.position.set(x, y, 0)
 
-        const glowScale = rig.glowBaseScale * (1 + smoothedLevel * 0.35)
+        const glowScale = rig.glowBaseScale * (1 + smoothedLevel * 0.35 * intensity)
         rig.glow.scale.set(glowScale, glowScale, 1)
 
         // chain the rings along the vector back toward frame center

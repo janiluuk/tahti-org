@@ -5,7 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { VisualPresetProps } from './types'
+import { readSettings, type VisualPresetProps } from './types'
 
 const CLOUD_COUNT = 6
 
@@ -29,7 +29,7 @@ function makeGlowTexture(): THREE.CanvasTexture {
  * whose size and the water's shimmer amplitude both pulse subtly with audio —
  * kept deliberately understated (small scale deltas, heavily smoothed) rather
  * than the sharper reactivity of REACTIVE_GRID. */
-export function CloudscapePreset({ colorScheme, analyser }: VisualPresetProps) {
+export function CloudscapePreset({ colorScheme, analyser, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -130,10 +130,11 @@ export function CloudscapePreset({ colorScheme, analyser }: VisualPresetProps) {
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
-      t += 0.016
+      const { speed, intensity } = readSettings(settingsRef)
+      t += 0.016 * speed
 
-      for (const { sprite, speed } of clouds) {
-        sprite.position.x += speed
+      for (const { sprite, speed: driftSpeed } of clouds) {
+        sprite.position.x += driftSpeed * speed
         if (sprite.position.x > 1.6) sprite.position.x = -1.6
       }
 
@@ -153,12 +154,12 @@ export function CloudscapePreset({ colorScheme, analyser }: VisualPresetProps) {
       smoothedBass += (bass - smoothedBass) * 0.05
       smoothedTreble += (treble - smoothedTreble) * 0.08
 
-      const lightScale = lightBaseScale * (1 + smoothedBass * 0.18)
+      const lightScale = lightBaseScale * (1 + smoothedBass * 0.18 * intensity)
       lightSprite.scale.set(lightScale, lightScale, 1)
 
       waterMat.uniforms.uTime!.value = t
-      waterMat.uniforms.uAmp!.value = 0.02 + smoothedTreble * 0.06
-      water.scale.y = 1 + smoothedBass * 0.08
+      waterMat.uniforms.uAmp!.value = 0.02 + smoothedTreble * 0.06 * intensity
+      water.scale.y = 1 + smoothedBass * 0.08 * intensity
 
       renderer.render(scene, camera)
     }

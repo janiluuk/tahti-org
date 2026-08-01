@@ -44,6 +44,7 @@ export type ChannelEditorData = {
   channelVisual: {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
+    visualSettingsJson: string | null
     headerStyle: ChannelHeaderStyle
     brandAccentPreset: string | null
     slideshowPreset: SlideshowPreset
@@ -95,6 +96,9 @@ export function ChannelEditorSections({
       const visualRes = await updateChannelVisual({
         visualPreset: draft.visual.visualPreset,
         colorScheme: draft.visual.colorSchemeJson ? JSON.parse(draft.visual.colorSchemeJson) : null,
+        visualSettings: draft.visual.visualSettingsJson
+          ? JSON.parse(draft.visual.visualSettingsJson)
+          : null,
         headerStyle: draft.visual.headerStyle,
         brandAccentPreset: draft.visual.brandAccentPreset,
       })

@@ -14,13 +14,13 @@ For full stack + journey fixtures: `./scripts/stack-up.sh --seed` (API `:15011`,
 
 ## Commands
 
-| Command | What it runs |
-|---------|----------------|
-| `pnpm ci:check` | Lint, format, typecheck, Tor exit list freshness |
-| `pnpm test` | Vitest (single worker; needs Postgres) |
-| `pnpm smoke` | Local CI gate + stack health (`scripts/unified-smoke.sh`) |
-| `pnpm smoke:prod` | Above + production HTTP checks on `app.tahti.live` |
-| `pnpm smoke:all` | Prod + e2e bash journeys (stack must be up; `--seed` fixtures) |
+| Command                      | What it runs                                                    |
+| ---------------------------- | --------------------------------------------------------------- |
+| `pnpm ci:check`              | Lint, format, typecheck, Tor exit list freshness                |
+| `pnpm test`                  | Vitest (single worker; needs Postgres)                          |
+| `pnpm smoke`                 | Local CI gate + stack health (`scripts/unified-smoke.sh`)       |
+| `pnpm smoke:prod`            | Above + production HTTP checks on `app.tahti.live`              |
+| `pnpm smoke:all`             | Prod + e2e bash journeys (stack must be up; `--seed` fixtures)  |
 | `pnpm test:e2e:journeys:all` | Vital-flows + user-journeys + Vitest `persona-journeys.test.ts` |
 
 Other scripts: `pnpm tor-exit:check`, `./scripts/status-monitor.sh`, persona-specific `pnpm test:e2e:journeys:*`.
@@ -35,6 +35,7 @@ Under `apps/api/src/routes/journeys/`:
 - `vital-flows.test.ts` — onboarding, fan subs, catalog gates, live broadcast, governance vote
 - `public-surfaces-journey.test.ts` — home/discover stats + channels, radio, venues, status
 - `tahti-radio-journey.test.ts` — Tahti Radio channel, chat tokens, announcements, member relay
+- `tahti-radio-live-show-journey.test.ts` — rotation track → live 1 min → announcement → show continues
 
 ### Smoke script flags
 
@@ -54,11 +55,11 @@ Under `apps/api/src/routes/journeys/`:
 
 ## Failure triage
 
-| Symptom | Likely fix |
-|---------|------------|
-| API exits on start | Check API Dockerfile includes all workspace packages (e.g. `@tahti/revelator`) |
-| Chat 404 on `/radio` | Run `apps/api/scripts/seed-tahti-radio.ts` or `./scripts/stack-up.sh --seed` |
-| Vitest DB errors | Start Postgres or full stack; run `DATABASE_URL=... pnpm --filter @tahti/db db:migrate:test` |
-| `/radio` old UI on prod | Rebuild `web` service; app is at `app.tahti.live`, not `tahti.live` |
-| Chat join E2E fails | Viewer token must not skip join UI; rebuild web after `chat-panel.tsx` changes |
-| Signup form vs beta closed | Set `SIGNUP_OPEN=true` in stack env |
+| Symptom                    | Likely fix                                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------- |
+| API exits on start         | Check API Dockerfile includes all workspace packages (e.g. `@tahti/revelator`)               |
+| Chat 404 on `/radio`       | Run `apps/api/scripts/seed-tahti-radio.ts` or `./scripts/stack-up.sh --seed`                 |
+| Vitest DB errors           | Start Postgres or full stack; run `DATABASE_URL=... pnpm --filter @tahti/db db:migrate:test` |
+| `/radio` old UI on prod    | Rebuild `web` service; app is at `app.tahti.live`, not `tahti.live`                          |
+| Chat join E2E fails        | Viewer token must not skip join UI; rebuild web after `chat-panel.tsx` changes               |
+| Signup form vs beta closed | Set `SIGNUP_OPEN=true` in stack env                                                          |

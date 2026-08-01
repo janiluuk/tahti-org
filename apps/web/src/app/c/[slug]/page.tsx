@@ -3,7 +3,13 @@
 
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG } from '@tahti/shared'
+import {
+  TAHTI_RADIO_SLUG,
+  TAHTI_SELECTS_SLUG,
+  parseVisualSettingsMap,
+  resolveVisualPresetSettings,
+  type VisualPreset,
+} from '@tahti/shared'
 import ChatPanel from './chat-panel'
 import FanChatPanel from './fan-chat-panel'
 import { LivePlayerSection } from './live-player-section'
@@ -72,6 +78,7 @@ interface ChannelResponse {
   videoBackgroundUrl?: string | null
   colorSchemeJson?: string | null
   visualPreset?: string
+  visualSettingsJson?: string | null
   slideshowPreset?: string
   slideshowIntervalSeconds?: number
   slideshowTransitionMs?: number
@@ -99,6 +106,8 @@ interface ChannelResponse {
 interface ArchiveItem {
   id: string
   title: string
+  artistName?: string | null
+  credits?: Array<{ role: string; name: string; artistUsername?: string }> | null
   description: string | null
   commentary: string | null
   durationSec: number | null
@@ -187,7 +196,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       kind: 'archive',
       url: i.audioUrl!,
       title: i.title,
-      subtitle: `@${channel.user.username}`,
+      subtitle: i.artistName?.trim() || `@${channel.user.username}`,
       href: `${resolveChannelUrl(slug)}#archive-item-${i.id}`,
       artworkUrl: i.bannerUrl,
     }))
@@ -311,8 +320,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
             {channel.visualPreset && channel.visualPreset !== 'MINIMAL' && (
               <ChannelVisualizer
-                preset={channel.visualPreset as import('@tahti/shared').VisualPreset}
+                preset={channel.visualPreset as VisualPreset}
                 colorSchemeJson={channel.colorSchemeJson}
+                settings={resolveVisualPresetSettings(
+                  parseVisualSettingsMap(channel.visualSettingsJson),
+                  channel.visualPreset as VisualPreset,
+                )}
                 className="ch-page-visualizer"
               />
             )}
@@ -558,7 +571,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                                     {ranks[item.id] && <RankBadge rank={ranks[item.id]!} />}
                                   </span>
                                   <div className="ch-archive-item-meta">
-                                    <div className="ch-archive-item-title">{item.title}</div>
+                                    <div className="ch-archive-item-meta-main">
+                                      <div className="ch-archive-item-title">{item.title}</div>
+                                      {(item.artistName ||
+                                        (item.credits && item.credits.length > 0)) && (
+                                        <div className="ch-archive-item-credit">
+                                          {item.artistName ? <span>{item.artistName}</span> : null}
+                                          {item.credits && item.credits.length > 0 ? (
+                                            <span className="ch-archive-item-credit__roles">
+                                              {item.credits
+                                                .map((c) => `${c.role}: ${c.name}`)
+                                                .join(' · ')}
+                                            </span>
+                                          ) : null}
+                                        </div>
+                                      )}
+                                    </div>
                                     <div className="ch-archive-item-date">
                                       {new Date(item.createdAt).toLocaleDateString(undefined, {
                                         year: 'numeric',
@@ -597,6 +625,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                                   <ArchiveItemPlayback
                                     channelSlug={slug}
                                     artistUsername={channel.user.username}
+                                    artistCredit={item.artistName}
                                     item={{ ...item, audioUrl: item.audioUrl }}
                                     colorSchemeJson={channel.colorSchemeJson}
                                     isLoggedIn={!!user}

@@ -1038,6 +1038,8 @@ model Channel {
   // M31: visual customization
   colorSchemeJson    String?              // JSON {bg,accent,text,muted,highlight} hex overrides
   visualPreset       VisualPreset         @default(MINIMAL)
+  // Per-preset knobs: JSON map { [VisualPreset]: { speed, intensity } }
+  visualSettingsJson String?
   headerStyle        ChannelHeaderStyle   @default(GRADIENT)
   brandAccentPreset  String?              // id into BRAND_ACCENT_PRESETS (@tahti/shared); null = custom/default colorScheme
   slideshowPreset    SlideshowPreset      @default(FADE)
@@ -1248,10 +1250,13 @@ model ArchiveItem {
   channel       Channel           @relation(fields: [channelId], references: [id], onDelete: Cascade)
   title         String
   // Overrides the displayed artist name away from channel.user.displayName —
-  // for curated/compilation tracks not uploaded under the original artist's
-  // own account (e.g. Tahti Selects' CC0 rotation). Null (the common case)
-  // means "use the owning channel's own artist name" as before.
+  // for curated/compilation tracks, guest features, or when a track's credit
+  // differs from the band / channel artist name. Null means use the owning
+  // channel's displayName.
   artistName    String?
+  // Structured role credits for this track when they differ from the channel
+  // Members/Credits roster — same shape as Release.credits.
+  credits       Json?             // [{ role, name, artistUsername? }]
   description   String?
   tracklist     Json?             // M22: [{startSec, title, artist?, artistUsername?}]
   editList      Json?             // Pro editor v3 draft (@tahti/audio-edit EditList v1)

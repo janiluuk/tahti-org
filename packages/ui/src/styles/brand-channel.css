@@ -4570,6 +4570,14 @@
   gap: 8px;
 }
 
+[data-tahti-ui='brand'] .ch-archive-item-meta-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 [data-tahti-ui='brand'] .ch-archive-item-title {
   flex: 1;
   min-width: 0;
@@ -4578,6 +4586,19 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-credit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  font-size: var(--text-xs);
+  color: var(--muted2);
+  line-height: 1.3;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-credit__roles {
+  color: var(--muted);
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-date {

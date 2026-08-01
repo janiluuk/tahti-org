@@ -21,6 +21,8 @@ import {
   BRAND_ACCENT_PRESETS,
   DEFAULT_COLOR_SCHEME,
   parseColorScheme,
+  parseVisualSettingsMap,
+  resolveVisualPresetSettings,
   type ChannelGalleryMode,
   type ChannelHeaderStyle,
   type ChannelTextLayerAlignment,
@@ -50,6 +52,7 @@ export type ChannelPreviewDraft = {
   visual: {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
+    visualSettingsJson: string | null
     headerStyle: ChannelHeaderStyle
     brandAccentPreset: string | null
     slideshowPreset: SlideshowPreset
@@ -75,6 +78,10 @@ function resolveHeaderBannerStyle(
 export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
   const backdrop = resolveArchiveBackground(draft.gallery.videoBackgroundUrl)
   const bannerStyle = resolveHeaderBannerStyle(draft.visual)
+  const visualSettings = resolveVisualPresetSettings(
+    parseVisualSettingsMap(draft.visual.visualSettingsJson),
+    draft.visual.visualPreset,
+  )
 
   return (
     <div data-tahti-ui="brand" data-channel-root className="brand-channel studio-channel-preview">
@@ -85,6 +92,7 @@ export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
           <ChannelVisualizer
             preset={draft.visual.visualPreset}
             colorSchemeJson={draft.visual.colorSchemeJson}
+            settings={visualSettings}
             className="ch-page-visualizer"
           />
         )}

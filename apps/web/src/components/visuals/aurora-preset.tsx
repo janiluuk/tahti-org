@@ -5,7 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { VisualPresetProps } from './types'
+import { readSettings, type VisualPresetProps } from './types'
 
 const VERT = `
   varying vec2 vUv;
@@ -17,6 +17,7 @@ const VERT = `
 
 const FRAG = `
   uniform float uTime;
+  uniform float uIntensity;
   uniform vec3 uColor1;
   uniform vec3 uColor2;
   uniform vec3 uColor3;
@@ -43,17 +44,17 @@ const FRAG = `
 
     float n1 = noise(uv * 2.5 + vec2(t, t * 0.5));
     float n2 = noise(uv * 4.0 - vec2(t * 0.7, t * 0.3));
-    float band = smoothstep(0.3, 0.7, uv.y + n1 * 0.3 - n2 * 0.15);
+    float band = smoothstep(0.3, 0.7, uv.y + n1 * 0.3 * uIntensity - n2 * 0.15 * uIntensity);
     float edge = smoothstep(0.0, 0.15, uv.y) * smoothstep(1.0, 0.85, uv.y);
 
     vec3 col = mix(uColor1, uColor2, band);
-    col = mix(col, uColor3, n2 * 0.4);
-    float alpha = edge * (0.4 + n1 * 0.3);
+    col = mix(col, uColor3, n2 * 0.4 * uIntensity);
+    float alpha = edge * (0.4 + n1 * 0.3 * uIntensity);
     gl_FragColor = vec4(col, alpha);
   }
 `
 
-export function AuroraPreset({ colorScheme }: VisualPresetProps) {
+export function AuroraPreset({ colorScheme, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -79,6 +80,7 @@ export function AuroraPreset({ colorScheme }: VisualPresetProps) {
 
     const uniforms = {
       uTime: { value: 0 },
+      uIntensity: { value: 1 },
       uColor1: { value: c1 },
       uColor2: { value: c2 },
       uColor3: { value: c3 },
@@ -101,7 +103,9 @@ export function AuroraPreset({ colorScheme }: VisualPresetProps) {
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
-      uniforms.uTime.value += 0.016
+      const { speed, intensity } = readSettings(settingsRef)
+      uniforms.uTime.value += 0.016 * speed
+      uniforms.uIntensity.value = intensity
       renderer.render(scene, camera)
     }
 

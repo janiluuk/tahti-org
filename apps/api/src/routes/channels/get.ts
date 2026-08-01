@@ -43,6 +43,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
           videoBackgroundUrl: true,
           colorSchemeJson: true,
           visualPreset: true,
+          visualSettingsJson: true,
           slideshowPreset: true,
           slideshowIntervalSeconds: true,
           slideshowTransitionMs: true,

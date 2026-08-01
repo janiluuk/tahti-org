@@ -17,6 +17,8 @@ import { resolveChannelUrl } from '@/lib/app-url'
 interface Props {
   channelSlug: string
   artistUsername: string
+  /** Per-track credit override — shown in the player instead of @username when set. */
+  artistCredit?: string | null
   item: {
     id: string
     title: string
@@ -40,6 +42,7 @@ interface Props {
 export function ArchiveItemPlayback({
   channelSlug,
   artistUsername,
+  artistCredit,
   item,
   colorSchemeJson,
   isLoggedIn,
@@ -57,7 +60,7 @@ export function ArchiveItemPlayback({
     kind: 'archive' as const,
     url: item.audioUrl,
     title: item.title,
-    subtitle: `@${artistUsername}`,
+    subtitle: artistCredit?.trim() || `@${artistUsername}`,
     href: `${resolveChannelUrl(channelSlug)}#archive-item-${item.id}`,
     artworkUrl: item.bannerUrl,
   }

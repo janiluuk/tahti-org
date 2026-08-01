@@ -5,11 +5,11 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { VisualPresetProps } from './types'
+import { readSettings, type VisualPresetProps } from './types'
 
 const PARTICLE_COUNT = 300
 
-export function ParticleFieldPreset({ colorScheme }: VisualPresetProps) {
+export function ParticleFieldPreset({ colorScheme, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -68,10 +68,12 @@ export function ParticleFieldPreset({ colorScheme }: VisualPresetProps) {
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
+      const { speed, intensity } = readSettings(settingsRef)
+      mat.opacity = 0.4 + 0.3 * intensity
       const pos = geo.attributes.position as THREE.BufferAttribute
       for (let i = 0; i < PARTICLE_COUNT; i++) {
-        pos.array[i * 3] += vels[i * 3]
-        pos.array[i * 3 + 1] += vels[i * 3 + 1]
+        pos.array[i * 3] += vels[i * 3] * speed
+        pos.array[i * 3 + 1] += vels[i * 3 + 1] * speed
         if ((pos.array as Float32Array)[i * 3 + 1] > 4) (pos.array as Float32Array)[i * 3 + 1] = -4
         if ((pos.array as Float32Array)[i * 3] > 4) (pos.array as Float32Array)[i * 3] = -4
         if ((pos.array as Float32Array)[i * 3] < -4) (pos.array as Float32Array)[i * 3] = 4

@@ -12,10 +12,12 @@ import {
   CHANNEL_HEADER_STYLE_LABELS,
   ColorSchemeSchema,
   DEFAULT_COLOR_SCHEME,
+  parseVisualSettingsMap,
   type ChannelHeaderStyle,
   type VisualPreset,
   type SlideshowPreset,
   type ColorScheme,
+  type VisualSettingsMap,
 } from '@tahti/shared'
 import { Panel } from '@tahti/ui'
 import { VisualPresetPicker } from '@/components/visuals/visual-preset-picker'
@@ -29,6 +31,7 @@ interface Props {
   initial: {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
+    visualSettingsJson?: string | null
     headerStyle: ChannelHeaderStyle
     brandAccentPreset: string | null
     slideshowPreset: SlideshowPreset
@@ -51,6 +54,7 @@ function parseOrNull(json: string | null): ColorScheme | null {
 export type ChannelVisualDraft = {
   visualPreset: VisualPreset
   colorSchemeJson: string | null
+  visualSettingsJson: string | null
   headerStyle: ChannelHeaderStyle
   brandAccentPreset: string | null
   slideshowPreset: SlideshowPreset
@@ -73,6 +77,9 @@ export default function ChannelVisualPresetPanel({
   const [useCustomScheme, setUseCustomScheme] = useState(!!parsed)
   const [brandAccentPreset, setBrandAccentPreset] = useState(initial.brandAccentPreset)
   const [headerStyle, setHeaderStyle] = useState<ChannelHeaderStyle>(initial.headerStyle)
+  const [settingsMap, setSettingsMap] = useState<VisualSettingsMap>(() =>
+    parseVisualSettingsMap(initial.visualSettingsJson),
+  )
 
   const canUseVideoLoop = tier !== 'FREE'
 
@@ -83,6 +90,7 @@ export default function ChannelVisualPresetPanel({
     onDraftChange?.({
       visualPreset: preset,
       colorSchemeJson: useCustomScheme ? JSON.stringify(scheme) : null,
+      visualSettingsJson: Object.keys(settingsMap).length > 0 ? JSON.stringify(settingsMap) : null,
       headerStyle,
       brandAccentPreset,
       slideshowPreset: initial.slideshowPreset,
@@ -91,7 +99,7 @@ export default function ChannelVisualPresetPanel({
       slideshowAutoplay: initial.slideshowAutoplay,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preset, scheme, useCustomScheme, headerStyle, brandAccentPreset])
+  }, [preset, scheme, useCustomScheme, headerStyle, brandAccentPreset, settingsMap])
 
   function updateColor(key: keyof ColorScheme, value: string) {
     setScheme((s) => ({ ...s, [key]: value }))
@@ -163,8 +171,13 @@ export default function ChannelVisualPresetPanel({
           value={preset}
           onChange={setPreset}
           colorScheme={useCustomScheme ? scheme : undefined}
+          settingsMap={settingsMap}
+          onSettingsChange={setSettingsMap}
           showPreview
         />
+        <p className="studio-help studio-mt-xs">
+          Quick picks above — open Gallery for full-size previews and per-visualizer settings.
+        </p>
       </div>
 
       <label className="studio-social-toggle studio-mb-sm">
