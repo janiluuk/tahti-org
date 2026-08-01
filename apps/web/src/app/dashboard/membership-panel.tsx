@@ -94,6 +94,7 @@ export default function MembershipPanel({
           )}
           {hasStripeSubscription ? (
             <Button onClick={openPortal} disabled={isPending} variant="ghost">
+              <ButtonIcon name="arrowRight" />
               {isPending ? 'Opening…' : 'Manage billing'}
             </Button>
           ) : subscriptionMigrationRequired ? (

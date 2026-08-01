@@ -4,7 +4,7 @@
 'use client'
 
 import { Fragment, useEffect, useMemo, useState, useTransition } from 'react'
-import { Button } from '@tahti/ui'
+import { Button, ButtonIcon } from '@tahti/ui'
 import { RADIO_SLOT_MAX_HOURS, type RadioSlotBookingItem } from '@tahti/shared'
 import { cancelRadioSlotBooking, createRadioSlotBooking, listRadioSlotBookings } from './actions'
 
@@ -276,6 +276,7 @@ export function RadioSlotCalendar({
             onChange={(e) => setNote(e.target.value)}
           />
           <Button variant="primary" size="sm" onClick={confirmBooking} disabled={pending}>
+            <ButtonIcon name="check" />
             {pending ? 'Booking…' : 'Confirm booking'}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setSelection(null)} disabled={pending}>

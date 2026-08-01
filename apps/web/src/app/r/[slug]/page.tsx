@@ -92,7 +92,6 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
 
       <ReleaseSmartLink
         releaseId={data.release.id}
-        statusLabel="Published"
         title={data.release.title}
         artistName={data.artist.displayName}
         releaseType={data.release.type}

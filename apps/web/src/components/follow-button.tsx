@@ -8,7 +8,7 @@ import { usePathname, useRouter } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
-function IconHeart({ filled }: { filled: boolean }) {
+function IconPerson({ filled }: { filled: boolean }) {
   return (
     <svg
       width="13"
@@ -17,11 +17,12 @@ function IconHeart({ filled }: { filled: boolean }) {
       fill={filled ? 'currentColor' : 'none'}
       aria-hidden
     >
+      <circle cx="8" cy="5.5" r="2.6" stroke="currentColor" strokeWidth="1.3" />
       <path
-        d="M8 13.8s-5.7-3.5-5.7-7.4a3.3 3.3 0 0 1 5.7-2.2 3.3 3.3 0 0 1 5.7 2.2c0 3.9-5.7 7.4-5.7 7.4Z"
+        d="M3.2 13.2c0-2.4 2.1-4.3 4.8-4.3s4.8 1.9 4.8 4.3"
         stroke="currentColor"
         strokeWidth="1.3"
-        strokeLinejoin="round"
+        strokeLinecap="round"
       />
     </svg>
   )
@@ -93,7 +94,7 @@ export function FollowButton({
       disabled={pending}
       aria-pressed={following}
     >
-      <IconHeart filled={following} />
+      <IconPerson filled={following} />
       {following ? 'Following' : 'Follow'}
       {followerCount > 0 && <span className="ch-follow-btn__count">{followerCount}</span>}
     </button>

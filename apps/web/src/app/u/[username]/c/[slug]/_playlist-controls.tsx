@@ -6,17 +6,10 @@
 import type { PlayerTrack } from '@/contexts/player-context'
 import { usePlayer } from '@/contexts/player-context'
 
-/** Random / Repeat toggles for a public collection playlist. */
+/** Shuffle / Repeat mode toggles for a public collection playlist. */
 export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
-  const { shuffle, toggleShuffle, repeat, toggleRepeat, load } = usePlayer()
+  const { shuffle, toggleShuffle, repeat, toggleRepeat } = usePlayer()
   const canMode = queue.length >= 2
-
-  function playRandom() {
-    if (queue.length === 0) return
-    if (!shuffle && canMode) toggleShuffle()
-    const start = queue[Math.floor(Math.random() * queue.length)]!
-    load(start, { autoplay: true, queue })
-  }
 
   if (queue.length === 0) return null
 
@@ -25,9 +18,10 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
       <button
         type="button"
         className={`prof-playlist-controls__btn${shuffle ? ' prof-playlist-controls__btn--active' : ''}`}
-        onClick={playRandom}
+        onClick={toggleShuffle}
+        disabled={!canMode}
         aria-pressed={shuffle}
-        title={shuffle ? 'Random: on — play a random track' : 'Play random'}
+        title={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
       >
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path
@@ -38,7 +32,7 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
             strokeLinejoin="round"
           />
         </svg>
-        Random
+        Shuffle
       </button>
       <button
         type="button"

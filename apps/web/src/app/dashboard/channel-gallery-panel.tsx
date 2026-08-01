@@ -23,6 +23,7 @@ const SIMPLE_MODES = CHANNEL_GALLERY_MODES.filter((m) => m === 'NONE' || m === '
 export default function ChannelGalleryPanel({
   initial,
   bare = false,
+  hideSave = false,
   onDraftChange,
 }: {
   initial: {
@@ -31,6 +32,8 @@ export default function ChannelGalleryPanel({
     videoBackgroundUrl?: string | null
   }
   bare?: boolean
+  /** When true, omit the save button (parent owns Publish). */
+  hideSave?: boolean
   /** Fires on every edit (before save) so a live preview can mirror the draft. */
   onDraftChange?: (draft: {
     galleryMode: ChannelGalleryMode
@@ -154,13 +157,15 @@ export default function ChannelGalleryPanel({
         </label>
       )}
 
-      {error && <p className="studio-notice studio-notice--error">{error}</p>}
-      {message && <p className="studio-notice studio-notice--success">{message}</p>}
+      {!hideSave && error && <p className="studio-notice studio-notice--error">{error}</p>}
+      {!hideSave && message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-      <Button onClick={save} disabled={isPending} variant="primary">
-        <ButtonIcon name="save" />
-        {isPending ? 'Saving…' : 'Save gallery'}
-      </Button>
+      {!hideSave && (
+        <Button onClick={save} disabled={isPending} variant="primary">
+          <ButtonIcon name="send" />
+          {isPending ? 'Publishing…' : 'Publish changes'}
+        </Button>
+      )}
     </>
   )
 

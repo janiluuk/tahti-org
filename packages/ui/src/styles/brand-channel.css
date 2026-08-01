@@ -3340,6 +3340,69 @@
   width: 100%;
 }
 
+[data-tahti-ui='brand'] .prof-message-interstitial {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__card {
+  width: min(24rem, 100%);
+  padding: 1.25rem 1.35rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-hover);
+  background: var(--card);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__title {
+  margin: 0 0 0.4rem;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__body {
+  margin: 0 0 1rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__cancel,
+[data-tahti-ui='brand'] .prof-message-interstitial__continue {
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__cancel {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__continue {
+  border: none;
+  background: var(--cyan);
+  color: var(--bg);
+}
+
 [data-tahti-ui='brand'] .prof-cta-btn {
   background: var(--cyan);
   color: var(--bg);
@@ -4209,6 +4272,21 @@
   color: var(--muted);
   border: 1px solid var(--border);
   border-top: 2px solid color-mix(in srgb, var(--cyan) 35%, var(--border));
+}
+
+[data-tahti-ui='brand'] .sl-panel-summary {
+  cursor: pointer;
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  list-style: none;
+}
+
+[data-tahti-ui='brand'] .sl-panel-summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-tahti-ui='brand'] .sl-panel--credits[open] > .sl-panel-summary {
+  margin-bottom: 0.55rem;
 }
 
 [data-tahti-ui='brand'] .sl-panel a {

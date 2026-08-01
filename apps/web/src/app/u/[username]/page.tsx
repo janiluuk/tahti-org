@@ -261,6 +261,20 @@ function CollectionRowList({ items }: { items: NonNullable<ProfileResponse['coll
   )
 }
 
+async function fetchSupportAvailable(username: string): Promise<boolean> {
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+  try {
+    const res = await fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(username)}/tiers`, {
+      next: { revalidate: 60 },
+    })
+    if (!res.ok) return false
+    const data = (await res.json()) as { tiers?: unknown[]; paymentsReady?: boolean }
+    return Boolean(data.paymentsReady && Array.isArray(data.tiers) && data.tiers.length > 0)
+  } catch {
+    return false
+  }
+}
+
 async function fetchPressKitImages(username: string): Promise<PublicPressKitImage[]> {
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const res = await fetch(
@@ -296,7 +310,11 @@ async function fetchChannelExtras(slug: string | undefined) {
 }
 
 export default async function ArtistProfilePage({ params }: { params: { username: string } }) {
-  const [data, user] = await Promise.all([fetchProfile(params.username), getSessionUser()])
+  const [data, user, showSupport] = await Promise.all([
+    fetchProfile(params.username),
+    getSessionUser(),
+    fetchSupportAvailable(params.username),
+  ])
   if (!data) {
     const nextUsername = await resolveUsernameRedirect(params.username)
     if (nextUsername) redirect(`/u/${nextUsername}`)
@@ -400,6 +418,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
             isLive={isLive}
             channelHref={links.channel}
             subscribeHref={links.subscribe}
+            showSupport={showSupport}
             tipJarUrl={artist.tipJarUrl}
             joinDateLabel={formatJoinDateLabel(artist.joinDate)}
             joinDateTitle={formatJoinDateTitle(artist.joinDate)}

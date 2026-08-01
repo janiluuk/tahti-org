@@ -5,7 +5,7 @@
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
-import { Button } from '@tahti/ui'
+import { Button, ButtonIcon } from '@tahti/ui'
 import { sendMessage, type ConversationDetail, type MessageView } from '../actions'
 import { MentionTextarea } from '../_mention-textarea'
 import { EmojiPicker } from '../_emoji-picker'
@@ -93,6 +93,7 @@ export function ConversationThread({
         <div className="dm-thread__composer-actions">
           <EmojiPicker onSelect={(emoji) => setDraft((prev) => prev + emoji)} />
           <Button onClick={submit} disabled={sending || !draft.trim()} variant="primary" size="sm">
+            <ButtonIcon name="send" />
             Send
           </Button>
         </div>

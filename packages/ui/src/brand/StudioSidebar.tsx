@@ -4,7 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { usePathname } from 'next/navigation'
-import { Fragment, useEffect, useState, type MouseEvent } from 'react'
+import { Fragment, useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { DASHBOARD_NAV, isDashboardNavItemActive, navigateDashboardHash } from './dashboard-nav'
 import type { DashboardNavDefinition } from './dashboard-nav'
 import { SidebarNavLink } from './SidebarNavLink'
@@ -19,6 +19,63 @@ const LISTENER_NAV: DashboardNavDefinition[] = [
   { href: '/dashboard/messages', label: 'Messages', icon: 'newsletter', isRoute: true },
   { href: '/dashboard/settings/account', label: 'Account', icon: 'settings', isRoute: true },
 ]
+
+function isItemActive(
+  pathname: string | null,
+  hash: string,
+  onDashboard: boolean,
+  item: DashboardNavDefinition,
+): boolean {
+  if (item.isRoute) {
+    // `/dashboard` is a path prefix of every other dashboard route, so it can only
+    // ever match exactly — a startsWith check here would light up Channel everywhere.
+    return item.href === '/dashboard'
+      ? pathname === '/dashboard'
+      : pathname === item.href || Boolean(pathname?.startsWith(`${item.href}/`))
+  }
+  return isDashboardNavItemActive(
+    hash,
+    { sectionKey: item.sectionKey, hash: item.hash, isRoute: item.isRoute },
+    onDashboard,
+  )
+}
+
+function NavRows({
+  items,
+  pathname,
+  hash,
+  onDashboard,
+  onHashNavClick,
+}: {
+  items: DashboardNavDefinition[]
+  pathname: string | null
+  hash: string
+  onDashboard: boolean
+  onHashNavClick: (e: MouseEvent<HTMLAnchorElement>, itemHash: string | undefined) => void
+}) {
+  return (
+    <>
+      {items.map((item) => {
+        const { href, label, icon, hash: itemHash, group } = item
+        const active = isItemActive(pathname, hash, onDashboard, item)
+        return (
+          <Fragment key={`${href}-${label}`}>
+            {group && <div className="db-nav-group-label">{group}</div>}
+            <SidebarNavLink
+              href={href}
+              icon={icon}
+              active={active}
+              surface="studio"
+              onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
+            >
+              {label}
+            </SidebarNavLink>
+          </Fragment>
+        )
+      })}
+    </>
+  )
+}
 
 /** Production dashboard sidebar — v8 nav items via SidebarNavLink. */
 export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
@@ -39,6 +96,18 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
       )
     : LISTENER_NAV
 
+  const { primary, secondary } = useMemo(() => {
+    const primaryItems: DashboardNavDefinition[] = []
+    const secondaryItems: DashboardNavDefinition[] = []
+    for (const item of navItems) {
+      if (item.secondary) secondaryItems.push(item)
+      else primaryItems.push(item)
+    }
+    return { primary: primaryItems, secondary: secondaryItems }
+  }, [navItems])
+
+  const secondaryOpen = secondary.some((item) => isItemActive(pathname, hash, onDashboard, item))
+
   function onHashNavClick(e: MouseEvent<HTMLAnchorElement>, itemHash: string | undefined) {
     if (!itemHash || !onDashboard) return
     e.preventDefault()
@@ -48,33 +117,25 @@ export function StudioSidebar({ isBoard, hasChannel = true }: Props) {
   return (
     <aside className="db-sidebar">
       <nav aria-label={hasChannel ? 'Dashboard sections' : 'Account'}>
-        {navItems.map(({ href, label, icon, isRoute, hash: itemHash, sectionKey, group }) => {
-          let active: boolean
-          if (isRoute) {
-            // `/dashboard` is a path prefix of every other dashboard route, so it can only
-            // ever match exactly — a startsWith check here would light up Channel everywhere.
-            active =
-              href === '/dashboard'
-                ? pathname === '/dashboard'
-                : pathname === href || pathname.startsWith(`${href}/`)
-          } else {
-            active = isDashboardNavItemActive(hash, { sectionKey, hash: itemHash }, onDashboard)
-          }
-          return (
-            <Fragment key={`${href}-${label}`}>
-              {group && <div className="db-nav-group-label">{group}</div>}
-              <SidebarNavLink
-                href={href}
-                icon={icon}
-                active={active}
-                surface="studio"
-                onClick={itemHash ? (e) => onHashNavClick(e, itemHash) : undefined}
-              >
-                {label}
-              </SidebarNavLink>
-            </Fragment>
-          )
-        })}
+        <NavRows
+          items={primary}
+          pathname={pathname}
+          hash={hash}
+          onDashboard={onDashboard}
+          onHashNavClick={onHashNavClick}
+        />
+        {secondary.length > 0 && (
+          <details className="db-nav-more" {...(secondaryOpen ? { open: true } : {})}>
+            <summary className="db-nav-more__summary">More</summary>
+            <NavRows
+              items={secondary}
+              pathname={pathname}
+              hash={hash}
+              onDashboard={onDashboard}
+              onHashNavClick={onHashNavClick}
+            />
+          </details>
+        )}
       </nav>
     </aside>
   )

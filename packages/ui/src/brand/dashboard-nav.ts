@@ -29,6 +29,8 @@ export type DashboardNavDefinition = {
   adminOnly?: boolean
   /** Group label rendered above the first item of each group; omit to stay ungrouped. */
   group?: string
+  /** Collapsed under a “More” disclosure in the desktop sidebar. */
+  secondary?: boolean
 }
 
 export const DASHBOARD_SECTION_TO_TAB: Record<DashboardSectionKey, DashboardTabId> = {
@@ -147,8 +149,9 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     icon: 'links',
     isRoute: true,
     requiresChannel: true,
+    secondary: true,
   },
-  { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true },
+  { href: '/dashboard/stash', label: 'Stash', icon: 'stash', isRoute: true, secondary: true },
 
   // Broadcasting — going live and scheduling it.
   {
@@ -167,17 +170,18 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     isRoute: true,
     requiresChannel: true,
   },
-  { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true },
-  { href: '/dashboard/events', label: 'Events', icon: 'schedule', isRoute: true },
+  { href: '/dashboard/venues', label: 'Venues', icon: 'venues', isRoute: true, secondary: true },
+  { href: '/dashboard/events', label: 'Events', icon: 'schedule', isRoute: true, secondary: true },
   {
     href: '/dashboard/tahti-radio-slots',
     label: 'Radio slot',
     icon: 'schedule',
     isRoute: true,
     requiresChannel: true,
+    secondary: true,
   },
-  { href: '/dashboard/posts', label: 'Posts', icon: 'posts', isRoute: true },
-  { href: '/dashboard/embeds', label: 'Embeds', icon: 'embeds', isRoute: true },
+  { href: '/dashboard/posts', label: 'Posts', icon: 'posts', isRoute: true, secondary: true },
+  { href: '/dashboard/embeds', label: 'Embeds', icon: 'embeds', isRoute: true, secondary: true },
 
   // Audience — fans, mailing list, and money.
   {

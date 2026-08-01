@@ -120,6 +120,8 @@ type ProfileHeroProps = {
   isLive?: boolean
   channelHref?: string | null
   subscribeHref: string
+  /** When false, hide the Support CTA (no tiers / payments). Defaults to true. */
+  showSupport?: boolean
   tipJarUrl?: string | null
   /** Pre-formatted, e.g. "Member since 8 months" — resolved by the caller so this component stays locale-agnostic. */
   joinDateLabel?: string | null
@@ -158,6 +160,7 @@ export function ProfileHero({
   isLive,
   channelHref,
   subscribeHref,
+  showSupport = true,
   tipJarUrl,
   joinDateLabel,
   joinDateTitle,
@@ -202,10 +205,12 @@ export function ProfileHero({
             </Link>
           )}
           {followSlot}
-          <Link href={subscribeHref} className="prof-sub-btn">
-            <IconHeart />
-            Support
-          </Link>
+          {showSupport ? (
+            <Link href={subscribeHref} className="prof-sub-btn">
+              <IconHeart />
+              Support
+            </Link>
+          ) : null}
           {messageSlot}
           {newsletterSlot}
           {rssUrl && (

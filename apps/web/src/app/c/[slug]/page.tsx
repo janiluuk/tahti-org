@@ -50,7 +50,6 @@ import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-ic
 import { ReportButton } from '@/components/report-button'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { FollowButton } from '@/components/follow-button'
-import { SendMessageButton } from '@/components/send-message-button'
 import { ReleasesGrid, type ReleaseGridItem } from '@/components/releases-grid'
 import { ChannelTabs } from './_channel-tabs'
 import { PublicChannelTabs } from './_public-tabs'
@@ -161,7 +160,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const channel = (await channelRes.json()) as ChannelResponse
 
-  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, profileRes, user] =
+  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, profileRes, tiersRes, user] =
     await Promise.all([
       fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
       fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
@@ -171,11 +170,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/profile`, {
         cache: 'no-store',
       }),
+      fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/tiers`, {
+        next: { revalidate: 60 },
+      }),
       getSessionUser(),
     ])
   const releases: ReleaseGridItem[] = profileRes.ok
     ? ((await profileRes.json()) as { releases: ReleaseGridItem[] }).releases
     : []
+  const showSupport = tiersRes.ok
+    ? await tiersRes
+        .json()
+        .then((data: { tiers?: unknown[]; paymentsReady?: boolean }) =>
+          Boolean(data.paymentsReady && Array.isArray(data.tiers) && data.tiers.length > 0),
+        )
+        .catch(() => false)
+    : false
 
   const items: ArchiveItem[] = itemsRes.ok ? ((await itemsRes.json()) as ArchiveItem[]) : []
   const ranks: Record<string, number> =
@@ -376,31 +386,27 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 </Row>
                 <div className="ch-artist-cta-row">
                   {user?.username !== channel.user.username && (
-                    <>
-                      <FollowButton artistUsername={channel.user.username} />
-                      <SendMessageButton artistUsername={channel.user.username} />
-                    </>
+                    <FollowButton artistUsername={channel.user.username} />
                   )}
-                  <Link
-                    href={`/u/${channel.user.username}/subscribe`}
-                    className="ch-artist-sub-btn"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
-                      <path d="M8 13.8 2.6 8.7C1 7.2 1 4.7 2.6 3.3c1.5-1.3 3.7-1 5 .5L8 4.3l.4-.5c1.3-1.5 3.5-1.8 5-.5 1.6 1.4 1.6 3.9 0 5.4L8 13.8z" />
-                    </svg>
-                    Support directly
-                  </Link>
+                  {showSupport && (
+                    <Link
+                      href={`/u/${channel.user.username}/subscribe`}
+                      className="ch-artist-sub-btn"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                        aria-hidden
+                      >
+                        <path d="M8 13.8 2.6 8.7C1 7.2 1 4.7 2.6 3.3c1.5-1.3 3.7-1 5 .5L8 4.3l.4-.5c1.3-1.5 3.5-1.8 5-.5 1.6 1.4 1.6 3.9 0 5.4L8 13.8z" />
+                      </svg>
+                      Support
+                    </Link>
+                  )}
                   <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <circle cx="8" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
-                      <path
-                        d="M3 13.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"
-                        stroke="currentColor"
-                        strokeWidth="1.3"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    View profile
+                    Profile
                   </Link>
                 </div>
               </header>
@@ -463,7 +469,10 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     )}
 
                     {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
-
+                  </>
+                }
+                archive={
+                  <>
                     {embeds.length > 0 && (
                       <section className="ch-archive-section">
                         <div className="ch-archive-section-head">

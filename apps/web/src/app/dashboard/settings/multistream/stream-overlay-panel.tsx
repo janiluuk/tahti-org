@@ -4,7 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useState } from 'react'
-import { Button, Panel } from '@tahti/ui'
+import { Button, ButtonIcon, Panel } from '@tahti/ui'
 
 interface StreamOverlay {
   streamOverlayTitle: string | null
@@ -117,7 +117,8 @@ export function StreamOverlayPanel({ initial }: { initial: StreamOverlay }) {
         />
       </div>
 
-      <Button onClick={() => void save()} disabled={saving}>
+      <Button onClick={() => void save()} disabled={saving} variant="primary">
+        <ButtonIcon name="save" />
         {saving ? 'Saving…' : 'Save overlay'}
       </Button>
     </Panel>
