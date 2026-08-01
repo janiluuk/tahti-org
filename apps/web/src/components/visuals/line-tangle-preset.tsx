@@ -5,7 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { VisualPresetProps } from './types'
+import { readSettings, type VisualPresetProps } from './types'
 
 // Adapted from the three.js "webgl_buffergeometry_lines" example: a big tangle
 // of randomly-placed line segments, rotating slowly. Segment count is a small
@@ -15,7 +15,7 @@ import type { VisualPresetProps } from './types'
 const SEGMENTS = 1500
 const RADIUS = 3
 
-export function LineTanglePreset({ colorScheme, analyser }: VisualPresetProps) {
+export function LineTanglePreset({ colorScheme, analyser, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -101,7 +101,8 @@ export function LineTanglePreset({ colorScheme, analyser }: VisualPresetProps) {
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
-      t += 0.0025
+      const { speed, intensity } = readSettings(settingsRef)
+      t += 0.0025 * speed
 
       let bass = 0
       if (analyser && freqData) {
@@ -114,7 +115,8 @@ export function LineTanglePreset({ colorScheme, analyser }: VisualPresetProps) {
       smoothedBass += (bass - smoothedBass) * 0.04
 
       lines.rotation.x = t * 0.25
-      lines.rotation.y = t * 0.5 * (1 + smoothedBass * 0.4)
+      lines.rotation.y = t * 0.5 * (1 + smoothedBass * 0.4 * intensity)
+      mat.opacity = 0.25 + 0.2 * intensity
 
       renderer.render(scene, camera)
     }

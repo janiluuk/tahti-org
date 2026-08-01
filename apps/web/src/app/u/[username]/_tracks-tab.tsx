@@ -12,6 +12,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_
 export interface TrackTabItem {
   id: string
   title: string
+  artistName?: string | null
   durationSec: number | null
   bannerUrl: string | null
   playUrl: string | null
@@ -128,6 +129,7 @@ export function TracksTab({ tracks, isOwner }: { tracks: TrackTabItem[]; isOwner
                   <div className="prof-collection-title">{t.title}</div>
                 )}
                 <div className="prof-list-meta prof-list-meta--strong">
+                  {t.artistName ? `${t.artistName} · ` : null}
                   {formatDuration(t.durationSec)}
                   {t.pinned && ' · Pinned'}
                 </div>

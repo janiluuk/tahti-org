@@ -26,6 +26,25 @@ describe('ArchiveMetadataFieldsSchema', () => {
     expect(parsed.success).toBe(true)
   })
 
+  it('accepts per-track artist credit override and role credits', () => {
+    const parsed = ArchiveMetadataFieldsSchema.safeParse({
+      artistName: 'Guest Alias feat. Friend',
+      credits: [
+        { role: 'performer', name: 'Guest Alias' },
+        { role: 'producer', name: 'Friend', artistUsername: 'friend' },
+      ],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('allows clearing artistName / credits with null', () => {
+    const parsed = ArchiveMetadataFieldsSchema.safeParse({
+      artistName: null,
+      credits: null,
+    })
+    expect(parsed.success).toBe(true)
+  })
+
   it('exports sensible defaults', () => {
     expect(ARCHIVE_METADATA_DEFAULTS.genre).toBe('Electronic')
     expect(ARCHIVE_METADATA_DEFAULTS.contentType).toBe('STUDIO')

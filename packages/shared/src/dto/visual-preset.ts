@@ -187,9 +187,57 @@ export function resolveColorScheme(
   return parseColorScheme(colorSchemeJson) ?? parseColorScheme(paletteJson) ?? DEFAULT_COLOR_SCHEME
 }
 
+/** Per-visualizer knobs (speed / intensity). Stored as a map keyed by preset. */
+export const VisualPresetSettingsSchema = z.object({
+  speed: z.number().min(0.25).max(2),
+  intensity: z.number().min(0.25).max(2),
+})
+
+export type VisualPresetSettings = z.infer<typeof VisualPresetSettingsSchema>
+
+export const DEFAULT_VISUAL_PRESET_SETTINGS: VisualPresetSettings = {
+  speed: 1,
+  intensity: 1,
+}
+
+export const VisualSettingsMapSchema = z.record(z.string(), VisualPresetSettingsSchema.partial())
+
+export type VisualSettingsMap = z.infer<typeof VisualSettingsMapSchema>
+
+export function parseVisualSettingsMap(json: string | null | undefined): VisualSettingsMap {
+  if (!json) return {}
+  try {
+    const parsed = VisualSettingsMapSchema.safeParse(JSON.parse(json))
+    return parsed.success ? parsed.data : {}
+  } catch {
+    return {}
+  }
+}
+
+export function resolveVisualPresetSettings(
+  map: VisualSettingsMap | null | undefined,
+  preset: VisualPreset,
+): VisualPresetSettings {
+  const partial = map?.[preset]
+  return {
+    speed: partial?.speed ?? DEFAULT_VISUAL_PRESET_SETTINGS.speed,
+    intensity: partial?.intensity ?? DEFAULT_VISUAL_PRESET_SETTINGS.intensity,
+  }
+}
+
+/** Compact strip favorites shown beside the gallery entry — not the full catalog. */
+export const VISUAL_PRESET_STRIP: VisualPreset[] = [
+  'MINIMAL',
+  'WAVEFORM_BARS',
+  'AURORA',
+  'PARTICLE_FIELD',
+]
+
 export const ChannelVisualPatchSchema = z.object({
   visualPreset: z.enum(VISUAL_PRESETS).optional(),
   colorScheme: ColorSchemeSchema.nullable().optional(),
+  /** Map of preset → { speed, intensity }. Null clears all overrides. */
+  visualSettings: VisualSettingsMapSchema.nullable().optional(),
   headerStyle: z.enum(CHANNEL_HEADER_STYLES).optional(),
   brandAccentPreset: z.string().nullable().optional(),
   slideshowPreset: z.enum(SLIDESHOW_PRESETS).optional(),

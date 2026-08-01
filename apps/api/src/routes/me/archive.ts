@@ -459,6 +459,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       select: {
         colorSchemeJson: true,
         visualPreset: true,
+        visualSettingsJson: true,
         headerStyle: true,
         brandAccentPreset: true,
         slideshowPreset: true,
@@ -480,6 +481,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
     const {
       visualPreset,
       colorScheme,
+      visualSettings,
       headerStyle,
       brandAccentPreset,
       slideshowPreset,
@@ -507,6 +509,14 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
         ...(colorScheme !== undefined
           ? { colorSchemeJson: colorScheme ? JSON.stringify(colorScheme) : null }
           : {}),
+        ...(visualSettings !== undefined
+          ? {
+              visualSettingsJson:
+                visualSettings && Object.keys(visualSettings).length > 0
+                  ? JSON.stringify(visualSettings)
+                  : null,
+            }
+          : {}),
         ...(headerStyle !== undefined ? { headerStyle } : {}),
         ...(brandAccentPreset !== undefined ? { brandAccentPreset } : {}),
         ...(slideshowPreset !== undefined ? { slideshowPreset } : {}),
@@ -517,6 +527,7 @@ const meArchiveRoutes: FastifyPluginAsync = async (fastify) => {
       select: {
         colorSchemeJson: true,
         visualPreset: true,
+        visualSettingsJson: true,
         headerStyle: true,
         brandAccentPreset: true,
         slideshowPreset: true,

@@ -5,12 +5,12 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { VisualPresetProps } from './types'
+import { readSettings, type VisualPresetProps } from './types'
 
 const GRID_W = 24
 const GRID_H = 14
 
-export function ReactiveGridPreset({ colorScheme, analyser }: VisualPresetProps) {
+export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -61,7 +61,8 @@ export function ReactiveGridPreset({ colorScheme, analyser }: VisualPresetProps)
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
-      t += 0.02
+      const { speed, intensity } = readSettings(settingsRef)
+      t += 0.02 * speed
 
       for (let i = 0; i < cells.length; i++) {
         const { mat, phase } = cells[i]!
@@ -74,7 +75,7 @@ export function ReactiveGridPreset({ colorScheme, analyser }: VisualPresetProps)
         }
         const col = new THREE.Color().lerpColors(muted, pulse > 0.7 ? highlight : accent, pulse)
         mat.color = col
-        mat.opacity = 0.1 + pulse * 0.3
+        mat.opacity = 0.1 + pulse * 0.3 * intensity
       }
 
       renderer.render(scene, camera)

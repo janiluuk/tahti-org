@@ -5,7 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { VisualPresetProps } from './types'
+import { readSettings, type VisualPresetProps } from './types'
 
 // Adapted from the three.js "webgpu_backdrop_area" example's core idea (a box
 // sitting in front of a backdrop, camera framing it) — recreated with the
@@ -15,7 +15,7 @@ import type { VisualPresetProps } from './types'
 // warrants). Zoom (camera FOV), the box's rotation angle, and its size all
 // idle-animate on their own, and get an additional subtle nudge from audio
 // when an analyser is present.
-export function BackdropBoxPreset({ colorScheme, analyser }: VisualPresetProps) {
+export function BackdropBoxPreset({ colorScheme, analyser, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -88,7 +88,8 @@ export function BackdropBoxPreset({ colorScheme, analyser }: VisualPresetProps) 
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
-      t += 0.01
+      const { speed, intensity } = readSettings(settingsRef)
+      t += 0.01 * speed
 
       let bass = 0
       let level = 0
@@ -105,15 +106,17 @@ export function BackdropBoxPreset({ colorScheme, analyser }: VisualPresetProps) 
       smoothedLevel += (level - smoothedLevel) * 0.04
 
       // angle: idle slow spin + a gentle wobble, audio adds a little extra speed
-      group.rotation.y = t * (0.3 + smoothedLevel * 0.25)
-      group.rotation.x = Math.sin(t * 0.4) * 0.15
+      group.rotation.y = t * (0.3 + smoothedLevel * 0.25 * intensity)
+      group.rotation.x = Math.sin(t * 0.4) * 0.15 * intensity
 
       // size: idle breathing, audio bass adds an extra pulse
-      const scale = baseScale * (1 + Math.sin(t * 0.6) * 0.04 + smoothedBass * 0.12)
+      const scale =
+        baseScale * (1 + Math.sin(t * 0.6) * 0.04 * intensity + smoothedBass * 0.12 * intensity)
       group.scale.setScalar(scale)
 
       // zoom: idle slow dolly via FOV, audio level adds a subtle extra push
-      camera.fov = baseFov * (1 + Math.sin(t * 0.25) * 0.03 - smoothedLevel * 0.05)
+      camera.fov =
+        baseFov * (1 + Math.sin(t * 0.25) * 0.03 * intensity - smoothedLevel * 0.05 * intensity)
       camera.updateProjectionMatrix()
 
       renderer.render(scene, camera)

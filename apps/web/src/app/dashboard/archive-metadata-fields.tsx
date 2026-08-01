@@ -3,7 +3,7 @@
 
 'use client'
 
-import type { TracklistEntry, ChannelGalleryMode } from '@tahti/shared'
+import type { TracklistEntry, ChannelGalleryMode, ReleaseCredit } from '@tahti/shared'
 import {
   ARCHIVE_GENRES,
   ARCHIVE_CONTENT_TYPES,
@@ -17,6 +17,7 @@ import {
   CHANNEL_GALLERY_MODE_HINTS,
   CHANNEL_GALLERY_MODE_LABELS,
   isWebGLGalleryMode,
+  RELEASE_CREDIT_ROLES,
 } from '@tahti/shared'
 import { TracklistEditor } from './tracklist-editor'
 import { CoverImageUpload } from '@/components/cover-image-upload'
@@ -26,9 +27,12 @@ import {
   completeArchiveBannerUpload,
   fetchArchiveBannerFromUrl,
 } from './archive-actions'
+import { Button } from '@tahti/ui'
 
 export type ArchiveMetadataFormState = {
   description: string
+  artistName: string
+  credits: ReleaseCredit[]
   genre: string
   genreCustom: string
   recordingLocation: string
@@ -58,6 +62,19 @@ export type ArchiveMetadataFormState = {
   tracklist: TracklistEntry[] | null
 }
 
+const EMPTY_CREDIT: ReleaseCredit = { role: 'performer', name: '' }
+
+function parseCredits(value: unknown): ReleaseCredit[] {
+  if (!Array.isArray(value)) return []
+  return value.filter(
+    (row): row is ReleaseCredit =>
+      Boolean(row) &&
+      typeof row === 'object' &&
+      typeof (row as ReleaseCredit).name === 'string' &&
+      RELEASE_CREDIT_ROLES.includes((row as ReleaseCredit).role),
+  )
+}
+
 export function defaultMetadataFormState(): ArchiveMetadataFormState {
   const now = new Date()
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
@@ -65,6 +82,8 @@ export function defaultMetadataFormState(): ArchiveMetadataFormState {
     .slice(0, 16)
   return {
     description: '',
+    artistName: '',
+    credits: [],
     genre: 'Electronic',
     genreCustom: '',
     recordingLocation: '',
@@ -102,8 +121,18 @@ export function metadataFormToPayload(state: ArchiveMetadataFormState): Record<s
     .filter(Boolean)
     .slice(0, 12)
 
+  const credits = state.credits
+    .map((c) => ({
+      role: c.role,
+      name: c.name.trim(),
+      ...(c.artistUsername?.trim() ? { artistUsername: c.artistUsername.trim() } : {}),
+    }))
+    .filter((c) => c.name.length > 0)
+
   return {
     description: state.description.trim() || undefined,
+    artistName: state.artistName.trim() || null,
+    credits: credits.length > 0 ? credits : null,
     genre: state.genre || undefined,
     genreCustom: state.genreCustom.trim() || undefined,
     recordingLocation: state.recordingLocation.trim() || undefined,
@@ -146,6 +175,8 @@ export function metadataFromApi(item: Record<string, unknown>): ArchiveMetadataF
 
   return {
     description: (item.description as string) ?? '',
+    artistName: (item.artistName as string) ?? '',
+    credits: parseCredits(item.credits),
     genre: (item.genre as string) ?? 'Electronic',
     genreCustom: (item.genreCustom as string) ?? '',
     recordingLocation: (item.recordingLocation as string) ?? '',
@@ -373,6 +404,84 @@ export function ArchiveMetadataFields({
         />
         Produced using AI technology
       </label>
+
+      <div className="studio-field--block">
+        <span className="studio-label">Track credit</span>
+        <label className="studio-field">
+          <span className="studio-label studio-label--secondary">Artist name (override)</span>
+          <input
+            type="text"
+            maxLength={120}
+            placeholder="Leave blank to use your channel / band name"
+            value={state.artistName}
+            disabled={disabled}
+            onChange={(e) => set({ artistName: e.target.value })}
+            className="studio-input"
+          />
+        </label>
+        <p className="studio-help studio-mt-xs">
+          Use when this track&apos;s credit differs from your artist name or band setup (guest
+          feature, alias, collaboration).
+        </p>
+
+        <div className="studio-mt-sm">
+          <div className="studio-text-strong-sm studio-mb-sm">Extra credits &amp; roles</div>
+          {state.credits.length === 0 && (
+            <p className="studio-empty">
+              Optional — add writers, performers, producers when they differ from your Members /
+              Credits roster.
+            </p>
+          )}
+          <ul className="studio-list studio-mb-sm">
+            {state.credits.map((credit, index) => (
+              <li key={index} className="studio-grid studio-grid--credits">
+                <select
+                  value={credit.role}
+                  disabled={disabled}
+                  onChange={(e) => {
+                    const next = [...state.credits]
+                    next[index] = { ...credit, role: e.target.value as ReleaseCredit['role'] }
+                    set({ credits: next })
+                  }}
+                  className="studio-input"
+                >
+                  {RELEASE_CREDIT_ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={credit.name}
+                  placeholder="Name"
+                  disabled={disabled}
+                  maxLength={120}
+                  onChange={(e) => {
+                    const next = [...state.credits]
+                    next[index] = { ...credit, name: e.target.value }
+                    set({ credits: next })
+                  }}
+                  className="studio-input"
+                />
+                <Button
+                  disabled={disabled}
+                  onClick={() => set({ credits: state.credits.filter((_, i) => i !== index) })}
+                  variant="ghost"
+                >
+                  Remove
+                </Button>
+              </li>
+            ))}
+          </ul>
+          <Button
+            disabled={disabled || state.credits.length >= 20}
+            onClick={() => set({ credits: [...state.credits, { ...EMPTY_CREDIT }] })}
+            variant="ghost"
+          >
+            Add credit
+          </Button>
+        </div>
+      </div>
 
       <label className="studio-field">
         <span className="studio-label">Description</span>

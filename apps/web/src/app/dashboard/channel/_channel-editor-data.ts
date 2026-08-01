@@ -27,6 +27,7 @@ export type ChannelEditorFetchResult = {
   channelVisual: {
     visualPreset: VisualPreset
     colorSchemeJson: string | null
+    visualSettingsJson: string | null
     headerStyle: ChannelHeaderStyle
     brandAccentPreset: string | null
     slideshowPreset: SlideshowPreset
@@ -175,6 +176,7 @@ export async function fetchChannelEditorData(
     channelVisual: channelVisual ?? {
       visualPreset: 'MINIMAL',
       colorSchemeJson: null,
+      visualSettingsJson: null,
       headerStyle: 'GRADIENT',
       brandAccentPreset: null,
       slideshowPreset: 'FADE',

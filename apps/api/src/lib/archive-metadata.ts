@@ -11,6 +11,8 @@ import {
 export const archiveItemMetadataSelect = {
   id: true,
   title: true,
+  artistName: true,
+  credits: true,
   description: true,
   tracklist: true,
   bannerUrl: true,
@@ -103,6 +105,17 @@ function parseOptionalUrl(value: string | null | undefined): string | null | und
 function fieldsToPrismaData(fields: ArchiveMetadataFields): Record<string, unknown> {
   const data: Record<string, unknown> = {}
   if (fields.description !== undefined) data.description = fields.description || null
+  if (fields.artistName !== undefined) data.artistName = fields.artistName?.trim() || null
+  if (fields.credits !== undefined) {
+    data.credits =
+      fields.credits && fields.credits.length > 0
+        ? fields.credits.map((c) => ({
+            role: c.role,
+            name: c.name.trim(),
+            ...(c.artistUsername ? { artistUsername: c.artistUsername } : {}),
+          }))
+        : null
+  }
   if (fields.tracklist !== undefined) data.tracklist = fields.tracklist
   if (fields.bannerUrl !== undefined) data.bannerUrl = parseOptionalUrl(fields.bannerUrl)
   if (fields.backgroundUrl !== undefined)

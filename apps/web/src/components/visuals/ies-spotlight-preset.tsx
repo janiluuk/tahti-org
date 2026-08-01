@@ -5,7 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { VisualPresetProps } from './types'
+import { readSettings, type VisualPresetProps } from './types'
 
 // Adapted from the three.js "webgpu_lights_ies_spotlight" example's look (a
 // few real SpotLights carving cones of light onto a floor) using the
@@ -18,7 +18,7 @@ import type { VisualPresetProps } from './types'
 // with the music.
 const LIGHT_COUNT = 3
 
-export function IesSpotlightPreset({ colorScheme, analyser }: VisualPresetProps) {
+export function IesSpotlightPreset({ colorScheme, analyser, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -122,7 +122,8 @@ export function IesSpotlightPreset({ colorScheme, analyser }: VisualPresetProps)
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
-      t += 0.01
+      const { speed, intensity } = readSettings(settingsRef)
+      t += 0.01 * speed
 
       let bass = 0
       let level = 0
@@ -142,12 +143,13 @@ export function IesSpotlightPreset({ colorScheme, analyser }: VisualPresetProps)
         const a = rig.angle + t * rig.speed
         const x = Math.cos(a) * rig.radius
         const z = Math.sin(a) * rig.radius
-        const y = 2.2 + Math.sin(t * 0.3 + rig.phase) * 0.2
+        const y = 2.2 + Math.sin(t * 0.3 + rig.phase) * 0.2 * intensity
         rig.light.position.set(x, y, z)
         rig.fixture.position.set(x, y, z)
 
-        rig.light.intensity = rig.baseIntensity * (1 + smoothedBass * 0.9 + smoothedLevel * 0.3)
-        const fixtureScale = 0.28 * (1 + smoothedBass * 0.5)
+        rig.light.intensity =
+          rig.baseIntensity * (1 + (smoothedBass * 0.9 + smoothedLevel * 0.3) * intensity)
+        const fixtureScale = 0.28 * (1 + smoothedBass * 0.5 * intensity)
         rig.fixture.scale.set(fixtureScale, fixtureScale, 1)
       }
 
@@ -156,11 +158,12 @@ export function IesSpotlightPreset({ colorScheme, analyser }: VisualPresetProps)
       const orbitRadius = 3.4
       camera.position.set(
         Math.sin(t * 0.12) * orbitRadius * 0.35,
-        0.6 + Math.sin(t * 0.2) * 0.15,
+        0.6 + Math.sin(t * 0.2) * 0.15 * intensity,
         orbitRadius + Math.cos(t * 0.09) * 0.4,
       )
       camera.lookAt(0, -0.2, 0)
-      camera.fov = baseFov * (1 + Math.sin(t * 0.18) * 0.04 - smoothedLevel * 0.03)
+      camera.fov =
+        baseFov * (1 + Math.sin(t * 0.18) * 0.04 * intensity - smoothedLevel * 0.03 * intensity)
       camera.updateProjectionMatrix()
 
       renderer.render(scene, camera)

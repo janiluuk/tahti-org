@@ -3,6 +3,7 @@
 
 import { z } from 'zod'
 import { CHANNEL_GALLERY_MODES } from './channel-gallery.js'
+import { ReleaseCreditSchema } from './release-ops.js'
 
 export const ARCHIVE_CONTENT_TYPES = [
   'STUDIO',
@@ -79,6 +80,10 @@ export type TracklistEntry = z.infer<typeof TracklistEntrySchema>
 
 export const ArchiveMetadataFieldsSchema = z.object({
   description: z.string().max(2000).optional(),
+  /** Display credit override — leave empty to use the channel / band artist name. */
+  artistName: z.string().trim().max(120).nullable().optional(),
+  /** Role-based credits when this track differs from the channel Members/Credits roster. */
+  credits: z.array(ReleaseCreditSchema).max(20).nullable().optional(),
   tracklist: z.array(TracklistEntrySchema).max(200).nullable().optional(),
   bannerUrl: z.string().max(2048).nullable().optional(),
   backgroundUrl: z.string().max(2048).nullable().optional(),

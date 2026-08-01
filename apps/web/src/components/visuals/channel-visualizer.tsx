@@ -3,10 +3,14 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
-import type { VisualPreset, ColorScheme } from '@tahti/shared'
-import { DEFAULT_COLOR_SCHEME, resolveColorScheme } from '@tahti/shared'
+import type { VisualPreset, ColorScheme, VisualPresetSettings } from '@tahti/shared'
+import {
+  DEFAULT_COLOR_SCHEME,
+  DEFAULT_VISUAL_PRESET_SETTINGS,
+  resolveColorScheme,
+} from '@tahti/shared'
 
 // Lazy-load each preset to keep the initial bundle small.
 // Each preset uses Three.js which is large.
@@ -51,6 +55,7 @@ interface Props {
   colorSchemeJson?: string | null
   paletteJson?: string | null
   analyser?: AnalyserNode | null
+  settings?: VisualPresetSettings | null
   className?: string
 }
 
@@ -69,6 +74,7 @@ export function ChannelVisualizer({
   colorSchemeJson,
   paletteJson,
   analyser,
+  settings,
   className,
 }: Props) {
   // window-dependent checks (WebGL support, prefers-reduced-motion) can only run on the
@@ -76,6 +82,9 @@ export function ChannelVisualizer({
   // client's first render diverges from the server-rendered HTML and React throws a
   // hydration mismatch.
   const [canRender, setCanRender] = useState(false)
+  const settingsRef = useRef<VisualPresetSettings>(settings ?? DEFAULT_VISUAL_PRESET_SETTINGS)
+  settingsRef.current = settings ?? DEFAULT_VISUAL_PRESET_SETTINGS
+
   useEffect(() => {
     setCanRender(!window.matchMedia('(prefers-reduced-motion: reduce)').matches && supportsWebGL())
   }, [])
@@ -85,7 +94,7 @@ export function ChannelVisualizer({
   const colorScheme: ColorScheme =
     resolveColorScheme(colorSchemeJson, paletteJson) ?? DEFAULT_COLOR_SCHEME
 
-  const props = { colorScheme, analyser }
+  const props = { colorScheme, analyser, settingsRef }
 
   return (
     <div

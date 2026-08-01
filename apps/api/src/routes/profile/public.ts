@@ -129,6 +129,8 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
         select: {
           id: true,
           title: true,
+          artistName: true,
+          credits: true,
           durationSec: true,
           bannerUrl: true,
           mp3Key: true,
@@ -168,6 +170,8 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
   const tracks = allArchiveItems.map((item) => ({
     id: item.id,
     title: item.title,
+    artistName: item.artistName,
+    credits: item.credits,
     durationSec: item.durationSec,
     bannerUrl: item.bannerUrl,
     playUrl: playUrlByArchiveId.get(item.id) ?? null,

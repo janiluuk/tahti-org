@@ -3,16 +3,22 @@
 
 'use client'
 
+import { useEffect, useId, useMemo, useState } from 'react'
 import {
   VISUAL_PRESETS,
   VISUAL_PRESET_LABELS,
   VISUAL_PRESET_DESCRIPTIONS,
+  VISUAL_PRESET_STRIP,
   DEFAULT_COLOR_SCHEME,
+  DEFAULT_VISUAL_PRESET_SETTINGS,
   resolveColorScheme,
+  resolveVisualPresetSettings,
   type VisualPreset,
   type ColorScheme,
+  type VisualPresetSettings,
+  type VisualSettingsMap,
 } from '@tahti/shared'
-import { brandTokens } from '@tahti/ui'
+import { brandTokens, Button } from '@tahti/ui'
 import { ChannelVisualizer } from './channel-visualizer'
 
 const WHITE = brandTokens.color.base.white
@@ -26,6 +32,9 @@ interface Props {
   colorSchemeJson?: string | null
   paletteJson?: string | null
   showPreview?: boolean
+  /** Per-preset knobs map. */
+  settingsMap?: VisualSettingsMap | null
+  onSettingsChange?: (map: VisualSettingsMap) => void
 }
 
 /**
@@ -178,6 +187,61 @@ function StaticPresetThumbnail({ preset, scheme }: { preset: VisualPreset; schem
   )
 }
 
+function PresetThumb({
+  preset,
+  scheme,
+  active,
+  live,
+  size = 'sm',
+  settings,
+}: {
+  preset: VisualPreset
+  scheme: ColorScheme
+  active?: boolean
+  live?: boolean
+  size?: 'sm' | 'lg'
+  settings?: VisualPresetSettings | null
+}) {
+  return (
+    <div
+      className={`visual-preset-picker__preview visual-preset-picker__preview--${size}${
+        preset === 'MINIMAL' ? ' visual-preset-picker__preview--minimal' : ''
+      }`}
+      style={{ background: scheme.bg }}
+      aria-hidden
+    >
+      {preset === 'MINIMAL' ? (
+        <span className="visual-preset-picker__minimal-label">None</span>
+      ) : live && active ? (
+        <ChannelVisualizer
+          preset={preset}
+          colorSchemeJson={JSON.stringify(scheme)}
+          settings={settings ?? undefined}
+          className="visual-preset-picker__preview-canvas"
+        />
+      ) : (
+        <StaticPresetThumbnail preset={preset} scheme={scheme} />
+      )}
+    </div>
+  )
+}
+
+function GalleryIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <rect x="1.5" y="1.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="9.5" y="1.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="1.5" y="9.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4" />
+      <rect x="9.5" y="9.5" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  )
+}
+
+function stripPresets(selected: VisualPreset): VisualPreset[] {
+  if (VISUAL_PRESET_STRIP.includes(selected)) return [...VISUAL_PRESET_STRIP]
+  return [...VISUAL_PRESET_STRIP.slice(0, 3), selected]
+}
+
 export function VisualPresetPicker({
   value,
   onChange,
@@ -186,13 +250,52 @@ export function VisualPresetPicker({
   colorSchemeJson,
   paletteJson,
   showPreview = true,
+  settingsMap,
+  onSettingsChange,
 }: Props) {
   const scheme = colorScheme ?? resolveColorScheme(colorSchemeJson ?? null, paletteJson ?? null)
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  const [focus, setFocus] = useState<VisualPreset>(value)
+  const titleId = useId()
+  const strip = useMemo(() => stripPresets(value), [value])
+
+  useEffect(() => {
+    if (galleryOpen) setFocus(value)
+  }, [galleryOpen, value])
+
+  useEffect(() => {
+    if (!galleryOpen) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setGalleryOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [galleryOpen])
+
+  const focusSettings = resolveVisualPresetSettings(settingsMap, focus)
+  const selectedSettings = resolveVisualPresetSettings(settingsMap, value)
+
+  function updateFocusSetting(key: keyof VisualPresetSettings, raw: number) {
+    if (!onSettingsChange) return
+    const next: VisualSettingsMap = {
+      ...(settingsMap ?? {}),
+      [focus]: {
+        ...resolveVisualPresetSettings(settingsMap, focus),
+        [key]: raw,
+      },
+    }
+    onSettingsChange(next)
+  }
+
+  function selectFromGallery(preset: VisualPreset) {
+    onChange(preset)
+    setFocus(preset)
+  }
 
   return (
     <div className="visual-preset-picker">
-      <div className="visual-preset-picker__grid" role="radiogroup" aria-label="Visual preset">
-        {VISUAL_PRESETS.map((preset) => {
+      <div className="visual-preset-picker__strip" role="radiogroup" aria-label="Visual preset">
+        {strip.map((preset) => {
           const active = value === preset
           return (
             <button
@@ -201,48 +304,193 @@ export function VisualPresetPicker({
               role="radio"
               aria-checked={active}
               disabled={disabled}
-              className={`visual-preset-picker__card${active ? ' visual-preset-picker__card--active' : ''}`}
+              title={VISUAL_PRESET_LABELS[preset]}
+              className={`visual-preset-picker__strip-card${active ? ' visual-preset-picker__strip-card--active' : ''}`}
               onClick={() => onChange(preset)}
             >
-              {preset === 'MINIMAL' ? (
-                <div
-                  className="visual-preset-picker__preview visual-preset-picker__preview--minimal"
-                  style={{ background: scheme.bg }}
-                  aria-hidden
-                >
-                  <span className="visual-preset-picker__minimal-label">None</span>
-                </div>
-              ) : showPreview && active ? (
-                <div
-                  className="visual-preset-picker__preview"
-                  style={{ background: scheme.bg }}
-                  aria-hidden
-                >
-                  <ChannelVisualizer
-                    preset={preset}
-                    colorSchemeJson={JSON.stringify(scheme)}
-                    className="visual-preset-picker__preview-canvas"
-                  />
-                </div>
-              ) : (
-                <div
-                  className="visual-preset-picker__preview"
-                  style={{ background: scheme.bg }}
-                  aria-hidden
-                >
-                  <StaticPresetThumbnail preset={preset} scheme={scheme} />
-                </div>
-              )}
-              <span className="visual-preset-picker__name">{VISUAL_PRESET_LABELS[preset]}</span>
-              <span className="visual-preset-picker__desc">
-                {VISUAL_PRESET_DESCRIPTIONS[preset]}
+              <PresetThumb
+                preset={preset}
+                scheme={scheme}
+                active={active}
+                live={showPreview && active}
+                settings={selectedSettings}
+                size="sm"
+              />
+              <span className="visual-preset-picker__strip-name">
+                {VISUAL_PRESET_LABELS[preset]}
               </span>
             </button>
           )
         })}
+        <button
+          type="button"
+          className="visual-preset-picker__gallery-btn"
+          disabled={disabled}
+          aria-haspopup="dialog"
+          aria-expanded={galleryOpen}
+          title="Browse all visualizers"
+          onClick={() => setGalleryOpen(true)}
+        >
+          <GalleryIcon />
+          <span>Gallery</span>
+        </button>
       </div>
+
+      {galleryOpen && (
+        <div
+          className="visual-preset-gallery-overlay"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setGalleryOpen(false)
+          }}
+        >
+          <div
+            className="visual-preset-gallery"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+          >
+            <header className="visual-preset-gallery__header">
+              <div>
+                <h3 id={titleId} className="visual-preset-gallery__title">
+                  Visualizer gallery
+                </h3>
+                <p className="visual-preset-gallery__sub">
+                  Preview each background visualizer at full size and tune its settings.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="visual-preset-gallery__close"
+                aria-label="Close gallery"
+                onClick={() => setGalleryOpen(false)}
+              >
+                ×
+              </button>
+            </header>
+
+            <div className="visual-preset-gallery__body">
+              <div className="visual-preset-gallery__stage" style={{ background: scheme.bg }}>
+                {focus === 'MINIMAL' ? (
+                  <div className="visual-preset-gallery__stage-empty">
+                    <span>No background visualizer</span>
+                  </div>
+                ) : (
+                  <ChannelVisualizer
+                    preset={focus}
+                    colorSchemeJson={JSON.stringify(scheme)}
+                    settings={focusSettings}
+                    className="visual-preset-gallery__stage-canvas"
+                  />
+                )}
+                <div className="visual-preset-gallery__stage-meta">
+                  <strong>{VISUAL_PRESET_LABELS[focus]}</strong>
+                  <span>{VISUAL_PRESET_DESCRIPTIONS[focus]}</span>
+                </div>
+              </div>
+
+              <aside className="visual-preset-gallery__side">
+                <div
+                  className="visual-preset-gallery__catalog"
+                  role="listbox"
+                  aria-label="All visualizers"
+                >
+                  {VISUAL_PRESETS.map((preset) => {
+                    const active = focus === preset
+                    const selected = value === preset
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        role="option"
+                        aria-selected={active}
+                        disabled={disabled}
+                        className={`visual-preset-gallery__item${active ? ' visual-preset-gallery__item--focus' : ''}${selected ? ' visual-preset-gallery__item--selected' : ''}`}
+                        onClick={() => selectFromGallery(preset)}
+                      >
+                        <PresetThumb preset={preset} scheme={scheme} size="sm" />
+                        <span className="visual-preset-gallery__item-text">
+                          <span className="visual-preset-gallery__item-name">
+                            {VISUAL_PRESET_LABELS[preset]}
+                            {selected ? <em> · active</em> : null}
+                          </span>
+                          <span className="visual-preset-gallery__item-desc">
+                            {VISUAL_PRESET_DESCRIPTIONS[preset]}
+                          </span>
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {focus !== 'MINIMAL' && onSettingsChange ? (
+                  <div className="visual-preset-gallery__settings">
+                    <span className="studio-label">Settings for {VISUAL_PRESET_LABELS[focus]}</span>
+                    <label className="visual-preset-gallery__slider">
+                      <span>
+                        Speed <strong>{focusSettings.speed.toFixed(2)}×</strong>
+                      </span>
+                      <input
+                        type="range"
+                        min={0.25}
+                        max={2}
+                        step={0.05}
+                        value={focusSettings.speed}
+                        disabled={disabled}
+                        onChange={(e) => updateFocusSetting('speed', Number(e.target.value))}
+                      />
+                    </label>
+                    <label className="visual-preset-gallery__slider">
+                      <span>
+                        Intensity <strong>{focusSettings.intensity.toFixed(2)}×</strong>
+                      </span>
+                      <input
+                        type="range"
+                        min={0.25}
+                        max={2}
+                        step={0.05}
+                        value={focusSettings.intensity}
+                        disabled={disabled}
+                        onChange={(e) => updateFocusSetting('intensity', Number(e.target.value))}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="visual-preset-gallery__reset"
+                      disabled={disabled}
+                      onClick={() => {
+                        const next = { ...(settingsMap ?? {}) }
+                        delete next[focus]
+                        onSettingsChange(next)
+                      }}
+                    >
+                      Reset to defaults
+                    </button>
+                  </div>
+                ) : null}
+
+                <div className="visual-preset-gallery__actions">
+                  <Button variant="ghost" onClick={() => setGalleryOpen(false)}>
+                    Close
+                  </Button>
+                  <Button
+                    variant="primary"
+                    disabled={disabled}
+                    onClick={() => {
+                      onChange(focus)
+                      setGalleryOpen(false)
+                    }}
+                  >
+                    Use {VISUAL_PRESET_LABELS[focus]}
+                  </Button>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-export { DEFAULT_COLOR_SCHEME }
+export { DEFAULT_COLOR_SCHEME, DEFAULT_VISUAL_PRESET_SETTINGS }

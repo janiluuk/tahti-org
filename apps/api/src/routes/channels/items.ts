@@ -46,6 +46,8 @@ const channelItemsRoute: FastifyPluginAsync = async (fastify) => {
           select: {
             id: true,
             title: true,
+            artistName: true,
+            credits: true,
             description: true,
             durationSec: true,
             fileSizeBytes: true,

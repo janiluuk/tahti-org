@@ -5,11 +5,11 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import type { VisualPresetProps } from './types'
+import { readSettings, type VisualPresetProps } from './types'
 
 const BAR_COUNT = 64
 
-export function WaveformBarsPreset({ colorScheme, analyser }: VisualPresetProps) {
+export function WaveformBarsPreset({ colorScheme, analyser, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -54,7 +54,8 @@ export function WaveformBarsPreset({ colorScheme, analyser }: VisualPresetProps)
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
-      frame++
+      const { speed, intensity } = readSettings(settingsRef)
+      frame += speed
 
       for (let i = 0; i < BAR_COUNT; i++) {
         let level = 0.08
@@ -62,11 +63,11 @@ export function WaveformBarsPreset({ colorScheme, analyser }: VisualPresetProps)
           const data = new Uint8Array(analyser.frequencyBinCount)
           analyser.getByteFrequencyData(data)
           const idx = Math.floor((i / BAR_COUNT) * data.length)
-          level = 0.06 + (data[idx]! / 255) * 0.55
+          level = 0.06 + (data[idx]! / 255) * 0.55 * intensity
         } else {
           const t = frame * 0.02 + i * 0.15
           const noise = Math.sin(t) * 0.5 + Math.sin(t * 2.3 + 1) * 0.3 + Math.sin(t * 0.7) * 0.2
-          level = 0.08 + Math.abs(noise) * 0.35
+          level = 0.08 + Math.abs(noise) * 0.35 * intensity
         }
         heights[i] = level
 
