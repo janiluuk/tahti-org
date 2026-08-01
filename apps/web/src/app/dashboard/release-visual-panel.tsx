@@ -104,52 +104,18 @@ export default function ReleaseVisualPanel({ releaseId, initial }: Props) {
           colorSchemeJson={initial.colorSchemeJson}
           paletteJson={initial.paletteJson}
           showPreview
+          colorSchemeEditor={{
+            enabled: useOverride,
+            onEnabledChange: setUseOverride,
+            scheme,
+            onSchemeChange: updateColor,
+            enabledLabel: 'Override color palette',
+            offHint: extracted
+              ? 'Colors extracted from cover art. Enable override in Presets to customize.'
+              : undefined,
+          }}
         />
       </div>
-      {extracted && !useOverride && (
-        <p className="studio-text-muted-sm studio-mb-sm">
-          Colors extracted from cover art. Enable override to customize.
-        </p>
-      )}
-
-      <label className="studio-social-toggle studio-mb-sm">
-        <input
-          type="checkbox"
-          checked={useOverride}
-          disabled={isPending}
-          onChange={(e) => setUseOverride(e.target.checked)}
-        />
-        <span>Override color palette</span>
-      </label>
-
-      {useOverride && (
-        <div className="studio-color-scheme-grid">
-          {(['bg', 'accent', 'text', 'muted', 'highlight'] as (keyof ColorScheme)[]).map((key) => (
-            <div key={key} className="studio-field--block">
-              <label className="studio-label" htmlFor={`rel-color-${key}`}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </label>
-              <div className="studio-color-input-row">
-                <input
-                  id={`rel-color-${key}`}
-                  type="color"
-                  value={scheme[key]}
-                  disabled={isPending}
-                  onChange={(e) => updateColor(key, e.target.value)}
-                />
-                <input
-                  type="text"
-                  value={scheme[key]}
-                  disabled={isPending}
-                  maxLength={7}
-                  onChange={(e) => updateColor(key, e.target.value)}
-                  className="studio-input"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       <label className="studio-field">
         <span className="studio-label">Slideshow image URLs (one per line, max 10)</span>

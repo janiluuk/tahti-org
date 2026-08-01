@@ -174,48 +174,18 @@ export default function ChannelVisualPresetPanel({
           settingsMap={settingsMap}
           onSettingsChange={setSettingsMap}
           showPreview
+          colorSchemeEditor={{
+            enabled: useCustomScheme,
+            onEnabledChange: setUseCustomScheme,
+            scheme,
+            onSchemeChange: updateColor,
+          }}
         />
         <p className="studio-help studio-mt-xs">
-          Quick picks above — browse all presets for full-size previews and per-visualizer settings.
+          Quick picks above — open Presets for full-size previews, per-visualizer settings, and a
+          custom color scheme.
         </p>
       </div>
-
-      <label className="studio-social-toggle studio-mb-sm">
-        <input
-          id="custom-scheme-toggle"
-          type="checkbox"
-          checked={useCustomScheme}
-          onChange={(e) => setUseCustomScheme(e.target.checked)}
-        />
-        <span>Use custom color scheme</span>
-      </label>
-
-      {useCustomScheme && (
-        <div className="studio-color-scheme-grid">
-          {(['bg', 'accent', 'text', 'muted', 'highlight'] as (keyof ColorScheme)[]).map((key) => (
-            <div key={key} className="studio-field--block">
-              <label className="studio-label" htmlFor={`color-${key}`}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </label>
-              <div className="studio-color-input-row">
-                <input
-                  id={`color-${key}`}
-                  type="color"
-                  value={scheme[key]}
-                  onChange={(e) => updateColor(key, e.target.value)}
-                />
-                <input
-                  type="text"
-                  value={scheme[key]}
-                  maxLength={7}
-                  onChange={(e) => updateColor(key, e.target.value)}
-                  className="studio-input"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {!bare ? (
         <div className="studio-actions studio-row--wrap">

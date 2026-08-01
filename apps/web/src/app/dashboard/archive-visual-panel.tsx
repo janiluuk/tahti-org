@@ -82,47 +82,18 @@ export default function ArchiveVisualPanel({ itemId, initial }: Props) {
           colorSchemeJson={initial.colorSchemeJson}
           paletteJson={initial.paletteJson}
           showPreview
+          colorSchemeEditor={{
+            enabled: useOverride,
+            onEnabledChange: setUseOverride,
+            scheme,
+            onSchemeChange: updateColor,
+            enabledLabel: "Custom accent color (also colors this track's waveform)",
+            offHint: extracted
+              ? 'Using colors extracted from artwork. Enable a custom scheme in Presets to override.'
+              : undefined,
+          }}
         />
       </div>
-
-      <label className="studio-social-toggle studio-mb-sm">
-        <input
-          type="checkbox"
-          checked={useOverride}
-          disabled={isPending}
-          onChange={(e) => setUseOverride(e.target.checked)}
-        />
-        <span>Custom accent color (also colors this track&apos;s waveform)</span>
-      </label>
-
-      {useOverride && (
-        <div className="studio-color-scheme-grid">
-          {(['bg', 'accent', 'text', 'muted', 'highlight'] as (keyof ColorScheme)[]).map((key) => (
-            <div key={key} className="studio-field--block">
-              <label className="studio-label" htmlFor={`archive-color-${itemId}-${key}`}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </label>
-              <div className="studio-color-input-row">
-                <input
-                  id={`archive-color-${itemId}-${key}`}
-                  type="color"
-                  value={scheme[key]}
-                  disabled={isPending}
-                  onChange={(e) => updateColor(key, e.target.value)}
-                />
-                <input
-                  type="text"
-                  value={scheme[key]}
-                  disabled={isPending}
-                  maxLength={7}
-                  onChange={(e) => updateColor(key, e.target.value)}
-                  className="studio-input"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {error && <p className="studio-notice studio-notice--error">{error}</p>}
       {message && <p className="studio-notice studio-notice--success">{message}</p>}

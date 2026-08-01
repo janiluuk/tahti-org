@@ -15,6 +15,8 @@ const GROUPS: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: '/dashboard/settings/account', label: 'Account' },
       { href: '/dashboard/settings/artist-info', label: 'Artist info' },
+      { href: '/dashboard/settings/artist-info#members', label: 'Members' },
+      { href: '/dashboard/settings/connections', label: 'Connections' },
       { href: '/dashboard/settings/media', label: 'Media & Presskit' },
       { href: '/dashboard/settings/discovery', label: 'Discovery' },
       { href: '/dashboard/settings/domain', label: 'Username & domain' },

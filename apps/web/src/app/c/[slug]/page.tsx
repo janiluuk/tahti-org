@@ -582,19 +582,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                                   <div className="ch-archive-item-meta">
                                     <div className="ch-archive-item-meta-main">
                                       <div className="ch-archive-item-title">{item.title}</div>
-                                      {(item.artistName ||
-                                        (item.credits && item.credits.length > 0)) && (
+                                      {item.artistName ? (
                                         <div className="ch-archive-item-credit">
-                                          {item.artistName ? <span>{item.artistName}</span> : null}
-                                          {item.credits && item.credits.length > 0 ? (
-                                            <span className="ch-archive-item-credit__roles">
-                                              {item.credits
-                                                .map((c) => `${c.role}: ${c.name}`)
-                                                .join(' · ')}
-                                            </span>
-                                          ) : null}
+                                          <span>{item.artistName}</span>
                                         </div>
-                                      )}
+                                      ) : null}
                                     </div>
                                     <div className="ch-archive-item-date">
                                       {new Date(item.createdAt).toLocaleDateString(undefined, {
@@ -607,29 +599,65 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                                     </div>
                                   </div>
                                 </div>
-                                {item.slideshowUrls && item.slideshowUrls.length > 0 && (
-                                  <ArchiveItemGallery
-                                    itemId={item.id}
-                                    images={item.slideshowUrls}
-                                    galleryMode={item.galleryMode ?? 'NONE'}
-                                    audioReactive={Boolean(item.galleryAudioReactive)}
-                                  />
-                                )}
-                                {item.description && (
-                                  <SafePlainText
-                                    text={item.description}
-                                    className="ch-archive-item-desc"
-                                  />
-                                )}
-                                {item.commentary && (
-                                  <SafePlainText
-                                    text={item.commentary}
-                                    className="ch-archive-item-commentary"
-                                  />
-                                )}
-                                {item.tracklist && item.tracklist.length > 0 && (
-                                  <TracklistView entries={item.tracklist} />
-                                )}
+                                {(() => {
+                                  const hasCredits = Boolean(
+                                    item.credits && item.credits.length > 0,
+                                  )
+                                  const hasGallery = Boolean(
+                                    item.slideshowUrls && item.slideshowUrls.length > 0,
+                                  )
+                                  const hasDesc = Boolean(item.description)
+                                  const hasCommentary = Boolean(item.commentary)
+                                  const hasTracklist = Boolean(
+                                    item.tracklist && item.tracklist.length > 0,
+                                  )
+                                  const hasDetails =
+                                    hasCredits ||
+                                    hasGallery ||
+                                    hasDesc ||
+                                    hasCommentary ||
+                                    hasTracklist
+                                  if (!hasDetails) return null
+                                  return (
+                                    <details className="ch-archive-item-details">
+                                      <summary className="ch-archive-item-details__summary">
+                                        Details
+                                      </summary>
+                                      <div className="ch-archive-item-details__body">
+                                        {hasCredits ? (
+                                          <div className="ch-archive-item-credit ch-archive-item-credit--roles">
+                                            {item
+                                              .credits!.map((c) => `${c.role}: ${c.name}`)
+                                              .join(' · ')}
+                                          </div>
+                                        ) : null}
+                                        {hasGallery ? (
+                                          <ArchiveItemGallery
+                                            itemId={item.id}
+                                            images={item.slideshowUrls!}
+                                            galleryMode={item.galleryMode ?? 'NONE'}
+                                            audioReactive={Boolean(item.galleryAudioReactive)}
+                                          />
+                                        ) : null}
+                                        {hasDesc ? (
+                                          <SafePlainText
+                                            text={item.description!}
+                                            className="ch-archive-item-desc"
+                                          />
+                                        ) : null}
+                                        {hasCommentary ? (
+                                          <SafePlainText
+                                            text={item.commentary!}
+                                            className="ch-archive-item-commentary"
+                                          />
+                                        ) : null}
+                                        {hasTracklist ? (
+                                          <TracklistView entries={item.tracklist!} />
+                                        ) : null}
+                                      </div>
+                                    </details>
+                                  )
+                                })()}
                                 {item.audioUrl ? (
                                   <ArchiveItemPlayback
                                     channelSlug={slug}
