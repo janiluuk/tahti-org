@@ -445,6 +445,8 @@ enum NotificationType {
   NEW_LIKE
   NEW_REPOST
   PLAYLIST_TRACK_ADDED
+  /// Fan-out when a Tahti Radio–opted-in artist publishes a release.
+  NEW_RELEASE
 
   @@schema("core")
 }

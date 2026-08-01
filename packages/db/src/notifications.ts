@@ -58,6 +58,31 @@ export async function notifyFollowersOfNewTrack(
   })
 }
 
+/** Fan out a NEW_RELEASE notification when a Tahti Radio–opted-in artist
+ * publishes a release — callers must check `!channel.metaStreamOptOut` first. */
+export async function notifyFollowersOfNewRelease(
+  prisma: PrismaClient,
+  artist: { id: string; username: string; displayName: string },
+  release: { title: string; smartLinkSlug: string },
+): Promise<void> {
+  const followers = await prisma.artistFollow.findMany({
+    where: { artistUserId: artist.id },
+    select: { followerUserId: true },
+  })
+  if (followers.length === 0) return
+
+  await prisma.notification.createMany({
+    data: followers.map((f) => ({
+      userId: f.followerUserId,
+      type: 'NEW_RELEASE' as const,
+      actorUserId: artist.id,
+      title: `${artist.displayName} released "${release.title}"`,
+      body: null,
+      url: `/r/${release.smartLinkSlug}`,
+    })),
+  })
+}
+
 /** M40: notify an artist that someone followed them. */
 export async function notifyArtistOfNewFollower(
   prisma: PrismaClient,

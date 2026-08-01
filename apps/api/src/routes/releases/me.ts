@@ -26,6 +26,7 @@ import {
   openApiResponses,
   parseRouteParams,
 } from '@tahti/shared'
+import { notifyFollowersOfNewRelease } from '@tahti/db'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { parseReleaseImportCsv } from '../../lib/release-import.js'
 import { queueReleaseSocialPost } from '../../lib/social-post.js'
@@ -268,6 +269,21 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.state === 'PUBLISHED' && existing.state !== 'PUBLISHED') {
         queueReleaseSocialPost(fastify.prisma, user.id, id).catch((err: unknown) =>
           request.log.warn({ err, releaseId: id }, 'social post enqueue failed'),
+        )
+        // Followers' /feed + inbox: only when the artist is opted into Tahti Radio.
+        void (async () => {
+          const channel = await fastify.prisma.channel.findUnique({
+            where: { userId: user.id },
+            select: { metaStreamOptOut: true },
+          })
+          if (!channel || channel.metaStreamOptOut) return
+          await notifyFollowersOfNewRelease(
+            fastify.prisma,
+            { id: user.id, username: user.username, displayName: user.displayName },
+            { title: release.title, smartLinkSlug: release.smartLinkSlug },
+          )
+        })().catch((err: unknown) =>
+          request.log.warn({ err, releaseId: id }, 'release feed announce failed'),
         )
       }
 

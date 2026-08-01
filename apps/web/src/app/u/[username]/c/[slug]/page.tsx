@@ -22,6 +22,7 @@ import type { PlayerTrack } from '@/contexts/player-context'
 import { SpotifyEmbedRow } from './_spotify-embed-row'
 import { MixcloudEmbedRow } from './_mixcloud-embed-row'
 import { ArchiveTrackRow } from './_archive-track-row'
+import { PlaylistControls } from './_playlist-controls'
 import { ReportButton } from '@/components/report-button'
 import { CollectionEmbedButton } from './_embed-button'
 import { AddTrackButton } from './_add-track-button'
@@ -220,88 +221,93 @@ export default async function CollectionPage({
             <p className="public-empty-card__hint">Items appear here when the artist adds them.</p>
           </div>
         ) : (
-          <ol className="prof-list prof-collection-items">
-            {data.items.map((item) => {
-              if (item.archiveItem?.source === 'SPOTIFY_EMBED' && item.archiveItem.embedUri) {
+          <>
+            {queue.length > 0 && <PlaylistControls queue={queue} />}
+            <ol className="prof-list prof-collection-items">
+              {data.items.map((item) => {
+                if (item.archiveItem?.source === 'SPOTIFY_EMBED' && item.archiveItem.embedUri) {
+                  return (
+                    <SpotifyEmbedRow
+                      key={item.id}
+                      title={item.archiveItem.title}
+                      embedUri={item.archiveItem.embedUri}
+                    />
+                  )
+                }
+                if (item.archiveItem?.source === 'MIXCLOUD_EMBED' && item.archiveItem.embedUri) {
+                  return (
+                    <MixcloudEmbedRow
+                      key={item.id}
+                      title={item.archiveItem.title}
+                      embedUri={item.archiveItem.embedUri}
+                    />
+                  )
+                }
+                const thumbUrl = item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null
+                if (item.archiveItem?.audioUrl) {
+                  return (
+                    <ArchiveTrackRow
+                      key={item.id}
+                      id={item.archiveItem.id}
+                      title={item.archiveItem.title}
+                      audioUrl={item.archiveItem.audioUrl}
+                      artistUsername={data.user.username}
+                      channelSlug={item.archiveItem.channel?.slug ?? null}
+                      thumbUrl={thumbUrl}
+                      durationLabel={
+                        item.archiveItem.durationSec != null
+                          ? formatDuration(item.archiveItem.durationSec)
+                          : null
+                      }
+                      addedByDisplayName={
+                        item.addedBy && item.addedBy.username !== data.user.username
+                          ? item.addedBy.displayName
+                          : null
+                      }
+                      addNote={item.addNote}
+                      queue={queue}
+                    />
+                  )
+                }
                 return (
-                  <SpotifyEmbedRow
-                    key={item.id}
-                    title={item.archiveItem.title}
-                    embedUri={item.archiveItem.embedUri}
-                  />
-                )
-              }
-              if (item.archiveItem?.source === 'MIXCLOUD_EMBED' && item.archiveItem.embedUri) {
-                return (
-                  <MixcloudEmbedRow
-                    key={item.id}
-                    title={item.archiveItem.title}
-                    embedUri={item.archiveItem.embedUri}
-                  />
-                )
-              }
-              const thumbUrl = item.archiveItem?.bannerUrl ?? item.release?.artworkUrl ?? null
-              if (item.archiveItem?.audioUrl) {
-                return (
-                  <ArchiveTrackRow
-                    key={item.id}
-                    id={item.archiveItem.id}
-                    title={item.archiveItem.title}
-                    audioUrl={item.archiveItem.audioUrl}
-                    artistUsername={data.user.username}
-                    channelSlug={item.archiveItem.channel?.slug ?? null}
-                    thumbUrl={thumbUrl}
-                    durationLabel={
-                      item.archiveItem.durationSec != null
-                        ? formatDuration(item.archiveItem.durationSec)
-                        : null
-                    }
-                    addedByDisplayName={
-                      item.addedBy && item.addedBy.username !== data.user.username
-                        ? item.addedBy.displayName
-                        : null
-                    }
-                    addNote={item.addNote}
-                    queue={queue}
-                  />
-                )
-              }
-              return (
-                <li key={item.id} className="prof-collection-item-row">
-                  <div className="prof-collection-cover prof-collection-cover--item">
-                    {thumbUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={thumbUrl} alt="" width={40} height={40} />
-                    ) : (
-                      <span className="prof-collection-cover-ph" aria-hidden />
-                    )}
-                  </div>
-                  <div className="prof-collection-item-body">
-                    {item.archiveItem && (
-                      <>
-                        <div className="prof-collection-title">{item.archiveItem.title}</div>
-                        {item.archiveItem.durationSec != null && (
+                  <li key={item.id} className="prof-collection-item-row">
+                    <div className="prof-collection-cover prof-collection-cover--item">
+                      {thumbUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={thumbUrl} alt="" width={40} height={40} />
+                      ) : (
+                        <span className="prof-collection-cover-ph" aria-hidden />
+                      )}
+                    </div>
+                    <div className="prof-collection-item-body">
+                      {item.archiveItem && (
+                        <>
+                          <div className="prof-collection-title">{item.archiveItem.title}</div>
+                          {item.archiveItem.durationSec != null && (
+                            <span className="prof-list-meta">
+                              {formatDuration(item.archiveItem.durationSec)}
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {item.release && (
+                        <>
+                          <Link href={`/r/${item.release.smartLinkSlug}`}>
+                            {item.release.title}
+                          </Link>
                           <span className="prof-list-meta">
-                            {formatDuration(item.archiveItem.durationSec)}
+                            {' '}
+                            · {item.release.type} ·{' '}
+                            {new Date(item.release.releaseDate).toLocaleDateString()}
                           </span>
-                        )}
-                      </>
-                    )}
-                    {item.release && (
-                      <>
-                        <Link href={`/r/${item.release.smartLinkSlug}`}>{item.release.title}</Link>
-                        <span className="prof-list-meta">
-                          {' '}
-                          · {item.release.type} ·{' '}
-                          {new Date(item.release.releaseDate).toLocaleDateString()}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
+                        </>
+                      )}
+                    </div>
+                  </li>
+                )
+              })}
+            </ol>
+          </>
         )}
       </section>
 

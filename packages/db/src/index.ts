@@ -24,6 +24,7 @@ export {
 export {
   notifyFollowersOfNewPost,
   notifyFollowersOfNewTrack,
+  notifyFollowersOfNewRelease,
   notifyArtistOfNewFollower,
   notifyArtistOfNewLike,
   notifyArtistOfNewRepost,

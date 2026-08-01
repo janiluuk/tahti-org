@@ -10,6 +10,8 @@ export const NotificationTypeSchema = z.enum([
   'NEW_FOLLOWER',
   'NEW_LIKE',
   'NEW_REPOST',
+  'PLAYLIST_TRACK_ADDED',
+  'NEW_RELEASE',
 ])
 
 export const NotificationSchema = z.object({
@@ -63,6 +65,16 @@ export const FeedItemSchema = z.discriminatedUnion('kind', [
     channelSlug: z.string(),
     liked: z.boolean(),
     likeCount: z.number().int(),
+    url: z.string(),
+  }),
+  z.object({
+    kind: z.literal('release'),
+    id: z.string(),
+    date: z.string().datetime(),
+    artist: FeedArtistSchema,
+    title: z.string(),
+    releaseType: z.string(),
+    artworkUrl: z.string().nullable(),
     url: z.string(),
   }),
 ])

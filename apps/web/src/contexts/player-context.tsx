@@ -144,6 +144,9 @@ interface PlayerContextValue extends PlayerState {
   /** When the queue reaches its end: loop back to the start, instead of stopping. */
   repeat: boolean
   toggleRepeat: () => void
+  /** When on, next/ended picks a random other track instead of sequential order. */
+  shuffle: boolean
+  toggleShuffle: () => void
   /** Appends to the queue — starts one from the current track if none exists yet. */
   addToQueue: (track: PlayerTrack) => void
   removeFromQueue: (trackId: string) => void
@@ -176,6 +179,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
    * since its listener closure would otherwise see a stale queue. */
   const queueRef = useRef<PlayerTrack[] | null>(null)
   const repeatRef = useRef(false)
+  const shuffleRef = useRef(false)
+  /** Track ids already advanced past while shuffle is on — so random next drains the
+   * playlist before wrapping (only when repeat is also on). */
+  const shufflePlayedRef = useRef<Set<string>>(new Set())
   /** The live stream that was playing right before the listener diverted to play a
    * one-off track (e.g. a single archive track while Radio was on) — so playback
    * can hand back to it once that track ends, instead of just going silent. Cleared
@@ -204,6 +211,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [queue, setQueue] = useState<PlayerTrack[]>([])
   const [history, setHistory] = useState<PlayerTrack[]>([])
   const [repeat, setRepeat] = useState(false)
+  const [shuffle, setShuffle] = useState(false)
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
   const [analyserL, setAnalyserL] = useState<AnalyserNode | null>(null)
   const [analyserR, setAnalyserR] = useState<AnalyserNode | null>(null)
@@ -260,8 +268,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       if (!audio) return
 
       const nextQueue = opts?.queue ?? null
+      const prevQueueIds = (queueRef.current ?? []).map((t) => t.id).join('\0')
+      const nextQueueIds = (nextQueue ?? []).map((t) => t.id).join('\0')
       queueRef.current = nextQueue
       setQueue(nextQueue ?? [])
+      // New playlist identity — restart the shuffle drain so random next can visit
+      // every track before wrapping again.
+      if (prevQueueIds !== nextQueueIds) {
+        shufflePlayedRef.current = new Set()
+      }
 
       if (currentTrackIdRef.current === track.id) {
         if (opts?.autoplay !== false) void audio.play()
@@ -402,6 +417,22 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (!q || q.length < 2 || !currentId) return false
     const idx = q.findIndex((t) => t.id === currentId)
     if (idx === -1) return false
+
+    if (shuffleRef.current) {
+      shufflePlayedRef.current.add(currentId)
+      const others = q.filter((t) => t.id !== currentId)
+      const unplayed = others.filter((t) => !shufflePlayedRef.current.has(t.id))
+      let pool = unplayed
+      if (pool.length === 0) {
+        if (!repeatRef.current) return false
+        shufflePlayedRef.current = new Set([currentId])
+        pool = others
+      }
+      const next = pool[Math.floor(Math.random() * pool.length)]!
+      load(next, { autoplay: true, queue: q })
+      return true
+    }
+
     const isLast = idx === q.length - 1
     if (isLast && !repeatRef.current) return false
     load(q[(idx + 1) % q.length]!, { autoplay: true, queue: q })
@@ -436,6 +467,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     currentTrackRef.current = null
     queueRef.current = null
     radioResumeRef.current = null
+    shufflePlayedRef.current = new Set()
     setQueue([])
     setState((prev) => ({
       ...prev,
@@ -451,6 +483,34 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const toggleRepeat = useCallback(() => {
     setRepeat((prev) => !prev)
+  }, [])
+
+  const toggleShuffle = useCallback(() => {
+    setShuffle((prev) => {
+      const next = !prev
+      if (next) {
+        shufflePlayedRef.current = new Set(
+          currentTrackIdRef.current ? [currentTrackIdRef.current] : [],
+        )
+        // Shuffle the visible Up Next order so the queue panel matches random mode.
+        const base = queueRef.current
+        if (base && base.length > 1) {
+          const currentIdx = base.findIndex((t) => t.id === currentTrackIdRef.current)
+          const head = currentIdx === -1 ? [] : base.slice(0, currentIdx + 1)
+          const rest = currentIdx === -1 ? [...base] : base.slice(currentIdx + 1)
+          for (let i = rest.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[rest[i], rest[j]] = [rest[j]!, rest[i]!]
+          }
+          const reordered = [...head, ...rest]
+          queueRef.current = reordered
+          setQueue(reordered)
+        }
+      } else {
+        shufflePlayedRef.current = new Set()
+      }
+      return next
+    })
   }, [])
 
   const clearQueue = useCallback(() => {
@@ -529,6 +589,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     repeatRef.current = repeat
   }, [repeat])
+
+  useEffect(() => {
+    shuffleRef.current = shuffle
+  }, [shuffle])
 
   // Counts a "listen" toward top-lists once a track has played long enough
   // to be a real listen (30s, or halfway through a shorter track) — fires
@@ -647,6 +711,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       history,
       repeat,
       toggleRepeat,
+      shuffle,
+      toggleShuffle,
       addToQueue,
       removeFromQueue,
       clearQueue,
@@ -671,6 +737,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       history,
       repeat,
       toggleRepeat,
+      shuffle,
+      toggleShuffle,
       addToQueue,
       removeFromQueue,
       clearQueue,
