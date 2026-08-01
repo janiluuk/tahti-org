@@ -73,7 +73,7 @@ export function GreenRoomGuestView({
 
   if (error === 'log in') {
     return (
-      <Callout tone="info">
+      <Callout label="Sign in required" variant="cyan">
         <Link href={`/login?next=/u/${artistUsername}/green-room`}>Log in</Link> to join this green
         room.
       </Callout>
@@ -81,12 +81,16 @@ export function GreenRoomGuestView({
   }
 
   if (error || !access) {
-    return <Callout tone="warning">{error ?? 'Green room unavailable'}</Callout>
+    return (
+      <Callout label="Unavailable" variant="amber">
+        {error ?? 'Green room unavailable'}
+      </Callout>
+    )
   }
 
   if (!access.greenRoomEnabled) {
     return (
-      <Callout tone="info">
+      <Callout label="Not open yet" variant="cyan">
         {access.artistDisplayName} has not opened the green room for this broadcast yet.
       </Callout>
     )
@@ -94,7 +98,7 @@ export function GreenRoomGuestView({
 
   if (!access.hasAccess) {
     return (
-      <Callout tone="warning">
+      <Callout label="Invite required" variant="amber">
         You are not on the guest list for {access.artistDisplayName}&apos;s green room.
       </Callout>
     )
@@ -102,7 +106,7 @@ export function GreenRoomGuestView({
 
   if (access.channelState === 'LIVE') {
     return (
-      <Callout tone="success">
+      <Callout label="On air" variant="green">
         {access.artistDisplayName} is now live.{' '}
         <Link href={`/c/${channelSlug}`}>Tune in on the public channel →</Link>
       </Callout>
@@ -111,7 +115,7 @@ export function GreenRoomGuestView({
 
   if (access.channelState !== 'PREVIEW' || !access.hlsUrl) {
     return (
-      <Callout tone="info">
+      <Callout label="Waiting for preview" variant="cyan">
         The green room opens when {access.artistDisplayName} starts their preview stream.
       </Callout>
     )

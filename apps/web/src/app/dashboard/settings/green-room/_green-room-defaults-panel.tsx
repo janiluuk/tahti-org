@@ -4,7 +4,8 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useState, useTransition } from 'react'
-import { Panel, Button } from '@tahti/ui'
+import Link from 'next/link'
+import { Panel } from '@tahti/ui'
 import type { GreenRoomDefaults, GreenRoomInvitePool } from '@tahti/shared'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
@@ -81,9 +82,9 @@ export function GreenRoomDefaultsPanel({ initial }: { initial: GreenRoomDefaults
       {error ? <p className="studio-notice studio-notice--error studio-mt-sm">{error}</p> : null}
 
       <div className="studio-actions studio-mt-md">
-        <Button href="/dashboard/broadcast?step=3" variant="secondary" size="sm">
+        <Link href="/dashboard/broadcast?step=3" className="ui-btn ui-btn--secondary ui-btn--sm">
           Open pre-flight controls
-        </Button>
+        </Link>
       </div>
     </Panel>
   )
