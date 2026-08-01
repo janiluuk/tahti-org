@@ -243,17 +243,19 @@ export function ArchiveMetadataFields({
             ))}
           </select>
         </label>
-        <label className="studio-field">
-          <span className="studio-label">Custom genre</span>
-          <input
-            type="text"
-            placeholder="Not in the list?"
-            value={state.genreCustom}
-            disabled={disabled}
-            onChange={(e) => set({ genreCustom: e.target.value })}
-            className="studio-input"
-          />
-        </label>
+        {(state.genre === 'Other' || state.genreCustom.trim().length > 0) && (
+          <label className="studio-field">
+            <span className="studio-label">Custom genre</span>
+            <input
+              type="text"
+              placeholder="Not in the list?"
+              value={state.genreCustom}
+              disabled={disabled}
+              onChange={(e) => set({ genreCustom: e.target.value })}
+              className="studio-input"
+            />
+          </label>
+        )}
       </div>
 
       <VenuePicker
@@ -372,7 +374,7 @@ export function ArchiveMetadataFields({
         </label>
       </div>
 
-      <label className="studio-label-row studio-row--start">
+      <label className="studio-label-row">
         <input
           type="checkbox"
           checked={state.useDetectedBpmKey}
@@ -380,12 +382,11 @@ export function ArchiveMetadataFields({
           onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
         />
         <span>
-          Use auto-detected tags (embedded file tags when present; otherwise BPM and key are
-          analyzed from the audio — first ~2 minutes for long files)
+          Use auto-detected BPM &amp; key
           {(detectedBpm != null || detectedKey) && (
             <span className="studio-text-muted-sm">
               {' '}
-              — detected:{' '}
+              —{' '}
               {[detectedBpm != null ? `${detectedBpm} BPM` : null, detectedKey ?? null]
                 .filter(Boolean)
                 .join(', ')}
@@ -393,6 +394,13 @@ export function ArchiveMetadataFields({
           )}
         </span>
       </label>
+      <details className="studio-details-block">
+        <summary className="studio-details-block__summary">About auto-detect</summary>
+        <p className="studio-help studio-mt-xs">
+          Uses embedded file tags when present; otherwise BPM and key are analyzed from the audio
+          (first ~2 minutes for long files).
+        </p>
+      </details>
 
       <label className="studio-label-row">
         <input

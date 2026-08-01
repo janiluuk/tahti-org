@@ -54,9 +54,12 @@ export default async function FeedPage() {
           </p>
           <p className="public-empty-card__hint">
             {followingCount === 0
-              ? 'Follow an artist from their channel or profile page to see their updates here.'
+              ? 'Discover artists on Tahti, then follow them to fill this feed.'
               : 'New posts, tracks, and releases from artists you follow will show up here.'}
           </p>
+          <Link href="/listen" className="public-empty-card__cta">
+            Discover artists →
+          </Link>
         </div>
       ) : (
         <ul className="feed-list">

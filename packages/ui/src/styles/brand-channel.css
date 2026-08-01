@@ -1027,6 +1027,69 @@
   border-color: color-mix(in srgb, var(--cyan) 65%, transparent);
 }
 
+[data-tahti-ui='brand'] .ch-archive-more {
+  position: relative;
+  margin-left: auto;
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__summary:hover,
+[data-tahti-ui='brand'] .ch-archive-more[open] > .ch-archive-more__summary {
+  color: var(--text);
+  background: var(--card2);
+  border-color: var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  min-width: 11.5rem;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-hover);
+  background: var(--card);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__btn:hover {
+  background: var(--card2);
+}
+
 [data-tahti-ui='brand'] .ch-download {
   font-size: var(--text-sm);
 }
@@ -5571,6 +5634,17 @@
   align-items: center;
   gap: 6px;
   margin-left: auto;
+}
+
+[data-tahti-ui='brand'] .prof-tracks-studio-link {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .prof-tracks-studio-link:hover {
+  color: var(--cyan);
 }
 
 [data-tahti-ui='brand'] .prof-tracks-reorder {

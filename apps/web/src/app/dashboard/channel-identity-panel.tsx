@@ -426,28 +426,32 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           </div>
 
           <div className="studio-avatar-picker__tools">
-            <label
-              className="studio-avatar-picker__color"
-              title="Solid color avatar"
-              aria-label="Solid color avatar"
-            >
-              <input
-                type="color"
-                value={avatarColor}
+            {!previewSrc && (
+              <label
+                className="studio-avatar-picker__color"
+                title="Solid color avatar"
+                aria-label="Solid color avatar"
+              >
+                <input
+                  type="color"
+                  value={avatarColor}
+                  disabled={avatarBusy}
+                  onChange={(e) => onColorPick(e.target.value)}
+                />
+              </label>
+            )}
+            {!previewSrc && (
+              <button
+                type="button"
+                className="studio-avatar-picker__url-btn"
+                title="Shuffle gradient"
+                aria-label="Shuffle gradient"
                 disabled={avatarBusy}
-                onChange={(e) => onColorPick(e.target.value)}
-              />
-            </label>
-            <button
-              type="button"
-              className="studio-avatar-picker__url-btn"
-              title="Shuffle gradient"
-              aria-label="Shuffle gradient"
-              disabled={avatarBusy}
-              onClick={onShuffleTheme}
-            >
-              <ButtonIcon name="refresh" />
-            </button>
+                onClick={onShuffleTheme}
+              >
+                <ButtonIcon name="refresh" />
+              </button>
+            )}
             <button
               type="button"
               className={`studio-avatar-picker__url-btn${urlMode ? ' studio-avatar-picker__url-btn--active' : ''}`}
@@ -465,26 +469,84 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           </div>
         </div>
 
-        <div className="studio-avatar-theme-swatches" role="list" aria-label="Gradient presets">
-          {swatches.map((preset) => {
-            const css = avatarThemeCss(preset)
-            const active = avatarTheme != null && avatarThemeCss(avatarTheme) === css
-            return (
-              <button
-                key={css}
-                type="button"
-                role="listitem"
-                className={`studio-avatar-theme-swatch${active ? ' studio-avatar-theme-swatch--active' : ''}`}
-                style={{ background: css }}
-                title="Apply gradient"
-                aria-label="Apply gradient"
-                aria-pressed={active}
-                disabled={avatarBusy}
-                onClick={() => applyTheme(preset)}
-              />
-            )
-          })}
-        </div>
+        {!previewSrc ? (
+          <div className="studio-avatar-theme-swatches" role="list" aria-label="Gradient presets">
+            {swatches.map((preset) => {
+              const css = avatarThemeCss(preset)
+              const active = avatarTheme != null && avatarThemeCss(avatarTheme) === css
+              return (
+                <button
+                  key={css}
+                  type="button"
+                  role="listitem"
+                  className={`studio-avatar-theme-swatch${active ? ' studio-avatar-theme-swatch--active' : ''}`}
+                  style={{ background: css }}
+                  title="Apply gradient"
+                  aria-label="Apply gradient"
+                  aria-pressed={active}
+                  disabled={avatarBusy}
+                  onClick={() => applyTheme(preset)}
+                />
+              )
+            })}
+          </div>
+        ) : (
+          <details className="studio-details-block studio-mt-sm">
+            <summary className="studio-details-block__summary">
+              Replace photo with a theme avatar
+            </summary>
+            <div className="studio-details-block__body">
+              <div className="studio-avatar-picker__tools studio-mb-sm">
+                <label
+                  className="studio-avatar-picker__color"
+                  title="Solid color avatar"
+                  aria-label="Solid color avatar"
+                >
+                  <input
+                    type="color"
+                    value={avatarColor}
+                    disabled={avatarBusy}
+                    onChange={(e) => onColorPick(e.target.value)}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="studio-avatar-picker__url-btn"
+                  title="Shuffle gradient"
+                  aria-label="Shuffle gradient"
+                  disabled={avatarBusy}
+                  onClick={onShuffleTheme}
+                >
+                  <ButtonIcon name="refresh" />
+                </button>
+              </div>
+              <div
+                className="studio-avatar-theme-swatches"
+                role="list"
+                aria-label="Gradient presets"
+              >
+                {swatches.map((preset) => {
+                  const css = avatarThemeCss(preset)
+                  const active = avatarTheme != null && avatarThemeCss(avatarTheme) === css
+                  return (
+                    <button
+                      key={css}
+                      type="button"
+                      role="listitem"
+                      className={`studio-avatar-theme-swatch${active ? ' studio-avatar-theme-swatch--active' : ''}`}
+                      style={{ background: css }}
+                      title="Apply gradient"
+                      aria-label="Apply gradient"
+                      aria-pressed={active}
+                      disabled={avatarBusy}
+                      onClick={() => applyTheme(preset)}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          </details>
+        )}
 
         {urlMode && (
           <div className="studio-avatar-picker__url-row">

@@ -1249,6 +1249,23 @@
   text-decoration: underline;
 }
 
+.public-empty-card__cta {
+  display: inline-flex;
+  margin-top: var(--space-4);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--cyan) 40%, transparent);
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+  color: var(--cyan);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.public-empty-card__cta:hover {
+  background: color-mix(in srgb, var(--cyan) 20%, transparent);
+}
+
 .stat-card-grid {
   display: grid;
   gap: var(--space-3);

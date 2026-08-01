@@ -774,6 +774,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     {posts.length === 0 && events.length === 0 && (
                       <div className="public-empty-card">
                         <p className="public-empty-card__text">No updates yet.</p>
+                        <p className="public-empty-card__hint">
+                          Posts and upcoming shows will land here. Past broadcasts are in Archive.
+                        </p>
+                        <Link
+                          href={`/u/${channel.user.username}`}
+                          className="public-empty-card__cta"
+                        >
+                          View profile →
+                        </Link>
                       </div>
                     )}
                   </>
