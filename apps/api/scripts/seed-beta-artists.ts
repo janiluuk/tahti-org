@@ -24,7 +24,15 @@
 import { randomBytes } from 'node:crypto'
 import { prisma } from '@tahti/db'
 import { hashPassword } from '../src/lib/password.js'
-import { TAHTI_SELECTS_SLUG } from '@tahti/shared'
+import { TAHTI_SELECTS_SLUG, VISUAL_PRESETS, type VisualPreset } from '@tahti/shared'
+
+const AMBIENT_PRESETS = VISUAL_PRESETS.filter((p): p is VisualPreset => p !== 'MINIMAL')
+
+function pickVisualPreset(seed: string): VisualPreset {
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0
+  return AMBIENT_PRESETS[h % AMBIENT_PRESETS.length]!
+}
 
 interface CountrySpec {
   code: string
@@ -146,6 +154,8 @@ async function ensureArtist(spec: ArtistSpec): Promise<{ channelId: string; crea
     liveSourcePassHash: await hashPassword(liveSourcePass),
     rtmpStreamKey,
     rtmpStreamKeyHash: await hashPassword(rtmpStreamKey),
+    fallbackEnabled: true,
+    visualPreset: pickVisualPreset(spec.username),
   }
 
   const created = await prisma.user.create({
@@ -208,6 +218,8 @@ async function main() {
             artistName: source.artistName,
             status: 'READY',
             isPublic: true,
+            isFallback: true,
+            fallbackOrder: i,
             license: source.license,
             qualityBadge: source.qualityBadge,
             mp3Key: source.mp3Key,
