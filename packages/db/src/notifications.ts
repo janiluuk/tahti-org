@@ -226,6 +226,26 @@ export async function notifyUsersOfChatMention(
   })
 }
 
+/** Board rejected a Tahti Radio submission with a note — silent when note empty. */
+export async function notifyArtistOfRadioSubmissionRejected(
+  prisma: PrismaClient,
+  artistUserId: string,
+  trackTitle: string,
+  rejectionNote: string,
+): Promise<void> {
+  const note = rejectionNote.trim()
+  if (!note) return
+  await prisma.notification.create({
+    data: {
+      userId: artistUserId,
+      type: 'RADIO_SUBMISSION_REJECTED',
+      title: `"${trackTitle}" was not added to Tahti Radio`,
+      body: note.slice(0, 500),
+      url: '/dashboard/settings/distribution',
+    },
+  })
+}
+
 export async function processScheduledPostNotifications(
   prisma: PrismaClient,
 ): Promise<{ notified: number }> {

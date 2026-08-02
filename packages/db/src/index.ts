@@ -31,5 +31,6 @@ export {
   notifyPlaylistOfNewTrack,
   notifyUserOfNewMessage,
   notifyUsersOfChatMention,
+  notifyArtistOfRadioSubmissionRejected,
   processScheduledPostNotifications,
 } from './notifications.js'

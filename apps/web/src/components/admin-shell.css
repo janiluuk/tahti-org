@@ -389,13 +389,82 @@
   font-size: 0.85rem;
 }
 
-.admin-beta-approve-form input {
+.admin-beta-approve-form input,
+.admin-beta-approve-form textarea {
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--bg) 60%, var(--card));
   color: var(--text);
   font-family: var(--font-body);
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+/* Big auditor for unaudited Tahti Radio submissions */
+.admin-radio-audit {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-radio-audit__player {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--card) 88%, var(--bg));
+}
+
+.admin-radio-audit__eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted2, var(--muted));
+}
+
+.admin-radio-audit__title {
+  margin: 0.25rem 0 0.35rem;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-family: var(--font-head, inherit);
+}
+
+.admin-radio-audit__note {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.admin-radio-audit__transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-radio-audit__scrub {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.admin-radio-audit__scrub input[type='range'] {
+  flex: 1;
+}
+
+.admin-radio-audit__actions {
+  max-width: 40rem;
+}
+
+.admin-radio-audit__row--active td {
+  background: color-mix(in srgb, var(--cyan) 10%, transparent);
 }
 
 .admin-beta-action-row {

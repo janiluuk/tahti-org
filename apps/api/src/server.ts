@@ -89,6 +89,7 @@ import adminMembersRoutes from './routes/admin/members.js'
 import adminStatsRoutes from './routes/admin/stats.js'
 import adminStreamsRoutes from './routes/admin/streams.js'
 import adminRadioRoutes from './routes/admin/radio.js'
+import adminRadioSubmissionRoutes from './routes/admin/radio-submissions.js'
 import adminTahtiSelectsRoutes from './routes/admin/tahti-selects.js'
 import adminNewsRoutes from './routes/admin/news.js'
 import adminChannelsRoutes from './routes/admin/channels.js'
@@ -159,6 +160,7 @@ import meRadioSlotBookings from './routes/me/radio-slot-bookings.js'
 import meArchiveRoutes from './routes/me/archive.js'
 import meArchiveBannerRoutes from './routes/me/archive-banner.js'
 import meProgrammeRoutes from './routes/me/programme.js'
+import meRadioSubmissionRoutes from './routes/me/radio-submissions.js'
 import meAnnouncementsRoutes from './routes/me/announcements.js'
 import adminAnnouncementsRoutes from './routes/admin/announcements.js'
 import meStorageRoutes from './routes/me/storage.js'
@@ -558,6 +560,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(adminStatsRoutes)
   await fastify.register(adminStreamsRoutes)
   await fastify.register(adminRadioRoutes)
+  await fastify.register(adminRadioSubmissionRoutes)
   await fastify.register(adminTahtiSelectsRoutes)
   await fastify.register(adminNewsRoutes)
   await fastify.register(adminChannelsRoutes)
@@ -653,6 +656,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meArchiveRoutes)
   await fastify.register(meArchiveBannerRoutes)
   await fastify.register(meProgrammeRoutes)
+  await fastify.register(meRadioSubmissionRoutes)
   await fastify.register(meAnnouncementsRoutes)
   await fastify.register(adminAnnouncementsRoutes)
   await fastify.register(meStorageRoutes)
