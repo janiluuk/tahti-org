@@ -17,7 +17,12 @@
  */
 
 import { prisma } from '@tahti/db'
-import { TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG, VISUAL_PRESETS, type VisualPreset } from '@tahti/shared'
+import {
+  TAHTI_RADIO_SLUG,
+  TAHTI_SELECTS_SLUG,
+  VISUAL_PRESETS,
+  type VisualPreset,
+} from '@tahti/shared'
 
 const SYSTEM_SLUGS = new Set([TAHTI_RADIO_SLUG, TAHTI_SELECTS_SLUG])
 const AMBIENT_PRESETS = VISUAL_PRESETS.filter((p): p is VisualPreset => p !== 'MINIMAL')
@@ -133,7 +138,9 @@ async function main() {
 
     let fallbackFlagged = items.filter((t) => t.isFallback).length
     if (fallbackFlagged < TRACKS_PER_CHANNEL) {
-      const toFlag = items.filter((t) => !t.isFallback).slice(0, TRACKS_PER_CHANNEL - fallbackFlagged)
+      const toFlag = items
+        .filter((t) => !t.isFallback)
+        .slice(0, TRACKS_PER_CHANNEL - fallbackFlagged)
       for (let i = 0; i < toFlag.length; i++) {
         await prisma.archiveItem.update({
           where: { id: toFlag[i]!.id },

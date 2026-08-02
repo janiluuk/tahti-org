@@ -40,7 +40,9 @@ async function main() {
   const dir = process.env.AMBIENT_DIR
   if (!dir) throw new Error('Set AMBIENT_DIR to the prepared track directory')
 
-  const manifest = JSON.parse(await readFile(path.join(dir, 'manifest.json'), 'utf8')) as ManifestTrack[]
+  const manifest = JSON.parse(
+    await readFile(path.join(dir, 'manifest.json'), 'utf8'),
+  ) as ManifestTrack[]
   if (manifest.length === 0) throw new Error('manifest.json is empty')
 
   const radio = await prisma.channel.findUnique({
