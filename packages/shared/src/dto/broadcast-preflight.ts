@@ -29,7 +29,9 @@ export const PlannedRadioShowSchema = z.object({
   bookingId: z.string(),
   startAt: z.string(),
   endAt: z.string(),
-  episodeNumber: z.number().int().positive(),
+  // Use .min(1) not .positive() — zod-to-json-schema openApi3 emits boolean
+  // exclusiveMinimum, which Fastify/AJV rejects (must be a number).
+  episodeNumber: z.number().int().min(1),
   tagline: z.string().nullable(),
   showType: BroadcastShowTypeSchema,
 })
@@ -41,7 +43,7 @@ export const BroadcastPreflightViewSchema = z.object({
   visibility: BroadcastVisibilitySchema,
   autoArchive: z.boolean(),
   showType: BroadcastShowTypeSchema,
-  episodeNumber: z.number().int().positive().nullable(),
+  episodeNumber: z.number().int().min(1).nullable(),
   tagline: z.string().nullable(),
   plannedRadioShow: PlannedRadioShowSchema.nullable(),
 })
