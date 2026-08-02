@@ -57,6 +57,16 @@ function IconDownload() {
   )
 }
 
+function IconMore() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+      <circle cx="3.5" cy="8" r="1.3" fill="currentColor" />
+      <circle cx="8" cy="8" r="1.3" fill="currentColor" />
+      <circle cx="12.5" cy="8" r="1.3" fill="currentColor" />
+    </svg>
+  )
+}
+
 type ProfileCoverProps = {
   displayName: string
   avatarUrl: string | null
@@ -120,6 +130,8 @@ type ProfileHeroProps = {
   isLive?: boolean
   channelHref?: string | null
   subscribeHref: string
+  /** When false, hide the Support CTA (no tiers / payments). Defaults to true. */
+  showSupport?: boolean
   tipJarUrl?: string | null
   /** Pre-formatted, e.g. "Member since 8 months" — resolved by the caller so this component stays locale-agnostic. */
   joinDateLabel?: string | null
@@ -158,6 +170,7 @@ export function ProfileHero({
   isLive,
   channelHref,
   subscribeHref,
+  showSupport = true,
   tipJarUrl,
   joinDateLabel,
   joinDateTitle,
@@ -177,14 +190,15 @@ export function ProfileHero({
           </div>
           <div className="prof-meta-line">
             <span>@{username}</span>
-            <span className="prof-country-flag">
-              {countryCode ? countryCodeToFlag(countryCode) : '🌍'}{' '}
-              {countryCode ? countryLabel || countryCode : 'World citizen'}
-            </span>
+            {countryCode ? (
+              <span className="prof-country-flag">
+                {countryCodeToFlag(countryCode)} {countryLabel || countryCode}
+              </span>
+            ) : null}
             {isLive && (
               <span className="prof-live-badge">
                 <span className="signal-dot" style={{ width: 6, height: 6 }} aria-hidden />
-                ON AIR NOW
+                ON AIR
               </span>
             )}
             {joinDateLabel && (
@@ -195,45 +209,56 @@ export function ProfileHero({
           </div>
         </div>
         <div className="prof-cta-row">
-          {channelHref && (
+          {channelHref && isLive ? (
             <Link href={channelHref} className="prof-cta-btn">
               <IconPlay />
-              Tune in live
+              Tune in
             </Link>
-          )}
+          ) : null}
           {followSlot}
-          <Link href={subscribeHref} className="prof-sub-btn">
-            <IconHeart />
-            Support
-          </Link>
-          {messageSlot}
-          {newsletterSlot}
-          {rssUrl && (
-            <a
-              href={rssUrl}
-              rel="alternate"
-              className="prof-icon-btn"
-              title="RSS feed"
-              aria-label="RSS feed"
-            >
-              <IconRss />
-            </a>
-          )}
-          {presskitUrl && (
-            <a
-              href={presskitUrl}
-              rel="nofollow"
-              className="prof-icon-btn"
-              title="Download press kit"
-              aria-label="Download press kit"
-            >
-              <IconDownload />
-            </a>
-          )}
-          {tipJarUrl && (
-            <a href={tipJarUrl} rel="noopener noreferrer" className="prof-tip-btn">
-              Tip ↗
-            </a>
+          {showSupport ? (
+            <Link href={subscribeHref} className="prof-sub-btn">
+              <IconHeart />
+              Support
+            </Link>
+          ) : null}
+          {(newsletterSlot || tipJarUrl || rssUrl || presskitUrl || messageSlot) && (
+            <details className="prof-cta-more">
+              <summary className="prof-icon-btn" title="More" aria-label="More actions">
+                <IconMore />
+              </summary>
+              <div className="prof-cta-more__menu">
+                {messageSlot}
+                {newsletterSlot}
+                {tipJarUrl && (
+                  <a href={tipJarUrl} rel="noopener noreferrer" className="prof-tip-btn">
+                    Tip ↗
+                  </a>
+                )}
+                {rssUrl && (
+                  <a
+                    href={rssUrl}
+                    rel="alternate"
+                    className="prof-icon-btn"
+                    title="RSS feed"
+                    aria-label="RSS feed"
+                  >
+                    <IconRss />
+                  </a>
+                )}
+                {presskitUrl && (
+                  <a
+                    href={presskitUrl}
+                    rel="nofollow"
+                    className="prof-icon-btn"
+                    title="Download press kit"
+                    aria-label="Download press kit"
+                  >
+                    <IconDownload />
+                  </a>
+                )}
+              </div>
+            </details>
           )}
         </div>
       </div>
@@ -242,27 +267,6 @@ export function ProfileHero({
         <div className="prof-bio prof-bio--rich" dangerouslySetInnerHTML={{ __html: bioHtml }} />
       ) : (
         bio && <SafePlainText text={bio} className="prof-bio" linkMentions />
-      )}
-
-      {isLive && channelHref && (
-        <Link href={channelHref} className="prof-embed-row">
-          <div className="prof-embed-cover" aria-hidden>
-            <svg width="22" height="22" viewBox="0 0 16 16" fill="none">
-              <path d="M4 3l9 5-9 5V3z" fill="currentColor" />
-            </svg>
-          </div>
-          <div className="prof-embed-info">
-            <div className="prof-embed-live-line">
-              <span className="signal-dot" style={{ width: 5, height: 5 }} aria-hidden />
-              LIVE NOW
-            </div>
-            <h5>{displayName}</h5>
-            <p>Tap to join the broadcast</p>
-            <div className="prof-embed-prog" aria-hidden>
-              <div className="prof-embed-prog-fill" />
-            </div>
-          </div>
-        </Link>
       )}
     </>
   )

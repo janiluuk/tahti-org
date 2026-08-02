@@ -4,8 +4,12 @@
 'use client'
 
 import { Fragment, useEffect, useMemo, useState, useTransition } from 'react'
-import { Button } from '@tahti/ui'
-import { RADIO_SLOT_MAX_HOURS, type RadioSlotBookingItem } from '@tahti/shared'
+import { Button, ButtonIcon } from '@tahti/ui'
+import {
+  RADIO_SLOT_MAX_HOURS,
+  type BroadcastShowType,
+  type RadioSlotBookingItem,
+} from '@tahti/shared'
 import { cancelRadioSlotBooking, createRadioSlotBooking, listRadioSlotBookings } from './actions'
 
 const DAYS_VISIBLE = 7
@@ -48,6 +52,7 @@ export function RadioSlotCalendar({
   const [bookings, setBookings] = useState(initialBookings)
   const [selection, setSelection] = useState<Selection | null>(null)
   const [note, setNote] = useState('')
+  const [showType, setShowType] = useState<BroadcastShowType>('LIVE_SET')
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -143,6 +148,7 @@ export function RadioSlotCalendar({
         startAt: startAt.toISOString(),
         endAt: endAt.toISOString(),
         note: note.trim() || undefined,
+        showType,
       })
       if (res.error) {
         setError(res.error)
@@ -151,6 +157,7 @@ export function RadioSlotCalendar({
       if (res.booking) setBookings((prev) => [...prev, res.booking!])
       setSelection(null)
       setNote('')
+      setShowType('LIVE_SET')
       setMessage('Slot booked.')
     })
   }
@@ -230,13 +237,14 @@ export function RadioSlotCalendar({
                     onClick={() => onCellClick(day, hour)}
                     title={
                       booking
-                        ? `${booking.displayName}${booking.note ? ` — ${booking.note}` : ''}${booking.isMine ? ' (click to cancel)' : ''}`
+                        ? `${booking.displayName} · ${booking.showType === 'TALK' ? 'Talk' : 'Live set'}${booking.note ? ` — ${booking.note}` : ''}${booking.isMine ? ' (click to cancel)' : ''}`
                         : undefined
                     }
                   >
                     {booking && (
                       <span className="studio-radio-calendar__cell-label">
                         {booking.displayName}
+                        {booking.showType === 'TALK' ? ' · Talk' : ''}
                       </span>
                     )}
                   </button>
@@ -267,15 +275,48 @@ export function RadioSlotCalendar({
               +1 hour
             </Button>
           )}
+          <div
+            className="studio-kind-toggle studio-kind-toggle--compact"
+            role="radiogroup"
+            aria-label="Show type"
+          >
+            <label
+              className={`studio-kind-toggle__option${showType === 'LIVE_SET' ? ' studio-kind-toggle__option--active' : ''}`}
+            >
+              <input
+                type="radio"
+                name="slot-show-type"
+                checked={showType === 'LIVE_SET'}
+                onChange={() => setShowType('LIVE_SET')}
+              />
+              <span className="studio-kind-toggle__title">Live set</span>
+            </label>
+            <label
+              className={`studio-kind-toggle__option${showType === 'TALK' ? ' studio-kind-toggle__option--active' : ''}`}
+            >
+              <input
+                type="radio"
+                name="slot-show-type"
+                checked={showType === 'TALK'}
+                onChange={() => setShowType('TALK')}
+              />
+              <span className="studio-kind-toggle__title">Talk</span>
+            </label>
+          </div>
           <input
             type="text"
             className="studio-input studio-input--sm studio-flex-1"
-            placeholder="Note (optional) — what you're playing"
+            placeholder={
+              showType === 'TALK'
+                ? 'Note (optional) — topic or guests'
+                : "Note (optional) — what you're playing"
+            }
             maxLength={200}
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
           <Button variant="primary" size="sm" onClick={confirmBooking} disabled={pending}>
+            <ButtonIcon name="check" />
             {pending ? 'Booking…' : 'Confirm booking'}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setSelection(null)} disabled={pending}>

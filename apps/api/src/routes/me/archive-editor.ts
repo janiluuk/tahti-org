@@ -4,11 +4,14 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { createDefaultEditList, validateEditList } from '@tahti/audio-edit'
 import {
+  ARCHIVE_CLIP_MAX_DURATION_SEC,
   ArchiveEditListDraftPatchResponseSchema,
   ArchiveEditListDraftPatchSchema,
   ArchiveEditListDraftResponseSchema,
   ArchiveEditListRenderResponseSchema,
   ArchiveEditListRenderSchema,
+  ArchiveEditorCreateClipResponseSchema,
+  ArchiveEditorCreateClipSchema,
   ArchiveEditorPublishResponseSchema,
   ArchiveEditorPublishSchema,
   ArchiveEditorSourceSchema,
@@ -23,6 +26,7 @@ import { resolveArchiveEditorSource } from '../../lib/archive-editor-source.js'
 import { getObjectStream, presignedGetUrl } from '../../lib/minio.js'
 import {
   enqueueBackfillEditorPeaks,
+  enqueueRenderAnnouncementTrim,
   enqueueRenderArchiveEdit,
   mediaQueue,
 } from '../../lib/queue.js'
@@ -363,6 +367,120 @@ const meArchiveEditorRoutes: FastifyPluginAsync = async (fastify) => {
         versionId: version.id,
         versionNumber: version.versionNumber,
         status: version.status,
+      })
+    },
+  )
+
+  // Create a ≤60s announcement/station-ID clip from an in/out selection on this track.
+  fastify.post(
+    '/api/me/archive/:id/editor/create-clip',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description:
+          'Cut a short announcement clip (max 60s) from an archive track for radio station IDs',
+        response: openApiResponses([
+          {
+            status: 202,
+            schema: ArchiveEditorCreateClipResponseSchema,
+            name: 'ArchiveEditorCreateClip',
+          },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const parsed = ArchiveEditorCreateClipSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.status(400).send({
+          error: parsed.error.issues[0]?.message ?? 'Invalid request body',
+        })
+      }
+
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(IdParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id } = routeParams
+
+      const item = await ownedItem(user.id, id)
+      if (!item) return reply.status(404).send({ error: 'Archive item not found' })
+
+      const source = await resolveArchiveEditorSource(fastify.prisma, id)
+      if (!source) {
+        return reply.status(409).send({ error: 'Archive item is not ready for editing' })
+      }
+
+      const { startSec, endSec, fadeInSec, fadeOutSec } = parsed.data
+      if (source.durationSec != null && endSec > source.durationSec + 0.05) {
+        return reply.status(400).send({ error: 'End is past the end of the track' })
+      }
+
+      const durationSec = Math.round((endSec - startSec) * 1000) / 1000
+      if (durationSec > ARCHIVE_CLIP_MAX_DURATION_SEC) {
+        return reply
+          .status(400)
+          .send({ error: `Clip must be ${ARCHIVE_CLIP_MAX_DURATION_SEC} seconds or less` })
+      }
+
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: user.id },
+        select: { id: true, slug: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      const maxPos = await fastify.prisma.announcementClip.aggregate({
+        where: { channelId: channel.id },
+        _max: { position: true },
+      })
+      const title =
+        parsed.data.title?.trim() ||
+        `${item.title.slice(0, 100)}${item.title.length > 100 ? '…' : ''} (clip)`
+
+      // originalAudioKey points at the archive source so re-trims never compound.
+      // audioKey is a pending placeholder until the trim worker writes the MP3.
+      const clip = await fastify.prisma.announcementClip.create({
+        data: {
+          channelId: channel.id,
+          title,
+          audioKey: `announcements/own/${channel.slug}/pending-${id}`,
+          originalAudioKey: source.sourceKey,
+          durationSec: Math.round(durationSec),
+          position: (maxPos._max.position ?? -1) + 1,
+          renderStatus: 'PROCESSING',
+          isEnabled: false,
+        },
+        select: { id: true, title: true, durationSec: true, renderStatus: true },
+      })
+
+      await enqueueRenderAnnouncementTrim({
+        clipId: clip.id,
+        sourceKey: source.sourceKey,
+        outputKeyPrefix: `announcements/own/${channel.slug}`,
+        startSec,
+        endSec,
+        fadeInSec,
+        fadeOutSec,
+      })
+
+      await auditLog(fastify.prisma, {
+        action: 'ARCHIVE_EDIT_RENDER',
+        actorId: user.id,
+        targetId: id,
+        meta: {
+          kind: 'create-clip',
+          clipId: clip.id,
+          startSec,
+          endSec,
+          durationSec,
+        },
+      })
+
+      return reply.status(202).send({
+        ok: true as const,
+        clipId: clip.id,
+        title: clip.title,
+        durationSec: clip.durationSec ?? Math.round(durationSec),
+        renderStatus: clip.renderStatus,
       })
     },
   )

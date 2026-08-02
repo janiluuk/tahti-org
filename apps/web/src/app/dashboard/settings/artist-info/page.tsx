@@ -7,7 +7,6 @@ import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-sessio
 import { fetchChannelEditorData } from '../../channel/_channel-editor-data'
 import { ArtistInfoForm } from './_artist-info-form'
 import { fetchMyMembers } from '../members/actions'
-import { SocialConnectionsSection } from './_social-connections'
 
 export default async function ArtistInfoSettingsPage() {
   const sessionValue = dashboardSessionCookie()
@@ -50,8 +49,12 @@ export default async function ArtistInfoSettingsPage() {
         <div>
           <h1 className="studio-page-title">Artist info</h1>
           <p className="studio-text-muted-sm studio-mt-xs">
-            Your name, bio, members, links, and social connections — shown on your channel page. For
-            colors, backgrounds, and layout, use{' '}
+            Your name, bio, and members — shown on your channel page. Streaming links and connected
+            accounts are under{' '}
+            <a href="/dashboard/settings/connections" className="studio-link">
+              Connections
+            </a>
+            . For colors and layout, use{' '}
             <a href="/dashboard/channel/edit" className="studio-link">
               Channel design
             </a>
@@ -81,9 +84,7 @@ export default async function ArtistInfoSettingsPage() {
           artistKind,
         }}
         initialMembers={members}
-      >
-        <SocialConnectionsSection apiUrl={apiUrl} sessionValue={sessionValue} />
-      </ArtistInfoForm>
+      />
     </div>
   )
 }

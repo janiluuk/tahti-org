@@ -126,7 +126,14 @@ export function ConversationList({ conversations }: { conversations: Conversatio
                   </span>
                 )}
                 <span className="dm-conversation-row__body">
-                  <span className="dm-conversation-row__name">{c.otherUser.displayName}</span>
+                  <span className="dm-conversation-row__name">
+                    {c.otherUser.displayName}
+                    {c.otherUser.channelRole === 'owner' ? (
+                      <span className="dm-role-badge dm-role-badge--owner">Owner</span>
+                    ) : c.otherUser.channelRole === 'moderator' ? (
+                      <span className="dm-role-badge dm-role-badge--moderator">Mod</span>
+                    ) : null}
+                  </span>
                   {c.lastMessage && (
                     <span className="dm-conversation-row__preview">{c.lastMessage.body}</span>
                   )}

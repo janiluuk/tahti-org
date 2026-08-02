@@ -3,8 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useEffect, useState } from 'react'
-import { TAHTI_RADIO_SLUG } from '@tahti/shared'
+import { useEffect, useRef, useState } from 'react'
+import { TAHTI_RADIO_SLUG, resolveColorScheme } from '@tahti/shared'
+import { cn, WAVEFORM_TRACK_IN_MS, WAVEFORM_TRACK_OUT_MS } from '@tahti/ui'
 import HlsPlayer from '../c/[slug]/hls-player'
 import ReactionsOverlay from '../c/[slug]/reactions'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
@@ -37,7 +38,10 @@ interface RadioPlayerSectionProps {
   /** STREAM-012: the orchestrator's synced rotation track, when fresh. Only used
    * while there's no liveSlot — a real booking always takes precedence. */
   nowPlaying: RadioNowPlayingTrack | null
+  colorSchemeJson?: string | null
 }
+
+type BackdropPhase = 'idle' | 'out' | 'in'
 
 /** Ticks once a second so the live-show elapsed time stays live without polling. */
 function useLiveElapsedSec(startAt: string | null): number | undefined {
@@ -58,11 +62,17 @@ function useLiveElapsedSec(startAt: string | null): number | undefined {
   return elapsed
 }
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 export function RadioPlayerSection({
   playback,
   slug,
   liveSlot,
   nowPlaying: initialNowPlaying,
+  colorSchemeJson,
 }: RadioPlayerSectionProps) {
   const { analyser, track, updateTrackMeta } = usePlayer()
   const liveElapsedSec = useLiveElapsedSec(liveSlot?.startAt ?? null)
@@ -99,9 +109,6 @@ export function RadioPlayerSection({
   }, [liveSlot])
 
   const title = liveSlot ? liveSlot.artist.displayName : (nowPlaying?.title ?? 'Tahti Radio')
-  // Always name the channel in the subtitle — live and rotation/replay alike —
-  // so a listener glancing at the mini-player elsewhere on the site can tell
-  // it's Tahti Radio playing, not just some artist's name in isolation.
   const subtitle = liveSlot
     ? 'Live now on Tahti Radio'
     : nowPlaying?.artistName
@@ -110,6 +117,68 @@ export function RadioPlayerSection({
   const subtitleHref =
     !liveSlot && nowPlaying?.artistUsername ? `/u/${nowPlaying.artistUsername}` : undefined
   const artworkUrl = liveSlot ? liveSlot.artist.avatarUrl : (nowPlaying?.artworkUrl ?? null)
+
+  const scheme = resolveColorScheme(colorSchemeJson, null)
+  const hasArt = Boolean(artworkUrl)
+
+  const [backdropPhase, setBackdropPhase] = useState<BackdropPhase>('idle')
+  const [displayedArt, setDisplayedArt] = useState<string | null>(artworkUrl ?? null)
+  const [outgoingArt, setOutgoingArt] = useState<string | null>(null)
+  const backdropBootstrapped = useRef(false)
+  const backdropTimers = useRef<number[]>([])
+  const displayedArtRef = useRef(displayedArt)
+  displayedArtRef.current = displayedArt
+
+  function clearBackdropTimers() {
+    for (const id of backdropTimers.current) window.clearTimeout(id)
+    backdropTimers.current = []
+  }
+
+  useEffect(() => {
+    const incoming = artworkUrl ?? null
+    if (!hasArt) {
+      setDisplayedArt(incoming)
+      setBackdropPhase('idle')
+      setOutgoingArt(null)
+      return
+    }
+
+    if (!backdropBootstrapped.current) {
+      backdropBootstrapped.current = true
+      setDisplayedArt(incoming)
+      return
+    }
+
+    const current = displayedArtRef.current
+    if (current === incoming) return
+
+    if (prefersReducedMotion()) {
+      setDisplayedArt(incoming)
+      setBackdropPhase('idle')
+      setOutgoingArt(null)
+      return
+    }
+
+    clearBackdropTimers()
+    setOutgoingArt(current)
+    setBackdropPhase('out')
+
+    const outTimer = window.setTimeout(() => {
+      setDisplayedArt(incoming)
+      setBackdropPhase('in')
+      const inTimer = window.setTimeout(() => {
+        setBackdropPhase('idle')
+        setOutgoingArt(null)
+      }, WAVEFORM_TRACK_IN_MS)
+      backdropTimers.current.push(inTimer)
+    }, WAVEFORM_TRACK_OUT_MS)
+    backdropTimers.current.push(outTimer)
+
+    return () => clearBackdropTimers()
+  }, [artworkUrl, hasArt])
+
+  const backdropUrl =
+    backdropPhase === 'out' && outgoingArt ? outgoingArt : (displayedArt ?? artworkUrl)
 
   // Keep the shared mini-player in sync when the rotation track changes (same HLS URL).
   useEffect(() => {
@@ -124,7 +193,27 @@ export function RadioPlayerSection({
   }, [liveSlot, track, playback.audioUrl, title, subtitle, artworkUrl, updateTrackMeta])
 
   return (
-    <div id="live-player" className="ch-player-wrap ch-radio-player-wrap">
+    <div
+      id="live-player"
+      className={cn('ch-player-wrap ch-radio-player-wrap', hasArt && 'ch-player-wrap--has-art')}
+      style={
+        {
+          '--ch-player-art': backdropUrl ? `url(${backdropUrl})` : undefined,
+          '--ch-player-overlay-tint': scheme.bg,
+          '--ch-player-overlay-accent': scheme.accent,
+        } as React.CSSProperties
+      }
+    >
+      {hasArt && (
+        <div
+          className={cn(
+            'ch-player-art-backdrop',
+            backdropPhase === 'out' && 'ch-player-art-backdrop--out',
+            backdropPhase === 'in' && 'ch-player-art-backdrop--in',
+          )}
+          aria-hidden
+        />
+      )}
       <div className="ch-player-inner">
         <ChannelVisualizer
           preset="REACTIVE_GRID"
@@ -143,6 +232,7 @@ export function RadioPlayerSection({
           hideWaveform
           artOverlayPlay
           animateTrackChange
+          hideArtBackdrop={hasArt}
         />
       </div>
       <ReactionsOverlay slug={slug} />

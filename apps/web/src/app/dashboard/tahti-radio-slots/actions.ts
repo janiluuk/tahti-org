@@ -32,6 +32,7 @@ export async function createRadioSlotBooking(params: {
   startAt: string
   endAt: string
   note?: string
+  showType?: 'LIVE_SET' | 'TALK'
 }): Promise<{ booking?: RadioSlotBookingItem; error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/radio-slot-bookings`, {
     method: 'POST',

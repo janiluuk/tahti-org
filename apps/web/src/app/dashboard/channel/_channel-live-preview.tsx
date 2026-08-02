@@ -74,14 +74,23 @@ function resolveHeaderBannerStyle(
   return { background: (preset ?? BRAND_ACCENT_PRESETS[0])?.gradient }
 }
 
-/** Mirrors the top-of-page visual stack from the public channel page, fed by live draft state. */
-export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
+/** Mirrors the top-of-page visual stack from the public channel page, fed by live draft state.
+ *  `mode="visual"` (Design editor) shows only what that page publishes — header chrome +
+ *  visualizer — not gallery/text-layer edits that live on other settings pages. */
+export function ChannelLivePreview({
+  draft,
+  mode = 'full',
+}: {
+  draft: ChannelPreviewDraft
+  mode?: 'full' | 'visual'
+}) {
   const backdrop = resolveArchiveBackground(draft.gallery.videoBackgroundUrl)
   const bannerStyle = resolveHeaderBannerStyle(draft.visual)
   const visualSettings = resolveVisualPresetSettings(
     parseVisualSettingsMap(draft.visual.visualSettingsJson),
     draft.visual.visualPreset,
   )
+  const showMedia = mode === 'full'
 
   return (
     <div data-tahti-ui="brand" data-channel-root className="brand-channel studio-channel-preview">
@@ -98,8 +107,10 @@ export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
         )}
 
         <div className="ch-page-foreground">
-          {backdrop.videoEmbedUrl && <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />}
-          {backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
+          {showMedia && backdrop.videoEmbedUrl && (
+            <ArchiveVideoBackdrop embedUrl={backdrop.videoEmbedUrl} />
+          )}
+          {showMedia && backdrop.cssImageUrl && !backdrop.videoEmbedUrl && (
             <div
               className="ch-channel-backdrop"
               style={{ ['--ch-backdrop-image' as string]: backdrop.cssImageUrl }}
@@ -116,16 +127,17 @@ export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
                 {draft.pronouns && <span className="prof-pronouns">{draft.pronouns}</span>}
               </Heading>
             </Row>
-            <Text size="sm" tone="muted" className="ch-artist-flag">
-              {draft.countryCode ? flagEmoji(draft.countryCode) : '🌍'}{' '}
-              {draft.countryCode ? countryName(draft.countryCode) : 'World citizen'}
-            </Text>
-            {draft.bio && (
+            {draft.countryCode ? (
+              <Text size="sm" tone="muted" className="ch-artist-flag">
+                {flagEmoji(draft.countryCode)} {countryName(draft.countryCode)}
+              </Text>
+            ) : null}
+            {showMedia && draft.bio && (
               <Text size="sm" className="ch-artist-bio">
                 {draft.bio}
               </Text>
             )}
-            {draft.genres.length > 0 && (
+            {showMedia && draft.genres.length > 0 && (
               <div className="prof-tags">
                 {draft.genres.map((tag) => (
                   <span key={tag} className="prof-tag-chip">
@@ -134,7 +146,7 @@ export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
                 ))}
               </div>
             )}
-            {draft.links.length > 0 && (
+            {showMedia && draft.links.length > 0 && (
               <div className="prof-social-links">
                 {draft.links.map((link) => (
                   <span key={link.label} className="prof-social-link">
@@ -145,31 +157,36 @@ export function ChannelLivePreview({ draft }: { draft: ChannelPreviewDraft }) {
             )}
           </header>
 
-          <ChannelTextLayerView
-            mode={draft.textLayer.textLayerMode}
-            text={draft.textLayer.textLayerText}
-            align={draft.textLayer.textLayerAlign}
-          />
-
-          {draft.gallery.galleryMode === 'STATIC_SLIDESHOW' &&
-          draft.gallery.slideshowImages.length > 0 ? (
-            <ChannelSlideshow
-              images={draft.gallery.slideshowImages}
-              preset={draft.visual.slideshowPreset}
-              intervalSeconds={draft.visual.slideshowIntervalSeconds}
-              transitionMs={draft.visual.slideshowTransitionMs}
-              autoplay={draft.visual.slideshowAutoplay}
-            />
-          ) : (
-            <ChannelGalleryView
-              mode={draft.gallery.galleryMode}
-              images={draft.gallery.slideshowImages}
+          {showMedia && (
+            <ChannelTextLayerView
+              mode={draft.textLayer.textLayerMode}
+              text={draft.textLayer.textLayerText}
+              align={draft.textLayer.textLayerAlign}
             />
           )}
+
+          {showMedia &&
+            (draft.gallery.galleryMode === 'STATIC_SLIDESHOW' &&
+            draft.gallery.slideshowImages.length > 0 ? (
+              <ChannelSlideshow
+                images={draft.gallery.slideshowImages}
+                preset={draft.visual.slideshowPreset}
+                intervalSeconds={draft.visual.slideshowIntervalSeconds}
+                transitionMs={draft.visual.slideshowTransitionMs}
+                autoplay={draft.visual.slideshowAutoplay}
+              />
+            ) : (
+              <ChannelGalleryView
+                mode={draft.gallery.galleryMode}
+                images={draft.gallery.slideshowImages}
+              />
+            ))}
         </div>
       </div>
       <Text size="sm" tone="muted" className="studio-channel-preview__caption">
-        Live preview — what listeners see at the top of your channel page
+        {mode === 'visual'
+          ? 'Live preview — visual style for your channel (gallery & text layer edit elsewhere)'
+          : 'Live preview — what listeners see at the top of your channel page'}
       </Text>
     </div>
   )

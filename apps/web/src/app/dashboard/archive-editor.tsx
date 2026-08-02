@@ -7,7 +7,6 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import NextLink from 'next/link'
 import { ButtonIcon, Button } from '@tahti/ui'
-import type { TracklistEntry } from '@tahti/shared'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { deleteArchiveItem, updateArchiveMetadata } from './archive-actions'
 import {
@@ -16,7 +15,6 @@ import {
   metadataFromApi,
   type ArchiveMetadataFormState,
 } from './archive-metadata-fields'
-import { TracklistEditor } from './tracklist-editor'
 import { ArchiveVersionPanel } from './archive-version-panel'
 import { ArchiveDownloadPanel } from './archive-download-panel'
 import { ArchiveGateStats } from './archive-gate-stats'
@@ -41,9 +39,6 @@ export default function ArchiveEditor({
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState(item.title)
   const [meta, setMeta] = useState<ArchiveMetadataFormState>(() => metadataFromApi(item))
-  const [tracklist, setTracklist] = useState<TracklistEntry[] | null>(
-    (item.tracklist as TracklistEntry[] | null) ?? null,
-  )
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -54,7 +49,6 @@ export default function ArchiveEditor({
     startTransition(async () => {
       const res = await updateArchiveMetadata(item.id, {
         title: title.trim(),
-        tracklist,
         ...metadataFormToPayload(meta),
       })
       if (res.error) {
@@ -188,22 +182,33 @@ export default function ArchiveEditor({
                 View on channel →
               </NextLink>
             )}
-            <Button onClick={togglePin} disabled={pinPending} variant="ghost" size="sm">
-              {pinned ? 'Unpin from Stage' : 'Pin to Stage'}
-            </Button>
-            <Button onClick={toggleRotation} disabled={rotationPending} variant="ghost" size="sm">
-              {inRotation ? 'Remove from rotation' : 'Add to rotation'}
-            </Button>
-            <AddToPlaylistButton archiveItemId={item.id} />
-            <NextLink
-              href={`/dashboard/insights/archive/${item.id}`}
-              className="ui-btn ui-btn--sm ui-btn--ghost"
-            >
-              Show insights
-            </NextLink>
             <Button onClick={() => setOpen(true)} variant="ghost" size="sm">
-              Re-edit
+              <ButtonIcon name="edit" />
+              Edit
             </Button>
+            <details className="studio-row-more">
+              <summary className="studio-row-more__summary">More</summary>
+              <div className="studio-row-more__menu">
+                <Button onClick={togglePin} disabled={pinPending} variant="ghost" size="sm">
+                  {pinned ? 'Unpin from Stage' : 'Pin to Stage'}
+                </Button>
+                <Button
+                  onClick={toggleRotation}
+                  disabled={rotationPending}
+                  variant="ghost"
+                  size="sm"
+                >
+                  {inRotation ? 'Remove from rotation' : 'Add to rotation'}
+                </Button>
+                <AddToPlaylistButton archiveItemId={item.id} />
+                <NextLink
+                  href={`/dashboard/insights/archive/${item.id}`}
+                  className="ui-btn ui-btn--sm ui-btn--ghost"
+                >
+                  Show insights
+                </NextLink>
+              </div>
+            </details>
           </div>
         ) : isReady ? (
           <Button onClick={() => setOpen(true)} variant="primary" size="sm">
@@ -232,6 +237,7 @@ export default function ArchiveEditor({
             Cancel
           </Button>
           <Button onClick={confirmSwap} disabled={rotationPending} variant="primary" size="sm">
+            <ButtonIcon name="check" />
             {rotationPending ? 'Swapping…' : 'Confirm swap'}
           </Button>
         </div>
@@ -261,8 +267,6 @@ export default function ArchiveEditor({
             detectedKey={detectedKey ?? null}
             itemId={item.id}
           />
-
-          <TracklistEditor value={tracklist} onChange={setTracklist} disabled={isPending} />
 
           <ArchiveGateStats
             itemId={item.id}

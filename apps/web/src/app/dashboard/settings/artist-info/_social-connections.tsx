@@ -26,7 +26,7 @@ async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promis
   }
 }
 
-/** OAuth / import accounts — lives on Artist info under Social connections. */
+/** OAuth / import accounts — lives on Settings → Connections. */
 export async function SocialConnectionsSection({
   apiUrl,
   sessionValue,

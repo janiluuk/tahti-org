@@ -63,6 +63,16 @@ export function SubscribeButton({ slug }: { slug: string }) {
         disabled={pending}
         aria-pressed={subscribed}
       >
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path
+            d="M8 2.5v7M4.5 6 8 9.5 11.5 6"
+            stroke="currentColor"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path d="M3 12.5h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
         {subscribed ? 'Subscribed' : 'Subscribe'}
         {subscriberCount > 0 && (
           <span className="prof-subscribe-btn__count">{subscriberCount}</span>

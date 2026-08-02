@@ -26,9 +26,9 @@ export async function recordMentions(
   text: string,
   surface: MentionSurface,
   sourceId: string,
-): Promise<void> {
+): Promise<string[]> {
   const handles = extractHandles(text)
-  if (handles.length === 0) return
+  if (handles.length === 0) return []
 
   // Enforce daily limit per mentioner
   const dayAgo = new Date(Date.now() - 24 * 3600 * 1000)
@@ -36,7 +36,7 @@ export async function recordMentions(
     where: { mentionerUserId, createdAt: { gte: dayAgo } },
   })
   const remaining = Math.max(0, DAILY_MENTION_LIMIT - todayCount)
-  if (remaining === 0) return
+  if (remaining === 0) return []
 
   const slice = handles.slice(0, remaining)
 
@@ -51,7 +51,7 @@ export async function recordMentions(
     select: { id: true },
   })
 
-  if (targets.length === 0) return
+  if (targets.length === 0) return []
 
   await prisma.mention.createMany({
     data: targets.map((t) => ({
@@ -62,4 +62,6 @@ export async function recordMentions(
     })),
     skipDuplicates: true,
   })
+
+  return targets.map((t) => t.id)
 }

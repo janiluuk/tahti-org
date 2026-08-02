@@ -1249,6 +1249,23 @@
   text-decoration: underline;
 }
 
+.public-empty-card__cta {
+  display: inline-flex;
+  margin-top: var(--space-4);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--cyan) 40%, transparent);
+  background: color-mix(in srgb, var(--cyan) 12%, transparent);
+  color: var(--cyan);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.public-empty-card__cta:hover {
+  background: color-mix(in srgb, var(--cyan) 20%, transparent);
+}
+
 .stat-card-grid {
   display: grid;
   gap: var(--space-3);
@@ -1504,7 +1521,7 @@
   background-size: cover;
   background-position: center;
   filter: blur(38px) saturate(1.3);
-  opacity: 0.35;
+  opacity: 0.24;
   transform: scale(1.15);
 }
 
@@ -1514,8 +1531,14 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--card) 55%, transparent) 0%,
-    color-mix(in srgb, var(--card) 88%, transparent) 100%
+    color-mix(in srgb, var(--waveform-player-overlay-tint, var(--card)) 38%, transparent) 0%,
+    color-mix(
+        in srgb,
+        var(--waveform-player-overlay-accent, var(--waveform-player-overlay-tint, var(--card))) 14%,
+        var(--waveform-player-overlay-tint, var(--card)) 42%
+      )
+      55%,
+    color-mix(in srgb, var(--waveform-player-overlay-tint, var(--card)) 52%, transparent) 100%
   );
 }
 
@@ -1545,6 +1568,14 @@
   animation: waveform-meta-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+.waveform-player__meta-title--out {
+  animation: waveform-title-out 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.waveform-player__meta-title--in {
+  animation: waveform-title-in 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 .waveform-player__art-wrap--out {
   animation: waveform-art-out 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
@@ -1557,10 +1588,12 @@
   from {
     opacity: 1;
     transform: translateX(0);
+    filter: blur(0);
   }
   to {
     opacity: 0;
     transform: translateX(-1.75rem);
+    filter: blur(5px);
   }
 }
 
@@ -1568,10 +1601,38 @@
   from {
     opacity: 0;
     transform: translateX(1.75rem);
+    filter: blur(8px);
   }
   to {
     opacity: 1;
     transform: translateX(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes waveform-title-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.35rem) scale(0.97);
+    filter: blur(8px);
+  }
+}
+
+@keyframes waveform-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(1.03);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
@@ -1599,7 +1660,7 @@
 
 @keyframes waveform-backdrop-out {
   from {
-    opacity: 0.35;
+    opacity: 0.24;
   }
   to {
     opacity: 0;
@@ -1612,7 +1673,7 @@
     transform: scale(1.28);
   }
   to {
-    opacity: 0.35;
+    opacity: 0.24;
     transform: scale(1.15);
   }
 }
@@ -1623,6 +1684,8 @@
   .waveform-player__art-backdrop--incoming,
   .waveform-player__meta-text--out,
   .waveform-player__meta-text--in,
+  .waveform-player__meta-title--out,
+  .waveform-player__meta-title--in,
   .waveform-player__art-wrap--out,
   .waveform-player__art-wrap--in {
     animation: none !important;

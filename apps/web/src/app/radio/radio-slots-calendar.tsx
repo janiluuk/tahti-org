@@ -173,7 +173,9 @@ function ShowDetailCard({ slot, onClose }: { slot: PublicRadioSlot; onClose: () 
             <p className="ch-radio-slots__show-card-note">{slot.note}</p>
           ) : (
             <p className="ch-radio-slots__show-card-note ch-radio-slots__show-card-note--muted">
-              Live set on the community radio stream.
+              {slot.showType === 'TALK'
+                ? 'Talk show on the community radio stream.'
+                : 'Live set on the community radio stream.'}
             </p>
           )}
 

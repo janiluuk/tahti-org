@@ -23,6 +23,7 @@ export interface AnnouncementClipRow {
   position: number
   renderStatus: 'READY' | 'PROCESSING' | 'ERROR'
   createdAt: string
+  isProfileBackground?: boolean
 }
 
 export async function fetchMyAnnouncements(): Promise<{
@@ -105,6 +106,23 @@ export async function deleteAnnouncement(id: string): Promise<{ error: string | 
   if (!res.ok && res.status !== 404) {
     const data = await res.json().catch(() => ({}))
     return { error: (data as { error?: string }).error ?? 'Could not delete' }
+  }
+  return { error: null }
+}
+
+/** Assign (or clear) a clip as looping ambient music on the public artist page. */
+export async function setProfileBackgroundClip(
+  clipId: string | null,
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/channel/profile-background`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ clipId }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Could not update page music' }
   }
   return { error: null }
 }

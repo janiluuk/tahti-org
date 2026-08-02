@@ -22,6 +22,7 @@ interface ChatMessage {
   text: string
   ts: number
   supporter?: boolean
+  channelRole?: 'owner' | 'moderator' | null
   countryCode?: string | null
   system?: boolean
   href?: string
@@ -93,6 +94,7 @@ export default function ChatPanel({
   const [publishToken, setPublishToken] = useState<string | null>(null)
   const connectionToken = publishToken ?? viewerToken
   const [supporter, setSupporter] = useState(false)
+  const [channelRole, setChannelRole] = useState<'owner' | 'moderator' | null>(null)
   const [myCountryCode, setMyCountryCode] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -209,6 +211,7 @@ export default function ChatPanel({
               text?: string
               ts?: number
               supporter?: boolean
+              channelRole?: 'owner' | 'moderator' | null
               countryCode?: string | null
               system?: boolean
               href?: string
@@ -223,6 +226,7 @@ export default function ChatPanel({
                     text: msg.text!,
                     ts: msg.ts ?? Date.now(),
                     supporter: msg.supporter,
+                    channelRole: msg.channelRole ?? null,
                     countryCode: msg.countryCode ?? null,
                     system: msg.system,
                     href: msg.href,
@@ -284,11 +288,13 @@ export default function ChatPanel({
         handle: string
         supporter?: boolean
         countryCode?: string | null
+        channelRole?: 'owner' | 'moderator' | null
       }
       persistChatHandle(data.handle)
       setHandle(data.handle)
       setPublishToken(data.token)
       setSupporter(!!data.supporter)
+      setChannelRole(data.channelRole ?? null)
       setMyCountryCode(data.countryCode ?? null)
       setError(null)
       resetCaptcha()
@@ -313,6 +319,7 @@ export default function ChatPanel({
             text,
             ts: Date.now(),
             supporter: supporter || undefined,
+            channelRole: channelRole || undefined,
             countryCode: myCountryCode || undefined,
           },
         },
@@ -325,7 +332,15 @@ export default function ChatPanel({
     id: m.id,
     handle: m.handle,
     text: m.text,
-    tone: m.system ? 'system' : m.supporter ? 'supporter' : 'default',
+    tone: m.system
+      ? 'system'
+      : m.channelRole === 'owner'
+        ? 'artist'
+        : m.channelRole === 'moderator'
+          ? 'moderator'
+          : m.supporter
+            ? 'supporter'
+            : 'default',
     countryCode: m.countryCode,
     href: m.href,
   }))
@@ -361,6 +376,22 @@ export default function ChatPanel({
       inputDisabled={!publishToken || status !== 'connected'}
       sendDisabled={!publishToken || status !== 'connected'}
       error={displayError}
+      onSearchMentions={async (query) => {
+        if (query.trim().length < 1) return []
+        try {
+          const res = await fetch(`${API_BASE}/api/users/search?q=${encodeURIComponent(query)}`, {
+            credentials: 'include',
+          })
+          if (!res.ok) return []
+          const data = (await res.json()) as Array<{
+            username: string
+            displayName: string
+          }>
+          return data.map((u) => ({ username: u.username, displayName: u.displayName }))
+        } catch {
+          return []
+        }
+      }}
     />
   )
 }

@@ -5,7 +5,7 @@
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
-import { Button } from '@tahti/ui'
+import { Button, ButtonIcon } from '@tahti/ui'
 import { sendMessage, type ConversationDetail, type MessageView } from '../actions'
 import { MentionTextarea } from '../_mention-textarea'
 import { EmojiPicker } from '../_emoji-picker'
@@ -32,6 +32,12 @@ function renderBody(body: string) {
     }
     return <span key={i}>{part}</span>
   })
+}
+
+function channelRoleLabel(role: 'owner' | 'moderator' | null | undefined): string | null {
+  if (role === 'owner') return 'Owner'
+  if (role === 'moderator') return 'Mod'
+  return null
 }
 
 export function ConversationThread({
@@ -72,12 +78,27 @@ export function ConversationThread({
             No messages yet — say hi to {initial.otherUser.displayName}.
           </p>
         ) : (
-          messages.map((m) => (
-            <div key={m.id} className={`dm-message${m.isMine ? ' dm-message--mine' : ''}`}>
-              <div className="dm-message__bubble">{renderBody(m.body)}</div>
-              <div className="dm-message__meta">{fmtTime(m.createdAt)}</div>
-            </div>
-          ))
+          messages.map((m) => {
+            const role = channelRoleLabel(m.senderChannelRole)
+            return (
+              <div key={m.id} className={`dm-message${m.isMine ? ' dm-message--mine' : ''}`}>
+                <div className="dm-message__who">
+                  <span className="dm-message__who-name">
+                    {m.isMine ? 'You' : m.senderDisplayName}
+                  </span>
+                  {role ? (
+                    <span
+                      className={`dm-role-badge dm-role-badge--${m.senderChannelRole === 'owner' ? 'owner' : 'moderator'}`}
+                    >
+                      {role}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="dm-message__bubble">{renderBody(m.body)}</div>
+                <div className="dm-message__meta">{fmtTime(m.createdAt)}</div>
+              </div>
+            )
+          })
         )}
         <div ref={bottomRef} />
       </div>
@@ -93,6 +114,7 @@ export function ConversationThread({
         <div className="dm-thread__composer-actions">
           <EmojiPicker onSelect={(emoji) => setDraft((prev) => prev + emoji)} />
           <Button onClick={submit} disabled={sending || !draft.trim()} variant="primary" size="sm">
+            <ButtonIcon name="send" />
             Send
           </Button>
         </div>

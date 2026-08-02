@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import React, { useState, type RefObject } from 'react'
+import React, { useEffect, useRef, useState, type RefObject } from 'react'
 import { cn } from '../lib/cn'
 import { chatHandleVariant } from '../lib/chat-handle'
 import { flagEmoji } from '../lib/flag-emoji'
@@ -15,10 +15,15 @@ export interface LiveChatMessage {
   id: string
   handle: string
   text: string
-  tone?: 'artist' | 'self' | 'supporter' | 'default' | 'system'
+  tone?: 'artist' | 'moderator' | 'self' | 'supporter' | 'default' | 'system'
   countryCode?: string | null
   /** Present on 'system' messages (e.g. "X loved Y") — links to the track. */
   href?: string
+}
+
+export type ChatMentionSuggestion = {
+  username: string
+  displayName: string
 }
 
 export interface LiveChatPanelProps {
@@ -58,6 +63,11 @@ export interface LiveChatPanelProps {
   readOnly?: boolean
   captchaSlot?: React.ReactNode
   className?: string
+  /**
+   * When set, typing `@partial` in the chat composer searches for users to tag.
+   * Mentions notify the tagged user when the sender is signed in.
+   */
+  onSearchMentions?: (query: string) => Promise<ChatMentionSuggestion[]>
 }
 
 function playgroundHandleClass(message: LiveChatMessage): string {
@@ -69,6 +79,33 @@ function playgroundHandleSuffix(message: LiveChatMessage): string | null {
   if (message.tone === 'artist') return '(artist)'
   if (message.tone === 'self') return '(you)'
   return null
+}
+
+function activeMentionQuery(
+  value: string,
+  cursor: number,
+): { start: number; query: string } | null {
+  const uptoCursor = value.slice(0, cursor)
+  const match = /(?:^|\s)@([a-zA-Z0-9_-]{0,30})$/.exec(uptoCursor)
+  if (!match) return null
+  const start = uptoCursor.length - match[1]!.length - 1
+  return { start, query: match[1]! }
+}
+
+/** Link @handles in chat text to public profiles. */
+export function renderChatMessageText(text: string): React.ReactNode {
+  const parts = text.split(/(@[a-zA-Z0-9_-]{2,32})/g)
+  return parts.map((part, i) => {
+    if (/^@[a-zA-Z0-9_-]{2,32}$/.test(part)) {
+      const username = part.slice(1)
+      return (
+        <a key={i} href={`/u/${username}`} className="chat-mention">
+          {part}
+        </a>
+      )
+    }
+    return <React.Fragment key={i}>{part}</React.Fragment>
+  })
 }
 
 /** Channel right-rail chat — header, pinned slot, messages, input. */
@@ -103,8 +140,13 @@ export function LiveChatPanel({
   readOnly = false,
   captchaSlot,
   className,
+  onSearchMentions,
 }: LiveChatPanelProps) {
   const [internalInput, setInternalInput] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [mentionStart, setMentionStart] = useState<number | null>(null)
+  const [mentionMatches, setMentionMatches] = useState<ChatMentionSuggestion[]>([])
+  const [mentionIndex, setMentionIndex] = useState(0)
   const isChannel = surface === 'channel'
   const showLive = connected ?? (isChannel ? false : live)
   const count = listenerCount ?? listeners
@@ -112,10 +154,33 @@ export function LiveChatPanel({
   const chatValue = inputValue ?? internalInput
   const setChatValue = onInputChange ?? setInternalInput
 
+  useEffect(() => {
+    if (!onSearchMentions || mentionStart === null || authPhase !== 'chat') {
+      setMentionMatches([])
+      return
+    }
+    const cursor = inputRef.current?.selectionStart ?? chatValue.length
+    const active = activeMentionQuery(chatValue, cursor)
+    if (!active) {
+      setMentionStart(null)
+      setMentionMatches([])
+      return
+    }
+    const handle = window.setTimeout(() => {
+      void onSearchMentions(active.query).then((results) => {
+        setMentionMatches(results)
+        setMentionIndex(0)
+      })
+    }, 180)
+    return () => window.clearTimeout(handle)
+  }, [authPhase, chatValue, mentionStart, onSearchMentions])
+
   function handleSend() {
     if (!chatValue.trim()) return
     onSend?.()
     if (!onInputChange) setInternalInput('')
+    setMentionStart(null)
+    setMentionMatches([])
   }
 
   function handleJoin() {
@@ -123,67 +188,142 @@ export function LiveChatPanel({
     onJoin?.()
   }
 
+  function updateChatValue(next: string, cursorHint?: number) {
+    setChatValue(next)
+    const cursor = cursorHint ?? next.length
+    const active = onSearchMentions ? activeMentionQuery(next, cursor) : null
+    setMentionStart(active ? active.start : null)
+  }
+
+  function selectMention(user: ChatMentionSuggestion) {
+    if (mentionStart === null) return
+    const cursor = inputRef.current?.selectionStart ?? chatValue.length
+    const before = chatValue.slice(0, mentionStart)
+    const after = chatValue.slice(cursor)
+    const next = `${before}@${user.username} ${after}`
+    updateChatValue(next, before.length + user.username.length + 2)
+    setMentionStart(null)
+    setMentionMatches([])
+    requestAnimationFrame(() => inputRef.current?.focus())
+  }
+
+  function handleChatKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (mentionMatches.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setMentionIndex((i) => (i + 1) % mentionMatches.length)
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setMentionIndex((i) => (i - 1 + mentionMatches.length) % mentionMatches.length)
+        return
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault()
+        selectMention(mentionMatches[mentionIndex]!)
+        return
+      }
+      if (e.key === 'Escape') {
+        setMentionStart(null)
+        setMentionMatches([])
+        return
+      }
+    }
+    if (e.key === 'Enter') {
+      if (authPhase === 'join') handleJoin()
+      else handleSend()
+    }
+  }
+
   const rootClass = isChannel
     ? cn('ch-chat-panel', compact && 'ch-chat-panel--sub', className)
     : cn('live-chat-panel', className)
 
-  const inputBlock =
-    !readOnly && (authPhase === 'join' || authPhase === 'chat') ? (
-      isChannel ? (
-        <>
-          <div className="ch-chat-input-row">
-            <input
-              type="text"
-              value={authPhase === 'join' ? joinHandle : chatValue}
-              onChange={(e) =>
-                authPhase === 'join'
-                  ? onJoinHandleChange?.(e.target.value)
-                  : setChatValue(e.target.value)
-              }
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter') return
-                if (authPhase === 'join') handleJoin()
-                else handleSend()
-              }}
-              placeholder={authPhase === 'join' ? joinPlaceholder : inputPlaceholder}
-              maxLength={authPhase === 'join' ? 32 : 500}
-              disabled={authPhase === 'chat' ? inputDisabled : false}
-              aria-label={authPhase === 'join' ? 'Chat handle' : 'Chat message'}
-            />
-            <button
-              type="button"
-              className="ch-chat-send"
-              onClick={authPhase === 'join' ? handleJoin : handleSend}
-              disabled={authPhase === 'chat' ? sendDisabled : false}
-            >
-              {authPhase === 'join' ? joinLabel : sendLabel}
-            </button>
-          </div>
-          {authPhase === 'join' && captchaSlot ? (
-            <div className="ch-chat-captcha">{captchaSlot}</div>
-          ) : null}
-        </>
-      ) : (
-        <div className="live-chat-panel__input-row">
+  const chatComposer =
+    authPhase === 'chat' ? (
+      <div className={isChannel ? 'ch-chat-composer' : 'live-chat-panel__composer'}>
+        {mentionMatches.length > 0 ? (
+          <ul className="ch-chat-mention-menu" role="listbox" aria-label="Mention someone">
+            {mentionMatches.map((user, i) => (
+              <li key={user.username}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={i === mentionIndex}
+                  className={cn(
+                    'ch-chat-mention-menu__item',
+                    i === mentionIndex && 'ch-chat-mention-menu__item--active',
+                  )}
+                  onMouseDown={(ev) => {
+                    ev.preventDefault()
+                    selectMention(user)
+                  }}
+                >
+                  <span className="ch-chat-mention-menu__name">{user.displayName}</span>
+                  <span className="ch-chat-mention-menu__handle">@{user.username}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <div className={isChannel ? 'ch-chat-input-row' : 'live-chat-panel__input-row'}>
           <input
+            ref={inputRef}
             type="text"
             value={chatValue}
-            onChange={(e) => setChatValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder={inputPlaceholder}
+            onChange={(e) =>
+              updateChatValue(e.target.value, e.target.selectionStart ?? e.target.value.length)
+            }
+            onKeyDown={handleChatKeyDown}
+            placeholder={onSearchMentions ? `${inputPlaceholder} (@ to mention)` : inputPlaceholder}
             maxLength={500}
             disabled={inputDisabled}
             aria-label="Chat message"
+            aria-autocomplete={onSearchMentions ? 'list' : undefined}
           />
           <button
             type="button"
-            className="live-chat-panel__send"
+            className={isChannel ? 'ch-chat-send' : 'live-chat-panel__send'}
             onClick={handleSend}
             disabled={sendDisabled}
           >
             {sendLabel}
           </button>
         </div>
+      </div>
+    ) : null
+
+  const inputBlock =
+    !readOnly && (authPhase === 'join' || authPhase === 'chat') ? (
+      isChannel ? (
+        <>
+          {authPhase === 'join' ? (
+            <div className="ch-chat-input-row">
+              <input
+                type="text"
+                value={joinHandle}
+                onChange={(e) => onJoinHandleChange?.(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleJoin()
+                }}
+                placeholder={joinPlaceholder}
+                maxLength={32}
+                aria-label="Chat handle"
+              />
+              <button type="button" className="ch-chat-send" onClick={handleJoin}>
+                {joinLabel}
+              </button>
+            </div>
+          ) : (
+            chatComposer
+          )}
+          {authPhase === 'join' && captchaSlot ? (
+            <div className="ch-chat-captcha">{captchaSlot}</div>
+          ) : null}
+        </>
+      ) : (
+        chatComposer
       )
     ) : null
 
@@ -253,15 +393,23 @@ export function LiveChatPanel({
                 <span
                   className={cn(
                     'handle',
-                    (message.tone === 'supporter' || message.tone === 'artist') && 'supporter',
+                    message.tone === 'artist'
+                      ? 'handle--artist'
+                      : message.tone === 'moderator'
+                        ? 'handle--moderator'
+                        : `handle--${chatHandleVariant(message.handle)}`,
                   )}
                 >
                   {message.handle}
                 </span>
-                {message.tone === 'supporter' ? (
+                {message.tone === 'artist' ? (
+                  <span className="chat-role-badge chat-role-badge--owner">owner</span>
+                ) : message.tone === 'moderator' ? (
+                  <span className="chat-role-badge chat-role-badge--moderator">mod</span>
+                ) : message.tone === 'supporter' ? (
                   <span className="chat-supporter-badge">supporter</span>
                 ) : null}
-                <span className="text">{message.text}</span>
+                <span className="text">{renderChatMessageText(message.text)}</span>
               </div>
             ),
           )
@@ -274,7 +422,7 @@ export function LiveChatPanel({
                   {message.handle}
                   {suffix ? ` ${suffix}` : ''}
                 </span>
-                <span className="live-chat-msg__text">{message.text}</span>
+                <span className="live-chat-msg__text">{renderChatMessageText(message.text)}</span>
               </div>
             )
           })

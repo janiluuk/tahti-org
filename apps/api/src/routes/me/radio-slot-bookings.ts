@@ -71,6 +71,7 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
           startAt: r.startAt.toISOString(),
           endAt: r.endAt.toISOString(),
           note: r.note,
+          showType: r.showType,
           channelSlug: r.channel.slug,
           displayName: r.channel.user.displayName,
           isMine: r.channelId === channel?.id,
@@ -143,7 +144,13 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
               throw new SlotConflictError()
             }
             return tx.radioSlotBooking.create({
-              data: { channelId: channel.id, startAt, endAt, note: parsed.data.note ?? null },
+              data: {
+                channelId: channel.id,
+                startAt,
+                endAt,
+                note: parsed.data.note ?? null,
+                showType: parsed.data.showType ?? 'LIVE_SET',
+              },
             })
           },
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -165,6 +172,7 @@ const meRadioSlotBookings: FastifyPluginAsync = async (fastify) => {
         startAt: row.startAt.toISOString(),
         endAt: row.endAt.toISOString(),
         note: row.note,
+        showType: row.showType,
         channelSlug: channel.slug,
         displayName: channel.user.displayName,
         isMine: true,

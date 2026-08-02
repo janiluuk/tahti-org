@@ -13,6 +13,15 @@ interface Preflight {
   title: string | null
   visibility: 'PUBLIC' | 'FAN_ONLY'
   autoArchive: boolean
+  showType: 'LIVE_SET' | 'TALK'
+  episodeNumber: number | null
+  tagline: string | null
+  plannedRadioShow: {
+    bookingId: string
+    episodeNumber: number
+    tagline: string | null
+    showType: 'LIVE_SET' | 'TALK'
+  } | null
 }
 
 interface RtmpTarget {
@@ -89,6 +98,25 @@ export function Step4GoLive() {
             <dt>Show name</dt>
             <dd>{preflight?.title || 'Untitled broadcast'}</dd>
           </div>
+          <div>
+            <dt>Type</dt>
+            <dd className="broadcast-studio__summary-accent">
+              {(preflight?.showType ?? preflight?.plannedRadioShow?.showType) === 'TALK'
+                ? 'Talk'
+                : 'Live set'}
+            </dd>
+          </div>
+          {(preflight?.episodeNumber ?? preflight?.plannedRadioShow?.episodeNumber) != null ? (
+            <div>
+              <dt>Episode</dt>
+              <dd className="broadcast-studio__summary-accent">
+                #{preflight?.episodeNumber ?? preflight?.plannedRadioShow?.episodeNumber}
+                {(preflight?.tagline ?? preflight?.plannedRadioShow?.tagline)
+                  ? ` — ${preflight?.tagline ?? preflight?.plannedRadioShow?.tagline}`
+                  : ''}
+              </dd>
+            </div>
+          ) : null}
           <div>
             <dt>Audio quality</dt>
             <dd className="broadcast-studio__summary-accent">FLAC 96 kHz / 24-bit</dd>

@@ -5,19 +5,19 @@
 
 import { useState, type ReactNode } from 'react'
 
-type Tab = 'live' | 'releases' | 'feed' | 'bio'
+type Tab = 'live' | 'archive' | 'releases' | 'feed' | 'bio'
 
-/** Public tab bar for a channel page — every channel (including Tahti Radio's
- * own /c/tahti-radio) gets the same Live/Releases/Feed/Bio structure as an
- * artist's /u/[username] profile. Distinct from ChannelTabs, which is the
- * owner-only Overview/Manage switch this wraps inside of. */
+/** Public tab bar for a channel page — Live is the player/now; Archive holds past
+ * broadcasts and external listen embeds. Distinct from ChannelTabs (owner Overview/Manage). */
 export function PublicChannelTabs({
   live,
+  archive,
   releases,
   feed,
   bio,
 }: {
   live: ReactNode
+  archive: ReactNode
   releases: ReactNode
   feed: ReactNode
   bio: ReactNode
@@ -26,6 +26,7 @@ export function PublicChannelTabs({
 
   const tabs: Array<{ id: Tab; label: string }> = [
     { id: 'live', label: 'Live' },
+    { id: 'archive', label: 'Archive' },
     { id: 'releases', label: 'Releases' },
     { id: 'feed', label: 'Feed' },
     { id: 'bio', label: 'Bio' },
@@ -49,6 +50,9 @@ export function PublicChannelTabs({
       </div>
       <div className="prof-tabs__panel" hidden={active !== 'live'}>
         {live}
+      </div>
+      <div className="prof-tabs__panel" hidden={active !== 'archive'}>
+        {archive}
       </div>
       <div className="prof-tabs__panel" hidden={active !== 'releases'}>
         {releases}

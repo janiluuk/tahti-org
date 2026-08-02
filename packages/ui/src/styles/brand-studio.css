@@ -415,6 +415,31 @@
   color: color-mix(in srgb, var(--muted) 60%, transparent);
 }
 
+[data-tahti-ui='studio'] .db-nav-more {
+  margin-top: 4px;
+}
+
+[data-tahti-ui='studio'] .db-nav-more__summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 9px 20px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  user-select: none;
+}
+
+[data-tahti-ui='studio'] .db-nav-more__summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-tahti-ui='studio'] .db-nav-more__summary:hover {
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .db-nav-more[open] > .db-nav-more__summary {
+  color: var(--text);
+}
+
 [data-tahti-ui='studio'] .db-nav-item {
   padding: 9px 20px;
   font-size: var(--text-sm);
@@ -1168,9 +1193,19 @@
 }
 
 [data-tahti-ui='studio'] .studio-grid--credits {
-  grid-template-columns: 120px 1fr auto;
+  grid-template-columns: 110px minmax(6rem, 1fr) minmax(5.5rem, 0.85fr) auto;
   gap: 0.35rem;
   align-items: center;
+}
+
+@media (max-width: 720px) {
+  [data-tahti-ui='studio'] .studio-grid--credits {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  [data-tahti-ui='studio'] .studio-grid--credits > :last-child {
+    grid-column: 1 / -1;
+  }
 }
 
 [data-tahti-ui='studio'] .studio-max-w-sm {
@@ -1914,6 +1949,54 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+[data-tahti-ui='studio'] .studio-row-more {
+  position: relative;
+}
+
+[data-tahti-ui='studio'] .studio-row-more__summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+[data-tahti-ui='studio'] .studio-row-more__summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-tahti-ui='studio'] .studio-row-more__summary:hover {
+  color: var(--text);
+  background: var(--card2);
+  border-color: var(--border);
+}
+
+[data-tahti-ui='studio'] .studio-row-more[open] > .studio-row-more__summary {
+  color: var(--text);
+  background: var(--card2);
+  border-color: var(--border);
+}
+
+[data-tahti-ui='studio'] .studio-row-more__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+  min-width: 11rem;
+  padding: 0.4rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--bg) 55%, transparent);
 }
 
 [data-tahti-ui='studio'] .archive-list__toolbar {
@@ -2781,6 +2864,20 @@
   margin-bottom: var(--space-5);
   border-bottom: 1px solid var(--border);
   padding-bottom: var(--space-3);
+  align-items: center;
+}
+
+[data-tahti-ui='studio'] .settings-subnav__group {
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  padding: 0 4px 0 10px;
+}
+
+[data-tahti-ui='studio'] .settings-subnav__group:first-child {
+  padding-left: 0;
 }
 
 [data-tahti-ui='studio'] .settings-subnav__item {
@@ -4141,8 +4238,6 @@
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
-  max-height: min(600px, calc(100vh - 320px));
-  overflow-y: auto;
   padding-right: var(--space-2);
 }
 
@@ -6027,7 +6122,9 @@
 @media (prefers-reduced-motion: reduce) {
   [data-tahti-ui='studio'] .signal-dot,
   [data-tahti-ui='studio'] .db-live-dot,
-  [data-tahti-ui='studio'] .db-hero__pulse-dot--preview {
+  [data-tahti-ui='studio'] .db-hero__pulse-dot--preview,
+  [data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed,
+  [data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed .broadcast-studio__record-btn__dot {
     animation: none !important;
   }
 }
@@ -7100,6 +7197,40 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.pro-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pro-editor-field__label {
+  font-size: var(--text-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted2);
+}
+
+.pro-editor-field__input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+.pro-editor-field__input:disabled {
+  opacity: 0.6;
+}
+
+.pro-editor-field-row {
+  display: flex;
+  gap: 10px;
 }
 
 /* ---- Knob primitive ---- */
@@ -9636,6 +9767,20 @@
   gap: var(--space-3);
 }
 
+[data-tahti-ui='studio'] .studio-kind-toggle--compact {
+  grid-template-columns: auto auto;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .studio-kind-toggle--compact .studio-kind-toggle__option {
+  padding: 0.35rem 0.7rem;
+}
+
+[data-tahti-ui='studio'] .studio-kind-toggle--compact .studio-kind-toggle__title {
+  font-size: var(--text-xs);
+}
+
 [data-tahti-ui='studio'] .studio-kind-toggle__option {
   display: flex;
   flex-direction: column;
@@ -9956,6 +10101,124 @@
 
 [data-tahti-ui='studio'] .broadcast-studio__pin-row .studio-input {
   flex: 1;
+}
+
+/* Pre-flight — planned Tahti Radio episode autofill. */
+
+[data-tahti-ui='studio'] .broadcast-studio__planned-show {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--cyan) 35%, var(--border));
+  background: color-mix(in srgb, var(--cyan) 8%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__planned-show-label {
+  margin: 0 0 0.2rem;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__planned-show-episode {
+  margin: 0;
+  font-size: var(--text-h3);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* Pre-live / go-live — Record arm (persists Channel.autoRecordEnabled). */
+
+[data-tahti-ui='studio'] .broadcast-studio__record {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-5) 0 var(--space-4);
+  text-align: center;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-width: 11rem;
+  min-height: 3.25rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--coral) 35%, var(--border));
+  background: color-mix(in srgb, var(--card2) 80%, transparent);
+  color: var(--text);
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--coral) 55%, var(--border));
+  background: color-mix(in srgb, var(--coral) 10%, var(--card2));
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn__dot {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--coral) 55%, var(--muted2));
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--coral) 80%, var(--border));
+  background: color-mix(in srgb, var(--coral) 28%, var(--card));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--coral) 45%, transparent),
+    0 0 22px color-mix(in srgb, var(--coral) 45%, transparent),
+    0 0 48px color-mix(in srgb, var(--coral) 22%, transparent);
+  animation: broadcast-record-shine 1.8s ease-in-out infinite;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed .broadcast-studio__record-btn__dot {
+  background: var(--coral);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--coral) 80%, transparent);
+  animation: studio-pulse 1.2s ease-in-out infinite;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__record-hint {
+  margin: 0;
+  max-width: 26rem;
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+@keyframes broadcast-record-shine {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--coral) 40%, transparent),
+      0 0 18px color-mix(in srgb, var(--coral) 38%, transparent),
+      0 0 40px color-mix(in srgb, var(--coral) 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--coral) 70%, transparent),
+      0 0 28px color-mix(in srgb, var(--coral) 55%, transparent),
+      0 0 56px color-mix(in srgb, var(--coral) 28%, transparent);
+  }
 }
 
 /* Step 4 — go live (docs/reference-html/06-broadcasting-step-4-go-live.html) */
@@ -10375,6 +10638,49 @@
   align-self: flex-end;
 }
 
+[data-tahti-ui='studio'] .dm-message__who {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.15rem;
+  font-size: var(--text-xs);
+  color: var(--muted2);
+}
+
+[data-tahti-ui='studio'] .dm-message__who-name {
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='studio'] .dm-role-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  font-size: var(--text-micro);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+[data-tahti-ui='studio'] .dm-role-badge--owner {
+  background: color-mix(in srgb, var(--cyan) 18%, var(--card2));
+  color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .dm-role-badge--moderator {
+  background: color-mix(in srgb, var(--amber) 18%, var(--card2));
+  color: var(--amber);
+}
+
+[data-tahti-ui='studio'] .dm-conversation-row__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
 [data-tahti-ui='studio'] .dm-message__bubble {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
@@ -10498,4 +10804,56 @@
 
 [data-tahti-ui='studio'] .emoji-picker__item:hover {
   background: color-mix(in srgb, var(--muted) 12%, transparent);
+}
+
+/* Green room — pre-live backstage panel (Broadcasting Setup step 3) */
+[data-tahti-ui='studio'] .green-room-panel {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-md);
+}
+
+[data-tahti-ui='studio'] .green-room-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+[data-tahti-ui='studio'] .green-room-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+[data-tahti-ui='studio'] .green-room-panel__guest-link {
+  margin-left: auto;
+}
+
+[data-tahti-ui='studio'] .green-room-panel__invite-list,
+[data-tahti-ui='studio'] .green-room-panel__candidate-list {
+  list-style: none;
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+}
+
+[data-tahti-ui='studio'] .green-room-panel__invite-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+[data-tahti-ui='studio'] .green-room-panel__invite-meta {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+[data-tahti-ui='studio'] .green-room-panel__candidate-list li {
+  padding: 4px 0;
+  font-size: var(--text-sm);
 }

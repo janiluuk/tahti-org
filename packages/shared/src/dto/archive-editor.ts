@@ -63,3 +63,29 @@ export const ArchiveEditorPublishResponseSchema = z.object({
 })
 
 export type ArchiveEditorPublishInput = z.infer<typeof ArchiveEditorPublishSchema>
+
+/** Max length for clips cut from archive tracks in the pro editor. */
+export const ARCHIVE_CLIP_MAX_DURATION_SEC = 60
+
+/** Create a station-ID / announcement clip from an in/out selection on an archive track. */
+export const ArchiveEditorCreateClipSchema = z
+  .object({
+    startSec: z.number().finite().min(0),
+    endSec: z.number().finite().min(0),
+    title: z.string().trim().min(1).max(120).optional(),
+    fadeInSec: z.number().finite().min(0).max(5).default(0.25),
+    fadeOutSec: z.number().finite().min(0).max(5).default(0.25),
+  })
+  .refine((b) => b.endSec > b.startSec, { message: 'End must be after start' })
+  .refine((b) => b.endSec - b.startSec <= ARCHIVE_CLIP_MAX_DURATION_SEC, {
+    message: `Clip must be ${ARCHIVE_CLIP_MAX_DURATION_SEC} seconds or less`,
+  })
+export type ArchiveEditorCreateClipInput = z.infer<typeof ArchiveEditorCreateClipSchema>
+
+export const ArchiveEditorCreateClipResponseSchema = z.object({
+  ok: z.literal(true),
+  clipId: z.string(),
+  title: z.string(),
+  durationSec: z.number(),
+  renderStatus: z.enum(['READY', 'PROCESSING', 'ERROR']),
+})

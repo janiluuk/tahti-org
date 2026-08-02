@@ -19,11 +19,18 @@ export type ChannelSlideshowDraft = {
 interface Props {
   initial: ChannelSlideshowDraft
   bare?: boolean
+  /** When true, omit the save button (parent owns Publish). */
+  hideSave?: boolean
   onDraftChange?: (draft: ChannelSlideshowDraft) => void
 }
 
 /** Applies when the channel gallery cycles through images — lives alongside the gallery, not Visual style. */
-export default function ChannelSlideshowPanel({ initial, bare = false, onDraftChange }: Props) {
+export default function ChannelSlideshowPanel({
+  initial,
+  bare = false,
+  hideSave = false,
+  onDraftChange,
+}: Props) {
   const router = useRouter()
   const [slideshowPreset, setSlideshowPreset] = useState<SlideshowPreset>(initial.slideshowPreset)
   const [interval, setInterval] = useState(initial.slideshowIntervalSeconds)
@@ -128,15 +135,17 @@ export default function ChannelSlideshowPanel({ initial, bare = false, onDraftCh
         <span>Automatically advance slides</span>
       </label>
 
-      {error && <p className="studio-notice studio-notice--error">{error}</p>}
-      {message && <p className="studio-notice studio-notice--success">{message}</p>}
+      {!hideSave && error && <p className="studio-notice studio-notice--error">{error}</p>}
+      {!hideSave && message && <p className="studio-notice studio-notice--success">{message}</p>}
 
-      <div className="studio-actions studio-mt-md">
-        <Button onClick={save} disabled={isPending} variant="primary">
-          <ButtonIcon name="save" />
-          {isPending ? 'Saving…' : 'Save slideshow'}
-        </Button>
-      </div>
+      {!hideSave && (
+        <div className="studio-actions studio-mt-md">
+          <Button onClick={save} disabled={isPending} variant="primary">
+            <ButtonIcon name="send" />
+            {isPending ? 'Publishing…' : 'Publish changes'}
+          </Button>
+        </div>
+      )}
     </>
   )
 

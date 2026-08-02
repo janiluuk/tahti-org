@@ -18,6 +18,7 @@ export interface PublicRadioSlot {
   startAt: string
   endAt: string
   note: string | null
+  showType: 'LIVE_SET' | 'TALK'
   coverUrl: string | null
   colorScheme: RadioColorScheme | null
   nextShowAt: string | null
@@ -51,6 +52,7 @@ export interface RadioShowEpisode {
   startAt: string
   endAt: string
   note: string | null
+  showType: 'LIVE_SET' | 'TALK'
 }
 
 export interface RadioShowDetail {

@@ -14,6 +14,8 @@ import {
   PatchAnnouncementClipSchema,
   PrepareAnnouncementUploadResponseSchema,
   PrepareAnnouncementUploadSchema,
+  ProfileBackgroundClipResponseSchema,
+  ProfileBackgroundClipSchema,
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
@@ -34,6 +36,25 @@ const CLIP_SELECT = {
   renderStatus: true,
   createdAt: true,
 } as const
+
+type ClipRow = {
+  id: string
+  title: string
+  durationSec: number | null
+  isEnabled: boolean
+  scheduleMode: 'AFTER_EVERY' | 'EVERY_NTH' | 'RANDOM'
+  everyNth: number | null
+  position: number
+  renderStatus: 'READY' | 'PROCESSING' | 'ERROR'
+  createdAt: Date
+}
+
+function withProfileFlag(clip: ClipRow, profileBackgroundClipId: string | null) {
+  return {
+    ...clip,
+    isProfileBackground: profileBackgroundClipId === clip.id,
+  }
+}
 
 const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /api/me/announcements/prepare — presigned upload for one's own announcement library
@@ -94,7 +115,7 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: request.sessionUser!.id },
-        select: { id: true, slug: true },
+        select: { id: true, slug: true, profileBackgroundClipId: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
       if (!uploadId.startsWith(`announcements/own/${channel.slug}/`)) {
@@ -111,7 +132,7 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
         },
         select: CLIP_SELECT,
       })
-      return reply.status(201).send(clip)
+      return reply.status(201).send(withProfileFlag(clip, channel.profileBackgroundClipId))
     },
   )
 
@@ -128,7 +149,7 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: request.sessionUser!.id },
-        select: { id: true },
+        select: { id: true, profileBackgroundClipId: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
@@ -137,7 +158,54 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
         orderBy: { createdAt: 'desc' },
         select: CLIP_SELECT,
       })
-      return reply.send({ clips })
+      return reply.send({
+        clips: clips.map((c) => withProfileFlag(c, channel.profileBackgroundClipId)),
+      })
+    },
+  )
+
+  // PATCH /api/me/channel/profile-background — assign (or clear) page ambient music clip
+  fastify.patch(
+    '/api/me/channel/profile-background',
+    {
+      preHandler: requireAuth,
+      schema: {
+        tags: ['channel'],
+        description: 'Assign an announcement clip as looping music on the public artist page',
+        response: openApiResponse(ProfileBackgroundClipResponseSchema, 'ProfileBackgroundClip'),
+      },
+    },
+    async (request, reply) => {
+      const parsed = ProfileBackgroundClipSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request' })
+      }
+
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { userId: request.sessionUser!.id },
+        select: { id: true },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      const { clipId } = parsed.data
+      if (clipId) {
+        const clip = await fastify.prisma.announcementClip.findFirst({
+          where: { id: clipId, channelId: channel.id },
+          select: { id: true, renderStatus: true, audioKey: true },
+        })
+        if (!clip) return reply.status(404).send({ error: 'Clip not found' })
+        if (clip.renderStatus !== 'READY' || clip.audioKey.includes('/pending-')) {
+          return reply.status(409).send({ error: 'Clip is still processing — try again shortly' })
+        }
+      }
+
+      await fastify.prisma.channel.update({
+        where: { id: channel.id },
+        data: { profileBackgroundClipId: clipId },
+      })
+      return reply.send({ clipId })
     },
   )
 
@@ -159,7 +227,7 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: request.sessionUser!.id },
-        select: { id: true },
+        select: { id: true, profileBackgroundClipId: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
@@ -177,7 +245,7 @@ const meAnnouncementsRoutes: FastifyPluginAsync = async (fastify) => {
         },
         select: CLIP_SELECT,
       })
-      return reply.send(clip)
+      return reply.send(withProfileFlag(clip, channel.profileBackgroundClipId))
     },
   )
 

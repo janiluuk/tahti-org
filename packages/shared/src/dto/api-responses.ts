@@ -240,6 +240,7 @@ export const PublicRadioSlotSchema = z.object({
   startAt: z.string(),
   endAt: z.string(),
   note: z.string().nullable(),
+  showType: z.enum(['LIVE_SET', 'TALK']),
   /** Stream-overlay cover when the artist set one; otherwise null (UI falls back to avatar). */
   coverUrl: z.string().nullable(),
   /** Accent/bg from the artist's profile-pic palette (or channel brand scheme). */
@@ -265,6 +266,7 @@ export const RadioShowEpisodeSchema = z.object({
   startAt: z.string(),
   endAt: z.string(),
   note: z.string().nullable(),
+  showType: z.enum(['LIVE_SET', 'TALK']),
 })
 export const RadioShowDetailSchema = z.object({
   artist: z.object({
@@ -807,6 +809,8 @@ export const PublicProfileViewSchema = z.object({
     }),
     presskit: z.string(),
   }),
+  /** Short-lived URL for looping page ambient music (from an assigned clip). */
+  backgroundMusicUrl: z.string().url().nullable().optional(),
 })
 
 export const SmartLinkViewSchema = z.object({
@@ -1128,6 +1132,7 @@ export const ChatTokenResponseSchema = z.object({
   fingerprint: z.string(),
   supporter: z.boolean(),
   countryCode: z.string().nullable(),
+  channelRole: z.enum(['owner', 'moderator']).nullable(),
 })
 
 export const ChatTokenOnlyResponseSchema = z.object({

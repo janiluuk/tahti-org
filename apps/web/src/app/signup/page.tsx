@@ -27,8 +27,8 @@ function SignupClosed() {
           </Text>
           <Text tone="muted">
             To be notified when registration opens, email{' '}
-            <a href="mailto:hello@tahti.fi" className="ui-link">
-              hello@tahti.fi
+            <a href="mailto:hello@tahti.live" className="ui-link">
+              hello@tahti.live
             </a>
             .
           </Text>

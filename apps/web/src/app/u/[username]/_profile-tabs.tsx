@@ -10,15 +10,15 @@ import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 type Tab = 'stage' | 'feed' | 'tracks'
 
 const TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'stage', label: 'Bio' },
+  { id: 'stage', label: 'Home' },
   { id: 'feed', label: 'Feed' },
-  { id: 'tracks', label: 'Releases' },
+  { id: 'tracks', label: 'Music' },
 ]
 
 const HELP_STEPS: HelpSpotlightStep[] = [
   {
     id: 'stage',
-    label: 'Bio',
+    label: 'Home',
     description:
       'The artist’s bio, latest releases, upcoming shows and events, pinned highlights, press kit, band members, and links to other platforms — everything that introduces who they are, in one scroll.',
   },
@@ -30,7 +30,7 @@ const HELP_STEPS: HelpSpotlightStep[] = [
   },
   {
     id: 'tracks',
-    label: 'Releases',
+    label: 'Music',
     description:
       'Every release, DJ mix, playlist, and individual track the artist has published on Tahti — this is where you go to actually listen.',
   },

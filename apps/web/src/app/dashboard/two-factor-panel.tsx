@@ -246,6 +246,7 @@ export function TwoFactorPanel() {
               onClick={() => void confirmSetup()}
               disabled={pending}
             >
+              <ButtonIcon name="check" />
               {pending ? 'Confirming…' : 'Confirm and enable'}
             </Button>
             <Button

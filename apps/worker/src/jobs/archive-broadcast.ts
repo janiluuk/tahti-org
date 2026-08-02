@@ -109,7 +109,13 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
     await uploadFile(mp3Key, mp3Path, 'audio/mpeg')
 
     const startedAt = broadcast.startedAt
-    const title = broadcast.title ?? `Live set — ${startedAt.toISOString().slice(0, 10)}`
+    const showType = broadcast.showType ?? 'LIVE_SET'
+    const title =
+      broadcast.title ??
+      (showType === 'TALK'
+        ? `Talk — ${startedAt.toISOString().slice(0, 10)}`
+        : `Live set — ${startedAt.toISOString().slice(0, 10)}`)
+    const contentType = showType === 'TALK' ? 'PODCAST' : 'LIVE'
 
     const rotationCount = await prisma.archiveItem.count({
       where: { channelId: broadcast.channel.id, isFallback: true },
@@ -143,8 +149,8 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         peaks,
         fileSizeBytes: 0,
         status: 'READY',
-        contentType: 'LIVE',
-        genre: 'Electronic',
+        contentType,
+        genre: showType === 'TALK' ? 'Talk' : 'Electronic',
         license: 'ALL_RIGHTS_RESERVED',
         releasedAt: startedAt,
         // Broadcasting Setup step 3 "auto-archive" toggle: off means the recording is
@@ -153,7 +159,10 @@ export async function processArchiveBroadcastJob(job: Job): Promise<void> {
         isFallback: true,
         fallbackOrder: rotationCount,
         useDetectedBpmKey: true,
-        description: `Auto-archived live broadcast from ${startedAt.toISOString()}`,
+        description:
+          showType === 'TALK'
+            ? `Auto-archived talk show from ${startedAt.toISOString()}`
+            : `Auto-archived live broadcast from ${startedAt.toISOString()}`,
         ...(tracklist ? { tracklist } : {}),
       },
     })

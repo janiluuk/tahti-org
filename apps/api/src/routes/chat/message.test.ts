@@ -69,4 +69,79 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     })
     expect(res.statusCode).toBe(403)
   })
+
+  it('records CHAT mentions and notifies when meta.userId is present', async () => {
+    const mentioner = await createTestArtist(prisma, {
+      email: `${PREFIX}from@example.com`,
+      username: 'chat-message-from',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98396,
+    })
+    const target = await createTestArtist(prisma, {
+      email: `${PREFIX}to@example.com`,
+      username: 'chat-message-to',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98397,
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: {
+        channel: `channel:${slug}`,
+        meta: { userId: mentioner.id },
+        data: { text: `hey @${target.username} nice set` },
+      },
+    })
+    expect(res.statusCode).toBe(200)
+
+    const mention = await prisma.mention.findFirst({
+      where: {
+        mentionerUserId: mentioner.id,
+        targetUserId: target.id,
+        surface: 'CHAT',
+      },
+    })
+    expect(mention).not.toBeNull()
+
+    const note = await prisma.notification.findFirst({
+      where: {
+        userId: target.id,
+        type: 'CHAT_MENTION',
+        actorUserId: mentioner.id,
+      },
+    })
+    expect(note).not.toBeNull()
+    expect(note?.url).toBe(`/c/${slug}`)
+  })
+
+  it('skips mention notifications when meta.userId is absent', async () => {
+    const target = await createTestArtist(prisma, {
+      email: `${PREFIX}anon-to@example.com`,
+      username: 'chat-message-anon-to',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98398,
+    })
+    const before = await prisma.mention.count({
+      where: { targetUserId: target.id, surface: 'CHAT' },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: {
+        channel: `channel:${slug}`,
+        data: { text: `hey @${target.username}` },
+      },
+    })
+    expect(res.statusCode).toBe(200)
+
+    const after = await prisma.mention.count({
+      where: { targetUserId: target.id, surface: 'CHAT' },
+    })
+    expect(after).toBe(before)
+  })
 })

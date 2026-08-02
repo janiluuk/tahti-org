@@ -85,6 +85,7 @@ export default async function BroadcastStudioPage() {
         {streamSettings ? (
           <BroadcastStudio
             channelSlug={user.channel.slug}
+            artistUsername={user.username}
             channelState={user.channel.state}
             streamSettings={streamSettings}
             broadcastUsage={broadcastUsage}

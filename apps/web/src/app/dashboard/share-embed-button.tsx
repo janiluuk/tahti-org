@@ -229,6 +229,7 @@ function ShareEmbedModal({
               size="sm"
               className="studio-mt-sm"
             >
+              <ButtonIcon name="link" />
               {copied === 'code' ? 'Copied!' : 'Copy embed code'}
             </Button>
             <p className="studio-text-muted-sm studio-mt-sm">

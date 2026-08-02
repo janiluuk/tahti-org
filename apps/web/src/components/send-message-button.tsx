@@ -3,9 +3,9 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { startConversation } from '@/app/dashboard/messages/actions'
+import { sendMessage, startConversation } from '@/app/dashboard/messages/actions'
 
 function IconMessage() {
   return (
@@ -20,19 +20,35 @@ function IconMessage() {
   )
 }
 
-/** Grouped with the "Support" button on the profile CTA row — starts (or
- * resumes) a direct-message conversation with this artist and jumps straight
- * to the thread. Not shown on your own profile (guarded by the caller, same
- * as FollowButton). */
+/** Brand-surface compose sheet — starts (or resumes) a DM without dumping into Studio. */
 export function SendMessageButton({ artistUsername }: { artistUsername: string }) {
   const pathname = usePathname()
   const router = useRouter()
+  const titleId = useId()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [sentConversationId, setSentConversationId] = useState<string | null>(null)
 
-  async function open() {
-    setPending(true)
+  useEffect(() => {
+    if (!open) return
+    const t = window.setTimeout(() => textareaRef.current?.focus(), 50)
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.clearTimeout(t)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  async function openComposer() {
     setError(null)
+    setSentConversationId(null)
+    setPending(true)
     const res = await startConversation(artistUsername)
     setPending(false)
     if (res.error) {
@@ -43,7 +59,32 @@ export function SendMessageButton({ artistUsername }: { artistUsername: string }
       setError(res.error)
       return
     }
-    if (res.conversationId) router.push(`/dashboard/messages/${res.conversationId}`)
+    setOpen(true)
+  }
+
+  async function submit() {
+    const body = draft.trim()
+    if (!body || pending) return
+    setPending(true)
+    setError(null)
+    const started = await startConversation(artistUsername)
+    if (started.error || !started.conversationId) {
+      setPending(false)
+      if (started.unauthorized) {
+        router.push(`/login?next=${encodeURIComponent(pathname || '/')}`)
+        return
+      }
+      setError(started.error ?? 'Could not open conversation')
+      return
+    }
+    const sent = await sendMessage(started.conversationId, body)
+    setPending(false)
+    if (sent.error) {
+      setError(sent.error)
+      return
+    }
+    setDraft('')
+    setSentConversationId(started.conversationId)
   }
 
   return (
@@ -51,15 +92,107 @@ export function SendMessageButton({ artistUsername }: { artistUsername: string }
       <button
         type="button"
         className="prof-message-btn"
-        onClick={() => void open()}
-        disabled={pending}
+        onClick={() => void openComposer()}
+        disabled={pending && !open}
         title="Send a message"
         aria-label="Send a message"
       >
         <IconMessage />
         Message
       </button>
-      {error && <p className="prof-message-btn__error">{error}</p>}
+      {error && !open && <p className="prof-message-btn__error">{error}</p>}
+      {open && (
+        <div
+          className="prof-message-sheet"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setOpen(false)
+          }}
+        >
+          <div
+            className="prof-message-sheet__card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+          >
+            <header className="prof-message-sheet__header">
+              <div>
+                <h2 id={titleId} className="prof-message-sheet__title">
+                  Message @{artistUsername}
+                </h2>
+                <p className="prof-message-sheet__sub">Stays on this page — no Studio redirect.</p>
+              </div>
+              <button
+                type="button"
+                className="prof-message-sheet__close"
+                aria-label="Close"
+                onClick={() => setOpen(false)}
+              >
+                ×
+              </button>
+            </header>
+
+            {sentConversationId ? (
+              <div className="prof-message-sheet__success">
+                <p>Message sent.</p>
+                <div className="prof-message-sheet__actions">
+                  <button
+                    type="button"
+                    className="prof-message-sheet__secondary"
+                    onClick={() => setOpen(false)}
+                  >
+                    Done
+                  </button>
+                  <a
+                    href={`/dashboard/messages/${sentConversationId}`}
+                    className="prof-message-sheet__primary"
+                  >
+                    Open full conversation
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <>
+                <textarea
+                  ref={textareaRef}
+                  className="prof-message-sheet__input"
+                  rows={5}
+                  maxLength={2000}
+                  placeholder="Write your message…"
+                  value={draft}
+                  disabled={pending}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault()
+                      void submit()
+                    }
+                  }}
+                />
+                {error && <p className="prof-message-btn__error">{error}</p>}
+                <div className="prof-message-sheet__actions">
+                  <button
+                    type="button"
+                    className="prof-message-sheet__secondary"
+                    onClick={() => setOpen(false)}
+                    disabled={pending}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="prof-message-sheet__primary"
+                    onClick={() => void submit()}
+                    disabled={pending || !draft.trim()}
+                  >
+                    {pending ? 'Sending…' : 'Send'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }

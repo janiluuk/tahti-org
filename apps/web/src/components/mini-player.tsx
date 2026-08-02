@@ -10,6 +10,7 @@ import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { AddToCollectionPanel } from '@/components/add-to-collection-panel'
 import { ArchiveWaveform, type WaveformMarker } from '@/components/archive-waveform'
+import { ActiveTrackStage } from '@/components/active-track-stage'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
@@ -507,8 +508,8 @@ function FullPlayerSheet({
           onClick={toggleShuffle}
           disabled={!canSkip}
           aria-pressed={shuffle}
-          aria-label={shuffle ? 'Random: on' : 'Random: off'}
-          title={shuffle ? 'Random: on' : 'Random: off'}
+          aria-label={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
+          title={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
         >
           <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
             <path
@@ -570,8 +571,8 @@ function FullPlayerSheet({
           onClick={toggleRepeat}
           disabled={!canSkip}
           aria-pressed={repeat}
-          aria-label={repeat ? 'Repeat: on' : 'Repeat: off'}
-          title={repeat ? 'Repeat: on' : 'Repeat: off'}
+          aria-label={repeat ? 'Loop: on' : 'Loop: off'}
+          title={repeat ? 'Loop: on' : 'Loop: off'}
         >
           <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden>
             <path
@@ -652,6 +653,16 @@ export function MiniPlayer() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [expanded, setExpanded] = useState(false)
   const [closingFullPlayer, setClosingFullPlayer] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
+  const [dockDetails] = useTrackPlaybackDetails(track?.kind === 'archive' ? track.id : null)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 641px)')
+    const sync = () => setIsDesktop(mq.matches)
+    sync()
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
 
   const closeFullPlayer = useCallback(() => {
     setClosingFullPlayer(true)
@@ -665,6 +676,7 @@ export function MiniPlayer() {
 
   const progress = duration > 0 ? currentTime / duration : 0
   const canSkip = queue.length > 1
+  const showDockStage = track.kind === 'archive' && !expanded && isDesktop
 
   function handleDrop(targetIndex: number) {
     if (dragIndex !== null && dragIndex !== targetIndex) {
@@ -679,7 +691,12 @@ export function MiniPlayer() {
 
   return (
     <>
-      <div className="mini-player" data-testid="mini-player" role="region" aria-label="Now playing">
+      <div
+        className={`mini-player${showDockStage ? ' mini-player--dock-stage' : ''}${playing ? ' mini-player--playing' : ''}`}
+        data-testid="mini-player"
+        role="region"
+        aria-label="Now playing"
+      >
         {addToOpen && track.kind === 'archive' && (
           <AddToCollectionPanel
             archiveItemId={track.id}
@@ -718,7 +735,8 @@ export function MiniPlayer() {
                     onClick={toggleShuffle}
                     disabled={queue.length < 2}
                     aria-pressed={shuffle}
-                    title={shuffle ? 'Random: on' : 'Random: off'}
+                    aria-label={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
+                    title={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
                       <path
@@ -729,7 +747,6 @@ export function MiniPlayer() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    Random
                   </button>
                   <button
                     type="button"
@@ -737,7 +754,8 @@ export function MiniPlayer() {
                     onClick={toggleRepeat}
                     disabled={queue.length < 2}
                     aria-pressed={repeat}
-                    title={repeat ? 'Repeat: on' : 'Repeat: off'}
+                    aria-label={repeat ? 'Loop: on' : 'Loop: off'}
+                    title={repeat ? 'Loop: on' : 'Loop: off'}
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
                       <path
@@ -755,7 +773,6 @@ export function MiniPlayer() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    Repeat
                   </button>
                   <button
                     type="button"
@@ -824,7 +841,19 @@ export function MiniPlayer() {
             )}
           </div>
         )}
-        {track.kind === 'archive' && duration > 0 && (
+        {showDockStage && (
+          <ActiveTrackStage
+            playing={playing}
+            preset="PARTICLE_FIELD"
+            analyser={analyser}
+            peaks={dockDetails?.peaks}
+            progress={progress}
+            onSeek={seek}
+            size="large"
+            className="mini-player__dock-stage"
+          />
+        )}
+        {!showDockStage && track.kind === 'archive' && duration > 0 && (
           <button
             type="button"
             className="mini-player__progress"

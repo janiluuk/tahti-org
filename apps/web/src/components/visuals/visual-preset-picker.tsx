@@ -24,6 +24,17 @@ import { ChannelVisualizer } from './channel-visualizer'
 const WHITE = brandTokens.color.base.white
 const BLACK = brandTokens.color.base.black
 
+export type ColorSchemeEditorProps = {
+  enabled: boolean
+  onEnabledChange: (enabled: boolean) => void
+  scheme: ColorScheme
+  onSchemeChange: (key: keyof ColorScheme, value: string) => void
+  /** Checkbox label; default is “Use custom color scheme”. */
+  enabledLabel?: string
+  /** Optional note shown when the custom scheme is off. */
+  offHint?: string
+}
+
 interface Props {
   value: VisualPreset
   onChange: (preset: VisualPreset) => void
@@ -35,6 +46,11 @@ interface Props {
   /** Per-preset knobs map. */
   settingsMap?: VisualSettingsMap | null
   onSettingsChange?: (map: VisualSettingsMap) => void
+  /**
+   * Custom color scheme UI — rendered inside the Presets gallery only so the
+   * main Design column stays accent + header + visualizer strip.
+   */
+  colorSchemeEditor?: ColorSchemeEditorProps
 }
 
 /**
@@ -252,6 +268,7 @@ export function VisualPresetPicker({
   showPreview = true,
   settingsMap,
   onSettingsChange,
+  colorSchemeEditor,
 }: Props) {
   const scheme = colorScheme ?? resolveColorScheme(colorSchemeJson ?? null, paletteJson ?? null)
   const [galleryOpen, setGalleryOpen] = useState(false)
@@ -328,11 +345,11 @@ export function VisualPresetPicker({
           disabled={disabled}
           aria-haspopup="dialog"
           aria-expanded={galleryOpen}
-          title="Browse all visualizers"
+          title="Browse all visualizer presets"
           onClick={() => setGalleryOpen(true)}
         >
           <GalleryIcon />
-          <span>Gallery</span>
+          <span>Presets</span>
         </button>
       </div>
 
@@ -353,16 +370,18 @@ export function VisualPresetPicker({
             <header className="visual-preset-gallery__header">
               <div>
                 <h3 id={titleId} className="visual-preset-gallery__title">
-                  Visualizer gallery
+                  Visualizer presets
                 </h3>
                 <p className="visual-preset-gallery__sub">
-                  Preview each background visualizer at full size and tune its settings.
+                  {colorSchemeEditor
+                    ? 'Preview each background visualizer at full size, tune its settings, and set a custom color scheme.'
+                    : 'Preview each background visualizer at full size and tune its settings.'}
                 </p>
               </div>
               <button
                 type="button"
                 className="visual-preset-gallery__close"
-                aria-label="Close gallery"
+                aria-label="Close presets"
                 onClick={() => setGalleryOpen(false)}
               >
                 ×
@@ -466,6 +485,60 @@ export function VisualPresetPicker({
                     >
                       Reset to defaults
                     </button>
+                  </div>
+                ) : null}
+
+                {colorSchemeEditor ? (
+                  <div className="visual-preset-gallery__settings">
+                    <span className="studio-label">Color scheme</span>
+                    <label className="studio-social-toggle studio-mb-sm">
+                      <input
+                        type="checkbox"
+                        checked={colorSchemeEditor.enabled}
+                        disabled={disabled}
+                        onChange={(e) => colorSchemeEditor.onEnabledChange(e.target.checked)}
+                      />
+                      <span>{colorSchemeEditor.enabledLabel ?? 'Use custom color scheme'}</span>
+                    </label>
+                    {!colorSchemeEditor.enabled && colorSchemeEditor.offHint ? (
+                      <p className="studio-text-muted-sm studio-mb-sm">
+                        {colorSchemeEditor.offHint}
+                      </p>
+                    ) : null}
+                    {colorSchemeEditor.enabled ? (
+                      <div className="studio-color-scheme-grid">
+                        {(
+                          ['bg', 'accent', 'text', 'muted', 'highlight'] as (keyof ColorScheme)[]
+                        ).map((key) => (
+                          <div key={key} className="studio-field--block">
+                            <label className="studio-label" htmlFor={`gallery-color-${key}`}>
+                              {key.charAt(0).toUpperCase() + key.slice(1)}
+                            </label>
+                            <div className="studio-color-input-row">
+                              <input
+                                id={`gallery-color-${key}`}
+                                type="color"
+                                value={colorSchemeEditor.scheme[key]}
+                                disabled={disabled}
+                                onChange={(e) =>
+                                  colorSchemeEditor.onSchemeChange(key, e.target.value)
+                                }
+                              />
+                              <input
+                                type="text"
+                                value={colorSchemeEditor.scheme[key]}
+                                disabled={disabled}
+                                maxLength={7}
+                                onChange={(e) =>
+                                  colorSchemeEditor.onSchemeChange(key, e.target.value)
+                                }
+                                className="studio-input"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
 

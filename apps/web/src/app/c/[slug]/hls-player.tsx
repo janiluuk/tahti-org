@@ -20,6 +20,7 @@ export default function HlsPlayer({
   hideWaveform = false,
   artOverlayPlay = false,
   animateTrackChange = false,
+  hideArtBackdrop = false,
 }: {
   url: string
   title?: string
@@ -47,6 +48,8 @@ export default function HlsPlayer({
   artOverlayPlay?: boolean
   /** Animate now-playing identity changes (title/art handoff). */
   animateTrackChange?: boolean
+  /** Parent renders full-bleed art backdrop — skip in-card wash. */
+  hideArtBackdrop?: boolean
 }) {
   const {
     track,
@@ -132,6 +135,7 @@ export default function HlsPlayer({
         hideWaveform={hideWaveform}
         artOverlayPlay={artOverlayPlay}
         animateTrackChange={animateTrackChange}
+        hideArtBackdrop={hideArtBackdrop}
       />
     </div>
   )

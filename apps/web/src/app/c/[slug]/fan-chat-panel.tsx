@@ -145,6 +145,22 @@ export default function FanChatPanel({ slug }: { slug: string }) {
       sendDisabled={status !== 'connected'}
       error={error}
       readOnly={!token}
+      onSearchMentions={async (query) => {
+        if (query.trim().length < 1) return []
+        try {
+          const res = await fetch(`${API_BASE}/api/users/search?q=${encodeURIComponent(query)}`, {
+            credentials: 'include',
+          })
+          if (!res.ok) return []
+          const data = (await res.json()) as Array<{
+            username: string
+            displayName: string
+          }>
+          return data.map((u) => ({ username: u.username, displayName: u.displayName }))
+        } catch {
+          return []
+        }
+      }}
     />
   )
 }

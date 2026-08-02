@@ -16,37 +16,59 @@ interface Prefs {
 
 export function NotificationPreferencesPanel() {
   const [prefs, setPrefs] = useState<Prefs | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [saving, setSaving] = useState<keyof Prefs | null>(null)
 
   useEffect(() => {
     let cancelled = false
     fetch(`${API_BASE}/api/me/notification-preferences`, { credentials: 'include' })
-      .then((res) => (res.ok ? (res.json() as Promise<Prefs>) : null))
-      .then((data) => {
-        if (!cancelled && data) setPrefs(data)
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Could not load notification preferences.')
+        return res.json() as Promise<Prefs>
       })
-      .catch(() => undefined)
+      .then((data) => {
+        if (!cancelled) {
+          setPrefs(data)
+          setLoadError(null)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError('Could not load notification preferences. Try refreshing.')
+      })
     return () => {
       cancelled = true
     }
   }, [])
 
   async function toggle(key: keyof Prefs, value: boolean) {
-    setPrefs((prev) => (prev ? { ...prev, [key]: value } : prev))
+    if (!prefs) return
+    const previous = prefs[key]
+    setPrefs({ ...prefs, [key]: value })
     setSaving(key)
     try {
-      await fetch(`${API_BASE}/api/me/notification-preferences`, {
+      const res = await fetch(`${API_BASE}/api/me/notification-preferences`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ [key]: value }),
       })
+      if (!res.ok) {
+        setPrefs((prev) => (prev ? { ...prev, [key]: previous } : prev))
+      }
+    } catch {
+      setPrefs((prev) => (prev ? { ...prev, [key]: previous } : prev))
     } finally {
       setSaving(null)
     }
   }
 
-  if (!prefs) return null
+  if (loadError) {
+    return <p className="studio-notice studio-notice--error">{loadError}</p>
+  }
+
+  if (!prefs) {
+    return <p className="studio-text-muted-sm">Loading notification preferences…</p>
+  }
 
   return (
     <div className="notification-prefs">

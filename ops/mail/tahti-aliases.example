@@ -1,0 +1,5 @@
+# postfix-virtual.cf lines for @tahti.live (docker-mailserver on vimage6)
+# Apply with: docker exec vimage6-mailserver setup alias add <left> <right>
+hello@tahti.live jani@tahti.live
+support@tahti.live jani@tahti.live
+hi@tahti.live jani@tahti.live

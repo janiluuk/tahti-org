@@ -46,6 +46,17 @@ export const AnnouncementClipViewSchema = z.object({
   position: z.number().int(),
   renderStatus: z.enum(ANNOUNCEMENT_RENDER_STATUSES),
   createdAt: z.coerce.date(),
+  /** True when this clip is the looping ambient music on the artist's public page. */
+  isProfileBackground: z.boolean().optional(),
+})
+
+export const ProfileBackgroundClipSchema = z.object({
+  clipId: z.string().nullable(),
+})
+export type ProfileBackgroundClipInput = z.infer<typeof ProfileBackgroundClipSchema>
+
+export const ProfileBackgroundClipResponseSchema = z.object({
+  clipId: z.string().nullable(),
 })
 
 export const AnnouncementClipListSchema = z.object({

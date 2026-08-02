@@ -2,8 +2,15 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
-import { ChatPublishAckSchema, ChatPublishProxySchema, openApiResponse } from '@tahti/shared'
+import {
+  ChatPublishAckSchema,
+  ChatPublishProxySchema,
+  chatProxyMetaUserId,
+  openApiResponse,
+} from '@tahti/shared'
+import { notifyUsersOfChatMention } from '@tahti/db'
 import { isChatCaptchaVerified } from '../../lib/chat-captcha.js'
+import { extractHandles, recordMentions } from '../../lib/mentions.js'
 
 // Centrifugo proxy publish webhook.
 // Centrifugo calls this before allowing a client to publish.
@@ -28,6 +35,7 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
 
       const sub = body.user ?? ''
       const fingerprint = sub.split('#')[1] ?? ''
+      const text = body.data?.text?.trim() ?? ''
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
@@ -47,6 +55,28 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
           },
         })
         if (ban) return reply.status(403).send({ error: 'banned' })
+      }
+
+      // @mentions → Mention rows + in-app notifications (signed-in chatters only).
+      const mentionerUserId = chatProxyMetaUserId(body.meta)
+      if (mentionerUserId && text && extractHandles(text).length > 0) {
+        const mentioner = await fastify.prisma.user.findUnique({
+          where: { id: mentionerUserId },
+          select: { id: true, username: true, displayName: true },
+        })
+        if (mentioner) {
+          const sourceId = `chat:${channel.id}:${Date.now()}:${mentioner.id}`
+          const targetIds = await recordMentions(
+            fastify.prisma,
+            mentioner.id,
+            text,
+            'CHAT',
+            sourceId,
+          )
+          if (targetIds.length > 0) {
+            await notifyUsersOfChatMention(fastify.prisma, targetIds, mentioner, slug, text)
+          }
+        }
       }
 
       // Return the data as-is — Centrifugo publishes it

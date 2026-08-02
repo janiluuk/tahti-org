@@ -865,6 +865,73 @@
   margin-bottom: 0.15rem;
 }
 
+[data-tahti-ui='brand'] .ch-radio-show-meta {
+  display: block;
+  margin-top: 0.35rem;
+}
+
+/* Owner-only go-live window on /radio/show/:slug (T−30m through slot end). */
+[data-tahti-ui='brand'] .ch-radio-show-go-live {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+[data-tahti-ui='brand'] .ch-radio-show-go-live__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--coral) 55%, var(--border));
+  background: color-mix(in srgb, var(--coral) 18%, transparent);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+[data-tahti-ui='brand'] .ch-radio-show-go-live__btn:hover {
+  background: color-mix(in srgb, var(--coral) 28%, transparent);
+  border-color: color-mix(in srgb, var(--coral) 75%, var(--border));
+}
+
+[data-tahti-ui='brand'] .ch-radio-show-go-live__btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+[data-tahti-ui='brand'] .ch-radio-show-go-live__btn.is-preview {
+  background: color-mix(in srgb, var(--cyan) 22%, transparent);
+  border-color: color-mix(in srgb, var(--cyan) 60%, var(--border));
+}
+
+[data-tahti-ui='brand'] .ch-radio-show-go-live__btn.is-preview:hover {
+  background: color-mix(in srgb, var(--cyan) 32%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-radio-show-go-live__btn.is-live {
+  background: color-mix(in srgb, var(--coral) 28%, transparent);
+  border-color: color-mix(in srgb, var(--coral) 70%, var(--border));
+}
+
+[data-tahti-ui='brand'] .ch-radio-show-go-live__hint {
+  margin: 0;
+  max-width: 28rem;
+  font-size: var(--text-xs);
+  color: var(--muted2);
+  line-height: 1.4;
+}
+
 /* @handle / country / member-since row — smaller and set into a faint pill so
  * it reads as secondary metadata rather than competing with the artist name. */
 [data-tahti-ui='brand'] .ch-artist-meta-row {
@@ -1025,6 +1092,69 @@
 [data-tahti-ui='brand'] .ch-archive-controls__queue:hover {
   background: color-mix(in srgb, var(--cyan) 26%, transparent);
   border-color: color-mix(in srgb, var(--cyan) 65%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-archive-more {
+  position: relative;
+  margin-left: auto;
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  user-select: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__summary:hover,
+[data-tahti-ui='brand'] .ch-archive-more[open] > .ch-archive-more__summary {
+  color: var(--text);
+  background: var(--card2);
+  border-color: var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  min-width: 11.5rem;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-hover);
+  background: var(--card);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+[data-tahti-ui='brand'] .ch-archive-more__btn:hover {
+  background: var(--card2);
 }
 
 [data-tahti-ui='brand'] .ch-download {
@@ -2570,12 +2700,148 @@
   overflow: hidden;
   min-height: 80px;
   border: 1px solid var(--border);
+  isolation: isolate;
+}
+
+/* Full-bleed art wash — lives on the wrap so nested player padding doesn't clip it. */
+[data-tahti-ui='brand'] .ch-player-art-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--ch-player-art);
+  background-size: cover;
+  background-position: center;
+  filter: blur(42px) saturate(1.35);
+  opacity: 0.22;
+  transform: scale(1.12);
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-player-art-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    165deg,
+    color-mix(
+        in srgb,
+        var(--ch-player-overlay-tint, var(--channel-bg, var(--card))) 32%,
+        transparent
+      )
+      0%,
+    color-mix(
+        in srgb,
+        var(--ch-player-overlay-accent, var(--channel-accent, var(--cyan))) 16%,
+        var(--ch-player-overlay-tint, var(--channel-bg, var(--card))) 38%
+      )
+      48%,
+    color-mix(
+        in srgb,
+        var(--ch-player-overlay-tint, var(--channel-bg, var(--card))) 48%,
+        transparent
+      )
+      100%
+  );
+}
+
+[data-tahti-ui='brand'] .ch-player-art-backdrop--out {
+  animation: ch-player-backdrop-out 0.38s ease forwards;
+}
+
+[data-tahti-ui='brand'] .ch-player-art-backdrop--in {
+  animation: ch-player-backdrop-in 0.56s ease forwards;
+}
+
+@keyframes ch-player-backdrop-out {
+  from {
+    opacity: 0.22;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ch-player-backdrop-in {
+  from {
+    opacity: 0;
+    transform: scale(1.26);
+  }
+  to {
+    opacity: 0.22;
+    transform: scale(1.12);
+  }
+}
+
+[data-tahti-ui='brand'] .ch-player-wrap--has-art .ch-player-card {
+  background: transparent;
+  border: none;
+  padding: 0;
 }
 
 [data-tahti-ui='brand'] .ch-player-inner {
   padding: 0.75rem;
   position: relative;
   z-index: 1;
+}
+
+[data-tahti-ui='brand'] .ch-channel-player-viz {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  opacity: 0.82;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-channel-player-wrap .waveform-player__meta-title {
+  font-family: var(--font-head);
+  font-size: clamp(18px, 2.8vw, 30px);
+  font-weight: var(--weight-semibold);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  animation: ch-channel-title-breathe 5s ease-in-out infinite;
+}
+
+[data-tahti-ui='brand'] .ch-channel-player-wrap .waveform-player__meta-subtitle {
+  font-size: clamp(13px, 1.4vw, 16px);
+}
+
+[data-tahti-ui='brand'] .ch-channel-player-wrap .waveform-player__art {
+  width: clamp(72px, 12vw, 120px);
+  height: clamp(72px, 12vw, 120px);
+}
+
+@keyframes ch-channel-title-breathe {
+  0%,
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  50% {
+    opacity: 0.88;
+    filter: blur(0.3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='brand'] .ch-channel-player-wrap .waveform-player__meta-title {
+    animation: none;
+  }
+
+  [data-tahti-ui='brand'] .ch-player-art-backdrop--out,
+  [data-tahti-ui='brand'] .ch-player-art-backdrop--in {
+    animation: none !important;
+  }
+}
+
+[data-tahti-ui='brand']
+  .ch-channel-player-wrap
+  .waveform-player--track-out
+  .waveform-player__meta-title,
+[data-tahti-ui='brand']
+  .ch-channel-player-wrap
+  .waveform-player--track-in
+  .waveform-player__meta-title {
+  animation: none;
 }
 
 [data-tahti-ui='brand'] .ch-radio-player-viz {
@@ -3058,12 +3324,95 @@
   color: var(--cyan);
 }
 
-[data-tahti-ui='brand'] .chat-msg .handle.supporter {
-  color: var(--lavender);
+[data-tahti-ui='brand'] .chat-msg .handle.handle--cyan {
+  color: var(--cyan);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--amber {
+  color: var(--amber);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--purple {
+  color: var(--purple);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--green {
+  color: var(--green);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--pink {
+  color: var(--chat-pink);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--orange {
+  color: var(--chat-orange);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--blue {
+  color: var(--chat-blue);
+}
+[data-tahti-ui='brand'] .chat-msg .handle.handle--light-purple {
+  color: var(--chat-light-purple);
 }
 
 [data-tahti-ui='brand'] .chat-msg .text {
   color: var(--text);
+}
+
+[data-tahti-ui='brand'] .chat-mention {
+  color: var(--cyan);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .chat-mention:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .ch-chat-composer,
+[data-tahti-ui='brand'] .live-chat-panel__composer {
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: calc(100% - 0.15rem);
+  z-index: 5;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  max-height: 11rem;
+  overflow-y: auto;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu__item:hover,
+[data-tahti-ui='brand'] .ch-chat-mention-menu__item--active {
+  background: color-mix(in srgb, var(--cyan) 12%, var(--card2));
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+[data-tahti-ui='brand'] .ch-chat-mention-menu__handle {
+  font-size: var(--text-xs);
+  color: var(--muted2);
 }
 
 [data-tahti-ui='brand'] .chat-msg--system {
@@ -3092,6 +3441,35 @@
   padding: 0.05rem 0.3rem;
   border-radius: 3px;
   vertical-align: middle;
+}
+
+[data-tahti-ui='brand'] .chat-role-badge {
+  margin-left: 0.25rem;
+  font-size: var(--text-micro);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  vertical-align: middle;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+[data-tahti-ui='brand'] .chat-role-badge--owner {
+  background: color-mix(in srgb, var(--cyan) 22%, var(--card));
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .chat-role-badge--moderator {
+  background: color-mix(in srgb, var(--amber) 20%, var(--card));
+  color: var(--amber);
+}
+
+[data-tahti-ui='brand'] .handle.handle--artist {
+  color: var(--cyan);
+}
+
+[data-tahti-ui='brand'] .handle.handle--moderator {
+  color: var(--amber);
 }
 
 [data-tahti-ui='brand'] .ch-chat-error {
@@ -3297,6 +3675,36 @@
   gap: 7px;
   flex-shrink: 0;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+[data-tahti-ui='brand'] .prof-cta-more {
+  position: relative;
+}
+
+[data-tahti-ui='brand'] .prof-cta-more > summary {
+  list-style: none;
+}
+
+[data-tahti-ui='brand'] .prof-cta-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-tahti-ui='brand'] .prof-cta-more__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  min-width: 10.5rem;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-hover);
+  background: var(--card);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--bg) 55%, transparent);
 }
 
 [data-tahti-ui='brand'] .prof-cta-btn,
@@ -3338,6 +3746,197 @@
   font-size: var(--text-xs);
   color: var(--coral);
   width: 100%;
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+@media (min-width: 640px) {
+  [data-tahti-ui='brand'] .prof-message-sheet {
+    align-items: center;
+  }
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__card {
+  width: min(28rem, 100%);
+  padding: 1.15rem 1.25rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-hover);
+  background: var(--card);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__sub {
+  margin: 0.25rem 0 0;
+  font-size: var(--text-xs);
+  color: var(--muted2);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__input {
+  width: 100%;
+  resize: vertical;
+  min-height: 7rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 55%, var(--card));
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__input:focus {
+  outline: 2px solid color-mix(in srgb, var(--cyan) 45%, transparent);
+  outline-offset: 1px;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__success {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__success p {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__secondary,
+[data-tahti-ui='brand'] .prof-message-sheet__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.15rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--muted2);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__primary {
+  background: var(--cyan);
+  color: var(--bg);
+}
+
+[data-tahti-ui='brand'] .prof-message-sheet__primary:disabled,
+[data-tahti-ui='brand'] .prof-message-sheet__secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__card {
+  width: min(24rem, 100%);
+  padding: 1.25rem 1.35rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-hover);
+  background: var(--card);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__title {
+  margin: 0 0 0.4rem;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__body {
+  margin: 0 0 1rem;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__cancel,
+[data-tahti-ui='brand'] .prof-message-interstitial__continue {
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__cancel {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .prof-message-interstitial__continue {
+  border: none;
+  background: var(--cyan);
+  color: var(--bg);
 }
 
 [data-tahti-ui='brand'] .prof-cta-btn {
@@ -4211,6 +4810,21 @@
   border-top: 2px solid color-mix(in srgb, var(--cyan) 35%, var(--border));
 }
 
+[data-tahti-ui='brand'] .sl-panel-summary {
+  cursor: pointer;
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  list-style: none;
+}
+
+[data-tahti-ui='brand'] .sl-panel-summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-tahti-ui='brand'] .sl-panel--credits[open] > .sl-panel-summary {
+  margin-bottom: 0.55rem;
+}
+
 [data-tahti-ui='brand'] .sl-panel a {
   color: var(--cyan);
 }
@@ -4358,11 +4972,106 @@
   pointer-events: none;
   overflow: hidden;
   opacity: 0.55;
+  transition: opacity 0.35s ease;
+}
+
+[data-tahti-ui='brand'] .ch-page-visualizer--live {
+  opacity: 0.78;
 }
 
 [data-tahti-ui='brand'] .ch-page-foreground {
   position: relative;
   z-index: 1;
+}
+
+/* Shared active-track stage — Three.js + waveform for the loaded row */
+[data-tahti-ui='brand'] .active-track-stage {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 28%, var(--border));
+  background: color-mix(in srgb, var(--card2) 72%, transparent);
+  margin: 0.35rem 0 0.55rem;
+  min-height: 88px;
+  animation: active-track-stage-in 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-tahti-ui='brand'] .active-track-stage--large {
+  min-height: 128px;
+}
+
+[data-tahti-ui='brand'] .active-track-stage--playing {
+  border-color: color-mix(in srgb, var(--cyan) 48%, var(--border));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--cyan) 18%, transparent),
+    0 12px 36px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .active-track-stage__viz {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0;
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .active-track-stage--playing .active-track-stage__viz {
+  opacity: 0.9;
+}
+
+[data-tahti-ui='brand'] .active-track-stage__foreground {
+  position: relative;
+  z-index: 1;
+  padding: 0.65rem 0.75rem 0.45rem;
+}
+
+[data-tahti-ui='brand'] .active-track-stage__foreground .ch-archive-waveform {
+  margin: 0;
+}
+
+[data-tahti-ui='brand'] .active-track-stage__progress {
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--border) 80%, transparent);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .active-track-stage__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cyan);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--cyan) 55%, transparent);
+}
+
+@keyframes active-track-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='brand'] .active-track-stage {
+    animation: none;
+  }
+}
+
+@media (min-width: 641px) {
+  [data-tahti-ui='brand'] .active-track-stage--large {
+    min-height: 152px;
+  }
+
+  [data-tahti-ui='brand'] .active-track-stage--large .ch-archive-waveform {
+    height: 104px;
+  }
 }
 
 [data-tahti-ui='brand'] .ch-archive-playback {
@@ -4371,7 +5080,15 @@
 }
 
 [data-tahti-ui='brand'] .ch-archive-playback--current {
-  margin-top: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-playback--playing {
+  padding-bottom: 0.15rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-playback__stage {
+  margin-top: 0.45rem;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-viz {
@@ -4599,6 +5316,55 @@
 
 [data-tahti-ui='brand'] .ch-archive-item-credit__roles {
   color: var(--muted);
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-credit__link {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-credit__link:hover {
+  text-decoration: underline;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-details {
+  margin: 0.65rem 0 0.35rem;
+  border-top: 1px solid color-mix(in srgb, var(--muted) 28%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-details__summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.45rem 0;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--muted2);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-details__summary::-webkit-details-marker {
+  display: none;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-details__summary::after {
+  content: ' ▾';
+  opacity: 0.7;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-details[open] > .ch-archive-item-details__summary::after {
+  content: ' ▴';
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-details__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0 0 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-archive-item-credit--roles {
+  margin: 0;
 }
 
 [data-tahti-ui='brand'] .ch-archive-item-date {
@@ -4870,12 +5636,34 @@
 
 [data-tahti-ui='brand'] .prof-collection-item-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
   padding: 10px 12px;
   margin: 0 -12px;
   border-radius: var(--radius-sm);
   border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row--current {
+  background: color-mix(in srgb, var(--cyan) 8%, var(--card));
+  border-color: color-mix(in srgb, var(--cyan) 28%, var(--border));
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row--playing {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cyan) 22%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-collection-item-row__stage {
+  width: 100%;
+  margin: 0.55rem 0 0.15rem;
 }
 
 [data-tahti-ui='brand'] .prof-collection-item-row:last-child {
@@ -4884,7 +5672,8 @@
 
 /* Tiger-striped rows — same alternating-tint pattern as the channel archive
    list, so a long album/EP tracklist is just as easy to scan. */
-[data-tahti-ui='brand'] .prof-collection-item-row:nth-child(even) {
+[data-tahti-ui='brand']
+  .prof-collection-item-row:nth-child(even):not(.prof-collection-item-row--current) {
   background: color-mix(in srgb, var(--card) 55%, transparent);
 }
 
@@ -4939,15 +5728,14 @@
 [data-tahti-ui='brand'] .prof-playlist-controls__btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 12px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   background: var(--card2);
   color: var(--muted2);
-  font-size: var(--text-micro);
-  font-weight: 600;
   cursor: pointer;
 }
 
@@ -5463,6 +6251,17 @@
   align-items: center;
   gap: 6px;
   margin-left: auto;
+}
+
+[data-tahti-ui='brand'] .prof-tracks-studio-link {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .prof-tracks-studio-link:hover {
+  color: var(--cyan);
 }
 
 [data-tahti-ui='brand'] .prof-tracks-reorder {
@@ -6468,4 +7267,88 @@
     text-align: center;
     bottom: 20px;
   }
+}
+
+/* Artist page ambient clip — Mute / Unmute (ducks when the mini-player plays). */
+[data-tahti-ui='brand'] .prof-bg-music-btn {
+  position: fixed;
+  bottom: 88px;
+  right: 20px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 40%, transparent);
+  background: color-mix(in srgb, var(--card2) 92%, transparent);
+  backdrop-filter: blur(12px);
+  color: var(--text);
+  font-family: var(--font-head, inherit);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+[data-tahti-ui='brand'] .prof-bg-music-btn:hover {
+  background: color-mix(in srgb, var(--cyan) 14%, var(--card2));
+  border-color: color-mix(in srgb, var(--cyan) 55%, transparent);
+  transform: scale(1.03);
+}
+
+[data-tahti-ui='brand'] .prof-bg-music-btn__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  animation: prof-bg-music-pulse 1.5s ease-in-out infinite;
+}
+
+[data-tahti-ui='brand'] .prof-bg-music-btn--muted .prof-bg-music-btn__pulse {
+  background: var(--coral, #f87171);
+  animation: none;
+}
+
+@keyframes prof-bg-music-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='brand'] .prof-bg-music-btn {
+    bottom: 76px;
+    right: 12px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+}
+
+/* Green room guest page (/u/:username/green-room) */
+[data-tahti-ui='brand'] .green-room-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-md) var(--space-2xl);
+}
+
+[data-tahti-ui='brand'] .green-room-page__title {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: var(--weight-medium);
+  margin: 0 0 var(--space-md);
+}
+
+[data-tahti-ui='brand'] .green-room-guest__lead {
+  margin-bottom: var(--space-md);
 }

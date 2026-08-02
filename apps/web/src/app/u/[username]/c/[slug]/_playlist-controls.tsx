@@ -6,17 +6,10 @@
 import type { PlayerTrack } from '@/contexts/player-context'
 import { usePlayer } from '@/contexts/player-context'
 
-/** Random / Repeat toggles for a public collection playlist. */
+/** Shuffle / loop mode toggles for a public collection playlist (icons only). */
 export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
-  const { shuffle, toggleShuffle, repeat, toggleRepeat, load } = usePlayer()
+  const { shuffle, toggleShuffle, repeat, toggleRepeat } = usePlayer()
   const canMode = queue.length >= 2
-
-  function playRandom() {
-    if (queue.length === 0) return
-    if (!shuffle && canMode) toggleShuffle()
-    const start = queue[Math.floor(Math.random() * queue.length)]!
-    load(start, { autoplay: true, queue })
-  }
 
   if (queue.length === 0) return null
 
@@ -25,11 +18,13 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
       <button
         type="button"
         className={`prof-playlist-controls__btn${shuffle ? ' prof-playlist-controls__btn--active' : ''}`}
-        onClick={playRandom}
+        onClick={toggleShuffle}
+        disabled={!canMode}
         aria-pressed={shuffle}
-        title={shuffle ? 'Random: on — play a random track' : 'Play random'}
+        aria-label={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
+        title={shuffle ? 'Shuffle: on' : 'Shuffle: off'}
       >
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path
             d="M2 4h3.2l6 8H14M14 4h-2.8L9.5 6.3M2 12h3.2l1.7-2.3M12.5 2.5 14 4l-1.5 1.5M12.5 10.5 14 12l-1.5 1.5"
             stroke="currentColor"
@@ -38,7 +33,6 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
             strokeLinejoin="round"
           />
         </svg>
-        Random
       </button>
       <button
         type="button"
@@ -46,9 +40,10 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
         onClick={toggleRepeat}
         disabled={!canMode}
         aria-pressed={repeat}
-        title={repeat ? 'Repeat: on' : 'Repeat: off'}
+        aria-label={repeat ? 'Loop: on' : 'Loop: off'}
+        title={repeat ? 'Loop: on' : 'Loop: off'}
       >
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path
             d="M3 6a3 3 0 0 1 3-3h6M12 3l-2-2m2 2-2 2"
             stroke="currentColor"
@@ -64,7 +59,6 @@ export function PlaylistControls({ queue }: { queue: PlayerTrack[] }) {
             strokeLinejoin="round"
           />
         </svg>
-        Repeat
       </button>
     </div>
   )

@@ -66,7 +66,17 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       showFollowing: true,
       createdAt: true,
       _count: { select: { artistFollowers: true, artistFollowing: true } },
-      channel: { select: { id: true, slug: true, state: true, artistKind: true } },
+      channel: {
+        select: {
+          id: true,
+          slug: true,
+          state: true,
+          artistKind: true,
+          profileBackgroundClip: {
+            select: { audioKey: true, renderStatus: true },
+          },
+        },
+      },
       releases: {
         where: { state: 'PUBLISHED' },
         orderBy: { releaseDate: 'desc' },
@@ -213,6 +223,12 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     })),
   )
 
+  const bgClip = user.channel?.profileBackgroundClip
+  const backgroundMusicUrl =
+    bgClip?.renderStatus === 'READY' && bgClip.audioKey && !bgClip.audioKey.includes('/pending-')
+      ? await presignedGetUrl(bgClip.audioKey, 3600)
+      : null
+
   return {
     artist: {
       username: user.username,
@@ -260,6 +276,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
       },
       presskit: `${config.apiUrl}/api/v1/u/${user.username}/press-kit.zip`,
     },
+    backgroundMusicUrl,
   }
 }
 

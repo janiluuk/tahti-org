@@ -9,6 +9,10 @@ export interface SessionUser {
   isBoard: boolean
   /** True when the account has a channel — i.e. an artist who can open the studio. */
   hasChannel: boolean
+  /** Own channel slug when the account has a channel. */
+  channelSlug: string | null
+  /** Channel lifecycle state (OFFLINE / PREVIEW / LIVE / …) when present. */
+  channelState: string | null
 }
 
 /** Best-effort lookup of the current session user for server components.
@@ -29,13 +33,15 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       username: string
       displayName: string
       isBoard: boolean
-      channel?: { slug: string } | null
+      channel?: { slug: string; state?: string } | null
     }
     return {
       username: data.username,
       displayName: data.displayName,
       isBoard: data.isBoard,
       hasChannel: Boolean(data.channel?.slug),
+      channelSlug: data.channel?.slug ?? null,
+      channelState: data.channel?.state ?? null,
     }
   } catch {
     return null

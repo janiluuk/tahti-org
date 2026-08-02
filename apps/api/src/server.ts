@@ -181,6 +181,9 @@ import meStatsRoutes from './routes/me/stats.js'
 import meEndBroadcastRoutes from './routes/me/end-broadcast.js'
 import meGoLiveRoutes from './routes/me/go-live.js'
 import meBroadcastPreflightRoutes from './routes/me/broadcast-preflight.js'
+import meGreenRoomDefaultsRoutes from './routes/me/green-room-defaults.js'
+import meGreenRoomRoutes from './routes/me/green-room.js'
+import meGreenRoomAccessRoutes from './routes/me/green-room-access.js'
 import meStashRoutes from './routes/me/stash.js'
 import meUsersRoutes from './routes/me/users.js'
 import collectionRoutes from './routes/collections/collections.js'
@@ -672,6 +675,9 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meEndBroadcastRoutes)
   await fastify.register(meGoLiveRoutes)
   await fastify.register(meBroadcastPreflightRoutes)
+  await fastify.register(meGreenRoomDefaultsRoutes)
+  await fastify.register(meGreenRoomRoutes)
+  await fastify.register(meGreenRoomAccessRoutes)
   await fastify.register(meStashRoutes)
   await fastify.register(meUsersRoutes)
 

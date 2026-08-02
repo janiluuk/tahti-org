@@ -17,7 +17,7 @@ import { LiveTracklistPanel } from '@/components/live-tracklist-panel'
 import { ChannelGalleryView } from './channel-gallery'
 import { ArchiveItemGallery } from './archive-item-gallery'
 import { ChannelTextLayerView } from '@/components/text-layer'
-import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
+import { ChannelPageVisualizer } from './_channel-page-visualizer'
 import { ChannelColorScheme } from '@/components/visuals/channel-color-scheme'
 import { ChannelSlideshow } from '@/components/visuals/channel-slideshow'
 import { TracklistView } from '@/components/tracklist/tracklist-view'
@@ -50,7 +50,6 @@ import { SocialLinkIcon, kickUsernameFromUrl } from '@/components/social-link-ic
 import { ReportButton } from '@/components/report-button'
 import { TrackCommentsToggle } from '@/components/track-comments-toggle'
 import { FollowButton } from '@/components/follow-button'
-import { SendMessageButton } from '@/components/send-message-button'
 import { ReleasesGrid, type ReleaseGridItem } from '@/components/releases-grid'
 import { ChannelTabs } from './_channel-tabs'
 import { PublicChannelTabs } from './_public-tabs'
@@ -161,7 +160,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
 
   const channel = (await channelRes.json()) as ChannelResponse
 
-  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, profileRes, user] =
+  const [itemsRes, announcementsRes, eventsRes, postsRes, embedsRes, profileRes, tiersRes, user] =
     await Promise.all([
       fetch(`${apiUrl}/api/channels/${slug}/items`, { cache: 'no-store' }),
       fetch(`${apiUrl}/api/chat/${slug}/announcements`, { cache: 'no-store' }),
@@ -171,11 +170,22 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/profile`, {
         cache: 'no-store',
       }),
+      fetch(`${apiUrl}/api/v1/u/${encodeURIComponent(channel.user.username)}/tiers`, {
+        next: { revalidate: 60 },
+      }),
       getSessionUser(),
     ])
   const releases: ReleaseGridItem[] = profileRes.ok
     ? ((await profileRes.json()) as { releases: ReleaseGridItem[] }).releases
     : []
+  const showSupport = tiersRes.ok
+    ? await tiersRes
+        .json()
+        .then((data: { tiers?: unknown[]; paymentsReady?: boolean }) =>
+          Boolean(data.paymentsReady && Array.isArray(data.tiers) && data.tiers.length > 0),
+        )
+        .catch(() => false)
+    : false
 
   const items: ArchiveItem[] = itemsRes.ok ? ((await itemsRes.json()) as ArchiveItem[]) : []
   const ranks: Record<string, number> =
@@ -318,17 +328,14 @@ export default async function ChannelPage({ params }: { params: { slug: string }
           <div className="ch-page-content">
             <ChannelColorScheme colorSchemeJson={channel.colorSchemeJson} />
 
-            {channel.visualPreset && channel.visualPreset !== 'MINIMAL' && (
-              <ChannelVisualizer
-                preset={channel.visualPreset as VisualPreset}
-                colorSchemeJson={channel.colorSchemeJson}
-                settings={resolveVisualPresetSettings(
-                  parseVisualSettingsMap(channel.visualSettingsJson),
-                  channel.visualPreset as VisualPreset,
-                )}
-                className="ch-page-visualizer"
-              />
-            )}
+            <ChannelPageVisualizer
+              preset={(channel.visualPreset ?? 'MINIMAL') as VisualPreset}
+              colorSchemeJson={channel.colorSchemeJson}
+              settings={resolveVisualPresetSettings(
+                parseVisualSettingsMap(channel.visualSettingsJson),
+                (channel.visualPreset ?? 'MINIMAL') as VisualPreset,
+              )}
+            />
 
             <div className="ch-page-foreground">
               {channelBackdrop.videoEmbedUrl && (
@@ -376,31 +383,27 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                 </Row>
                 <div className="ch-artist-cta-row">
                   {user?.username !== channel.user.username && (
-                    <>
-                      <FollowButton artistUsername={channel.user.username} />
-                      <SendMessageButton artistUsername={channel.user.username} />
-                    </>
+                    <FollowButton artistUsername={channel.user.username} />
                   )}
-                  <Link
-                    href={`/u/${channel.user.username}/subscribe`}
-                    className="ch-artist-sub-btn"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
-                      <path d="M8 13.8 2.6 8.7C1 7.2 1 4.7 2.6 3.3c1.5-1.3 3.7-1 5 .5L8 4.3l.4-.5c1.3-1.5 3.5-1.8 5-.5 1.6 1.4 1.6 3.9 0 5.4L8 13.8z" />
-                    </svg>
-                    Support directly
-                  </Link>
+                  {showSupport && (
+                    <Link
+                      href={`/u/${channel.user.username}/subscribe`}
+                      className="ch-artist-sub-btn"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                        aria-hidden
+                      >
+                        <path d="M8 13.8 2.6 8.7C1 7.2 1 4.7 2.6 3.3c1.5-1.3 3.7-1 5 .5L8 4.3l.4-.5c1.3-1.5 3.5-1.8 5-.5 1.6 1.4 1.6 3.9 0 5.4L8 13.8z" />
+                      </svg>
+                      Support
+                    </Link>
+                  )}
                   <Link href={`/u/${channel.user.username}`} className="ch-artist-profile-link">
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-                      <circle cx="8" cy="5.5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
-                      <path
-                        d="M3 13.5c0-2.5 2.2-4.5 5-4.5s5 2 5 4.5"
-                        stroke="currentColor"
-                        strokeWidth="1.3"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    View profile
+                    Profile
                   </Link>
                 </div>
               </header>
@@ -452,18 +455,31 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                             ? `/u/${channel.nowPlaying.artistUsername}`
                             : undefined
                         }
-                        artworkUrl={isRotationChannel ? channel.nowPlaying?.artworkUrl : undefined}
+                        artworkUrl={
+                          isRotationChannel
+                            ? channel.nowPlaying?.artworkUrl
+                            : channel.user.avatarUrl
+                        }
                         isReplay={isRotationChannel}
                         nextUpLabel={
                           isRotationChannel && channel.nowPlayingNext
                             ? `${channel.nowPlayingNext.title} — ${channel.nowPlayingNext.artistName}`
                             : undefined
                         }
+                        isRotationChannel={isRotationChannel}
+                        colorSchemeJson={channel.colorSchemeJson}
+                        visualPreset={(channel.visualPreset ?? 'MINIMAL') as VisualPreset}
+                        visualSettingsJson={channel.visualSettingsJson}
+                        initialNowPlaying={channel.nowPlaying}
+                        initialNowPlayingNext={channel.nowPlayingNext}
                       />
                     )}
 
                     {channel.state === 'LIVE' && <LiveTracklistPanel slug={slug} />}
-
+                  </>
+                }
+                archive={
+                  <>
                     {embeds.length > 0 && (
                       <section className="ch-archive-section">
                         <div className="ch-archive-section-head">
@@ -573,19 +589,11 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                                   <div className="ch-archive-item-meta">
                                     <div className="ch-archive-item-meta-main">
                                       <div className="ch-archive-item-title">{item.title}</div>
-                                      {(item.artistName ||
-                                        (item.credits && item.credits.length > 0)) && (
+                                      {item.artistName ? (
                                         <div className="ch-archive-item-credit">
-                                          {item.artistName ? <span>{item.artistName}</span> : null}
-                                          {item.credits && item.credits.length > 0 ? (
-                                            <span className="ch-archive-item-credit__roles">
-                                              {item.credits
-                                                .map((c) => `${c.role}: ${c.name}`)
-                                                .join(' · ')}
-                                            </span>
-                                          ) : null}
+                                          <span>{item.artistName}</span>
                                         </div>
-                                      )}
+                                      ) : null}
                                     </div>
                                     <div className="ch-archive-item-date">
                                       {new Date(item.createdAt).toLocaleDateString(undefined, {
@@ -598,29 +606,78 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                                     </div>
                                   </div>
                                 </div>
-                                {item.slideshowUrls && item.slideshowUrls.length > 0 && (
-                                  <ArchiveItemGallery
-                                    itemId={item.id}
-                                    images={item.slideshowUrls}
-                                    galleryMode={item.galleryMode ?? 'NONE'}
-                                    audioReactive={Boolean(item.galleryAudioReactive)}
-                                  />
-                                )}
-                                {item.description && (
-                                  <SafePlainText
-                                    text={item.description}
-                                    className="ch-archive-item-desc"
-                                  />
-                                )}
-                                {item.commentary && (
-                                  <SafePlainText
-                                    text={item.commentary}
-                                    className="ch-archive-item-commentary"
-                                  />
-                                )}
-                                {item.tracklist && item.tracklist.length > 0 && (
-                                  <TracklistView entries={item.tracklist} />
-                                )}
+                                {(() => {
+                                  const hasCredits = Boolean(
+                                    item.credits && item.credits.length > 0,
+                                  )
+                                  const hasGallery = Boolean(
+                                    item.slideshowUrls && item.slideshowUrls.length > 0,
+                                  )
+                                  const hasDesc = Boolean(item.description)
+                                  const hasCommentary = Boolean(item.commentary)
+                                  const hasTracklist = Boolean(
+                                    item.tracklist && item.tracklist.length > 0,
+                                  )
+                                  const hasDetails =
+                                    hasCredits ||
+                                    hasGallery ||
+                                    hasDesc ||
+                                    hasCommentary ||
+                                    hasTracklist
+                                  if (!hasDetails) return null
+                                  return (
+                                    <details className="ch-archive-item-details">
+                                      <summary className="ch-archive-item-details__summary">
+                                        Details
+                                      </summary>
+                                      <div className="ch-archive-item-details__body">
+                                        {hasCredits ? (
+                                          <div className="ch-archive-item-credit ch-archive-item-credit--roles">
+                                            {item.credits!.map((c, i) => (
+                                              <span key={`${c.role}-${c.name}-${i}`}>
+                                                {i > 0 ? ' · ' : null}
+                                                {c.role}:{' '}
+                                                {c.artistUsername ? (
+                                                  <a
+                                                    href={`/u/${c.artistUsername}`}
+                                                    className="ch-archive-item-credit__link"
+                                                  >
+                                                    {c.name}
+                                                  </a>
+                                                ) : (
+                                                  c.name
+                                                )}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        ) : null}
+                                        {hasGallery ? (
+                                          <ArchiveItemGallery
+                                            itemId={item.id}
+                                            images={item.slideshowUrls!}
+                                            galleryMode={item.galleryMode ?? 'NONE'}
+                                            audioReactive={Boolean(item.galleryAudioReactive)}
+                                          />
+                                        ) : null}
+                                        {hasDesc ? (
+                                          <SafePlainText
+                                            text={item.description!}
+                                            className="ch-archive-item-desc"
+                                          />
+                                        ) : null}
+                                        {hasCommentary ? (
+                                          <SafePlainText
+                                            text={item.commentary!}
+                                            className="ch-archive-item-commentary"
+                                          />
+                                        ) : null}
+                                        {hasTracklist ? (
+                                          <TracklistView entries={item.tracklist!} />
+                                        ) : null}
+                                      </div>
+                                    </details>
+                                  )
+                                })()}
                                 {item.audioUrl ? (
                                   <ArchiveItemPlayback
                                     channelSlug={slug}
@@ -765,6 +822,15 @@ export default async function ChannelPage({ params }: { params: { slug: string }
                     {posts.length === 0 && events.length === 0 && (
                       <div className="public-empty-card">
                         <p className="public-empty-card__text">No updates yet.</p>
+                        <p className="public-empty-card__hint">
+                          Posts and upcoming shows will land here. Past broadcasts are in Archive.
+                        </p>
+                        <Link
+                          href={`/u/${channel.user.username}`}
+                          className="public-empty-card__cta"
+                        >
+                          View profile →
+                        </Link>
                       </div>
                     )}
                   </>

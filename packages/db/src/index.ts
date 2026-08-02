@@ -30,5 +30,6 @@ export {
   notifyArtistOfNewRepost,
   notifyPlaylistOfNewTrack,
   notifyUserOfNewMessage,
+  notifyUsersOfChatMention,
   processScheduledPostNotifications,
 } from './notifications.js'

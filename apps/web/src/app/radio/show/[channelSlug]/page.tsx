@@ -9,6 +9,7 @@ import { getSessionUser } from '@/lib/session'
 import { renderBio } from '@/lib/render-bio'
 import { fetchRadioShow, type RadioShowEpisode } from '../../actions'
 import { formatShowTime } from '../../upcoming-shows'
+import { ShowOwnerGoLiveCta } from './_owner-go-live-cta'
 
 export async function generateMetadata({
   params,
@@ -33,7 +34,10 @@ function EpisodeList({ episodes, emptyText }: { episodes: RadioShowEpisode[]; em
       {episodes.map((ep) => (
         <li key={ep.id} className="ch-radio-upcoming__item">
           <div className="ch-radio-upcoming__body">
-            <span className="ch-radio-upcoming__artist">{formatShowTime(ep.startAt)}</span>
+            <span className="ch-radio-upcoming__artist">
+              {formatShowTime(ep.startAt)}
+              {ep.showType === 'TALK' ? ' · Talk' : ''}
+            </span>
             {ep.note && <span className="ch-radio-upcoming__note">{ep.note}</span>}
           </div>
         </li>
@@ -52,6 +56,7 @@ export default async function RadioShowPage({
   if (!show) notFound()
 
   const bioHtml = show.artist.bio ? await renderBio(show.artist.bio) : null
+  const isShowOwner = user?.channelSlug != null && user.channelSlug === show.artist.channelSlug
 
   return (
     <>
@@ -78,12 +83,21 @@ export default async function RadioShowPage({
                       <Link href={`/u/${show.artist.username}`}>view artist profile</Link>
                     </Text>
                     {(show.nextShowAt || show.lastShowAt) && (
-                      <Text size="sm" tone="muted" className="studio-mt-xs">
+                      <Text size="sm" tone="muted" className="ch-radio-show-meta">
                         {show.nextShowAt ? `Next ${formatShowTime(show.nextShowAt)}` : null}
                         {show.nextShowAt && show.lastShowAt ? ' · ' : null}
                         {show.lastShowAt ? `Last ${formatShowTime(show.lastShowAt)}` : null}
                       </Text>
                     )}
+                    {isShowOwner && user ? (
+                      <ShowOwnerGoLiveCta
+                        initialChannelState={user.channelState}
+                        episodes={show.upcomingEpisodes.map((ep) => ({
+                          startAt: ep.startAt,
+                          endAt: ep.endAt,
+                        }))}
+                      />
+                    ) : null}
                   </div>
                 </Row>
                 {bioHtml ? (

@@ -5,7 +5,6 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { AddToPlaylistButton } from '../../dashboard/_add-to-playlist-button'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? ''
 
@@ -90,6 +89,11 @@ export function TracksTab({ tracks, isOwner }: { tracks: TrackTabItem[]; isOwner
         <div className="prof-sec-label">Tracks</div>
         <div className="prof-sec-label-row__actions">
           <div className="prof-sec-count">{tracks.length} total</div>
+          {isOwner && (
+            <Link href="/dashboard/archive" className="prof-tracks-studio-link">
+              Manage in Studio
+            </Link>
+          )}
         </div>
       </div>
       <div className="prof-tracks-sort" role="group" aria-label="Sort tracks">
@@ -134,38 +138,26 @@ export function TracksTab({ tracks, isOwner }: { tracks: TrackTabItem[]; isOwner
                   {t.pinned && ' · Pinned'}
                 </div>
               </div>
-              {isOwner && (
+              {isOwner && mode === 'manual' && (
                 <div className="prof-tracks-owner-actions">
-                  <Link href="/dashboard/archive" className="ui-btn ui-btn--sm ui-btn--ghost">
-                    Edit
-                  </Link>
-                  <AddToPlaylistButton archiveItemId={t.id} />
-                  <Link
-                    href={`/dashboard/insights/archive/${t.id}`}
-                    className="ui-btn ui-btn--sm ui-btn--ghost"
-                  >
-                    Show insights
-                  </Link>
-                  {mode === 'manual' && (
-                    <div className="prof-tracks-reorder">
-                      <button
-                        type="button"
-                        onClick={() => move(i, -1)}
-                        disabled={i === 0}
-                        aria-label={`Move ${t.title} up`}
-                      >
-                        ↑
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => move(i, 1)}
-                        disabled={i === visible.length - 1}
-                        aria-label={`Move ${t.title} down`}
-                      >
-                        ↓
-                      </button>
-                    </div>
-                  )}
+                  <div className="prof-tracks-reorder">
+                    <button
+                      type="button"
+                      onClick={() => move(i, -1)}
+                      disabled={i === 0}
+                      aria-label={`Move ${t.title} up`}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => move(i, 1)}
+                      disabled={i === visible.length - 1}
+                      aria-label={`Move ${t.title} down`}
+                    >
+                      ↓
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

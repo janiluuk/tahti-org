@@ -41,7 +41,8 @@ export function SmartLinkReleaseDetails({
   return (
     <>
       {hasCredits ? (
-        <div className="sl-panel">
+        <details className="sl-panel sl-panel--credits">
+          <summary className="sl-panel-summary">Credits &amp; IDs</summary>
           {upc ? (
             <div className="sl-panel-row">
               <strong>UPC:</strong> {upc}
@@ -68,7 +69,7 @@ export function SmartLinkReleaseDetails({
               <a href={discogsUrl}>View on Discogs</a>
             </div>
           ) : null}
-        </div>
+        </details>
       ) : null}
 
       {featuredCollections && featuredCollections.length > 0 ? (

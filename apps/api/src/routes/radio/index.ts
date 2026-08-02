@@ -241,6 +241,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
             startAt: r.startAt.toISOString(),
             endAt: r.endAt.toISOString(),
             note: r.note,
+            showType: r.showType,
             coverUrl: r.channel.streamOverlayCoverUrl,
             colorScheme: slotColorScheme(
               r.channel.colorSchemeJson,
@@ -299,20 +300,27 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           where: { channelId: channel.id, endAt: { lte: now } },
           orderBy: { startAt: 'desc' },
           take: 50,
-          select: { id: true, startAt: true, endAt: true, note: true },
+          select: { id: true, startAt: true, endAt: true, note: true, showType: true },
         }),
         fastify.prisma.radioSlotBooking.findMany({
           where: { channelId: channel.id, endAt: { gt: now } },
           orderBy: { startAt: 'asc' },
-          select: { id: true, startAt: true, endAt: true, note: true },
+          select: { id: true, startAt: true, endAt: true, note: true, showType: true },
         }),
       ])
 
-      const toEpisode = (r: { id: string; startAt: Date; endAt: Date; note: string | null }) => ({
+      const toEpisode = (r: {
+        id: string
+        startAt: Date
+        endAt: Date
+        note: string | null
+        showType: 'LIVE_SET' | 'TALK'
+      }) => ({
         id: r.id,
         startAt: r.startAt.toISOString(),
         endAt: r.endAt.toISOString(),
         note: r.note,
+        showType: r.showType,
       })
 
       return reply.send({

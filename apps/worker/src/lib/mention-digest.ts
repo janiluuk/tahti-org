@@ -18,6 +18,7 @@ const SURFACE_LABEL: Record<MentionSurface, string> = {
   RELEASE: 'release credits',
   NEWSLETTER: 'a newsletter draft',
   TRACKLIST: 'a tracklist',
+  CHAT: 'live chat',
 }
 
 let _transport: nodemailer.Transporter | null = null
