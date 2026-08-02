@@ -476,8 +476,18 @@ enum NotificationType {
   NEW_RELEASE
   /// Someone @mentioned you in a channel live chat.
   CHAT_MENTION
+  /// Board rejected a Tahti Radio track submission (only when a note is provided).
+  RADIO_SUBMISSION_REJECTED
 
   @@schema("core")
+}
+
+enum RadioSubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+
+  @@schema("channel")
 }
 
 enum CollectionType {
@@ -731,6 +741,8 @@ model User {
   moderatorOf             ChannelModerator[]
   greenRoomInvites        BroadcastGreenRoomInvite[]
   curatedRotationItemsAdded CuratedRotationItem[]
+  radioSubmissionBatches    RadioTrackSubmissionBatch[] @relation("RadioSubmissionSubmitter")
+  radioSubmissionsReviewed  RadioTrackSubmissionItem[]  @relation("RadioSubmissionReviewer")
   events                  ArtistEvent[]
   posts                   ArtistPost[]
   embeds                  ArtistEmbed[]
@@ -1123,6 +1135,7 @@ model Channel {
   radioFeatureLogs  RadioFeatureLog[]
   radioPlayLogs     RadioPlayLog[]
   curatedRotationItems CuratedRotationItem[]
+  radioSubmissionBatches RadioTrackSubmissionBatch[]
   comments          Comment[]
   pressKitImages    PressKitImage[]
   radioSlotBookings RadioSlotBooking[]
@@ -1397,6 +1410,7 @@ model ArchiveItem {
   collectionItems CollectionItem[]
   versions        ArchiveItemVersion[]
   curatedRotationItems CuratedRotationItem[]
+  radioSubmissions     RadioTrackSubmissionItem[]
   comments        Comment[]
   likes           ArchiveItemLike[]
   reposts         ArchiveItemRepost[]
@@ -1545,6 +1559,42 @@ model CuratedRotationItem {
 
   @@unique([channelId, archiveItemId])
   @@index([channelId, position])
+  @@schema("channel")
+}
+
+/// Artist submits up to 5 READY archive tracks at once for Tahti Radio audit.
+model RadioTrackSubmissionBatch {
+  id          String                     @id @default(cuid())
+  submitterId String
+  submitter   User                       @relation("RadioSubmissionSubmitter", fields: [submitterId], references: [id], onDelete: Cascade)
+  channelId   String
+  channel     Channel                    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  note        String?
+  createdAt   DateTime                   @default(now())
+  items       RadioTrackSubmissionItem[]
+
+  @@index([createdAt(sort: Desc)])
+  @@index([submitterId, createdAt(sort: Desc)])
+  @@schema("channel")
+}
+
+model RadioTrackSubmissionItem {
+  id              String                @id @default(cuid())
+  batchId         String
+  batch           RadioTrackSubmissionBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  archiveItemId   String
+  archiveItem     ArchiveItem           @relation(fields: [archiveItemId], references: [id], onDelete: Cascade)
+  positionInBatch Int
+  status          RadioSubmissionStatus @default(PENDING)
+  rejectionNote   String?
+  reviewedById    String?
+  reviewedBy      User?                 @relation("RadioSubmissionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt      DateTime?
+  createdAt       DateTime              @default(now())
+
+  @@unique([batchId, archiveItemId])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([archiveItemId, status])
   @@schema("channel")
 }
 

@@ -65,6 +65,22 @@ const NAV = [
     ),
   },
   {
+    href: '/admin/radio-submissions',
+    label: 'Radio submissions',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <path d="M4 3.5h8v9H4z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+        <path
+          d="M6.5 7.5 8 9l2.5-3"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
     href: '/admin/news',
     label: 'News',
     icon: (

@@ -4,6 +4,7 @@
 import { redirect } from 'next/navigation'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { TahtiRadioPanel } from '../../tahti-radio-panel'
+import { RadioSubmitPanel } from '../../_radio-submit-panel'
 import AnnouncementsPanel from '../../announcements-panel'
 
 export default async function DistributionSettingsPage() {
@@ -36,6 +37,7 @@ export default async function DistributionSettingsPage() {
       </div>
 
       <TahtiRadioPanel />
+      <RadioSubmitPanel />
       <AnnouncementsPanel initial={announcements} />
     </div>
   )
