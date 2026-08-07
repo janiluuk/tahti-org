@@ -16,18 +16,26 @@ export async function createPasswordSetupToken(prisma: PrismaClient, userId: str
   return token
 }
 
-export async function findActivePasswordSetupToken(
+/** One query for every userId instead of one round trip each, keeping the most
+ * recent active (unused, unexpired) token per user. */
+export async function findActivePasswordSetupTokens(
   prisma: PrismaClient,
-  userId: string,
-): Promise<string | null> {
-  const row = await prisma.passwordSetup.findFirst({
+  userIds: string[],
+): Promise<Map<string, string>> {
+  const tokens = new Map<string, string>()
+  if (userIds.length === 0) return tokens
+
+  const rows = await prisma.passwordSetup.findMany({
     where: {
-      userId,
+      userId: { in: userIds },
       usedAt: null,
       expiresAt: { gt: new Date() },
     },
     orderBy: { createdAt: 'desc' },
-    select: { token: true },
+    select: { userId: true, token: true },
   })
-  return row?.token ?? null
+  for (const row of rows) {
+    if (!tokens.has(row.userId)) tokens.set(row.userId, row.token)
+  }
+  return tokens
 }

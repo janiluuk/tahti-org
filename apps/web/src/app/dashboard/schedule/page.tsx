@@ -13,12 +13,33 @@ export default async function SchedulePage() {
   const sessionValue = dashboardSessionCookie()
   if (!sessionValue) redirect('/login?next=/dashboard/schedule')
 
-  const user = await getDashboardUser()
+  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
+
+  type ChannelScheduleResponse = {
+    nextBroadcastAt: string | null
+    nextBroadcastNote: string | null
+  }
+  const emptyChannelSchedule: ChannelScheduleResponse = {
+    nextBroadcastAt: null,
+    nextBroadcastNote: null,
+  }
+
+  const [user, { data }, channelSchedule] = await Promise.all([
+    getDashboardUser(),
+    fetchChannelProgramme(),
+    fetch(`${apiUrl}/api/me/channel/schedule`, {
+      headers: { Cookie: `tahti_session=${sessionValue}` },
+      cache: 'no-store',
+    })
+      .then((res) =>
+        res.ok ? (res.json() as Promise<ChannelScheduleResponse>) : emptyChannelSchedule,
+      )
+      .catch(() => emptyChannelSchedule),
+  ])
+
   if (!user) redirect('/login?next=/dashboard/schedule')
   if (!user.channel) redirect('/dashboard/setup-channel')
 
-  const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const { data } = await fetchChannelProgramme()
   const initial = data ?? {
     fallbackMode: 'shuffle' as const,
     fallbackEnabled: true,
@@ -28,20 +49,6 @@ export default async function SchedulePage() {
     library: [],
   }
   const isLive = user.channel.state === 'LIVE'
-
-  let channelSchedule: { nextBroadcastAt: string | null; nextBroadcastNote: string | null } = {
-    nextBroadcastAt: null,
-    nextBroadcastNote: null,
-  }
-  try {
-    const res = await fetch(`${apiUrl}/api/me/channel/schedule`, {
-      headers: { Cookie: `tahti_session=${sessionValue}` },
-      cache: 'no-store',
-    })
-    if (res.ok) channelSchedule = (await res.json()) as typeof channelSchedule
-  } catch {
-    // render with partial data
-  }
 
   return (
     <PageShell size="lg" className="studio-channel-editor-page">

@@ -73,28 +73,30 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     async (_request, reply) => {
-      const latest = await Promise.all(
-        WORKER_CRON_JOBS.map(async (spec) => {
-          const run = await fastify.prisma.cronRun.findFirst({
-            where: { jobName: spec.name },
-            orderBy: { startedAt: 'desc' },
-          })
-          return {
-            jobName: spec.name,
-            description: spec.description,
-            pattern: spec.pattern ?? `every ${spec.everyMs}ms`,
-            lastRun: run
-              ? {
-                  id: run.id.toString(),
-                  startedAt: run.startedAt,
-                  finishedAt: run.finishedAt,
-                  outcome: run.outcome,
-                  errorMessage: run.errorMessage,
-                }
-              : null,
-          }
-        }),
-      )
+      const latestRuns = await fastify.prisma.cronRun.findMany({
+        where: { jobName: { in: WORKER_CRON_JOBS.map((spec) => spec.name) } },
+        orderBy: [{ jobName: 'asc' }, { startedAt: 'desc' }],
+        distinct: ['jobName'],
+      })
+      const latestByJobName = new Map(latestRuns.map((run) => [run.jobName, run]))
+
+      const latest = WORKER_CRON_JOBS.map((spec) => {
+        const run = latestByJobName.get(spec.name)
+        return {
+          jobName: spec.name,
+          description: spec.description,
+          pattern: spec.pattern ?? `every ${spec.everyMs}ms`,
+          lastRun: run
+            ? {
+                id: run.id.toString(),
+                startedAt: run.startedAt,
+                finishedAt: run.finishedAt,
+                outcome: run.outcome,
+                errorMessage: run.errorMessage,
+              }
+            : null,
+        }
+      })
       return reply.send(latest)
     },
   )

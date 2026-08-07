@@ -83,7 +83,7 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
   const cookie = `tahti_session=${sessionCookie.value}`
 
-  const [plays, topTracks, topCountries, grantEstimate, allDaily] = await Promise.all([
+  const [plays, topTracks, topCountries, grantEstimate, allDaily, user] = await Promise.all([
     apiFetch<PlaysPayload>(apiUrl, cookie, `/api/me/stats/plays?range=${range}`),
     apiFetch<{ items: TopTrack[] }>(apiUrl, cookie, `/api/me/stats/top-tracks?range=${range}`),
     apiFetch<{ items: TopCountry[] }>(apiUrl, cookie, `/api/me/stats/top-countries?range=${range}`),
@@ -91,6 +91,7 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
     range === 'all'
       ? null
       : apiFetch<PlaysPayload>(apiUrl, cookie, '/api/me/stats/plays?range=all'),
+    getDashboardUser(),
   ])
 
   const totalPlays = plays?.totalPlays ?? 0
@@ -128,7 +129,6 @@ export default async function StatsPage({ searchParams }: { searchParams: { rang
   const hasEnoughHistory = periodDays != null && comparisonDaily.length >= periodDays * 2
 
   const hasData = totalPlays > 0 || tracks.length > 0 || countries.length > 0
-  const user = await getDashboardUser()
 
   return (
     <PageShell size="md">

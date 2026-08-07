@@ -136,26 +136,25 @@ const meEditorProjectRoutes: FastifyPluginAsync = async (fastify) => {
       const seedId = timeline.seedArchiveItemId
       if (typeof seedId === 'string') archiveIds.add(seedId)
 
-      const sources: Array<{
+      type EditorProjectSource = {
         archiveItemId: string
         title: string
         url: string
         durationSec: number | null
-      }> = []
-
-      for (const archiveItemId of archiveIds) {
-        const item = await ownedArchiveItem(user.id, archiveItemId)
-        if (!item) continue
-        const source = await resolveArchiveEditorSource(fastify.prisma, archiveItemId)
-        if (!source) continue
-        const url = await presignedGetUrl(source.sourceKey, 3600)
-        sources.push({
-          archiveItemId,
-          title: item.title,
-          url,
-          durationSec: source.durationSec,
-        })
       }
+
+      const resolvedSources = await Promise.all(
+        Array.from(archiveIds).map(async (archiveItemId): Promise<EditorProjectSource | null> => {
+          const [item, source] = await Promise.all([
+            ownedArchiveItem(user.id, archiveItemId),
+            resolveArchiveEditorSource(fastify.prisma, archiveItemId),
+          ])
+          if (!item || !source) return null
+          const url = await presignedGetUrl(source.sourceKey, 3600)
+          return { archiveItemId, title: item.title, url, durationSec: source.durationSec }
+        }),
+      )
+      const sources = resolvedSources.filter((s): s is EditorProjectSource => s !== null)
 
       return reply.send({
         id: project.id,

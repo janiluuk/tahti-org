@@ -93,16 +93,16 @@ async function checkHttp(id: string, url: string, critical: boolean): Promise<De
 }
 
 export async function runDependencyChecks(prisma: PrismaClient): Promise<DependencyCheck[]> {
-  const [postgres, redis, minio, centrifugo, orchestrator] = await Promise.all([
+  const icecastUrl = config.icecastBaseUrl.replace(/\/$/, '')
+
+  const [postgres, redis, minio, centrifugo, orchestrator, icecast] = await Promise.all([
     checkPostgres(prisma),
     checkRedis(),
     checkMinio(),
     checkHttp('centrifugo', centrifugoHealthUrl(), false),
     checkHttp('orchestrator', `${config.orchestratorUrl.replace(/\/$/, '')}/health`, false),
+    checkHttp('icecast', `${icecastUrl}/status-json.xsl`, false),
   ])
-
-  const icecastUrl = config.icecastBaseUrl.replace(/\/$/, '')
-  const icecast = await checkHttp('icecast', `${icecastUrl}/status-json.xsl`, false)
 
   return [postgres, redis, minio, centrifugo, orchestrator, icecast]
 }

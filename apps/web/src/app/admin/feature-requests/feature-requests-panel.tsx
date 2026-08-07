@@ -24,13 +24,9 @@ export type AdminFeatureRequestRow = {
   createdAt: string
 }
 
-function RowActions({
-  row,
-  allRows,
-}: {
-  row: AdminFeatureRequestRow
-  allRows: AdminFeatureRequestRow[]
-}) {
+const MERGE_TARGETS_LIST_ID = 'admin-feature-request-merge-targets'
+
+function RowActions({ row }: { row: AdminFeatureRequestRow }) {
   const router = useRouter()
   const [note, setNote] = useState('')
   const [mergeTarget, setMergeTarget] = useState('')
@@ -116,20 +112,11 @@ function RowActions({
           </div>
           <div className="admin-beta-action-row">
             <input
-              list={`merge-targets-${row.id}`}
+              list={MERGE_TARGETS_LIST_ID}
               placeholder="Merge into (paste request id)"
               value={mergeTarget}
               onChange={(e) => setMergeTarget(e.target.value)}
             />
-            <datalist id={`merge-targets-${row.id}`}>
-              {allRows
-                .filter((r) => r.id !== row.id)
-                .map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.title}
-                  </option>
-                ))}
-            </datalist>
             <Button
               size="sm"
               variant="ghost"
@@ -153,6 +140,13 @@ export function FeatureRequestsPanel({ rows }: { rows: AdminFeatureRequestRow[] 
 
   return (
     <div className="admin-table-wrap">
+      <datalist id={MERGE_TARGETS_LIST_ID}>
+        {rows.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.title}
+          </option>
+        ))}
+      </datalist>
       <table className="admin-table">
         <thead>
           <tr>
@@ -181,7 +175,7 @@ export function FeatureRequestsPanel({ rows }: { rows: AdminFeatureRequestRow[] 
               </td>
               <td className={r.status === 'OPEN' ? 'admin-warn' : ''}>{r.status}</td>
               <td>
-                <RowActions row={r} allRows={rows} />
+                <RowActions row={r} />
               </td>
             </tr>
           ))}

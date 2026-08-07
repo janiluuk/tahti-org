@@ -74,6 +74,26 @@ export async function buildGrantPreview(
   const start = new Date(Date.UTC(year, 0, 1))
   const end = new Date(Date.UTC(year + 1, 0, 1))
 
+  // Batch the DOMINANT_IP anomaly check across every artist's channel in one
+  // query instead of one `download.findMany` per artist — this runs on every
+  // board view of the grant preview, not just the annual disbursement run.
+  const channelIds = users.map((u) => u.channel?.id).filter((id): id is string => Boolean(id))
+  const ipCounts = channelIds.length
+    ? await prisma.download.groupBy({
+        by: ['channelId', 'byIpHash'],
+        where: { channelId: { in: channelIds }, countedAt: { gte: start, lt: end } },
+        _count: { _all: true },
+      })
+    : []
+  const downloadStatsByChannel = new Map<string, { total: number; topIpCount: number }>()
+  for (const row of ipCounts) {
+    const count = row._count._all
+    const stats = downloadStatsByChannel.get(row.channelId) ?? { total: 0, topIpCount: 0 }
+    stats.total += count
+    if (count > stats.topIpCount) stats.topIpCount = count
+    downloadStatsByChannel.set(row.channelId, stats)
+  }
+
   const artists: GrantPreviewArtist[] = []
 
   for (const row of unitRows) {
@@ -95,24 +115,14 @@ export async function buildGrantPreview(
     }
 
     const channelId = user?.channel?.id
-    if (channelId) {
-      const counted = await prisma.download.findMany({
-        where: { channelId, countedAt: { gte: start, lt: end } },
-        select: { byIpHash: true },
-      })
-      if (counted.length >= DOMINANT_IP_MIN_COUNTED) {
-        const byIp = new Map<string, number>()
-        for (const d of counted) {
-          byIp.set(d.byIpHash, (byIp.get(d.byIpHash) ?? 0) + 1)
-        }
-        const top = [...byIp.values()].sort((a, b) => b - a)[0] ?? 0
-        const pct = top / counted.length
-        if (pct >= DOMINANT_IP_PCT) {
-          anomalies.push({
-            code: 'DOMINANT_IP',
-            message: `One IP hash accounts for ${Math.round(pct * 100)}% of counted downloads (${top}/${counted.length})`,
-          })
-        }
+    const stats = channelId ? downloadStatsByChannel.get(channelId) : undefined
+    if (stats && stats.total >= DOMINANT_IP_MIN_COUNTED) {
+      const pct = stats.topIpCount / stats.total
+      if (pct >= DOMINANT_IP_PCT) {
+        anomalies.push({
+          code: 'DOMINANT_IP',
+          message: `One IP hash accounts for ${Math.round(pct * 100)}% of counted downloads (${stats.topIpCount}/${stats.total})`,
+        })
       }
     }
 

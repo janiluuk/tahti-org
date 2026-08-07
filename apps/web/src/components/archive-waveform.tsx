@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 
 export interface WaveformMarker {
   id: string
@@ -40,17 +40,21 @@ export function ArchiveWaveform({
 }) {
   const [dragRatio, setDragRatio] = useState<number | null>(null)
 
+  const bars = useMemo(
+    () =>
+      peaks?.map((peak, i) => (
+        <span
+          key={i}
+          className="ch-archive-wf-bar"
+          style={{ ['--h' as string]: `${Math.max(4, Math.round((peak / 255) * 100))}%` }}
+        />
+      )),
+    [peaks],
+  )
+
   if (!peaks || peaks.length === 0) return null
 
   const displayProgress = dragRatio ?? progress
-
-  const bars = peaks.map((peak, i) => (
-    <span
-      key={i}
-      className="ch-archive-wf-bar"
-      style={{ ['--h' as string]: `${Math.max(4, Math.round((peak / 255) * 100))}%` }}
-    />
-  ))
 
   function handlePointerDown(e: ReactMouseEvent<HTMLDivElement>) {
     if (!onSeek) return

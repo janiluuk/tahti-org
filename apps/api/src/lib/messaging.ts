@@ -107,25 +107,29 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
     orderBy: { conversation: { updatedAt: 'desc' } },
   })
 
-  const unreadCounts = await Promise.all(
-    memberships.map((m) =>
-      prisma.message.count({
-        where: {
-          conversationId: m.conversationId,
-          senderId: { not: userId },
-          ...(m.lastReadAt ? { createdAt: { gt: m.lastReadAt } } : {}),
-        },
-      }),
-    ),
-  )
-
   const otherIds = memberships
     .map((m) => m.conversation.participants[0]?.user.id)
     .filter((id): id is string => Boolean(id))
-  const roles = await resolveChannelStaffRoles(prisma, otherIds)
+
+  const [unreadRows, roles] = await Promise.all([
+    memberships.length > 0
+      ? prisma.$queryRaw<{ conversationId: string; count: bigint }[]>`
+          SELECT cp."conversationId" AS "conversationId", COUNT(m.id)::bigint AS "count"
+          FROM engagement."ConversationParticipant" cp
+          JOIN engagement."Message" m
+            ON m."conversationId" = cp."conversationId"
+            AND m."senderId" != cp."userId"
+            AND (cp."lastReadAt" IS NULL OR m."createdAt" > cp."lastReadAt")
+          WHERE cp."userId" = ${userId}
+          GROUP BY cp."conversationId"
+        `
+      : Promise.resolve([]),
+    resolveChannelStaffRoles(prisma, otherIds),
+  ])
+  const unreadByConversation = new Map(unreadRows.map((r) => [r.conversationId, Number(r.count)]))
 
   return memberships
-    .map((m, i) => {
+    .map((m) => {
       const other = m.conversation.participants[0]?.user
       if (!other) return null
       const last = m.conversation.messages[0]
@@ -139,7 +143,7 @@ export async function listConversations(prisma: PrismaClient, userId: string) {
               createdAt: last.createdAt.toISOString(),
             }
           : null,
-        unreadCount: unreadCounts[i]!,
+        unreadCount: unreadByConversation.get(m.conversationId) ?? 0,
         updatedAt: m.conversation.updatedAt.toISOString(),
       }
     })

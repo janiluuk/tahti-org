@@ -6,7 +6,7 @@
 // Pure presentational SVG choropleth + top-N list, shared by the channel-wide
 // listener map (listener-map-panel.tsx) and per-track insights.
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ComposableMap, Geographies, Geography, Sphere, Graticule } from 'react-simple-maps'
 import { ISO_NUM_TO_A2 } from '@/lib/iso-numeric-to-a2'
 
@@ -31,9 +31,16 @@ export function CountryChoroplethMap({
 }) {
   const [tooltip, setTooltip] = useState<{ name: string; count: number } | null>(null)
 
-  const maxCount = Math.max(1, ...data.map((d) => d.count))
-  const countByCode = Object.fromEntries(data.map((d) => [d.countryCode, d.count]))
-  const nameByCode = Object.fromEntries(data.map((d) => [d.countryCode, d.displayName]))
+  const maxCount = useMemo(() => Math.max(1, ...data.map((d) => d.count)), [data])
+  const countByCode = useMemo(
+    () => Object.fromEntries(data.map((d) => [d.countryCode, d.count])),
+    [data],
+  )
+  const nameByCode = useMemo(
+    () => Object.fromEntries(data.map((d) => [d.countryCode, d.displayName])),
+    [data],
+  )
+  const top10 = useMemo(() => [...data].sort((a, b) => b.count - a.count).slice(0, 10), [data])
 
   function fillForCount(count: number): string {
     const t = count / maxCount
@@ -41,8 +48,6 @@ export function CountryChoroplethMap({
     const pct = Math.round(t * 100)
     return `color-mix(in srgb, var(--cyan) ${Math.max(12, pct)}%, var(--map-fill-empty))`
   }
-
-  const top10 = [...data].sort((a, b) => b.count - a.count).slice(0, 10)
 
   return (
     <>

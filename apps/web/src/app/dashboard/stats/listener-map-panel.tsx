@@ -6,7 +6,18 @@
 // PLAT-065: SVG choropleth world map of listener countries (downloads + HLS plays).
 
 import { useState } from 'react'
-import { CountryChoroplethMap, type GeoPoint } from '@/components/country-choropleth-map'
+import dynamic from 'next/dynamic'
+import type { GeoPoint } from '@/components/country-choropleth-map'
+
+// react-simple-maps (d3-geo/d3-scale) is large — lazy-load it instead of
+// paying for it in the initial dashboard bundle.
+const CountryChoroplethMap = dynamic(
+  () =>
+    import('@/components/country-choropleth-map').then((m) => ({
+      default: m.CountryChoroplethMap,
+    })),
+  { ssr: false },
+)
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 

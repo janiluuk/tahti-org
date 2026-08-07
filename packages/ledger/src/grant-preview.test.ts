@@ -14,17 +14,22 @@ describe('buildGrantPreview', () => {
         findMany: async () => [{ surplus: BigInt(100_000) }],
       },
       download: {
-        groupBy: async () => [
-          { channelId, weight: 1, _count: 90 },
-          { channelId: 'ch-2', weight: 1, _count: 10 },
-        ],
-        findMany: async ({ where }: { where: { channelId: string } }) => {
-          if (where.channelId === 'ch-2') {
-            return Array.from({ length: 5 }, () => ({ byIpHash: 'ip-b' }))
+        groupBy: async (args: { by: string[] }) => {
+          if (args.by.includes('byIpHash')) {
+            // DOMINANT_IP check: ch-1 has 20 counted downloads, 18 from the same
+            // IP hash (90% — over the 40% threshold); ch-2 has 5, below the
+            // 15-download minimum to even consider it.
+            return [
+              { channelId, byIpHash: 'same-ip', _count: { _all: 18 } },
+              { channelId, byIpHash: 'ip-18', _count: { _all: 1 } },
+              { channelId, byIpHash: 'ip-19', _count: { _all: 1 } },
+              { channelId: 'ch-2', byIpHash: 'ip-b', _count: { _all: 5 } },
+            ]
           }
-          return Array.from({ length: 20 }, (_, i) => ({
-            byIpHash: i < 18 ? 'same-ip' : `ip-${i}`,
-          }))
+          return [
+            { channelId, weight: 1, _count: 90 },
+            { channelId: 'ch-2', weight: 1, _count: 10 },
+          ]
         },
       },
       channel: {

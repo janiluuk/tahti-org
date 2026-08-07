@@ -17,13 +17,16 @@ import { requireBoard } from '../../plugins/auth.js'
 import { config } from '../../config.js'
 import { createArtistAccount } from '../../lib/create-artist-account.js'
 import { sendBetaApprovedEmail } from '../../lib/email.js'
-import { createPasswordSetupToken, findActivePasswordSetupToken } from '../../lib/password-setup.js'
+import {
+  createPasswordSetupToken,
+  findActivePasswordSetupTokens,
+} from '../../lib/password-setup.js'
 
 function setupUrl(token: string) {
   return `${config.appUrl}/setup-password?token=${encodeURIComponent(token)}`
 }
 
-async function mapApplicationRow(
+function mapApplicationRow(
   app: {
     id: string
     name: string
@@ -38,13 +41,11 @@ async function mapApplicationRow(
     createdAt: Date
     user: { username: string; passwordHash: string | null } | null
   },
-  prisma: Parameters<typeof findActivePasswordSetupToken>[0],
+  setupTokensByUserId: Map<string, string>,
 ) {
   const hasPassword = Boolean(app.user?.passwordHash)
-  let setupToken: string | null = null
-  if (app.userId && !hasPassword) {
-    setupToken = await findActivePasswordSetupToken(prisma, app.userId)
-  }
+  const setupToken =
+    app.userId && !hasPassword ? (setupTokensByUserId.get(app.userId) ?? null) : null
 
   return {
     id: app.id,
@@ -90,9 +91,14 @@ const adminBetaRoutes: FastifyPluginAsync = async (fastify) => {
         },
       })
 
-      const rows = await Promise.all(
-        applications.map((app) => mapApplicationRow(app, fastify.prisma)),
+      const needsTokenUserIds = applications
+        .filter((app) => app.userId && !app.user?.passwordHash)
+        .map((app) => app.userId!)
+      const setupTokensByUserId = await findActivePasswordSetupTokens(
+        fastify.prisma,
+        needsTokenUserIds,
       )
+      const rows = applications.map((app) => mapApplicationRow(app, setupTokensByUserId))
 
       return reply.send({ applications: rows })
     },

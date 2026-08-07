@@ -79,13 +79,27 @@ export function RadioSlotCalendar({
     }
   }, [weekStart])
 
+  // Precompute the day×hour → booking lookup once per bookings/days change instead
+  // of re-scanning every booking for all 168 grid cells on every render (e.g. each
+  // keystroke in the note field), while keeping the exact same match semantics.
+  const bookingGrid = useMemo(() => {
+    const map = new Map<string, RadioSlotBookingItem>()
+    for (const day of days) {
+      for (const hour of HOURS) {
+        const cellStart = atHour(day, hour).getTime()
+        const found = bookings.find((b) => {
+          const s = new Date(b.startAt).getTime()
+          const e = new Date(b.endAt).getTime()
+          return cellStart >= s && cellStart < e
+        })
+        if (found) map.set(`${day.toDateString()}-${hour}`, found)
+      }
+    }
+    return map
+  }, [days, bookings])
+
   function bookingAt(day: Date, hour: number): RadioSlotBookingItem | undefined {
-    const cellStart = atHour(day, hour).getTime()
-    return bookings.find((b) => {
-      const s = new Date(b.startAt).getTime()
-      const e = new Date(b.endAt).getTime()
-      return cellStart >= s && cellStart < e
-    })
+    return bookingGrid.get(`${day.toDateString()}-${hour}`)
   }
 
   function cancelBooking(id: string) {

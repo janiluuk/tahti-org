@@ -1608,6 +1608,7 @@ model ChatBan {
   bannedAt        DateTime @default(now())
 
   @@unique([channelId, fingerprintHash])
+  @@index([channelId, bannedAt])
   @@schema("chat")
 }
 
@@ -1691,6 +1692,7 @@ model AuditLog {
 
   @@index([actorId, createdAt])
   @@index([action, createdAt])
+  @@index([createdAt])
   @@schema("governance")
 }
 
@@ -1847,6 +1849,7 @@ model Download {
   @@index([byFingerprint, archiveItemId])
   @@index([archiveItemId, createdAt])
   @@index([byIpHash, createdAt])
+  @@index([countedAt])
   @@schema("engagement")
 }
 
@@ -1931,6 +1934,7 @@ model ListenEvent {
 
   @@unique([archiveItemId, dedupeKey, dayBucket])
   @@index([archiveItemId, playedAt])
+  @@index([playedAt])
   @@schema("engagement")
 }
 
@@ -2052,6 +2056,7 @@ model FanSubscription {
   @@unique([artistUserId, subscriberUserId])
   @@index([artistUserId, state])
   @@index([subscriberUserId, state])
+  @@index([state])
   @@schema("fansubs")
 }
 
@@ -2073,6 +2078,8 @@ model FanSubPayout {
 
   @@index([fanSubscriptionId, forPeriodStart])
   @@index([artistUserId, forPeriodStart])
+  @@index([artistUserId, state, paidAt])
+  @@index([state, createdAt])
   @@schema("fansubs")
 }
 
@@ -2323,6 +2330,7 @@ model Venue {
   broadcasts   VenueBroadcast[]
   archiveItems ArchiveItem[]
 
+  @@index([createdBy])
   @@schema("venue")
 }
 

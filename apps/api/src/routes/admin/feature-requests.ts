@@ -45,6 +45,7 @@ const adminFeatureRequestRoutes: FastifyPluginAsync = async (fastify) => {
       const rows = await fastify.prisma.featureRequest.findMany({
         where,
         orderBy: [{ votes: { _count: 'desc' } }, { createdAt: 'desc' }],
+        take: 200,
         include: {
           proposedBy: { select: { displayName: true, username: true } },
           mergedInto: { select: { title: true } },

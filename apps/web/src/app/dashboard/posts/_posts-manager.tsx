@@ -95,23 +95,33 @@ export function PostsManager({ initialPosts }: { initialPosts: ArtistPostView[] 
     let finalPost = created.post
     const postId = created.post.id
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]!
-      if (!ACCEPTED_TYPES.includes(file.type)) continue
-      setStatus(`Uploading image ${i + 1} of ${files.length}…`)
+    const validFiles = files.filter((file) => ACCEPTED_TYPES.includes(file.type))
+    if (validFiles.length > 0) {
+      setStatus(`Uploading ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}…`)
 
-      const prep = await preparePostImageUpload(postId, file.name, file.type)
-      if (prep.error || !prep.uploadUrl || !prep.uploadKey) continue
+      const uploaded = await Promise.all(
+        validFiles.map(async (file) => {
+          const prep = await preparePostImageUpload(postId, file.name, file.type)
+          if (prep.error || !prep.uploadUrl || !prep.uploadKey) return null
 
-      const putRes = await fetch(prep.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      })
-      if (!putRes.ok) continue
+          const putRes = await fetch(prep.uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type },
+            body: file,
+          })
+          if (!putRes.ok) return null
 
-      const complete = await completePostImageUpload(postId, prep.uploadKey)
-      if (complete.post) finalPost = complete.post
+          const complete = await completePostImageUpload(postId, prep.uploadKey)
+          return complete.post ?? null
+        }),
+      )
+
+      // Each upload appends its image atomically (DB array_append), so every
+      // response reflects a valid-but-possibly-partial state — the one with
+      // the most images is the most complete snapshot to show.
+      for (const post of uploaded) {
+        if (post && post.images.length > finalPost.images.length) finalPost = post
+      }
     }
 
     setPosts((prev) => [finalPost, ...prev].sort((a, b) => (a.publishAt < b.publishAt ? 1 : -1)))
