@@ -6124,7 +6124,9 @@
   [data-tahti-ui='studio'] .db-live-dot,
   [data-tahti-ui='studio'] .db-hero__pulse-dot--preview,
   [data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed,
-  [data-tahti-ui='studio'] .broadcast-studio__record-btn.is-armed .broadcast-studio__record-btn__dot {
+  [data-tahti-ui='studio']
+    .broadcast-studio__record-btn.is-armed
+    .broadcast-studio__record-btn__dot {
     animation: none !important;
   }
 }
@@ -10312,6 +10314,130 @@
 [data-tahti-ui='studio'] .broadcast-studio__summary-list dd {
   margin: 0;
   color: var(--text);
+}
+
+/* Audio-readiness panel — shown before "GO LIVE NOW" so the artist can see
+ * their levels moving and knows exactly when to start talking/playing. */
+[data-tahti-ui='studio'] .broadcast-studio__audio-check {
+  max-width: 400px;
+  margin: 0 auto var(--space-5);
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--muted);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  transition: border-left-color 200ms ease;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check--ready {
+  border-left-color: var(--green);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check--checking {
+  border-left-color: var(--cyan);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: var(--border);
+  color: var(--muted);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check--ready .broadcast-studio__audio-check-icon,
+[data-tahti-ui='studio']
+  .broadcast-studio__audio-check--checking
+  .broadcast-studio__audio-check-icon {
+  background: color-mix(in srgb, var(--green) 18%, transparent);
+  color: var(--green);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check-header > div {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__pulse-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--muted);
+  border: 2px solid var(--card2);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check--ready .broadcast-studio__pulse-dot,
+[data-tahti-ui='studio'] .broadcast-studio__audio-check--checking .broadcast-studio__pulse-dot {
+  background: var(--green);
+  animation: audio-check-pulse 1.6s ease-out infinite;
+}
+
+@keyframes audio-check-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--green) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tahti-ui='studio'] .broadcast-studio__audio-check--ready .broadcast-studio__pulse-dot,
+  [data-tahti-ui='studio'] .broadcast-studio__audio-check--checking .broadcast-studio__pulse-dot {
+    animation: none;
+  }
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check-status {
+  margin: 4px 0 2px;
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check-hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check-btn {
+  flex: none;
+  align-self: center;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__audio-check .signal-meters {
+  margin-bottom: 0;
 }
 
 [data-tahti-ui='studio'] .broadcast-studio__summary-accent {

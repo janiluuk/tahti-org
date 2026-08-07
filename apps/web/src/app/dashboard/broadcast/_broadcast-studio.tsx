@@ -106,9 +106,10 @@ export function BroadcastStudio({
     return () => window.clearInterval(id)
   }, [status, activeStep, router])
 
-  // Steps 1-2 (credentials & test signal) poll Icecast's own status JSON for live confirmation.
+  // Steps 1-2 (credentials & test signal) poll Icecast's own status JSON for live
+  // confirmation; step 4 (go live) also polls so its audio-check panel stays fresh.
   useEffect(() => {
-    if (![1, 2].includes(activeStep) || status === 'live') return
+    if (![1, 2, 4].includes(activeStep) || status === 'live') return
     let cancelled = false
     async function poll() {
       try {
@@ -297,7 +298,7 @@ export function BroadcastStudio({
               You are on air — this is exactly what listeners hear.
             </Text>
           ) : isPreview ? (
-            <Step4GoLive />
+            <Step4GoLive signal={signal} hlsUrl={streamSettings.hlsUrl} />
           ) : (
             <Text as="p" tone="muted" size="sm">
               Start streaming in step 1 to unlock going live.
