@@ -101,55 +101,43 @@ export function ArchiveItemPlayback({
           </button>
           <LoveButton channelSlug={channelSlug} itemId={item.id} />
         </div>
-        <details className="ch-archive-more">
-          <summary
-            className="ch-archive-more__summary"
-            title="More actions"
-            aria-label="More actions"
-          >
-            More
-          </summary>
-          <div className="ch-archive-more__menu">
-            <button
-              type="button"
-              className="ch-archive-more__btn"
-              onClick={() => addToQueue(playerTrack)}
-            >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-                <path
-                  d="M2.5 4h11M2.5 8h11M2.5 12h7"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M12 10.5v4M10 12.5h4"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Add to queue
-            </button>
-            <ArchiveDownloadButton
-              channelSlug={channelSlug}
-              artistUsername={artistUsername}
-              itemId={item.id}
-              repostToDownload={Boolean(item.repostToDownload)}
-              followToDownload={Boolean(item.followToDownload)}
-              downloadCount={item.downloadCount ?? 0}
+        <button
+          type="button"
+          className="ch-archive-controls__queue"
+          onClick={() => addToQueue(playerTrack)}
+          title="Add to queue"
+          aria-label="Add to queue"
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+            <path
+              d="M2.5 4h11M2.5 8h11M2.5 12h7"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
             />
-            <RepostButton channelSlug={channelSlug} itemId={item.id} />
-            <TrackCommentsToggle
-              archiveItemId={item.id}
-              isLoggedIn={isLoggedIn}
-              commentCount={item.commentCount ?? 0}
+            <path
+              d="M12 10.5v4M10 12.5h4"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
             />
-            {isCurrent && (
-              <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} variant="icon" />
-            )}
-          </div>
-        </details>
+          </svg>
+        </button>
+        <ArchiveDownloadButton
+          channelSlug={channelSlug}
+          artistUsername={artistUsername}
+          itemId={item.id}
+          repostToDownload={Boolean(item.repostToDownload)}
+          followToDownload={Boolean(item.followToDownload)}
+          downloadCount={item.downloadCount ?? 0}
+        />
+        <RepostButton channelSlug={channelSlug} itemId={item.id} />
+        <TrackCommentsToggle
+          archiveItemId={item.id}
+          isLoggedIn={isLoggedIn}
+          commentCount={item.commentCount ?? 0}
+        />
+        {isCurrent && <ReportButton targetType="ARCHIVE_ITEM" targetId={item.id} variant="icon" />}
       </div>
     </div>
   )

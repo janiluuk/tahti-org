@@ -203,26 +203,33 @@ export function ArchiveList({
                     channelSlug={channelSlug}
                   />
                   {channelSlug && play?.audioUrl && (
-                    <ArchiveItemPlayback
-                      channelSlug={channelSlug}
-                      artistUsername={artistUsername}
-                      artistCredit={play.artistName}
-                      item={{
-                        id: play.id,
-                        title: play.title,
-                        audioUrl: play.audioUrl,
-                        bannerUrl: play.bannerUrl,
-                        peaks: play.peaks,
-                        visualPreset: play.visualPreset,
-                        repostToDownload: play.repostToDownload,
-                        followToDownload: play.followToDownload,
-                        commentCount: play.commentCount,
-                        downloadCount: play.downloadCount,
-                        accentColor: play.accentColor,
-                      }}
-                      isLoggedIn
-                      queue={queue}
-                    />
+                    // ArchiveItemPlayback's classes (ch-archive-*, waveform bars, action
+                    // pill colors) are only styled under the public "brand" design system —
+                    // the dashboard is scoped "studio", so without this wrapper the waveform
+                    // bars render with no size/color at all and only the background particle
+                    // visualizer is visible. Same fix mini-player.tsx uses to work everywhere.
+                    <div data-tahti-ui="brand">
+                      <ArchiveItemPlayback
+                        channelSlug={channelSlug}
+                        artistUsername={artistUsername}
+                        artistCredit={play.artistName}
+                        item={{
+                          id: play.id,
+                          title: play.title,
+                          audioUrl: play.audioUrl,
+                          bannerUrl: play.bannerUrl,
+                          peaks: play.peaks,
+                          visualPreset: play.visualPreset,
+                          repostToDownload: play.repostToDownload,
+                          followToDownload: play.followToDownload,
+                          commentCount: play.commentCount,
+                          downloadCount: play.downloadCount,
+                          accentColor: play.accentColor,
+                        }}
+                        isLoggedIn
+                        queue={queue}
+                      />
+                    </div>
                   )}
                 </div>
               </li>

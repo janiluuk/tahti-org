@@ -104,11 +104,11 @@ export function MusicBrowser({
     return { tracks, djSets }
   }, [items])
 
-  const tabs: Array<{ id: MusicTab; label: string; count: number }> = [
-    { id: 'tracks', label: 'Tracks', count: tracks.length },
-    { id: 'albums', label: 'Albums', count: albums.length },
-    { id: 'dj-sets', label: 'DJ Sets', count: djSets.length },
-    { id: 'collections', label: 'Collections', count: collections.length },
+  const tabs: Array<{ id: MusicTab; label: string; count: number; accent: string }> = [
+    { id: 'tracks', label: 'Tracks', count: tracks.length, accent: 'cyan' },
+    { id: 'albums', label: 'Albums', count: albums.length, accent: 'purple' },
+    { id: 'dj-sets', label: 'DJ Sets', count: djSets.length, accent: 'amber' },
+    { id: 'collections', label: 'Collections', count: collections.length, accent: 'green' },
   ]
 
   return (
@@ -119,7 +119,7 @@ export function MusicBrowser({
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`music-browser__nav-item${tab === t.id ? ' music-browser__nav-item--active' : ''}`}
+            className={`music-browser__nav-item music-browser__nav-item--${t.accent}${tab === t.id ? ' music-browser__nav-item--active' : ''}`}
           >
             <span>{t.label}</span>
             <span className="music-browser__nav-count">{t.count}</span>

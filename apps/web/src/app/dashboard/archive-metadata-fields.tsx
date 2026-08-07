@@ -212,25 +212,23 @@ export function metadataFromApi(item: Record<string, unknown>): ArchiveMetadataF
   }
 }
 
-export function ArchiveMetadataFields({
-  state,
-  onChange,
-  disabled,
-  detectedBpm,
-  detectedKey,
-  itemId,
-}: {
+type SectionProps = {
   state: ArchiveMetadataFormState
   onChange: (next: ArchiveMetadataFormState) => void
   disabled?: boolean
-  detectedBpm?: number | null
-  detectedKey?: string | null
-  itemId?: string
-}) {
+}
+
+/** Essentials — the handful of fields that actually shape how a track shows
+ * up. Everything else has a sane default and lives under "Advanced". */
+export function ArchiveBasicsFields({
+  state,
+  onChange,
+  disabled,
+}: SectionProps & { itemId?: string }) {
   const set = (patch: Partial<ArchiveMetadataFormState>) => onChange({ ...state, ...patch })
 
   return (
-    <div className="studio-grid studio-mt-md">
+    <div className="studio-grid">
       <div className="studio-grid studio-grid--2">
         <label className="studio-field">
           <span className="studio-label">Genre</span>
@@ -262,164 +260,248 @@ export function ArchiveMetadataFields({
         )}
       </div>
 
-      <VenuePicker
-        venueId={state.venueId}
-        disabled={disabled}
-        onChange={(venueId) => set({ venueId })}
-      />
+      <div className="studio-grid studio-grid--2">
+        <label className="studio-field">
+          <span className="studio-label">Type</span>
+          <select
+            value={state.contentType}
+            disabled={disabled}
+            onChange={(e) => set({ contentType: e.target.value })}
+            className="studio-input"
+          >
+            {ARCHIVE_CONTENT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {CONTENT_TYPE_LABELS[t] ?? t}
+              </option>
+            ))}
+          </select>
+          {state.contentType !== 'DJ_MIX' && (
+            <p className="studio-field-note studio-field-note--warning">
+              You must own the rights to this music, or have permission from the rights holder, to
+              publish it here.
+            </p>
+          )}
+        </label>
+        <label className="studio-field">
+          <span className="studio-label">Release date</span>
+          <input
+            type="datetime-local"
+            value={state.releasedAt}
+            disabled={disabled}
+            onChange={(e) => set({ releasedAt: e.target.value })}
+            className="studio-input"
+          />
+        </label>
+      </div>
 
       <label className="studio-field">
-        <span className="studio-label">Release date</span>
-        <input
-          type="datetime-local"
-          value={state.releasedAt}
+        <span className="studio-label">Description</span>
+        <textarea
+          rows={3}
+          placeholder="What is this recording? A line or two is plenty."
+          value={state.description}
           disabled={disabled}
-          onChange={(e) => set({ releasedAt: e.target.value })}
-          className="studio-input"
+          onChange={(e) => set({ description: e.target.value })}
+          className="studio-textarea"
         />
       </label>
+    </div>
+  )
+}
+
+/** Cover art, background, slideshow — everything a listener sees behind the track. */
+export function ArchiveVisualsFields({
+  state,
+  onChange,
+  disabled,
+  itemId,
+}: SectionProps & { itemId?: string }) {
+  const set = (patch: Partial<ArchiveMetadataFormState>) => onChange({ ...state, ...patch })
+
+  return (
+    <div className="studio-grid">
+      {itemId && (
+        <CoverImageUpload
+          currentUrl={state.bannerUrl || null}
+          label="Upload cover image"
+          prepare={(args) => prepareArchiveBannerUpload(itemId, args)}
+          complete={(uploadKey) => completeArchiveBannerUpload(itemId, uploadKey)}
+          fromUrl={(sourceUrl) => fetchArchiveBannerFromUrl(itemId, sourceUrl)}
+          onUploaded={(url) => set({ bannerUrl: url ?? '' })}
+        />
+      )}
+
+      <div className="studio-grid studio-grid--2">
+        <label className="studio-field">
+          <span className="studio-label">Cover image URL</span>
+          <input
+            type="url"
+            value={state.bannerUrl}
+            disabled={disabled}
+            onChange={(e) => set({ bannerUrl: e.target.value })}
+            className="studio-input"
+          />
+        </label>
+        <label className="studio-field">
+          <span className="studio-label">Background URL (image or YouTube/Vimeo)</span>
+          <input
+            type="url"
+            placeholder="https://… or https://youtu.be/…"
+            value={state.backgroundUrl}
+            disabled={disabled}
+            onChange={(e) => set({ backgroundUrl: e.target.value })}
+            className="studio-input"
+          />
+        </label>
+      </div>
 
       <details className="studio-details-block">
-        <summary className="studio-details-block__summary">More details</summary>
+        <summary className="studio-details-block__summary">Slideshow (optional)</summary>
         <div className="studio-details-block__body">
           <label className="studio-field">
-            <span className="studio-label">Recording location notes (optional)</span>
-            <input
-              type="text"
-              placeholder="e.g. backstage, second stage — extra detail beyond the venue"
-              value={state.recordingLocation}
+            <span className="studio-label">Slideshow image URLs (one per line, max 10)</span>
+            <textarea
+              rows={2}
+              placeholder="https://cdn.example/slide1.jpg"
+              value={state.slideshowUrls}
               disabled={disabled}
-              onChange={(e) => set({ recordingLocation: e.target.value })}
-              className="studio-input"
+              onChange={(e) => set({ slideshowUrls: e.target.value })}
+              className="studio-textarea"
             />
           </label>
 
-          <label className="studio-field">
-            <span className="studio-label">Sub-genres (comma-separated)</span>
-            <input
-              type="text"
-              value={state.subGenres}
-              disabled={disabled}
-              onChange={(e) => set({ subGenres: e.target.value })}
-              className="studio-input"
-            />
-          </label>
+          {state.slideshowUrls.trim() && (
+            <>
+              <label className="studio-field">
+                <span className="studio-label">Slideshow transition</span>
+                <select
+                  value={state.galleryMode}
+                  disabled={disabled}
+                  onChange={(e) => set({ galleryMode: e.target.value as ChannelGalleryMode })}
+                  className="studio-input"
+                >
+                  {CHANNEL_GALLERY_MODES.filter((m) => m !== 'STATIC_SLIDESHOW').map((mode) => (
+                    <option key={mode} value={mode}>
+                      {CHANNEL_GALLERY_MODE_LABELS[mode]}
+                    </option>
+                  ))}
+                </select>
+                {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode] && (
+                  <span className="studio-text-muted-sm">
+                    {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode]}
+                  </span>
+                )}
+              </label>
 
-          <div className="studio-grid studio-grid--3">
-            <label className="studio-field">
-              <span className="studio-label">Type</span>
-              <select
-                value={state.contentType}
-                disabled={disabled}
-                onChange={(e) => set({ contentType: e.target.value })}
-                className="studio-input"
-              >
-                {ARCHIVE_CONTENT_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {CONTENT_TYPE_LABELS[t] ?? t}
-                  </option>
-                ))}
-              </select>
-              {state.contentType !== 'DJ_MIX' && (
-                <p className="studio-field-note studio-field-note--warning">
-                  You must own the rights to this music, or have permission from the rights holder,
-                  to publish it here.
-                </p>
+              {isWebGLGalleryMode(state.galleryMode) && (
+                <label className="studio-label-row studio-text-sm studio-mb-sm">
+                  <input
+                    type="checkbox"
+                    checked={state.galleryAudioReactive}
+                    disabled={disabled}
+                    onChange={(e) => set({ galleryAudioReactive: e.target.checked })}
+                  />
+                  Audio-reactive — images pulse with this track&apos;s playback
+                </label>
               )}
-            </label>
-            <label className="studio-field">
-              <span className="studio-label">Version</span>
-              <input
-                type="text"
-                placeholder="Original Mix"
-                value={state.mixVersion}
-                disabled={disabled}
-                onChange={(e) => set({ mixVersion: e.target.value })}
-                className="studio-input"
-              />
-            </label>
-            <label className="studio-field">
-              <span className="studio-label">License</span>
-              <select
-                value={state.license}
-                disabled={disabled}
-                onChange={(e) => set({ license: e.target.value })}
-                className="studio-input"
-              >
-                {ARCHIVE_LICENSES.map((l) => (
-                  <option key={l} value={l}>
-                    {ARCHIVE_LICENSE_LABELS[l]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="studio-grid studio-grid--3">
-            <label className="studio-field">
-              <span className="studio-label">BPM</span>
-              <input
-                type="number"
-                min={40}
-                max={300}
-                placeholder="118"
-                value={state.bpm}
-                disabled={disabled || state.useDetectedBpmKey}
-                onChange={(e) => set({ bpm: e.target.value })}
-                className="studio-input"
-              />
-            </label>
-            <label className="studio-field">
-              <span className="studio-label">Key</span>
-              <input
-                type="text"
-                placeholder="Em"
-                value={state.musicalKey}
-                disabled={disabled || state.useDetectedBpmKey}
-                onChange={(e) => set({ musicalKey: e.target.value })}
-                className="studio-input"
-              />
-            </label>
-            <div />
-          </div>
-
-          <label className="studio-label-row">
-            <input
-              type="checkbox"
-              checked={state.useDetectedBpmKey}
-              disabled={disabled}
-              onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
-            />
-            <span>
-              Use auto-detected BPM &amp; key
-              {(detectedBpm != null || detectedKey) && (
-                <span className="studio-text-muted-sm">
-                  {' '}
-                  —{' '}
-                  {[detectedBpm != null ? `${detectedBpm} BPM` : null, detectedKey ?? null]
-                    .filter(Boolean)
-                    .join(', ')}
-                </span>
-              )}
-            </span>
-          </label>
-          <p className="studio-help studio-mt-xs">
-            Uses embedded file tags when present; otherwise BPM and key are analyzed from the audio
-            (first ~2 minutes for long files).
-          </p>
-
-          <label className="studio-label-row studio-mt-sm">
-            <input
-              type="checkbox"
-              checked={state.isAiGenerated}
-              disabled={disabled}
-              onChange={(e) => set({ isAiGenerated: e.target.checked })}
-            />
-            Produced using AI technology
-          </label>
+            </>
+          )}
         </div>
       </details>
+    </div>
+  )
+}
 
+/** Who can hear it and how they can interact — everything defaults to the
+ * artist-friendly setting (public, comments on, eligible for discovery). */
+export function ArchiveSharingFields({
+  state,
+  onChange,
+  disabled,
+  itemId,
+}: SectionProps & { itemId?: string }) {
+  const set = (patch: Partial<ArchiveMetadataFormState>) => onChange({ ...state, ...patch })
+
+  return (
+    <div className="studio-row studio-row--wrap studio-gap-lg studio-text-sm">
+      <label className="studio-label-row">
+        <input
+          type="checkbox"
+          checked={state.isPublic}
+          disabled={disabled}
+          onChange={(e) => set({ isPublic: e.target.checked })}
+        />
+        Public on channel
+      </label>
+      <label className="studio-label-row">
+        <input
+          type="checkbox"
+          checked={state.repostToDownload}
+          disabled={disabled}
+          onChange={(e) => set({ repostToDownload: e.target.checked })}
+        />
+        Repost to download
+      </label>
+      <label className="studio-label-row">
+        <input
+          type="checkbox"
+          checked={state.followToDownload}
+          disabled={disabled}
+          onChange={(e) => set({ followToDownload: e.target.checked })}
+        />
+        Follow to download
+      </label>
+      <label
+        className="studio-label-row"
+        title="Enter the weekly Tahti Selects rotation draw — up to 3 of your opted-in tracks can be picked per week"
+      >
+        <input
+          type="checkbox"
+          checked={state.selectsOptIn}
+          disabled={disabled}
+          onChange={(e) => set({ selectsOptIn: e.target.checked })}
+        />
+        Eligible for Tahti Selects
+      </label>
+      {itemId && (
+        <label className="studio-label-row">
+          <input
+            type="checkbox"
+            checked={state.commentsEnabled}
+            disabled={disabled}
+            onChange={(e) => set({ commentsEnabled: e.target.checked })}
+          />
+          Allow comments on this track
+        </label>
+      )}
+      {itemId && (
+        <label className="studio-label-row">
+          <input
+            type="checkbox"
+            checked={state.topListsEligible}
+            disabled={disabled}
+            onChange={(e) => set({ topListsEligible: e.target.checked })}
+          />
+          Include in top lists
+        </label>
+      )}
+    </div>
+  )
+}
+
+/** Everything else — venue, BPM/key, license, extra credits, liner notes.
+ * All of it already has a working default, so it's fine to never touch this tab. */
+export function ArchiveAdvancedFields({
+  state,
+  onChange,
+  disabled,
+  detectedBpm,
+  detectedKey,
+}: SectionProps & { detectedBpm?: number | null; detectedKey?: string | null }) {
+  const set = (patch: Partial<ArchiveMetadataFormState>) => onChange({ ...state, ...patch })
+
+  return (
+    <div className="studio-grid">
       <div className="studio-field--block">
         <span className="studio-label">Track credit</span>
         <label className="studio-field">
@@ -522,15 +604,132 @@ export function ArchiveMetadataFields({
         </details>
       </div>
 
-      <label className="studio-field">
-        <span className="studio-label">Description</span>
-        <textarea
-          rows={2}
-          value={state.description}
+      <div className="studio-field--block">
+        <span className="studio-label">Venue &amp; location</span>
+        <p className="studio-help studio-mt-xs studio-mb-sm">
+          Optional — only worth setting for a recording tied to a real show or venue.
+        </p>
+        <VenuePicker
+          venueId={state.venueId}
           disabled={disabled}
-          onChange={(e) => set({ description: e.target.value })}
-          className="studio-textarea"
+          onChange={(venueId) => set({ venueId })}
         />
+        <label className="studio-field studio-mt-sm">
+          <span className="studio-label studio-label--secondary">
+            Extra location notes (optional)
+          </span>
+          <input
+            type="text"
+            placeholder="e.g. backstage, second stage — extra detail beyond the venue"
+            value={state.recordingLocation}
+            disabled={disabled}
+            onChange={(e) => set({ recordingLocation: e.target.value })}
+            className="studio-input"
+          />
+        </label>
+      </div>
+
+      <div className="studio-grid studio-grid--3">
+        <label className="studio-field">
+          <span className="studio-label">Sub-genres</span>
+          <input
+            type="text"
+            placeholder="comma-separated"
+            value={state.subGenres}
+            disabled={disabled}
+            onChange={(e) => set({ subGenres: e.target.value })}
+            className="studio-input"
+          />
+        </label>
+        <label className="studio-field">
+          <span className="studio-label">Version</span>
+          <input
+            type="text"
+            placeholder="Original Mix"
+            value={state.mixVersion}
+            disabled={disabled}
+            onChange={(e) => set({ mixVersion: e.target.value })}
+            className="studio-input"
+          />
+        </label>
+        <label className="studio-field">
+          <span className="studio-label">License</span>
+          <select
+            value={state.license}
+            disabled={disabled}
+            onChange={(e) => set({ license: e.target.value })}
+            className="studio-input"
+          >
+            {ARCHIVE_LICENSES.map((l) => (
+              <option key={l} value={l}>
+                {ARCHIVE_LICENSE_LABELS[l]}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="studio-grid studio-grid--3">
+        <label className="studio-field">
+          <span className="studio-label">BPM</span>
+          <input
+            type="number"
+            min={40}
+            max={300}
+            placeholder="118"
+            value={state.bpm}
+            disabled={disabled || state.useDetectedBpmKey}
+            onChange={(e) => set({ bpm: e.target.value })}
+            className="studio-input"
+          />
+        </label>
+        <label className="studio-field">
+          <span className="studio-label">Key</span>
+          <input
+            type="text"
+            placeholder="Em"
+            value={state.musicalKey}
+            disabled={disabled || state.useDetectedBpmKey}
+            onChange={(e) => set({ musicalKey: e.target.value })}
+            className="studio-input"
+          />
+        </label>
+        <div />
+      </div>
+
+      <label className="studio-label-row">
+        <input
+          type="checkbox"
+          checked={state.useDetectedBpmKey}
+          disabled={disabled}
+          onChange={(e) => set({ useDetectedBpmKey: e.target.checked })}
+        />
+        <span>
+          Use auto-detected BPM &amp; key
+          {(detectedBpm != null || detectedKey) && (
+            <span className="studio-text-muted-sm">
+              {' '}
+              —{' '}
+              {[detectedBpm != null ? `${detectedBpm} BPM` : null, detectedKey ?? null]
+                .filter(Boolean)
+                .join(', ')}
+            </span>
+          )}
+        </span>
+      </label>
+      <p className="studio-help studio-mt-xs">
+        Uses embedded file tags when present; otherwise BPM and key are analyzed from the audio
+        (first ~2 minutes for long files).
+      </p>
+
+      <label className="studio-label-row studio-mt-sm">
+        <input
+          type="checkbox"
+          checked={state.isAiGenerated}
+          disabled={disabled}
+          onChange={(e) => set({ isAiGenerated: e.target.checked })}
+        />
+        Produced using AI technology
       </label>
 
       <details className="studio-details-block">
@@ -560,173 +759,80 @@ export function ArchiveMetadataFields({
           </label>
         </div>
       </details>
+    </div>
+  )
+}
 
-      <details className="studio-details-block">
-        <summary className="studio-details-block__summary">Cover &amp; visuals</summary>
-        <div className="studio-details-block__body studio-grid">
-          {itemId && (
-            <CoverImageUpload
-              currentUrl={state.bannerUrl || null}
-              label="Upload cover image"
-              prepare={(args) => prepareArchiveBannerUpload(itemId, args)}
-              complete={(uploadKey) => completeArchiveBannerUpload(itemId, uploadKey)}
-              fromUrl={(sourceUrl) => fetchArchiveBannerFromUrl(itemId, sourceUrl)}
-              onUploaded={(url) => set({ bannerUrl: url ?? '' })}
-            />
-          )}
+/** Tracklist — its own tab since a multi-track DJ set can have dozens of entries. */
+export function ArchiveTracklistField({ state, onChange, disabled }: SectionProps) {
+  return (
+    <TracklistEditor
+      value={state.tracklist}
+      onChange={(tracklist) => onChange({ ...state, tracklist })}
+      disabled={disabled}
+    />
+  )
+}
 
-          <div className="studio-grid studio-grid--2">
-            <label className="studio-field">
-              <span className="studio-label">Cover image URL</span>
-              <input
-                type="url"
-                value={state.bannerUrl}
-                disabled={disabled}
-                onChange={(e) => set({ bannerUrl: e.target.value })}
-                className="studio-input"
-              />
-            </label>
-            <label className="studio-field">
-              <span className="studio-label">Background URL (image or YouTube/Vimeo)</span>
-              <input
-                type="url"
-                placeholder="https://… or https://youtu.be/…"
-                value={state.backgroundUrl}
-                disabled={disabled}
-                onChange={(e) => set({ backgroundUrl: e.target.value })}
-                className="studio-input"
-              />
-            </label>
-          </div>
-
-          <label className="studio-field">
-            <span className="studio-label">Slideshow image URLs (one per line, max 10)</span>
-            <textarea
-              rows={2}
-              placeholder="https://cdn.example/slide1.jpg"
-              value={state.slideshowUrls}
-              disabled={disabled}
-              onChange={(e) => set({ slideshowUrls: e.target.value })}
-              className="studio-textarea"
-            />
-          </label>
-
-          {state.slideshowUrls.trim() && (
-            <>
-              <label className="studio-field">
-                <span className="studio-label">Slideshow transition</span>
-                <select
-                  value={state.galleryMode}
-                  disabled={disabled}
-                  onChange={(e) => set({ galleryMode: e.target.value as ChannelGalleryMode })}
-                  className="studio-input"
-                >
-                  {CHANNEL_GALLERY_MODES.filter((m) => m !== 'STATIC_SLIDESHOW').map((mode) => (
-                    <option key={mode} value={mode}>
-                      {CHANNEL_GALLERY_MODE_LABELS[mode]}
-                    </option>
-                  ))}
-                </select>
-                {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode] && (
-                  <span className="studio-text-muted-sm">
-                    {CHANNEL_GALLERY_MODE_HINTS[state.galleryMode]}
-                  </span>
-                )}
-              </label>
-
-              {isWebGLGalleryMode(state.galleryMode) && (
-                <label className="studio-label-row studio-text-sm studio-mb-sm">
-                  <input
-                    type="checkbox"
-                    checked={state.galleryAudioReactive}
-                    disabled={disabled}
-                    onChange={(e) => set({ galleryAudioReactive: e.target.checked })}
-                  />
-                  Audio-reactive — images pulse with this track&apos;s playback
-                </label>
-              )}
-            </>
-          )}
-        </div>
-      </details>
-
+/** Full flowing form — every section in one column, used by the upload wizard
+ * where there's no tabbed editor chrome yet (a track doesn't exist to switch
+ * "tabs" on until it's actually uploaded). */
+export function ArchiveMetadataFields({
+  state,
+  onChange,
+  disabled,
+  detectedBpm,
+  detectedKey,
+  itemId,
+}: {
+  state: ArchiveMetadataFormState
+  onChange: (next: ArchiveMetadataFormState) => void
+  disabled?: boolean
+  detectedBpm?: number | null
+  detectedKey?: string | null
+  itemId?: string
+}) {
+  return (
+    <div className="studio-grid studio-mt-md">
+      <ArchiveBasicsFields state={state} onChange={onChange} disabled={disabled} itemId={itemId} />
       <details className="studio-details-block" open>
         <summary className="studio-details-block__summary">Tracklist</summary>
         <div className="studio-details-block__body">
-          <TracklistEditor
-            value={state.tracklist}
-            onChange={(tracklist) => set({ tracklist })}
+          <ArchiveTracklistField state={state} onChange={onChange} disabled={disabled} />
+        </div>
+      </details>
+      <details className="studio-details-block">
+        <summary className="studio-details-block__summary">Cover &amp; visuals</summary>
+        <div className="studio-details-block__body">
+          <ArchiveVisualsFields
+            state={state}
+            onChange={onChange}
             disabled={disabled}
+            itemId={itemId}
           />
         </div>
       </details>
-
       <details className="studio-details-block">
         <summary className="studio-details-block__summary">Visibility &amp; discovery</summary>
         <div className="studio-details-block__body">
-          <div className="studio-row studio-row--wrap studio-gap-lg studio-text-sm">
-            <label className="studio-label-row">
-              <input
-                type="checkbox"
-                checked={state.isPublic}
-                disabled={disabled}
-                onChange={(e) => set({ isPublic: e.target.checked })}
-              />
-              Public on channel
-            </label>
-            <label className="studio-label-row">
-              <input
-                type="checkbox"
-                checked={state.repostToDownload}
-                disabled={disabled}
-                onChange={(e) => set({ repostToDownload: e.target.checked })}
-              />
-              Repost to download
-            </label>
-            <label className="studio-label-row">
-              <input
-                type="checkbox"
-                checked={state.followToDownload}
-                disabled={disabled}
-                onChange={(e) => set({ followToDownload: e.target.checked })}
-              />
-              Follow to download
-            </label>
-            <label
-              className="studio-label-row"
-              title="Enter the weekly Tahti Selects rotation draw — up to 3 of your opted-in tracks can be picked per week"
-            >
-              <input
-                type="checkbox"
-                checked={state.selectsOptIn}
-                disabled={disabled}
-                onChange={(e) => set({ selectsOptIn: e.target.checked })}
-              />
-              Eligible for Tahti Selects
-            </label>
-            {itemId && (
-              <label className="studio-label-row">
-                <input
-                  type="checkbox"
-                  checked={state.commentsEnabled}
-                  disabled={disabled}
-                  onChange={(e) => set({ commentsEnabled: e.target.checked })}
-                />
-                Allow comments on this track
-              </label>
-            )}
-            {itemId && (
-              <label className="studio-label-row">
-                <input
-                  type="checkbox"
-                  checked={state.topListsEligible}
-                  disabled={disabled}
-                  onChange={(e) => set({ topListsEligible: e.target.checked })}
-                />
-                Include in top lists
-              </label>
-            )}
-          </div>
+          <ArchiveSharingFields
+            state={state}
+            onChange={onChange}
+            disabled={disabled}
+            itemId={itemId}
+          />
+        </div>
+      </details>
+      <details className="studio-details-block">
+        <summary className="studio-details-block__summary">Advanced</summary>
+        <div className="studio-details-block__body">
+          <ArchiveAdvancedFields
+            state={state}
+            onChange={onChange}
+            disabled={disabled}
+            detectedBpm={detectedBpm}
+            detectedKey={detectedKey}
+          />
         </div>
       </details>
     </div>

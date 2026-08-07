@@ -10,7 +10,11 @@ import { ButtonIcon, Button } from '@tahti/ui'
 import { resolveChannelUrl } from '@/lib/app-url'
 import { deleteArchiveItem, updateArchiveMetadata } from './archive-actions'
 import {
-  ArchiveMetadataFields,
+  ArchiveBasicsFields,
+  ArchiveTracklistField,
+  ArchiveVisualsFields,
+  ArchiveSharingFields,
+  ArchiveAdvancedFields,
   metadataFormToPayload,
   metadataFromApi,
   type ArchiveMetadataFormState,
@@ -21,6 +25,16 @@ import { ArchiveGateStats } from './archive-gate-stats'
 import { ArchiveMixcloudUpload } from './archive-mixcloud'
 import ArchiveVisualPanel from './archive-visual-panel'
 import { AddToPlaylistButton } from './_add-to-playlist-button'
+
+type EditorTab = 'basics' | 'tracklist' | 'visuals' | 'sharing' | 'advanced'
+
+const EDITOR_TABS: { id: EditorTab; label: string; icon: string }[] = [
+  { id: 'basics', label: 'Basics', icon: '📝' },
+  { id: 'tracklist', label: 'Tracklist', icon: '🎼' },
+  { id: 'visuals', label: 'Cover & visuals', icon: '🖼️' },
+  { id: 'sharing', label: 'Sharing', icon: '🔗' },
+  { id: 'advanced', label: 'Advanced', icon: '⚙️' },
+]
 
 export default function ArchiveEditor({
   item,
@@ -37,6 +51,7 @@ export default function ArchiveEditor({
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [tab, setTab] = useState<EditorTab>('basics')
   const [title, setTitle] = useState(item.title)
   const [meta, setMeta] = useState<ArchiveMetadataFormState>(() => metadataFromApi(item))
   const [error, setError] = useState<string | null>(null)
@@ -255,50 +270,94 @@ export default function ArchiveEditor({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               disabled={isPending}
-              className="studio-input"
+              className="studio-input studio-editor-title-input"
             />
           </label>
 
-          <ArchiveMetadataFields
-            state={meta}
-            onChange={setMeta}
-            disabled={isPending}
-            detectedBpm={detectedBpm ?? null}
-            detectedKey={detectedKey ?? null}
-            itemId={item.id}
-          />
+          <div className="studio-editor-tabs" role="tablist" aria-label="Track details">
+            {EDITOR_TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.id}
+                onClick={() => setTab(t.id)}
+                className={`studio-editor-tab studio-editor-tab--${t.id}${tab === t.id ? ' studio-editor-tab--active' : ''}`}
+              >
+                <span className="studio-editor-tab__icon" aria-hidden>
+                  {t.icon}
+                </span>
+                {t.label}
+              </button>
+            ))}
+          </div>
 
-          <ArchiveGateStats
-            itemId={item.id}
-            repostToDownload={meta.repostToDownload}
-            followToDownload={meta.followToDownload}
-          />
-
-          <ArchiveVersionPanel
-            itemId={item.id}
-            itemStatus={item.status}
-            embedUri={item.embedUri as string | null | undefined}
-          />
-
-          <ArchiveDownloadPanel itemId={item.id} />
-
-          <ArchiveVisualPanel
-            itemId={item.id}
-            initial={{
-              visualPreset: ((item.visualPreset as string | undefined) ??
-                'MINIMAL') as import('@tahti/shared').VisualPreset,
-              colorSchemeJson: (item.colorSchemeJson as string | null | undefined) ?? null,
-              paletteJson: (item.paletteJson as string | null | undefined) ?? null,
-            }}
-          />
-
-          <ArchiveMixcloudUpload
-            itemId={item.id}
-            itemStatus={item.status}
-            mixcloudConnected={mixcloudConnected}
-            mixcloudConfigured={mixcloudConfigured}
-            apiUrl={apiUrl}
-          />
+          <div className="studio-editor-tab-panel">
+            {tab === 'basics' && (
+              <ArchiveBasicsFields state={meta} onChange={setMeta} disabled={isPending} />
+            )}
+            {tab === 'tracklist' && (
+              <ArchiveTracklistField state={meta} onChange={setMeta} disabled={isPending} />
+            )}
+            {tab === 'visuals' && (
+              <>
+                <ArchiveVisualsFields
+                  state={meta}
+                  onChange={setMeta}
+                  disabled={isPending}
+                  itemId={item.id}
+                />
+                <ArchiveVisualPanel
+                  itemId={item.id}
+                  initial={{
+                    visualPreset: ((item.visualPreset as string | undefined) ??
+                      'MINIMAL') as import('@tahti/shared').VisualPreset,
+                    colorSchemeJson: (item.colorSchemeJson as string | null | undefined) ?? null,
+                    paletteJson: (item.paletteJson as string | null | undefined) ?? null,
+                  }}
+                />
+              </>
+            )}
+            {tab === 'sharing' && (
+              <>
+                <ArchiveSharingFields
+                  state={meta}
+                  onChange={setMeta}
+                  disabled={isPending}
+                  itemId={item.id}
+                />
+                <ArchiveGateStats
+                  itemId={item.id}
+                  repostToDownload={meta.repostToDownload}
+                  followToDownload={meta.followToDownload}
+                />
+                <ArchiveDownloadPanel itemId={item.id} />
+              </>
+            )}
+            {tab === 'advanced' && (
+              <>
+                <ArchiveAdvancedFields
+                  state={meta}
+                  onChange={setMeta}
+                  disabled={isPending}
+                  detectedBpm={detectedBpm ?? null}
+                  detectedKey={detectedKey ?? null}
+                />
+                <ArchiveVersionPanel
+                  itemId={item.id}
+                  itemStatus={item.status}
+                  embedUri={item.embedUri as string | null | undefined}
+                />
+                <ArchiveMixcloudUpload
+                  itemId={item.id}
+                  itemStatus={item.status}
+                  mixcloudConnected={mixcloudConnected}
+                  mixcloudConfigured={mixcloudConfigured}
+                  apiUrl={apiUrl}
+                />
+              </>
+            )}
+          </div>
 
           <div className="studio-actions studio-mt-lg">
             <Button onClick={save} disabled={isPending || !title.trim()} variant="primary">
