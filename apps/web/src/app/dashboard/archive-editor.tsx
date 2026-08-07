@@ -204,7 +204,13 @@ export default function ArchiveEditor({
             <details className="studio-row-more">
               <summary className="studio-row-more__summary">More</summary>
               <div className="studio-row-more__menu">
-                <Button onClick={togglePin} disabled={pinPending} variant="ghost" size="sm">
+                <Button
+                  onClick={togglePin}
+                  disabled={pinPending}
+                  variant="ghost"
+                  size="sm"
+                  className="studio-row-more__btn--pin"
+                >
                   {pinned ? 'Unpin from Stage' : 'Pin to Stage'}
                 </Button>
                 <Button
@@ -212,13 +218,16 @@ export default function ArchiveEditor({
                   disabled={rotationPending}
                   variant="ghost"
                   size="sm"
+                  className="studio-row-more__btn--rotation"
                 >
                   {inRotation ? 'Remove from rotation' : 'Add to rotation'}
                 </Button>
-                <AddToPlaylistButton archiveItemId={item.id} />
+                <span className="studio-row-more__btn--playlist">
+                  <AddToPlaylistButton archiveItemId={item.id} />
+                </span>
                 <NextLink
                   href={`/dashboard/insights/archive/${item.id}`}
-                  className="ui-btn ui-btn--sm ui-btn--ghost"
+                  className="ui-btn ui-btn--sm ui-btn--ghost studio-row-more__btn--insights"
                 >
                   Show insights
                 </NextLink>

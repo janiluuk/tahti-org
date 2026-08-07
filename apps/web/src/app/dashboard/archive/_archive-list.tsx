@@ -208,6 +208,8 @@ export function ArchiveList({
                     // the dashboard is scoped "studio", so without this wrapper the waveform
                     // bars render with no size/color at all and only the background particle
                     // visualizer is visible. Same fix mini-player.tsx uses to work everywhere.
+                    // (Not using the full .brand-channel class here — it sets min-height:100vh
+                    // for a page root, which would blow out this inline row's height.)
                     <div data-tahti-ui="brand">
                       <ArchiveItemPlayback
                         channelSlug={channelSlug}
