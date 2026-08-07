@@ -5,6 +5,8 @@
 
 import { useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { ArchiveItemPlayback } from '@/components/archive-item-playback'
+import type { PlayerTrack } from '@/contexts/player-context'
 
 const ArchiveEditor = dynamic(() => import('../archive-editor'))
 
@@ -19,7 +21,17 @@ type ArchiveListItem = Record<string, unknown> & {
 
 interface PlayableItem {
   id: string
+  title: string
+  artistName: string | null
   audioUrl: string | null
+  bannerUrl: string | null
+  peaks: number[] | null
+  visualPreset: string | null
+  accentColor: string | null
+  repostToDownload: boolean
+  followToDownload: boolean
+  commentCount: number
+  downloadCount: number
 }
 
 type StatusFilter = 'all' | 'unpublished' | 'drafts' | 'published'
@@ -78,6 +90,7 @@ export function ArchiveList({
   mixcloudConfigured,
   apiUrl,
   channelSlug,
+  artistUsername,
 }: {
   items: ArchiveListItem[]
   playable: PlayableItem[]
@@ -85,6 +98,7 @@ export function ArchiveList({
   mixcloudConfigured: boolean
   apiUrl: string
   channelSlug: string | null
+  artistUsername: string
 }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<StatusFilter>('all')
@@ -110,6 +124,24 @@ export function ArchiveList({
     })
     return sortItems(matched, sort)
   }, [items, search, filter, sort])
+
+  // Shared play queue, in display order — lets playback auto-advance to the
+  // next track on 'ended' instead of just stopping, same as public listings.
+  const queue: PlayerTrack[] = useMemo(
+    () =>
+      visible
+        .map((item) => playable.find((p) => p.id === item.id))
+        .filter((p): p is PlayableItem => Boolean(p?.audioUrl))
+        .map((p) => ({
+          id: p.id,
+          kind: 'archive' as const,
+          url: p.audioUrl!,
+          title: p.title,
+          subtitle: p.artistName?.trim() || `@${artistUsername}`,
+          artworkUrl: p.bannerUrl,
+        })),
+    [visible, playable, artistUsername],
+  )
 
   return (
     <div>
@@ -170,12 +202,26 @@ export function ArchiveList({
                     apiUrl={apiUrl}
                     channelSlug={channelSlug}
                   />
-                  {play?.audioUrl && (
-                    <audio
-                      controls
-                      src={play.audioUrl}
-                      className="studio-audio-full"
-                      data-testid="dashboard-archive-player"
+                  {channelSlug && play?.audioUrl && (
+                    <ArchiveItemPlayback
+                      channelSlug={channelSlug}
+                      artistUsername={artistUsername}
+                      artistCredit={play.artistName}
+                      item={{
+                        id: play.id,
+                        title: play.title,
+                        audioUrl: play.audioUrl,
+                        bannerUrl: play.bannerUrl,
+                        peaks: play.peaks,
+                        visualPreset: play.visualPreset,
+                        repostToDownload: play.repostToDownload,
+                        followToDownload: play.followToDownload,
+                        commentCount: play.commentCount,
+                        downloadCount: play.downloadCount,
+                        accentColor: play.accentColor,
+                      }}
+                      isLoggedIn
+                      queue={queue}
                     />
                   )}
                 </div>

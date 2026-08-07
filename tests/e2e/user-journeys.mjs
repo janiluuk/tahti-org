@@ -132,14 +132,20 @@ async function main() {
     else fail('dashboard missing channel panel')
     if (body.includes(FIXTURE.releaseTitle)) ok('dashboard lists demo release')
     if (body.includes('Music')) ok('dashboard music section')
-    const dashPlayer = dash.locator('[data-testid="dashboard-archive-player"]')
-    if ((await dashPlayer.count()) > 0) {
-      const src = await dashPlayer.first().getAttribute('src')
+
+    await pageLoads(dash, '/dashboard/archive', 'dashboard music page', { text: 'Music' })
+    const dashPlayToggle = dash.locator('[data-testid="channel-archive-play-toggle"]').first()
+    if ((await dashPlayToggle.count()) > 0) {
+      await dashPlayToggle.click()
+      const dashAudio = dash.locator('[data-testid="channel-archive-player"]')
+      const src = await dashAudio.first().getAttribute('src')
       if (src && src.length > 8) ok('dashboard archive player src')
       else fail('dashboard archive player missing src')
     } else {
-      console.log('⚠ dashboard archive player skipped (no audioUrl / MinIO)')
+      console.log('⚠ dashboard archive player skipped (no playable track)')
     }
+    await dash.goto(`${APP}/dashboard`, { waitUntil: 'load', timeout: 45_000 })
+
     const channelLink = dash.locator(`a[href="/c/${FIXTURE.artist}"]`).first()
     if ((await channelLink.count()) > 0) {
       await channelLink.click()

@@ -13,8 +13,17 @@ import { MusicBrowser, type AlbumSummary, type CollectionSummary } from './_musi
 interface ArchiveItem {
   id: string
   title: string
+  artistName: string | null
   durationSec: number | null
   audioUrl: string | null
+  bannerUrl: string | null
+  peaks: number[] | null
+  visualPreset: string | null
+  accentColor: string | null
+  repostToDownload: boolean
+  followToDownload: boolean
+  commentCount: number
+  downloadCount: number
   createdAt: string
 }
 
@@ -143,6 +152,7 @@ export default async function ArchivePage() {
           mixcloudConfigured={mixcloudStatus.configured}
           apiUrl={apiUrl}
           channelSlug={slug ?? null}
+          artistUsername={user.username}
         />
       )}
     </PageShell>

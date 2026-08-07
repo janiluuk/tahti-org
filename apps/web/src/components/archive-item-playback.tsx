@@ -10,7 +10,7 @@ import { ReportButton } from '@/components/report-button'
 import { LoveButton } from '@/components/love-button'
 import { RepostButton } from '@/components/repost-button'
 import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
-import { ArchiveDownloadButton } from './archive-download'
+import { ArchiveDownloadButton } from './archive-download-button'
 import { resolveChannelUrl } from '@/lib/app-url'
 
 interface Props {

@@ -18,7 +18,17 @@ type ArchiveListItem = Record<string, unknown> & {
 
 interface PlayableItem {
   id: string
+  title: string
+  artistName: string | null
   audioUrl: string | null
+  bannerUrl: string | null
+  peaks: number[] | null
+  visualPreset: string | null
+  accentColor: string | null
+  repostToDownload: boolean
+  followToDownload: boolean
+  commentCount: number
+  downloadCount: number
 }
 
 export interface AlbumSummary {
@@ -67,6 +77,7 @@ export function MusicBrowser({
   mixcloudConfigured,
   apiUrl,
   channelSlug,
+  artistUsername,
 }: {
   items: ArchiveListItem[]
   playable: PlayableItem[]
@@ -76,6 +87,7 @@ export function MusicBrowser({
   mixcloudConfigured: boolean
   apiUrl: string
   channelSlug: string | null
+  artistUsername: string
 }) {
   const [tab, setTab] = useState<MusicTab>('tracks')
 
@@ -127,6 +139,7 @@ export function MusicBrowser({
               mixcloudConfigured={mixcloudConfigured}
               apiUrl={apiUrl}
               channelSlug={channelSlug}
+              artistUsername={artistUsername}
             />
           ))}
 
@@ -141,6 +154,7 @@ export function MusicBrowser({
               mixcloudConfigured={mixcloudConfigured}
               apiUrl={apiUrl}
               channelSlug={channelSlug}
+              artistUsername={artistUsername}
             />
           ))}
 
