@@ -326,7 +326,7 @@ function FullPlayerSheet({
       aria-modal="true"
       aria-label="Now playing"
     >
-      <ChannelVisualizer preset="PARTICLE_FIELD" analyser={analyser} className="full-player__viz" />
+      <ChannelVisualizer preset="WAVEFORM_BARS" analyser={analyser} className="full-player__viz" />
       {track.artworkUrl && (
         <div
           className="full-player__backdrop"
@@ -844,7 +844,6 @@ export function MiniPlayer() {
         {showDockStage && (
           <ActiveTrackStage
             playing={playing}
-            preset="PARTICLE_FIELD"
             analyser={analyser}
             peaks={dockDetails?.peaks}
             progress={progress}

@@ -2035,8 +2035,10 @@
 
 [data-tahti-ui='studio'] .archive-list__filter--active {
   border-color: var(--cyan);
-  color: var(--cyan);
-  background: color-mix(in srgb, var(--cyan) 12%, var(--card2));
+  color: var(--bg);
+  background: var(--cyan);
+  font-weight: var(--weight-medium);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--cyan) 45%, transparent);
 }
 
 [data-tahti-ui='studio'] .archive-list__toolbar-right {

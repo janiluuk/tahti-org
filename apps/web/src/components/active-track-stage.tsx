@@ -7,11 +7,12 @@ import type { VisualPreset } from '@tahti/shared'
 import { ArchiveWaveform } from '@/components/archive-waveform'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 
-/** Prefer the track's preset; when unset/MINIMAL, use an audio-reactive field so
- * the active row still reads as "now playing" at a glance. */
+/** Prefer the track's preset; when unset/MINIMAL, fall back to a transparent
+ * audio-reactive spectrum analyzer so the active row reads as "now playing"
+ * at a glance without looking like an unrelated layer of drifting dots. */
 export function resolveActiveTrackPreset(preset?: VisualPreset | string | null): VisualPreset {
   if (preset && preset !== 'MINIMAL') return preset as VisualPreset
-  return 'PARTICLE_FIELD'
+  return 'WAVEFORM_BARS'
 }
 
 /**
