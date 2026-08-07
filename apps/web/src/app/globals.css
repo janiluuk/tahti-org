@@ -39,44 +39,6 @@ body {
   box-shadow: 0 -10px 40px color-mix(in srgb, var(--bg) 45%, transparent);
 }
 
-.mini-player__dock-stage {
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--cyan) 22%, var(--border));
-  min-height: 120px;
-  animation: mini-player-dock-in 0.36s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.mini-player__dock-stage .active-track-stage__foreground {
-  padding: 0.75rem 1rem 0.55rem;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.mini-player__dock-stage .active-track-stage__viz {
-  opacity: 0.82;
-}
-
-@keyframes mini-player-dock-in {
-  from {
-    opacity: 0;
-    max-height: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    max-height: 200px;
-    transform: translateY(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mini-player__dock-stage {
-    animation: none;
-  }
-}
-
 /* Active track stage — also used inside the global mini-player (not always under brand) */
 .active-track-stage {
   position: relative;
@@ -936,10 +898,6 @@ body {
 /* Leave room for the mini-player so it doesn't cover page content */
 body:has(.mini-player) {
   padding-bottom: 56px;
-}
-
-body:has(.mini-player--dock-stage) {
-  padding-bottom: 176px;
 }
 
 /* ── Full-screen "now playing" sheet ─────────────────────────────────── */

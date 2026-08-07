@@ -10,7 +10,6 @@ import { usePlayer, type PlayerTrack } from '@/contexts/player-context'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { AddToCollectionPanel } from '@/components/add-to-collection-panel'
 import { ArchiveWaveform, type WaveformMarker } from '@/components/archive-waveform'
-import { ActiveTrackStage } from '@/components/active-track-stage'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
@@ -653,16 +652,6 @@ export function MiniPlayer() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [expanded, setExpanded] = useState(false)
   const [closingFullPlayer, setClosingFullPlayer] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(false)
-  const [dockDetails] = useTrackPlaybackDetails(track?.kind === 'archive' ? track.id : null)
-
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 641px)')
-    const sync = () => setIsDesktop(mq.matches)
-    sync()
-    mq.addEventListener('change', sync)
-    return () => mq.removeEventListener('change', sync)
-  }, [])
 
   const closeFullPlayer = useCallback(() => {
     setClosingFullPlayer(true)
@@ -676,7 +665,6 @@ export function MiniPlayer() {
 
   const progress = duration > 0 ? currentTime / duration : 0
   const canSkip = queue.length > 1
-  const showDockStage = track.kind === 'archive' && !expanded && isDesktop
 
   function handleDrop(targetIndex: number) {
     if (dragIndex !== null && dragIndex !== targetIndex) {
@@ -692,7 +680,7 @@ export function MiniPlayer() {
   return (
     <>
       <div
-        className={`mini-player${showDockStage ? ' mini-player--dock-stage' : ''}${playing ? ' mini-player--playing' : ''}`}
+        className={`mini-player${playing ? ' mini-player--playing' : ''}`}
         data-testid="mini-player"
         role="region"
         aria-label="Now playing"
@@ -841,18 +829,7 @@ export function MiniPlayer() {
             )}
           </div>
         )}
-        {showDockStage && (
-          <ActiveTrackStage
-            playing={playing}
-            analyser={analyser}
-            peaks={dockDetails?.peaks}
-            progress={progress}
-            onSeek={seek}
-            size="large"
-            className="mini-player__dock-stage"
-          />
-        )}
-        {!showDockStage && track.kind === 'archive' && duration > 0 && (
+        {track.kind === 'archive' && duration > 0 && (
           <button
             type="button"
             className="mini-player__progress"

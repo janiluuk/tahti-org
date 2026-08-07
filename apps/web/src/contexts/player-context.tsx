@@ -230,7 +230,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         const ctx = new AudioContext()
         const node = ctx.createAnalyser()
         node.fftSize = 512
-        node.smoothingTimeConstant = 0.8
+        // 0.8 made the spectrum-analyzer visualizer look sluggish/laggy behind
+        // the actual audio; 0.3 keeps it visually reactive without being jittery.
+        node.smoothingTimeConstant = 0.3
         const source = ctx.createMediaElementSource(audio)
         source.connect(node)
         node.connect(ctx.destination)
