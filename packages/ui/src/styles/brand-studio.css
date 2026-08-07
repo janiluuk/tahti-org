@@ -2045,8 +2045,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.6rem;
+  flex-wrap: nowrap;
   margin-bottom: 1rem;
   padding: 0.65rem 0.85rem;
   border-radius: var(--radius-md, var(--radius));
@@ -2056,23 +2056,26 @@
     color-mix(in srgb, var(--cyan) 10%, var(--card2)),
     var(--card2) 60%
   );
+  overflow-x: auto;
 }
 
 [data-tahti-ui='studio'] .archive-list__filters {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 [data-tahti-ui='studio'] .archive-list__filter {
   font-size: var(--text-xs);
-  padding: 0.3rem 0.65rem;
+  padding: 0.3rem 0.55rem;
   border-radius: var(--radius-full, 999px);
   border: 1px solid var(--border);
   background: var(--card2);
   color: var(--text-muted);
   cursor: pointer;
+  white-space: nowrap;
 }
 
 [data-tahti-ui='studio'] .archive-list__filter--active {
@@ -2087,16 +2090,38 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 [data-tahti-ui='studio'] .archive-list__search {
-  max-width: 220px;
+  max-width: 180px;
+  min-width: 80px;
+  flex-shrink: 1;
 }
 
 [data-tahti-ui='studio'] .archive-list__sort {
   width: auto;
-  max-width: 160px;
+  max-width: 130px;
+  flex-shrink: 1;
+}
+
+@media (max-width: 640px) {
+  [data-tahti-ui='studio'] .archive-list__toolbar {
+    flex-wrap: wrap;
+  }
+
+  [data-tahti-ui='studio'] .archive-list__toolbar-right {
+    flex-shrink: 0;
+    min-width: 100%;
+  }
+
+  [data-tahti-ui='studio'] .archive-list__search,
+  [data-tahti-ui='studio'] .archive-list__sort {
+    max-width: none;
+    flex: 1;
+  }
 }
 
 [data-tahti-ui='studio'] .archive-list__row {
