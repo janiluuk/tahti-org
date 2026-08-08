@@ -131,6 +131,7 @@ export function ArchiveTrackRow({
           peaks={peaks}
           progress={progress}
           onSeek={seek}
+          artworkUrl={thumbUrl}
           size="large"
           className="prof-collection-item-row__stage"
         />

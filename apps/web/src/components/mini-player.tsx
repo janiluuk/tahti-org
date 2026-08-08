@@ -325,7 +325,12 @@ function FullPlayerSheet({
       aria-modal="true"
       aria-label="Now playing"
     >
-      <ChannelVisualizer preset="WAVEFORM_BARS" analyser={analyser} className="full-player__viz" />
+      <ChannelVisualizer
+        preset="WATER_RIPPLE"
+        analyser={analyser}
+        artworkUrl={track.artworkUrl}
+        className="full-player__viz"
+      />
       {track.artworkUrl && (
         <div
           className="full-player__backdrop"

@@ -84,6 +84,7 @@ export function ArchiveItemPlayback({
           progress={progress}
           onSeek={seek}
           accentColor={item.accentColor}
+          artworkUrl={item.bannerUrl}
           size="large"
           className="ch-archive-playback__stage"
         />

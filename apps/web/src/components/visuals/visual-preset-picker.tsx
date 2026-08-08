@@ -61,6 +61,23 @@ interface Props {
  * this picker more than once (channel/release/archive-item visual settings).
  */
 function StaticPresetThumbnail({ preset, scheme }: { preset: VisualPreset; scheme: ColorScheme }) {
+  if (preset === 'WATER_RIPPLE') {
+    return (
+      <div
+        className="visual-preset-picker__thumb"
+        aria-hidden
+        style={{
+          background: `linear-gradient(160deg, ${scheme.highlight}, ${scheme.accent} 60%)`,
+          backgroundImage: [
+            `radial-gradient(circle at 38% 42%, transparent 0 9%, ${WHITE}33 10%, transparent 12%)`,
+            `radial-gradient(circle at 38% 42%, transparent 0 17%, ${WHITE}22 18%, transparent 20%)`,
+            `radial-gradient(circle at 38% 42%, transparent 0 25%, ${WHITE}18 26%, transparent 28%)`,
+            `linear-gradient(160deg, ${scheme.highlight}, ${scheme.accent} 60%)`,
+          ].join(', '),
+        }}
+      />
+    )
+  }
   if (preset === 'WAVEFORM_BARS') {
     const heights = [40, 70, 50, 90, 60, 35, 80, 55]
     return (

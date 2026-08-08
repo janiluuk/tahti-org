@@ -8,6 +8,7 @@ import { CHANNEL_GALLERY_MODES } from './channel-gallery.js'
 
 export const VISUAL_PRESETS = [
   'MINIMAL',
+  'WATER_RIPPLE',
   'WAVEFORM_BARS',
   'PARTICLE_FIELD',
   'AURORA',
@@ -23,6 +24,7 @@ export type VisualPreset = (typeof VISUAL_PRESETS)[number]
 
 export const VISUAL_PRESET_LABELS: Record<VisualPreset, string> = {
   MINIMAL: 'None',
+  WATER_RIPPLE: 'Water ripple',
   WAVEFORM_BARS: 'Waveform bars',
   PARTICLE_FIELD: 'Particle field',
   AURORA: 'Aurora',
@@ -36,6 +38,8 @@ export const VISUAL_PRESET_LABELS: Record<VisualPreset, string> = {
 
 export const VISUAL_PRESET_DESCRIPTIONS: Record<VisualPreset, string> = {
   MINIMAL: 'No background visualizer.',
+  WATER_RIPPLE:
+    'Your cover art rippling like water, with drops that grow and speed up with the music.',
   WAVEFORM_BARS: 'Animated frequency bars in your accent color.',
   PARTICLE_FIELD: 'Drifting particle cloud in your color palette.',
   AURORA: 'Slow aurora-borealis color wash.',
@@ -228,6 +232,7 @@ export function resolveVisualPresetSettings(
 /** Compact strip favorites shown beside the gallery entry — not the full catalog. */
 export const VISUAL_PRESET_STRIP: VisualPreset[] = [
   'MINIMAL',
+  'WATER_RIPPLE',
   'WAVEFORM_BARS',
   'AURORA',
   'PARTICLE_FIELD',

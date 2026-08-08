@@ -7,12 +7,13 @@ import type { VisualPreset } from '@tahti/shared'
 import { ArchiveWaveform } from '@/components/archive-waveform'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 
-/** Prefer the track's preset; when unset/MINIMAL, fall back to a transparent
- * audio-reactive spectrum analyzer so the active row reads as "now playing"
- * at a glance without looking like an unrelated layer of drifting dots. */
+/** Prefer the track's preset; when unset/MINIMAL, fall back to the bright
+ * water-ripple effect (the track's own cover art, rippling in time with the
+ * music) so every track reads as "now playing" with a good-looking default,
+ * unless the artist has explicitly picked something else. */
 export function resolveActiveTrackPreset(preset?: VisualPreset | string | null): VisualPreset {
   if (preset && preset !== 'MINIMAL') return preset as VisualPreset
-  return 'WAVEFORM_BARS'
+  return 'WATER_RIPPLE'
 }
 
 /**
@@ -28,6 +29,7 @@ export function ActiveTrackStage({
   progress,
   onSeek,
   accentColor,
+  artworkUrl,
   size = 'default',
   className,
 }: {
@@ -39,6 +41,8 @@ export function ActiveTrackStage({
   progress: number
   onSeek?: (ratio: number) => void
   accentColor?: string | null
+  /** Cover art to ripple — only used by the WATER_RIPPLE preset. */
+  artworkUrl?: string | null
   size?: 'default' | 'large'
   className?: string
 }) {
@@ -53,6 +57,7 @@ export function ActiveTrackStage({
         preset={resolved}
         colorSchemeJson={colorSchemeJson}
         analyser={playing ? analyser : null}
+        artworkUrl={artworkUrl}
         className="active-track-stage__viz"
       />
       <div className="active-track-stage__foreground">

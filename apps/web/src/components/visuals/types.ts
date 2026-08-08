@@ -10,6 +10,9 @@ export interface VisualPresetProps {
   analyser?: AnalyserNode | null
   /** Live-updated knobs — read `.current` each animation frame. */
   settingsRef: MutableRefObject<VisualPresetSettings>
+  /** Cover/background image to render behind the effect — only WATER_RIPPLE
+   * uses this today; every other preset ignores it. */
+  artworkUrl?: string | null
 }
 
 export function readSettings(ref: MutableRefObject<VisualPresetSettings>): VisualPresetSettings {

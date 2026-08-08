@@ -14,6 +14,10 @@ import {
 
 // Lazy-load each preset to keep the initial bundle small.
 // Each preset uses Three.js which is large.
+const WaterRipple = dynamic(
+  () => import('./water-ripple-preset').then((m) => ({ default: m.WaterRipplePreset })),
+  { ssr: false },
+)
 const WaveformBars = dynamic(
   () => import('./waveform-bars-preset').then((m) => ({ default: m.WaveformBarsPreset })),
   { ssr: false },
@@ -57,6 +61,8 @@ interface Props {
   analyser?: AnalyserNode | null
   settings?: VisualPresetSettings | null
   className?: string
+  /** Cover/background image — only WATER_RIPPLE uses this today. */
+  artworkUrl?: string | null
 }
 
 function supportsWebGL(): boolean {
@@ -76,6 +82,7 @@ export function ChannelVisualizer({
   analyser,
   settings,
   className,
+  artworkUrl,
 }: Props) {
   // window-dependent checks (WebGL support, prefers-reduced-motion) can only run on the
   // client, and SSR always renders nothing — so defer them to after mount. Otherwise the
@@ -94,7 +101,7 @@ export function ChannelVisualizer({
   const colorScheme: ColorScheme =
     resolveColorScheme(colorSchemeJson, paletteJson) ?? DEFAULT_COLOR_SCHEME
 
-  const props = { colorScheme, analyser, settingsRef }
+  const props = { colorScheme, analyser, settingsRef, artworkUrl }
 
   return (
     <div
@@ -108,6 +115,7 @@ export function ChannelVisualizer({
       }}
       aria-hidden
     >
+      {preset === 'WATER_RIPPLE' && <WaterRipple {...props} />}
       {preset === 'WAVEFORM_BARS' && <WaveformBars {...props} />}
       {preset === 'PARTICLE_FIELD' && <ParticleField {...props} />}
       {preset === 'AURORA' && <Aurora {...props} />}
