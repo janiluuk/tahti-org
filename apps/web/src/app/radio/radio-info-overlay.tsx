@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import { RadioSlotsCalendar } from './radio-slots-calendar'
+import { RadioScheduleList } from './radio-schedule-list'
 import type { PublicRadioSlot } from './actions'
 import { resolveChannelUrl } from '@/lib/app-url'
 
@@ -50,13 +50,11 @@ export function RadioInfoOverlay({
   rotation,
   slots,
   memberRelay,
-  isLoggedIn,
   iconOnly = false,
 }: {
   rotation: RadioRotationItem[]
   slots: PublicRadioSlot[]
   memberRelay: RadioMemberRelay | null
-  isLoggedIn: boolean
   /** Compact icon-only trigger (calendar glyph, no label) — used next to the
    * channel banner, where a full text button would crowd the header row. */
   iconOnly?: boolean
@@ -123,7 +121,7 @@ export function RadioInfoOverlay({
 
               <div className="ch-radio-info-panel__body">
                 {tab === 'schedule' ? (
-                  <RadioSlotsCalendar initialSlots={slots} isLoggedIn={isLoggedIn} />
+                  <RadioScheduleList slots={slots} />
                 ) : (
                   <>
                     {rotation.length > 0 ? (

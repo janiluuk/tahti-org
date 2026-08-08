@@ -1786,6 +1786,62 @@
   white-space: nowrap;
 }
 
+/* ── Day-by-day schedule (replaces the 7×24 grid calendar) ────────────── */
+[data-tahti-ui='brand'] .ch-radio-schedule__days {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-tahti-ui='brand'] .ch-radio-schedule__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  min-width: 4.25rem;
+  padding: 0.5rem 0.4rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card2);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .ch-radio-schedule__day:hover {
+  border-color: color-mix(in srgb, var(--cyan) 40%, var(--border));
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .ch-radio-schedule__day--active {
+  border-color: var(--cyan);
+  background: var(--cyan);
+  color: var(--bg);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--cyan) 45%, transparent);
+}
+
+[data-tahti-ui='brand'] .ch-radio-schedule__day-top {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-radio-schedule__day-bottom {
+  font-size: var(--text-xs);
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+[data-tahti-ui='brand'] .ch-radio-schedule__empty {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  padding: 1.5rem 0;
+  text-align: center;
+}
+
 [data-tahti-ui='brand'] .ch-radio-upcoming__rotation {
   margin-top: 0.75rem;
   padding-top: 0.75rem;

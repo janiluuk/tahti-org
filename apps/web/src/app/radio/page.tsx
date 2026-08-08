@@ -188,7 +188,6 @@ export default async function RadioPage() {
                         }
                       : null
                   }
-                  isLoggedIn={!!user}
                   iconOnly
                 />
               </Row>
