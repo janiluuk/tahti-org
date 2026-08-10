@@ -89,7 +89,12 @@ export function ArtistDirectory({ items }: { items: ChannelDirectoryEntry[] }) {
                 >
                   {item.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.avatarUrl} alt="" className="artist-directory__avatar" />
+                    <img
+                      src={item.avatarUrl}
+                      alt=""
+                      loading="lazy"
+                      className="artist-directory__avatar"
+                    />
                   ) : (
                     <AvatarTile
                       size="sm"

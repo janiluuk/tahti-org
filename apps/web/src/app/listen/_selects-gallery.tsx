@@ -55,7 +55,7 @@ function GalleryTile({
     >
       {item.bannerUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.bannerUrl} alt="" className="selects-gallery__art" />
+        <img src={item.bannerUrl} alt="" loading="lazy" className="selects-gallery__art" />
       ) : (
         <AvatarTile size="full" name={item.title} className="selects-gallery__art" />
       )}

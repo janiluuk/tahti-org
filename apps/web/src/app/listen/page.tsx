@@ -84,7 +84,16 @@ async function fetchTahtiRadioPreview(): Promise<TahtiRadioPreview> {
 
 async function fetchListenerCount(slug: string): Promise<number> {
   try {
-    const res = await fetch(`${API_URL}/api/channels/${slug}/presence`, { cache: 'no-store' })
+    // The presence API itself is already Redis-cached for 5s (see
+    // apps/api/src/routes/chat/presence.ts) — matching that here (instead of
+    // no-store) lets Next.js ISR-cache this whole page. A single no-store
+    // fetch anywhere on the page forces the entire route into fully-dynamic
+    // rendering, which was defeating the revalidate: 30/60 on every *other*
+    // fetch here too and making every visitor pay for a fresh server render
+    // (including one parallel presence round-trip per live channel).
+    const res = await fetch(`${API_URL}/api/channels/${slug}/presence`, {
+      next: { revalidate: 10 },
+    })
     if (!res.ok) return 0
     const data = (await res.json()) as { numClients: number }
     return data.numClients

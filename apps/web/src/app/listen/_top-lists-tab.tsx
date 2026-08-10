@@ -116,7 +116,12 @@ export function TopListsTab() {
           <span className="top-lists-latest-release__label">Latest release</span>
           {latestRelease.artworkUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={latestRelease.artworkUrl} alt="" className="top-lists-latest-release__art" />
+            <img
+              src={latestRelease.artworkUrl}
+              alt=""
+              loading="lazy"
+              className="top-lists-latest-release__art"
+            />
           ) : (
             <span className="top-lists-latest-release__art top-lists-latest-release__art--fallback" />
           )}
@@ -175,7 +180,12 @@ export function TopListsTab() {
                 <span className="top-lists-ranked-item__rank">{i + 1}</span>
                 {r.artworkUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={r.artworkUrl} alt="" className="top-lists-ranked-item__art" />
+                  <img
+                    src={r.artworkUrl}
+                    alt=""
+                    loading="lazy"
+                    className="top-lists-ranked-item__art"
+                  />
                 ) : (
                   <span className="top-lists-ranked-item__art top-lists-ranked-item__art--fallback" />
                 )}
@@ -204,7 +214,12 @@ export function TopListsTab() {
               <span className="top-lists-ranked-item__rank">{i + 1}</span>
               {e.bannerUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={e.bannerUrl} alt="" className="top-lists-ranked-item__art" />
+                <img
+                  src={e.bannerUrl}
+                  alt=""
+                  loading="lazy"
+                  className="top-lists-ranked-item__art"
+                />
               ) : (
                 <span className="top-lists-ranked-item__art top-lists-ranked-item__art--fallback" />
               )}

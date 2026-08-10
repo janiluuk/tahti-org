@@ -15,7 +15,7 @@ function LiveCard({ channel, listenerCount }: { channel: ChannelCard; listenerCo
       <div className="listen-live-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={channel.user.avatarUrl} alt={channel.user.displayName} />
+          <img src={channel.user.avatarUrl} alt={channel.user.displayName} loading="lazy" />
         ) : (
           <span className="listen-live-card__avatar-fallback">
             {channel.user.displayName.charAt(0).toUpperCase()}
@@ -57,7 +57,7 @@ function ChannelCardItem({ channel }: { channel: ChannelCard }) {
       <div className="listen-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={channel.user.avatarUrl} alt={channel.user.displayName} />
+          <img src={channel.user.avatarUrl} alt={channel.user.displayName} loading="lazy" />
         ) : (
           <span className="listen-card__avatar-fallback">
             {channel.user.displayName.charAt(0).toUpperCase()}
@@ -100,7 +100,7 @@ function ReplayCard({ channel }: { channel: ChannelCard }) {
       <div className="listen-card__avatar">
         {channel.user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={channel.user.avatarUrl} alt={channel.user.displayName} />
+          <img src={channel.user.avatarUrl} alt={channel.user.displayName} loading="lazy" />
         ) : (
           <span className="listen-card__avatar-fallback">
             {channel.user.displayName.charAt(0).toUpperCase()}
