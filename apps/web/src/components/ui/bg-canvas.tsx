@@ -210,41 +210,47 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
     let lastStarTime = 0
 
     // ── Grid lines ───────────────────────────────────────────────────────────
-    const gridLines: { line: THREE.Line }[] = []
+    // Two merged LineSegments (vertical/cyan, horizontal/purple) instead of 32
+    // individual THREE.Line objects — was 32 draw calls for a barely-visible
+    // background grid. Per-line opacity pulse is averaged within each group
+    // (material opacity isn't per-vertex), losing the subtle inter-line
+    // ripple but keeping the overall bass/energy breathing.
     const gridSpacing = 80,
       gridExtent = 600
+    const vLinePositions: number[] = []
     for (let x = -gridExtent; x <= gridExtent; x += gridSpacing) {
-      const g = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(x, -gridExtent, -300),
-        new THREE.Vector3(x, gridExtent, -300),
-      ])
-      const line = new THREE.Line(
-        g,
-        new THREE.LineBasicMaterial({
-          color: new THREE.Color(0.0, 0.74, 0.83),
-          transparent: true,
-          opacity: op(0.07),
-        }),
-      )
-      scene.add(line)
-      gridLines.push({ line })
+      vLinePositions.push(x, -gridExtent, -300, x, gridExtent, -300)
     }
+    const hLinePositions: number[] = []
     for (let y = -gridExtent; y <= gridExtent; y += gridSpacing) {
-      const g = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-gridExtent, y, -300),
-        new THREE.Vector3(gridExtent, y, -300),
-      ])
-      const line = new THREE.Line(
-        g,
-        new THREE.LineBasicMaterial({
-          color: new THREE.Color(0.49, 0.3, 1.0),
-          transparent: true,
-          opacity: op(0.07),
-        }),
-      )
-      scene.add(line)
-      gridLines.push({ line })
+      hLinePositions.push(-gridExtent, y, -300, gridExtent, y, -300)
     }
+    const vLineCount = vLinePositions.length / 6
+    const hLineCount = hLinePositions.length / 6
+
+    const vGridGeo = new THREE.BufferGeometry()
+    vGridGeo.setAttribute(
+      'position',
+      new THREE.BufferAttribute(new Float32Array(vLinePositions), 3),
+    )
+    const vGridMat = new THREE.LineBasicMaterial({
+      color: new THREE.Color(0.0, 0.74, 0.83),
+      transparent: true,
+      opacity: op(0.07),
+    })
+    scene.add(new THREE.LineSegments(vGridGeo, vGridMat))
+
+    const hGridGeo = new THREE.BufferGeometry()
+    hGridGeo.setAttribute(
+      'position',
+      new THREE.BufferAttribute(new Float32Array(hLinePositions), 3),
+    )
+    const hGridMat = new THREE.LineBasicMaterial({
+      color: new THREE.Color(0.49, 0.3, 1.0),
+      transparent: true,
+      opacity: op(0.07),
+    })
+    scene.add(new THREE.LineSegments(hGridGeo, hGridMat))
 
     // ── Floating diamonds ────────────────────────────────────────────────────
     const diamondObjs: { mesh: THREE.Mesh; rotSpeed: number; drift: number; phase: number }[] = []
@@ -474,10 +480,22 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
 
     // ── Animation loop ───────────────────────────────────────────────────────
     let frameId: number
+    // This is a soft, slow-moving ambient background, not something that
+    // needs 60fps precision — throttling to ~30fps halves every recurring
+    // cost in this scene (CPU math for ~1800/900 particles + 3×400 waveform
+    // points, and the GPU buffer re-upload their needsUpdate triggers every
+    // rendered frame) with no perceptible visual difference, since t is
+    // wall-clock-based (Date.now()) rather than frame-count-based — motion
+    // timing stays correct even though we render half as often.
+    const FRAME_INTERVAL_MS = 1000 / 30
+    let lastFrameTime = 0
 
     function animate() {
       frameId = requestAnimationFrame(animate)
       if (suspendedRef.current) return
+      const now = performance.now()
+      if (now - lastFrameTime < FRAME_INTERVAL_MS) return
+      lastFrameTime = now
       const t = Date.now() * 0.001
 
       sampleAudio()
@@ -556,13 +574,28 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
       starGeo.attributes.position.needsUpdate = true
       starGeo.attributes.color.needsUpdate = true
 
-      // Grid — energy brightens, bass creates travelling pulse
-      gridLines.forEach((g, i) => {
+      // Grid — energy brightens, bass creates travelling pulse (averaged
+      // across each merged group instead of set per-line).
+      let vGridOpacitySum = 0
+      for (let i = 0; i < vLineCount; i++) {
         const travel = Math.sin(t * 1.2 + i * 0.2) * aBass * 0.06 * react
-        const pulse =
-          op(0.05) + Math.sin(t * 0.8 + i * 0.15) * op(0.04) + aEnergy * op(0.14) + travel
-        ;(g.line.material as THREE.LineBasicMaterial).opacity = Math.max(0.002, pulse)
-      })
+        vGridOpacitySum += Math.max(
+          0.002,
+          op(0.05) + Math.sin(t * 0.8 + i * 0.15) * op(0.04) + aEnergy * op(0.14) + travel,
+        )
+      }
+      vGridMat.opacity = vGridOpacitySum / vLineCount
+
+      let hGridOpacitySum = 0
+      for (let i = 0; i < hLineCount; i++) {
+        const idx = vLineCount + i
+        const travel = Math.sin(t * 1.2 + idx * 0.2) * aBass * 0.06 * react
+        hGridOpacitySum += Math.max(
+          0.002,
+          op(0.05) + Math.sin(t * 0.8 + idx * 0.15) * op(0.04) + aEnergy * op(0.14) + travel,
+        )
+      }
+      hGridMat.opacity = hGridOpacitySum / hLineCount
 
       // Diamonds — highs spin, bass flashes scale
       diamondObjs.forEach((d) => {
