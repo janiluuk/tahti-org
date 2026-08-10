@@ -14,7 +14,7 @@ import {
 import { signCentrifugoToken } from '../../lib/centrifugo-jwt.js'
 import { verifyHcaptcha } from '../../lib/hcaptcha.js'
 import { isActiveFanSubscriber } from '../../lib/fansub.js'
-import { markChatCaptchaVerified } from '../../lib/chat-captcha.js'
+import { isChatCaptchaVerified, markChatCaptchaVerified } from '../../lib/chat-captcha.js'
 import { countryFromIp } from '../../lib/geoip.js'
 
 // Rate limit: 10 tokens per IP per minute
@@ -58,18 +58,6 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
         return reply.status(429).send({ error: 'Too many requests' })
       }
 
-      // hCaptcha guards the anonymous join path from bot spam — a signed-in
-      // session is already a stronger anti-abuse signal than a captcha, and
-      // the chat UI never renders a captcha widget for this endpoint (only
-      // /signup does), so requiring one unconditionally left every signed-in
-      // member unable to join a channel's chat wherever HCAPTCHA_SECRET is a
-      // real, non-dev value — i.e. everywhere assertProductionSecrets()
-      // requires it to be, so this endpoint was broken for everyone.
-      const captchaOk = request.sessionUser?.id ? true : await verifyHcaptcha(hcaptchaToken)
-      if (!captchaOk) {
-        return reply.status(400).send({ error: 'hCaptcha verification failed' })
-      }
-
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
         select: { id: true, userId: true, chatSubscribersOnly: true },
@@ -86,6 +74,27 @@ const chatTokenRoute: FastifyPluginAsync = async (fastify) => {
         .update(`${ip}:${ua}:${channel.id}:${salt}`)
         .digest('hex')
         .slice(0, 16)
+
+      // hCaptcha guards the anonymous join path from bot spam — a signed-in
+      // session is already a stronger anti-abuse signal than a captcha, and
+      // the chat UI never renders a captcha widget for this endpoint (only
+      // /signup does), so requiring one unconditionally left every signed-in
+      // member unable to join a channel's chat wherever HCAPTCHA_SECRET is a
+      // real, non-dev value — i.e. everywhere assertProductionSecrets()
+      // requires it to be, so this endpoint was broken for everyone.
+      //
+      // A fingerprint that already solved hCaptcha on this channel within the
+      // last 24h (markChatCaptchaVerified below, also reused by the publish
+      // path — see chat-captcha.ts) skips a fresh solve, so a returning
+      // anonymous visitor who reloads or comes back later the same day isn't
+      // re-challenged for a captcha they already passed.
+      const captchaOk =
+        Boolean(request.sessionUser?.id) ||
+        (await isChatCaptchaVerified(channel.id, fingerprint, { failOpen: false })) ||
+        (await verifyHcaptcha(hcaptchaToken))
+      if (!captchaOk) {
+        return reply.status(400).send({ error: 'hCaptcha verification failed' })
+      }
 
       // Check ban before issuing token
       const ban = await fastify.prisma.chatBan.findUnique({

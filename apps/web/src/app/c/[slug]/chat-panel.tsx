@@ -6,6 +6,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { LiveChatPanel, PinnedAnnouncement, type LiveChatMessage } from '@tahti/ui'
 import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
+import {
+  clearChatCaptchaVerifiedLocally,
+  markChatCaptchaVerifiedLocally,
+  wasChatCaptchaRecentlyVerified,
+} from '@/lib/chat-captcha-memory'
 import { useHcaptcha } from '@/lib/use-hcaptcha'
 import { usePlayer } from '@/contexts/player-context'
 import { LoginPromptModal } from '@/components/login-prompt-modal'
@@ -114,12 +119,17 @@ export default function ChatPanel({
   // forever, so sendDisabled/inputDisabled (which gate on !publishToken)
   // stayed true forever and returning visitors could never actually send.
   // When hCaptcha is enforced, skip auto-rejoin — the widget must be solved
-  // on an explicit Join click.
+  // on an explicit Join click — UNLESS this browser already solved it for
+  // this channel recently (wasChatCaptchaRecentlyVerified): joinChat() below
+  // then attempts the join with no fresh token, and the server independently
+  // confirms the same "recently verified" fact before accepting it (see the
+  // comment in chat-captcha-memory.ts) — worst case it's rejected and the
+  // visitor falls back to the widget, same as before this existed.
   useEffect(() => {
     const saved = loadStoredChatHandle()
     if (saved) {
       setPendingHandle(saved)
-      if (!captchaRequired) void joinChat(saved)
+      if (!captchaRequired || wasChatCaptchaRecentlyVerified(slug)) void joinChat(saved)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [captchaRequired])
@@ -254,7 +264,7 @@ export default function ChatPanel({
 
   async function joinChat(h: string) {
     try {
-      if (captchaRequired && !getToken()) {
+      if (captchaRequired && !getToken() && !wasChatCaptchaRecentlyVerified(slug)) {
         setError('Complete the captcha to join chat.')
         return
       }
@@ -276,6 +286,9 @@ export default function ChatPanel({
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string }
         resetCaptcha()
+        if (body.error === 'hCaptcha verification failed') {
+          clearChatCaptchaVerifiedLocally(slug)
+        }
         setError(
           body.error === 'hCaptcha verification failed'
             ? 'Captcha failed — try again.'
@@ -291,6 +304,7 @@ export default function ChatPanel({
         channelRole?: 'owner' | 'moderator' | null
       }
       persistChatHandle(data.handle)
+      if (captchaRequired) markChatCaptchaVerifiedLocally(slug)
       setHandle(data.handle)
       setPublishToken(data.token)
       setSupporter(!!data.supporter)
