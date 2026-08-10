@@ -84,6 +84,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(target, 308)
   }
 
+  // On radio.tahti.live itself, bare "/" already renders /radio via the rewrite
+  // below — so a literal "/radio" link (used by every OTHER page/subdomain to
+  // reach the station) is redundant and shows up in the address bar as the
+  // ugly "radio.tahti.live/radio". Canonicalize it back to the bare root here
+  // instead of hunting down every Link that points at "/radio".
+  if (channelSlug === 'radio' && (pathname === '/radio' || pathname === '/radio/')) {
+    const target = new URL('/', request.url)
+    target.search = search
+    return NextResponse.redirect(target, 308)
+  }
+
   if (channelSlug) {
     if (isRewritableRoot) {
       const url = request.nextUrl.clone()

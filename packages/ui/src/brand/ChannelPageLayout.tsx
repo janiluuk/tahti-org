@@ -73,6 +73,26 @@ const SITE_NAV: { id: SiteNavId; href: string; label: string }[] = [
   { id: 'venues', href: '/venues', label: 'Venues' },
 ]
 
+/** Tahti Radio's canonical public address is radio.tahti.live, not a
+ * same-origin "/radio" path — a relative href would keep whatever subdomain
+ * the visitor is already on (e.g. app.tahti.live/radio), which still renders
+ * the right page but leaves the wrong host in the address bar. Mirrors the
+ * app.<root>/apex → <slug>.<root> logic in apps/web/src/lib/app-url.ts
+ * (duplicated here in miniature since packages/ui can't import from apps/web). */
+function resolveRadioNavHref(): string {
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://tahti.live').replace(/\/$/, '')
+  try {
+    const { protocol, hostname } = new URL(appUrl)
+    if (hostname.startsWith('app.')) return `${protocol}//radio.${hostname.slice('app.'.length)}`
+    if (hostname === 'tahti.live' || hostname === 'www.tahti.live') {
+      return `${protocol}//radio.tahti.live`
+    }
+  } catch {
+    // fall through to same-origin path (local/dev hosts with no wildcard DNS)
+  }
+  return '/radio'
+}
+
 /** This header also renders on wildcard subdomains (radio.tahti.live, an artist's
  * own slug.tahti.live) where middleware.ts rewrites a bare "/" straight back to
  * the current page — a plain relative "/" there would be a dead click, not a
@@ -105,6 +125,7 @@ export function ChannelHeader({
   const resolvedActiveNav = activeNav ?? SITE_NAV.find((item) => item.href === pathname)?.id
   const channelLiveMode = Boolean(isLive && artistHandle && !resolvedActiveNav && !contextLink)
   const homeHref = resolveHomeHref()
+  const radioHref = resolveRadioNavHref()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -149,7 +170,7 @@ export function ChannelHeader({
           {SITE_NAV.map((item) => (
             <Link
               key={item.id}
-              href={item.id === 'home' ? homeHref : item.href}
+              href={item.id === 'home' ? homeHref : item.id === 'radio' ? radioHref : item.href}
               className={`ch-header__nav-link${resolvedActiveNav === item.id ? ' ch-header__nav-link--active' : ''}`}
               aria-current={resolvedActiveNav === item.id ? 'page' : undefined}
             >
@@ -327,6 +348,11 @@ export function ChannelPageLayout({
   main,
   sidebar,
 }: ChannelPageLayoutProps) {
+  // Collapsing only hides the chat rail visually (grid column animates to
+  // ~0) — the sidebar subtree stays mounted so the chat websocket doesn't
+  // drop and reconnect every time someone tucks it away.
+  const [chatCollapsed, setChatCollapsed] = useState(false)
+
   return (
     <>
       <ChannelHeader
@@ -337,9 +363,29 @@ export function ChannelPageLayout({
         showLiveBadge={showLiveBadge}
         user={user}
       />
-      <div className="ch-body shell-channel">
+      <div className={`ch-body shell-channel${chatCollapsed ? ' ch-body--chat-collapsed' : ''}`}>
         <div className="ch-main">{main}</div>
-        <aside className="ch-sidebar">{sidebar}</aside>
+        <button
+          type="button"
+          className="ch-chat-collapse-toggle"
+          onClick={() => setChatCollapsed((v) => !v)}
+          aria-expanded={!chatCollapsed}
+          aria-label={chatCollapsed ? 'Show chat' : 'Hide chat'}
+          title={chatCollapsed ? 'Show chat' : 'Hide chat'}
+        >
+          <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden>
+            <path
+              d={chatCollapsed ? 'M2 1l6 7-6 7' : 'M8 1L2 8l6 7'}
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+        <aside className="ch-sidebar" aria-hidden={chatCollapsed}>
+          {sidebar}
+        </aside>
       </div>
     </>
   )
