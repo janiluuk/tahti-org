@@ -160,6 +160,29 @@ export default function ChatPanel({
     }
   }, [slug])
 
+  // Chat has no database persistence — messages only live in Centrifugo's own
+  // history buffer (history_size/history_ttl, infra/centrifugo.json). Without
+  // this fetch, every page load or WS reconnect started from a blank chat.
+  useEffect(() => {
+    let cancelled = false
+    fetch(`${API_BASE}/api/chat/${slug}/history`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { messages: Omit<ChatMessage, 'id'>[] } | null) => {
+        if (cancelled || !data?.messages?.length) return
+        setMessages((prev) => {
+          const seen = new Set(prev.map((m) => `${m.ts}-${m.handle}-${m.text}`))
+          const history = data.messages
+            .filter((m) => !seen.has(`${m.ts}-${m.handle}-${m.text}`))
+            .map((m, i) => ({ ...m, id: `history-${m.ts}-${i}` }))
+          return [...history, ...prev].sort((a, b) => a.ts - b.ts).slice(-100)
+        })
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [slug])
+
   useEffect(() => {
     let cancelled = false
     const poll = async () => {

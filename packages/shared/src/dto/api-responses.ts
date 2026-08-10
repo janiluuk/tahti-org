@@ -1147,6 +1147,21 @@ export const ChatPresenceResponseSchema = z.object({
   numClients: z.number().int().nonnegative(),
 })
 
+export const ChatHistoryMessageSchema = z.object({
+  handle: z.string(),
+  text: z.string(),
+  ts: z.number(),
+  supporter: z.boolean().optional(),
+  channelRole: z.enum(['owner', 'moderator']).nullable().optional(),
+  countryCode: z.string().nullable().optional(),
+  system: z.boolean().optional(),
+  href: z.string().optional(),
+})
+
+export const ChatHistoryResponseSchema = z.object({
+  messages: z.array(ChatHistoryMessageSchema),
+})
+
 export const ChatAnnouncementViewSchema = z.object({
   id: z.string(),
   body: z.string(),

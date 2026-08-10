@@ -55,6 +55,7 @@ import chatMessageRoute from './routes/chat/message.js'
 import chatAnnouncementsRoute from './routes/chat/announcements.js'
 import chatReactRoute from './routes/chat/react.js'
 import chatPresenceRoute from './routes/chat/presence.js'
+import chatHistoryRoute from './routes/chat/history.js'
 import meChat from './routes/me/chat.js'
 import meCommentSettings from './routes/me/comment-settings.js'
 import meTopListsSettings from './routes/me/top-lists-settings.js'
@@ -513,6 +514,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(chatAnnouncementsRoute)
   await fastify.register(chatReactRoute)
   await fastify.register(chatPresenceRoute)
+  await fastify.register(chatHistoryRoute)
   await fastify.register(meChat)
   await fastify.register(meCommentSettings)
   await fastify.register(meTopListsSettings)
