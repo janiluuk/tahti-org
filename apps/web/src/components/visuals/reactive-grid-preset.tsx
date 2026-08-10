@@ -74,8 +74,7 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
           const idx = Math.floor((i / cells.length) * data.length)
           pulse = data[idx]! / 255
         }
-        const col = new THREE.Color().lerpColors(muted, pulse > 0.7 ? highlight : accent, pulse)
-        mat.color = col
+        mat.color.lerpColors(muted, pulse > 0.7 ? highlight : accent, pulse)
         mat.opacity = 0.1 + pulse * 0.3 * intensity
       }
 

@@ -77,8 +77,8 @@ export function WaveformBarsPreset({ colorScheme, analyser, settingsRef }: Visua
         bar.position.y = -1 + heights[i] / 2
 
         const lerpT = analyser ? heights[i] / 0.65 : Math.abs(Math.sin(frame * 0.02 + i * 0.15))
-        const col = new THREE.Color().lerpColors(accent, highlight, Math.min(1, lerpT))
-        ;(bar.material as THREE.MeshBasicMaterial).color = col
+        const mat = bar.material as THREE.MeshBasicMaterial
+        mat.color.lerpColors(accent, highlight, Math.min(1, lerpT))
       }
 
       renderer.render(scene, camera)
