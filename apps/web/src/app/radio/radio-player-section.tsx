@@ -10,6 +10,7 @@ import HlsPlayer from '../c/[slug]/hls-player'
 import ReactionsOverlay from '../c/[slug]/reactions'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { usePlayer } from '@/contexts/player-context'
+import { useSuspendBackgroundCanvas } from '@/contexts/background-canvas-context'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
 const NOW_PLAYING_POLL_MS = 8_000
@@ -75,6 +76,12 @@ export function RadioPlayerSection({
   colorSchemeJson,
 }: RadioPlayerSectionProps) {
   const { analyser, track, updateTrackMeta } = usePlayer()
+  // This card always renders its own ChannelVisualizer below (unconditionally,
+  // unlike ChannelPageVisualizer) — pause the shared background canvas for as
+  // long as this section is mounted so the radio page isn't running two full
+  // WebGL scenes (BgCanvas + this REACTIVE_GRID) at once, one almost entirely
+  // hidden behind the other.
+  useSuspendBackgroundCanvas(true)
   const liveElapsedSec = useLiveElapsedSec(liveSlot?.startAt ?? null)
   const [nowPlaying, setNowPlaying] = useState(initialNowPlaying)
 
@@ -228,7 +235,16 @@ export function RadioPlayerSection({
           artworkUrl={artworkUrl}
           liveElapsedSec={liveElapsedSec}
           isReplay={!liveSlot}
-          href="/radio"
+          // "/" not "/radio" — this player only ever renders already on the
+          // radio.tahti.live subdomain (middleware rewrites its root to this
+          // same page), so linking to the literal /radio path is a real,
+          // different URL to Next.js and shows a redundant /radio suffix in
+          // the address bar after clicking, even though the content is
+          // identical. The shared mini-player's own href (set via
+          // updateTrackMeta below) stays "/radio" — that one can be clicked
+          // from any other subdomain, where a bare "/" would go to the
+          // wrong (current) site's home instead of the radio station.
+          href="/"
           hideWaveform
           artOverlayPlay
           animateTrackChange
