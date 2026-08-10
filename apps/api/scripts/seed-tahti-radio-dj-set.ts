@@ -102,6 +102,8 @@ async function transcodeToFlac(inputPath: string, outputPath: string): Promise<v
     '2',
     '-sample_fmt',
     's16',
+    '-af',
+    'aresample=resampler=soxr:precision=28',
     outputPath,
   ])
 }
@@ -132,7 +134,7 @@ async function main() {
 
   let archive = await prisma.archiveItem.findFirst({
     where: { channelId: radio.id, title: TITLE },
-    select: { id: true, mp3Key: true, durationSec: true },
+    select: { id: true, mp3Key: true, flacKey: true, durationSec: true },
   })
 
   if (!archive) {
@@ -147,12 +149,15 @@ async function main() {
         qualityBadge: 'TRANSCODED',
         commentary: 'Long-form DJ set for Tahti Radio rotation (set_20260519).',
       },
-      select: { id: true, mp3Key: true, durationSec: true },
+      select: { id: true, mp3Key: true, flacKey: true, durationSec: true },
     })
   }
 
-  let destKey = `mp3/${TAHTI_RADIO_SLUG}/${archive.id}.mp3`
-  let isFlac = false
+  // Prefer whichever key the DB already has (a prior run may have stored
+  // FLAC) so a re-run doesn't fall through to the MP3 fallback path and
+  // silently downgrade + orphan an existing lossless upload.
+  let destKey = archive.flacKey ?? archive.mp3Key ?? `mp3/${TAHTI_RADIO_SLUG}/${archive.id}.mp3`
+  let isFlac = Boolean(archive.flacKey)
   let durationSec = archive.durationSec ?? EXPECTED_DURATION_SEC
   let fileSizeBytes: bigint | null = null
 
@@ -278,7 +283,7 @@ async function main() {
       {
         ok: true,
         archiveItemId: archive.id,
-        mp3Key: destKey,
+        ...(isFlac ? { flacKey: destKey } : { mp3Key: destKey }),
         durationSec,
         rotationItemId: rotation.id,
         position: rotation.position,

@@ -57,6 +57,7 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
     let raf: number
     let disposed = false
     let t = 0
+    const data = analyser ? new Uint8Array(analyser.frequencyBinCount) : null
 
     function animate() {
       if (disposed) return
@@ -64,7 +65,6 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
       const { speed, intensity } = readSettings(settingsRef)
       t += 0.02 * speed
 
-      const data = analyser ? new Uint8Array(analyser.frequencyBinCount) : null
       if (analyser && data) analyser.getByteFrequencyData(data)
 
       for (let i = 0; i < cells.length; i++) {
