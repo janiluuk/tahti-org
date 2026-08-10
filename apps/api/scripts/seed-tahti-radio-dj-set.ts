@@ -20,7 +20,13 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { CopyObjectCommand, HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import { prisma } from '@tahti/db'
-import { TAHTI_RADIO_SLUG } from '@tahti/shared'
+import {
+  TAHTI_RADIO_SLUG,
+  chooseLossyOutputBitrateKbps,
+  deriveQualityBadge,
+  isLosslessCodec,
+  isLosslessSource,
+} from '@tahti/shared'
 import { s3 } from '../src/lib/minio.js'
 import { config } from '../src/config.js'
 import { generateCoverArtSvg } from '../src/lib/generate-cover-art.js'
@@ -59,7 +65,52 @@ async function ffprobeDurationSec(filePath: string): Promise<number> {
   return Math.round(parseFloat(stdout.trim()))
 }
 
-async function transcodeToMp3(inputPath: string, outputPath: string): Promise<void> {
+async function ffprobeFormat(
+  filePath: string,
+): Promise<{ format: string; codec: string | null; bitrateKbps: number | null }> {
+  const { stdout } = await execFileAsync('ffprobe', [
+    '-v',
+    'error',
+    '-print_format',
+    'json',
+    '-show_format',
+    '-show_streams',
+    filePath,
+  ])
+  const data = JSON.parse(stdout) as {
+    format?: { format_name?: string; bit_rate?: string }
+    streams?: { codec_type?: string; codec_name?: string; bit_rate?: string }[]
+  }
+  const format = (data.format?.format_name ?? '').split(',')[0] ?? ''
+  const stream = data.streams?.find((s) => s.codec_type === 'audio')
+  const rawBitrate = stream?.bit_rate ?? data.format?.bit_rate
+  const bitrateKbps = rawBitrate ? Math.round(Number(rawBitrate) / 1000) : null
+  return { format, codec: stream?.codec_name ?? null, bitrateKbps }
+}
+
+/** Lossless sources (e.g. WAV) are kept as FLAC — never force-encoded down to lossy MP3. */
+async function transcodeToFlac(inputPath: string, outputPath: string): Promise<void> {
+  await execFileAsync('ffmpeg', [
+    '-y',
+    '-i',
+    inputPath,
+    '-codec:a',
+    'flac',
+    '-ar',
+    '44100',
+    '-ac',
+    '2',
+    '-sample_fmt',
+    's16',
+    outputPath,
+  ])
+}
+
+async function transcodeToMp3(
+  inputPath: string,
+  outputPath: string,
+  bitrateKbps: number,
+): Promise<void> {
   await execFileAsync('ffmpeg', [
     '-y',
     '-i',
@@ -67,7 +118,7 @@ async function transcodeToMp3(inputPath: string, outputPath: string): Promise<vo
     '-codec:a',
     'libmp3lame',
     '-b:a',
-    '192k',
+    `${bitrateKbps}k`,
     outputPath,
   ])
 }
@@ -100,7 +151,8 @@ async function main() {
     })
   }
 
-  const destKey = `mp3/${TAHTI_RADIO_SLUG}/${archive.id}.mp3`
+  let destKey = `mp3/${TAHTI_RADIO_SLUG}/${archive.id}.mp3`
+  let isFlac = false
   let durationSec = archive.durationSec ?? EXPECTED_DURATION_SEC
   let fileSizeBytes: bigint | null = null
 
@@ -139,22 +191,39 @@ async function main() {
       }
       const tmpDir = await mkdtemp(path.join(tmpdir(), 'tahti-dj-set-'))
       try {
-        const mp3Path = path.join(tmpDir, 'set.mp3')
         const lower = localPath.toLowerCase()
-        if (lower.endsWith('.mp3')) {
-          await fs.copyFile(localPath, mp3Path)
+        const probe = await ffprobeFormat(localPath)
+        const lossless = isLosslessSource(probe.format) || isLosslessCodec(probe.codec)
+
+        let outPath: string
+        let contentType: string
+        if (lower.endsWith('.mp3') && !lossless) {
+          outPath = path.join(tmpDir, 'set.mp3')
+          await fs.copyFile(localPath, outPath)
+          contentType = 'audio/mpeg'
+        } else if (lossless) {
+          // Keep lossless sources (e.g. WAV) as FLAC — never force-downsample to MP3.
+          outPath = path.join(tmpDir, 'set.flac')
+          await transcodeToFlac(localPath, outPath)
+          isFlac = true
+          destKey = `flac/${TAHTI_RADIO_SLUG}/${archive.id}.flac`
+          contentType = 'audio/flac'
         } else {
-          await transcodeToMp3(localPath, mp3Path)
+          outPath = path.join(tmpDir, 'set.mp3')
+          const bitrateKbps = chooseLossyOutputBitrateKbps(probe.bitrateKbps)
+          await transcodeToMp3(localPath, outPath, bitrateKbps)
+          contentType = 'audio/mpeg'
         }
-        durationSec = await ffprobeDurationSec(mp3Path)
-        const stat = await fs.stat(mp3Path)
+
+        durationSec = await ffprobeDurationSec(outPath)
+        const stat = await fs.stat(outPath)
         fileSizeBytes = BigInt(stat.size)
         await s3.send(
           new PutObjectCommand({
             Bucket: config.minio.bucket,
             Key: destKey,
-            Body: createReadStream(mp3Path),
-            ContentType: 'audio/mpeg',
+            Body: createReadStream(outPath),
+            ContentType: contentType,
             ContentLength: stat.size,
           }),
         )
@@ -171,7 +240,9 @@ async function main() {
     where: { id: archive.id },
     data: {
       status: 'READY',
-      mp3Key: destKey,
+      mp3Key: isFlac ? null : destKey,
+      flacKey: isFlac ? destKey : null,
+      qualityBadge: deriveQualityBadge('UPLOAD', isFlac),
       durationSec,
       fileSizeBytes: fileSizeBytes ?? undefined,
       bannerUrl: publicMediaUrl(coverKey),
