@@ -127,6 +127,7 @@ export default function FanChatPanel({ slug }: { slug: string }) {
     handle: m.handle,
     text: m.text,
     tone: 'supporter',
+    ts: m.ts,
   }))
 
   return (

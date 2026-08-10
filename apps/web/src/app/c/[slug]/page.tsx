@@ -905,7 +905,7 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       }
       sidebar={
         <>
-          <ChatPanel slug={slug} announcements={announcements} />
+          <ChatPanel slug={slug} announcements={announcements} isLoggedIn={Boolean(user)} />
           <FanChatPanel slug={slug} />
           <ReportButton targetType="CHANNEL" targetId={slug} />
         </>

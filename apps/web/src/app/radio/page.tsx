@@ -249,7 +249,13 @@ export default async function RadioPage() {
           </div>
         </div>
       }
-      sidebar={<ChatPanel slug={TAHTI_RADIO_SLUG} announcements={announcements} />}
+      sidebar={
+        <ChatPanel
+          slug={TAHTI_RADIO_SLUG}
+          announcements={announcements}
+          isLoggedIn={Boolean(user)}
+        />
+      }
     />
   )
 }

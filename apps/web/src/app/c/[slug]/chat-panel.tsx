@@ -87,12 +87,23 @@ function ChatLoveButton() {
 export default function ChatPanel({
   slug,
   announcements,
+  isLoggedIn = false,
 }: {
   slug: string
   announcements: Announcement[]
+  /** Signed-in members skip the captcha entirely — the server already treats
+   * a session as a stronger anti-abuse signal than a captcha (see
+   * apps/api/src/routes/chat/token.ts), the client just never checked login
+   * state before, so it loaded/rendered the widget for everyone regardless. */
+  isLoggedIn?: boolean
 }) {
   const [handle, setHandle] = useState<string>('')
   const [pendingHandle, setPendingHandle] = useState('')
+  // Anonymous visitors start on a plain "Join chat" prompt — the handle
+  // input and (for them only) the captcha widget don't appear until they
+  // actually decide to join, instead of loading/rendering immediately on
+  // page load before any interaction.
+  const [joinStarted, setJoinStarted] = useState(false)
   /** Read-only Centrifugo token — receive messages before join. */
   const [viewerToken, setViewerToken] = useState<string | null>(null)
   /** Publish-capable token after handle join. */
@@ -106,11 +117,22 @@ export default function ChatPanel({
   const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected')
   const [error, setError] = useState<string | null>(null)
   const [listenerCount, setListenerCount] = useState<number | null>(null)
+  const [dailyListenerCount, setDailyListenerCount] = useState<number | null>(null)
   const [subscribersOnly, setSubscribersOnly] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const msgIdRef = useRef(1)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const { captchaRef, required: captchaRequired, getToken, reset: resetCaptcha } = useHcaptcha(true)
+  const {
+    captchaRef,
+    required: hcaptchaConfigured,
+    getToken,
+    reset: resetCaptcha,
+  } = useHcaptcha(joinStarted && !isLoggedIn)
+  // Signed-in members never need a captcha at all (see isLoggedIn doc above)
+  // — captchaRequired (not the raw hook value) gates every actual join-flow
+  // decision below, so it's never true for them even though hCaptcha itself
+  // is configured site-wide.
+  const captchaRequired = hcaptchaConfigured && !isLoggedIn
 
   // A returning visitor already has a handle saved from a previous visit —
   // silently rejoin with it to get a fresh publish token. Previously this just
@@ -200,6 +222,22 @@ export default function ChatPanel({
     return () => {
       cancelled = true
       clearInterval(t)
+    }
+  }, [slug])
+
+  // Artist-controlled (Settings → Artist info → "Show today's listener count") —
+  // the endpoint itself reports enabled=false when they've turned it off, so
+  // this stays null (hidden) in that case rather than needing a second fetch.
+  useEffect(() => {
+    let cancelled = false
+    fetch(`${API_BASE}/api/channels/${slug}/daily-listeners`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { count: number; enabled: boolean } | null) => {
+        if (!cancelled && data?.enabled) setDailyListenerCount(data.count)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
     }
   }, [slug])
 
@@ -380,6 +418,7 @@ export default function ChatPanel({
             : 'default',
     countryCode: m.countryCode,
     href: m.href,
+    ts: m.ts,
   }))
 
   const displayError =
@@ -393,6 +432,7 @@ export default function ChatPanel({
       surface="channel"
       connected={status === 'connected'}
       listenerCount={listenerCount}
+      dailyListenerCount={dailyListenerCount}
       messages={liveMessages}
       messagesRef={scrollRef}
       headerExtra={<ChatLoveButton />}
@@ -402,7 +442,8 @@ export default function ChatPanel({
           ? announcements.map((a) => <PinnedAnnouncement key={a.id}>{a.body}</PinnedAnnouncement>)
           : undefined
       }
-      authPhase={handle ? 'chat' : 'join'}
+      authPhase={handle ? 'chat' : joinStarted ? 'join' : 'prompt'}
+      onStartJoin={() => setJoinStarted(true)}
       joinHandle={pendingHandle}
       onJoinHandleChange={setPendingHandle}
       onJoin={() => void joinChat(pendingHandle)}

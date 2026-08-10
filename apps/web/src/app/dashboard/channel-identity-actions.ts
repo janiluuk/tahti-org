@@ -32,6 +32,7 @@ export async function updateChannelProfile(patch: {
   showJoinDate?: boolean
   showFollowers?: boolean
   showFollowing?: boolean
+  showDailyListeners?: boolean
   artistKind?: 'SINGLE' | 'COLLECTIVE'
 }): Promise<{ error: string | null }> {
   const res = await fetch(`${apiUrl}/api/me/profile`, {

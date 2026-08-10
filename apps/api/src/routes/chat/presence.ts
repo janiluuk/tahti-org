@@ -3,6 +3,7 @@
 
 import type { FastifyPluginAsync } from 'fastify'
 import {
+  ChatDailyListenersResponseSchema,
   ChatPresenceResponseSchema,
   SlugParamSchema,
   openApiResponse,
@@ -10,6 +11,7 @@ import {
 } from '@tahti/shared'
 import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
+import { fetchMeasuredHlsListenersByDate } from '../../lib/hls-egress-measured.js'
 
 const chatPresenceRoute: FastifyPluginAsync = async (fastify) => {
   // GET /api/channels/:slug/presence — listener count from Centrifugo
@@ -67,6 +69,38 @@ const chatPresenceRoute: FastifyPluginAsync = async (fastify) => {
         } catch {
           return { numClients: 0 }
         }
+      })
+      return reply.send(result)
+    },
+  )
+
+  // GET /api/channels/:slug/daily-listeners — distinct listeners so far today
+  // (UTC), shown at the top of the chat panel — same anonymized-id-set counter
+  // (M22, populated by a worker cron from HLS access logs) the artist's own
+  // stats dashboard uses, not a new tracking mechanism.
+  fastify.get(
+    '/api/channels/:slug/daily-listeners',
+    {
+      schema: {
+        tags: ['chat'],
+        response: openApiResponse(ChatDailyListenersResponseSchema, 'ChatDailyListeners'),
+      },
+    },
+    async (request, reply) => {
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
+
+      const channel = await fastify.prisma.channel.findUnique({
+        where: { slug },
+        select: { id: true, user: { select: { showDailyListeners: true } } },
+      })
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+
+      const result = await getCachedJson(`daily-listeners:${slug}`, 60, async () => {
+        const today = new Date().toISOString().slice(0, 10)
+        const byDate = await fetchMeasuredHlsListenersByDate(slug, [today])
+        return { count: byDate[today] ?? 0, enabled: channel.user.showDailyListeners }
       })
       return reply.send(result)
     },

@@ -40,6 +40,7 @@ const profileSelect = {
   showJoinDate: true,
   showFollowers: true,
   showFollowing: true,
+  showDailyListeners: true,
   createdAt: true,
 } as const
 
@@ -63,6 +64,7 @@ function serializeProfile(
     showJoinDate: boolean
     showFollowers: boolean
     showFollowing: boolean
+    showDailyListeners: boolean
     createdAt: Date
   },
   artistKind: 'SINGLE' | 'COLLECTIVE',
@@ -86,6 +88,7 @@ function serializeProfile(
     showJoinDate: profile.showJoinDate,
     showFollowers: profile.showFollowers,
     showFollowing: profile.showFollowing,
+    showDailyListeners: profile.showDailyListeners,
     createdAt: profile.createdAt.toISOString(),
     artistKind,
   }
@@ -156,6 +159,7 @@ const meProfileRoutes: FastifyPluginAsync = async (fastify) => {
       if (body.showJoinDate !== undefined) data.showJoinDate = body.showJoinDate
       if (body.showFollowers !== undefined) data.showFollowers = body.showFollowers
       if (body.showFollowing !== undefined) data.showFollowing = body.showFollowing
+      if (body.showDailyListeners !== undefined) data.showDailyListeners = body.showDailyListeners
 
       const updated =
         Object.keys(data).length > 0

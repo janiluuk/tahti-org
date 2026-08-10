@@ -46,6 +46,7 @@ export type ChannelEditorFetchResult = {
   showJoinDate: boolean
   showFollowers: boolean
   showFollowing: boolean
+  showDailyListeners: boolean
   defaultLocation: string | null
   genres: string[]
   links: Array<{ label: string; url: string }>
@@ -85,6 +86,7 @@ export async function fetchChannelEditorData(
   let showJoinDate = true
   let showFollowers = true
   let showFollowing = true
+  let showDailyListeners = true
   let defaultLocation: string | null = null
   let genres: string[] = []
   let links: Array<{ label: string; url: string }> = []
@@ -112,6 +114,7 @@ export async function fetchChannelEditorData(
         showJoinDate: boolean
         showFollowers: boolean
         showFollowing: boolean
+        showDailyListeners: boolean
         defaultLocation: string | null
         avatarUrl: string | null
         avatarPosterUrl: string | null
@@ -122,6 +125,7 @@ export async function fetchChannelEditorData(
       showJoinDate = profile.showJoinDate
       showFollowers = profile.showFollowers
       showFollowing = profile.showFollowing
+      showDailyListeners = profile.showDailyListeners
       defaultLocation = profile.defaultLocation
       avatarUrl = profile.avatarUrl
       avatarPosterUrl = profile.avatarPosterUrl
@@ -195,6 +199,7 @@ export async function fetchChannelEditorData(
     showJoinDate,
     showFollowers,
     showFollowing,
+    showDailyListeners,
     defaultLocation,
     genres,
     links,

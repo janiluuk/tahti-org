@@ -2949,6 +2949,19 @@
   font-size: clamp(14px, 1.6vw, 18px);
 }
 
+/* The artist name (--muted2, a fairly dim gray) was hard to read over the
+   busy blurred artwork + REACTIVE_GRID visualizer backdrop this player sits
+   on — same problem the bright title text doesn't have. A rounded,
+   semi-transparent backing behind both lifts them off the backdrop as one
+   consistent, readable block instead of changing the subtitle's color alone. */
+[data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__meta-text {
+  width: fit-content;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--bg) 50%, transparent);
+  backdrop-filter: blur(3px);
+}
+
 [data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__art {
   width: clamp(96px, 16vw, 220px);
   height: clamp(96px, 16vw, 220px);
@@ -3343,6 +3356,11 @@
   font-weight: 400;
 }
 
+[data-tahti-ui='brand'] .ch-chat-listeners--daily {
+  margin-left: 0.5rem;
+  opacity: 0.75;
+}
+
 [data-tahti-ui='brand'] .ch-chat-panel__head-extra {
   margin-left: auto;
 }
@@ -3573,6 +3591,10 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+[data-tahti-ui='brand'] .ch-chat-input-row--prompt {
+  justify-content: center;
 }
 
 [data-tahti-ui='brand'] .ch-chat-captcha {

@@ -42,6 +42,7 @@ export interface ArtistInfoFormData {
   showJoinDate: boolean
   showFollowers: boolean
   showFollowing: boolean
+  showDailyListeners: boolean
   defaultLocation: string | null
   genres: string[]
   bio: string
@@ -73,6 +74,7 @@ export function ArtistInfoForm({
   const [showJoinDate, setShowJoinDate] = useState(initial.showJoinDate)
   const [showFollowers, setShowFollowers] = useState(initial.showFollowers)
   const [showFollowing, setShowFollowing] = useState(initial.showFollowing)
+  const [showDailyListeners, setShowDailyListeners] = useState(initial.showDailyListeners)
   const [artistKind, setArtistKind] = useState<ArtistKind>(initial.artistKind)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -96,6 +98,7 @@ export function ArtistInfoForm({
         showJoinDate,
         showFollowers,
         showFollowing,
+        showDailyListeners,
         defaultLocation: identity.defaultLocation,
         artistKind,
         socialLinks: {
@@ -205,6 +208,15 @@ export function ArtistInfoForm({
             onChange={(e) => setShowFollowing(e.target.checked)}
           />
           <span className="studio-toggle-label">Show who I follow on my profile</span>
+        </label>
+        <label className="studio-toggle-row studio-mt-sm">
+          <input
+            type="checkbox"
+            className="studio-toggle-checkbox"
+            checked={showDailyListeners}
+            onChange={(e) => setShowDailyListeners(e.target.checked)}
+          />
+          <span className="studio-toggle-label">Show today’s listener count in my chat</span>
         </label>
       </Panel>
 

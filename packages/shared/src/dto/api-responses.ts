@@ -1008,6 +1008,7 @@ export const ProfileFieldsSchema = z.object({
   showJoinDate: z.boolean(),
   showFollowers: z.boolean(),
   showFollowing: z.boolean(),
+  showDailyListeners: z.boolean(),
   createdAt: z.string().datetime(),
   /** Solo DJ/artist vs collective/band. Defaults to SINGLE when no channel. */
   artistKind: z.enum(['SINGLE', 'COLLECTIVE']),
@@ -1146,6 +1147,13 @@ export const ChatOkResponseSchema = z.object({
 
 export const ChatPresenceResponseSchema = z.object({
   numClients: z.number().int().nonnegative(),
+})
+
+export const ChatDailyListenersResponseSchema = z.object({
+  count: z.number().int().nonnegative(),
+  /** False when the artist has turned this off in their settings — the
+   * count itself is still computed above but callers should not display it. */
+  enabled: z.boolean(),
 })
 
 export const ChatHistoryMessageSchema = z.object({

@@ -19,6 +19,23 @@ export interface LiveChatMessage {
   countryCode?: string | null
   /** Present on 'system' messages (e.g. "X loved Y") — links to the track. */
   href?: string
+  /** Unix ms — shown as a humanized age in the message row's corner. */
+  ts?: number
+}
+
+/** "just now" / "4m ago" / "2h ago" / "5d ago" / "2mo ago" / "over a year ago". */
+export function formatMessageAge(ts: number): string {
+  const sec = Math.max(0, Math.floor((Date.now() - ts) / 1000))
+  if (sec < 60) return 'just now'
+  const min = Math.floor(sec / 60)
+  if (min < 60) return `${min}m ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}h ago`
+  const day = Math.floor(hr / 24)
+  if (day < 30) return `${day}d ago`
+  const month = Math.floor(day / 30.44)
+  if (month < 12) return `${month}mo ago`
+  return 'over a year ago'
 }
 
 export type ChatMentionSuggestion = {
@@ -39,6 +56,8 @@ export interface LiveChatPanelProps {
   live?: boolean
   listeners?: number
   listenerCount?: number | null
+  /** Distinct listeners so far today (UTC) — shown alongside the live count. */
+  dailyListenerCount?: number | null
   /** Extra control rendered in the channel-surface header, e.g. a "love this track" button. */
   headerExtra?: React.ReactNode
   pinned?: React.ReactNode
@@ -49,8 +68,16 @@ export interface LiveChatPanelProps {
   onSend?: () => void
   inputPlaceholder?: string
   sendLabel?: string
-  /** Join-before-chat flow for public channel chat. */
-  authPhase?: 'join' | 'chat'
+  /** Join-before-chat flow for public channel chat. 'prompt' (default entry
+   * point for a visitor who hasn't joined yet) shows just a single "Join
+   * chat" affordance — no handle input, no captcha — until onStartJoin
+   * fires, which is when the real 'join' form (and, for anonymous
+   * visitors, the captcha widget) actually appears. Skip straight to 'join'
+   * (never pass 'prompt') if there's no reason to gate it, e.g. a returning
+   * visitor being silently rejoined. */
+  authPhase?: 'prompt' | 'join' | 'chat'
+  onStartJoin?: () => void
+  startJoinLabel?: string
   joinHandle?: string
   onJoinHandleChange?: (value: string) => void
   onJoin?: () => void
@@ -118,6 +145,7 @@ export function LiveChatPanel({
   live = true,
   listeners,
   listenerCount,
+  dailyListenerCount,
   headerExtra,
   pinned,
   messages,
@@ -128,6 +156,8 @@ export function LiveChatPanel({
   inputPlaceholder = 'Say something…',
   sendLabel = 'Send',
   authPhase = 'chat',
+  onStartJoin,
+  startJoinLabel = 'Join chat',
   joinHandle = '',
   onJoinHandleChange,
   onJoin,
@@ -294,38 +324,45 @@ export function LiveChatPanel({
       </div>
     ) : null
 
-  const inputBlock =
-    !readOnly && (authPhase === 'join' || authPhase === 'chat') ? (
-      isChannel ? (
-        <>
-          {authPhase === 'join' ? (
-            <div className="ch-chat-input-row">
-              <input
-                type="text"
-                value={joinHandle}
-                onChange={(e) => onJoinHandleChange?.(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleJoin()
-                }}
-                placeholder={joinPlaceholder}
-                maxLength={32}
-                aria-label="Chat handle"
-              />
-              <button type="button" className="ch-chat-send" onClick={handleJoin}>
-                {joinLabel}
-              </button>
-            </div>
-          ) : (
-            chatComposer
-          )}
-          {authPhase === 'join' && captchaSlot ? (
-            <div className="ch-chat-captcha">{captchaSlot}</div>
-          ) : null}
-        </>
-      ) : (
-        chatComposer
+  let inputBlock: React.ReactNode = null
+  if (!readOnly) {
+    if (!isChannel) {
+      inputBlock = chatComposer
+    } else if (authPhase === 'prompt') {
+      inputBlock = (
+        <div className="ch-chat-input-row ch-chat-input-row--prompt">
+          <button type="button" className="ch-chat-send" onClick={() => onStartJoin?.()}>
+            {startJoinLabel}
+          </button>
+        </div>
       )
-    ) : null
+    } else if (authPhase === 'join') {
+      inputBlock = (
+        <>
+          <div className="ch-chat-input-row">
+            <input
+              type="text"
+              value={joinHandle}
+              onChange={(e) => onJoinHandleChange?.(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleJoin()
+              }}
+              placeholder={joinPlaceholder}
+              maxLength={32}
+              aria-label="Chat handle"
+              autoFocus
+            />
+            <button type="button" className="ch-chat-send" onClick={handleJoin}>
+              {joinLabel}
+            </button>
+          </div>
+          {captchaSlot ? <div className="ch-chat-captcha">{captchaSlot}</div> : null}
+        </>
+      )
+    } else {
+      inputBlock = chatComposer
+    }
+  }
 
   return (
     <Tag className={rootClass} aria-label={title}>
@@ -336,6 +373,11 @@ export function LiveChatPanel({
           {typeof count === 'number' && count > 0 ? (
             <span className="ch-chat-listeners">
               {count} {count === 1 ? 'listener' : 'listeners'}
+            </span>
+          ) : null}
+          {typeof dailyListenerCount === 'number' && dailyListenerCount > 0 ? (
+            <span className="ch-chat-listeners ch-chat-listeners--daily">
+              {dailyListenerCount} today
             </span>
           ) : null}
           {headerExtra ? <span className="ch-chat-panel__head-extra">{headerExtra}</span> : null}
@@ -409,6 +451,9 @@ export function LiveChatPanel({
                 ) : message.tone === 'supporter' ? (
                   <span className="chat-supporter-badge">supporter</span>
                 ) : null}
+                {message.ts != null && (
+                  <span className="chat-msg__time">{formatMessageAge(message.ts)}</span>
+                )}
                 <span className="text">{renderChatMessageText(message.text)}</span>
               </div>
             ),

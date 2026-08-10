@@ -1434,9 +1434,19 @@
   gap: 6px;
 }
 .chat-msg {
+  display: flow-root;
   margin-bottom: 10px;
   font-size: var(--text-sm);
   line-height: 1.4;
+}
+
+.chat-msg__time {
+  float: right;
+  margin-left: 8px;
+  font-size: var(--text-micro);
+  color: var(--muted2);
+  opacity: 0.7;
+  white-space: nowrap;
 }
 .chat-handle {
   font-weight: var(--weight-medium);

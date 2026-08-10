@@ -650,6 +650,7 @@ model User {
   showJoinDate          Boolean    @default(true)
   showFollowers         Boolean    @default(true)
   showFollowing         Boolean    @default(true)
+  showDailyListeners    Boolean    @default(true)
   stripeCustomerId                  String?
   stripeMembershipSubscriptionId    String?  @unique
   stripeConnectAccountId            String?  @unique
