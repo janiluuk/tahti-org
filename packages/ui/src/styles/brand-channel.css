@@ -3557,6 +3557,11 @@
 
 [data-tahti-ui='brand'] .ch-chat-captcha > div {
   max-width: 100%;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .ch-chat-captcha iframe {
+  max-width: 100%;
 }
 
 [data-tahti-ui='brand'] .ch-chat-input-row input {

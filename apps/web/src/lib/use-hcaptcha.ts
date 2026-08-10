@@ -32,6 +32,7 @@ export function useHcaptcha(enabled: boolean) {
       widgetIdRef.current = window.hcaptcha.render(captchaRef.current, {
         sitekey: HCAPTCHA_SITE_KEY,
         theme: 'dark',
+        size: 'compact',
       })
     }
 
