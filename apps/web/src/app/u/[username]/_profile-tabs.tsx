@@ -82,7 +82,7 @@ export function ProfileTabs({
         steps={HELP_STEPS}
         activeId={active}
         onNavigate={(id) => setActive(id as Tab)}
-        targetEl={panelRefs.current[active]}
+        getTargetEl={() => panelRefs.current[active]}
       />
       <div className="prof-tabs__bar" role="tablist" aria-label="Profile sections">
         {TABS.map((tab) => (

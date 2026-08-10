@@ -41,7 +41,7 @@ export function RadioTabs({ recent, upcoming }: { recent: ReactNode; upcoming: R
         steps={HELP_STEPS}
         activeId={active}
         onNavigate={(id) => setActive(id as Tab)}
-        targetEl={panelRefs.current[active]}
+        getTargetEl={() => panelRefs.current[active]}
       />
       <div className="prof-tabs__bar" role="tablist" aria-label="Radio schedule">
         {tabs.map((tab) => (

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cn } from '../lib/cn'
 
 export interface HelpSpotlightStep {
@@ -17,10 +17,15 @@ export interface HelpSpotlightProps {
   activeId: string
   /** Switches the real underlying tab — the spotlight re-measures and follows. */
   onNavigate: (id: string) => void
-  /** The DOM node of the currently active panel to spotlight. Recomputed by the
-   * caller on every render (e.g. from a ref map keyed by tab id) since the
-   * active panel element changes as tabs switch. */
-  targetEl: HTMLElement | null
+  /** Returns the DOM node of the currently active panel to spotlight — called
+   * fresh whenever help opens or the active step changes, not read once as a
+   * value. Callers source this from a ref map keyed by tab id; ref mutations
+   * don't trigger a re-render on their own, so a plain `targetEl` value prop
+   * would capture whatever the ref held at the *previous* render (null before
+   * the panel has ever been switched to) and never update — the "?" button
+   * would then open nothing, forever, until some unrelated re-render happened
+   * to pass a fresher value. */
+  getTargetEl: () => HTMLElement | null
   className?: string
 }
 
@@ -32,17 +37,21 @@ export function HelpSpotlight({
   steps,
   activeId,
   onNavigate,
-  targetEl,
+  getTargetEl,
   className,
 }: HelpSpotlightProps) {
   const [open, setOpen] = useState(false)
   const [visible, setVisible] = useState(false)
   const [rect, setRect] = useState<DOMRect | null>(null)
 
+  const getTargetElRef = useRef(getTargetEl)
+  getTargetElRef.current = getTargetEl
+
   useEffect(() => {
     if (!open) return
     function measure() {
-      if (targetEl) setRect(targetEl.getBoundingClientRect())
+      const el = getTargetElRef.current()
+      if (el) setRect(el.getBoundingClientRect())
     }
     measure()
     window.addEventListener('resize', measure)
@@ -51,7 +60,7 @@ export function HelpSpotlight({
       window.removeEventListener('resize', measure)
       window.removeEventListener('scroll', measure, true)
     }
-  }, [open, targetEl])
+  }, [open, activeId])
 
   useEffect(() => {
     if (!open) return
