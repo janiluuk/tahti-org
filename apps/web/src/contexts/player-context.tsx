@@ -13,6 +13,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { isTypingTarget } from '../lib/is-typing-target'
 
 interface HlsErrorData {
   fatal: boolean
@@ -130,6 +131,8 @@ interface PlayerContextValue extends PlayerState {
   load: (track: PlayerTrack, opts?: { autoplay?: boolean; queue?: PlayerTrack[] }) => void
   togglePlay: () => void | Promise<void>
   seek: (ratio: number) => void
+  /** Relative seek in seconds (e.g. -10 / +10 for keyboard shortcuts); no-op on live streams. */
+  seekBy: (deltaSeconds: number) => void
   /** Jumps to the next track in queue — wraps to the start only if repeat is on. */
   playNext: () => void
   /** Jumps to the previous track in queue, wrapping to the end. */
@@ -411,6 +414,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     audio.currentTime = ratio * audio.duration
   }, [])
 
+  /** Relative seek (keyboard shortcuts) — clamped to the track bounds; a no-op
+   * on live streams, which report no duration and can't be seeked. */
+  const seekBy = useCallback((deltaSeconds: number) => {
+    const audio = audioRef.current
+    if (!audio || !Number.isFinite(audio.duration)) return
+    audio.currentTime = Math.min(audio.duration, Math.max(0, audio.currentTime + deltaSeconds))
+  }, [])
+
   /** Returns whether it actually advanced to another track — onEnded uses this to
    * know whether to fall back to radioResumeRef instead of just going silent. */
   const playNext = useCallback((): boolean => {
@@ -586,6 +597,54 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
   }, [state.track, state.playing])
 
+  // Site-wide keyboard shortcuts for the player (space/arrows/M) — active from
+  // any page once a track is loaded. Yields to typing targets, modifier-key
+  // combos (Cmd/Ctrl/Alt stay reserved for the browser/OS), and any keydown a
+  // more specific widget already consumed (e.g. the mixer knob, a menu).
+  useEffect(() => {
+    if (!state.track) return
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return
+      if (isTypingTarget(e.target)) return
+
+      switch (e.key) {
+        case ' ':
+          e.preventDefault()
+          void togglePlay()
+          break
+        case 'ArrowRight':
+          e.preventDefault()
+          if (e.shiftKey) playNext()
+          else seekBy(10)
+          break
+        case 'ArrowLeft':
+          e.preventDefault()
+          if (e.shiftKey) playPrevious()
+          else seekBy(-10)
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setVolume(state.volume + 0.05)
+          break
+        case 'ArrowDown':
+          e.preventDefault()
+          setVolume(state.volume - 0.05)
+          break
+        case 'm':
+        case 'M':
+          e.preventDefault()
+          toggleMute()
+          break
+        default:
+          break
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [state.track, state.volume, togglePlay, seekBy, playNext, playPrevious, setVolume, toggleMute])
+
   // Kept in sync so onEnded's listener closure (registered once, below) always reads
   // the current value rather than the one captured when the listener was attached.
   useEffect(() => {
@@ -705,6 +764,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       load,
       togglePlay,
       seek,
+      seekBy,
       playNext,
       playPrevious,
       close,
@@ -731,6 +791,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       load,
       togglePlay,
       seek,
+      seekBy,
       playNext,
       playPrevious,
       close,
