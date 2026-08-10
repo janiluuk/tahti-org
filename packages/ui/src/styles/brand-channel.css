@@ -99,6 +99,12 @@
 [data-tahti-ui='brand'] .ch-header {
   background: color-mix(in srgb, var(--card) 80%, transparent);
   backdrop-filter: blur(10px);
+  /* This sits sticky above a continuously-animating full-page canvas
+     (BgCanvas) — without isolating its own compositor layer, the browser
+     recomputes the blur sample against the whole moving background on
+     every frame, which gets noticeably worse mid-scroll. */
+  will-change: backdrop-filter, transform;
+  contain: layout style paint;
   padding: 0 24px;
   height: 52px;
   display: flex;
@@ -3278,6 +3284,8 @@
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--cyan) 5%, color-mix(in srgb, var(--card) 88%, transparent));
   backdrop-filter: blur(6px);
+  will-change: backdrop-filter, transform;
+  contain: layout style paint;
   height: calc(100vh - 6rem);
   position: sticky;
   top: 68px;
@@ -6034,6 +6042,8 @@
   background: color-mix(in srgb, var(--card) 92%, transparent);
   border-top: 1px solid var(--border);
   backdrop-filter: blur(8px);
+  will-change: backdrop-filter, transform;
+  contain: layout style paint;
 }
 
 [data-tahti-ui='brand'] .ch-sticky-live-dot {
@@ -7358,6 +7368,8 @@
   border: 1px solid color-mix(in srgb, var(--cyan) 40%, transparent);
   background: color-mix(in srgb, var(--card2) 92%, transparent);
   backdrop-filter: blur(12px);
+  will-change: backdrop-filter, transform;
+  contain: layout style paint;
   color: var(--text);
   font-family: var(--font-head, inherit);
   font-size: 12px;
