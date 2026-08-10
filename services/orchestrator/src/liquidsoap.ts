@@ -122,6 +122,41 @@ export function getContainerNameForChannel(channelId: string): string | undefine
   return activeChannels.get(channelId)
 }
 
+/** activeChannels is in-memory and empty on every fresh orchestrator process —
+ * a channel whose Liquidsoap container was spawned before this restart (and
+ * never actually stopped, e.g. Tahti Radio's 24/7 rotation) keeps playing
+ * fine, but getActiveChannelEntries() silently returns nothing for it until
+ * something calls spawnLiquidsoapContainer again. That starves the STREAM-012
+ * now-playing poller (now-playing-sync.ts), which iterates that same list —
+ * "now playing" freezes at whatever it last was, with no error anywhere to
+ * point at. Call once at boot to reconcile against real Docker state before
+ * the poller starts, the same check spawnLiquidsoapContainer already does
+ * per-channel on demand, just proactively for everything already running. */
+export async function reconcileActiveChannelsOnBoot(): Promise<void> {
+  const live = await prisma.channel.findMany({
+    where: { state: 'LIVE' },
+    select: { id: true, slug: true },
+  })
+  if (live.length === 0) return
+
+  const { stdout } = await execAsync(
+    `docker ps --format '{{.Names}}' --filter "status=running"`,
+  ).catch(() => ({ stdout: '' }))
+  const runningNames = new Set(
+    stdout
+      .split('\n')
+      .map((n) => n.trim())
+      .filter(Boolean),
+  )
+
+  for (const ch of live) {
+    const containerName = `tahti-channel-${ch.slug}`
+    if (runningNames.has(containerName)) {
+      activeChannels.set(ch.id, containerName)
+    }
+  }
+}
+
 export type RtmpTargetLiveStatus = 'connected' | 'error' | 'offline'
 
 const RTMP_STATUS_LOG_WINDOW = '90s'
@@ -187,6 +222,16 @@ export async function spawnLiquidsoapContainer(
     activeChannels.set(channelId, containerName)
     return
   }
+
+  // The running check above only covers the happy path. A container that
+  // exited without being removed (e.g. every container gets killed by an
+  // ungraceful dockerd crash, not just the ones this reconciliation was
+  // written for) still holds the name — `docker run --name X` refuses to
+  // start a fresh one until that stale one is gone, and every retry of this
+  // function (the radio-slot-switchover cron calls it every minute) fails
+  // the same way forever. Confirmed live: this exact scenario left Tahti
+  // Radio permanently offline after a dockerd crash until manually cleared.
+  await execAsync(`docker rm "${containerName}"`).catch(() => undefined)
 
   const templatePath = templateKind === 'rotation' ? ROTATION_TEMPLATE_PATH : TEMPLATE_PATH
 

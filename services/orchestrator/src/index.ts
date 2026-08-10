@@ -12,6 +12,7 @@ import {
   getActiveChannels,
   getContainerNameForChannel,
   getRtmpTargetStatuses,
+  reconcileActiveChannelsOnBoot,
 } from './liquidsoap.js'
 import { getActiveRecorders } from './recorder.js'
 import { getActiveEdgeEncoders } from './edge-encoder.js'
@@ -176,6 +177,7 @@ fastify.post('/rtmp-status', async (request, reply) => {
   return reply.send({ statuses })
 })
 
+await reconcileActiveChannelsOnBoot()
 startNowPlayingSync()
 
 await fastify.listen({ port: PORT, host: '0.0.0.0' })
