@@ -651,6 +651,7 @@ model User {
   showFollowers         Boolean    @default(true)
   showFollowing         Boolean    @default(true)
   showDailyListeners    Boolean    @default(true)
+  chatEnabled           Boolean    @default(true)
   stripeCustomerId                  String?
   stripeMembershipSubscriptionId    String?  @unique
   stripeConnectAccountId            String?  @unique

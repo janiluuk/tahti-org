@@ -65,6 +65,7 @@ const channelGetRoute: FastifyPluginAsync = async (fastify) => {
               socialLinks: true,
               tier: true,
               showJoinDate: true,
+              chatEnabled: true,
               createdAt: true,
             },
           },

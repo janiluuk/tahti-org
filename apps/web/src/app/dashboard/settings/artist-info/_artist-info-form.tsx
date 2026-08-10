@@ -43,6 +43,7 @@ export interface ArtistInfoFormData {
   showFollowers: boolean
   showFollowing: boolean
   showDailyListeners: boolean
+  chatEnabled: boolean
   defaultLocation: string | null
   genres: string[]
   bio: string
@@ -75,6 +76,7 @@ export function ArtistInfoForm({
   const [showFollowers, setShowFollowers] = useState(initial.showFollowers)
   const [showFollowing, setShowFollowing] = useState(initial.showFollowing)
   const [showDailyListeners, setShowDailyListeners] = useState(initial.showDailyListeners)
+  const [chatEnabled, setChatEnabled] = useState(initial.chatEnabled)
   const [artistKind, setArtistKind] = useState<ArtistKind>(initial.artistKind)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -99,6 +101,7 @@ export function ArtistInfoForm({
         showFollowers,
         showFollowing,
         showDailyListeners,
+        chatEnabled,
         defaultLocation: identity.defaultLocation,
         artistKind,
         socialLinks: {
@@ -218,6 +221,18 @@ export function ArtistInfoForm({
           />
           <span className="studio-toggle-label">Show today’s listener count in my chat</span>
         </label>
+        <label className="studio-toggle-row studio-mt-sm">
+          <input
+            type="checkbox"
+            className="studio-toggle-checkbox"
+            checked={chatEnabled}
+            onChange={(e) => setChatEnabled(e.target.checked)}
+          />
+          <span className="studio-toggle-label">Enable live chat on my channel</span>
+        </label>
+        <p className="studio-text-muted-sm studio-mt-xs">
+          Hides the chat panel from your channel page entirely. Turn it back on any time.
+        </p>
       </Panel>
 
       <Panel title="Bio">

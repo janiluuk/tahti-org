@@ -102,6 +102,8 @@ async function fetchRecentlyPlayed(): Promise<RecentlyPlayedItem[]> {
 
 interface RadioChannelPayload {
   hlsUrl: string | null
+  chatEnabled?: boolean
+  channelDisplayName?: string
   nowPlaying: {
     title: string
     artistName: string
@@ -122,7 +124,14 @@ async function fetchRadioChannel(): Promise<RadioChannelPayload> {
       next: { revalidate: 30 },
     })
     if (!res.ok) return { hlsUrl: null, nowPlaying: null }
-    return (await res.json()) as RadioChannelPayload
+    const data = (await res.json()) as RadioChannelPayload & {
+      user?: { chatEnabled?: boolean; displayName?: string }
+    }
+    return {
+      ...data,
+      chatEnabled: data.user?.chatEnabled,
+      channelDisplayName: data.user?.displayName,
+    }
   } catch {
     return { hlsUrl: null, nowPlaying: null }
   }
@@ -139,7 +148,7 @@ export default async function RadioPage() {
       fetchRadioChannel(),
       getSessionUser(),
     ])
-  const { hlsUrl: realHlsUrl, nowPlaying } = radioChannel
+  const { hlsUrl: realHlsUrl, nowPlaying, chatEnabled, channelDisplayName } = radioChannel
 
   const playback = realHlsUrl
     ? ({ kind: 'audio', audioUrl: realHlsUrl } as const)
@@ -250,11 +259,17 @@ export default async function RadioPage() {
         </div>
       }
       sidebar={
-        <ChatPanel
-          slug={TAHTI_RADIO_SLUG}
-          announcements={announcements}
-          isLoggedIn={Boolean(user)}
-        />
+        chatEnabled !== false ? (
+          <ChatPanel
+            slug={TAHTI_RADIO_SLUG}
+            announcements={announcements}
+            isLoggedIn={Boolean(user)}
+          />
+        ) : (
+          <p className="ch-chat-disabled-note">
+            Chat is turned off for {channelDisplayName ?? 'this channel'} right now.
+          </p>
+        )
       }
     />
   )

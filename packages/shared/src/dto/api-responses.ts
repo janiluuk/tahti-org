@@ -502,6 +502,7 @@ export const PublicChannelUserSchema = z.object({
   pronouns: z.string().nullable().optional(),
   socialLinks: z.unknown().optional(),
   joinDate: z.string().datetime().nullable().optional(),
+  chatEnabled: z.boolean().optional(),
 })
 
 export const PublicChannelViewSchema = z.object({
@@ -1009,6 +1010,7 @@ export const ProfileFieldsSchema = z.object({
   showFollowers: z.boolean(),
   showFollowing: z.boolean(),
   showDailyListeners: z.boolean(),
+  chatEnabled: z.boolean(),
   createdAt: z.string().datetime(),
   /** Solo DJ/artist vs collective/band. Defaults to SINGLE when no channel. */
   artistKind: z.enum(['SINGLE', 'COLLECTIVE']),

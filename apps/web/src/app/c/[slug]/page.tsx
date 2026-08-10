@@ -92,6 +92,7 @@ interface ChannelResponse {
     socialLinks?: Record<string, string> | null
     tier: string
     joinDate?: string | null
+    chatEnabled?: boolean
   }
   nowPlaying: {
     title: string
@@ -905,8 +906,16 @@ export default async function ChannelPage({ params }: { params: { slug: string }
       }
       sidebar={
         <>
-          <ChatPanel slug={slug} announcements={announcements} isLoggedIn={Boolean(user)} />
-          <FanChatPanel slug={slug} />
+          {channel.user.chatEnabled !== false ? (
+            <>
+              <ChatPanel slug={slug} announcements={announcements} isLoggedIn={Boolean(user)} />
+              <FanChatPanel slug={slug} />
+            </>
+          ) : (
+            <p className="ch-chat-disabled-note">
+              {channel.user.displayName} has turned off chat for this channel.
+            </p>
+          )}
           <ReportButton targetType="CHANNEL" targetId={slug} />
         </>
       }
