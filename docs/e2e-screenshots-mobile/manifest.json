@@ -1,0 +1,359 @@
+[
+  {
+    "role": "artist",
+    "id": "dashboard",
+    "file": "artist/dashboard.png",
+    "url": "/dashboard",
+    "label": "Artist dashboard"
+  },
+  {
+    "role": "artist",
+    "id": "channel-appearance",
+    "file": "artist/channel-appearance.png",
+    "url": "/dashboard/channel/edit",
+    "label": "Channel design editor"
+  },
+  {
+    "role": "artist",
+    "id": "schedule-programme",
+    "file": "artist/schedule-programme.png",
+    "url": "/dashboard/schedule",
+    "label": "Schedule & programme"
+  },
+  {
+    "role": "artist",
+    "id": "broadcast-studio",
+    "file": "artist/broadcast-studio.png",
+    "url": "/dashboard/broadcast",
+    "label": "Broadcast studio"
+  },
+  {
+    "role": "artist",
+    "id": "stats",
+    "file": "artist/stats.png",
+    "url": "/dashboard/stats",
+    "label": "Artist stats"
+  },
+  {
+    "role": "artist",
+    "id": "stats-detail",
+    "file": "artist/stats-detail.png",
+    "url": "/dashboard/stats/detail",
+    "label": "Stats detail"
+  },
+  {
+    "role": "artist",
+    "id": "stash",
+    "file": "artist/stash.png",
+    "url": "/dashboard/stash",
+    "label": "Stash file manager"
+  },
+  {
+    "role": "artist",
+    "id": "editor",
+    "file": "artist/editor.png",
+    "url": "/dashboard/editor",
+    "label": "Audio editor"
+  },
+  {
+    "role": "artist",
+    "id": "revenue",
+    "file": "artist/revenue.png",
+    "url": "/dashboard/revenue",
+    "label": "Revenue"
+  },
+  {
+    "role": "artist",
+    "id": "upload",
+    "file": "artist/upload.png",
+    "url": "/dashboard/upload",
+    "label": "Upload"
+  },
+  {
+    "role": "artist",
+    "id": "newsletter-compose",
+    "file": "artist/newsletter-compose.png",
+    "url": "/dashboard/newsletter/compose",
+    "label": "Newsletter compose"
+  },
+  {
+    "role": "artist",
+    "id": "venues",
+    "file": "artist/venues.png",
+    "url": "/dashboard/venues",
+    "label": "Venue bookings"
+  },
+  {
+    "role": "artist",
+    "id": "releases",
+    "file": "artist/releases.png",
+    "url": "/dashboard/releases",
+    "label": "Releases catalog"
+  },
+  {
+    "role": "artist",
+    "id": "collections",
+    "file": "artist/collections.png",
+    "url": "/dashboard/collections",
+    "label": "Collections"
+  },
+  {
+    "role": "artist",
+    "id": "collections-new",
+    "file": "artist/collections-new.png",
+    "url": "/dashboard/collections/new",
+    "label": "New collection"
+  },
+  {
+    "role": "artist",
+    "id": "archive",
+    "file": "artist/archive.png",
+    "url": "/dashboard/archive",
+    "label": "Archive history"
+  },
+  {
+    "role": "artist",
+    "id": "settings-account",
+    "file": "artist/settings-account.png",
+    "url": "/dashboard/settings/account",
+    "label": "Settings — account"
+  },
+  {
+    "role": "artist",
+    "id": "settings-artist-info",
+    "file": "artist/settings-artist-info.png",
+    "url": "/dashboard/settings/artist-info",
+    "label": "Settings — artist info"
+  },
+  {
+    "role": "artist",
+    "id": "settings-connections",
+    "file": "artist/settings-connections.png",
+    "url": "/dashboard/settings/connections",
+    "label": "Settings — connections"
+  },
+  {
+    "role": "artist",
+    "id": "settings-distribution",
+    "file": "artist/settings-distribution.png",
+    "url": "/dashboard/settings/distribution",
+    "label": "Settings — distribution"
+  },
+  {
+    "role": "artist",
+    "id": "settings-domain",
+    "file": "artist/settings-domain.png",
+    "url": "/dashboard/settings/domain",
+    "label": "Settings — custom domain"
+  },
+  {
+    "role": "artist",
+    "id": "settings-fan-subs",
+    "file": "artist/settings-fan-subs.png",
+    "url": "/dashboard/settings/fan-subs",
+    "label": "Settings — fan subs"
+  },
+  {
+    "role": "artist",
+    "id": "settings-mentions",
+    "file": "artist/settings-mentions.png",
+    "url": "/dashboard/settings/mentions",
+    "label": "Settings — mentions"
+  },
+  {
+    "role": "artist",
+    "id": "settings-moderators",
+    "file": "artist/settings-moderators.png",
+    "url": "/dashboard/settings/moderators",
+    "label": "Settings — moderators"
+  },
+  {
+    "role": "artist",
+    "id": "settings-multistream",
+    "file": "artist/settings-multistream.png",
+    "url": "/dashboard/settings/multistream",
+    "label": "Settings — multistream"
+  },
+  {
+    "role": "artist",
+    "id": "settings-notifications",
+    "file": "artist/settings-notifications.png",
+    "url": "/dashboard/settings/notifications",
+    "label": "Settings — notifications"
+  },
+  {
+    "role": "artist",
+    "id": "release-detail",
+    "file": "artist/release-detail.png",
+    "url": "/dashboard/releases/cmsn5lltn0006107f71kyi7ly",
+    "label": "Release detail"
+  },
+  {
+    "role": "artist",
+    "id": "collection-editor",
+    "file": "artist/collection-editor.png",
+    "url": "/dashboard/collections/demo-mixes",
+    "label": "Collection editor"
+  },
+  {
+    "role": "artist",
+    "id": "archive-item",
+    "file": "artist/archive-item.png",
+    "url": "/dashboard/archive/cmsn5llua000s107fovsxla89",
+    "label": "Archive item preview"
+  },
+  {
+    "role": "artist",
+    "id": "archive-item-editor",
+    "file": "artist/archive-item-editor.png",
+    "url": "/dashboard/archive/cmsn5llua000s107fovsxla89/editor",
+    "label": "Archive item — audio editor"
+  },
+  {
+    "role": "artist",
+    "id": "editor-project",
+    "file": "artist/editor-project.png",
+    "url": "/dashboard/editor/cmsn5llwy000u107f30cme89g",
+    "label": "Editor project"
+  },
+  {
+    "role": "admin",
+    "id": "dashboard",
+    "file": "admin/dashboard.png",
+    "url": "/admin/dashboard",
+    "label": "Admin dashboard"
+  },
+  {
+    "role": "admin",
+    "id": "beta",
+    "file": "admin/beta.png",
+    "url": "/admin/beta",
+    "label": "Beta applications"
+  },
+  {
+    "role": "admin",
+    "id": "users",
+    "file": "admin/users.png",
+    "url": "/admin/users",
+    "label": "User directory"
+  },
+  {
+    "role": "admin",
+    "id": "streams",
+    "file": "admin/streams.png",
+    "url": "/admin/streams",
+    "label": "Stream manager"
+  },
+  {
+    "role": "admin",
+    "id": "support",
+    "file": "admin/support.png",
+    "url": "/admin/support",
+    "label": "Support tickets"
+  },
+  {
+    "role": "admin",
+    "id": "financial",
+    "file": "admin/financial.png",
+    "url": "/admin/financial",
+    "label": "Financial hub"
+  },
+  {
+    "role": "admin",
+    "id": "financial-ledger",
+    "file": "admin/financial-ledger.png",
+    "url": "/admin/financial/ledger",
+    "label": "Ledger"
+  },
+  {
+    "role": "admin",
+    "id": "financial-fansubs",
+    "file": "admin/financial-fansubs.png",
+    "url": "/admin/financial/fansubs",
+    "label": "Fan subs & payouts"
+  },
+  {
+    "role": "admin",
+    "id": "financial-legacy",
+    "file": "admin/financial-legacy.png",
+    "url": "/admin/financial/legacy-members",
+    "label": "Legacy membership queue"
+  },
+  {
+    "role": "admin",
+    "id": "governance",
+    "file": "admin/governance.png",
+    "url": "/admin/governance",
+    "label": "Governance hub"
+  },
+  {
+    "role": "admin",
+    "id": "governance-audit",
+    "file": "admin/governance-audit.png",
+    "url": "/admin/governance/audit",
+    "label": "Audit log"
+  },
+  {
+    "role": "admin",
+    "id": "governance-resolutions",
+    "file": "admin/governance-resolutions.png",
+    "url": "/admin/governance/resolutions",
+    "label": "Board resolutions"
+  },
+  {
+    "role": "admin",
+    "id": "governance-report",
+    "file": "admin/governance-report.png",
+    "url": "/admin/governance/report",
+    "label": "Annual report generator"
+  },
+  {
+    "role": "admin",
+    "id": "status",
+    "file": "admin/status.png",
+    "url": "/admin/status",
+    "label": "Admin status view"
+  },
+  {
+    "role": "admin",
+    "id": "venues",
+    "file": "admin/venues.png",
+    "url": "/governance/venues",
+    "label": "Venue verification queue"
+  },
+  {
+    "role": "admin",
+    "id": "grants",
+    "file": "admin/grants.png",
+    "url": "/admin/grants",
+    "label": "Grants overview"
+  },
+  {
+    "role": "admin",
+    "id": "agm",
+    "file": "admin/agm.png",
+    "url": "/admin/agm",
+    "label": "AGM"
+  },
+  {
+    "role": "admin",
+    "id": "radio",
+    "file": "admin/radio.png",
+    "url": "/admin/radio",
+    "label": "Tahti Radio admin"
+  },
+  {
+    "role": "admin",
+    "id": "settings-vendors",
+    "file": "admin/settings-vendors.png",
+    "url": "/admin/settings/vendors",
+    "label": "Vendor settings"
+  },
+  {
+    "role": "admin",
+    "id": "tahti-selects",
+    "file": "admin/tahti-selects.png",
+    "url": "/admin/tahti-selects",
+    "label": "Tahti Selects admin"
+  }
+]
