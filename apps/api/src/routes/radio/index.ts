@@ -11,7 +11,6 @@ import {
   RadioShowDetailSchema,
   RadioSlotBookingListQuerySchema,
   TAHTI_RADIO_SLUG,
-  TAHTI_SELECTS_SLUG,
   openApiResponse,
   resolveColorScheme,
   type ColorScheme,
@@ -127,7 +126,10 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
     },
   )
 
-  // STREAM-011: public "up next" preview — the Tahti Selects curated rotation order.
+  // STREAM-011: public "up next" preview — Tahti Radio's own curated rotation
+  // order (the same per-channel CuratedRotationItem rows Liquidsoap's
+  // fallback.m3u lookup reads, mirrored from Tahti Selects by
+  // seed-tahti-radio-rotation.ts but tracked separately per channelId since).
   // The rotation plays in shuffle by default, so this is illustrative ("in the
   // rotation"), not a live-synced guarantee of exact play order.
   fastify.get(
@@ -135,13 +137,13 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['radio'],
-        description: 'Tahti Selects curated rotation, in admin-set order',
+        description: 'Tahti Radio curated rotation, in admin-set order',
         response: openApiResponse(RadioRotationSchema, 'RadioRotation'),
       },
     },
     async (_request, reply) => {
       const channel = await fastify.prisma.channel.findUnique({
-        where: { slug: TAHTI_SELECTS_SLUG },
+        where: { slug: TAHTI_RADIO_SLUG },
         select: { id: true },
       })
       if (!channel) return reply.send([])

@@ -3,7 +3,7 @@
 
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { prisma } from '@tahti/db'
-import { TAHTI_SELECTS_SLUG } from '@tahti/shared'
+import { TAHTI_RADIO_SLUG } from '@tahti/shared'
 import { buildApp } from '../../server.js'
 import { cleanupUsersByEmailPrefix, createTestArtist } from '../../test/helpers.js'
 
@@ -50,28 +50,28 @@ describe('M16 — Tahti Radio proxy', () => {
     expect(res.json()).toEqual({ live: false, channel: null })
   })
 
-  it('returns an empty rotation when Tahti Selects has no channel yet', async () => {
+  it('returns an empty rotation when Tahti Radio has no channel yet', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/v1/radio/rotation' })
     expect(res.statusCode).toBe(200)
     expect(res.json()).toEqual([])
   })
 })
 
-describe('STREAM-011 — Tahti Selects rotation preview', () => {
+describe('STREAM-011 — Tahti Radio rotation preview', () => {
   let app: Awaited<ReturnType<typeof buildApp>>
-  let selectsChannelId: string
+  let radioChannelId: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
     await app.ready()
 
     await cleanupUsersByEmailPrefix(prisma, PREFIX)
-    const selectsArtist = await createTestArtist(prisma, {
-      email: `${PREFIX}selects@example.com`,
-      username: TAHTI_SELECTS_SLUG,
-      displayName: 'Tahti Selects',
+    const radioArtist = await createTestArtist(prisma, {
+      email: `${PREFIX}radio@example.com`,
+      username: TAHTI_RADIO_SLUG,
+      displayName: 'Tahti Radio',
     })
-    selectsChannelId = selectsArtist.channel!.id
+    radioChannelId = radioArtist.channel!.id
 
     const trackArtist = await createTestArtist(prisma, {
       email: `${PREFIX}track-artist@example.com`,
@@ -98,18 +98,18 @@ describe('STREAM-011 — Tahti Selects rotation preview', () => {
 
     await prisma.curatedRotationItem.create({
       data: {
-        channelId: selectsChannelId,
+        channelId: radioChannelId,
         archiveItemId: second.id,
         position: 1,
-        addedById: selectsArtist.id,
+        addedById: radioArtist.id,
       },
     })
     await prisma.curatedRotationItem.create({
       data: {
-        channelId: selectsChannelId,
+        channelId: radioChannelId,
         archiveItemId: first.id,
         position: 0,
-        addedById: selectsArtist.id,
+        addedById: radioArtist.id,
       },
     })
   })
