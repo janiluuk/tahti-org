@@ -3,11 +3,14 @@
 /**
  * Ensures one long DJ set is in the Tahti Radio curated rotation.
  *
- * Prefer an existing READY object (e.g. previously uploaded set_20260519),
- * copy it under mp3/tahti-radio/, and append a CuratedRotationItem.
- *
- * Optional local re-upload when the object is missing:
+ * If DJ_SET_PATH is set and the archive item isn't already lossless (FLAC),
+ * that local source always wins — transcoded to FLAC if lossless (e.g. WAV)
+ * or MP3 otherwise — over reusing/copying any pre-existing MP3 object, so a
+ * fresh lossless upload can never lose to a stale lossy copy:
  *   DJ_SET_PATH=/path/to/set.wav tsx apps/api/scripts/seed-tahti-radio-dj-set.ts
+ *
+ * Without DJ_SET_PATH, falls back to an existing READY object (e.g. a
+ * previously uploaded set_20260519), copied under mp3/tahti-radio/.
  *
  * Run (prod): docker exec -w /app tahti-stack-api-1 tsx apps/api/scripts/seed-tahti-radio-dj-set.ts
  */
@@ -125,6 +128,58 @@ async function transcodeToMp3(
   ])
 }
 
+async function uploadLocalFile(
+  localPath: string,
+  archiveId: string,
+): Promise<{ destKey: string; isFlac: boolean; durationSec: number; fileSizeBytes: bigint }> {
+  const tmpDir = await mkdtemp(path.join(tmpdir(), 'tahti-dj-set-'))
+  try {
+    const lower = localPath.toLowerCase()
+    const probe = await ffprobeFormat(localPath)
+    const lossless = isLosslessSource(probe.format) || isLosslessCodec(probe.codec)
+
+    let outPath: string
+    let contentType: string
+    let destKey: string
+    let isFlac = false
+    if (lossless) {
+      // Keep lossless sources (e.g. WAV) as FLAC — never force-downsample to MP3.
+      outPath = path.join(tmpDir, 'set.flac')
+      await transcodeToFlac(localPath, outPath)
+      isFlac = true
+      destKey = `flac/${TAHTI_RADIO_SLUG}/${archiveId}.flac`
+      contentType = 'audio/flac'
+    } else if (lower.endsWith('.mp3')) {
+      outPath = path.join(tmpDir, 'set.mp3')
+      await fs.copyFile(localPath, outPath)
+      destKey = `mp3/${TAHTI_RADIO_SLUG}/${archiveId}.mp3`
+      contentType = 'audio/mpeg'
+    } else {
+      outPath = path.join(tmpDir, 'set.mp3')
+      const bitrateKbps = chooseLossyOutputBitrateKbps(probe.bitrateKbps)
+      await transcodeToMp3(localPath, outPath, bitrateKbps)
+      destKey = `mp3/${TAHTI_RADIO_SLUG}/${archiveId}.mp3`
+      contentType = 'audio/mpeg'
+    }
+
+    const durationSec = await ffprobeDurationSec(outPath)
+    const stat = await fs.stat(outPath)
+    const fileSizeBytes = BigInt(stat.size)
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: config.minio.bucket,
+        Key: destKey,
+        Body: createReadStream(outPath),
+        ContentType: contentType,
+        ContentLength: stat.size,
+      }),
+    )
+    return { destKey, isFlac, durationSec, fileSizeBytes }
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true })
+  }
+}
+
 async function main() {
   const radio = await prisma.channel.findUnique({
     where: { slug: TAHTI_RADIO_SLUG },
@@ -161,79 +216,56 @@ async function main() {
   let durationSec = archive.durationSec ?? EXPECTED_DURATION_SEC
   let fileSizeBytes: bigint | null = null
 
-  const destSize = await objectExists(destKey)
-  if (destSize != null && destSize > 0) {
-    fileSizeBytes = BigInt(destSize)
-  } else {
-    let sourceKey: string | null = null
-    for (const key of SOURCE_KEY_CANDIDATES) {
-      const size = await objectExists(key)
-      if (size != null && size > 0) {
-        sourceKey = key
-        fileSizeBytes = BigInt(size)
-        break
-      }
-    }
+  const localPath = process.env.DJ_SET_PATH
 
-    if (sourceKey) {
-      await s3.send(
-        new CopyObjectCommand({
-          Bucket: config.minio.bucket,
-          CopySource: `${config.minio.bucket}/${sourceKey}`,
-          Key: destKey,
-          ContentType: 'audio/mpeg',
-          MetadataDirective: 'REPLACE',
-        }),
-      )
-      const copied = await objectExists(destKey)
-      if (copied != null) fileSizeBytes = BigInt(copied)
+  if (localPath && !isFlac) {
+    // A lossless local source always wins over reusing/copying an existing
+    // lossy object — a freshly provided WAV should never lose out to a stale
+    // 192k MP3 that happens to already be sitting in storage.
+    const uploaded = await uploadLocalFile(localPath, archive.id)
+    destKey = uploaded.destKey
+    isFlac = uploaded.isFlac
+    durationSec = uploaded.durationSec
+    fileSizeBytes = uploaded.fileSizeBytes
+  } else {
+    const destSize = await objectExists(destKey)
+    if (destSize != null && destSize > 0) {
+      fileSizeBytes = BigInt(destSize)
     } else {
-      const localPath = process.env.DJ_SET_PATH
-      if (!localPath) {
+      let sourceKey: string | null = null
+      for (const key of SOURCE_KEY_CANDIDATES) {
+        const size = await objectExists(key)
+        if (size != null && size > 0) {
+          sourceKey = key
+          fileSizeBytes = BigInt(size)
+          break
+        }
+      }
+
+      if (sourceKey) {
+        await s3.send(
+          new CopyObjectCommand({
+            Bucket: config.minio.bucket,
+            CopySource: `${config.minio.bucket}/${sourceKey}`,
+            Key: destKey,
+            ContentType: 'audio/mpeg',
+            MetadataDirective: 'REPLACE',
+          }),
+        )
+        const copied = await objectExists(destKey)
+        if (copied != null) fileSizeBytes = BigInt(copied)
+      } else if (localPath) {
+        // isFlac was true but the stored FLAC object is missing (data
+        // inconsistency) — fall back to re-uploading from the local source.
+        const uploaded = await uploadLocalFile(localPath, archive.id)
+        destKey = uploaded.destKey
+        isFlac = uploaded.isFlac
+        durationSec = uploaded.durationSec
+        fileSizeBytes = uploaded.fileSizeBytes
+      } else {
         throw new Error(
           'No existing MinIO object for the DJ set and DJ_SET_PATH is unset — cannot upload',
         )
-      }
-      const tmpDir = await mkdtemp(path.join(tmpdir(), 'tahti-dj-set-'))
-      try {
-        const lower = localPath.toLowerCase()
-        const probe = await ffprobeFormat(localPath)
-        const lossless = isLosslessSource(probe.format) || isLosslessCodec(probe.codec)
-
-        let outPath: string
-        let contentType: string
-        if (lower.endsWith('.mp3') && !lossless) {
-          outPath = path.join(tmpDir, 'set.mp3')
-          await fs.copyFile(localPath, outPath)
-          contentType = 'audio/mpeg'
-        } else if (lossless) {
-          // Keep lossless sources (e.g. WAV) as FLAC — never force-downsample to MP3.
-          outPath = path.join(tmpDir, 'set.flac')
-          await transcodeToFlac(localPath, outPath)
-          isFlac = true
-          destKey = `flac/${TAHTI_RADIO_SLUG}/${archive.id}.flac`
-          contentType = 'audio/flac'
-        } else {
-          outPath = path.join(tmpDir, 'set.mp3')
-          const bitrateKbps = chooseLossyOutputBitrateKbps(probe.bitrateKbps)
-          await transcodeToMp3(localPath, outPath, bitrateKbps)
-          contentType = 'audio/mpeg'
-        }
-
-        durationSec = await ffprobeDurationSec(outPath)
-        const stat = await fs.stat(outPath)
-        fileSizeBytes = BigInt(stat.size)
-        await s3.send(
-          new PutObjectCommand({
-            Bucket: config.minio.bucket,
-            Key: destKey,
-            Body: createReadStream(outPath),
-            ContentType: contentType,
-            ContentLength: stat.size,
-          }),
-        )
-      } finally {
-        await rm(tmpDir, { recursive: true, force: true })
       }
     }
   }
