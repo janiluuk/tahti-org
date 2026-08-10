@@ -1719,6 +1719,12 @@
 }
 
 [data-tahti-ui='brand'] .ch-radio-upcoming__avatar {
+  /* Match Recently Played's compact 32px art (.ch-radio-recent__art) instead
+     of AvatarTile's default 46px "sm" — the two tabs sit right next to each
+     other in the same tab bar and should read as one consistent list density,
+     not two differently-scaled rows depending which tab is active. */
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
 }
 
@@ -1865,6 +1871,18 @@
 
 [data-tahti-ui='brand'] .ch-radio-upcoming__artist--sub {
   color: var(--muted2);
+}
+
+/* Rotation-queue track title — was completely unstyled (no rule existed),
+   rendering with default browser text instead of matching
+   .ch-radio-recent__song's look. */
+[data-tahti-ui='brand'] .ch-radio-upcoming__song {
+  color: var(--text);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 [data-tahti-ui='brand'] .ch-radio-recent__art {
