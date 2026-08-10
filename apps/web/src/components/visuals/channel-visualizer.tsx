@@ -11,6 +11,7 @@ import {
   DEFAULT_VISUAL_PRESET_SETTINGS,
   resolveColorScheme,
 } from '@tahti/shared'
+import { isSoftwareWebglRenderer } from '@/lib/webgl-support'
 
 // Lazy-load each preset to keep the initial bundle small.
 // Each preset uses Three.js which is large.
@@ -69,7 +70,12 @@ function supportsWebGL(): boolean {
   if (typeof window === 'undefined') return false
   try {
     const canvas = document.createElement('canvas')
-    return !!(canvas.getContext('webgl2') ?? canvas.getContext('webgl'))
+    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl')
+    if (!gl) return false
+    // Context creation succeeding doesn't mean it's hardware-accelerated —
+    // see isSoftwareWebglRenderer. These presets are all Three.js scenes
+    // with dozens to hundreds of elements, too heavy for a CPU rasterizer.
+    return !isSoftwareWebglRenderer(gl)
   } catch {
     return false
   }

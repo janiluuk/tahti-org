@@ -6,6 +6,7 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { useBackgroundCanvasSuspended } from '@/contexts/background-canvas-context'
+import { isSoftwareWebglRenderer } from '@/lib/webgl-support'
 
 interface AudioState {
   analyser: AnalyserNode | null
@@ -70,6 +71,23 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
       canvas.classList.add('bg-canvas--webgl-fallback')
       return
     }
+
+    // Context creation can "succeed" but silently land on a software
+    // rasterizer (SwiftShader, llvmpipe/Mesa, ANGLE's software fallback) —
+    // GPU blocklisted driver, remote desktop, some VM/sandboxed browser
+    // profiles. That's not a failure the try/catch above ever sees, but this
+    // whole scene (~1800 particles, multiple waveforms, dozens of meshes)
+    // is 10-100x too heavy to render on a CPU rasterizer at any usable frame
+    // rate. Detect it via the debug renderer string and fall back the same
+    // way as an outright creation failure, rather than uniformly grinding
+    // even after the draw-call/throttle optimizations above.
+    if (isSoftwareWebglRenderer(renderer.getContext())) {
+      console.warn('[bg-canvas] software WebGL renderer detected, using static fallback')
+      renderer.dispose()
+      canvas.classList.add('bg-canvas--webgl-fallback')
+      return
+    }
+
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     renderer.setSize(window.innerWidth, window.innerHeight)
 
