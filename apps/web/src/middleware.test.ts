@@ -82,6 +82,17 @@ describe('PLAT-050/051 — subdomain + custom domain routing middleware', () => 
     expect(res.headers.get('x-middleware-rewrite')).toBeNull()
   })
 
+  it('fast path: redirects tahti-radio.tahti.live to radio.tahti.live, preserving path', async () => {
+    const res = await middleware(
+      req('https://tahti-radio.tahti.live/dashboard', {
+        host: 'tahti-radio.tahti.live',
+        'x-tahti-channel-slug': 'tahti-radio',
+      }),
+    )
+    expect(res.status).toBe(308)
+    expect(res.headers.get('location')).toBe('https://radio.tahti.live/dashboard')
+  })
+
   it('passes through untouched when neither header is present', async () => {
     const res = await middleware(req('https://app.tahti.live/dashboard'))
     expect(res.headers.get('x-middleware-rewrite')).toBeNull()

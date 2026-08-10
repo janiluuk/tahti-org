@@ -72,6 +72,18 @@ export async function middleware(request: NextRequest) {
 
   // Fast path: reverse-proxy subdomain routing (slug.tahti.live → /c/slug)
   const channelSlug = request.headers.get('x-tahti-channel-slug')
+
+  // tahti-radio.tahti.live is a legacy address for the same station as
+  // radio.tahti.live (the dedicated /radio page below) — 'radio' itself can't
+  // be the channel's actual slug since it's reserved (RESERVED_CHANNEL_SLUGS),
+  // so fold the old subdomain into the canonical one instead of leaving two
+  // live URLs for the same station.
+  if (channelSlug === 'tahti-radio' && root) {
+    const target = new URL(`https://radio.${root}${pathname}`)
+    target.search = search
+    return NextResponse.redirect(target, 308)
+  }
+
   if (channelSlug) {
     if (isRewritableRoot) {
       const url = request.nextUrl.clone()
