@@ -3400,3 +3400,9 @@
 .grant-approve__btn:hover:not(:disabled) {
   filter: brightness(1.05);
 }
+
+/* No-GPU fallback (see brand-channel.css for the html.gpu-limited flag's
+   full rationale — bg-canvas.tsx sets it when it detects software WebGL). */
+html.gpu-limited .nav {
+  backdrop-filter: none;
+}

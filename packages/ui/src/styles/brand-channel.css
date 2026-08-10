@@ -7621,3 +7621,36 @@
 [data-tahti-ui='brand'] .green-room-guest__lead {
   margin-bottom: var(--space-md);
 }
+
+/* ── No-GPU fallback ──────────────────────────────────────────────────────
+   Set on <html> by bg-canvas.tsx when it detects a software (CPU) WebGL
+   renderer — a strong signal this browser has no GPU acceleration at all,
+   not just for WebGL. backdrop-filter is normally GPU-composited too, so on
+   a machine that lands here it's very likely also running on the CPU
+   site-wide, continuously, on every sticky/fixed element that uses it —
+   independent of (and in addition to) the WebGL scenes already skipped.
+   Drop the blur and fall back to a plain, more opaque background instead. */
+html.gpu-limited [data-tahti-ui='brand'] .ch-header {
+  backdrop-filter: none;
+}
+
+html.gpu-limited [data-tahti-ui='brand'] .ch-chat-panel {
+  backdrop-filter: none;
+}
+
+html.gpu-limited [data-tahti-ui='brand'] .ch-sticky-live-bar {
+  backdrop-filter: none;
+}
+
+html.gpu-limited [data-tahti-ui='brand'] .prof-bg-music-btn {
+  backdrop-filter: none;
+}
+
+html.gpu-limited [data-tahti-ui='brand'] .ch-reaction-btn {
+  backdrop-filter: none;
+}
+
+html.gpu-limited [data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__meta-text {
+  backdrop-filter: none;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+}

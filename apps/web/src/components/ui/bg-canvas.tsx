@@ -85,6 +85,13 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
       console.warn('[bg-canvas] software WebGL renderer detected, using static fallback')
       renderer.dispose()
       canvas.classList.add('bg-canvas--webgl-fallback')
+      // No GPU acceleration available to this browser at all — not just for
+      // WebGL. backdrop-filter/filter blur are normally GPU-composited too,
+      // so on a machine landing here they're very likely also running on the
+      // CPU site-wide. This flag on <html> lets CSS drop blur (see the
+      // html.gpu-limited overrides in brand-channel.css/components.css)
+      // everywhere, not just in this one component.
+      document.documentElement.classList.add('gpu-limited')
       return
     }
 
