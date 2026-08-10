@@ -158,6 +158,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
             select: {
               title: true,
               artistName: true,
+              bannerUrl: true,
               channel: { select: { user: { select: { displayName: true, username: true } } } },
             },
           },
@@ -172,6 +173,7 @@ const radioRoutes: FastifyPluginAsync = async (fastify) => {
           artistUsername: item.archiveItem.artistName
             ? null
             : item.archiveItem.channel.user.username,
+          artworkUrl: item.archiveItem.bannerUrl,
         })),
       )
     },

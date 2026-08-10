@@ -176,6 +176,7 @@ export const RadioRotationItemSchema = z.object({
   title: z.string(),
   artistName: z.string(),
   artistUsername: z.string().nullable(),
+  artworkUrl: z.string().nullable(),
 })
 export const RadioRotationSchema = z.array(RadioRotationItemSchema)
 

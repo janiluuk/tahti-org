@@ -44,6 +44,7 @@ interface RadioRotationItem {
   title: string
   artistName: string
   artistUsername: string | null
+  artworkUrl: string | null
 }
 
 async function fetchAnnouncements(): Promise<Announcement[]> {

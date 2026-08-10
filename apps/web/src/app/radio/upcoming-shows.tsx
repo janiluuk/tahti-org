@@ -16,6 +16,7 @@ export interface RotationQueueItem {
   title: string
   artistName: string
   artistUsername: string | null
+  artworkUrl: string | null
 }
 
 export function formatShowTime(iso: string): string {
@@ -162,6 +163,12 @@ export function UpcomingShows({
           <ul className="ch-radio-upcoming__list">
             {rotationQueue.map((item) => (
               <li key={item.id} className="ch-radio-upcoming__item">
+                {item.artworkUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.artworkUrl} alt="" className="ch-radio-recent__art" />
+                ) : (
+                  <AvatarTile size="sm" name={item.title} className="ch-radio-recent__art" />
+                )}
                 <div className="ch-radio-upcoming__body">
                   <span className="ch-radio-upcoming__song">{item.title}</span>
                   {item.artistUsername ? (
