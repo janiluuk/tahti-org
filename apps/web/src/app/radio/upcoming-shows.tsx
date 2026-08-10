@@ -32,6 +32,19 @@ export function formatShowTime(iso: string): string {
   return `${date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}, ${time}`
 }
 
+/** "2h", "90m", "1h 30m" — how long a booked slot runs. */
+export function formatShowDuration(startIso: string, endIso: string): string {
+  const mins = Math.max(
+    0,
+    Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 60_000),
+  )
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  if (h === 0) return `${m}m`
+  if (m === 0) return `${h}h`
+  return `${h}h ${m}m`
+}
+
 /** Radio page "Upcoming" tab — booked artist slots (the live one, if any,
  * highlighted first) plus a preview of the curated rotation's queue. Distinct
  * from the dense 7-day calendar in the "Schedule & rotation" overlay, which
@@ -151,7 +164,13 @@ export function UpcomingShows({
                     </div>
                   </>
                 )}
-                <span className="ch-radio-upcoming__time">{formatShowTime(slot.startAt)}</span>
+                <span className="ch-radio-upcoming__time">
+                  {formatShowTime(slot.startAt)}
+                  <span className="ch-radio-upcoming__duration">
+                    {' · '}
+                    {formatShowDuration(slot.startAt, slot.endAt)}
+                  </span>
+                </span>
               </li>
             )
           })}
