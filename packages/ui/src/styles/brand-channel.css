@@ -2757,6 +2757,10 @@
   min-height: 80px;
   border: 1px solid var(--border);
   isolation: isolate;
+  /* Breathing room from the header above — without it, this card's own
+     visualizer sits flush against the page-level one with no transition,
+     reading as two separate visualizers meeting at a hard seam. */
+  margin-top: 1.25rem;
 }
 
 /* Full-bleed art wash — lives on the wrap so nested player padding doesn't clip it. */
@@ -2842,7 +2846,9 @@
 
 [data-tahti-ui='brand'] .ch-channel-player-viz {
   position: absolute !important;
-  inset: 0 !important;
+  inset: 10px !important;
+  border-radius: calc(var(--radius-lg) - 6px);
+  overflow: hidden;
   z-index: 0;
   opacity: 0.82;
   pointer-events: none;
@@ -5032,7 +5038,10 @@
 }
 
 [data-tahti-ui='brand'] .ch-page-visualizer--live {
-  opacity: 0.78;
+  /* Stays subtle even while live — the player card below has its own,
+     stronger visualizer, so this one should read as ambient backdrop
+     rather than a second competing animation. */
+  opacity: 0.32;
 }
 
 [data-tahti-ui='brand'] .ch-page-foreground {
