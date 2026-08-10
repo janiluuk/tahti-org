@@ -13,6 +13,7 @@ describe('GET /api/v1/channels — live / replaying / recent tiers', () => {
   let liveSlug: string
   let replayingSlug: string
   let recentSlug: string
+  let deletedSlug: string
 
   beforeAll(async () => {
     app = await buildApp({ logger: false })
@@ -53,6 +54,23 @@ describe('GET /api/v1/channels — live / replaying / recent tiers', () => {
       where: { id: recentArtist.channel!.id },
       data: { state: 'OFFLINE', goneLiveAt: new Date(), fallbackEnabled: false },
     })
+
+    // Account deletion anonymizes the user but leaves the channel + rotation
+    // config in place — must not surface in any tier.
+    const deletedArtist = await createTestArtist(prisma, {
+      email: `${PREFIX}deleted@example.com`,
+      username: `${PREFIX}deleted`,
+      tier: 'ARTIST',
+    })
+    deletedSlug = deletedArtist.channel!.slug
+    await prisma.channel.update({
+      where: { id: deletedArtist.channel!.id },
+      data: { state: 'OFFLINE', goneLiveAt: new Date(), fallbackEnabled: true },
+    })
+    await prisma.user.update({
+      where: { id: deletedArtist.id },
+      data: { deletedAt: new Date() },
+    })
   })
 
   afterAll(async () => {
@@ -81,5 +99,19 @@ describe('GET /api/v1/channels — live / replaying / recent tiers', () => {
     expect(body.recent.some((c) => c.slug === recentSlug)).toBe(true)
     expect(body.live.some((c) => c.slug === recentSlug)).toBe(false)
     expect(body.replaying.some((c) => c.slug === recentSlug)).toBe(false)
+  })
+
+  it('excludes a deleted user’s channel from every tier', async () => {
+    const res = await app.inject({ method: 'GET', url: '/api/v1/channels' })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as {
+      live: Array<{ slug: string }>
+      replaying: Array<{ slug: string }>
+      recent: Array<{ slug: string }>
+    }
+
+    expect(body.live.some((c) => c.slug === deletedSlug)).toBe(false)
+    expect(body.replaying.some((c) => c.slug === deletedSlug)).toBe(false)
+    expect(body.recent.some((c) => c.slug === deletedSlug)).toBe(false)
   })
 })

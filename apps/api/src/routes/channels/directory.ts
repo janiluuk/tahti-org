@@ -22,7 +22,10 @@ const channelDirectoryRoute: FastifyPluginAsync = async (fastify) => {
     async (_request, reply) => {
       const result = await getCachedJson('channels:directory', 60, async () => {
         const channels = await fastify.prisma.channel.findMany({
-          where: { archiveItems: { some: { status: 'READY', isPublic: true } } },
+          where: {
+            archiveItems: { some: { status: 'READY', isPublic: true } },
+            user: { deletedAt: null },
+          },
           orderBy: { user: { displayName: 'asc' } },
           take: 500,
           select: {

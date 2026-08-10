@@ -37,7 +37,7 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
       const result = await getCachedJson('channels:list', 10, async () => {
         const [liveChannels, replayingChannels, recentChannels] = await Promise.all([
           fastify.prisma.channel.findMany({
-            where: { state: 'LIVE' },
+            where: { state: 'LIVE', user: { deletedAt: null } },
             orderBy: { goneLiveAt: 'desc' },
             take: 20,
             select: cardSelect,
@@ -45,7 +45,7 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
           // Not live, but airing their 24/7 archive rotation right now — the
           // "REPLAY" tier, same concept as Tahti Radio's own REPLAY badge.
           fastify.prisma.channel.findMany({
-            where: { state: { not: 'LIVE' }, fallbackEnabled: true },
+            where: { state: { not: 'LIVE' }, fallbackEnabled: true, user: { deletedAt: null } },
             orderBy: { goneLiveAt: 'desc' },
             take: 20,
             select: cardSelect,
@@ -55,7 +55,12 @@ const channelListRoute: FastifyPluginAsync = async (fastify) => {
             // not yet public) must not surface in the public "recently active" list.
             // fallbackEnabled: false — those are covered by the "replaying" tier above,
             // not "recently active" (they're airing right now, not just recently).
-            where: { state: 'OFFLINE', goneLiveAt: { not: null }, fallbackEnabled: false },
+            where: {
+              state: 'OFFLINE',
+              goneLiveAt: { not: null },
+              fallbackEnabled: false,
+              user: { deletedAt: null },
+            },
             orderBy: { goneLiveAt: 'desc' },
             take: 20,
             select: cardSelect,
