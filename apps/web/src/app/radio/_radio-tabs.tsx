@@ -7,8 +7,15 @@ import { useRef, useState, type ReactNode } from 'react'
 import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
 
 type Tab = 'recent' | 'upcoming'
+type StepId = 'player' | Tab
 
 const HELP_STEPS: HelpSpotlightStep[] = [
+  {
+    id: 'player',
+    label: 'Now playing',
+    description:
+      'The live Tahti Radio stream — whoever’s booked for this slot, or the 24/7 curated rotation when nobody is. The visualizer reacts to the audio, and the ♥ loves whatever’s currently playing.',
+  },
   {
     id: 'recent',
     label: 'Recently played',
@@ -23,11 +30,21 @@ const HELP_STEPS: HelpSpotlightStep[] = [
   },
 ]
 
-/** Small tab bar under the Tahti Radio player, switching between what already
- * played (RecentlyPlayed) and what's coming next (UpcomingShows — booked
- * artist slots plus the curated rotation queue). */
-export function RadioTabs({ recent, upcoming }: { recent: ReactNode; upcoming: ReactNode }) {
+/** Tahti Radio's player + schedule tab bar, wrapped in one help walkthrough —
+ * "Now playing" spotlights the fixed player section (no tab to switch to);
+ * "Recently played" and "Upcoming" switch the real tab underneath as the
+ * walkthrough steps through them. */
+export function RadioTabs({
+  player,
+  recent,
+  upcoming,
+}: {
+  player: ReactNode
+  recent: ReactNode
+  upcoming: ReactNode
+}) {
   const [active, setActive] = useState<Tab>('recent')
+  const playerRef = useRef<HTMLDivElement | null>(null)
   const panelRefs = useRef<Record<Tab, HTMLDivElement | null>>({ recent: null, upcoming: null })
 
   const tabs: Array<{ id: Tab; label: string }> = [
@@ -36,45 +53,53 @@ export function RadioTabs({ recent, upcoming }: { recent: ReactNode; upcoming: R
   ]
 
   return (
-    <div className="ch-radio-tabbed prof-tabs">
+    <>
       <HelpSpotlight
         steps={HELP_STEPS}
         activeId={active}
-        onNavigate={(id) => setActive(id as Tab)}
-        getTargetEl={() => panelRefs.current[active]}
+        onNavigate={(id) => {
+          if (id === 'recent' || id === 'upcoming') setActive(id)
+        }}
+        getTargetEl={(step) => {
+          const id = step.id as StepId
+          return id === 'player' ? playerRef.current : panelRefs.current[id]
+        }}
       />
-      <div className="prof-tabs__bar" role="tablist" aria-label="Radio schedule">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={active === tab.id}
-            className={`prof-tabs__tab${active === tab.id ? ' prof-tabs__tab--active' : ''}`}
-            onClick={() => setActive(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div ref={playerRef}>{player}</div>
+      <div className="ch-radio-tabbed prof-tabs">
+        <div className="prof-tabs__bar" role="tablist" aria-label="Radio schedule">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active === tab.id}
+              className={`prof-tabs__tab${active === tab.id ? ' prof-tabs__tab--active' : ''}`}
+              onClick={() => setActive(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div
+          className="prof-tabs__panel"
+          hidden={active !== 'recent'}
+          ref={(el) => {
+            panelRefs.current.recent = el
+          }}
+        >
+          {recent}
+        </div>
+        <div
+          className="prof-tabs__panel"
+          hidden={active !== 'upcoming'}
+          ref={(el) => {
+            panelRefs.current.upcoming = el
+          }}
+        >
+          {upcoming}
+        </div>
       </div>
-      <div
-        className="prof-tabs__panel"
-        hidden={active !== 'recent'}
-        ref={(el) => {
-          panelRefs.current.recent = el
-        }}
-      >
-        {recent}
-      </div>
-      <div
-        className="prof-tabs__panel"
-        hidden={active !== 'upcoming'}
-        ref={(el) => {
-          panelRefs.current.upcoming = el
-        }}
-      >
-        {upcoming}
-      </div>
-    </div>
+    </>
   )
 }

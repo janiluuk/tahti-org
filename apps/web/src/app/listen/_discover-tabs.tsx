@@ -70,7 +70,7 @@ export function DiscoverTabs({
         steps={HELP_STEPS}
         activeId={tab}
         onNavigate={(id) => setTab(id as Tab)}
-        getTargetEl={() => panelRefs.current[tab]}
+        getTargetEl={(step) => panelRefs.current[step.id as Tab]}
       />
       <div className="discover-tabs" role="tablist" aria-label="Discover view">
         <button

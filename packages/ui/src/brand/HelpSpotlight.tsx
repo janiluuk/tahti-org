@@ -14,25 +14,35 @@ export interface HelpSpotlightStep {
 
 export interface HelpSpotlightProps {
   steps: HelpSpotlightStep[]
-  activeId: string
-  /** Switches the real underlying tab — the spotlight re-measures and follows. */
-  onNavigate: (id: string) => void
-  /** Returns the DOM node of the currently active panel to spotlight — called
-   * fresh whenever help opens or the active step changes, not read once as a
-   * value. Callers source this from a ref map keyed by tab id; ref mutations
-   * don't trigger a re-render on their own, so a plain `targetEl` value prop
-   * would capture whatever the ref held at the *previous* render (null before
-   * the panel has ever been switched to) and never update — the "?" button
-   * would then open nothing, forever, until some unrelated re-render happened
-   * to pass a fresher value. */
-  getTargetEl: () => HTMLElement | null
+  /** The real underlying UI's current selection (e.g. active tab id), if it can
+   * change from outside the walkthrough (a visitor clicking a real tab while
+   * help is open) — the walkthrough follows along when this matches a step id.
+   * Omit entirely if none of `steps` correspond to switchable tabs. */
+  activeId?: string
+  /** Called whenever the walkthrough moves to a step (via the arrows), so the
+   * caller can sync any real underlying state for that step — e.g. switch to
+   * the matching tab. No-op (or omit) for steps that just spotlight a fixed
+   * page element with nothing to switch to. */
+  onNavigate?: (id: string) => void
+  /** Returns the DOM node to spotlight for a given step — called fresh
+   * whenever help opens or the current step changes, not read once as a
+   * value. Callers typically source this from a ref map keyed by step id;
+   * ref mutations don't trigger a re-render on their own, so a plain
+   * `targetEl` value prop would capture whatever the ref held at the
+   * *previous* render (null before the panel has ever been switched to) and
+   * never update — the "?" button would then open nothing, forever, until
+   * some unrelated re-render happened to pass a fresher value. */
+  getTargetEl: (step: HelpSpotlightStep) => HTMLElement | null
   className?: string
 }
 
 /** Small "?" affordance (desktop only) that, on click, dims the whole page
- * except the currently active tab panel and walks the visitor through what
- * each tab does via prev/next arrows — the spotlight follows as they step
- * through, since `onNavigate` drives the real tab switch underneath. */
+ * except the current step's target and walks the visitor through what each
+ * one does via prev/next arrows. Steps can be tab-linked (`onNavigate` drives
+ * the real tab switch underneath, and `activeId` keeps the walkthrough in
+ * sync if a real tab is clicked directly) or spotlight a fixed page element
+ * that doesn't correspond to any tab — the walkthrough tracks its own current
+ * step independently of `activeId` so both kinds can be mixed freely. */
 export function HelpSpotlight({
   steps,
   activeId,
@@ -43,14 +53,30 @@ export function HelpSpotlight({
   const [open, setOpen] = useState(false)
   const [visible, setVisible] = useState(false)
   const [rect, setRect] = useState<DOMRect | null>(null)
+  const [stepId, setStepId] = useState(() => steps[0]?.id)
 
   const getTargetElRef = useRef(getTargetEl)
   getTargetElRef.current = getTargetEl
 
+  // Follow a real tab switch that happened outside the walkthrough (the
+  // visitor clicked a tab directly while help was open) — only for steps
+  // that actually correspond to a tab; fixed-element steps have no `activeId`
+  // to match and are left alone.
+  useEffect(() => {
+    if (!open || activeId == null) return
+    if (steps.some((s) => s.id === activeId)) setStepId(activeId)
+  }, [open, activeId, steps])
+
+  const activeIndex = Math.max(
+    0,
+    steps.findIndex((s) => s.id === stepId),
+  )
+  const step = steps[activeIndex]
+
   useEffect(() => {
     if (!open) return
     function measure() {
-      const el = getTargetElRef.current()
+      const el = step && getTargetElRef.current(step)
       if (el) setRect(el.getBoundingClientRect())
     }
     measure()
@@ -60,7 +86,7 @@ export function HelpSpotlight({
       window.removeEventListener('resize', measure)
       window.removeEventListener('scroll', measure, true)
     }
-  }, [open, activeId])
+  }, [open, step])
 
   useEffect(() => {
     if (!open) return
@@ -69,6 +95,11 @@ export function HelpSpotlight({
   }, [open])
 
   function launch() {
+    const first = steps[0]
+    if (first) {
+      setStepId(first.id)
+      onNavigate?.(first.id)
+    }
     setOpen(true)
   }
 
@@ -77,15 +108,12 @@ export function HelpSpotlight({
     window.setTimeout(() => setOpen(false), 280)
   }
 
-  const activeIndex = Math.max(
-    0,
-    steps.findIndex((s) => s.id === activeId),
-  )
-  const step = steps[activeIndex]
-
   function go(delta: number) {
     const next = steps[(activeIndex + delta + steps.length) % steps.length]
-    if (next) onNavigate(next.id)
+    if (next) {
+      setStepId(next.id)
+      onNavigate?.(next.id)
+    }
   }
 
   return (

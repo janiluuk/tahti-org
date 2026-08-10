@@ -208,23 +208,26 @@ export default async function RadioPage() {
               </p>
             )}
 
-            {playback.kind === 'none' ? (
-              <div className="public-empty-card">
-                <p className="public-empty-card__text">Tahti Radio is temporarily offline.</p>
-                <p className="public-empty-card__hint">
-                  <Link href="/listen">Browse live channels</Link> or check back soon.
-                </p>
-              </div>
-            ) : (
-              <RadioPlayerSection
-                playback={playback}
-                slug={TAHTI_RADIO_SLUG}
-                liveSlot={liveSlot ? { startAt: liveSlot.startAt, artist: liveSlot.artist } : null}
-                nowPlaying={nowPlaying}
-              />
-            )}
-
             <RadioTabs
+              player={
+                playback.kind === 'none' ? (
+                  <div className="public-empty-card">
+                    <p className="public-empty-card__text">Tahti Radio is temporarily offline.</p>
+                    <p className="public-empty-card__hint">
+                      <Link href="/listen">Browse live channels</Link> or check back soon.
+                    </p>
+                  </div>
+                ) : (
+                  <RadioPlayerSection
+                    playback={playback}
+                    slug={TAHTI_RADIO_SLUG}
+                    liveSlot={
+                      liveSlot ? { startAt: liveSlot.startAt, artist: liveSlot.artist } : null
+                    }
+                    nowPlaying={nowPlaying}
+                  />
+                )
+              }
               recent={<RecentlyPlayed items={recentlyPlayed} embedded />}
               upcoming={
                 <UpcomingShows
