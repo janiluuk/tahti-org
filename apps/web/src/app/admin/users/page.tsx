@@ -48,7 +48,10 @@ export default async function AdminUsersPage({
     <>
       <h1 className="admin-section-title">Users</h1>
 
-      <form method="get" style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+      <form
+        method="get"
+        style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}
+      >
         <input
           name="q"
           type="search"

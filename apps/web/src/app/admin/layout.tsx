@@ -9,6 +9,7 @@ import '@tahti/ui/src/tokens.css'
 import '@tahti/ui/src/components.css'
 import '@/components/admin-shell.css'
 import { AdminNav } from './admin-nav'
+import { AdminMobileNav } from './admin-mobile-nav'
 
 async function requireBoardSession() {
   const sessionCookie = cookies().get('tahti_session')
@@ -35,6 +36,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       variant="studio"
       displayName={me.displayName}
       sidebar={<AdminNav />}
+      mobileNav={<AdminMobileNav />}
       header={
         <AdminShellHeader
           displayName={me.displayName}

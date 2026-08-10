@@ -13,6 +13,9 @@ export interface AdminShellProps {
   /** `studio` uses production tahti-studio + admin-shell.css layout. */
   variant?: 'playground' | 'studio'
   className?: string
+  /** Bottom tab bar shown ≤768px once `.db-sidebar` hides (studio variant only)
+   * — without this, the sidebar's admin sections become unreachable on mobile. */
+  mobileNav?: React.ReactNode
 }
 
 /** Board admin layout — amber view strip, sidebar slot, main content. */
@@ -23,6 +26,7 @@ export function AdminShell({
   header,
   variant = 'playground',
   className,
+  mobileNav,
 }: AdminShellProps) {
   const initial = displayName.trim().charAt(0).toUpperCase()
 
@@ -34,6 +38,7 @@ export function AdminShell({
           <aside className="db-sidebar">{sidebar}</aside>
           <main className="db-main shell-app__content admin-main">{children}</main>
         </div>
+        {mobileNav}
       </div>
     )
   }

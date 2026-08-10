@@ -6,7 +6,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const NAV = [
+export const ADMIN_NAV = [
   {
     href: '/admin/dashboard',
     label: 'Dashboard',
@@ -352,7 +352,7 @@ export function AdminNav() {
 
   return (
     <nav aria-label="Admin sections">
-      {NAV.map(({ href, label, icon }) => {
+      {ADMIN_NAV.map(({ href, label, icon }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`)
         return (
           <Link key={href} href={href} className={`db-nav-item${active ? ' active' : ''}`}>

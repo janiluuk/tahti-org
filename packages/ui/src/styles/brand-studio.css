@@ -1917,7 +1917,15 @@
   color: var(--fg);
 }
 
-[data-tahti-ui='studio'] .cover-upload__file-input {
+/* `input[type='file'].cover-upload__file-input` (not just `.cover-upload__file-input`) —
+   the generic `[data-tahti-ui='studio'] input[type='file']` rule above carries an
+   extra attribute selector (`[type='file']`), giving it higher specificity
+   (0,2,1) than the class alone (0,2,0), so it was winning and forcing this
+   back to `display: block`. The native "Choose File / No file chosen" control
+   that exposed doesn't shrink or wrap, so on narrow viewports it overflowed
+   the whole page horizontally — this input is meant to stay hidden behind the
+   custom dropzone UI (click forwards to it via a ref) in all cases. */
+[data-tahti-ui='studio'] input[type='file'].cover-upload__file-input {
   display: none;
 }
 
@@ -2344,6 +2352,14 @@
 @media (max-width: 720px) {
   [data-tahti-ui='studio'] .music-browser {
     flex-direction: column;
+    /* Base rule sets `align-items: flex-start` for the desktop row layout (top-
+       align the nav rail against the panel). Once flex-direction flips to
+       column here, flex-start instead shrinks each child to its own content
+       width and left-aligns it — so .music-browser__panel's un-wrapped content
+       pokes past the 390px viewport instead of being constrained to it. Stretch
+       so children fill the available width like every other stacked mobile
+       layout in this file. */
+    align-items: stretch;
   }
 
   [data-tahti-ui='studio'] .music-browser__nav {
@@ -8996,6 +9012,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: var(--space-3);
 }
 
@@ -9029,7 +9046,12 @@
 
 [data-tahti-ui='studio'] .collection-tracklist__row {
   display: grid;
-  grid-template-columns: 24px 28px 40px 1fr auto auto 16px;
+  /* minmax(0, 1fr), not a bare 1fr — a bare 1fr track has an implicit
+     min-width: auto, so it won't shrink below the title's min-content width.
+     That defeated .collection-tracklist__title's text-overflow: ellipsis and
+     pushed the whole row (and on narrow viewports, the page) wider than the
+     title's on-screen box. */
+  grid-template-columns: 24px 28px 40px minmax(0, 1fr) auto auto 16px;
   align-items: center;
   gap: var(--space-2);
   background: color-mix(in srgb, var(--bg) 35%, var(--card));
@@ -9173,7 +9195,11 @@
 
 @media (max-width: 900px) {
   [data-tahti-ui='studio'] .collection-editor__body {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr) — a bare 1fr still carries an implicit min-width: auto,
+       so the single stacked column wouldn't shrink below its content's
+       min-content width (e.g. the tracklist section), overflowing the page
+       on narrow viewports instead of wrapping/truncating within it. */
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -10135,7 +10161,10 @@
 
 @media (max-width: 900px) {
   [data-tahti-ui='studio'] .collection-editor__body {
-    grid-template-columns: 1fr;
+    /* Same fix as the identical duplicate rule above (~line 9196) — minmax(0, 1fr)
+       instead of a bare 1fr so the stacked column can shrink below its content's
+       min-content width instead of overflowing the viewport. */
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

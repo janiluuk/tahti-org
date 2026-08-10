@@ -42,6 +42,18 @@
   width: 100%;
 }
 
+/* Same breakpoint/values as brand-studio.css's own `.db-main` mobile override —
+   this selector (`.admin-shell .admin-main`) has equal specificity and comes
+   later in the cascade, so without this it was winning at every viewport width
+   and pinning admin pages to the desktop 2.5rem side padding even on a 390px
+   screen. Bottom padding also clears the fixed AdminMobileNav bar that now
+   replaces the sidebar at this breakpoint (packages/ui/src/brand/AdminShell.tsx). */
+@media (max-width: 768px) {
+  .admin-shell .admin-main {
+    padding: 16px 16px 80px;
+  }
+}
+
 .admin-panel-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
