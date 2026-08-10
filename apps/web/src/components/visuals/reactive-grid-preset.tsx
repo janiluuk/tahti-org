@@ -64,12 +64,13 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
       const { speed, intensity } = readSettings(settingsRef)
       t += 0.02 * speed
 
+      const data = analyser ? new Uint8Array(analyser.frequencyBinCount) : null
+      if (analyser && data) analyser.getByteFrequencyData(data)
+
       for (let i = 0; i < cells.length; i++) {
         const { mat, phase } = cells[i]!
         let pulse = Math.sin(t + phase) * 0.5 + 0.5
-        if (analyser) {
-          const data = new Uint8Array(analyser.frequencyBinCount)
-          analyser.getByteFrequencyData(data)
+        if (analyser && data) {
           const idx = Math.floor((i / cells.length) * data.length)
           pulse = data[idx]! / 255
         }

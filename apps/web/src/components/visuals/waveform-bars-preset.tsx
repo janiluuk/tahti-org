@@ -57,11 +57,12 @@ export function WaveformBarsPreset({ colorScheme, analyser, settingsRef }: Visua
       const { speed, intensity } = readSettings(settingsRef)
       frame += speed
 
+      const data = analyser ? new Uint8Array(analyser.frequencyBinCount) : null
+      if (analyser && data) analyser.getByteFrequencyData(data)
+
       for (let i = 0; i < BAR_COUNT; i++) {
         let level = 0.08
-        if (analyser) {
-          const data = new Uint8Array(analyser.frequencyBinCount)
-          analyser.getByteFrequencyData(data)
+        if (analyser && data) {
           const idx = Math.floor((i / BAR_COUNT) * data.length)
           level = 0.06 + (data[idx]! / 255) * 0.55 * intensity
         } else {
