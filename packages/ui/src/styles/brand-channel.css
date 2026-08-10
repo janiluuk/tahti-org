@@ -608,6 +608,8 @@
   min-height: calc(100vh - 52px);
   max-width: var(--public-max);
   margin: 0 auto;
+  position: relative;
+  transition: grid-template-columns 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-tahti-ui='brand'] .ch-main {
@@ -623,6 +625,64 @@
   gap: 16px;
   min-width: 0;
   background: color-mix(in srgb, var(--bg) 80%, var(--card));
+  opacity: 1;
+  transition:
+    opacity 0.22s ease,
+    padding 0.32s ease;
+}
+
+/* Desktop-only chat collapse (PLAT toggle next to the two-column rail) — on
+   mobile the columns already stack to 1fr and the chat sits below main, so
+   there's nothing to collapse there; see .ch-chat-collapse-toggle below. */
+[data-tahti-ui='brand'] .ch-body--chat-collapsed {
+  grid-template-columns: 1fr 0px;
+}
+
+[data-tahti-ui='brand'] .ch-body--chat-collapsed .ch-sidebar {
+  padding-left: 0;
+  padding-right: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+[data-tahti-ui='brand'] .ch-chat-collapse-toggle {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  [data-tahti-ui='brand'] .ch-chat-collapse-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 24px;
+    right: calc(var(--chat-w) - 12px);
+    width: 24px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--card2);
+    color: var(--muted);
+    cursor: pointer;
+    z-index: 15;
+    transition:
+      right 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s;
+  }
+
+  [data-tahti-ui='brand'] .ch-chat-collapse-toggle:hover {
+    background: color-mix(in srgb, var(--cyan) 14%, var(--card2));
+    border-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+    color: var(--cyan);
+  }
+
+  [data-tahti-ui='brand'] .ch-body--chat-collapsed .ch-chat-collapse-toggle {
+    right: 4px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1782,6 +1842,10 @@
   white-space: nowrap;
 }
 
+[data-tahti-ui='brand'] .ch-radio-upcoming__duration {
+  opacity: 0.75;
+}
+
 [data-tahti-ui='brand'] .ch-radio-upcoming__item--live {
   background: color-mix(in srgb, var(--coral) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--coral) 35%, transparent);
@@ -2795,10 +2859,18 @@
   background-image: var(--ch-player-art);
   background-size: cover;
   background-position: center;
-  filter: blur(42px) saturate(1.35);
+  filter: blur(28px) saturate(1.35);
   opacity: 0.22;
   transform: scale(1.12);
   pointer-events: none;
+  /* This sits directly behind a WebGL canvas that repaints continuously
+   * (the player's REACTIVE_GRID visualizer, always-on on the radio page) —
+   * without a compositing hint the browser can end up re-rasterizing this
+   * expensive blur alongside every canvas frame instead of caching it as
+   * its own GPU layer once. will-change targets the properties this
+   * element's own crossfade animation actually changes (see
+   * .ch-player-art-backdrop--out/--in below), not the static blur/scale. */
+  will-change: opacity;
 }
 
 [data-tahti-ui='brand'] .ch-player-art-backdrop::after {
@@ -2866,6 +2938,11 @@
   padding: 0.75rem;
   position: relative;
   z-index: 1;
+  /* Contains the continuously-repainting visualizer canvas — without this,
+   * every frame it draws is a candidate to force paint/layout checks on
+   * siblings and ancestors outside its own box, same reasoning as
+   * .ch-chat-panel's containment below. */
+  contain: layout paint;
 }
 
 [data-tahti-ui='brand'] .ch-channel-player-viz {
@@ -2934,15 +3011,16 @@
   opacity: 0.9;
 }
 
-/* Radio page only — much bigger now-playing title/artist, with a slow subtle
-   breathing animation so the "always on" station feels alive even when the
-   audio-reactive visualizer behind it is barely moving (quiet passages). */
+/* Radio page only — much bigger now-playing title/artist. Used to run a
+   perpetual opacity "breathing" animation so the "always on" station felt
+   alive during quiet passages — purely decorative, and one more thing
+   compositing continuously forever alongside everything else already
+   running on this page (the visualizer canvas foremost), so it's gone. */
 [data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__meta-title {
   font-family: var(--font-head);
   font-size: clamp(22px, 3.6vw, 40px);
   font-weight: var(--weight-semibold);
   line-height: 1.1;
-  animation: ch-radio-title-breathe 4s ease-in-out infinite;
 }
 
 [data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__meta-subtitle {
@@ -2958,42 +3036,18 @@
   width: fit-content;
   padding: 0.3rem 0.7rem;
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--bg) 50%, transparent);
-  backdrop-filter: blur(3px);
+  /* No backdrop-filter here (there was a 3px blur) — this sits directly over
+   * the REACTIVE_GRID canvas, which repaints continuously, and unlike a
+   * plain filter, backdrop-filter has to resample whatever's behind it on
+   * every single paint. A more opaque flat backing reads just as well
+   * without paying that cost every frame — same fallback already proven for
+   * gpu-limited machines below, just applied everywhere now. */
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
 }
 
 [data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__art {
   width: clamp(96px, 16vw, 220px);
   height: clamp(96px, 16vw, 220px);
-}
-
-@keyframes ch-radio-title-breathe {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.82;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__meta-title {
-    animation: none;
-  }
-}
-
-/* During a track handoff, pause the idle breathe so it doesn't fight the
-   slide/fly choreography. */
-[data-tahti-ui='brand']
-  .ch-radio-player-wrap
-  .waveform-player--track-out
-  .waveform-player__meta-title,
-[data-tahti-ui='brand']
-  .ch-radio-player-wrap
-  .waveform-player--track-in
-  .waveform-player__meta-title {
-  animation: none;
 }
 
 [data-tahti-ui='brand'] .ch-player-inner--video {
@@ -3407,6 +3461,13 @@
 
 [data-tahti-ui='brand'] .ch-chat-messages {
   flex: 1;
+  /* Flex items default to min-height:auto, which refuses to shrink below the
+   * content's natural size — once there are enough messages to overflow,
+   * this grows instead of scrolling internally, pushing .ch-chat-panel (and
+   * with it the sidebar/page) taller instead of staying put. Tahti Radio's
+   * chat is busy enough to hit this reliably; a quieter channel chat might
+   * rarely accumulate enough messages in one sitting to notice. */
+  min-height: 0;
   overflow-y: auto;
   padding: 0.75rem 1rem;
 }
@@ -3416,6 +3477,15 @@
   font-size: var(--text-sm);
   text-align: center;
   margin-top: 2rem;
+}
+
+[data-tahti-ui='brand'] .ch-chat-disabled-note {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
 }
 
 [data-tahti-ui='brand'] .chat-msg {
@@ -7648,9 +7718,4 @@ html.gpu-limited [data-tahti-ui='brand'] .prof-bg-music-btn {
 
 html.gpu-limited [data-tahti-ui='brand'] .ch-reaction-btn {
   backdrop-filter: none;
-}
-
-html.gpu-limited [data-tahti-ui='brand'] .ch-radio-player-wrap .waveform-player__meta-text {
-  backdrop-filter: none;
-  background: color-mix(in srgb, var(--bg) 80%, transparent);
 }

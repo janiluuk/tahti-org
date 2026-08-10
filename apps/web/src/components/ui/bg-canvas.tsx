@@ -4,6 +4,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import * as THREE from 'three'
 import { useBackgroundCanvasSuspended } from '@/contexts/background-canvas-context'
 import { isSoftwareWebglRenderer } from '@/lib/webgl-support'
@@ -23,6 +24,14 @@ interface BgCanvasProps {
 
 export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  // The radio page keeps its full animated background even under software
+  // rendering — turning it off there didn't actually fix that page's
+  // reported slowness, so there's no performance reason left to pay the
+  // aesthetic cost of a static fallback specifically there. Read fresh at
+  // setup time below (this component mounts once per full page load from
+  // the root layout and never remounts on client-side navigation, so this
+  // only reflects whichever page was current at that initial mount).
+  const isRadioPage = usePathname()?.startsWith('/radio') ?? false
   const audioStateRef = useRef<AudioState>({
     analyser: null,
     smooth: new Float32Array(256) as Float32Array<ArrayBuffer>,
@@ -82,17 +91,24 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
     // way as an outright creation failure, rather than uniformly grinding
     // even after the draw-call/throttle optimizations above.
     if (isSoftwareWebglRenderer(renderer.getContext())) {
-      console.warn('[bg-canvas] software WebGL renderer detected, using static fallback')
-      renderer.dispose()
-      canvas.classList.add('bg-canvas--webgl-fallback')
       // No GPU acceleration available to this browser at all — not just for
       // WebGL. backdrop-filter/filter blur are normally GPU-composited too,
       // so on a machine landing here they're very likely also running on the
       // CPU site-wide. This flag on <html> lets CSS drop blur (see the
       // html.gpu-limited overrides in brand-channel.css/components.css)
-      // everywhere, not just in this one component.
+      // everywhere, not just in this one component — applies regardless of
+      // page, unlike the canvas fallback below.
       document.documentElement.classList.add('gpu-limited')
-      return
+
+      if (!isRadioPage) {
+        console.warn('[bg-canvas] software WebGL renderer detected, using static fallback')
+        renderer.dispose()
+        canvas.classList.add('bg-canvas--webgl-fallback')
+        return
+      }
+      console.warn(
+        '[bg-canvas] software WebGL renderer detected, but keeping the full scene on /radio',
+      )
     }
 
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))

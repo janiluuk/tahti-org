@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LiveChatPanel, PinnedAnnouncement, type LiveChatMessage } from '@tahti/ui'
 import { loadStoredChatHandle, persistChatHandle } from '@/lib/chat-handle'
 import {
@@ -403,23 +403,33 @@ export default function ChatPanel({
     setInput('')
   }
 
-  const liveMessages: LiveChatMessage[] = messages.map((m) => ({
-    id: m.id,
-    handle: m.handle,
-    text: m.text,
-    tone: m.system
-      ? 'system'
-      : m.channelRole === 'owner'
-        ? 'artist'
-        : m.channelRole === 'moderator'
-          ? 'moderator'
-          : m.supporter
-            ? 'supporter'
-            : 'default',
-    countryCode: m.countryCode,
-    href: m.href,
-    ts: m.ts,
-  }))
+  // Tahti Radio's chat aggregates every listener on the platform, so this
+  // recomputes far more often than on a typical channel — memoizing means a
+  // re-render triggered by something else (listenerCount polling, daily
+  // count, etc.) reuses the same array/message objects instead of mapping
+  // all 100 messages fresh, which would also defeat ChatMessageRow's own
+  // memoization downstream (new object identity every render = no bailout).
+  const liveMessages: LiveChatMessage[] = useMemo(
+    () =>
+      messages.map((m) => ({
+        id: m.id,
+        handle: m.handle,
+        text: m.text,
+        tone: m.system
+          ? 'system'
+          : m.channelRole === 'owner'
+            ? 'artist'
+            : m.channelRole === 'moderator'
+              ? 'moderator'
+              : m.supporter
+                ? 'supporter'
+                : 'default',
+        countryCode: m.countryCode,
+        href: m.href,
+        ts: m.ts,
+      })),
+    [messages],
+  )
 
   const displayError =
     error ??

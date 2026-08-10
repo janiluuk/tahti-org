@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { VisualPreset, ColorScheme, VisualPresetSettings } from '@tahti/shared'
 import {
@@ -11,7 +11,6 @@ import {
   DEFAULT_VISUAL_PRESET_SETTINGS,
   resolveColorScheme,
 } from '@tahti/shared'
-import { isSoftwareWebglRenderer } from '@/lib/webgl-support'
 
 // Lazy-load each preset to keep the initial bundle small.
 // Each preset uses Three.js which is large.
@@ -70,18 +69,13 @@ function supportsWebGL(): boolean {
   if (typeof window === 'undefined') return false
   try {
     const canvas = document.createElement('canvas')
-    const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl')
-    if (!gl) return false
-    // Context creation succeeding doesn't mean it's hardware-accelerated —
-    // see isSoftwareWebglRenderer. These presets are all Three.js scenes
-    // with dozens to hundreds of elements, too heavy for a CPU rasterizer.
-    return !isSoftwareWebglRenderer(gl)
+    return !!(canvas.getContext('webgl2') ?? canvas.getContext('webgl'))
   } catch {
     return false
   }
 }
 
-export function ChannelVisualizer({
+function ChannelVisualizerImpl({
   preset,
   colorSchemeJson,
   paletteJson,
@@ -134,3 +128,9 @@ export function ChannelVisualizer({
     </div>
   )
 }
+
+// The radio page's player re-renders on its own ticks (a 1s live-elapsed
+// clock, a periodic now-playing poll) with every other prop here holding a
+// stable reference — memoizing skips re-invoking this (and the heavy Three.js
+// preset tree beneath it) on renders that don't actually change what it draws.
+export const ChannelVisualizer = memo(ChannelVisualizerImpl)

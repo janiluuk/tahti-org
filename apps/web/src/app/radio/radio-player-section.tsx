@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { TAHTI_RADIO_SLUG, resolveColorScheme } from '@tahti/shared'
 import { cn, WAVEFORM_TRACK_IN_MS, WAVEFORM_TRACK_OUT_MS } from '@tahti/ui'
 import HlsPlayer from '../c/[slug]/hls-player'
@@ -68,6 +68,17 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
+function sameNowPlaying(a: RadioNowPlayingTrack | null, b: RadioNowPlayingTrack | null): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  return (
+    a.title === b.title &&
+    a.artistName === b.artistName &&
+    a.artistUsername === b.artistUsername &&
+    a.artworkUrl === b.artworkUrl
+  )
+}
+
 export function RadioPlayerSection({
   playback,
   slug,
@@ -102,7 +113,15 @@ export function RadioPlayerSection({
         })
         if (!res.ok || cancelled) return
         const data = (await res.json()) as { nowPlaying: RadioNowPlayingTrack | null }
-        if (!cancelled) setNowPlaying(data.nowPlaying)
+        // Every poll parses a brand-new object even when nothing actually
+        // changed — radio plays 24/7, so this fires forever, and setting
+        // state unconditionally forced a re-render of the whole card (and
+        // the WebGL visualizer beneath it) every 8s indefinitely. Keep the
+        // old object identity when the track is unchanged so React bails
+        // out of re-rendering this subtree.
+        if (!cancelled) {
+          setNowPlaying((prev) => (sameNowPlaying(prev, data.nowPlaying) ? prev : data.nowPlaying))
+        }
       } catch {
         /* keep last known */
       }
@@ -118,14 +137,14 @@ export function RadioPlayerSection({
   const title = liveSlot ? liveSlot.artist.displayName : (nowPlaying?.title ?? 'Tahti Radio')
   const subtitle = liveSlot
     ? 'Live now on Tahti Radio'
-    : nowPlaying?.artistName
-      ? `${nowPlaying.artistName} on Tahti Radio`
-      : 'Tahti Radio · 24/7 rotation'
+    : (nowPlaying?.artistName ?? 'Tahti Radio · 24/7 rotation')
   const subtitleHref =
     !liveSlot && nowPlaying?.artistUsername ? `/u/${nowPlaying.artistUsername}` : undefined
   const artworkUrl = liveSlot ? liveSlot.artist.avatarUrl : (nowPlaying?.artworkUrl ?? null)
 
-  const scheme = resolveColorScheme(colorSchemeJson, null)
+  // liveElapsedSec ticks every second during a booked live slot — memoize so
+  // that tick doesn't recompute/reallocate the color scheme on every render.
+  const scheme = useMemo(() => resolveColorScheme(colorSchemeJson, null), [colorSchemeJson])
   const hasArt = Boolean(artworkUrl)
 
   const [backdropPhase, setBackdropPhase] = useState<BackdropPhase>('idle')

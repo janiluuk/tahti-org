@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import React, { useEffect, useRef, useState, type RefObject } from 'react'
+import React, { memo, useEffect, useRef, useState, type RefObject } from 'react'
 import { cn } from '../lib/cn'
 import { chatHandleVariant } from '../lib/chat-handle'
 import { flagEmoji } from '../lib/flag-emoji'
@@ -134,6 +134,59 @@ export function renderChatMessageText(text: string): React.ReactNode {
     return <React.Fragment key={i}>{part}</React.Fragment>
   })
 }
+
+// Tahti Radio's chat aggregates every listener on the platform, not just one
+// artist's room — new messages there arrive far more often than on a typical
+// channel. Without memoizing each row, one incoming message re-renders every
+// message currently on screen (each re-running renderChatMessageText's regex
+// split, chatHandleVariant, formatMessageAge, ...) even though up to 99 of
+// them are unchanged. Keyed by message identity so React can skip a row
+// entirely when its own props haven't changed.
+const ChatMessageRow = memo(function ChatMessageRow({ message }: { message: LiveChatMessage }) {
+  if (message.tone === 'system') {
+    return (
+      <div className="chat-msg chat-msg--system">
+        {message.href ? (
+          <a href={message.href} className="chat-msg__system-text">
+            {message.text}
+          </a>
+        ) : (
+          <span className="chat-msg__system-text">{message.text}</span>
+        )}
+      </div>
+    )
+  }
+  return (
+    <div className="chat-msg">
+      {message.countryCode ? (
+        <span className="chat-flag" aria-label={message.countryCode} title={message.countryCode}>
+          {flagEmoji(message.countryCode)}
+        </span>
+      ) : null}
+      <span
+        className={cn(
+          'handle',
+          message.tone === 'artist'
+            ? 'handle--artist'
+            : message.tone === 'moderator'
+              ? 'handle--moderator'
+              : `handle--${chatHandleVariant(message.handle)}`,
+        )}
+      >
+        {message.handle}
+      </span>
+      {message.tone === 'artist' ? (
+        <span className="chat-role-badge chat-role-badge--owner">owner</span>
+      ) : message.tone === 'moderator' ? (
+        <span className="chat-role-badge chat-role-badge--moderator">mod</span>
+      ) : message.tone === 'supporter' ? (
+        <span className="chat-supporter-badge">supporter</span>
+      ) : null}
+      {message.ts != null && <span className="chat-msg__time">{formatMessageAge(message.ts)}</span>}
+      <span className="text">{renderChatMessageText(message.text)}</span>
+    </div>
+  )
+})
 
 /** Channel right-rail chat — header, pinned slot, messages, input. */
 export function LiveChatPanel({
@@ -410,54 +463,7 @@ export function LiveChatPanel({
         {messages.length === 0 ? (
           <p className={isChannel ? 'ch-chat-empty' : 'live-chat-panel__empty'}>{emptyMessage}</p>
         ) : isChannel ? (
-          messages.map((message) =>
-            message.tone === 'system' ? (
-              <div key={message.id} className="chat-msg chat-msg--system">
-                {message.href ? (
-                  <a href={message.href} className="chat-msg__system-text">
-                    {message.text}
-                  </a>
-                ) : (
-                  <span className="chat-msg__system-text">{message.text}</span>
-                )}
-              </div>
-            ) : (
-              <div key={message.id} className="chat-msg">
-                {message.countryCode ? (
-                  <span
-                    className="chat-flag"
-                    aria-label={message.countryCode}
-                    title={message.countryCode}
-                  >
-                    {flagEmoji(message.countryCode)}
-                  </span>
-                ) : null}
-                <span
-                  className={cn(
-                    'handle',
-                    message.tone === 'artist'
-                      ? 'handle--artist'
-                      : message.tone === 'moderator'
-                        ? 'handle--moderator'
-                        : `handle--${chatHandleVariant(message.handle)}`,
-                  )}
-                >
-                  {message.handle}
-                </span>
-                {message.tone === 'artist' ? (
-                  <span className="chat-role-badge chat-role-badge--owner">owner</span>
-                ) : message.tone === 'moderator' ? (
-                  <span className="chat-role-badge chat-role-badge--moderator">mod</span>
-                ) : message.tone === 'supporter' ? (
-                  <span className="chat-supporter-badge">supporter</span>
-                ) : null}
-                {message.ts != null && (
-                  <span className="chat-msg__time">{formatMessageAge(message.ts)}</span>
-                )}
-                <span className="text">{renderChatMessageText(message.text)}</span>
-              </div>
-            ),
-          )
+          messages.map((message) => <ChatMessageRow key={message.id} message={message} />)
         ) : (
           messages.map((message) => {
             const suffix = playgroundHandleSuffix(message)

@@ -707,7 +707,31 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const onPlay = () => setState((prev) => ({ ...prev, playing: true }))
     const onPause = () => setState((prev) => ({ ...prev, playing: false }))
     const onCanPlay = () => setState((prev) => ({ ...prev, buffering: false }))
-    const onTimeUpdate = () => setState((prev) => ({ ...prev, currentTime: audio.currentTime }))
+    // The context value below is memoized on `state` as a whole, so every
+    // setState here recreates it and re-renders every usePlayer() consumer
+    // app-wide — including ones that never read currentTime at all (e.g.
+    // RadioPlayerSection, which only destructures analyser/track). Browsers
+    // fire native timeupdate far more often than any progress UI needs
+    // (commonly much faster than 4/sec) — while radio plays practically
+    // 100% of the time on that page, this was forcing continuous, high-
+    // frequency re-renders of the whole player-adjacent tree, visualizer
+    // included. 4 updates/sec is still smooth for a progress bar/waveform.
+    //
+    // Live streams (radio included — hls-player.tsx hardcodes kind: 'live')
+    // never actually display this value: WaveformPlayer forces progress to 0
+    // for isLive and shows liveElapsedSec or a bare "LIVE" label instead
+    // (see WaveformPlayer.tsx). So for live playback, currentTime state has
+    // no visual consumer at all — skip the update entirely rather than just
+    // throttling it, cutting radio's continuous re-render rate to zero
+    // instead of 4/sec.
+    let lastTimeUpdateAt = 0
+    const onTimeUpdate = () => {
+      if (currentTrackRef.current?.kind === 'live') return
+      const now = performance.now()
+      if (now - lastTimeUpdateAt < 250) return
+      lastTimeUpdateAt = now
+      setState((prev) => ({ ...prev, currentTime: audio.currentTime }))
+    }
     const onDurationChange = () =>
       setState((prev) => ({
         ...prev,
