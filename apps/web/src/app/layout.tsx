@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { Suspense } from 'react'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { PlayerProvider } from '@/contexts/player-context'
+import { BackgroundCanvasProvider } from '@/contexts/background-canvas-context'
 import { MiniPlayer } from '@/components/mini-player'
 import { PublicNavBg } from '@/components/public-nav-bg'
 import { ScrollRestoration } from '@/components/scroll-restoration'
@@ -35,12 +36,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <ToastProvider>
           <PlayerProvider>
-            <Suspense fallback={null}>
-              <ScrollRestoration />
-            </Suspense>
-            <PublicNavBg />
-            <main>{children}</main>
-            <MiniPlayer />
+            <BackgroundCanvasProvider>
+              <Suspense fallback={null}>
+                <ScrollRestoration />
+              </Suspense>
+              <PublicNavBg />
+              <main>{children}</main>
+              <MiniPlayer />
+            </BackgroundCanvasProvider>
           </PlayerProvider>
         </ToastProvider>
       </body>

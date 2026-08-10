@@ -4,6 +4,7 @@
 'use client'
 
 import { usePlayer } from '@/contexts/player-context'
+import { useSuspendBackgroundCanvas } from '@/contexts/background-canvas-context'
 import { ChannelVisualizer } from '@/components/visuals/channel-visualizer'
 import { resolveActiveTrackPreset } from '@/components/active-track-stage'
 import type { VisualPreset, VisualPresetSettings } from '@tahti/shared'
@@ -21,7 +22,11 @@ export function ChannelPageVisualizer({
 }) {
   const { analyser, playing } = usePlayer()
   const resolved = playing ? resolveActiveTrackPreset(preset) : preset
-  if (resolved === 'MINIMAL') return null
+  const active = resolved !== 'MINIMAL'
+  // This covers the same viewport as the shared background canvas (BgCanvas) —
+  // no point running two full WebGL scenes when only one is ever visible.
+  useSuspendBackgroundCanvas(active)
+  if (!active) return null
 
   return (
     <ChannelVisualizer

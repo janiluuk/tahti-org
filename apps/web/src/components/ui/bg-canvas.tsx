@@ -5,6 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import { useBackgroundCanvasSuspended } from '@/contexts/background-canvas-context'
 
 interface AudioState {
   analyser: AnalyserNode | null
@@ -30,6 +31,17 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
   useEffect(() => {
     audioStateRef.current.analyser = analyser
   }, [analyser])
+
+  // Some pages (e.g. a channel with its own visual preset) mount a second,
+  // page-level WebGL visualizer that fully covers this one — no point paying
+  // for two full animated scenes when only one is ever visible. Read via a
+  // ref inside animate() rather than as an effect dependency, same reasoning
+  // as audioStateRef: this must not tear down and rebuild the whole scene.
+  const suspended = useBackgroundCanvasSuspended()
+  const suspendedRef = useRef(suspended)
+  useEffect(() => {
+    suspendedRef.current = suspended
+  }, [suspended])
 
   // ── Three.js scene — runs once, reads audioStateRef each frame ───────────
   useEffect(() => {
@@ -465,6 +477,7 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
 
     function animate() {
       frameId = requestAnimationFrame(animate)
+      if (suspendedRef.current) return
       const t = Date.now() * 0.001
 
       sampleAudio()
