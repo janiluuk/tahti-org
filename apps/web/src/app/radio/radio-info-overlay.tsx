@@ -4,7 +4,6 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { RadioScheduleList } from './radio-schedule-list'
 import type { PublicRadioSlot } from './actions'
@@ -61,11 +60,6 @@ export function RadioInfoOverlay({
 }) {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<'schedule' | 'rotation'>('schedule')
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -80,92 +74,6 @@ export function RadioInfoOverlay({
       document.body.style.overflow = prev
     }
   }, [open])
-
-  const dialog =
-    open && mounted
-      ? createPortal(
-          <div className="ch-radio-info-overlay" role="presentation" onClick={() => setOpen(false)}>
-            <div
-              className="ch-radio-info-panel"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Schedule and rotation"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="ch-radio-info-panel__header">
-                <div className="ch-radio-info-panel__tabs">
-                  <button
-                    type="button"
-                    className={`ch-radio-info-panel__tab${tab === 'schedule' ? ' active' : ''}`}
-                    onClick={() => setTab('schedule')}
-                  >
-                    Live artist slots
-                  </button>
-                  <button
-                    type="button"
-                    className={`ch-radio-info-panel__tab${tab === 'rotation' ? ' active' : ''}`}
-                    onClick={() => setTab('rotation')}
-                  >
-                    In the rotation
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className="ch-radio-info-panel__close"
-                  aria-label="Close"
-                  onClick={() => setOpen(false)}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="ch-radio-info-panel__body">
-                {tab === 'schedule' ? (
-                  <RadioScheduleList slots={slots} />
-                ) : (
-                  <>
-                    {rotation.length > 0 ? (
-                      <ul className="ch-radio-rotation__list">
-                        {rotation.map((item) =>
-                          item.artistUsername ? (
-                            <li key={item.id} className="ch-radio-rotation__item">
-                              <Link
-                                href={`/u/${item.artistUsername}`}
-                                className="ch-radio-rotation__link"
-                              >
-                                <span className="ch-radio-rotation__title">{item.title}</span>
-                                <span className="ch-radio-rotation__artist">{item.artistName}</span>
-                              </Link>
-                            </li>
-                          ) : (
-                            <li key={item.id} className="ch-radio-rotation__item">
-                              <div className="ch-radio-rotation__link">
-                                <span className="ch-radio-rotation__title">{item.title}</span>
-                                <span className="ch-radio-rotation__artist">{item.artistName}</span>
-                              </div>
-                            </li>
-                          ),
-                        )}
-                      </ul>
-                    ) : (
-                      <p className="ch-radio-info-panel__empty">Nothing in rotation right now.</p>
-                    )}
-                    {memberRelay && (
-                      <p className="ch-radio-info-panel__note">
-                        Member relay also live:{' '}
-                        <Link href={resolveChannelUrl(memberRelay.slug)}>
-                          {memberRelay.artistName}
-                        </Link>
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )
-      : null
 
   return (
     <>
@@ -183,7 +91,87 @@ export function RadioInfoOverlay({
         <IconCalendar />
         {!iconOnly && <span>Schedule &amp; rotation</span>}
       </button>
-      {dialog}
+      {open && (
+        <div className="ch-radio-info-overlay" role="presentation" onClick={() => setOpen(false)}>
+          <div
+            className="ch-radio-info-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Schedule and rotation"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="ch-radio-info-panel__header">
+              <div className="ch-radio-info-panel__tabs">
+                <button
+                  type="button"
+                  className={`ch-radio-info-panel__tab${tab === 'schedule' ? ' active' : ''}`}
+                  onClick={() => setTab('schedule')}
+                >
+                  Live artist slots
+                </button>
+                <button
+                  type="button"
+                  className={`ch-radio-info-panel__tab${tab === 'rotation' ? ' active' : ''}`}
+                  onClick={() => setTab('rotation')}
+                >
+                  In the rotation
+                </button>
+              </div>
+              <button
+                type="button"
+                className="ch-radio-info-panel__close"
+                aria-label="Close"
+                onClick={() => setOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="ch-radio-info-panel__body">
+              {tab === 'schedule' ? (
+                <RadioScheduleList slots={slots} />
+              ) : (
+                <>
+                  {rotation.length > 0 ? (
+                    <ul className="ch-radio-rotation__list">
+                      {rotation.map((item) =>
+                        item.artistUsername ? (
+                          <li key={item.id} className="ch-radio-rotation__item">
+                            <Link
+                              href={`/u/${item.artistUsername}`}
+                              className="ch-radio-rotation__link"
+                            >
+                              <span className="ch-radio-rotation__title">{item.title}</span>
+                              <span className="ch-radio-rotation__artist">{item.artistName}</span>
+                            </Link>
+                          </li>
+                        ) : (
+                          <li key={item.id} className="ch-radio-rotation__item">
+                            <div className="ch-radio-rotation__link">
+                              <span className="ch-radio-rotation__title">{item.title}</span>
+                              <span className="ch-radio-rotation__artist">{item.artistName}</span>
+                            </div>
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  ) : (
+                    <p className="ch-radio-info-panel__empty">Nothing in rotation right now.</p>
+                  )}
+                  {memberRelay && (
+                    <p className="ch-radio-info-panel__note">
+                      Member relay also live:{' '}
+                      <Link href={resolveChannelUrl(memberRelay.slug)}>
+                        {memberRelay.artistName}
+                      </Link>
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
