@@ -356,26 +356,25 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
     )
     specGroup.add(baseRing)
 
-    const specBars: {
-      geo: THREE.BufferGeometry
-      cosA: number
-      sinA: number
-      mat: THREE.LineBasicMaterial
-      baseColor: [number, number, number]
-    }[] = []
+    // A single merged LineSegments geometry instead of 128 individual
+    // THREE.Line objects — was issuing 128 draw calls + 128 separate GPU
+    // buffer uploads every frame for this one element alone. Per-vertex
+    // color still gives each bar its own hue/bloom; only the opacity
+    // (previously per-bar) is now a single material-wide value driven by
+    // the average bin energy, since LineBasicMaterial has no per-vertex alpha.
+    const specAngles: { cosA: number; sinA: number; baseColor: [number, number, number] }[] = []
+    const specPos = new Float32Array(SPEC_N * 6)
+    const specCol = new Float32Array(SPEC_N * 6)
     for (let i = 0; i < SPEC_N; i++) {
       const angle = (i / SPEC_N) * Math.PI * 2
       const cosA = Math.cos(angle),
         sinA = Math.sin(angle)
-      const pts = new Float32Array(6)
-      pts[0] = cosA * SPEC_R
-      pts[1] = sinA * SPEC_R
-      pts[2] = 0
-      pts[3] = cosA * (SPEC_R + 20)
-      pts[4] = sinA * (SPEC_R + 20)
-      pts[5] = 0
-      const g = new THREE.BufferGeometry()
-      g.setAttribute('position', new THREE.BufferAttribute(pts, 3))
+      specPos[i * 6] = cosA * SPEC_R
+      specPos[i * 6 + 1] = sinA * SPEC_R
+      specPos[i * 6 + 2] = 0
+      specPos[i * 6 + 3] = cosA * (SPEC_R + 20)
+      specPos[i * 6 + 4] = sinA * (SPEC_R + 20)
+      specPos[i * 6 + 5] = 0
       const frac = i / SPEC_N
       let r: number, gc: number, bc: number
       if (frac < 0.25) {
@@ -395,14 +394,23 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
         gc = 0.9
         bc = 0.46
       }
-      const m = new THREE.LineBasicMaterial({
-        color: new THREE.Color(r, gc, bc),
-        transparent: true,
-        opacity: op(0.7),
-      })
-      specGroup.add(new THREE.Line(g, m))
-      specBars.push({ geo: g, cosA, sinA, mat: m, baseColor: [r, gc, bc] })
+      specCol[i * 6] = r
+      specCol[i * 6 + 1] = gc
+      specCol[i * 6 + 2] = bc
+      specCol[i * 6 + 3] = r
+      specCol[i * 6 + 4] = gc
+      specCol[i * 6 + 5] = bc
+      specAngles.push({ cosA, sinA, baseColor: [r, gc, bc] })
     }
+    const specGeo = new THREE.BufferGeometry()
+    specGeo.setAttribute('position', new THREE.BufferAttribute(specPos, 3))
+    specGeo.setAttribute('color', new THREE.BufferAttribute(specCol, 3))
+    const specMat = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      opacity: op(0.7),
+    })
+    specGroup.add(new THREE.LineSegments(specGeo, specMat))
 
     // ── Bass-pulse spheres ───────────────────────────────────────────────────
     const pulseSphere = new THREE.Mesh(
@@ -592,23 +600,30 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
       specGroup.rotation.z += (0.004 + aBass * 0.012) * motion
       baseRingMat.opacity = op(0.22) + aEnergy * op(0.55)
       baseRing.scale.setScalar(1 + aBass * 0.08 * react)
-      specBars.forEach(({ geo, cosA, sinA, mat, baseColor }, i) => {
+      let specOpacitySum = 0
+      for (let i = 0; i < SPEC_N; i++) {
+        const { cosA, sinA, baseColor } = specAngles[i]!
         const binVal = bin(Math.floor((i / SPEC_N) * 100))
         // More vivid: bars reach further, sit brighter at rest, and the loudest
         // bins bloom toward white instead of just fading up their base hue.
         const barLen = 10 + binVal * 130 * (1 + aBass * 0.9 * react) * react
-        const pa = geo.attributes.position.array as Float32Array
-        pa[3] = cosA * (SPEC_R + barLen)
-        pa[4] = sinA * (SPEC_R + barLen)
-        geo.attributes.position.needsUpdate = true
-        mat.opacity = op(0.45) + binVal * op(0.85)
+        specPos[i * 6 + 3] = cosA * (SPEC_R + barLen)
+        specPos[i * 6 + 4] = sinA * (SPEC_R + barLen)
         const bloom = Math.min(1, binVal * 1.4)
-        mat.color.setRGB(
-          baseColor[0] + (1 - baseColor[0]) * bloom * 0.6,
-          baseColor[1] + (1 - baseColor[1]) * bloom * 0.6,
-          baseColor[2] + (1 - baseColor[2]) * bloom * 0.6,
-        )
-      })
+        const rr = baseColor[0] + (1 - baseColor[0]) * bloom * 0.6
+        const gg = baseColor[1] + (1 - baseColor[1]) * bloom * 0.6
+        const bb = baseColor[2] + (1 - baseColor[2]) * bloom * 0.6
+        specCol[i * 6] = rr
+        specCol[i * 6 + 1] = gg
+        specCol[i * 6 + 2] = bb
+        specCol[i * 6 + 3] = rr
+        specCol[i * 6 + 4] = gg
+        specCol[i * 6 + 5] = bb
+        specOpacitySum += op(0.45) + binVal * op(0.85)
+      }
+      specGeo.attributes.position.needsUpdate = true
+      specGeo.attributes.color.needsUpdate = true
+      specMat.opacity = specOpacitySum / SPEC_N
 
       // Bass-pulse spheres
       const ps = 1 + aBass * 2.8 * react
