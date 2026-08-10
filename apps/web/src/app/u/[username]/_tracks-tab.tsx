@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
+import { TrackDetailModal } from './_track-detail-modal'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? process.env.NEXT_PUBLIC_API_BASE ?? ''
 
@@ -20,11 +21,12 @@ export interface TrackTabItem {
   trackOrder: number
   createdAt: string
   channelItemUrl: string | null
+  releaseSlug: string | null
 }
 
 type SortMode = 'time' | 'name' | 'manual'
 
-function formatDuration(sec: number | null): string {
+export function formatDuration(sec: number | null): string {
   if (sec == null) return ''
   const m = Math.floor(sec / 60)
   const s = Math.round(sec % 60)
@@ -39,15 +41,33 @@ function sortTracks(tracks: TrackTabItem[], mode: SortMode): TrackTabItem[] {
   return [...tracks].sort((a, b) => a.trackOrder - b.trackOrder)
 }
 
-export function TracksTab({ tracks, isOwner }: { tracks: TrackTabItem[]; isOwner: boolean }) {
+export function TracksTab({
+  tracks,
+  isOwner,
+  channelSlug,
+  username,
+}: {
+  tracks: TrackTabItem[]
+  isOwner: boolean
+  /** Needed for the love-button API (scoped to a channel) — null only for the
+   * (rare) archive item with no channel at all. */
+  channelSlug: string | null
+  /** For the track detail modal's "Artist bio" link fallback (when opened
+   * outside ProfileTabs' own tab-switch context, e.g. never happens in
+   * practice here, but keeps the modal reusable). */
+  username: string
+}) {
   const [mode, setMode] = useState<SortMode>('time')
   const [order, setOrder] = useState<TrackTabItem[]>(() => sortTracks(tracks, 'time'))
   const [saving, setSaving] = useState(false)
+  const [openTrackId, setOpenTrackId] = useState<string | null>(null)
 
   const visible = useMemo(
     () => (mode === 'manual' ? order : sortTracks(tracks, mode)),
     [mode, order, tracks],
   )
+
+  const openTrack = openTrackId ? (tracks.find((t) => t.id === openTrackId) ?? null) : null
 
   function changeMode(next: SortMode) {
     setMode(next)
@@ -116,28 +136,29 @@ export function TracksTab({ tracks, isOwner }: { tracks: TrackTabItem[]; isOwner
         {visible.map((t, i) => (
           <li key={t.id}>
             <div className="prof-collection-row">
-              <div className="prof-collection-cover">
-                {t.bannerUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={t.bannerUrl} alt="" width={76} height={76} />
-                ) : (
-                  <span className="prof-collection-cover-ph" aria-hidden />
-                )}
-              </div>
-              <div>
-                {t.channelItemUrl ? (
-                  <Link href={t.channelItemUrl} className="prof-collection-title">
-                    {t.title}
-                  </Link>
-                ) : (
-                  <div className="prof-collection-title">{t.title}</div>
-                )}
-                <div className="prof-list-meta prof-list-meta--strong">
-                  {t.artistName ? `${t.artistName} · ` : null}
-                  {formatDuration(t.durationSec)}
-                  {t.pinned && ' · Pinned'}
+              <button
+                type="button"
+                className="prof-collection-row__clickarea"
+                onClick={() => setOpenTrackId(t.id)}
+                aria-label={`View ${t.title}`}
+              >
+                <div className="prof-collection-cover">
+                  {t.bannerUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={t.bannerUrl} alt="" width={76} height={76} />
+                  ) : (
+                    <span className="prof-collection-cover-ph" aria-hidden />
+                  )}
                 </div>
-              </div>
+                <div>
+                  <div className="prof-collection-title">{t.title}</div>
+                  <div className="prof-list-meta prof-list-meta--strong">
+                    {t.artistName ? `${t.artistName} · ` : null}
+                    {formatDuration(t.durationSec)}
+                    {t.pinned && ' · Pinned'}
+                  </div>
+                </div>
+              </button>
               {isOwner && mode === 'manual' && (
                 <div className="prof-tracks-owner-actions">
                   <div className="prof-tracks-reorder">
@@ -164,6 +185,15 @@ export function TracksTab({ tracks, isOwner }: { tracks: TrackTabItem[]; isOwner
           </li>
         ))}
       </ul>
+
+      {openTrack && (
+        <TrackDetailModal
+          track={openTrack}
+          channelSlug={channelSlug}
+          username={username}
+          onClose={() => setOpenTrackId(null)}
+        />
+      )}
     </div>
   )
 }

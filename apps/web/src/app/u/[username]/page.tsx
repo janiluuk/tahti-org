@@ -159,6 +159,7 @@ interface ProfileResponse {
   tracks: Array<{
     id: string
     title: string
+    artistName?: string | null
     durationSec: number | null
     bannerUrl: string | null
     playUrl: string | null
@@ -167,6 +168,7 @@ interface ProfileResponse {
     trackOrder: number
     createdAt: string
     channelItemUrl: string | null
+    releaseSlug: string | null
   }>
   links: {
     channel: string | null
@@ -759,7 +761,12 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 </section>
               )}
               <section className="prof-section">
-                <TracksTab tracks={tracks} isOwner={isOwner} />
+                <TracksTab
+                  tracks={tracks}
+                  isOwner={isOwner}
+                  channelSlug={channel?.slug ?? null}
+                  username={artist.username}
+                />
               </section>
               {/* Only formal multi-track Release albums/EPs belong here — an artist
                   with individual uploaded tracks (shown in TracksTab above) but no

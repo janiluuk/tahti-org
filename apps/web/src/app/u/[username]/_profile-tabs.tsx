@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { HelpSpotlight, type HelpSpotlightStep } from '@tahti/ui'
+import { ProfileTabSwitchProvider } from './_profile-tab-context'
 
 type Tab = 'stage' | 'feed' | 'tracks'
 
@@ -78,53 +79,55 @@ export function ProfileTabs({
 
   return (
     <div className="prof-tabs">
-      <HelpSpotlight
-        steps={HELP_STEPS}
-        activeId={active}
-        onNavigate={(id) => setActive(id as Tab)}
-        getTargetEl={(step) => panelRefs.current[step.id as Tab]}
-      />
-      <div className="prof-tabs__bar" role="tablist" aria-label="Profile sections">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={active === tab.id}
-            className={`prof-tabs__tab${active === tab.id ? ' prof-tabs__tab--active' : ''}`}
-            onClick={() => setActive(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      <div
-        className="prof-tabs__panel"
-        hidden={active !== 'stage'}
-        ref={(el) => {
-          panelRefs.current.stage = el
-        }}
-      >
-        {stage}
-      </div>
-      <div
-        className="prof-tabs__panel"
-        hidden={active !== 'feed'}
-        ref={(el) => {
-          panelRefs.current.feed = el
-        }}
-      >
-        {feed}
-      </div>
-      <div
-        className="prof-tabs__panel"
-        hidden={active !== 'tracks'}
-        ref={(el) => {
-          panelRefs.current.tracks = el
-        }}
-      >
-        {tracks}
-      </div>
+      <ProfileTabSwitchProvider value={setActive}>
+        <HelpSpotlight
+          steps={HELP_STEPS}
+          activeId={active}
+          onNavigate={(id) => setActive(id as Tab)}
+          getTargetEl={(step) => panelRefs.current[step.id as Tab]}
+        />
+        <div className="prof-tabs__bar" role="tablist" aria-label="Profile sections">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active === tab.id}
+              className={`prof-tabs__tab${active === tab.id ? ' prof-tabs__tab--active' : ''}`}
+              onClick={() => setActive(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div
+          className="prof-tabs__panel"
+          hidden={active !== 'stage'}
+          ref={(el) => {
+            panelRefs.current.stage = el
+          }}
+        >
+          {stage}
+        </div>
+        <div
+          className="prof-tabs__panel"
+          hidden={active !== 'feed'}
+          ref={(el) => {
+            panelRefs.current.feed = el
+          }}
+        >
+          {feed}
+        </div>
+        <div
+          className="prof-tabs__panel"
+          hidden={active !== 'tracks'}
+          ref={(el) => {
+            panelRefs.current.tracks = el
+          }}
+        >
+          {tracks}
+        </div>
+      </ProfileTabSwitchProvider>
     </div>
   )
 }

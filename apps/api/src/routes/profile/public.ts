@@ -159,6 +159,15 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     ...allArchiveItems.map((i) => i.id),
   ])
 
+  // So the Tracks tab can link a standalone-looking track straight to the
+  // formal Release it's actually part of, when it's part of one.
+  const releaseSlugByArchiveId = new Map<string, string>()
+  for (const release of user.releases) {
+    for (const t of release.tracks) {
+      if (t.archiveItemId) releaseSlugByArchiveId.set(t.archiveItemId, release.smartLinkSlug)
+    }
+  }
+
   const playUrlByArchiveId = new Map<string, string | null>()
   if (archiveIds.size > 0) {
     const items = await fastify.prisma.archiveItem.findMany({
@@ -192,6 +201,7 @@ async function buildPublicProfile(fastify: FastifyInstance, username: string) {
     channelItemUrl: channelSlug
       ? resolveChannelUrl(channelSlug, { hash: `archive-item-${item.id}` })
       : null,
+    releaseSlug: releaseSlugByArchiveId.get(item.id) ?? null,
   }))
 
   const releases = await Promise.all(

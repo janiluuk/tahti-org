@@ -4032,6 +4032,129 @@
   color: var(--bg);
 }
 
+/* Track detail modal (opened from the Music tab) — bottom sheet on mobile,
+   centered card from 640px up, same responsive shape as .prof-message-sheet. */
+[data-tahti-ui='brand'] .prof-track-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+@media (min-width: 640px) {
+  [data-tahti-ui='brand'] .prof-track-modal {
+    align-items: center;
+  }
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__card {
+  position: relative;
+  width: min(26rem, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-hover);
+  background: var(--card);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  color: var(--text);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__art {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius) var(--radius) 0 0;
+  overflow: hidden;
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__art-ph {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--card2), var(--border));
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__body {
+  padding: 1rem 1.15rem 1.25rem;
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__title {
+  margin: 0 0 0.25rem;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__meta {
+  margin: 0 0 1rem;
+  font-size: var(--text-sm);
+  color: var(--muted2);
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__love {
+  display: flex;
+  align-items: center;
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__primary,
+[data-tahti-ui='brand'] .prof-track-modal__secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.15rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__primary {
+  background: var(--cyan);
+  color: var(--bg);
+}
+
+[data-tahti-ui='brand'] .prof-track-modal__secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--muted2);
+}
+
 [data-tahti-ui='brand'] .prof-cta-btn {
   background: var(--cyan);
   color: var(--bg);
@@ -5633,6 +5756,25 @@
 
 [data-tahti-ui='brand'] .prof-collection-row:hover {
   background: var(--card2);
+}
+
+/* The clickable cover+title area of a track row (opens TrackDetailModal) —
+   a <button> instead of the row itself so the owner reorder controls beside
+   it (also buttons) don't fight it for clicks. */
+[data-tahti-ui='brand'] .prof-collection-row__clickarea {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
 }
 
 [data-tahti-ui='brand'] .prof-collection-list li:last-child .prof-collection-row {

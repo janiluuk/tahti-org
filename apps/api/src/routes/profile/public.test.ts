@@ -94,4 +94,34 @@ describe('GET /api/v1/u/:username/profile', () => {
     expect(track!.title).toBe('Pinned track')
     expect(track!.pinned).toBe(true)
   })
+
+  it('links a track to its Release via releaseSlug when it belongs to one', async () => {
+    const artist = await prisma.user.findUniqueOrThrow({
+      where: { username: 'public-profile-artist' },
+      select: { id: true, channel: { select: { id: true } } },
+    })
+    const item = await createReadyArchiveItem(prisma, artist.channel!.id, 'Album track')
+    const release = await prisma.release.create({
+      data: {
+        userId: artist.id,
+        title: 'Test Album',
+        type: 'ALBUM',
+        releaseDate: new Date(),
+        smartLinkSlug: `${PREFIX}test-album`,
+        state: 'PUBLISHED',
+        tracks: {
+          create: { position: 1, title: 'Album track', archiveItemId: item.id },
+        },
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/u/public-profile-artist/profile',
+    })
+    expect(res.statusCode).toBe(200)
+    const body = res.json() as { tracks: Array<{ id: string; releaseSlug: string | null }> }
+    const track = body.tracks.find((t) => t.id === item.id)
+    expect(track?.releaseSlug).toBe(release.smartLinkSlug)
+  })
 })
