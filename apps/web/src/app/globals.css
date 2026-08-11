@@ -866,6 +866,12 @@ body {
   .mini-player__badge {
     display: none;
   }
+  /* Disabled skip buttons (no queue to skip through, e.g. live radio with
+   * nothing queued) just burn ~80px of a ~390px bar for two dead buttons —
+   * that's the space the track title needs to stay readable. */
+  .mini-player__skip:disabled {
+    display: none;
+  }
   .mini-player__queue-toggle {
     padding: 0 6px;
   }
