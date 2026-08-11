@@ -1132,6 +1132,7 @@ model Channel {
   broadcasts        Broadcast[]
   announcements     ChannelAnnouncement[]
   chatBans          ChatBan[]
+  chatMessages      ChatMessage[]
   moderators        ChannelModerator[]
   rtmpTargets       RtmpTarget[]
   radioFeatureLogs  RadioFeatureLog[]
@@ -1611,6 +1612,31 @@ model ChatBan {
 
   @@unique([channelId, fingerprintHash])
   @@index([channelId, bannedAt])
+  @@schema("chat")
+}
+
+/// Permanent record of chat messages — Centrifugo's own history is a 1h
+/// rolling in-memory buffer with no persistence, so this is the durable
+/// source of truth. Written once, on the server, when a message clears
+/// moderation in routes/chat/message.ts (Centrifugo's publish proxy) — never
+/// by the client directly. System-generated messages (e.g. "X loved Y" love
+/// announcements) are published straight to Centrifugo by the API and don't
+/// go through that proxy, so they aren't captured here.
+model ChatMessage {
+  id          String   @id @default(cuid())
+  channelId   String
+  channel     Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  /// True for the subscriber-only ":fans" sub-channel, false for the main chat.
+  fanOnly     Boolean  @default(false)
+  handle      String
+  text        String
+  userId      String?
+  supporter   Boolean  @default(false)
+  channelRole String?
+  countryCode String?
+  createdAt   DateTime @default(now())
+
+  @@index([channelId, fanOnly, createdAt])
   @@schema("chat")
 }
 

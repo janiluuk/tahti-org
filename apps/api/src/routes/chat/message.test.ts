@@ -42,6 +42,41 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(res.json()).toEqual({ result: {} })
   })
 
+  it('persists the message to ChatMessage', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: {
+        channel: `channel:${slug}`,
+        data: { text: 'a message worth keeping', handle: 'Listener42', countryCode: 'FI' },
+      },
+    })
+    expect(res.statusCode).toBe(200)
+
+    const row = await prisma.chatMessage.findFirst({
+      where: { channelId: channel.id, text: 'a message worth keeping' },
+    })
+    expect(row).not.toBeNull()
+    expect(row?.handle).toBe('Listener42')
+    expect(row?.countryCode).toBe('FI')
+    expect(row?.fanOnly).toBe(false)
+  })
+
+  it('marks messages on the :fans sub-channel as fanOnly', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+    await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: { channel: `channel:${slug}:fans`, data: { text: 'fans-only note' } },
+    })
+
+    const row = await prisma.chatMessage.findFirst({
+      where: { channelId: channel.id, text: 'fans-only note' },
+    })
+    expect(row?.fanOnly).toBe(true)
+  })
+
   it('returns 404 for unknown channel', async () => {
     const res = await app.inject({
       method: 'POST',

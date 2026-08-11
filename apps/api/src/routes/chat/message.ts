@@ -36,6 +36,8 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
       const sub = body.user ?? ''
       const fingerprint = sub.split('#')[1] ?? ''
       const text = body.data?.text?.trim() ?? ''
+      const isFanChannel = body.channel.endsWith(':fans')
+      const mentionerUserId = chatProxyMetaUserId(body.meta)
 
       const channel = await fastify.prisma.channel.findUnique({
         where: { slug },
@@ -58,7 +60,6 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
       }
 
       // @mentions → Mention rows + in-app notifications (signed-in chatters only).
-      const mentionerUserId = chatProxyMetaUserId(body.meta)
       if (mentionerUserId && text && extractHandles(text).length > 0) {
         const mentioner = await fastify.prisma.user.findUnique({
           where: { id: mentionerUserId },
@@ -77,6 +78,30 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
             await notifyUsersOfChatMention(fastify.prisma, targetIds, mentioner, slug, text)
           }
         }
+      }
+
+      // Permanent record — Centrifugo's own history is a 1h rolling in-memory
+      // buffer with nothing surviving a restart. This is the only place a
+      // user-typed message is ever seen server-side (system-generated
+      // messages, e.g. love announcements, publish straight to Centrifugo
+      // from elsewhere and skip this proxy, so they aren't captured here).
+      if (text) {
+        const data = (body.data ?? {}) as Record<string, unknown>
+        await fastify.prisma.chatMessage.create({
+          data: {
+            channelId: channel.id,
+            fanOnly: isFanChannel,
+            handle: (typeof data.handle === 'string' && data.handle.trim()) || 'anon',
+            text,
+            userId: mentionerUserId,
+            supporter: data.supporter === true,
+            channelRole:
+              data.channelRole === 'owner' || data.channelRole === 'moderator'
+                ? data.channelRole
+                : null,
+            countryCode: typeof data.countryCode === 'string' ? data.countryCode : null,
+          },
+        })
       }
 
       // Return the data as-is — Centrifugo publishes it

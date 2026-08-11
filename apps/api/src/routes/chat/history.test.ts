@@ -37,6 +37,30 @@ describe('GET /api/chat/:slug/history', () => {
         },
       },
     })
+    // Separate channel from the "empty" test above — /api/chat/:slug/history
+    // caches its result per slug for 5s (getCachedJson), so reusing the same
+    // slug for both an empty check and a populated check risks the second
+    // one reading the first's cached empty response.
+    await prisma.user.create({
+      data: {
+        email: `${TEST_EMAIL_PREFIX}populated@example.com`,
+        passwordHash,
+        username: 'chat-history-populated',
+        displayName: 'History Populated Test',
+        emailVerifiedAt: new Date(),
+        membership: { create: { status: 'ACTIVE', activatedAt: new Date() } },
+        channel: {
+          create: {
+            slug: 'chat-history-populated',
+            liveSourceMount: '/live/chat-history-populated',
+            liveSourcePass: 'dummypass',
+            liveSourcePassHash: 'dummy',
+            rtmpStreamKey: 'chat-history-populated__dummykey',
+            rtmpStreamKeyHash: 'dummy',
+          },
+        },
+      },
+    })
   })
 
   afterAll(async () => {
@@ -49,13 +73,33 @@ describe('GET /api/chat/:slug/history', () => {
     expect(res.statusCode).toBe(404)
   })
 
-  it('returns an empty message list when Centrifugo is unavailable', async () => {
+  it('returns an empty message list when nothing has been posted', async () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/chat/chat-history-testuser/history',
     })
     expect(res.statusCode).toBe(200)
-    // Centrifugo not running in test — falls back to empty history
     expect(res.json().messages).toEqual([])
+  })
+
+  it('returns persisted messages in chronological order, excluding fan-only ones', async () => {
+    const channel = await prisma.channel.findFirstOrThrow({
+      where: { slug: 'chat-history-populated' },
+    })
+    await prisma.chatMessage.createMany({
+      data: [
+        { channelId: channel.id, handle: 'alice', text: 'first', fanOnly: false },
+        { channelId: channel.id, handle: 'bob', text: 'fans only', fanOnly: true },
+        { channelId: channel.id, handle: 'carol', text: 'second', fanOnly: false },
+      ],
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/chat/chat-history-populated/history',
+    })
+    expect(res.statusCode).toBe(200)
+    const messages = res.json().messages as { handle: string; text: string }[]
+    expect(messages.map((m) => m.text)).toEqual(['first', 'second'])
   })
 })

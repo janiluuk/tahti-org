@@ -8,14 +8,16 @@ import {
   openApiResponse,
   parseRouteParams,
 } from '@tahti/shared'
-import { config } from '../../config.js'
 import { getCachedJson } from '../../lib/json-cache.js'
 
+const HISTORY_LIMIT = 100
+
 const chatHistoryRoute: FastifyPluginAsync = async (fastify) => {
-  // GET /api/chat/:slug/history — recent messages from Centrifugo's own history
-  // buffer (history_size/history_ttl in infra/centrifugo.json), fetched once on
-  // join so a fresh page load or WS reconnect isn't a blank chat. Chat has no
-  // database persistence — anything outside this buffer is gone for good.
+  // GET /api/chat/:slug/history — recent messages, fetched once on join so a
+  // fresh page load or WS reconnect isn't a blank chat. Backed by the
+  // permanent ChatMessage table (see routes/chat/message.ts), not
+  // Centrifugo's own history buffer, which is a 1h rolling in-memory window
+  // with nothing surviving a restart.
   fastify.get(
     '/api/chat/:slug/history',
     {
@@ -36,32 +38,29 @@ const chatHistoryRoute: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
       const result = await getCachedJson(`chat-history:${slug}`, 5, async () => {
-        try {
-          const res = await fetch(`${config.centrifugo.apiUrl}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `apikey ${config.centrifugo.apiKey}`,
-            },
-            body: JSON.stringify({
-              method: 'history',
-              params: { channel: `channel:${slug}`, limit: 100, reverse: false },
-            }),
-            signal: AbortSignal.timeout(2000),
-          })
-
-          if (!res.ok) return { messages: [] }
-
-          const data = (await res.json()) as {
-            result?: { publications?: { data?: Record<string, unknown> }[] }
-          }
-          const messages = (data.result?.publications ?? [])
-            .map((p) => p.data)
-            .filter((d): d is Record<string, unknown> => Boolean(d && typeof d.text === 'string'))
-          return { messages }
-        } catch {
-          return { messages: [] }
-        }
+        const rows = await fastify.prisma.chatMessage.findMany({
+          where: { channelId: channel.id, fanOnly: false },
+          orderBy: { createdAt: 'desc' },
+          take: HISTORY_LIMIT,
+          select: {
+            handle: true,
+            text: true,
+            supporter: true,
+            channelRole: true,
+            countryCode: true,
+            createdAt: true,
+          },
+        })
+        const messages = rows.reverse().map((r) => ({
+          handle: r.handle,
+          text: r.text,
+          ts: r.createdAt.getTime(),
+          supporter: r.supporter,
+          channelRole:
+            r.channelRole === 'owner' || r.channelRole === 'moderator' ? r.channelRole : null,
+          countryCode: r.countryCode,
+        }))
+        return { messages }
       })
       return reply.send(result)
     },
