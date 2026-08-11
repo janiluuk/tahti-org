@@ -458,8 +458,15 @@
   background: var(--bg);
   display: block;
   /* Darkened a bit relative to the raw scene so foreground text/cards keep
-   * enough contrast against the animation instead of competing with it. */
-  filter: blur(12px) brightness(0.72);
+   * enough contrast against the animation instead of competing with it.
+   *
+   * Do NOT use filter: blur() here — this canvas is full-viewport, fixed, and
+   * (when not suspended) repaints ~30fps. A CSS blur on a continuously updating
+   * fullscreen layer forces the compositor to re-blur the entire screen every
+   * frame and is the dominant scroll-jank source on /radio (sticky
+   * backdrop-filter headers/chat also resample it while scrolling). Softness
+   * comes from the in-scene "subtle" opacity/motion and .app-bg-veil instead. */
+  filter: brightness(0.72);
   pointer-events: none;
 }
 

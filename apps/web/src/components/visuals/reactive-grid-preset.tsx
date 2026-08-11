@@ -12,6 +12,8 @@ const GRID_W = 24
 const GRID_H = 14
 const CELL_COUNT = GRID_W * GRID_H
 const VERTS_PER_CELL = 6 // two triangles, non-indexed
+/** Soft ambient viz — 60fps buys nothing perceptible and fights scroll. */
+const FRAME_INTERVAL_MS = 1000 / 30
 
 export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: VisualPresetProps) {
   const mountRef = useRef<HTMLDivElement>(null)
@@ -38,7 +40,10 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
     // visible size) cuts that dominant cost directly instead of trading away
     // scene complexity that was already down to a single draw call.
     const softwareRendered = isSoftwareWebglRenderer(renderer.getContext())
-    renderer.setPixelRatio(softwareRendered ? 0.4 : Math.min(devicePixelRatio, 2))
+    if (softwareRendered) {
+      document.documentElement.classList.add('gpu-limited')
+    }
+    renderer.setPixelRatio(softwareRendered ? 0.4 : Math.min(devicePixelRatio, 1.5))
     renderer.setSize(w, h, false)
     // setSize's `updateStyle=false` skips touching the canvas's CSS size —
     // it otherwise falls back to the drawing-buffer's own width/height
@@ -114,6 +119,8 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
     let raf: number
     let disposed = false
     let t = 0
+    let lastFrameTime = 0
+    let inView = true
     const data = analyser ? new Uint8Array(analyser.frequencyBinCount) : null
     // The shared analyser's own smoothingTimeConstant is deliberately low
     // (0.3 — see player-context.tsx) so bass-heavy visualizers don't feel
@@ -130,12 +137,18 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
     const ATTACK = 0.65
     const RELEASE = 0.2
 
-    // Now a single draw call (see the merged geometry above) instead of 336,
-    // so it can run at full frame rate without the cost that motivated
-    // throttling it before.
     function animate() {
       if (disposed) return
       raf = requestAnimationFrame(animate)
+
+      // Pause while the tab is hidden or the player card is scrolled off-screen
+      // — otherwise this keeps burning main-thread + GPU during scroll of other
+      // page sections (Upcoming / Recently played) for a viz nobody can see.
+      if (document.hidden || !inView) return
+
+      const now = performance.now()
+      if (now - lastFrameTime < FRAME_INTERVAL_MS) return
+      lastFrameTime = now
 
       const { speed, intensity } = readSettings(settingsRef)
       t += 0.02 * speed
@@ -181,16 +194,25 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
     })
     ro.observe(mount)
 
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry?.isIntersecting ?? true
+      },
+      { root: null, threshold: 0 },
+    )
+    io.observe(mount)
+
     return () => {
       disposed = true
       cancelAnimationFrame(raf)
       ro.disconnect()
+      io.disconnect()
       geo.dispose()
       mat.dispose()
       renderer.dispose()
       if (renderer.domElement.parentElement === mount) mount.removeChild(renderer.domElement)
     }
-  }, [colorScheme.accent, colorScheme.muted, colorScheme.highlight, analyser])
+  }, [colorScheme.accent, colorScheme.muted, colorScheme.highlight, analyser, settingsRef])
 
   return <div ref={mountRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} />
 }

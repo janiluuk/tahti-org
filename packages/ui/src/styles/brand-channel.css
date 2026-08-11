@@ -41,7 +41,10 @@
    section instead of a per-page CSS wash. */
 .bg-canvas--subtle {
   background: var(--bg);
-  filter: blur(32px) brightness(0.8) saturate(0.85);
+  /* No blur — see .bg-canvas in admin-ui.css. Brightness/saturate alone are
+   * cheap color-matrix ops; blur(32px) on this fullscreen fixed layer was
+   * wrecking scroll on radio/channel pages. */
+  filter: brightness(0.8) saturate(0.85);
 }
 
 .app-bg-veil {
@@ -50,7 +53,9 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: rgba(5, 8, 16, 0.15);
+  /* Slightly stronger than pre-blur-removal so the sharper (unblurred)
+   * gateway canvas still sits behind content without competing. */
+  background: rgba(5, 8, 16, 0.28);
 }
 
 [data-tahti-ui='brand'].brand-channel--radio .radio-shell {
@@ -97,13 +102,10 @@
 
 /* Channel page layout */
 [data-tahti-ui='brand'] .ch-header {
-  background: color-mix(in srgb, var(--card) 80%, transparent);
-  backdrop-filter: blur(10px);
-  /* This sits sticky above a continuously-animating full-page canvas
-     (BgCanvas) — without isolating its own compositor layer, the browser
-     recomputes the blur sample against the whole moving background on
-     every frame, which gets noticeably worse mid-scroll. */
-  will-change: backdrop-filter, transform;
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  /* No backdrop-filter — this is sticky above scrolling content and (on
+   * radio/channel) canvases. Sampling a live backdrop every scroll frame is
+   * a known compositor tax; a slightly more opaque solid reads the same. */
   contain: layout style paint;
   padding: 0 24px;
   height: 52px;
@@ -2859,18 +2861,18 @@
   background-image: var(--ch-player-art);
   background-size: cover;
   background-position: center;
-  filter: blur(28px) saturate(1.35);
+  /* Keep blur modest — this layer sits under a continuously-repainting WebGL
+   * visualizer. Large radii (28px+) are disproportionately expensive for the
+   * wash effect they produce; 12px is enough to abstract the artwork. */
+  filter: blur(12px) saturate(1.35);
   opacity: 0.22;
-  transform: scale(1.12);
+  transform: translateZ(0) scale(1.12);
   pointer-events: none;
-  /* This sits directly behind a WebGL canvas that repaints continuously
-   * (the player's REACTIVE_GRID visualizer, always-on on the radio page) —
-   * without a compositing hint the browser can end up re-rasterizing this
-   * expensive blur alongside every canvas frame instead of caching it as
-   * its own GPU layer once. will-change targets the properties this
-   * element's own crossfade animation actually changes (see
-   * .ch-player-art-backdrop--out/--in below), not the static blur/scale. */
+  /* Promote once so the static blurred wash isn't re-rasterized every time
+   * the sibling visualizer canvas paints. will-change matches the crossfade
+   * (.ch-player-art-backdrop--out/--in) which animates opacity. */
   will-change: opacity;
+  contain: paint;
 }
 
 [data-tahti-ui='brand'] .ch-player-art-backdrop::after {
@@ -2920,11 +2922,11 @@
 @keyframes ch-player-backdrop-in {
   from {
     opacity: 0;
-    transform: scale(1.26);
+    transform: translateZ(0) scale(1.26);
   }
   to {
     opacity: 0.22;
-    transform: scale(1.12);
+    transform: translateZ(0) scale(1.12);
   }
 }
 
@@ -3367,9 +3369,10 @@
   flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--cyan) 25%, var(--border));
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--cyan) 5%, color-mix(in srgb, var(--card) 88%, transparent));
-  backdrop-filter: blur(6px);
-  will-change: backdrop-filter, transform;
+  /* More opaque so sticky scroll doesn't need a live backdrop-filter sample
+   * against the page (and any canvases behind it) every frame — that was a
+   * major scroll-jank contributor on /radio next to the player visualizer. */
+  background: color-mix(in srgb, var(--cyan) 5%, color-mix(in srgb, var(--card) 94%, transparent));
   contain: layout style paint;
   height: calc(100vh - 6rem);
   position: sticky;
@@ -7718,4 +7721,13 @@ html.gpu-limited [data-tahti-ui='brand'] .prof-bg-music-btn {
 
 html.gpu-limited [data-tahti-ui='brand'] .ch-reaction-btn {
   backdrop-filter: none;
+}
+
+html.gpu-limited .bg-canvas,
+html.gpu-limited .bg-canvas--subtle {
+  filter: none;
+}
+
+html.gpu-limited [data-tahti-ui='brand'] .ch-player-art-backdrop {
+  filter: none;
 }
