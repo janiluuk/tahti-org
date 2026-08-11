@@ -862,7 +862,8 @@ body {
     padding: var(--space-3);
   }
   .mini-player__time,
-  .mini-player__volume {
+  .mini-player__volume,
+  .mini-player__badge {
     display: none;
   }
   .mini-player__queue-toggle {
