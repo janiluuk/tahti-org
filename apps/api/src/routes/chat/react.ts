@@ -72,6 +72,25 @@ const chatReactRoute: FastifyPluginAsync = async (fastify) => {
 
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
+      // Anchor to the currently-live broadcast (if any) so this reaction can
+      // later be replayed at the right moment against the recording —
+      // Broadcast.archiveItemId links a finished broadcast to its archive
+      // item. Reactions fired with nothing live (e.g. a stale tab) have no
+      // meaningful show timeline to anchor to, so they're only broadcast
+      // live via Centrifugo below, not persisted.
+      const liveBroadcast = await fastify.prisma.broadcast.findFirst({
+        where: { channelId: channel.id, endedAt: null },
+        orderBy: { startedAt: 'desc' },
+        select: { id: true, wentLiveAt: true, startedAt: true },
+      })
+      if (liveBroadcast) {
+        const anchor = liveBroadcast.wentLiveAt ?? liveBroadcast.startedAt
+        const elapsedSec = Math.max(0, (Date.now() - anchor.getTime()) / 1000)
+        await fastify.prisma.broadcastReaction
+          .create({ data: { broadcastId: liveBroadcast.id, emoji, elapsedSec } })
+          .catch((err: unknown) => fastify.log.warn({ err }, 'broadcast reaction persist failed'))
+      }
+
       // Publish via Centrifugo server API
       await fetch(`${config.centrifugo.apiUrl}`, {
         method: 'POST',

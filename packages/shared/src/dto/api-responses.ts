@@ -622,6 +622,11 @@ export const TrackPlaybackDetailsSchema = z.object({
   tracklist: z.array(TrackTracklistEntrySchema).nullable(),
   peaks: z.array(z.number()).nullable(),
   reactions: z.array(TrackReactionItemSchema),
+  /** Flying-emoji reactions fired live during the original broadcast, if this
+   * track was recorded from one — replayed at the matching elapsedSec while
+   * scrubbing/playing the archive so the "show" feels alive again. Empty for
+   * tracks with no linked broadcast (e.g. uploaded, not recorded live). */
+  broadcastReactions: z.array(z.object({ emoji: z.string(), elapsedSec: z.number() })),
 })
 
 export const ChannelCardSchema = z.object({

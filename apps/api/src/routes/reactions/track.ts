@@ -117,6 +117,14 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
         select: { id: true, type: true, positionSec: true, createdAt: true },
       })
 
+      // Broadcast.archiveItemId is a plain unique column, not a declared
+      // Prisma relation (no matching field exists on ArchiveItem) — an
+      // explicit lookup instead of a nested select.
+      const broadcast = await fastify.prisma.broadcast.findUnique({
+        where: { archiveItemId: routeParams.id },
+        select: { reactions: { select: { emoji: true, elapsedSec: true } } },
+      })
+
       return reply.send({
         title: item.title,
         artistName: item.artistName ?? item.channel.user.displayName,
@@ -125,6 +133,7 @@ const trackReactionsRoutes: FastifyPluginAsync = async (fastify) => {
         tracklist: parseTracklist(item.tracklist),
         peaks: (item.peaks as number[] | null) ?? null,
         reactions,
+        broadcastReactions: broadcast?.reactions ?? [],
       })
     },
   )

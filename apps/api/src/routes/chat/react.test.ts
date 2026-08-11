@@ -81,6 +81,57 @@ describe('POST /api/chat/:slug/react', () => {
     expect(res.statusCode).toBe(200)
     expect(res.json().ok).toBe(true)
   })
+
+  it('does not persist a reaction when nothing is currently live', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({
+      where: { slug: 'chat-react-testuser' },
+    })
+    const before = await prisma.broadcastReaction.count({
+      where: { broadcast: { channelId: channel.id } },
+    })
+
+    // Distinct remoteAddress — the route rate-limits by sha256(ip:ua), and
+    // earlier tests above already spent some of the default IP's budget
+    // (3 per 5s).
+    await app.inject({
+      method: 'POST',
+      url: '/api/chat/chat-react-testuser/react',
+      remoteAddress: '198.51.100.10',
+      payload: { emoji: '🔥' },
+    })
+
+    const after = await prisma.broadcastReaction.count({
+      where: { broadcast: { channelId: channel.id } },
+    })
+    expect(after).toBe(before)
+  })
+
+  it('persists a reaction with elapsedSec anchored to the live broadcast', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({
+      where: { slug: 'chat-react-testuser' },
+    })
+    const wentLiveAt = new Date(Date.now() - 30_000)
+    const broadcast = await prisma.broadcast.create({
+      data: { channelId: channel.id, source: 'ICECAST', wentLiveAt },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/chat-react-testuser/react',
+      remoteAddress: '198.51.100.11',
+      payload: { emoji: '🌟' },
+    })
+    expect(res.statusCode).toBe(200)
+
+    const rows = await prisma.broadcastReaction.findMany({ where: { broadcastId: broadcast.id } })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.emoji).toBe('🌟')
+    // ~30s in, generous window for test execution time
+    expect(rows[0]?.elapsedSec).toBeGreaterThanOrEqual(29)
+    expect(rows[0]?.elapsedSec).toBeLessThan(40)
+
+    await prisma.broadcast.delete({ where: { id: broadcast.id } })
+  })
 })
 
 describe('GET /api/chat/:slug/reactions-token', () => {

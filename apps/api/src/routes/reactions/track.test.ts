@@ -74,6 +74,55 @@ describe('/api/reactions/track/:id', () => {
     expect(body.reactions).toEqual([])
   })
 
+  it('includes broadcastReactions when the track was recorded from a broadcast', async () => {
+    const owner = await prisma.channel.findUniqueOrThrow({ where: { slug: channelSlug } })
+    const recordedItem = await prisma.archiveItem.create({
+      data: {
+        channelId: owner.id,
+        title: 'Recorded Show',
+        status: 'READY',
+        isPublic: true,
+        durationSec: 3600,
+      },
+    })
+    const broadcast = await prisma.broadcast.create({
+      data: {
+        channelId: owner.id,
+        source: 'ICECAST',
+        archiveItemId: recordedItem.id,
+        reactions: {
+          createMany: {
+            data: [
+              { emoji: '🔥', elapsedSec: 12.5 },
+              { emoji: '💜', elapsedSec: 90 },
+            ],
+          },
+        },
+      },
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: `/api/reactions/track/${recordedItem.id}`,
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().broadcastReactions).toEqual(
+      expect.arrayContaining([
+        { emoji: '🔥', elapsedSec: 12.5 },
+        { emoji: '💜', elapsedSec: 90 },
+      ]),
+    )
+
+    await prisma.broadcast.delete({ where: { id: broadcast.id } })
+    await prisma.archiveItem.delete({ where: { id: recordedItem.id } })
+  })
+
+  it('returns an empty broadcastReactions list for a track with no linked broadcast', async () => {
+    const res = await app.inject({ method: 'GET', url: `/api/reactions/track/${archiveItemId}` })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().broadcastReactions).toEqual([])
+  })
+
   it('404s for an unknown track', async () => {
     const res = await app.inject({ method: 'GET', url: '/api/reactions/track/does-not-exist' })
     expect(res.statusCode).toBe(404)

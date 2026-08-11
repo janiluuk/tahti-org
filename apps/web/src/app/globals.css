@@ -963,6 +963,17 @@ body:has(.mini-player) {
   z-index: -1 !important;
 }
 
+/* Replays the original broadcast's live flying-emoji reactions during
+ * archive playback (see mini-player.tsx's flyingReactions) — sits above the
+ * visualizer/backdrop (both pinned to z-index:-1 above) but never intercepts
+ * clicks on the transport controls underneath. */
+.full-player__reactions-replay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
 .full-player__topbar {
   width: 100%;
   max-width: 420px;

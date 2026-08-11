@@ -1278,6 +1278,7 @@ model Broadcast {
   /// Pre-live backstage: invite moderators/subscribers to hear the preview stream.
   greenRoomEnabled Boolean @default(false)
   greenRoomInvites BroadcastGreenRoomInvite[]
+  reactions        BroadcastReaction[]
 
   @@index([channelId, startedAt(sort: Desc)])
   @@index([radioSlotBookingId])
@@ -1943,6 +1944,27 @@ model TrackReaction {
   createdAt     DateTime          @default(now())
 
   @@index([archiveItemId, positionSec])
+  @@schema("engagement")
+}
+
+/// Flying-emoji reactions fired during a LIVE broadcast (routes/chat/react.ts,
+/// ReactionsOverlay) — anonymous-friendly and channel/show-wide, unlike
+/// TrackReaction above (signed-in, anchored to a specific archived track's
+/// playback position). elapsedSec is seconds since the broadcast's
+/// wentLiveAt/startedAt, computed once at write time, so replaying them
+/// during archive playback later is a direct lookup, not a recomputation.
+/// Broadcast.archiveItemId links a finished broadcast to its recording, so
+/// a reaction can be looked up either live (by broadcastId) or on replay
+/// (by resolving the archive item back to its broadcast).
+model BroadcastReaction {
+  id          String    @id @default(cuid())
+  broadcastId String
+  broadcast   Broadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  emoji       String
+  elapsedSec  Float
+  createdAt   DateTime  @default(now())
+
+  @@index([broadcastId, elapsedSec])
   @@schema("engagement")
 }
 

@@ -29,6 +29,11 @@ interface TracklistCue {
   artist?: string | null
 }
 
+interface BroadcastReactionItem {
+  emoji: string
+  elapsedSec: number
+}
+
 interface TrackPlaybackDetails {
   title: string
   artistName: string
@@ -37,6 +42,10 @@ interface TrackPlaybackDetails {
   tracklist: TracklistCue[] | null
   peaks: number[] | null
   reactions: TrackReactionItem[]
+  /** Flying-emoji reactions fired live during the original broadcast, if
+   * this track was recorded from one — replayed at matching elapsedSec
+   * during archive playback. Empty for tracks with no linked broadcast. */
+  broadcastReactions: BroadcastReactionItem[]
 }
 
 const REACTION_TYPES: { type: TrackReactionType; emoji: string; label: string }[] = [
@@ -259,6 +268,33 @@ function FullPlayerSheet({
   const [postingReaction, setPostingReaction] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const [flyingReactions, setFlyingReactions] = useState<
+    { id: string; emoji: string; x: number }[]
+  >([])
+  const lastReactionCheckRef = useRef(0)
+
+  // Replays the broadcast's original flying-emoji reactions at the same
+  // moments they happened live, as playback crosses each elapsedSec — same
+  // visual as ReactionsOverlay's live version, so an archived show still
+  // feels like it did in the room. Only fires reactions within a small
+  // forward window of the last tick; a big jump (seek/scrub) just resyncs
+  // the marker instead of flooding the screen with every reaction skipped
+  // over.
+  useEffect(() => {
+    const last = lastReactionCheckRef.current
+    lastReactionCheckRef.current = currentTime
+    if (!details?.broadcastReactions?.length) return
+    const jumped = currentTime < last || currentTime - last > 5
+    if (jumped) return
+    for (const r of details.broadcastReactions) {
+      if (r.elapsedSec > last && r.elapsedSec <= currentTime) {
+        const id = `${r.elapsedSec}-${Math.random()}`
+        const x = 10 + Math.random() * 80
+        setFlyingReactions((prev) => [...prev.slice(-20), { id, emoji: r.emoji, x }])
+        setTimeout(() => setFlyingReactions((prev) => prev.filter((f) => f.id !== id)), 2500)
+      }
+    }
+  }, [currentTime, details?.broadcastReactions])
 
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement)
@@ -337,6 +373,19 @@ function FullPlayerSheet({
           style={{ backgroundImage: `url(${track.artworkUrl})` }}
           aria-hidden
         />
+      )}
+      {flyingReactions.length > 0 && (
+        <div className="ch-reactions full-player__reactions-replay" aria-hidden>
+          {flyingReactions.map((fr) => (
+            <span
+              key={fr.id}
+              className="ch-reaction-fly"
+              style={{ ['--ch-reaction-x' as string]: `${fr.x}%` }}
+            >
+              {fr.emoji}
+            </span>
+          ))}
+        </div>
       )}
       <div className="full-player__topbar">
         <button
