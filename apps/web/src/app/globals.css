@@ -872,6 +872,22 @@ body {
   .mini-player__skip:disabled {
     display: none;
   }
+  /* Root cause of the overlap bug: min-width:0 let this shrink to ~0, but
+   * its flex:none art child doesn't shrink with it, so the artwork spilled
+   * out of its own collapsed box and sat on top of whatever came next. A
+   * floor big enough for the art keeps it contained; overflow-x is a
+   * safety net so a still-too-narrow combination scrolls instead of
+   * stacking, rather than silently reintroducing the same bug. */
+  .mini-player__now-playing {
+    min-width: 90px;
+  }
+  .mini-player__inner {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .mini-player__inner::-webkit-scrollbar {
+    display: none;
+  }
   .mini-player__queue-toggle {
     padding: 0 6px;
   }
