@@ -361,8 +361,8 @@ function FullPlayerSheet({
           className="full-player__fullscreen-toggle"
           onClick={toggleFullscreen}
           aria-pressed={isFullscreen}
-          aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-          title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+          aria-label={isFullscreen ? 'Minimize' : 'Fullscreen'}
+          title={isFullscreen ? 'Minimize' : 'Fullscreen'}
         >
           {isFullscreen ? (
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>

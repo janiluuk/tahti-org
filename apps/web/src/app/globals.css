@@ -954,6 +954,15 @@ body:has(.mini-player) {
   opacity: 0.6;
 }
 
+/* ChannelVisualizer sets `position: absolute; z-index: 0` inline — without an
+ * explicit negative z-index here, that still paints above every plain
+ * in-flow sibling below (art, seek bar, transport, volume), regardless of
+ * DOM order, since positioned elements stack above static ones by default.
+ * The `!important` is required to win over the component's inline style. */
+.full-player__viz {
+  z-index: -1 !important;
+}
+
 .full-player__topbar {
   width: 100%;
   max-width: 420px;
@@ -978,6 +987,40 @@ body:has(.mini-player) {
 
 .full-player__fullscreen-toggle:hover {
   color: var(--text);
+}
+
+/* In true browser fullscreen, the toggle becomes the minimize control — pull
+ * it out of the topbar flow into a floating glass button so it reads as a
+ * deliberate "exit" affordance over the cinema-mode visualizer, not just
+ * another row of small icons. */
+.full-player--fullscreen .full-player__fullscreen-toggle {
+  position: absolute;
+  top: max(env(safe-area-inset-top), var(--space-4));
+  right: var(--space-4);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--card) 55%, transparent);
+  backdrop-filter: blur(14px) saturate(1.5);
+  -webkit-backdrop-filter: blur(14px) saturate(1.5);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--black) 35%, transparent);
+  color: var(--text);
+  transition:
+    transform var(--ease),
+    background var(--ease),
+    box-shadow var(--ease);
+}
+
+.full-player--fullscreen .full-player__fullscreen-toggle:hover {
+  transform: scale(1.08);
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--black) 45%, transparent);
+}
+
+.full-player--fullscreen .full-player__fullscreen-toggle:active {
+  transform: scale(0.96);
 }
 
 .full-player__collapse {
