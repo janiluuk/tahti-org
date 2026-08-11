@@ -4,7 +4,7 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { TAHTI_RADIO_SLUG, resolveColorScheme } from '@tahti/shared'
+import { TAHTI_RADIO_SLUG, resolveColorScheme, type VisualPresetSettings } from '@tahti/shared'
 import { cn, WAVEFORM_TRACK_IN_MS, WAVEFORM_TRACK_OUT_MS } from '@tahti/ui'
 import HlsPlayer from '../c/[slug]/hls-player'
 import ReactionsOverlay from '../c/[slug]/reactions'
@@ -13,6 +13,13 @@ import { usePlayer } from '@/contexts/player-context'
 import { useSuspendBackgroundCanvas } from '@/contexts/background-canvas-context'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:3001'
+// Module-level (not a literal in JSX props) so the reference stays stable across
+// this page's frequent re-renders (1s live-elapsed tick, 8s now-playing poll) —
+// see ChannelVisualizer's memo() comment for why a fresh object there would
+// defeat it. Pushed past the schema's un-clamped default (1) since this is the
+// flagship 24/7 station and should read as visibly more alive than a typical
+// channel's own visualizer.
+const RADIO_VIZ_SETTINGS: VisualPresetSettings = { speed: 1.15, intensity: 1.8 }
 const NOW_PLAYING_POLL_MS = 8_000
 
 interface RadioLiveSlot {
@@ -244,6 +251,8 @@ export function RadioPlayerSection({
         <ChannelVisualizer
           preset="REACTIVE_GRID"
           analyser={analyser}
+          colorSchemeJson={colorSchemeJson}
+          settings={RADIO_VIZ_SETTINGS}
           className="ch-radio-player-viz"
         />
         <HlsPlayer

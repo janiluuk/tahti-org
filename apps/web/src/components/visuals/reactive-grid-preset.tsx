@@ -134,8 +134,8 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
     // jitter actually reads as flicker — a value climbing is expected motion,
     // one value randomly dropping and popping back up next frame is not).
     const smooth = data ? new Float32Array(data.length) : null
-    const ATTACK = 0.65
-    const RELEASE = 0.2
+    const ATTACK = 0.8
+    const RELEASE = 0.22
 
     function animate() {
       if (disposed) return
@@ -162,6 +162,12 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
         }
       }
 
+      // intensity also biases the curve, not just the opacity multiplier below —
+      // an exponent under 1 (intensity > 1) lifts quiet/mid readings toward the
+      // bright end instead of leaving them clustered near the dim, washed-out
+      // "muted" color, so turning intensity up reads as more colorful, not just
+      // more opaque.
+      const curve = 1 / intensity
       let opacitySum = 0
       for (let i = 0; i < CELL_COUNT; i++) {
         let pulse = Math.sin(t + phases[i]!) * 0.5 + 0.5
@@ -169,8 +175,16 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
           const idx = Math.floor((i / CELL_COUNT) * smooth.length)
           pulse = smooth[idx]!
         }
-        cellColor.lerpColors(muted, pulse > 0.7 ? highlight : accent, pulse)
-        opacitySum += 0.1 + pulse * 0.3 * intensity
+        const boosted = Math.pow(pulse, curve)
+        // Continuous three-stop ramp (muted → accent → highlight) instead of a
+        // hard accent/highlight cutoff at pulse > 0.7 — that jump read as a
+        // sudden flat-color pop on loud hits rather than a smooth flare.
+        if (boosted < 0.5) {
+          cellColor.lerpColors(muted, accent, boosted * 2)
+        } else {
+          cellColor.lerpColors(accent, highlight, (boosted - 0.5) * 2)
+        }
+        opacitySum += 0.12 + boosted * 0.45 * intensity
 
         const base = i * VERTS_PER_CELL * 3
         for (let k = 0; k < VERTS_PER_CELL; k++) {
@@ -180,7 +194,7 @@ export function ReactiveGridPreset({ colorScheme, analyser, settingsRef }: Visua
         }
       }
       colorAttr.needsUpdate = true
-      mat.opacity = opacitySum / CELL_COUNT
+      mat.opacity = Math.min(1, opacitySum / CELL_COUNT)
 
       renderer.render(scene, camera)
     }

@@ -3010,7 +3010,10 @@
 }
 
 [data-tahti-ui='brand'] .ch-radio-player-viz {
-  opacity: 0.9;
+  opacity: 0.95;
+  /* saturate() is a cheap per-pixel color-matrix op (unlike blur() — see the
+   * .bg-canvas comment above), safe to run over a canvas repainting ~30fps. */
+  filter: saturate(1.3);
 }
 
 /* Radio page only — much bigger now-playing title/artist. Used to run a
