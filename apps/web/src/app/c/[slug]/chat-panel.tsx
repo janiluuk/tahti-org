@@ -88,6 +88,7 @@ export default function ChatPanel({
   slug,
   announcements,
   isLoggedIn = false,
+  accountHandle,
 }: {
   slug: string
   announcements: Announcement[]
@@ -96,6 +97,10 @@ export default function ChatPanel({
    * apps/api/src/routes/chat/token.ts), the client just never checked login
    * state before, so it loaded/rendered the widget for everyone regardless. */
   isLoggedIn?: boolean
+  /** Signed-in member's displayName — lets them skip the "pick a nickname"
+   * join prompt entirely and land straight in the chat, same as the saved-
+   * handle silent rejoin below does for a returning anonymous visitor. */
+  accountHandle?: string
 }) {
   const [handle, setHandle] = useState<string>('')
   const [pendingHandle, setPendingHandle] = useState('')
@@ -148,13 +153,22 @@ export default function ChatPanel({
   // comment in chat-captcha-memory.ts) — worst case it's rejected and the
   // visitor falls back to the widget, same as before this existed.
   useEffect(() => {
+    // Signed-in members: skip the join prompt and localStorage lookup below
+    // entirely — the account name is authoritative and always available,
+    // unlike a saved handle which is per-browser and can be empty on a new
+    // device even for a member who's chatted plenty elsewhere.
+    if (isLoggedIn && accountHandle) {
+      setPendingHandle(accountHandle)
+      void joinChat(accountHandle)
+      return
+    }
     const saved = loadStoredChatHandle()
     if (saved) {
       setPendingHandle(saved)
       if (!captchaRequired || wasChatCaptchaRecentlyVerified(slug)) void joinChat(saved)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [captchaRequired])
+  }, [captchaRequired, isLoggedIn, accountHandle])
 
   useEffect(() => {
     let cancelled = false

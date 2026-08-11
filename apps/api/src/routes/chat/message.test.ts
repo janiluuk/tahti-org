@@ -105,6 +105,69 @@ describe('POST /api/chat/message — Centrifugo proxy', () => {
     expect(res.statusCode).toBe(403)
   })
 
+  // Note: isChatCaptchaVerified fails *open* (treats an unreachable Redis as
+  // "verified") whenever the caller doesn't pass `failOpen: false`, and
+  // getRedisClient() always returns null in the test env (see redis.ts) — so
+  // the anonymous-and-never-verified 403 path isn't reachable from an
+  // integration test against this route. This suite only covers the new
+  // signed-in bypass, which doesn't depend on Redis at all.
+
+  it('accepts an unverified fingerprint when meta.userId is present (signed-in sender)', async () => {
+    const sender = await createTestArtist(prisma, {
+      email: `${PREFIX}signed-in@example.com`,
+      username: 'chat-message-signed-in',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98399,
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: {
+        channel: `channel:${slug}`,
+        user: 'SignedInListener#never-verified-fingerprint-2',
+        meta: { userId: sender.id },
+        data: { text: 'signed in, no captcha needed' },
+      },
+    })
+    expect(res.statusCode).toBe(200)
+
+    const row = await prisma.chatMessage.findFirst({
+      where: { channelId: (await prisma.channel.findUniqueOrThrow({ where: { slug } })).id,
+        text: 'signed in, no captcha needed' },
+    })
+    expect(row).not.toBeNull()
+  })
+
+  it('still enforces bans for signed-in senders even though captcha is skipped', async () => {
+    const channel = await prisma.channel.findUniqueOrThrow({ where: { slug } })
+    const sender = await createTestArtist(prisma, {
+      email: `${PREFIX}banned-signed-in@example.com`,
+      username: 'chat-message-banned-signed-in',
+      tier: 'ARTIST',
+      isMember: true,
+      memberNumber: 98400,
+    })
+    const fingerprintHash = 'banned-signed-in-fingerprint'
+    await prisma.chatBan.create({
+      data: { channelId: channel.id, fingerprintHash },
+    })
+
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/chat/message',
+      payload: {
+        channel: `channel:${slug}`,
+        user: `BannedListener#${fingerprintHash}`,
+        meta: { userId: sender.id },
+        data: { text: 'should not post' },
+      },
+    })
+    expect(res.statusCode).toBe(403)
+    expect(res.json()).toEqual({ error: 'banned' })
+  })
+
   it('records CHAT mentions and notifies when meta.userId is present', async () => {
     const mentioner = await createTestArtist(prisma, {
       email: `${PREFIX}from@example.com`,

@@ -908,7 +908,12 @@ export default async function ChannelPage({ params }: { params: { slug: string }
         <>
           {channel.user.chatEnabled !== false ? (
             <>
-              <ChatPanel slug={slug} announcements={announcements} isLoggedIn={Boolean(user)} />
+              <ChatPanel
+                slug={slug}
+                announcements={announcements}
+                isLoggedIn={Boolean(user)}
+                accountHandle={user?.displayName}
+              />
               <FanChatPanel slug={slug} />
             </>
           ) : (

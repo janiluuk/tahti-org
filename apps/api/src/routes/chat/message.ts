@@ -47,9 +47,18 @@ const chatMessageRoute: FastifyPluginAsync = async (fastify) => {
       if (!channel) return reply.status(404).send({ error: 'channel not found' })
 
       if (fingerprint) {
-        const verified = await isChatCaptchaVerified(channel.id, fingerprint)
-        if (!verified) {
-          return reply.status(403).send({ error: 'captcha_required' })
+        // Same reasoning as token.ts's join-time bypass: a signed-in session
+        // is a stronger anti-abuse signal than hCaptcha, and re-checking the
+        // Redis-cached join-time verification here left signed-in senders
+        // blocked with "captcha_required" whenever that cache entry wasn't
+        // there for any reason (TTL, a Redis blip, a fingerprint recomputed
+        // after a UA/IP change mid-session) — captcha was already skipped
+        // for them at join, this publish-time check just never knew that.
+        if (!mentionerUserId) {
+          const verified = await isChatCaptchaVerified(channel.id, fingerprint)
+          if (!verified) {
+            return reply.status(403).send({ error: 'captcha_required' })
+          }
         }
         const ban = await fastify.prisma.chatBan.findUnique({
           where: {

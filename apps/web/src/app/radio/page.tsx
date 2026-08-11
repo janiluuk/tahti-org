@@ -264,6 +264,7 @@ export default async function RadioPage() {
             slug={TAHTI_RADIO_SLUG}
             announcements={announcements}
             isLoggedIn={Boolean(user)}
+            accountHandle={user?.displayName}
           />
         ) : (
           <p className="ch-chat-disabled-note">
