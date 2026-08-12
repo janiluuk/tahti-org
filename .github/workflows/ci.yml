@@ -465,11 +465,13 @@ jobs:
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
-      - name: Upload OpenAPI spec artifact
+      - name: Upload OpenAPI spec artifacts
         uses: actions/upload-artifact@v4
         with:
           name: openapi-${{ github.sha }}
-          path: openapi.json
+          path: |
+            openapi.json
+            openapi.public.json
           retention-days: 90
 
   all-checks:
@@ -681,4 +683,5 @@ jobs:
           body: ${{ steps.release_body.outputs.body }}
           files: |
             release-assets/openapi.json
+            release-assets/openapi.public.json
           fail_on_unmatched_files: false

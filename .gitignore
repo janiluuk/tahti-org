@@ -23,6 +23,10 @@ dist/
 *.tgz
 *.tar.gz
 
+# OpenAPI exports (CI / local `export-openapi.ts`)
+/openapi.json
+/openapi.public.json
+
 # Large media — marketing hero assets are tracked under website/
 *.mp4
 !website/output_vhs.mp4

@@ -228,7 +228,15 @@ echo -n "$(openssl rand -base64 24)" | docker secret create docs_pass_v2 -
 docker service update --secret-add docs_pass_v2 tahti_api
 ```
 
-OpenAPI UI: `https://api.tahti.live/docs`
+OpenAPI UI (ops, basic auth): `https://api.tahti.live/docs`
+
+Public API docs (unauthenticated Scalar + OpenAPI JSON, regenerated on API deploy / CI main push):
+
+- HTML: `https://api.tahti.live/api`
+- Spec: `https://api.tahti.live/api/openapi.json`
+- Release artifacts: `openapi.json` (full) + `openapi.public.json` (admin/internal omitted)
+
+Nuclear beta (`beta.tahti.live`) proxies to the same production API, so those URLs apply there too.
 
 ## Mixcloud OAuth (M7 production)
 

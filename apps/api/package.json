@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "lint": "eslint src --ext .ts --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "openapi:export": "tsx scripts/export-openapi.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.600.0",
