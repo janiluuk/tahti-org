@@ -2,6 +2,8 @@
 
 A Finnish nonprofit, open-source, channel-first broadcasting platform for independent artists.
 
+Tahti is built so artists can go live, publish archive and releases, and earn directly from fans — without a corporate intermediary taking the creative cut. This monorepo is the **implementation package**: constitution and strategy docs, the production API/worker/web stack, ops, and guides.
+
 ## Read first
 
 **[`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)** — the three rules that govern every other document in this repository:
@@ -14,6 +16,8 @@ These rules are constitutional. They are not changeable by management decision. 
 
 ## What this is
 
+Tahti ships a **channel-first** product: listeners discover and play artist channels (live HLS + archive), join chat, and subscribe to fan tiers; artists run a studio for broadcast, music, schedule, and revenue. The public HTTP API behind that product is documented below ([API documentation](#api-documentation)).
+
 - **Legal form:** Finnish *yhdistys* (registered nonprofit association)
 - **License:** AGPL-3.0
 - **Audio quality:** lossless FLAC for members (all their listeners); MP3 192 kbps for free-tier artists
@@ -21,6 +25,15 @@ These rules are constitutional. They are not changeable by management decision. 
 - **Direct artist revenue:** fan-to-artist subscriptions with 0% org take (2% operational fee covers Stripe + GDPR + ops)
 - **Hosting:** owned hardware in Helsinki + UpCloud Helsinki spillover; no CDN
 - **Membership:** €40/year to support Tahti ry; free-tier artists get MP3 + 1 hr/week live broadcasting
+
+### Web clients
+
+| Client | Role |
+|--------|------|
+| **`apps/web`** (this repo) | Production Next.js listen + studio + admin — `app.tahti.live` / `tahti.live` |
+| **Nuclear `tahti-web`** (separate repo) | Next listen + studio SPA on Nuclear UI — live on [beta.tahti.live](https://beta.tahti.live); cutover plan [`ops/nuclear-web-cutover.md`](ops/nuclear-web-cutover.md) |
+
+Both clients talk to the same API, chat, and media stack. Prefer the Nuclear beta when evaluating the upcoming player UX; keep `apps/web` as production until cutover P0s are done.
 
 ## Package structure
 
