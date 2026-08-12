@@ -1,18 +1,22 @@
 # User flows & screen map
 
+> **Canonical redesign pack (Mermaid + screenshots by persona):** **[flows/](flows/README.md)**  
+> Four parts: [anonymous listener](flows/anonymous-listener.md) · [logged-in listener / member](flows/logged-in-listener.md) · [artist](flows/artist.md) · [board member](flows/board-member.md).  
+> Design-review embed pack: [flows/navigation-flows-design-review.md](flows/navigation-flows-design-review.md) · full route map: [flows/site-map.md](flows/site-map.md).
+
 Screenshots live in [e2e-screenshots/](e2e-screenshots/). Capture locally via `./scripts/e2e-screenshots.sh` (not run in CI).
 
 For **how to distribute Swarm nodes by bottleneck** (API, chat, transcode, ingest, egress), see [scaling-node-distribution.md](scaling-node-distribution.md).
 
 ## Personas
 
-| Persona              | Who                                                  | Guide                                   | Technical journey                                    |
-| -------------------- | ---------------------------------------------------- | --------------------------------------- | ---------------------------------------------------- |
-| **Listener**         | Anyone tuning in; account optional                   | [for-viewers.md](guides/for-viewers.md) | [journey-listener.md](technical/journey-listener.md) |
-| **Member**           | Tahti ry cooperative member (€40/year)               | [for-members.md](guides/for-members.md) | [journey-member.md](technical/journey-member.md)     |
-| **Artist**           | Member with channel, releases, fan tiers             | [for-artists.md](guides/for-artists.md) | [journey-artist.md](technical/journey-artist.md)     |
-| **Director / board** | Executive + board — grants, ledger, governance admin | —                                       | [journey-director.md](technical/journey-director.md) |
-| **Ops**              | Deploy, monitor, recover the platform                | [RUNBOOK.md](../ops/RUNBOOK.md)         | [journey-ops.md](technical/journey-ops.md)           |
+| Persona              | Who                                                  | Flow pack | Guide                                   | Technical journey                                    |
+| -------------------- | ---------------------------------------------------- | --------- | --------------------------------------- | ---------------------------------------------------- |
+| **Anonymous listener** | Anyone tuning in; no account                       | [Part 1](flows/anonymous-listener.md) | [for-viewers.md](guides/for-viewers.md) | [journey-listener.md](technical/journey-listener.md) |
+| **Logged-in listener / member** | Free account, fan-sub, or €40 coop member | [Part 2](flows/logged-in-listener.md) | [for-viewers.md](guides/for-viewers.md), [for-members.md](guides/for-members.md) | [journey-member.md](technical/journey-member.md) |
+| **Artist**           | Channel owner — studio, releases, fan tiers          | [Part 3](flows/artist.md) | [for-artists.md](guides/for-artists.md) | [journey-artist.md](technical/journey-artist.md)     |
+| **Board member**     | `isBoard` — grants, ledger, governance admin         | [Part 4](flows/board-member.md) | —                                       | [journey-director.md](technical/journey-director.md) |
+| **Ops**              | Deploy, monitor, recover the platform                | — | [RUNBOOK.md](../ops/RUNBOOK.md)         | [journey-ops.md](technical/journey-ops.md)           |
 
 **Streamer** is the live-broadcast slice of the artist path: [for-streamers.md](guides/for-streamers.md).
 

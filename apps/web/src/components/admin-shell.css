@@ -197,6 +197,29 @@
   color: var(--coral);
 }
 
+.admin-stream-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 12rem;
+}
+
+.admin-stream-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.admin-stream-controls__hls {
+  font-size: 0.75rem;
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.admin-stream-controls__hls:hover {
+  text-decoration: underline;
+}
+
 .admin-btn-danger {
   font-size: 0.8rem;
   padding: 0.3rem 0.6rem;

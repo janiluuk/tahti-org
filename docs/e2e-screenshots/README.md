@@ -87,6 +87,6 @@ Or after `./scripts/e2e-screenshots.sh`, run the journey script with the same po
 Seeded channel includes a **next live broadcast** schedule (`2026-07-10T20:00:00Z`) so the
 Archive countdown and dashboard schedule preview appear in captures.
 
-Linked from `docs/user-flows.md`.
+Linked from [`docs/flows/`](../flows/README.md) (canonical persona packs) and [`docs/user-flows.md`](../user-flows.md).
 
 Production node layout and scaling bottlenecks: [../scaling-node-distribution.md](../scaling-node-distribution.md).

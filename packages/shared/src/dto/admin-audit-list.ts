@@ -36,3 +36,10 @@ export const AdminForceOfflineResponseSchema = z.object({
   channelId: z.string(),
   slug: z.string(),
 })
+
+export const AdminStreamControlResponseSchema = z.object({
+  ok: z.literal(true),
+  channelId: z.string(),
+  slug: z.string(),
+  action: z.enum(['restart', 'skip', 'pause', 'resume']),
+})

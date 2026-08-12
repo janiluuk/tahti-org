@@ -337,6 +337,11 @@ services:
     environment:
       <<: *app-env
       RECORDINGS_ROOT: /recordings
+      # hls-minio-sync must tick every ~4s or the public ~16s HLS window runs
+      # dry (listeners buffer). With concurrency 1, the once-a-minute
+      # channel-watchdog (and other crons) blocked that tick for ~40s —
+      # confirmed live as playlist Last-Modified stalls then +10 segment jumps.
+      WORKER_CONCURRENCY: '4'
     volumes:
       - stack_hls:/hls:ro
       - stack_recordings:/recordings:ro

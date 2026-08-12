@@ -50,12 +50,15 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
     if (!canvas) return
 
     const subtle = variant === 'subtle'
-    const op = (v: number) => v * (subtle ? 0.28 : 1)
-    const motion = subtle ? 0.18 : 1
+    // Softness used to come from a fullscreen CSS blur(32px). That was the
+    // scroll-jank culprit, so we dim/desaturate in-scene instead — keep this
+    // multiplier low enough that sharp geometry still reads as atmosphere.
+    const op = (v: number) => v * (subtle ? 0.16 : 1)
+    const motion = subtle ? 0.14 : 1
     // Deliberately much less dampened than motion/opacity — the point of the subtle
     // variant is a quiet background at rest that still visibly comes alive with the
     // music, not a background that merely nods along to it.
-    const react = subtle ? 0.75 : 1
+    const react = subtle ? 0.65 : 1
 
     let renderer: THREE.WebGLRenderer
     try {
@@ -317,7 +320,7 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
       vels[i * 2 + 1] = (Math.random() - 0.5) * 0.04
       phases[i] = Math.random() * Math.PI * 2
       const c = palette[Math.floor(Math.random() * palette.length)]
-      const bright = (0.15 + Math.random() * 0.35) * (subtle ? 0.55 : 1)
+      const bright = (0.15 + Math.random() * 0.35) * (subtle ? 0.35 : 1)
       col[i * 3] = c[0] * bright
       col[i * 3 + 1] = c[1] * bright
       col[i * 3 + 2] = c[2] * bright
@@ -330,7 +333,7 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
         pGeo,
         new THREE.PointsMaterial({
           opacity: op(0.85),
-          size: subtle ? 1.5 : 2,
+          size: subtle ? 1.15 : 2,
           sizeAttenuation: true,
         }),
       ),
@@ -346,7 +349,7 @@ export function BgCanvas({ analyser = null, variant = 'default' }: BgCanvasProps
     ]
     const waveFreqs = [0.018, 0.012, 0.025],
       waveSpeeds = [2.0, 1.3, 2.8].map((s) => s * motion),
-      waveAmps = [28, 18, 14].map((a) => a * (subtle ? 0.45 : 1)),
+      waveAmps = [28, 18, 14].map((a) => a * (subtle ? 0.32 : 1)),
       waveZ = [-40, -60, -80]
     const waveObjs: { geo: THREE.BufferGeometry; freq: number; speed: number; amp: number }[] = []
     for (let w = 0; w < WAVES; w++) {

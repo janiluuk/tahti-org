@@ -43,8 +43,9 @@
   background: var(--bg);
   /* No blur — see .bg-canvas in admin-ui.css. Brightness/saturate alone are
    * cheap color-matrix ops; blur(32px) on this fullscreen fixed layer was
-   * wrecking scroll on radio/channel pages. */
-  filter: brightness(0.8) saturate(0.85);
+   * wrecking scroll on radio/channel pages. Dim further so sharp in-scene
+   * geometry still reads as soft atmosphere without a CSS blur. */
+  filter: brightness(0.62) saturate(0.7);
 }
 
 .app-bg-veil {
@@ -53,9 +54,9 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  /* Slightly stronger than pre-blur-removal so the sharper (unblurred)
-   * gateway canvas still sits behind content without competing. */
-  background: rgba(5, 8, 16, 0.28);
+  /* Stronger veil stands in for the removed fullscreen blur — keeps the
+   * gateway canvas behind content without competing. */
+  background: rgba(5, 8, 16, 0.4);
 }
 
 [data-tahti-ui='brand'].brand-channel--radio .radio-shell {

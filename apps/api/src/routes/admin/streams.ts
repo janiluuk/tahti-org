@@ -4,6 +4,8 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { AdminLiveStreamListSchema, openApiResponse } from '@tahti/shared'
 import { requireBoard } from '../../plugins/auth.js'
+import { config } from '../../config.js'
+import { liveHlsUrl } from '../../lib/stream-quality.js'
 
 // M21-C: live channel overview for admin stream manager
 const adminStreamsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -26,7 +28,8 @@ const adminStreamsRoutes: FastifyPluginAsync = async (fastify) => {
           id: true,
           slug: true,
           goneLiveAt: true,
-          user: { select: { displayName: true, username: true } },
+          user: { select: { displayName: true, username: true, tier: true } },
+          curatedRotationItems: { select: { id: true }, take: 1 },
         },
       })
 
@@ -39,6 +42,8 @@ const adminStreamsRoutes: FastifyPluginAsync = async (fastify) => {
         elapsedSec: ch.goneLiveAt
           ? Math.max(0, Math.floor((now - ch.goneLiveAt.getTime()) / 1000))
           : 0,
+        hlsUrl: liveHlsUrl(config.hlsBaseUrl, ch.slug, ch.user.tier),
+        isRotation: ch.curatedRotationItems.length > 0,
       }))
 
       return reply.send({ count: streams.length, streams })

@@ -5,7 +5,7 @@ import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vites
 import { mkdir, writeFile, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
+import { PutObjectCommand } from '@aws-sdk/client-s3'
 
 const { mockSend } = vi.hoisted(() => ({
   mockSend: vi.fn(),
@@ -15,7 +15,7 @@ vi.mock('./minio.js', () => ({
   s3: { send: mockSend },
 }))
 
-import { hlsObjectUpToDate, syncChannelHlsToMinio } from './hls-minio-sync.js'
+import { hlsObjectUpToDate, resetHlsUploadCache, syncChannelHlsToMinio } from './hls-minio-sync.js'
 
 describe('syncChannelHlsToMinio', () => {
   const root = join(tmpdir(), `tahti-hls-sync-${process.pid}`)
@@ -34,50 +34,62 @@ describe('syncChannelHlsToMinio', () => {
 
   beforeEach(() => {
     mockSend.mockReset()
-    mockSend.mockRejectedValue(Object.assign(new Error('NotFound'), { name: 'NotFound' }))
+    mockSend.mockResolvedValue({})
+    resetHlsUploadCache()
   })
 
   it('uploads segment files under slug prefix', async () => {
-    mockSend.mockImplementation(async (cmd) => {
-      if (cmd instanceof HeadObjectCommand) {
-        throw Object.assign(new Error('NotFound'), { name: 'NotFound' })
-      }
-      return {}
-    })
-
     const result = await syncChannelHlsToMinio(root, channelId, slug)
     expect(result.uploaded).toBeGreaterThan(0)
     expect(mockSend.mock.calls.some(([cmd]) => cmd instanceof PutObjectCommand)).toBe(true)
   })
 
   it('skips objects already mirrored at the same size and mtime', async () => {
-    mockSend.mockImplementation(async (cmd) => {
-      if (cmd instanceof HeadObjectCommand) {
-        return { ContentLength: 8, LastModified: new Date() }
-      }
-      return {}
-    })
+    // First pass uploads and records fingerprints.
+    await syncChannelHlsToMinio(root, channelId, slug)
+    mockSend.mockClear()
 
     const result = await syncChannelHlsToMinio(root, channelId, slug)
     expect(result.uploaded).toBe(0)
     expect(result.skipped).toBeGreaterThan(0)
-    expect(mockSend.mock.calls.every(([cmd]) => !(cmd instanceof PutObjectCommand))).toBe(true)
+    expect(mockSend).not.toHaveBeenCalled()
+  })
+
+  it('uploads playlists after segments', async () => {
+    await syncChannelHlsToMinio(root, channelId, slug)
+    const putKeys = mockSend.mock.calls
+      .filter(([cmd]) => cmd instanceof PutObjectCommand)
+      .map(([cmd]) => (cmd as PutObjectCommand).input.Key as string)
+    const lastSeg = putKeys
+      .map((k, i) => ({ k, i }))
+      .filter((x) => x.k.endsWith('.ts'))
+      .pop()
+    const firstPl = putKeys.map((k, i) => ({ k, i })).find((x) => x.k.endsWith('.m3u8'))
+    expect(lastSeg && firstPl && lastSeg.i < firstPl.i).toBe(true)
   })
 })
 
 describe('hlsObjectUpToDate', () => {
   beforeEach(() => {
-    mockSend.mockReset()
+    resetHlsUploadCache()
   })
 
-  it('returns false when object is missing', async () => {
-    mockSend.mockRejectedValue(Object.assign(new Error('NotFound'), { name: 'NotFound' }))
-    await expect(hlsObjectUpToDate('slug/seg.ts', 100, Date.now())).resolves.toBe(false)
+  it('returns false when nothing has been uploaded yet', () => {
+    expect(hlsObjectUpToDate('slug/seg.ts', 100, Date.now())).toBe(false)
   })
 
-  it('returns true when remote matches local size and mtime', async () => {
-    const mtime = Date.now() - 5000
-    mockSend.mockResolvedValue({ ContentLength: 100, LastModified: new Date(mtime + 1000) })
-    await expect(hlsObjectUpToDate('slug/seg.ts', 100, mtime)).resolves.toBe(true)
+  it('returns true after a matching upload is recorded via sync', async () => {
+    const root = join(tmpdir(), `tahti-hls-fp-${process.pid}`)
+    const channelId = 'ch-fp'
+    const slug = 'fp'
+    await mkdir(join(root, channelId), { recursive: true })
+    await writeFile(join(root, channelId, 'seg.ts'), Buffer.alloc(8))
+    mockSend.mockResolvedValue({})
+    await syncChannelHlsToMinio(root, channelId, slug)
+    const { mtimeMs } = await import('node:fs/promises').then((fs) =>
+      fs.stat(join(root, channelId, 'seg.ts')),
+    )
+    expect(hlsObjectUpToDate(`${slug}/seg.ts`, 8, mtimeMs)).toBe(true)
+    await rm(root, { recursive: true, force: true })
   })
 })

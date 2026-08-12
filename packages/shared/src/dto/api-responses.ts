@@ -1516,6 +1516,9 @@ export const AdminLiveStreamSchema = z.object({
   username: z.string(),
   goneLiveAt: z.coerce.date().nullable(),
   elapsedSec: z.number().int().nonnegative(),
+  hlsUrl: z.string().url().nullable(),
+  /** True when this channel uses the curated-rotation Liquidsoap template. */
+  isRotation: z.boolean(),
 })
 
 export const AdminLiveStreamListSchema = z.object({

@@ -229,19 +229,29 @@ process.on('uncaughtException', (err) => {
   console.error('[worker] uncaughtException:', err)
 })
 
-// Register repeatable cron jobs — idempotent (BullMQ deduplicates by key)
+// Register repeatable cron jobs. Wipe existing repeatables first so a changed
+// `every`/`pattern` (or an old jobId) can't leave a second scheduler firing
+// forever. Confirmed live: two hls-minio-sync repeat hashes were both
+// enqueueing, doubling MinIO load and causing ~40s sync gaps that emptied the
+// public ~16s HLS window.
 async function registerCrons() {
   const queue = new Queue('media', { connection, defaultJobOptions })
   const hasCaddyLog = Boolean(process.env.CADDY_HLS_ACCESS_LOG)
 
+  for (const prev of await queue.getRepeatableJobs()) {
+    await queue.removeRepeatableByKey(prev.key)
+  }
+
+  let registered = 0
   for (const job of WORKER_CRON_JOBS) {
     if (job.name === 'hls-caddy-egress-sync' && !hasCaddyLog) continue
     const repeat = job.everyMs != null ? { every: job.everyMs } : { pattern: job.pattern! }
     await queue.add(job.name, {}, { repeat, jobId: job.jobId })
+    registered++
   }
 
   await queue.close()
-  console.log(`[worker] ${WORKER_CRON_JOBS.length} cron jobs registered`)
+  console.log(`[worker] ${registered} cron jobs registered (repeatables reset)`)
 }
 
 registerCrons().catch((err: unknown) => {

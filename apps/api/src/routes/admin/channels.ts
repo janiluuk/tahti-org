@@ -2,8 +2,10 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import type { FastifyPluginAsync } from 'fastify'
+import type { PrismaClient } from '@tahti/db'
 import {
   AdminForceOfflineResponseSchema,
+  AdminStreamControlResponseSchema,
   ChannelProgrammePatchSchema,
   ChannelProgrammePromoteSchema,
   ChannelProgrammeViewSchema,
@@ -20,6 +22,36 @@ import {
   fetchProgrammeView,
   promoteReleaseTrackToProgramme,
 } from '../../lib/programme.js'
+import {
+  pauseChannelRotation,
+  restartChannelLiquidsoap,
+  resumeChannelRotation,
+  skipChannelTrack,
+  type LiquidsoapTemplateKind,
+} from '../../lib/orchestrator.js'
+
+async function loadLiveChannelForControl(prisma: PrismaClient, slug: string) {
+  return prisma.channel.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      slug: true,
+      state: true,
+      userId: true,
+      curatedRotationItems: { select: { id: true }, take: 1 },
+      broadcasts: {
+        where: { endedAt: null },
+        orderBy: { startedAt: 'desc' },
+        take: 1,
+        select: { id: true },
+      },
+    },
+  })
+}
+
+function liquidsoapTemplate(isRotation: boolean): LiquidsoapTemplateKind {
+  return isRotation ? 'rotation' : 'channel'
+}
 
 // M21-C: force a live channel offline (orchestrator stop + broadcast end + audit)
 const adminChannelsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -65,6 +97,113 @@ const adminChannelsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({ ok: true as const, channelId: channel.id, slug })
     },
   )
+
+  // Board stream-manager: bounce Liquidsoap for a LIVE channel (stale HLS, hung
+  // encoder, etc.) without ending the broadcast / taking the channel offline.
+  fastify.post(
+    '/api/admin/channels/:slug/restart',
+    {
+      preHandler: requireBoard,
+      schema: {
+        tags: ['admin'],
+        description: 'Restart Liquidsoap for a live channel (keeps broadcast / LIVE state)',
+        response: openApiResponses([
+          { status: 200, schema: AdminStreamControlResponseSchema, name: 'Ok' },
+        ]),
+      },
+    },
+    async (request, reply) => {
+      const actor = request.sessionUser!
+      const routeParams = parseRouteParams(SlugParamSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { slug } = routeParams
+
+      const channel = await loadLiveChannelForControl(fastify.prisma, slug)
+      if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+      if (channel.state === 'OFFLINE') {
+        return reply.status(409).send({ error: 'Channel is not live' })
+      }
+      const broadcastId = channel.broadcasts[0]?.id
+      if (!broadcastId) {
+        return reply.status(409).send({ error: 'No active broadcast to restart' })
+      }
+
+      const template = liquidsoapTemplate(channel.curatedRotationItems.length > 0)
+      try {
+        await restartChannelLiquidsoap(channel.id, channel.slug, broadcastId, template)
+      } catch (err) {
+        request.log.error({ err, slug }, 'orchestrator restart failed')
+        return reply
+          .status(502)
+          .send({ error: 'Orchestrator restart failed — check the orchestrator service' })
+      }
+
+      await auditLog(fastify.prisma, {
+        action: 'STREAM_RESTART',
+        actorId: actor.id,
+        targetId: channel.userId,
+        meta: { channelId: channel.id, slug, broadcastId, template },
+      })
+
+      return reply.send({
+        ok: true as const,
+        channelId: channel.id,
+        slug,
+        action: 'restart' as const,
+      })
+    },
+  )
+
+  function registerAdminTransport(
+    path: 'skip' | 'pause' | 'resume',
+    action: (channelId: string) => Promise<void>,
+  ) {
+    fastify.post(
+      `/api/admin/channels/:slug/${path}`,
+      {
+        preHandler: requireBoard,
+        schema: {
+          tags: ['admin'],
+          description: `Stream manager transport control: ${path}`,
+          response: openApiResponses([
+            { status: 200, schema: AdminStreamControlResponseSchema, name: 'Ok' },
+          ]),
+        },
+      },
+      async (request, reply) => {
+        const routeParams = parseRouteParams(SlugParamSchema, request.params)
+        if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+        const { slug } = routeParams
+
+        const channel = await loadLiveChannelForControl(fastify.prisma, slug)
+        if (!channel) return reply.status(404).send({ error: 'Channel not found' })
+        if (channel.state === 'OFFLINE') {
+          return reply.status(409).send({ error: 'Channel is not live' })
+        }
+
+        try {
+          await action(channel.id)
+        } catch (err) {
+          const status = (err as Error & { status?: number }).status
+          if (status === 404) {
+            return reply.status(409).send({ error: 'Channel is not currently running' })
+          }
+          throw err
+        }
+
+        return reply.send({
+          ok: true as const,
+          channelId: channel.id,
+          slug,
+          action: path,
+        })
+      },
+    )
+  }
+
+  registerAdminTransport('skip', skipChannelTrack)
+  registerAdminTransport('pause', pauseChannelRotation)
+  registerAdminTransport('resume', resumeChannelRotation)
 
   // Board access to any artist's 24/7 rotation editor — mirrors /api/me/channel/programme's
   // three endpoints exactly, scoped by :slug (requireBoard) instead of the session user.

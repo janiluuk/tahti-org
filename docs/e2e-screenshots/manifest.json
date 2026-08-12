@@ -31,7 +31,7 @@
     "role": "public",
     "id": "verify-token",
     "file": "public/verify-token.png",
-    "url": "/verify?token=pc7E0mq4slK5kpoH8iAsqGx9iSfTuHeC",
+    "url": "/verify?token=rrbQv4PpozNOa5n5dekYOa9VRKWtNho5",
     "label": "Verify email (with token)"
   },
   {
@@ -227,7 +227,7 @@
     "role": "public",
     "id": "embed-release",
     "file": "public/embed-release.png",
-    "url": "/embed/r/cmr98iwge0006n3nsw2dej348",
+    "url": "/embed/r/cmsn5lltn0006107f71kyi7ly",
     "label": "Embed release player"
   },
   {
@@ -437,7 +437,7 @@
     "role": "artist",
     "id": "release-detail",
     "file": "artist/release-detail.png",
-    "url": "/dashboard/releases/cmr98iwge0006n3nsw2dej348",
+    "url": "/dashboard/releases/cmsn5lltn0006107f71kyi7ly",
     "label": "Release detail"
   },
   {
@@ -451,21 +451,21 @@
     "role": "artist",
     "id": "archive-item",
     "file": "artist/archive-item.png",
-    "url": "/dashboard/archive/cmr98iwh9000sn3nsulao6ij5",
+    "url": "/dashboard/archive/cmsn5llua000s107fovsxla89",
     "label": "Archive item preview"
   },
   {
     "role": "artist",
     "id": "archive-item-editor",
     "file": "artist/archive-item-editor.png",
-    "url": "/dashboard/archive/cmr98iwh9000sn3nsulao6ij5/editor",
+    "url": "/dashboard/archive/cmsn5llua000s107fovsxla89/editor",
     "label": "Archive item — audio editor"
   },
   {
     "role": "artist",
     "id": "editor-project",
     "file": "artist/editor-project.png",
-    "url": "/dashboard/editor/cmr98iwit000un3nszwyoume0",
+    "url": "/dashboard/editor/cmsn5llwy000u107f30cme89g",
     "label": "Editor project"
   },
   {

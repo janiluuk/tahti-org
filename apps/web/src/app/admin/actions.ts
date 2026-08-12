@@ -31,6 +31,40 @@ export async function forceChannelOffline(slug: string): Promise<{ error: string
   return { error: null }
 }
 
+async function postAdminStreamControl(
+  slug: string,
+  action: 'restart' | 'skip' | 'pause' | 'resume',
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/admin/channels/${encodeURIComponent(slug)}/${action}`, {
+    method: 'POST',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? `${action} failed` }
+  }
+  revalidatePath('/admin/streams')
+  revalidatePath('/admin/dashboard')
+  return { error: null }
+}
+
+export async function restartLiveStream(slug: string): Promise<{ error: string | null }> {
+  return postAdminStreamControl(slug, 'restart')
+}
+
+export async function skipLiveStreamTrack(slug: string): Promise<{ error: string | null }> {
+  return postAdminStreamControl(slug, 'skip')
+}
+
+export async function pauseLiveStream(slug: string): Promise<{ error: string | null }> {
+  return postAdminStreamControl(slug, 'pause')
+}
+
+export async function resumeLiveStream(slug: string): Promise<{ error: string | null }> {
+  return postAdminStreamControl(slug, 'resume')
+}
+
 export async function retryFanSubPayout(payoutId: string): Promise<{ error: string | null }> {
   const res = await fetch(
     `${apiUrl}/api/admin/fansubs/payouts/${encodeURIComponent(payoutId)}/retry`,

@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { cookies } from 'next/headers'
-import { ForceOfflineButton } from './force-offline-button'
+import { StreamControls } from './stream-controls'
 import { resolveChannelUrl } from '@/lib/app-url'
 
 function boardFetch(path: string) {
@@ -35,6 +35,8 @@ export default async function AdminStreamsPage() {
           username: string
           elapsedSec: number
           goneLiveAt: string | null
+          hlsUrl: string | null
+          isRotation: boolean
         }>
       })
     : { count: 0, streams: [] }
@@ -43,7 +45,8 @@ export default async function AdminStreamsPage() {
     <>
       <h1 className="admin-section-title">Stream manager</h1>
       <p className="admin-stat-sub" style={{ marginBottom: '1.5rem' }}>
-        {data.count} channel{data.count === 1 ? '' : 's'} live · refreshes on load
+        {data.count} channel{data.count === 1 ? '' : 's'} live · Restart bounces Liquidsoap without
+        ending the broadcast · Skip / Pause / Resume hit the archive rotation · refreshes on load
       </p>
 
       {data.streams.length === 0 ? (
@@ -68,6 +71,7 @@ export default async function AdminStreamsPage() {
                   </td>
                   <td>
                     <Link href={resolveChannelUrl(s.slug)}>{s.slug}</Link>
+                    {s.isRotation ? <span className="admin-stat-sub"> · rotation</span> : null}
                   </td>
                   <td>
                     {s.goneLiveAt
@@ -79,7 +83,7 @@ export default async function AdminStreamsPage() {
                   </td>
                   <td>{formatDuration(s.elapsedSec)}</td>
                   <td>
-                    <ForceOfflineButton slug={s.slug} />
+                    <StreamControls slug={s.slug} hlsUrl={s.hlsUrl} />
                   </td>
                 </tr>
               ))}
