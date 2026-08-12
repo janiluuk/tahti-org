@@ -115,6 +115,19 @@ SEED_JOURNEY_FIXTURES=1 DATABASE_URL=postgres://tahti:tahti_dev@localhost:5432/t
 # Persona scripts (source helpers + fixtures first): journeys/listener|artist|member.sh
 ```
 
+## API documentation
+
+Public, unauthenticated reference (Scalar + filtered OpenAPI):
+
+| Surface | URL |
+|---|---|
+| Human UI (Scalar) | [`GET /api`](https://api.tahti.live/api) — production `https://api.tahti.live/api` |
+| OpenAPI JSON | `GET /api/openapi.json` (admin/internal routes omitted) |
+
+Ops full Swagger UI stays at `/docs` (HTTP basic auth). Credential rotation: [`ops/RUNBOOK.md`](ops/RUNBOOK.md).
+
+On every merge to **`main`**, CI exports `openapi.json` (full) and `openapi.public.json` as release artifacts alongside the dated GitHub release.
+
 ## CI releases
 
 Every merge to **`main`** runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). When all checks pass, CI creates a GitHub release tagged **`YYYY-MM-DD-buildnr`** (UTC calendar date + daily increment), e.g. `2026-06-03-1`, `2026-06-03-2`.
