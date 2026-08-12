@@ -36,5 +36,15 @@ describe('Public API docs', () => {
     expect(body.paths['/api/admin/stats']).toBeUndefined()
     expect(body.paths['/internal/rtmp/on_publish']).toBeUndefined()
     expect(body.paths['/metrics']).toBeUndefined()
+
+    // Regression: Scalar shows "No document selected" when every component is a self-$ref stub.
+    const schemas = body.components?.schemas ?? {}
+    const names = Object.keys(schemas)
+    expect(names.length).toBeGreaterThan(0)
+    for (const name of names.slice(0, 20)) {
+      const schema = schemas[name]
+      expect(schema, name).not.toEqual({ $ref: `#/components/schemas/${name}` })
+      expect(schema).not.toHaveProperty('$ref')
+    }
   })
 })

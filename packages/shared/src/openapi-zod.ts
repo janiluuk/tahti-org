@@ -4,13 +4,41 @@
 import { zodToJsonSchema } from 'zod-to-json-schema'
 import type { z } from 'zod'
 
+/**
+ * zod-to-json-schema with a `name` returns a $ref wrapper plus the real body under
+ * `definitions` / `components.schemas`. Fastify swagger then stores only the $ref in
+ * components, leaving Scalar with self-referential stubs and an empty docs UI.
+ */
+function unwrapNamedJsonSchema(
+  json: Record<string, unknown>,
+  name: string,
+): Record<string, unknown> {
+  const components = json.components as
+    | { schemas?: Record<string, Record<string, unknown>> }
+    | undefined
+  const fromComponents = components?.schemas?.[name]
+  if (fromComponents) return { ...fromComponents }
+
+  const definitions = json.definitions as Record<string, Record<string, unknown>> | undefined
+  const fromDefinitions = definitions?.[name]
+  if (fromDefinitions) return { ...fromDefinitions }
+
+  const copy = { ...json }
+  delete copy.$schema
+  delete copy.$ref
+  delete copy.definitions
+  delete copy.components
+  return copy
+}
+
 /** Convert a Zod schema to an OpenAPI 3.1 response object for Fastify route `schema.response`. */
 function zodToOpenApiJson(schema: z.ZodTypeAny, name: string): Record<string, unknown> {
-  return zodToJsonSchema(schema, {
+  const json = zodToJsonSchema(schema, {
     name,
     target: 'openApi3',
     $refStrategy: 'none',
   }) as Record<string, unknown>
+  return unwrapNamedJsonSchema(json, name)
 }
 
 export function openApiResponse(
@@ -49,8 +77,7 @@ export function zodOpenApiComponents(
       target: 'openApi3',
       $refStrategy: 'none',
     }) as Record<string, unknown>
-    delete json.$schema
-    out[name] = json
+    out[name] = unwrapNamedJsonSchema(json, name)
   }
   return out
 }

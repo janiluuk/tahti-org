@@ -24,6 +24,12 @@ describe('openApiResponse', () => {
     expect(out[200]).toBeTruthy()
     expect(JSON.stringify(out[200])).toContain('ok')
   })
+
+  it('inlines the schema body instead of a dangling components $ref', () => {
+    const out = openApiResponse(z.object({ ok: z.boolean() }), 'OkBody')
+    expect(out[200]).not.toHaveProperty('$ref')
+    expect(JSON.stringify(out[200])).toContain('"ok"')
+  })
 })
 
 describe('openApiResponses', () => {
@@ -46,6 +52,18 @@ describe('zodOpenApiComponents', () => {
       Ping: z.object({ pong: z.literal(true) }),
     })
     expect(components.Ping).toBeTruthy()
+    expect(JSON.stringify(components.Ping)).toContain('pong')
+  })
+
+  it('stores real schema bodies, not self-$ref stubs', () => {
+    const components = zodOpenApiComponents({
+      Ping: z.object({ pong: z.literal(true) }),
+    })
+    expect(components.Ping).not.toHaveProperty('$ref')
+    expect(components.Ping).toMatchObject({
+      type: 'object',
+      properties: { pong: { type: 'boolean' } },
+    })
     expect(JSON.stringify(components.Ping)).toContain('pong')
   })
 })
