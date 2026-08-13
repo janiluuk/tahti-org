@@ -16,6 +16,14 @@ describe('Public API docs', () => {
     await app.close()
   })
 
+  it('GET / serves Scalar HTML without auth (api.tahti.live apex)', async () => {
+    const res = await app.inject({ method: 'GET', url: '/' })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-type']).toMatch(/text\/html/)
+    expect(res.body).toContain('@scalar/api-reference')
+    expect(res.body).toContain('/api/openapi.json')
+  })
+
   it('GET /api serves Scalar HTML without auth', async () => {
     const res = await app.inject({ method: 'GET', url: '/api' })
     expect(res.statusCode).toBe(200)

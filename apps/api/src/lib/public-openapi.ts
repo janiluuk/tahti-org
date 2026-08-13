@@ -81,9 +81,9 @@ export function toPublicOpenApi(
       'See `docs/technical/rate-limit-policy.md` in the repo.',
       '',
       '## Docs surfaces',
-      '- This document: public routes only (admin/internal omitted)',
-      '- Ops Swagger UI: `GET /docs` (HTTP basic auth)',
+      '- Human UI: `GET /` on `https://api.tahti.live` (also `/api`)',
       '- Machine-readable: `GET /api/openapi.json`',
+      '- Ops Swagger UI: `GET /docs` (HTTP basic auth)',
       opts.generatedAt ? `\n_Generated ${opts.generatedAt}_` : '',
     ].join('\n'),
   }

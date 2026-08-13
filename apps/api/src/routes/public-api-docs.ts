@@ -1,51 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { config } from '../config.js'
 import { renderPublicApiDocsHtml, toPublicOpenApi } from '../lib/public-openapi.js'
 
 /**
  * Public, unauthenticated API docs (Scalar + OpenAPI JSON).
+ * Canonical entry: `https://api.tahti.live/` (also `/api`).
  * Ops full Swagger UI stays at `/docs` behind basic auth.
  */
 const publicApiDocsRoute: FastifyPluginAsync = async (fastify) => {
   const openapiPath = '/api/openapi.json'
 
-  fastify.get(
-    '/api',
-    {
-      schema: {
-        tags: ['compliance'],
-        hide: true,
-        description: 'Public API reference (Scalar UI)',
-      },
-    },
-    async (_request, reply) => {
-      return reply
-        .type('text/html; charset=utf-8')
-        .header('Cache-Control', 'public, max-age=60')
-        .send(renderPublicApiDocsHtml(openapiPath))
-    },
-  )
+  async function sendDocsHtml(_request: FastifyRequest, reply: FastifyReply) {
+    return reply
+      .type('text/html; charset=utf-8')
+      .header('Cache-Control', 'public, max-age=60')
+      .send(renderPublicApiDocsHtml(openapiPath))
+  }
 
-  // Trailing slash convenience (browsers / bookmarks)
-  fastify.get(
-    '/api/',
-    {
-      schema: {
-        tags: ['compliance'],
-        hide: true,
-        description: 'Public API reference (Scalar UI)',
+  // Apex of the API host — what people expect when they open api.tahti.live
+  for (const path of ['/', '/api', '/api/'] as const) {
+    fastify.get(
+      path,
+      {
+        schema: {
+          tags: ['compliance'],
+          hide: true,
+          description: 'Public API reference (Scalar UI)',
+        },
       },
-    },
-    async (_request, reply) => {
-      return reply
-        .type('text/html; charset=utf-8')
-        .header('Cache-Control', 'public, max-age=60')
-        .send(renderPublicApiDocsHtml(openapiPath))
-    },
-  )
+      sendDocsHtml,
+    )
+  }
 
   fastify.get(
     openapiPath,

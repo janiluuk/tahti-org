@@ -134,7 +134,7 @@ Public, unauthenticated reference (Scalar + filtered OpenAPI):
 
 | Surface | URL |
 |---|---|
-| Human UI (Scalar) | [`GET /api`](https://api.tahti.live/api) — production `https://api.tahti.live/api` |
+| Human UI (Scalar) | [`https://api.tahti.live`](https://api.tahti.live/) (also `/api`) |
 | OpenAPI JSON | `GET /api/openapi.json` (admin/internal routes omitted) |
 
 Ops full Swagger UI stays at `/docs` (HTTP basic auth). Credential rotation: [`ops/RUNBOOK.md`](ops/RUNBOOK.md).

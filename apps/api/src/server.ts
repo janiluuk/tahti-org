@@ -320,7 +320,7 @@ export async function buildApp(opts: BuildOptions = {}) {
         title: 'Tahti API',
         version: '1',
         description:
-          'Tahti ry broadcasting platform API. AGPL-3.0 licensed. Source: https://github.com/tahtiapp/tahti. Public docs: GET /api (Scalar) · GET /api/openapi.json',
+          'Tahti ry broadcasting platform API. AGPL-3.0 licensed. Source: https://github.com/tahtiapp/tahti. Public docs: GET / (Scalar) · GET /api/openapi.json',
         contact: { name: 'Tahti ry', url: 'https://tahti.live' },
         license: { name: 'AGPL-3.0', url: 'https://www.gnu.org/licenses/agpl-3.0.html' },
       },
