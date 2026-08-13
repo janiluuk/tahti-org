@@ -14,6 +14,7 @@ COPY packages/db/package.json     ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/ui/package.json     ./packages/ui/
 COPY packages/audio-edit/package.json ./packages/audio-edit/
+COPY packages/api-client/package.json ./packages/api-client/
 COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
 COPY apps/web/package.json             ./apps/web/
@@ -49,6 +50,7 @@ COPY packages/shared/tsconfig.json ./packages/shared/tsconfig.json
 COPY packages/shared/src ./packages/shared/src
 COPY packages/audio-edit/src ./packages/audio-edit/src
 COPY packages/ui/src     ./packages/ui/src
+COPY packages/api-client/src ./packages/api-client/src
 COPY apps/web/           ./apps/web/
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN cd apps/web && pnpm build
@@ -66,6 +68,7 @@ COPY packages/db/package.json     ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/ui/package.json     ./packages/ui/
 COPY packages/audio-edit/package.json ./packages/audio-edit/
+COPY packages/api-client/package.json ./packages/api-client/
 COPY apps/api/package.json             ./apps/api/
 COPY apps/worker/package.json          ./apps/worker/
 COPY apps/web/package.json             ./apps/web/
@@ -77,6 +80,7 @@ RUN pnpm install --frozen-lockfile --prod
 # Shared/UI source needed for workspace symlink resolution at runtime
 COPY packages/shared/src ./packages/shared/src
 COPY packages/ui/src     ./packages/ui/src
+COPY packages/api-client/src ./packages/api-client/src
 
 # Compiled Next.js output + static assets — chowned to the runtime user
 # (USER nextjs below), otherwise the server can render pages fine but every

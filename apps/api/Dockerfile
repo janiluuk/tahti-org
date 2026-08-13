@@ -17,6 +17,7 @@ COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY packages/db/package.json       ./packages/db/
 COPY packages/ledger/package.json   ./packages/ledger/
 COPY packages/mixcloud/package.json ./packages/mixcloud/
+COPY packages/hearthis/package.json ./packages/hearthis/
 COPY packages/revelator/package.json ./packages/revelator/
 COPY packages/shared/package.json   ./packages/shared/
 COPY packages/audio-edit/package.json ./packages/audio-edit/
@@ -33,6 +34,7 @@ COPY packages/db/src     ./packages/db/src
 COPY packages/db/prisma  ./packages/db/prisma
 COPY packages/ledger/src  ./packages/ledger/src
 COPY packages/mixcloud/src ./packages/mixcloud/src
+COPY packages/hearthis/src ./packages/hearthis/src
 COPY packages/revelator/src ./packages/revelator/src
 COPY packages/shared/src  ./packages/shared/src
 COPY packages/audio-edit/src ./packages/audio-edit/src
