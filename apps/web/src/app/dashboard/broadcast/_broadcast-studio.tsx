@@ -19,6 +19,7 @@ import { GreenRoomPanel } from './_green-room-panel'
 import { Step4GoLive } from './_step4-go-live'
 import { SignalMeters } from './_signal-meters'
 import { RecordingToggle } from './_recording-toggle'
+import { PublishToggle } from './_publish-toggle'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -57,6 +58,7 @@ export function BroadcastStudio({
   streamSettings,
   broadcastUsage,
   autoRecordEnabled,
+  autoPublishBroadcast,
 }: {
   channelSlug: string
   artistUsername: string
@@ -64,6 +66,7 @@ export function BroadcastStudio({
   streamSettings: StreamSettings
   broadcastUsage: BroadcastUsage | null
   autoRecordEnabled: boolean
+  autoPublishBroadcast: boolean
 }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -277,7 +280,12 @@ export function BroadcastStudio({
           </div>
           <Step3Preflight />
           <GreenRoomPanel artistUsername={artistUsername} />
-          {!isLive && <RecordingToggle initialEnabled={autoRecordEnabled} />}
+          {!isLive && (
+            <div className="broadcast-studio__toggles">
+              <RecordingToggle initialEnabled={autoRecordEnabled} />
+              <PublishToggle initialEnabled={autoPublishBroadcast} />
+            </div>
+          )}
           <div className="studio-actions">
             <Button onClick={() => setActiveStep(2)} variant="ghost">
               ← Back to test signal
@@ -292,7 +300,12 @@ export function BroadcastStudio({
 
       {activeStep === 4 && (
         <Panel title="Go live" headerTight>
-          {!isLive && <RecordingToggle initialEnabled={autoRecordEnabled} />}
+          {!isLive && (
+            <div className="broadcast-studio__toggles">
+              <RecordingToggle initialEnabled={autoRecordEnabled} />
+              <PublishToggle initialEnabled={autoPublishBroadcast} />
+            </div>
+          )}
           {isLive ? (
             <Text as="p" tone="muted" size="sm">
               You are on air — this is exactly what listeners hear.

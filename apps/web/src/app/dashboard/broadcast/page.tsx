@@ -7,6 +7,7 @@ import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-sessio
 import { StudioHeaderActions } from '../_studio-header-actions'
 import { BroadcastStudio } from './_broadcast-studio'
 import { fetchAutoRecordEnabled } from './recording-actions'
+import { fetchAutoPublishBroadcast } from './publish-actions'
 
 interface StreamSettings {
   rtmp: { server: string; streamKey: string; fallbackServers?: string[] }
@@ -43,12 +44,14 @@ export default async function BroadcastStudioPage() {
   let streamSettings: StreamSettings | null = null
   let broadcastUsage: BroadcastUsageInfo | null = null
   let autoRecordEnabled = true
+  let autoPublishBroadcast = true
 
   try {
-    const [streamSettingsRes, broadcastUsageRes, autoRecord] = await Promise.all([
+    const [streamSettingsRes, broadcastUsageRes, autoRecord, autoPublish] = await Promise.all([
       get('/api/me/stream-settings'),
       get('/api/me/broadcast-usage'),
       fetchAutoRecordEnabled(),
+      fetchAutoPublishBroadcast(),
     ])
 
     if (streamSettingsRes.ok) streamSettings = (await streamSettingsRes.json()) as StreamSettings
@@ -56,6 +59,7 @@ export default async function BroadcastStudioPage() {
       broadcastUsage = (await broadcastUsageRes.json()) as BroadcastUsageInfo
     }
     autoRecordEnabled = autoRecord
+    autoPublishBroadcast = autoPublish
   } catch {
     // render with partial data
   }
@@ -90,6 +94,7 @@ export default async function BroadcastStudioPage() {
             streamSettings={streamSettings}
             broadcastUsage={broadcastUsage}
             autoRecordEnabled={autoRecordEnabled}
+            autoPublishBroadcast={autoPublishBroadcast}
           />
         ) : (
           <Text tone="muted">Could not load stream credentials. Refresh or contact support.</Text>

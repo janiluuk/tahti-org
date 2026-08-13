@@ -149,7 +149,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.sessionUser!
       const channel = await fastify.prisma.channel.findUnique({
         where: { userId: user.id },
-        select: { id: true },
+        select: { id: true, autoPublishBroadcast: true },
       })
       if (!channel) return reply.status(404).send({ error: 'Channel not found' })
 
@@ -166,7 +166,7 @@ const meBroadcastPreflightRoutes: FastifyPluginAsync = async (fastify) => {
             {
               title: null,
               visibility: 'PUBLIC',
-              autoArchive: true,
+              autoArchive: channel.autoPublishBroadcast,
               showType: planned?.showType ?? 'LIVE_SET',
               episodeNumber: planned?.episodeNumber ?? null,
               tagline: planned?.tagline ?? null,

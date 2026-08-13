@@ -10375,6 +10375,19 @@
   color: var(--text);
 }
 
+/* Pre-live / go-live — Record + publish-default toggles side by side. */
+[data-tahti-ui='studio'] .broadcast-studio__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-6);
+  margin: var(--space-5) 0 var(--space-4);
+}
+
+[data-tahti-ui='studio'] .broadcast-studio__toggles .broadcast-studio__record {
+  margin: 0;
+}
+
 /* Pre-live / go-live — Record arm (persists Channel.autoRecordEnabled). */
 
 [data-tahti-ui='studio'] .broadcast-studio__record {

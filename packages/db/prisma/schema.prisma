@@ -1083,6 +1083,11 @@ model Channel {
   // M35: whether a finished broadcast is auto-recorded to the archive. Defaults
   // to true (today's unconditional behavior) — artists opt out per-channel.
   autoRecordEnabled  Boolean      @default(true)
+  // Persistent per-channel default for a new broadcast's `autoArchive` (whether
+  // the recorded archive item is public once it's created) — the artist can
+  // still override per-session in preflight; this just sets the starting value
+  // so "always publish" doesn't need re-toggling every show.
+  autoPublishBroadcast Boolean    @default(true)
   // Manage panel playlist switch: when set, the fallback rotation plays this
   // Collection's tracks (in position order) instead of the regular
   // isFallback-flagged ArchiveItem set. Null = default rotation. SetNull so

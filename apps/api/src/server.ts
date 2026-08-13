@@ -62,6 +62,7 @@ import meChat from './routes/me/chat.js'
 import meCommentSettings from './routes/me/comment-settings.js'
 import meTopListsSettings from './routes/me/top-lists-settings.js'
 import meRecordingSettings from './routes/me/recording-settings.js'
+import mePublishSettings from './routes/me/publish-settings.js'
 import commentsRoutes from './routes/comments/index.js'
 import trackReactionsRoutes from './routes/reactions/track.js'
 import meNotificationPreferencesRoutes from './routes/me/notification-preferences.js'
@@ -541,6 +542,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(meCommentSettings)
   await fastify.register(meTopListsSettings)
   await fastify.register(meRecordingSettings)
+  await fastify.register(mePublishSettings)
   await fastify.register(commentsRoutes)
   await fastify.register(trackReactionsRoutes)
   await fastify.register(meNotificationPreferencesRoutes)

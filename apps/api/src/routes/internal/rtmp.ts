@@ -53,6 +53,7 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
           rtmpStreamKeyPreviousExpiresAt: true,
           state: true,
           userId: true,
+          autoPublishBroadcast: true,
           user: { select: { tier: true } },
         },
       })
@@ -82,7 +83,11 @@ const rtmpRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const broadcast = await fastify.prisma.broadcast.create({
-        data: { channelId: channel.id, source: 'RTMP' },
+        data: {
+          channelId: channel.id,
+          source: 'RTMP',
+          autoArchive: channel.autoPublishBroadcast,
+        },
       })
 
       // Connecting only puts the channel in private PREVIEW — only the artist can hear it

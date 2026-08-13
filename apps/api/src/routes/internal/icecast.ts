@@ -50,6 +50,7 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
           liveSourcePassPreviousExpiresAt: true,
           state: true,
           userId: true,
+          autoPublishBroadcast: true,
           user: { select: { tier: true } },
         },
       })
@@ -76,7 +77,11 @@ const icecastRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const broadcast = await fastify.prisma.broadcast.create({
-        data: { channelId: channel.id, source: 'ICECAST' },
+        data: {
+          channelId: channel.id,
+          source: 'ICECAST',
+          autoArchive: channel.autoPublishBroadcast,
+        },
       })
 
       // Connecting only puts the channel in private PREVIEW — only the artist can hear it
