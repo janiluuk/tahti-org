@@ -66,6 +66,7 @@ import trackReactionsRoutes from './routes/reactions/track.js'
 import meNotificationPreferencesRoutes from './routes/me/notification-preferences.js'
 import meModerators from './routes/me/moderators.js'
 import rtmpTargetRoutes from './routes/me/rtmp-targets.js'
+import apiTokenRoutes from './routes/me/api-tokens.js'
 import obsPresetRoutes from './routes/me/obs-preset.js'
 import transparencyRoutes from './routes/transparency/index.js'
 import adminLedgerRoutes from './routes/admin/ledger.js'
@@ -135,6 +136,7 @@ import googleDriveRoutes from './routes/me/google-drive.js'
 import spotifyImportRoutes from './routes/imports/spotify.js'
 import spotifyProfileRoute from './routes/me/spotify-profile.js'
 import mixcloudEmbedImportRoutes from './routes/imports/mixcloud-embed.js'
+import hearthisImportRoutes from './routes/imports/hearthis.js'
 import revelatorRoutes from './routes/me/revelator.js'
 import newsletterPublicRoutes from './routes/newsletter/public.js'
 import newsletterMeRoutes from './routes/newsletter/me.js'
@@ -263,6 +265,8 @@ import {
   RtmpStreamKeyRevealSchema,
   RtmpTargetListSchema,
   RtmpTargetViewSchema,
+  ApiTokenListSchema,
+  ApiTokenCreatedSchema,
   SmartLinkViewSchema,
   StreamKeyRotateResponseSchema,
   StreamSettingsResponseSchema,
@@ -330,6 +334,12 @@ export async function buildApp(opts: BuildOptions = {}) {
             in: 'cookie',
             name: config.sessionCookieName,
             description: 'Session cookie issued by POST /api/auth/login',
+          },
+          apiToken: {
+            type: 'http',
+            scheme: 'bearer',
+            description:
+              'Personal API token, generated at /dashboard/settings/api (POST /api/me/api-tokens). Read-only tokens may only call GET/HEAD/OPTIONS.',
           },
         },
         schemas: zodOpenApiComponents({
@@ -410,6 +420,8 @@ export async function buildApp(opts: BuildOptions = {}) {
           ReleaseEmbed: ReleaseEmbedViewSchema,
           ChannelEmbed: ChannelEmbedViewSchema,
           EmbedTrackPlay: EmbedTrackPlaySchema,
+          ApiTokenList: ApiTokenListSchema,
+          ApiTokenCreated: ApiTokenCreatedSchema,
         }),
       },
       tags: [
@@ -424,6 +436,7 @@ export async function buildApp(opts: BuildOptions = {}) {
         { name: 'transparency', description: 'Public transparency ledger' },
         { name: 'venues', description: 'Venue directory and iCalendar feeds' },
         { name: 'radio', description: 'Tahti Radio meta-stream' },
+        { name: 'settings', description: 'Account settings, incl. personal API tokens' },
         { name: 'admin', description: 'Board / admin endpoints' },
       ],
     },
@@ -535,6 +548,9 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(rtmpTargetRoutes)
   await fastify.register(obsPresetRoutes)
 
+  // Personal API tokens (Bearer auth for third-party / scripted access)
+  await fastify.register(apiTokenRoutes)
+
   // M8: transparency ledger
   await fastify.register(transparencyRoutes)
   await fastify.register(adminLedgerRoutes)
@@ -631,6 +647,7 @@ export async function buildApp(opts: BuildOptions = {}) {
   await fastify.register(spotifyImportRoutes)
   await fastify.register(spotifyProfileRoute)
   await fastify.register(mixcloudEmbedImportRoutes)
+  await fastify.register(hearthisImportRoutes)
   await fastify.register(revelatorRoutes)
 
   // M13: newsletter (public + artist-facing)

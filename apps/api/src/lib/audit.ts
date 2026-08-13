@@ -41,6 +41,8 @@ interface AuditParams {
     | 'FEATURE_REQUEST_STATUS_UPDATE'
     | 'FEATURE_REQUEST_QUARTERLY_REPORT'
     | 'ARCHIVE_METADATA_ADMIN_EDIT'
+    | 'API_TOKEN_CREATE'
+    | 'API_TOKEN_REVOKE'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

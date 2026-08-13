@@ -19,6 +19,7 @@
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
     "@tahti/audio-edit": "workspace:*",
+    "@tahti/api-client": "workspace:*",
     "@tahti/shared": "workspace:*",
     "@tahti/ui": "workspace:*",
     "@waveform-playlist/browser": "^13.0.0",

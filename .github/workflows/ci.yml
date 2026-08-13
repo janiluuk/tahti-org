@@ -79,6 +79,47 @@ jobs:
       - name: Prettier (format:check)
         run: pnpm format:check
 
+  api-client-sdk-drift:
+    name: SDK drift check (@tahti/api-client)
+    needs: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @tahti/db db:generate
+
+      # No live DB/Redis needed: export-openapi.ts builds the Fastify route
+      # graph without connecting to either (see apps/api/src/lib/queue.ts —
+      # bullmq's Queue connects lazily). Regenerates src/schema.d.ts fresh
+      # from the current route schemas and fails if that's not what's
+      # committed — the enforcement half of "the SDK stays in sync with the
+      # API" (the other half is turbo.json making apps/web's dev/build/
+      # typecheck regenerate it automatically; see packages/api-client/README.md).
+      - name: Regenerate SDK types
+        run: pnpm --filter @tahti/api-client generate
+
+      - name: Fail if schema.d.ts is out of date
+        run: |
+          if ! git diff --quiet -- packages/api-client/src/schema.d.ts; then
+            echo "::error::packages/api-client/src/schema.d.ts is stale. Run 'pnpm --filter @tahti/api-client generate' and commit the result."
+            git diff -- packages/api-client/src/schema.d.ts | head -100
+            exit 1
+          fi
+
   typecheck:
     name: Typecheck
     needs: lint
@@ -485,6 +526,7 @@ jobs:
       - vital-flows-e2e
       - user-journeys-e2e
       - agpl-check
+      - api-client-sdk-drift
     runs-on: ubuntu-24.04
     steps:
       - name: Check all jobs passed
@@ -497,6 +539,7 @@ jobs:
           ok "${{ needs.vital-flows-e2e.result }}" || { echo "vital-flows-e2e failed"; exit 1; }
           ok "${{ needs.user-journeys-e2e.result }}" || { echo "user-journeys-e2e failed"; exit 1; }
           ok "${{ needs.agpl-check.result }}" || { echo "agpl-check failed"; exit 1; }
+          ok "${{ needs.api-client-sdk-drift.result }}" || { echo "api-client-sdk-drift failed"; exit 1; }
           echo "All checks passed ✓"
 
   release:

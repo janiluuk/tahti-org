@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./test/helpers": "./src/test/helpers.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
@@ -23,6 +28,7 @@
     "@fastify/swagger-ui": "^4.1.0",
     "@tahti/audio-edit": "workspace:*",
     "@tahti/db": "workspace:*",
+    "@tahti/hearthis": "workspace:*",
     "@tahti/ledger": "workspace:*",
     "@tahti/mixcloud": "workspace:*",
     "@tahti/revelator": "workspace:*",

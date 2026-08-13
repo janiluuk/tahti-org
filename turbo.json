@@ -22,6 +22,19 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
+    },
+    "generate": {
+      "cache": false,
+      "outputs": ["src/schema.d.ts"]
+    },
+    "@tahti/web#dev": {
+      "dependsOn": ["@tahti/api-client#generate"]
+    },
+    "@tahti/web#build": {
+      "dependsOn": ["^build", "@tahti/api-client#generate"]
+    },
+    "@tahti/web#typecheck": {
+      "dependsOn": ["^build", "@tahti/api-client#generate"]
     }
   }
 }

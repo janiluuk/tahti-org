@@ -359,6 +359,11 @@ export default function ChannelIdentityPanel({ initial, onDraftChange }: Props) 
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           className="studio-input"
+          autoComplete="name"
+          data-1p-ignore
+          data-lpignore="true"
+          data-bwignore="true"
+          data-form-type="other"
         />
       </div>
 

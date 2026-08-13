@@ -217,6 +217,10 @@ export function SignupForm() {
                     maxLength={64}
                     autoComplete="name"
                     placeholder="DJ Moonrise"
+                    data-1p-ignore
+                    data-lpignore="true"
+                    data-bwignore="true"
+                    data-form-type="other"
                   />
                 </Field>
               </div>

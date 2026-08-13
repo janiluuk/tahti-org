@@ -69,7 +69,7 @@ enum ChannelGalleryMode {
   @@schema("channel")
 }
 
-/// Channel page header banner treatment (docs/reference-html/08-channel-designer.html "Header style").
+/// Channel page header banner treatment (channel designer "Header style").
 enum ChannelHeaderStyle {
   GRADIENT
   SOLID
@@ -110,6 +110,7 @@ enum VisualPreset {
   BACKDROP_BOX
   LENS_FLARES
   IES_SPOTLIGHT
+  WATER_RIPPLE
 
   @@schema("channel")
 }
@@ -181,6 +182,7 @@ enum ArchiveItemSource {
   SPOTIFY_EMBED
   MIXCLOUD_EMBED
   URL_EMBED
+  HEARTHIS_EMBED
 
   @@schema("channel")
 }
@@ -200,6 +202,7 @@ enum ArchiveEmbedProvider {
   YOUTUBE
   APPLE
   GENERIC
+  HEARTHIS
 
   @@schema("channel")
 }
@@ -336,6 +339,8 @@ enum AuditAction {
   FEATURE_REQUEST_STATUS_UPDATE
   FEATURE_REQUEST_QUARTERLY_REPORT
   ARCHIVE_METADATA_ADMIN_EDIT
+  API_TOKEN_CREATE
+  API_TOKEN_REVOKE
 
   @@schema("governance")
 }
@@ -687,12 +692,14 @@ model User {
   googleDriveRefreshTokenEnc String?  // PLAT-083: encrypted refresh token
   spotifyArtistId       String?  // mixed-source collections brief: resolved Spotify artist catalog ID for "Your tracks" — search itself uses an app-level token, no per-user OAuth
   mixcloudUsername      String?  // mixed-source collections brief: artist's own Mixcloud handle for "Your tracks" — Mixcloud's read API is public, no OAuth needed for catalog browsing
+  hearthisUsername      String?  // same idea as mixcloudUsername, for hearthis.at's own public read API
   totpSecretEnc         String?  // 2FA: TOTP secret, AES-GCM encrypted at rest
   totpEnabledAt         DateTime? // null = 2FA off (default)
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 
   sessions              Session[]
+  apiTokens             ApiToken[]
   emailVerifications    EmailVerification[]
   totpBackupCodes       TotpBackupCode[]
   totpChallenges        TotpChallenge[]
@@ -930,6 +937,30 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@schema("core")
+}
+
+// Personal API token — self-service, generated from /dashboard/settings/api,
+// used as `Authorization: Bearer <token>` on api.tahti.live for third-party /
+// scripted access (mirrors the public SDK surface). Only tokenHash is stored;
+// the plaintext token is shown once at creation time. `scopes` gates write
+// access — a token without "write" can only make GET/HEAD/OPTIONS requests
+// (enforced in the auth plugin, not per-route) so read-only integrations
+// can't be used to mutate data if leaked.
+model ApiToken {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  tokenHash   String    @unique
+  tokenPrefix String
+  scopes      String[]  @default(["read"])
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
 
   @@index([userId])
   @@schema("core")

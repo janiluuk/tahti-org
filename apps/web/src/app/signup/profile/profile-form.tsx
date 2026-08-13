@@ -89,6 +89,11 @@ export function SignupProfileForm({ displayName }: { displayName: string }) {
                   required
                   maxLength={100}
                   defaultValue={displayName}
+                  autoComplete="name"
+                  data-1p-ignore
+                  data-lpignore="true"
+                  data-bwignore="true"
+                  data-form-type="other"
                 />
               </Field>
 

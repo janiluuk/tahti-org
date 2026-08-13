@@ -5,42 +5,9 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import NextLink from 'next/link'
 import { ButtonIcon, StatusPill } from '@tahti/ui'
+import { createTahtiClient } from '@tahti/api-client'
 import { MultistreamTargetsPanel } from './multistream-targets-panel'
 import { StreamOverlayPanel } from './stream-overlay-panel'
-
-interface RtmpTarget {
-  id: string
-  provider: string
-  label: string
-  rtmpUrl: string
-  alwaysMirror: boolean
-  enabled: boolean
-  keyLast4?: string
-}
-
-interface MeResponse {
-  tier: string
-  channel: { state: string } | null
-}
-
-interface StreamOverlay {
-  streamOverlayTitle: string | null
-  streamOverlaySubtitle: string | null
-  streamOverlayCoverUrl: string | null
-}
-
-async function apiFetch<T>(apiUrl: string, cookie: string, path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${apiUrl}${path}`, {
-      headers: { Cookie: cookie },
-      cache: 'no-store',
-    })
-    if (!res.ok) return null
-    return (await res.json()) as T
-  } catch {
-    return null
-  }
-}
 
 export default async function MultistreamSettingsPage() {
   const cookieStore = cookies()
@@ -48,12 +15,12 @@ export default async function MultistreamSettingsPage() {
   if (!sessionCookie) redirect('/login')
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const cookie = `tahti_session=${sessionCookie.value}`
+  const api = createTahtiClient({ baseUrl: apiUrl, cookie: `tahti_session=${sessionCookie.value}` })
 
   const [me, targets, overlay] = await Promise.all([
-    apiFetch<MeResponse>(apiUrl, cookie, '/api/auth/me'),
-    apiFetch<RtmpTarget[]>(apiUrl, cookie, '/api/me/rtmp-targets'),
-    apiFetch<StreamOverlay>(apiUrl, cookie, '/api/me/channel/stream-overlay'),
+    api.GET('/api/auth/me').then((r) => r.data),
+    api.GET('/api/me/rtmp-targets').then((r) => r.data),
+    api.GET('/api/me/channel/stream-overlay').then((r) => r.data),
   ])
 
   const isPaid = me?.tier === 'STUDIO'
