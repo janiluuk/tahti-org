@@ -217,7 +217,7 @@ export function CollectionEditor({
 
   // Manual drag-reorder only takes effect on the public page when the collection's
   // saved sort mode is MANUAL — other modes recompute display order server-side, so
-  // dragging would silently do nothing (see docs/worklogs UX sweep, 2026-07-22).
+  // dragging would silently do nothing (UX sweep, 2026-07-22).
   const canManualReorder = initial.trackSortMode === 'MANUAL'
   const displayItems = useMemo(() => {
     if (canManualReorder) return items

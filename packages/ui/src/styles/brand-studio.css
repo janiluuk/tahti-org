@@ -4971,7 +4971,7 @@
    * budget. Scrolls internally rather than the page — same treatment as
    * the channel editor's controls column. Rule 3 (this view being form-heavy
    * rather than instrument-pattern direct manipulation) is a separate,
-   * larger redesign tracked in docs/design-audit-2026-07.md, not fixed here. */
+   * larger redesign (instrument-pattern), not fixed here. */
   max-height: min(330px, calc(100vh - 570px));
   overflow-y: auto;
   padding-right: var(--space-2);
@@ -10252,7 +10252,7 @@
   margin: var(--space-3) 0 0;
 }
 
-/* Stereo input-level meters — docs/reference-html/04-broadcasting-step-2-test-signal.html */
+/* Stereo input-level meters (broadcast test-signal step) */
 [data-tahti-ui='studio'] .signal-meters {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -10327,7 +10327,7 @@
   gap: var(--space-4);
 }
 
-/* Step 3 — pre-flight form (docs/reference-html/05-broadcasting-step-3-preview.html) */
+/* Step 3 — pre-flight form (broadcast preview step) */
 
 [data-tahti-ui='studio'] .broadcast-studio__card-title {
   margin: 0 0 var(--space-3);
@@ -10482,7 +10482,7 @@
   }
 }
 
-/* Step 4 — go live (docs/reference-html/06-broadcasting-step-4-go-live.html) */
+/* Step 4 — go live */
 
 [data-tahti-ui='studio'] .broadcast-studio__go-live-hero {
   text-align: center;

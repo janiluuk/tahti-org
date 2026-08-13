@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 /**
- * Playwright e2e — empty artist account logs in, provisions a channel, uploads
- * album + EP + single, and captures journey screenshots (artist + admin).
+ * Playwright e2e — empty artist account logs in first, provisions a channel
+ * (setup wizard), opens broadcast studio, uploads album + EP + single, and
+ * captures journey screenshots (artist + admin). Login happens before wizard
+ * and broadcasting shots so those pages are authenticated (not a login wall).
  *
  *   WEB_PORT=17777 API_PORT=15011 node tests/e2e/fresh-artist-journey.mjs
  *
@@ -16,7 +18,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { chromium } from 'playwright'
-import { assertAuthenticated, apiLogin } from './lib/playwright-auth.mjs'
+import { assertAuthenticated, uiLogin } from './lib/playwright-auth.mjs'
 import {
   createRelease,
   makeSilentWav,
@@ -89,9 +91,22 @@ async function main() {
   ok('API health')
 
   try {
-    spawnSync('docker', ['compose', '-f', join(__dirname, '../../infra/docker-compose.stack.yml'), 'exec', '-T', 'redis', 'redis-cli', 'FLUSHDB'], {
-      encoding: 'utf8',
-    })
+    spawnSync(
+      'docker',
+      [
+        'compose',
+        '-f',
+        join(__dirname, '../../infra/docker-compose.stack.yml'),
+        'exec',
+        '-T',
+        'redis',
+        'redis-cli',
+        'FLUSHDB',
+      ],
+      {
+        encoding: 'utf8',
+      },
+    )
   } catch {
     /* optional — avoids auth rate limit during screenshot runs */
   }
@@ -124,7 +139,10 @@ async function main() {
       } else if (reset.stdout.includes('user missing')) {
         fail('fresh artist account missing — run stack seed first')
       } else {
-        console.log('⚠ fresh reset skipped —', reset.stderr?.slice(0, 120) || reset.stdout?.slice(0, 120))
+        console.log(
+          '⚠ fresh reset skipped —',
+          reset.stderr?.slice(0, 120) || reset.stdout?.slice(0, 120),
+        )
       }
     } catch {
       console.log('⚠ fresh reset skipped — docker compose unavailable')
@@ -145,20 +163,18 @@ async function main() {
 
   try {
     const artistCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
-
-    const loginDemo = await artistCtx.newPage()
-    await loginDemo.goto(`${APP}/login`, { waitUntil: 'load', timeout: 45_000 })
-    await loginDemo.locator('#auth-panel-login input[name="email"]').fill(FRESH_EMAIL)
-    await loginDemo.locator('#auth-panel-login input[name="password"]').fill(PASS)
-    await loginDemo.screenshot({ path: join(OUT, '00-login-filled.png'), fullPage: true })
-    ok('screenshot 00-login-filled.png')
-    await loginDemo.close()
-
-    const artistCookie = await apiLogin(API, APP, FRESH_EMAIL, PASS)
-    await artistCtx.addCookies([artistCookie])
-    ok('artist session')
-
     const page = await artistCtx.newPage()
+
+    // Login first (UI submit) so SSR dashboard / wizard / broadcast pages are authenticated.
+    await page.goto(`${APP}/login`, { waitUntil: 'load', timeout: 45_000 })
+    await page.locator('#auth-panel-login input[name="email"]').fill(FRESH_EMAIL)
+    await page.locator('#auth-panel-login input[name="password"]').fill(PASS)
+    await page.screenshot({ path: join(OUT, '00-login-filled.png'), fullPage: true })
+    ok('screenshot 00-login-filled.png')
+    await page.locator('#auth-panel-login button[type="submit"]').click()
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 45_000 })
+    await assertAuthenticated(page, 'after UI login')
+    ok('artist session (UI login)')
 
     await page.goto(`${APP}/dashboard`, { waitUntil: 'networkidle', timeout: 45_000 })
     await assertAuthenticated(page, 'dashboard after login')
@@ -169,23 +185,36 @@ async function main() {
     const hasChannel = Boolean(me.channel)
 
     if (!hasChannel) {
+      // Channel setup wizard (empty artist → create channel)
       await page.goto(`${APP}/dashboard/setup-channel`, { waitUntil: 'load', timeout: 45_000 })
-      await assertAuthenticated(page, 'setup channel')
-      await shot(page, '02-setup-channel.png', 'setup channel')
+      await assertAuthenticated(page, 'setup channel wizard')
+      await shot(page, '02-setup-channel.png', 'setup channel wizard')
 
-      await page.getByRole('button', { name: new RegExp(`Create ${FRESH_USER}\\.tahti\\.live`) }).click()
+      await page
+        .getByRole('button', { name: new RegExp(`Create ${FRESH_USER}\\.tahti\\.live`) })
+        .click()
       await page.waitForURL((url) => url.pathname.includes('/dashboard/channel'), {
         timeout: 45_000,
       })
       ok('channel provisioned via UI')
     } else {
       ok('channel already exists — skipping provision UI')
-      await page.goto(`${APP}/dashboard/channel`, { waitUntil: 'load', timeout: 45_000 })
+      await page.goto(`${APP}/dashboard/setup-channel`, { waitUntil: 'load', timeout: 45_000 })
+      // May redirect away if channel exists; still try a wizard shot when available.
+      if (page.url().includes('/setup-channel')) {
+        await shot(page, '02-setup-channel.png', 'setup channel wizard')
+      } else {
+        console.log(
+          '⚠ setup-channel redirected (channel exists) — keeping prior 02 shot if present',
+        )
+      }
     }
 
-    await assertAuthenticated(page, 'channel design')
-    await page.waitForTimeout(800)
-    await shot(page, '03-channel-editor.png', 'channel design editor')
+    // Broadcast studio (go-live wizard) — always capture after login + channel
+    await page.goto(`${APP}/dashboard/broadcast`, { waitUntil: 'load', timeout: 45_000 })
+    await assertAuthenticated(page, 'broadcast studio')
+    await page.waitForTimeout(1200)
+    await shot(page, '03-broadcast-studio.png', 'broadcast studio')
 
     const api = artistCtx.request
     api._apiUrl = API
@@ -269,19 +298,32 @@ async function main() {
     await artistCtx.close()
 
     try {
-      spawnSync('docker', ['compose', '-f', join(__dirname, '../../infra/docker-compose.stack.yml'), 'exec', '-T', 'redis', 'redis-cli', 'FLUSHDB'], {
-        encoding: 'utf8',
-      })
+      spawnSync(
+        'docker',
+        [
+          'compose',
+          '-f',
+          join(__dirname, '../../infra/docker-compose.stack.yml'),
+          'exec',
+          '-T',
+          'redis',
+          'redis-cli',
+          'FLUSHDB',
+        ],
+        {
+          encoding: 'utf8',
+        },
+      )
     } catch {
       /* optional */
     }
 
     // ── Admin verifies the new artist ───────────────────────────────────────
     const adminCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
-    const adminCookie = await apiLogin(API, APP, ADMIN_EMAIL, PASS)
-    await adminCtx.addCookies([adminCookie])
     const adminPage = await adminCtx.newPage()
-    ok('admin session')
+    await uiLogin(adminPage, APP, ADMIN_EMAIL, PASS, { next: '/admin/users' })
+    await assertAuthenticated(adminPage, 'admin after UI login')
+    ok('admin session (UI login)')
 
     await adminPage.goto(`${APP}/admin/users`, { waitUntil: 'networkidle', timeout: 45_000 })
     await assertAuthenticated(adminPage, 'admin users')
@@ -304,8 +346,8 @@ async function main() {
     const manifest = [
       { file: '00-login-filled.png', label: 'Login form (fresh artist credentials)' },
       { file: '01-artist-dashboard-empty.png', label: 'Artist dashboard (no channel yet)' },
-      { file: '02-setup-channel.png', label: 'Create your artist channel' },
-      { file: '03-channel-editor.png', label: 'Channel design editor (full page)' },
+      { file: '02-setup-channel.png', label: 'Design your artist channel (setup wizard)' },
+      { file: '03-broadcast-studio.png', label: 'Broadcast studio after provision' },
       { file: '04-releases-catalog.png', label: 'Album + EP + single on dashboard' },
       { file: '05-public-channel.png', label: 'Public channel page' },
       { file: '06-admin-users.png', label: 'Admin user directory' },

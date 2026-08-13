@@ -96,8 +96,8 @@ usability parity with Twitch's mobile app.
 
 ### Tahti today
 
-No dedicated mobile app — web-only (responsive, per `docs/design-audit-2026-07.md`, but
-not a native/PWA experience).
+No dedicated mobile app — web-only (responsive; see `docs/e2e-screenshots-mobile/`,
+but not a native/PWA experience).
 
 ### Should consider
 

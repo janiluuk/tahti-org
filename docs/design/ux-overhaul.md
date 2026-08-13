@@ -228,19 +228,12 @@ Everything else, decide and proceed. The principle is non-negotiable. The exact 
 
 ---
 
-## Docs cleanup pass — record of what was done (2026-06-21)
+## Docs note
 
-Archived to `docs/_archive/` (see `DEPRECATED.md` there for why):
-- `design-system.2026-06-05.md`
-- `style-guide.2026-06-04.md`
-- `design-closing-gap.2026-06-11.md`
-- `UI-brief.2026-06-20.md`
+Earlier design drafts lived under `docs/_archive/` and HTML/PNG mockup packs under
+`docs/reference-*`. Those trees were removed so agents use **live UI +
+`docs/e2e-screenshots/` + `@tahti/ui`** instead. See `docs/design/README.md`.
 
-Moved into `docs/design/` (the active spec set):
-- `AGENT-INSTRUCTIONS.md` (was at repo root) — v3 pixel-exact reference approach, still current.
-- `ux-overhaul.md` (this file).
-
-Referenced-but-not-yet-filed: this brief names three prior briefs — "design-reference-pack," "audio editor v3.2," "upload+collections" — that don't exist as files in the repo (likely delivered as chat content in an earlier session and never saved). `docs/audio-editor.md` is a related baseline spec but isn't the v3.2 doc. If these should be preserved as files, they need to be supplied and added here.
 
 ## Broadcasting Setup — ingest feature scope (2026-06-22)
 

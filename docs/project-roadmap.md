@@ -551,11 +551,11 @@ Hardening, optimisations, and refactors identified in the **2026-06-03 audit**
 | [x] | **PLAT-025** | Remove `eslint.ignoreDuringBuilds` in web Dockerfile once lint clean in CI | `next.config.mjs` — lint enforced at `next build` | P3 |
 | [x] | **PLAT-026** | Reconcile tier enum in AGENT.md (`FREE/PAID` vs `FREE/ARTIST/STUDIO`) | P2 |
 
-### UI / Design alignment (reference mockup parity)
+### UI / Design alignment (historical mockup parity — done)
 
-Gaps identified 2026-06-05 by comparing `docs/reference-screenshots/` against the
-live app. All items target the dark brand palette already defined in
-`packages/ui/src/tokens.css` — no new design decisions needed.
+Gaps identified 2026-06-05 against then-current mockups. Visual ground truth is now
+`docs/e2e-screenshots/` + `@tahti/ui`. All items targeted the dark brand palette in
+`packages/ui` — no new design decisions needed.
 
 | Done | ID | Item | Effort | Priority |
 |:---:|---|---|---|---|
@@ -572,7 +572,7 @@ live app. All items target the dark brand palette already defined in
 
 ### Public pages and signup (UI-brief gap audit, 2026-06-09)
 
-These routes were specified in the now-archived `docs/_archive/UI-brief.2026-06-20.md` but return 404 today.
+These routes were called out in an early UI brief (since removed) but return 404 today.
 All are required before public beta (1 August 2026 target).
 
 | Done | ID | Item | Effort | Priority |
@@ -695,7 +695,7 @@ Cross-cutting audit of auth, studio UX, and dashboard/API performance. Items mar
 | [x] | **SEC-005** | **Production secret validation at startup** — fail boot when `INTERNAL_SECRET`, `DOCS_PASS`, or `HCAPTCHA_SECRET` retain dev defaults. | P1 |
 | [x] | **SEC-006** | **`videoBackgroundUrl` CSS injection** — HTTPS allowlist + safe `url()` encoding on `/c/:slug`. | P2 |
 | [x] | **SEC-007** | **Centrifugo publish proxy auth** — `/api/chat/message` now sits behind the same `isTrustedInternalRequest` check as `/internal/*` (private network or `Bearer $INTERNAL_SECRET`); Centrifugo always calls it over the internal Docker network. Fixed 2026-07-07. | P2 |
-| [x] | **SEC-008** | **Caddy HSTS + baseline CSP** — HSTS enforcing, CSP report-only (deliberately, given the wide set of embedded third-party origins — Stripe, Spotify, YouTube, Vimeo, Mixcloud, chat WebSocket — that can't be fully verified without production traffic) via a reusable `(security_headers)` snippet in `infra/Caddyfile`. Fixed 2026-07-07; also surfaced and fixed three independent pre-existing bugs that meant this Caddyfile could never actually start (duplicate `@ws` matcher, `tls` nested in a `handle` block, missing on-demand-TLS `ask` permission module) and a 5-occurrence `api:3000`→`api:3001` port mismatch across `Caddyfile`/`docker-stack.yml` — see `docs/worklogs/2026-07-07-gap-analysis-promises-vs-implementation.md` §7. | P2 |
+| [x] | **SEC-008** | **Caddy HSTS + baseline CSP** — HSTS enforcing, CSP report-only (deliberately, given the wide set of embedded third-party origins — Stripe, Spotify, YouTube, Vimeo, Mixcloud, chat WebSocket — that can't be fully verified without production traffic) via a reusable `(security_headers)` snippet in `infra/Caddyfile`. Fixed 2026-07-07; also fixed three independent pre-existing bugs that meant this Caddyfile could never actually start (duplicate `@ws` matcher, `tls` nested in a `handle` block, missing on-demand-TLS `ask` permission module) and a 5-occurrence `api:3000`→`api:3001` port mismatch across `Caddyfile`/`docker-stack.yml`. | P2 |
 | [x] | **SEC-009** | **Restrict `/metrics`** to internal scrape network or token. | P2 |
 | [x] | **SEC-010** | **Session revocation on login** — `revokeAllSessions()` (`apps/api/src/lib/session.ts`) deletes every other session for the account right before a fresh one is created, wired into both `/api/auth/login` and the TOTP-completion step `/api/auth/login/totp` (the actual point a 2FA login succeeds). Fixed 2026-07-22. | P3 |
 
@@ -791,7 +791,7 @@ Issues identified from streaming architecture review and user journey analysis. 
 | How to scale nodes? | `scaling-node-distribution.md`, `infra/docker-compose.stack.yml` |
 | E2E screenshots / flows? | `user-flows.md`, `e2e-screenshots/README.md` |
 | Platform hardening backlog? | [Platform engineering backlog](#platform-engineering-backlog), `future-improvements.md` |
-| UI / design alignment? | [UI / Design alignment](#ui--design-alignment-reference-mockup-parity), `docs/reference-screenshots/` |
+| UI / design alignment? | [UI / Design alignment](#ui--design-alignment-historical-mockup-parity--done), `docs/design/README.md`, `docs/e2e-screenshots/` |
 | Backup & restore flow? | `technical/phase-3.md`, [Phase 2b](#phase-2b--backup--disaster-recovery-before-public-beta) |
 | Ops journeys (restore drill)? | `technical/journey-ops.md` |
 

@@ -211,7 +211,7 @@ See `docs/e2e-screenshots/README.md` for ports, fixtures, and route → file map
 | Studio | `/dashboard` | `StudioShell`, `Button`, `Panel`, … |
 | Marketing / auth | `/`, `/login`, `/join` | `MarketingButton`, `Nav`, `LiveBadge`, `BgCanvas` (web-only) |
 
-**CSS:** Import token/stylesheets once per layout — see `reference/tokens.css`, `docs/reference-screenshots/`, and `.cursor/rules/ui-library.mdc`.
+**CSS:** Import token/stylesheets once per layout — see `packages/ui` styles, `reference/tokens.css` (legacy names), `.cursor/rules/ui-library.mdc`, and `docs/e2e-screenshots/` for visual ground truth.
 
 **Adding components:** Implement in `packages/ui/src/admin/`, `brand/`, or `marketing/`; export from `packages/ui/src/index.ts`; run `pnpm lint`.
 

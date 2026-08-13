@@ -78,8 +78,8 @@ function ChannelMeter({
 }
 
 /**
- * Stereo input-level meters for the broadcast test-signal step (docs/reference-html/
- * 04-broadcasting-step-2-test-signal.html). Reads the shared player's per-channel
+ * Stereo input-level meters for the broadcast test-signal step.
+ * Reads the shared player's per-channel
  * analysers — active only while the studio preview is actually playing, since an
  * AnalyserNode reports silence (not "no data") when nothing is connected/playing.
  */
