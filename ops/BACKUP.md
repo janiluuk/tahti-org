@@ -7,10 +7,19 @@ Quick reference for operators. Step-by-step restore commands live in
 
 | Asset | Method | RPO (max data loss) | RTO (target restore) | Notes |
 |-------|--------|---------------------|----------------------|-------|
-| Postgres | `pg_dump` → MinIO `backups/pg/` | ~24 h (daily dump) | 2–4 h maintenance window | PITR via pgBackRest **deferred** |
-| MinIO objects | `mc mirror` primary → DR | ~24 h (daily mirror) | 1–3 h per bucket | 1% count tolerance in script |
+| Postgres | `pg_dump` → `/share/disk2` (local, separate mount) + MinIO `backups/pg/` | ~24 h (daily dump) | 2–4 h maintenance window | PITR via pgBackRest **deferred** |
+| MinIO objects | `mc mirror` primary → `/share/disk2` (local) + DR | ~24 h (daily mirror) | 1–3 h per bucket | 1% count tolerance in script |
 | Redis / sessions | Not backed up | N/A | Rebuild on redeploy | Users re-login after major DR |
 | Ledger integrity | Postgres restore | Same as Postgres | Verify via `/api/transparency/ytd` | Compare row counts pre/post |
+
+**2026-08-16 incident context:** the 2026-08-13 prod DB wipe (Docker volume for Postgres
+recreated fresh, all real users lost, no backup existed) happened because this cron was
+never actually installed (`install-crons.sh` had never been run) — `backup.sh` existed in
+the repo but was dormant. It's now installed and running (verified with a manual
+`backup.sh all` run same day). MinIO's own volume was recreated in that same incident, so
+`backup.sh` now writes Postgres dumps and a bucket mirror to **`/share/disk2`** — a
+separate physical disk, not a Docker-managed volume — as the primary safety net; the
+MinIO copy is a secondary convenience copy only.
 
 ## Cron schedule (UTC)
 
@@ -28,10 +37,12 @@ Installed by `sudo ./scripts/install-crons.sh` on the Swarm manager:
 | Alias | Role | Typical buckets / prefixes |
 |-------|------|----------------------------|
 | `tahti` | Primary (on-site) | `audio/`, `covers/`, `backups/pg/` |
-| `tahti-dr` | DR mirror (UpCloud) | Same prefixes mirrored daily |
+| `tahti-dr` | DR mirror (UpCloud) | Same prefixes mirrored daily — **not yet provisioned as of 2026-08-16; `backup.sh` skips this step with a WARNING until a `tahti-dr` alias exists** |
 
 Configure with `mc alias set` on the manager. Env overrides: `SRC_ALIAS`, `DST_ALIAS`,
-`BACKUP_BUCKET` (default `backups`), `MINIO_ALIAS` (default `tahti`).
+`BACKUP_BUCKET` (default `backups`), `MINIO_ALIAS` (default `tahti`), `LOCAL_BACKUP_DIR`
+(default `/share/disk2/tahti-backups/pg`), `LOCAL_MIRROR_DIR`
+(default `/share/disk2/tahti-backups/minio-mirror`).
 
 ## Monitoring & alerts
 

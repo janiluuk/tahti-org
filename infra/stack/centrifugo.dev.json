@@ -39,7 +39,8 @@
       "presence": false,
       "join_leave": false,
       "history_size": 0,
-      "history_ttl": "0s"
+      "history_ttl": "0s",
+      "allow_subscribe_for_client": true
     }
   ]
 }

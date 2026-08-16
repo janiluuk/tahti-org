@@ -27,41 +27,65 @@ backup_postgres() {
   log() { echo "$LOG_PREFIX $*"; }
   die() { echo "$LOG_PREFIX ERROR: $*" >&2; exit 1; }
 
-  local DATE BACKUP_KEY MINIO_ALIAS BACKUP_BUCKET CONTAINER_FILTER PG_CONTAINER SIZE COUNT
+  local DATE BACKUP_KEY MINIO_ALIAS BACKUP_BUCKET CONTAINER_FILTER PG_CONTAINER
+  local LOCAL_BACKUP_DIR LOCAL_RETENTION_DAYS LOCAL_FILE COUNT
   DATE=$(date -u +%Y%m%d-%H%M%S)
   BACKUP_KEY="pg/${DATE}.sql.gz"
   MINIO_ALIAS="${MINIO_ALIAS:-tahti}"
   BACKUP_BUCKET="${BACKUP_BUCKET:-backups}"
-  CONTAINER_FILTER="${PG_CONTAINER:-tahti_postgres}"
+  # NB: compose project renders container names as "tahti-stack-postgres-1"
+  # (hyphens), not "tahti_postgres" — keep this in sync with the service name
+  # in infra/docker-compose.stack.yml if that ever changes.
+  CONTAINER_FILTER="${PG_CONTAINER:-tahti-stack-postgres}"
+  LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-/share/disk2/tahti-backups/pg}"
+  LOCAL_RETENTION_DAYS="${LOCAL_RETENTION_DAYS:-30}"
 
   PG_CONTAINER=$(docker ps -qf "name=${CONTAINER_FILTER}" | head -1)
   [[ -n "$PG_CONTAINER" ]] || die "No running container matching '${CONTAINER_FILTER}'"
 
-  log "Backing up from container $PG_CONTAINER → $BACKUP_KEY"
+  # Local disk copy is the primary safety net — it lives on a physically
+  # separate mount from any Docker-managed volume, so it survives the class
+  # of incident that wiped prod on 2026-08-13 (a Docker volume recreated
+  # fresh; MinIO's own volume was recreated in that same event, so a
+  # MinIO-only backup would not have helped).
+  mkdir -p "$LOCAL_BACKUP_DIR"
+  LOCAL_FILE="${LOCAL_BACKUP_DIR}/${DATE}.sql.gz"
 
+  log "Backing up from container $PG_CONTAINER → $LOCAL_FILE"
   docker exec "$PG_CONTAINER" \
     pg_dump -U tahti --no-password --no-acl --no-owner tahti \
-    | gzip -9 \
-    | mc pipe "${MINIO_ALIAS}/${BACKUP_BUCKET}/${BACKUP_KEY}"
+    | gzip -9 > "$LOCAL_FILE"
+  [[ -s "$LOCAL_FILE" ]] || die "Local backup file is empty — pg_dump likely failed"
+  log "Local backup complete — ${LOCAL_FILE} ($(du -h "$LOCAL_FILE" | cut -f1))"
 
-  SIZE=$(mc stat "${MINIO_ALIAS}/${BACKUP_BUCKET}/${BACKUP_KEY}" --json \
-    | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('size',0))" 2>/dev/null || echo "?")
+  find "$LOCAL_BACKUP_DIR" -maxdepth 1 -name '*.sql.gz' -mtime "+${LOCAL_RETENTION_DAYS}" -delete
+  COUNT=$(find "$LOCAL_BACKUP_DIR" -maxdepth 1 -name '*.sql.gz' | wc -l | tr -d ' ')
+  log "Local backups retained (<=${LOCAL_RETENTION_DAYS}d): $COUNT"
+  [[ "$COUNT" -gt 0 ]] || die "No local backups found after write — check ${LOCAL_BACKUP_DIR}"
 
-  log "Backup complete — ${BACKUP_KEY} (${SIZE} bytes)"
-
-  COUNT=$(mc ls "${MINIO_ALIAS}/${BACKUP_BUCKET}/pg/" | wc -l)
-  log "Total backup files in pg/: $COUNT"
-  [[ $COUNT -gt 0 ]] || die "No backups found after upload — check mc configuration"
+  # Secondary copy in the primary MinIO — convenient for restore-test/status,
+  # but NOT a substitute for the local copy above (same host, same class of
+  # volume-wipe risk). Skips cleanly if mc isn't set up yet.
+  if command -v mc >/dev/null 2>&1 && mc alias list 2>/dev/null | grep -qx "$MINIO_ALIAS"; then
+    if mc pipe "${MINIO_ALIAS}/${BACKUP_BUCKET}/${BACKUP_KEY}" < "$LOCAL_FILE"; then
+      log "Also uploaded to MinIO — ${BACKUP_KEY}"
+    else
+      log "WARNING: MinIO upload failed — local backup at ${LOCAL_FILE} is still authoritative"
+    fi
+  else
+    log "mc alias '${MINIO_ALIAS}' not configured — skipping MinIO copy (local backup only)"
+  fi
 }
 
 backup_minio() {
   local LOG_PREFIX="[$(log_ts)] [minio-backup]"
   log() { echo "$LOG_PREFIX $*"; }
 
-  local SRC_ALIAS DST_ALIAS MIRROR_BUCKETS bucket RESULT TOTAL_SYNCED AUDIO_COUNT
+  local SRC_ALIAS DST_ALIAS LOCAL_MIRROR_DIR MIRROR_BUCKETS bucket RESULT TOTAL_SYNCED
   SRC_ALIAS="${SRC_ALIAS:-tahti}"
   DST_ALIAS="${DST_ALIAS:-tahti-dr}"
-  MIRROR_BUCKETS=(audio covers backups)
+  LOCAL_MIRROR_DIR="${LOCAL_MIRROR_DIR:-/share/disk2/tahti-backups/minio-mirror}"
+  MIRROR_BUCKETS=(audio covers recordings)
   TOTAL_SYNCED=0
 
   count_objects() {
@@ -70,7 +94,32 @@ backup_minio() {
     mc ls --recursive "${alias}/${bucket}/" 2>/dev/null | wc -l | tr -d ' '
   }
 
+  # Local disk mirror — same rationale as the Postgres local copy: MinIO's
+  # own Docker volume was recreated in the same 2026-08-13 incident that
+  # wiped Postgres, so a same-host MinIO→MinIO copy alone proved not to be
+  # independent redundancy. This gives the actual uploaded audio/cover files
+  # a copy outside any Docker-managed volume.
+  mkdir -p "$LOCAL_MIRROR_DIR"
   for bucket in "${MIRROR_BUCKETS[@]}"; do
+    log "Mirroring $bucket → local disk ($LOCAL_MIRROR_DIR)..."
+    if RESULT=$(mc mirror --overwrite --remove --summary "${SRC_ALIAS}/${bucket}/" "${LOCAL_MIRROR_DIR}/${bucket}/" 2>&1); then
+      log "$bucket (local): $RESULT"
+    else
+      log "WARNING: local mirror of $bucket failed: $RESULT"
+    fi
+    ((TOTAL_SYNCED++)) || true
+  done
+  log "Local mirror complete — $TOTAL_SYNCED buckets synced to disk"
+
+  # Offsite DR mirror — only runs once a real DR destination alias exists.
+  # As of 2026-08-16 no offsite DR (e.g. UpCloud) has been provisioned, so
+  # this cleanly skips instead of failing the whole cron run.
+  if ! mc alias list 2>/dev/null | grep -qx "$DST_ALIAS"; then
+    log "WARNING: DR alias '${DST_ALIAS}' not configured — offsite mirror skipped (no DR destination provisioned yet; local disk mirror above is the only redundancy right now)"
+    return 0
+  fi
+
+  for bucket in "${MIRROR_BUCKETS[@]}" backups; do
     log "Mirroring $bucket → DR..."
     RESULT=$(mc mirror \
       --overwrite \
@@ -78,7 +127,7 @@ backup_minio() {
       --preserve \
       --summary \
       "${SRC_ALIAS}/${bucket}/" \
-      "${DST_ALIAS}/${bucket}/" 2>&1)
+      "${DST_ALIAS}/${bucket}/" 2>&1) || true
     log "$bucket: $RESULT"
 
     SRC_COUNT=$(count_objects "$SRC_ALIAS" "$bucket")
@@ -92,10 +141,9 @@ backup_minio() {
         log "$bucket DR mirror count OK (within 1%)"
       fi
     fi
-    ((TOTAL_SYNCED++)) || true
   done
 
-  log "Mirror complete — $TOTAL_SYNCED buckets synced"
+  log "DR mirror complete"
 }
 
 backup_restore_test() {
@@ -178,22 +226,25 @@ print(latest.get('key','').lstrip('/'))
 }
 
 backup_status() {
-  local MINIO_ALIAS BACKUP_BUCKET WARN_HOURS PAGE_HOURS DST_ALIAS
+  local MINIO_ALIAS BACKUP_BUCKET WARN_HOURS PAGE_HOURS DST_ALIAS LOCAL_BACKUP_DIR
   MINIO_ALIAS="${MINIO_ALIAS:-tahti}"
   BACKUP_BUCKET="${BACKUP_BUCKET:-backups}"
   WARN_HOURS="${BACKUP_WARN_AGE_HOURS:-26}"
   PAGE_HOURS="${BACKUP_PAGE_AGE_HOURS:-48}"
   DST_ALIAS="${DST_ALIAS:-tahti-dr}"
+  LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-/share/disk2/tahti-backups/pg}"
 
   MINIO_ALIAS="$MINIO_ALIAS" BACKUP_BUCKET="$BACKUP_BUCKET" \
     WARN_HOURS="$WARN_HOURS" PAGE_HOURS="$PAGE_HOURS" DST_ALIAS="$DST_ALIAS" \
+    LOCAL_BACKUP_DIR="$LOCAL_BACKUP_DIR" \
     python3 - <<'PY'
-import json, os, subprocess, sys
+import json, os, subprocess, sys, glob
 from datetime import datetime, timezone
 
 alias = os.environ["MINIO_ALIAS"]
 dst_alias = os.environ["DST_ALIAS"]
 bucket = os.environ["BACKUP_BUCKET"]
+local_dir = os.environ["LOCAL_BACKUP_DIR"]
 warn_h, page_h = float(os.environ["WARN_HOURS"]), float(os.environ["PAGE_HOURS"])
 
 def latest_age_hours(mc_alias: str, prefix: str) -> float | None:
@@ -218,21 +269,33 @@ def latest_age_hours(mc_alias: str, prefix: str) -> float | None:
         dt = dt.replace(tzinfo=timezone.utc)
     return (datetime.now(timezone.utc) - dt).total_seconds() / 3600
 
+def latest_local_age_hours(directory: str) -> float | None:
+    files = glob.glob(os.path.join(directory, "*.sql.gz"))
+    if not files:
+        return None
+    newest = max(files, key=os.path.getmtime)
+    mtime = datetime.fromtimestamp(os.path.getmtime(newest), tz=timezone.utc)
+    return (datetime.now(timezone.utc) - mtime).total_seconds() / 3600
+
+local_age = latest_local_age_hours(local_dir)
 pg_age = latest_age_hours(alias, "pg")
 dr_pg_age = latest_age_hours(dst_alias, "pg")
+print(f"local_postgres_backup_age_hours={local_age if local_age is not None else 'missing'}")
 print(f"postgres_backup_age_hours={pg_age if pg_age is not None else 'missing'}")
 print(f"minio_dr_postgres_backup_age_hours={dr_pg_age if dr_pg_age is not None else 'missing'}")
 if pg_age is not None and dr_pg_age is not None and abs(pg_age - dr_pg_age) > 2:
     print("dr_mirror=WARN reason=dr_pg_backup_diverged_from_primary")
 
-if pg_age is None:
-    print("status=CRITICAL reason=no_postgres_backup")
+# The local copy is the authoritative safety net (see backup_postgres) — it's
+# what status/paging is actually keyed on.
+if local_age is None:
+    print("status=CRITICAL reason=no_local_postgres_backup")
     sys.exit(2)
-if pg_age > page_h:
-    print(f"status=CRITICAL reason=backup_older_than_{page_h}h")
+if local_age > page_h:
+    print(f"status=CRITICAL reason=local_backup_older_than_{page_h}h")
     sys.exit(2)
-if pg_age > warn_h:
-    print(f"status=WARN reason=backup_older_than_{warn_h}h")
+if local_age > warn_h:
+    print(f"status=WARN reason=local_backup_older_than_{warn_h}h")
     sys.exit(1)
 print("status=OK")
 sys.exit(0)
