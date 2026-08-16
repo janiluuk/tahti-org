@@ -221,6 +221,15 @@ export const config = {
       `${process.env.API_URL ?? 'http://localhost:3001'}/api/me/soundcloud/oauth/callback`,
     oauthStateCookie: 'tahti_soundcloud_oauth',
   },
+  /** MusicBrainz release/recording submission OAuth (optional — set MUSICBRAINZ_CLIENT_ID). */
+  musicbrainz: {
+    clientId: process.env.MUSICBRAINZ_CLIENT_ID ?? '',
+    clientSecret: readSecret('MUSICBRAINZ_CLIENT_SECRET', 'MUSICBRAINZ_CLIENT_SECRET_FILE', ''),
+    redirectUri:
+      process.env.MUSICBRAINZ_OAUTH_REDIRECT_URI ??
+      `${process.env.API_URL ?? 'http://localhost:3001'}/api/musicbrainz/oauth/callback`,
+    oauthStateCookie: 'tahti_musicbrainz_oauth',
+  },
   /** PLAT-080: Google Drive cloud import (optional — set GOOGLE_DRIVE_CLIENT_ID). */
   googleDrive: {
     clientId: process.env.GOOGLE_DRIVE_CLIENT_ID ?? '',
