@@ -61,7 +61,7 @@ x-app-env: &app-env
   # STREAM-007: comma-separated public Icecast hosts for Mixxx failover (second replica in prod)
   ICECAST_INGEST_HEALTH_PATH: /status-json.xsl
   # STREAM-008 phase 3: optional AcoustID key for archive tracklist title lookup (https://acoustid.org/new-application)
-  ACOUSTID_API_KEY: ''
+  ACOUSTID_API_KEY: ${ACOUSTID_API_KEY:-}
   ACRCLOUD_ENABLED: 'false'
   # Post-production: ACRCLOUD_ENABLED=true + keys; set orchestrator FINGERPRINT_SEND_AUDIO=1
   ACRCLOUD_HOST: identify-eu-west-1.acrcloud.com
