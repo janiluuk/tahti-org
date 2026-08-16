@@ -2285,7 +2285,12 @@ model ReleaseTrack {
   sourceBitDepth   Int?
   streamKey        String?     // Opus 256 kbps derivative
   flacKey          String?     // FLAC 16/44 derivative (Studio tier download)
-  fingerprint      String?
+  fingerprint      String?     // Chromaprint fingerprint (base64), generated on upload
+  // AcoustID lookup result against `fingerprint`, generated automatically on upload —
+  // { acoustidId, score, recordingId?, title?, artist? } (see AcoustidFullMatch in
+  // @tahti/shared). Null while pending/unmatched. This is the raw candidate match;
+  // musicbrainzRecordingId above is only set once the artist confirms/registers it.
+  fingerprintMatch Json?
   explicit         Boolean     @default(false)
   status           TrackStatus @default(PENDING)
   createdAt        DateTime    @default(now())

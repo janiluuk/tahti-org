@@ -57,9 +57,65 @@ interface ReleaseSummary {
     isrc: string | null
     status?: string
     credits?: unknown
+    fingerprintMatch?: {
+      acoustidId: string
+      score: number
+      recordingId?: string
+      title?: string
+      artist?: string
+    } | null
   }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
+}
+
+type FingerprintMatch = NonNullable<
+  NonNullable<ReleaseSummary['tracks']>[number]['fingerprintMatch']
+>
+
+function FingerprintMatchNote({
+  status,
+  match,
+}: {
+  status?: string
+  match?: FingerprintMatch | null
+}) {
+  if (status === 'PENDING' || status === 'SCANNING' || status === 'TRANSCODING') {
+    return <p className="studio-text-muted-sm">Checking for a fingerprint match…</p>
+  }
+  if (status !== 'READY') return null
+
+  if (!match) {
+    return <p className="studio-text-muted-sm">No fingerprint match found — likely original.</p>
+  }
+
+  const pct = Math.round(match.score * 100)
+  if (match.title) {
+    return (
+      <p className="studio-text-error studio-text-sm">
+        ⚠ Fingerprint matches an existing recording: “{match.title}”
+        {match.artist ? ` by ${match.artist}` : ''} ({pct}% confidence)
+        {match.recordingId && (
+          <>
+            {' — '}
+            <a
+              href={`https://musicbrainz.org/recording/${match.recordingId}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              view on MusicBrainz
+            </a>
+          </>
+        )}
+      </p>
+    )
+  }
+  return (
+    <p className="studio-text-muted-sm">
+      Fingerprint matches a known recording ({pct}% confidence) — no title/artist metadata linked
+      yet.
+    </p>
+  )
 }
 
 export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
@@ -164,6 +220,7 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
       {(r.tracks ?? []).map((t) => (
         <div key={t.id}>
           <ReleaseTrackVersionPanel releaseId={r.id} trackId={t.id} trackTitle={t.title} />
+          <FingerprintMatchNote status={t.status} match={t.fingerprintMatch} />
           <ReleaseTrackCreditsPanel
             releaseId={r.id}
             trackId={t.id}

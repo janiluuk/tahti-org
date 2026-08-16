@@ -5,8 +5,10 @@ import type { Job } from 'bullmq'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, extname } from 'node:path'
+import { readFile } from 'node:fs/promises'
 import ffmpeg from 'fluent-ffmpeg'
-import { prisma } from '@tahti/db'
+import { prisma, Prisma } from '@tahti/db'
+import { lookupAcoustidFullTrack, type AcoustidFullMatch } from '@tahti/shared'
 import { downloadToFile, uploadFile } from '../lib/minio.js'
 import { writeThroughToR2 } from '../lib/release-r2-sync.js'
 
@@ -38,6 +40,46 @@ function transcodeOpus(inputPath: string, outputPath: string): Promise<void> {
       .on('end', () => resolve())
       .save(outputPath)
   })
+}
+
+function generateChromaprintFingerprint(inputPath: string, outputPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .format('chromaprint')
+      .outputOptions(['-fp_format', 'base64'])
+      .on('error', reject)
+      .on('end', () => resolve())
+      .save(outputPath)
+  })
+}
+
+/**
+ * Best-effort: generates a Chromaprint fingerprint and looks it up via
+ * AcoustID (used both to surface a title/artist suggestion for original
+ * uploads and as a copyright-conflict signal — a fingerprint that already
+ * matches an existing recording is very likely not a novel work). Never
+ * throws — a fingerprinting failure shouldn't fail the whole transcode job.
+ */
+async function fingerprintAndIdentify(
+  inputPath: string,
+  tmpDir: string,
+  durationSec: number,
+): Promise<{ fingerprint: string | null; match: AcoustidFullMatch | null }> {
+  const apiKey = process.env.ACOUSTID_API_KEY?.trim() ?? ''
+
+  try {
+    const fpPath = join(tmpDir, 'audio.fp')
+    await generateChromaprintFingerprint(inputPath, fpPath)
+    const fingerprint = (await readFile(fpPath, 'utf8')).trim()
+    if (!fingerprint) return { fingerprint: null, match: null }
+
+    if (!apiKey) return { fingerprint, match: null }
+
+    const match = await lookupAcoustidFullTrack(fingerprint, durationSec, { apiKey })
+    return { fingerprint, match }
+  } catch {
+    return { fingerprint: null, match: null }
+  }
 }
 
 function transcodeFlac(inputPath: string, outputPath: string): Promise<void> {
@@ -120,6 +162,8 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
       track.release.userId,
     )
 
+    const { fingerprint, match } = await fingerprintAndIdentify(srcPath, tmpDir, meta.duration)
+
     await prisma.releaseTrack.update({
       where: { id: trackId },
       data: {
@@ -127,6 +171,8 @@ export async function processTranscodeReleaseTrackJob(job: Job): Promise<void> {
         flacKey: flacKey ?? null,
         r2Key: r2?.r2Key ?? null,
         r2SizeBytes: r2?.sizeBytes ?? null,
+        fingerprint,
+        fingerprintMatch: match ?? Prisma.JsonNull,
         status: 'READY',
       },
     })
