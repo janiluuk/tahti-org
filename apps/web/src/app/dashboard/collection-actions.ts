@@ -8,6 +8,7 @@ import type {
   CollectionGalleryMode,
   CollectionTextLayerAlignment,
   CollectionTextLayerMode,
+  HearthisTrackResult,
   MixcloudTrackResult,
   SpotifyTrackResult,
 } from '@tahti/shared'
@@ -388,6 +389,84 @@ export async function addMixcloudTrackToCollection(
     archiveItemId: string
     collectionItemId: string
     track: MixcloudTrackResult
+  }
+  return { error: null, ...data }
+}
+
+// ── Mixed-source collections: hearthis.at search + embed ──────────────────
+
+type HearthisTracksResult = { tracks: HearthisTrackResult[]; error: string | null }
+
+export async function searchHearthisTracks(query: string): Promise<HearthisTracksResult> {
+  const res = await fetch(
+    `${apiUrl}/api/v1/imports/hearthis/search?q=${encodeURIComponent(query)}`,
+    { headers: { Cookie: sessionHeader() }, cache: 'no-store' },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { tracks: [], error: (data as { error?: string }).error ?? 'hearthis.at search failed' }
+  }
+  const data = (await res.json()) as { tracks: HearthisTrackResult[] }
+  return { tracks: data.tracks, error: null }
+}
+
+export async function getHearthisMyTracks(): Promise<
+  HearthisTracksResult & { username: string | null }
+> {
+  const res = await fetch(`${apiUrl}/api/v1/imports/hearthis/me-tracks`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return {
+      tracks: [],
+      username: null,
+      error: (data as { error?: string }).error ?? 'hearthis.at lookup failed',
+    }
+  }
+  const data = (await res.json()) as { username: string | null; tracks: HearthisTrackResult[] }
+  return { tracks: data.tracks, username: data.username, error: null }
+}
+
+export async function getHearthisTracksByProfileUrl(
+  profileUrl: string,
+): Promise<HearthisTracksResult> {
+  const res = await fetch(
+    `${apiUrl}/api/v1/imports/hearthis/by-username?profileUrl=${encodeURIComponent(profileUrl)}`,
+    { headers: { Cookie: sessionHeader() }, cache: 'no-store' },
+  )
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { tracks: [], error: (data as { error?: string }).error ?? 'hearthis.at lookup failed' }
+  }
+  const data = (await res.json()) as { tracks: HearthisTrackResult[] }
+  return { tracks: data.tracks, error: null }
+}
+
+export async function addHearthisTrackToCollection(
+  collectionId: string,
+  trackUrl: string,
+): Promise<{
+  error: string | null
+  archiveItemId?: string
+  collectionItemId?: string
+  track?: HearthisTrackResult
+}> {
+  const res = await fetch(`${apiUrl}/api/v1/imports/hearthis/add`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ collectionId, trackUrl }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to add hearthis.at track' }
+  }
+  const data = (await res.json()) as {
+    archiveItemId: string
+    collectionItemId: string
+    track: HearthisTrackResult
   }
   return { error: null, ...data }
 }

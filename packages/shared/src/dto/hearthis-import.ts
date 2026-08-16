@@ -4,6 +4,8 @@
 import { z } from 'zod'
 
 export const HearthisTrackResultSchema = z.object({
+  /** Numeric hearthis.at track id — required for the widget embed src (hearthis has no URL-based embed). */
+  id: z.string(),
   url: z.string(),
   title: z.string(),
   username: z.string(),
@@ -14,6 +16,8 @@ export const HearthisTrackResultSchema = z.object({
   /** hearthis.at's own playback URL — for in-app preview only, never stored/re-hosted. */
   streamUrl: z.string().nullable(),
 })
+
+export type HearthisTrackResult = z.infer<typeof HearthisTrackResultSchema>
 
 export const HearthisSearchResponseSchema = z.object({
   tracks: z.array(HearthisTrackResultSchema),

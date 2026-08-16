@@ -147,8 +147,8 @@ export interface HearthisClient {
   getTrackByUrl(trackUrl: string): Promise<HearthisTrack>
   /** INFERRED — community wrappers document q/type params; response shape assumed to match feed/. */
   search(query: string, params?: HearthisSearchParams): Promise<HearthisTrack[]>
-  /** INFERRED — no verified path for a user's own track list distinct from getUser(); most
-   * likely candidate based on hearthis.at's site structure. Verify before relying on this. */
+  /** VERIFIED — GET /{permalink}/?type=tracks (NOT /{permalink}/tracks/, which 404s as
+   * `{"status":"error","message":"Content Gone"}` — confirmed live against hearthis.at/yaniho). */
   getUserTracks(permalink: string, params?: { page?: number; count?: number }): Promise<HearthisTrack[]>
 }
 
@@ -169,9 +169,20 @@ export function createHearthisClient(options: HearthisClientOptions = {}): Heart
   async function get<T>(path: string, params?: Record<string, string | number | undefined>): Promise<T> {
     const res = await doFetch(buildUrl(path, params).toString())
     if (!res.ok) throw new Error(`hearthis.at API request failed (${res.status}): ${path}`)
-    const data = (await res.json()) as T | { success: false; message: string }
-    if (data && typeof data === 'object' && 'success' in data && data.success === false) {
-      throw new Error(`hearthis.at API error: ${data.message}`)
+    const data = (await res.json()) as
+      | T
+      | { success: false; message: string }
+      | { status: 'error'; message: string }
+    // The API uses two different shapes for in-band errors depending on the
+    // endpoint: {success:false,...} (e.g. search rate limits) and
+    // {status:"error",...} (e.g. a permalink that no longer resolves).
+    if (data && typeof data === 'object') {
+      if ('success' in data && data.success === false) {
+        throw new Error(`hearthis.at API error: ${data.message}`)
+      }
+      if ('status' in data && data.status === 'error') {
+        throw new Error(`hearthis.at API error: ${data.message}`)
+      }
     }
     return data as T
   }
@@ -208,7 +219,8 @@ export function createHearthisClient(options: HearthisClientOptions = {}): Heart
       }),
 
     getUserTracks: (permalink, params = {}) =>
-      get<HearthisTrack[]>(`/${encodeURIComponent(permalink)}/tracks/`, {
+      get<HearthisTrack[]>(`/${encodeURIComponent(permalink)}/`, {
+        type: 'tracks',
         page: params.page,
         count: params.count,
       }),

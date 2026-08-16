@@ -22,16 +22,19 @@ import {
 import { STYLE_LABEL, STYLE_COLOR } from '../collection-labels'
 import { SpotifyImportModal, spotifyCoverProxySrc } from './_spotify-import-modal'
 import { MixcloudImportModal, mixcloudCoverProxySrc } from './_mixcloud-import-modal'
+import { HearthisImportModal } from './_hearthis-import-modal'
 
 const SOURCE_BADGE_LABEL: Partial<Record<ArchiveItemSource, string>> = {
   SPOTIFY_EMBED: 'SPOTIFY EMBED',
   MIXCLOUD_EMBED: 'MIXCLOUD EMBED',
+  HEARTHIS_EMBED: 'HEARTHIS EMBED',
   URL_EMBED: 'EMBED',
 }
 
 const SOURCE_BADGE_CLASS: Partial<Record<ArchiveItemSource, string>> = {
   SPOTIFY_EMBED: 'collection-tracklist__badge--spotify',
   MIXCLOUD_EMBED: 'collection-tracklist__badge--mixcloud',
+  HEARTHIS_EMBED: 'collection-tracklist__badge--hearthis',
   URL_EMBED: 'collection-tracklist__badge--embed',
 }
 
@@ -152,6 +155,7 @@ export function CollectionEditor({
   const [reorderError, setReorderError] = useState<string | null>(null)
   const [spotifyModalOpen, setSpotifyModalOpen] = useState(false)
   const [mixcloudModalOpen, setMixcloudModalOpen] = useState(false)
+  const [hearthisModalOpen, setHearthisModalOpen] = useState(false)
   const [libraryPickerOpen, setLibraryPickerOpen] = useState(false)
   const [libraryPick, setLibraryPick] = useState('')
   const [libraryAdding, setLibraryAdding] = useState(false)
@@ -562,6 +566,14 @@ export function CollectionEditor({
               >
                 + Mixcloud
               </Button>
+              <Button
+                onClick={() => setHearthisModalOpen(true)}
+                variant="ghost"
+                size="sm"
+                className="collection-editor__add-btn--hearthis"
+              >
+                + hearthis.at
+              </Button>
             </div>
           </div>
 
@@ -650,6 +662,33 @@ export function CollectionEditor({
                       bannerUrl: track.coverUrl,
                       createdAt: new Date().toISOString(),
                       source: 'MIXCLOUD_EMBED',
+                      qualityBadge: 'EMBED_ONLY',
+                    },
+                    release: null,
+                  },
+                ])
+              }}
+            />
+          ) : null}
+
+          {hearthisModalOpen ? (
+            <HearthisImportModal
+              collectionId={initial.id}
+              collectionTitle={name || initial.name}
+              onClose={() => setHearthisModalOpen(false)}
+              onAdded={({ archiveItemId, collectionItemId, track }) => {
+                setItems((prev) => [
+                  ...prev,
+                  {
+                    id: collectionItemId,
+                    position: prev.length + 1,
+                    archiveItem: {
+                      id: archiveItemId,
+                      title: track.title,
+                      durationSec: track.durationSec,
+                      bannerUrl: track.coverUrl,
+                      createdAt: new Date().toISOString(),
+                      source: 'HEARTHIS_EMBED',
                       qualityBadge: 'EMBED_ONLY',
                     },
                     release: null,

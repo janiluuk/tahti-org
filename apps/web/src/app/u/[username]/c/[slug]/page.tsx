@@ -21,6 +21,7 @@ import { collectionRssUrl } from '@/lib/rss-feeds'
 import type { PlayerTrack } from '@/contexts/player-context'
 import { SpotifyEmbedRow } from './_spotify-embed-row'
 import { MixcloudEmbedRow } from './_mixcloud-embed-row'
+import { HearthisEmbedRow } from './_hearthis-embed-row'
 import { ArchiveTrackRow } from './_archive-track-row'
 import { PlaylistControls } from './_playlist-controls'
 import { ReportButton } from '@/components/report-button'
@@ -237,6 +238,15 @@ export default async function CollectionPage({
                 if (item.archiveItem?.source === 'MIXCLOUD_EMBED' && item.archiveItem.embedUri) {
                   return (
                     <MixcloudEmbedRow
+                      key={item.id}
+                      title={item.archiveItem.title}
+                      embedUri={item.archiveItem.embedUri}
+                    />
+                  )
+                }
+                if (item.archiveItem?.source === 'HEARTHIS_EMBED' && item.archiveItem.embedUri) {
+                  return (
+                    <HearthisEmbedRow
                       key={item.id}
                       title={item.archiveItem.title}
                       embedUri={item.archiveItem.embedUri}

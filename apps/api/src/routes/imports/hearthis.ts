@@ -18,6 +18,7 @@ const hearthis = createHearthisClient()
 
 function toTrackResult(track: HearthisTrack) {
   return {
+    id: track.id,
     url: track.permalink_url,
     title: track.title,
     username: track.user.username,
@@ -159,7 +160,7 @@ const hearthisImportRoutes: FastifyPluginAsync = async (fastify) => {
           durationSec: result.durationSec,
           source: 'HEARTHIS_EMBED',
           qualityBadge: 'EMBED_ONLY',
-          embedUri: result.url,
+          embedUri: result.id,
           embedProvider: 'HEARTHIS',
           status: 'READY',
           isPublic: true,

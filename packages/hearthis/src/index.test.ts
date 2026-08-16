@@ -112,6 +112,24 @@ describe('@tahti/hearthis client', () => {
     expect(tracks).toEqual([])
   })
 
+  it('lists a user\'s tracks via ?type=tracks on the profile path, not /tracks/', async () => {
+    // Regression test: /{permalink}/tracks/ 404s live as {"status":"error","message":"Content Gone"} —
+    // confirmed against hearthis.at/yaniho. The real listing is /{permalink}/?type=tracks.
+    const fetchMock = mockFetch(200, [SAMPLE_TRACK])
+    const client = createHearthisClient({ fetch: fetchMock })
+    await client.getUserTracks('yaniho', { count: 5 })
+    const calledUrl = fetchMock.mock.calls[0]?.[0] as string
+    expect(calledUrl).toMatch(/\/yaniho\/\?.*type=tracks/)
+    expect(calledUrl).not.toContain('/yaniho/tracks/')
+    expect(calledUrl).toContain('count=5')
+  })
+
+  it('throws on a 200 response carrying {status:"error"} (a gone/unresolvable permalink)', async () => {
+    const fetchMock = mockFetch(200, { status: 'error', message: 'Content Gone' })
+    const client = createHearthisClient({ fetch: fetchMock })
+    await expect(client.getUserTracks('some-old-handle')).rejects.toThrow(/Content Gone/)
+  })
+
   it('sends key/secret when configured', async () => {
     const fetchMock = mockFetch(200, [])
     const client = createHearthisClient({ fetch: fetchMock, apiKey: 'k', apiSecret: 's' })

@@ -16,15 +16,17 @@ export type ArchiveItemSource =
   | 'MIXCLOUD_RESCUE'
   | 'SPOTIFY_EMBED'
   | 'MIXCLOUD_EMBED'
+  | 'HEARTHIS_EMBED'
   | 'URL_EMBED'
 
 export type ArchiveQualityBadge = 'LOSSLESS' | 'TRANSCODED' | 'EMBED_ONLY'
 
-export type ArchiveEmbedProvider = 'SPOTIFY' | 'MIXCLOUD' | 'YOUTUBE' | 'APPLE' | 'GENERIC'
+export type ArchiveEmbedProvider = 'SPOTIFY' | 'MIXCLOUD' | 'HEARTHIS' | 'YOUTUBE' | 'APPLE' | 'GENERIC'
 
 const EMBED_ONLY_SOURCES: ReadonlySet<ArchiveItemSource> = new Set([
   'SPOTIFY_EMBED',
   'MIXCLOUD_EMBED',
+  'HEARTHIS_EMBED',
   'URL_EMBED',
 ])
 
@@ -48,7 +50,12 @@ export function deriveQualityBadge(
   return hasFlac ? 'LOSSLESS' : 'TRANSCODED'
 }
 
-export type ArchivePlayerKind = 'TAHTI' | 'SPOTIFY_EMBED' | 'MIXCLOUD_EMBED' | 'GENERIC_EMBED'
+export type ArchivePlayerKind =
+  | 'TAHTI'
+  | 'SPOTIFY_EMBED'
+  | 'MIXCLOUD_EMBED'
+  | 'HEARTHIS_EMBED'
+  | 'GENERIC_EMBED'
 
 export function playerKindForSource(source: ArchiveItemSource): ArchivePlayerKind {
   switch (source) {
@@ -56,6 +63,8 @@ export function playerKindForSource(source: ArchiveItemSource): ArchivePlayerKin
       return 'SPOTIFY_EMBED'
     case 'MIXCLOUD_EMBED':
       return 'MIXCLOUD_EMBED'
+    case 'HEARTHIS_EMBED':
+      return 'HEARTHIS_EMBED'
     case 'URL_EMBED':
       return 'GENERIC_EMBED'
     default:
