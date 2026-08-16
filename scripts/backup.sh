@@ -3,9 +3,10 @@
 #
 # Usage:
 #   ./scripts/backup.sh              # same as: all
-#   ./scripts/backup.sh all          # postgres, then minio
+#   ./scripts/backup.sh all          # postgres, then minio, then push to vimage6
 #   ./scripts/backup.sh postgres
 #   ./scripts/backup.sh minio
+#   ./scripts/backup.sh vimage6      # rsync local pg dumps + minio mirror to vimage6
 #   ./scripts/backup.sh restore-test
 #   ./scripts/backup.sh status       # latest backup ages (for monitoring / cron checks)
 #
@@ -13,7 +14,8 @@
 #   0 3 * * *  root .../backup.sh all
 #   0 5 * * 0  root .../backup.sh restore-test
 #
-# Env: MINIO_ALIAS, BACKUP_BUCKET, PG_CONTAINER, SRC_ALIAS, DST_ALIAS, ALERT_EMAIL
+# Env: MINIO_ALIAS, BACKUP_BUCKET, PG_CONTAINER, SRC_ALIAS, DST_ALIAS, ALERT_EMAIL,
+#      VIMAGE6_BACKUP_HOST, VIMAGE6_BACKUP_KEY, VIMAGE6_BACKUP_DIR
 
 set -euo pipefail
 
@@ -146,6 +148,46 @@ backup_minio() {
   log "DR mirror complete"
 }
 
+backup_push_vimage6() {
+  local LOG_PREFIX="[$(log_ts)] [vimage6-push]"
+  log() { echo "$LOG_PREFIX $*"; }
+
+  local VIMAGE6_HOST VIMAGE6_KEY VIMAGE6_REMOTE_DIR LOCAL_BACKUP_DIR LOCAL_MIRROR_DIR RSYNC_SSH RESULT
+  VIMAGE6_HOST="${VIMAGE6_BACKUP_HOST:-jani@192.168.2.105}"
+  VIMAGE6_KEY="${VIMAGE6_BACKUP_KEY:-/root/.ssh/vimage6_backup_ed25519}"
+  VIMAGE6_REMOTE_DIR="${VIMAGE6_BACKUP_DIR:-/home/jani/tahti-backups/tahti}"
+  LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-/share/disk2/tahti-backups/pg}"
+  LOCAL_MIRROR_DIR="${LOCAL_MIRROR_DIR:-/share/disk2/tahti-backups/minio-mirror}"
+
+  if [[ ! -f "$VIMAGE6_KEY" ]]; then
+    log "WARNING: key ${VIMAGE6_KEY} not found — skipping off-host push to vimage6"
+    return 0
+  fi
+
+  # Off-host copy on a second physical machine (vimage6, the monitoring host).
+  # The /share/disk2 copy above is still on the same host as the primary
+  # Postgres/MinIO volumes, so it alone wouldn't survive a whole-host loss.
+  # The receiving key on vimage6 is restricted (rrsync -wo, no shell, no
+  # port/agent forwarding) to /home/jani/tahti-backups/tahti.
+  RSYNC_SSH="ssh -i ${VIMAGE6_KEY} -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10"
+
+  if [[ -d "$LOCAL_BACKUP_DIR" ]]; then
+    if RESULT=$(rsync -az -e "$RSYNC_SSH" "${LOCAL_BACKUP_DIR}/" "${VIMAGE6_HOST}:${VIMAGE6_REMOTE_DIR}/pg/" 2>&1); then
+      log "Postgres dumps synced to vimage6:${VIMAGE6_REMOTE_DIR}/pg/"
+    else
+      log "WARNING: vimage6 postgres sync failed: $RESULT"
+    fi
+  fi
+
+  if [[ -d "$LOCAL_MIRROR_DIR" ]]; then
+    if RESULT=$(rsync -az -e "$RSYNC_SSH" "${LOCAL_MIRROR_DIR}/" "${VIMAGE6_HOST}:${VIMAGE6_REMOTE_DIR}/minio-mirror/" 2>&1); then
+      log "MinIO mirror synced to vimage6:${VIMAGE6_REMOTE_DIR}/minio-mirror/"
+    else
+      log "WARNING: vimage6 minio-mirror sync failed: $RESULT"
+    fi
+  fi
+}
+
 backup_restore_test() {
   local LOG_PREFIX="[$(log_ts)] [restore-test]"
   local TEMP_CONTAINER ALERT_EMAIL MINIO_ALIAS BACKUP_BUCKET EXPECTED_MIN_ROWS
@@ -227,12 +269,31 @@ print(latest.get('key','').lstrip('/'))
 
 backup_status() {
   local MINIO_ALIAS BACKUP_BUCKET WARN_HOURS PAGE_HOURS DST_ALIAS LOCAL_BACKUP_DIR
+  local VIMAGE6_HOST VIMAGE6_KEY VIMAGE6_REMOTE_DIR
   MINIO_ALIAS="${MINIO_ALIAS:-tahti}"
   BACKUP_BUCKET="${BACKUP_BUCKET:-backups}"
   WARN_HOURS="${BACKUP_WARN_AGE_HOURS:-26}"
   PAGE_HOURS="${BACKUP_PAGE_AGE_HOURS:-48}"
   DST_ALIAS="${DST_ALIAS:-tahti-dr}"
   LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-/share/disk2/tahti-backups/pg}"
+  VIMAGE6_HOST="${VIMAGE6_BACKUP_HOST:-jani@192.168.2.105}"
+  VIMAGE6_KEY="${VIMAGE6_BACKUP_KEY:-/root/.ssh/vimage6_backup_ed25519}"
+  VIMAGE6_REMOTE_DIR="${VIMAGE6_BACKUP_DIR:-/home/jani/tahti-backups/tahti}"
+
+  # Best-effort — informational only, does not affect exit code (local disk
+  # copy stays the authoritative signal for paging, see below).
+  if [[ -f "$VIMAGE6_KEY" ]]; then
+    VIMAGE6_LATEST=$(ssh -i "$VIMAGE6_KEY" -o BatchMode=yes -o ConnectTimeout=5 "$VIMAGE6_HOST" \
+      "find '${VIMAGE6_REMOTE_DIR}/pg' -maxdepth 1 -name '*.sql.gz' -printf '%T@\n' 2>/dev/null | sort -n | tail -1" 2>/dev/null || true)
+    if [[ -n "$VIMAGE6_LATEST" ]]; then
+      VIMAGE6_AGE_HOURS=$(awk -v t="$VIMAGE6_LATEST" 'BEGIN { print (systime() - t) / 3600 }')
+      echo "vimage6_postgres_backup_age_hours=${VIMAGE6_AGE_HOURS}"
+    else
+      echo "vimage6_postgres_backup_age_hours=missing"
+    fi
+  else
+    echo "vimage6_postgres_backup_age_hours=missing reason=no_key"
+  fi
 
   MINIO_ALIAS="$MINIO_ALIAS" BACKUP_BUCKET="$BACKUP_BUCKET" \
     WARN_HOURS="$WARN_HOURS" PAGE_HOURS="$PAGE_HOURS" DST_ALIAS="$DST_ALIAS" \
@@ -305,12 +366,14 @@ PY
 case "$CMD" in
   postgres) backup_postgres ;;
   minio) backup_minio ;;
+  vimage6) backup_push_vimage6 ;;
   restore-test) backup_restore_test ;;
   status) backup_status ;;
   all)
     echo "[$(log_ts)] [backup] Starting full backup (postgres + minio)"
     backup_postgres
     backup_minio
+    backup_push_vimage6
     echo "[$(log_ts)] [backup] Full backup complete"
     ;;
   -h|--help)

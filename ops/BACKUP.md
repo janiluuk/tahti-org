@@ -7,10 +7,18 @@ Quick reference for operators. Step-by-step restore commands live in
 
 | Asset | Method | RPO (max data loss) | RTO (target restore) | Notes |
 |-------|--------|---------------------|----------------------|-------|
-| Postgres | `pg_dump` → `/share/disk2` (local, separate mount) + MinIO `backups/pg/` | ~24 h (daily dump) | 2–4 h maintenance window | PITR via pgBackRest **deferred** |
-| MinIO objects | `mc mirror` primary → `/share/disk2` (local) + DR | ~24 h (daily mirror) | 1–3 h per bucket | 1% count tolerance in script |
+| Postgres | `pg_dump` → `/share/disk2` (local, separate mount) + MinIO `backups/pg/` + rsync push to **vimage6** | ~24 h (daily dump) | 2–4 h maintenance window | PITR via pgBackRest **deferred** |
+| MinIO objects | `mc mirror` primary → `/share/disk2` (local) + rsync push to **vimage6** + offsite DR | ~24 h (daily mirror) | 1–3 h per bucket | 1% count tolerance in script |
 | Redis / sessions | Not backed up | N/A | Rebuild on redeploy | Users re-login after major DR |
 | Ledger integrity | Postgres restore | Same as Postgres | Verify via `/api/transparency/ytd` | Compare row counts pre/post |
+
+**Off-host copy on vimage6:** every `backup.sh all` run also rsyncs `/share/disk2/tahti-backups/{pg,minio-mirror}`
+to `vimage6:/home/jani/tahti-backups/tahti/` (a second physical machine — vimage6 is the monitoring host at
+`192.168.2.105`), using a write-only key (`/root/.ssh/vimage6_backup_ed25519` on vimage, restricted server-side via
+`rrsync -wo`, no shell/port/agent forwarding). This is what actually protects against a whole-host loss of vimage
+(the `/share/disk2` local copy alone would not). Run manually with `./scripts/backup.sh vimage6`. `backup.sh status`
+prints `vimage6_postgres_backup_age_hours` (informational — doesn't affect the CRITICAL/WARN exit code, which stays
+keyed on the local `/share/disk2` copy).
 
 **2026-08-16 incident context:** the 2026-08-13 prod DB wipe (Docker volume for Postgres
 recreated fresh, all real users lost, no backup existed) happened because this cron was
@@ -42,7 +50,10 @@ Installed by `sudo ./scripts/install-crons.sh` on the Swarm manager:
 Configure with `mc alias set` on the manager. Env overrides: `SRC_ALIAS`, `DST_ALIAS`,
 `BACKUP_BUCKET` (default `backups`), `MINIO_ALIAS` (default `tahti`), `LOCAL_BACKUP_DIR`
 (default `/share/disk2/tahti-backups/pg`), `LOCAL_MIRROR_DIR`
-(default `/share/disk2/tahti-backups/minio-mirror`).
+(default `/share/disk2/tahti-backups/minio-mirror`), `VIMAGE6_BACKUP_HOST`
+(default `jani@192.168.2.105`), `VIMAGE6_BACKUP_KEY`
+(default `/root/.ssh/vimage6_backup_ed25519`), `VIMAGE6_BACKUP_DIR`
+(default `/home/jani/tahti-backups/tahti`).
 
 ## Monitoring & alerts
 
