@@ -138,16 +138,26 @@ const adminStatsRoutes: FastifyPluginAsync = async (fastify) => {
         response: openApiResponse(AdminAuditRecentListSchema, 'AdminAuditRecentList'),
       },
     },
-    async (_request, reply) => {
+    async (request, reply) => {
+      const rawLimit = (request.query as { limit?: string | number } | undefined)?.limit
+      const parsed =
+        typeof rawLimit === 'string'
+          ? Number.parseInt(rawLimit, 10)
+          : typeof rawLimit === 'number'
+            ? rawLimit
+            : 100
+      const limit = Number.isFinite(parsed) ? Math.min(Math.max(parsed, 1), 500) : 100
+
       const rows = await fastify.prisma.auditLog.findMany({
         orderBy: { createdAt: 'desc' },
-        take: 10,
+        take: limit,
         select: {
           id: true,
           action: true,
           actorId: true,
           targetId: true,
           createdAt: true,
+          meta: true,
         },
       })
       return reply.send(

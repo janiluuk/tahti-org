@@ -36,7 +36,13 @@ interface ReleaseSummary {
   slideshowImages?: string[]
   galleryMode?: ChannelGalleryMode
   galleryAudioReactive?: boolean
-  tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
+  tracks?: Array<{
+    id: string
+    title: string
+    isrc: string | null
+    status?: string
+    credits?: unknown
+  }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
 }

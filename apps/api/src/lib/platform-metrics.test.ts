@@ -36,9 +36,20 @@ describe('platform-metrics', () => {
     expect(snap.registeredUsers).toBeGreaterThan(0)
     expect(snap.activeUsersToday).toBeGreaterThan(0)
 
+    expect(snap.storageUsedBytes).toBeGreaterThanOrEqual(0)
+    expect(snap.storageQuotaBytes).toBeGreaterThanOrEqual(0)
+    expect(snap.tracksTotal).toBeGreaterThanOrEqual(0)
+    expect(snap.releasesPublishedTotal).toBeGreaterThanOrEqual(0)
+    expect(snap.registrationsToday).toBeGreaterThanOrEqual(0)
+
     const text = renderPlatformMetricLines(snap).join('\n')
     expect(text).toContain('tahti_users_registered_total')
     expect(text).toContain('tahti_users_active_today')
+    expect(text).toContain('tahti_storage_used_bytes')
+    expect(text).toContain('tahti_storage_quota_bytes')
+    expect(text).toContain('tahti_tracks_total')
+    expect(text).toContain('tahti_releases_published_total')
+    expect(text).toContain('tahti_registrations_today')
   })
 
   it('counts audit errors in the last 24 hours', async () => {

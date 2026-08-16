@@ -7151,6 +7151,9 @@ export interface paths {
                             targetId: string | null;
                             /** Format: date-time */
                             createdAt: string;
+                            meta?: {
+                                [key: string]: unknown;
+                            } | null;
                         }[];
                     };
                 };
@@ -11241,6 +11244,52 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/me/releases/{id}/tracks/{trackId}/credits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    trackId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            releaseId: string;
+                            position: number;
+                            title: string;
+                            status: string;
+                        } & {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/me/releases/{id}/tracks/{trackId}/download": {

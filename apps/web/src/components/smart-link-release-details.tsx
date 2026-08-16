@@ -2,11 +2,18 @@
 // Copyright (C) 2026 Tahti ry <https://tahti.live>
 
 import Link from 'next/link'
+import type { TrackCredit } from '@tahti/shared'
 
 interface SmartLinkTrack {
   title: string
   isrc: string | null
   position: number
+}
+
+interface SmartLinkTrackWithCredits {
+  title: string
+  position: number
+  credits?: TrackCredit[] | null
 }
 
 interface FeaturedCollection {
@@ -21,6 +28,7 @@ interface SmartLinkReleaseDetailsProps {
   pLine?: string | null
   cLine?: string | null
   tracksWithIsrc: SmartLinkTrack[]
+  tracksWithCredits?: SmartLinkTrackWithCredits[]
   musicbrainzUrl?: string | null
   discogsUrl?: string | null
   featuredCollections?: FeaturedCollection[]
@@ -31,12 +39,19 @@ export function SmartLinkReleaseDetails({
   pLine,
   cLine,
   tracksWithIsrc,
+  tracksWithCredits = [],
   musicbrainzUrl,
   discogsUrl,
   featuredCollections,
 }: SmartLinkReleaseDetailsProps) {
   const hasCredits =
-    upc || pLine || cLine || tracksWithIsrc.length > 0 || musicbrainzUrl || discogsUrl
+    upc ||
+    pLine ||
+    cLine ||
+    tracksWithIsrc.length > 0 ||
+    tracksWithCredits.length > 0 ||
+    musicbrainzUrl ||
+    discogsUrl
 
   return (
     <>
@@ -55,6 +70,15 @@ export function SmartLinkReleaseDetails({
               {tracksWithIsrc.map((track) => (
                 <li key={track.position}>
                   {track.title}: {track.isrc}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {tracksWithCredits.length > 0 ? (
+            <ul className="sl-track-list">
+              {tracksWithCredits.map((track) => (
+                <li key={track.position}>
+                  {track.title}: {track.credits!.map((c) => `${c.role} — ${c.name}`).join(', ')}
                 </li>
               ))}
             </ul>

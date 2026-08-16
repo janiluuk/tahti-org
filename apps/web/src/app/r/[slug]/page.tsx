@@ -3,7 +3,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import type { ChannelGalleryMode } from '@tahti/shared'
+import type { ChannelGalleryMode, TrackCredit } from '@tahti/shared'
 import { ReleaseSmartLink, SafePlainText, SmartLinkPageLayout } from '@tahti/ui'
 import { SmartLinkDspButtons } from '@/components/smart-link-dsp-buttons'
 import { SmartLinkReleaseDetails } from '@/components/smart-link-release-details'
@@ -16,6 +16,7 @@ interface SmartLinkTrack {
   title: string
   isrc: string | null
   position: number
+  credits?: TrackCredit[] | null
 }
 
 interface FeaturedCollection {
@@ -109,6 +110,7 @@ export default async function SmartLinkPage({ params }: { params: { slug: string
             pLine={data.release.pLine}
             cLine={data.release.cLine}
             tracksWithIsrc={tracksWithIsrc}
+            tracksWithCredits={data.release.tracks.filter((t) => t.credits && t.credits.length > 0)}
             musicbrainzUrl={data.release.musicbrainzUrl}
             discogsUrl={data.release.discogsUrl}
             featuredCollections={data.featuredCollections}

@@ -24,6 +24,46 @@ export const ReleaseCreditSchema = z.object({
 
 export type ReleaseCredit = z.infer<typeof ReleaseCreditSchema>
 
+// Per-song credits on a ReleaseTrack — distinct from ReleaseCreditSchema above
+// (whole-release credits): roles here are instrument/performance credits for
+// a single track's liner notes, so the role is a curated preset list in the UI
+// but free text at the schema level (an artist can type anything, e.g. "sitar").
+export const TRACK_CREDIT_ROLE_PRESETS = [
+  'vocals',
+  'guitars',
+  'bass',
+  'drums',
+  'keys',
+  'synths',
+  'strings',
+  'brass',
+  'programming',
+  'writer',
+  'composer',
+  'producer',
+  'mixing',
+  'mastering',
+  'engineer',
+  'featuring',
+] as const
+
+export const TrackCreditSchema = z.object({
+  role: z.string().trim().min(1).max(40),
+  name: z.string().trim().min(1).max(120),
+  artistUsername: z
+    .string()
+    .regex(/^[a-z0-9_-]{2,32}$/i)
+    .optional(),
+})
+
+export type TrackCredit = z.infer<typeof TrackCreditSchema>
+
+export const ReleaseTrackCreditsPatchSchema = z.object({
+  credits: z.array(TrackCreditSchema).max(20).nullable(),
+})
+
+export type ReleaseTrackCreditsPatch = z.infer<typeof ReleaseTrackCreditsPatchSchema>
+
 export const ReleaseCatalogPatchSchema = z
   .object({
     upc: z.string().max(20).nullable().optional(),

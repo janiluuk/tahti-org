@@ -43,6 +43,10 @@ interface AuditParams {
     | 'ARCHIVE_METADATA_ADMIN_EDIT'
     | 'API_TOKEN_CREATE'
     | 'API_TOKEN_REVOKE'
+    | 'USER_LOGIN'
+    | 'USER_REGISTER'
+    | 'CONTENT_UPLOAD'
+    | 'RELEASE_PUBLISH'
   actorId: string
   targetId?: string
   meta?: Record<string, unknown>

@@ -1505,6 +1505,7 @@ export const AdminAuditRecentItemSchema = z.object({
   actorId: z.string(),
   targetId: z.string().nullable(),
   createdAt: z.coerce.date(),
+  meta: z.record(z.string(), z.unknown()).nullable().optional(),
 })
 
 export const AdminAuditRecentListSchema = z.array(AdminAuditRecentItemSchema)

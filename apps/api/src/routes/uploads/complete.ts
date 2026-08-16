@@ -8,6 +8,7 @@ import { enqueueTranscode } from '../../lib/queue.js'
 import { metadataForNewUpload } from '../../lib/archive-metadata.js'
 import { headObjectSize } from '../../lib/minio.js'
 import { MAX_FALLBACK_ITEMS, fallbackCount } from '../../lib/fallback-rotation.js'
+import { auditLog } from '../../lib/audit.js'
 
 const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -81,6 +82,13 @@ const completeUploadRoute: FastifyPluginAsync = async (fastify) => {
           topListsEligible: !channel.user.topListsOptOut,
         },
         select: { id: true, status: true },
+      })
+
+      void auditLog(fastify.prisma, {
+        action: 'CONTENT_UPLOAD',
+        actorId: user.id,
+        targetId: item.id,
+        meta: { title },
       })
 
       await enqueueTranscode(item.id)

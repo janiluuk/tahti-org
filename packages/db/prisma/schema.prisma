@@ -341,6 +341,10 @@ enum AuditAction {
   ARCHIVE_METADATA_ADMIN_EDIT
   API_TOKEN_CREATE
   API_TOKEN_REVOKE
+  USER_LOGIN
+  USER_REGISTER
+  CONTENT_UPLOAD
+  RELEASE_PUBLISH
 
   @@schema("governance")
 }
@@ -2273,6 +2277,7 @@ model ReleaseTrack {
   archiveItemId    String?
   genre            String?
   genreCustom      String?     // when not in preset genre list
+  credits          Json?       // per-song credits [{ role, name, artistUsername? }], distinct from Release.credits
   // M12 — audio file pipeline
   sourceKey        String?     // original uploaded file in MinIO
   sourceFormat     String?     // wav | flac | mp3 | aac | aiff

@@ -4,7 +4,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import type { ReleaseCredit } from '@tahti/shared'
+import type { ReleaseCredit, TrackCredit } from '@tahti/shared'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
@@ -281,6 +281,24 @@ export async function fetchReleaseTrackVersions(
     return { error: (data as { error?: string }).error ?? 'Failed to load versions' }
   }
   return { versions: await res.json(), error: null }
+}
+
+export async function updateReleaseTrackCredits(
+  releaseId: string,
+  trackId: string,
+  credits: TrackCredit[],
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/releases/${releaseId}/tracks/${trackId}/credits`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ credits }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to save credits' }
+  }
+  return { error: null }
 }
 
 export async function prepareReleaseTrackVersionUpload(

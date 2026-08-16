@@ -53,7 +53,7 @@ const smartlinkRoutes: FastifyPluginAsync = async (fastify) => {
           galleryMode: true,
           tracks: {
             orderBy: { position: 'asc' },
-            select: { title: true, isrc: true, position: true },
+            select: { title: true, isrc: true, position: true, credits: true },
           },
           user: {
             select: {

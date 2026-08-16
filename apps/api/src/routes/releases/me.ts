@@ -30,6 +30,7 @@ import { notifyFollowersOfNewRelease } from '@tahti/db'
 import { resolveReleaseArtworkUrl } from '../../lib/release-artwork.js'
 import { parseReleaseImportCsv } from '../../lib/release-import.js'
 import { queueReleaseSocialPost } from '../../lib/social-post.js'
+import { auditLog } from '../../lib/audit.js'
 
 function slugify(title: string): string {
   return title
@@ -117,6 +118,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
                 genre: true,
                 genreCustom: true,
                 durationSec: true,
+                credits: true,
               },
             },
             _count: { select: { tracks: true } },
@@ -267,6 +269,12 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
       })
 
       if (body.state === 'PUBLISHED' && existing.state !== 'PUBLISHED') {
+        void auditLog(fastify.prisma, {
+          action: 'RELEASE_PUBLISH',
+          actorId: user.id,
+          targetId: id,
+          meta: { title: release.title },
+        })
         queueReleaseSocialPost(fastify.prisma, user.id, id).catch((err: unknown) =>
           request.log.warn({ err, releaseId: id }, 'social post enqueue failed'),
         )

@@ -7,6 +7,7 @@ import { verifyPassword } from '../../lib/password.js'
 import { createSession, revokeAllSessions } from '../../lib/session.js'
 import { generateTotpChallengeId, totpChallengeExpiresAt } from '../../lib/token.js'
 import { config } from '../../config.js'
+import { auditLog } from '../../lib/audit.js'
 
 const loginRoute: FastifyPluginAsync = async (fastify) => {
   fastify.post(
@@ -77,6 +78,12 @@ const loginRoute: FastifyPluginAsync = async (fastify) => {
 
       await revokeAllSessions(fastify.prisma, user.id)
       const session = await createSession(fastify.prisma, user.id)
+
+      void auditLog(fastify.prisma, {
+        action: 'USER_LOGIN',
+        actorId: user.id,
+        meta: { username: user.username },
+      })
 
       reply.setCookie(config.sessionCookieName, session.id, {
         httpOnly: true,

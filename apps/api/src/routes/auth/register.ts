@@ -12,6 +12,7 @@ import { hashPassword } from '../../lib/password.js'
 import { generateVerificationToken, verificationExpiresAt } from '../../lib/token.js'
 import { sendVerificationEmail } from '../../lib/email.js'
 import { verifyHcaptcha } from '../../lib/hcaptcha.js'
+import { auditLog } from '../../lib/audit.js'
 import { nanoid } from 'nanoid'
 
 const RESERVED = new Set<string>(RESERVED_CHANNEL_SLUGS)
@@ -108,6 +109,12 @@ const registerRoute: FastifyPluginAsync = async (fastify) => {
       sendVerificationEmail(user.email, user.displayName, user.verificationToken).catch(
         (err: unknown) => fastify.log.error({ err }, 'Failed to send verification email'),
       )
+
+      void auditLog(fastify.prisma, {
+        action: 'USER_REGISTER',
+        actorId: user.id,
+        meta: { username, email },
+      })
 
       return reply.status(201).send({
         message: 'Registration successful — check your email to verify your address',

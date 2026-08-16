@@ -5,6 +5,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import {
   IdParamSchema,
   MeReleaseTrackDownloadQuerySchema,
+  ReleaseTrackCreditsPatchSchema,
   ReleaseTrackDownloadUrlSchema,
   ReleaseTrackFinalizeSchema,
   ReleaseTrackInputSchema,
@@ -162,6 +163,56 @@ const releaseTrackRoutes: FastifyPluginAsync = async (fastify) => {
       await mediaQueue.add('transcode-release-track', { trackId })
 
       return reply.send({ trackId, status: 'scanning' })
+    },
+  )
+
+  // PATCH /api/me/releases/:id/tracks/:trackId/credits — per-song credits (vocals, guitars, ...)
+  fastify.patch(
+    '/api/me/releases/:id/tracks/:trackId/credits',
+    {
+      preHandler: requireAuth,
+      schema: {
+        response: openApiResponse(ReleaseTrackViewSchema, 'ReleaseTrackView'),
+      },
+    },
+    async (request, reply) => {
+      const user = request.sessionUser!
+      const routeParams = parseRouteParams(ReleaseTrackParamsSchema, request.params)
+      if (!routeParams) return reply.status(400).send({ error: 'Invalid path parameters' })
+      const { id: releaseId, trackId } = routeParams
+      const parsed = ReleaseTrackCreditsPatchSchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply
+          .status(400)
+          .send({ error: parsed.error.issues[0]?.message ?? 'Invalid request body' })
+      }
+
+      const release = await fastify.prisma.release.findFirst({
+        where: { id: releaseId, userId: user.id },
+      })
+      if (!release) return reply.status(404).send({ error: 'Release not found' })
+
+      const track = await fastify.prisma.releaseTrack.findFirst({
+        where: { id: trackId, releaseId },
+      })
+      if (!track) return reply.status(404).send({ error: 'Track not found' })
+
+      const credits =
+        parsed.data.credits && parsed.data.credits.length > 0
+          ? parsed.data.credits.map((c) => ({
+              role: c.role.trim(),
+              name: c.name.trim(),
+              ...(c.artistUsername ? { artistUsername: c.artistUsername } : {}),
+            }))
+          : null
+
+      const data: Record<string, unknown> = { credits }
+      const updated = await fastify.prisma.releaseTrack.update({
+        where: { id: trackId },
+        data,
+      })
+
+      return reply.send(updated)
     },
   )
 

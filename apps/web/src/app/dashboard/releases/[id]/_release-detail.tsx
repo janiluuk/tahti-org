@@ -12,6 +12,7 @@ import { publishRelease, updateReleaseDate, updateReleaseSmartLinks } from '../.
 import ReleaseOpsPanel, { parseCredits } from '../../release-ops-panel'
 import { ReleaseArtworkUpload } from '../../release-artwork-upload'
 import { ReleaseTrackVersionPanel } from '../../release-track-version-panel'
+import { ReleaseTrackCreditsPanel, parseTrackCredits } from '../../release-track-credits-panel'
 import ReleaseVisualPanel from '../../release-visual-panel'
 
 const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
@@ -50,7 +51,13 @@ interface ReleaseSummary {
   slideshowImages?: string[]
   galleryMode?: ChannelGalleryMode
   galleryAudioReactive?: boolean
-  tracks?: Array<{ id: string; title: string; isrc: string | null; status?: string }>
+  tracks?: Array<{
+    id: string
+    title: string
+    isrc: string | null
+    status?: string
+    credits?: unknown
+  }>
   checklist?: ReleaseChecklistItem[]
   _count: { tracks: number }
 }
@@ -155,7 +162,15 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
       <ReleaseArtworkUpload releaseId={r.id} artworkUrl={r.artworkUrl} />
 
       {(r.tracks ?? []).map((t) => (
-        <ReleaseTrackVersionPanel key={t.id} releaseId={r.id} trackId={t.id} trackTitle={t.title} />
+        <div key={t.id}>
+          <ReleaseTrackVersionPanel releaseId={r.id} trackId={t.id} trackTitle={t.title} />
+          <ReleaseTrackCreditsPanel
+            releaseId={r.id}
+            trackId={t.id}
+            trackTitle={t.title}
+            initialCredits={parseTrackCredits(t.credits)}
+          />
+        </div>
       ))}
 
       <Panel
