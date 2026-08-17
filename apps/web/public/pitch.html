@@ -164,6 +164,7 @@
 
   /* plans */
   .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-items:stretch}
+  .plans.two{grid-template-columns:repeat(2,1fr);max-width:820px;margin:0 auto}
   .plan{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;display:flex;flex-direction:column}
   .plan.feature{border-color:var(--amber);box-shadow:0 24px 60px -34px rgba(255,176,32,.35)}
   .plan .pname{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
@@ -755,6 +756,32 @@
   </div>
 </section>
 
+<!-- ===== THE GUARANTEE (AGPL) ===== -->
+<section class="band">
+  <div class="wrap">
+    <div class="split">
+      <div class="rv">
+        <div class="eyebrow">The guarantee</div>
+        <h2 style="font-size:clamp(28px,4vw,46px);margin-top:14px">It can never be quietly turned against you.</h2>
+        <div style="margin-top:30px">
+          <div class="feat"><div class="badge sm"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div><div><h3>No secret version</h3><p>AGPL covers network use — so anyone running tahti.live, us included, must publish the exact source they run. There is no hidden build.</p></div></div>
+          <div class="feat"><div class="badge sm"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div><div><h3>The escape hatch is real</h3><p>If whoever runs it ever betrays the mission, the code and your data are the commons' — the community can fork it and run it themselves.</p></div></div>
+        </div>
+      </div>
+      <div class="rv">
+        <div class="card amber" style="padding:30px">
+          <div class="eyebrow" style="font-size:11px;margin-bottom:18px">If it's ever…</div>
+          <div class="funder"><span class="b" style="background:var(--amber)"></span><div><h4>Prices creep, or a paid tier appears</h4><p style="color:var(--amber)">→ fork it and run it your way.</p></div></div>
+          <div class="funder"><span class="b" style="background:var(--amber)"></span><div><h4>Ads or data-selling slip in</h4><p style="color:var(--amber)">→ the constitution forbids it — and the public source means it can't hide.</p></div></div>
+          <div class="funder"><span class="b" style="background:var(--amber)"></span><div><h4>The org is sold, or folds</h4><p style="color:var(--amber)">→ the platform lives on; export everything.</p></div></div>
+          <div class="funder"><span class="b" style="background:var(--amber)"></span><div><h4>A feature you rely on is removed</h4><p style="color:var(--amber)">→ keep it alive in a fork.</p></div></div>
+        </div>
+      </div>
+    </div>
+    <p class="stmt rv" style="text-align:center">There is no version of this where you're trapped.</p>
+  </div>
+</section>
+
 <!-- ===== PEOPLE ===== -->
 <section class="band">
   <div class="wrap">
@@ -775,10 +802,10 @@
   <div class="wrap">
     <div class="sec-head rv">
       <div class="eyebrow">Plans</div>
-      <h2>One price to be an artist. One for the full studio.</h2>
-      <p class="dek">Listening is always free and always lossless. Being a full artist is €40 a year. The Studio tier adds the heavy production tools.</p>
+      <h2>Free to listen. €40 a year to be an artist.</h2>
+      <p class="dek">That's the whole pricing. Listening is always free and always lossless. One membership unlocks everything an artist needs — no premium tier, no upsell, no locked features.</p>
     </div>
-    <div class="plans">
+    <div class="plans two">
       <div class="plan rv">
         <div class="pname">Free</div>
         <div class="pprice">€0</div>
@@ -792,36 +819,22 @@
         </ul>
       </div>
 
-      <div class="plan rv">
+      <div class="plan feature rv">
         <div class="pname">Artist Membership</div>
         <div class="pprice">€40<span style="font-size:18px;color:var(--faint)"> /yr</span></div>
-        <div class="pper">everything to be a full artist</div>
-        <div class="ptag">Run your channel, publish, broadcast, and earn.</div>
+        <div class="pper">everything an artist needs — all in</div>
+        <div class="ptag">Run your channel, publish, broadcast, create, and earn. Everything included.</div>
         <ul class="pl-list">
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Broadcast live in lossless FLAC</li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Publish &amp; simulcast everywhere</li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Official releases — fingerprinted &amp; registered</li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>0% cut on fan support</li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Your channel + practically unlimited storage</li>
-        </ul>
-      </div>
-
-      <div class="plan feature rv">
-        <div class="pname">Studio</div>
-        <div class="pprice">€120<span style="font-size:18px;color:var(--faint)"> /yr</span></div>
-        <div class="pper">the full production toolkit</div>
-        <div class="ptag">For artists who want to make and finish everything in one place.</div>
-        <div class="phead">Everything in Membership, plus</div>
-        <ul class="pl-list">
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><b style="font-weight:600">Advanced audio editor</b> — pro plugins, stem separation, version history</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Publish &amp; simulcast everywhere, official releases</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>0% cut on fan support + practically unlimited storage</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><b style="font-weight:600">Advanced audio editor</b> — plugins, stems, version history</li>
           <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><b style="font-weight:600">Your own domain</b> (baba.live) + full channel design</li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><b style="font-weight:600">Live chat</b> on your channel, subscriber-limitable</li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><b style="font-weight:600">Direct fan messaging</b></li>
-          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Priority limits &amp; support</li>
+          <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><b style="font-weight:600">Live chat</b> on your channel + <b style="font-weight:600">direct fan messaging</b></li>
         </ul>
       </div>
     </div>
-    <p class="stmt rv" style="text-align:center">Why a Studio tier? The advanced editor runs on real hardware — the higher tier pays for that compute, and unlocks the premium channel tools. Everything else stays open to every member.</p>
+    <p class="stmt rv" style="text-align:center">One flat price. Everything's in the €40 — no tiers to climb, no features held back for a bigger plan.</p>
   </div>
 </section>
 

@@ -47,7 +47,7 @@ The infrastructure dashboard surfaces CPU, load, memory, disk free/used, disk I/
 
 ## Grafana
 
-Open Grafana on vimage6 (`http://192.168.2.105:3000` or `grafana.tahti.live`) → **Dashboards** → **Tahti — infrastructure & services**.
+Open Grafana on vimage6 (`http://192.168.2.105:3000`, `https://grafana.tahti.live`, or `https://monitor.dudeisland.eu`) → **Dashboards** → **Tahti — infrastructure & services**.
 
 Datasource UID `P501B54A0D5548634` must match the local Prometheus datasource.
 
