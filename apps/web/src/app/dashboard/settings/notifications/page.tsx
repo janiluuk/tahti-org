@@ -4,6 +4,7 @@
 import { redirect } from 'next/navigation'
 import { dashboardSessionCookie, getDashboardUser } from '@/lib/dashboard-session'
 import { CommentSettingsPanel } from '../../comment-settings-panel'
+import { MusicbrainzSettingsPanel } from '../../musicbrainz-settings-panel'
 import { MentionsPanel } from '../../mentions-panel'
 import { NotificationPreferencesPanel } from '../notification-preferences-panel'
 import { fetchMyAnnouncements } from '../announcements/actions'
@@ -18,9 +19,10 @@ export default async function NotificationSettingsPage() {
   if (!user.channel) redirect('/dashboard/setup-channel')
 
   const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
-  const [{ clips }, commentState] = await Promise.all([
+  const [{ clips }, commentState, musicbrainzState] = await Promise.all([
     fetchMyAnnouncements(),
     loadCommentSettings(apiUrl, sessionValue),
+    loadMusicbrainzSettings(apiUrl, sessionValue),
   ])
 
   return (
@@ -46,6 +48,15 @@ export default async function NotificationSettingsPage() {
         />
       </div>
 
+      <div id="musicbrainz">
+        <MusicbrainzSettingsPanel
+          initialConnected={musicbrainzState.connected}
+          initialUsername={musicbrainzState.username}
+          initialConfigured={musicbrainzState.configured}
+          initialDefault={musicbrainzState.defaultRegisterToMusicbrainz}
+        />
+      </div>
+
       <div id="mentions">
         <MentionsPanel />
       </div>
@@ -55,6 +66,34 @@ export default async function NotificationSettingsPage() {
       </div>
     </div>
   )
+}
+
+async function loadMusicbrainzSettings(apiUrl: string, sessionValue: string) {
+  try {
+    const [statusRes, defaultRes] = await Promise.all([
+      fetch(`${apiUrl}/api/me/musicbrainz`, {
+        headers: { Cookie: `tahti_session=${sessionValue}` },
+        cache: 'no-store',
+      }),
+      fetch(`${apiUrl}/api/me/musicbrainz/default`, {
+        headers: { Cookie: `tahti_session=${sessionValue}` },
+        cache: 'no-store',
+      }),
+    ])
+    const status = statusRes.ok
+      ? ((await statusRes.json()) as {
+          connected: boolean
+          username: string | null
+          configured: boolean
+        })
+      : { connected: false, username: null, configured: false }
+    const defaults = defaultRes.ok
+      ? ((await defaultRes.json()) as { defaultRegisterToMusicbrainz: boolean | null })
+      : { defaultRegisterToMusicbrainz: null }
+    return { ...status, defaultRegisterToMusicbrainz: defaults.defaultRegisterToMusicbrainz }
+  } catch {
+    return { connected: false, username: null, configured: false, defaultRegisterToMusicbrainz: null }
+  }
 }
 
 async function loadCommentSettings(apiUrl: string, sessionValue: string) {

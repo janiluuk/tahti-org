@@ -694,6 +694,12 @@ model User {
   soundcloudAccessTokenEnc String?  // Sprint 9: SoundCloud import OAuth
   googleDriveAccessTokenEnc  String?  // PLAT-080: Google Drive import OAuth
   googleDriveRefreshTokenEnc String?  // PLAT-083: encrypted refresh token
+  musicbrainzAccessTokenEnc  String?  // MusicBrainz OAuth2 (profile scope — identifies the connected editor)
+  musicbrainzRefreshTokenEnc String?
+  musicbrainzUsername        String?  // MB editor name, shown as "Connected as X" — fetched via userinfo at connect time
+  // Remembered choice for the publish-time "register this with MusicBrainz?" offer —
+  // null = ask every time (no preference set yet), true/false = stop asking, do this.
+  defaultRegisterToMusicbrainz Boolean?
   spotifyArtistId       String?  // mixed-source collections brief: resolved Spotify artist catalog ID for "Your tracks" — search itself uses an app-level token, no per-user OAuth
   mixcloudUsername      String?  // mixed-source collections brief: artist's own Mixcloud handle for "Your tracks" — Mixcloud's read API is public, no OAuth needed for catalog browsing
   hearthisUsername      String?  // same idea as mixcloudUsername, for hearthis.at's own public read API

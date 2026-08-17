@@ -487,3 +487,57 @@ export async function activateReleaseTrackVersion(
   }
   return { error: null }
 }
+
+// ── MusicBrainz connection + publish-time registration preference ─────────
+
+export async function getMusicbrainzStatus(): Promise<{
+  connected: boolean
+  username: string | null
+  configured: boolean
+}> {
+  const res = await fetch(`${apiUrl}/api/me/musicbrainz`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return { connected: false, username: null, configured: false }
+  return (await res.json()) as { connected: boolean; username: string | null; configured: boolean }
+}
+
+export async function getMusicbrainzDefault(): Promise<boolean | null> {
+  const res = await fetch(`${apiUrl}/api/me/musicbrainz/default`, {
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) return null
+  const data = (await res.json()) as { defaultRegisterToMusicbrainz: boolean | null }
+  return data.defaultRegisterToMusicbrainz
+}
+
+export async function setMusicbrainzDefault(
+  value: boolean | null,
+): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/musicbrainz/default`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Cookie: sessionHeader() },
+    body: JSON.stringify({ defaultRegisterToMusicbrainz: value }),
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to save preference' }
+  }
+  return { error: null }
+}
+
+export async function disconnectMusicbrainz(): Promise<{ error: string | null }> {
+  const res = await fetch(`${apiUrl}/api/me/musicbrainz`, {
+    method: 'DELETE',
+    headers: { Cookie: sessionHeader() },
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}))
+    return { error: (data as { error?: string }).error ?? 'Failed to disconnect' }
+  }
+  return { error: null }
+}

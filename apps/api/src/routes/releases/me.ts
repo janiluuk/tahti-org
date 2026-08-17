@@ -133,6 +133,7 @@ const meReleaseRoutes: FastifyPluginAsync = async (fastify) => {
         releases: await Promise.all(
           releases.map(async (r) => ({
             ...r,
+            artistName: user.displayName,
             artworkUrl: await resolveReleaseArtworkUrl(r),
             checklist: computeReleaseChecklist(r),
           })),

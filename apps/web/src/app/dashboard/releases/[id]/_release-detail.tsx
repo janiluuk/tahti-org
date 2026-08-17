@@ -14,6 +14,7 @@ import { ReleaseArtworkUpload } from '../../release-artwork-upload'
 import { ReleaseTrackVersionPanel } from '../../release-track-version-panel'
 import { ReleaseTrackCreditsPanel, parseTrackCredits } from '../../release-track-credits-panel'
 import ReleaseVisualPanel from '../../release-visual-panel'
+import { MusicbrainzRegisterPanel } from './_musicbrainz-register-panel'
 
 const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
   { key: 'spotify', label: 'Spotify', placeholder: 'https://open.spotify.com/...' },
@@ -27,6 +28,7 @@ const DSP_FIELDS: { key: string; label: string; placeholder: string }[] = [
 interface ReleaseSummary {
   id: string
   title: string
+  artistName?: string
   type: string
   state: string
   releaseDate: string
@@ -56,6 +58,7 @@ interface ReleaseSummary {
     title: string
     isrc: string | null
     status?: string
+    durationSec?: number | null
     credits?: unknown
     fingerprintMatch?: {
       acoustidId: string
@@ -193,6 +196,19 @@ export function ReleaseDetail({ release: r }: { release: ReleaseSummary }) {
             )}
           </div>
         </div>
+        {r.state === 'PUBLISHED' && (
+          <MusicbrainzRegisterPanel
+            release={{
+              title: r.title,
+              artistName: r.artistName ?? '',
+              type: r.type as 'SINGLE' | 'EP' | 'ALBUM' | 'COMPILATION' | 'REMIX',
+              releaseDate: r.releaseDate,
+              upc: r.upc,
+              tracks: (r.tracks ?? []).map((t) => ({ title: t.title, durationSec: t.durationSec })),
+              sourceUrl: `https://tahti.live/r/${r.smartLinkSlug}`,
+            }}
+          />
+        )}
       </Panel>
 
       <Panel title="Release date" headerTight className="studio-mb-md">
