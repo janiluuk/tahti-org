@@ -215,11 +215,129 @@
       ]
     },
     {
+      "id": 16,
+      "title": "Storage used",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 8, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 1, "unit": "decbytes" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "tahti_storage_used_bytes{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{environment}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "R2 storage budget",
+      "description": "Artist UserStorageQuota used vs quota (Cloudflare R2 / MinIO object storage budget).",
+      "type": "stat",
+      "gridPos": { "x": 4, "y": 8, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 1,
+          "unit": "percent",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "tahti_storage_used_bytes{job=\"tahti_api_metrics\",environment=~\"$environment\"} / tahti_storage_quota_bytes{job=\"tahti_api_metrics\",environment=~\"$environment\"} * 100",
+          "legendFormat": "{{environment}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Music tracks",
+      "type": "stat",
+      "gridPos": { "x": 8, "y": 8, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "tahti_tracks_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{environment}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Published releases",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 8, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "tahti_releases_published_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{environment}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Registrations today",
+      "type": "stat",
+      "gridPos": { "x": 16, "y": 8, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "tahti_registrations_today{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "{{environment}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "title": "Active gigs (Giggi)",
+      "description": "From Giggi metrics on the same monitor host.",
+      "type": "stat",
+      "gridPos": { "x": 20, "y": 8, "w": 4, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": { "defaults": { "decimals": 0, "unit": "short" } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+      "targets": [
+        {
+          "expr": "giggi_gigs_active_total{environment=~\"$environment\"} or vector(0)",
+          "legendFormat": "active gigs",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
       "id": 15,
       "title": "Postgres backup age (hours)",
       "description": "From GET /metrics — newest object under backups/pg/ in MinIO. -1 = unknown.",
       "type": "stat",
-      "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
+      "gridPos": { "x": 0, "y": 12, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": {
@@ -269,7 +387,7 @@
       "title": "HTTP response time (avg, ms)",
       "description": "In-process counter average since API start; resets on deploy.",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": { "unit": "ms", "custom": { "drawStyle": "line", "lineWidth": 2 } }
@@ -292,7 +410,7 @@
       "title": "External probe duration (s)",
       "description": "Blackbox probes from monitor host to lab endpoints.",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": { "unit": "s", "custom": { "drawStyle": "line", "lineWidth": 2 } }
@@ -309,7 +427,7 @@
       "id": 11,
       "title": "Load average — vimage",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 20, "w": 12, "h": 6 },
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } }
@@ -336,7 +454,7 @@
       "id": 12,
       "title": "HTTP errors by class",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 20, "w": 12, "h": 6 },
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": {
@@ -356,7 +474,7 @@
       "id": 13,
       "title": "Users over time",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 26, "w": 24, "h": 6 },
+      "gridPos": { "x": 0, "y": 30, "w": 12, "h": 6 },
       "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
       "fieldConfig": {
         "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } }
@@ -371,6 +489,44 @@
           "expr": "tahti_users_active_today{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
           "legendFormat": "active today",
           "refId": "B"
+        },
+        {
+          "expr": "tahti_registrations_today{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "registrations today",
+          "refId": "C"
+        },
+        {
+          "expr": "tahti_tracks_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "tracks",
+          "refId": "D"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Platform inventory",
+      "description": "Catalog and account growth: tracks, published releases, registered users.",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 30, "w": 12, "h": 6 },
+      "datasource": { "type": "prometheus", "uid": "P501B54A0D5548634" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2 } }
+      },
+      "targets": [
+        {
+          "expr": "tahti_tracks_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "tracks",
+          "refId": "A"
+        },
+        {
+          "expr": "tahti_releases_published_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "releases",
+          "refId": "B"
+        },
+        {
+          "expr": "tahti_users_registered_total{job=\"tahti_api_metrics\",environment=~\"$environment\"}",
+          "legendFormat": "registered users",
+          "refId": "C"
         }
       ]
     },
@@ -378,10 +534,10 @@
       "id": 14,
       "title": "Endpoints monitored",
       "type": "text",
-      "gridPos": { "x": 0, "y": 32, "w": 24, "h": 4 },
+      "gridPos": { "x": 0, "y": 36, "w": 24, "h": 5 },
       "options": {
         "mode": "markdown",
-        "content": "Grafana on **monitor.dudeisland.eu** (vimage6) scrapes the **lab stack on vimage** (`192.168.2.100`).\n\n| Source | Metric |\n|--------|--------|\n| `GET /metrics` | Users, deps, HTTP counters, backup age, Stripe webhook failures |\n| `job=node` | Load average (`instance=vimage`) |\n| `job=tahti_blackbox` | External latency + probe up/down |\n\nAlerts: `prometheus-tahti-alerts.yml` (backup >26h WARN, >48h critical). Deploy: `./ops/monitoring/vimage6/deploy.sh`"
+        "content": "Grafana on **monitor.dudeisland.eu** (vimage6) scrapes the **lab stack on vimage** (`192.168.2.100`).\n\n| Source | Metric |\n|--------|--------|\n| `GET /metrics` | Users, deps, HTTP counters, backup age, Stripe webhook failures |\n| `GET /metrics` | Storage used/quota (R2 budget %), tracks, published releases, registrations today |\n| Giggi (optional) | `giggi_gigs_active_total` — active gigs on the same monitor host |\n| `job=node` | Load average (`instance=vimage`) |\n| `job=tahti_blackbox` | External latency + probe up/down |\n\nTimeseries: **Users over time** (registered, active today, registrations today, tracks) and **Platform inventory** (tracks, releases, registered users).\n\nAlerts: `prometheus-tahti-alerts.yml` (backup >26h WARN, >48h critical). Deploy: `./ops/monitoring/vimage6/deploy.sh`"
       }
     }
   ]

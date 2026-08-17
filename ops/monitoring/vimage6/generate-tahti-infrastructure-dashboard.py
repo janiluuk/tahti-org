@@ -8,6 +8,9 @@ from pathlib import Path
 DS = {"type": "prometheus", "uid": "P501B54A0D5548634"}
 HOSTS = "vimage|vimage2|vimage3|vimage4|vimage5|vimage6|pi4|pi5|web"
 NET_DEV = 'device!~"lo|veth.*|docker.*|br-.*|cali.*|flannel.*|cni.*"'
+# scripts/backup.sh (tahti) and /usr/local/sbin/backup-other-services.sh (sparkki, giggi)
+# on vimage both write tahti_ops_backup_* via node_exporter's textfile collector.
+BACKUP_SERVICES = ["tahti", "sparkki", "giggi"]
 
 
 def row(title: str, y: int, panel_id: int) -> dict:
@@ -61,6 +64,50 @@ def stat_panel(
         "options": {
             "reduceOptions": {"calcs": ["lastNotNull"]},
             "colorMode": "background",
+            "orientation": "horizontal",
+            "textMode": "auto",
+        },
+        "targets": [
+            {
+                "expr": expr,
+                "legendFormat": legend,
+                "instant": True,
+                "refId": "A",
+            }
+        ],
+    }
+
+
+def metric_stat_panel(
+    panel_id: int,
+    title: str,
+    expr: str,
+    y: int,
+    w: int = 8,
+    h: int = 4,
+    x: int = 0,
+    unit: str = "short",
+    decimals: int | None = None,
+    legend: str = "{{service}}",
+    description: str = "",
+) -> dict:
+    """Plain single-value stat panel (no UP/DOWN 1/0 mapping) — for arbitrary
+    gauges like a backup's last-success date or file size, one series per
+    service."""
+    defaults: dict = {"unit": unit}
+    if decimals is not None:
+        defaults["decimals"] = decimals
+    return {
+        "id": panel_id,
+        "type": "stat",
+        "title": title,
+        "description": description,
+        "gridPos": {"h": h, "w": w, "x": x, "y": y},
+        "datasource": DS,
+        "fieldConfig": {"defaults": defaults},
+        "options": {
+            "reduceOptions": {"calcs": ["lastNotNull"]},
+            "colorMode": "none",
             "orientation": "horizontal",
             "textMode": "auto",
         },
@@ -280,6 +327,39 @@ def main() -> None:
         }
     )
     pid += 1
+    y += 4
+
+    panels.append(row("Backups (tahti / sparkki / giggi)", y, pid))
+    pid += 1
+    y += 1
+    for i, service in enumerate(BACKUP_SERVICES):
+        panels.append(
+            metric_stat_panel(
+                pid,
+                f"{service} — last backup",
+                f'tahti_ops_backup_last_success_timestamp_seconds{{service="{service}"}} * 1000',
+                y,
+                x=i * 8,
+                unit="dateTimeAsIso",
+                legend=service,
+                description="0 / 1970 means no successful backup has been recorded yet.",
+            )
+        )
+        pid += 1
+    y += 4
+    for i, service in enumerate(BACKUP_SERVICES):
+        panels.append(
+            metric_stat_panel(
+                pid,
+                f"{service} — backup size",
+                f'tahti_ops_backup_size_bytes{{service="{service}"}}',
+                y,
+                x=i * 8,
+                unit="decbytes",
+                legend=service,
+            )
+        )
+        pid += 1
     y += 4
 
     panels.append(row("Public endpoints (via NPM / DNS)", y, pid))

@@ -15,7 +15,7 @@
 #   0 5 * * 0  root .../backup.sh restore-test
 #
 # Env: MINIO_ALIAS, BACKUP_BUCKET, PG_CONTAINER, SRC_ALIAS, DST_ALIAS, ALERT_EMAIL,
-#      VIMAGE6_BACKUP_HOST, VIMAGE6_BACKUP_KEY, VIMAGE6_BACKUP_DIR
+#      VIMAGE6_BACKUP_HOST, VIMAGE6_BACKUP_KEY, VIMAGE6_BACKUP_DIR, TEXTFILE_COLLECTOR_DIR
 
 set -euo pipefail
 
@@ -363,6 +363,40 @@ sys.exit(0)
 PY
 }
 
+write_textfile_metrics() {
+  # Exposes latest-backup date+size to Prometheus via node_exporter's
+  # textfile collector (see /var/lib/node_exporter/textfile_collector on
+  # vimage) — the Grafana infrastructure dashboard's Backups row reads these.
+  # Atomic write (tmp + mv) so Prometheus never scrapes a half-written file.
+  local TEXTFILE_DIR="${TEXTFILE_COLLECTOR_DIR:-/var/lib/node_exporter/textfile_collector}"
+  local LOCAL_BACKUP_DIR="${LOCAL_BACKUP_DIR:-/share/disk2/tahti-backups/pg}"
+  local LOCAL_MIRROR_DIR="${LOCAL_MIRROR_DIR:-/share/disk2/tahti-backups/minio-mirror}"
+  [[ -d "$TEXTFILE_DIR" ]] || return 0
+
+  local latest_file latest_ts latest_size total_size tmp
+  latest_file=$(find "$LOCAL_BACKUP_DIR" -maxdepth 1 -name '*.sql.gz' -printf '%T@ %p\n' 2>/dev/null \
+    | sort -n | tail -1 | cut -d' ' -f2-)
+  latest_ts=0
+  latest_size=0
+  [[ -n "$latest_file" ]] && latest_ts=$(stat -c %Y "$latest_file" 2>/dev/null || echo 0)
+  [[ -n "$latest_file" ]] && latest_size=$(stat -c %s "$latest_file" 2>/dev/null || echo 0)
+  total_size=$(du -sb "$LOCAL_BACKUP_DIR" "$LOCAL_MIRROR_DIR" 2>/dev/null | awk '{s+=$1} END {print s+0}')
+
+  tmp="${TEXTFILE_DIR}/tahti_backup_tahti.prom.$$"
+  cat > "$tmp" <<EOF
+# HELP tahti_ops_backup_last_success_timestamp_seconds Unix timestamp of the newest local backup file. 0 when unknown.
+# TYPE tahti_ops_backup_last_success_timestamp_seconds gauge
+tahti_ops_backup_last_success_timestamp_seconds{service="tahti"} ${latest_ts}
+# HELP tahti_ops_backup_size_bytes Size of the newest primary backup file (Postgres dump), in bytes.
+# TYPE tahti_ops_backup_size_bytes gauge
+tahti_ops_backup_size_bytes{service="tahti"} ${latest_size}
+# HELP tahti_ops_backup_total_size_bytes Total on-disk size of this service's local backup directory (dump + mirrored data), in bytes.
+# TYPE tahti_ops_backup_total_size_bytes gauge
+tahti_ops_backup_total_size_bytes{service="tahti"} ${total_size}
+EOF
+  mv -f "$tmp" "${TEXTFILE_DIR}/tahti_backup_tahti.prom"
+}
+
 case "$CMD" in
   postgres) backup_postgres ;;
   minio) backup_minio ;;
@@ -374,6 +408,7 @@ case "$CMD" in
     backup_postgres
     backup_minio
     backup_push_vimage6
+    write_textfile_metrics
     echo "[$(log_ts)] [backup] Full backup complete"
     ;;
   -h|--help)

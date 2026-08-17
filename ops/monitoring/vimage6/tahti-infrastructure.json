@@ -592,7 +592,7 @@
     {
       "id": 11,
       "type": "row",
-      "title": "Public endpoints (via NPM / DNS)",
+      "title": "Backups (tahti / sparkki / giggi)",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -604,13 +604,259 @@
     {
       "id": 12,
       "type": "stat",
+      "title": "tahti \u2014 last backup",
+      "description": "0 / 1970 means no successful backup has been recorded yet.",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 23
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeAsIso"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "tahti_ops_backup_last_success_timestamp_seconds{service=\"tahti\"} * 1000",
+          "legendFormat": "tahti",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "sparkki \u2014 last backup",
+      "description": "0 / 1970 means no successful backup has been recorded yet.",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 23
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeAsIso"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "tahti_ops_backup_last_success_timestamp_seconds{service=\"sparkki\"} * 1000",
+          "legendFormat": "sparkki",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "giggi \u2014 last backup",
+      "description": "0 / 1970 means no successful backup has been recorded yet.",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 23
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeAsIso"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "tahti_ops_backup_last_success_timestamp_seconds{service=\"giggi\"} * 1000",
+          "legendFormat": "giggi",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "tahti \u2014 backup size",
+      "description": "",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 27
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "tahti_ops_backup_size_bytes{service=\"tahti\"}",
+          "legendFormat": "tahti",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "stat",
+      "title": "sparkki \u2014 backup size",
+      "description": "",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 27
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "tahti_ops_backup_size_bytes{service=\"sparkki\"}",
+          "legendFormat": "sparkki",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "giggi \u2014 backup size",
+      "description": "",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 27
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P501B54A0D5548634"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes"
+        }
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "none",
+        "orientation": "horizontal",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "expr": "tahti_ops_backup_size_bytes{service=\"giggi\"}",
+          "legendFormat": "giggi",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "row",
+      "title": "Public endpoints (via NPM / DNS)",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "collapsed": false
+    },
+    {
+      "id": 19,
+      "type": "stat",
       "title": "HTTPS probes",
       "description": "Blackbox checks from vimage6 to public tahti.live hostnames.",
       "gridPos": {
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 32
       },
       "datasource": {
         "type": "prometheus",
@@ -668,7 +914,7 @@
       ]
     },
     {
-      "id": 13,
+      "id": 20,
       "type": "stat",
       "title": "SMTP submission (mail.tahti.live:587)",
       "description": "",
@@ -676,7 +922,7 @@
         "h": 4,
         "w": 8,
         "x": 0,
-        "y": 27
+        "y": 36
       },
       "datasource": {
         "type": "prometheus",
@@ -734,19 +980,19 @@
       ]
     },
     {
-      "id": 14,
+      "id": 21,
       "type": "row",
       "title": "CPU & load",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 40
       },
       "collapsed": false
     },
     {
-      "id": 15,
+      "id": 22,
       "type": "timeseries",
       "title": "CPU usage %",
       "description": "",
@@ -754,7 +1000,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 32
+        "y": 41
       },
       "datasource": {
         "type": "prometheus",
@@ -785,7 +1031,7 @@
       ]
     },
     {
-      "id": 16,
+      "id": 23,
       "type": "timeseries",
       "title": "Load average (1m)",
       "description": "",
@@ -793,7 +1039,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 32
+        "y": 41
       },
       "datasource": {
         "type": "prometheus",
@@ -824,19 +1070,19 @@
       ]
     },
     {
-      "id": 17,
+      "id": 24,
       "type": "row",
       "title": "Memory",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 49
       },
       "collapsed": false
     },
     {
-      "id": 18,
+      "id": 25,
       "type": "timeseries",
       "title": "Memory used %",
       "description": "",
@@ -844,7 +1090,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 50
       },
       "datasource": {
         "type": "prometheus",
@@ -875,26 +1121,26 @@
       ]
     },
     {
-      "id": 19,
+      "id": 26,
       "type": "row",
       "title": "Disk space & I/O",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 58
       },
       "collapsed": false
     },
     {
-      "id": 20,
+      "id": 27,
       "type": "bargauge",
       "title": "Root filesystem free %",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 50
+        "y": 59
       },
       "datasource": {
         "type": "prometheus",
@@ -947,7 +1193,7 @@
       ]
     },
     {
-      "id": 21,
+      "id": 28,
       "type": "timeseries",
       "title": "Root disk used %",
       "description": "",
@@ -955,7 +1201,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 50
+        "y": 59
       },
       "datasource": {
         "type": "prometheus",
@@ -986,7 +1232,7 @@
       ]
     },
     {
-      "id": 22,
+      "id": 29,
       "type": "timeseries",
       "title": "Disk read throughput",
       "description": "",
@@ -994,7 +1240,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 58
+        "y": 67
       },
       "datasource": {
         "type": "prometheus",
@@ -1025,7 +1271,7 @@
       ]
     },
     {
-      "id": 23,
+      "id": 30,
       "type": "timeseries",
       "title": "Disk write throughput",
       "description": "",
@@ -1033,7 +1279,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 58
+        "y": 67
       },
       "datasource": {
         "type": "prometheus",
@@ -1064,7 +1310,7 @@
       ]
     },
     {
-      "id": 24,
+      "id": 31,
       "type": "timeseries",
       "title": "Disk read IOPS",
       "description": "",
@@ -1072,7 +1318,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 66
+        "y": 75
       },
       "datasource": {
         "type": "prometheus",
@@ -1103,7 +1349,7 @@
       ]
     },
     {
-      "id": 25,
+      "id": 32,
       "type": "timeseries",
       "title": "Disk write IOPS",
       "description": "",
@@ -1111,7 +1357,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 66
+        "y": 75
       },
       "datasource": {
         "type": "prometheus",
@@ -1142,19 +1388,19 @@
       ]
     },
     {
-      "id": 26,
+      "id": 33,
       "type": "row",
       "title": "Network",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 74
+        "y": 83
       },
       "collapsed": false
     },
     {
-      "id": 27,
+      "id": 34,
       "type": "timeseries",
       "title": "Network receive",
       "description": "",
@@ -1162,7 +1408,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 75
+        "y": 84
       },
       "datasource": {
         "type": "prometheus",
@@ -1193,7 +1439,7 @@
       ]
     },
     {
-      "id": 28,
+      "id": 35,
       "type": "timeseries",
       "title": "Network transmit",
       "description": "",
@@ -1201,7 +1447,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 75
+        "y": 84
       },
       "datasource": {
         "type": "prometheus",
@@ -1232,7 +1478,7 @@
       ]
     },
     {
-      "id": 29,
+      "id": 36,
       "type": "timeseries",
       "title": "Network receive errors",
       "description": "",
@@ -1240,7 +1486,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 83
+        "y": 92
       },
       "datasource": {
         "type": "prometheus",
@@ -1271,7 +1517,7 @@
       ]
     },
     {
-      "id": 30,
+      "id": 37,
       "type": "timeseries",
       "title": "Network transmit errors",
       "description": "",
@@ -1279,7 +1525,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 83
+        "y": 92
       },
       "datasource": {
         "type": "prometheus",
@@ -1310,19 +1556,19 @@
       ]
     },
     {
-      "id": 31,
+      "id": 38,
       "type": "row",
       "title": "Tahti containers on vimage",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 91
+        "y": 100
       },
       "collapsed": false
     },
     {
-      "id": 32,
+      "id": 39,
       "type": "timeseries",
       "title": "Container CPU (cores)",
       "description": "",
@@ -1330,7 +1576,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 92
+        "y": 101
       },
       "datasource": {
         "type": "prometheus",
@@ -1361,7 +1607,7 @@
       ]
     },
     {
-      "id": 33,
+      "id": 40,
       "type": "timeseries",
       "title": "Container memory",
       "description": "",
@@ -1369,7 +1615,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 92
+        "y": 101
       },
       "datasource": {
         "type": "prometheus",
@@ -1400,7 +1646,7 @@
       ]
     },
     {
-      "id": 34,
+      "id": 41,
       "type": "timeseries",
       "title": "Blackbox probe duration (lab)",
       "description": "",
@@ -1408,7 +1654,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 100
+        "y": 109
       },
       "datasource": {
         "type": "prometheus",
@@ -1439,7 +1685,7 @@
       ]
     },
     {
-      "id": 35,
+      "id": 42,
       "type": "timeseries",
       "title": "Dependency check latency",
       "description": "",
@@ -1447,7 +1693,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 100
+        "y": 109
       },
       "datasource": {
         "type": "prometheus",
