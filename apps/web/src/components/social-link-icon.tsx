@@ -4,6 +4,7 @@
 type SocialPlatform =
   | 'bandcamp'
   | 'soundcloud'
+  | 'mixcloud'
   | 'instagram'
   | 'twitter'
   | 'facebook'
@@ -20,6 +21,7 @@ type SocialPlatform =
 const LABEL_KEYWORDS: Array<[RegExp, SocialPlatform]> = [
   [/bandcamp/i, 'bandcamp'],
   [/soundcloud/i, 'soundcloud'],
+  [/mixcloud/i, 'mixcloud'],
   [/instagram|insta\b/i, 'instagram'],
   [/twitter|\bx\b/i, 'twitter'],
   [/facebook|\bfb\b/i, 'facebook'],
@@ -36,6 +38,7 @@ const LABEL_KEYWORDS: Array<[RegExp, SocialPlatform]> = [
 const HOSTNAME_KEYWORDS: Array<[string, SocialPlatform]> = [
   ['bandcamp.com', 'bandcamp'],
   ['soundcloud.com', 'soundcloud'],
+  ['mixcloud.com', 'mixcloud'],
   ['instagram.com', 'instagram'],
   ['twitter.com', 'twitter'],
   ['x.com', 'twitter'],
@@ -97,6 +100,19 @@ function PlatformGlyph({ platform }: { platform: SocialPlatform }) {
             strokeWidth="1.3"
             strokeLinejoin="round"
           />
+        </svg>
+      )
+    case 'mixcloud':
+      return (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path
+            d="M2 10.5c0-2 1.4-3.2 3-3.2.9 0 1.6.4 2 .9.4-.5 1.1-.9 2-.9 1.6 0 3 1.2 3 3.2"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+          />
+          <circle cx="5.5" cy="10.7" r="1.1" stroke="currentColor" strokeWidth="1.1" />
+          <circle cx="9.5" cy="10.7" r="1.1" stroke="currentColor" strokeWidth="1.1" />
         </svg>
       )
     case 'instagram':
