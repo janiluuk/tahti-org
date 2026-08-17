@@ -17,6 +17,7 @@ import { processTranscodeReleaseTrackVersionJob } from './jobs/transcode-release
 import { processMixcloudUploadJob } from './jobs/mixcloud-upload.js'
 import { processCloudImportGoogleDriveJob } from './jobs/cloud-import-google-drive.js'
 import { processSoundcloudImportJob } from './jobs/soundcloud-import.js'
+import { processHearthisImportJob } from './jobs/hearthis-import.js'
 import { processNewsletterDispatch } from './jobs/newsletter-dispatch.js'
 import { processArchiveBroadcastJob } from './jobs/archive-broadcast.js'
 import { processFinalizeBroadcastRecordingJob } from './jobs/finalize-broadcast-recording.js'
@@ -121,6 +122,8 @@ const worker = new Worker(
         await processCloudImportGoogleDriveJob(job)
       } else if (job.name === 'cloud-import-soundcloud') {
         await processSoundcloudImportJob(job)
+      } else if (job.name === 'cloud-import-hearthis') {
+        await processHearthisImportJob(job)
       } else if (job.name === 'newsletter-dispatch') {
         await processNewsletterDispatch(job)
       } else if (job.name === 'finalize-broadcast-recording') {

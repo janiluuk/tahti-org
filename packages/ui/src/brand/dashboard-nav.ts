@@ -123,7 +123,9 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     label: 'Stats',
     icon: 'stats',
     isRoute: true,
+    group: 'Stats',
   },
+  { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
 
   // My Library — the artist's own catalog and files.
   {
@@ -178,9 +180,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     icon: 'schedule',
     isRoute: true,
     requiresChannel: true,
-    secondary: true,
   },
-  { href: '/dashboard/posts', label: 'Posts', icon: 'posts', isRoute: true, secondary: true },
   { href: '/dashboard/embeds', label: 'Embeds', icon: 'embeds', isRoute: true, secondary: true },
 
   // Audience — fans, mailing list, and money.
@@ -192,7 +192,7 @@ export const DASHBOARD_NAV: DashboardNavDefinition[] = [
     requiresChannel: true,
     group: 'Audience',
   },
-  { href: '/dashboard/revenue', label: 'Revenue', icon: 'revenue', isRoute: true },
+  { href: '/dashboard/posts', label: 'Posts', icon: 'posts', isRoute: true },
 
   // Channel setup — appearance and account-level settings.
   {
